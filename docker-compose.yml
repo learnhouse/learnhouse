@@ -1,0 +1,25 @@
+version: "3.9"
+services:
+  api:
+    build: .
+    ports:
+      - "1338:80"
+    volumes:
+      - .:/usr/learnhouse
+  mongo:
+    image: mongo:5.0
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=learnhouse
+      - MONGO_INITDB_ROOT_PASSWORD=learnhouse
+  mongo-express:
+    image: mongo-express
+    restart: always
+    ports:
+      - 8081:8081
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: learnhouse
+      ME_CONFIG_MONGODB_ADMINPASSWORD: learnhouse
+      ME_CONFIG_MONGODB_URL: mongodb://learnhouse:learnhouse@mongo:27017/
