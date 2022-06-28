@@ -22,6 +22,7 @@ class House(BaseModel):
 class HouseInDB(House):
     house_id: str
     owners: List[str]
+    admins: List[str]
 
 #### Classes ####################################################
 
@@ -55,6 +56,7 @@ async def create_house(house_object: House, current_user: User):
     house_id = str(f"house_{uuid4()}")
 
     house = HouseInDB(house_id=house_id, owners=[
+                      current_user.username], admins=[
                       current_user.username], **house_object.dict())
 
     house_in_db = houses.insert_one(house.dict())
@@ -68,22 +70,24 @@ async def create_house(house_object: House, current_user: User):
 
 async def update_house(house_object: House, house_id: str, current_user: User):
     await check_database()
-    
+
     # verify house rights
-    await verify_house_ownership(house_id, current_user)
-    
+    await verify_house_rights(house_id, current_user)
+
     houses = learnhouseDB["houses"]
 
     house = houses.find_one({"house_id": house_id})
-    
-    ## get owner value from house object database
+
+    # get owner value from house object database
     owners = house["owners"]
+    admins = house["admins"]
 
     if not house:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="House does not exist")
 
-    updated_house = HouseInDB(house_id=house_id, owners=owners, **house_object.dict())
+    updated_house = HouseInDB(
+        house_id=house_id, owners=owners, admins=admins, **house_object.dict())
 
     houses.update_one({"house_id": house_id}, {"$set": updated_house.dict()})
 
@@ -92,10 +96,10 @@ async def update_house(house_object: House, house_id: str, current_user: User):
 
 async def delete_house(house_id: str, current_user: User):
     await check_database()
-    
+
     # verify house rights
-    await verify_house_ownership(house_id, current_user)
-    
+    await verify_house_rights(house_id, current_user)
+
     houses = learnhouseDB["houses"]
 
     house = houses.find_one({"house_id": house_id})
@@ -125,7 +129,7 @@ async def get_houses(page: int = 1, limit: int = 10):
 
 #### Security ####################################################
 
-async def verify_house_ownership(house_id: str, current_user: User):
+async def verify_house_rights(house_id: str, current_user: User):
     await check_database()
     houses = learnhouseDB["houses"]
 
@@ -135,9 +139,12 @@ async def verify_house_ownership(house_id: str, current_user: User):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="House does not exist")
 
-    if current_user.username not in house["owners"]:
+    isAdmin = current_user.username in house["admins"]
+    isOwner = current_user.username in house["owners"]
+
+    if not isAdmin and not isOwner:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="User does not own this house")
+            status_code=status.HTTP_403_FORBIDDEN, detail="You do not have rights to this house")
 
     return True
 
