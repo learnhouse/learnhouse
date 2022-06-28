@@ -24,7 +24,7 @@ async def api_get_house(house_id: str):
     return await get_house(house_id)
 
 
-@router.get("/page/{house_id}/limit/{limit}")
+@router.get("/page/{page}/limit/{limit}")
 async def api_get_house_by(page: int, limit: int):
     """
     Get houses by page and limit
