@@ -1,7 +1,7 @@
 from pydantic import BaseModel
-from ..services.database import create_config_collection, check_database, create_database, learnhouseDB, learnhouseDB
+from ..services.database import check_database,  learnhouseDB, learnhouseDB
 from ..services.security import *
-from fastapi import FastAPI, HTTPException, status, Request, Response, BackgroundTasks
+from fastapi import HTTPException, status
 from datetime import datetime
 
 #### Classes ####################################################
@@ -15,7 +15,8 @@ class User(BaseModel):
     avatar_url: str | None = None
     verified: bool
     created_date: str
-    bio : str | None = None
+    user_type: str
+    bio: str | None = None
 
 
 class UserInDB(User):
@@ -61,7 +62,7 @@ async def update_user(user_object: UserInDB):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="User does not exist")
 
-    user_object.password = security_hash_password(user_object.password)
+    user_object.password = await security_hash_password(user_object.password)
 
     updated_user = {"$set": user_object.dict()}
     users.update_one({"username": user_object.username}, updated_user)
@@ -96,7 +97,7 @@ async def create_user(user_object: UserInDB):
 
     # lowercase username
     user_object.username = user_object.username.lower()
-    
+
     user_object.created_date = str(datetime.now())
 
     user_object.password = await security_hash_password(user_object.password)
