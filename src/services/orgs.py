@@ -116,6 +116,7 @@ async def delete_org(org_id: str, current_user: User):
 
 
 async def get_orgs(page: int = 1, limit: int = 10):
+    ## TODO : auth
     await check_database()
     orgs = learnhouseDB["orgs"]
 
@@ -127,7 +128,7 @@ async def get_orgs(page: int = 1, limit: int = 10):
 
 #### Security ####################################################
 
-async def verify_org_rights(org_id: str, current_user: User):
+async def verify_org_rights(org_id: str,  current_user: User, action:str,):
     await check_database()
     orgs = learnhouseDB["organizations"]
 
@@ -137,10 +138,10 @@ async def verify_org_rights(org_id: str, current_user: User):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Organization does not exist")
 
-    isAdmin = current_user.username in org["admins"]
     isOwner = current_user.username in org["owners"]
+    hasRoleRights = await verify_user_rights_with_roles(action,current_user.username,org_id)
 
-    if not isAdmin and not isOwner:
+    if not hasRoleRights and not isOwner:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="You do not have rights to this organization")
 

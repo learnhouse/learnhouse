@@ -16,19 +16,19 @@ async def api_create_org(org_object: Organization, current_user: User = Depends(
 
 
 @router.get("/{org_id}")
-async def api_get_org(org_id: str):
+async def api_get_org(org_id: str, current_user: User = Depends(get_current_user)):
     """
     Get single Org by ID
     """
-    return await get_organization(org_id)
+    return await get_organization(org_id, current_user)
 
 
 @router.get("/page/{page}/limit/{limit}")
-async def api_get_org_by(page: int, limit: int):
+async def api_get_org_by(page: int, limit: int, current_user: User = Depends(get_current_user)):
     """
     Get orgs by page and limit
     """
-    return await get_orgs(page, limit)
+    return await get_orgs(page, limit, current_user)
 
 
 @router.put("/{org_id}")

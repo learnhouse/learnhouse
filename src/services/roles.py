@@ -3,28 +3,28 @@ from typing import List
 from uuid import uuid4
 from pydantic import BaseModel
 from src.services.users import User
-from ..services.database import  check_database,  learnhouseDB, learnhouseDB
+from ..services.database import check_database,  learnhouseDB, learnhouseDB
 from ..services.security import *
 from ..services.houses import House
-from fastapi import  HTTPException, status
+from fastapi import HTTPException, status
 from datetime import datetime
 
 #### Classes ####################################################
 
 
 class Permission(BaseModel):
-    create: bool
-    read: bool
-    update: bool
-    delete: bool
+    action_create: bool
+    action_read: bool
+    action_update: bool
+    action_delete: bool
 
 
 class Elements(BaseModel):
     course: List[str]
     users: List[str]
     houses: List[str]
-    paths: List[str]
-    coursegroups: List[str]
+    collections: List[str]
+    organizations: List[str]
 
 
 class Role(BaseModel):
@@ -32,6 +32,7 @@ class Role(BaseModel):
     description: str
     permissions: Permission
     elements: Elements
+    linked_users: List[str]
 
 
 class RoleInDB(Role):
