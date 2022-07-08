@@ -34,13 +34,7 @@ async def get_house(house_id: str, current_user: User):
     house = houses.find_one({"house_id": house_id})
 
     # verify house rights
-    hasOwnershipRights = await verify_house_rights(house_id, current_user)
-
-    hasRoleRights = await verify_user_rights_with_roles("read", current_user.username, house_id)
-
-    if not hasRoleRights or not hasOwnershipRights:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Roles/Ownership : Insufficient rights to perform this action")
+    await verify_house_rights(house_id, current_user,"read")
 
     if not house:
         raise HTTPException(
@@ -87,13 +81,7 @@ async def update_house(house_object: House, house_id: str, current_user: User):
     await check_database()
 
     # verify house rights
-    hasOwnershipRights = await verify_house_rights(house_id, current_user)
-
-    hasRoleRights = await verify_user_rights_with_roles("update", current_user.username, house_id)
-
-    if not hasRoleRights or not hasOwnershipRights:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Roles/Ownership : Insufficient rights to perform this action")
+    await verify_house_rights(house_id, current_user,"update")
 
     houses = learnhouseDB["houses"]
 
@@ -119,13 +107,7 @@ async def delete_house(house_id: str, current_user: User):
     await check_database()
 
     # verify house rights
-    hasOwnershipRights = await verify_house_rights(house_id, current_user)
-
-    hasRoleRights = await verify_user_rights_with_roles("delete", current_user.username, house_id)
-
-    if not hasRoleRights or not hasOwnershipRights:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Roles/Ownership : Insufficient rights to perform this action")
+    await verify_house_rights(house_id, current_user,"delete")
 
     houses = learnhouseDB["houses"]
 
@@ -156,7 +138,7 @@ async def get_houses(page: int = 1, limit: int = 10):
 
 #### Security ####################################################
 
-async def verify_house_rights(house_id: str, current_user: User):
+async def verify_house_rights(house_id: str, current_user: User, action: str):
     await check_database()
     houses = learnhouseDB["houses"]
 
@@ -166,12 +148,12 @@ async def verify_house_rights(house_id: str, current_user: User):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="House does not exist")
 
-    isAdmin = current_user.username in house["admins"]
+    hasRoleRights = await verify_user_rights_with_roles(action, current_user.username, house_id)
     isOwner = current_user.username in house["owners"]
 
-    if not isAdmin and not isOwner:
+    if not hasRoleRights and not isOwner:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="You do not have rights to this house")
+            status_code=status.HTTP_403_FORBIDDEN, detail="Roles/Ownership : Insufficient rights to perform this action")
 
     return True
 
