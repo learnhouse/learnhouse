@@ -24,6 +24,7 @@ class Elements(BaseModel):
     users: List[str]
     houses: List[str]
     collections: List[str]
+    organizations: List[str]
 
 
 class Role(BaseModel):

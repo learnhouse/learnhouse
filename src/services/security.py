@@ -70,6 +70,8 @@ async def check_element_type(element_id):
         return "users"
     elif element_id.startswith("house_"):
         return "houses"
+    elif element_id.startswith("org_"):
+        return "organizations"
     elif element_id.startswith("collection_"):
         return "collections"
     else:
