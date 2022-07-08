@@ -17,11 +17,11 @@ async def api_create_house(house_object: House, current_user: User = Depends(get
 
 
 @router.get("/{house_id}")
-async def api_get_house(house_id: str):
+async def api_get_house(house_id: str, current_user: User = Depends(get_current_user)):
     """
     Get single House by house_id
     """
-    return await get_house(house_id)
+    return await get_house(house_id, current_user=current_user)
 
 
 @router.get("/page/{page}/limit/{limit}")
