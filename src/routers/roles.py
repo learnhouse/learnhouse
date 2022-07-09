@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from src.services.auth import get_current_user
 
-from src.services.roles import Role, create_role, delete_role, get_role, update_role
+from src.services.roles import Role, create_role, delete_role, get_role, get_roles, update_role
 from src.services.users import User
 
 
@@ -29,7 +29,7 @@ async def api_get_role_by(page: int, limit: int):
     """
     Get roles by page and limit
     """
-    return await get_role(page, limit)
+    return await get_roles(page, limit)
 
 
 @router.put("/{role_id}")
