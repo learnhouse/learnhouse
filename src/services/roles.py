@@ -2,7 +2,7 @@ import json
 from typing import List
 from uuid import uuid4
 from pydantic import BaseModel
-from src.services.users import User
+from src.services.users import PublicUser, User
 from src.services.database import check_database,  learnhouseDB, learnhouseDB
 from src.services.security import *
 from src.services.houses import House
@@ -25,7 +25,7 @@ class Elements(BaseModel):
     houses: List[str]
     collections: List[str]
     organizations: List[str]
-    coursechapters : List[str]
+    coursechapters: List[str]
 
 
 class Role(BaseModel):
@@ -69,7 +69,7 @@ async def create_role(role_object: Role, current_user: User):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Role name already exists")
 
-    await verify_user_permissions("create", current_user)
+    await verify_user_permissions_on_roles("create", current_user)
 
     # generate house_id with uuid4
     role_id = str(f"role_{uuid4()}")
@@ -90,7 +90,7 @@ async def update_role(role_object: House, role_id: str, current_user: User):
     await check_database()
 
     # verify house rights
-    await verify_user_permissions("update", current_user)
+    await verify_user_permissions_on_roles("update", current_user)
 
     roles = learnhouseDB["roles"]
 
@@ -112,7 +112,7 @@ async def delete_role(role_id: str, current_user: User):
     await check_database()
 
     # verify house rights
-    await verify_user_permissions("delete", current_user)
+    await verify_user_permissions_on_roles("delete", current_user)
 
     roles = learnhouseDB["roles"]
 
@@ -143,11 +143,11 @@ async def get_roles(page: int = 1, limit: int = 10):
 
 #### Security ####################################################
 
-async def verify_user_permissions(action: str, current_user: User):
+async def verify_user_permissions_on_roles(action: str, current_user: PublicUser):
     await check_database()
     users = learnhouseDB["users"]
 
-    user = users.find_one({"username": current_user.username})
+    user = users.find_one({"user_id": current_user.user_id})
 
     if not user:
         raise HTTPException(
@@ -155,8 +155,8 @@ async def verify_user_permissions(action: str, current_user: User):
 
     isOwner = "owner" in user["user_type"]
     isEditor = "editor" in user["user_type"]
-    
-    # TODO: verify for all actions. 
+
+    # TODO: verify for all actions.
     if action == "delete":
         if isEditor:
             raise HTTPException(
