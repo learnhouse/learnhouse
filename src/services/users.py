@@ -1,6 +1,6 @@
 from pydantic import BaseModel
-from ..services.database import check_database,  learnhouseDB, learnhouseDB
-from ..services.security import *
+from src.services.database import check_database,  learnhouseDB, learnhouseDB
+from src.services.security import *
 from fastapi import HTTPException, status
 from datetime import datetime
 
@@ -24,6 +24,7 @@ class UserInDB(User):
 
 #### Classes ####################################################
 
+# TODO : user actions security 
 
 async def get_user(username: str):
     check_database()
