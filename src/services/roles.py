@@ -3,9 +3,9 @@ from typing import List
 from uuid import uuid4
 from pydantic import BaseModel
 from src.services.users import User
-from ..services.database import check_database,  learnhouseDB, learnhouseDB
-from ..services.security import *
-from ..services.houses import House
+from src.services.database import check_database,  learnhouseDB, learnhouseDB
+from src.services.security import *
+from src.services.houses import House
 from fastapi import HTTPException, status
 from datetime import datetime
 
@@ -155,7 +155,8 @@ async def verify_user_permissions(action: str, current_user: User):
 
     isOwner = "owner" in user["user_type"]
     isEditor = "editor" in user["user_type"]
-
+    
+    # TODO: verify for all actions. 
     if action == "delete":
         if isEditor:
             raise HTTPException(

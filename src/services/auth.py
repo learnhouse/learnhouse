@@ -4,8 +4,8 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
-from ..services.users import *
-from ..services.security import *
+from src.services.users import *
+from src.services.security import *
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/token")
 

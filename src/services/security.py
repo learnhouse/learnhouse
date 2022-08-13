@@ -3,8 +3,8 @@ from passlib.context import CryptContext
 from jose import JWTError, jwt
 import logging
 from passlib.hash import pbkdf2_sha256
-from ..services.database import check_database
-from ..services.database import check_database,  learnhouseDB, learnhouseDB
+from src.services.database import check_database
+from src.services.database import check_database,  learnhouseDB, learnhouseDB
 
 ### 🔒 JWT ##############################################################
 
