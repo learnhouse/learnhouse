@@ -55,8 +55,8 @@ async def create_org(org_object: Organization, current_user: User):
     org_id = str(f"org_{uuid4()}")
 
     org = OrganizationInDB(org_id=org_id, owners=[
-        current_user.username], admins=[
-        current_user.username], **org_object.dict())
+        current_user.user_id], admins=[
+        current_user.user_id], **org_object.dict())
 
     org_in_db = orgs.insert_one(org.dict())
 
@@ -128,7 +128,7 @@ async def get_orgs(page: int = 1, limit: int = 10):
 
 #### Security ####################################################
 
-async def verify_org_rights(org_id: str,  current_user: User, action:str,):
+async def verify_org_rights(org_id: str,  current_user: User, action: str,):
     await check_database()
     orgs = learnhouseDB["organizations"]
 
@@ -138,8 +138,8 @@ async def verify_org_rights(org_id: str,  current_user: User, action:str,):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Organization does not exist")
 
-    isOwner = current_user.username in org["owners"]
-    hasRoleRights = await verify_user_rights_with_roles(action,current_user.username,org_id)
+    isOwner = current_user.user_id in org["owners"]
+    hasRoleRights = await verify_user_rights_with_roles(action, current_user.user_id, org_id)
 
     if not hasRoleRights and not isOwner:
         raise HTTPException(

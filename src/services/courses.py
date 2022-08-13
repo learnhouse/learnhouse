@@ -78,14 +78,14 @@ async def create_course(course_object: Course, current_user: User):
     # generate course_id with uuid4
     course_id = str(f"course_{uuid4()}")
 
-    hasRoleRights = await verify_user_rights_with_roles("create", current_user.username, course_id)
+    hasRoleRights = await verify_user_rights_with_roles("create", current_user.user_id, course_id)
 
     if not hasRoleRights:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Roles : Insufficient rights to perform this action")
 
     course = CourseInDB(course_id=course_id, authors=[
-        current_user.username], creationDate=str(datetime.now()), updateDate=str(datetime.now()), **course_object.dict())
+        current_user.user_id], creationDate=str(datetime.now()), updateDate=str(datetime.now()), **course_object.dict())
 
     course_in_db = courses.insert_one(course.dict())
 
@@ -185,7 +185,7 @@ async def create_coursechapter(coursechapter_object: CourseChapter, course_id: s
     # generate coursechapter_id with uuid4
     coursechapter_id = str(f"coursechapter_{uuid4()}")
 
-    hasRoleRights = await verify_user_rights_with_roles("create", current_user.username, coursechapter_id)
+    hasRoleRights = await verify_user_rights_with_roles("create", current_user.user_id, coursechapter_id)
 
     if not hasRoleRights:
         raise HTTPException(
@@ -209,7 +209,7 @@ async def update_coursechapter(coursechapter_object: CourseChapter,  coursechapt
 
     coursechapter = coursechapters.find_one(
         {"coursechapter_id": coursechapter_id})
-    
+
     # verify course rights
     await verify_rights(coursechapter["course_id"], current_user, "update")
     creationDate = coursechapter["creationDate"]
@@ -237,8 +237,8 @@ async def delete_coursechapter(coursechapter_id: str,  current_user: User):
 
     coursechapter = coursechapters.find_one(
         {"coursechapter_id": coursechapter_id})
-    
-     # verify course rights
+
+    # verify course rights
     await verify_rights(coursechapter["course_id"], current_user, "delete")
 
     if not coursechapter:
@@ -278,8 +278,8 @@ async def verify_rights(course_id: str, current_user: User, action: str):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail=f"Course/CourseChapter does not exist")
 
-    hasRoleRights = await verify_user_rights_with_roles(action, current_user.username, course_id)
-    isAuthor = current_user.username in course["authors"]
+    hasRoleRights = await verify_user_rights_with_roles(action, current_user.user_id, course_id)
+    isAuthor = current_user.user_id in course["authors"]
 
     if not hasRoleRights and not isAuthor:
         raise HTTPException(
