@@ -1,8 +1,8 @@
 from fastapi import Depends, FastAPI, APIRouter
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel
-from ..services.auth import *
-from ..services.users import *
+from src.services.auth import *
+from src.services.users import *
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/token")
 
