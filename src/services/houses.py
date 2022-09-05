@@ -26,6 +26,7 @@ class HouseInDB(House):
 
 #### Classes ####################################################
 
+# TODO : Add house photo upload and delete
 
 async def get_house(house_id: str, current_user: User):
     await check_database()

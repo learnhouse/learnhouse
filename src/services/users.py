@@ -38,6 +38,7 @@ class UserInDB(UserWithPassword):
 #### Classes ####################################################
 
 # TODO : user actions security
+# TODO : avatar upload and update
 
 
 async def get_user(username: str):
