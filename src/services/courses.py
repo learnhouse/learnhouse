@@ -32,6 +32,8 @@ class CourseInDB(Course):
 
 class CourseElement(BaseModel):
     element_id: str
+    content: str
+    content_type: str
     position: int
 
 
@@ -51,6 +53,9 @@ class CourseChapterInDB(CourseChapter):
 
 
 #### Classes ####################################################
+
+# TODO : Add courses photo & cover upload and delete
+
 
 # Courses
 

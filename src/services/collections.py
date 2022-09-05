@@ -14,7 +14,7 @@ from datetime import datetime
 class Collection(BaseModel):
     name: str
     description: str
-    elements: List[str]
+    courses: List[str] # course_id
 
 
 class CollectionInDB(Collection):
