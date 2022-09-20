@@ -164,25 +164,6 @@ async def get_courses(page: int = 1, limit: int = 10):
 
 # CoursesChapters
 
-
-async def get_coursechapter(coursechapter_id: str, current_user: User):
-    await check_database()
-    coursechapters = learnhouseDB["coursechapters"]
-
-    coursechapter = coursechapters.find_one(
-        {"coursechapter_id": coursechapter_id})
-
-    # verify course rights
-    await verify_rights(coursechapter["course_id"], current_user, "read")
-
-    if not coursechapter:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="CourseChapter does not exist")
-
-    coursechapter = CourseChapter(**coursechapter)
-    return coursechapter
-
-
 async def create_coursechapter(coursechapter_object: CourseChapter, course_id: str, current_user: User):
     await check_database()
     coursechapters = learnhouseDB["coursechapters"]
@@ -207,6 +188,23 @@ async def create_coursechapter(coursechapter_object: CourseChapter, course_id: s
 
     return coursechapter.dict()
 
+
+async def get_coursechapter(coursechapter_id: str, current_user: User):
+    await check_database()
+    coursechapters = learnhouseDB["coursechapters"]
+
+    coursechapter = coursechapters.find_one(
+        {"coursechapter_id": coursechapter_id})
+
+    # verify course rights
+    await verify_rights(coursechapter["course_id"], current_user, "read")
+
+    if not coursechapter:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="CourseChapter does not exist")
+
+    coursechapter = CourseChapter(**coursechapter)
+    return coursechapter
 
 async def update_coursechapter(coursechapter_object: CourseChapter,  coursechapter_id: str, current_user: User):
     await check_database()
