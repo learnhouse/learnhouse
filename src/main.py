@@ -1,6 +1,5 @@
 from fastapi import APIRouter
 from src.routers import collections, courses, users, auth, houses, orgs, roles
-from starlette.responses import FileResponse
 
 
 global_router = APIRouter(prefix="/api")
