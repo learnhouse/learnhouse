@@ -8,7 +8,8 @@ const Login = () => {
 
   const handleSubmit = (e: any) => {
     e.preventDefault();
-    console.log(email, password);
+    console.log({ email, password });
+    alert(JSON.stringify({ email, password }));
   };
 
   const handleEmailChange = (e: any) => {
@@ -21,7 +22,7 @@ const Login = () => {
 
   return (
     <div>
-      <Layout>
+      <Layout title="Login">
         <Title>Login</Title>
 
         <form>
