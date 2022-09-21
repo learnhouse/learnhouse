@@ -8,7 +8,11 @@ export const Menu = () => {
     <GlobalHeader>
       <LogoArea>
         <Logo>
-          <img src="./learnhouse_logo.png" alt="" />
+          <Link href={"/"}>
+            <a>
+              <img src="./learnhouse_logo.png" alt="" />
+            </a>
+          </Link>
         </Logo>
         <div id="accounts"></div>
       </LogoArea>
