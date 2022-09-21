@@ -16,7 +16,7 @@ const Layout = (props: any) => {
 
       <Footer>
         <a href="" target="_blank" rel="noopener noreferrer">
-          Powered by <img src="/learnhouse_logo.png" alt="Learnhouse Logo"  />
+          <img src="/learnhouse_icon.png" alt="Learnhouse Logo"  />
         </a>
       </Footer>
     </div>
@@ -34,7 +34,8 @@ const Footer = styled.footer`
   font-size: 16px;
 
   img{
-    width: 100px;
+    width: 40px;
+    opacity: 0.40;
     display: inline;
   }
 `;

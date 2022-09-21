@@ -1,6 +1,7 @@
 import React from "react";
 import styled from "styled-components";
-import { HeaderProfileBox } from "../auth/HeaderProfileBox";
+import { HeaderProfileBox } from "../../auth/HeaderProfileBox";
+import Link from "next/link";
 
 export const Menu = () => {
   return (
