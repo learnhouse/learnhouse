@@ -1,9 +1,7 @@
-from typing import Union
 from fastapi import FastAPI
-from src import main
-from fastapi.staticfiles import StaticFiles
 from src.main import global_router
-import pymongo
+from fastapi.middleware.cors import CORSMiddleware
+
 
 # Init
 app = FastAPI(
@@ -12,9 +10,19 @@ app = FastAPI(
     version="0.1.0",
     root_path="/"
 )
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_credentials=True,
+    allow_headers=["*"],
+)
 
 app.include_router(global_router)
+
+
 
 @app.get("/")
 async def root():
     return {"Message": "Welcome to LearnHouse ✨"}
+

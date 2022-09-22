@@ -1,6 +1,7 @@
 import React from "react";
 import Layout from "../components/ui/layout";
 import { Title } from "../components/ui/styles/title";
+import { signup } from "../services/auth";
 
 const SignUp = () => {
   const [email, setEmail] = React.useState("");
@@ -11,6 +12,7 @@ const SignUp = () => {
     e.preventDefault();
     console.log({ email, password, username });
     alert(JSON.stringify({ email, password, username }));
+    signup({ email, password, username });
   };
 
   const handleEmailChange = (e: any) => {

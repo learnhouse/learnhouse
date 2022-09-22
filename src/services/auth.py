@@ -23,8 +23,8 @@ class TokenData(BaseModel):
 #### Classes ####################################################
 
 
-async def authenticate_user(username: str, password: str):
-    user = await security_get_user(username)
+async def authenticate_user(email: str, password: str):
+    user = await security_get_user(email)
     if not user:
         return False
     if not await security_verify_password(password, user.password):

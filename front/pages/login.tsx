@@ -1,6 +1,7 @@
 import React from "react";
 import Layout from "../components/ui/layout";
 import { Title } from "../components/ui/styles/title";
+import { loginAndGetToken } from "../services/auth";
 
 const Login = () => {
   const [email, setEmail] = React.useState("");
@@ -10,6 +11,7 @@ const Login = () => {
     e.preventDefault();
     console.log({ email, password });
     alert(JSON.stringify({ email, password }));
+    loginAndGetToken(email, password);
   };
 
   const handleEmailChange = (e: any) => {

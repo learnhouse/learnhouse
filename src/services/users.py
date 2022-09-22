@@ -12,10 +12,10 @@ class User(BaseModel):
     username: str
     email: str
     full_name: str | None = None
-    disabled: bool | None = None
+    disabled: bool | None = False
     avatar_url: str | None = None
-    verified: bool
-    user_type: str
+    verified: bool | None = False
+    user_type: str | None = None
     bio: str | None = None
 
 
@@ -69,15 +69,15 @@ async def get_user_by_userid(user_id: str):
     return user
 
 
-async def security_get_user(username: str):
+async def security_get_user(email: str):
     check_database()
     users = learnhouseDB["users"]
 
-    user = users.find_one({"username": username})
+    user = users.find_one({"email": email})
 
     if not user:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="User does not exist")
+            status_code=status.HTTP_409_CONFLICT, detail="User with Email does not exist")
 
     return UserInDB(**user)
 
