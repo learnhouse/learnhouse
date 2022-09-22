@@ -1,7 +1,7 @@
 import React from "react";
 import Layout from "../components/ui/layout";
 import { Title } from "../components/ui/styles/title";
-import { signup } from "../services/auth";
+import { signup } from "../services/auth/auth";
 
 const SignUp = () => {
   const [email, setEmail] = React.useState("");

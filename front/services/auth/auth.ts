@@ -1,4 +1,4 @@
-import { getAPIUrl } from "./config";
+import { getAPIUrl } from "../config";
 
 interface LoginAndGetTokenResponse {
   access_token: "string";
@@ -9,7 +9,7 @@ interface LoginAndGetTokenResponse {
 
 export async function loginAndGetToken(username: string, password: string): Promise<LoginAndGetTokenResponse> {
   // Request Config
-  const HeadersConfig = new Headers({ "Content-Type": "application/x-www-form-urlencoded", Origin: "http://localhost:3000" });
+  const HeadersConfig = new Headers({ "Content-Type": "application/x-www-form-urlencoded" , Origin: "http://localhost:3000" });
   const urlencoded = new URLSearchParams({ username: username, password: password });
 
   const requestOptions: any = {
@@ -17,11 +17,13 @@ export async function loginAndGetToken(username: string, password: string): Prom
     headers: HeadersConfig,
     body: urlencoded,
     redirect: "follow",
+    credentials: "include",
   };
 
-  return fetch(`${getAPIUrl()}auth/token`, requestOptions)
-    .then((result) => result.json())
-    .catch((error) => console.log("error", error));
+  // fetch using await and async
+  const response = await fetch(`${getAPIUrl()}auth/token`, requestOptions);
+  const data = await response.json();
+  return data;
 }
 
 export async function getUserInfo(token: string): Promise<any> {
@@ -30,6 +32,7 @@ export async function getUserInfo(token: string): Promise<any> {
     method: "GET",
     headers: HeadersConfig,
     redirect: "follow",
+    credentials: "include"
   };
 
   return fetch(`${getAPIUrl()}auth/users/me`, requestOptions)
