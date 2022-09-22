@@ -1,9 +1,9 @@
-from fastapi import Depends, FastAPI, APIRouter, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from pydantic import BaseModel
+from fastapi import Depends, APIRouter, HTTPException, status
+from fastapi.security import  OAuth2PasswordRequestForm
 from src.services.auth import *
 from src.services.users import *
-from datetime import datetime, timedelta
+from datetime import  timedelta
+from fastapi.responses import JSONResponse
 
 router = APIRouter()
 
@@ -24,4 +24,8 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     access_token = create_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
-    return {"access_token": access_token, "token_type": "bearer"}
+    
+    response = JSONResponse(content={"access_token" : access_token ,"token_type": "bearer"})
+    response.set_cookie(key="user_token", value=access_token, httponly=True, expires="3600",secure=True)
+    
+    return response
