@@ -5,3 +5,4 @@ pymongo==4.1.1
 python-multipart
 python-jose
 passlib
+fastapi-jwt-auth

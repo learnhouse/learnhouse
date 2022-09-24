@@ -5,9 +5,28 @@ from passlib.context import CryptContext
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
 from src.services.users import *
+from fastapi import Cookie, FastAPI
 from src.services.security import *
+from fastapi_jwt_auth import AuthJWT
+from fastapi_jwt_auth.exceptions import AuthJWTException
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
+
+#### JWT Auth ####################################################
+class Settings(BaseModel):
+    authjwt_secret_key: str = "secret"
+    authjwt_token_location = {"cookies", "headers"}
+    authjwt_cookie_csrf_protect = False
+    
+@AuthJWT.load_config
+def get_config():
+    return Settings()
+
+
+
+#### JWT Auth ####################################################
+
+
 
 #### Classes ####################################################
 
@@ -42,7 +61,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-
+# DEPRECATED
 async def get_current_user(token: str = Depends(oauth2_scheme)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -57,7 +76,28 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         token_data = TokenData(username=username)
     except JWTError:
         raise credentials_exception
-    user = await security_get_user(username=token_data.username)
+    user = await security_get_user(email=token_data.username)
     if user is None:
         raise credentials_exception
     return PublicUser(**user.dict())
+
+
+async def get_current_user_jwt(Authorize: AuthJWT = Depends()):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    
+    try:
+        Authorize.jwt_required()
+        username = Authorize.get_jwt_subject()
+        token_data = TokenData(username=username)
+    except JWTError:
+        raise credentials_exception
+    user = await security_get_user(email=token_data.username) # treated as an email
+    if user is None:
+        raise credentials_exception
+    return PublicUser(**user.dict())
+    
+    

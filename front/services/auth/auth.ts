@@ -5,7 +5,8 @@ interface LoginAndGetTokenResponse {
   token_type: "string";
 }
 
-// TODO : everything in this file need to be refactored / mvp phase
+// ⚠️ mvp phase code 
+// TODO : everything in this file need to be refactored including security issues fix 
 
 export async function loginAndGetToken(username: string, password: string): Promise<LoginAndGetTokenResponse> {
   // Request Config
@@ -21,21 +22,34 @@ export async function loginAndGetToken(username: string, password: string): Prom
   };
 
   // fetch using await and async
-  const response = await fetch(`${getAPIUrl()}auth/token`, requestOptions);
+  const response = await fetch(`${getAPIUrl()}auth/login`, requestOptions);
   const data = await response.json();
   return data;
 }
 
 export async function getUserInfo(token: string): Promise<any> {
   const HeadersConfig = new Headers({ Authorization: `Bearer ${token}`, Origin: "http://localhost:3000" });
+
   const requestOptions: any = {
     method: "GET",
     headers: HeadersConfig,
     redirect: "follow",
-    credentials: "include"
+    credentials: "include",
   };
 
-  return fetch(`${getAPIUrl()}auth/users/me`, requestOptions)
+  return fetch(`${getAPIUrl()}users/profile`, requestOptions)
+    .then((result) => result.json())
+    .catch((error) => console.log("error", error));
+}
+
+export async function getRefreshToken(): Promise<any> {
+  const requestOptions: any = {
+    method: "POST",
+    redirect: "follow",
+    credentials: "include",
+  };
+
+  return fetch(`${getAPIUrl()}auth/refresh`, requestOptions)
     .then((result) => result.json())
     .catch((error) => console.log("error", error));
 }

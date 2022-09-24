@@ -6,8 +6,10 @@ import Link from "next/link";
 export const Menu = () => {
   return (
     <GlobalHeader>
+       
       <LogoArea>
         <Logo>
+          <img style={{ width: "30px", opacity: "0.9", margin: "10px", paddingRight: "4px" }} src="./learnhouse_icon.png" alt="" />
           <Link href={"/"}>
             <a>
               <img src="./learnhouse_logo.png" alt="" />
@@ -50,7 +52,9 @@ const Logo = styled.div`
   display: flex;
   place-items: center;
   padding-left: 20px;
-
+ a{
+  margin: 0;
+ }
   img {
     width: 100px;
   }
