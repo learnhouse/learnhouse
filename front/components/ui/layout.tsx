@@ -13,7 +13,7 @@ const Layout = (props: any) => {
           <meta name="description" content={props.description} />
           <link rel="icon" href="/favicon.ico" />
         </Head>
-        <Header></Header>
+        <PreAlphaLabel>🚧 Pre-Alpha</PreAlphaLabel>
         <Main className="min-h-screen">{props.children}</Main>
 
         <Footer>
@@ -42,5 +42,17 @@ const Footer = styled.footer`
     display: inline;
   }
 `;
+
+const PreAlphaLabel = styled.div`
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  padding: 9px;
+  background-color: #080501;
+  color: white;
+  font-size: 19px;
+  font-weight: bold;
+  border-radius: 5px 0 0 0px;
+  `;
 
 export default Layout;

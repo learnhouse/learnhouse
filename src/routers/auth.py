@@ -59,6 +59,7 @@ async def login(Authorize: AuthJWT = Depends(), form_data: OAuth2PasswordRequest
     access_token = Authorize.create_access_token(subject=form_data.username)
     refresh_token = Authorize.create_refresh_token(subject=form_data.username)
     Authorize.set_refresh_cookies(refresh_token)
+    Authorize.set_access_cookies(access_token)
     return {"access_token": access_token , "refresh_token": refresh_token}
 
 @router.delete('/logout')

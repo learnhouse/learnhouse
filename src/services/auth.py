@@ -15,8 +15,10 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 #### JWT Auth ####################################################
 class Settings(BaseModel):
     authjwt_secret_key: str = "secret"
-    authjwt_token_location = {"cookies", "headers"}
+    authjwt_token_location = {"cookies"}
     authjwt_cookie_csrf_protect = False
+    authjwt_access_token_expires = False # (pre-alpha only) # TODO: set to 1 hour 
+    
     
 @AuthJWT.load_config
 def get_config():
