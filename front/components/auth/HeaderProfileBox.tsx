@@ -1,12 +1,15 @@
 import React from "react";
 import styled from "styled-components";
 import Link from "next/link";
+import { AuthContext } from "../security/AuthProvider";
 
 export const HeaderProfileBox = () => {
+  const auth: any = React.useContext(AuthContext);
+
   return (
     <ProfileArea>
       {" "}
-      <span>HeaderProfileBox</span>{" "}
+      <span>HeaderProfileBox {String(auth.isAuthenticated)}</span>{" "}
       <UnidentifiedArea>
         <ul>
           <li>

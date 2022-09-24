@@ -2,23 +2,26 @@ import React from "react";
 import Head from "next/head";
 import { Header } from "./header";
 import styled from "styled-components";
+import AuthProvider from "../security/AuthProvider";
 
 const Layout = (props: any) => {
   return (
     <div>
-      <Head>
-        <title>{props.title}</title>
-        <meta name="description" content={props.description} />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-      <Header></Header>
-      <Main className="min-h-screen">{props.children}</Main>
+      <AuthProvider>
+        <Head>
+          <title>{props.title}</title>
+          <meta name="description" content={props.description} />
+          <link rel="icon" href="/favicon.ico" />
+        </Head>
+        <Header></Header>
+        <Main className="min-h-screen">{props.children}</Main>
 
-      <Footer>
-        <a href="" target="_blank" rel="noopener noreferrer">
-          <img src="/learnhouse_icon.png" alt="Learnhouse Logo"  />
-        </a>
-      </Footer>
+        <Footer>
+          <a href="" target="_blank" rel="noopener noreferrer">
+            <img src="/learnhouse_icon.png" alt="Learnhouse Logo" />
+          </a>
+        </Footer>
+      </AuthProvider>
     </div>
   );
 };
@@ -33,9 +36,9 @@ const Footer = styled.footer`
   margin: 20px;
   font-size: 16px;
 
-  img{
-    width: 40px;
-    opacity: 0.40;
+  img {
+    width: 20px;
+    opacity: 0.4;
     display: inline;
   }
 `;
