@@ -62,7 +62,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     return encoded_jwt
 
 # DEPRECATED
-async def get_current_user(token: str = Depends(oauth2_scheme)):
+async def get_current_user_old(token: str = Depends(oauth2_scheme)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -82,7 +82,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     return PublicUser(**user.dict())
 
 
-async def get_current_user_jwt(Authorize: AuthJWT = Depends()):
+async def get_current_user(Authorize: AuthJWT = Depends()):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
