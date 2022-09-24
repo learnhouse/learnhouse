@@ -1,5 +1,6 @@
 import Link from "next/link";
 import React from "react";
+import AuthenticatedOnly from "../../components/security/AuthenticatedOnly";
 import Layout from "../../components/ui/layout";
 import { Title } from "../../components/ui/styles/title";
 import { deleteOrganizationFromBackend, getUserOrganizations } from "../../services/orgs";
@@ -32,6 +33,7 @@ const Organizations = () => {
   return (
     
     <Layout>
+      <AuthenticatedOnly>
       <Title>
         Your Organizations{" "}
         <Link href={"/organizations/new"}>
@@ -59,6 +61,7 @@ const Organizations = () => {
           ))}
         </div>
       )}
+      </AuthenticatedOnly>
       
     </Layout>
   );
