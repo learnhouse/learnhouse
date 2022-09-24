@@ -1,4 +1,5 @@
 import React from "react";
+import { Header } from "../components/ui/header";
 import Layout from "../components/ui/layout";
 import { Title } from "../components/ui/styles/title";
 import { loginAndGetToken } from "../services/auth/auth";
@@ -25,6 +26,7 @@ const Login = () => {
   return (
     <div>
       <Layout title="Login">
+      <Header></Header>
         <Title>Login</Title>
 
         <form>

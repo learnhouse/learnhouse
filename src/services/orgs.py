@@ -96,7 +96,7 @@ async def update_org(org_object: Organization, org_id: str, current_user: User):
 async def delete_org(org_id: str, current_user: User):
     await check_database()
 
-    await verify_org_rights(org_id, current_user)
+    await verify_org_rights(org_id, current_user,"delete")
 
     orgs = learnhouseDB["organizations"]
 
@@ -116,14 +116,25 @@ async def delete_org(org_id: str, current_user: User):
 
 
 async def get_orgs(page: int = 1, limit: int = 10):
-    ## TODO : auth
+    ## TODO : Deprecated
     await check_database()
-    orgs = learnhouseDB["orgs"]
+    orgs = learnhouseDB["organizations"]
 
     # get all orgs from database
     all_orgs = orgs.find().sort("name", 1).skip(10 * (page - 1)).limit(limit)
 
-    return [json.loads(json.dumps(house, default=str)) for house in all_orgs]
+    return [json.loads(json.dumps(org, default=str)) for org in all_orgs]
+
+
+async def get_orgs_by_user(user_id: str, page: int = 1, limit: int = 10):
+    await check_database()
+    orgs = learnhouseDB["organizations"]
+    print(user_id)
+    # find all orgs where user_id is in owners or admins arrays 
+    all_orgs = orgs.find({"$or": [{"owners": user_id}, {"admins": user_id}]}).sort("name", 1).skip(10 * (page - 1)).limit(limit)
+    
+    return [json.loads(json.dumps(org, default=str)) for org in all_orgs]
+    
 
 
 #### Security ####################################################

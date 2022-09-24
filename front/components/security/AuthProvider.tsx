@@ -28,7 +28,7 @@ const AuthProvider = (props: any) => {
       userInfo = await getUserInfo(access_token);
       isAuthenticated = true;
       setAuth({ access_token, isAuthenticated, userInfo, isLoading });
-    } else if (!access_token) {
+    } else{
       isAuthenticated = false;
       setAuth({ access_token, isAuthenticated, userInfo, isLoading });
     }

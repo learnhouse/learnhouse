@@ -1,4 +1,5 @@
 import React from "react";
+import { Header } from "../components/ui/header";
 import Layout from "../components/ui/layout";
 import { Title } from "../components/ui/styles/title";
 import { signup } from "../services/auth/auth";
@@ -30,6 +31,7 @@ const SignUp = () => {
   return (
     <div>
       <Layout title="Sign up">
+      <Header></Header>
         <Title>Sign up </Title>
 
         <form>
