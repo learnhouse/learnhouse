@@ -9,7 +9,9 @@ export const HeaderProfileBox = () => {
   return (
     <ProfileArea>
       {" "}
-      <span>HeaderProfileBox {String(auth.isAuthenticated)}</span>{" "}
+      <span>
+        HeaderProfileBox <br />  isLogged : {String(auth.isAuthenticated)}  <br /> user : {String(auth.userInfo.username)}
+      </span>{" "}
       <UnidentifiedArea>
         <ul>
           <li>
@@ -41,7 +43,8 @@ const ProfileArea = styled.div`
     padding: 6px;
     font-size: 12px;
     margin: 3px;
-    background-color: #19191939;
+    // blur 
+    background-color: #19191960;
     border-radius: 5px;
     color: white;
     width: auto;
