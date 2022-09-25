@@ -49,7 +49,7 @@ const Organizations = () => {
         <div>
           {userOrganizations.map((org: any) => (
             <div key={org.org_id}>
-              <Link href={`/organizations/${org.org_id}`}>
+              <Link href={`/org/${org.slug}`}>
                 <a>
                   <h3>{org.name}</h3>
                 </a>

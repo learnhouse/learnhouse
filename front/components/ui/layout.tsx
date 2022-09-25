@@ -43,7 +43,7 @@ const Footer = styled.footer`
   }
 `;
 
-const PreAlphaLabel = styled.div`
+export const PreAlphaLabel = styled.div`
   position: fixed;
   bottom: 0;
   right: 0;
