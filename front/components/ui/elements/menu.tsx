@@ -1,7 +1,10 @@
 import React from "react";
 import styled from "styled-components";
 import { HeaderProfileBox } from "../../auth/HeaderProfileBox";
+import learnhouseIcon from 'public/learnhouse_icon.png'
+import learnhouseLogo from 'public/learnhouse_logo.png'
 import Link from "next/link";
+import Image from "next/image";
 
 export const Menu = () => {
   return (
@@ -9,10 +12,10 @@ export const Menu = () => {
        
       <LogoArea>
         <Logo>
-          <img style={{ width: "30px", opacity: "0.9", margin: "10px", paddingRight: "4px" }} src="./learnhouse_icon.png" alt="" />
+          <Image width={25} height={25} src={learnhouseIcon} alt="" />
           <Link href={"/"}>
             <a>
-              <img src="./learnhouse_logo.png" alt="" />
+            <Image  width={108} height={28} src={learnhouseLogo} alt="" />
             </a>
           </Link>
         </Logo>
@@ -54,10 +57,10 @@ const Logo = styled.div`
   padding-left: 20px;
  a{
   margin: 0;
+  padding-left: 10px;
+  padding-top: 2px;
  }
-  img {
-    width: 100px;
-  }
+  
 `;
 
 const SearchArea = styled.div`

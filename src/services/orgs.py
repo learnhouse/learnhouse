@@ -15,6 +15,7 @@ class Organization(BaseModel):
     name: str
     description: str
     email: str
+    slug :str 
 
 
 class OrganizationInDB(Organization):
@@ -45,11 +46,11 @@ async def create_org(org_object: Organization, current_user: User):
     orgs = learnhouseDB["organizations"]
 
     # find if org already exists using name
-    isOrgAvailable = orgs.find_one({"name": org_object.name})
+    isOrgAvailable = orgs.find_one({"slug": org_object.slug})
 
     if isOrgAvailable:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Organization name already exists")
+            status_code=status.HTTP_409_CONFLICT, detail="Organization slug already exists")
 
     # generate org_id with uuid4
     org_id = str(f"org_{uuid4()}")
