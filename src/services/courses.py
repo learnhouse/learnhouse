@@ -16,9 +16,11 @@ class Course(BaseModel):
     mini_description: str
     description: str
     photo: str
+    learnings: List[str]
     cover_photo: str
     public: bool
     chapters: List[str]
+    org_id: str
 
 
 class CourseInDB(Course):
@@ -59,11 +61,11 @@ class CourseChapterInDB(CourseChapter):
 
 # Courses
 
-async def get_course(course_id: str, current_user: User):
+async def get_course(course_id: str, org_id :str , current_user: User):
     await check_database()
     courses = learnhouseDB["courses"]
 
-    course = courses.find_one({"course_id": course_id})
+    course = courses.find_one({"course_id": course_id , "org_id" : org_id})
 
     # verify course rights
     await verify_rights(course_id, current_user, "read")
@@ -76,12 +78,14 @@ async def get_course(course_id: str, current_user: User):
     return course
 
 
-async def create_course(course_object: Course, current_user: User):
+async def create_course(course_object: Course, org_id : str , current_user: User):
     await check_database()
     courses = learnhouseDB["courses"]
 
     # generate course_id with uuid4
     course_id = str(f"course_{uuid4()}")
+    
+    course_object.org_id = org_id
 
     hasRoleRights = await verify_user_rights_with_roles("create", current_user.user_id, course_id)
 
@@ -153,12 +157,12 @@ async def delete_course(course_id: str, current_user: User):
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Unavailable database")
 
 
-async def get_courses(page: int = 1, limit: int = 10):
+async def get_courses(page: int = 1, limit: int = 10 , org_id : str = None):
     await check_database()
     courses = learnhouseDB["courses"]
     # TODO : Get only courses that user is admin/has roles of
     # get all courses from database
-    all_courses = courses.find().sort("name", 1).skip(10 * (page - 1)).limit(limit)
+    all_courses = courses.find({"org_id": org_id}).sort("name", 1).skip(10 * (page - 1)).limit(limit)
 
     return [json.loads(json.dumps(course, default=str)) for course in all_courses]
 

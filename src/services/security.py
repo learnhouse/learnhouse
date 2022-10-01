@@ -73,7 +73,7 @@ async def check_element_type(element_id):
     elif element_id.startswith("org_"):
         return "organizations"
     elif element_id.startswith("coursechapter_"):
-        return "courses"
+        return "coursechapters"
     elif element_id.startswith("collection_"):
         return "collections"
     else:

@@ -22,6 +22,13 @@ class OrganizationInDB(Organization):
     org_id: str
     owners: List[str]
     admins: List[str]
+    
+class PublicOrganization(Organization):
+    name: str
+    description: str
+    email: str
+    slug: str
+    org_id: str
 
 
 #### Classes ####################################################
@@ -37,7 +44,20 @@ async def get_organization(org_id: str):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Organization does not exist")
 
-    org = Organization(**org)
+    org = PublicOrganization(**org)
+    return org
+
+async def get_organization_by_slug(org_slug: str):
+    await check_database()
+    orgs = learnhouseDB["organizations"]
+
+    org = orgs.find_one({"slug": org_slug})
+
+    if not org:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="Organization does not exist")
+
+    org = PublicOrganization(**org)
     return org
 
 

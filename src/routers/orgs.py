@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 from src.services.auth import get_current_user
-from src.services.orgs import Organization, create_org, delete_org, get_organization, get_orgs, get_orgs_by_user, update_org
+from src.services.orgs import Organization, create_org, delete_org, get_organization, get_organization_by_slug, get_orgs, get_orgs_by_user, update_org
 from src.services.users import User
 
 
@@ -21,6 +21,13 @@ async def api_get_org(org_id: str, current_user: User = Depends(get_current_user
     Get single Org by ID
     """
     return await get_organization(org_id, current_user)
+
+@router.get("/slug/{org_slug}")
+async def api_get_org(org_slug: str, current_user: User = Depends(get_current_user)):
+    """
+    Get single Org by Slug
+    """
+    return await get_organization_by_slug(org_slug)
 
 
 @router.get("/page/{page}/limit/{limit}")

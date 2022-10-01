@@ -1,21 +1,24 @@
 import React from "react";
 import styled from "styled-components";
 import { HeaderProfileBox } from "../../auth/HeaderProfileBox";
-import learnhouseIcon from 'public/learnhouse_icon.png'
-import learnhouseLogo from 'public/learnhouse_logo.png'
+import learnhouseIcon from "public/learnhouse_icon.png";
+import learnhouseLogo from "public/learnhouse_logo.png";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/router";
 
 export const Menu = () => {
+  const router = useRouter();
+  const { orgslug } = router.query;
+
   return (
     <GlobalHeader>
-       
       <LogoArea>
         <Logo>
           <Image width={25} height={25} src={learnhouseIcon} alt="" />
           <Link href={"/"}>
             <a>
-            <Image  width={108} height={28} src={learnhouseLogo} alt="" />
+              <Image width={108} height={28} src={learnhouseLogo} alt="" />
             </a>
           </Link>
         </Logo>
@@ -28,7 +31,11 @@ export const Menu = () => {
       </SearchArea>
       <MenuArea>
         <ul>
-          <li>Courses </li>
+          <li>
+            <Link href={"/org/" + orgslug + "/courses"}>
+              <a>Courses</a>
+            </Link>
+          </li>
           <li>Collections</li>
           <li>Activity</li>
           <li>More</li>
@@ -55,12 +62,11 @@ const Logo = styled.div`
   display: flex;
   place-items: center;
   padding-left: 20px;
- a{
-  margin: 0;
-  padding-left: 10px;
-  padding-top: 2px;
- }
-  
+  a {
+    margin: 0;
+    padding-left: 10px;
+    padding-top: 2px;
+  }
 `;
 
 const SearchArea = styled.div`

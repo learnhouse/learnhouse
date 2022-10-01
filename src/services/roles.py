@@ -20,7 +20,7 @@ class Permission(BaseModel):
 
 
 class Elements(BaseModel):
-    course: List[str]
+    courses: List[str]
     users: List[str]
     houses: List[str]
     collections: List[str]
