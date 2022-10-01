@@ -9,27 +9,27 @@ router = APIRouter()
 
 
 @router.post("/")
-async def api_create_course(course_object: Course, current_user: User = Depends(get_current_user)):
+async def api_create_course(course_object: Course, org_id :str ,  current_user: User = Depends(get_current_user)):
     """
     Create new Course
     """
-    return await create_course(course_object, current_user)
+    return await create_course(course_object, org_id ,  current_user)
 
 
 @router.get("/{course_id}")
-async def api_get_course(course_id: str, current_user: User = Depends(get_current_user)):
+async def api_get_course(course_id: str, org_id : str,  current_user: User = Depends(get_current_user)):
     """
     Get single Course by course_id
     """
-    return await get_course(course_id, current_user=current_user)
+    return await get_course(course_id, org_id,current_user=current_user)
 
 
-@router.get("/page/{page}/limit/{limit}")
-async def api_get_course_by(page: int, limit: int):
+@router.get("/{org_id}/page/{page}/limit/{limit}")
+async def api_get_course_by(page: int, limit: int, org_id: str):
     """
     Get houses by page and limit
     """
-    return await get_courses(page, limit)
+    return await get_courses(page, limit, org_id)
 
 
 @router.put("/{course_id}")

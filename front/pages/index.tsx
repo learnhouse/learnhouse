@@ -21,7 +21,7 @@ const Home: NextPage = () => {
         }}
         exit={{ opacity: 1 }}
       >
-        <Image alt="Learnhouse Icon" height={295} width={295} quality={100} src={learnhouseBigIcon}></Image>
+        <Image alt="Learnhouse Icon" height={260} width={260} quality={100} src={learnhouseBigIcon}></Image>
       </motion.div>
       <br />
       <br />
