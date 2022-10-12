@@ -2,14 +2,14 @@ from fastapi import APIRouter, Depends
 from src.services.auth import get_current_user
 
 from src.services.roles import Role, create_role, delete_role, get_role, get_roles, update_role
-from src.services.users import User
+from src.services.users import PublicUser, User
 
 
 router = APIRouter()
 
 
 @router.post("/")
-async def api_create_role(role_object: Role, current_user: User = Depends(get_current_user)):
+async def api_create_role(role_object: Role, current_user: PublicUser = Depends(get_current_user)):
     """
     Create new role
     """
@@ -33,7 +33,7 @@ async def api_get_role_by(page: int, limit: int):
 
 
 @router.put("/{role_id}")
-async def api_update_role(role_object: Role, role_id: str, current_user: User = Depends(get_current_user)):
+async def api_update_role(role_object: Role, role_id: str, current_user: PublicUser = Depends(get_current_user)):
     """
     Update role by role_id
     """
@@ -41,7 +41,7 @@ async def api_update_role(role_object: Role, role_id: str, current_user: User = 
 
 
 @router.delete("/{role_id}")
-async def api_delete_role(role_id: str, current_user: User = Depends(get_current_user)):
+async def api_delete_role(role_id: str, current_user: PublicUser = Depends(get_current_user)):
     """
     Delete role by ID
     """

@@ -1,15 +1,15 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, File, UploadFile
 from src.services.auth import get_current_user
 
 from src.services.courses import Course, CourseChapter, create_course, create_coursechapter, delete_coursechapter, get_course, get_coursechapter, get_coursechapters, get_courses, update_course, delete_course, update_coursechapter
-from src.services.users import User
+from src.services.users import PublicUser, User
 
 
 router = APIRouter()
 
 
 @router.post("/")
-async def api_create_course(course_object: Course, org_id :str ,  current_user: User = Depends(get_current_user)):
+async def api_create_course(course_object: Course, org_id :str ,  current_user: PublicUser = Depends(get_current_user)):
     """
     Create new Course
     """
@@ -17,7 +17,7 @@ async def api_create_course(course_object: Course, org_id :str ,  current_user: 
 
 
 @router.get("/{course_id}")
-async def api_get_course(course_id: str, org_id : str,  current_user: User = Depends(get_current_user)):
+async def api_get_course(course_id: str, org_id : str,  current_user: PublicUser = Depends(get_current_user)):
     """
     Get single Course by course_id
     """
@@ -33,7 +33,7 @@ async def api_get_course_by(page: int, limit: int, org_id: str):
 
 
 @router.put("/{course_id}")
-async def api_update_course(course_object: Course, course_id: str, current_user: User = Depends(get_current_user)):
+async def api_update_course(course_object: Course, course_id: str, current_user: PublicUser = Depends(get_current_user)):
     """
     Update Course by course_id
     """
@@ -41,7 +41,7 @@ async def api_update_course(course_object: Course, course_id: str, current_user:
 
 
 @router.delete("/{course_id}")
-async def api_delete_course(course_id: str, current_user: User = Depends(get_current_user)):
+async def api_delete_course(course_id: str, current_user: PublicUser = Depends(get_current_user)):
     """
     Delete Course by ID
     """
@@ -52,7 +52,7 @@ async def api_delete_course(course_id: str, current_user: User = Depends(get_cur
 
 
 @router.post("/chapters/")
-async def api_create_coursechapter(coursechapter_object: CourseChapter, course_id: str, current_user: User = Depends(get_current_user)):
+async def api_create_coursechapter(coursechapter_object: CourseChapter, course_id: str, current_user: PublicUser = Depends(get_current_user)):
     """
     Create new CourseChapter
     """
@@ -60,7 +60,7 @@ async def api_create_coursechapter(coursechapter_object: CourseChapter, course_i
 
 
 @router.get("/chapters/{coursechapter_id}")
-async def api_get_coursechapter(coursechapter_id: str, current_user: User = Depends(get_current_user)):
+async def api_get_coursechapter(coursechapter_id: str, current_user: PublicUser = Depends(get_current_user)):
     """
     Get single CourseChapter by coursechapter_id
     """
@@ -76,7 +76,7 @@ async def api_get_coursechapter_by(course_id: str, page: int, limit: int):
 
 
 @router.put("/chapters/{coursechapter_id}")
-async def api_update_coursechapter(coursechapter_object: CourseChapter, coursechapter_id: str, current_user: User = Depends(get_current_user)):
+async def api_update_coursechapter(coursechapter_object: CourseChapter, coursechapter_id: str, current_user: PublicUser = Depends(get_current_user)):
     """
     Update CourseChapters by course_id
     """
@@ -84,7 +84,7 @@ async def api_update_coursechapter(coursechapter_object: CourseChapter, coursech
 
 
 @router.delete("/chapters/{coursechapter_id}")
-async def api_delete_coursechapter(coursechapter_id: str, current_user: User = Depends(get_current_user)):
+async def api_delete_coursechapter(coursechapter_id: str, current_user: PublicUser = Depends(get_current_user)):
     """
     Delete CourseChapters by ID
     """

@@ -11,7 +11,7 @@ from fastapi_jwt_auth.exceptions import AuthJWTException
 # (c) LearnHouse 2022  
 ########################
 
-#
+
 # Global Config 
 app = FastAPI(
     title="LearnHouse",
@@ -28,13 +28,13 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-#
+
 # Exception Handler
 @app.exception_handler(AuthJWTException)
 def authjwt_exception_handler(request: Request, exc: AuthJWTException):
     return JSONResponse(
-        status_code=exc.status_code,
-        content={"detail": exc.message}
+        status_code=exc.status_code,  # type: ignore
+        content={"detail": exc.message} # type: ignore
     )
 
 app.include_router(global_router)

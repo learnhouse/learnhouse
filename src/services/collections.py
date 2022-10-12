@@ -2,7 +2,7 @@ import json
 from typing import List
 from uuid import uuid4
 from pydantic import BaseModel
-from src.services.users import User
+from src.services.users import PublicUser, User
 from src.services.database import create_config_collection, check_database, create_database, learnhouseDB, learnhouseDB
 from src.services.security import *
 from fastapi import FastAPI, HTTPException, status, Request, Response, BackgroundTasks
@@ -24,7 +24,7 @@ class CollectionInDB(Collection):
 #### Classes ####################################################
 
 
-async def get_collection(collection_id: str, current_user: User):
+async def get_collection(collection_id: str, current_user: PublicUser):
     await check_database()
     collections = learnhouseDB["collections"]
 
@@ -41,7 +41,7 @@ async def get_collection(collection_id: str, current_user: User):
     return collection
 
 
-async def create_collection(collection_object: Collection, current_user: User):
+async def create_collection(collection_object: Collection, current_user: PublicUser):
     await check_database()
     collections = learnhouseDB["collections"]
 
@@ -68,7 +68,7 @@ async def create_collection(collection_object: Collection, current_user: User):
     return collection.dict()
 
 
-async def update_collection(collection_object: Collection, collection_id: str, current_user: User):
+async def update_collection(collection_object: Collection, collection_id: str, current_user: PublicUser):
     await check_database()
 
     # verify collection rights
@@ -91,7 +91,7 @@ async def update_collection(collection_object: Collection, collection_id: str, c
     return Collection(**updated_collection.dict())
 
 
-async def delete_collection(collection_id: str, current_user: User):
+async def delete_collection(collection_id: str, current_user: PublicUser):
     await check_database()
 
     await verify_collection_rights(collection_id, current_user,"delete")
@@ -127,7 +127,7 @@ async def get_collections(page: int = 1, limit: int = 10):
 
 #### Security ####################################################
 
-async def verify_collection_rights(collection_id: str,  current_user: User, action: str):
+async def verify_collection_rights(collection_id: str,  current_user: PublicUser, action: str):
     await check_database()
     collections = learnhouseDB["collections"]
 

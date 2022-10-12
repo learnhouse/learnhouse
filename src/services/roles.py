@@ -58,7 +58,7 @@ async def get_role(role_id: str):
     return role
 
 
-async def create_role(role_object: Role, current_user: User):
+async def create_role(role_object: Role, current_user: PublicUser):
     await check_database()
     roles = learnhouseDB["roles"]
 
@@ -86,7 +86,7 @@ async def create_role(role_object: Role, current_user: User):
     return role.dict()
 
 
-async def update_role(role_object: House, role_id: str, current_user: User):
+async def update_role(role_object: Role, role_id: str, current_user: PublicUser):
     await check_database()
 
     # verify house rights
@@ -98,7 +98,7 @@ async def update_role(role_object: House, role_id: str, current_user: User):
 
     if not role:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="House does not exist")
+            status_code=status.HTTP_409_CONFLICT, detail="Role does not exist")
 
     updated_role = RoleInDB(
         role_id=role_id, updateDate=str(datetime.now()), creationDate=role["creationDate"],  **role_object.dict())
@@ -108,7 +108,7 @@ async def update_role(role_object: House, role_id: str, current_user: User):
     return RoleInDB(**updated_role.dict())
 
 
-async def delete_role(role_id: str, current_user: User):
+async def delete_role(role_id: str, current_user: PublicUser):
     await check_database()
 
     # verify house rights

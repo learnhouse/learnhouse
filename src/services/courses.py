@@ -1,11 +1,12 @@
 import json
+import os
 from typing import List
 from uuid import uuid4
 from pydantic import BaseModel
-from src.services.users import User
+from src.services.users import PublicUser, User
 from src.services.database import create_config_collection, check_database, create_database, learnhouseDB, learnhouseDB
 from src.services.security import *
-from fastapi import FastAPI, HTTPException, status, Request, Response, BackgroundTasks
+from fastapi import FastAPI, HTTPException, status, Request, Response, BackgroundTasks, UploadFile, File
 from datetime import datetime
 
 #### Classes ####################################################
@@ -61,7 +62,7 @@ class CourseChapterInDB(CourseChapter):
 
 # Courses
 
-async def get_course(course_id: str, org_id :str , current_user: User):
+async def get_course(course_id: str, org_id :str , current_user: PublicUser):
     await check_database()
     courses = learnhouseDB["courses"]
 
@@ -78,7 +79,7 @@ async def get_course(course_id: str, org_id :str , current_user: User):
     return course
 
 
-async def create_course(course_object: Course, org_id : str , current_user: User):
+async def create_course(course_object: Course, org_id : str , current_user: PublicUser):
     await check_database()
     courses = learnhouseDB["courses"]
 
@@ -105,36 +106,39 @@ async def create_course(course_object: Course, org_id : str , current_user: User
     return course.dict()
 
 
-async def update_course(course_object: Course, course_id: str, current_user: User):
+async def update_course(course_object: Course, course_id: str, current_user: PublicUser):
     await check_database()
 
     # verify course rights
     await verify_rights(course_id, current_user, "update")
-
+    
     courses = learnhouseDB["courses"]
 
     course = courses.find_one({"course_id": course_id})
 
-    creationDate = course["creationDate"]
-    authors = course["authors"]
+    if course:
+        creationDate = course["creationDate"]
+        authors = course["authors"]
 
-    # get today's date
-    datetime_object = datetime.now()
+        # get today's date
+        datetime_object = datetime.now()
+        
+        updated_course = CourseInDB(
+            course_id=course_id, creationDate=creationDate, authors=authors, updateDate=str(datetime_object), **course_object.dict())
 
-    if not course:
+        courses.update_one({"course_id": course_id}, {
+                        "$set": updated_course.dict()})
+
+        return CourseInDB(**updated_course.dict())
+
+    else:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Course does not exist")
 
-    updated_course = CourseInDB(
-        course_id=course_id, creationDate=creationDate, authors=authors, updateDate=str(datetime_object), **course_object.dict())
-
-    courses.update_one({"course_id": course_id}, {
-                       "$set": updated_course.dict()})
-
-    return CourseInDB(**updated_course.dict())
+    
 
 
-async def delete_course(course_id: str, current_user: User):
+async def delete_course(course_id: str, current_user: PublicUser):
     await check_database()
 
     # verify course rights
@@ -157,7 +161,7 @@ async def delete_course(course_id: str, current_user: User):
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Unavailable database")
 
 
-async def get_courses(page: int = 1, limit: int = 10 , org_id : str = None):
+async def get_courses(page: int = 1, limit: int = 10 , org_id : str | None = None):
     await check_database()
     courses = learnhouseDB["courses"]
     # TODO : Get only courses that user is admin/has roles of
@@ -168,7 +172,7 @@ async def get_courses(page: int = 1, limit: int = 10 , org_id : str = None):
 
 # CoursesChapters
 
-async def create_coursechapter(coursechapter_object: CourseChapter, course_id: str, current_user: User):
+async def create_coursechapter(coursechapter_object: CourseChapter, course_id: str, current_user: PublicUser):
     await check_database()
     coursechapters = learnhouseDB["coursechapters"]
 
@@ -193,51 +197,57 @@ async def create_coursechapter(coursechapter_object: CourseChapter, course_id: s
     return coursechapter.dict()
 
 
-async def get_coursechapter(coursechapter_id: str, current_user: User):
+async def get_coursechapter(coursechapter_id: str, current_user: PublicUser):
     await check_database()
     coursechapters = learnhouseDB["coursechapters"]
 
     coursechapter = coursechapters.find_one(
         {"coursechapter_id": coursechapter_id})
 
-    # verify course rights
-    await verify_rights(coursechapter["course_id"], current_user, "read")
+    if coursechapter:
+            # verify course rights
+            await verify_rights(coursechapter["course_id"], current_user, "read")
+            coursechapter = CourseChapter(**coursechapter)
+            
+            return coursechapter
 
-    if not coursechapter:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="CourseChapter does not exist")
+    else:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT, detail="CourseChapter does not exist")
 
-    coursechapter = CourseChapter(**coursechapter)
-    return coursechapter
+    
 
-async def update_coursechapter(coursechapter_object: CourseChapter,  coursechapter_id: str, current_user: User):
+async def update_coursechapter(coursechapter_object: CourseChapter,  coursechapter_id: str, current_user: PublicUser):
     await check_database()
     coursechapters = learnhouseDB["coursechapters"]
 
     coursechapter = coursechapters.find_one(
         {"coursechapter_id": coursechapter_id})
 
-    # verify course rights
-    await verify_rights(coursechapter["course_id"], current_user, "update")
-    creationDate = coursechapter["creationDate"]
+    if coursechapter: 
+        # verify course rights
+        await verify_rights(coursechapter["course_id"], current_user, "update")
+        creationDate = coursechapter["creationDate"]
 
-    # get today's date
-    datetime_object = datetime.now()
+        # get today's date
+        datetime_object = datetime.now()
+        
+        updated_coursechapter = CourseChapterInDB(
+        coursechapter_id=coursechapter_id, creationDate=creationDate, course_id=coursechapter["course_id"], updateDate=str(datetime_object), **coursechapter_object.dict())
 
-    if not coursechapter:
+        coursechapters.update_one({"coursechapter_id": coursechapter_id}, {
+            "$set": updated_coursechapter.dict()})
+
+        return CourseChapterInDB(**updated_coursechapter.dict())
+
+    else:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Coursechapter does not exist")
 
-    updated_coursechapter = CourseChapterInDB(
-        coursechapter_id=coursechapter_id, creationDate=creationDate, course_id=coursechapter["course_id"], updateDate=str(datetime_object), **coursechapter_object.dict())
-
-    coursechapters.update_one({"coursechapter_id": coursechapter_id}, {
-        "$set": updated_coursechapter.dict()})
-
-    return CourseChapterInDB(**updated_coursechapter.dict())
+    
 
 
-async def delete_coursechapter(coursechapter_id: str,  current_user: User):
+async def delete_coursechapter(coursechapter_id: str,  current_user: PublicUser):
     await check_database()
 
     coursechapters = learnhouseDB["coursechapters"]
@@ -245,21 +255,24 @@ async def delete_coursechapter(coursechapter_id: str,  current_user: User):
     coursechapter = coursechapters.find_one(
         {"coursechapter_id": coursechapter_id})
 
-    # verify course rights
-    await verify_rights(coursechapter["course_id"], current_user, "delete")
+    if coursechapter:
+        # verify course rights
+        await verify_rights(coursechapter["course_id"], current_user, "delete")
+        
+        isDeleted = coursechapters.delete_one(
+            {"coursechapter_id": coursechapter_id})
 
-    if not coursechapter:
+        if isDeleted:
+            return {"detail": "coursechapter deleted"}
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Unavailable database")
+
+    else:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Course does not exist")
 
-    isDeleted = coursechapters.delete_one(
-        {"coursechapter_id": coursechapter_id})
-
-    if isDeleted:
-        return {"detail": "coursechapter deleted"}
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Unavailable database")
+    
 
 
 async def get_coursechapters(course_id: str, page: int = 1, limit: int = 10):
@@ -275,7 +288,7 @@ async def get_coursechapters(course_id: str, page: int = 1, limit: int = 10):
 #### Security ####################################################
 
 
-async def verify_rights(course_id: str, current_user: User, action: str):
+async def verify_rights(course_id: str, current_user: PublicUser, action: str):
     await check_database()
     courses = learnhouseDB["courses"]
 

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 from src.services.auth import get_current_user
-from src.services.users import User
+from src.services.users import PublicUser, User
 from src.services.collections import Collection, create_collection, get_collection, get_collections, update_collection, delete_collection
 
 
@@ -8,7 +8,7 @@ router = APIRouter()
 
 
 @router.post("/")
-async def api_create_collection(collection_object: Collection, current_user: User = Depends(get_current_user)):
+async def api_create_collection(collection_object: Collection, current_user: PublicUser = Depends(get_current_user)):
     """
     Create new Collection
     """
@@ -16,7 +16,7 @@ async def api_create_collection(collection_object: Collection, current_user: Use
 
 
 @router.get("/{collection_id}")
-async def api_get_collection(collection_id: str, current_user: User = Depends(get_current_user)):
+async def api_get_collection(collection_id: str, current_user: PublicUser = Depends(get_current_user)):
     """
     Get single collection by ID
     """
@@ -24,15 +24,15 @@ async def api_get_collection(collection_id: str, current_user: User = Depends(ge
 
 
 @router.get("/page/{page}/limit/{limit}")
-async def api_get_collection_by(page: int, limit: int, current_user: User = Depends(get_current_user)):
+async def api_get_collection_by(page: int, limit: int, current_user: PublicUser = Depends(get_current_user)):
     """
     Get collections by page and limit
     """
-    return await get_collections(page, limit, current_user)
+    return await get_collections(page, limit)
 
 
 @router.put("/{collection_id}")
-async def api_update_collection(collection_object: Collection, collection_id: str, current_user: User = Depends(get_current_user)):
+async def api_update_collection(collection_object: Collection, collection_id: str, current_user: PublicUser = Depends(get_current_user)):
     """
     Update collection by ID
     """
@@ -40,7 +40,7 @@ async def api_update_collection(collection_object: Collection, collection_id: st
 
 
 @router.delete("/{collection_id}")
-async def api_delete_collection(collection_id: str, current_user: User = Depends(get_current_user)):
+async def api_delete_collection(collection_id: str, current_user: PublicUser = Depends(get_current_user)):
     """
     Delete collection by ID
     """

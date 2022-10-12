@@ -2,14 +2,14 @@ from fastapi import APIRouter, Depends
 from src.services.auth import get_current_user
 
 from src.services.houses import House, HouseInDB, create_house, get_house, get_houses, update_house, delete_house
-from src.services.users import User
+from src.services.users import PublicUser, User
 
 
 router = APIRouter()
 
 
 @router.post("/")
-async def api_create_house(house_object: House, current_user: User = Depends(get_current_user)):
+async def api_create_house(house_object: House, current_user: PublicUser = Depends(get_current_user)):
     """
     Create new house
     """
@@ -17,7 +17,7 @@ async def api_create_house(house_object: House, current_user: User = Depends(get
 
 
 @router.get("/{house_id}")
-async def api_get_house(house_id: str, current_user: User = Depends(get_current_user)):
+async def api_get_house(house_id: str, current_user: PublicUser = Depends(get_current_user)):
     """
     Get single House by house_id
     """
@@ -33,7 +33,7 @@ async def api_get_house_by(page: int, limit: int):
 
 
 @router.put("/{house_id}")
-async def api_update_house(house_object: House, house_id: str, current_user: User = Depends(get_current_user)):
+async def api_update_house(house_object: House, house_id: str, current_user: PublicUser = Depends(get_current_user)):
     """
     Update House by house_id
     """
@@ -41,7 +41,7 @@ async def api_update_house(house_object: House, house_id: str, current_user: Use
 
 
 @router.delete("/{house_id}")
-async def api_delete_house(house_id: str, current_user: User = Depends(get_current_user)):
+async def api_delete_house(house_id: str, current_user: PublicUser = Depends(get_current_user)):
     """
     Delete House by ID
     """

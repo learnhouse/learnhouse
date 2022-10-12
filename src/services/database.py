@@ -1,7 +1,7 @@
 import pymongo
 
 # MongoDB
-client = pymongo.MongoClient("mongodb://learnhouse:learnhouse@mongo:27017/")
+client = pymongo.MongoClient("mongodb://learnhouse:learnhouse@mongo:27017/") # type: ignore
 learnhouseDB = client["learnhouse"]
 
 
@@ -15,7 +15,7 @@ async def check_database():
     if "learnhouse" in client.list_database_names():
         return True
     else:
-        create_database()
+        await create_database()
 
 
 async def create_config_collection():

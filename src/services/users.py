@@ -42,7 +42,7 @@ class UserInDB(UserWithPassword):
 
 
 async def get_user(username: str):
-    check_database()
+    await check_database()
     users = learnhouseDB["users"]
 
     user = users.find_one({"username": username})
@@ -56,7 +56,7 @@ async def get_user(username: str):
 
 
 async def get_user_by_userid(user_id: str):
-    check_database()
+    await check_database()
     users = learnhouseDB["users"]
 
     user = users.find_one({"user_id": user_id})
@@ -70,7 +70,7 @@ async def get_user_by_userid(user_id: str):
 
 
 async def security_get_user(email: str):
-    check_database()
+    await check_database()
     users = learnhouseDB["users"]
 
     user = users.find_one({"email": email})
@@ -83,7 +83,7 @@ async def security_get_user(email: str):
 
 
 async def get_userid_by_username(username: str):
-    check_database()
+    await check_database()
     users = learnhouseDB["users"]
 
     user = users.find_one({"username": username})
@@ -96,7 +96,7 @@ async def get_userid_by_username(username: str):
 
 
 async def update_user(user_id: str, user_object: UserWithPassword):
-    check_database()
+    await check_database()
     users = learnhouseDB["users"]
 
     isUserExists = users.find_one({"user_id": user_id})
@@ -119,7 +119,7 @@ async def update_user(user_id: str, user_object: UserWithPassword):
 
 
 async def delete_user(user_id: str):
-    check_database()
+    await check_database()
     users = learnhouseDB["users"]
 
     isUserAvailable = users.find_one({"user_id": user_id})
@@ -134,7 +134,7 @@ async def delete_user(user_id: str):
 
 
 async def create_user(user_object: UserWithPassword):
-    check_database()
+    await check_database()
     users = learnhouseDB["users"]
 
     isUserAvailable = users.find_one({"username": user_object.username})

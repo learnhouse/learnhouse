@@ -3,8 +3,16 @@ import Head from "next/head";
 import { Header } from "./header";
 import styled from "styled-components";
 import AuthProvider from "../security/AuthProvider";
+import { motion } from "framer-motion";
+import { Menu } from "./elements/menu";
 
 const Layout = (props: any) => {
+  const variants = {
+    hidden: { opacity: 0, x: 0, y: 0 },
+    enter: { opacity: 1, x: 0, y: 0 },
+    exit: { opacity: 0, x: 0, y: 0 },
+  };
+
   return (
     <div>
       <AuthProvider>
@@ -14,8 +22,17 @@ const Layout = (props: any) => {
           <link rel="icon" href="/favicon.ico" />
         </Head>
         <PreAlphaLabel>🚧 Pre-Alpha</PreAlphaLabel>
-        <Main className="min-h-screen">{props.children}</Main>
-
+        <Menu></Menu>
+        <motion.main
+          variants={variants} // Pass the variant object into Framer Motion
+          initial="hidden" // Set the initial state to variants.hidden
+          animate="enter" // Animated state to variants.enter
+          exit="exit" // Exit state (used later) to variants.exit
+          transition={{ type: "linear" }} // Set the transition to linear
+          className=""
+        >
+          <Main className="min-h-screen">{props.children}</Main>
+        </motion.main>
         <Footer>
           <a href="" target="_blank" rel="noopener noreferrer">
             <img src="/learnhouse_icon.png" alt="Learnhouse Logo" />
@@ -53,6 +70,6 @@ export const PreAlphaLabel = styled.div`
   font-size: 19px;
   font-weight: bold;
   border-radius: 5px 0 0 0px;
-  `;
+`;
 
 export default Layout;
