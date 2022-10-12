@@ -2,7 +2,7 @@ import json
 from typing import List
 from uuid import uuid4
 from pydantic import BaseModel
-from src.services.users import User
+from src.services.users import PublicUser, User
 from src.services.database import create_config_collection, check_database, create_database, learnhouseDB, learnhouseDB
 from src.services.security import *
 from fastapi import FastAPI, HTTPException, status, Request, Response, BackgroundTasks
@@ -28,7 +28,7 @@ class HouseInDB(House):
 
 # TODO : Add house photo upload and delete
 
-async def get_house(house_id: str, current_user: User):
+async def get_house(house_id: str, current_user: PublicUser):
     await check_database()
     houses = learnhouseDB["houses"]
 
@@ -45,7 +45,7 @@ async def get_house(house_id: str, current_user: User):
     return house
 
 
-async def create_house(house_object: House, current_user: User):
+async def create_house(house_object: House, current_user: PublicUser):
     await check_database()
     houses = learnhouseDB["houses"]
 
@@ -78,7 +78,7 @@ async def create_house(house_object: House, current_user: User):
     return house.dict()
 
 
-async def update_house(house_object: House, house_id: str, current_user: User):
+async def update_house(house_object: House, house_id: str, current_user: PublicUser):
     await check_database()
 
     # verify house rights
@@ -88,23 +88,26 @@ async def update_house(house_object: House, house_id: str, current_user: User):
 
     house = houses.find_one({"house_id": house_id})
 
-    # get owner value from house object database
-    owners = house["owners"]
-    admins = house["admins"]
+    if house:
+        # get owner value from house object database
+        owners = house["owners"]
+        admins = house["admins"]
 
-    if not house:
+        updated_house = HouseInDB(
+            house_id=house_id, owners=owners, admins=admins, **house_object.dict())
+
+        houses.update_one({"house_id": house_id}, {"$set": updated_house.dict()})
+
+        return HouseInDB(**updated_house.dict())
+
+    else:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="House does not exist")
 
-    updated_house = HouseInDB(
-        house_id=house_id, owners=owners, admins=admins, **house_object.dict())
-
-    houses.update_one({"house_id": house_id}, {"$set": updated_house.dict()})
-
-    return HouseInDB(**updated_house.dict())
+    
 
 
-async def delete_house(house_id: str, current_user: User):
+async def delete_house(house_id: str, current_user: PublicUser):
     await check_database()
 
     # verify house rights
@@ -139,7 +142,7 @@ async def get_houses(page: int = 1, limit: int = 10):
 
 #### Security ####################################################
 
-async def verify_house_rights(house_id: str, current_user: User, action: str):
+async def verify_house_rights(house_id: str, current_user: PublicUser, action: str):
     await check_database()
     houses = learnhouseDB["houses"]
 

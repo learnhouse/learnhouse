@@ -28,7 +28,7 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     )
     
     response = JSONResponse(content={"access_token" : access_token ,"token_type": "bearer"})
-    response.set_cookie(key="user_token", value=access_token, httponly=True, expires="3600",secure=True)
+    response.set_cookie(key="user_token", value=access_token, httponly=True, expires=3600,secure=True)
     
     return response
 
@@ -43,7 +43,7 @@ def refresh(Authorize: AuthJWT = Depends()):
     Authorize.jwt_refresh_token_required()
 
     current_user = Authorize.get_jwt_subject()
-    new_access_token = Authorize.create_access_token(subject=current_user)
+    new_access_token = Authorize.create_access_token(subject=current_user) # type: ignore
     return {"access_token": new_access_token}
 
 @router.post('/login')

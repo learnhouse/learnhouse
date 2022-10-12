@@ -20,7 +20,7 @@ class Settings(BaseModel):
     authjwt_access_token_expires = False # (pre-alpha only) # TODO: set to 1 hour 
     
     
-@AuthJWT.load_config
+@AuthJWT.load_config # type: ignore
 def get_config():
     return Settings()
 
@@ -72,13 +72,13 @@ async def get_current_user_old(token: str = Depends(oauth2_scheme)):
     )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
+        username: str = payload.get("sub") # type: ignore
         if username is None:
             raise credentials_exception
         token_data = TokenData(username=username)
     except JWTError:
         raise credentials_exception
-    user = await security_get_user(email=token_data.username)
+    user = await security_get_user(email=token_data.username) # type: ignore
     if user is None:
         raise credentials_exception
     return PublicUser(**user.dict())
@@ -94,10 +94,10 @@ async def get_current_user(Authorize: AuthJWT = Depends()):
     try:
         Authorize.jwt_required()
         username = Authorize.get_jwt_subject()
-        token_data = TokenData(username=username)
+        token_data = TokenData(username=username)  # type: ignore
     except JWTError:
         raise credentials_exception
-    user = await security_get_user(email=token_data.username) # treated as an email
+    user = await security_get_user(email=token_data.username) # type: ignore # treated as an email 
     if user is None:
         raise credentials_exception
     return PublicUser(**user.dict())

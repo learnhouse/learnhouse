@@ -11,7 +11,7 @@ router = APIRouter()
 
 # DEPRECATED
 @router.get("/me")
-async def api_get_current_user(current_user: User = Depends(get_current_user)):
+async def api_get_current_user_old(current_user: User = Depends(get_current_user)):
     """
     Get current user
     """

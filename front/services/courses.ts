@@ -14,3 +14,19 @@ export async function getOrgCourses(org_id: number) {
     .then((result) => result.json())
     .catch((error) => console.log("error", error));
 }
+
+export async function getCourse(org_id: any, course_id: any) {
+  const HeadersConfig = new Headers({ "Content-Type": "application/json" });
+
+  const requestOptions: any = {
+    method: "GET",
+    headers: HeadersConfig,
+    redirect: "follow",
+    credentials: "include",
+  };
+
+  // todo : add course id to url
+  return fetch(`${getAPIUrl()}courses/${course_id}`, requestOptions)
+    .then((result) => result.json())
+    .catch((error) => console.log("error", error));
+}
