@@ -3,6 +3,7 @@ import os
 from typing import List
 from uuid import uuid4
 from pydantic import BaseModel
+from src.services.uploads import upload_thumbnail
 from src.services.users import PublicUser, User
 from src.services.database import create_config_collection, check_database, create_database, learnhouseDB, learnhouseDB
 from src.services.security import *
@@ -16,7 +17,6 @@ class Course(BaseModel):
     name: str
     mini_description: str
     description: str
-    photo: str
     learnings: List[str]
     thumbnail : str 
     public: bool
@@ -79,21 +79,27 @@ async def get_course(course_id: str, org_id :str , current_user: PublicUser):
     return course
 
 
-async def create_course(course_object: Course, org_id : str , current_user: PublicUser):
+async def create_course(course_object: Course,   org_id : str , current_user: PublicUser, thumbnail_file: UploadFile | None = None):
     await check_database()
     courses = learnhouseDB["courses"]
 
     # generate course_id with uuid4
     course_id = str(f"course_{uuid4()}")
     
+    # TODO(fix) : the implementation here is clearly not the best one (this entire function)
     course_object.org_id = org_id
-
     hasRoleRights = await verify_user_rights_with_roles("create", current_user.user_id, course_id)
-
+    
+    
     if not hasRoleRights:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Roles : Insufficient rights to perform this action")
-
+        
+    if thumbnail_file:
+        name_in_disk = f"{course_id}_thumbnail_{uuid4()}.{thumbnail_file.filename.split('.')[-1]}"
+        await upload_thumbnail(thumbnail_file, name_in_disk)
+        course_object.thumbnail = name_in_disk
+    
     course = CourseInDB(course_id=course_id, authors=[
         current_user.user_id], creationDate=str(datetime.now()), updateDate=str(datetime.now()), **course_object.dict())
 
@@ -119,20 +125,10 @@ async def update_course_thumbnail(course_id: str , current_user: PublicUser, thu
         creationDate = course["creationDate"]
         authors = course["authors"]
         if thumbnail_file: 
-            contents = thumbnail_file.file.read()
             name_in_disk = f"{course_id}_thumbnail_{uuid4()}.{thumbnail_file.filename.split('.')[-1]}"
             course = Course(**course).copy(update={"thumbnail": name_in_disk})
-            try: 
-                with open(f"content/uploads/img/{name_in_disk}", 'wb') as f:
-                    f.write(contents)
-                    f.close()
-                    
-            except Exception as e:
-                print(e)
-                return {"message": "There was an error uploading the file"}
-            finally:
-                thumbnail_file.file.close()
-            
+            await upload_thumbnail( thumbnail_file, name_in_disk)
+           
             
             updated_course = CourseInDB(course_id=course_id, creationDate=creationDate, authors=authors, updateDate=str(datetime.now()) , **course.dict())
 

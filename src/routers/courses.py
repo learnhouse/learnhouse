@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, File, UploadFile
+from fastapi import APIRouter, Depends, File, UploadFile, Form
 from src.services.auth import get_current_user
 
 from src.services.courses import Course, CourseChapter, create_course, create_coursechapter, delete_coursechapter, get_course, get_coursechapter, get_coursechapters, get_courses, update_course, delete_course, update_course_thumbnail, update_coursechapter
@@ -9,16 +9,17 @@ router = APIRouter()
 
 
 @router.post("/")
-async def api_create_course(course_object: Course, org_id :str ,  current_user: PublicUser = Depends(get_current_user)):
+async def api_create_course(org_id :str , name : str = Form(), mini_description : str = Form() , description :str = Form(), public : bool = Form(),    current_user: PublicUser = Depends(get_current_user) , thumbnail: UploadFile | None = None):
     """
     Create new Course
     """
-    return await create_course(course_object, org_id ,  current_user)
+    course = Course(name=name, mini_description=mini_description, description=description, org_id=org_id, public=public , thumbnail="" , chapters=[], learnings=[]) 
+    return await create_course(course, org_id ,  current_user, thumbnail)
 
 @router.put("/thumbnail/{course_id}")
 async def api_create_course_thumbnail(course_id : str, thumbnail: UploadFile | None = None,   current_user: PublicUser = Depends(get_current_user)):
     """
-    Create new Course Thumbnail
+    Update new Course Thumbnail
     """
     return await update_course_thumbnail(course_id,  current_user, thumbnail)
 

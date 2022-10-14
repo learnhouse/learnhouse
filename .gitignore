@@ -9,6 +9,9 @@ __pycache__/
 # Visual Studio Code
 .vscode/
 
+# Learnhouse 
+content/*
+
 # Distribution / packaging
 .Python
 build/
