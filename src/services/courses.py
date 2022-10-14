@@ -18,7 +18,7 @@ class Course(BaseModel):
     description: str
     photo: str
     learnings: List[str]
-    cover_photo: str
+    thumbnail : str 
     public: bool
     chapters: List[str]
     org_id: str
@@ -104,6 +104,47 @@ async def create_course(course_object: Course, org_id : str , current_user: Publ
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Unavailable database")
 
     return course.dict()
+
+async def update_course_thumbnail(course_id: str , current_user: PublicUser, thumbnail_file: UploadFile | None = None):
+    await check_database()
+
+    # verify course rights
+    await verify_rights(course_id, current_user, "update")
+    
+    courses = learnhouseDB["courses"]
+
+    course = courses.find_one({"course_id": course_id})
+    # TODO(fix) : the implementation here is clearly not the best one
+    if course:
+        creationDate = course["creationDate"]
+        authors = course["authors"]
+        if thumbnail_file: 
+            contents = thumbnail_file.file.read()
+            name_in_disk = f"{course_id}_thumbnail_{uuid4()}.{thumbnail_file.filename.split('.')[-1]}"
+            course = Course(**course).copy(update={"thumbnail": name_in_disk})
+            try: 
+                with open(f"content/uploads/img/{name_in_disk}", 'wb') as f:
+                    f.write(contents)
+                    f.close()
+                    
+            except Exception as e:
+                print(e)
+                return {"message": "There was an error uploading the file"}
+            finally:
+                thumbnail_file.file.close()
+            
+            
+            updated_course = CourseInDB(course_id=course_id, creationDate=creationDate, authors=authors, updateDate=str(datetime.now()) , **course.dict())
+
+            courses.update_one({"course_id": course_id}, {
+                                "$set": updated_course.dict()})
+
+            return CourseInDB(**updated_course.dict())
+                
+
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="Course does not exist")
 
 
 async def update_course(course_object: Course, course_id: str, current_user: PublicUser):
