@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, File, UploadFile
 from src.services.auth import get_current_user
 
-from src.services.courses import Course, CourseChapter, create_course, create_coursechapter, delete_coursechapter, get_course, get_coursechapter, get_coursechapters, get_courses, update_course, delete_course, update_coursechapter
+from src.services.courses import Course, CourseChapter, create_course, create_coursechapter, delete_coursechapter, get_course, get_coursechapter, get_coursechapters, get_courses, update_course, delete_course, update_course_thumbnail, update_coursechapter
 from src.services.users import PublicUser, User
 
 
@@ -14,6 +14,13 @@ async def api_create_course(course_object: Course, org_id :str ,  current_user: 
     Create new Course
     """
     return await create_course(course_object, org_id ,  current_user)
+
+@router.put("/thumbnail/{course_id}")
+async def api_create_course_thumbnail(course_id : str, thumbnail: UploadFile | None = None,   current_user: PublicUser = Depends(get_current_user)):
+    """
+    Create new Course Thumbnail
+    """
+    return await update_course_thumbnail(course_id,  current_user, thumbnail)
 
 
 @router.get("/{course_id}")
