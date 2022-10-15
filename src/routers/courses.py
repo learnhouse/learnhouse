@@ -25,11 +25,11 @@ async def api_create_course_thumbnail(course_id : str, thumbnail: UploadFile | N
 
 
 @router.get("/{course_id}")
-async def api_get_course(course_id: str, org_id : str,  current_user: PublicUser = Depends(get_current_user)):
+async def api_get_course(course_id: str,  current_user: PublicUser = Depends(get_current_user)):
     """
     Get single Course by course_id
     """
-    return await get_course(course_id, org_id,current_user=current_user)
+    return await get_course(course_id,current_user=current_user)
 
 
 @router.get("/{org_id}/page/{page}/limit/{limit}")

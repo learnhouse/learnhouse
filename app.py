@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from src.main import global_router
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi_jwt_auth.exceptions import AuthJWTException
 
 ########################
@@ -28,6 +29,7 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
+app.mount("/content", StaticFiles(directory="content"), name="content")
 
 # Exception Handler
 @app.exception_handler(AuthJWTException)
