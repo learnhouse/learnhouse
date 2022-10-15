@@ -62,11 +62,11 @@ class CourseChapterInDB(CourseChapter):
 
 # Courses
 
-async def get_course(course_id: str, org_id :str , current_user: PublicUser):
+async def get_course(course_id: str , current_user: PublicUser):
     await check_database()
     courses = learnhouseDB["courses"]
 
-    course = courses.find_one({"course_id": course_id , "org_id" : org_id})
+    course = courses.find_one({"course_id": course_id})
 
     # verify course rights
     await verify_rights(course_id, current_user, "read")

@@ -17,7 +17,7 @@ const Organizations = () => {
   }
 
   async function deleteOrganization(org_id:any)  {
-   const response = await deleteOrganizationFromBackend(org_id);
+    const response = await deleteOrganizationFromBackend(org_id);
     const newOrganizations = userOrganizations.filter((org:any) => org.org_id !== org_id);
     setUserOrganizations(newOrganizations);
   }

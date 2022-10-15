@@ -4,7 +4,7 @@ import React from "react";
 import { Header } from "../../../../components/ui/header";
 import Layout from "../../../../components/ui/layout";
 import { Title } from "../../../../components/ui/styles/title";
-import { getOrgCourses } from "../../../../services/courses";
+import { deleteCourseFromBackend, getOrgCourses } from "../../../../services/courses";
 import { getOrganizationContextInfo } from "../../../../services/orgs";
 
 const CoursesIndexPage = () => {
@@ -20,6 +20,12 @@ const CoursesIndexPage = () => {
     const response = await getOrgCourses(org.org_id);
     setCourses(response);
     setIsLoading(false);
+  }
+
+  async function deleteCourses(course_id: any) {
+    const response = await deleteCourseFromBackend(course_id);
+    const newCourses = courses.filter((course: any) => course.course_id !== course_id);
+    setCourses(newCourses);
   }
 
   // function to remove "course_" from the course_id
@@ -55,9 +61,12 @@ const CoursesIndexPage = () => {
         <div>
           {courses.map((course: any) => (
             <div key={course.course_id}>
-              <Link href={"/org/" + orgslug + "/courses/" + removeCoursePrefix(course.course_id)}>
-                <a><h2>{course.name}</h2></a>
+              <Link href={"/org/" + orgslug + "/course/" + removeCoursePrefix(course.course_id)}>
+                <a>
+                  <h2>{course.name}</h2>
+                </a>
               </Link>
+              <button onClick={() => deleteCourses(course.course_id)}>Delete</button>
             </div>
           ))}
         </div>
