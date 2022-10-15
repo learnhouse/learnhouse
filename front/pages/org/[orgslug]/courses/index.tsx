@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 import React from "react";
+import styled from "styled-components";
 import { Header } from "../../../../components/ui/header";
 import Layout from "../../../../components/ui/layout";
 import { Title } from "../../../../components/ui/styles/title";
+import { getBackendUrl } from "../../../../services/config";
 import { deleteCourseFromBackend, getOrgCourses } from "../../../../services/courses";
 import { getOrganizationContextInfo } from "../../../../services/orgs";
 
@@ -64,7 +66,11 @@ const CoursesIndexPage = () => {
               <Link href={"/org/" + orgslug + "/course/" + removeCoursePrefix(course.course_id)}>
                 <a>
                   <h2>{course.name}</h2>
+                  <CourseWrapper>
+            <img src={`${getBackendUrl()}content/uploads/img/${course.thumbnail}`} alt="" />
+          </CourseWrapper>
                 </a>
+                
               </Link>
               <button onClick={() => deleteCourses(course.course_id)}>Delete</button>
             </div>
@@ -76,3 +82,18 @@ const CoursesIndexPage = () => {
 };
 
 export default CoursesIndexPage;
+
+const CourseWrapper = styled.div`
+  display: flex;
+  img {
+    
+    width: 269px;
+    height: 151px;
+    
+
+    background: url(), #d9d9d9;
+    border: 1px solid rgba(255, 255, 255, 0.19);
+    box-shadow: 0px 13px 33px -13px rgba(0, 0, 0, 0.42);
+    border-radius: 7px;
+  }
+`;
