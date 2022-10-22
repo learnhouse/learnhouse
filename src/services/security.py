@@ -38,9 +38,10 @@ async def verify_user_rights_with_roles(action: str, user_id: str, element_id: s
     await check_database()
     roles = learnhouseDB["roles"]
 
-    user_roles_cursor = roles.find({
-        "linked_users": str(user_id)
-    })
+    # find data where user_id is in linked_users or * is in linked_users
+    user_roles_cursor = roles.find({"$or": [{"linked_users": user_id}, {"linked_users": "*"}]})
+
+    
 
     user_roles = []
 
