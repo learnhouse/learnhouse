@@ -72,7 +72,12 @@ const CoursesIndexPage = () => {
                 </a>
                 
               </Link>
-              <button onClick={() => deleteCourses(course.course_id)}>Delete</button>
+              <button style={{backgroundColor:"red" , border:"none"}} onClick={() => deleteCourses(course.course_id)}>Delete</button>
+              <Link href={"/org/" + orgslug + "/course/" + removeCoursePrefix(course.course_id) + "/edit"}>
+                <a>
+                  <button >Edit</button>
+                </a>
+              </Link>
             </div>
           ))}
         </div>

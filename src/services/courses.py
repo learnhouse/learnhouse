@@ -37,15 +37,12 @@ class CourseElement(BaseModel):
     element_id: str
     content: str
     content_type: str
-    position: int
 
 
 class CourseChapter(BaseModel):
     name: str
     description: str
-    course: str
     elements: List[CourseElement]
-    position: int
 
 
 class CourseChapterInDB(CourseChapter):

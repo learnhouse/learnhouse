@@ -34,10 +34,14 @@ const AuthProvider = (props: any) => {
     }
   }
 
-   // TODO(mvp) : fix performance issues > no need to check auth on every render
+  
+
   useEffect(() => {
-    if (!auth.isAuthenticated) {
+    if (auth.isLoading) {
       checkAuth();
+    }
+    return () => {
+      auth.isLoading = false;
     }
   }, []);
 
