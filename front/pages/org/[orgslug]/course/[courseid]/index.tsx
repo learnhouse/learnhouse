@@ -1,10 +1,10 @@
 import { useRouter } from "next/router";
 import React from "react";
 import styled from "styled-components";
-import Layout from "../../../../components/ui/layout";
-import { getAPIUrl, getBackendUrl } from "../../../../services/config";
-import { getCourse } from "../../../../services/courses";
-import { getOrganizationContextInfo } from "../../../../services/orgs";
+import Layout from "../../../../../components/ui/layout";
+import { getAPIUrl, getBackendUrl } from "../../../../../services/config";
+import { getCourse } from "../../../../../services/courses";
+import { getOrganizationContextInfo } from "../../../../../services/orgs";
 
 const CourseIdPage = () => {
   const router = useRouter();
@@ -26,7 +26,8 @@ const CourseIdPage = () => {
     if (router.isReady) {
       fetchCourseInfo();
     }
-  }, [isLoading, router.isReady]);
+    return () => {};
+  }, [router.isReady]);
 
   return (
     <Layout>

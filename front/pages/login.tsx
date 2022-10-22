@@ -1,3 +1,4 @@
+import Router from "next/router";
 import React from "react";
 import { Header } from "../components/ui/header";
 import Layout from "../components/ui/layout";
@@ -12,7 +13,13 @@ const Login = () => {
     e.preventDefault();
     console.log({ email, password });
     alert(JSON.stringify({ email, password }));
-    loginAndGetToken(email, password);
+    try {
+      loginAndGetToken(email, password);
+      Router.push("/");
+    }
+    catch (e) {
+      console.log(e);
+    }
   };
 
   const handleEmailChange = (e: any) => {
