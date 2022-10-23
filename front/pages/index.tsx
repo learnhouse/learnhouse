@@ -44,6 +44,12 @@ const Home: NextPage = () => {
               <OrgsButton>See Organizations</OrgsButton>
             </a>
           </Link>
+          <br /><br />
+          <Link href={"/login"}>
+            <a>
+              <OrgsButton>Login</OrgsButton>
+            </a>
+          </Link>
         </div>
       </motion.div>
     </HomePage>
