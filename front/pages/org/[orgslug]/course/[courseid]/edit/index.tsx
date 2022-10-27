@@ -141,6 +141,7 @@ function CourseEdit() {
               <div  key={"chapters"} {...provided.droppableProps} ref={provided.innerRef}>
                 {getChapters().map((info: any, index: any) => (
                   <Chapter key={index} info={info} index={index}></Chapter>
+                  
                 ))}
                 {provided.placeholder}
               </div>
