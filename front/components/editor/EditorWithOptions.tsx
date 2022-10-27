@@ -3,8 +3,12 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Collaboration from "@tiptap/extension-collaboration";
 import CollaborationCursor from "@tiptap/extension-collaboration-cursor";
+import { AuthContext } from "../security/AuthProvider";
+
 
 function EditorWithOptions(props: any) {
+  const auth: any = React.useContext(AuthContext);
+  
   const MenuBar = ({ editor }: any) => {
     if (!editor) {
       return null;
@@ -110,6 +114,7 @@ function EditorWithOptions(props: any) {
       StarterKit.configure({
         // The Collaboration extension comes with its own history handling
         history: false,
+        
       }),
       // Register the document with Tiptap
       Collaboration.configure({
@@ -119,14 +124,16 @@ function EditorWithOptions(props: any) {
       CollaborationCursor.configure({
         provider: props.provider,
         user: {
-          name: "Cyndi Lauper",
+          name: auth.userInfo.username,
           color: "#f783ac",
         },
       }),
     ],
+    
     content: "<p>Hello World!</p>",
   });
-  console.log(props.ydoc);
+
+  
 
   return (
     <div>

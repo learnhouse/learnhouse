@@ -3,6 +3,7 @@ import { default as React, useEffect, useRef } from "react";
 import Layout from "../../../../../../components/ui/layout";
 import { Title } from "../../../../../../components/ui/styles/title";
 import dynamic from "next/dynamic";
+import { AuthContext } from "../../../../../../components/security/AuthProvider";
 
 const Editor = dynamic(() => import("../../../../../../components/editor/editor"), {
   ssr: false,
@@ -11,8 +12,8 @@ const Editor = dynamic(() => import("../../../../../../components/editor/editor"
 // tools
 
 function EditElement() {
-  // A new Y document
-
+  
+  
   return (
     <Layout>
       <Title>Edit Page </Title>
