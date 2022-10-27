@@ -52,7 +52,8 @@ const CourseWrapper = styled.div`
     position: absolute;
     width: 794px;
     height: 224.28px;
-    
+    object-fit: cover;
+    object-position: top;
 
     background: url(), #d9d9d9;
     border: 1px solid rgba(255, 255, 255, 0.19);

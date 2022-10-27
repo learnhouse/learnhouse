@@ -2,6 +2,7 @@ import React from "react";
 import styled from "styled-components";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import Element, { ElementWrapper } from "./element";
+import Link from "next/link";
 
 
 const ChapterWrapper = styled.div`
@@ -26,7 +27,7 @@ function Chapter(props: any) {
             {(provided) => (
               <ElementsList {...provided.droppableProps} ref={provided.innerRef}>
                 {props.info.list.elements.map((element: any, index: any) => (
-                  <Element key={element.id} element={element} index={index}></Element>
+                 <div key={element.id}> <Element key={element.id} element={element} index={index}></Element> <Link href={"/"}><a>Edit</a></Link></div>
                 ))}
                 {provided.placeholder}
               </ElementsList>
