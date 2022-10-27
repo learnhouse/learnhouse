@@ -3,10 +3,11 @@ import styled from "styled-components";
 import Link from "next/link";
 import { AuthContext } from "../security/AuthProvider";
 import { getBackendUrl } from "../../services/config";
+import Avvvatars from "avvvatars-react";
 
 export const HeaderProfileBox = () => {
   const auth: any = React.useContext(AuthContext);
-  
+
   return (
     <ProfileArea>
       {!auth.isAuthenticated && (
@@ -25,10 +26,14 @@ export const HeaderProfileBox = () => {
           </ul>
         </UnidentifiedArea>
       )}
-      {auth.isAuthenticated && <AccountArea>
-        <div>{auth.userInfo.username}</div>
-        <div><img src={`${getBackendUrl()}content/uploads/img/${auth.userInfo.avatar_url}`} alt="" /></div>
-        </AccountArea>}
+      {auth.isAuthenticated && (
+        <AccountArea>
+          <div>{auth.userInfo.username}</div>
+          <div>
+            <Avvvatars value={auth.userInfo.username} style="shape" />
+          </div>
+        </AccountArea>
+      )}
     </ProfileArea>
   );
 };
@@ -38,10 +43,10 @@ const AccountArea = styled.div`
   display: flex;
   place-items: center;
 
-  div{
+  div {
     margin-right: 10px;
   }
-  img{
+  img {
     width: 29px;
     border-radius: 19px;
   }
@@ -51,8 +56,6 @@ const ProfileArea = styled.div`
   display: flex;
   place-items: stretch;
   place-items: center;
-
-
 `;
 
 const UnidentifiedArea = styled.div`

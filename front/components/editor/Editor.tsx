@@ -2,6 +2,7 @@ import { default as React, useEffect, useRef } from "react";
 import * as Y from "yjs";
 import { WebrtcProvider } from "y-webrtc";
 import EditorWithOptions from "./EditorWithOptions";
+import { IndexeddbPersistence } from 'y-indexeddb'
 
 // tools
 
@@ -14,6 +15,7 @@ function Editor() {
 
   function createRTCProvider() {
     const provider = new WebrtcProvider("learnhouse-1", ydoc);
+    
     setYdocState(ydoc);
     setProviderState(provider);
     setIsLoading(false);
