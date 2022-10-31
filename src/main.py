@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from src.routers import collections, courses, users, auth, houses, orgs, roles
+from src.routers import chapters, collections, courses, users, auth, houses, orgs, roles
 
 
 global_router = APIRouter(prefix="/api")
@@ -12,5 +12,6 @@ global_router.include_router(houses.router, prefix="/houses", tags=["houses"])
 global_router.include_router(orgs.router, prefix="/orgs", tags=["orgs"])
 global_router.include_router(roles.router, prefix="/roles", tags=["roles"])
 global_router.include_router(courses.router, prefix="/courses", tags=["courses"])
+global_router.include_router(chapters.router, prefix="/chapters", tags=["chapters"])
 global_router.include_router(collections.router, prefix="/collections", tags=["collections"])
 
