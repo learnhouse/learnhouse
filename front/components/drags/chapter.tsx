@@ -22,7 +22,7 @@ function Chapter(props: any) {
     <Draggable key={props.info.list.chapter.id} draggableId={props.info.list.chapter.id} index={props.index}>
       {(provided, snapshot) => (
         <ChapterWrapper {...provided.dragHandleProps} {...provided.draggableProps} ref={provided.innerRef} isDragging={snapshot.isDragging} key={props.info.list.chapter.id}>
-          <h3>{props.info.list.chapter.title}</h3>
+          <h3>{props.info.list.chapter.name}</h3>
           <Droppable droppableId={props.info.list.chapter.id} type="element">
             {(provided) => (
               <ElementsList {...provided.droppableProps} ref={provided.innerRef}>

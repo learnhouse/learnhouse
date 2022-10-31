@@ -7,14 +7,28 @@ import { Title } from "../../../../../../components/ui/styles/title";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { initialData } from "../../../../../../components/drags/data";
 import Chapter from "../../../../../../components/drags/chapter";
+import { getCourseChaptersMetadata } from "../../../../../../services/chapters";
+import { useRouter } from "next/router";
 
 function CourseEdit() {
+  const router = useRouter();
   const [data, setData] = useState(initialData) as any;
   const [winReady, setwinReady] = useState(false);
+  const { courseid } = router.query;
 
+  async function getCourseChapters() {
+    const courseChapters = await getCourseChaptersMetadata(courseid);
+    setData(courseChapters);
+    console.log(courseChapters);
+    
+  }
+  
   useEffect(() => {
+
+    
+
     setwinReady(true);
-  }, []);
+  }, [router.isReady]);
 
   // get a list of chapters order by chapter order
   const getChapters = () => {
@@ -68,7 +82,7 @@ function CourseEdit() {
     if (start === finish) {
       // create new arrays for chapters and elements
       const chapter = data.chapters[source.droppableId];
-      const newElementIds = Array.from(chapter.elementIds);
+      const newElementIds = Array.from(chapter.elements.element_id);
 
       // remove the element from the old position
       newElementIds.splice(source.index, 1);

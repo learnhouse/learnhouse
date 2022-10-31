@@ -28,7 +28,6 @@ class CourseChapterInDB(CourseChapter):
     course_id: str
     creationDate: str
     updateDate: str
-    
 
 
 # Frontend
@@ -97,10 +96,18 @@ async def get_coursechapters_meta(course_id: str, current_user: PublicUser):
     course = courses.find_one({"course_id": course_id})
     course = Course(**course)
 
-
     # chapters
-    chapters = [json.loads(json.dumps(chapter, default=str))
-                for chapter in coursechapters]
+    chapters = {}
+    for coursechapter in coursechapters:
+        coursechapter = CourseChapterInDB(**coursechapter)
+        coursechapter_elementIds = []
+        
+        for element in coursechapter.elements:
+            coursechapter_elementIds.append(element.element_id)
+            
+        chapters[coursechapter.coursechapter_id] = {
+            "id": coursechapter.coursechapter_id, "name": coursechapter.name,  "elementIds": coursechapter_elementIds
+        }
 
     final = {
         "chapters": chapters,
@@ -121,9 +128,8 @@ async def update_coursechapters_meta(course_id: str, coursechapters_metadata: Co
     # update chapters in course
     courseInDB = courses.update_one({"course_id": course_id}, {
                                     "$set": {"chapters": coursechapters_metadata.chapterOrder}})
-    
+
     # TODO : update chapters in coursechapters
-    
 
     return {courseInDB}
 
