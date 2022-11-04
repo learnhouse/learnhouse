@@ -99,10 +99,10 @@ async def get_coursechapters_meta(course_id: str, current_user: PublicUser):
     for coursechapter in coursechapters:
         coursechapter = CourseChapterInDB(**coursechapter)
         coursechapter_elementIds = []
-        
+
         for element in coursechapter.elements:
             coursechapter_elementIds.append(element.element_id)
-            
+
         chapters[coursechapter.coursechapter_id] = {
             "id": coursechapter.coursechapter_id, "name": coursechapter.name,  "elementIds": coursechapter_elementIds
         }
@@ -164,6 +164,7 @@ async def delete_coursechapter(coursechapter_id: str,  current_user: PublicUser)
     await check_database()
 
     coursechapters = learnhouseDB["coursechapters"]
+    courses = learnhouseDB["courses"]
 
     coursechapter = coursechapters.find_one(
         {"coursechapter_id": coursechapter_id})
@@ -175,7 +176,9 @@ async def delete_coursechapter(coursechapter_id: str,  current_user: PublicUser)
         isDeleted = coursechapters.delete_one(
             {"coursechapter_id": coursechapter_id})
 
-        # TODO : delete coursechapter from course using $pull https://www.mongodb.com/docs/v4.2/reference/operator/update/pull/
+        # Remove coursechapter from course
+        courses.update_one({"course_id": coursechapter["course_id"]}, {
+            "$pull": {"chapters": coursechapter_id}})
 
         if isDeleted:
             return {"detail": "coursechapter deleted"}

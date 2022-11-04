@@ -7,7 +7,7 @@ import { Title } from "../../../../../../components/ui/styles/title";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { initialData, initialData2 } from "../../../../../../components/drags/data";
 import Chapter from "../../../../../../components/drags/chapter";
-import { createChapter, getCourseChaptersMetadata } from "../../../../../../services/chapters";
+import { createChapter, deleteChapter, getCourseChaptersMetadata } from "../../../../../../services/chapters";
 import { useRouter } from "next/router";
 import NewChapterModal from "../../../../../../components/modals/chapters/new";
 
@@ -58,6 +58,15 @@ function CourseEdit() {
     getCourseChapters();
     setNewChapterModal(false);
   };
+
+  const deleteChapterUI = async (chapterId: any) => {
+    console.log("deleteChapter", chapterId);
+    await deleteChapter(chapterId);
+    
+    getCourseChapters();
+  };
+
+
 
   // Close new chapter modal
   const closeModal = () => {
@@ -177,7 +186,7 @@ function CourseEdit() {
               {(provided) => (
                 <div key={"chapters"} {...provided.droppableProps} ref={provided.innerRef}>
                   {getChapters().map((info: any, index: any) => (
-                    <Chapter key={index} info={info} index={index}></Chapter>
+                    <Chapter deleteChapter={deleteChapterUI} key={index} info={info} index={index}></Chapter>
                   ))}
                   {provided.placeholder}
                 </div>

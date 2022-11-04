@@ -41,3 +41,22 @@ export async function createChapter(data: any, course_id: any) {
   
   return result;
 }
+
+export async function deleteChapter (coursechapter_id: any) {
+  const HeadersConfig = new Headers({ "Content-Type": "application/json" });
+
+  const requestOptions: any = {
+    method: "DELETE",
+    headers: HeadersConfig,
+    redirect: "follow",
+    credentials: "include",
+  };
+
+  const result: any = await fetch(`${getAPIUrl()}chapters/${coursechapter_id}`, requestOptions)
+    .then((result) => result.json())
+    .catch((error) => console.log("error", error));
+
+  console.log("result", result);
+  
+  return result;
+}
