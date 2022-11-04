@@ -34,9 +34,7 @@ const Layout = (props: any) => {
           <Main className="min-h-screen">{props.children}</Main>
         </motion.main>
         <Footer>
-          <a href="" target="_blank" rel="noopener noreferrer">
-            <img src="/learnhouse_icon.png" alt="Learnhouse Logo" />
-          </a>
+          <p>LearnHouse © 2021 - {new Date().getFullYear()} - All rights reserved</p>
         </Footer>
       </AuthProvider>
     </div>
