@@ -9,6 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@radix-ui/react-dialog": "^1.0.2",
+    "@radix-ui/react-icons": "^1.1.1",
     "@tiptap/extension-collaboration": "^2.0.0-beta.199",
     "@tiptap/extension-collaboration-cursor": "^2.0.0-beta.199",
     "@tiptap/react": "^2.0.0-beta.199",

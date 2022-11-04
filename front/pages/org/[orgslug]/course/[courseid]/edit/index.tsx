@@ -5,21 +5,23 @@ import { Header } from "../../../../../../components/ui/header";
 import Layout from "../../../../../../components/ui/layout";
 import { Title } from "../../../../../../components/ui/styles/title";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
-import { initialData } from "../../../../../../components/drags/data";
+import { initialData, initialData2 } from "../../../../../../components/drags/data";
 import Chapter from "../../../../../../components/drags/chapter";
-import { getCourseChaptersMetadata } from "../../../../../../services/chapters";
+import { createChapter, getCourseChaptersMetadata } from "../../../../../../services/chapters";
 import { useRouter } from "next/router";
+import NewChapterModal from "../../../../../../components/modals/chapters/new";
 
 function CourseEdit() {
   const router = useRouter();
-  const [data, setData] = useState(initialData) as any;
+  const [data, setData] = useState(initialData2) as any;
+  const [newChapterModal, setNewChapterModal] = useState(false) as any;
   const [winReady, setwinReady] = useState(false);
   const { courseid } = router.query;
 
   async function getCourseChapters() {
     const courseChapters = await getCourseChaptersMetadata(courseid);
     setData(courseChapters);
-    console.log(courseChapters);
+    console.log( "courseChapters" , courseChapters);
   }
 
   useEffect(() => {
@@ -32,13 +34,14 @@ function CourseEdit() {
 
   // get a list of chapters order by chapter order
   const getChapters = () => {
-    return data.chapterOrder.map((chapterId: any) => {
+    const chapterOrder = data.chapterOrder ? data.chapterOrder : [];
+    return chapterOrder.map((chapterId: any) => {
       const chapter = data.chapters[chapterId];
       let elements = [];
       if (data.elements) {
         elements = chapter.elementIds.map((elementId: any) => data.elements[elementId])
           ? chapter.elementIds.map((elementId: any) => data.elements[elementId])
-          : null;
+          : [];
       }
       return {
         list: {
@@ -47,6 +50,18 @@ function CourseEdit() {
         },
       };
     });
+  };
+
+  // Submit new chapter
+  const submitChapter = async (chapter: any) => {
+    await createChapter(chapter, courseid);
+    getCourseChapters();
+    setNewChapterModal(false);
+  };
+
+  // Close new chapter modal
+  const closeModal = () => {
+    setNewChapterModal(false);
   };
 
   const onDragEnd = (result: any) => {
@@ -150,9 +165,12 @@ function CourseEdit() {
   return (
     <Layout>
       <Header></Header>
-      <Title>Edit Course Chapters</Title>
+      <Title>
+        Edit Course Chapters <button onClick={()=> {setNewChapterModal(true)}}>+</button>
+      </Title>
+      {newChapterModal && <NewChapterModal closeModal={closeModal} submitChapter={submitChapter}></NewChapterModal>}
       <br />
-      {winReady && (
+      {winReady &&   (
         <ChapterlistWrapper>
           <DragDropContext onDragEnd={onDragEnd}>
             <Droppable droppableId="chapters" type="chapter">
