@@ -13,8 +13,6 @@ from fastapi import FastAPI, HTTPException, status, Request, Response, Backgroun
 
 class CourseElement(BaseModel):
     element_id: str
-    content: str
-    content_type: str
 
 
 class CourseChapter(BaseModel):
