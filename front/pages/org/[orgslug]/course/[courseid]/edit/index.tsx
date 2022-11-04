@@ -20,12 +20,12 @@ function CourseEdit() {
     const courseChapters = await getCourseChaptersMetadata(courseid);
     setData(courseChapters);
     console.log(courseChapters);
-    
   }
-  
-  useEffect(() => {
 
-    
+  useEffect(() => {
+    if (router.isReady) {
+      getCourseChapters();
+    }
 
     setwinReady(true);
   }, [router.isReady]);
@@ -34,7 +34,12 @@ function CourseEdit() {
   const getChapters = () => {
     return data.chapterOrder.map((chapterId: any) => {
       const chapter = data.chapters[chapterId];
-      const elements = chapter.elementIds.map((elementId: any) => data.elements[elementId]);
+      let elements = [];
+      if (data.elements) {
+        elements = chapter.elementIds.map((elementId: any) => data.elements[elementId])
+          ? chapter.elementIds.map((elementId: any) => data.elements[elementId])
+          : null;
+      }
       return {
         list: {
           chapter: chapter,
@@ -68,7 +73,7 @@ function CourseEdit() {
         chapterOrder: newChapterOrder,
       };
       console.log(newState);
-      
+
       setData(newState);
       return;
     }
@@ -82,7 +87,7 @@ function CourseEdit() {
     if (start === finish) {
       // create new arrays for chapters and elements
       const chapter = data.chapters[source.droppableId];
-      const newElementIds = Array.from(chapter.elements.element_id);
+      const newElementIds = Array.from(chapter.elementIds);
 
       // remove the element from the old position
       newElementIds.splice(source.index, 1);
@@ -150,18 +155,17 @@ function CourseEdit() {
       {winReady && (
         <ChapterlistWrapper>
           <DragDropContext onDragEnd={onDragEnd}>
-          <Droppable droppableId="chapters" type="chapter">
-            {(provided) => (
-              <div  key={"chapters"} {...provided.droppableProps} ref={provided.innerRef}>
-                {getChapters().map((info: any, index: any) => (
-                  <Chapter key={index} info={info} index={index}></Chapter>
-                  
-                ))}
-                {provided.placeholder}
-              </div>
-            )}
-          </Droppable>
-        </DragDropContext>
+            <Droppable droppableId="chapters" type="chapter">
+              {(provided) => (
+                <div key={"chapters"} {...provided.droppableProps} ref={provided.innerRef}>
+                  {getChapters().map((info: any, index: any) => (
+                    <Chapter key={index} info={info} index={index}></Chapter>
+                  ))}
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
+          </DragDropContext>
         </ChapterlistWrapper>
       )}
     </Layout>
