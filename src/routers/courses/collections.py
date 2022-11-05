@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from src.services.auth import get_current_user
 from src.services.users import PublicUser, User
-from src.services.collections import Collection, create_collection, get_collection, get_collections, update_collection, delete_collection
+from src.services.courses.collections import Collection, create_collection, get_collection, get_collections, update_collection, delete_collection
 
 
 router = APIRouter()

@@ -67,15 +67,16 @@ const CoursesIndexPage = () => {
                 <a>
                   <h2>{course.name}</h2>
                   <CourseWrapper>
-            <img src={`${getBackendUrl()}content/uploads/img/${course.thumbnail}`} alt="" />
-          </CourseWrapper>
+                    <img src={`${getBackendUrl()}content/uploads/img/${course.thumbnail}`} alt="" />
+                  </CourseWrapper>
                 </a>
-                
               </Link>
-              <button style={{backgroundColor:"red" , border:"none"}} onClick={() => deleteCourses(course.course_id)}>Delete</button>
+              <button style={{ backgroundColor: "red", border: "none" }} onClick={() => deleteCourses(course.course_id)}>
+                Delete
+              </button>
               <Link href={"/org/" + orgslug + "/course/" + removeCoursePrefix(course.course_id) + "/edit"}>
                 <a>
-                  <button >Edit Chapters</button>
+                  <button>Edit Chapters</button>
                 </a>
               </Link>
             </div>
@@ -91,10 +92,8 @@ export default CoursesIndexPage;
 const CourseWrapper = styled.div`
   display: flex;
   img {
-    
     width: 269px;
     height: 151px;
-    
 
     background: url(), #d9d9d9;
     border: 1px solid rgba(255, 255, 255, 0.19);

@@ -4,9 +4,9 @@ import styled from "styled-components";
 
 function Element(props: any) {
   return (
-    <Draggable draggableId={props.element.id} index={props.index}>
+    <Draggable key={props.element.id} draggableId={props.element.id} index={props.index}>
       {(provided) => (
-        <ElementWrapper {...provided.draggableProps} {...provided.dragHandleProps} ref={provided.innerRef}>
+        <ElementWrapper key={props.element.id} {...provided.draggableProps} {...provided.dragHandleProps} ref={provided.innerRef}>
           {props.element.content}
         </ElementWrapper>
       )}

@@ -23,11 +23,11 @@ function Chapter(props: any) {
       {(provided, snapshot) => (
         <ChapterWrapper {...provided.dragHandleProps} {...provided.draggableProps} ref={provided.innerRef} isDragging={snapshot.isDragging} key={props.info.list.chapter.id}>
           <h3>{props.info.list.chapter.name} <button onClick={() => {props.deleteChapter(props.info.list.chapter.id)}}>X</button></h3>
-          <Droppable droppableId={props.info.list.chapter.id} type="element">
+          <Droppable key={props.info.list.chapter.id} droppableId={props.info.list.chapter.id} type="element">
             {(provided) => (
               <ElementsList {...provided.droppableProps} ref={provided.innerRef}>
                 {props.info.list.elements.map((element: any, index: any) => (
-                 <div key={element.id}> <Element key={element.id} element={element} index={index}></Element></div>
+                  <Element key={element.id} element={element} index={index}></Element>
                 ))}
                 {provided.placeholder}
               </ElementsList>

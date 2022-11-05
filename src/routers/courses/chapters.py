@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, UploadFile, Form
 
-from src.services.chapters import CourseChapter, CourseChapterMetaData, create_coursechapter, delete_coursechapter, get_coursechapter, get_coursechapters, get_coursechapters_meta, update_coursechapter, update_coursechapters_meta
+from src.services.courses.chapters import CourseChapter, CourseChapterMetaData, create_coursechapter, delete_coursechapter, get_coursechapter, get_coursechapters, get_coursechapters_meta, update_coursechapter, update_coursechapters_meta
 from src.services.users import PublicUser
 from src.services.auth import get_current_user
 
