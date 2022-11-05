@@ -1,5 +1,6 @@
 from fastapi import APIRouter
-from src.routers import chapters, collections, courses, users, auth, houses, orgs, roles
+from src.routers import users, auth, houses, orgs, roles
+from src.routers.courses import chapters, collections, courses
 
 
 global_router = APIRouter(prefix="/api")

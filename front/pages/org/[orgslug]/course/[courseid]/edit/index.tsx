@@ -182,7 +182,7 @@ function CourseEdit() {
       {winReady &&   (
         <ChapterlistWrapper>
           <DragDropContext onDragEnd={onDragEnd}>
-            <Droppable droppableId="chapters" type="chapter">
+            <Droppable key="chapters" droppableId="chapters" type="chapter">
               {(provided) => (
                 <div key={"chapters"} {...provided.droppableProps} ref={provided.innerRef}>
                   {getChapters().map((info: any, index: any) => (
