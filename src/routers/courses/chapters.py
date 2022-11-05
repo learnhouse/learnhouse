@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, UploadFile, Form
 
 from src.services.courses.chapters import CourseChapter, CourseChapterMetaData, create_coursechapter, delete_coursechapter, get_coursechapter, get_coursechapters, get_coursechapters_meta, update_coursechapter, update_coursechapters_meta
 from src.services.users import PublicUser
-from src.services.auth import get_current_user
+from src.dependencies.auth import get_current_user
 
 router = APIRouter()
 
@@ -24,7 +24,7 @@ async def api_get_coursechapter(coursechapter_id: str, current_user: PublicUser 
 
 
 @router.get("/meta/{course_id}")
-async def api_get_coursechapter(course_id: str, current_user: PublicUser = Depends(get_current_user)):
+async def api_get_coursechapter_meta(course_id: str, current_user: PublicUser = Depends(get_current_user)):
     """
     Get coursechapter metadata
     """

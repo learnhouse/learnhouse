@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, UploadFile, Form
-from src.services.auth import get_current_user
+from src.dependencies.auth import get_current_user
 
 from src.services.courses.courses import Course,  create_course,  get_course, get_courses, update_course, delete_course, update_course_thumbnail
 from src.services.users import PublicUser

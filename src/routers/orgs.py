@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from src.services.auth import get_current_user
+from src.dependencies.auth import get_current_user
 from src.services.orgs import Organization, create_org, delete_org, get_organization, get_organization_by_slug, get_orgs, get_orgs_by_user, update_org
 from src.services.users import PublicUser, User
 

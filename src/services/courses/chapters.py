@@ -91,7 +91,7 @@ async def get_coursechapters_meta(course_id: str, current_user: PublicUser):
         {"course_id": course_id}).sort("name", 1)
 
     course = courses.find_one({"course_id": course_id})
-    course = Course(**course)
+    course = Course(**course)  # type: ignore
 
     # chapters
     chapters = {}
@@ -120,7 +120,7 @@ async def update_coursechapters_meta(course_id: str, coursechapters_metadata: Co
     courses = learnhouseDB["courses"]
 
     course = courses.find_one({"course_id": course_id})
-    course = Course(**course)
+    course = Course(**course)  # type: ignore
 
     # update chapters in course
     courseInDB = courses.update_one({"course_id": course_id}, {
