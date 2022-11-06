@@ -32,7 +32,11 @@ class CourseChapterMetaData(BaseModel):
     chapterOrder: List[str]
     chapters: List
 
-# CoursesChapters
+#### Classes ####################################################
+
+####################################################
+# CRUD
+####################################################
 
 
 async def create_coursechapter(coursechapter_object: CourseChapter, course_id: str, current_user: PublicUser):
@@ -80,55 +84,6 @@ async def get_coursechapter(coursechapter_id: str, current_user: PublicUser):
     else:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="CourseChapter does not exist")
-
-
-async def get_coursechapters_meta(course_id: str, current_user: PublicUser):
-    await check_database()
-    coursechapters = learnhouseDB["coursechapters"]
-    courses = learnhouseDB["courses"]
-
-    coursechapters = coursechapters.find(
-        {"course_id": course_id}).sort("name", 1)
-
-    course = courses.find_one({"course_id": course_id})
-    course = Course(**course)  # type: ignore
-
-    # chapters
-    chapters = {}
-    for coursechapter in coursechapters:
-        coursechapter = CourseChapterInDB(**coursechapter)
-        coursechapter_elementIds = []
-
-        for element in coursechapter.elements:
-            coursechapter_elementIds.append(element.element_id)
-
-        chapters[coursechapter.coursechapter_id] = {
-            "id": coursechapter.coursechapter_id, "name": coursechapter.name,  "elementIds": coursechapter_elementIds
-        }
-
-    final = {
-        "chapters": chapters,
-        "chapterOrder": course.chapters
-    }
-
-    return final
-
-
-async def update_coursechapters_meta(course_id: str, coursechapters_metadata: CourseChapterMetaData, current_user: PublicUser):
-    await check_database()
-    coursechapters = learnhouseDB["coursechapters"]
-    courses = learnhouseDB["courses"]
-
-    course = courses.find_one({"course_id": course_id})
-    course = Course(**course)  # type: ignore
-
-    # update chapters in course
-    courseInDB = courses.update_one({"course_id": course_id}, {
-                                    "$set": {"chapters": coursechapters_metadata.chapterOrder}})
-
-    # TODO : update chapters in coursechapters
-
-    return {courseInDB}
 
 
 async def update_coursechapter(coursechapter_object: CourseChapter,  coursechapter_id: str, current_user: PublicUser):
@@ -189,6 +144,10 @@ async def delete_coursechapter(coursechapter_id: str,  current_user: PublicUser)
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Course does not exist")
 
+####################################################
+# Misc
+####################################################
+
 
 async def get_coursechapters(course_id: str, page: int = 1, limit: int = 10):
     await check_database()
@@ -200,6 +159,54 @@ async def get_coursechapters(course_id: str, page: int = 1, limit: int = 10):
 
     return [json.loads(json.dumps(coursechapter, default=str)) for coursechapter in all_coursechapters]
 
+
+async def get_coursechapters_meta(course_id: str, current_user: PublicUser):
+    await check_database()
+    coursechapters = learnhouseDB["coursechapters"]
+    courses = learnhouseDB["courses"]
+
+    coursechapters = coursechapters.find(
+        {"course_id": course_id}).sort("name", 1)
+
+    course = courses.find_one({"course_id": course_id})
+    course = Course(**course)  # type: ignore
+
+    # chapters
+    chapters = {}
+    for coursechapter in coursechapters:
+        coursechapter = CourseChapterInDB(**coursechapter)
+        coursechapter_elementIds = []
+
+        for element in coursechapter.elements:
+            coursechapter_elementIds.append(element.element_id)
+
+        chapters[coursechapter.coursechapter_id] = {
+            "id": coursechapter.coursechapter_id, "name": coursechapter.name,  "elementIds": coursechapter_elementIds
+        }
+
+    final = {
+        "chapters": chapters,
+        "chapterOrder": course.chapters
+    }
+
+    return final
+
+
+async def update_coursechapters_meta(course_id: str, coursechapters_metadata: CourseChapterMetaData, current_user: PublicUser):
+    await check_database()
+    coursechapters = learnhouseDB["coursechapters"]
+    courses = learnhouseDB["courses"]
+
+    course = courses.find_one({"course_id": course_id})
+    course = Course(**course)  # type: ignore
+
+    # update chapters in course
+    courseInDB = courses.update_one({"course_id": course_id}, {
+                                    "$set": {"chapters": coursechapters_metadata.chapterOrder}})
+
+    # TODO : update chapters in coursechapters
+
+    return {courseInDB}
 
 #### Security ####################################################
 
