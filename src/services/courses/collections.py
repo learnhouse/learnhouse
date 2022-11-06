@@ -23,6 +23,9 @@ class CollectionInDB(Collection):
 
 #### Classes ####################################################
 
+####################################################
+# CRUD
+####################################################
 
 async def get_collection(collection_id: str, current_user: PublicUser):
     await check_database()
@@ -112,6 +115,9 @@ async def delete_collection(collection_id: str, current_user: PublicUser):
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Unavailable database")
 
+####################################################
+# Misc
+####################################################
 
 async def get_collections(page: int = 1, limit: int = 10):
     ## TODO : auth

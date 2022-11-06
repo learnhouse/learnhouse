@@ -5,7 +5,7 @@ from uuid import uuid4
 from pydantic import BaseModel
 from src.services.uploads import upload_thumbnail
 from src.services.users import PublicUser, User
-from src.services.database import create_config_collection, check_database, create_database, learnhouseDB, learnhouseDB
+from src.services.database import create_config_collection, check_database, create_database, learnhouseDB
 from src.services.security import *
 from fastapi import FastAPI, HTTPException, status, Request, Response, BackgroundTasks, UploadFile, File
 from datetime import datetime
@@ -30,17 +30,14 @@ class CourseInDB(Course):
     updateDate: str
     authors: List[str]
 
-#####
-
-
-
-
 #### Classes ####################################################
 
 # TODO : Add courses photo & cover upload and delete
 
 
-# Courses
+####################################################
+# CRUD
+####################################################
 
 async def get_course(course_id: str, current_user: PublicUser):
     await check_database()
@@ -59,7 +56,7 @@ async def get_course(course_id: str, current_user: PublicUser):
     return course
 
 
-async def create_course(course_object: Course,   org_id: str, current_user: PublicUser, thumbnail_file: UploadFile | None = None):
+async def create_course(course_object: Course, org_id: str, current_user: PublicUser, thumbnail_file: UploadFile | None = None):
     await check_database()
     courses = learnhouseDB["courses"]
 
@@ -174,6 +171,10 @@ async def delete_course(course_id: str, current_user: PublicUser):
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Unavailable database")
 
+####################################################
+# Misc
+####################################################
+
 
 async def get_courses(page: int = 1, limit: int = 10, org_id: str | None = None):
     await check_database()
@@ -184,7 +185,6 @@ async def get_courses(page: int = 1, limit: int = 10, org_id: str | None = None)
         "name", 1).skip(10 * (page - 1)).limit(limit)
 
     return [json.loads(json.dumps(course, default=str)) for course in all_courses]
-
 
 
 #### Security ####################################################
