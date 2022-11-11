@@ -1,6 +1,6 @@
 import React from "react";
-import Layout from "../../components/ui/layout";
-import { Title } from "../../components/ui/styles/title";
+import Layout from "../../components/ui/Layout";
+import { Title } from "../../components/ui/styles/Title";
 import { createNewOrganization } from "../../services/orgs";
 
 const Organizations = () => {

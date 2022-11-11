@@ -1,7 +1,7 @@
 import { default as React, useEffect, useRef } from "react";
 
-import Layout from "../../../../../../components/ui/layout";
-import { Title } from "../../../../../../components/ui/styles/title";
+import Layout from "../../../../../../components/ui/Layout";
+import { Title } from "../../../../../../components/ui/styles/Title";
 import dynamic from "next/dynamic";
 import { AuthContext } from "../../../../../../components/security/AuthProvider";
 

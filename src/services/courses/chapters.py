@@ -4,20 +4,18 @@ from typing import List
 from uuid import uuid4
 from pydantic import BaseModel
 from src.services.courses.courses import Course, CourseInDB
+from src.services.courses.elements import Element, ElementInDB
 from src.services.database import create_config_collection, check_database, create_database, learnhouseDB, learnhouseDB
 from src.services.security import verify_user_rights_with_roles
 from src.services.users import PublicUser
 from fastapi import FastAPI, HTTPException, status, Request, Response, BackgroundTasks, UploadFile, File
 
 
-class CourseElement(BaseModel):
-    element_id: str
-
 
 class CourseChapter(BaseModel):
     name: str
     description: str
-    elements: List[CourseElement]
+    elements: list
 
 
 class CourseChapterInDB(CourseChapter):
@@ -164,12 +162,18 @@ async def get_coursechapters_meta(course_id: str, current_user: PublicUser):
     await check_database()
     coursechapters = learnhouseDB["coursechapters"]
     courses = learnhouseDB["courses"]
+    elements = learnhouseDB["elements"]
 
     coursechapters = coursechapters.find(
         {"course_id": course_id}).sort("name", 1)
 
+
+
     course = courses.find_one({"course_id": course_id})
     course = Course(**course)  # type: ignore
+
+    # elements
+    coursechapter_elementIds_global = []
 
     # chapters
     chapters = {}
@@ -178,15 +182,27 @@ async def get_coursechapters_meta(course_id: str, current_user: PublicUser):
         coursechapter_elementIds = []
 
         for element in coursechapter.elements:
-            coursechapter_elementIds.append(element.element_id)
+            coursechapter_elementIds.append(element)
+            coursechapter_elementIds_global.append(element)
 
         chapters[coursechapter.coursechapter_id] = {
             "id": coursechapter.coursechapter_id, "name": coursechapter.name,  "elementIds": coursechapter_elementIds
         }
+    
+    # elements 
+    elements_list = {}
+    for element in elements.find({"element_id": {"$in": coursechapter_elementIds_global}}):
+        element = ElementInDB(**element)
+        elements_list[element.element_id] = {
+            "id": element.element_id, "name": element.name, "type": element.type , "content": element.content
+        }
+    
+
 
     final = {
         "chapters": chapters,
-        "chapterOrder": course.chapters
+        "chapterOrder": course.chapters,
+        "elements" : elements_list
     }
 
     return final

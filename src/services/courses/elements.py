@@ -8,11 +8,11 @@ from datetime import datetime
 
 #### Classes ####################################################
 
+
 class Element(BaseModel):
     name: str
-    element_type: str
-    content: str
-    
+    type: str
+    content: object
 
 
 class ElementInDB(Element):
@@ -29,9 +29,10 @@ class ElementInDB(Element):
 ####################################################
 
 
-async def create_element(element_object: Element, coursechapter_id : str , current_user: PublicUser):
+async def create_element(element_object: Element, coursechapter_id: str, current_user: PublicUser):
     await check_database()
     elements = learnhouseDB["elements"]
+    coursechapters = learnhouseDB["coursechapters"]
 
     # generate element_id
     element_id = str(f"element_{uuid4()}")
@@ -46,6 +47,10 @@ async def create_element(element_object: Element, coursechapter_id : str , curre
     element = ElementInDB(**element_object.dict(), creationDate=str(
         datetime.now()), coursechapter_id=coursechapter_id, updateDate=str(datetime.now()), element_id=element_id)
     elements.insert_one(element.dict())
+
+    # update chapter
+    coursechapters.update_one({"coursechapter_id": coursechapter_id}, {
+                       "$addToSet": {"elements": element_id}})
 
     return element
 
@@ -88,7 +93,7 @@ async def update_element(element_object: Element, element_id: str, current_user:
         datetime_object = datetime.now()
 
         updated_course = ElementInDB(
-            element_id=element_id,coursechapter_id=element["coursechapter_id"] ,creationDate=creationDate, updateDate=str(datetime_object), **element_object.dict())
+            element_id=element_id, coursechapter_id=element["coursechapter_id"], creationDate=creationDate, updateDate=str(datetime_object), **element_object.dict())
 
         elements.update_one({"element_id": element_id}, {
             "$set": updated_course.dict()})

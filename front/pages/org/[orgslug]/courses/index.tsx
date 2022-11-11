@@ -2,11 +2,11 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import React from "react";
 import styled from "styled-components";
-import { Header } from "../../../../components/ui/header";
-import Layout from "../../../../components/ui/layout";
-import { Title } from "../../../../components/ui/styles/title";
+import { Header } from "../../../../components/ui/Header";
+import Layout from "../../../../components/ui/Layout";
+import { Title } from "../../../../components/ui/styles/Title";
 import { getBackendUrl } from "../../../../services/config";
-import { deleteCourseFromBackend, getOrgCourses } from "../../../../services/courses";
+import { deleteCourseFromBackend, getOrgCourses } from "../../../../services/courses/courses";
 import { getOrganizationContextInfo } from "../../../../services/orgs";
 
 const CoursesIndexPage = () => {
