@@ -1,4 +1,4 @@
-import { getAPIUrl } from "./config";
+import { getAPIUrl } from "../config";
 
 export async function getOrgCourses(org_id: number) {
   const HeadersConfig = new Headers({ "Content-Type": "application/json" });

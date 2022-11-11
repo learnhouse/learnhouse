@@ -1,27 +1,38 @@
 import React from "react";
 import { useState, useEffect } from "react";
 import styled from "styled-components";
-import { Header } from "../../../../../../components/ui/header";
-import Layout from "../../../../../../components/ui/layout";
-import { Title } from "../../../../../../components/ui/styles/title";
+import { Header } from "../../../../../../components/ui/Header";
+import Layout from "../../../../../../components/ui/Layout";
+import { Title } from "../../../../../../components/ui/styles/Title";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { initialData, initialData2 } from "../../../../../../components/drags/data";
-import Chapter from "../../../../../../components/drags/chapter";
-import { createChapter, deleteChapter, getCourseChaptersMetadata } from "../../../../../../services/chapters";
+import Chapter from "../../../../../../components/drags/Chapter";
+import { createChapter, deleteChapter, getCourseChaptersMetadata } from "../../../../../../services/courses/chapters";
 import { useRouter } from "next/router";
-import NewChapterModal from "../../../../../../components/modals/chapters/new";
+import NewChapterModal from "../../../../../../components/modals/CourseEdit/NewChapter";
+import NewElementModal from "../../../../../../components/modals/CourseEdit/NewElement";
+import { createElement } from "../../../../../../services/courses/elements";
 
 function CourseEdit() {
   const router = useRouter();
+
+  // Initial Course State
   const [data, setData] = useState(initialData2) as any;
+
+  // New Chapter Modal State
   const [newChapterModal, setNewChapterModal] = useState(false) as any;
+  // New Element Modal State
+  const [newElementModal, setNewElementModal] = useState(false) as any;
+  const [newElementModalData, setNewElementModalData] = useState("") as any;
+
+  // Check window availability
   const [winReady, setwinReady] = useState(false);
   const { courseid } = router.query;
 
   async function getCourseChapters() {
     const courseChapters = await getCourseChaptersMetadata(courseid);
     setData(courseChapters);
-    console.log( "courseChapters" , courseChapters);
+    console.log("courseChapters", courseChapters);
   }
 
   useEffect(() => {
@@ -59,20 +70,44 @@ function CourseEdit() {
     setNewChapterModal(false);
   };
 
+  // Submit new element
+  const submitElement = async (element: any) => {
+    console.log("submitElement", element);
+    await createElement(element, element.chapterId);
+    getCourseChapters();
+    setNewElementModal(false);
+  };
+
   const deleteChapterUI = async (chapterId: any) => {
     console.log("deleteChapter", chapterId);
     await deleteChapter(chapterId);
-    
     getCourseChapters();
   };
 
+  const openNewElementModal = async (chapterId: any) => {
+    console.log("openNewElementModal", chapterId);
+    setNewElementModal(true);
+    setNewElementModalData(chapterId);
+  };
 
+  /* 
+  
+  Modals
 
+  */
   // Close new chapter modal
-  const closeModal = () => {
+  const closeNewChapterModal = () => {
     setNewChapterModal(false);
   };
 
+  const closeNewElementModal = () => {
+    setNewElementModal(false);
+  };
+
+  /* 
+  Drag and drop functions
+
+  */
   const onDragEnd = (result: any) => {
     const { destination, source, draggableId, type } = result;
     console.log(result);
@@ -175,21 +210,34 @@ function CourseEdit() {
     <Layout>
       <Header></Header>
       <Title>
-        Edit Course Chapters <button onClick={()=> {setNewChapterModal(true)}}>+</button>
+        Edit Course Chapters{" "}
+        <button
+          onClick={() => {
+            setNewChapterModal(true);
+          }}
+        >
+          +
+        </button>
       </Title>
-      {newChapterModal && <NewChapterModal closeModal={closeModal} submitChapter={submitChapter}></NewChapterModal>}
+      {newChapterModal && <NewChapterModal closeModal={closeNewChapterModal} submitChapter={submitChapter}></NewChapterModal>}
+      {newElementModal && <NewElementModal closeModal={closeNewElementModal} submitElement={submitElement} chapterId={newElementModalData}></NewElementModal>}
+
       <br />
-      {winReady &&   (
+      {winReady && (
         <ChapterlistWrapper>
           <DragDropContext onDragEnd={onDragEnd}>
             <Droppable key="chapters" droppableId="chapters" type="chapter">
               {(provided) => (
-                <div key={"chapters"} {...provided.droppableProps} ref={provided.innerRef}>
-                  {getChapters().map((info: any, index: any) => (
-                    <Chapter deleteChapter={deleteChapterUI} key={index} info={info} index={index}></Chapter>
-                  ))}
-                  {provided.placeholder}
-                </div>
+                <>
+                  <div key={"chapters"} {...provided.droppableProps} ref={provided.innerRef}>
+                    {getChapters().map((info: any, index: any) => (
+                      <>
+                        <Chapter openNewElementModal={openNewElementModal} deleteChapter={deleteChapterUI} key={index} info={info} index={index}></Chapter>
+                      </>
+                    ))}
+                    {provided.placeholder}
+                  </div>
+                </>
               )}
             </Droppable>
           </DragDropContext>

@@ -1,9 +1,9 @@
 import { useRouter } from "next/router";
 import React from "react";
-import { Header } from "../../../../../components/ui/header";
-import Layout from "../../../../../components/ui/layout";
-import { Title } from "../../../../../components/ui/styles/title";
-import { createNewCourse } from "../../../../../services/courses";
+import { Header } from "../../../../../components/ui/Header";
+import Layout from "../../../../../components/ui/Layout";
+import { Title } from "../../../../../components/ui/styles/Title";
+import { createNewCourse } from "../../../../../services/courses/courses";
 import { getOrganizationContextInfo } from "../../../../../services/orgs";
 
 const NewCoursePage = () => {

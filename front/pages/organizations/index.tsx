@@ -1,8 +1,8 @@
 import Link from "next/link";
 import React from "react";
 import AuthenticatedOnly from "../../components/security/AuthenticatedOnly";
-import Layout from "../../components/ui/layout";
-import { Title } from "../../components/ui/styles/title";
+import Layout from "../../components/ui/Layout";
+import { Title } from "../../components/ui/styles/Title";
 import { deleteOrganizationFromBackend, getUserOrganizations } from "../../services/orgs";
 
 const Organizations = () => {

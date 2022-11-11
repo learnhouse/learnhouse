@@ -1,5 +1,5 @@
-import { initialData } from "../components/drags/data";
-import { getAPIUrl } from "./config";
+import { initialData } from "../../components/drags/data";
+import { getAPIUrl } from "../config";
 
 export async function getCourseChaptersMetadata(course_id: any) {
   const HeadersConfig = new Headers({ "Content-Type": "application/json" });

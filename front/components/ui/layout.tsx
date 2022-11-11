@@ -1,10 +1,9 @@
 import React from "react";
 import Head from "next/head";
-import { Header } from "./header";
 import styled from "styled-components";
 import AuthProvider from "../security/AuthProvider";
 import { motion } from "framer-motion";
-import { Menu } from "./elements/menu";
+import { Menu } from "./elements/Menu";
 
 const Layout = (props: any) => {
   const variants = {

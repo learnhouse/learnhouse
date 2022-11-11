@@ -7,7 +7,7 @@ function Element(props: any) {
     <Draggable key={props.element.id} draggableId={props.element.id} index={props.index}>
       {(provided) => (
         <ElementWrapper key={props.element.id} {...provided.draggableProps} {...provided.dragHandleProps} ref={provided.innerRef}>
-          {props.element.content}
+          <p>{props.element.name} </p>
         </ElementWrapper>
       )}
     </Draggable>
