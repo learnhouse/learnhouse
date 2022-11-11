@@ -35,7 +35,7 @@ function Chapter(props: any) {
             {(provided) => (
               <ElementsList {...provided.droppableProps} ref={provided.innerRef}>
                 {props.info.list.elements.map((element: any, index: any) => (
-                  <Element key={element.id} element={element} index={index}></Element>
+                  <Element orgslug={props.orgslug} courseid={props.courseid} key={element.id} element={element} index={index}></Element>
                 ))}
                 {provided.placeholder}
               </ElementsList>

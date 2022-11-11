@@ -27,7 +27,7 @@ function CourseEdit() {
 
   // Check window availability
   const [winReady, setwinReady] = useState(false);
-  const { courseid } = router.query;
+  const { courseid, orgslug } = router.query;
 
   async function getCourseChapters() {
     const courseChapters = await getCourseChaptersMetadata(courseid);
@@ -232,7 +232,7 @@ function CourseEdit() {
                   <div key={"chapters"} {...provided.droppableProps} ref={provided.innerRef}>
                     {getChapters().map((info: any, index: any) => (
                       <>
-                        <Chapter openNewElementModal={openNewElementModal} deleteChapter={deleteChapterUI} key={index} info={info} index={index}></Chapter>
+                        <Chapter orgslug={orgslug} courseid={courseid} openNewElementModal={openNewElementModal} deleteChapter={deleteChapterUI} key={index} info={info} index={index}></Chapter>
                       </>
                     ))}
                     {provided.placeholder}
