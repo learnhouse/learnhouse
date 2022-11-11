@@ -5,6 +5,7 @@ html,
 body {
   padding: 0;
   margin: 0;
+  transition: all 0.2s ease;
   font-family: 'DM Sans' , -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
 }
 
