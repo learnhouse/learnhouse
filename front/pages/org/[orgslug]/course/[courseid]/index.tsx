@@ -17,7 +17,7 @@ const CourseIdPage = () => {
     const course = await getCourse("course_" + courseid);
 
     setCourseInfo(course);
-    console.log(courseInfo);
+    console.log("courseinfo" , courseInfo);
 
     setIsLoading(false);
   }
@@ -27,6 +27,7 @@ const CourseIdPage = () => {
       fetchCourseInfo();
     }
     return () => {};
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router.isReady]);
 
   return (

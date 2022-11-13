@@ -1,6 +1,7 @@
 import Link from "next/link";
 import React from "react";
 import {  Draggable } from "react-beautiful-dnd";
+import { EyeOpenIcon, Pencil2Icon } from '@radix-ui/react-icons'
 import styled from "styled-components";
 
 function Element(props: any) {
@@ -10,8 +11,11 @@ function Element(props: any) {
       {(provided) => (
         <ElementWrapper key={props.element.id} {...provided.draggableProps} {...provided.dragHandleProps} ref={provided.innerRef}>
           <p>{props.element.name} </p>
+          <Link href={`/org/${props.orgslug}/course/${props.courseid}/element/${props.element.id.replace("element_", "")}`}>
+            <a  target="_blank" rel="noopener noreferrer">&nbsp; <EyeOpenIcon/></a>
+          </Link>
           <Link href={`/org/${props.orgslug}/course/${props.courseid}/element/${props.element.id.replace("element_", "")}/edit`}>
-            <a  target="_blank" rel="noopener noreferrer">Edit</a>
+            <a  target="_blank" rel="noopener noreferrer">&nbsp; <Pencil2Icon/></a>
           </Link>
         </ElementWrapper>
       )}

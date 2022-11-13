@@ -6,9 +6,8 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/router";
 import { getElement } from "../../../../../../../services/courses/elements";
 
-// Workarkound (Next.js SSR doesn't support tip tap editor)
-
-const Editor : any = dynamic(() => import("../../../../../../../components/editor/editor"), {
+// Workaround (Next.js SSR doesn't support tip tap editor)
+const Editor: any = dynamic(() => import("../../../../../../../components/editor/Editor") as any, {
   ssr: false,
 });
 
@@ -29,11 +28,12 @@ function EditElement() {
       fetchElementData();
     }
     return () => {};
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router.isReady]);
 
   return (
     <Layout>
-      <Title>Edit Page </Title>
+      <Title>Edit : {element.name} </Title>
       <br />
       {isLoading ? (
         <div>Loading...</div>

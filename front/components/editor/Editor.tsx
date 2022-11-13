@@ -27,7 +27,7 @@ function Editor(props: EditorProps) {
 
   async function setContent(content: any) {
     let element = props.element;
-    element.content = content.content;
+    element.content = content;
     const res = await updateElement(element, element.element_id);
     
   }
