@@ -2,11 +2,15 @@ import { default as React, useEffect, useRef } from "react";
 import * as Y from "yjs";
 import { WebrtcProvider } from "y-webrtc";
 import EditorWithOptions from "./EditorWithOptions";
-import { IndexeddbPersistence } from 'y-indexeddb'
+import { IndexeddbPersistence } from "y-indexeddb";
+import { updateElement } from "../../services/courses/elements";
 
-// tools
+interface EditorProps {
+  content: string;
+  element: any;
+}
 
-function Editor() {
+function Editor(props: EditorProps) {
   // A new Y document
   const ydoc = new Y.Doc();
   const [providerState, setProviderState] = React.useState<any>({});
@@ -14,11 +18,18 @@ function Editor() {
   const [isLoading, setIsLoading] = React.useState(true);
 
   function createRTCProvider() {
-    const provider = new WebrtcProvider("learnhouse-1", ydoc);
-    
+    const provider = new WebrtcProvider(props.element.element_id, ydoc);
+
     setYdocState(ydoc);
     setProviderState(provider);
     setIsLoading(false);
+  }
+
+  async function setContent(content: any) {
+    let element = props.element;
+    element.content = content;
+    const res = await updateElement(element, element.element_id);
+    
   }
 
   if (isLoading) {
@@ -26,7 +37,7 @@ function Editor() {
   } else {
     return (
       <div>
-        <EditorWithOptions provider={providerState} ydoc={ydocState}></EditorWithOptions>
+        <EditorWithOptions content={props.content} setContent={setContent} provider={providerState} ydoc={ydocState}></EditorWithOptions>
       </div>
     );
   }

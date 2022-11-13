@@ -7,7 +7,7 @@ import { Title } from "../../../../../../components/ui/styles/Title";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { initialData, initialData2 } from "../../../../../../components/drags/data";
 import Chapter from "../../../../../../components/drags/Chapter";
-import { createChapter, deleteChapter, getCourseChaptersMetadata } from "../../../../../../services/courses/chapters";
+import { createChapter, deleteChapter, getCourseChaptersMetadata, updateChaptersMetadata } from "../../../../../../services/courses/chapters";
 import { useRouter } from "next/router";
 import NewChapterModal from "../../../../../../components/modals/CourseEdit/NewChapter";
 import NewElementModal from "../../../../../../components/modals/CourseEdit/NewElement";
@@ -73,6 +73,7 @@ function CourseEdit() {
   // Submit new element
   const submitElement = async (element: any) => {
     console.log("submitElement", element);
+    updateChaptersMetadata(courseid, data);
     await createElement(element, element.chapterId);
     getCourseChapters();
     setNewElementModal(false);
@@ -84,10 +85,9 @@ function CourseEdit() {
     getCourseChapters();
   };
 
-  const openNewElementModal = async (chapterId: any) => {
-    console.log("openNewElementModal", chapterId);
-    setNewElementModal(true);
-    setNewElementModalData(chapterId);
+  const updateChapters = () => {
+    console.log(data);
+    updateChaptersMetadata(courseid,data);
   };
 
   /* 
@@ -95,6 +95,13 @@ function CourseEdit() {
   Modals
 
   */
+
+  const openNewElementModal = async (chapterId: any) => {
+    console.log("openNewElementModal", chapterId);
+    setNewElementModal(true);
+    setNewElementModalData(chapterId);
+  };
+
   // Close new chapter modal
   const closeNewChapterModal = () => {
     setNewChapterModal(false);
@@ -218,6 +225,13 @@ function CourseEdit() {
         >
           +
         </button>
+        <button
+          onClick={() => {
+            updateChapters();
+          }}
+        >
+          Save Chapters
+        </button>
       </Title>
       {newChapterModal && <NewChapterModal closeModal={closeNewChapterModal} submitChapter={submitChapter}></NewChapterModal>}
       {newElementModal && <NewElementModal closeModal={closeNewElementModal} submitElement={submitElement} chapterId={newElementModalData}></NewElementModal>}
@@ -232,7 +246,15 @@ function CourseEdit() {
                   <div key={"chapters"} {...provided.droppableProps} ref={provided.innerRef}>
                     {getChapters().map((info: any, index: any) => (
                       <>
-                        <Chapter orgslug={orgslug} courseid={courseid} openNewElementModal={openNewElementModal} deleteChapter={deleteChapterUI} key={index} info={info} index={index}></Chapter>
+                        <Chapter
+                          orgslug={orgslug}
+                          courseid={courseid}
+                          openNewElementModal={openNewElementModal}
+                          deleteChapter={deleteChapterUI}
+                          key={index}
+                          info={info}
+                          index={index}
+                        ></Chapter>
                       </>
                     ))}
                     {provided.placeholder}

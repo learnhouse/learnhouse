@@ -28,7 +28,8 @@ class CourseChapterInDB(CourseChapter):
 # Frontend
 class CourseChapterMetaData(BaseModel):
     chapterOrder: List[str]
-    chapters: List
+    chapters: object
+    elements: object
 
 #### Classes ####################################################
 
@@ -167,8 +168,6 @@ async def get_coursechapters_meta(course_id: str, current_user: PublicUser):
     coursechapters = coursechapters.find(
         {"course_id": course_id}).sort("name", 1)
 
-
-
     course = courses.find_one({"course_id": course_id})
     course = Course(**course)  # type: ignore
 
@@ -213,16 +212,20 @@ async def update_coursechapters_meta(course_id: str, coursechapters_metadata: Co
     coursechapters = learnhouseDB["coursechapters"]
     courses = learnhouseDB["courses"]
 
-    course = courses.find_one({"course_id": course_id})
-    course = Course(**course)  # type: ignore
-
     # update chapters in course
     courseInDB = courses.update_one({"course_id": course_id}, {
                                     "$set": {"chapters": coursechapters_metadata.chapterOrder}})
 
-    # TODO : update chapters in coursechapters
 
-    return {courseInDB}
+    # update elements in coursechapters
+    # TODO : performance/optimization improvement
+    for coursechapter in coursechapters_metadata.chapters:
+        coursechapters.update_one({"coursechapter_id": coursechapter}, {
+            "$set": {"elements": coursechapters_metadata.chapters[coursechapter]["elementIds"]}})
+    
+    
+
+    return {"ok"}
 
 #### Security ####################################################
 
