@@ -5,10 +5,16 @@ import Collaboration from "@tiptap/extension-collaboration";
 import CollaborationCursor from "@tiptap/extension-collaboration-cursor";
 import { AuthContext } from "../security/AuthProvider";
 
+interface EditorWithOptionsProps {
+  content: string;
+  ydoc: any;
+  provider: any;
+  setContent: (content: string) => void;
+}
 
-function EditorWithOptions(props: any) {
+function EditorWithOptions(props: EditorWithOptionsProps) {
   const auth: any = React.useContext(AuthContext);
-  
+
   const MenuBar = ({ editor }: any) => {
     if (!editor) {
       return null;
@@ -109,12 +115,11 @@ function EditorWithOptions(props: any) {
     );
   };
 
-  const editor = useEditor({
+  const editor : any = useEditor({
     extensions: [
       StarterKit.configure({
         // The Collaboration extension comes with its own history handling
         history: false,
-        
       }),
       // Register the document with Tiptap
       Collaboration.configure({
@@ -129,14 +134,14 @@ function EditorWithOptions(props: any) {
         },
       }),
     ],
-    
-    content: "<p>Hello World!</p>",
-  });
 
-  
+    content: props.content,
+  });
 
   return (
     <div>
+      File <button onClick={() => props.setContent(editor.getJSON())}>save</button>
+      <br /><hr />
       <MenuBar editor={editor} />
       <EditorContent editor={editor} style={{ backgroundColor: "white" }} />
     </div>
