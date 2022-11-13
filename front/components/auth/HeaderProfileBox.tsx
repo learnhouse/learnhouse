@@ -30,7 +30,7 @@ export const HeaderProfileBox = () => {
         <AccountArea>
           <div>{auth.userInfo.username}</div>
           <div>
-            <Avvvatars value={auth.userInfo.username} style="shape" />
+            <Avvvatars value={auth.userInfo.user_id} style="shape" />
           </div>
         </AccountArea>
       )}
