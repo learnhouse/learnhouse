@@ -66,16 +66,16 @@ function CourseEdit() {
   // Submit new chapter
   const submitChapter = async (chapter: any) => {
     await createChapter(chapter, courseid);
-    getCourseChapters();
+    await getCourseChapters();
     setNewChapterModal(false);
   };
 
   // Submit new element
   const submitElement = async (element: any) => {
     console.log("submitElement", element);
-    updateChaptersMetadata(courseid, data);
+    await updateChaptersMetadata(courseid, data);
     await createElement(element, element.chapterId);
-    getCourseChapters();
+    await getCourseChapters();
     setNewElementModal(false);
   };
 
