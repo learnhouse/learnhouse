@@ -1,23 +1,25 @@
+import { EyeOpenIcon, Pencil2Icon } from "@radix-ui/react-icons";
+import Link from "next/link";
 import { useRouter } from "next/router";
 import React from "react";
 import styled from "styled-components";
 import Layout from "../../../../../components/ui/Layout";
 import { getAPIUrl, getBackendUrl } from "../../../../../services/config";
-import { getCourse } from "../../../../../services/courses/courses";
+import { getCourse, getCourseMetadata } from "../../../../../services/courses/courses";
 import { getOrganizationContextInfo } from "../../../../../services/orgs";
 
 const CourseIdPage = () => {
   const router = useRouter();
-  const { courseid } = router.query;
+  const { courseid, orgslug } = router.query;
 
   const [isLoading, setIsLoading] = React.useState(true);
   const [courseInfo, setCourseInfo] = React.useState({}) as any;
 
   async function fetchCourseInfo() {
-    const course = await getCourse("course_" + courseid);
+    const course = await getCourseMetadata("course_" + courseid);
 
     setCourseInfo(course);
-    console.log("courseinfo" , courseInfo);
+
 
     setIsLoading(false);
   }
@@ -27,7 +29,7 @@ const CourseIdPage = () => {
       fetchCourseInfo();
     }
     return () => {};
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router.isReady]);
 
   return (
@@ -35,22 +37,82 @@ const CourseIdPage = () => {
       {isLoading ? (
         <div>Loading...</div>
       ) : (
-        <div>
+        <CoursePageLayout>
           <br></br>
-          <h1>{courseInfo.name}</h1>
-          <CourseWrapper>
-            <img src={`${getBackendUrl()}content/uploads/img/${courseInfo.thumbnail}`} alt="" />
-          </CourseWrapper>
-        </div>
+          <p>Course</p>
+          <h1>
+            {courseInfo.course.name}{" "}
+            <Link href={`/org/${orgslug}/course/${courseid}/edit`}>
+              <a target="_blank" rel="noopener noreferrer">
+                &nbsp; <Pencil2Icon />
+              </a>
+            </Link>{" "}
+          </h1>
+          <br />
+          <ChaptersWrapper>
+            {courseInfo.chapters.map((chapter: any) => {
+              return (
+                <>
+                  {chapter.elements.map((element: any) => {
+                    return (
+                      <>
+                        <Link href={`/org/${orgslug}/course/${courseid}/element/${element.id.replace("element_", "")}`}>
+                          <a target="_blank" rel="noopener noreferrer">
+                            <ChapterIndicator />
+                          </a>
+                        </Link>{" "}
+                      </>
+                    );
+                  })}
+                  &nbsp;&nbsp;&nbsp;&nbsp;
+                </>
+              );
+            })}
+          </ChaptersWrapper>
+
+          <CourseThumbnailWrapper>
+            <img src={`${getBackendUrl()}content/uploads/img/${courseInfo.course.thumbnail}`} alt="" />
+          </CourseThumbnailWrapper>
+
+          <h2>Description</h2>
+          <p>{courseInfo.course.description}</p>
+
+          <h2>What you will learn</h2>
+          <p>{courseInfo.course.learnings == ![] ? "no data" : courseInfo.course.learnings}</p>
+
+          <h2>Course Lessons</h2>
+
+          {courseInfo.chapters.map((chapter: any) => {
+            return (
+              <>
+                <h3>Chapter : {chapter.name}</h3>
+                {chapter.elements.map((element: any) => {
+                  return (
+                    <>
+                      <p>
+                        Element {element.name}
+                        <Link href={`/org/${orgslug}/course/${courseid}/element/${element.id.replace("element_", "")}`}>
+                          <a target="_blank" rel="noopener noreferrer">
+                            &nbsp; <EyeOpenIcon />
+                          </a>
+                        </Link>{" "}
+                      </p>
+                    </>
+                  );
+                })}
+                &nbsp;&nbsp;&nbsp;&nbsp;
+              </>
+            );
+          })}
+        </CoursePageLayout>
       )}
     </Layout>
   );
 };
 
-const CourseWrapper = styled.div`
+const CourseThumbnailWrapper = styled.div`
   display: flex;
   img {
-    position: absolute;
     width: 794px;
     height: 224.28px;
     object-fit: cover;
@@ -60,6 +122,30 @@ const CourseWrapper = styled.div`
     border: 1px solid rgba(255, 255, 255, 0.19);
     box-shadow: 0px 13px 33px -13px rgba(0, 0, 0, 0.42);
     border-radius: 7px;
+  }
+`;
+const CoursePageLayout = styled.div`
+  margin-left: 40px;
+  margin-right: 40px;
+`;
+
+const ChaptersWrapper = styled.div`
+  display: flex;
+`;
+const ChapterIndicator = styled.div`
+  border-radius: 20px;
+  height: 5px;
+  background: #151515;
+  border-radius: 3px;
+  width: 40px;
+  background-color: black;
+  margin: 10px;
+  margin-left: 0px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    width: 50px;
+    cursor: pointer;
   }
 `;
 

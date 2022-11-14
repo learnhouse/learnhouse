@@ -31,9 +31,25 @@ function ElementPage() {
 
   const output = useMemo(() => {
     if (router.isReady) {
-      console.log("element", element.content);
+      console.log( "el",element.content);
+      
+      let content = Object.keys(element.content).length > 0 ? element.content : {
+        "type": "doc",
+        "content": [
+            {
+                "type": "paragraph",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": "Hello world, this is a example Canva ⚡️"
+                    }
+                ]
+            }
+        ]
+    }
+      console.log("element", content);
 
-      return generateHTML(element.content, [Document, StarterKit, Paragraph, Text, Bold]);
+      return generateHTML(content, [Document, StarterKit, Paragraph, Text, Bold]);
     }
   }, [element.content]);
 
@@ -44,7 +60,7 @@ function ElementPage() {
       ) : (
         <div>
           <p>element</p>
-          <h1>{element.name}</h1>
+          <h1>{element.name} </h1>
           <hr />
           <div dangerouslySetInnerHTML={{ __html: output } as any}></div>
         </div>
