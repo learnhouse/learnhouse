@@ -3,6 +3,7 @@ import os
 from typing import List
 from uuid import uuid4
 from pydantic import BaseModel
+from src.services.courses.elements import ElementInDB
 from src.services.uploads import upload_thumbnail
 from src.services.users import PublicUser, User
 from src.services.database import create_config_collection, check_database, create_database, learnhouseDB
@@ -30,6 +31,21 @@ class CourseInDB(Course):
     updateDate: str
     authors: List[str]
 
+
+# TODO : wow terrible, fix this
+# those models need to be available only in the chapters service
+class CourseChapter(BaseModel):
+    name: str
+    description: str
+    elements: list
+
+
+class CourseChapterInDB(CourseChapter):
+    coursechapter_id: str
+    course_id: str
+    creationDate: str
+    updateDate: str
+
 #### Classes ####################################################
 
 # TODO : Add courses photo & cover upload and delete
@@ -54,6 +70,61 @@ async def get_course(course_id: str, current_user: PublicUser):
 
     course = Course(**course)
     return course
+
+
+async def get_course_meta(course_id: str, current_user: PublicUser):
+    await check_database()
+    courses = learnhouseDB["courses"]
+    coursechapters = learnhouseDB["coursechapters"]
+    course = courses.find_one({"course_id": course_id})
+    elements = learnhouseDB["elements"]
+
+
+    # verify course rights
+    await verify_rights(course_id, current_user, "read")
+
+    if not course:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="Course does not exist")
+
+
+    coursechapters = coursechapters.find(
+        {"course_id": course_id}).sort("name", 1)
+
+    # elements
+    coursechapter_elementIds_global = []
+
+    # chapters
+    chapters = {}
+    for coursechapter in coursechapters:
+        coursechapter = CourseChapterInDB(**coursechapter)
+        coursechapter_elementIds = []
+
+        for element in coursechapter.elements:
+            coursechapter_elementIds.append(element)
+            coursechapter_elementIds_global.append(element)
+
+        chapters[coursechapter.coursechapter_id] = {
+            "id": coursechapter.coursechapter_id, "name": coursechapter.name,  "elementIds": coursechapter_elementIds
+        }
+
+    # elements
+    elements_list = {}
+    for element in elements.find({"element_id": {"$in": coursechapter_elementIds_global}}):
+        element = ElementInDB(**element)
+        elements_list[element.element_id] = {
+            "id": element.element_id, "name": element.name, "type": element.type, "content": element.content
+        }
+
+    chapters_list_with_elements = []
+    for chapter in chapters:
+        chapters_list_with_elements.append(
+            {"id": chapters[chapter]["id"], "name": chapters[chapter]["name"], "elements": [elements_list[element] for element in chapters[chapter]["elementIds"]]})
+    course = Course(**course)
+    return {
+        "course": course,
+        "chapters": chapters_list_with_elements,
+    }
 
 
 async def create_course(course_object: Course, org_id: str, current_user: PublicUser, thumbnail_file: UploadFile | None = None):
