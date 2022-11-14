@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, UploadFile, Form
 from src.dependencies.auth import get_current_user
 
-from src.services.courses.courses import Course,  create_course,  get_course, get_courses, update_course, delete_course, update_course_thumbnail
+from src.services.courses.courses import Course,  create_course,  get_course, get_course_meta, get_courses, update_course, delete_course, update_course_thumbnail
 from src.services.users import PublicUser
 
 
@@ -32,6 +32,14 @@ async def api_get_course(course_id: str,  current_user: PublicUser = Depends(get
     Get single Course by course_id
     """
     return await get_course(course_id, current_user=current_user)
+
+
+@router.get("/meta/{course_id}")
+async def api_get_course_meta(course_id: str,  current_user: PublicUser = Depends(get_current_user)):
+    """
+    Get single Course Metadata (chapters, elements) by course_id
+    """
+    return await get_course_meta(course_id, current_user=current_user)
 
 
 @router.get("/{org_id}/page/{page}/limit/{limit}")
