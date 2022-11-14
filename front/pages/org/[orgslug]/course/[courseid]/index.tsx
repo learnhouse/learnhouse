@@ -17,6 +17,8 @@ const CourseIdPage = () => {
     const course = await getCourse("course_" + courseid);
 
     setCourseInfo(course);
+    
+    
     console.log("courseinfo" , courseInfo);
 
     setIsLoading(false);
@@ -37,6 +39,7 @@ const CourseIdPage = () => {
       ) : (
         <div>
           <br></br>
+          <p>Course</p>
           <h1>{courseInfo.name}</h1>
           <CourseWrapper>
             <img src={`${getBackendUrl()}content/uploads/img/${courseInfo.thumbnail}`} alt="" />
