@@ -15,7 +15,7 @@ export async function getOrgCourses(org_id: number) {
     .catch((error) => console.log("error", error));
 }
 
-export async function getCourse(course_id: any) {
+export async function getCourse(course_id: string) {
   const HeadersConfig = new Headers({ "Content-Type": "application/json" });
 
   const requestOptions: any = {
@@ -29,6 +29,23 @@ export async function getCourse(course_id: any) {
   return fetch(`${getAPIUrl()}courses/${course_id}`, requestOptions)
     .then((result) => result.json())
     .catch((error) => console.log("error", error));
+}
+
+export async function getCourseMetadata(course_id: string) {
+  const HeadersConfig = new Headers({ "Content-Type": "application/json" });
+
+  const requestOptions: any = {
+    method: "GET",
+    headers: HeadersConfig,
+    redirect: "follow",
+    credentials: "include",
+  };
+
+  // todo : add course id to url
+  return fetch(`${getAPIUrl()}courses/meta/${course_id}`, requestOptions)
+    .then((result) => result.json())
+    .catch((error) => console.log("error", error));
+  
 }
 
 export async function createNewCourse(org_id: string, course_body: any, thumbnail: any) {
