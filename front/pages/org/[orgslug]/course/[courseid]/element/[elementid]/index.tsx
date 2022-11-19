@@ -30,7 +30,7 @@ function ElementPage() {
   }, [router.isReady]);
 
   const output = useMemo(() => {
-    if (router.isReady) {
+    if (router.isReady && !isLoading) {
       console.log( "el",element.content);
       
       let content = Object.keys(element.content).length > 0 ? element.content : {

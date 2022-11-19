@@ -6,7 +6,6 @@ import styled from "styled-components";
 import Layout from "../../../../../components/ui/Layout";
 import { getAPIUrl, getBackendUrl } from "../../../../../services/config";
 import { getCourse, getCourseMetadata } from "../../../../../services/courses/courses";
-import { getOrganizationContextInfo } from "../../../../../services/orgs";
 
 const CourseIdPage = () => {
   const router = useRouter();
@@ -57,7 +56,7 @@ const CourseIdPage = () => {
                     return (
                       <>
                         <Link href={`/org/${orgslug}/course/${courseid}/element/${element.id.replace("element_", "")}`}>
-                          <a target="_blank" rel="noopener noreferrer">
+                          <a>
                             <ChapterIndicator />
                           </a>
                         </Link>{" "}
