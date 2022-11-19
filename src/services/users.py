@@ -35,6 +35,18 @@ class UserInDB(UserWithPassword):
     creationDate: str
     updateDate: str
 
+
+class UserProfileMetadata(BaseModel):
+    user_object: PublicUser
+    roles = list
+
+# TODO : terrible, export role classes from one single source of truth
+class Role(BaseModel):
+    name: str
+    description: str
+    permissions: object
+    elements: object
+
 #### Classes ####################################################
 
 # TODO : user actions security
@@ -53,6 +65,31 @@ async def get_user(username: str):
 
     user = User(**user)
     return user
+
+
+async def get_profile_metadata(user):
+    await check_database()
+    users = learnhouseDB["users"]
+    roles = learnhouseDB["roles"]
+
+    user = users.find_one({"user_id": user['user_id']})
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="User does not exist")
+
+    # get roles
+    user_roles = roles.find({"linked_users": user['user_id']})
+
+    user_roles_list = []
+    for role in user_roles:
+        print(role)
+        user_roles_list.append(Role(**role))
+
+    return {
+        "user_object": PublicUser(**user),
+        "roles": user_roles_list
+    }
 
 
 async def get_user_by_userid(user_id: str):
