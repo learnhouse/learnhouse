@@ -1,8 +1,7 @@
 import React from "react";
 import styled from "styled-components";
 import Link from "next/link";
-import { AuthContext } from "../security/AuthProvider";
-import { getBackendUrl } from "../../services/config";
+import { AuthContext } from "./AuthProvider";
 import Avvvatars from "avvvatars-react";
 
 export const HeaderProfileBox = () => {
@@ -28,9 +27,9 @@ export const HeaderProfileBox = () => {
       )}
       {auth.isAuthenticated && (
         <AccountArea>
-          <div>{auth.userInfo.username}</div>
+          <div>{auth.userInfo.user_object.username}</div>
           <div>
-            <Avvvatars value={auth.userInfo.user_id} style="shape" />
+            <Avvvatars value={auth.userInfo.user_object.user_id} style="shape" />
           </div>
         </AccountArea>
       )}

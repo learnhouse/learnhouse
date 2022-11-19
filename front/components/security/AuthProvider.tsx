@@ -1,8 +1,10 @@
 import React, { useEffect } from "react";
 import { getRefreshToken, getUserInfo } from "../../services/auth/auth";
+import { useRouter } from "next/router";
 
 export const AuthContext: any = React.createContext({});
 
+const NON_AUTHENTICATED_ROUTES = ["/login", "/signup"];
 export interface Auth {
   access_token: string;
   isAuthenticated: boolean;
@@ -10,7 +12,9 @@ export interface Auth {
   isLoading: boolean;
 }
 
+
 const AuthProvider = (props: any) => {
+  const router = useRouter();
   const [auth, setAuth] = React.useState<Auth>({ access_token: "", isAuthenticated: false, userInfo: {}, isLoading: true });
 
   async function checkRefreshToken() {
@@ -19,22 +23,27 @@ const AuthProvider = (props: any) => {
   }
 
   async function checkAuth() {
-    let access_token = await checkRefreshToken();
-    let isAuthenticated = false;
-    let userInfo = {};
-    let isLoading = false;
+    try {
+      let access_token = await checkRefreshToken();
+      let userInfo = {};
+      let isLoading = false;
+    
+      if (access_token) {
+        userInfo = await getUserInfo(access_token);
+        setAuth({ access_token, isAuthenticated: true, userInfo, isLoading });
 
-    if (access_token) {
-      userInfo = await getUserInfo(access_token);
-      isAuthenticated = true;
-      setAuth({ access_token, isAuthenticated, userInfo, isLoading });
-    } else{
-      isAuthenticated = false;
-      setAuth({ access_token, isAuthenticated, userInfo, isLoading });
+        // if user is authenticated and tries to access login or signup page, redirect to home
+        if(NON_AUTHENTICATED_ROUTES.includes(router.pathname)) {
+          router.push("/");
+        }
+      } else {
+        setAuth({ access_token, isAuthenticated: false, userInfo, isLoading });
+        router.push("/login");
+      }
+    } catch (error) {
+      router.push("/");
     }
   }
-
-  
 
   useEffect(() => {
     if (auth.isLoading) {
@@ -42,7 +51,7 @@ const AuthProvider = (props: any) => {
     }
     return () => {
       auth.isLoading = false;
-    }
+    };
   }, []);
 
   return <AuthContext.Provider value={auth}>{props.children}</AuthContext.Provider>;
