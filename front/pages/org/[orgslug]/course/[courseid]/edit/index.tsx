@@ -11,7 +11,7 @@ import { createChapter, deleteChapter, getCourseChaptersMetadata, updateChapters
 import { useRouter } from "next/router";
 import NewChapterModal from "../../../../../../components/modals/CourseEdit/NewChapter";
 import NewElementModal from "../../../../../../components/modals/CourseEdit/NewElement";
-import { createElement } from "../../../../../../services/courses/elements";
+import { createElement, createFileElement } from "../../../../../../services/courses/elements";
 
 function CourseEdit() {
   const router = useRouter();
@@ -79,6 +79,15 @@ function CourseEdit() {
     setNewElementModal(false);
   };
 
+  // Submit File Upload
+  const submitFileElement = async (file: any, type: any, element: any, chapterId: string) => {
+    console.log("submitFileElement", file);
+    await updateChaptersMetadata(courseid, data);
+    await createFileElement(file, type, element, chapterId);
+    await getCourseChapters();
+    setNewElementModal(false);
+  };
+
   const deleteChapterUI = async (chapterId: any) => {
     console.log("deleteChapter", chapterId);
     await deleteChapter(chapterId);
@@ -87,7 +96,7 @@ function CourseEdit() {
 
   const updateChapters = () => {
     console.log(data);
-    updateChaptersMetadata(courseid,data);
+    updateChaptersMetadata(courseid, data);
   };
 
   /* 
@@ -234,7 +243,14 @@ function CourseEdit() {
         </button>
       </Title>
       {newChapterModal && <NewChapterModal closeModal={closeNewChapterModal} submitChapter={submitChapter}></NewChapterModal>}
-      {newElementModal && <NewElementModal closeModal={closeNewElementModal} submitElement={submitElement} chapterId={newElementModalData}></NewElementModal>}
+      {newElementModal && (
+        <NewElementModal
+          closeModal={closeNewElementModal}
+          submitFileElement={submitFileElement}
+          submitElement={submitElement}
+          chapterId={newElementModalData}
+        ></NewElementModal>
+      )}
 
       <br />
       {winReady && (
