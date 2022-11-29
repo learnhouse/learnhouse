@@ -3,7 +3,7 @@ import os
 from typing import List
 from uuid import uuid4
 from pydantic import BaseModel
-from src.services.courses.elements import ElementInDB
+from src.services.courses.elements.elements import ElementInDB
 from src.services.uploads import upload_thumbnail
 from src.services.users import PublicUser, User
 from src.services.database import create_config_collection, check_database, create_database, learnhouseDB

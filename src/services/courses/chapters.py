@@ -4,7 +4,7 @@ from typing import List
 from uuid import uuid4
 from pydantic import BaseModel
 from src.services.courses.courses import Course, CourseInDB
-from src.services.courses.elements import Element, ElementInDB
+from src.services.courses.elements.elements import Element, ElementInDB
 from src.services.database import create_config_collection, check_database, create_database, learnhouseDB, learnhouseDB
 from src.services.security import verify_user_rights_with_roles
 from src.services.users import PublicUser
