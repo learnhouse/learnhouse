@@ -9,7 +9,7 @@ router = APIRouter()
 
 
 @router.post("/")
-async def api_create_course(org_id: str, name: str = Form(), mini_description: str = Form(), description: str = Form(), public: bool = Form(),    current_user: PublicUser = Depends(get_current_user), thumbnail: UploadFile | None = None):
+async def api_create_course(org_id: str, name: str = Form(), mini_description: str = Form(), description: str = Form(), public: bool = Form(),   current_user: PublicUser = Depends(get_current_user), thumbnail: UploadFile | None = None):
     """
     Create new Course
     """

@@ -8,6 +8,7 @@ import { useRouter } from "next/router";
 import React, { useMemo } from "react";
 import Layout from "../../../../../../../components/ui/Layout";
 import { getElement } from "../../../../../../../services/courses/elements";
+import { getBackendUrl } from "../../../../../../../services/config";
 
 function ElementPage() {
   const router = useRouter();
@@ -31,25 +32,30 @@ function ElementPage() {
 
   const output = useMemo(() => {
     if (router.isReady && !isLoading) {
-      console.log( "el",element.content);
-      
-      let content = Object.keys(element.content).length > 0 ? element.content : {
-        "type": "doc",
-        "content": [
-            {
-                "type": "paragraph",
-                "content": [
-                    {
-                        "type": "text",
-                        "text": "Hello world, this is a example Canva ⚡️"
-                    }
-                ]
-            }
-        ]
-    }
-      console.log("element", content);
+      console.log(element);
 
-      return generateHTML(content, [Document, StarterKit, Paragraph, Text, Bold]);
+      if (element.type == "dynamic") {
+        let content =
+          Object.keys(element.content).length > 0
+            ? element.content
+            : {
+                type: "doc",
+                content: [
+                  {
+                    type: "paragraph",
+                    content: [
+                      {
+                        type: "text",
+                        text: "Hello world, this is a example Canva ⚡️",
+                      },
+                    ],
+                  },
+                ],
+              };
+        console.log("element", content);
+
+        return generateHTML(content, [Document, StarterKit, Paragraph, Text, Bold]);
+      }
     }
   }, [element.content]);
 
@@ -62,7 +68,12 @@ function ElementPage() {
           <p>element</p>
           <h1>{element.name} </h1>
           <hr />
-          <div dangerouslySetInnerHTML={{ __html: output } as any}></div>
+
+          {element.type == "dynamic" && <div dangerouslySetInnerHTML={{ __html: output } as any}></div>}
+          {/* todo : use apis & streams instead of this */}
+          {element.type == "video" && (
+            <video controls src={`${getBackendUrl()}content/uploads/video/${element.content.video.element_id}/${element.content.video.filename}`}></video>
+          )}
         </div>
       )}
     </Layout>
