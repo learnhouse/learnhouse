@@ -17,12 +17,12 @@ async def upload_thumbnail(thumbnail_file, name_in_disk):
 
 async def upload_video(video_file, name_in_disk, element_id):
     contents = video_file.file.read()
-
+    video_format = video_file.filename.split(".")[-1]
     # create folder
     os.mkdir(f"content/uploads/video/{element_id}")
 
     try:
-        with open(f"content/uploads/video/{element_id}/{name_in_disk}", 'wb') as f:
+        with open(f"content/uploads/video/{element_id}/video.{video_format}", 'wb') as f:
             f.write(contents)
             f.close()
 

@@ -17,6 +17,7 @@ async def create_video_element(name: str,  coursechapter_id: str, current_user: 
     # generate element_id
     element_id = str(f"element_{uuid4()}")
 
+    video_format = video_file.filename.split(".")[-1]
     element_object = ElementInDB(
         element_id=element_id,
         coursechapter_id=coursechapter_id,
@@ -24,7 +25,7 @@ async def create_video_element(name: str,  coursechapter_id: str, current_user: 
         type="video",
         content={
             "video": {
-                "filename": video_file.filename,
+                "filename": "video."+video_format,
                 "element_id": element_id,
             }
         },
@@ -45,6 +46,8 @@ async def create_video_element(name: str,  coursechapter_id: str, current_user: 
     # upload video
     if video_file:
         print("uploading video")
+        # get videofile format
+
         await upload_video(video_file, video_file.filename, element_id)
 
     # todo : choose whether to update the chapter or not
