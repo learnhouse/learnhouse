@@ -1,13 +1,15 @@
 import { default as React, useEffect, useRef } from "react";
 
-import Layout from "../../../../../../../components/ui/Layout";
-import { Title } from "../../../../../../../components/ui/styles/Title";
+import Layout from "../../../../../../../components/rename/UI/Layout";
+import { Title } from "../../../../../../../components/rename/UI/Elements/Styles/Title";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/router";
 import { getElement } from "../../../../../../../services/courses/elements";
+import AuthProvider from "../../../../../../../components/security/AuthProvider";
+import EditorWrapper from "../../../../../../../components/Editor/EditorWrapper";
 
 // Workaround (Next.js SSR doesn't support tip tap editor)
-const Editor: any = dynamic(() => import("../../../../../../../components/editor/Editor") as any, {
+const Editor: any = dynamic(() => import("../../../../../../../components/Editor/EditorWrapper") as any, {
   ssr: false,
 });
 
@@ -28,22 +30,10 @@ function EditElement() {
       fetchElementData();
     }
     return () => {};
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router.isReady]);
 
-  return (
-    <Layout>
-      <Title>Edit : {element.name} </Title>
-      <br />
-      {isLoading ? (
-        <div>Loading...</div>
-      ) : (
-        <div>
-          <Editor element={element} content={element.content}></Editor>
-        </div>
-      )}
-    </Layout>
-  );
+  return <AuthProvider>{isLoading ? <div>Loading...</div> : <EditorWrapper element={element} content={element.content}></EditorWrapper>}</AuthProvider>;
 }
 
 export default EditElement;
