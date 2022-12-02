@@ -1,99 +1,82 @@
-export const ToolbarButtons = ({ editor }: any) => {
-    if (!editor) {
-      return null;
-    }
+import styled from "styled-components";
+import { FontBoldIcon, FontItalicIcon, StrikethroughIcon, ArrowLeftIcon, ArrowRightIcon } from "@radix-ui/react-icons";
 
-    return (
-      <>
-        <button
-          onClick={() => editor.chain().focus().toggleBold().run()}
-          disabled={!editor.can().chain().focus().toggleBold().run()}
-          className={editor.isActive("bold") ? "is-active" : ""}
-        >
-          bold
-        </button>
-        <button
-          onClick={() => editor.chain().focus().toggleItalic().run()}
-          disabled={!editor.can().chain().focus().toggleItalic().run()}
-          className={editor.isActive("italic") ? "is-active" : ""}
-        >
-          italic
-        </button>
-        <button
-          onClick={() => editor.chain().focus().toggleStrike().run()}
-          disabled={!editor.can().chain().focus().toggleStrike().run()}
-          className={editor.isActive("strike") ? "is-active" : ""}
-        >
-          strike
-        </button>
-        <button
-          onClick={() => editor.chain().focus().toggleCode().run()}
-          disabled={!editor.can().chain().focus().toggleCode().run()}
-          className={editor.isActive("code") ? "is-active" : ""}
-        >
-          code
-        </button>
-        <button onClick={() => editor.chain().focus().unsetAllMarks().run()}>clear marks</button>
-        <button onClick={() => editor.chain().focus().clearNodes().run()}>clear nodes</button>
-        <button onClick={() => editor.chain().focus().setParagraph().run()} className={editor.isActive("paragraph") ? "is-active" : ""}>
-          paragraph
-        </button>
-        <button
-          onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-          className={editor.isActive("heading", { level: 1 }) ? "is-active" : ""}
-        >
-          h1
-        </button>
-        <button
-          onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-          className={editor.isActive("heading", { level: 2 }) ? "is-active" : ""}
-        >
-          h2
-        </button>
-        <button
-          onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-          className={editor.isActive("heading", { level: 3 }) ? "is-active" : ""}
-        >
-          h3
-        </button>
-        <button
-          onClick={() => editor.chain().focus().toggleHeading({ level: 4 }).run()}
-          className={editor.isActive("heading", { level: 4 }) ? "is-active" : ""}
-        >
-          h4
-        </button>
-        <button
-          onClick={() => editor.chain().focus().toggleHeading({ level: 5 }).run()}
-          className={editor.isActive("heading", { level: 5 }) ? "is-active" : ""}
-        >
-          h5
-        </button>
-        <button
-          onClick={() => editor.chain().focus().toggleHeading({ level: 6 }).run()}
-          className={editor.isActive("heading", { level: 6 }) ? "is-active" : ""}
-        >
-          h6
-        </button>
-        <button onClick={() => editor.chain().focus().toggleBulletList().run()} className={editor.isActive("bulletList") ? "is-active" : ""}>
-          bullet list
-        </button>
-        <button onClick={() => editor.chain().focus().toggleOrderedList().run()} className={editor.isActive("orderedList") ? "is-active" : ""}>
-          ordered list
-        </button>
-        <button onClick={() => editor.chain().focus().toggleCodeBlock().run()} className={editor.isActive("codeBlock") ? "is-active" : ""}>
-          code block
-        </button>
-        <button onClick={() => editor.chain().focus().toggleBlockquote().run()} className={editor.isActive("blockquote") ? "is-active" : ""}>
-          blockquote
-        </button>
-        <button onClick={() => editor.chain().focus().setHorizontalRule().run()}>horizontal rule</button>
-        <button onClick={() => editor.chain().focus().setHardBreak().run()}>hard break</button>
-        <button onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().chain().focus().undo().run()}>
-          undo
-        </button>
-        <button onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().chain().focus().redo().run()}>
-          redo
-        </button>
-      </>
-    );
-  };
+export const ToolbarButtons = ({ editor }: any) => {
+  if (!editor) {
+    return null;
+  }
+
+  return (
+    <ToolButtonsWrapper>
+      <ToolBtn onClick={() => editor.chain().focus().toggleBold().run()} className={editor.isActive("bold") ? "is-active" : ""}>
+        <FontBoldIcon />
+      </ToolBtn>
+      <ToolBtn onClick={() => editor.chain().focus().toggleItalic().run()} className={editor.isActive("italic") ? "is-active" : ""}>
+        <FontItalicIcon />
+      </ToolBtn>
+      <ToolBtn onClick={() => editor.chain().focus().toggleStrike().run()} className={editor.isActive("strike") ? "is-active" : ""}>
+        <StrikethroughIcon />
+      </ToolBtn>
+
+      <ToolBtn onClick={() => editor.chain().focus().undo().run()}>
+        <ArrowLeftIcon />
+      </ToolBtn>
+      <ToolBtn onClick={() => editor.chain().focus().redo().run()}>
+        <ArrowRightIcon />
+      </ToolBtn>
+      <ToolSelect onChange={(e) => editor.chain().focus().toggleHeading({ level: parseInt(e.target.value) }).run() }>
+        <option value="1">Heading 1</option>
+        <option value="2">Heading 2</option>
+        <option value="3">Heading 3</option>
+        <option value="4">Heading 4</option>
+        <option value="5">Heading 5</option>
+        <option value="6">Heading 6</option>
+      </ToolSelect>
+    </ToolButtonsWrapper>
+  );
+};
+
+const ToolButtonsWrapper = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: left;
+  justify-content: left;
+`;
+
+const ToolBtn = styled.div`
+  display: flex;
+  background: rgba(217, 217, 217, 0.24);
+  border-radius: 6px;
+  width: 25px;
+  height: 25px;
+  padding: 5px;
+  font-size: 5px;
+  margin-right: 5px;
+
+  &.is-active {
+    background: rgba(176, 176, 176, 0.5);
+
+    &:hover {
+      background: rgba(139, 139, 139, 0.5);
+      cursor: pointer;
+    }
+  }
+
+  &:hover {
+    background: rgba(217, 217, 217, 0.48);
+    cursor: pointer;
+  }
+`;
+
+const ToolSelect = styled.select`
+  display: flex;
+  background: rgba(217, 217, 217, 0.24);
+  border-radius: 6px;
+  width: 100px;
+  border: none;
+  height: 25px;
+  padding: 5px;
+  font-size: 11px;
+  font-family: "DM Sans";
+  margin-right: 5px;
+`;

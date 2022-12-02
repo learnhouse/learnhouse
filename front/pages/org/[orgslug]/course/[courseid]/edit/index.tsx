@@ -1,9 +1,9 @@
 import React from "react";
 import { useState, useEffect } from "react";
 import styled from "styled-components";
-import { Header } from "../../../../../../components/rename/UI/Header";
-import Layout from "../../../../../../components/rename/UI/Layout";
-import { Title } from "../../../../../../components/rename/UI/Elements/Styles/Title";
+import { Header } from "../../../../../../components//UI/Header";
+import Layout from "../../../../../../components//UI/Layout";
+import { Title } from "../../../../../../components//UI/Elements/Styles/Title";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { initialData, initialData2 } from "../../../../../../components/Drags/data";
 import Chapter from "../../../../../../components/Drags/Chapter";

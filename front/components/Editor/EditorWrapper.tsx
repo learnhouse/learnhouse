@@ -7,6 +7,7 @@ import { updateElement } from "../../services/courses/elements";
 interface EditorWrapperProps {
   content: string;
   element: any;
+  course:any
 }
 
 function EditorWrapper(props: EditorWrapperProps) {
@@ -18,7 +19,6 @@ function EditorWrapper(props: EditorWrapperProps) {
 
   function createRTCProvider() {
     const provider = new WebrtcProvider(props.element.element_id, ydoc);
-
     setYdocState(ydoc);
     setProviderState(provider);
     setIsLoading(false);
@@ -28,12 +28,13 @@ function EditorWrapper(props: EditorWrapperProps) {
     let element = props.element;
     element.content = content;
     const res = await updateElement(element, element.element_id);
+    alert(JSON.stringify(res));
   }
 
   if (isLoading) {
     createRTCProvider();
   } else {
-    return <Editor content={props.content} setContent={setContent} provider={providerState} ydoc={ydocState}></Editor>;
+    return <Editor course={props.course} element={props.element} content={props.content} setContent={setContent} provider={providerState} ydoc={ydocState}></Editor>;
   }
 }
 

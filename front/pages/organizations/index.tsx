@@ -1,7 +1,7 @@
 import Link from "next/link";
 import React from "react";
-import Layout from "../../components/rename/UI/Layout";
-import { Title } from "../../components/rename/UI/Elements/Styles/Title";
+import Layout from "../../components//UI/Layout";
+import { Title } from "../../components//UI/Elements/Styles/Title";
 import { deleteOrganizationFromBackend, getUserOrganizations } from "../../services/orgs";
 
 const Organizations = () => {
