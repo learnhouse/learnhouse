@@ -1,8 +1,8 @@
 import React from "react";
 import { useRouter } from "next/router";
-import Layout from "../../../components/rename/UI/Layout";
-import { Title } from "../../../components/rename/UI/Elements/Styles/Title";
-import { Header } from "../../../components/rename/UI/Header";
+import Layout from "../../../components//UI/Layout";
+import { Title } from "../../../components//UI/Elements/Styles/Title";
+import { Header } from "../../../components//UI/Header";
 import Link from "next/link";
 
 const OrgHomePage = () => {
