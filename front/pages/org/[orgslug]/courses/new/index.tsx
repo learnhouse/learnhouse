@@ -1,8 +1,8 @@
 import { useRouter } from "next/router";
 import React from "react";
-import { Header } from "../../../../../components/ui/Header";
-import Layout from "../../../../../components/ui/Layout";
-import { Title } from "../../../../../components/ui/styles/Title";
+import { Header } from "../../../../../components/rename/UI/Header";
+import Layout from "../../../../../components/rename/UI/Layout";
+import { Title } from "../../../../../components/rename/UI/Elements/Styles/Title";
 import { createNewCourse } from "../../../../../services/courses/courses";
 import { getOrganizationContextInfo } from "../../../../../services/orgs";
 

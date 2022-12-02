@@ -1,21 +1,4 @@
-import React from "react";
-import { useEditor, EditorContent } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import Collaboration from "@tiptap/extension-collaboration";
-import CollaborationCursor from "@tiptap/extension-collaboration-cursor";
-import { AuthContext } from "../security/AuthProvider";
-
-interface EditorWithOptionsProps {
-  content: string;
-  ydoc: any;
-  provider: any;
-  setContent: (content: string) => void;
-}
-
-function EditorWithOptions(props: EditorWithOptionsProps) {
-  const auth: any = React.useContext(AuthContext);
-
-  const MenuBar = ({ editor }: any) => {
+export const ToolbarButtons = ({ editor }: any) => {
     if (!editor) {
       return null;
     }
@@ -114,38 +97,3 @@ function EditorWithOptions(props: EditorWithOptionsProps) {
       </>
     );
   };
-
-  const editor : any = useEditor({
-    extensions: [
-      StarterKit.configure({
-        // The Collaboration extension comes with its own history handling
-        history: false,
-      }),
-      // Register the document with Tiptap
-      Collaboration.configure({
-        document: props.ydoc,
-      }),
-      // Register the collaboration cursor extension
-      CollaborationCursor.configure({
-        provider: props.provider,
-        user: {
-          name: auth.userInfo.username,
-          color: "#f783ac",
-        },
-      }),
-    ],
-
-    content: props.content,
-  });
-
-  return (
-    <div>
-      File <button onClick={() => props.setContent(editor.getJSON())}>save</button>
-      <br /><hr />
-      <MenuBar editor={editor} />
-      <EditorContent editor={editor} style={{ backgroundColor: "white" }} />
-    </div>
-  );
-}
-
-export default EditorWithOptions;
