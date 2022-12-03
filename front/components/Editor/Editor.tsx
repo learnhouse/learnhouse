@@ -6,10 +6,12 @@ import CollaborationCursor from "@tiptap/extension-collaboration-cursor";
 import { AuthContext } from "../Security/AuthProvider";
 import learnhouseIcon from "public/learnhouse_icon.png";
 import { ToolbarButtons } from "./Toolbar/ToolbarButtons";
+import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import styled from "styled-components";
 import { getBackendUrl } from "../../services/config";
-import { RocketIcon, SlashIcon, TriangleLeftIcon, TriangleRightIcon } from "@radix-ui/react-icons";
+import { GlobeIcon, SlashIcon } from "@radix-ui/react-icons";
+import Avvvatars from "avvvatars-react";
 
 interface Editor {
   content: string;
@@ -50,28 +52,58 @@ function Editor(props: Editor) {
 
   return (
     <div>
-      <EditorTop>
-        <EditorDocSection>
-          <EditorInfoWrapper>
-            <EditorInfoLearnHouseLogo width={23} height={23} src={learnhouseIcon} alt="" />
-            <EditorInfoThumbnail src={`${getBackendUrl()}content/uploads/img/${props.course.course.thumbnail}`} alt=""></EditorInfoThumbnail>
-            <EditorInfoDocName>
-              {" "}
-              <b>{props.course.course.name}</b> <SlashIcon /> {props.element.name}{" "}
-            </EditorInfoDocName>
-            <EditorSaveButton onClick={() => props.setContent(editor.getJSON())}>
-              <RocketIcon></RocketIcon>
-            </EditorSaveButton>
-          </EditorInfoWrapper>
-          <EditorButtonsWrapper>
-            <ToolbarButtons editor={editor} />
-          </EditorButtonsWrapper>
-        </EditorDocSection>
-        <EditorUsersSection></EditorUsersSection>
-      </EditorTop>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        key="modal"
+        transition={{
+          type: "spring",
+          stiffness: 360,
+          damping: 70,
+          delay: 0.02,
+        }}
+        exit={{ opacity: 0 }}
+      >
+        <EditorTop>
+          <EditorDocSection>
+            <EditorInfoWrapper>
+              <EditorInfoLearnHouseLogo width={23} height={23} src={learnhouseIcon} alt="" />
+              <EditorInfoThumbnail src={`${getBackendUrl()}content/uploads/img/${props.course.course.thumbnail}`} alt=""></EditorInfoThumbnail>
+              <EditorInfoDocName>
+                {" "}
+                <b>{props.course.course.name}</b> <SlashIcon /> {props.element.name}{" "}
+              </EditorInfoDocName>
+              <EditorSaveButton onClick={() => props.setContent(editor.getJSON())}>
+                <GlobeIcon></GlobeIcon>
+              </EditorSaveButton>
+            </EditorInfoWrapper>
+            <EditorButtonsWrapper>
+              <ToolbarButtons editor={editor} />
+            </EditorButtonsWrapper>
+          </EditorDocSection>
+          <EditorUsersSection>
+            <EditorUserProfileWrapper>
+              <Avvvatars value={auth.userInfo.user_object.user_id} style="shape" />
+            </EditorUserProfileWrapper>
+          </EditorUsersSection>
+        </EditorTop>
+      </motion.div>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        key="modal"
+        transition={{
+          type: "spring",
+          stiffness: 360,
+          damping: 70,
+          delay: 0.5,
+        }}
+        exit={{ opacity: 0 }}
+      >
       <EditorContentWrapper>
         <EditorContent editor={editor} />
       </EditorContentWrapper>
+      </motion.div>
     </div>
   );
 }
@@ -82,6 +114,12 @@ const EditorTop = styled.div`
   margin: 40px;
   margin-bottom: 20px;
   padding: 10px;
+  display: flex;
+  justify-content: space-between;
+  box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.03);
+  //position: fixed;
+  z-index: 3;
+  width: -webkit-fill-available;
 `;
 
 // Inside EditorTop
@@ -92,6 +130,8 @@ const EditorDocSection = styled.div`
 const EditorUsersSection = styled.div`
   display: flex;
   flex-direction: column;
+  justify-content: center;
+  align-items: center;
 `;
 
 // Inside EditorDocSection
@@ -103,7 +143,12 @@ const EditorInfoWrapper = styled.div`
 const EditorButtonsWrapper = styled.div``;
 
 // Inside EditorUsersSection
-const EditorUserProfileWrapper = styled.div``;
+const EditorUserProfileWrapper = styled.div`
+  padding-right: 8px;
+  svg {
+    border-radius: 7px;
+  }
+`;
 
 // Inside EditorInfoWrapper
 //..todo
@@ -117,11 +162,13 @@ const EditorInfoDocName = styled.div`
   align-items: center;
   display: flex;
   margin-left: 10px;
+  color: #494949;
 
   svg {
     margin-left: 4px;
     margin-right: 4px;
-    color: #909090;
+    padding: 3px;
+    color: #353535;
   }
 `;
 
@@ -161,20 +208,24 @@ const EditorInfoThumbnail = styled.img`
 
 const EditorContentWrapper = styled.div`
   margin: 40px;
+  margin-top: 20px;
   background-color: white;
+  border-radius: 10px;
+  box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.03);
 
   // disable chrome outline
 
-
   .ProseMirror {
-    padding: 10px;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-bottom: 6px;
+    padding-top: 1px;
     &:focus {
-    outline: none !important;
-    outline-style: none !important;
-    box-shadow: none !important;
+      outline: none !important;
+      outline-style: none !important;
+      box-shadow: none !important;
+    }
   }
-  }
-
 `;
 
 export default Editor;

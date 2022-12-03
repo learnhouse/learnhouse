@@ -8,6 +8,12 @@ export const ToolbarButtons = ({ editor }: any) => {
 
   return (
     <ToolButtonsWrapper>
+      <ToolBtn onClick={() => editor.chain().focus().undo().run()}>
+        <ArrowLeftIcon />
+      </ToolBtn>
+      <ToolBtn onClick={() => editor.chain().focus().redo().run()}>
+        <ArrowRightIcon />
+      </ToolBtn>
       <ToolBtn onClick={() => editor.chain().focus().toggleBold().run()} className={editor.isActive("bold") ? "is-active" : ""}>
         <FontBoldIcon />
       </ToolBtn>
@@ -16,13 +22,6 @@ export const ToolbarButtons = ({ editor }: any) => {
       </ToolBtn>
       <ToolBtn onClick={() => editor.chain().focus().toggleStrike().run()} className={editor.isActive("strike") ? "is-active" : ""}>
         <StrikethroughIcon />
-      </ToolBtn>
-
-      <ToolBtn onClick={() => editor.chain().focus().undo().run()}>
-        <ArrowLeftIcon />
-      </ToolBtn>
-      <ToolBtn onClick={() => editor.chain().focus().redo().run()}>
-        <ArrowRightIcon />
       </ToolBtn>
       <ToolSelect onChange={(e) => editor.chain().focus().toggleHeading({ level: parseInt(e.target.value) }).run() }>
         <option value="1">Heading 1</option>
@@ -52,6 +51,7 @@ const ToolBtn = styled.div`
   padding: 5px;
   font-size: 5px;
   margin-right: 5px;
+  transition: all 0.2s ease-in-out;
 
   &.is-active {
     background: rgba(176, 176, 176, 0.5);
