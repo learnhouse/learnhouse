@@ -4,7 +4,7 @@ import styled from "styled-components";
 import { Header } from "../../../../../../components//UI/Header";
 import Layout from "../../../../../../components//UI/Layout";
 import { Title } from "../../../../../../components//UI/Elements/Styles/Title";
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import { DragDropContext, Droppable } from "react-beautiful-dnd";
 import { initialData, initialData2 } from "../../../../../../components/Drags/data";
 import Chapter from "../../../../../../components/Drags/Chapter";
 import { createChapter, deleteChapter, getCourseChaptersMetadata, updateChaptersMetadata } from "../../../../../../services/courses/chapters";

@@ -12,14 +12,15 @@ export interface Auth {
   isLoading: boolean;
 }
 
-
 const AuthProvider = (props: any) => {
   const router = useRouter();
   const [auth, setAuth] = React.useState<Auth>({ access_token: "", isAuthenticated: false, userInfo: {}, isLoading: true });
 
   async function checkRefreshToken() {
     let data = await getRefreshToken();
-    return data.access_token;
+    if (data) {
+      return data.access_token;
+    }
   }
 
   async function checkAuth() {
@@ -27,13 +28,13 @@ const AuthProvider = (props: any) => {
       let access_token = await checkRefreshToken();
       let userInfo = {};
       let isLoading = false;
-    
+
       if (access_token) {
         userInfo = await getUserInfo(access_token);
         setAuth({ access_token, isAuthenticated: true, userInfo, isLoading });
 
         // if user is authenticated and tries to access login or signup page, redirect to home
-        if(NON_AUTHENTICATED_ROUTES.includes(router.pathname)) {
+        if (NON_AUTHENTICATED_ROUTES.includes(router.pathname)) {
           router.push("/");
         }
       } else {

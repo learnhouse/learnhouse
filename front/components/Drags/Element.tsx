@@ -15,7 +15,7 @@ function Element(props: any) {
             <a  target="_blank" rel="noopener noreferrer">&nbsp; <EyeOpenIcon/></a>
           </Link>
           <Link href={`/org/${props.orgslug}/course/${props.courseid}/element/${props.element.id.replace("element_", "")}/edit`}>
-            <a  target="_blank" rel="noopener noreferrer">&nbsp; <Pencil2Icon/></a>
+            <a  rel="noopener noreferrer">&nbsp; <Pencil2Icon/></a>
           </Link>
         </ElementWrapper>
       )}
