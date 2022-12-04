@@ -24,8 +24,6 @@ interface Editor {
 
 function Editor(props: Editor) {
   const auth: any = React.useContext(AuthContext);
-  console.log(props.element);
-  console.log(props.course);
 
   const editor: any = useEditor({
     extensions: [
@@ -53,7 +51,7 @@ function Editor(props: Editor) {
   return (
     <div>
       <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
+        initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
         key="modal"
         transition={{
@@ -83,13 +81,14 @@ function Editor(props: Editor) {
           </EditorDocSection>
           <EditorUsersSection>
             <EditorUserProfileWrapper>
-              <Avvvatars value={auth.userInfo.user_object.user_id} style="shape" />
+              {!auth.isAuthenticated && <span>Loading</span>}
+              {auth.isAuthenticated && <Avvvatars value={auth.userInfo.user_object.user_id} style="shape" />}
             </EditorUserProfileWrapper>
           </EditorUsersSection>
         </EditorTop>
       </motion.div>
       <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
+        initial={{ opacity: 0, scale: 0.99 }}
         animate={{ opacity: 1, scale: 1 }}
         key="modal"
         transition={{
@@ -100,9 +99,9 @@ function Editor(props: Editor) {
         }}
         exit={{ opacity: 0 }}
       >
-      <EditorContentWrapper>
-        <EditorContent editor={editor} />
-      </EditorContentWrapper>
+        <EditorContentWrapper>
+          <EditorContent editor={editor} />
+        </EditorContentWrapper>
       </motion.div>
     </div>
   );
