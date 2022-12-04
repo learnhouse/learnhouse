@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import React from "react";
 import styled from "styled-components";
-import Layout from "../../../../../components/ui/Layout";
+import Layout from "../../../../../components//UI/Layout";
 import { getAPIUrl, getBackendUrl } from "../../../../../services/config";
 import { getCourse, getCourseMetadata } from "../../../../../services/courses/courses";
 

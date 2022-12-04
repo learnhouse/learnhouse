@@ -1,6 +1,6 @@
 import React from "react";
 import styled from "styled-components";
-import { HeaderProfileBox } from "../../security/HeaderProfileBox";
+import { HeaderProfileBox } from "../../Security/HeaderProfileBox";
 import learnhouseIcon from "public/learnhouse_icon.png";
 import learnhouseLogo from "public/learnhouse_logo.png";
 import Link from "next/link";

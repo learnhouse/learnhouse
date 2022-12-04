@@ -4,7 +4,7 @@ import styled from "styled-components";
 import learnhouseBigIcon from "public/learnhouse_bigicon.png";
 import Image from "next/image";
 import Link from "next/link";
-import { PreAlphaLabel } from "../components/ui/Layout";
+import { PreAlphaLabel } from "../components//UI/Layout";
 
 const Home: NextPage = () => {
   return (
