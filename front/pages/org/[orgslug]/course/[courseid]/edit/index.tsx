@@ -1,16 +1,16 @@
 import React from "react";
 import { useState, useEffect } from "react";
 import styled from "styled-components";
-import { Header } from "../../../../../../components/ui/Header";
-import Layout from "../../../../../../components/ui/Layout";
-import { Title } from "../../../../../../components/ui/styles/Title";
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
-import { initialData, initialData2 } from "../../../../../../components/drags/data";
-import Chapter from "../../../../../../components/drags/Chapter";
+import { Header } from "../../../../../../components//UI/Header";
+import Layout from "../../../../../../components//UI/Layout";
+import { Title } from "../../../../../../components//UI/Elements/Styles/Title";
+import { DragDropContext, Droppable } from "react-beautiful-dnd";
+import { initialData, initialData2 } from "../../../../../../components/Drags/data";
+import Chapter from "../../../../../../components/Drags/Chapter";
 import { createChapter, deleteChapter, getCourseChaptersMetadata, updateChaptersMetadata } from "../../../../../../services/courses/chapters";
 import { useRouter } from "next/router";
-import NewChapterModal from "../../../../../../components/modals/CourseEdit/NewChapter";
-import NewElementModal from "../../../../../../components/modals/CourseEdit/NewElement";
+import NewChapterModal from "../../../../../../components/Modals/CourseEdit/NewChapter";
+import NewElementModal from "../../../../../../components/Modals/CourseEdit/NewElement";
 import { createElement, createFileElement } from "../../../../../../services/courses/elements";
 
 function CourseEdit() {

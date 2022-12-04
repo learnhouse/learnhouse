@@ -6,7 +6,7 @@ import Text from "@tiptap/extension-text";
 import { generateHTML } from "@tiptap/html";
 import { useRouter } from "next/router";
 import React, { useMemo } from "react";
-import Layout from "../../../../../../../components/ui/Layout";
+import Layout from "../../../../../../../components//UI/Layout";
 import { getElement } from "../../../../../../../services/courses/elements";
 import { getBackendUrl } from "../../../../../../../services/config";
 

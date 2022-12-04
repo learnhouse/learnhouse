@@ -1,16 +1,16 @@
-import { default as React, useEffect, useRef } from "react";
+import { default as React, } from "react";
 import * as Y from "yjs";
 import { WebrtcProvider } from "y-webrtc";
-import EditorWithOptions from "./EditorWithOptions";
-import { IndexeddbPersistence } from "y-indexeddb";
+import Editor from "./Editor";
 import { updateElement } from "../../services/courses/elements";
 
-interface EditorProps {
+interface EditorWrapperProps {
   content: string;
   element: any;
+  course:any
 }
 
-function Editor(props: EditorProps) {
+function EditorWrapper(props: EditorWrapperProps) {
   // A new Y document
   const ydoc = new Y.Doc();
   const [providerState, setProviderState] = React.useState<any>({});
@@ -19,7 +19,6 @@ function Editor(props: EditorProps) {
 
   function createRTCProvider() {
     const provider = new WebrtcProvider(props.element.element_id, ydoc);
-
     setYdocState(ydoc);
     setProviderState(provider);
     setIsLoading(false);
@@ -29,18 +28,14 @@ function Editor(props: EditorProps) {
     let element = props.element;
     element.content = content;
     const res = await updateElement(element, element.element_id);
-    
+    alert(JSON.stringify(res));
   }
 
   if (isLoading) {
     createRTCProvider();
   } else {
-    return (
-      <div>
-        <EditorWithOptions content={props.content} setContent={setContent} provider={providerState} ydoc={ydocState}></EditorWithOptions>
-      </div>
-    );
+    return <Editor course={props.course} element={props.element} content={props.content} setContent={setContent} provider={providerState} ydoc={ydocState}></Editor>;
   }
 }
 
-export default Editor;
+export default EditorWrapper;

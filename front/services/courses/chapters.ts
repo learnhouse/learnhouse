@@ -1,4 +1,4 @@
-import { initialData } from "../../components/drags/data";
+import { initialData } from "../../components/Drags/data";
 import { getAPIUrl } from "../config";
 
 export async function getCourseChaptersMetadata(course_id: any) {
