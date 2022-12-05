@@ -20,7 +20,7 @@ const Layout = (props: any) => {
           <meta name="description" content={props.description} />
           <link rel="icon" href="/favicon.ico" />
         </Head>
-        <PreAlphaLabel>🚧 Pre-Alpha</PreAlphaLabel>
+        <ProjectPhaseLabel>🚧 Dev Phase</ProjectPhaseLabel>
         <Menu></Menu>
         <motion.main
           variants={variants} // Pass the variant object into Framer Motion
@@ -57,7 +57,7 @@ const Footer = styled.footer`
   }
 `;
 
-export const PreAlphaLabel = styled.div`
+export const ProjectPhaseLabel = styled.div`
   position: fixed;
   bottom: 0;
   right: 0;
