@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import styled from "styled-components";
 import { getBackendUrl } from "../../services/config";
-import { GlobeIcon, SlashIcon } from "@radix-ui/react-icons";
+import { GlobeIcon, PaperPlaneIcon, SlashIcon } from "@radix-ui/react-icons";
 import Avvvatars from "avvvatars-react";
 
 interface Editor {
@@ -49,7 +49,7 @@ function Editor(props: Editor) {
   });
 
   return (
-    <div>
+    <Page>
       <motion.div
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -72,7 +72,7 @@ function Editor(props: Editor) {
                 <b>{props.course.course.name}</b> <SlashIcon /> {props.element.name}{" "}
               </EditorInfoDocName>
               <EditorSaveButton onClick={() => props.setContent(editor.getJSON())}>
-                <GlobeIcon></GlobeIcon>
+                Save
               </EditorSaveButton>
             </EditorInfoWrapper>
             <EditorButtonsWrapper>
@@ -103,20 +103,36 @@ function Editor(props: Editor) {
           <EditorContent editor={editor} />
         </EditorContentWrapper>
       </motion.div>
-    </div>
+    </Page>
   );
 }
+const Page = styled.div`
+  height: 100vh;
+  width: 100%;
+  min-height: 100vh;
+  min-width: 100vw;
+  padding-top: 30px;
+
+  // dots background 
+  background-image: radial-gradient(#4744446b 1px, transparent 1px), radial-gradient(#4744446b 1px, transparent 1px);
+  background-position: 0 0, 25px 25px;
+  background-size: 50px 50px;
+  background-attachment: fixed;
+  background-repeat: repeat;
+`
 
 const EditorTop = styled.div`
-  background-color: white;
+  background-color: #ffffffb8;
   border-radius: 15px;
+  backdrop-filter: saturate(180%) blur(14px);
   margin: 40px;
+  margin-top: 0px;
   margin-bottom: 20px;
   padding: 10px;
   display: flex;
   justify-content: space-between;
   box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.03);
-  //position: fixed;
+  position: fixed;
   z-index: 3;
   width: -webkit-fill-available;
 `;
@@ -174,12 +190,11 @@ const EditorInfoDocName = styled.div`
 const EditorSaveButton = styled.div`
   display: flex;
   border-radius: 6px;
-  width: 25px;
-  height: 25px;
   padding: 5px;
-  font-size: 5px;
+  font-size: 12px;
   margin-right: 5px;
   margin-left: 7px;
+  background: rgba(176, 176, 176, 0.145);
 
   &.is-active {
     background: rgba(176, 176, 176, 0.5);
@@ -203,11 +218,15 @@ const EditorInfoThumbnail = styled.img`
   object-position: top;
   border-radius: 7px;
   margin-left: 5px;
+
+  &:hover {
+    cursor: pointer;
+  }
 `;
 
 const EditorContentWrapper = styled.div`
   margin: 40px;
-  margin-top: 20px;
+  margin-top: 90px;
   background-color: white;
   border-radius: 10px;
   box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.03);
