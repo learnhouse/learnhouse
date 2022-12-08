@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import { FontBoldIcon, FontItalicIcon, StrikethroughIcon, ArrowLeftIcon, ArrowRightIcon, OpacityIcon } from "@radix-ui/react-icons";
-import { AlertTriangle, Info } from "lucide-react";
+import { AlertCircle, AlertTriangle, Info } from "lucide-react";
 
 export const ToolbarButtons = ({ editor }: any) => {
   if (!editor) {
@@ -33,8 +33,11 @@ export const ToolbarButtons = ({ editor }: any) => {
         <option value="6">Heading 6</option>
       </ToolSelect>
       {/* TODO: fix this : toggling only works one-way */}
-      <ToolBtn onClick={() => editor.chain().focus().toggleNode('calloutInfo').run()} >
+      <ToolBtn onClick={() => editor.chain().focus().toggleNode('calloutWarning').run()} >
         <AlertTriangle size={15} />
+      </ToolBtn>
+      <ToolBtn onClick={() => editor.chain().focus().toggleNode('calloutInfo').run()} >
+        <AlertCircle size={15} />
       </ToolBtn>
     </ToolButtonsWrapper>
   );
