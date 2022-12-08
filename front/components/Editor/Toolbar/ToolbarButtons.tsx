@@ -1,5 +1,6 @@
 import styled from "styled-components";
-import { FontBoldIcon, FontItalicIcon, StrikethroughIcon, ArrowLeftIcon, ArrowRightIcon } from "@radix-ui/react-icons";
+import { FontBoldIcon, FontItalicIcon, StrikethroughIcon, ArrowLeftIcon, ArrowRightIcon, OpacityIcon } from "@radix-ui/react-icons";
+import { AlertTriangle, Info } from "lucide-react";
 
 export const ToolbarButtons = ({ editor }: any) => {
   if (!editor) {
@@ -31,6 +32,10 @@ export const ToolbarButtons = ({ editor }: any) => {
         <option value="5">Heading 5</option>
         <option value="6">Heading 6</option>
       </ToolSelect>
+      {/* TODO: fix this : toggling only works one-way */}
+      <ToolBtn onClick={() => editor.chain().focus().toggleNode('calloutInfo').run()} >
+        <AlertTriangle size={15} />
+      </ToolBtn>
     </ToolButtonsWrapper>
   );
 };
@@ -49,9 +54,12 @@ const ToolBtn = styled.div`
   width: 25px;
   height: 25px;
   padding: 5px;
-  font-size: 5px;
   margin-right: 5px;
   transition: all 0.2s ease-in-out;
+
+  svg{
+    padding: 1px;
+  }
 
   &.is-active {
     background: rgba(176, 176, 176, 0.5);
