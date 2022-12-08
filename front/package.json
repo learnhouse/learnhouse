@@ -18,6 +18,7 @@
     "@tiptap/starter-kit": "^2.0.0-beta.199",
     "avvvatars-react": "^0.4.2",
     "framer-motion": "^7.3.6",
+    "lucide-react": "^0.104.1",
     "next": "12.3.1",
     "react": "18.2.0",
     "react-beautiful-dnd": "^13.1.1",
