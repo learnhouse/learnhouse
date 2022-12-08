@@ -14,6 +14,7 @@ import { SlashIcon } from "@radix-ui/react-icons";
 import Avvvatars from "avvvatars-react";
 // extensions
 import InfoCallout from "./Extensions/Callout/Info/InfoCallout";
+import WarningCallout from "./Extensions/Callout/Warning/WarningCallout";
 
 interface Editor {
   content: string;
@@ -32,9 +33,12 @@ function Editor(props: Editor) {
     extensions: [
       StarterKit.configure({
         // The Collaboration extension comes with its own history handling
-       // history: false,
+        // history: false,
       }),
       InfoCallout.configure({
+        editable: true,
+      }),
+      WarningCallout.configure({
         editable: true,
       }),
       // Register the document with Tiptap
