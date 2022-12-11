@@ -1,10 +1,10 @@
 from pydantic import BaseModel
-from src.services.database import create_config_collection, check_database, create_database, learnhouseDB
+from src.services.database import check_database,  learnhouseDB
 from src.services.security import verify_user_rights_with_roles
-from src.services.uploads import upload_video
-from src.services.users import PublicUser, User
-from src.services.courses.elements.elements import ElementInDB, Element
-from fastapi import FastAPI, HTTPException, status, Request, Response, BackgroundTasks, UploadFile, File
+from src.services.courses.elements.uploads import upload_video
+from src.services.users import PublicUser
+from src.services.courses.elements.elements import ElementInDB
+from fastapi import HTTPException, status, UploadFile
 from uuid import uuid4
 from datetime import datetime
 
@@ -48,7 +48,7 @@ async def create_video_element(name: str,  coursechapter_id: str, current_user: 
         print("uploading video")
         # get videofile format
 
-        await upload_video(video_file, video_file.filename, element_id)
+        await upload_video(video_file,  element_id)
 
     # todo : choose whether to update the chapter or not
     # update chapter
