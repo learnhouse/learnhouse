@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from src.services.database import check_database,  learnhouseDB
 from src.services.security import verify_user_rights_with_roles
-from src.services.courses.elements.uploads import upload_video
+from src.services.courses.elements.uploads.videos import upload_video
 from src.services.users import PublicUser
 from src.services.courses.elements.elements import ElementInDB
 from fastapi import HTTPException, status, UploadFile
