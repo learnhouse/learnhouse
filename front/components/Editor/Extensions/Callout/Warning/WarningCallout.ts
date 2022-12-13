@@ -7,7 +7,11 @@ export default Node.create({
   name: "calloutWarning",
   group: "block",
   draggable: true,
-  content: "inline*",
+  content: "text*",
+  marks: "",
+  defining: true,
+
+  // TODO : multi line support
 
   parseHTML() {
     return [

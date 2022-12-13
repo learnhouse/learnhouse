@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from src.services.database import check_database,  learnhouseDB, learnhouseDB
 from fastapi import HTTPException, status, UploadFile
 from fastapi.responses import StreamingResponse
+import os
 
 from src.services.users import PublicUser
 
@@ -53,6 +54,10 @@ async def create_picture_file(picture_file: UploadFile, element_id: str):
         file_type=file_type,
         element_id=element_id
     )
+
+    # create folder for element
+    if not os.path.exists(f"content/uploads/files/pictures/{element_id}"):
+        os.mkdir(f"content/uploads/files/pictures/{element_id}")
 
     # upload file to server
     with open(f"content/uploads/files/pictures/{element_id}/{file_id}.{file_format}", 'wb') as f:
