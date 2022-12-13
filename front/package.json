@@ -13,6 +13,7 @@
     "@radix-ui/react-icons": "^1.1.1",
     "@tiptap/extension-collaboration": "^2.0.0-beta.199",
     "@tiptap/extension-collaboration-cursor": "^2.0.0-beta.199",
+    "@tiptap/extension-youtube": "^2.0.0-beta.207",
     "@tiptap/html": "^2.0.0-beta.202",
     "@tiptap/react": "^2.0.0-beta.199",
     "@tiptap/starter-kit": "^2.0.0-beta.199",

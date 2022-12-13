@@ -16,6 +16,7 @@ import Avvvatars from "avvvatars-react";
 import InfoCallout from "./Extensions/Callout/Info/InfoCallout";
 import WarningCallout from "./Extensions/Callout/Warning/WarningCallout";
 import ImageBlock from "./Extensions/Image/ImageBlock";
+import Youtube from "@tiptap/extension-youtube";
 
 interface Editor {
   content: string;
@@ -31,7 +32,7 @@ function Editor(props: Editor) {
 
   const editor: any = useEditor({
     editable: true,
-    
+
     extensions: [
       StarterKit.configure({
         // The Collaboration extension comes with its own history handling
@@ -45,7 +46,11 @@ function Editor(props: Editor) {
       }),
       ImageBlock.configure({
         editable: true,
-        element: props.element
+        element: props.element,
+      }),
+      Youtube.configure({
+        controls: true,
+        modestBranding: true,
       }),
       // Register the document with Tiptap
       // Collaboration.configure({
@@ -238,7 +243,7 @@ const EditorInfoThumbnail = styled.img`
   }
 `;
 
-const EditorContentWrapper = styled.div`
+export const EditorContentWrapper = styled.div`
   margin: 40px;
   margin-top: 90px;
   background-color: white;
@@ -258,6 +263,17 @@ const EditorContentWrapper = styled.div`
       outline-style: none !important;
       box-shadow: none !important;
     }
+  }
+
+  iframe {
+    border-radius: 6px;
+    border: none;
+    min-width: 200px;
+    width: 100%;
+    height: 440px;
+    min-height: 200px;
+    display: block;
+    outline: 0px solid transparent;
   }
 `;
 
