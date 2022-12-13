@@ -15,6 +15,7 @@ import Avvvatars from "avvvatars-react";
 // extensions
 import InfoCallout from "./Extensions/Callout/Info/InfoCallout";
 import WarningCallout from "./Extensions/Callout/Warning/WarningCallout";
+import ImageBlock from "./Extensions/Image/ImageBlock";
 
 interface Editor {
   content: string;
@@ -30,6 +31,7 @@ function Editor(props: Editor) {
 
   const editor: any = useEditor({
     editable: true,
+    
     extensions: [
       StarterKit.configure({
         // The Collaboration extension comes with its own history handling
@@ -40,6 +42,10 @@ function Editor(props: Editor) {
       }),
       WarningCallout.configure({
         editable: true,
+      }),
+      ImageBlock.configure({
+        editable: true,
+        element: props.element
       }),
       // Register the document with Tiptap
       // Collaboration.configure({
@@ -244,7 +250,8 @@ const EditorContentWrapper = styled.div`
   .ProseMirror {
     padding-left: 20px;
     padding-right: 20px;
-    padding-bottom: 6px;
+    padding-bottom: 20px;
+
     padding-top: 1px;
     &:focus {
       outline: none !important;

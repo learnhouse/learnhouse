@@ -4,6 +4,7 @@ import StarterKit from "@tiptap/starter-kit";
 // Custom Extensions
 import InfoCallout from "../Editor/Extensions/Callout/Info/InfoCallout";
 import WarningCallout from "../Editor/Extensions/Callout/Warning/WarningCallout";
+import ImageBlock from "../Editor/Extensions/Image/ImageBlock";
 
 interface Editor {
   content: string;
@@ -23,6 +24,10 @@ function Canva(props: Editor) {
       }),
       WarningCallout.configure({
         editable: isEditable,
+      }),
+      ImageBlock.configure({
+        editable: isEditable,
+        element: props.element,
       }),
     ],
 

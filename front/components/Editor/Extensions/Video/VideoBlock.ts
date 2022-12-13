@@ -1,20 +1,20 @@
 import { mergeAttributes, Node } from "@tiptap/core";
 import { ReactNodeViewRenderer } from "@tiptap/react";
 
-import InfoCalloutComponent from "./InfoCalloutComponent";
+import VideoBlockComponent from "./VideoBlockComponent";
 
 export default Node.create({
-  name: "calloutInfo",
+  name: "calloutWarning",
   group: "block",
   draggable: true,
-  content: "text*",
+  content: "inline*",
 
   // TODO : multi line support
 
   parseHTML() {
     return [
       {
-        tag: "callout-info",
+        tag: "callout-warning",
       },
     ];
   },
@@ -24,6 +24,6 @@ export default Node.create({
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(InfoCalloutComponent);
+    return ReactNodeViewRenderer(VideoBlockComponent);
   },
 });
