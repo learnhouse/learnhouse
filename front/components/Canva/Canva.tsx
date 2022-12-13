@@ -5,6 +5,8 @@ import StarterKit from "@tiptap/starter-kit";
 import InfoCallout from "../Editor/Extensions/Callout/Info/InfoCallout";
 import WarningCallout from "../Editor/Extensions/Callout/Warning/WarningCallout";
 import ImageBlock from "../Editor/Extensions/Image/ImageBlock";
+import Youtube from "@tiptap/extension-youtube";
+import { EditorContentWrapper } from "../Editor/Editor";
 
 interface Editor {
   content: string;
@@ -29,12 +31,20 @@ function Canva(props: Editor) {
         editable: isEditable,
         element: props.element,
       }),
+      Youtube.configure({
+        controls: true,
+        modestBranding: true,
+      }),
     ],
 
     content: props.content,
   });
 
-  return <EditorContent editor={editor} />;
+  return (
+    <EditorContentWrapper>
+      <EditorContent editor={editor} />
+    </EditorContentWrapper>
+  );
 }
 
 export default Canva;
