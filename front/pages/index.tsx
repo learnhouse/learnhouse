@@ -4,12 +4,10 @@ import styled from "styled-components";
 import learnhouseBigIcon from "public/learnhouse_bigicon.png";
 import Image from "next/image";
 import Link from "next/link";
-import { PreAlphaLabel } from "../components//UI/Layout";
 
 const Home: NextPage = () => {
   return (
     <HomePage>
-      <PreAlphaLabel>🚧 Pre-Alpha</PreAlphaLabel>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

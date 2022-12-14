@@ -39,7 +39,7 @@ const AuthProvider = (props: any) => {
         }
       } else {
         setAuth({ access_token, isAuthenticated: false, userInfo, isLoading });
-        router.push("/login");
+        //router.push("/login");
       }
     } catch (error) {
       router.push("/");
