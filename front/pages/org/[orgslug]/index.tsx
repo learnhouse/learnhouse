@@ -15,9 +15,9 @@ const OrgHomePage = () => {
         <Header></Header>
         <Title>Welcome {orgslug} 👋🏻</Title>
         <Link href={orgslug + "/courses"}>
-          <a>
-            <button>See Courses </button>
-          </a>
+
+          <button>See Courses </button>
+
         </Link>
       </Layout>
     </div>
