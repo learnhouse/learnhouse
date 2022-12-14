@@ -2,7 +2,7 @@ import type { NextPage } from "next";
 import { motion } from "framer-motion";
 import styled from "styled-components";
 import learnhouseBigIcon from "public/learnhouse_bigicon.png";
-import Image from "next/image";
+import Image from "next/legacy/image";
 import Link from "next/link";
 
 const Home: NextPage = () => {
@@ -38,15 +38,15 @@ const Home: NextPage = () => {
       >
         <div>
           <Link href={"/organizations"}>
-            <a>
-              <OrgsButton>See Organizations</OrgsButton>
-            </a>
+
+            <OrgsButton>See Organizations</OrgsButton>
+
           </Link>
           <br /><br />
           <Link href={"/login"}>
-            <a>
-              <OrgsButton>Login</OrgsButton>
-            </a>
+
+            <OrgsButton>Login</OrgsButton>
+
           </Link>
         </div>
       </motion.div>
