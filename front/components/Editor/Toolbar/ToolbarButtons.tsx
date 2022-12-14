@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import { FontBoldIcon, FontItalicIcon, StrikethroughIcon, ArrowLeftIcon, ArrowRightIcon, OpacityIcon } from "@radix-ui/react-icons";
-import { AlertCircle, AlertTriangle, ImagePlus, Info, Youtube } from "lucide-react";
+import { AlertCircle, AlertTriangle, ImagePlus, Info, Video, Youtube } from "lucide-react";
 
 export const ToolbarButtons = ({ editor }: any) => {
   if (!editor) {
@@ -73,6 +73,19 @@ export const ToolbarButtons = ({ editor }: any) => {
         }
       >
         <ImagePlus size={15} />
+      </ToolBtn>
+      <ToolBtn
+        onClick={() =>
+          editor
+            .chain()
+            .focus()
+            .insertContent({
+              type: "blockVideo",
+            })
+            .run()
+        }
+      >
+        <Video size={15} />
       </ToolBtn>
       <ToolBtn onClick={() => addYoutubeVideo()}>
         <Youtube size={15} />

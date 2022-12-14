@@ -17,6 +17,7 @@ import InfoCallout from "./Extensions/Callout/Info/InfoCallout";
 import WarningCallout from "./Extensions/Callout/Warning/WarningCallout";
 import ImageBlock from "./Extensions/Image/ImageBlock";
 import Youtube from "@tiptap/extension-youtube";
+import VideoBlock from "./Extensions/Video/VideoBlock";
 
 interface Editor {
   content: string;
@@ -45,6 +46,10 @@ function Editor(props: Editor) {
         editable: true,
       }),
       ImageBlock.configure({
+        editable: true,
+        element: props.element,
+      }),
+      VideoBlock.configure({
         editable: true,
         element: props.element,
       }),

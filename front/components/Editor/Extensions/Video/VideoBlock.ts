@@ -4,23 +4,28 @@ import { ReactNodeViewRenderer } from "@tiptap/react";
 import VideoBlockComponent from "./VideoBlockComponent";
 
 export default Node.create({
-  name: "calloutWarning",
+  name: "blockVideo",
   group: "block",
-  draggable: true,
-  content: "inline*",
-
-  // TODO : multi line support
+  atom: true,
+  
+  addAttributes() {
+    return {
+      fileObject: {
+        default: null,
+      },
+    };
+  },
 
   parseHTML() {
     return [
       {
-        tag: "callout-warning",
+        tag: "block-video",
       },
     ];
   },
 
   renderHTML({ HTMLAttributes }) {
-    return ["callout-info", mergeAttributes(HTMLAttributes), 0];
+    return ["block-video", mergeAttributes(HTMLAttributes), 0];
   },
 
   addNodeView() {

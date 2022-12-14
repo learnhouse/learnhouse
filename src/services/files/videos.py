@@ -55,7 +55,8 @@ async def create_video_file(video_file: UploadFile, element_id: str):
     )
 
     # create folder for element
-    os.mkdir(f"content/uploads/files/videos/{element_id}")
+    if not os.path.exists(f"content/uploads/files/videos/{element_id}"):
+        os.mkdir(f"content/uploads/files/videos/{element_id}")
 
     # upload file to server
     with open(f"content/uploads/files/videos/{element_id}/{file_id}.{file_format}", 'wb') as f:
