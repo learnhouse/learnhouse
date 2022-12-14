@@ -7,7 +7,7 @@ import { AuthContext } from "../Security/AuthProvider";
 import learnhouseIcon from "public/learnhouse_icon.png";
 import { ToolbarButtons } from "./Toolbar/ToolbarButtons";
 import { motion, AnimatePresence } from "framer-motion";
-import Image from "next/image";
+import Image from "next/legacy/image";
 import styled from "styled-components";
 import { getBackendUrl } from "../../services/config";
 import { SlashIcon } from "@radix-ui/react-icons";

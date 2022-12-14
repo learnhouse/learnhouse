@@ -11,11 +11,16 @@ function Element(props: any) {
       {(provided) => (
         <ElementWrapper key={props.element.id} {...provided.draggableProps} {...provided.dragHandleProps} ref={provided.innerRef}>
           <p>{props.element.name} </p>
-          <Link href={`/org/${props.orgslug}/course/${props.courseid}/element/${props.element.id.replace("element_", "")}`}>
-            <a  target="_blank" rel="noopener noreferrer">&nbsp; <EyeOpenIcon/></a>
+          <Link
+            href={`/org/${props.orgslug}/course/${props.courseid}/element/${props.element.id.replace("element_", "")}`}
+            
+            rel="noopener noreferrer">
+            &nbsp; <EyeOpenIcon/>
           </Link>
-          <Link href={`/org/${props.orgslug}/course/${props.courseid}/element/${props.element.id.replace("element_", "")}/edit`}>
-            <a  rel="noopener noreferrer">&nbsp; <Pencil2Icon/></a>
+          <Link
+            href={`/org/${props.orgslug}/course/${props.courseid}/element/${props.element.id.replace("element_", "")}/edit`}
+            rel="noopener noreferrer">
+            &nbsp; <Pencil2Icon/>
           </Link>
         </ElementWrapper>
       )}

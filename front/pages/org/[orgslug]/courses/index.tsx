@@ -50,9 +50,9 @@ const CoursesIndexPage = () => {
       <Title>
         {orgslug} courses :{" "}
         <Link href={"/org/" + orgslug + "/courses/new"}>
-          <a>
-            <button>+</button>
-          </a>
+
+          <button>+</button>
+
         </Link>{" "}
       </Title>
 
@@ -64,20 +64,20 @@ const CoursesIndexPage = () => {
           {courses.map((course: any) => (
             <div key={course.course_id}>
               <Link href={"/org/" + orgslug + "/course/" + removeCoursePrefix(course.course_id)}>
-                <a>
-                  <h2>{course.name}</h2>
-                  <CourseWrapper>
-                    <img src={`${getBackendUrl()}content/uploads/img/${course.thumbnail}`} alt="" />
-                  </CourseWrapper>
-                </a>
+
+                <h2>{course.name}</h2>
+                <CourseWrapper>
+                  <img src={`${getBackendUrl()}content/uploads/img/${course.thumbnail}`} alt="" />
+                </CourseWrapper>
+
               </Link>
               <button style={{ backgroundColor: "red", border: "none" }} onClick={() => deleteCourses(course.course_id)}>
                 Delete
               </button>
               <Link href={"/org/" + orgslug + "/course/" + removeCoursePrefix(course.course_id) + "/edit"}>
-                <a>
-                  <button>Edit Chapters</button>
-                </a>
+
+                <button>Edit Chapters</button>
+
               </Link>
             </div>
           ))}
