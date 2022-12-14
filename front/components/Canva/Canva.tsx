@@ -7,6 +7,7 @@ import WarningCallout from "../Editor/Extensions/Callout/Warning/WarningCallout"
 import ImageBlock from "../Editor/Extensions/Image/ImageBlock";
 import Youtube from "@tiptap/extension-youtube";
 import { EditorContentWrapper } from "../Editor/Editor";
+import VideoBlock from "../Editor/Extensions/Video/VideoBlock";
 
 interface Editor {
   content: string;
@@ -29,6 +30,10 @@ function Canva(props: Editor) {
       }),
       ImageBlock.configure({
         editable: isEditable,
+        element: props.element,
+      }),
+      VideoBlock.configure({
+        editable: true,
         element: props.element,
       }),
       Youtube.configure({
