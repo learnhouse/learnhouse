@@ -10,8 +10,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import styled from "styled-components";
 import { getBackendUrl } from "../../services/config";
-import { GlobeIcon, PaperPlaneIcon, SlashIcon } from "@radix-ui/react-icons";
+import { SlashIcon } from "@radix-ui/react-icons";
 import Avvvatars from "avvvatars-react";
+// extensions
+import InfoCallout from "./Extensions/Callout/Info/InfoCallout";
+import WarningCallout from "./Extensions/Callout/Warning/WarningCallout";
+import ImageBlock from "./Extensions/Image/ImageBlock";
+import Youtube from "@tiptap/extension-youtube";
+import VideoBlock from "./Extensions/Video/VideoBlock";
 
 interface Editor {
   content: string;
@@ -26,23 +32,43 @@ function Editor(props: Editor) {
   const auth: any = React.useContext(AuthContext);
 
   const editor: any = useEditor({
+    editable: true,
+
     extensions: [
       StarterKit.configure({
         // The Collaboration extension comes with its own history handling
-        history: false,
+        // history: false,
+      }),
+      InfoCallout.configure({
+        editable: true,
+      }),
+      WarningCallout.configure({
+        editable: true,
+      }),
+      ImageBlock.configure({
+        editable: true,
+        element: props.element,
+      }),
+      VideoBlock.configure({
+        editable: true,
+        element: props.element,
+      }),
+      Youtube.configure({
+        controls: true,
+        modestBranding: true,
       }),
       // Register the document with Tiptap
-      Collaboration.configure({
-        document: props.ydoc,
-      }),
+      // Collaboration.configure({
+      //   document: props.ydoc,
+      // }),
       // Register the collaboration cursor extension
-      CollaborationCursor.configure({
-        provider: props.provider,
-        user: {
-          name: auth.userInfo.username,
-          color: "#f783ac",
-        },
-      }),
+      // CollaborationCursor.configure({
+      //   provider: props.provider,
+      //   user: {
+      //     name: auth.userInfo.username,
+      //     color: "#f783ac",
+      //   },
+      // }),
     ],
 
     content: props.content,
@@ -65,15 +91,13 @@ function Editor(props: Editor) {
         <EditorTop>
           <EditorDocSection>
             <EditorInfoWrapper>
-              <EditorInfoLearnHouseLogo width={23} height={23} src={learnhouseIcon} alt="" />
+              <EditorInfoLearnHouseLogo width={25} height={25} src={learnhouseIcon} alt="" />
               <EditorInfoThumbnail src={`${getBackendUrl()}content/uploads/img/${props.course.course.thumbnail}`} alt=""></EditorInfoThumbnail>
               <EditorInfoDocName>
                 {" "}
                 <b>{props.course.course.name}</b> <SlashIcon /> {props.element.name}{" "}
               </EditorInfoDocName>
-              <EditorSaveButton onClick={() => props.setContent(editor.getJSON())}>
-                Save
-              </EditorSaveButton>
+              <EditorSaveButton onClick={() => props.setContent(editor.getJSON())}>Save</EditorSaveButton>
             </EditorInfoWrapper>
             <EditorButtonsWrapper>
               <ToolbarButtons editor={editor} />
@@ -90,7 +114,6 @@ function Editor(props: Editor) {
       <motion.div
         initial={{ opacity: 0, scale: 0.99 }}
         animate={{ opacity: 1, scale: 1 }}
-        key="modal"
         transition={{
           type: "spring",
           stiffness: 360,
@@ -106,6 +129,7 @@ function Editor(props: Editor) {
     </Page>
   );
 }
+
 const Page = styled.div`
   height: 100vh;
   width: 100%;
@@ -113,13 +137,13 @@ const Page = styled.div`
   min-width: 100vw;
   padding-top: 30px;
 
-  // dots background 
+  // dots background
   background-image: radial-gradient(#4744446b 1px, transparent 1px), radial-gradient(#4744446b 1px, transparent 1px);
   background-position: 0 0, 25px 25px;
   background-size: 50px 50px;
   background-attachment: fixed;
   background-repeat: repeat;
-`
+`;
 
 const EditorTop = styled.div`
   background-color: #ffffffb8;
@@ -224,7 +248,7 @@ const EditorInfoThumbnail = styled.img`
   }
 `;
 
-const EditorContentWrapper = styled.div`
+export const EditorContentWrapper = styled.div`
   margin: 40px;
   margin-top: 90px;
   background-color: white;
@@ -236,13 +260,25 @@ const EditorContentWrapper = styled.div`
   .ProseMirror {
     padding-left: 20px;
     padding-right: 20px;
-    padding-bottom: 6px;
+    padding-bottom: 20px;
+
     padding-top: 1px;
     &:focus {
       outline: none !important;
       outline-style: none !important;
       box-shadow: none !important;
     }
+  }
+
+  iframe {
+    border-radius: 6px;
+    border: none;
+    min-width: 200px;
+    width: 100%;
+    height: 440px;
+    min-height: 200px;
+    display: block;
+    outline: 0px solid transparent;
   }
 `;
 

@@ -47,7 +47,6 @@ async def api_delete_element(element_id: str, current_user: PublicUser = Depends
 
 # Video Element
 
-
 @router.post("/video")
 async def api_create_video_element(name: str = Form() , coursechapter_id: str = Form(),  current_user: PublicUser = Depends(get_current_user), video_file: UploadFile | None = None):
     """

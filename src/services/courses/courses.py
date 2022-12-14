@@ -1,14 +1,13 @@
 import json
-import os
 from typing import List
 from uuid import uuid4
 from pydantic import BaseModel
 from src.services.courses.elements.elements import ElementInDB
-from src.services.uploads import upload_thumbnail
-from src.services.users import PublicUser, User
-from src.services.database import create_config_collection, check_database, create_database, learnhouseDB
+from src.services.courses.thumbnails import upload_thumbnail
+from src.services.users import PublicUser
+from src.services.database import check_database,  learnhouseDB
 from src.services.security import *
-from fastapi import FastAPI, HTTPException, status, Request, Response, BackgroundTasks, UploadFile, File
+from fastapi import HTTPException, status, UploadFile
 from datetime import datetime
 
 #### Classes ####################################################
@@ -79,14 +78,12 @@ async def get_course_meta(course_id: str, current_user: PublicUser):
     course = courses.find_one({"course_id": course_id})
     elements = learnhouseDB["elements"]
 
-
     # verify course rights
     await verify_rights(course_id, current_user, "read")
 
     if not course:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Course does not exist")
-
 
     coursechapters = coursechapters.find(
         {"course_id": course_id}).sort("name", 1)
