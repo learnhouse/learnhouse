@@ -4,7 +4,7 @@ import { HeaderProfileBox } from "../../Security/HeaderProfileBox";
 import learnhouseIcon from "public/learnhouse_icon.png";
 import learnhouseLogo from "public/learnhouse_logo.png";
 import Link from "next/link";
-import Image from "next/image";
+import Image from "next/legacy/image";
 import { useRouter } from "next/router";
 
 export const Menu = () => {
@@ -17,9 +17,9 @@ export const Menu = () => {
         <Logo>
           <Image width={25} height={25} src={learnhouseIcon} alt="" />
           <Link href={"/"}>
-            <a>
-              <Image width={108} height={28} src={learnhouseLogo} alt="" />
-            </a>
+
+            <Image width={108} height={28} src={learnhouseLogo} alt="" />
+
           </Link>
         </Logo>
         <div id="accounts"></div>
@@ -33,7 +33,7 @@ export const Menu = () => {
         <ul>
           <li>
             <Link href={"/org/" + orgslug + "/courses"}>
-              <a>Courses</a>
+              Courses
             </Link>
           </li>
           <li>Collections</li>

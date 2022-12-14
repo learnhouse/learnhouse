@@ -14,12 +14,12 @@ export const HeaderProfileBox = () => {
           <ul>
             <li>
               <Link href="/login">
-                <a>Login</a>
+                Login
               </Link>
             </li>
             <li>
               <Link href="/signup">
-                <a>Sign up</a>
+                Sign up
               </Link>
             </li>
           </ul>

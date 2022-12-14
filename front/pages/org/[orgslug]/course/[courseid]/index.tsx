@@ -41,31 +41,30 @@ const CourseIdPage = () => {
           <p>Course</p>
           <h1>
             {courseInfo.course.name}{" "}
-            <Link href={`/org/${orgslug}/course/${courseid}/edit`}>
-              <a target="_blank" rel="noopener noreferrer">
-                &nbsp; <Pencil2Icon />
-              </a>
+            <Link
+              href={`/org/${orgslug}/course/${courseid}/edit`}
+              
+              rel="noopener noreferrer">
+
+              <Pencil2Icon />
+
             </Link>{" "}
           </h1>
           <br />
           <ChaptersWrapper>
             {courseInfo.chapters.map((chapter: any) => {
-              return (
-                <>
-                  {chapter.elements.map((element: any) => {
-                    return (
-                      <>
-                        <Link href={`/org/${orgslug}/course/${courseid}/element/${element.id.replace("element_", "")}`}>
-                          <a>
-                            <ChapterIndicator />
-                          </a>
-                        </Link>{" "}
-                      </>
-                    );
-                  })}
-                  &nbsp;&nbsp;&nbsp;&nbsp;
-                </>
-              );
+              return <>
+                {chapter.elements.map((element: any) => {
+                  return <>
+                    <Link href={`/org/${orgslug}/course/${courseid}/element/${element.id.replace("element_", "")}`}>
+
+                      <ChapterIndicator />
+
+                    </Link>{" "}
+                  </>;
+                })}
+                &nbsp;&nbsp;&nbsp;&nbsp;
+              </>;
             })}
           </ChaptersWrapper>
 
@@ -82,26 +81,25 @@ const CourseIdPage = () => {
           <h2>Course Lessons</h2>
 
           {courseInfo.chapters.map((chapter: any) => {
-            return (
-              <>
-                <h3>Chapter : {chapter.name}</h3>
-                {chapter.elements.map((element: any) => {
-                  return (
-                    <>
-                      <p>
-                        Element {element.name}
-                        <Link href={`/org/${orgslug}/course/${courseid}/element/${element.id.replace("element_", "")}`}>
-                          <a target="_blank" rel="noopener noreferrer">
-                            &nbsp; <EyeOpenIcon />
-                          </a>
-                        </Link>{" "}
-                      </p>
-                    </>
-                  );
-                })}
-                &nbsp;&nbsp;&nbsp;&nbsp;
-              </>
-            );
+            return <>
+              <h3>Chapter : {chapter.name}</h3>
+              {chapter.elements.map((element: any) => {
+                return <>
+                  <p>
+                    Element {element.name}
+                    <Link
+                      href={`/org/${orgslug}/course/${courseid}/element/${element.id.replace("element_", "")}`}
+                      
+                      rel="noopener noreferrer">
+
+                      <EyeOpenIcon />
+
+                    </Link>{" "}
+                  </p>
+                </>;
+              })}
+              &nbsp;&nbsp;&nbsp;&nbsp;
+            </>;
           })}
         </CoursePageLayout>
       )}

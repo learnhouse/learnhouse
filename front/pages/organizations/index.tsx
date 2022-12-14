@@ -30,14 +30,13 @@ const Organizations = () => {
 
 
   return (
-    
     <Layout>
       <Title>
         Your Organizations{" "}
         <Link href={"/organizations/new"}>
-          <a>
-            <button>+</button>
-          </a>
+
+          <button>+</button>
+
         </Link>
       </Title>
       <hr />
@@ -48,9 +47,9 @@ const Organizations = () => {
           {userOrganizations.map((org: any) => (
             <div key={org.org_id}>
               <Link href={`/org/${org.slug}`}>
-                <a>
-                  <h3>{org.name}</h3>
-                </a>
+
+                <h3>{org.name}</h3>
+
               </Link>
               <button onClick={() => deleteOrganization(org.org_id)}>
                 Delete
