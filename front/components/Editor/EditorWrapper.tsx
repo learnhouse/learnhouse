@@ -18,9 +18,9 @@ function EditorWrapper(props: EditorWrapperProps) {
   const [isLoading, setIsLoading] = React.useState(true);
 
   function createRTCProvider() {
-    const provider = new WebrtcProvider(props.element.element_id, ydoc);
-    setYdocState(ydoc);
-    setProviderState(provider);
+   // const provider = new WebrtcProvider(props.element.element_id, ydoc);
+   // setYdocState(ydoc);
+   // setProviderState(provider);
     setIsLoading(false);
   }
 
