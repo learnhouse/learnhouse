@@ -15,6 +15,7 @@ class Collection(BaseModel):
     name: str
     description: str
     courses: List[str] # course_id
+    org_id: str # org_id
 
 
 class CollectionInDB(Collection):
@@ -51,7 +52,8 @@ async def create_collection(collection_object: Collection, current_user: PublicU
     # find if collection already exists using name
     isCollectionNameAvailable = collections.find_one({"name": collection_object.name})
     
-    await verify_collection_rights("*", current_user, "create")
+    # TODO 
+    # await verify_collection_rights("*", current_user, "create")
 
     if isCollectionNameAvailable:
         raise HTTPException(
@@ -139,7 +141,7 @@ async def verify_collection_rights(collection_id: str,  current_user: PublicUser
 
     collection = collections.find_one({"collection_id": collection_id})
 
-    if not collection:
+    if not collection and action != "create":
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Collection does not exist")
 

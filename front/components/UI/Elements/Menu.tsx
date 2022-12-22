@@ -17,9 +17,7 @@ export const Menu = () => {
         <Logo>
           <Image width={25} height={25} src={learnhouseIcon} alt="" />
           <Link href={"/"}>
-
             <Image width={108} height={28} src={learnhouseLogo} alt="" />
-
           </Link>
         </Logo>
         <div id="accounts"></div>
@@ -32,11 +30,11 @@ export const Menu = () => {
       <MenuArea>
         <ul>
           <li>
-            <Link href={"/org/" + orgslug + "/courses"}>
-              Courses
-            </Link>
+            <Link href={"/org/" + orgslug + "/courses"}>Courses</Link>
           </li>
-          <li>Collections</li>
+          <li>
+            <Link href={"/org/" + orgslug + "/collections"}>Collections</Link>
+          </li>
           <li>Activity</li>
           <li>More</li>
         </ul>
