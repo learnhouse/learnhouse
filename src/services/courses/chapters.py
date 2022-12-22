@@ -238,7 +238,7 @@ async def verify_rights(course_id: str, current_user: PublicUser, action: str):
 
     if not course:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail=f"Course/CourseChapter does not exist")
+            status_code=status.HTTP_409_CONFLICT, detail=f"Course does not exist")
 
     hasRoleRights = await verify_user_rights_with_roles(action, current_user.user_id, course_id)
     isAuthor = current_user.user_id in course["authors"]

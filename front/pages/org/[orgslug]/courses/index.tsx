@@ -48,7 +48,7 @@ const CoursesIndexPage = () => {
     <Layout title="Courses">
       <Header></Header>
       <Title>
-        {orgslug} courses :{" "}
+        {orgslug} Courses :{" "}
         <Link href={"/org/" + orgslug + "/courses/new"}>
 
           <button>+</button>
