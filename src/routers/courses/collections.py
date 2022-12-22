@@ -24,7 +24,7 @@ async def api_get_collection(collection_id: str, current_user: PublicUser = Depe
 
 
 @router.get("/page/{page}/limit/{limit}")
-async def api_get_collection_by(page: int, limit: int, current_user: PublicUser = Depends(get_current_user)):
+async def api_get_collections_by(page: int, limit: int, current_user: PublicUser = Depends(get_current_user)):
     """
     Get collections by page and limit
     """
