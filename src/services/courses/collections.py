@@ -14,8 +14,8 @@ from datetime import datetime
 class Collection(BaseModel):
     name: str
     description: str
-    courses: List[str] # course_id
-    org_id: str # org_id
+    courses: List[str]  # course_id
+    org_id: str  # org_id
 
 
 class CollectionInDB(Collection):
@@ -36,7 +36,7 @@ async def get_collection(collection_id: str, current_user: PublicUser):
 
     # verify collection rights
     await verify_collection_rights(collection_id, current_user, "read")
-    
+
     if not collection:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Collection does not exist")
@@ -50,9 +50,10 @@ async def create_collection(collection_object: Collection, current_user: PublicU
     collections = learnhouseDB["collections"]
 
     # find if collection already exists using name
-    isCollectionNameAvailable = collections.find_one({"name": collection_object.name})
-    
-    # TODO 
+    isCollectionNameAvailable = collections.find_one(
+        {"name": collection_object.name})
+
+    # TODO
     # await verify_collection_rights("*", current_user, "create")
 
     if isCollectionNameAvailable:
@@ -62,7 +63,8 @@ async def create_collection(collection_object: Collection, current_user: PublicU
     # generate collection_id with uuid4
     collection_id = str(f"collection_{uuid4()}")
 
-    collection = CollectionInDB(collection_id=collection_id, **collection_object.dict())
+    collection = CollectionInDB(
+        collection_id=collection_id, **collection_object.dict())
 
     collection_in_db = collections.insert_one(collection.dict())
 
@@ -83,7 +85,6 @@ async def update_collection(collection_object: Collection, collection_id: str, c
 
     collection = collections.find_one({"collection_id": collection_id})
 
-
     if not collection:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Collection does not exist")
@@ -91,7 +92,8 @@ async def update_collection(collection_object: Collection, collection_id: str, c
     updated_collection = CollectionInDB(
         collection_id=collection_id,  **collection_object.dict())
 
-    collections.update_one({"collection_id": collection_id}, {"$set": updated_collection.dict()})
+    collections.update_one({"collection_id": collection_id}, {
+                           "$set": updated_collection.dict()})
 
     return Collection(**updated_collection.dict())
 
@@ -99,7 +101,7 @@ async def update_collection(collection_object: Collection, collection_id: str, c
 async def delete_collection(collection_id: str, current_user: PublicUser):
     await check_database()
 
-    await verify_collection_rights(collection_id, current_user,"delete")
+    await verify_collection_rights(collection_id, current_user, "delete")
 
     collections = learnhouseDB["collections"]
 
@@ -121,19 +123,35 @@ async def delete_collection(collection_id: str, current_user: PublicUser):
 # Misc
 ####################################################
 
+
 async def get_collections(page: int = 1, limit: int = 10):
     ## TODO : auth
     await check_database()
     collections = learnhouseDB["collections"]
 
-    # get all collections from database
-    all_collections = collections.find().sort("name", 1).skip(10 * (page - 1)).limit(limit)
-    
-    # TODO : Check rights for each collection
-    return [json.loads(json.dumps(collection, default=str)) for collection in all_collections]
+    # get all collections from database without ObjectId
+    all_collections = collections.find({}).sort(
+        "name", 1).skip(10 * (page - 1)).limit(limit)
 
+    # create list of collections and include courses in each collection
+    collections_list = []
+    for collection in all_collections:
+        collection = CollectionInDB(**collection)
+        collections_list.append(collection)
+
+        collection_courses = [course for course in collection.courses]
+        # add courses to collection
+        courses = learnhouseDB["courses"]
+        collection.courses = []
+        collection.courses = courses.find(
+            {"course_id": {"$in": collection_courses}}, {'_id': 0})
+
+        collection.courses = [course for course in collection.courses]
+
+    return collections_list
 
 #### Security ####################################################
+
 
 async def verify_collection_rights(collection_id: str,  current_user: PublicUser, action: str):
     await check_database()
