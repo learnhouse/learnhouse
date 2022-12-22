@@ -6,6 +6,7 @@ import styled from "styled-components";
 import { Title } from "../../../../components/UI/Elements/Styles/Title";
 import { deleteCollection, getOrgCollections } from "../../../../services/collections";
 import { getOrganizationContextInfo } from "../../../../services/orgs";
+import { getBackendUrl } from "../../../../services/config";
 
 function Collections() {
   const router = useRouter();
@@ -48,6 +49,13 @@ function Collections() {
           {collections.map((collection: any) => (
             <CollectionItem key={collection.collection_id}>
               <Link href={"/org/" + orgslug + "/collections/" + collection.collection_id}>{collection.name}</Link>
+              <CourseMiniThumbnail>
+                {collection.courses.map((course: any) => (
+                  <Link key={course.course_id} href={"/org/" + orgslug + "/course/" + course.course_id.substring(7)}>
+                    <img key={course.course_id} src={`${getBackendUrl()}content/uploads/img/${course.thumbnail}`} alt={course.name} />
+                  </Link>
+                ))}
+              </CourseMiniThumbnail>
               <button onClick={() => deleteCollectionAndFetch(collection.collection_id)}>Delete</button>
             </CollectionItem>
           ))}
@@ -59,7 +67,7 @@ function Collections() {
 
 const CollectionItem = styled.div`
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   place-items: center;
   width: 100%;
   height: 100%;
@@ -75,4 +83,19 @@ const CollectionItem = styled.div`
   }
 `;
 
+const CourseMiniThumbnail = styled.div`
+  display: flex;
+  flex-direction: row;
+  img {
+    width: 20px;
+    height: 20px;
+    border-radius: 5px;
+    margin: 5px;
+    transition: all 0.2s ease-in-out;
+  }
+
+  &:hover {
+    opacity: 0.8;
+  }
+`;
 export default Collections;
