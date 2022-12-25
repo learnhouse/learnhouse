@@ -25,7 +25,7 @@ async def api_get_current_user(current_user: User = Depends(get_current_user)):
     return current_user.dict()
 
 @router.get("/profile_metadata")
-async def api_get_current_user(current_user: User = Depends(get_current_user)):
+async def api_get_current_user_metadata(current_user: User = Depends(get_current_user)):
     """
     Get current user
     """

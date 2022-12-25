@@ -34,7 +34,6 @@ async def create_picture_file(picture_file: UploadFile, element_id: str):
 
     # create file
     file = await picture_file.read()
-    
 
     # get file size
     file_size = len(file)
@@ -95,14 +94,15 @@ async def get_picture_file(file_id: str, current_user: PublicUser):
 
     photo_file = photos.find_one({"file_id": file_id})
 
-    # check media type 
-    if photo_file.format not in ["jpg", "jpeg", "png", "gif"]:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Photo file format not supported")
-            
     # TODO : check if user has access to file
 
     if photo_file:
+
+        # check media type
+        if photo_file.format not in ["jpg", "jpeg", "png", "gif"]:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT, detail="Photo file format not supported")
+
         # stream file
         photo_file = PhotoFile(**photo_file)
         file_format = photo_file.file_format
