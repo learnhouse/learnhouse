@@ -94,14 +94,15 @@ async def get_video_file(file_id: str, current_user: PublicUser):
 
     video_file = photos.find_one({"file_id": file_id})
 
-    # check media type
-    if video_file.format not in ["mp4", "webm", "ogg"]:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Video file format not supported")
-
     # TODO : check if user has access to file
 
     if video_file:
+
+        # check media type
+        if video_file.format not in ["mp4", "webm", "ogg"]:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT, detail="Video file format not supported")
+
         # stream file
         video_file = VideoFile(**video_file)
         file_format = video_file.file_format

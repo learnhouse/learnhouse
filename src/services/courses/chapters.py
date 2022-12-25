@@ -11,7 +11,6 @@ from src.services.users import PublicUser
 from fastapi import FastAPI, HTTPException, status, Request, Response, BackgroundTasks, UploadFile, File
 
 
-
 class CourseChapter(BaseModel):
     name: str
     description: str
@@ -187,21 +186,19 @@ async def get_coursechapters_meta(course_id: str, current_user: PublicUser):
         chapters[coursechapter.coursechapter_id] = {
             "id": coursechapter.coursechapter_id, "name": coursechapter.name,  "elementIds": coursechapter_elementIds
         }
-    
-    # elements 
+
+    # elements
     elements_list = {}
     for element in elements.find({"element_id": {"$in": coursechapter_elementIds_global}}):
         element = ElementInDB(**element)
         elements_list[element.element_id] = {
-            "id": element.element_id, "name": element.name, "type": element.type , "content": element.content
+            "id": element.element_id, "name": element.name, "type": element.type, "content": element.content
         }
-    
-
 
     final = {
         "chapters": chapters,
         "chapterOrder": course.chapters,
-        "elements" : elements_list
+        "elements": elements_list
     }
 
     return final
@@ -216,16 +213,13 @@ async def update_coursechapters_meta(course_id: str, coursechapters_metadata: Co
     courseInDB = courses.update_one({"course_id": course_id}, {
                                     "$set": {"chapters": coursechapters_metadata.chapterOrder}})
 
-
     # update elements in coursechapters
     # TODO : performance/optimization improvement
-    for coursechapter in coursechapters_metadata.chapters:
+    for coursechapter in coursechapters_metadata.chapters.__dict__.items():
         coursechapters.update_one({"coursechapter_id": coursechapter}, {
             "$set": {"elements": coursechapters_metadata.chapters[coursechapter]["elementIds"]}})
-    
-    
 
-    return {"ok"}
+    return {"detail": "coursechapters metadata updated"}
 
 #### Security ####################################################
 

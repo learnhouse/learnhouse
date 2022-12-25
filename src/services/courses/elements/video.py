@@ -17,6 +17,11 @@ async def create_video_element(name: str,  coursechapter_id: str, current_user: 
     # generate element_id
     element_id = str(f"element_{uuid4()}")
 
+    # check if video_file is not None
+    if not video_file:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="Video : No video file provided")
+
     video_format = video_file.filename.split(".")[-1]
     element_object = ElementInDB(
         element_id=element_id,
