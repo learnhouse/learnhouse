@@ -6,3 +6,5 @@ python-multipart
 python-jose
 passlib
 fastapi-jwt-auth
+faker
+requests
