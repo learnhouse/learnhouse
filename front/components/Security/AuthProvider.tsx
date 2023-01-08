@@ -1,6 +1,7 @@
+"use client";
 import React, { useEffect } from "react";
 import { getRefreshToken, getUserInfo } from "../../services/auth/auth";
-import { useRouter } from "next/router";
+import { useRouter, usePathname } from "next/navigation";
 
 export const AuthContext: any = React.createContext({});
 
@@ -12,7 +13,7 @@ export interface Auth {
   isLoading: boolean;
 }
 
-const AuthProvider = (props: any) => {
+const AuthProvider = ({ children }: any) => {
   const router = useRouter();
   const [auth, setAuth] = React.useState<Auth>({ access_token: "", isAuthenticated: false, userInfo: {}, isLoading: true });
 
@@ -55,7 +56,7 @@ const AuthProvider = (props: any) => {
     };
   }, []);
 
-  return <AuthContext.Provider value={auth}>{props.children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>;
 };
 
 export default AuthProvider;

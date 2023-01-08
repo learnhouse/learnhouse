@@ -1,17 +1,18 @@
+"use client"; 
 import Link from "next/link";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import React from "react";
 import styled from "styled-components";
-import { Header } from "../../../../components//UI/Header";
-import Layout from "../../../../components//UI/Layout";
-import { Title } from "../../../../components//UI/Elements/Styles/Title";
+import { Header } from "../../../../components/UI/Header";
+import Layout from "../../../../components/UI/Layout";
+import { Title } from "../../../../components/UI/Elements/Styles/Title";
 import { getBackendUrl } from "../../../../services/config";
 import { deleteCourseFromBackend, getOrgCourses } from "../../../../services/courses/courses";
 import { getOrganizationContextInfo } from "../../../../services/orgs";
 
-const CoursesIndexPage = () => {
+const CoursesIndexPage = (params : any) => {
   const router = useRouter();
-  const { orgslug } = router.query;
+  const orgslug = params.params.orgslug;
 
   const [isLoading, setIsLoading] = React.useState(true);
   const [orgInfo, setOrgInfo] = React.useState(null);
@@ -36,20 +37,20 @@ const CoursesIndexPage = () => {
   }
 
   React.useEffect(() => {
-    if (router.isReady) {
+    if (orgslug) {
       fetchCourses();
       if (courses.length > 0) {
         setIsLoading(false);
       }
     }
-  }, [isLoading, router.isReady]);
+  }, [isLoading, orgslug]);
 
   return (
     <Layout title="Courses">
       <Header></Header>
       <Title>
         {orgslug} Courses :{" "}
-        <Link href={"/org/" + orgslug + "/courses/new"}>
+        <Link href={"/courses/new"}>
 
           <button>+</button>
 

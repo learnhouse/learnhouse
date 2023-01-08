@@ -1,3 +1,4 @@
+"use client";
 import type { NextPage } from "next";
 import { motion } from "framer-motion";
 import styled from "styled-components";
@@ -38,15 +39,12 @@ const Home: NextPage = () => {
       >
         <div>
           <Link href={"/organizations"}>
-
             <OrgsButton>See Organizations</OrgsButton>
-
           </Link>
-          <br /><br />
+          <br />
+          <br />
           <Link href={"/login"}>
-
             <OrgsButton>Login</OrgsButton>
-
           </Link>
         </div>
       </motion.div>
@@ -56,21 +54,21 @@ const Home: NextPage = () => {
 
 const OrgsButton = styled.button`
   background: #151515;
-    border: 1px solid #e5e5e50a;
-    box-sizing: border-box;
-    border-radius: 4px;
-    padding: 10px 20px;
-    color: white;
-    font-size: 16px;
-    line-height: 24px;
-    margin: 0 10px;
-    margin: auto;
-    cursor: pointer;
-    font-family: "DM Sans";
-    font-weight: 500;
-    border-radius: 12px;
-    -webkit-transition: all 0.2s ease-in-out;
-    transition: all 0.2s ease-in-out;
+  border: 1px solid #e5e5e50a;
+  box-sizing: border-box;
+  border-radius: 4px;
+  padding: 10px 20px;
+  color: white;
+  font-size: 16px;
+  line-height: 24px;
+  margin: 0 10px;
+  margin: auto;
+  cursor: pointer;
+  font-family: "DM Sans";
+  font-weight: 500;
+  border-radius: 12px;
+  -webkit-transition: all 0.2s ease-in-out;
+  transition: all 0.2s ease-in-out;
   &:hover {
     background: #191919;
   }

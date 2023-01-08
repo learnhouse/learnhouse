@@ -1,15 +1,17 @@
+"use client";
 import { EyeOpenIcon, Pencil2Icon } from "@radix-ui/react-icons";
 import Link from "next/link";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import React from "react";
 import styled from "styled-components";
-import Layout from "../../../../../components//UI/Layout";
+import Layout from "../../../../../components/UI/Layout";
 import { getAPIUrl, getBackendUrl } from "../../../../../services/config";
 import { getCourse, getCourseMetadata } from "../../../../../services/courses/courses";
 
-const CourseIdPage = () => {
+const CourseIdPage = (params : any) => {
   const router = useRouter();
-  const { courseid, orgslug } = router.query;
+  const courseid = params.params.courseid;
+  const orgslug = params.params.orgslug;
 
   const [isLoading, setIsLoading] = React.useState(true);
   const [courseInfo, setCourseInfo] = React.useState({}) as any;
@@ -24,12 +26,12 @@ const CourseIdPage = () => {
   }
 
   React.useEffect(() => {
-    if (router.isReady) {
+    if (courseid && orgslug) {
       fetchCourseInfo();
     }
     return () => {};
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [router.isReady]);
+  }, [courseid && orgslug]);
 
   return (
     <Layout>

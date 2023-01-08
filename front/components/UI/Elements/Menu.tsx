@@ -1,15 +1,15 @@
+"use client";
 import React from "react";
 import styled from "styled-components";
 import { HeaderProfileBox } from "../../Security/HeaderProfileBox";
 import learnhouseIcon from "public/learnhouse_icon.png";
 import learnhouseLogo from "public/learnhouse_logo.png";
 import Link from "next/link";
-import Image from "next/legacy/image";
-import { useRouter } from "next/router";
+import Image from "next/image";
+import { useRouter, useSearchParams } from "next/navigation";
+import { headers } from 'next/headers';
 
-export const Menu = () => {
-  const router = useRouter();
-  const { orgslug } = router.query;
+export const Menu = ({orgslug } : any) => {
 
   return (
     <GlobalHeader>
@@ -30,10 +30,10 @@ export const Menu = () => {
       <MenuArea>
         <ul>
           <li>
-            <Link href={"/org/" + orgslug + "/courses"}>Courses</Link>
+            <Link href={ "/courses"}>Courses</Link>
           </li>
           <li>
-            <Link href={"/org/" + orgslug + "/collections"}>Collections</Link>
+            <Link href={ "/collections"}>Collections</Link>
           </li>
           <li>Activity</li>
           <li>More</li>

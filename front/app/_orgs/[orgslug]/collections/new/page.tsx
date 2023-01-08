@@ -1,4 +1,5 @@
-import { useRouter } from "next/router";
+"use client";
+import { useRouter } from "next/navigation";
 import React from "react";
 import { Title } from "../../../../../components/UI/Elements/Styles/Title";
 import Layout from "../../../../../components/UI/Layout";
@@ -6,17 +7,18 @@ import { getOrganizationContextInfo } from "../../../../../services/orgs";
 import { getOrgCourses } from "../../../../../services/courses/courses";
 import { createCollection } from "../../../../../services/collections";
 
-function NewCollection() {
-  const router = useRouter();
-  const { orgslug } = router.query;
+function NewCollection(params : any) {
+  const orgslug = params.params.orgslug;
   const [name, setName] = React.useState("");
   const [org, setOrg] = React.useState({}) as any;
   const [description, setDescription] = React.useState("");
   const [selectedCourses, setSelectedCourses] = React.useState([]) as any;
   const [courses, setCourses] = React.useState([]) as any;
   const [isLoading, setIsLoading] = React.useState(false);
+  const router = useRouter();
 
   async function getCourses() {
+  
     setIsLoading(true);
     const org = await getOrganizationContextInfo(orgslug);
     setOrg(org);
@@ -47,12 +49,12 @@ function NewCollection() {
   };
 
   React.useEffect(() => {
-    if (router.isReady) {
+    if (params.params.orgslug) {
       getCourses();
     }
     return () => {};
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [router.isReady]);
+  }, [params.params.orgslug]);
 
   return (
     <Layout>
