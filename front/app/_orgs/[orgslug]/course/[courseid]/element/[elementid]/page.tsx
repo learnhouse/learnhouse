@@ -1,13 +1,14 @@
-import { useRouter } from "next/router";
+"use client";
+import { useRouter } from "next/navigation";
 import React, { useMemo } from "react";
-import Layout from "../../../../../../../components//UI/Layout";
+import Layout from "../../../../../../../components/UI/Layout";
 import { getElement } from "../../../../../../../services/courses/elements";
 import { getBackendUrl } from "../../../../../../../services/config";
 import Canva from "../../../../../../../components/Canva/Canva";
 
-function ElementPage() {
+function ElementPage(params: any) {
   const router = useRouter();
-  const { elementid } = router.query;
+  const elementid = params.params.elementid;
   const [element, setElement] = React.useState<any>({});
   const [isLoading, setIsLoading] = React.useState(true);
 
@@ -18,12 +19,12 @@ function ElementPage() {
   }
 
   React.useEffect(() => {
-    if (router.isReady) {
+    if (elementid) {
       fetchElementData();
     }
     return () => {};
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [router.isReady]);
+  }, [elementid]);
 
   return (
     <Layout>

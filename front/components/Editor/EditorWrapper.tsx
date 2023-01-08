@@ -10,7 +10,7 @@ interface EditorWrapperProps {
   course:any
 }
 
-function EditorWrapper(props: EditorWrapperProps) {
+function EditorWrapper(props: EditorWrapperProps) : JSX.Element {
   // A new Y document
   const ydoc = new Y.Doc();
   const [providerState, setProviderState] = React.useState<any>({});
@@ -33,6 +33,7 @@ function EditorWrapper(props: EditorWrapperProps) {
 
   if (isLoading) {
     createRTCProvider();
+    return <div>Loading...</div>;
   } else {
     return <Editor course={props.course} element={props.element} content={props.content} setContent={setContent} provider={providerState} ydoc={ydocState}></Editor>;
   }
