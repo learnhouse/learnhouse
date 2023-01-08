@@ -20,7 +20,7 @@
     "avvvatars-react": "^0.4.2",
     "framer-motion": "^7.3.6",
     "lucide-react": "^0.104.1",
-    "next": "^13.0.6",
+    "next": "^13.1.0",
     "react": "^18.2.0",
     "react-beautiful-dnd": "^13.1.1",
     "react-dom": "^18.2.0",

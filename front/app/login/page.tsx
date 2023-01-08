@@ -1,13 +1,15 @@
-import Router from "next/router";
+"use client";
+import { useRouter } from 'next/navigation';
 import React from "react";
-import { Header } from "../components//UI/Header";
-import Layout from "../components//UI/Layout";
-import { Title } from "../components//UI/Elements/Styles/Title";
-import { loginAndGetToken } from "../services/auth/auth";
+import { Header } from "../../components/UI/Header";
+import Layout from "../../components/UI/Layout";
+import { Title } from "../../components/UI/Elements/Styles/Title";
+import { loginAndGetToken } from "../../services/auth/auth";
 
 const Login = () => {
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
+  const router = useRouter();
 
   const handleSubmit = (e: any) => {
     e.preventDefault();
@@ -15,7 +17,7 @@ const Login = () => {
     alert(JSON.stringify({ email, password }));
     try {
       loginAndGetToken(email, password);
-      Router.push("/");
+      router.push("/");
     }
     catch (e) {
       console.log(e);
