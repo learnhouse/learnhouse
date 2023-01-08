@@ -1,22 +1,24 @@
+"use client";
 import { default as React, useEffect, useRef } from "react";
 
-import Layout from "../../../../../../../components//UI/Layout";
-import { Title } from "../../../../../../../components//UI/Elements/Styles/Title";
+import Layout from "../../../../../../../../components/UI/Layout";
+import { Title } from "../../../../../../../../components/UI/Elements/Styles/Title";
 import dynamic from "next/dynamic";
-import { useRouter } from "next/router";
-import { getElement } from "../../../../../../../services/courses/elements";
-import AuthProvider from "../../../../../../../components/Security/AuthProvider";
-import EditorWrapper from "../../../../../../../components/Editor/EditorWrapper";
-import { getCourseMetadata } from "../../../../../../../services/courses/courses";
+import { useRouter } from "next/navigation";
+import { getElement } from "../../../../../../../../services/courses/elements";
+import AuthProvider from "../../../../../../../../components/Security/AuthProvider";
+import EditorWrapper from "../../../../../../../../components/Editor/EditorWrapper";
+import { getCourseMetadata } from "../../../../../../../../services/courses/courses";
 
 // Workaround (Next.js SSR doesn't support tip tap editor)
-const Editor: any = dynamic(() => import("../../../../../../../components/Editor/EditorWrapper") as any, {
+const Editor: any = dynamic(() => import("../../../../../../../../components/Editor/EditorWrapper") as any, {
   ssr: false,
 });
 
-function EditElement() {
+function EditElement(params: any) {
   const router = useRouter();
-  const { elementid, courseid } = router.query;
+  const elementid = params.params.elementid;
+  const courseid = params.params.courseid;
   const [element, setElement] = React.useState<any>({});
   const [courseInfo, setCourseInfo] = React.useState({}) as any;
   const [isLoading, setIsLoading] = React.useState(true);
@@ -38,12 +40,12 @@ function EditElement() {
   }
 
   React.useEffect(() => {
-    if (router.isReady) {
+    if (elementid && courseid) {
       fetchAllData();
     }
     return () => {};
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [router.isReady]);
+  }, [elementid, courseid ]);
 
   return (
     <AuthProvider>

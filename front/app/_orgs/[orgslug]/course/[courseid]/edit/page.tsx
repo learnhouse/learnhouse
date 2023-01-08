@@ -1,19 +1,20 @@
+"use client";
 import React from "react";
 import { useState, useEffect } from "react";
 import styled from "styled-components";
-import { Header } from "../../../../../../components//UI/Header";
-import Layout from "../../../../../../components//UI/Layout";
-import { Title } from "../../../../../../components//UI/Elements/Styles/Title";
+import { Header } from "../../../../../../components/UI/Header";
+import Layout from "../../../../../../components/UI/Layout";
+import { Title } from "../../../../../../components/UI/Elements/Styles/Title";
 import { DragDropContext, Droppable } from "react-beautiful-dnd";
 import { initialData, initialData2 } from "../../../../../../components/Drags/data";
 import Chapter from "../../../../../../components/Drags/Chapter";
 import { createChapter, deleteChapter, getCourseChaptersMetadata, updateChaptersMetadata } from "../../../../../../services/courses/chapters";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import NewChapterModal from "../../../../../../components/Modals/CourseEdit/NewChapter";
 import NewElementModal from "../../../../../../components/Modals/CourseEdit/NewElement";
 import { createElement, createFileElement } from "../../../../../../services/courses/elements";
 
-function CourseEdit() {
+function CourseEdit(params: any) {
   const router = useRouter();
 
   // Initial Course State
@@ -27,7 +28,8 @@ function CourseEdit() {
 
   // Check window availability
   const [winReady, setwinReady] = useState(false);
-  const { courseid, orgslug } = router.query;
+  const courseid = params.params.courseid;
+  const orgslug = params.params.orgslug;
 
   async function getCourseChapters() {
     const courseChapters = await getCourseChaptersMetadata(courseid);
@@ -36,12 +38,12 @@ function CourseEdit() {
   }
 
   useEffect(() => {
-    if (router.isReady) {
+    if (courseid && orgslug) {
       getCourseChapters();
     }
 
     setwinReady(true);
-  }, [router.isReady]);
+  }, [courseid, orgslug]);
 
   // get a list of chapters order by chapter order
   const getChapters = () => {
