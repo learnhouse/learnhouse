@@ -1,14 +1,14 @@
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import React from "react";
-import { Header } from "../../../../../components//UI/Header";
-import Layout from "../../../../../components//UI/Layout";
-import { Title } from "../../../../../components//UI/Elements/Styles/Title";
+import { Header } from "../../../../../components/UI/Header";
+import Layout from "../../../../../components/UI/Layout";
+import { Title } from "../../../../../components/UI/Elements/Styles/Title";
 import { createNewCourse } from "../../../../../services/courses/courses";
 import { getOrganizationContextInfo } from "../../../../../services/orgs";
 
-const NewCoursePage = () => {
+const NewCoursePage = (params: any) => {
   const router = useRouter();
-  const { orgslug } = router.query;
+  const orgslug = params.params.orgslug;
   const [name, setName] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [isLoading, setIsLoading] = React.useState(false);
@@ -48,10 +48,10 @@ const NewCoursePage = () => {
   };
 
   React.useEffect(() => {
-    if (router.isReady) {
+    if (orgslug) {
       getOrgMetadata();
     }
-  }, [isLoading, router.isReady]);
+  }, [isLoading, orgslug]);
 
 
   return (

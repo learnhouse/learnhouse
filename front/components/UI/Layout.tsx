@@ -1,3 +1,4 @@
+
 import React from "react";
 import Head from "next/head";
 import styled from "styled-components";
@@ -13,15 +14,11 @@ const Layout = (props: any) => {
   };
 
   return (
-    <div>
+    <html>
+      <body>
       <AuthProvider>
-        <Head>
-          <title>{props.title}</title>
-          <meta name="description" content={props.description} />
-          <link rel="icon" href="/favicon.ico" />
-        </Head>
         <ProjectPhaseLabel>🚧 Dev Phase</ProjectPhaseLabel>
-        <Menu></Menu>
+        <Menu orgslug={props.orgslug}></Menu>
         <motion.main
           variants={variants} // Pass the variant object into Framer Motion
           initial="hidden" // Set the initial state to variants.hidden
@@ -36,7 +33,8 @@ const Layout = (props: any) => {
           <p>LearnHouse © 2021 - {new Date().getFullYear()} - All rights reserved</p>
         </Footer>
       </AuthProvider>
-    </div>
+      </body>
+    </html>
   );
 };
 

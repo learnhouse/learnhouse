@@ -1,3 +1,4 @@
+"use client";
 import Layout from "../../../../components/UI/Layout";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -8,9 +9,8 @@ import { deleteCollection, getOrgCollections } from "../../../../services/collec
 import { getOrganizationContextInfo } from "../../../../services/orgs";
 import { getBackendUrl } from "../../../../services/config";
 
-function Collections() {
-  const router = useRouter();
-  const { orgslug } = router.query;
+function Collections(params:any) {
+  const orgslug = params.params.orgslug;
 
   const [isLoading, setIsLoading] = React.useState(true);
   const [collections, setCollections] = React.useState([]);
@@ -38,7 +38,7 @@ function Collections() {
     <Layout>
       <Title>
         {orgslug} Collections :{" "}
-        <Link href={"/org/" + orgslug + "/collections/new"}>
+        <Link href={"/collections/new"}>
           <button>+</button>
         </Link>{" "}
       </Title>
