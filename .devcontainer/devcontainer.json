@@ -1,0 +1,17 @@
+{
+  "name": "learnhouse-backend",
+  "dockerComposeFile": ["../docker-compose.yml"],
+  "service": "api",
+  "workspaceFolder": "/usr/learnhouse",
+  "extensions": [
+    "eamodio.gitlens",
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    "styled-components.vscode-styled-components",
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "ms-python.isort",
+    "redhat.vscode-yaml"
+  ],
+  "shutdownAction": "stopCompose"
+}
