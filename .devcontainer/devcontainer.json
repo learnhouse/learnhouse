@@ -1,5 +1,5 @@
 {
-  "name": "learnhouse-dev",
+  "name": "learnhouse-backend",
   "dockerComposeFile": ["../docker-compose.yml"],
   "service": "api",
   "workspaceFolder": "/usr/learnhouse",
