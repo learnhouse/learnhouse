@@ -1,3 +1,4 @@
+
 "use client";
 import { default as React, useEffect, useRef } from "react";
 
@@ -10,10 +11,6 @@ import AuthProvider from "../../../../../../../../components/Security/AuthProvid
 import EditorWrapper from "../../../../../../../../components/Editor/EditorWrapper";
 import { getCourseMetadata } from "../../../../../../../../services/courses/courses";
 
-// Workaround (Next.js SSR doesn't support tip tap editor)
-const Editor: any = dynamic(() => import("../../../../../../../../components/Editor/EditorWrapper") as any, {
-  ssr: false,
-});
 
 function EditElement(params: any) {
   const router = useRouter();
