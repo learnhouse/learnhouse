@@ -1,15 +1,14 @@
-import '../styles/globals.css'
-import StyledComponentsRegistry from '../services/lib/styled-registry'
+import "../styles/globals.css";
+import StyledComponentsRegistry from "../services/lib/styled-registry";
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html>
       <head />
-      <body> <StyledComponentsRegistry>{children}</StyledComponentsRegistry></body>
+      <body>
+        {" "}
+        <StyledComponentsRegistry>{children}</StyledComponentsRegistry>
+      </body>
     </html>
-  )
+  );
 }
