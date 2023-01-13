@@ -1,4 +1,4 @@
-
+"use client";
 import React from "react";
 import Head from "next/head";
 import styled from "styled-components";
@@ -14,8 +14,6 @@ const Layout = (props: any) => {
   };
 
   return (
-    <html>
-      <body>
       <AuthProvider>
         <ProjectPhaseLabel>🚧 Dev Phase</ProjectPhaseLabel>
         <Menu orgslug={props.orgslug}></Menu>
@@ -33,8 +31,6 @@ const Layout = (props: any) => {
           <p>LearnHouse © 2021 - {new Date().getFullYear()} - All rights reserved</p>
         </Footer>
       </AuthProvider>
-      </body>
-    </html>
   );
 };
 

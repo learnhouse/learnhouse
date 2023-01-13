@@ -13,7 +13,7 @@ const OrgHomePage = (params: any) => {
   return (
     <div>
       <Layout orgslug={orgslug} title={"Org " + orgslug}>
-        <Header></Header>
+        
         <Title>Welcome {orgslug} 👋🏻</Title>
         <Link href={pathname + "/courses"}>
           <button>See Courses </button>
