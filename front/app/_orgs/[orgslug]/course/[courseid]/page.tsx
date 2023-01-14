@@ -33,7 +33,7 @@ const CourseIdPage = (params: any) => {
   }, [courseid && orgslug]);
 
   return (
-    <Layout>
+    <>
       {isLoading ? (
         <div>Loading...</div>
       ) : (
@@ -106,7 +106,7 @@ const CourseIdPage = (params: any) => {
           </BoxWrapper>
         </CoursePageLayout>
       )}
-    </Layout>
+    </>
   );
 };
 

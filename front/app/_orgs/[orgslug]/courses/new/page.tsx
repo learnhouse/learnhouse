@@ -1,3 +1,4 @@
+"use client";
 import { useRouter } from "next/navigation";
 import React from "react";
 import { Header } from "../../../../../components/UI/Header";
@@ -55,8 +56,7 @@ const NewCoursePage = (params: any) => {
 
 
   return (
-    <Layout title="New course">
-      <Header></Header>
+    <>
       <Title>New Course </Title>
       <hr />
       Name : <input onChange={handleNameChange} type="text" /> <br />
@@ -64,7 +64,7 @@ const NewCoursePage = (params: any) => {
       Cover Photo : <input onChange={handleThumbnailChange} type="file" /> <br />
       Learnings (empty for now) (separated by ; ) : <textarea id="story" name="story" rows={5} cols={33} /> <br />
       <button onClick={handleSubmit}>Create</button>
-    </Layout>
+    </>
   );
 };
 

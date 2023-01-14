@@ -42,7 +42,7 @@ function ElementPage(params: any) {
   }, [elementid]);
 
   return (
-    <Layout>
+    <>
       {isLoading ? (
         <div>Loading...</div>
       ) : (
@@ -88,7 +88,7 @@ function ElementPage(params: any) {
           </CourseContent>
         </LectureLayout>
       )}
-    </Layout>
+    </>
   );
 }
 
