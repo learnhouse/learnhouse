@@ -1,6 +1,6 @@
 "use client";
 import "../styles/globals.css";
-import StyledComponentsRegistry from "../services/lib/styled-registry";
+import StyledComponentsRegistry from "../components/lib/styled-registry";
 import { Menu } from "../components/UI/Elements/Menu";
 import { motion } from "framer-motion";
 
