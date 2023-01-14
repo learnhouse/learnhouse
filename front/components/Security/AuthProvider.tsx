@@ -34,10 +34,7 @@ const AuthProvider = ({ children }: any) => {
         userInfo = await getUserInfo(access_token);
         setAuth({ access_token, isAuthenticated: true, userInfo, isLoading });
 
-        // if user is authenticated and tries to access login or signup page, redirect to home
-        if (NON_AUTHENTICATED_ROUTES.includes(router.pathname)) {
-          router.push("/");
-        }
+        
       } else {
         setAuth({ access_token, isAuthenticated: false, userInfo, isLoading });
         //router.push("/login");

@@ -225,7 +225,7 @@ function CourseEdit(params: any) {
   };
 
   return (
-    <Layout>
+    <>
       <Header></Header>
       <Title>
         Edit Course Chapters{" "}
@@ -283,7 +283,7 @@ function CourseEdit(params: any) {
           </DragDropContext>
         </ChapterlistWrapper>
       )}
-    </Layout>
+    </>
   );
 }
 
