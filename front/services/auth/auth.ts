@@ -19,7 +19,7 @@ export async function loginAndGetToken(username: string, password: string): Prom
     body: urlencoded,
     redirect: "follow",
     credentials: "include",
-  };
+  };  
 
   // fetch using await and async
   const response = await fetch(`${getAPIUrl()}auth/login`, requestOptions);
@@ -76,3 +76,5 @@ export async function signup(body: NewAccountBody): Promise<any> {
     .then((result) => result.json())
     .catch((error) => console.log("error", error));
 }
+
+

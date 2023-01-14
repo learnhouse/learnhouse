@@ -1,4 +1,4 @@
-"use client"; 
+"use client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React from "react";
@@ -10,7 +10,7 @@ import { getBackendUrl } from "../../../../services/config";
 import { deleteCourseFromBackend, getOrgCourses } from "../../../../services/courses/courses";
 import { getOrganizationContextInfo } from "../../../../services/orgs";
 
-const CoursesIndexPage = (params : any) => {
+const CoursesIndexPage = (params: any) => {
   const router = useRouter();
   const orgslug = params.params.orgslug;
 
@@ -46,14 +46,11 @@ const CoursesIndexPage = (params : any) => {
   }, [isLoading, orgslug]);
 
   return (
-    <Layout title="Courses">
-      <Header></Header>
+    <>
       <Title>
         {orgslug} Courses :{" "}
         <Link href={"/courses/new"}>
-
           <button>+</button>
-
         </Link>{" "}
       </Title>
 
@@ -65,26 +62,22 @@ const CoursesIndexPage = (params : any) => {
           {courses.map((course: any) => (
             <div key={course.course_id}>
               <Link href={"/org/" + orgslug + "/course/" + removeCoursePrefix(course.course_id)}>
-
                 <h2>{course.name}</h2>
                 <CourseWrapper>
                   <img src={`${getBackendUrl()}content/uploads/img/${course.thumbnail}`} alt="" />
                 </CourseWrapper>
-
               </Link>
               <button style={{ backgroundColor: "red", border: "none" }} onClick={() => deleteCourses(course.course_id)}>
                 Delete
               </button>
               <Link href={"/org/" + orgslug + "/course/" + removeCoursePrefix(course.course_id) + "/edit"}>
-
                 <button>Edit Chapters</button>
-
               </Link>
             </div>
           ))}
         </div>
       )}
-    </Layout>
+    </>
   );
 };
 
