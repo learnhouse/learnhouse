@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { ArrowLeftIcon, Cross1Icon } from "@radix-ui/react-icons";
 import Modal from "../Modal";
 import styled from "styled-components";
-import dynamic from "next/dynamic";
 import DynamicCanvaModal from "./NewElementModal/DynamicCanva";
 import VideoModal from "./NewElementModal/Video";
 
