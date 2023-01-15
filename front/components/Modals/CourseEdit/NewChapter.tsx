@@ -16,7 +16,7 @@ function NewChapterModal({ submitChapter , closeModal }: any) {
   const handleSubmit = async (e: any) => {
     e.preventDefault();
     console.log({ chapterName, chapterDescription });
-    submitChapter({ name : chapterName, description : chapterDescription , elements : [] });
+    submitChapter({ name : chapterName, description : chapterDescription , lectures : [] });
   };
 
   return (

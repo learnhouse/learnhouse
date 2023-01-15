@@ -2,10 +2,10 @@ import { getBackendUrl } from "@services/config";
 import React from "react";
 import styled from "styled-components";
 
-function VideoLecture({ element, course }: { element: any; course: any }) {
+function VideoLecture({ lecture, course }: { lecture: any; course: any }) {
   function getChapterName() {
     let chapterName = "";
-    let chapterId = element.chapter_id;
+    let chapterId = lecture.chapter_id;
     course.chapters.forEach((chapter: any) => {
       if (chapter.chapter_id === chapterId) {
         chapterName = chapter.name;
@@ -18,10 +18,10 @@ function VideoLecture({ element, course }: { element: any; course: any }) {
     <VideoLectureLayout>
       <VideoTitle>
         <p>Chapter : {getChapterName()}</p>
-        {element.name}
+        {lecture.name}
       </VideoTitle>
       <VideoPlayerWrapper>
-        <video controls src={`${getBackendUrl()}content/uploads/video/${element.content.video.element_id}/${element.content.video.filename}`}></video>
+        <video controls src={`${getBackendUrl()}content/uploads/video/${lecture.content.video.lecture_id}/${lecture.content.video.filename}`}></video>
       </VideoPlayerWrapper>
     </VideoLectureLayout>
   );

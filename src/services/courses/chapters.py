@@ -4,17 +4,17 @@ from typing import List
 from uuid import uuid4
 from pydantic import BaseModel
 from src.services.courses.courses import Course, CourseInDB
-from src.services.courses.elements.elements import Element, ElementInDB
+from src.services.courses.lectures.lectures import Lecture, LectureInDB
 from src.services.database import create_config_collection, check_database, create_database, learnhouseDB, learnhouseDB
 from src.services.security import verify_user_rights_with_roles
 from src.services.users import PublicUser
-from fastapi import FastAPI, HTTPException, status, Request, Response, BackgroundTasks, UploadFile, File
+from fastapi import HTTPException, status, Request, Response, BackgroundTasks, UploadFile, File
 
 
 class CourseChapter(BaseModel):
     name: str
     description: str
-    elements: list
+    lectures: list
 
 
 class CourseChapterInDB(CourseChapter):
@@ -28,7 +28,7 @@ class CourseChapterInDB(CourseChapter):
 class CourseChapterMetaData(BaseModel):
     chapterOrder: List[str]
     chapters: object
-    elements: object
+    lectures: object
 
 #### Classes ####################################################
 
@@ -162,7 +162,7 @@ async def get_coursechapters_meta(course_id: str, current_user: PublicUser):
     await check_database()
     coursechapters = learnhouseDB["coursechapters"]
     courses = learnhouseDB["courses"]
-    elements = learnhouseDB["elements"]
+    lectures = learnhouseDB["lectures"]
 
     coursechapters = coursechapters.find(
         {"course_id": course_id}).sort("name", 1)
@@ -170,35 +170,35 @@ async def get_coursechapters_meta(course_id: str, current_user: PublicUser):
     course = courses.find_one({"course_id": course_id})
     course = Course(**course)  # type: ignore
 
-    # elements
-    coursechapter_elementIds_global = []
+    # lectures
+    coursechapter_lectureIds_global = []
 
     # chapters
     chapters = {}
     for coursechapter in coursechapters:
         coursechapter = CourseChapterInDB(**coursechapter)
-        coursechapter_elementIds = []
+        coursechapter_lectureIds = []
 
-        for element in coursechapter.elements:
-            coursechapter_elementIds.append(element)
-            coursechapter_elementIds_global.append(element)
+        for lecture in coursechapter.lectures:
+            coursechapter_lectureIds.append(lecture)
+            coursechapter_lectureIds_global.append(lecture)
 
         chapters[coursechapter.coursechapter_id] = {
-            "id": coursechapter.coursechapter_id, "name": coursechapter.name,  "elementIds": coursechapter_elementIds
+            "id": coursechapter.coursechapter_id, "name": coursechapter.name,  "lectureIds": coursechapter_lectureIds
         }
 
-    # elements
-    elements_list = {}
-    for element in elements.find({"element_id": {"$in": coursechapter_elementIds_global}}):
-        element = ElementInDB(**element)
-        elements_list[element.element_id] = {
-            "id": element.element_id, "name": element.name, "type": element.type, "content": element.content
+    # lectures
+    lectures_list = {}
+    for lecture in lectures.find({"lecture_id": {"$in": coursechapter_lectureIds_global}}):
+        lecture = LectureInDB(**lecture)
+        lectures_list[lecture.lecture_id] = {
+            "id": lecture.lecture_id, "name": lecture.name, "type": lecture.type, "content": lecture.content
         }
 
     final = {
         "chapters": chapters,
         "chapterOrder": course.chapters,
-        "elements": elements_list
+        "lectures": lectures_list
     }
 
     return final
@@ -213,11 +213,11 @@ async def update_coursechapters_meta(course_id: str, coursechapters_metadata: Co
     courseInDB = courses.update_one({"course_id": course_id}, {
                                     "$set": {"chapters": coursechapters_metadata.chapterOrder}})
 
-    # update elements in coursechapters
+    # update lectures in coursechapters
     # TODO : performance/optimization improvement
     for coursechapter in coursechapters_metadata.chapters.__dict__.items():
         coursechapters.update_one({"coursechapter_id": coursechapter}, {
-            "$set": {"elements": coursechapters_metadata.chapters[coursechapter]["elementIds"]}})
+            "$set": {"lectures": coursechapters_metadata.chapters[coursechapter]["lectureIds"]}})
 
     return {"detail": "coursechapters metadata updated"}
 

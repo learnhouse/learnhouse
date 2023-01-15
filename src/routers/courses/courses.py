@@ -37,7 +37,7 @@ async def api_get_course(course_id: str,  current_user: PublicUser = Depends(get
 @router.get("/meta/{course_id}")
 async def api_get_course_meta(course_id: str,  current_user: PublicUser = Depends(get_current_user)):
     """
-    Get single Course Metadata (chapters, elements) by course_id
+    Get single Course Metadata (chapters, lectures) by course_id
     """
     return await get_course_meta(course_id, current_user=current_user)
 

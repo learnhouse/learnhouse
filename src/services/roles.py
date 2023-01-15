@@ -26,7 +26,7 @@ class Elements(BaseModel):
     collections: List[str]
     organizations: List[str]
     coursechapters: List[str]
-    elements : List[str]
+    lectures : List[str]
 
 
 class Role(BaseModel):

@@ -24,7 +24,7 @@ interface Editor {
   content: string;
   ydoc: any;
   provider: any;
-  element: any;
+  lecture: any;
   course: any;
   setContent: (content: string) => void;
 }
@@ -48,11 +48,11 @@ function Editor(props: Editor) {
       }),
       ImageBlock.configure({
         editable: true,
-        element: props.element,
+        lecture: props.lecture,
       }),
       VideoBlock.configure({
         editable: true,
-        element: props.element,
+        lecture: props.lecture,
       }),
       Youtube.configure({
         controls: true,
@@ -96,7 +96,7 @@ function Editor(props: Editor) {
               <EditorInfoThumbnail src={`${getBackendUrl()}content/uploads/img/${props.course.course.thumbnail}`} alt=""></EditorInfoThumbnail>
               <EditorInfoDocName>
                 {" "}
-                <b>{props.course.course.name}</b> <SlashIcon /> {props.element.name}{" "}
+                <b>{props.course.course.name}</b> <SlashIcon /> {props.lecture.name}{" "}
               </EditorInfoDocName>
               <EditorSaveButton onClick={() => props.setContent(editor.getJSON())}>
                 Save <Save size={12} />

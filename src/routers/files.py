@@ -10,19 +10,19 @@ router = APIRouter()
 
 
 @router.post("/picture")
-async def api_create_picture_file(file_object: UploadFile, element_id: str = Form(),  current_user: PublicUser = Depends(get_current_user)):
+async def api_create_picture_file(file_object: UploadFile, lecture_id: str = Form(),  current_user: PublicUser = Depends(get_current_user)):
     """
     Create new picture file
     """
-    return await create_picture_file(file_object, element_id)
+    return await create_picture_file(file_object, lecture_id)
 
 
 @router.post("/video")
-async def api_create_video_file(file_object: UploadFile,element_id: str = Form(), current_user: PublicUser = Depends(get_current_user)):
+async def api_create_video_file(file_object: UploadFile,lecture_id: str = Form(), current_user: PublicUser = Depends(get_current_user)):
     """
     Create new video file
     """
-    return await create_video_file(file_object, element_id)
+    return await create_video_file(file_object, lecture_id)
 
 
 @router.get("/picture")

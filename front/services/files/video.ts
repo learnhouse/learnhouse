@@ -1,12 +1,12 @@
 import { getAPIUrl } from "../config";
 
-export async function uploadNewVideoFile(file: any, element_id: string) {
+export async function uploadNewVideoFile(file: any, lecture_id: string) {
   const HeadersConfig = new Headers();
 
   // Send file thumbnail as form data
   const formData = new FormData();
   formData.append("file_object", file);
-  formData.append("element_id", element_id);
+  formData.append("lecture_id", lecture_id);
 
   const requestOptions: any = {
     method: "POST",
