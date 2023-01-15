@@ -57,7 +57,7 @@ function NewCollection(params : any) {
   }, [params.params.orgslug]);
 
   return (
-    <Layout>
+    <>
       <Title>Add new</Title>
       <br />
       <input type="text" placeholder="Name" value={name} onChange={handleNameChange} />
@@ -90,7 +90,7 @@ function NewCollection(params : any) {
       <input type="text" placeholder="Description" value={description} onChange={handleDescriptionChange} />
       <br />
       <button onClick={handleSubmit}>Submit</button>
-    </Layout>
+    </>
   );
 }
 

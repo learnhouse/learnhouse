@@ -24,7 +24,7 @@
     "react": "^18.2.0",
     "react-beautiful-dnd": "^13.1.1",
     "react-dom": "^18.2.0",
-    "styled-components": "^5.3.5",
+    "styled-components": "^6.0.0-beta.9",
     "y-indexeddb": "^9.0.9",
     "y-webrtc": "^10.2.3",
     "yjs": "^13.5.42"
