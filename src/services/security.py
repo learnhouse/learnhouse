@@ -77,8 +77,8 @@ async def check_element_type(element_id):
         return "coursechapters"
     elif element_id.startswith("collection_"):
         return "collections"
-    elif element_id.startswith("element_"):
-        return "elements"
+    elif element_id.startswith("lecture_"):
+        return "lectures"
     else:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Issue verifying element nature")

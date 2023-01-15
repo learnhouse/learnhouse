@@ -1,11 +1,11 @@
+import requests
 from datetime import datetime
 from fileinput import filename
 from pprint import pprint
 from uuid import uuid4
-import requests
 from fastapi import File, UploadFile
 from src.services.courses.chapters import CourseChapter, create_coursechapter
-from src.services.courses.elements.elements import Element, create_element
+from src.services.courses.lectures.lectures import Lecture, create_lecture
 from src.services.courses.thumbnails import upload_thumbnail
 from src.services.users import PublicUser, User, UserInDB, UserWithPassword
 from src.services.database import learnhouseDB
@@ -104,7 +104,7 @@ async def create_initial_data():
             collections=["*"],
             organizations=["*"],
             coursechapters=["*"],
-            elements=["*"],
+            lectures=["*"],
         ),
         linked_users=[admin_user.user_id],
     )
@@ -168,16 +168,16 @@ async def create_initial_data():
                     coursechapter = CourseChapter(
                         name=fake_multilang.unique.sentence(),
                         description=fake_multilang.unique.text(),
-                        elements=[],
+                        lectures=[],
                     )
                     coursechapter = await create_coursechapter(coursechapter, course_id, current_user)
                     pprint(coursechapter)
                     if coursechapter:
-                        # create elements
+                        # create lectures
                         for i in range(0, 5):
-                            element = Element(
+                            lecture = Lecture(
                                 name=fake_multilang.unique.sentence(),
                                 type="dynamic",
                                 content={},
                             )
-                            element = await create_element(element, coursechapter['coursechapter_id'], current_user)
+                            lecture = await create_lecture(lecture, coursechapter['coursechapter_id'], current_user)
