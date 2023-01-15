@@ -2,12 +2,12 @@ import React from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 // Custom Extensions
-import InfoCallout from "../Editor/Extensions/Callout/Info/InfoCallout";
-import WarningCallout from "../Editor/Extensions/Callout/Warning/WarningCallout";
-import ImageBlock from "../Editor/Extensions/Image/ImageBlock";
+import InfoCallout from "@editor/Extensions/Callout/Info/InfoCallout";
+import WarningCallout from "@editor/Extensions/Callout/Warning/WarningCallout";
+import ImageBlock from "@editor/Extensions/Image/ImageBlock";
 import Youtube from "@tiptap/extension-youtube";
-import { EditorContentWrapper } from "../Editor/Editor";
-import VideoBlock from "../Editor/Extensions/Video/VideoBlock";
+import { EditorContentWrapper } from "@editor/Editor";
+import VideoBlock from "@editor/Extensions/Video/VideoBlock";
 import { styled } from "styled-components";
 
 interface Editor {
