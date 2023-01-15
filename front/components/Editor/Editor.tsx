@@ -18,6 +18,7 @@ import WarningCallout from "./Extensions/Callout/Warning/WarningCallout";
 import ImageBlock from "./Extensions/Image/ImageBlock";
 import Youtube from "@tiptap/extension-youtube";
 import VideoBlock from "./Extensions/Video/VideoBlock";
+import { Save } from "lucide-react";
 
 interface Editor {
   content: string;
@@ -97,7 +98,9 @@ function Editor(props: Editor) {
                 {" "}
                 <b>{props.course.course.name}</b> <SlashIcon /> {props.element.name}{" "}
               </EditorInfoDocName>
-              <EditorSaveButton onClick={() => props.setContent(editor.getJSON())}>Save</EditorSaveButton>
+              <EditorSaveButton onClick={() => props.setContent(editor.getJSON())}>
+                Save <Save size={12} />
+              </EditorSaveButton>
             </EditorInfoWrapper>
             <EditorButtonsWrapper>
               <ToolbarButtons editor={editor} />
@@ -146,7 +149,7 @@ const Page = styled.div`
 `;
 
 const EditorTop = styled.div`
-  background-color: #ffffffb8;
+  background-color: #ffffffeb;
   border-radius: 15px;
   backdrop-filter: saturate(180%) blur(14px);
   margin: 40px;
@@ -213,24 +216,28 @@ const EditorInfoDocName = styled.div`
 
 const EditorSaveButton = styled.div`
   display: flex;
-  border-radius: 6px;
+  border-radius: 8px;
   padding: 5px;
   font-size: 12px;
   margin-right: 5px;
   margin-left: 7px;
-  background: rgba(176, 176, 176, 0.145);
+  background: #ffffff8d;
+  color: #5252528d;
+  border: solid 1px #52525257;
+  align-items: center;
+  justify-content: space-between;
+  width: 53px;
 
   &.is-active {
     background: rgba(176, 176, 176, 0.5);
 
     &:hover {
-      background: rgba(139, 139, 139, 0.5);
+      background: rgba(31, 31, 31, 0.5);
       cursor: pointer;
     }
   }
 
   &:hover {
-    background: rgba(217, 217, 217, 0.48);
     cursor: pointer;
   }
 `;

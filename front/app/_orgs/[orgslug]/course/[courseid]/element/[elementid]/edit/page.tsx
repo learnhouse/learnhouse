@@ -1,19 +1,14 @@
+
 "use client";
 import { default as React, useEffect, useRef } from "react";
 
-import Layout from "../../../../../../../../components/UI/Layout";
-import { Title } from "../../../../../../../../components/UI/Elements/Styles/Title";
-import dynamic from "next/dynamic";
+
 import { useRouter } from "next/navigation";
 import { getElement } from "../../../../../../../../services/courses/elements";
 import AuthProvider from "../../../../../../../../components/Security/AuthProvider";
 import EditorWrapper from "../../../../../../../../components/Editor/EditorWrapper";
 import { getCourseMetadata } from "../../../../../../../../services/courses/courses";
 
-// Workaround (Next.js SSR doesn't support tip tap editor)
-const Editor: any = dynamic(() => import("../../../../../../../../components/Editor/EditorWrapper") as any, {
-  ssr: false,
-});
 
 function EditElement(params: any) {
   const router = useRouter();
