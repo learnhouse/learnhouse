@@ -2,9 +2,7 @@
 "use client";
 import { default as React, useEffect, useRef } from "react";
 
-import Layout from "../../../../../../../../components/UI/Layout";
-import { Title } from "../../../../../../../../components/UI/Elements/Styles/Title";
-import dynamic from "next/dynamic";
+
 import { useRouter } from "next/navigation";
 import { getElement } from "../../../../../../../../services/courses/elements";
 import AuthProvider from "../../../../../../../../components/Security/AuthProvider";

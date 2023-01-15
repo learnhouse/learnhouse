@@ -8,6 +8,7 @@ import ImageBlock from "../Editor/Extensions/Image/ImageBlock";
 import Youtube from "@tiptap/extension-youtube";
 import { EditorContentWrapper } from "../Editor/Editor";
 import VideoBlock from "../Editor/Extensions/Video/VideoBlock";
+import { styled } from "styled-components";
 
 interface Editor {
   content: string;
@@ -46,10 +47,16 @@ function Canva(props: Editor) {
   });
 
   return (
-    <EditorContentWrapper>
+    <CanvaWrapper>
       <EditorContent editor={editor} />
-    </EditorContentWrapper>
+    </CanvaWrapper>
   );
 }
+
+const CanvaWrapper = styled.div`
+  padding-top: 20px;
+  width: 1300px;
+  margin: 0 auto;
+`;
 
 export default Canva;

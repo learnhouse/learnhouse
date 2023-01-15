@@ -98,7 +98,9 @@ function Editor(props: Editor) {
                 {" "}
                 <b>{props.course.course.name}</b> <SlashIcon /> {props.element.name}{" "}
               </EditorInfoDocName>
-              <EditorSaveButton onClick={() => props.setContent(editor.getJSON())}>Save <Save size={12}/></EditorSaveButton>
+              <EditorSaveButton onClick={() => props.setContent(editor.getJSON())}>
+                Save <Save size={12} />
+              </EditorSaveButton>
             </EditorInfoWrapper>
             <EditorButtonsWrapper>
               <ToolbarButtons editor={editor} />
@@ -147,7 +149,7 @@ const Page = styled.div`
 `;
 
 const EditorTop = styled.div`
-  background-color: #ffffffb8;
+  background-color: #ffffffeb;
   border-radius: 15px;
   backdrop-filter: saturate(180%) blur(14px);
   margin: 40px;
@@ -225,7 +227,6 @@ const EditorSaveButton = styled.div`
   align-items: center;
   justify-content: space-between;
   width: 53px;
-  
 
   &.is-active {
     background: rgba(176, 176, 176, 0.5);
