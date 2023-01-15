@@ -1,6 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
-import  Link  from "next/link";
+import Link from "next/link";
 import React, { useMemo } from "react";
 import Layout from "../../../../../../../components/UI/Layout";
 import { getElement } from "../../../../../../../services/courses/elements";
@@ -8,7 +8,7 @@ import { getBackendUrl } from "../../../../../../../services/config";
 import Canva from "../../../../../../../components/LectureViews/DynamicCanva/DynamicCanva";
 import styled from "styled-components";
 import { getCourse, getCourseMetadata } from "../../../../../../../services/courses/courses";
-
+import VideoLecture from "@components/LectureViews/Video/Video";
 
 function ElementPage(params: any) {
   const router = useRouter();
@@ -28,7 +28,6 @@ function ElementPage(params: any) {
   async function fetchCourseData() {
     const course = await getCourseMetadata("course_" + courseid);
     setCourse(course);
-    console.log(course);
     setIsLoading(false);
   }
 
@@ -50,28 +49,28 @@ function ElementPage(params: any) {
           <LectureTopWrapper>
             <LectureThumbnail>
               <Link href={`/org/${orgslug}/course/${courseid}`}>
-              <img src={`${getBackendUrl()}content/uploads/img/${course.course.thumbnail}`} alt="" />
+                <img src={`${getBackendUrl()}content/uploads/img/${course.course.thumbnail}`} alt="" />
               </Link>
             </LectureThumbnail>
             <LectureInfo>
-              <p>Lecture</p>
-              <h1>{element.name}</h1>
+              <p>Course</p>
+              <h1>{course.course.name}</h1>
             </LectureInfo>
           </LectureTopWrapper>
           <ChaptersWrapper>
             {course.chapters.map((chapter: any) => {
               return (
                 <>
-                  <div style={{display:"flex" , flexDirection:"row"}}key={chapter.chapter_id}>
-                  {chapter.elements.map((element: any) => {
-                    return (
-                      <>
-                        <Link href={`/org/${orgslug}/course/${courseid}/element/${element.id.replace("element_", "")}`}>
-                          <ChapterIndicator key={element.id} />
-                        </Link>{" "}
-                      </>
-                    );
-                  })}
+                  <div style={{ display: "flex", flexDirection: "row" }} key={chapter.chapter_id}>
+                    {chapter.elements.map((element: any) => {
+                      return (
+                        <>
+                          <Link href={`/org/${orgslug}/course/${courseid}/element/${element.id.replace("element_", "")}`}>
+                            <ChapterIndicator key={element.id} />
+                          </Link>{" "}
+                        </>
+                      );
+                    })}
                   </div>
                   &nbsp;&nbsp;&nbsp;&nbsp;
                 </>
@@ -82,9 +81,7 @@ function ElementPage(params: any) {
           <CourseContent>
             {element.type == "dynamic" && <Canva content={element.content} element={element} />}
             {/* todo : use apis & streams instead of this */}
-            {element.type == "video" && (
-              <video controls src={`${getBackendUrl()}content/uploads/video/${element.content.video.element_id}/${element.content.video.filename}`}></video>
-            )}
+            {element.type == "video" && <VideoLecture course={course} element={element} />}
           </CourseContent>
         </LectureLayout>
       )}
@@ -118,7 +115,7 @@ const LectureInfo = styled.div`
 
 const ChaptersWrapper = styled.div`
   display: flex;
-  // row 
+  // row
   flex-direction: row;
   justify-content: space-around;
   width: 100%;
