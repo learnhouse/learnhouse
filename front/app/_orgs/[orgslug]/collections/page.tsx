@@ -35,7 +35,7 @@ function Collections(params:any) {
   }, []);
 
   return (
-    <Layout>
+    <>
       <Title>
         {orgslug} Collections :{" "}
         <Link href={"/collections/new"}>
@@ -61,7 +61,7 @@ function Collections(params:any) {
           ))}
         </div>
       )}
-    </Layout>
+    </>
   );
 }
 

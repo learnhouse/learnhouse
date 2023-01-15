@@ -34,7 +34,7 @@ const Login = () => {
 
   return (
     <div>
-      <Layout title="Login">
+      < >
       <Header></Header>
         <Title>Login</Title>
 
@@ -45,7 +45,7 @@ const Login = () => {
             Login
           </button>
         </form>
-      </Layout>
+      </>
     </div>
   );
 };

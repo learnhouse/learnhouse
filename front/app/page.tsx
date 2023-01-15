@@ -6,7 +6,7 @@ import learnhouseBigIcon from "public/learnhouse_bigicon.png";
 import Image from "next/legacy/image";
 import Link from "next/link";
 
-const Home: NextPage = () => {
+export default function Home() {
   return (
     <HomePage>
       <motion.div
@@ -89,4 +89,3 @@ const HomePage = styled.div`
   }
 `;
 
-export default Home;

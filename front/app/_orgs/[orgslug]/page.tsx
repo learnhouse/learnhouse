@@ -1,10 +1,7 @@
 "use client";
-import { useRouter, useSearchParams, useSelectedLayoutSegment } from "next/navigation";
-import Layout from "../../../components/UI/Layout";
-import { Title } from "../../../components/UI/Elements/Styles/Title";
-import { Header } from "../../../components/UI/Header";
+import { Title } from "@components/UI/Elements/Styles/Title";
 import Link from "next/link";
-import { usePathname } from 'next/navigation';
+import { usePathname } from "next/navigation";
 
 const OrgHomePage = (params: any) => {
   const orgslug = params.params.orgslug;
@@ -12,13 +9,10 @@ const OrgHomePage = (params: any) => {
 
   return (
     <div>
-      <Layout orgslug={orgslug} title={"Org " + orgslug}>
-        <Header></Header>
-        <Title>Welcome {orgslug} 👋🏻</Title>
-        <Link href={pathname + "/courses"}>
-          <button>See Courses </button>
-        </Link>
-      </Layout>
+      <Title>Welcome {orgslug} 👋🏻</Title>
+      <Link href={pathname + "/courses"}>
+        <button>See Courses </button>
+      </Link>
     </div>
   );
 };
