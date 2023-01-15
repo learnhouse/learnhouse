@@ -5,7 +5,7 @@ import React, { useMemo } from "react";
 import Layout from "../../../../../../../components/UI/Layout";
 import { getElement } from "../../../../../../../services/courses/elements";
 import { getBackendUrl } from "../../../../../../../services/config";
-import Canva from "../../../../../../../components/Canva/Canva";
+import Canva from "../../../../../../../components/LectureViews/DynamicCanva/DynamicCanva";
 import styled from "styled-components";
 import { getCourse, getCourseMetadata } from "../../../../../../../services/courses/courses";
 
