@@ -12,7 +12,7 @@ import { styled } from "styled-components";
 
 interface Editor {
   content: string;
-  element: any;
+  lecture: any;
   //course: any;
 }
 
@@ -31,11 +31,11 @@ function Canva(props: Editor) {
       }),
       ImageBlock.configure({
         editable: isEditable,
-        element: props.element,
+        lecture: props.lecture,
       }),
       VideoBlock.configure({
         editable: true,
-        element: props.element,
+        lecture: props.lecture,
       }),
       Youtube.configure({
         controls: true,
