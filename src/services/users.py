@@ -1,8 +1,7 @@
 from uuid import uuid4
 from pydantic import BaseModel
-from src.services.database import check_database,  learnhouseDB, learnhouseDB
 from src.services.security import *
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, Request
 from datetime import datetime
 
 #### Classes ####################################################
@@ -41,6 +40,8 @@ class UserProfileMetadata(BaseModel):
     roles = list
 
 # TODO : terrible, export role classes from one single source of truth
+
+
 class Role(BaseModel):
     name: str
     description: str
@@ -53,9 +54,8 @@ class Role(BaseModel):
 # TODO : avatar upload and update
 
 
-async def get_user(username: str):
-    await check_database()
-    users = learnhouseDB["users"]
+async def get_user(request: Request, username: str):
+    users = request.app.db["users"]
 
     user = users.find_one({"username": username})
 
@@ -67,10 +67,9 @@ async def get_user(username: str):
     return user
 
 
-async def get_profile_metadata(user):
-    await check_database()
-    users = learnhouseDB["users"]
-    roles = learnhouseDB["roles"]
+async def get_profile_metadata(request: Request, user):
+    users = request.app.db["users"]
+    roles = request.app.db["roles"]
 
     user = users.find_one({"user_id": user['user_id']})
 
@@ -92,9 +91,8 @@ async def get_profile_metadata(user):
     }
 
 
-async def get_user_by_userid(user_id: str):
-    await check_database()
-    users = learnhouseDB["users"]
+async def get_user_by_userid(request: Request, user_id: str):
+    users = request.app.db["users"]
 
     user = users.find_one({"user_id": user_id})
 
@@ -106,9 +104,8 @@ async def get_user_by_userid(user_id: str):
     return user
 
 
-async def security_get_user(email: str):
-    await check_database()
-    users = learnhouseDB["users"]
+async def security_get_user(request: Request, email: str):
+    users = request.app.db["users"]
 
     user = users.find_one({"email": email})
 
@@ -119,9 +116,8 @@ async def security_get_user(email: str):
     return UserInDB(**user)
 
 
-async def get_userid_by_username(username: str):
-    await check_database()
-    users = learnhouseDB["users"]
+async def get_userid_by_username(request: Request, username: str):
+    users = request.app.db["users"]
 
     user = users.find_one({"username": username})
 
@@ -132,9 +128,8 @@ async def get_userid_by_username(username: str):
     return user["user_id"]
 
 
-async def update_user(user_id: str, user_object: UserWithPassword):
-    await check_database()
-    users = learnhouseDB["users"]
+async def update_user(request: Request, user_id: str, user_object: UserWithPassword):
+    users = request.app.db["users"]
 
     isUserExists = users.find_one({"user_id": user_id})
     isUsernameAvailable = users.find_one({"username": user_object.username})
@@ -155,9 +150,8 @@ async def update_user(user_id: str, user_object: UserWithPassword):
     return User(**user_object.dict())
 
 
-async def delete_user(user_id: str):
-    await check_database()
-    users = learnhouseDB["users"]
+async def delete_user(request: Request, user_id: str):
+    users = request.app.db["users"]
 
     isUserAvailable = users.find_one({"user_id": user_id})
 
@@ -170,9 +164,8 @@ async def delete_user(user_id: str):
     return {"detail": "User deleted"}
 
 
-async def create_user(user_object: UserWithPassword):
-    await check_database()
-    users = learnhouseDB["users"]
+async def create_user(request: Request, user_object: UserWithPassword):
+    users = request.app.db["users"]
 
     isUserAvailable = users.find_one({"username": user_object.username})
 

@@ -3,7 +3,6 @@ from typing import List
 from uuid import uuid4
 from pydantic import BaseModel
 from src.services.users import PublicUser, User
-from src.services.database import check_database, create_database, learnhouseDB, learnhouseDB
 from src.services.security import *
 from fastapi import FastAPI, HTTPException, status, Request, Response, BackgroundTasks
 from datetime import datetime
@@ -113,7 +112,6 @@ async def update_org(request: Request, org_object: Organization, org_id: str, cu
 
 
 async def delete_org(request: Request, org_id: str, current_user: PublicUser):
-    await check_database()
 
     await verify_org_rights(request, org_id, current_user, "delete")
 
