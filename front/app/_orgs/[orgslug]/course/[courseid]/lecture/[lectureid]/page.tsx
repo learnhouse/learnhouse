@@ -3,26 +3,26 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import React, { useMemo } from "react";
 import Layout from "../../../../../../../components/UI/Layout";
-import { getElement } from "../../../../../../../services/courses/elements";
+import { getLecture } from "../../../../../../../services/courses/lectures";
 import { getBackendUrl } from "../../../../../../../services/config";
 import Canva from "../../../../../../../components/LectureViews/DynamicCanva/DynamicCanva";
 import styled from "styled-components";
 import { getCourse, getCourseMetadata } from "../../../../../../../services/courses/courses";
 import VideoLecture from "@components/LectureViews/Video/Video";
 
-function ElementPage(params: any) {
+function LecturePage(params: any) {
   const router = useRouter();
-  const elementid = params.params.elementid;
+  const lectureid = params.params.lectureid;
   const courseid = params.params.courseid;
   const orgslug = params.params.orgslug;
-  const [element, setElement] = React.useState<any>({});
+  const [lecture, setLecture] = React.useState<any>({});
   const [course, setCourse] = React.useState<any>({});
   const [isLoading, setIsLoading] = React.useState(true);
 
-  async function fetchElementData() {
+  async function fetchLectureData() {
     setIsLoading(true);
-    const element = await getElement("element_" + elementid);
-    setElement(element);
+    const lecture = await getLecture("lecture_" + lectureid);
+    setLecture(lecture);
   }
 
   async function fetchCourseData() {
@@ -32,13 +32,13 @@ function ElementPage(params: any) {
   }
 
   React.useEffect(() => {
-    if (elementid) {
-      fetchElementData();
+    if (lectureid) {
+      fetchLectureData();
       fetchCourseData();
     }
     return () => {};
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [elementid]);
+  }, [lectureid]);
 
   return (
     <>
@@ -62,11 +62,11 @@ function ElementPage(params: any) {
               return (
                 <>
                   <div style={{ display: "flex", flexDirection: "row" }} key={chapter.chapter_id}>
-                    {chapter.elements.map((element: any) => {
+                    {chapter.lectures.map((lecture: any) => {
                       return (
                         <>
-                          <Link href={`/org/${orgslug}/course/${courseid}/element/${element.id.replace("element_", "")}`}>
-                            <ChapterIndicator key={element.id} />
+                          <Link href={`/org/${orgslug}/course/${courseid}/lecture/${lecture.id.replace("lecture_", "")}`}>
+                            <ChapterIndicator key={lecture.id} />
                           </Link>{" "}
                         </>
                       );
@@ -79,9 +79,9 @@ function ElementPage(params: any) {
           </ChaptersWrapper>
 
           <CourseContent>
-            {element.type == "dynamic" && <Canva content={element.content} element={element} />}
+            {lecture.type == "dynamic" && <Canva content={lecture.content} lecture={lecture} />}
             {/* todo : use apis & streams instead of this */}
-            {element.type == "video" && <VideoLecture course={course} element={element} />}
+            {lecture.type == "video" && <VideoLecture course={course} lecture={lecture} />}
           </CourseContent>
         </LectureLayout>
       )}
@@ -154,4 +154,4 @@ const CourseContent = styled.div`
   background-color: white;
   min-height: 600px;
 `;
-export default ElementPage;
+export default LecturePage;

@@ -4,17 +4,16 @@ from typing import List
 from uuid import uuid4
 from pydantic import BaseModel
 from src.services.courses.courses import Course, CourseInDB
-from src.services.courses.elements.elements import Element, ElementInDB
-from src.services.database import create_config_collection, check_database, create_database, learnhouseDB, learnhouseDB
+from src.services.courses.lectures.lectures import Lecture, LectureInDB
 from src.services.security import verify_user_rights_with_roles
 from src.services.users import PublicUser
-from fastapi import FastAPI, HTTPException, status, Request, Response, BackgroundTasks, UploadFile, File
+from fastapi import HTTPException, status, Request, Response, BackgroundTasks, UploadFile, File
 
 
 class CourseChapter(BaseModel):
     name: str
     description: str
-    elements: list
+    lectures: list
 
 
 class CourseChapterInDB(CourseChapter):
@@ -28,7 +27,7 @@ class CourseChapterInDB(CourseChapter):
 class CourseChapterMetaData(BaseModel):
     chapterOrder: List[str]
     chapters: object
-    elements: object
+    lectures: object
 
 #### Classes ####################################################
 
@@ -37,15 +36,14 @@ class CourseChapterMetaData(BaseModel):
 ####################################################
 
 
-async def create_coursechapter(coursechapter_object: CourseChapter, course_id: str, current_user: PublicUser):
-    await check_database()
-    coursechapters = learnhouseDB["coursechapters"]
-    courses = learnhouseDB["courses"]
+async def create_coursechapter(request: Request,coursechapter_object: CourseChapter, course_id: str, current_user: PublicUser):
+    coursechapters = request.app.db["coursechapters"]
+    courses = request.app.db["courses"]
 
     # generate coursechapter_id with uuid4
     coursechapter_id = str(f"coursechapter_{uuid4()}")
 
-    hasRoleRights = await verify_user_rights_with_roles("create", current_user.user_id, coursechapter_id)
+    hasRoleRights = await verify_user_rights_with_roles(request, "create", current_user.user_id, coursechapter_id)
 
     if not hasRoleRights:
         raise HTTPException(
@@ -65,16 +63,15 @@ async def create_coursechapter(coursechapter_object: CourseChapter, course_id: s
     return coursechapter.dict()
 
 
-async def get_coursechapter(coursechapter_id: str, current_user: PublicUser):
-    await check_database()
-    coursechapters = learnhouseDB["coursechapters"]
+async def get_coursechapter(request: Request,coursechapter_id: str, current_user: PublicUser):
+    coursechapters = request.app.db["coursechapters"]
 
     coursechapter = coursechapters.find_one(
         {"coursechapter_id": coursechapter_id})
 
     if coursechapter:
         # verify course rights
-        await verify_rights(coursechapter["course_id"], current_user, "read")
+        await verify_rights(request, coursechapter["course_id"], current_user, "read")
         coursechapter = CourseChapter(**coursechapter)
 
         return coursechapter
@@ -84,16 +81,15 @@ async def get_coursechapter(coursechapter_id: str, current_user: PublicUser):
             status_code=status.HTTP_409_CONFLICT, detail="CourseChapter does not exist")
 
 
-async def update_coursechapter(coursechapter_object: CourseChapter,  coursechapter_id: str, current_user: PublicUser):
-    await check_database()
-    coursechapters = learnhouseDB["coursechapters"]
+async def update_coursechapter(request: Request,coursechapter_object: CourseChapter,  coursechapter_id: str, current_user: PublicUser):
+    coursechapters = request.app.db["coursechapters"]
 
     coursechapter = coursechapters.find_one(
         {"coursechapter_id": coursechapter_id})
 
     if coursechapter:
         # verify course rights
-        await verify_rights(coursechapter["course_id"], current_user, "update")
+        await verify_rights(request, coursechapter["course_id"], current_user, "update")
         creationDate = coursechapter["creationDate"]
 
         # get today's date
@@ -112,18 +108,17 @@ async def update_coursechapter(coursechapter_object: CourseChapter,  coursechapt
             status_code=status.HTTP_409_CONFLICT, detail="Coursechapter does not exist")
 
 
-async def delete_coursechapter(coursechapter_id: str,  current_user: PublicUser):
-    await check_database()
+async def delete_coursechapter(request: Request,coursechapter_id: str,  current_user: PublicUser):
 
-    coursechapters = learnhouseDB["coursechapters"]
-    courses = learnhouseDB["courses"]
+    coursechapters = request.app.db["coursechapters"]
+    courses = request.app.db["courses"]
 
     coursechapter = coursechapters.find_one(
         {"coursechapter_id": coursechapter_id})
 
     if coursechapter:
         # verify course rights
-        await verify_rights(coursechapter["course_id"], current_user, "delete")
+        await verify_rights(request, coursechapter["course_id"], current_user, "delete")
 
         isDeleted = coursechapters.delete_one(
             {"coursechapter_id": coursechapter_id})
@@ -147,9 +142,8 @@ async def delete_coursechapter(coursechapter_id: str,  current_user: PublicUser)
 ####################################################
 
 
-async def get_coursechapters(course_id: str, page: int = 1, limit: int = 10):
-    await check_database()
-    courses = learnhouseDB["coursechapters"]
+async def get_coursechapters(request: Request,course_id: str, page: int = 1, limit: int = 10):
+    courses = request.app.db["coursechapters"]
     # TODO : Get only courses that user is admin/has roles of
     # get all courses from database
     all_coursechapters = courses.find({"course_id": course_id}).sort(
@@ -158,11 +152,10 @@ async def get_coursechapters(course_id: str, page: int = 1, limit: int = 10):
     return [json.loads(json.dumps(coursechapter, default=str)) for coursechapter in all_coursechapters]
 
 
-async def get_coursechapters_meta(course_id: str, current_user: PublicUser):
-    await check_database()
-    coursechapters = learnhouseDB["coursechapters"]
-    courses = learnhouseDB["courses"]
-    elements = learnhouseDB["elements"]
+async def get_coursechapters_meta(request: Request,course_id: str, current_user: PublicUser):
+    coursechapters = request.app.db["coursechapters"]
+    courses = request.app.db["courses"]
+    lectures = request.app.db["lectures"]
 
     coursechapters = coursechapters.find(
         {"course_id": course_id}).sort("name", 1)
@@ -170,63 +163,61 @@ async def get_coursechapters_meta(course_id: str, current_user: PublicUser):
     course = courses.find_one({"course_id": course_id})
     course = Course(**course)  # type: ignore
 
-    # elements
-    coursechapter_elementIds_global = []
+    # lectures
+    coursechapter_lectureIds_global = []
 
     # chapters
     chapters = {}
     for coursechapter in coursechapters:
         coursechapter = CourseChapterInDB(**coursechapter)
-        coursechapter_elementIds = []
+        coursechapter_lectureIds = []
 
-        for element in coursechapter.elements:
-            coursechapter_elementIds.append(element)
-            coursechapter_elementIds_global.append(element)
+        for lecture in coursechapter.lectures:
+            coursechapter_lectureIds.append(lecture)
+            coursechapter_lectureIds_global.append(lecture)
 
         chapters[coursechapter.coursechapter_id] = {
-            "id": coursechapter.coursechapter_id, "name": coursechapter.name,  "elementIds": coursechapter_elementIds
+            "id": coursechapter.coursechapter_id, "name": coursechapter.name,  "lectureIds": coursechapter_lectureIds
         }
 
-    # elements
-    elements_list = {}
-    for element in elements.find({"element_id": {"$in": coursechapter_elementIds_global}}):
-        element = ElementInDB(**element)
-        elements_list[element.element_id] = {
-            "id": element.element_id, "name": element.name, "type": element.type, "content": element.content
+    # lectures
+    lectures_list = {}
+    for lecture in lectures.find({"lecture_id": {"$in": coursechapter_lectureIds_global}}):
+        lecture = LectureInDB(**lecture)
+        lectures_list[lecture.lecture_id] = {
+            "id": lecture.lecture_id, "name": lecture.name, "type": lecture.type, "content": lecture.content
         }
 
     final = {
         "chapters": chapters,
         "chapterOrder": course.chapters,
-        "elements": elements_list
+        "lectures": lectures_list
     }
 
     return final
 
 
-async def update_coursechapters_meta(course_id: str, coursechapters_metadata: CourseChapterMetaData, current_user: PublicUser):
-    await check_database()
-    coursechapters = learnhouseDB["coursechapters"]
-    courses = learnhouseDB["courses"]
+async def update_coursechapters_meta(request: Request,course_id: str, coursechapters_metadata: CourseChapterMetaData, current_user: PublicUser):
+    coursechapters = request.app.db["coursechapters"]
+    courses = request.app.db["courses"]
 
     # update chapters in course
     courseInDB = courses.update_one({"course_id": course_id}, {
                                     "$set": {"chapters": coursechapters_metadata.chapterOrder}})
 
-    # update elements in coursechapters
+    # update lectures in coursechapters
     # TODO : performance/optimization improvement
     for coursechapter in coursechapters_metadata.chapters.__dict__.items():
         coursechapters.update_one({"coursechapter_id": coursechapter}, {
-            "$set": {"elements": coursechapters_metadata.chapters[coursechapter]["elementIds"]}})
+            "$set": {"lectures": coursechapters_metadata.chapters[coursechapter]["lectureIds"]}}) # type: ignore
 
     return {"detail": "coursechapters metadata updated"}
 
 #### Security ####################################################
 
 
-async def verify_rights(course_id: str, current_user: PublicUser, action: str):
-    await check_database()
-    courses = learnhouseDB["courses"]
+async def verify_rights(request: Request,course_id: str, current_user: PublicUser, action: str):
+    courses = request.app.db["courses"]
 
     course = courses.find_one({"course_id": course_id})
 
@@ -234,7 +225,7 @@ async def verify_rights(course_id: str, current_user: PublicUser, action: str):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail=f"Course does not exist")
 
-    hasRoleRights = await verify_user_rights_with_roles(action, current_user.user_id, course_id)
+    hasRoleRights = await verify_user_rights_with_roles(request, action, current_user.user_id, course_id)
     isAuthor = current_user.user_id in course["authors"]
 
     if not hasRoleRights and not isAuthor:

@@ -1,7 +1,7 @@
 import React from "react";
 import styled from "styled-components";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
-import Element, { ElementWrapper } from "./Element";
+import Lecture, { LectureWrapper } from "./Lecture";
 
 function Chapter(props: any) {
   return (
@@ -18,10 +18,10 @@ function Chapter(props: any) {
             {props.info.list.chapter.name}{" "}
             <button
               onClick={() => {
-                props.openNewElementModal(props.info.list.chapter.id);
+                props.openNewLectureModal(props.info.list.chapter.id);
               }}
             >
-              Create Element
+              Create Lecture
             </button>
             <button
               onClick={() => {
@@ -31,14 +31,14 @@ function Chapter(props: any) {
               X
             </button>
           </h3>
-          <Droppable key={props.info.list.chapter.id} droppableId={props.info.list.chapter.id} type="element">
+          <Droppable key={props.info.list.chapter.id} droppableId={props.info.list.chapter.id} type="lecture">
             {(provided) => (
-              <ElementsList {...provided.droppableProps} ref={provided.innerRef}>
-                {props.info.list.elements.map((element: any, index: any) => (
-                  <Element orgslug={props.orgslug} courseid={props.courseid} key={element.id} element={element} index={index}></Element>
+              <LecturesList {...provided.droppableProps} ref={provided.innerRef}>
+                {props.info.list.lectures.map((lecture: any, index: any) => (
+                  <Lecture orgslug={props.orgslug} courseid={props.courseid} key={lecture.id} lecture={lecture} index={index}></Lecture>
                 ))}
                 {provided.placeholder}
-              </ElementsList>
+              </LecturesList>
             )}
           </Droppable>
         </ChapterWrapper>
@@ -59,7 +59,7 @@ const ChapterWrapper = styled.div`
   transition: all 0.2s ease;
 `;
 
-const ElementsList = styled.div`
+const LecturesList = styled.div`
   padding: 10px;
 `;
 
