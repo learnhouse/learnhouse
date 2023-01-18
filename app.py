@@ -1,3 +1,4 @@
+import logging
 from urllib.request import Request
 from fastapi import FastAPI
 from src.main import global_router
@@ -6,6 +7,7 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi_jwt_auth.exceptions import AuthJWTException
 from src.services.mocks.initial import create_initial_data
+import pymongo
 
 ########################
 # Pre-Alpha Version 0.1.0
@@ -24,17 +26,37 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["http://localhost:3000", "http://localhost:3001"],
     allow_methods=["*"],
     allow_credentials=True,
     allow_headers=["*"]
 )
 
+# Static Files
 app.mount("/content", StaticFiles(directory="content"), name="content")
 
-# Exception Handler
+
+# Lifecycle Events
+@app.on_event("startup")
+def startup_event():
+    logging.info("Starting LearnHouse...")
+    # Database Connection
+    logging.info("Connecting to database...")
+    try:
+        app.mongodb_client = pymongo.MongoClient("mongodb://localhost:27017/") # type: ignore
+        app.db = app.mongodb_client["learnhouse"] # type: ignore
+        logging.info("Connected to database!")
+    except Exception as e:
+        logging.error("Failed to connect to database!")
+        logging.error(e)
+
+@app.on_event("shutdown")
+def shutdown_event():
+    app.mongodb_client.close() # type: ignore
+    logging.info("LearnHouse has been shut down.")
 
 
+# JWT Exception Handler
 @app.exception_handler(AuthJWTException)
 def authjwt_exception_handler(request: Request, exc: AuthJWTException):
     return JSONResponse(
@@ -42,10 +64,10 @@ def authjwt_exception_handler(request: Request, exc: AuthJWTException):
         content={"detail": exc.message}  # type: ignore
     )
 
-
+# Global Routes
 app.include_router(global_router)
 
-
+# General Routes
 @app.get("/")
 async def root():
     return {"Message": "Welcome to LearnHouse ✨"}
