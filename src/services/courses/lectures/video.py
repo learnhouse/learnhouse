@@ -1,18 +1,16 @@
 from pydantic import BaseModel
-from src.services.database import check_database,  learnhouseDB
 from src.services.security import verify_user_rights_with_roles
 from src.services.courses.lectures.uploads.videos import upload_video
 from src.services.users import PublicUser
 from src.services.courses.lectures.lectures import LectureInDB
-from fastapi import HTTPException, status, UploadFile
+from fastapi import HTTPException, status, UploadFile, Request
 from uuid import uuid4
 from datetime import datetime
 
 
-async def create_video_lecture(name: str,  coursechapter_id: str, current_user: PublicUser,  video_file: UploadFile | None = None):
-    await check_database()
-    lectures = learnhouseDB["lectures"]
-    coursechapters = learnhouseDB["coursechapters"]
+async def create_video_lecture(request: Request,name: str,  coursechapter_id: str, current_user: PublicUser,  video_file: UploadFile | None = None):
+    lectures = request.app.db["lectures"]
+    coursechapters = request.app.db["coursechapters"]
 
     # generate lecture_id
     lecture_id = str(f"lecture_{uuid4()}")
@@ -38,7 +36,7 @@ async def create_video_lecture(name: str,  coursechapter_id: str, current_user: 
         updateDate=str(datetime.now()),
     )
 
-    hasRoleRights = await verify_user_rights_with_roles("create", current_user.user_id, lecture_id)
+    hasRoleRights = await verify_user_rights_with_roles(request,"create", current_user.user_id, lecture_id)
 
     if not hasRoleRights:
         raise HTTPException(

@@ -1,7 +1,6 @@
 from uuid import uuid4
 from pydantic import BaseModel
-from src.services.database import check_database,  learnhouseDB, learnhouseDB
-from fastapi import HTTPException, status, UploadFile
+from fastapi import HTTPException, status, UploadFile, Request
 from fastapi.responses import StreamingResponse
 import os
 
@@ -17,9 +16,8 @@ class PhotoFile(BaseModel):
     lecture_id: str
 
 
-async def create_picture_file(picture_file: UploadFile, lecture_id: str):
-    await check_database()
-    photos = learnhouseDB["files"]
+async def create_picture_file(request: Request,picture_file: UploadFile, lecture_id: str):
+    photos = request.app.db["files"]
 
     # generate file_id
     file_id = str(f"file_{uuid4()}")
@@ -73,9 +71,8 @@ async def create_picture_file(picture_file: UploadFile, lecture_id: str):
     return uploadable_file
 
 
-async def get_picture_object(file_id: str):
-    await check_database()
-    photos = learnhouseDB["files"]
+async def get_picture_object(request: Request,file_id: str):
+    photos = request.app.db["files"]
 
     photo_file = photos.find_one({"file_id": file_id})
 
@@ -88,9 +85,8 @@ async def get_picture_object(file_id: str):
             status_code=status.HTTP_409_CONFLICT, detail="Photo file does not exist")
 
 
-async def get_picture_file(file_id: str, current_user: PublicUser):
-    await check_database()
-    photos = learnhouseDB["files"]
+async def get_picture_file(request: Request,file_id: str, current_user: PublicUser):
+    photos = request.app.db["files"]
 
     photo_file = photos.find_one({"file_id": file_id})
 

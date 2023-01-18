@@ -1,6 +1,5 @@
 import logging
-from urllib.request import Request
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from src.main import global_router
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -43,7 +42,7 @@ def startup_event():
     # Database Connection
     logging.info("Connecting to database...")
     try:
-        app.mongodb_client = pymongo.MongoClient("mongodb://localhost:27017/") # type: ignore
+        app.mongodb_client = pymongo.MongoClient("mongodb://learnhouse:learnhouse@mongo:27017/") # type: ignore
         app.db = app.mongodb_client["learnhouse"] # type: ignore
         logging.info("Connected to database!")
     except Exception as e:
@@ -54,7 +53,6 @@ def startup_event():
 def shutdown_event():
     app.mongodb_client.close() # type: ignore
     logging.info("LearnHouse has been shut down.")
-
 
 # JWT Exception Handler
 @app.exception_handler(AuthJWTException)
@@ -74,7 +72,7 @@ async def root():
 
 
 @app.get("/initial_data")
-async def initial_data():
+async def initial_data(request: Request):
 
-    await create_initial_data()
+    await create_initial_data(request)
     return {"Message": "Initial data created 🤖"}

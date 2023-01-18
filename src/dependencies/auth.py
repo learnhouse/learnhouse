@@ -44,8 +44,8 @@ class TokenData(BaseModel):
 #### Classes ####################################################
 
 
-async def authenticate_user(email: str, password: str):
-    user = await security_get_user(email)
+async def authenticate_user(request: Request,email: str, password: str):
+    user = await security_get_user(request, email)
     if not user:
         return False
     if not await security_verify_password(password, user.password):
@@ -63,28 +63,10 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-# DEPRECATED
-async def get_current_user_old(token: str = Depends(oauth2_scheme)):
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub") # type: ignore
-        if username is None:
-            raise credentials_exception
-        token_data = TokenData(username=username)
-    except JWTError:
-        raise credentials_exception
-    user = await security_get_user(email=token_data.username) # type: ignore
-    if user is None:
-        raise credentials_exception
-    return PublicUser(**user.dict())
 
 
-async def get_current_user(Authorize: AuthJWT = Depends()):
+
+async def get_current_user(request: Request, Authorize: AuthJWT = Depends()):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -97,7 +79,7 @@ async def get_current_user(Authorize: AuthJWT = Depends()):
         token_data = TokenData(username=username)  # type: ignore
     except JWTError:
         raise credentials_exception
-    user = await security_get_user(email=token_data.username) # type: ignore # treated as an email 
+    user = await security_get_user(request, email=token_data.username) # type: ignore # treated as an email 
     if user is None:
         raise credentials_exception
     return PublicUser(**user.dict())

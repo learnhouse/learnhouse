@@ -3,7 +3,6 @@ from typing import List
 from uuid import uuid4
 from pydantic import BaseModel
 from src.services.users import PublicUser, User
-from src.services.database import create_config_collection, check_database, create_database, learnhouseDB, learnhouseDB
 from src.services.security import *
 from fastapi import FastAPI, HTTPException, status, Request, Response, BackgroundTasks
 from datetime import datetime
@@ -28,14 +27,13 @@ class CollectionInDB(Collection):
 # CRUD
 ####################################################
 
-async def get_collection(collection_id: str, current_user: PublicUser):
-    await check_database()
-    collections = learnhouseDB["collections"]
+async def get_collection(request: Request,collection_id: str, current_user: PublicUser):
+    collections = request.app.db["collections"]
 
     collection = collections.find_one({"collection_id": collection_id})
 
     # verify collection rights
-    await verify_collection_rights(collection_id, current_user, "read")
+    await verify_collection_rights(request, collection_id, current_user, "read")
 
     if not collection:
         raise HTTPException(
@@ -45,9 +43,8 @@ async def get_collection(collection_id: str, current_user: PublicUser):
     return collection
 
 
-async def create_collection(collection_object: Collection, current_user: PublicUser):
-    await check_database()
-    collections = learnhouseDB["collections"]
+async def create_collection(request: Request,collection_object: Collection, current_user: PublicUser):
+    collections = request.app.db["collections"]
 
     # find if collection already exists using name
     isCollectionNameAvailable = collections.find_one(
@@ -75,13 +72,12 @@ async def create_collection(collection_object: Collection, current_user: PublicU
     return collection.dict()
 
 
-async def update_collection(collection_object: Collection, collection_id: str, current_user: PublicUser):
-    await check_database()
+async def update_collection(request: Request,collection_object: Collection, collection_id: str, current_user: PublicUser):
 
     # verify collection rights
-    await verify_collection_rights(collection_id, current_user, "update")
+    await verify_collection_rights(request, collection_id, current_user, "update")
 
-    collections = learnhouseDB["collections"]
+    collections = request.app.db["collections"]
 
     collection = collections.find_one({"collection_id": collection_id})
 
@@ -98,12 +94,11 @@ async def update_collection(collection_object: Collection, collection_id: str, c
     return Collection(**updated_collection.dict())
 
 
-async def delete_collection(collection_id: str, current_user: PublicUser):
-    await check_database()
+async def delete_collection(request: Request,collection_id: str, current_user: PublicUser):
 
-    await verify_collection_rights(collection_id, current_user, "delete")
+    await verify_collection_rights(request, collection_id, current_user, "delete")
 
-    collections = learnhouseDB["collections"]
+    collections = request.app.db["collections"]
 
     collection = collections.find_one({"collection_id": collection_id})
 
@@ -124,10 +119,9 @@ async def delete_collection(collection_id: str, current_user: PublicUser):
 ####################################################
 
 
-async def get_collections(page: int = 1, limit: int = 10):
+async def get_collections(request: Request,page: int = 1, limit: int = 10):
     ## TODO : auth
-    await check_database()
-    collections = learnhouseDB["collections"]
+    collections = request.app.db["collections"]
 
     # get all collections from database without ObjectId
     all_collections = collections.find({}).sort(
@@ -141,7 +135,7 @@ async def get_collections(page: int = 1, limit: int = 10):
 
         collection_courses = [course for course in collection.courses]
         # add courses to collection
-        courses = learnhouseDB["courses"]
+        courses = request.app.db["courses"]
         collection.courses = []
         collection.courses = courses.find(
             {"course_id": {"$in": collection_courses}}, {'_id': 0})
@@ -153,9 +147,8 @@ async def get_collections(page: int = 1, limit: int = 10):
 #### Security ####################################################
 
 
-async def verify_collection_rights(collection_id: str,  current_user: PublicUser, action: str):
-    await check_database()
-    collections = learnhouseDB["collections"]
+async def verify_collection_rights(request: Request,collection_id: str,  current_user: PublicUser, action: str):
+    collections = request.app.db["collections"]
 
     collection = collections.find_one({"collection_id": collection_id})
 
@@ -163,7 +156,7 @@ async def verify_collection_rights(collection_id: str,  current_user: PublicUser
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Collection does not exist")
 
-    hasRoleRights = await verify_user_rights_with_roles(action, current_user.user_id, collection_id)
+    hasRoleRights = await verify_user_rights_with_roles(request, action, current_user.user_id, collection_id)
 
     if not hasRoleRights:
         raise HTTPException(
