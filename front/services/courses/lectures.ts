@@ -1,6 +1,6 @@
 import { getAPIUrl } from "../config";
 
-export async function createElement(data: any, chapter_id: any) {
+export async function createLecture(data: any, chapter_id: any) {
   data.content = {};
   console.log("data", data, chapter_id);
 
@@ -17,7 +17,7 @@ export async function createElement(data: any, chapter_id: any) {
     body: JSON.stringify(data),
   };
 
-  const result: any = await fetch(`${getAPIUrl()}elements/?coursechapter_id=${chapter_id}`, requestOptions)
+  const result: any = await fetch(`${getAPIUrl()}lectures/?coursechapter_id=${chapter_id}`, requestOptions)
     .then((result) => result.json())
     .catch((error) => console.log("error", error));
 
@@ -26,7 +26,7 @@ export async function createElement(data: any, chapter_id: any) {
   return result;
 }
 
-export async function createFileElement(file: File, type: string, data: any, chapter_id: any) {
+export async function createFileLecture(file: File, type: string, data: any, chapter_id: any) {
   
 
   const HeadersConfig = new Headers();
@@ -37,12 +37,12 @@ export async function createFileElement(file: File, type: string, data: any, cha
   console.log("type" , type);
   
 
-  let endpoint = `${getAPIUrl()}elements/video`;
+  let endpoint = `${getAPIUrl()}lectures/video`;
 
   if (type === "video") {
     formData.append("name", data.name);
     formData.append("video_file", file);
-    endpoint = `${getAPIUrl()}elements/video`;
+    endpoint = `${getAPIUrl()}lectures/video`;
   }
 
   console.log();
@@ -67,21 +67,21 @@ export async function createFileElement(file: File, type: string, data: any, cha
   return result;
 }
 
-export async function getElement(element_id: any) {
+export async function getLecture(lecture_id: any) {
   const requestOptions: any = {
     method: "GET",
     redirect: "follow",
     credentials: "include",
   };
 
-  const result: any = await fetch(`${getAPIUrl()}elements/${element_id}`, requestOptions)
+  const result: any = await fetch(`${getAPIUrl()}lectures/${lecture_id}`, requestOptions)
     .then((result) => result.json())
     .catch((error) => console.log("error", error));
 
   return result;
 }
 
-export async function updateElement(data: any, element_id: any) {
+export async function updateLecture(data: any, lecture_id: any) {
   const HeadersConfig = new Headers({ "Content-Type": "application/json" });
 
   const requestOptions: any = {
@@ -92,7 +92,7 @@ export async function updateElement(data: any, element_id: any) {
     body: JSON.stringify(data),
   };
 
-  const result: any = await fetch(`${getAPIUrl()}elements/${element_id}`, requestOptions)
+  const result: any = await fetch(`${getAPIUrl()}lectures/${lecture_id}`, requestOptions)
     .then((result) => result.json())
     .catch((error) => console.log("error", error));
 

@@ -2,10 +2,10 @@ import React, { useState } from "react";
 import { ArrowLeftIcon, Cross1Icon } from "@radix-ui/react-icons";
 import Modal from "../Modal";
 import styled from "styled-components";
-import DynamicCanvaModal from "./NewElementModal/DynamicCanva";
-import VideoModal from "./NewElementModal/Video";
+import DynamicCanvaModal from "./NewLectureModal/DynamicCanva";
+import VideoModal from "./NewLectureModal/Video";
 
-function NewElementModal({ closeModal, submitElement, submitFileElement, chapterId }: any) {
+function NewLectureModal({ closeModal, submitLecture, submitFileLecture, chapterId }: any) {
   const [selectedView, setSelectedView] = useState("home");
 
   return (
@@ -16,29 +16,29 @@ function NewElementModal({ closeModal, submitElement, submitFileElement, chapter
       <button onClick={closeModal}>
         <Cross1Icon />
       </button>
-      <h1>Add New Element</h1>
+      <h1>Add New Lecture</h1>
       <br />
 
       {selectedView === "home" && (
-        <ElementChooserWrapper>
-          <ElementButton onClick={() => {setSelectedView("dynamic")}}>✨📄</ElementButton>
-          <ElementButton onClick={() => {setSelectedView("video")}}>📹</ElementButton>
-        </ElementChooserWrapper>
+        <LectureChooserWrapper>
+          <LectureButton onClick={() => {setSelectedView("dynamic")}}>✨📄</LectureButton>
+          <LectureButton onClick={() => {setSelectedView("video")}}>📹</LectureButton>
+        </LectureChooserWrapper>
       )}
 
       {selectedView === "dynamic" && (
-        <DynamicCanvaModal submitElement={submitElement} chapterId={chapterId} />
+        <DynamicCanvaModal submitLecture={submitLecture} chapterId={chapterId} />
       )}
 
       {selectedView === "video" && (
-        <VideoModal submitFileElement={submitFileElement} chapterId={chapterId} />
+        <VideoModal submitFileLecture={submitFileLecture} chapterId={chapterId} />
       )}
       
     </Modal>
   );
 }
 
-const ElementChooserWrapper = styled.div`
+const LectureChooserWrapper = styled.div`
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -46,7 +46,7 @@ const ElementChooserWrapper = styled.div`
   gap: 20px;
 `;
 
-const ElementButton = styled.button`
+const LectureButton = styled.button`
   padding: 20px;
   border-radius: 10px;
   border: none;
@@ -58,4 +58,4 @@ const ElementButton = styled.button`
   }
 `;
 
-export default NewElementModal;
+export default NewLectureModal;

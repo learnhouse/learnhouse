@@ -4,31 +4,31 @@ import {  Draggable } from "react-beautiful-dnd";
 import { EyeOpenIcon, Pencil2Icon } from '@radix-ui/react-icons'
 import styled from "styled-components";
 
-function Element(props: any) {
+function Lecture(props: any) {
 
   return (
-    <Draggable key={props.element.id} draggableId={props.element.id} index={props.index}>
+    <Draggable key={props.lecture.id} draggableId={props.lecture.id} index={props.index}>
       {(provided) => (
-        <ElementWrapper key={props.element.id} {...provided.draggableProps} {...provided.dragHandleProps} ref={provided.innerRef}>
-          <p>{props.element.name} </p>
+        <LectureWrapper key={props.lecture.id} {...provided.draggableProps} {...provided.dragHandleProps} ref={provided.innerRef}>
+          <p>{props.lecture.name} </p>
           <Link
-            href={`/org/${props.orgslug}/course/${props.courseid}/element/${props.element.id.replace("element_", "")}`}
+            href={`/org/${props.orgslug}/course/${props.courseid}/lecture/${props.lecture.id.replace("lecture_", "")}`}
             
             rel="noopener noreferrer">
             &nbsp; <EyeOpenIcon/>
           </Link>
           <Link
-            href={`/org/${props.orgslug}/course/${props.courseid}/element/${props.element.id.replace("element_", "")}/edit`}
+            href={`/org/${props.orgslug}/course/${props.courseid}/lecture/${props.lecture.id.replace("lecture_", "")}/edit`}
             rel="noopener noreferrer">
             &nbsp; <Pencil2Icon/>
           </Link>
-        </ElementWrapper>
+        </LectureWrapper>
       )}
     </Draggable>
   );
 }
 
-export const ElementWrapper = styled.div`
+export const LectureWrapper = styled.div`
   padding: 10px;
   padding-left: 17px;
   list-style: none;
@@ -42,4 +42,4 @@ export const ElementWrapper = styled.div`
   }
   
 `;
-export default Element;
+export default Lecture;

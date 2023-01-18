@@ -17,7 +17,7 @@ function ImageBlockComponent(props: any) {
   const handleSubmit = async (e: any) => {
     e.preventDefault();
     setIsLoading(true);
-    let object = await uploadNewImageFile(image, props.extension.options.element.element_id);
+    let object = await uploadNewImageFile(image, props.extension.options.lecture.lecture_id);
     setIsLoading(false);
     setfileObject(object);
     props.updateAttributes({
@@ -41,7 +41,7 @@ function ImageBlockComponent(props: any) {
       {fileObject && (
         <BlockImage>
           <img
-            src={`${getBackendUrl()}content/uploads/files/pictures/${props.extension.options.element.element_id}/${fileObject.file_id}.${
+            src={`${getBackendUrl()}content/uploads/files/pictures/${props.extension.options.lecture.lecture_id}/${fileObject.file_id}.${
               fileObject.file_format
             }`}
             alt=""

@@ -9,7 +9,7 @@ services:
   frontend:
     build: ./front
     ports:
-      - "3000:3000"
+      - "3001:3000"
     volumes:
       - ./front:/usr/learnhouse/front
   mongo:

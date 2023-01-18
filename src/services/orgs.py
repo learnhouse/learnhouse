@@ -3,7 +3,6 @@ from typing import List
 from uuid import uuid4
 from pydantic import BaseModel
 from src.services.users import PublicUser, User
-from src.services.database import create_config_collection, check_database, create_database, learnhouseDB, learnhouseDB
 from src.services.security import *
 from fastapi import FastAPI, HTTPException, status, Request, Response, BackgroundTasks
 from datetime import datetime
@@ -15,14 +14,15 @@ class Organization(BaseModel):
     name: str
     description: str
     email: str
-    slug :str 
+    slug: str
 
 
 class OrganizationInDB(Organization):
     org_id: str
     owners: List[str]
     admins: List[str]
-    
+
+
 class PublicOrganization(Organization):
     name: str
     description: str
@@ -34,9 +34,8 @@ class PublicOrganization(Organization):
 #### Classes ####################################################
 
 
-async def get_organization(org_id: str):
-    await check_database()
-    orgs = learnhouseDB["organizations"]
+async def get_organization(request: Request, org_id: str):
+    orgs = request.app.db["organizations"]
 
     org = orgs.find_one({"org_id": org_id})
 
@@ -47,9 +46,9 @@ async def get_organization(org_id: str):
     org = PublicOrganization(**org)
     return org
 
-async def get_organization_by_slug(org_slug: str):
-    await check_database()
-    orgs = learnhouseDB["organizations"]
+
+async def get_organization_by_slug(request: Request, org_slug: str):
+    orgs = request.app.db["organizations"]
 
     org = orgs.find_one({"slug": org_slug})
 
@@ -61,9 +60,8 @@ async def get_organization_by_slug(org_slug: str):
     return org
 
 
-async def create_org(org_object: Organization, current_user: PublicUser):
-    await check_database()
-    orgs = learnhouseDB["organizations"]
+async def create_org(request: Request, org_object: Organization, current_user: PublicUser):
+    orgs = request.app.db["organizations"]
 
     # find if org already exists using name
     isOrgAvailable = orgs.find_one({"slug": org_object.slug})
@@ -88,13 +86,12 @@ async def create_org(org_object: Organization, current_user: PublicUser):
     return org.dict()
 
 
-async def update_org(org_object: Organization, org_id: str, current_user: PublicUser):
-    await check_database()
+async def update_org(request: Request, org_object: Organization, org_id: str, current_user: PublicUser):
 
     # verify org rights
-    await verify_org_rights(org_id, current_user,"update")
+    await verify_org_rights(request, org_id, current_user, "update")
 
-    orgs = learnhouseDB["organizations"]
+    orgs = request.app.db["organizations"]
 
     org = orgs.find_one({"org_id": org_id})
 
@@ -114,12 +111,11 @@ async def update_org(org_object: Organization, org_id: str, current_user: Public
     return Organization(**updated_org.dict())
 
 
-async def delete_org(org_id: str, current_user: PublicUser):
-    await check_database()
+async def delete_org(request: Request, org_id: str, current_user: PublicUser):
 
-    await verify_org_rights(org_id, current_user,"delete")
+    await verify_org_rights(request, org_id, current_user, "delete")
 
-    orgs = learnhouseDB["organizations"]
+    orgs = request.app.db["organizations"]
 
     org = orgs.find_one({"org_id": org_id})
 
@@ -136,33 +132,21 @@ async def delete_org(org_id: str, current_user: PublicUser):
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Unavailable database")
 
 
-async def get_orgs(page: int = 1, limit: int = 10):
-    ## TODO : Deprecated
-    await check_database()
-    orgs = learnhouseDB["organizations"]
+async def get_orgs_by_user(request: Request, user_id: str, page: int = 1, limit: int = 10):
+    orgs = request.app.db["organizations"]
 
-    # get all orgs from database
-    all_orgs = orgs.find().sort("name", 1).skip(10 * (page - 1)).limit(limit)
-
-    return [json.loads(json.dumps(org, default=str)) for org in all_orgs]
-
-
-async def get_orgs_by_user(user_id: str, page: int = 1, limit: int = 10):
-    await check_database()
-    orgs = learnhouseDB["organizations"]
     print(user_id)
-    # find all orgs where user_id is in owners or admins arrays 
-    all_orgs = orgs.find({"$or": [{"owners": user_id}, {"admins": user_id}]}).sort("name", 1).skip(10 * (page - 1)).limit(limit)
-    
+    # find all orgs where user_id is in owners or admins arrays
+    all_orgs = orgs.find({"$or": [{"owners": user_id}, {"admins": user_id}]}).sort(
+        "name", 1).skip(10 * (page - 1)).limit(limit)
+
     return [json.loads(json.dumps(org, default=str)) for org in all_orgs]
-    
 
 
 #### Security ####################################################
 
-async def verify_org_rights(org_id: str,  current_user: PublicUser, action: str,):
-    await check_database()
-    orgs = learnhouseDB["organizations"]
+async def verify_org_rights(request: Request, org_id: str,  current_user: PublicUser, action: str,):
+    orgs = request.app.db["organizations"]
 
     org = orgs.find_one({"org_id": org_id})
 

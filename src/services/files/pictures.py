@@ -1,7 +1,6 @@
 from uuid import uuid4
 from pydantic import BaseModel
-from src.services.database import check_database,  learnhouseDB, learnhouseDB
-from fastapi import HTTPException, status, UploadFile
+from fastapi import HTTPException, status, UploadFile, Request
 from fastapi.responses import StreamingResponse
 import os
 
@@ -14,12 +13,11 @@ class PhotoFile(BaseModel):
     file_name: str
     file_size: int
     file_type: str
-    element_id: str
+    lecture_id: str
 
 
-async def create_picture_file(picture_file: UploadFile, element_id: str):
-    await check_database()
-    photos = learnhouseDB["files"]
+async def create_picture_file(request: Request,picture_file: UploadFile, lecture_id: str):
+    photos = request.app.db["files"]
 
     # generate file_id
     file_id = str(f"file_{uuid4()}")
@@ -51,15 +49,15 @@ async def create_picture_file(picture_file: UploadFile, element_id: str):
         file_name=file_name,
         file_size=file_size,
         file_type=file_type,
-        element_id=element_id
+        lecture_id=lecture_id
     )
 
-    # create folder for element
-    if not os.path.exists(f"content/uploads/files/pictures/{element_id}"):
-        os.mkdir(f"content/uploads/files/pictures/{element_id}")
+    # create folder for lecture
+    if not os.path.exists(f"content/uploads/files/pictures/{lecture_id}"):
+        os.mkdir(f"content/uploads/files/pictures/{lecture_id}")
 
     # upload file to server
-    with open(f"content/uploads/files/pictures/{element_id}/{file_id}.{file_format}", 'wb') as f:
+    with open(f"content/uploads/files/pictures/{lecture_id}/{file_id}.{file_format}", 'wb') as f:
         f.write(file)
         f.close()
 
@@ -73,9 +71,8 @@ async def create_picture_file(picture_file: UploadFile, element_id: str):
     return uploadable_file
 
 
-async def get_picture_object(file_id: str):
-    await check_database()
-    photos = learnhouseDB["files"]
+async def get_picture_object(request: Request,file_id: str):
+    photos = request.app.db["files"]
 
     photo_file = photos.find_one({"file_id": file_id})
 
@@ -88,9 +85,8 @@ async def get_picture_object(file_id: str):
             status_code=status.HTTP_409_CONFLICT, detail="Photo file does not exist")
 
 
-async def get_picture_file(file_id: str, current_user: PublicUser):
-    await check_database()
-    photos = learnhouseDB["files"]
+async def get_picture_file(request: Request,file_id: str, current_user: PublicUser):
+    photos = request.app.db["files"]
 
     photo_file = photos.find_one({"file_id": file_id})
 
@@ -106,9 +102,9 @@ async def get_picture_file(file_id: str, current_user: PublicUser):
         # stream file
         photo_file = PhotoFile(**photo_file)
         file_format = photo_file.file_format
-        element_id = photo_file.element_id
+        lecture_id = photo_file.lecture_id
         file = open(
-            f"content/uploads/files/pictures/{element_id}/{file_id}.{file_format}", 'rb')
+            f"content/uploads/files/pictures/{lecture_id}/{file_id}.{file_format}", 'rb')
         return StreamingResponse(file, media_type=photo_file.file_type)
 
     else:
