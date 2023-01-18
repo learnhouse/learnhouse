@@ -3,10 +3,9 @@ from typing import List
 from uuid import uuid4
 from pydantic import BaseModel
 from src.services.users import PublicUser, User
-from src.services.database import check_database,  learnhouseDB, learnhouseDB
 from src.services.security import *
 from src.services.houses import House
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, Request
 from datetime import datetime
 
 #### Classes ####################################################
@@ -45,9 +44,8 @@ class RoleInDB(Role):
 #### Classes ####################################################
 
 
-async def get_role(role_id: str):
-    await check_database()
-    roles = learnhouseDB["roles"]
+async def get_role(request: Request,role_id: str):
+    roles = request.app.db["roles"]
 
     role = roles.find_one({"role_id": role_id})
 
@@ -59,9 +57,8 @@ async def get_role(role_id: str):
     return role
 
 
-async def create_role(role_object: Role, current_user: PublicUser):
-    await check_database()
-    roles = learnhouseDB["roles"]
+async def create_role(request: Request,role_object: Role, current_user: PublicUser):
+    roles = request.app.db["roles"]
 
     # find if house already exists using name
     isRoleAvailable = roles.find_one({"name": role_object.name})
@@ -70,7 +67,7 @@ async def create_role(role_object: Role, current_user: PublicUser):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Role name already exists")
 
-    await verify_user_permissions_on_roles("create", current_user)
+    await verify_user_permissions_on_roles(request, "create", current_user)
 
     # generate house_id with uuid4
     role_id = str(f"role_{uuid4()}")
@@ -87,13 +84,12 @@ async def create_role(role_object: Role, current_user: PublicUser):
     return role.dict()
 
 
-async def update_role(role_object: Role, role_id: str, current_user: PublicUser):
-    await check_database()
+async def update_role(request: Request,role_object: Role, role_id: str, current_user: PublicUser):
 
     # verify house rights
-    await verify_user_permissions_on_roles("update", current_user)
+    await verify_user_permissions_on_roles(request, "update", current_user)
 
-    roles = learnhouseDB["roles"]
+    roles = request.app.db["roles"]
 
     role = roles.find_one({"role_id": role_id})
 
@@ -109,13 +105,12 @@ async def update_role(role_object: Role, role_id: str, current_user: PublicUser)
     return RoleInDB(**updated_role.dict())
 
 
-async def delete_role(role_id: str, current_user: PublicUser):
-    await check_database()
+async def delete_role(request: Request,role_id: str, current_user: PublicUser):
 
     # verify house rights
-    await verify_user_permissions_on_roles("delete", current_user)
+    await verify_user_permissions_on_roles(request, "delete", current_user)
 
-    roles = learnhouseDB["roles"]
+    roles = request.app.db["roles"]
 
     role = roles.find_one({"role_id": role_id})
 
@@ -132,9 +127,8 @@ async def delete_role(role_id: str, current_user: PublicUser):
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Unavailable database")
 
 
-async def get_roles(page: int = 1, limit: int = 10):
-    await check_database()
-    roles = learnhouseDB["roles"]
+async def get_roles(request: Request,page: int = 1, limit: int = 10):
+    roles = request.app.db["roles"]
 
     # get all roles from database
     all_roles = roles.find().sort("name", 1).skip(10 * (page - 1)).limit(limit)
@@ -144,9 +138,8 @@ async def get_roles(page: int = 1, limit: int = 10):
 
 #### Security ####################################################
 
-async def verify_user_permissions_on_roles(action: str, current_user: PublicUser):
-    await check_database()
-    users = learnhouseDB["users"]
+async def verify_user_permissions_on_roles(request: Request,action: str, current_user: PublicUser):
+    users = request.app.db["users"]
 
     user = users.find_one({"user_id": current_user.user_id})
 

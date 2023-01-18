@@ -1,5 +1,4 @@
 from pydantic import BaseModel
-from src.services.database import create_config_collection, check_database, create_database, learnhouseDB
 from src.services.security import verify_user_rights_with_roles
 from src.services.users import PublicUser, User
 from fastapi import FastAPI, HTTPException, status, Request, Response, BackgroundTasks, UploadFile, File
@@ -29,15 +28,14 @@ class LectureInDB(Lecture):
 ####################################################
 
 
-async def create_lecture(lecture_object: Lecture, coursechapter_id: str, current_user: PublicUser):
-    await check_database()
-    lectures = learnhouseDB["lectures"]
-    coursechapters = learnhouseDB["coursechapters"]
+async def create_lecture(request: Request,lecture_object: Lecture, coursechapter_id: str, current_user: PublicUser):
+    lectures = request.app.db["lectures"]
+    coursechapters = request.app.db["coursechapters"]
 
     # generate lecture_id
     lecture_id = str(f"lecture_{uuid4()}")
 
-    hasRoleRights = await verify_user_rights_with_roles("create", current_user.user_id, lecture_id)
+    hasRoleRights = await verify_user_rights_with_roles(request, "create", current_user.user_id, lecture_id)
 
     if not hasRoleRights:
         raise HTTPException(
@@ -55,14 +53,13 @@ async def create_lecture(lecture_object: Lecture, coursechapter_id: str, current
     return lecture
 
 
-async def get_lecture(lecture_id: str, current_user: PublicUser):
-    await check_database()
-    lectures = learnhouseDB["lectures"]
+async def get_lecture(request: Request,lecture_id: str, current_user: PublicUser):
+    lectures = request.app.db["lectures"]
 
     lecture = lectures.find_one({"lecture_id": lecture_id})
 
     # verify course rights
-    hasRoleRights = await verify_user_rights_with_roles("read", current_user.user_id, lecture_id)
+    hasRoleRights = await verify_user_rights_with_roles(request,"read", current_user.user_id, lecture_id)
 
     if not hasRoleRights:
         raise HTTPException(
@@ -76,13 +73,12 @@ async def get_lecture(lecture_id: str, current_user: PublicUser):
     return lecture
 
 
-async def update_lecture(lecture_object: Lecture, lecture_id: str, current_user: PublicUser):
-    await check_database()
+async def update_lecture(request: Request,lecture_object: Lecture, lecture_id: str, current_user: PublicUser):
 
     # verify course rights
-    await verify_user_rights_with_roles("update", current_user.user_id, lecture_id)
+    await verify_user_rights_with_roles(request, "update", current_user.user_id, lecture_id)
 
-    lectures = learnhouseDB["lectures"]
+    lectures = request.app.db["lectures"]
 
     lecture = lectures.find_one({"lecture_id": lecture_id})
 
@@ -105,13 +101,12 @@ async def update_lecture(lecture_object: Lecture, lecture_id: str, current_user:
             status_code=status.HTTP_409_CONFLICT, detail="lecture does not exist")
 
 
-async def delete_lecture(lecture_id: str, current_user: PublicUser):
-    await check_database()
+async def delete_lecture(request: Request,lecture_id: str, current_user: PublicUser):
 
     # verify course rights
-    await verify_user_rights_with_roles("delete", current_user.user_id, lecture_id)
+    await verify_user_rights_with_roles(request,"delete", current_user.user_id, lecture_id)
 
-    lectures = learnhouseDB["lectures"]
+    lectures = request.app.db["lectures"]
 
     lecture = lectures.find_one({"lecture_id": lecture_id})
 
@@ -132,12 +127,11 @@ async def delete_lecture(lecture_id: str, current_user: PublicUser):
 ####################################################
 
 
-async def get_lectures(coursechapter_id: str, current_user: PublicUser):
-    await check_database()
-    lectures = learnhouseDB["lectures"]
+async def get_lectures(request: Request,coursechapter_id: str, current_user: PublicUser):
+    lectures = request.app.db["lectures"]
 
     # verify course rights
-    await verify_user_rights_with_roles("read", current_user.user_id, coursechapter_id)
+    await verify_user_rights_with_roles(request,"read", current_user.user_id, coursechapter_id)
 
     lectures = lectures.find({"coursechapter_id": coursechapter_id})
 

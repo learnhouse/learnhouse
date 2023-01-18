@@ -3,7 +3,6 @@ from typing import List
 from uuid import uuid4
 from pydantic import BaseModel
 from src.services.users import PublicUser, User
-from src.services.database import  check_database, create_database, learnhouseDB, learnhouseDB
 from src.services.security import *
 from fastapi import FastAPI, HTTPException, status, Request, Response, BackgroundTasks
 from datetime import datetime
@@ -28,14 +27,13 @@ class HouseInDB(House):
 
 # TODO : Add house photo upload and delete
 
-async def get_house(house_id: str, current_user: PublicUser):
-    await check_database()
-    houses = learnhouseDB["houses"]
+async def get_house(request: Request, house_id: str, current_user: PublicUser):
+    houses = request.app.db["houses"]
 
     house = houses.find_one({"house_id": house_id})
 
     # verify house rights
-    await verify_house_rights(house_id, current_user, "read")
+    await verify_house_rights(request,house_id, current_user, "read")
 
     if not house:
         raise HTTPException(
@@ -45,9 +43,8 @@ async def get_house(house_id: str, current_user: PublicUser):
     return house
 
 
-async def create_house(house_object: House, current_user: PublicUser):
-    await check_database()
-    houses = learnhouseDB["houses"]
+async def create_house(request: Request,house_object: House, current_user: PublicUser):
+    houses = request.app.db["houses"]
 
     # find if house already exists using name
     isHouseAvailable = houses.find_one({"name": house_object.name})
@@ -59,7 +56,7 @@ async def create_house(house_object: House, current_user: PublicUser):
     # generate house_id with uuid4
     house_id = str(f"house_{uuid4()}")
 
-    hasRoleRights = await verify_user_rights_with_roles("create", current_user.user_id, house_id)
+    hasRoleRights = await verify_user_rights_with_roles(request, "create", current_user.user_id, house_id)
 
     if not hasRoleRights:
         raise HTTPException(
@@ -78,13 +75,12 @@ async def create_house(house_object: House, current_user: PublicUser):
     return house.dict()
 
 
-async def update_house(house_object: House, house_id: str, current_user: PublicUser):
-    await check_database()
+async def update_house(request: Request,house_object: House, house_id: str, current_user: PublicUser):
 
     # verify house rights
-    await verify_house_rights(house_id, current_user, "update")
+    await verify_house_rights(request,house_id, current_user, "update")
 
-    houses = learnhouseDB["houses"]
+    houses = request.app.db["houses"]
 
     house = houses.find_one({"house_id": house_id})
 
@@ -107,13 +103,12 @@ async def update_house(house_object: House, house_id: str, current_user: PublicU
     
 
 
-async def delete_house(house_id: str, current_user: PublicUser):
-    await check_database()
+async def delete_house(request: Request,house_id: str, current_user: PublicUser):
 
     # verify house rights
-    await verify_house_rights(house_id, current_user, "delete")
+    await verify_house_rights(request,house_id, current_user, "delete")
 
-    houses = learnhouseDB["houses"]
+    houses = request.app.db["houses"]
 
     house = houses.find_one({"house_id": house_id})
 
@@ -130,9 +125,8 @@ async def delete_house(house_id: str, current_user: PublicUser):
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Unavailable database")
 
 
-async def get_houses(page: int = 1, limit: int = 10):
-    await check_database()
-    houses = learnhouseDB["houses"]
+async def get_houses(request: Request,page: int = 1, limit: int = 10):
+    houses = request.app.db["houses"]
     # TODO : Get only houses that user is admin/has roles of
     # get all houses from database
     all_houses = houses.find().sort("name", 1).skip(10 * (page - 1)).limit(limit)
@@ -142,9 +136,8 @@ async def get_houses(page: int = 1, limit: int = 10):
 
 #### Security ####################################################
 
-async def verify_house_rights(house_id: str, current_user: PublicUser, action: str):
-    await check_database()
-    houses = learnhouseDB["houses"]
+async def verify_house_rights(request: Request,house_id: str, current_user: PublicUser, action: str):
+    houses = request.app.db["houses"]
 
     house = houses.find_one({"house_id": house_id})
 
@@ -152,7 +145,7 @@ async def verify_house_rights(house_id: str, current_user: PublicUser, action: s
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="House does not exist")
 
-    hasRoleRights = await verify_user_rights_with_roles(action, current_user.user_id, house_id)
+    hasRoleRights = await verify_user_rights_with_roles(request,action, current_user.user_id, house_id)
     isOwner = current_user.user_id in house["owners"]
 
     if not hasRoleRights and not isOwner:

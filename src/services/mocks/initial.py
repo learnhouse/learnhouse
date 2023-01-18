@@ -3,12 +3,12 @@ from datetime import datetime
 from fileinput import filename
 from pprint import pprint
 from uuid import uuid4
-from fastapi import File, UploadFile
+from fastapi import File, UploadFile, Request
 from src.services.courses.chapters import CourseChapter, create_coursechapter
 from src.services.courses.lectures.lectures import Lecture, create_lecture
 from src.services.courses.thumbnails import upload_thumbnail
 from src.services.users import PublicUser, User, UserInDB, UserWithPassword
-from src.services.database import learnhouseDB
+
 from src.services.orgs import OrganizationInDB, Organization, create_org
 from src.services.roles import Permission, Elements, create_role
 from src.services.users import create_user
@@ -17,7 +17,7 @@ from src.services.roles import Role
 from faker import Faker
 
 
-async def create_initial_data():
+async def create_initial_data(request: Request):
     fake = Faker(['en_US'])
     fake_multilang = Faker(
         ['en_US', 'de_DE', 'ja_JP', 'es_ES', 'it_IT', 'pt_BR', 'ar_PS'])
@@ -25,7 +25,7 @@ async def create_initial_data():
     # Create users
     ########################################
 
-    database_users = learnhouseDB["users"]
+    database_users = request.app.db["users"]
     database_users.delete_many({})
 
     users = []
@@ -36,7 +36,7 @@ async def create_initial_data():
         user_type="isOwner",
     )
 
-    admin_user = await create_user(admin_user)
+    admin_user = await create_user(request, admin_user)
 
     for i in range(0, 20):
         user = UserWithPassword(
@@ -49,10 +49,10 @@ async def create_initial_data():
         users.append(user)
 
     for user in users:
-        await create_user(user)
+        await create_user(request, user)
 
     # find admin user
-    users = learnhouseDB["users"]
+    users = request.app.db["users"]
     admin_user = users.find_one({"username": "admin"})
 
     if admin_user:
@@ -64,7 +64,7 @@ async def create_initial_data():
     # Create organizations
     ########################################
 
-    database_orgs = learnhouseDB["organizations"]
+    database_orgs = request.app.db["organizations"]
     database_orgs.delete_many({})
 
     organizations = []
@@ -79,12 +79,12 @@ async def create_initial_data():
             slug=slug,
         )
         organizations.append(org)
-        await create_org(org, current_user)
+        await create_org(request, org, current_user)
 
     # Create roles
     ########################################
 
-    database_roles = learnhouseDB["roles"]
+    database_roles = request.app.db["roles"]
     database_roles.delete_many({})
 
     roles = []
@@ -110,18 +110,18 @@ async def create_initial_data():
     )
     roles.append(admin_role)
 
-    await create_role(admin_role, current_user)
+    await create_role(request, admin_role, current_user)
 
     # Generate Courses and CourseChapters
     ########################################
 
-    database_courses = learnhouseDB["courses"]
-    database_chapters = learnhouseDB["coursechapters"]
+    database_courses = request.app.db["courses"]
+    database_chapters = request.app.db["coursechapters"]
     database_courses.delete_many({})
     database_chapters.delete_many({})
 
     courses = []
-    orgs = learnhouseDB["organizations"]
+    orgs = request.app.db["organizations"]
 
     if orgs.count_documents({}) > 0:
         for org in orgs.find():
@@ -150,7 +150,7 @@ async def create_initial_data():
                     authors=[current_user.user_id],
                 )
 
-                courses = learnhouseDB["courses"]
+                courses = request.app.db["courses"]
                 name_in_disk = f"test_mock{course_id}.jpeg"
 
                 image = requests.get(
@@ -170,7 +170,7 @@ async def create_initial_data():
                         description=fake_multilang.unique.text(),
                         lectures=[],
                     )
-                    coursechapter = await create_coursechapter(coursechapter, course_id, current_user)
+                    coursechapter = await create_coursechapter(request,coursechapter, course_id, current_user)
                     pprint(coursechapter)
                     if coursechapter:
                         # create lectures
@@ -180,4 +180,4 @@ async def create_initial_data():
                                 type="dynamic",
                                 content={},
                             )
-                            lecture = await create_lecture(lecture, coursechapter['coursechapter_id'], current_user)
+                            lecture = await create_lecture(request,lecture, coursechapter['coursechapter_id'], current_user)

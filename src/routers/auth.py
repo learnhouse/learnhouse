@@ -1,5 +1,5 @@
 from urllib.request import Request
-from fastapi import Depends, APIRouter, HTTPException, status
+from fastapi import Depends, APIRouter, HTTPException, status, Request
 from fastapi.security import  OAuth2PasswordRequestForm
 from src.dependencies.auth import *
 from src.services.users import *
@@ -11,11 +11,11 @@ router = APIRouter()
 
 # DEPRECATED
 @router.post("/token", response_model=Token)
-async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
+async def login_for_access_token(request: Request, form_data: OAuth2PasswordRequestForm = Depends()):
     """
     OAuth2 compatible token login, get access token for future requests
     """
-    user = await authenticate_user(form_data.username, form_data.password)
+    user = await authenticate_user(request, form_data.username, form_data.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -47,8 +47,8 @@ def refresh(Authorize: AuthJWT = Depends()):
     return {"access_token": new_access_token}
 
 @router.post('/login')
-async def login(Authorize: AuthJWT = Depends(), form_data: OAuth2PasswordRequestForm = Depends()):
-    user = await authenticate_user(form_data.username, form_data.password)
+async def login(request: Request,Authorize: AuthJWT = Depends(), form_data: OAuth2PasswordRequestForm = Depends()):
+    user = await authenticate_user(request, form_data.username, form_data.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
