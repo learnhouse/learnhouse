@@ -1,10 +1,6 @@
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, Request
 from passlib.context import CryptContext
-from jose import JWTError, jwt
-import logging
 from passlib.hash import pbkdf2_sha256
-from src.services.database import check_database
-from src.services.database import check_database,  learnhouseDB, learnhouseDB
 
 ### 🔒 JWT ##############################################################
 
@@ -31,12 +27,11 @@ async def security_verify_password(plain_password: str, hashed_password: str):
 ### 🔒 Roles checking  ##############################################################
 
 
-async def verify_user_rights_with_roles(action: str, user_id: str, element_id: str):
+async def verify_user_rights_with_roles(request: Request,action: str, user_id: str, element_id: str):
     """
     Check if the user has the right to perform the action on the element
     """
-    await check_database()
-    roles = learnhouseDB["roles"]
+    roles = request.app.db["roles"]
 
     # find data where user_id is in linked_users or * is in linked_users
     user_roles_cursor = roles.find({"$or": [{"linked_users": user_id}, {"linked_users": "*"}]})
@@ -77,8 +72,8 @@ async def check_element_type(element_id):
         return "coursechapters"
     elif element_id.startswith("collection_"):
         return "collections"
-    elif element_id.startswith("element_"):
-        return "elements"
+    elif element_id.startswith("lecture_"):
+        return "lectures"
     else:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Issue verifying element nature")

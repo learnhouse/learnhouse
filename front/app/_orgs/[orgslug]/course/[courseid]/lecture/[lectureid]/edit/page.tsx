@@ -4,23 +4,23 @@ import { default as React, useEffect, useRef } from "react";
 
 
 import { useRouter } from "next/navigation";
-import { getElement } from "../../../../../../../../services/courses/elements";
+import { getLecture } from "../../../../../../../../services/courses/lectures";
 import AuthProvider from "../../../../../../../../components/Security/AuthProvider";
 import EditorWrapper from "../../../../../../../../components/Editor/EditorWrapper";
 import { getCourseMetadata } from "../../../../../../../../services/courses/courses";
 
 
-function EditElement(params: any) {
+function EditLecture(params: any) {
   const router = useRouter();
-  const elementid = params.params.elementid;
+  const lectureid = params.params.lectureid;
   const courseid = params.params.courseid;
-  const [element, setElement] = React.useState<any>({});
+  const [lecture, setLecture] = React.useState<any>({});
   const [courseInfo, setCourseInfo] = React.useState({}) as any;
   const [isLoading, setIsLoading] = React.useState(true);
 
-  async function fetchElementData() {
-    const element = await getElement("element_" + elementid);
-    setElement(element);
+  async function fetchLectureData() {
+    const lecture = await getLecture("lecture_" + lectureid);
+    setLecture(lecture);
   }
 
   async function fetchCourseInfo() {
@@ -29,24 +29,24 @@ function EditElement(params: any) {
   }
 
   async function fetchAllData() {
-    await fetchElementData();
+    await fetchLectureData();
     await fetchCourseInfo();
     setIsLoading(false);
   }
 
   React.useEffect(() => {
-    if (elementid && courseid) {
+    if (lectureid && courseid) {
       fetchAllData();
     }
     return () => {};
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [elementid, courseid ]);
+  }, [lectureid, courseid ]);
 
   return (
     <AuthProvider>
-      {isLoading ? <div>Loading...</div> : <EditorWrapper course={courseInfo} element={element} content={element.content}></EditorWrapper>}
+      {isLoading ? <div>Loading...</div> : <EditorWrapper course={courseInfo} lecture={lecture} content={lecture.content}></EditorWrapper>}
     </AuthProvider>
   );
 }
 
-export default EditElement;
+export default EditLecture;

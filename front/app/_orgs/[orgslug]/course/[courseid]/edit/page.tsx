@@ -11,8 +11,8 @@ import Chapter from "../../../../../../components/Drags/Chapter";
 import { createChapter, deleteChapter, getCourseChaptersMetadata, updateChaptersMetadata } from "../../../../../../services/courses/chapters";
 import { useRouter } from "next/navigation";
 import NewChapterModal from "../../../../../../components/Modals/CourseEdit/NewChapter";
-import NewElementModal from "../../../../../../components/Modals/CourseEdit/NewElement";
-import { createElement, createFileElement } from "../../../../../../services/courses/elements";
+import NewLectureModal from "../../../../../../components/Modals/CourseEdit/NewLecture";
+import { createLecture, createFileLecture } from "../../../../../../services/courses/lectures";
 
 function CourseEdit(params: any) {
   const router = useRouter();
@@ -22,9 +22,9 @@ function CourseEdit(params: any) {
 
   // New Chapter Modal State
   const [newChapterModal, setNewChapterModal] = useState(false) as any;
-  // New Element Modal State
-  const [newElementModal, setNewElementModal] = useState(false) as any;
-  const [newElementModalData, setNewElementModalData] = useState("") as any;
+  // New Lecture Modal State
+  const [newLectureModal, setNewLectureModal] = useState(false) as any;
+  const [newLectureModalData, setNewLectureModalData] = useState("") as any;
 
   // Check window availability
   const [winReady, setwinReady] = useState(false);
@@ -50,16 +50,16 @@ function CourseEdit(params: any) {
     const chapterOrder = data.chapterOrder ? data.chapterOrder : [];
     return chapterOrder.map((chapterId: any) => {
       const chapter = data.chapters[chapterId];
-      let elements = [];
-      if (data.elements) {
-        elements = chapter.elementIds.map((elementId: any) => data.elements[elementId])
-          ? chapter.elementIds.map((elementId: any) => data.elements[elementId])
+      let lectures = [];
+      if (data.lectures) {
+        lectures = chapter.lectureIds.map((lectureId: any) => data.lectures[lectureId])
+          ? chapter.lectureIds.map((lectureId: any) => data.lectures[lectureId])
           : [];
       }
       return {
         list: {
           chapter: chapter,
-          elements: elements,
+          lectures: lectures,
         },
       };
     });
@@ -72,22 +72,22 @@ function CourseEdit(params: any) {
     setNewChapterModal(false);
   };
 
-  // Submit new element
-  const submitElement = async (element: any) => {
-    console.log("submitElement", element);
+  // Submit new lecture
+  const submitLecture = async (lecture: any) => {
+    console.log("submitLecture", lecture);
     await updateChaptersMetadata(courseid, data);
-    await createElement(element, element.chapterId);
+    await createLecture(lecture, lecture.chapterId);
     await getCourseChapters();
-    setNewElementModal(false);
+    setNewLectureModal(false);
   };
 
   // Submit File Upload
-  const submitFileElement = async (file: any, type: any, element: any, chapterId: string) => {
-    console.log("submitFileElement", file);
+  const submitFileLecture = async (file: any, type: any, lecture: any, chapterId: string) => {
+    console.log("submitFileLecture", file);
     await updateChaptersMetadata(courseid, data);
-    await createFileElement(file, type, element, chapterId);
+    await createFileLecture(file, type, lecture, chapterId);
     await getCourseChapters();
-    setNewElementModal(false);
+    setNewLectureModal(false);
   };
 
   const deleteChapterUI = async (chapterId: any) => {
@@ -107,10 +107,10 @@ function CourseEdit(params: any) {
 
   */
 
-  const openNewElementModal = async (chapterId: any) => {
-    console.log("openNewElementModal", chapterId);
-    setNewElementModal(true);
-    setNewElementModalData(chapterId);
+  const openNewLectureModal = async (chapterId: any) => {
+    console.log("openNewLectureModal", chapterId);
+    setNewLectureModal(true);
+    setNewLectureModalData(chapterId);
   };
 
   // Close new chapter modal
@@ -118,8 +118,8 @@ function CourseEdit(params: any) {
     setNewChapterModal(false);
   };
 
-  const closeNewElementModal = () => {
-    setNewElementModal(false);
+  const closeNewLectureModal = () => {
+    setNewLectureModal(false);
   };
 
   /* 
@@ -130,12 +130,12 @@ function CourseEdit(params: any) {
     const { destination, source, draggableId, type } = result;
     console.log(result);
 
-    // check if the element is dropped outside the droppable area
+    // check if the lecture is dropped outside the droppable area
     if (!destination) {
       return;
     }
 
-    // check if the element is dropped in the same place
+    // check if the lecture is dropped in the same place
     if (destination.droppableId === source.droppableId && destination.index === source.index) {
       return;
     }
@@ -155,26 +155,26 @@ function CourseEdit(params: any) {
       return;
     }
 
-    //////////////////////// ELEMENTS IN SAME CHAPTERS ////////////////////////////
-    // check if the element is dropped in the same chapter
+    //////////////////////// LECTURES IN SAME CHAPTERS ////////////////////////////
+    // check if the lecture is dropped in the same chapter
     const start = data.chapters[source.droppableId];
     const finish = data.chapters[destination.droppableId];
 
-    // check if the element is dropped in the same chapter
+    // check if the lecture is dropped in the same chapter
     if (start === finish) {
-      // create new arrays for chapters and elements
+      // create new arrays for chapters and lectures
       const chapter = data.chapters[source.droppableId];
-      const newElementIds = Array.from(chapter.elementIds);
+      const newLectureIds = Array.from(chapter.lectureIds);
 
-      // remove the element from the old position
-      newElementIds.splice(source.index, 1);
+      // remove the lecture from the old position
+      newLectureIds.splice(source.index, 1);
 
-      // add the element to the new position
-      newElementIds.splice(destination.index, 0, draggableId);
+      // add the lecture to the new position
+      newLectureIds.splice(destination.index, 0, draggableId);
 
       const newChapter = {
         ...chapter,
-        elementIds: newElementIds,
+        lectureIds: newLectureIds,
       };
 
       const newState = {
@@ -189,25 +189,25 @@ function CourseEdit(params: any) {
       return;
     }
 
-    //////////////////////// ELEMENTS IN DIFF CHAPTERS ////////////////////////////
-    // check if the element is dropped in a different chapter
+    //////////////////////// LECTURES IN DIFF CHAPTERS ////////////////////////////
+    // check if the lecture is dropped in a different chapter
     if (start !== finish) {
-      // create new arrays for chapters and elements
-      const startChapterElementIds = Array.from(start.elementIds);
+      // create new arrays for chapters and lectures
+      const startChapterLectureIds = Array.from(start.lectureIds);
 
-      // remove the element from the old position
-      startChapterElementIds.splice(source.index, 1);
+      // remove the lecture from the old position
+      startChapterLectureIds.splice(source.index, 1);
       const newStart = {
         ...start,
-        elementIds: startChapterElementIds,
+        lectureIds: startChapterLectureIds,
       };
 
-      // add the element to the new position within the chapter
-      const finishChapterElementIds = Array.from(finish.elementIds);
-      finishChapterElementIds.splice(destination.index, 0, draggableId);
+      // add the lecture to the new position within the chapter
+      const finishChapterLectureIds = Array.from(finish.lectureIds);
+      finishChapterLectureIds.splice(destination.index, 0, draggableId);
       const newFinish = {
         ...finish,
-        elementIds: finishChapterElementIds,
+        lectureIds: finishChapterLectureIds,
       };
 
       const newState = {
@@ -245,13 +245,13 @@ function CourseEdit(params: any) {
         </button>
       </Title>
       {newChapterModal && <NewChapterModal closeModal={closeNewChapterModal} submitChapter={submitChapter}></NewChapterModal>}
-      {newElementModal && (
-        <NewElementModal
-          closeModal={closeNewElementModal}
-          submitFileElement={submitFileElement}
-          submitElement={submitElement}
-          chapterId={newElementModalData}
-        ></NewElementModal>
+      {newLectureModal && (
+        <NewLectureModal
+          closeModal={closeNewLectureModal}
+          submitFileLecture={submitFileLecture}
+          submitLecture={submitLecture}
+          chapterId={newLectureModalData}
+        ></NewLectureModal>
       )}
 
       <br />
@@ -267,7 +267,7 @@ function CourseEdit(params: any) {
                         <Chapter
                           orgslug={orgslug}
                           courseid={courseid}
-                          openNewElementModal={openNewElementModal}
+                          openNewLectureModal={openNewLectureModal}
                           deleteChapter={deleteChapterUI}
                           key={index}
                           info={info}

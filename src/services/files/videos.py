@@ -1,8 +1,7 @@
 from uuid import uuid4
 from pydantic import BaseModel
 import os
-from src.services.database import check_database,  learnhouseDB, learnhouseDB
-from fastapi import HTTPException, status, UploadFile
+from fastapi import HTTPException, status, UploadFile,Request
 from fastapi.responses import StreamingResponse
 
 from src.services.users import PublicUser
@@ -14,12 +13,11 @@ class VideoFile(BaseModel):
     file_name: str
     file_size: int
     file_type: str
-    element_id: str
+    lecture_id: str
 
 
-async def create_video_file(video_file: UploadFile, element_id: str):
-    await check_database()
-    files = learnhouseDB["files"]
+async def create_video_file(request: Request,video_file: UploadFile, lecture_id: str):
+    files = request.app.db["files"]
 
     # generate file_id
     file_id = str(f"file_{uuid4()}")
@@ -51,15 +49,15 @@ async def create_video_file(video_file: UploadFile, element_id: str):
         file_name=file_name,
         file_size=file_size,
         file_type=file_type,
-        element_id=element_id
+        lecture_id=lecture_id
     )
 
-    # create folder for element
-    if not os.path.exists(f"content/uploads/files/videos/{element_id}"):
-        os.mkdir(f"content/uploads/files/videos/{element_id}")
+    # create folder for lecture
+    if not os.path.exists(f"content/uploads/files/videos/{lecture_id}"):
+        os.mkdir(f"content/uploads/files/videos/{lecture_id}")
 
     # upload file to server
-    with open(f"content/uploads/files/videos/{element_id}/{file_id}.{file_format}", 'wb') as f:
+    with open(f"content/uploads/files/videos/{lecture_id}/{file_id}.{file_format}", 'wb') as f:
         f.write(file)
         f.close()
 
@@ -73,9 +71,8 @@ async def create_video_file(video_file: UploadFile, element_id: str):
     return uploadable_file
 
 
-async def get_video_object(file_id: str, current_user: PublicUser):
-    await check_database()
-    photos = learnhouseDB["files"]
+async def get_video_object(request: Request,file_id: str, current_user: PublicUser):
+    photos = request.app.db["files"]
 
     video_file = photos.find_one({"file_id": file_id})
 
@@ -88,9 +85,8 @@ async def get_video_object(file_id: str, current_user: PublicUser):
             status_code=status.HTTP_409_CONFLICT, detail="Photo file does not exist")
 
 
-async def get_video_file(file_id: str, current_user: PublicUser):
-    await check_database()
-    photos = learnhouseDB["files"]
+async def get_video_file(request: Request,file_id: str, current_user: PublicUser):
+    photos = request.app.db["files"]
 
     video_file = photos.find_one({"file_id": file_id})
 
@@ -106,11 +102,11 @@ async def get_video_file(file_id: str, current_user: PublicUser):
         # stream file
         video_file = VideoFile(**video_file)
         file_format = video_file.file_format
-        element_id = video_file.element_id
+        lecture_id = video_file.lecture_id
 
         def iterfile():  #
             #
-            with open(f"content/uploads/files/videos/{element_id}/{file_id}.{file_format}", mode="rb") as file_like:
+            with open(f"content/uploads/files/videos/{lecture_id}/{file_id}.{file_format}", mode="rb") as file_like:
                 yield from file_like
         return StreamingResponse(iterfile(), media_type=video_file.file_type)
 
