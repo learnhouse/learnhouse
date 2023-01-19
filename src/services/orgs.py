@@ -135,7 +135,6 @@ async def delete_org(request: Request, org_id: str, current_user: PublicUser):
 async def get_orgs_by_user(request: Request, user_id: str, page: int = 1, limit: int = 10):
     orgs = request.app.db["organizations"]
 
-    print(user_id)
     # find all orgs where user_id is in owners or admins arrays
     all_orgs = orgs.find({"$or": [{"owners": user_id}, {"admins": user_id}]}).sort(
         "name", 1).skip(10 * (page - 1)).limit(limit)
@@ -155,7 +154,7 @@ async def verify_org_rights(request: Request, org_id: str,  current_user: Public
             status_code=status.HTTP_409_CONFLICT, detail="Organization does not exist")
 
     isOwner = current_user.user_id in org["owners"]
-    hasRoleRights = await verify_user_rights_with_roles(action, current_user.user_id, org_id)
+    hasRoleRights = await verify_user_rights_with_roles(request, action, current_user.user_id, org_id)
 
     if not hasRoleRights and not isOwner:
         raise HTTPException(
