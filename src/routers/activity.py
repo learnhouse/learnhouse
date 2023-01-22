@@ -21,7 +21,7 @@ async def api_get_activity_by_userid(request: Request, org_id: str, user=Depends
     """
     Get a user activities
     """
-    return await get_user_activities(request, user, org_id)
+    return await get_user_activities(request, user, org_id=org_id)
 
 
 @router.post("/{org_id}/add_lecture/{course_id}/{lecture_id}")
