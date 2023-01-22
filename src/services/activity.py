@@ -14,8 +14,8 @@ class Activity(BaseModel):
     course_id: str
     status:  Optional[Literal['ongoing', 'done', 'closed']] = 'ongoing'
     masked: Optional[bool] = False
-    chapters_marked_complete: Optional[List[str]]
-    chapters_data: Optional[List[dict]]
+    lectures_marked_complete: Optional[List[str]]
+    lectures_data: Optional[List[dict]]
 
 
 class ActivityInDB(Activity):
@@ -33,12 +33,18 @@ async def create_activity(request: Request, user: PublicUser, activity_object: A
     activities = request.app.db["activities"]
 
     # find if the user has already started the course
-    isActivityAlreadyStarted = activities.find_one(
+    isActivityAlreadCreated = activities.find_one(
         {"course_id": activity_object.course_id, "user_id": user.user_id})
 
-    if isActivityAlreadyStarted:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Activity already started")
+    if isActivityAlreadCreated:
+        if isActivityAlreadCreated['status'] == 'closed':
+            activity_object.status = 'ongoing'
+            activities.update_one(
+                {"activity_id": isActivityAlreadCreated['activity_id']}, {"$set": activity_object.dict()})
+            return activity_object
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT, detail="Activity already created")
 
     # create activity
     activity = ActivityInDB(**activity_object.dict(),
@@ -62,7 +68,7 @@ async def get_user_activities(request: Request, user: PublicUser, org_id: str):
     return [json.loads(json.dumps(activity, default=str)) for activity in user_activities]
 
 
-async def add_chapter_to_activity(request: Request, user: PublicUser, org_id: str, course_id: str, chapter_id: str):
+async def add_lecture_to_activity(request: Request, user: PublicUser, org_id: str, course_id: str, lecture_id: str):
     activities = request.app.db["activities"]
 
     activity = activities.find_one(
@@ -75,24 +81,25 @@ async def add_chapter_to_activity(request: Request, user: PublicUser, org_id: st
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Activity not found")
 
-    if chapter_id in activity['chapters_marked_complete']:
+    if lecture_id in activity['lectures_marked_complete']:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Chapter already marked complete")
+            status_code=status.HTTP_409_CONFLICT, detail="Lecture already marked complete")
 
-    activity['chapters_marked_complete'].append(chapter_id)
+    activity['lectures_marked_complete'].append(lecture_id)
 
     activities.update_one(
         {"activity_id": activity['activity_id']}, {"$set": activity})
 
     # send 200 custom message
-    return {"message": "Chapter added to activity"}
+    return {"message": "Lecture added to activity"}
 
 
-async def close_activity(request: Request, user: PublicUser, org_id: str, activity_id: str):
+async def close_activity(request: Request, user: PublicUser,  activity_id: str, org_id: str,):
     activities = request.app.db["activities"]
-
+    print(activity_id)
+    print(org_id)
     activity = activities.find_one(
-        {"activity_id": activity_id, "user_id": user.user_id, "org_id": org_id})
+        {"activity_id": activity_id, "user_id": user.user_id})
 
     if not activity:
         raise HTTPException(

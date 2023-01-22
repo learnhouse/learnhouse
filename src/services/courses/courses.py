@@ -53,13 +53,13 @@ class CourseChapterInDB(CourseChapter):
 # CRUD
 ####################################################
 
-async def get_course(request: Request,course_id: str, current_user: PublicUser):
+async def get_course(request: Request, course_id: str, current_user: PublicUser):
     courses = request.app.db["courses"]
 
     course = courses.find_one({"course_id": course_id})
 
     # verify course rights
-    await verify_rights(request,course_id, current_user, "read")
+    await verify_rights(request, course_id, current_user, "read")
 
     if not course:
         raise HTTPException(
@@ -69,14 +69,16 @@ async def get_course(request: Request,course_id: str, current_user: PublicUser):
     return course
 
 
-async def get_course_meta(request: Request,course_id: str, current_user: PublicUser):
+async def get_course_meta(request: Request, course_id: str, current_user: PublicUser):
     courses = request.app.db["courses"]
     coursechapters = request.app.db["coursechapters"]
+    activities = request.app.db["activities"]
+
     course = courses.find_one({"course_id": course_id})
     lectures = request.app.db["lectures"]
 
     # verify course rights
-    await verify_rights(request,course_id, current_user, "read")
+    await verify_rights(request, course_id, current_user, "read")
 
     if not course:
         raise HTTPException(
@@ -115,13 +117,23 @@ async def get_course_meta(request: Request,course_id: str, current_user: PublicU
         chapters_list_with_lectures.append(
             {"id": chapters[chapter]["id"], "name": chapters[chapter]["name"], "lectures": [lectures_list[lecture] for lecture in chapters[chapter]["lectureIds"]]})
     course = Course(**course)
+
+    # Get activity by user
+    activity = activities.find_one(
+        {"course_id": course_id, "user_id": current_user.user_id})
+    if activity:
+        activity = json.loads(json.dumps(activity, default=str))
+    else:
+        activity = ""
+
     return {
         "course": course,
         "chapters": chapters_list_with_lectures,
+        "activity": activity
     }
 
 
-async def create_course(request: Request,course_object: Course, org_id: str, current_user: PublicUser, thumbnail_file: UploadFile | None = None):
+async def create_course(request: Request, course_object: Course, org_id: str, current_user: PublicUser, thumbnail_file: UploadFile | None = None):
     courses = request.app.db["courses"]
 
     # generate course_id with uuid4
@@ -152,7 +164,7 @@ async def create_course(request: Request,course_object: Course, org_id: str, cur
     return course.dict()
 
 
-async def update_course_thumbnail(request: Request,course_id: str, current_user: PublicUser, thumbnail_file: UploadFile | None = None):
+async def update_course_thumbnail(request: Request, course_id: str, current_user: PublicUser, thumbnail_file: UploadFile | None = None):
 
     # verify course rights
     await verify_rights(request, course_id, current_user, "update")
@@ -182,7 +194,7 @@ async def update_course_thumbnail(request: Request,course_id: str, current_user:
             status_code=status.HTTP_409_CONFLICT, detail="Course does not exist")
 
 
-async def update_course(request: Request,course_object: Course, course_id: str, current_user: PublicUser):
+async def update_course(request: Request, course_object: Course, course_id: str, current_user: PublicUser):
 
     # verify course rights
     await verify_rights(request, course_id, current_user, "update")
@@ -211,7 +223,7 @@ async def update_course(request: Request,course_object: Course, course_id: str, 
             status_code=status.HTTP_409_CONFLICT, detail="Course does not exist")
 
 
-async def delete_course(request: Request,course_id: str, current_user: PublicUser):
+async def delete_course(request: Request, course_id: str, current_user: PublicUser):
 
     # verify course rights
     await verify_rights(request, course_id, current_user, "delete")
@@ -237,7 +249,7 @@ async def delete_course(request: Request,course_id: str, current_user: PublicUse
 ####################################################
 
 
-async def get_courses(request: Request,page: int = 1, limit: int = 10, org_id: str | None = None):
+async def get_courses(request: Request, page: int = 1, limit: int = 10, org_id: str | None = None):
     courses = request.app.db["courses"]
     # TODO : Get only courses that user is admin/has roles of
     # get all courses from database
@@ -250,7 +262,7 @@ async def get_courses(request: Request,page: int = 1, limit: int = 10, org_id: s
 #### Security ####################################################
 
 
-async def verify_rights(request: Request,course_id: str, current_user: PublicUser, action: str):
+async def verify_rights(request: Request, course_id: str, current_user: PublicUser, action: str):
     courses = request.app.db["courses"]
 
     course = courses.find_one({"course_id": course_id})
