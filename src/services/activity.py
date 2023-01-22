@@ -1,3 +1,4 @@
+from cmath import log
 from datetime import datetime
 import json
 from typing import List, Literal, Optional
@@ -14,8 +15,8 @@ class Activity(BaseModel):
     course_id: str
     status:  Optional[Literal['ongoing', 'done', 'closed']] = 'ongoing'
     masked: Optional[bool] = False
-    lectures_marked_complete: Optional[List[str]]
-    lectures_data: Optional[List[dict]]
+    lectures_marked_complete: Optional[List[str]] = []
+    lectures_data: Optional[List[dict]] = []
 
 
 class ActivityInDB(Activity):
@@ -70,28 +71,27 @@ async def get_user_activities(request: Request, user: PublicUser, org_id: str):
 
 async def add_lecture_to_activity(request: Request, user: PublicUser, org_id: str, course_id: str, lecture_id: str):
     activities = request.app.db["activities"]
-
+    print(lecture_id)
+    course_id = f"course_{course_id}"
+    lecture_id = f"lecture_{lecture_id}"
+    print(lecture_id)
     activity = activities.find_one(
         {"course_id": course_id,
-            "user_id": user.user_id,
-            "org_id": org_id
-         })
+            "user_id": user.user_id
+         },  {'_id': 0})
 
     if not activity:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Activity not found")
 
-    if lecture_id in activity['lectures_marked_complete']:
+    if lecture_id not in activity['lectures_marked_complete']:
+        activity['lectures_marked_complete'].append(str(lecture_id))
+        activities.update_one(
+            {"activity_id": activity['activity_id']}, {"$set": activity})
+        return activity
+    else:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Lecture already marked complete")
-
-    activity['lectures_marked_complete'].append(lecture_id)
-
-    activities.update_one(
-        {"activity_id": activity['activity_id']}, {"$set": activity})
-
-    # send 200 custom message
-    return {"message": "Lecture added to activity"}
 
 
 async def close_activity(request: Request, user: PublicUser,  activity_id: str, org_id: str,):

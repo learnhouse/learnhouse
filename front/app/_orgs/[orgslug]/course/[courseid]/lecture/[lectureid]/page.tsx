@@ -10,6 +10,7 @@ import styled from "styled-components";
 import { getCourse, getCourseMetadata } from "../../../../../../../services/courses/courses";
 import VideoLecture from "@components/LectureViews/Video/Video";
 import { Check } from "lucide-react";
+import { maskLectureAsComplete } from "@services/courses/activity";
 
 function LecturePage(params: any) {
   const router = useRouter();
@@ -30,6 +31,11 @@ function LecturePage(params: any) {
     const course = await getCourseMetadata("course_" + courseid);
     setCourse(course);
     setIsLoading(false);
+  }
+
+  async function markLectureAsCompleteFront() {
+    const activity = await maskLectureAsComplete("" + lectureid, courseid, lecture.lecture_id.replace("lecture_", ""));
+    fetchCourseData();
   }
 
   React.useEffect(() => {
@@ -85,10 +91,24 @@ function LecturePage(params: any) {
             {lecture.type == "video" && <VideoLecture course={course} lecture={lecture} />}
 
             <ActivityMarkerWrapper>
-              <button> <i><Check size={20}></Check></i> Mark as complete</button>
+              {course.activity.lectures_marked_complete.includes("lecture_"+lectureid) ? (
+                <button style={{ backgroundColor: "green" }}>
+                  <i>
+                    <Check size={20}></Check>
+                  </i>{" "}
+                  Already completed
+                </button>
+              ) : (
+                <button onClick={markLectureAsCompleteFront}>
+                  {" "}
+                  <i>
+                    <Check size={20}></Check>
+                  </i>{" "}
+                  Mark as complete
+                </button>
+              )}
             </ActivityMarkerWrapper>
           </CourseContent>
-          
         </LectureLayout>
       )}
     </>
@@ -169,8 +189,7 @@ const ActivityMarkerWrapper = styled.div`
   margin: 0 auto;
   align-items: center;
 
-
-  button{
+  button {
     background-color: #151515;
     border: none;
     padding: 18px;
@@ -190,20 +209,17 @@ const ActivityMarkerWrapper = styled.div`
     font-size: 16px;
     letter-spacing: -0.05em;
     box-shadow: 0px 13px 33px -13px rgba(0, 0, 0, 0.42);
-    
 
-    i{
+    i {
       margin-right: 5px;
 
       // center the icon
       display: flex;
       align-items: center;
       justify-content: center;
-
-  
     }
 
-    &:hover{
+    &:hover {
       background-color: #000000;
     }
   }
