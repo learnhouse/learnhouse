@@ -21,7 +21,7 @@ class Activity(BaseModel):
 
 
 class ActivityInDB(Activity):
-    activity_id: str = str(f"activity_{uuid4()}")
+    activity_id: str 
     user_id: str
     org_id: str
     creationDate: str = datetime.now().isoformat()
@@ -47,9 +47,11 @@ async def create_activity(request: Request, user: PublicUser, activity_object: A
         else:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT, detail="Activity already created")
+    # create activity id 
+    activity_id = f"activity_{uuid4()}"
 
     # create activity
-    activity = ActivityInDB(**activity_object.dict(),
+    activity = ActivityInDB(**activity_object.dict(),activity_id=activity_id,
                             user_id=user.user_id, org_id=activity_object.course_id)
 
     activities.insert_one(activity.dict())
@@ -66,8 +68,6 @@ async def get_user_activities(request: Request, user: PublicUser, org_id: str):
 
     user_activities = activities.find(
         {"user_id": user.user_id}, {'_id': 0})
-
-    
 
     if not user_activities:
         raise HTTPException(
@@ -92,24 +92,24 @@ async def get_user_activities(request: Request, user: PublicUser, org_id: str):
 
 async def add_lecture_to_activity(request: Request, user: PublicUser, org_id: str, course_id: str, lecture_id: str):
     activities = request.app.db["activities"]
-    print(lecture_id)
     course_id = f"course_{course_id}"
     lecture_id = f"lecture_{lecture_id}"
-    print(lecture_id)
+   
     activity = activities.find_one(
         {"course_id": course_id,
             "user_id": user.user_id
          },  {'_id': 0})
-
-    if not activity:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Activity not found")
 
     if lecture_id not in activity['lectures_marked_complete']:
         activity['lectures_marked_complete'].append(str(lecture_id))
         activities.update_one(
             {"activity_id": activity['activity_id']}, {"$set": activity})
         return activity
+
+    if not activity:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="Activity not found")
+
     else:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Lecture already marked complete")
