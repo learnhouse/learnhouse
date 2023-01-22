@@ -206,7 +206,7 @@ async def update_coursechapters_meta(request: Request,course_id: str, coursechap
                                     "$set": {"chapters": coursechapters_metadata.chapterOrder}})
 
     # update lectures in coursechapters
-    # TODO : performance/optimization improvement
+    # TODO : performance/optimization improvement, this does not work anyway.
     for coursechapter in coursechapters_metadata.chapters.__dict__.items():
         coursechapters.update_one({"coursechapter_id": coursechapter}, {
             "$set": {"lectures": coursechapters_metadata.chapters[coursechapter]["lectureIds"]}}) # type: ignore

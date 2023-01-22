@@ -1,5 +1,6 @@
 "use client";
 import { EyeOpenIcon, Pencil2Icon } from "@radix-ui/react-icons";
+import { closeActivity, createActivity } from "@services/courses/activity";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React from "react";
@@ -18,10 +19,24 @@ const CourseIdPage = (params: any) => {
 
   async function fetchCourseInfo() {
     const course = await getCourseMetadata("course_" + courseid);
-
     setCourseInfo(course);
-
     setIsLoading(false);
+  }
+
+  async function startActivity() {
+    const activity = await createActivity("course_" + courseid);
+    fetchCourseInfo();
+  }
+
+  async function quitActivity() {
+    let activity_id = courseInfo.activity.activity_id;
+    let org_id = courseInfo.activity.org_id;
+    console.log("activity", activity_id);
+
+    let activity = await closeActivity(activity_id, org_id);
+    console.log(activity);
+
+    fetchCourseInfo();
   }
 
   React.useEffect(() => {
@@ -69,41 +84,52 @@ const CourseIdPage = (params: any) => {
             <img src={`${getBackendUrl()}content/uploads/img/${courseInfo.course.thumbnail}`} alt="" />
           </CourseThumbnailWrapper>
 
-          <h2>Description</h2>
+          <CourseMetaWrapper>
+            <CourseMetaLeft>
+              <h2>Description</h2>
 
-          <BoxWrapper>
-            <p>{courseInfo.course.description}</p>
-          </BoxWrapper>
+              <BoxWrapper>
+                <p>{courseInfo.course.description}</p>
+              </BoxWrapper>
 
-          <h2>What you will learn</h2>
-          <BoxWrapper>
-            <p>{courseInfo.course.learnings == ![] ? "no data" : courseInfo.course.learnings}</p>
-          </BoxWrapper>
+              <h2>What you will learn</h2>
+              <BoxWrapper>
+                <p>{courseInfo.course.learnings == ![] ? "no data" : courseInfo.course.learnings}</p>
+              </BoxWrapper>
 
-          <h2>Course Lessons</h2>
+              <h2>Course Lessons</h2>
 
-          <BoxWrapper>
-            {courseInfo.chapters.map((chapter: any) => {
-              return (
-                <>
-                  <h3>Chapter : {chapter.name}</h3>
-                  {chapter.lectures.map((lecture: any) => {
-                    return (
-                      <>
-                        <p>
-                          Lecture {lecture.name}
-                          <Link href={`/org/${orgslug}/course/${courseid}/lecture/${lecture.id.replace("lecture_", "")}`} rel="noopener noreferrer">
-                            <EyeOpenIcon />
-                          </Link>{" "}
-                        </p>
-                      </>
-                    );
-                  })}
-                  &nbsp;&nbsp;&nbsp;&nbsp;
-                </>
-              );
-            })}
-          </BoxWrapper>
+              <BoxWrapper>
+                {courseInfo.chapters.map((chapter: any) => {
+                  return (
+                    <>
+                      <h3>Chapter : {chapter.name}</h3>
+                      {chapter.lectures.map((lecture: any) => {
+                        return (
+                          <>
+                            <p>
+                              Lecture {lecture.name}
+                              <Link href={`/org/${orgslug}/course/${courseid}/lecture/${lecture.id.replace("lecture_", "")}`} rel="noopener noreferrer">
+                                <EyeOpenIcon />
+                              </Link>{" "}
+                            </p>
+                          </>
+                        );
+                      })}
+                      &nbsp;&nbsp;&nbsp;&nbsp;
+                    </>
+                  );
+                })}
+              </BoxWrapper>
+            </CourseMetaLeft>
+            <CourseMetaRight>
+              {courseInfo.activity.status == "ongoing" ? (
+                <button style={{backgroundColor:"red"}} onClick={quitActivity}>Quit Activity</button>
+              ) : (
+                <button onClick={startActivity}>Start Activity</button>
+              )}
+            </CourseMetaRight>
+          </CourseMetaWrapper>
         </CoursePageLayout>
       )}
     </>
@@ -139,8 +165,6 @@ const CoursePageLayout = styled.div`
     letter-spacing: -0.05em;
     margin-bottom: 10px;
   }
-
-  
 `;
 
 const ChaptersWrapper = styled.div`
@@ -175,7 +199,6 @@ const BoxWrapper = styled.div`
   padding-top: 7px;
   padding-left: 30px;
 
-
   p {
     font-family: "DM Sans";
     font-style: normal;
@@ -184,6 +207,47 @@ const BoxWrapper = styled.div`
     letter-spacing: -0.02em;
 
     color: #9d9d9d;
+  }
+`;
+
+const CourseMetaWrapper = styled.div`
+  display: flex;
+  justify-content: space-between;
+`;
+
+const CourseMetaLeft = styled.div`
+  width: 80%;
+`;
+
+const CourseMetaRight = styled.div`
+  background: #ffffff;
+  box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.03);
+  border-radius: 7px;
+  padding: 20px;
+  width: 30%;
+  display: flex;
+  height: 100%;
+  justify-content: center;
+  margin-left: 50px;
+  margin-top: 20px;
+  button {
+    width: 100%;
+    height: 50px;
+    background: #151515;
+    border-radius: 15px;
+    border: none;
+    color: white;
+    font-weight: 700;
+    font-family: "DM Sans";
+    font-size: 16px;
+    letter-spacing: -0.05em;
+    transition: all 0.2s ease;
+    box-shadow: 0px 13px 33px -13px rgba(0, 0, 0, 0.42);
+
+    &:hover {
+      cursor: pointer;
+      background: #000000;
+    }
   }
 `;
 

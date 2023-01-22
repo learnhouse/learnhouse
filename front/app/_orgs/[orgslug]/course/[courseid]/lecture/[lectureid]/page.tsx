@@ -9,6 +9,7 @@ import Canva from "../../../../../../../components/LectureViews/DynamicCanva/Dyn
 import styled from "styled-components";
 import { getCourse, getCourseMetadata } from "../../../../../../../services/courses/courses";
 import VideoLecture from "@components/LectureViews/Video/Video";
+import { Check } from "lucide-react";
 
 function LecturePage(params: any) {
   const router = useRouter();
@@ -82,7 +83,12 @@ function LecturePage(params: any) {
             {lecture.type == "dynamic" && <Canva content={lecture.content} lecture={lecture} />}
             {/* todo : use apis & streams instead of this */}
             {lecture.type == "video" && <VideoLecture course={course} lecture={lecture} />}
+
+            <ActivityMarkerWrapper>
+              <button> <i><Check size={20}></Check></i> Mark as complete</button>
+            </ActivityMarkerWrapper>
           </CourseContent>
+          
         </LectureLayout>
       )}
     </>
@@ -151,7 +157,56 @@ const LectureTopWrapper = styled.div`
 
 const CourseContent = styled.div`
   display: flex;
+  flex-direction: column;
   background-color: white;
   min-height: 600px;
 `;
+
+const ActivityMarkerWrapper = styled.div`
+  display: block;
+  width: 1300px;
+  justify-content: flex-end;
+  margin: 0 auto;
+  align-items: center;
+
+
+  button{
+    background-color: #151515;
+    border: none;
+    padding: 18px;
+    border-radius: 15px;
+    margin: 15px;
+    margin-left: 20px;
+    margin-top: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: auto;
+    color: white;
+    font-weight: 700;
+    font-family: "DM Sans";
+    font-size: 16px;
+    letter-spacing: -0.05em;
+    box-shadow: 0px 13px 33px -13px rgba(0, 0, 0, 0.42);
+    
+
+    i{
+      margin-right: 5px;
+
+      // center the icon
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+  
+    }
+
+    &:hover{
+      background-color: #000000;
+    }
+  }
+`;
+
 export default LecturePage;
