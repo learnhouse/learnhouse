@@ -29,3 +29,12 @@ export async function maskLectureAsComplete(org_id: string, course_id: string, l
     .catch((error) => console.log("error", error));
   return result;
 }
+
+// get all activities 
+export async function getActivities(org_id: string) {
+  const result: any = await fetch(`${getAPIUrl()}activity/${org_id}/activities`, RequestBody("GET", null))
+    .then((result) => result.json())
+    .catch((error) => console.log("error", error));
+  return result;
+}
+
