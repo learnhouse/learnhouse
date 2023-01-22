@@ -5,6 +5,7 @@ from typing import List, Literal, Optional
 from uuid import uuid4
 from fastapi import HTTPException, Request, status
 from pydantic import BaseModel
+from src.services.courses.chapters import get_coursechapters_meta
 
 from src.services.users import PublicUser
 
@@ -58,15 +59,35 @@ async def create_activity(request: Request, user: PublicUser, activity_object: A
 
 async def get_user_activities(request: Request, user: PublicUser, org_id: str):
     activities = request.app.db["activities"]
+    courses = request.app.db["courses"]
+    coursechapters = request.app.db["coursechapters"]
+
+    activities_metadata = []
 
     user_activities = activities.find(
-        {"user_id": user.user_id, "org_id": org_id})
+        {"user_id": user.user_id}, {'_id': 0})
+
+    
 
     if not user_activities:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="No activities found")
 
-    return [json.loads(json.dumps(activity, default=str)) for activity in user_activities]
+    for activity in user_activities:
+        # get number of lectures in the course
+        coursechapters = await get_coursechapters_meta(request, activity['course_id'], user)
+
+        # calculate progression using the number of lectures marked complete and the total number of lectures
+        progression = round(
+            len(activity['lectures_marked_complete']) / len(coursechapters['lectures']) * 100, 2)  
+
+        course = courses.find_one({"course_id": activity['course_id']}, {'_id': 0})
+
+        # add progression to the activity
+        one_activity = {"course": course,  "activitydata": activity, "progression": progression}
+        activities_metadata.append(one_activity)
+
+    return activities_metadata
 
 
 async def add_lecture_to_activity(request: Request, user: PublicUser, org_id: str, course_id: str, lecture_id: str):
