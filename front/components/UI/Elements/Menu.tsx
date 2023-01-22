@@ -7,10 +7,9 @@ import learnhouseLogo from "public/learnhouse_logo.png";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import { headers } from 'next/headers';
+import { headers } from "next/headers";
 
-export const Menu = ({orgslug } : any) => {
-
+export const Menu = ({ orgslug }: any) => {
   return (
     <GlobalHeader>
       <LogoArea>
@@ -30,12 +29,15 @@ export const Menu = ({orgslug } : any) => {
       <MenuArea>
         <ul>
           <li>
-            <Link href={ "/courses"}>Courses</Link>
+            <Link href={"/courses"}>Courses</Link>
           </li>
           <li>
-            <Link href={ "/collections"}>Collections</Link>
+            <Link href={"/collections"}>Collections</Link>
           </li>
-          <li>Activity</li>
+          <li>
+            {" "}
+            <Link href={"/activity"}>Activity</Link>
+          </li>
           <li>More</li>
         </ul>
       </MenuArea>
