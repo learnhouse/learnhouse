@@ -91,7 +91,7 @@ function LecturePage(params: any) {
             {lecture.type == "video" && <VideoLecture course={course} lecture={lecture} />}
 
             <ActivityMarkerWrapper>
-              {course.activity.lectures_marked_complete.includes("lecture_"+lectureid) ? (
+              {course.activity.lectures_marked_complete.includes("lecture_"+lectureid) && course.activity.status == "ongoing" ? (
                 <button style={{ backgroundColor: "green" }}>
                   <i>
                     <Check size={20}></Check>

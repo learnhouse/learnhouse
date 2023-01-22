@@ -96,8 +96,6 @@ async def add_lecture_to_activity(request: Request, user: PublicUser, org_id: st
 
 async def close_activity(request: Request, user: PublicUser,  activity_id: str, org_id: str,):
     activities = request.app.db["activities"]
-    print(activity_id)
-    print(org_id)
     activity = activities.find_one(
         {"activity_id": activity_id, "user_id": user.user_id})
 
