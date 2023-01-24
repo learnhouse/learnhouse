@@ -2,67 +2,55 @@
 import { EyeOpenIcon, Pencil2Icon } from "@radix-ui/react-icons";
 import { closeActivity, createActivity } from "@services/courses/activity";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import React from "react";
 import styled from "styled-components";
-import Layout from "../../../../../components/UI/Layout";
 import { getAPIUrl, getBackendUrl } from "../../../../../services/config";
-import { getCourse, getCourseMetadata } from "../../../../../services/courses/courses";
+import useSWR, { mutate } from "swr";
+import { swrFetcher } from "@services/utils/requests";
 
 const CourseIdPage = (params: any) => {
-  const router = useRouter();
   const courseid = params.params.courseid;
   const orgslug = params.params.orgslug;
-
-  const [isLoading, setIsLoading] = React.useState(true);
-  const [courseInfo, setCourseInfo] = React.useState({}) as any;
-
-  async function fetchCourseInfo() {
-    const course = await getCourseMetadata("course_" + courseid);
-    setCourseInfo(course);
-    setIsLoading(false);
-  }
+  const { data: course, error: error } = useSWR(`${getAPIUrl()}courses/meta/course_${courseid}`, swrFetcher);
 
   async function startActivity() {
-    const activity = await createActivity("course_" + courseid);
-    fetchCourseInfo();
+    // Create activity
+    await createActivity("course_" + courseid);
+
+    // Mutate course
+    mutate(`${getAPIUrl()}courses/meta/${courseid}`);
   }
 
   async function quitActivity() {
-    let activity_id = courseInfo.activity.activity_id;
-    let org_id = courseInfo.activity.org_id;
-    console.log("activity", activity_id);
+    // Get activity id and org id
+    let activity_id = course.activity.activity_id;
+    let org_id = course.activity.org_id;
 
+    // Close activity
     let activity = await closeActivity(activity_id, org_id);
     console.log(activity);
 
-    fetchCourseInfo();
+    // Mutate course
+    mutate(`${getAPIUrl()}courses/meta/${courseid}`);
   }
-
-  React.useEffect(() => {
-    if (courseid && orgslug) {
-      fetchCourseInfo();
-    }
-    return () => {};
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [courseid && orgslug]);
 
   return (
     <>
-      {isLoading ? (
+      {error && <p>Failed to load</p>}
+      {!course ? (
         <div>Loading...</div>
       ) : (
         <CoursePageLayout>
           <br></br>
           <p>Course</p>
           <h1>
-            {courseInfo.course.name}{" "}
+            {course.course.name}{" "}
             <Link href={`/org/${orgslug}/course/${courseid}/edit`} rel="noopener noreferrer">
               <Pencil2Icon />
             </Link>{" "}
           </h1>
           <ChaptersWrapper>
-            {courseInfo.chapters.map((chapter: any) => {
+            {course.chapters.map((chapter: any) => {
               return (
                 <>
                   {chapter.lectures.map((lecture: any) => {
@@ -81,7 +69,7 @@ const CourseIdPage = (params: any) => {
           </ChaptersWrapper>
 
           <CourseThumbnailWrapper>
-            <img src={`${getBackendUrl()}content/uploads/img/${courseInfo.course.thumbnail}`} alt="" />
+            <img src={`${getBackendUrl()}content/uploads/img/${course.course.thumbnail}`} alt="" />
           </CourseThumbnailWrapper>
 
           <CourseMetaWrapper>
@@ -89,18 +77,18 @@ const CourseIdPage = (params: any) => {
               <h2>Description</h2>
 
               <BoxWrapper>
-                <p>{courseInfo.course.description}</p>
+                <p>{course.course.description}</p>
               </BoxWrapper>
 
               <h2>What you will learn</h2>
               <BoxWrapper>
-                <p>{courseInfo.course.learnings == ![] ? "no data" : courseInfo.course.learnings}</p>
+                <p>{course.course.learnings == ![] ? "no data" : course.course.learnings}</p>
               </BoxWrapper>
 
               <h2>Course Lessons</h2>
 
               <BoxWrapper>
-                {courseInfo.chapters.map((chapter: any) => {
+                {course.chapters.map((chapter: any) => {
                   return (
                     <>
                       <h3>Chapter : {chapter.name}</h3>
@@ -123,8 +111,10 @@ const CourseIdPage = (params: any) => {
               </BoxWrapper>
             </CourseMetaLeft>
             <CourseMetaRight>
-              {courseInfo.activity.status == "ongoing" ? (
-                <button style={{backgroundColor:"red"}} onClick={quitActivity}>Quit Activity</button>
+              {course.activity.status == "ongoing" ? (
+                <button style={{ backgroundColor: "red" }} onClick={quitActivity}>
+                  Quit Activity
+                </button>
               ) : (
                 <button onClick={startActivity}>Start Activity</button>
               )}
