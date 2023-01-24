@@ -1,7 +1,5 @@
 "use client";
 import { getAPIUrl, getBackendUrl } from "@services/config";
-import { getActivities } from "@services/courses/activity";
-import { getOrganizationContextInfo } from "@services/orgs";
 import { swrFetcher } from "@services/utils/requests";
 import React from "react";
 import { styled } from "styled-components";

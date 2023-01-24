@@ -1,38 +1,21 @@
 "use client";
-import Layout from "../../../../components/UI/Layout";
 import Link from "next/link";
-import { useRouter } from "next/router";
 import React from "react";
 import styled from "styled-components";
-import { Title } from "../../../../components/UI/Elements/Styles/Title";
-import { deleteCollection, getOrgCollections } from "../../../../services/collections";
-import { getOrganizationContextInfo } from "../../../../services/orgs";
-import { getBackendUrl } from "../../../../services/config";
+import { Title } from "@components/UI/Elements/Styles/Title";
+import { deleteCollection } from "@services/collections";
+import { getAPIUrl, getBackendUrl } from "@services/config";
+import { swrFetcher } from "@services/utils/requests";
+import useSWR, { mutate } from "swr";
 
-function Collections(params:any) {
+function Collections(params: any) {
   const orgslug = params.params.orgslug;
-
-  const [isLoading, setIsLoading] = React.useState(true);
-  const [collections, setCollections] = React.useState([]);
-
-  async function fetchCollections() {
-    setIsLoading(true);
-    const org = await getOrganizationContextInfo(orgslug);
-    const collections = await getOrgCollections(org.org_id);
-    setCollections(collections);
-    setIsLoading(false);
-  }
+  const { data: collections, error: error } = useSWR(`${getAPIUrl()}collections/page/1/limit/10`, swrFetcher);
 
   async function deleteCollectionAndFetch(collectionId: number) {
-    setIsLoading(true);
     await deleteCollection(collectionId);
-    await fetchCollections();
-    setIsLoading(false);
+    mutate(`${getAPIUrl()}collections/page/1/limit/10`);
   }
-
-  React.useEffect(() => {
-    fetchCollections();
-  }, []);
 
   return (
     <>
@@ -42,7 +25,8 @@ function Collections(params:any) {
           <button>+</button>
         </Link>{" "}
       </Title>
-      {isLoading ? (
+      {error && <p>Failed to load</p>}
+      {!collections ? (
         <div>Loading...</div>
       ) : (
         <div>
