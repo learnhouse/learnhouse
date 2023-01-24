@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Request
 from src.dependencies.auth import get_current_user
-from src.services.activity import Activity, add_lecture_to_activity, close_activity, create_activity, get_user_activities
+from src.services.activity import Activity, add_lecture_to_activity, close_activity, create_activity, get_user_activities, get_user_activities_orgslug
 
 
 router = APIRouter()
@@ -16,12 +16,19 @@ async def api_start_activity(request: Request, activity_object: Activity, user=D
 # TODO : get activity by user_is and org_id and course_id
 
 
-@router.get("/{org_id}/activities")
-async def api_get_activity_by_userid(request: Request, org_id: str, user=Depends(get_current_user)):
+@router.get("/org_id/{org_id}/activities")
+async def api_get_activity_by_orgid(request: Request, org_id: str, user=Depends(get_current_user)):
     """
     Get a user activities
     """
     return await get_user_activities(request, user, org_id=org_id)
+
+@router.get("/org_slug/{org_slug}/activities")
+async def api_get_activity_by_orgslug(request: Request, org_slug: str, user=Depends(get_current_user)):
+    """
+    Get a user activities using org slug
+    """
+    return await get_user_activities_orgslug(request, user, org_slug=org_slug)
 
 
 @router.post("/{org_id}/add_lecture/{course_id}/{lecture_id}")

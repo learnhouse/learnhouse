@@ -1,5 +1,5 @@
 import { RequestBody } from "@services/utils/requests";
-import { getAPIUrl } from "../config";
+import { getAPIUrl } from "@services/config";
 
 /*
  This file includes only POST, PUT, DELETE requests
@@ -25,14 +25,6 @@ export async function closeActivity(org_id: string, activity_id: string) {
 
 export async function maskLectureAsComplete(org_id: string, course_id: string, lecture_id: string) {
   const result: any = await fetch(`${getAPIUrl()}activity/${org_id}/add_lecture/${course_id}/${lecture_id}`, RequestBody("POST", null))
-    .then((result) => result.json())
-    .catch((error) => console.log("error", error));
-  return result;
-}
-
-// get all activities 
-export async function getActivities(org_id: string) {
-  const result: any = await fetch(`${getAPIUrl()}activity/${org_id}/activities`, RequestBody("GET", null))
     .then((result) => result.json())
     .catch((error) => console.log("error", error));
   return result;
