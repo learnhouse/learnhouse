@@ -1,11 +1,10 @@
 "use client";
 import { useRouter } from "next/navigation";
 import React from "react";
-import { Title } from "../../../../../components/UI/Elements/Styles/Title";
-import Layout from "../../../../../components/UI/Layout";
-import { getOrganizationContextInfo } from "../../../../../services/orgs";
-import { getOrgCourses } from "../../../../../services/courses/courses";
-import { createCollection } from "../../../../../services/collections";
+import { Title } from "@components/UI/Elements/Styles/Title";
+import { getOrganizationContextInfo } from "@services/orgs";
+import { getOrgCourses } from "@services/courses/courses";
+import { createCollection } from "@services/collections";
 
 function NewCollection(params : any) {
   const orgslug = params.params.orgslug;
@@ -18,7 +17,6 @@ function NewCollection(params : any) {
   const router = useRouter();
 
   async function getCourses() {
-  
     setIsLoading(true);
     const org = await getOrganizationContextInfo(orgslug);
     setOrg(org);

@@ -2,12 +2,12 @@
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import React, { useMemo } from "react";
-import Layout from "../../../../../../../components/UI/Layout";
-import { getLecture } from "../../../../../../../services/courses/lectures";
-import { getBackendUrl } from "../../../../../../../services/config";
-import Canva from "../../../../../../../components/LectureViews/DynamicCanva/DynamicCanva";
+import Layout from "@components/UI/Layout";
+import { getLecture } from "@services/courses/lectures";
+import { getBackendUrl } from "@services/config";
+import Canva from "@components/LectureViews/DynamicCanva/DynamicCanva";
 import styled from "styled-components";
-import { getCourse, getCourseMetadata } from "../../../../../../../services/courses/courses";
+import { getCourse } from "@services/courses/courses";
 import VideoLecture from "@components/LectureViews/Video/Video";
 import { Check } from "lucide-react";
 import { maskLectureAsComplete } from "@services/courses/activity";
