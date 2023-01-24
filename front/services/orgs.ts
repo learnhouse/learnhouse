@@ -1,19 +1,9 @@
-import { getAPIUrl } from "./config";
+import { getAPIUrl } from "@services/config";
 
-export async function getUserOrganizations() {
-  const HeadersConfig = new Headers({ "Content-Type": "application/json" });
-
-  const requestOptions: any = {
-    method: "GET",
-    headers: HeadersConfig,
-    redirect: "follow",
-    credentials: "include",
-  };
-
-  return fetch(`${getAPIUrl()}orgs/user/page/1/limit/10`, requestOptions)
-    .then((result) => result.json())
-    .catch((error) => console.log("error", error));
-}
+/*
+ This file includes only POST, PUT, DELETE requests
+ GET requests are called from the frontend using SWR (https://swr.vercel.app/)
+*/
 
 export async function createNewOrganization(body: any) {
   const HeadersConfig = new Headers({ "Content-Type": "application/json" });
@@ -31,8 +21,6 @@ export async function createNewOrganization(body: any) {
     .catch((error) => console.log("error", error));
 }
 
-// export async function getOrganizationData(org_id) {}
-
 export async function deleteOrganizationFromBackend(org_id: any) {
   const HeadersConfig = new Headers({ "Content-Type": "application/json" });
 
@@ -48,7 +36,6 @@ export async function deleteOrganizationFromBackend(org_id: any) {
     .catch((error) => console.log("error", error));
 }
 
-// export async function updateOrganization(org_id) {}
 
 export async function getOrganizationContextInfo(org_slug : any){
   const HeadersConfig = new Headers({ "Content-Type": "application/json" });
