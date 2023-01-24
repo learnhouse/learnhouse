@@ -1,4 +1,4 @@
-import { getAPIUrl } from "../config";
+import { getAPIUrl } from "@services/config";
 
 export async function createLecture(data: any, chapter_id: any) {
   data.content = {};

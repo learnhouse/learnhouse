@@ -1,4 +1,4 @@
-import { getAPIUrl } from "../config";
+import { getAPIUrl } from "@services/config";
 
 /*
  This file includes only POST, PUT, DELETE requests
