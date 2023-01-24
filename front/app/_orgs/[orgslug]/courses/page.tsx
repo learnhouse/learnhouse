@@ -3,47 +3,27 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React from "react";
 import styled from "styled-components";
-import { Header } from "../../../../components/UI/Header";
-import Layout from "../../../../components/UI/Layout";
 import { Title } from "../../../../components/UI/Elements/Styles/Title";
-import { getBackendUrl } from "../../../../services/config";
-import { deleteCourseFromBackend, getOrgCourses } from "../../../../services/courses/courses";
-import { getOrganizationContextInfo } from "../../../../services/orgs";
+import { getAPIUrl, getBackendUrl } from "../../../../services/config";
+import { deleteCourseFromBackend } from "../../../../services/courses/courses";
+import useSWR, { mutate } from "swr";
+import { swrFetcher } from "@services/utils/requests";
 
 const CoursesIndexPage = (params: any) => {
   const router = useRouter();
   const orgslug = params.params.orgslug;
 
-  const [isLoading, setIsLoading] = React.useState(true);
-  const [orgInfo, setOrgInfo] = React.useState(null);
-  const [courses, setCourses] = React.useState([]);
-
-  async function fetchCourses() {
-    const org = await getOrganizationContextInfo(orgslug);
-    const response = await getOrgCourses(org.org_id);
-    setCourses(response);
-    setIsLoading(false);
-  }
+  const { data: courses, error: error } = useSWR(`${getAPIUrl()}courses/org_slug/${orgslug}/page/1/limit/10`, swrFetcher);
 
   async function deleteCourses(course_id: any) {
-    const response = await deleteCourseFromBackend(course_id);
-    const newCourses = courses.filter((course: any) => course.course_id !== course_id);
-    setCourses(newCourses);
+    await deleteCourseFromBackend(course_id);
+    mutate(`${getAPIUrl()}courses/${orgslug}/page/1/limit/10`);
   }
 
   // function to remove "course_" from the course_id
   function removeCoursePrefix(course_id: string) {
     return course_id.replace("course_", "");
   }
-
-  React.useEffect(() => {
-    if (orgslug) {
-      fetchCourses();
-      if (courses.length > 0) {
-        setIsLoading(false);
-      }
-    }
-  }, [isLoading, orgslug]);
 
   return (
     <>
@@ -55,7 +35,8 @@ const CoursesIndexPage = (params: any) => {
       </Title>
 
       <hr />
-      {isLoading ? (
+      {error && <p>Failed to load</p>}
+      {!courses ? (
         <div>Loading...</div>
       ) : (
         <div>
