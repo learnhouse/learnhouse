@@ -18,7 +18,7 @@ const CourseIdPage = (params: any) => {
     await createActivity("course_" + courseid);
 
     // Mutate course
-    mutate(`${getAPIUrl()}courses/meta/${courseid}`);
+    mutate(`${getAPIUrl()}courses/meta/course_${courseid}`);
   }
 
   async function quitActivity() {
@@ -31,7 +31,7 @@ const CourseIdPage = (params: any) => {
     console.log(activity);
 
     // Mutate course
-    mutate(`${getAPIUrl()}courses/meta/${courseid}`);
+    mutate(`${getAPIUrl()}courses/meta/course_${courseid}`);
   }
 
   return (
