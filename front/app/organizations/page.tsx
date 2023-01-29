@@ -17,7 +17,7 @@ const Organizations = () => {
   }
 
   return (
-    <Layout>
+    <>
       <Title>
         Your Organizations{" "}
         <Link href={"/organizations/new"}>
@@ -40,7 +40,7 @@ const Organizations = () => {
           ))}
         </div>
       )}
-    </Layout>
+    </>
   );
 };
 

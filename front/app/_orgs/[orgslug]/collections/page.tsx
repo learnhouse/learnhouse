@@ -4,7 +4,7 @@ import React from "react";
 import styled from "styled-components";
 import { Title } from "@components/UI/Elements/Styles/Title";
 import { deleteCollection } from "@services/collections";
-import { getAPIUrl, getBackendUrl } from "@services/config";
+import { getAPIUrl, getBackendUrl, getUriWithOrg } from "@services/config";
 import { swrFetcher } from "@services/utils/requests";
 import useSWR, { mutate } from "swr";
 
@@ -21,7 +21,7 @@ function Collections(params: any) {
     <>
       <Title>
         {orgslug} Collections :{" "}
-        <Link href={"/collections/new"}>
+        <Link href={getUriWithOrg(orgslug, "/collections/new")}>
           <button>+</button>
         </Link>{" "}
       </Title>
