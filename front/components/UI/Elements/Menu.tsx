@@ -20,7 +20,7 @@ export const Menu = (params : any) => {
       <LogoArea>
         <Logo>
           <Image width={25} height={25} src={learnhouseIcon} alt="" />
-          <Link href={"/"}>
+          <Link href={getUriWithOrg(orgslug, "/")}>
             <Image width={108} height={28} src={learnhouseLogo} alt="" />
           </Link>
         </Logo>
