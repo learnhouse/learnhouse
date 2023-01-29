@@ -1,4 +1,4 @@
-import { getAPIUrl } from "../config";
+import { getAPIUrl } from "@services/config";
 
 export async function uploadNewImageFile(file: any, lecture_id: string) {
   const HeadersConfig = new Headers();
