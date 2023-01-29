@@ -6,6 +6,7 @@ import { createCollection } from "@services/collections";
 import useSWR from "swr";
 import { getAPIUrl } from "@services/config";
 import { swrFetcher } from "@services/utils/requests";
+import { getOrganizationContextInfo } from "@services/orgs";
 
 function NewCollection(params : any) {
   const orgslug = params.params.orgslug;
@@ -16,6 +17,14 @@ function NewCollection(params : any) {
   const router = useRouter();
 
   const { data: courses, error: error } = useSWR(`${getAPIUrl()}courses/org_slug/${orgslug}/page/1/limit/10`, swrFetcher);
+
+  React.useEffect(() => {
+    async function getOrg() {
+      const org = await getOrganizationContextInfo(orgslug);
+      setOrg(org);
+    }
+    getOrg();
+  }, []);
 
   const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setName(event.target.value);
