@@ -10,6 +10,6 @@ export const getUriWithOrg = ( orgslug: string, path: string) => {
 };
 
 export const getOrgFromUri = (uri: any) => {
-  let org = uri.match(/\/org\/(.*?)\//)[1];
+  let org = uri.match(/\/org\/([\w]+)/)[1];
   return org;
 };

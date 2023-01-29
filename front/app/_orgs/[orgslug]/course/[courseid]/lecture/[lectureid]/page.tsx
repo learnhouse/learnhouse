@@ -26,7 +26,8 @@ function LecturePage(params: any) {
 
   async function markLectureAsCompleteFront() {
     const activity = await maskLectureAsComplete("" + lectureid, courseid, lecture.lecture_id.replace("lecture_", ""));
-    mutate(`${getAPIUrl()}courses/meta/${courseid}`);
+    mutate(`${getAPIUrl()}lectures/lecture_${lectureid}`);
+    mutate(`${getAPIUrl()}courses/meta/course_${courseid}`);
   }
 
   return (
