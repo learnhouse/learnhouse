@@ -1,4 +1,9 @@
-import { getAPIUrl } from "../config";
+import { getAPIUrl } from "@services/config";
+
+/*
+ This file includes only POST, PUT, DELETE requests
+ GET requests are called from the frontend using SWR (https://swr.vercel.app/)
+*/
 
 export async function getOrgCourses(org_id: number) {
   const HeadersConfig = new Headers({ "Content-Type": "application/json" });
@@ -31,22 +36,6 @@ export async function getCourse(course_id: string) {
     .catch((error) => console.log("error", error));
 }
 
-export async function getCourseMetadata(course_id: string) {
-  const HeadersConfig = new Headers({ "Content-Type": "application/json" });
-
-  const requestOptions: any = {
-    method: "GET",
-    headers: HeadersConfig,
-    redirect: "follow",
-    credentials: "include",
-  };
-
-  // todo : add course id to url
-  return fetch(`${getAPIUrl()}courses/meta/${course_id}`, requestOptions)
-    .then((result) => result.json())
-    .catch((error) => console.log("error", error));
-  
-}
 
 export async function createNewCourse(org_id: string, course_body: any, thumbnail: any) {
   const HeadersConfig = new Headers();

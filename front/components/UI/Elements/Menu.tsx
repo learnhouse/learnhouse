@@ -6,16 +6,21 @@ import learnhouseIcon from "public/learnhouse_icon.png";
 import learnhouseLogo from "public/learnhouse_logo.png";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { headers } from "next/headers";
+import { getOrgFromUri, getUriWithOrg } from "@services/config";
 
-export const Menu = ({ orgslug }: any) => {
+export const Menu = (params : any) => {
+  const router = useRouter();
+  const pathname = usePathname();
+  const orgslug = getOrgFromUri(pathname);
+  
   return (
     <GlobalHeader>
       <LogoArea>
         <Logo>
           <Image width={25} height={25} src={learnhouseIcon} alt="" />
-          <Link href={"/"}>
+          <Link href={getUriWithOrg(orgslug, "/")}>
             <Image width={108} height={28} src={learnhouseLogo} alt="" />
           </Link>
         </Logo>
@@ -29,14 +34,14 @@ export const Menu = ({ orgslug }: any) => {
       <MenuArea>
         <ul>
           <li>
-            <Link href={"/courses"}>Courses</Link>
+            <Link href={getUriWithOrg(orgslug, "/courses")}>Courses</Link>
           </li>
           <li>
-            <Link href={"/collections"}>Collections</Link>
+            <Link href={getUriWithOrg(orgslug, "/collections")}>Collections</Link>
           </li>
           <li>
             {" "}
-            <Link href={"/activity"}>Activity</Link>
+            <Link href={getUriWithOrg(orgslug, "/activity")}>Activity</Link>
           </li>
           <li>More</li>
         </ul>

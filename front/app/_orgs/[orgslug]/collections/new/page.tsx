@@ -1,11 +1,12 @@
 "use client";
 import { useRouter } from "next/navigation";
 import React from "react";
-import { Title } from "../../../../../components/UI/Elements/Styles/Title";
-import Layout from "../../../../../components/UI/Layout";
-import { getOrganizationContextInfo } from "../../../../../services/orgs";
-import { getOrgCourses } from "../../../../../services/courses/courses";
-import { createCollection } from "../../../../../services/collections";
+import { Title } from "@components/UI/Elements/Styles/Title";
+import { createCollection } from "@services/collections";
+import useSWR from "swr";
+import { getAPIUrl } from "@services/config";
+import { swrFetcher } from "@services/utils/requests";
+import { getOrganizationContextInfo } from "@services/orgs";
 
 function NewCollection(params : any) {
   const orgslug = params.params.orgslug;
@@ -13,19 +14,17 @@ function NewCollection(params : any) {
   const [org, setOrg] = React.useState({}) as any;
   const [description, setDescription] = React.useState("");
   const [selectedCourses, setSelectedCourses] = React.useState([]) as any;
-  const [courses, setCourses] = React.useState([]) as any;
-  const [isLoading, setIsLoading] = React.useState(false);
   const router = useRouter();
 
-  async function getCourses() {
-  
-    setIsLoading(true);
-    const org = await getOrganizationContextInfo(orgslug);
-    setOrg(org);
-    const courses = await getOrgCourses(org.org_id);
-    setCourses(courses);
-    setIsLoading(false);
-  }
+  const { data: courses, error: error } = useSWR(`${getAPIUrl()}courses/org_slug/${orgslug}/page/1/limit/10`, swrFetcher);
+
+  React.useEffect(() => {
+    async function getOrg() {
+      const org = await getOrganizationContextInfo(orgslug);
+      setOrg(org);
+    }
+    getOrg();
+  }, []);
 
   const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setName(event.target.value);
@@ -48,20 +47,13 @@ function NewCollection(params : any) {
     router.push("/org/" + orgslug + "/collections");
   };
 
-  React.useEffect(() => {
-    if (params.params.orgslug) {
-      getCourses();
-    }
-    return () => {};
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [params.params.orgslug]);
 
   return (
     <>
       <Title>Add new</Title>
       <br />
       <input type="text" placeholder="Name" value={name} onChange={handleNameChange} />
-      {isLoading ? (
+      {!courses ? (
         <p>Loading...</p>
       ) : (
         <div>

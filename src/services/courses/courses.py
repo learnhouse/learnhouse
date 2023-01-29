@@ -258,6 +258,25 @@ async def get_courses(request: Request, page: int = 1, limit: int = 10, org_id: 
 
     return [json.loads(json.dumps(course, default=str)) for course in all_courses]
 
+async def get_courses_orgslug(request: Request, page: int = 1, limit: int = 10, org_slug: str | None = None):
+    courses = request.app.db["courses"]
+    orgs = request.app.db["organizations"]
+    # TODO : Get only courses that user is admin/has roles of
+
+    # get org_id from slug
+    org = orgs.find_one({"slug": org_slug})
+
+    if not org:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail=f"Organization does not exist")
+    
+    # get all courses from database
+    all_courses = courses.find({"org_id": org['org_id']}).sort(
+        "name", 1).skip(10 * (page - 1)).limit(limit)
+
+    return [json.loads(json.dumps(course, default=str)) for course in all_courses]
+
+
 
 #### Security ####################################################
 

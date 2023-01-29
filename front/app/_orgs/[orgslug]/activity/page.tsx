@@ -1,41 +1,25 @@
 "use client";
-import { getBackendUrl } from "@services/config";
-import { getActivities } from "@services/courses/activity";
-import { getOrganizationContextInfo } from "@services/orgs";
-import {  RequestBody } from "@services/utils/requests";
+import { getAPIUrl, getBackendUrl } from "@services/config";
+import { swrFetcher } from "@services/utils/requests";
 import React from "react";
 import { styled } from "styled-components";
 import useSWR from "swr";
 
 function Activity(params: any) {
   let orgslug = params.params.orgslug;
-  const [isLoading, setIsLoading] = React.useState(true);
-  const [activities, setActivities] = React.useState([]);
-
-  async function fetchActivities() {
-    setIsLoading(true);
-    const org = await getOrganizationContextInfo(orgslug);
-    const activities = await getActivities(org.org_id);
-    console.log(activities);
-    
-    setActivities(activities);
-    setIsLoading(false);
-  }
-  React.useEffect(() => {
-    fetchActivities();
-  }, []);
+  const { data: activities, error: error } = useSWR(`${getAPIUrl()}activity/org_slug/${orgslug}/activities`, swrFetcher);
 
   return (
     <ActivityLayout>
       <h1>Activity</h1>
       <br />
-      {isLoading ? (
+      {error && <p>Failed to load</p>}
+      {!activities ? (
         <div>Loading...</div>
       ) : (
         <div>
           {activities.map((activity: any) => (
             <ActivityBox key={activity.activity_id}>
-              
               <ActivityMetadata>
                 <ActivityThumbnail>
                   <img src={`${getBackendUrl()}content/uploads/img/${activity.course.thumbnail}`}></img>

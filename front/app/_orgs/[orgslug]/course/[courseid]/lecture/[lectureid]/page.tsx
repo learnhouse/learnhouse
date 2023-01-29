@@ -2,54 +2,38 @@
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import React, { useMemo } from "react";
-import Layout from "../../../../../../../components/UI/Layout";
-import { getLecture } from "../../../../../../../services/courses/lectures";
-import { getBackendUrl } from "../../../../../../../services/config";
-import Canva from "../../../../../../../components/LectureViews/DynamicCanva/DynamicCanva";
+import Layout from "@components/UI/Layout";
+import { getLecture } from "@services/courses/lectures";
+import { getAPIUrl, getBackendUrl } from "@services/config";
+import Canva from "@components/LectureViews/DynamicCanva/DynamicCanva";
 import styled from "styled-components";
-import { getCourse, getCourseMetadata } from "../../../../../../../services/courses/courses";
+import { getCourse } from "@services/courses/courses";
 import VideoLecture from "@components/LectureViews/Video/Video";
+import useSWR, { mutate } from "swr";
 import { Check } from "lucide-react";
 import { maskLectureAsComplete } from "@services/courses/activity";
+import { swrFetcher } from "@services/utils/requests";
 
 function LecturePage(params: any) {
-  const router = useRouter();
   const lectureid = params.params.lectureid;
   const courseid = params.params.courseid;
   const orgslug = params.params.orgslug;
-  const [lecture, setLecture] = React.useState<any>({});
-  const [course, setCourse] = React.useState<any>({});
-  const [isLoading, setIsLoading] = React.useState(true);
 
-  async function fetchLectureData() {
-    setIsLoading(true);
-    const lecture = await getLecture("lecture_" + lectureid);
-    setLecture(lecture);
-  }
+  const { data: course, error: error_course } = useSWR(`${getAPIUrl()}courses/meta/course_${courseid}`, swrFetcher);
+  const { data: lecture, error: error_lecture } = useSWR(`${getAPIUrl()}lectures/lecture_${lectureid}`, swrFetcher);
 
-  async function fetchCourseData() {
-    const course = await getCourseMetadata("course_" + courseid);
-    setCourse(course);
-    setIsLoading(false);
-  }
+  console.log(course, lecture);
 
   async function markLectureAsCompleteFront() {
     const activity = await maskLectureAsComplete("" + lectureid, courseid, lecture.lecture_id.replace("lecture_", ""));
-    fetchCourseData();
+    mutate(`${getAPIUrl()}lectures/lecture_${lectureid}`);
+    mutate(`${getAPIUrl()}courses/meta/course_${courseid}`);
   }
-
-  React.useEffect(() => {
-    if (lectureid) {
-      fetchLectureData();
-      fetchCourseData();
-    }
-    return () => {};
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lectureid]);
 
   return (
     <>
-      {isLoading ? (
+      {error_course && <p>Failed to load</p>}
+      {!course || !lecture ? (
         <div>Loading...</div>
       ) : (
         <LectureLayout>
@@ -85,30 +69,36 @@ function LecturePage(params: any) {
             })}
           </ChaptersWrapper>
 
-          <CourseContent>
-            {lecture.type == "dynamic" && <Canva content={lecture.content} lecture={lecture} />}
-            {/* todo : use apis & streams instead of this */}
-            {lecture.type == "video" && <VideoLecture course={course} lecture={lecture} />}
+          {lecture ? (
+            <CourseContent>
+              {lecture.type == "dynamic" && <Canva content={lecture.content} lecture={lecture} />}
+              {/* todo : use apis & streams instead of this */}
+              {lecture.type == "video" && <VideoLecture course={course} lecture={lecture} />}
 
-            <ActivityMarkerWrapper>
-              {course.activity.lectures_marked_complete.includes("lecture_"+lectureid) && course.activity.status == "ongoing" ? (
-                <button style={{ backgroundColor: "green" }}>
-                  <i>
-                    <Check size={20}></Check>
-                  </i>{" "}
-                  Already completed
-                </button>
-              ) : (
-                <button onClick={markLectureAsCompleteFront}>
-                  {" "}
-                  <i>
-                    <Check size={20}></Check>
-                  </i>{" "}
-                  Mark as complete
-                </button>
-              )}
-            </ActivityMarkerWrapper>
-          </CourseContent>
+              <ActivityMarkerWrapper>
+                {course.activity.lectures_marked_complete &&
+                course.activity.lectures_marked_complete.includes("lecture_" + lectureid) &&
+                course.activity.status == "ongoing" ? (
+                  <button style={{ backgroundColor: "green" }}>
+                    <i>
+                      <Check size={20}></Check>
+                    </i>{" "}
+                    Already completed
+                  </button>
+                ) : (
+                  <button onClick={markLectureAsCompleteFront}>
+                    {" "}
+                    <i>
+                      <Check size={20}></Check>
+                    </i>{" "}
+                    Mark as complete
+                  </button>
+                )}
+              </ActivityMarkerWrapper>
+            </CourseContent>
+          ) : (
+            <div>Loading...</div>
+          )}
         </LectureLayout>
       )}
     </>

@@ -3,64 +3,44 @@ import Link from "next/link";
 import React from "react";
 import Layout from "../../components/UI/Layout";
 import { Title } from "../../components/UI/Elements/Styles/Title";
-import { deleteOrganizationFromBackend, getUserOrganizations } from "../../services/orgs";
+import { deleteOrganizationFromBackend } from "@services/orgs";
+import useSWR, { mutate } from "swr";
+import { swrFetcher } from "@services/utils/requests";
+import { getAPIUrl } from "@services/config";
 
 const Organizations = () => {
-  const [userOrganizations, setUserOrganizations] = React.useState([]);
-  const [isLoading, setIsLoading] = React.useState(false);
+  const { data : organizations , error } = useSWR(`${getAPIUrl()}orgs/user/page/1/limit/10`, swrFetcher)
 
-  async function fetchUserOrganizations() {
-    const response = await getUserOrganizations();
-    setUserOrganizations(response);
-    console.log(response);
-    setIsLoading(false);
-  }
-
-  async function deleteOrganization(org_id:any)  {
+  async function deleteOrganization(org_id: any) {
     const response = await deleteOrganizationFromBackend(org_id);
-    const newOrganizations = userOrganizations.filter((org:any) => org.org_id !== org_id);
-    setUserOrganizations(newOrganizations);
+    response && mutate(`${getAPIUrl()}orgs/user/page/1/limit/10`, organizations.filter((org: any) => org.org_id !== org_id)); 
   }
-
-
-  React.useEffect(() => {
-    setIsLoading(true);
-    fetchUserOrganizations();
-    setIsLoading(false);
-  }, []);
-
 
   return (
-    <Layout>
+    <>
       <Title>
         Your Organizations{" "}
         <Link href={"/organizations/new"}>
-
           <button>+</button>
-
         </Link>
       </Title>
       <hr />
-      {isLoading ? (
+      {error && <p>Failed to load</p>}
+      {!organizations ? (
         <p>Loading...</p>
       ) : (
         <div>
-          {userOrganizations.map((org: any) => (
+          {organizations.map((org: any) => (
             <div key={org.org_id}>
               <Link href={`/org/${org.slug}`}>
-
                 <h3>{org.name}</h3>
-
               </Link>
-              <button onClick={() => deleteOrganization(org.org_id)}>
-                Delete
-              </button>
+              <button onClick={() => deleteOrganization(org.org_id)}>Delete</button>
             </div>
           ))}
         </div>
       )}
-      
-    </Layout>
+    </>
   );
 };
 
