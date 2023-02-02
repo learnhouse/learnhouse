@@ -12,8 +12,19 @@ export const RequestBody = (method: string, data: any) => {
   return options;
 };
 
-export const swrFetcher = async (url: string, body: any) => {
+export const RequestBodyForm = (method: string, data: any) => {
+  let HeadersConfig = new Headers({});
+  let options: any = {
+    method: method,
+    headers: HeadersConfig,
+    redirect: "follow",
+    credentials: "include",
+    body: data,
+  };
+  return options;
+};
 
+export const swrFetcher = async (url: string, body: any) => {
   // Create the request options
   let HeadersConfig = new Headers({ "Content-Type": "application/json" });
   let options: any = {
