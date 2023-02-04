@@ -29,14 +29,15 @@ function Lecture(props: any) {
 }
 
 export const LectureWrapper = styled.div`
-  padding: 10px;
+  padding: 2px;
   padding-left: 17px;
   list-style: none;
   /* padding-left: 2px; */
-  background-color: #8c949c33;
-  border-radius: 28px;
+  background-color: #f4f4f4c5;
+  border-radius: 7px;
   margin: 15px;
-
+  display: flex;
+  align-items: center;
   &:hover {
     background-color: #8c949c7b;
   }
