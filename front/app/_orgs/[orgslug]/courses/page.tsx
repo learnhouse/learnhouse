@@ -99,6 +99,7 @@ const CourseWrapper = styled.div`
       border-radius: 7px;
       background: #000000;
       opacity: 0.4;
+      font-family: "DM Sans", sans-serif;
 
       color: #ffffff;
       font-size: 12px;
