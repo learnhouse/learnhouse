@@ -47,11 +47,12 @@ const LectureChooserWrapper = styled.div`
 `;
 
 const LectureButton = styled.button`
-  padding: 20px;
-  border-radius: 10px;
+  padding: 40px;
+  border-radius: 10px !important;
   border: none;
-  font-size: 50px;
-  background-color: #8c949c33;
+  font-size: 80px !important;
+  margin: 40px;
+  background-color: #8c949c33 !important;
   cursor: pointer;
   &:hover {
     background-color: #8c949c7b;
