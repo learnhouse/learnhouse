@@ -48,15 +48,22 @@ function Chapter(props: any) {
 }
 
 const ChapterWrapper = styled.div`
-  margin-bottom: 5px;
-  padding: 11px;
-  background-color: #00000010;
-  width: 310px;
+  margin-bottom: 20px;
+  padding: 4px;
+  background-color: #ffffffc5;
+  width: 900px;
+  font-size: 15px;
   display: block;
   border-radius: 9px;
   border: 1px solid rgba(255, 255, 255, 0.19);
   box-shadow: 0px 13px 33px -13px rgb(0 0 0 / 12%);
   transition: all 0.2s ease;
+  
+
+  h3{
+    padding-left: 20px;
+    padding-right: 20px;
+  }
 `;
 
 const LecturesList = styled.div`
