@@ -1,4 +1,5 @@
 import { getAPIUrl } from "./config";
+import { RequestBody } from "./utils/requests";
 
 /*
  This file includes only POST, PUT, DELETE requests
@@ -6,36 +7,14 @@ import { getAPIUrl } from "./config";
 */
 
 export async function deleteCollection(collection_id: any) {
-  const HeadersConfig = new Headers({ "Content-Type": "application/json" });
-
-  const requestOptions: any = {
-    method: "DELETE",
-    headers: HeadersConfig,
-    redirect: "follow",
-    credentials: "include",
-  };
-
-  return fetch(
-    `${getAPIUrl()}collections/${collection_id}`,
-    requestOptions
-  )
+  return fetch(`${getAPIUrl()}collections/${collection_id}`, RequestBody("DELETE", null))
     .then((result) => result.json())
     .catch((error) => console.log("error", error));
 }
 
 // Create a new collection
 export async function createCollection(collection: any) {
-  const HeadersConfig = new Headers({ "Content-Type": "application/json" });
-
-  const requestOptions: any = {
-    method: "POST",
-    headers: HeadersConfig,
-    redirect: "follow",
-    credentials: "include",
-    body: JSON.stringify(collection),
-  };
-
-  return fetch(`${getAPIUrl()}collections/`, requestOptions)
+  return fetch(`${getAPIUrl()}collections/`, RequestBody("POST", collection))
     .then((result) => result.json())
     .catch((error) => console.log("error", error));
 }

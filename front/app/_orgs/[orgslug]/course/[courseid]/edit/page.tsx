@@ -226,22 +226,22 @@ function CourseEdit(params: any) {
 
   return (
     <>
-      <Header></Header>
+    <Page>
       <Title>
-        Edit Course Chapters{" "}
+        Edit Course {" "}
         <button
           onClick={() => {
             setNewChapterModal(true);
           }}
         >
-          +
+          Add chapter +
         </button>
         <button
           onClick={() => {
             updateChapters();
           }}
         >
-          Save Chapters
+          Save 
         </button>
       </Title>
       {newChapterModal && <NewChapterModal closeModal={closeNewChapterModal} submitChapter={submitChapter}></NewChapterModal>}
@@ -283,12 +283,46 @@ function CourseEdit(params: any) {
           </DragDropContext>
         </ChapterlistWrapper>
       )}
+      </Page>
     </>
   );
 }
 
+const Page = styled.div`
+  height: 100%;
+  width: 100%;
+  min-height: 100vh;
+  min-width: 100vw;
+  padding-top: 30px;
+
+  // dots background
+  background-image: radial-gradient(#4744446b 1px, transparent 1px), radial-gradient(#4744446b 1px, transparent 1px);
+  background-position: 0 0, 25px 25px;
+  background-size: 50px 50px;
+  background-attachment: fixed;
+  background-repeat: repeat;
+
+  button {
+    margin-left: 10px;
+    background-color: #000000;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    color: white;
+    font-size: 13px;
+    cursor: pointer;
+    transition: 0.2s;
+    font-family: "DM Sans", sans-serif;
+    &:hover {
+      background-color: #474444;
+
+      transition: 0.2s;
+    }
+  }
+`;
 const ChapterlistWrapper = styled.div`
   display: flex;
   padding-left: 30px;
+  justify-content: center;
 `;
 export default CourseEdit;
