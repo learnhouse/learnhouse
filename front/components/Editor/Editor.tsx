@@ -19,6 +19,7 @@ import ImageBlock from "./Extensions/Image/ImageBlock";
 import Youtube from "@tiptap/extension-youtube";
 import VideoBlock from "./Extensions/Video/VideoBlock";
 import { Save } from "lucide-react";
+import MathEquationBlock from "./Extensions/MathEquation/MathEquationBlock";
 
 interface Editor {
   content: string;
@@ -51,6 +52,10 @@ function Editor(props: Editor) {
         lecture: props.lecture,
       }),
       VideoBlock.configure({
+        editable: true,
+        lecture: props.lecture,
+      }),
+      MathEquationBlock.configure({
         editable: true,
         lecture: props.lecture,
       }),
