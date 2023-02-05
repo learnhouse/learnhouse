@@ -9,6 +9,7 @@ import Youtube from "@tiptap/extension-youtube";
 import { EditorContentWrapper } from "@editor/Editor";
 import VideoBlock from "@editor/Extensions/Video/VideoBlock";
 import { styled } from "styled-components";
+import MathEquationBlock from "@components/Editor/Extensions/MathEquation/MathEquationBlock";
 
 interface Editor {
   content: string;
@@ -35,6 +36,10 @@ function Canva(props: Editor) {
       }),
       VideoBlock.configure({
         editable: true,
+        lecture: props.lecture,
+      }),
+      MathEquationBlock.configure({
+        editable: false,
         lecture: props.lecture,
       }),
       Youtube.configure({
