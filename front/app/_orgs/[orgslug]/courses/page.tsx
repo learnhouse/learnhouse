@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import React from "react";
 import styled from "styled-components";
 import { Title } from "../../../../components/UI/Elements/Styles/Title";
-import { getAPIUrl, getBackendUrl } from "../../../../services/config";
+import { getAPIUrl, getBackendUrl, getUriWithOrg } from "../../../../services/config";
 import { deleteCourseFromBackend } from "../../../../services/courses/courses";
 import useSWR, { mutate } from "swr";
 import { swrFetcher } from "@services/utils/requests";
@@ -18,7 +18,7 @@ const CoursesIndexPage = (params: any) => {
 
   async function deleteCourses(course_id: any) {
     await deleteCourseFromBackend(course_id);
-    mutate(`${getAPIUrl()}courses/${orgslug}/page/1/limit/10`);
+    mutate(`${getAPIUrl()}courses/org_slug/${orgslug}/page/1/limit/10`);
   }
 
   // function to remove "course_" from the course_id
@@ -30,7 +30,7 @@ const CoursesIndexPage = (params: any) => {
     <>
       <Title>
         Courses :{" "}
-        <Link href={"/courses/new"}>
+        <Link href={getUriWithOrg(orgslug, "/courses/new")}>
           <button>+</button>
         </Link>{" "}
       </Title>
@@ -41,12 +41,14 @@ const CoursesIndexPage = (params: any) => {
         <CourseWrapper>
           {courses.map((course: any) => (
             <div key={course.course_id}>
+              <button style={{ backgroundColor: "red", border: "none" }} onClick={() => deleteCourses(course.course_id)}>
+                Delete <Trash size={10}></Trash>
+              </button>
               <Link href={"/org/" + orgslug + "/course/" + removeCoursePrefix(course.course_id)}>
-                <button style={{ backgroundColor: "red", border: "none" }} onClick={() => deleteCourses(course.course_id)}>
-                 Delete <Trash size={10}></Trash>
-                </button>
                 <Link href={"/org/" + orgslug + "/course/" + removeCoursePrefix(course.course_id) + "/edit"}>
-                  <button>Edit <Edit2 size={10} ></Edit2></button>
+                  <button>
+                    Edit <Edit2 size={10}></Edit2>
+                  </button>
                 </Link>
                 <CourseThumbnail>
                   <img src={`${getBackendUrl()}content/uploads/img/${course.thumbnail}`} alt="" />

@@ -36,7 +36,7 @@ export default function middleware(req: NextRequest) {
   
   // if url starts with "/organizations" rewrite to path 
   if (url.pathname.startsWith("/organizations")) {
-    url.pathname = url.pathname.replace("/organizations", `/organizations/${currentHost}`);
+    url.pathname = url.pathname.replace("/organizations", `/organizations${currentHost}`);
     // remove localhost:3000 from url
     url.pathname = url.pathname.replace(`localhost:3000`, "");
     console.log(url);
