@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import { FontBoldIcon, FontItalicIcon, StrikethroughIcon, ArrowLeftIcon, ArrowRightIcon, OpacityIcon } from "@radix-ui/react-icons";
-import { AlertCircle, AlertTriangle, ImagePlus, Info, Sigma, Video, Youtube } from "lucide-react";
+import { AlertCircle, AlertTriangle, FileText, ImagePlus, Info, Sigma, Video, Youtube } from "lucide-react";
 
 export const ToolbarButtons = ({ editor }: any) => {
   if (!editor) {
@@ -102,6 +102,19 @@ export const ToolbarButtons = ({ editor }: any) => {
         }
       >
         <Sigma size={15} />
+      </ToolBtn>
+      <ToolBtn
+        onClick={() =>
+          editor
+            .chain()
+            .focus()
+            .insertContent({
+              type: "blockPDF",
+            })
+            .run()
+        }
+      >
+        <FileText size={15} />
       </ToolBtn>
     </ToolButtonsWrapper>
   );
