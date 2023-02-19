@@ -95,7 +95,7 @@ async def get_document_file(request: Request, file_id: str, current_user: Public
     if document_file:
 
         # check media type
-        if document_file.format not in ["jpg", "jpeg", "png", "gif"]:
+        if document_file.format not in ["pdf"]:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT, detail="Document file format not supported")
 
