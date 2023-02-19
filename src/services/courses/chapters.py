@@ -26,7 +26,7 @@ class CourseChapterInDB(CourseChapter):
 # Frontend
 class CourseChapterMetaData(BaseModel):
     chapterOrder: List[str]
-    chapters: object
+    chapters: dict
     lectures: object
 
 #### Classes ####################################################
@@ -205,11 +205,15 @@ async def update_coursechapters_meta(request: Request,course_id: str, coursechap
     courseInDB = courses.update_one({"course_id": course_id}, {
                                     "$set": {"chapters": coursechapters_metadata.chapterOrder}})
 
-    # update lectures in coursechapters
-    # TODO : performance/optimization improvement, this does not work anyway.
-    for coursechapter in coursechapters_metadata.chapters.__dict__.items():
-        coursechapters.update_one({"coursechapter_id": coursechapter}, {
-            "$set": {"lectures": coursechapters_metadata.chapters[coursechapter]["lectureIds"]}}) # type: ignore
+    if coursechapters_metadata.chapters is not None:
+        for coursechapter_id, chapter_metadata in coursechapters_metadata.chapters.items():
+            filter_query = {"coursechapter_id": coursechapter_id}
+            update_query = {"$set": {"lectures": chapter_metadata["lectureIds"]}}
+            result = coursechapters.update_one(filter_query, update_query)
+            if result.matched_count == 0:
+                # handle error when no documents are matched by the filter query
+                print(f"No documents found for course chapter ID {coursechapter_id}")
+
 
     return {"detail": "coursechapters metadata updated"}
 
