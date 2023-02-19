@@ -1,15 +1,15 @@
 import React from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import { styled } from "styled-components";
+import Youtube from "@tiptap/extension-youtube";
 // Custom Extensions
 import InfoCallout from "@editor/Extensions/Callout/Info/InfoCallout";
 import WarningCallout from "@editor/Extensions/Callout/Warning/WarningCallout";
 import ImageBlock from "@editor/Extensions/Image/ImageBlock";
-import Youtube from "@tiptap/extension-youtube";
-import { EditorContentWrapper } from "@editor/Editor";
 import VideoBlock from "@editor/Extensions/Video/VideoBlock";
-import { styled } from "styled-components";
 import MathEquationBlock from "@components/Editor/Extensions/MathEquation/MathEquationBlock";
+import PDFBlock from "@components/Editor/Extensions/PDF/PDFBlock";
 
 interface Editor {
   content: string;
@@ -40,6 +40,10 @@ function Canva(props: Editor) {
       }),
       MathEquationBlock.configure({
         editable: false,
+        lecture: props.lecture,
+      }),
+      PDFBlock.configure({
+        editable: true,
         lecture: props.lecture,
       }),
       Youtube.configure({
