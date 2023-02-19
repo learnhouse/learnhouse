@@ -7,13 +7,13 @@ export async function uploadNewVideoFile(file: any, lecture_id: string) {
   formData.append("file_object", file);
   formData.append("lecture_id", lecture_id);
 
-  return fetch(`${getAPIUrl()}files/video`, RequestBodyForm("POST", formData))
+  return fetch(`${getAPIUrl()}blocks/video`, RequestBodyForm("POST", formData))
     .then((result) => result.json())
     .catch((error) => console.log("error", error));
 }
 
 export async function getVideoFile(file_id: string) {
-  return fetch(`${getAPIUrl()}files/video?file_id=${file_id}`, RequestBody("GET", null))
+  return fetch(`${getAPIUrl()}blocks/video?file_id=${file_id}`, RequestBody("GET", null))
     .then((result) => result.json())
     .catch((error) => console.log("error", error));
 }
