@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, UploadFile, Form, Request
 from src.dependencies.auth import get_current_user
 from fastapi import HTTPException, status, UploadFile
-from src.services.blocks.files.pictures import create_picture_file, get_picture_file
-from src.services.blocks.files.videos import create_video_file, get_video_file
+from src.services.blocks.imageBlock.images import create_image_file, get_image_file
+from src.services.blocks.videoBlock.videos import create_video_file, get_video_file
 from src.services.blocks.pdfBlock.documents import create_document_file, get_document_file
 from src.services.blocks.quizBlock.quizBlock import create_quiz_block, get_quiz_block_answers, get_quiz_block_options, quizBlock
 from src.services.users import PublicUser
@@ -10,12 +10,12 @@ from src.services.users import PublicUser
 router = APIRouter()
 
 
-@router.post("/picture")
-async def api_create_picture_file_block(request: Request, file_object: UploadFile, lecture_id: str = Form(),  current_user: PublicUser = Depends(get_current_user)):
+@router.post("/image")
+async def api_create_image_file_block(request: Request, file_object: UploadFile, lecture_id: str = Form(),  current_user: PublicUser = Depends(get_current_user)):
     """
-    Create new picture file
+    Create new image file
     """
-    return await create_picture_file(request, file_object, lecture_id)
+    return await create_image_file(request, file_object, lecture_id)
 
 
 @router.post("/video")
@@ -26,12 +26,12 @@ async def api_create_video_file_block(request: Request, file_object: UploadFile,
     return await create_video_file(request, file_object, lecture_id)
 
 
-@router.get("/picture")
-async def api_get_picture_file_block(request: Request, file_id: str, current_user: PublicUser = Depends(get_current_user)):
+@router.get("/image")
+async def api_get_image_file_block(request: Request, file_id: str, current_user: PublicUser = Depends(get_current_user)):
     """
-    Get picture file
+    Get image file
     """
-    return await get_picture_file(request, file_id, current_user)
+    return await get_image_file(request, file_id, current_user)
 
 
 @router.get("/video")
