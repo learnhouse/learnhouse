@@ -41,7 +41,7 @@ function ImageBlockComponent(props: any) {
       {fileObject && (
         <BlockImage>
           <img
-            src={`${getBackendUrl()}content/uploads/files/pictures/${props.extension.options.lecture.lecture_id}/${fileObject.file_id}.${
+            src={`${getBackendUrl()}content/uploads/files/images/${props.extension.options.lecture.lecture_id}/${fileObject.file_id}.${
               fileObject.file_format
             }`}
             alt=""

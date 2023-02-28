@@ -22,6 +22,7 @@ import { Save } from "lucide-react";
 import MathEquationBlock from "./Extensions/MathEquation/MathEquationBlock";
 import PDFBlockComponent from "./Extensions/PDF/PDFBlockComponent";
 import PDFBlock from "./Extensions/PDF/PDFBlock";
+import QuizBlock from "./Extensions/Quiz/QuizBlock";
 
 interface Editor {
   content: string;
@@ -62,6 +63,10 @@ function Editor(props: Editor) {
         lecture: props.lecture,
       }),
       PDFBlock.configure({
+        editable: true,
+        lecture: props.lecture,
+      }),
+      QuizBlock.configure({
         editable: true,
         lecture: props.lecture,
       }),
@@ -114,7 +119,7 @@ function Editor(props: Editor) {
               </EditorSaveButton>
             </EditorInfoWrapper>
             <EditorButtonsWrapper>
-              <ToolbarButtons editor={editor} />
+              <ToolbarButtons  editor={editor} />
             </EditorButtonsWrapper>
           </EditorDocSection>
           <EditorUsersSection>
@@ -279,8 +284,8 @@ export const EditorContentWrapper = styled.div`
     padding-left: 20px;
     padding-right: 20px;
     padding-bottom: 20px;
+    padding-top: 20px;
 
-    padding-top: 1px;
     &:focus {
       outline: none !important;
       outline-style: none !important;
