@@ -62,7 +62,7 @@ async def create_video_file(request: Request,video_file: UploadFile, lecture_id:
         f.close()
 
     # insert file object into database
-    video_file_in_db = files.insert_one(uploadable_file.dict())
+    video_file_in_db = await files.insert_one(uploadable_file.dict())
 
     if not video_file_in_db:
         raise HTTPException(
@@ -74,7 +74,7 @@ async def create_video_file(request: Request,video_file: UploadFile, lecture_id:
 async def get_video_object(request: Request,file_id: str, current_user: PublicUser):
     photos = request.app.db["files"]
 
-    video_file = photos.find_one({"file_id": file_id})
+    video_file = await photos.find_one({"file_id": file_id})
 
     if video_file:
         video_file = VideoFile(**video_file)
@@ -88,7 +88,7 @@ async def get_video_object(request: Request,file_id: str, current_user: PublicUs
 async def get_video_file(request: Request,file_id: str, current_user: PublicUser):
     photos = request.app.db["files"]
 
-    video_file = photos.find_one({"file_id": file_id})
+    video_file = await photos.find_one({"file_id": file_id})
 
     # TODO : check if user has access to file
 

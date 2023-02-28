@@ -1,11 +1,11 @@
 import logging
 from fastapi import FastAPI
-import pymongo
+import motor.motor_asyncio
 
 async def connect_to_db(app: FastAPI) :
     logging.info("Connecting to database...")
     try:
-        app.mongodb_client = pymongo.MongoClient("mongodb://learnhouse:learnhouse@mongo:27017/") # type: ignore
+        app.mongodb_client = motor.motor_asyncio.AsyncIOMotorClient("mongodb://learnhouse:learnhouse@mongo:27017/") # type: ignore
         app.db = app.mongodb_client["learnhouse"] # type: ignore
         logging.info("Connected to database!")
     except Exception as e:

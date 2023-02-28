@@ -34,6 +34,9 @@ const Overlay = styled.div`
   width: 100%;
   height: 100%;
   z-index: 100;
+  background-color: #00000029;
+  backdrop-filter: blur(1px);
+
 `;
 
 const Content = styled.div`

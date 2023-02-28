@@ -57,7 +57,7 @@ class Role(BaseModel):
 async def get_user(request: Request, username: str):
     users = request.app.db["users"]
 
-    user = users.find_one({"username": username})
+    user = await users.find_one({"username": username})
 
     if not user:
         raise HTTPException(
@@ -71,7 +71,7 @@ async def get_profile_metadata(request: Request, user):
     users = request.app.db["users"]
     roles = request.app.db["roles"]
 
-    user = users.find_one({"user_id": user['user_id']})
+    user = await users.find_one({"user_id": user['user_id']})
 
     if not user:
         raise HTTPException(
@@ -81,7 +81,7 @@ async def get_profile_metadata(request: Request, user):
     user_roles = roles.find({"linked_users": user['user_id']})
 
     user_roles_list = []
-    for role in user_roles:
+    for role in await user_roles.to_list(length=100):
         print(role)
         user_roles_list.append(Role(**role))
 
@@ -94,7 +94,7 @@ async def get_profile_metadata(request: Request, user):
 async def get_user_by_userid(request: Request, user_id: str):
     users = request.app.db["users"]
 
-    user = users.find_one({"user_id": user_id})
+    user = await users.find_one({"user_id": user_id})
 
     if not user:
         raise HTTPException(
@@ -107,7 +107,7 @@ async def get_user_by_userid(request: Request, user_id: str):
 async def security_get_user(request: Request, email: str):
     users = request.app.db["users"]
 
-    user = users.find_one({"email": email})
+    user = await users.find_one({"email": email})
 
     if not user:
         raise HTTPException(
@@ -119,7 +119,7 @@ async def security_get_user(request: Request, email: str):
 async def get_userid_by_username(request: Request, username: str):
     users = request.app.db["users"]
 
-    user = users.find_one({"username": username})
+    user = await users.find_one({"username": username})
 
     if not user:
         raise HTTPException(
@@ -131,8 +131,8 @@ async def get_userid_by_username(request: Request, username: str):
 async def update_user(request: Request, user_id: str, user_object: UserWithPassword):
     users = request.app.db["users"]
 
-    isUserExists = users.find_one({"user_id": user_id})
-    isUsernameAvailable = users.find_one({"username": user_object.username})
+    isUserExists = await users.find_one({"user_id": user_id})
+    isUsernameAvailable = await users.find_one({"username": user_object.username})
 
     if not isUserExists:
         raise HTTPException(
@@ -153,7 +153,7 @@ async def update_user(request: Request, user_id: str, user_object: UserWithPassw
 async def delete_user(request: Request, user_id: str):
     users = request.app.db["users"]
 
-    isUserAvailable = users.find_one({"user_id": user_id})
+    isUserAvailable = await users.find_one({"user_id": user_id})
 
     if not isUserAvailable:
         raise HTTPException(
@@ -167,7 +167,7 @@ async def delete_user(request: Request, user_id: str):
 async def create_user(request: Request, user_object: UserWithPassword):
     users = request.app.db["users"]
 
-    isUserAvailable = users.find_one({"username": user_object.username})
+    isUserAvailable = await users.find_one({"username": user_object.username})
 
     if isUserAvailable:
         raise HTTPException(
@@ -184,6 +184,6 @@ async def create_user(request: Request, user_object: UserWithPassword):
     user = UserInDB(user_id=user_id, creationDate=str(datetime.now()),
                     updateDate=str(datetime.now()), **user_object.dict())
 
-    user_in_db = users.insert_one(user.dict())
+    user_in_db = await users.insert_one(user.dict())
 
     return User(**user.dict())
