@@ -19,6 +19,7 @@ class answer(BaseModel):
 
 class question(BaseModel):
     question_id: str
+    question_value:str
     options: List[option]
 
 
