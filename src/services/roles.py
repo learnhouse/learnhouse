@@ -47,7 +47,7 @@ class RoleInDB(Role):
 async def get_role(request: Request,role_id: str):
     roles = request.app.db["roles"]
 
-    role = roles.find_one({"role_id": role_id})
+    role = await roles.find_one({"role_id": role_id})
 
     if not role:
         raise HTTPException(
@@ -61,7 +61,7 @@ async def create_role(request: Request,role_object: Role, current_user: PublicUs
     roles = request.app.db["roles"]
 
     # find if house already exists using name
-    isRoleAvailable = roles.find_one({"name": role_object.name})
+    isRoleAvailable = await roles.find_one({"name": role_object.name})
 
     if isRoleAvailable:
         raise HTTPException(
@@ -75,7 +75,7 @@ async def create_role(request: Request,role_object: Role, current_user: PublicUs
     role = RoleInDB(role_id=role_id, creationDate=str(datetime.now()),
                     updateDate=str(datetime.now()), **role_object.dict())
 
-    role_in_db = roles.insert_one(role.dict())
+    role_in_db = await roles.insert_one(role.dict())
 
     if not role_in_db:
         raise HTTPException(
@@ -91,7 +91,7 @@ async def update_role(request: Request,role_object: Role, role_id: str, current_
 
     roles = request.app.db["roles"]
 
-    role = roles.find_one({"role_id": role_id})
+    role = await roles.find_one({"role_id": role_id})
 
     if not role:
         raise HTTPException(
@@ -100,7 +100,7 @@ async def update_role(request: Request,role_object: Role, role_id: str, current_
     updated_role = RoleInDB(
         role_id=role_id, updateDate=str(datetime.now()), creationDate=role["creationDate"],  **role_object.dict())
 
-    roles.update_one({"role_id": role_id}, {"$set": updated_role.dict()})
+    await roles.update_one({"role_id": role_id}, {"$set": updated_role.dict()})
 
     return RoleInDB(**updated_role.dict())
 
@@ -112,13 +112,13 @@ async def delete_role(request: Request,role_id: str, current_user: PublicUser):
 
     roles = request.app.db["roles"]
 
-    role = roles.find_one({"role_id": role_id})
+    role = await roles.find_one({"role_id": role_id})
 
     if not role:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Role does not exist")
 
-    isDeleted = roles.delete_one({"role_id": role_id})
+    isDeleted = await roles.delete_one({"role_id": role_id})
 
     if isDeleted:
         return {"detail": "Role deleted"}
@@ -133,7 +133,7 @@ async def get_roles(request: Request,page: int = 1, limit: int = 10):
     # get all roles from database
     all_roles = roles.find().sort("name", 1).skip(10 * (page - 1)).limit(limit)
 
-    return [json.loads(json.dumps(role, default=str)) for role in all_roles]
+    return [json.loads(json.dumps(role, default=str)) for role in await all_roles.to_list(length=limit)]
 
 
 #### Security ####################################################
@@ -141,7 +141,7 @@ async def get_roles(request: Request,page: int = 1, limit: int = 10):
 async def verify_user_permissions_on_roles(request: Request,action: str, current_user: PublicUser):
     users = request.app.db["users"]
 
-    user = users.find_one({"user_id": current_user.user_id})
+    user = await users.find_one({"user_id": current_user.user_id})
 
     if not user:
         raise HTTPException(

@@ -131,7 +131,7 @@ async def get_houses(request: Request,page: int = 1, limit: int = 10):
     # get all houses from database
     all_houses = houses.find().sort("name", 1).skip(10 * (page - 1)).limit(limit)
 
-    return [json.loads(json.dumps(house, default=str)) for house in all_houses]
+    return [json.loads(json.dumps(house, default=str)) for house in await all_houses.to_list(length=limit)]
 
 
 #### Security ####################################################

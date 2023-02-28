@@ -37,7 +37,7 @@ class PublicOrganization(Organization):
 async def get_organization(request: Request, org_id: str):
     orgs = request.app.db["organizations"]
 
-    org = orgs.find_one({"org_id": org_id})
+    org = await orgs.find_one({"org_id": org_id})
 
     if not org:
         raise HTTPException(
@@ -50,7 +50,7 @@ async def get_organization(request: Request, org_id: str):
 async def get_organization_by_slug(request: Request, org_slug: str):
     orgs = request.app.db["organizations"]
 
-    org = orgs.find_one({"slug": org_slug})
+    org = await orgs.find_one({"slug": org_slug})
 
     if not org:
         raise HTTPException(
@@ -64,7 +64,7 @@ async def create_org(request: Request, org_object: Organization, current_user: P
     orgs = request.app.db["organizations"]
 
     # find if org already exists using name
-    isOrgAvailable = orgs.find_one({"slug": org_object.slug})
+    isOrgAvailable = await orgs.find_one({"slug": org_object.slug})
 
     if isOrgAvailable:
         raise HTTPException(
@@ -77,7 +77,7 @@ async def create_org(request: Request, org_object: Organization, current_user: P
         current_user.user_id], admins=[
         current_user.user_id], **org_object.dict())
 
-    org_in_db = orgs.insert_one(org.dict())
+    org_in_db = await orgs.insert_one(org.dict())
 
     if not org_in_db:
         raise HTTPException(
@@ -93,7 +93,7 @@ async def update_org(request: Request, org_object: Organization, org_id: str, cu
 
     orgs = request.app.db["organizations"]
 
-    org = orgs.find_one({"org_id": org_id})
+    org = await orgs.find_one({"org_id": org_id})
 
     if org:
         owners = org["owners"]
@@ -106,7 +106,7 @@ async def update_org(request: Request, org_object: Organization, org_id: str, cu
     updated_org = OrganizationInDB(
         org_id=org_id, owners=owners, admins=admins, **org_object.dict())
 
-    orgs.update_one({"org_id": org_id}, {"$set": updated_org.dict()})
+    await orgs.update_one({"org_id": org_id}, {"$set": updated_org.dict()})
 
     return Organization(**updated_org.dict())
 
@@ -117,13 +117,13 @@ async def delete_org(request: Request, org_id: str, current_user: PublicUser):
 
     orgs = request.app.db["organizations"]
 
-    org = orgs.find_one({"org_id": org_id})
+    org = await orgs.find_one({"org_id": org_id})
 
     if not org:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Organization does not exist")
 
-    isDeleted = orgs.delete_one({"org_id": org_id})
+    isDeleted = await orgs.delete_one({"org_id": org_id})
 
     if isDeleted:
         return {"detail": "Org deleted"}
@@ -137,9 +137,9 @@ async def get_orgs_by_user(request: Request, user_id: str, page: int = 1, limit:
 
     # find all orgs where user_id is in owners or admins arrays
     all_orgs = orgs.find({"$or": [{"owners": user_id}, {"admins": user_id}]}).sort(
-        "name", 1).skip(10 * (page - 1)).limit(limit)
+        "name", 1).skip(10 * (page - 1)).limit(100)
 
-    return [json.loads(json.dumps(org, default=str)) for org in all_orgs]
+    return [json.loads(json.dumps(org, default=str)) for org in await all_orgs.to_list(length=100)]
 
 
 #### Security ####################################################
@@ -147,7 +147,7 @@ async def get_orgs_by_user(request: Request, user_id: str, page: int = 1, limit:
 async def verify_org_rights(request: Request, org_id: str,  current_user: PublicUser, action: str,):
     orgs = request.app.db["organizations"]
 
-    org = orgs.find_one({"org_id": org_id})
+    org = await orgs.find_one({"org_id": org_id})
 
     if not org:
         raise HTTPException(
