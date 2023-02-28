@@ -62,7 +62,7 @@ async def create_image_file(request: Request,image_file: UploadFile, lecture_id:
         f.close()
 
     # insert file object into database
-    photo_file_in_db = photos.insert_one(uploadable_file.dict())
+    photo_file_in_db = await photos.insert_one(uploadable_file.dict())
 
     if not photo_file_in_db:
         raise HTTPException(
@@ -74,7 +74,7 @@ async def create_image_file(request: Request,image_file: UploadFile, lecture_id:
 async def get_image_object(request: Request,file_id: str):
     photos = request.app.db["files"]
 
-    photo_file = photos.find_one({"file_id": file_id})
+    photo_file = await photos.find_one({"file_id": file_id})
 
     if photo_file:
         photo_file = PhotoFile(**photo_file)
@@ -88,7 +88,7 @@ async def get_image_object(request: Request,file_id: str):
 async def get_image_file(request: Request,file_id: str, current_user: PublicUser):
     photos = request.app.db["files"]
 
-    photo_file = photos.find_one({"file_id": file_id})
+    photo_file = await photos.find_one({"file_id": file_id})
 
     # TODO : check if user has access to file
 
