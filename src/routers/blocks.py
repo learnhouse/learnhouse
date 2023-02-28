@@ -56,7 +56,7 @@ async def api_get_document_file_block(request: Request, file_id: str, current_us
     return await get_document_file(request, file_id, current_user)
 
 
-@router.post("/quiz")
+@router.post("/quiz/{lecture_id}")
 async def api_create_quiz_block(request: Request, quiz_block: quizBlock, lecture_id: str, current_user: PublicUser = Depends(get_current_user)):
     """
     Create new document file
