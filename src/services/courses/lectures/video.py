@@ -44,7 +44,7 @@ async def create_video_lecture(request: Request,name: str,  coursechapter_id: st
 
     # create lecture
     lecture = LectureInDB(**lecture_object.dict())
-    lectures.insert_one(lecture.dict())
+    await lectures.insert_one(lecture.dict())
 
     # upload video
     if video_file:
@@ -55,7 +55,7 @@ async def create_video_lecture(request: Request,name: str,  coursechapter_id: st
 
     # todo : choose whether to update the chapter or not
     # update chapter
-    coursechapters.update_one({"coursechapter_id": coursechapter_id}, {
+    await coursechapters.update_one({"coursechapter_id": coursechapter_id}, {
         "$addToSet": {"lectures": lecture_id}})
 
     return lecture

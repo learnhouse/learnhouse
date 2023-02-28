@@ -52,7 +52,7 @@ async def create_coursechapter(request: Request,coursechapter_object: CourseChap
     coursechapter = CourseChapterInDB(coursechapter_id=coursechapter_id, creationDate=str(
         datetime.now()), updateDate=str(datetime.now()), course_id=course_id, **coursechapter_object.dict())
 
-    coursechapter_in_db = coursechapters.insert_one(coursechapter.dict())
+    coursechapter_in_db = await coursechapters.insert_one(coursechapter.dict())
     courses.update_one({"course_id": course_id}, {
                        "$addToSet": {"chapters": coursechapter_id}})
 
@@ -66,7 +66,7 @@ async def create_coursechapter(request: Request,coursechapter_object: CourseChap
 async def get_coursechapter(request: Request,coursechapter_id: str, current_user: PublicUser):
     coursechapters = request.app.db["coursechapters"]
 
-    coursechapter = coursechapters.find_one(
+    coursechapter = await coursechapters.find_one(
         {"coursechapter_id": coursechapter_id})
 
     if coursechapter:
@@ -84,7 +84,7 @@ async def get_coursechapter(request: Request,coursechapter_id: str, current_user
 async def update_coursechapter(request: Request,coursechapter_object: CourseChapter,  coursechapter_id: str, current_user: PublicUser):
     coursechapters = request.app.db["coursechapters"]
 
-    coursechapter = coursechapters.find_one(
+    coursechapter = await coursechapters.find_one(
         {"coursechapter_id": coursechapter_id})
 
     if coursechapter:
@@ -98,7 +98,7 @@ async def update_coursechapter(request: Request,coursechapter_object: CourseChap
         updated_coursechapter = CourseChapterInDB(
             coursechapter_id=coursechapter_id, creationDate=creationDate, course_id=coursechapter["course_id"], updateDate=str(datetime_object), **coursechapter_object.dict())
 
-        coursechapters.update_one({"coursechapter_id": coursechapter_id}, {
+        await coursechapters.update_one({"coursechapter_id": coursechapter_id}, {
             "$set": updated_coursechapter.dict()})
 
         return CourseChapterInDB(**updated_coursechapter.dict())
@@ -113,18 +113,18 @@ async def delete_coursechapter(request: Request,coursechapter_id: str,  current_
     coursechapters = request.app.db["coursechapters"]
     courses = request.app.db["courses"]
 
-    coursechapter = coursechapters.find_one(
+    coursechapter = await coursechapters.find_one(
         {"coursechapter_id": coursechapter_id})
 
     if coursechapter:
         # verify course rights
         await verify_rights(request, coursechapter["course_id"], current_user, "delete")
 
-        isDeleted = coursechapters.delete_one(
+        isDeleted = await coursechapters.delete_one(
             {"coursechapter_id": coursechapter_id})
 
         # Remove coursechapter from course
-        courses.update_one({"course_id": coursechapter["course_id"]}, {
+        await courses.update_one({"course_id": coursechapter["course_id"]}, {
             "$pull": {"chapters": coursechapter_id}})
 
         if isDeleted:
@@ -149,7 +149,7 @@ async def get_coursechapters(request: Request,course_id: str, page: int = 1, lim
     all_coursechapters = courses.find({"course_id": course_id}).sort(
         "name", 1).skip(10 * (page - 1)).limit(limit)
 
-    return [json.loads(json.dumps(coursechapter, default=str)) for coursechapter in all_coursechapters]
+    return [json.loads(json.dumps(coursechapter, default=str)) for coursechapter in await all_coursechapters.to_list(length=100)]
 
 
 async def get_coursechapters_meta(request: Request, course_id: str, current_user: PublicUser):
@@ -160,7 +160,7 @@ async def get_coursechapters_meta(request: Request, course_id: str, current_user
     coursechapters = coursechapters.find(
         {"course_id": course_id}).sort("name", 1)
 
-    course = courses.find_one({"course_id": course_id})
+    course = await courses.find_one({"course_id": course_id})
     course = Course(**course)  # type: ignore
 
     # lectures
@@ -168,7 +168,7 @@ async def get_coursechapters_meta(request: Request, course_id: str, current_user
 
     # chapters
     chapters = {}
-    for coursechapter in coursechapters:
+    for coursechapter in await coursechapters.to_list(length=100):
         coursechapter = CourseChapterInDB(**coursechapter)
         coursechapter_lectureIds = []
 
@@ -182,7 +182,7 @@ async def get_coursechapters_meta(request: Request, course_id: str, current_user
 
     # lectures
     lectures_list = {}
-    for lecture in lectures.find({"lecture_id": {"$in": coursechapter_lectureIds_global}}):
+    for lecture in await lectures.find({"lecture_id": {"$in": coursechapter_lectureIds_global}}).to_list(length=100):
         lecture = LectureInDB(**lecture)
         lectures_list[lecture.lecture_id] = {
             "id": lecture.lecture_id, "name": lecture.name, "type": lecture.type, "content": lecture.content
@@ -202,14 +202,14 @@ async def update_coursechapters_meta(request: Request,course_id: str, coursechap
     courses = request.app.db["courses"]
 
     # update chapters in course
-    courseInDB = courses.update_one({"course_id": course_id}, {
+    courseInDB = await courses.update_one({"course_id": course_id}, {
                                     "$set": {"chapters": coursechapters_metadata.chapterOrder}})
 
     if coursechapters_metadata.chapters is not None:
         for coursechapter_id, chapter_metadata in coursechapters_metadata.chapters.items():
             filter_query = {"coursechapter_id": coursechapter_id}
             update_query = {"$set": {"lectures": chapter_metadata["lectureIds"]}}
-            result = coursechapters.update_one(filter_query, update_query)
+            result = await coursechapters.update_one(filter_query, update_query)
             if result.matched_count == 0:
                 # handle error when no documents are matched by the filter query
                 print(f"No documents found for course chapter ID {coursechapter_id}")
@@ -223,7 +223,7 @@ async def update_coursechapters_meta(request: Request,course_id: str, coursechap
 async def verify_rights(request: Request,course_id: str, current_user: PublicUser, action: str):
     courses = request.app.db["courses"]
 
-    course = courses.find_one({"course_id": course_id})
+    course = await courses.find_one({"course_id": course_id})
 
     if not course:
         raise HTTPException(

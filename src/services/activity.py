@@ -35,13 +35,13 @@ async def create_activity(request: Request, user: PublicUser, activity_object: A
     activities = request.app.db["activities"]
 
     # find if the user has already started the course
-    isActivityAlreadCreated = activities.find_one(
+    isActivityAlreadCreated = await activities.find_one(
         {"course_id": activity_object.course_id, "user_id": user.user_id})
 
     if isActivityAlreadCreated:
         if isActivityAlreadCreated['status'] == 'closed':
             activity_object.status = 'ongoing'
-            activities.update_one(
+            await activities.update_one(
                 {"activity_id": isActivityAlreadCreated['activity_id']}, {"$set": activity_object.dict()})
             return activity_object
         else:
@@ -54,7 +54,7 @@ async def create_activity(request: Request, user: PublicUser, activity_object: A
     activity = ActivityInDB(**activity_object.dict(),activity_id=activity_id,
                             user_id=user.user_id, org_id=activity_object.course_id)
 
-    activities.insert_one(activity.dict())
+    await activities.insert_one(activity.dict())
 
     return activity
 
@@ -73,7 +73,7 @@ async def get_user_activities(request: Request, user: PublicUser, org_id: str):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="No activities found")
 
-    for activity in user_activities:
+    for activity in await user_activities.to_list(length=100):
         # get number of lectures in the course
         coursechapters = await get_coursechapters_meta(request, activity['course_id'], user)
 
@@ -81,7 +81,7 @@ async def get_user_activities(request: Request, user: PublicUser, org_id: str):
         progression = round(
             len(activity['lectures_marked_complete']) / len(coursechapters['lectures']) * 100, 2)  
 
-        course = courses.find_one({"course_id": activity['course_id']}, {'_id': 0})
+        course = await courses.find_one({"course_id": activity['course_id']}, {'_id': 0})
 
         # add progression to the activity
         one_activity = {"course": course,  "activitydata": activity, "progression": progression}
@@ -103,7 +103,7 @@ async def get_user_activities_orgslug(request: Request, user: PublicUser, org_sl
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="No activities found")
 
-    for activity in user_activities:
+    for activity in await user_activities.to_list(length=100):
         # get number of lectures in the course
         coursechapters = await get_coursechapters_meta(request, activity['course_id'], user)
 
@@ -111,7 +111,7 @@ async def get_user_activities_orgslug(request: Request, user: PublicUser, org_sl
         progression = round(
             len(activity['lectures_marked_complete']) / len(coursechapters['lectures']) * 100, 2)  
 
-        course = courses.find_one({"course_id": activity['course_id']}, {'_id': 0})
+        course = await courses.find_one({"course_id": activity['course_id']}, {'_id': 0})
 
         # add progression to the activity
         one_activity = {"course": course,  "activitydata": activity, "progression": progression}
@@ -125,14 +125,14 @@ async def add_lecture_to_activity(request: Request, user: PublicUser, org_id: st
     course_id = f"course_{course_id}"
     lecture_id = f"lecture_{lecture_id}"
    
-    activity = activities.find_one(
+    activity = await activities.find_one(
         {"course_id": course_id,
             "user_id": user.user_id
          },  {'_id': 0})
 
     if lecture_id not in activity['lectures_marked_complete']:
         activity['lectures_marked_complete'].append(str(lecture_id))
-        activities.update_one(
+        await activities.update_one(
             {"activity_id": activity['activity_id']}, {"$set": activity})
         return activity
 
@@ -147,7 +147,7 @@ async def add_lecture_to_activity(request: Request, user: PublicUser, org_id: st
 
 async def close_activity(request: Request, user: PublicUser,  activity_id: str, org_id: str,):
     activities = request.app.db["activities"]
-    activity = activities.find_one(
+    activity = await activities.find_one(
         {"activity_id": activity_id, "user_id": user.user_id})
 
     if not activity:
@@ -156,7 +156,7 @@ async def close_activity(request: Request, user: PublicUser,  activity_id: str, 
 
     activity['status'] = 'closed'
 
-    activities.update_one(
+    await activities.update_one(
         {"activity_id": activity['activity_id']}, {"$set": activity})
 
     activity = ActivityInDB(**activity)

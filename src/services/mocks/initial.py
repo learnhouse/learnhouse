@@ -26,7 +26,7 @@ async def create_initial_data(request: Request):
     ########################################
 
     database_users = request.app.db["users"]
-    database_users.delete_many({})
+    await database_users.delete_many({})
 
     users = []
     admin_user = UserWithPassword(
@@ -53,7 +53,7 @@ async def create_initial_data(request: Request):
 
     # find admin user
     users = request.app.db["users"]
-    admin_user = users.find_one({"username": "admin"})
+    admin_user = await users.find_one({"username": "admin"})
 
     if admin_user:
         admin_user = UserInDB(**admin_user)
@@ -65,7 +65,7 @@ async def create_initial_data(request: Request):
     ########################################
 
     database_orgs = request.app.db["organizations"]
-    database_orgs.delete_many({})
+    await database_orgs.delete_many({})
 
     organizations = []
     for i in range(0, 5):
@@ -85,7 +85,7 @@ async def create_initial_data(request: Request):
     ########################################
 
     database_roles = request.app.db["roles"]
-    database_roles.delete_many({})
+    await database_roles.delete_many({})
 
     roles = []
     admin_role = Role(
@@ -117,14 +117,14 @@ async def create_initial_data(request: Request):
 
     database_courses = request.app.db["courses"]
     database_chapters = request.app.db["coursechapters"]
-    database_courses.delete_many({})
-    database_chapters.delete_many({})
+    await database_courses.delete_many({})
+    await database_chapters.delete_many({})
 
     courses = []
     orgs = request.app.db["organizations"]
 
-    if orgs.count_documents({}) > 0:
-        for org in orgs.find():
+    if await orgs.count_documents({}) > 0:
+        for org in await orgs.find().to_list(length=100):
             for i in range(0, 5):
 
                 # get image in BinaryIO format from unsplash and save it to disk
@@ -161,7 +161,7 @@ async def create_initial_data(request: Request):
                 course.thumbnail = name_in_disk
 
                 course = CourseInDB(**course.dict())
-                course_in_db = courses.insert_one(course.dict())
+                course_in_db = await courses.insert_one(course.dict())
 
                 # create chapters
                 for i in range(0, 5):

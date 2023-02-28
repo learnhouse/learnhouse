@@ -37,7 +37,7 @@ async def create_quiz_block(request: Request, quizBlock: quizBlock, lecture_id: 
                   block_type="quizBlock", block_data=quizBlock)
 
     # insert block
-    blocks.insert_one(block.dict())
+    await blocks.insert_one(block.dict())
 
     return block
 
@@ -45,7 +45,7 @@ async def create_quiz_block(request: Request, quizBlock: quizBlock, lecture_id: 
 async def get_quiz_block_options(request: Request, block_id: str, user: PublicUser):
     blocks = request.app.db["blocks"]
     # find block but get only the options
-    block = blocks.find_one({"block_id": block_id, }, {
+    block = await blocks.find_one({"block_id": block_id, }, {
                             "_id": 0, "block_data.answers": 0})
 
     return block
@@ -54,7 +54,7 @@ async def get_quiz_block_answers(request: Request, block_id: str, user: PublicUs
     blocks = request.app.db["blocks"]
     
     # find block but get only the answers
-    block = blocks.find_one({"block_id": block_id, }, {
+    block = await blocks.find_one({"block_id": block_id, }, {
                             "_id": 0, "block_data.questions": 0})
 
     return block

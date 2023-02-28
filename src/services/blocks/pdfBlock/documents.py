@@ -62,7 +62,7 @@ async def create_document_file(request: Request, document_file: UploadFile, lect
         f.close()
 
     # insert file object into database
-    document_file_in_db = documents.insert_one(uploadable_file.dict())
+    document_file_in_db = await documents.insert_one(uploadable_file.dict())
 
     if not document_file_in_db:
         raise HTTPException(
@@ -74,7 +74,7 @@ async def create_document_file(request: Request, document_file: UploadFile, lect
 async def get_document_object(request: Request, file_id: str):
     documents = request.app.db["files"]
 
-    document_file = documents.find_one({"file_id": file_id})
+    document_file = await documents.find_one({"file_id": file_id})
 
     if document_file:
         document_file = DocumentFile(**document_file)
@@ -88,7 +88,7 @@ async def get_document_object(request: Request, file_id: str):
 async def get_document_file(request: Request, file_id: str, current_user: PublicUser):
     documents = request.app.db["files"]
 
-    document_file = documents.find_one({"file_id": file_id})
+    document_file = await documents.find_one({"file_id": file_id})
 
     # TODO : check if user has access to file
 
