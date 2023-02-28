@@ -30,7 +30,7 @@ class CollectionInDB(Collection):
 async def get_collection(request: Request,collection_id: str, current_user: PublicUser):
     collections = request.app.db["collections"]
 
-    collection = collections.find_one({"collection_id": collection_id})
+    collection = await collections.find_one({"collection_id": collection_id})
 
     # verify collection rights
     await verify_collection_rights(request, collection_id, current_user, "read")
@@ -47,7 +47,7 @@ async def create_collection(request: Request,collection_object: Collection, curr
     collections = request.app.db["collections"]
 
     # find if collection already exists using name
-    isCollectionNameAvailable = collections.find_one(
+    isCollectionNameAvailable = await collections.find_one(
         {"name": collection_object.name})
 
     # TODO
@@ -63,7 +63,7 @@ async def create_collection(request: Request,collection_object: Collection, curr
     collection = CollectionInDB(
         collection_id=collection_id, **collection_object.dict())
 
-    collection_in_db = collections.insert_one(collection.dict())
+    collection_in_db = await collections.insert_one(collection.dict())
 
     if not collection_in_db:
         raise HTTPException(
@@ -79,7 +79,7 @@ async def update_collection(request: Request,collection_object: Collection, coll
 
     collections = request.app.db["collections"]
 
-    collection = collections.find_one({"collection_id": collection_id})
+    collection = await collections.find_one({"collection_id": collection_id})
 
     if not collection:
         raise HTTPException(
@@ -88,7 +88,7 @@ async def update_collection(request: Request,collection_object: Collection, coll
     updated_collection = CollectionInDB(
         collection_id=collection_id,  **collection_object.dict())
 
-    collections.update_one({"collection_id": collection_id}, {
+    await collections.update_one({"collection_id": collection_id}, {
                            "$set": updated_collection.dict()})
 
     return Collection(**updated_collection.dict())
@@ -100,13 +100,13 @@ async def delete_collection(request: Request,collection_id: str, current_user: P
 
     collections = request.app.db["collections"]
 
-    collection = collections.find_one({"collection_id": collection_id})
+    collection = await collections.find_one({"collection_id": collection_id})
 
     if not collection:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Collection does not exist")
 
-    isDeleted = collections.delete_one({"collection_id": collection_id})
+    isDeleted = await collections.delete_one({"collection_id": collection_id})
 
     if isDeleted:
         return {"detail": "collection deleted"}
@@ -129,7 +129,7 @@ async def get_collections(request: Request,page: int = 1, limit: int = 10):
 
     # create list of collections and include courses in each collection
     collections_list = []
-    for collection in all_collections:
+    for collection in await all_collections.to_list(length=100):
         collection = CollectionInDB(**collection)
         collections_list.append(collection)
 
@@ -140,7 +140,7 @@ async def get_collections(request: Request,page: int = 1, limit: int = 10):
         collection.courses = courses.find(
             {"course_id": {"$in": collection_courses}}, {'_id': 0})
 
-        collection.courses = [course for course in collection.courses]
+        collection.courses = [course for course in await collection.courses.to_list(length=100)]
 
     return collections_list
 
@@ -150,7 +150,7 @@ async def get_collections(request: Request,page: int = 1, limit: int = 10):
 async def verify_collection_rights(request: Request,collection_id: str,  current_user: PublicUser, action: str):
     collections = request.app.db["collections"]
 
-    collection = collections.find_one({"collection_id": collection_id})
+    collection = await collections.find_one({"collection_id": collection_id})
 
     if not collection and action != "create":
         raise HTTPException(

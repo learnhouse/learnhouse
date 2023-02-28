@@ -42,7 +42,7 @@ async def verify_user_rights_with_roles(request: Request,action: str, user_id: s
 
     # Info: permission actions are: read, create, delete, update
 
-    for role in user_roles_cursor:
+    for role in await user_roles_cursor.to_list(length=100):
         user_roles.append(role)
 
     for role in user_roles:

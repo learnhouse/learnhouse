@@ -27,6 +27,7 @@
     "react-katex": "^3.0.1",
     "styled-components": "^6.0.0-beta.9",
     "swr": "^2.0.1",
+    "uuid": "^9.0.0",
     "y-indexeddb": "^9.0.9",
     "y-webrtc": "^10.2.3",
     "yjs": "^13.5.42"
@@ -38,6 +39,7 @@
     "@types/react-dom": "18.0.6",
     "@types/react-katex": "^3.0.0",
     "@types/styled-components": "^5.1.26",
+    "@types/uuid": "^9.0.0",
     "autoprefixer": "^10.4.12",
     "eslint": "8.23.1",
     "eslint-config-next": "^13.0.6",
