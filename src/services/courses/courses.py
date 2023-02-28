@@ -56,7 +56,7 @@ class CourseChapterInDB(CourseChapter):
 async def get_course(request: Request, course_id: str, current_user: PublicUser):
     courses = request.app.db["courses"]
 
-    course = courses.find_one({"course_id": course_id})
+    course = await courses.find_one({"course_id": course_id})
 
     # verify course rights
     await verify_rights(request, course_id, current_user, "read")
@@ -74,7 +74,7 @@ async def get_course_meta(request: Request, course_id: str, current_user: Public
     coursechapters = request.app.db["coursechapters"]
     activities = request.app.db["activities"]
 
-    course = courses.find_one({"course_id": course_id})
+    course = await courses.find_one({"course_id": course_id})
     lectures = request.app.db["lectures"]
 
     # verify course rights
@@ -92,7 +92,7 @@ async def get_course_meta(request: Request, course_id: str, current_user: Public
 
     # chapters
     chapters = {}
-    for coursechapter in coursechapters:
+    for coursechapter in await coursechapters.to_list(length=100):
         coursechapter = CourseChapterInDB(**coursechapter)
         coursechapter_lectureIds = []
 
@@ -106,7 +106,7 @@ async def get_course_meta(request: Request, course_id: str, current_user: Public
 
     # lectures
     lectures_list = {}
-    for lecture in lectures.find({"lecture_id": {"$in": coursechapter_lectureIds_global}}):
+    for lecture in await lectures.find({"lecture_id": {"$in": coursechapter_lectureIds_global}}).to_list(length=100):
         lecture = LectureInDB(**lecture)
         lectures_list[lecture.lecture_id] = {
             "id": lecture.lecture_id, "name": lecture.name, "type": lecture.type, "content": lecture.content
@@ -119,7 +119,7 @@ async def get_course_meta(request: Request, course_id: str, current_user: Public
     course = Course(**course)
 
     # Get activity by user
-    activity = activities.find_one(
+    activity = await activities.find_one(
         {"course_id": course_id, "user_id": current_user.user_id})
     if activity:
         activity = json.loads(json.dumps(activity, default=str))
@@ -155,7 +155,7 @@ async def create_course(request: Request, course_object: Course, org_id: str, cu
     course = CourseInDB(course_id=course_id, authors=[
         current_user.user_id], creationDate=str(datetime.now()), updateDate=str(datetime.now()), **course_object.dict())
 
-    course_in_db = courses.insert_one(course.dict())
+    course_in_db = await courses.insert_one(course.dict())
 
     if not course_in_db:
         raise HTTPException(
@@ -171,7 +171,7 @@ async def update_course_thumbnail(request: Request, course_id: str, current_user
 
     courses = request.app.db["courses"]
 
-    course = courses.find_one({"course_id": course_id})
+    course = await courses.find_one({"course_id": course_id})
     # TODO(fix) : the implementation here is clearly not the best one
     if course:
         creationDate = course["creationDate"]
@@ -184,7 +184,7 @@ async def update_course_thumbnail(request: Request, course_id: str, current_user
             updated_course = CourseInDB(course_id=course_id, creationDate=creationDate,
                                         authors=authors, updateDate=str(datetime.now()), **course.dict())
 
-            courses.update_one({"course_id": course_id}, {
+            await courses.update_one({"course_id": course_id}, {
                 "$set": updated_course.dict()})
 
             return CourseInDB(**updated_course.dict())
@@ -201,7 +201,7 @@ async def update_course(request: Request, course_object: Course, course_id: str,
 
     courses = request.app.db["courses"]
 
-    course = courses.find_one({"course_id": course_id})
+    course = await courses.find_one({"course_id": course_id})
 
     if course:
         creationDate = course["creationDate"]
@@ -213,7 +213,7 @@ async def update_course(request: Request, course_object: Course, course_id: str,
         updated_course = CourseInDB(
             course_id=course_id, creationDate=creationDate, authors=authors, updateDate=str(datetime_object), **course_object.dict())
 
-        courses.update_one({"course_id": course_id}, {
+        await courses.update_one({"course_id": course_id}, {
             "$set": updated_course.dict()})
 
         return CourseInDB(**updated_course.dict())
@@ -230,13 +230,13 @@ async def delete_course(request: Request, course_id: str, current_user: PublicUs
 
     courses = request.app.db["courses"]
 
-    course = courses.find_one({"course_id": course_id})
+    course = await courses.find_one({"course_id": course_id})
 
     if not course:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Course does not exist")
 
-    isDeleted = courses.delete_one({"course_id": course_id})
+    isDeleted = await courses.delete_one({"course_id": course_id})
 
     if isDeleted:
         return {"detail": "Course deleted"}
@@ -256,7 +256,7 @@ async def get_courses(request: Request, page: int = 1, limit: int = 10, org_id: 
     all_courses = courses.find({"org_id": org_id}).sort(
         "name", 1).skip(10 * (page - 1)).limit(limit)
 
-    return [json.loads(json.dumps(course, default=str)) for course in all_courses]
+    return [json.loads(json.dumps(course, default=str)) for course in await all_courses.to_list(length=100)]
 
 async def get_courses_orgslug(request: Request, page: int = 1, limit: int = 10, org_slug: str | None = None):
     courses = request.app.db["courses"]
@@ -264,7 +264,7 @@ async def get_courses_orgslug(request: Request, page: int = 1, limit: int = 10, 
     # TODO : Get only courses that user is admin/has roles of
 
     # get org_id from slug
-    org = orgs.find_one({"slug": org_slug})
+    org = await orgs.find_one({"slug": org_slug})
 
     if not org:
         raise HTTPException(
@@ -274,7 +274,7 @@ async def get_courses_orgslug(request: Request, page: int = 1, limit: int = 10, 
     all_courses = courses.find({"org_id": org['org_id']}).sort(
         "name", 1).skip(10 * (page - 1)).limit(limit)
 
-    return [json.loads(json.dumps(course, default=str)) for course in all_courses]
+    return [json.loads(json.dumps(course, default=str)) for course in await all_courses.to_list(length=100)]
 
 
 
@@ -284,7 +284,7 @@ async def get_courses_orgslug(request: Request, page: int = 1, limit: int = 10, 
 async def verify_rights(request: Request, course_id: str, current_user: PublicUser, action: str):
     courses = request.app.db["courses"]
 
-    course = courses.find_one({"course_id": course_id})
+    course = await courses.find_one({"course_id": course_id})
 
     if not course:
         raise HTTPException(

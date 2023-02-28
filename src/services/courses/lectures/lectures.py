@@ -44,10 +44,10 @@ async def create_lecture(request: Request,lecture_object: Lecture, coursechapter
     # create lecture
     lecture = LectureInDB(**lecture_object.dict(), creationDate=str(
         datetime.now()), coursechapter_id=coursechapter_id, updateDate=str(datetime.now()), lecture_id=lecture_id)
-    lectures.insert_one(lecture.dict())
+    await lectures.insert_one(lecture.dict())
 
     # update chapter
-    coursechapters.update_one({"coursechapter_id": coursechapter_id}, {
+    await coursechapters.update_one({"coursechapter_id": coursechapter_id}, {
                        "$addToSet": {"lectures": lecture_id}})
 
     return lecture
@@ -56,7 +56,7 @@ async def create_lecture(request: Request,lecture_object: Lecture, coursechapter
 async def get_lecture(request: Request,lecture_id: str, current_user: PublicUser):
     lectures = request.app.db["lectures"]
 
-    lecture = lectures.find_one({"lecture_id": lecture_id})
+    lecture = await lectures.find_one({"lecture_id": lecture_id})
 
     # verify course rights
     hasRoleRights = await verify_user_rights_with_roles(request,"read", current_user.user_id, lecture_id)
@@ -80,7 +80,7 @@ async def update_lecture(request: Request,lecture_object: Lecture, lecture_id: s
 
     lectures = request.app.db["lectures"]
 
-    lecture = lectures.find_one({"lecture_id": lecture_id})
+    lecture = await lectures.find_one({"lecture_id": lecture_id})
 
     if lecture:
         creationDate = lecture["creationDate"]
@@ -91,7 +91,7 @@ async def update_lecture(request: Request,lecture_object: Lecture, lecture_id: s
         updated_course = LectureInDB(
             lecture_id=lecture_id, coursechapter_id=lecture["coursechapter_id"], creationDate=creationDate, updateDate=str(datetime_object), **lecture_object.dict())
 
-        lectures.update_one({"lecture_id": lecture_id}, {
+        await lectures.update_one({"lecture_id": lecture_id}, {
             "$set": updated_course.dict()})
 
         return LectureInDB(**updated_course.dict())
@@ -108,13 +108,13 @@ async def delete_lecture(request: Request,lecture_id: str, current_user: PublicU
 
     lectures = request.app.db["lectures"]
 
-    lecture = lectures.find_one({"lecture_id": lecture_id})
+    lecture = await lectures.find_one({"lecture_id": lecture_id})
 
     if not lecture:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="lecture does not exist")
 
-    isDeleted = lectures.delete_one({"lecture_id": lecture_id})
+    isDeleted = await lectures.delete_one({"lecture_id": lecture_id})
 
     if isDeleted:
         return {"detail": "lecture deleted"}
@@ -137,11 +137,8 @@ async def get_lectures(request: Request,coursechapter_id: str, current_user: Pub
 
     if not lectures:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="No lectures found")
+            status_code=status.HTTP_409_CONFLICT, detail="Course does not exist")
+    
+    lectures = [LectureInDB(**lecture) for lecture in await lectures.to_list(length=100)]
 
-    lectures_list = []
-
-    for lecture in lectures:
-        lectures_list.append(Lecture(**lecture))
-
-    return lectures_list
+    return lectures

@@ -1,8 +1,8 @@
 import styled from "styled-components";
 import { FontBoldIcon, FontItalicIcon, StrikethroughIcon, ArrowLeftIcon, ArrowRightIcon, OpacityIcon } from "@radix-ui/react-icons";
-import { AlertCircle, AlertTriangle, FileText, ImagePlus, Info, Sigma, Video, Youtube } from "lucide-react";
+import { AlertCircle, AlertTriangle, FileText, GraduationCap, ImagePlus, Info, Sigma, Video, Youtube } from "lucide-react";
 
-export const ToolbarButtons = ({ editor }: any) => {
+export const ToolbarButtons = ({ editor, props }: any) => {
   if (!editor) {
     return null;
   }
@@ -115,6 +115,19 @@ export const ToolbarButtons = ({ editor }: any) => {
         }
       >
         <FileText size={15} />
+      </ToolBtn>
+      <ToolBtn
+        onClick={() =>
+          editor
+            .chain()
+            .focus()
+            .insertContent({
+              type: "blockQuiz",
+            })
+            .run()
+        }
+      >
+        <GraduationCap size={15} />
       </ToolBtn>
     </ToolButtonsWrapper>
   );
