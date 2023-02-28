@@ -1,4 +1,4 @@
-fastapi==0.89.1
+fastapi==0.92.0
 pydantic>=1.8.0,<2.0.0
 uvicorn==0.20.0
 pymongo==4.1.1
