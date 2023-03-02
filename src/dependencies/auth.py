@@ -18,6 +18,8 @@ class Settings(BaseModel):
     authjwt_token_location = {"cookies"}
     authjwt_cookie_csrf_protect = False
     authjwt_access_token_expires = False # (pre-alpha only) # TODO: set to 1 hour 
+    authjwt_cookie_samesite = "none"
+    authjwt_cookie_secure = True
     
     
 @AuthJWT.load_config # type: ignore

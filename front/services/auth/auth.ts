@@ -10,7 +10,10 @@ interface LoginAndGetTokenResponse {
 
 export async function loginAndGetToken(username: string, password: string): Promise<LoginAndGetTokenResponse> {
   // Request Config
-  const HeadersConfig = new Headers({ "Content-Type": "application/x-www-form-urlencoded" , Origin: "http://localhost:3000" });
+
+  // get origin 
+  const origin = window.location.origin;
+  const HeadersConfig = new Headers({ "Content-Type": "application/x-www-form-urlencoded" , Origin: origin  });
   const urlencoded = new URLSearchParams({ username: username, password: password });
 
   const requestOptions: any = {
@@ -28,7 +31,8 @@ export async function loginAndGetToken(username: string, password: string): Prom
 }
 
 export async function getUserInfo(token: string): Promise<any> {
-  const HeadersConfig = new Headers({ Authorization: `Bearer ${token}`, Origin: "http://localhost:3000" });
+  const origin = window.location.origin;
+  const HeadersConfig = new Headers({ Authorization: `Bearer ${token}`, Origin:origin });
 
   const requestOptions: any = {
     method: "GET",

@@ -4,7 +4,7 @@ import Link from "next/link";
 import React, { useMemo } from "react";
 import Layout from "@components/UI/Layout";
 import { getLecture } from "@services/courses/lectures";
-import { getAPIUrl, getBackendUrl } from "@services/config";
+import { getAPIUrl, getBackendUrl, getUriWithOrg } from "@services/config";
 import Canva from "@components/LectureViews/DynamicCanva/DynamicCanva";
 import styled from "styled-components";
 import { getCourse } from "@services/courses/courses";
@@ -39,7 +39,7 @@ function LecturePage(params: any) {
         <LectureLayout>
           <LectureTopWrapper>
             <LectureThumbnail>
-              <Link href={`/org/${orgslug}/course/${courseid}`}>
+              <Link href={getUriWithOrg(orgslug,"") +`/course/${courseid}`}>
                 <img src={`${getBackendUrl()}content/uploads/img/${course.course.thumbnail}`} alt="" />
               </Link>
             </LectureThumbnail>
@@ -56,7 +56,7 @@ function LecturePage(params: any) {
                     {chapter.lectures.map((lecture: any) => {
                       return (
                         <>
-                          <Link href={`/org/${orgslug}/course/${courseid}/lecture/${lecture.id.replace("lecture_", "")}`}>
+                          <Link href={getUriWithOrg(orgslug,"") +`/course/${courseid}/lecture/${lecture.id.replace("lecture_", "")}`}>
                             <ChapterIndicator key={lecture.id} />
                           </Link>{" "}
                         </>
