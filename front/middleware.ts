@@ -20,11 +20,6 @@ export default function middleware(req: NextRequest) {
   // Get hostname of request (e.g. demo.vercel.pub, demo.localhost:3000)
   const hostname = req.headers.get("host") || "learnhouse.app";
 
-  // Only for demo purposes - remove this if you want to use your root domain as the landing page
-  if (hostname === "vercel.pub" || hostname === "platforms.vercel.app") {
-    return NextResponse.redirect("https://demo.vercel.pub");
-  }
-
   /*  You have to replace ".vercel.pub" with your own domain if you deploy this example under your domain.
       You can also use wildcard subdomains on .vercel.app links that are associated with your Vercel team slug
       in this case, our team slug is "platformize", thus *.platformize.vercel.app works. Do note that you'll
@@ -33,31 +28,29 @@ export default function middleware(req: NextRequest) {
     process.env.NODE_ENV === "production" && process.env.VERCEL === "1"
       ? hostname.replace(`.vercel.pub`, "").replace(`.platformize.vercel.app`, "")
       : hostname.replace(`.localhost:3000`, "");
-  
-  // if url starts with "/organizations" rewrite to path 
+
+  /*  Editor route */
+  if (url.pathname.match(/^\/course\/[^/]+\/lecture\/[^/]+\/edit$/)) {
+    url.pathname = `/_editor${url.pathname}`;
+    console.log("editor route", url.pathname);
+
+    return NextResponse.rewrite(url, { headers: { orgslug: currentHost } });
+  }
+
+  /*  Organizations route */
   if (url.pathname.startsWith("/organizations")) {
     url.pathname = url.pathname.replace("/organizations", `/organizations${currentHost}`);
     // remove localhost:3000 from url
     url.pathname = url.pathname.replace(`localhost:3000`, "");
-    console.log(url);
+    
     
     return NextResponse.rewrite(url);
   }
 
-  else if (url.pathname.startsWith("/org")) {
-    url.pathname = url.pathname.replace("/organizations", `/_orgs/${currentHost}`);
-    // remove localhost:3000 from url
-    
-    url.pathname = `/_orgs/${currentHost}${url.pathname}`;
-    url.pathname = url.pathname.replace(`localhost:3000/org/`, "");
-    console.log(url);
-    
-    return NextResponse.rewrite(url);
-  }
+  console.log("currentHost", url);
 
   // rewrite everything else to `/_sites/[site] dynamic route
   url.pathname = `/_orgs/${currentHost}${url.pathname}`;
-  console.log(url);
-  
-  return NextResponse.rewrite(url, { headers: { "olgslug": currentHost } });
+
+  return NextResponse.rewrite(url, { headers: { olgslug: currentHost } });
 }

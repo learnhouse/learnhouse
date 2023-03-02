@@ -3,6 +3,7 @@ import React from "react";
 import {  Draggable } from "react-beautiful-dnd";
 import { EyeOpenIcon, Pencil2Icon } from '@radix-ui/react-icons'
 import styled from "styled-components";
+import { getUriWithOrg } from "@services/config";
 
 function Lecture(props: any) {
 
@@ -12,13 +13,13 @@ function Lecture(props: any) {
         <LectureWrapper key={props.lecture.id} {...provided.draggableProps} {...provided.dragHandleProps} ref={provided.innerRef}>
           <p>{props.lecture.name} </p>
           <Link
-            href={`/org/${props.orgslug}/course/${props.courseid}/lecture/${props.lecture.id.replace("lecture_", "")}`}
+            href={getUriWithOrg(props.orgslug,"")+`/course/${props.courseid}/lecture/${props.lecture.id.replace("lecture_", "")}`}
             
             rel="noopener noreferrer">
             &nbsp; <EyeOpenIcon/>
           </Link>
           <Link
-            href={`/org/${props.orgslug}/course/${props.courseid}/lecture/${props.lecture.id.replace("lecture_", "")}/edit`}
+            href={getUriWithOrg(props.orgslug,"") +`/course/${props.courseid}/lecture/${props.lecture.id.replace("lecture_", "")}/edit`}
             rel="noopener noreferrer">
             &nbsp; <Pencil2Icon/>
           </Link>

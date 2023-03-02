@@ -4,9 +4,9 @@ import { default as React, useEffect, useRef } from "react";
 
 
 import { useRouter } from "next/navigation";
-import { getLecture } from "../../../../../../../../services/courses/lectures";
-import AuthProvider from "../../../../../../../../components/Security/AuthProvider";
-import EditorWrapper from "../../../../../../../../components/Editor/EditorWrapper";
+import { getLecture } from "@services/courses/lectures";
+import AuthProvider from "@components/Security/AuthProvider";
+import EditorWrapper from "@components/Editor/EditorWrapper";
 import useSWR, { mutate } from "swr";
 import { getAPIUrl } from "@services/config";
 import { swrFetcher } from "@services/utils/requests";

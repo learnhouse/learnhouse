@@ -1,5 +1,6 @@
 "use client";
 import { Title } from "@components/UI/Elements/Styles/Title";
+import { getUriWithOrg } from "@services/config";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -10,7 +11,7 @@ const OrgHomePage = (params: any) => {
   return (
     <div>
       <Title>Welcome {orgslug} 👋🏻</Title>
-      <Link href={pathname + "/courses"}>
+      <Link href={getUriWithOrg(orgslug,"/courses")}>
         <button>See Courses </button>
       </Link>
     </div>
