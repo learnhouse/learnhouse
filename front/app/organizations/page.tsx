@@ -6,7 +6,7 @@ import { Title } from "../../components/UI/Elements/Styles/Title";
 import { deleteOrganizationFromBackend } from "@services/orgs";
 import useSWR, { mutate } from "swr";
 import { swrFetcher } from "@services/utils/requests";
-import { getAPIUrl } from "@services/config";
+import { getAPIUrl, getUriWithOrg } from "@services/config";
 
 const Organizations = () => {
   const { data : organizations , error } = useSWR(`${getAPIUrl()}orgs/user/page/1/limit/10`, swrFetcher)
@@ -32,7 +32,7 @@ const Organizations = () => {
         <div>
           {organizations.map((org: any) => (
             <div key={org.org_id}>
-              <Link href={`/org/${org.slug}`}>
+              <Link href={getUriWithOrg(org.slug,"/")}>
                 <h3>{org.name}</h3>
               </Link>
               <button onClick={() => deleteOrganization(org.org_id)}>Delete</button>

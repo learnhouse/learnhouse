@@ -6,12 +6,6 @@ services:
       - "1338:80"
     volumes:
       - .:/usr/learnhouse
-  frontend:
-    build: ./front
-    ports:
-      - "3001:3000"
-    volumes:
-      - ./front:/usr/learnhouse/front
   mongo:
     image: mongo:5.0
     restart: always

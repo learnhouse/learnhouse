@@ -4,7 +4,7 @@ import { closeActivity, createActivity } from "@services/courses/activity";
 import Link from "next/link";
 import React from "react";
 import styled from "styled-components";
-import { getAPIUrl, getBackendUrl } from "@services/config";
+import { getAPIUrl, getBackendUrl, getUriWithOrg } from "@services/config";
 import useSWR, { mutate } from "swr";
 import { swrFetcher } from "@services/utils/requests";
 
@@ -45,7 +45,7 @@ const CourseIdPage = (params: any) => {
           <p>Course</p>
           <h1>
             {course.course.name}{" "}
-            <Link href={`/org/${orgslug}/course/${courseid}/edit`} rel="noopener noreferrer">
+            <Link href={getUriWithOrg(orgslug,"") +`/course/${courseid}/edit`} rel="noopener noreferrer">
               <Pencil2Icon />
             </Link>{" "}
           </h1>
@@ -56,7 +56,7 @@ const CourseIdPage = (params: any) => {
                   {chapter.lectures.map((lecture: any) => {
                     return (
                       <>
-                        <Link href={`/org/${orgslug}/course/${courseid}/lecture/${lecture.id.replace("lecture_", "")}`}>
+                        <Link href={getUriWithOrg(orgslug,"") +`/course/${courseid}/lecture/${lecture.id.replace("lecture_", "")}`}>
                           <ChapterIndicator />
                         </Link>{" "}
                       </>
@@ -97,7 +97,7 @@ const CourseIdPage = (params: any) => {
                           <>
                             <p>
                               Lecture {lecture.name}
-                              <Link href={`/org/${orgslug}/course/${courseid}/lecture/${lecture.id.replace("lecture_", "")}`} rel="noopener noreferrer">
+                              <Link href={getUriWithOrg(orgslug,"") +`/course/${courseid}/lecture/${lecture.id.replace("lecture_", "")}`} rel="noopener noreferrer">
                                 <EyeOpenIcon />
                               </Link>{" "}
                             </p>

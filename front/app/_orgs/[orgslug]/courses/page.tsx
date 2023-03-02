@@ -44,8 +44,8 @@ const CoursesIndexPage = (params: any) => {
               <button style={{ backgroundColor: "red", border: "none" }} onClick={() => deleteCourses(course.course_id)}>
                 Delete <Trash size={10}></Trash>
               </button>
-              <Link href={"/org/" + orgslug + "/course/" + removeCoursePrefix(course.course_id)}>
-                <Link href={"/org/" + orgslug + "/course/" + removeCoursePrefix(course.course_id) + "/edit"}>
+              <Link href={getUriWithOrg(orgslug,"") + "/course/" + removeCoursePrefix(course.course_id)}>
+                <Link href={getUriWithOrg(orgslug,"") + "/course/" + removeCoursePrefix(course.course_id) + "/edit"}>
                   <button>
                     Edit <Edit2 size={10}></Edit2>
                   </button>

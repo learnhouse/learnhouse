@@ -6,16 +6,13 @@ export const getAPIUrl = () => LEARNHOUSE_API_URL;
 export const getBackendUrl = () => LEARNHOUSE_BACKEND_URL;
 
 export const getUriWithOrg = (orgslug: string, path: string) => {
-  return `http://localhost:3000/org/${orgslug}${path}`;
+  return `http://${orgslug}.localhost:3000${path}`;
 };
 
-export const getOrgFromUri = (uri: any) => {
-  // if url contains /org
-  if (uri.includes("/org/")) {
-    let org = uri.match(/\/org\/([\w]+)/)[1];
-    return org;
-  }
-  else {
-    return "";
-  }
+export const getOrgFromUri = () => {
+  const hostname = window.location.hostname;
+  // get the orgslug from the hostname
+  const orgslug = hostname.split(".")[0];
+  return orgslug;
+  
 };

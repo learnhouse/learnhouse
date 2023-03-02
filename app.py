@@ -1,5 +1,6 @@
 import logging
 from fastapi import FastAPI, Request
+import re
 from src.core.config.config import Settings, get_settings
 from src.core.events.events import shutdown_app, startup_app
 from src.main import global_router
@@ -23,9 +24,11 @@ app = FastAPI(
     root_path="/"
 )
 
+origin_regex = re.compile(r"^http://[\w.-]+\.localhost:3000$")
 
 app.add_middleware(
     CORSMiddleware,
+    allow_origin_regex=str(origin_regex.pattern),
     allow_origins=["http://localhost:3000", "http://localhost:3001"],
     allow_methods=["*"],
     allow_credentials=True,
