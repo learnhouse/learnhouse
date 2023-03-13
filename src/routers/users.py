@@ -64,3 +64,10 @@ async def api_update_user(request: Request, user_object: User, user_id: str):
     Update user by ID
     """
     return await update_user(request, user_id, user_object)
+
+@router.put("/password/user_id/{user_id}")
+async def api_update_user_password(request: Request, user_id: str , passwordChangeForm : PasswordChangeForm):
+    """
+    Update user password by ID
+    """
+    return await update_user_password(request, user_id, passwordChangeForm)
