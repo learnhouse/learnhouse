@@ -59,7 +59,7 @@ async def api_delete_user(request: Request, user_id: str):
 
 
 @router.put("/user_id/{user_id}")
-async def api_update_user(request: Request, user_object: UserWithPassword, user_id: str):
+async def api_update_user(request: Request, user_object: User, user_id: str):
     """
     Update user by ID
     """

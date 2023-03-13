@@ -1,3 +1,4 @@
+from typing import Optional
 from uuid import uuid4
 from pydantic import BaseModel
 from src.services.security import *
@@ -16,7 +17,6 @@ class User(BaseModel):
     verified: bool | None = False
     user_type: str | None = None
     bio: str | None = None
-
 
 class UserWithPassword(User):
     password: str
@@ -128,7 +128,7 @@ async def get_userid_by_username(request: Request, username: str):
     return user["user_id"]
 
 
-async def update_user(request: Request, user_id: str, user_object: UserWithPassword):
+async def update_user(request: Request, user_id: str, user_object: User):
     users = request.app.db["users"]
 
     isUserExists = await users.find_one({"user_id": user_id})
@@ -138,11 +138,18 @@ async def update_user(request: Request, user_id: str, user_object: UserWithPassw
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="User does not exist")
 
-    if isUsernameAvailable:
-        raise HTTPException(
+    
+    # TODO : fix this
+
+    # okay if username is not changed
+    if isUserExists["username"] == user_object.username:
+        user_object.username = user_object.username.lower()
+
+    else:
+        if isUsernameAvailable:
+         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Username already used")
 
-    user_object.password = await security_hash_password(user_object.password)
 
     updated_user = {"$set": user_object.dict()}
     users.update_one({"user_id": user_id}, updated_user)
