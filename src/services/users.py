@@ -27,6 +27,10 @@ class PublicUser(User):
     creationDate: str
     updateDate: str
 
+class PasswordChangeForm(BaseModel):
+    old_password: str
+    new_password: str
+
 
 class UserInDB(UserWithPassword):
     user_id: str
@@ -155,6 +159,27 @@ async def update_user(request: Request, user_id: str, user_object: User):
     users.update_one({"user_id": user_id}, updated_user)
 
     return User(**user_object.dict())
+
+
+async def update_user_password(request: Request, user_id: str, password_change_form: PasswordChangeForm):
+    users = request.app.db["users"]
+
+    isUserExists = await users.find_one({"user_id": user_id})
+
+    if not isUserExists:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="User does not exist")
+
+    if not await security_verify_password(password_change_form.old_password, isUserExists["password"]):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Wrong password")
+
+    new_password = await security_hash_password(password_change_form.new_password)
+
+    updated_user = {"$set": {"password": new_password}}
+    users.update_one({"user_id": user_id}, updated_user)
+
+    return {"detail": "Password updated"}
 
 
 async def delete_user(request: Request, user_id: str):
