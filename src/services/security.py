@@ -46,14 +46,15 @@ async def verify_user_rights_with_roles(request: Request,action: str, user_id: s
         user_roles.append(role)
 
     for role in user_roles:
-        element = role["elements"][await check_element_type(element_id)]
-        permission_state = role["permissions"][f'action_{action}']
+        for policy in role['policies']:
+            element = policy["elements"][await check_element_type(element_id)]
+            permission_state = policy["permissions"][f'action_{action}']
 
-        ##
-        if ("*" in element or element_id in element) and (permission_state is True):
-            return True
-        else:
-            return False
+            ##
+            if ("*" in element or element_id in element) and (permission_state is True):
+                return True
+            else:
+                return False
 
 
 async def check_element_type(element_id):
