@@ -24,6 +24,11 @@ function SettingsLayout({ children, params }: { children: React.ReactNode, param
                             <li><Link href="/settings/account/profile">Profile</Link></li>
                             <li><Link href="/settings/account/passwords">Passwords</Link></li>
                         </ul>
+                        <MenuTitle>Organization</MenuTitle>
+                        <ul>
+                            <li><Link href="/settings/organization/general">General</Link></li>
+                            <li><Link href="/settings/organization/roles">Roles</Link></li>
+                        </ul>
                     </LeftMenuWrapper>
                 </LeftWrapper>
                 <RightWrapper>

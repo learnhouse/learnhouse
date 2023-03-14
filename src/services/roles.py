@@ -28,13 +28,15 @@ class Elements(BaseModel):
     lectures : List[str]
 
 
+class RolePolicy(BaseModel):
+    permissions: Permission
+    elements: Elements
+
 class Role(BaseModel):
     name: str
     description: str
-    permissions: Permission
-    elements: Elements
+    policies: List[RolePolicy]
     linked_users: List[str]
-
 
 class RoleInDB(Role):
     role_id: str
