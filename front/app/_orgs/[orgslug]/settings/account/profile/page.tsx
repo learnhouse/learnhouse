@@ -5,10 +5,7 @@ import { Formik, Form, Field, ErrorMessage } from 'formik';
 import { updateProfile } from '@services/settings/profile';
 
 function SettingsProfilePage() {
-
     const auth: any = React.useContext(AuthContext);
-
-
 
     return (
         <div>
