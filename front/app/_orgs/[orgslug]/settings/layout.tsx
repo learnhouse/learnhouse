@@ -27,7 +27,6 @@ function SettingsLayout({ children, params }: { children: React.ReactNode, param
                         <MenuTitle>Organization</MenuTitle>
                         <ul>
                             <li><Link href="/settings/organization/general">General</Link></li>
-                            <li><Link href="/settings/organization/roles">Roles</Link></li>
                         </ul>
                     </LeftMenuWrapper>
                 </LeftWrapper>
