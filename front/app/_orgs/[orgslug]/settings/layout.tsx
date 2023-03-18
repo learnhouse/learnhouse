@@ -2,8 +2,10 @@
 import React, { createContext, useState } from 'react'
 import { styled } from '@stitches/react';
 import Link from 'next/link';
+import LearnHouseWhiteLogo from '@public/learnhouse_text_white.png';
 import { AuthContext } from '@components/Security/AuthProvider';
 import Avvvatars from 'avvvatars-react';
+import Image from 'next/image';
 
 
 
@@ -15,9 +17,13 @@ function SettingsLayout({ children, params }: { children: React.ReactNode, param
         <>
             <Main>
                 <LeftWrapper>
+                    <LeftTopArea>
+                    
+                    <Image alt="Learnhouse logo" width={128}  src={LearnHouseWhiteLogo}/>
                     {auth.isAuthenticated && (
                         <Avvvatars value={auth.userInfo.user_object.user_id} style="shape" />
                     )}
+                    </LeftTopArea>
                     <LeftMenuWrapper>
                         <MenuTitle>Account</MenuTitle>
                         <ul>
@@ -46,10 +52,22 @@ const Main = styled('div', {
 })
 
 const LeftWrapper = styled('div', {
-    width: '250px',
+    width: '270px',
     background: "linear-gradient(348.55deg, #010101 -8.61%, #343434 105.52%);",
     height: '100vh',
     padding: '20px',
+})
+
+const LeftTopArea = styled('div', {
+    display: 'flex',
+    marginLeft: '20px',
+    
+    alignItems: 'center',
+
+    img: {
+        marginRight: '20px',
+    }
+    
 })
 
 const LeftMenuWrapper = styled('div', {
