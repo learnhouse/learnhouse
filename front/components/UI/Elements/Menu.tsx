@@ -13,7 +13,7 @@ import { getOrgFromUri, getUriWithOrg } from "@services/config";
 export const Menu = (params : any) => {
   const router = useRouter();
   const pathname = usePathname();
-  const orgslug = getOrgFromUri(pathname);
+  const orgslug = getOrgFromUri();
   
   return (
     <GlobalHeader>

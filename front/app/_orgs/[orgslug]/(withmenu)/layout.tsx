@@ -7,6 +7,7 @@ export default function RootLayout({ children, params }: { children: React.React
   return (
     <>
       <AuthProvider>
+        <Menu></Menu>
         {children}
       </AuthProvider>
     </>
