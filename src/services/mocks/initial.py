@@ -10,7 +10,7 @@ from src.services.courses.thumbnails import upload_thumbnail
 from src.services.users import PublicUser, User, UserInDB, UserWithPassword
 
 from src.services.orgs import OrganizationInDB, Organization, create_org
-from src.services.roles import Permission, Elements, create_role
+from src.services.roles import Permission, Elements, RolePolicy, create_role
 from src.services.users import create_user
 from src.services.courses.courses import Course, CourseInDB, create_course
 from src.services.roles import Role
@@ -87,11 +87,14 @@ async def create_initial_data(request: Request):
     database_roles = request.app.db["roles"]
     await database_roles.delete_many({})
 
+    
+    
+    
     roles = []
     admin_role = Role(
         name="admin",
         description="admin",
-        permissions=Permission(
+        policies=[RolePolicy(permissions=Permission(
             action_create=True,
             action_read=True,
             action_update=True,
@@ -105,7 +108,7 @@ async def create_initial_data(request: Request):
             organizations=["*"],
             coursechapters=["*"],
             lectures=["*"],
-        ),
+        ))],
         linked_users=[admin_user.user_id],
     )
     roles.append(admin_role)
