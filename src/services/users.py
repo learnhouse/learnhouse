@@ -1,3 +1,4 @@
+from typing import Optional
 from uuid import uuid4
 from pydantic import BaseModel
 from src.services.security import *
@@ -17,7 +18,6 @@ class User(BaseModel):
     user_type: str | None = None
     bio: str | None = None
 
-
 class UserWithPassword(User):
     password: str
 
@@ -26,6 +26,10 @@ class PublicUser(User):
     user_id: str
     creationDate: str
     updateDate: str
+
+class PasswordChangeForm(BaseModel):
+    old_password: str
+    new_password: str
 
 
 class UserInDB(UserWithPassword):
@@ -128,7 +132,7 @@ async def get_userid_by_username(request: Request, username: str):
     return user["user_id"]
 
 
-async def update_user(request: Request, user_id: str, user_object: UserWithPassword):
+async def update_user(request: Request, user_id: str, user_object: User):
     users = request.app.db["users"]
 
     isUserExists = await users.find_one({"user_id": user_id})
@@ -138,16 +142,44 @@ async def update_user(request: Request, user_id: str, user_object: UserWithPassw
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="User does not exist")
 
-    if isUsernameAvailable:
-        raise HTTPException(
+    
+    # TODO : fix this
+
+    # okay if username is not changed
+    if isUserExists["username"] == user_object.username:
+        user_object.username = user_object.username.lower()
+
+    else:
+        if isUsernameAvailable:
+         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Username already used")
 
-    user_object.password = await security_hash_password(user_object.password)
 
     updated_user = {"$set": user_object.dict()}
     users.update_one({"user_id": user_id}, updated_user)
 
     return User(**user_object.dict())
+
+
+async def update_user_password(request: Request, user_id: str, password_change_form: PasswordChangeForm):
+    users = request.app.db["users"]
+
+    isUserExists = await users.find_one({"user_id": user_id})
+
+    if not isUserExists:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="User does not exist")
+
+    if not await security_verify_password(password_change_form.old_password, isUserExists["password"]):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Wrong password")
+
+    new_password = await security_hash_password(password_change_form.new_password)
+
+    updated_user = {"$set": {"password": new_password}}
+    users.update_one({"user_id": user_id}, updated_user)
+
+    return {"detail": "Password updated"}
 
 
 async def delete_user(request: Request, user_id: str):
