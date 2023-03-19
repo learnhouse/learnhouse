@@ -4,7 +4,7 @@ from uuid import uuid4
 from pydantic import BaseModel
 from src.services.courses.lectures.lectures import LectureInDB
 from src.services.courses.thumbnails import upload_thumbnail
-from src.services.users import PublicUser
+from src.services.users.users import PublicUser
 from src.services.security import *
 from fastapi import HTTPException, status, UploadFile
 from datetime import datetime

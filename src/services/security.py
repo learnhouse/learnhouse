@@ -1,6 +1,10 @@
+from pprint import pprint
 from fastapi import HTTPException, status, Request
 from passlib.context import CryptContext
 from passlib.hash import pbkdf2_sha256
+from src.services.roles.schemas.roles import RoleInDB
+
+from src.services.users.schemas.users import User, UserInDB
 
 ### 🔒 JWT ##############################################################
 
@@ -27,34 +31,41 @@ async def security_verify_password(plain_password: str, hashed_password: str):
 ### 🔒 Roles checking  ##############################################################
 
 
-async def verify_user_rights_with_roles(request: Request,action: str, user_id: str, element_id: str):
+async def verify_user_rights_with_roles(request: Request, action: str, user_id: str, element_id: str):
     """
     Check if the user has the right to perform the action on the element
     """
     roles = request.app.db["roles"]
+    users = request.app.db["users"]
 
-    # find data where user_id is in linked_users or * is in linked_users
-    user_roles_cursor = roles.find({"$or": [{"linked_users": user_id}, {"linked_users": "*"}]})
+    # Check if the user is an admin
+    user: UserInDB = UserInDB(**await users.find_one({"user_id": user_id}))
 
-    
+    # Organization roles verification
+    for org in user.orgs:
+        # TODO: Check if the org_id (user) is the same as the org_id (element)
 
-    user_roles = []
+        # Check if user is owner or reader of the organization
+        if org.org_role == ("owner" or "editor"):
+            return True
 
-    # Info: permission actions are: read, create, delete, update
+    # If the user is not an owner or a editor, check if he has a role
+    # Get user roles
+    user_roles = user.roles
 
-    for role in await user_roles_cursor.to_list(length=100):
-        user_roles.append(role)
+    # TODO: Check if the org_id of the role is the same as the org_id of the element using find
 
-    for role in user_roles:
-        for policy in role['policies']:
-            element = policy["elements"][await check_element_type(element_id)]
-            permission_state = policy["permissions"][f'action_{action}']
+    # Check if user has the right role
 
-            ##
-            if ("*" in element or element_id in element) and (permission_state is True):
-                return True
-            else:
-                return False
+    element_type = await check_element_type(element_id)
+    for role_id in user_roles:
+        role = RoleInDB(**await roles.find_one({"role_id": role_id}))
+        if role.elements[element_type][f"action_{action}"]:
+            return True
+
+    # If no role is found, raise an error
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN, detail="You don't have the right to perform this action")
 
 
 async def check_element_type(element_id):

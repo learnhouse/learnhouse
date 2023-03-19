@@ -7,7 +7,7 @@ from fastapi import HTTPException, Request, status
 from pydantic import BaseModel
 from src.services.courses.chapters import get_coursechapters_meta
 
-from src.services.users import PublicUser
+from src.services.users.users import PublicUser
 
 #### Classes ####################################################
 
