@@ -10,11 +10,17 @@ from src.services.users.schemas.users import PasswordChangeForm, PublicUser, Use
 async def create_user(request: Request, current_user: PublicUser | None,  user_object: UserWithPassword, org_id: str):
     users = request.app.db["users"]
 
-    isUserAvailable = await users.find_one({"username": user_object.username})
+    isUsernameAvailable = await users.find_one({"username": user_object.username})
+    isEmailAvailable = await users.find_one({"email": user_object.email})
 
-    if isUserAvailable:
+
+    if isUsernameAvailable:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Username already exists")
+    
+    if isEmailAvailable:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="Email already exists")
 
     # Generate user_id with uuid4
     user_id = str(f"user_{uuid4()}")
@@ -69,6 +75,7 @@ async def update_user(request: Request,  user_id: str, user_object: User,current
 
     isUserExists = await users.find_one({"user_id": user_id})
     isUsernameAvailable = await users.find_one({"username": user_object.username})
+    isEmailAvailable = await users.find_one({"email": user_object.email})
 
     if not isUserExists:
         raise HTTPException(
@@ -82,6 +89,10 @@ async def update_user(request: Request,  user_id: str, user_object: User,current
         if isUsernameAvailable:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT, detail="Username already used")
+        
+        if isEmailAvailable:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT, detail="Email already used")
 
     updated_user = {"$set": user_object.dict()}
     users.update_one({"user_id": user_id}, updated_user)
