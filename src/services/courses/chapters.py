@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from src.services.courses.courses import Course, CourseInDB
 from src.services.courses.lectures.lectures import Lecture, LectureInDB
 from src.services.security import verify_user_rights_with_roles
-from src.services.users import PublicUser
+from src.services.users.users import PublicUser
 from fastapi import HTTPException, status, Request, Response, BackgroundTasks, UploadFile, File
 
 

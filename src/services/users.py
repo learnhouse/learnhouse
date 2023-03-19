@@ -17,6 +17,8 @@ class User(BaseModel):
     verified: bool | None = False
     user_type: str | None = None
     bio: str | None = None
+    orgs: list
+
 
 class UserWithPassword(User):
     password: str
@@ -24,8 +26,10 @@ class UserWithPassword(User):
 
 class PublicUser(User):
     user_id: str
+    orgs: list
     creationDate: str
     updateDate: str
+
 
 class PasswordChangeForm(BaseModel):
     old_password: str
@@ -86,7 +90,6 @@ async def get_profile_metadata(request: Request, user):
 
     user_roles_list = []
     for role in await user_roles.to_list(length=100):
-        print(role)
         user_roles_list.append(Role(**role))
 
     return {
@@ -142,7 +145,6 @@ async def update_user(request: Request, user_id: str, user_object: User):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="User does not exist")
 
-    
     # TODO : fix this
 
     # okay if username is not changed
@@ -151,9 +153,8 @@ async def update_user(request: Request, user_id: str, user_object: User):
 
     else:
         if isUsernameAvailable:
-         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Username already used")
-
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT, detail="Username already used")
 
     updated_user = {"$set": user_object.dict()}
     users.update_one({"user_id": user_id}, updated_user)
