@@ -1,13 +1,13 @@
 import { getAPIUrl } from "@services/config";
 import { RequestBody, RequestBodyForm } from "@services/utils/requests";
 
-export async function createLecture(data: any, chapter_id: any) {
+export async function createLecture(data: any, chapter_id: any, org_id: any) {
   data.content = {};
-
   // remove chapter_id from data
   delete data.chapterId;
+  
 
-  const result: any = await fetch(`${getAPIUrl()}lectures/?coursechapter_id=${chapter_id}`, RequestBody("POST", data))
+  const result: any = await fetch(`${getAPIUrl()}lectures/?coursechapter_id=${chapter_id}&org_id=${org_id}`, RequestBody("POST", data))
     .then((result) => result.json())
     .catch((error) => console.log("error", error));
 

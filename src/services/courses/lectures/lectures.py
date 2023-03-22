@@ -44,7 +44,7 @@ async def create_lecture(request: Request, lecture_object: Lecture, org_id: str,
 
     # create lecture
     lecture = LectureInDB(**lecture_object.dict(), creationDate=str(
-        datetime.now()), coursechapter_id=coursechapter_id, updateDate=str(datetime.now()), lecture_id=lecture_id)
+        datetime.now()), coursechapter_id=coursechapter_id, updateDate=str(datetime.now()), lecture_id=lecture_id, org_id=org_id)
     await lectures.insert_one(lecture.dict())
 
     # update chapter
@@ -89,7 +89,7 @@ async def update_lecture(request: Request, lecture_object: Lecture, lecture_id: 
         datetime_object = datetime.now()
 
         updated_course = LectureInDB(
-            lecture_id=lecture_id, coursechapter_id=lecture["coursechapter_id"], creationDate=creationDate, updateDate=str(datetime_object), **lecture_object.dict())
+            lecture_id=lecture_id, coursechapter_id=lecture["coursechapter_id"], creationDate=creationDate, updateDate=str(datetime_object), org_id=lecture["org_id"], **lecture_object.dict())
 
         await lectures.update_one({"lecture_id": lecture_id}, {
             "$set": updated_course.dict()})
@@ -133,7 +133,7 @@ async def get_lectures(request: Request, coursechapter_id: str,  current_user: P
     # TODO : TERRIBLE SECURITY ISSUE HERE, NEED TO FIX ASAP
     # TODO : TERRIBLE SECURITY ISSUE HERE, NEED TO FIX ASAP
     # TODO : TERRIBLE SECURITY ISSUE HERE, NEED TO FIX ASAP
-    
+
     lectures = lectures.find({"coursechapter_id": coursechapter_id})
 
     if not lectures:

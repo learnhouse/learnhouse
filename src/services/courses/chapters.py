@@ -40,10 +40,13 @@ async def create_coursechapter(request: Request,coursechapter_object: CourseChap
     coursechapters = request.app.db["coursechapters"]
     courses = request.app.db["courses"]
 
+    # get course org_id and verify rights
+    course = await courses.find_one({"course_id": course_id})
+
     # generate coursechapter_id with uuid4
     coursechapter_id = str(f"coursechapter_{uuid4()}")
 
-    hasRoleRights = await verify_user_rights_with_roles(request, "create", current_user.user_id, coursechapter_id)
+    hasRoleRights = await verify_user_rights_with_roles(request, "create", current_user.user_id, coursechapter_id, course["org_id"])
 
     if not hasRoleRights:
         raise HTTPException(
@@ -229,7 +232,7 @@ async def verify_rights(request: Request,course_id: str, current_user: PublicUse
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail=f"Course does not exist")
 
-    hasRoleRights = await verify_user_rights_with_roles(request, action, current_user.user_id, course_id)
+    hasRoleRights = await verify_user_rights_with_roles(request, action, current_user.user_id, course_id, course["org_id"])
     isAuthor = current_user.user_id in course["authors"]
 
     if not hasRoleRights and not isAuthor:
