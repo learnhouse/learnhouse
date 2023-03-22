@@ -17,6 +17,7 @@ class Lecture(BaseModel):
 class LectureInDB(Lecture):
     lecture_id: str
     coursechapter_id: str
+    org_id: str
     creationDate: str
     updateDate: str
 
