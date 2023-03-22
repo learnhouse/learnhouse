@@ -6,6 +6,9 @@ class UserOrganization(BaseModel):
     org_id: str
     org_role: Literal['owner', 'editor', 'member'] 
 
+    def __getitem__(self, item):
+        return getattr(self, item)
+
 
 class User(BaseModel):
     username: str
