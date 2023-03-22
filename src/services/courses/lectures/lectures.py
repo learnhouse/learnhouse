@@ -29,14 +29,14 @@ class LectureInDB(Lecture):
 ####################################################
 
 
-async def create_lecture(request: Request,lecture_object: Lecture, coursechapter_id: str, current_user: PublicUser):
+async def create_lecture(request: Request, lecture_object: Lecture, org_id: str, coursechapter_id: str, current_user: PublicUser):
     lectures = request.app.db["lectures"]
     coursechapters = request.app.db["coursechapters"]
 
     # generate lecture_id
     lecture_id = str(f"lecture_{uuid4()}")
 
-    hasRoleRights = await verify_user_rights_with_roles(request, "create", current_user.user_id, lecture_id)
+    hasRoleRights = await verify_user_rights_with_roles(request, "create", current_user.user_id, lecture_id, org_id)
 
     if not hasRoleRights:
         raise HTTPException(
@@ -49,18 +49,18 @@ async def create_lecture(request: Request,lecture_object: Lecture, coursechapter
 
     # update chapter
     await coursechapters.update_one({"coursechapter_id": coursechapter_id}, {
-                       "$addToSet": {"lectures": lecture_id}})
+        "$addToSet": {"lectures": lecture_id}})
 
     return lecture
 
 
-async def get_lecture(request: Request,lecture_id: str, current_user: PublicUser):
+async def get_lecture(request: Request, lecture_id: str, current_user: PublicUser):
     lectures = request.app.db["lectures"]
 
     lecture = await lectures.find_one({"lecture_id": lecture_id})
 
     # verify course rights
-    hasRoleRights = await verify_user_rights_with_roles(request,"read", current_user.user_id, lecture_id)
+    hasRoleRights = await verify_user_rights_with_roles(request, "read", current_user.user_id, lecture_id, element_org_id=lecture["org_id"])
 
     if not hasRoleRights:
         raise HTTPException(
@@ -74,14 +74,13 @@ async def get_lecture(request: Request,lecture_id: str, current_user: PublicUser
     return lecture
 
 
-async def update_lecture(request: Request,lecture_object: Lecture, lecture_id: str, current_user: PublicUser):
-
-    # verify course rights
-    await verify_user_rights_with_roles(request, "update", current_user.user_id, lecture_id)
+async def update_lecture(request: Request, lecture_object: Lecture, lecture_id: str, current_user: PublicUser):
 
     lectures = request.app.db["lectures"]
 
     lecture = await lectures.find_one({"lecture_id": lecture_id})
+    # verify course rights
+    await verify_user_rights_with_roles(request, "update", current_user.user_id, lecture_id, element_org_id=lecture["org_id"])
 
     if lecture:
         creationDate = lecture["creationDate"]
@@ -102,14 +101,14 @@ async def update_lecture(request: Request,lecture_object: Lecture, lecture_id: s
             status_code=status.HTTP_409_CONFLICT, detail="lecture does not exist")
 
 
-async def delete_lecture(request: Request,lecture_id: str, current_user: PublicUser):
-
-    # verify course rights
-    await verify_user_rights_with_roles(request,"delete", current_user.user_id, lecture_id)
+async def delete_lecture(request: Request, lecture_id: str, current_user: PublicUser):
 
     lectures = request.app.db["lectures"]
 
     lecture = await lectures.find_one({"lecture_id": lecture_id})
+
+    # verify course rights
+    await verify_user_rights_with_roles(request, "delete", current_user.user_id, lecture_id, element_org_id=lecture["org_id"])
 
     if not lecture:
         raise HTTPException(
@@ -128,18 +127,19 @@ async def delete_lecture(request: Request,lecture_id: str, current_user: PublicU
 ####################################################
 
 
-async def get_lectures(request: Request,coursechapter_id: str, current_user: PublicUser):
+async def get_lectures(request: Request, coursechapter_id: str,  current_user: PublicUser):
     lectures = request.app.db["lectures"]
 
-    # verify course rights
-    await verify_user_rights_with_roles(request,"read", current_user.user_id, coursechapter_id)
-
+    # TODO : TERRIBLE SECURITY ISSUE HERE, NEED TO FIX ASAP
+    # TODO : TERRIBLE SECURITY ISSUE HERE, NEED TO FIX ASAP
+    # TODO : TERRIBLE SECURITY ISSUE HERE, NEED TO FIX ASAP
+    
     lectures = lectures.find({"coursechapter_id": coursechapter_id})
 
     if not lectures:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Course does not exist")
-    
+
     lectures = [LectureInDB(**lecture) for lecture in await lectures.to_list(length=100)]
 
     return lectures

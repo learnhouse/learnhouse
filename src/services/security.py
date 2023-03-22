@@ -58,7 +58,8 @@ async def verify_user_rights_with_roles(request: Request, action: str, user_id: 
 
     # TODO: Check if the org_id of the role is the same as the org_id of the element using find
 
-    await check_user_role_org_with_element_org(request, element_id, user_roles)
+    if action != "create":
+        await check_user_role_org_with_element_org(request, element_id, user_roles)
 
     # Check if user has the right role
 
@@ -105,12 +106,16 @@ async def check_user_role_org_with_element_org(request: Request, element_id: str
     # get singular element type
     singular_form_element = element_type[:-1]
 
-    element_org_id = await element.find_one({singular_form_element + "_id": element_id}, {"org_id": 1})
+    element_type_id = singular_form_element + "_id"
+    
+    element_org = await element.find_one({element_type_id: element_id})
+
 
     for role_id in roles_list:
         role = RoleInDB(**await roles.find_one({"role_id": role_id}))
-        
-        if role.org_id == element_org_id:
+        if role.org_id == element_org["org_id"]:
+            return True
+        if role.org_id == "*":
             return True
 
         else:
