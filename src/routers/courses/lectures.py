@@ -15,7 +15,7 @@ async def api_create_lecture(request: Request, lecture_object: Lecture,  org_id:
 
 
 @router.get("/{lecture_id}")
-async def api_get_lecture(request: Request, lecture_id: str, org_id: str, current_user: PublicUser = Depends(get_current_user)):
+async def api_get_lecture(request: Request, lecture_id: str,  current_user: PublicUser = Depends(get_current_user)):
     """
     Get single lecture by lecture_id
     """
