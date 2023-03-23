@@ -1,20 +1,19 @@
-import { getAPIUrl } from "@services/config";
+import { getAPIUrl } from "@services/config/config";
 import { RequestBody, RequestBodyForm } from "@services/utils/requests";
 
-export async function uploadNewPDFFile(file: any, lecture_id: string) {
+export async function uploadNewVideoFile(file: any, lecture_id: string) {
   // Send file thumbnail as form data
   const formData = new FormData();
   formData.append("file_object", file);
   formData.append("lecture_id", lecture_id);
 
-  return fetch(`${getAPIUrl()}blocks/document`, RequestBodyForm("POST", formData))
+  return fetch(`${getAPIUrl()}blocks/video`, RequestBodyForm("POST", formData))
     .then((result) => result.json())
     .catch((error) => console.log("error", error));
 }
 
-export async function getPDFFile(file_id: string) {
-  // todo : add course id to url
-  return fetch(`${getAPIUrl()}blocks/document?file_id=${file_id}`, RequestBody("GET", null))
+export async function getVideoFile(file_id: string) {
+  return fetch(`${getAPIUrl()}blocks/video?file_id=${file_id}`, RequestBody("GET", null))
     .then((result) => result.json())
     .catch((error) => console.log("error", error));
 }

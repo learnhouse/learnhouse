@@ -1,6 +1,6 @@
 "use client";
 import { Title } from "@components/UI/Elements/Styles/Title";
-import { getUriWithOrg } from "@services/config";
+import { getUriWithOrg } from "@services/config/config";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 

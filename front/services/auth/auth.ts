@@ -1,4 +1,4 @@
-import { getAPIUrl } from "@services/config";
+import { getAPIUrl } from "@services/config/config";
 
 interface LoginAndGetTokenResponse {
   access_token: "string";

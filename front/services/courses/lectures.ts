@@ -1,4 +1,4 @@
-import { getAPIUrl } from "@services/config";
+import { getAPIUrl } from "@services/config/config";
 import { RequestBody, RequestBodyForm } from "@services/utils/requests";
 
 export async function createLecture(data: any, chapter_id: any, org_id: any) {

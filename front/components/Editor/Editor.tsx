@@ -9,7 +9,7 @@ import { ToolbarButtons } from "./Toolbar/ToolbarButtons";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/legacy/image";
 import styled from "styled-components";
-import { getBackendUrl } from "../../services/config";
+import { getBackendUrl } from "@services/config/config";
 import { SlashIcon } from "@radix-ui/react-icons";
 import Avvvatars from "avvvatars-react";
 // extensions

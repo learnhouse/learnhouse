@@ -10,7 +10,7 @@ export default Node.create({
   
   addAttributes() {
     return {
-      fileObject: {
+      blockObject: {
         default: null,
       },
     };

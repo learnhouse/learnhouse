@@ -1,5 +1,5 @@
-import { getAPIUrl } from "@services/config";
-import { RequestBody } from "./utils/requests";
+import { getAPIUrl } from "@services/config/config";
+import { RequestBody } from "../utils/requests";
 
 /*
  This file includes only POST, PUT, DELETE requests

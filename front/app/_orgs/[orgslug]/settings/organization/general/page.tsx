@@ -2,7 +2,7 @@
 import React from 'react'
 import useSWR, { mutate } from "swr";
 import { swrFetcher } from "@services/utils/requests";
-import { getAPIUrl } from '@services/config';
+import { getAPIUrl } from '@services/config/config';
 import { Field, Form, Formik } from 'formik';
 import { updateOrganization } from '@services/settings/org';
 
