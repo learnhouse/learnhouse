@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, UploadFile, Form, Request
 from src.dependencies.auth import get_current_user
 from fastapi import HTTPException, status, UploadFile
-from src.services.blocks.block_types.imageBlock.images import create_image_file, get_image_file
+from src.services.blocks.block_types.imageBlock.images import create_image_block, get_image_block  
 from src.services.blocks.block_types.videoBlock.videoBlock import create_video_block, get_video_block
 from src.services.blocks.block_types.pdfBlock.pdfBlock import create_pdf_block, get_pdf_block
 from src.services.blocks.block_types.quizBlock.quizBlock import create_quiz_block, get_quiz_block_answers, get_quiz_block_options, quizBlock
@@ -18,7 +18,7 @@ async def api_create_image_file_block(request: Request, file_object: UploadFile,
     """
     Create new image file
     """
-    return await create_image_file(request, file_object, lecture_id)
+    return await create_image_block(request, file_object, lecture_id)
 
 
 @router.get("/image")
@@ -26,7 +26,7 @@ async def api_get_image_file_block(request: Request, file_id: str, current_user:
     """
     Get image file
     """
-    return await get_image_file(request, file_id, current_user)
+    return await get_image_block(request, file_id, current_user)
 
 ####################
 # Video Block
