@@ -2,11 +2,11 @@
 import { useRouter } from "next/navigation";
 import React from "react";
 import { Title } from "@components/UI/Elements/Styles/Title";
-import { createCollection } from "@services/collections";
+import { createCollection } from "@services/courses/collections";
 import useSWR from "swr";
-import { getAPIUrl } from "@services/config";
+import { getAPIUrl } from "@services/config/config";
 import { swrFetcher } from "@services/utils/requests";
-import { getOrganizationContextInfo } from "@services/orgs";
+import { getOrganizationContextInfo } from "@services/organizations/orgs";
 
 function NewCollection(params : any) {
   const orgslug = params.params.orgslug;

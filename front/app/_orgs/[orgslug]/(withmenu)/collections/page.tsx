@@ -3,8 +3,8 @@ import Link from "next/link";
 import React from "react";
 import styled from "styled-components";
 import { Title } from "@components/UI/Elements/Styles/Title";
-import { deleteCollection } from "@services/collections";
-import { getAPIUrl, getBackendUrl, getUriWithOrg } from "@services/config";
+import { deleteCollection } from "@services/courses/collections";
+import { getAPIUrl, getBackendUrl, getUriWithOrg } from "@services/config/config";
 import { swrFetcher } from "@services/utils/requests";
 import useSWR, { mutate } from "swr";
 

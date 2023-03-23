@@ -2,7 +2,7 @@
 import React from "react";
 import Layout from "../../../components/UI/Layout";
 import { Title } from "../../../components/UI/Elements/Styles/Title";
-import { createNewOrganization } from "../../../services/orgs";
+import { createNewOrganization } from "../../../services/organizations/orgs";
 
 const Organizations = () => {
   const [name, setName] = React.useState("");

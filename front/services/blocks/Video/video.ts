@@ -1,4 +1,4 @@
-import { getAPIUrl } from "@services/config";
+import { getAPIUrl } from "@services/config/config";
 import { RequestBody, RequestBodyForm } from "@services/utils/requests";
 
 export async function uploadNewVideoFile(file: any, lecture_id: string) {

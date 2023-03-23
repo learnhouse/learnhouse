@@ -2,7 +2,7 @@ import { NodeViewWrapper } from "@tiptap/react";
 import { AlertTriangle, Image, Video } from "lucide-react";
 import React from "react";
 import styled from "styled-components";
-import { getBackendUrl } from "../../../../services/config";
+import { getBackendUrl } from "../../../../services/config/config";
 import { uploadNewVideoFile } from "../../../../services/blocks/Video/video";
 
 function VideoBlockComponents(props: any) {

@@ -3,7 +3,7 @@ import React from "react";
 import styled from "styled-components";
 import { AlertCircle, AlertTriangle, Image, ImagePlus, Info } from "lucide-react";
 import { getImageFile, uploadNewImageFile } from "../../../../services/blocks/Image/images";
-import { getBackendUrl } from "../../../../services/config";
+import { getBackendUrl } from "../../../../services/config/config";
 
 function ImageBlockComponent(props: any) {
   const [image, setImage] = React.useState(null);

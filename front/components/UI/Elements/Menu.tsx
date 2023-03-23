@@ -8,7 +8,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { headers } from "next/headers";
-import { getOrgFromUri, getUriWithOrg } from "@services/config";
+import { getOrgFromUri, getUriWithOrg } from "@services/config/config";
 
 export const Menu = (params : any) => {
   const router = useRouter();

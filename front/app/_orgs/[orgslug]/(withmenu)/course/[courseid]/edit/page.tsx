@@ -13,7 +13,7 @@ import { useRouter } from "next/navigation";
 import NewChapterModal from "@components/Modals/CourseEdit/NewChapter";
 import NewLectureModal from "@components/Modals/CourseEdit/NewLecture";
 import { createLecture, createFileLecture } from "@services/courses/lectures";
-import { getOrganizationContextInfo } from "@services/orgs";
+import { getOrganizationContextInfo } from "@services/organizations/orgs";
 
 function CourseEdit(params: any) {
   const router = useRouter();
