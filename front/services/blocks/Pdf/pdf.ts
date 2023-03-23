@@ -7,14 +7,14 @@ export async function uploadNewPDFFile(file: any, lecture_id: string) {
   formData.append("file_object", file);
   formData.append("lecture_id", lecture_id);
 
-  return fetch(`${getAPIUrl()}blocks/document`, RequestBodyForm("POST", formData))
+  return fetch(`${getAPIUrl()}blocks/pdf`, RequestBodyForm("POST", formData))
     .then((result) => result.json())
     .catch((error) => console.log("error", error));
 }
 
 export async function getPDFFile(file_id: string) {
   // todo : add course id to url
-  return fetch(`${getAPIUrl()}blocks/document?file_id=${file_id}`, RequestBody("GET", null))
+  return fetch(`${getAPIUrl()}blocks/pdf?file_id=${file_id}`, RequestBody("GET", null))
     .then((result) => result.json())
     .catch((error) => console.log("error", error));
 }

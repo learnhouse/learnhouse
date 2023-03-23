@@ -3,12 +3,15 @@ from src.dependencies.auth import get_current_user
 from fastapi import HTTPException, status, UploadFile
 from src.services.blocks.block_types.imageBlock.images import create_image_file, get_image_file
 from src.services.blocks.block_types.videoBlock.videoBlock import create_video_block, get_video_block
-from src.services.blocks.block_types.pdfBlock.documents import create_document_file, get_document_file
+from src.services.blocks.block_types.pdfBlock.pdfBlock import create_pdf_block, get_pdf_block
 from src.services.blocks.block_types.quizBlock.quizBlock import create_quiz_block, get_quiz_block_answers, get_quiz_block_options, quizBlock
 from src.services.users.users import PublicUser
 
 router = APIRouter()
 
+####################
+# Image Block
+####################
 
 @router.post("/image")
 async def api_create_image_file_block(request: Request, file_object: UploadFile, lecture_id: str = Form(),  current_user: PublicUser = Depends(get_current_user)):
@@ -25,6 +28,9 @@ async def api_get_image_file_block(request: Request, file_id: str, current_user:
     """
     return await get_image_file(request, file_id, current_user)
 
+####################
+# Video Block
+####################
 
 @router.post("/video")
 async def api_create_video_file_block(request: Request, file_object: UploadFile, lecture_id: str = Form(), current_user: PublicUser = Depends(get_current_user)):
@@ -41,22 +47,29 @@ async def api_get_video_file_block(request: Request, file_id: str, current_user:
     """
     return await get_video_block(request, file_id, current_user)
 
+####################
+# PDF Block
+####################
 
-@router.post("/document")
-async def api_create_document_file_block(request: Request, file_object: UploadFile, lecture_id: str = Form(), current_user: PublicUser = Depends(get_current_user)):
+@router.post("/pdf")
+async def api_create_pdf_file_block(request: Request, file_object: UploadFile, lecture_id: str = Form(), current_user: PublicUser = Depends(get_current_user)):
     """
-    Create new document file
+    Create new pdf file
     """
-    return await create_document_file(request, file_object, lecture_id)
+    return await create_pdf_block(request, file_object, lecture_id)
 
 
-@router.get("/document")
-async def api_get_document_file_block(request: Request, file_id: str, current_user: PublicUser = Depends(get_current_user)):
+@router.get("/pdf")
+async def api_get_pdf_file_block(request: Request, file_id: str, current_user: PublicUser = Depends(get_current_user)):
     """
-    Get document file
+    Get pdf file
     """
-    return await get_document_file(request, file_id, current_user)
+    return await get_pdf_block(request, file_id, current_user)
 
+
+####################
+# Quiz Block
+####################
 
 @router.post("/quiz/{lecture_id}")
 async def api_create_quiz_block(request: Request, quiz_block: quizBlock, lecture_id: str, current_user: PublicUser = Depends(get_current_user)):
