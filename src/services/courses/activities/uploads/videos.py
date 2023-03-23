@@ -1,14 +1,14 @@
 import os
 
 
-async def upload_video(video_file,  lecture_id):
+async def upload_video(video_file,  activity_id):
     contents = video_file.file.read()
     video_format = video_file.filename.split(".")[-1]
     # create folder
-    os.mkdir(f"content/uploads/video/{lecture_id}")
+    os.mkdir(f"content/uploads/video/{activity_id}")
 
     try:
-        with open(f"content/uploads/video/{lecture_id}/video.{video_format}", 'wb') as f:
+        with open(f"content/uploads/video/{activity_id}/video.{video_format}", 'wb') as f:
             f.write(contents)
             f.close()
 

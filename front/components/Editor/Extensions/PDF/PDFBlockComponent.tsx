@@ -17,7 +17,7 @@ function PDFBlockComponent(props: any) {
   const handleSubmit = async (e: any) => {
     e.preventDefault();
     setIsLoading(true);
-    let object = await uploadNewPDFFile(pdf, props.extension.options.lecture.lecture_id);
+    let object = await uploadNewPDFFile(pdf, props.extension.options.activity.activity_id);
     setIsLoading(false);
     setblockObject(object);
     props.updateAttributes({
@@ -41,7 +41,7 @@ function PDFBlockComponent(props: any) {
       {blockObject && (
         <BlockPDF>
           <iframe
-            src={`${getBackendUrl()}content/uploads/files/lectures/${props.extension.options.lecture.lecture_id}/blocks/pdfBlock/${blockObject.block_id}/${blockObject.block_data.file_id}.${
+            src={`${getBackendUrl()}content/uploads/files/activities/${props.extension.options.activity.activity_id}/blocks/pdfBlock/${blockObject.block_id}/${blockObject.block_data.file_id}.${
               blockObject.block_data.file_format
             }`}
           />

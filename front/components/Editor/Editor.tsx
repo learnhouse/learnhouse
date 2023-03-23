@@ -28,7 +28,7 @@ interface Editor {
   content: string;
   ydoc: any;
   provider: any;
-  lecture: any;
+  activity: any;
   course: any;
   setContent: (content: string) => void;
 }
@@ -52,23 +52,23 @@ function Editor(props: Editor) {
       }),
       ImageBlock.configure({
         editable: true,
-        lecture: props.lecture,
+        activity: props.activity,
       }),
       VideoBlock.configure({
         editable: true,
-        lecture: props.lecture,
+        activity: props.activity,
       }),
       MathEquationBlock.configure({
         editable: true,
-        lecture: props.lecture,
+        activity: props.activity,
       }),
       PDFBlock.configure({
         editable: true,
-        lecture: props.lecture,
+        activity: props.activity,
       }),
       QuizBlock.configure({
         editable: true,
-        lecture: props.lecture,
+        activity: props.activity,
       }),
       Youtube.configure({
         controls: true,
@@ -112,7 +112,7 @@ function Editor(props: Editor) {
               <EditorInfoThumbnail src={`${getBackendUrl()}content/uploads/img/${props.course.course.thumbnail}`} alt=""></EditorInfoThumbnail>
               <EditorInfoDocName>
                 {" "}
-                <b>{props.course.course.name}</b> <SlashIcon /> {props.lecture.name}{" "}
+                <b>{props.course.course.name}</b> <SlashIcon /> {props.activity.name}{" "}
               </EditorInfoDocName>
               <EditorSaveButton onClick={() => props.setContent(editor.getJSON())}>
                 Save <Save size={12} />

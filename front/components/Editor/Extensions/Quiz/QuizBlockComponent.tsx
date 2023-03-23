@@ -88,7 +88,7 @@ function ImageBlockComponent(props: any) {
     console.log(questions);
     console.log(answers);
     try {
-      let res = await submitQuizBlock(props.extension.options.lecture.lecture_id, {questions : questions , answers : answers})
+      let res = await submitQuizBlock(props.extension.options.activity.activity_id, {questions : questions , answers : answers})
       console.log(res.block_id);
       props.updateAttributes({
         quizId: {

@@ -53,10 +53,10 @@ const CourseIdPage = (params: any) => {
             {course.chapters.map((chapter: any) => {
               return (
                 <>
-                  {chapter.lectures.map((lecture: any) => {
+                  {chapter.activities.map((activity: any) => {
                     return (
                       <>
-                        <Link href={getUriWithOrg(orgslug,"") +`/course/${courseid}/lecture/${lecture.id.replace("lecture_", "")}`}>
+                        <Link href={getUriWithOrg(orgslug,"") +`/course/${courseid}/activity/${activity.id.replace("activity_", "")}`}>
                           <ChapterIndicator />
                         </Link>{" "}
                       </>
@@ -92,12 +92,12 @@ const CourseIdPage = (params: any) => {
                   return (
                     <>
                       <h3>Chapter : {chapter.name}</h3>
-                      {chapter.lectures.map((lecture: any) => {
+                      {chapter.activities.map((activity: any) => {
                         return (
                           <>
                             <p>
-                              Lecture {lecture.name}
-                              <Link href={getUriWithOrg(orgslug,"") +`/course/${courseid}/lecture/${lecture.id.replace("lecture_", "")}`} rel="noopener noreferrer">
+                              Activity {activity.name}
+                              <Link href={getUriWithOrg(orgslug,"") +`/course/${courseid}/activity/${activity.id.replace("activity_", "")}`} rel="noopener noreferrer">
                                 <EyeOpenIcon />
                               </Link>{" "}
                             </p>
