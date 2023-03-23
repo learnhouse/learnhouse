@@ -5,31 +5,31 @@ import { EyeOpenIcon, Pencil2Icon } from '@radix-ui/react-icons'
 import styled from "styled-components";
 import { getUriWithOrg } from "@services/config/config";
 
-function Lecture(props: any) {
+function Activity(props: any) {
 
   return (
-    <Draggable key={props.lecture.id} draggableId={props.lecture.id} index={props.index}>
+    <Draggable key={props.activity.id} draggableId={props.activity.id} index={props.index}>
       {(provided) => (
-        <LectureWrapper key={props.lecture.id} {...provided.draggableProps} {...provided.dragHandleProps} ref={provided.innerRef}>
-          <p>{props.lecture.name} </p>
+        <ActivityWrapper key={props.activity.id} {...provided.draggableProps} {...provided.dragHandleProps} ref={provided.innerRef}>
+          <p>{props.activity.name} </p>
           <Link
-            href={getUriWithOrg(props.orgslug,"")+`/course/${props.courseid}/lecture/${props.lecture.id.replace("lecture_", "")}`}
+            href={getUriWithOrg(props.orgslug,"")+`/course/${props.courseid}/activity/${props.activity.id.replace("activity_", "")}`}
             
             rel="noopener noreferrer">
             &nbsp; <EyeOpenIcon/>
           </Link>
           <Link
-            href={getUriWithOrg(props.orgslug,"") +`/course/${props.courseid}/lecture/${props.lecture.id.replace("lecture_", "")}/edit`}
+            href={getUriWithOrg(props.orgslug,"") +`/course/${props.courseid}/activity/${props.activity.id.replace("activity_", "")}/edit`}
             rel="noopener noreferrer">
             &nbsp; <Pencil2Icon/>
           </Link>
-        </LectureWrapper>
+        </ActivityWrapper>
       )}
     </Draggable>
   );
 }
 
-export const LectureWrapper = styled.div`
+export const ActivityWrapper = styled.div`
   padding: 2px;
   padding-left: 17px;
   list-style: none;
@@ -44,4 +44,4 @@ export const LectureWrapper = styled.div`
   }
   
 `;
-export default Lecture;
+export default Activity;

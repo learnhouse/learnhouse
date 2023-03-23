@@ -23,8 +23,8 @@ export async function closeActivity(org_id: string, activity_id: string) {
   return result;
 }
 
-export async function maskLectureAsComplete(org_id: string, course_id: string, lecture_id: string) {
-  const result: any = await fetch(`${getAPIUrl()}activity/${org_id}/add_lecture/${course_id}/${lecture_id}`, RequestBody("POST", null))
+export async function maskActivityAsComplete(org_id: string, course_id: string, activity_id: string) {
+  const result: any = await fetch(`${getAPIUrl()}activity/${org_id}/add_activity/${course_id}/${activity_id}`, RequestBody("POST", null))
     .then((result) => result.json())
     .catch((error) => console.log("error", error));
   return result;

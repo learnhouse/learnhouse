@@ -13,7 +13,7 @@ import PDFBlock from "@components/Editor/Extensions/PDF/PDFBlock";
 
 interface Editor {
   content: string;
-  lecture: any;
+  activity: any;
   //course: any;
 }
 
@@ -32,19 +32,19 @@ function Canva(props: Editor) {
       }),
       ImageBlock.configure({
         editable: isEditable,
-        lecture: props.lecture,
+        activity: props.activity,
       }),
       VideoBlock.configure({
         editable: true,
-        lecture: props.lecture,
+        activity: props.activity,
       }),
       MathEquationBlock.configure({
         editable: false,
-        lecture: props.lecture,
+        activity: props.activity,
       }),
       PDFBlock.configure({
         editable: true,
-        lecture: props.lecture,
+        activity: props.activity,
       }),
       Youtube.configure({
         controls: true,
