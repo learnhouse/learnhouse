@@ -3,61 +3,61 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import React, { useMemo } from "react";
 import Layout from "@components/UI/Layout";
-import { getLecture } from "@services/courses/lectures";
+import { getActivity } from "@services/courses/activities";
 import { getAPIUrl, getBackendUrl, getUriWithOrg } from "@services/config/config";
-import Canva from "@components/LectureViews/DynamicCanva/DynamicCanva";
-import styled from "styled-components";
+import Canva from "@components/ActivityViews/DynamicCanva/DynamicCanva";
+import styled from "styled-components"; 
 import { getCourse } from "@services/courses/courses";
-import VideoLecture from "@components/LectureViews/Video/Video";
+import VideoActivity from "@components/ActivityViews/Video/Video";
 import useSWR, { mutate } from "swr";
 import { Check } from "lucide-react";
-import { maskLectureAsComplete } from "@services/courses/activity";
+import { maskActivityAsComplete } from "@services/courses/activity";
 import { swrFetcher } from "@services/utils/requests";
 
-function LecturePage(params: any) {
-  const lectureid = params.params.lectureid;
+function ActivityPage(params: any) {
+  const activityid = params.params.activityid;
   const courseid = params.params.courseid;
   const orgslug = params.params.orgslug;
 
   const { data: course, error: error_course } = useSWR(`${getAPIUrl()}courses/meta/course_${courseid}`, swrFetcher);
-  const { data: lecture, error: error_lecture } = useSWR(`${getAPIUrl()}lectures/lecture_${lectureid}`, swrFetcher);
+  const { data: activity, error: error_activity } = useSWR(`${getAPIUrl()}activities/activity_${activityid}`, swrFetcher);
 
-  console.log(course, lecture);
+  console.log(course, activity);
 
-  async function markLectureAsCompleteFront() {
-    const activity = await maskLectureAsComplete("" + lectureid, courseid, lecture.lecture_id.replace("lecture_", ""));
-    mutate(`${getAPIUrl()}lectures/lecture_${lectureid}`);
+  async function markActivityAsCompleteFront() {
+    const activity = await maskActivityAsComplete("" + activityid, courseid, activity.activity_id.replace("activity_", ""));
+    mutate(`${getAPIUrl()}activities/activity_${activityid}`);
     mutate(`${getAPIUrl()}courses/meta/course_${courseid}`);
   }
 
   return (
     <>
       {error_course && <p>Failed to load</p>}
-      {!course || !lecture ? (
+      {!course || !activity ? (
         <div>Loading...</div>
       ) : (
-        <LectureLayout>
-          <LectureTopWrapper>
-            <LectureThumbnail>
+        <ActivityLayout>
+          <ActivityTopWrapper>
+            <ActivityThumbnail>
               <Link href={getUriWithOrg(orgslug,"") +`/course/${courseid}`}>
                 <img src={`${getBackendUrl()}content/uploads/img/${course.course.thumbnail}`} alt="" />
               </Link>
-            </LectureThumbnail>
-            <LectureInfo>
+            </ActivityThumbnail>
+            <ActivityInfo>
               <p>Course</p>
               <h1>{course.course.name}</h1>
-            </LectureInfo>
-          </LectureTopWrapper>
+            </ActivityInfo>
+          </ActivityTopWrapper>
           <ChaptersWrapper>
             {course.chapters.map((chapter: any) => {
               return (
                 <>
                   <div style={{ display: "flex", flexDirection: "row" }} key={chapter.chapter_id}>
-                    {chapter.lectures.map((lecture: any) => {
+                    {chapter.activities.map((activity: any) => {
                       return (
                         <>
-                          <Link href={getUriWithOrg(orgslug,"") +`/course/${courseid}/lecture/${lecture.id.replace("lecture_", "")}`}>
-                            <ChapterIndicator key={lecture.id} />
+                          <Link href={getUriWithOrg(orgslug,"") +`/course/${courseid}/activity/${activity.id.replace("activity_", "")}`}>
+                            <ChapterIndicator key={activity.id} />
                           </Link>{" "}
                         </>
                       );
@@ -69,15 +69,15 @@ function LecturePage(params: any) {
             })}
           </ChaptersWrapper>
 
-          {lecture ? (
+          {activity ? (
             <CourseContent>
-              {lecture.type == "dynamic" && <Canva content={lecture.content} lecture={lecture} />}
+              {activity.type == "dynamic" && <Canva content={activity.content} activity={activity} />}
               {/* todo : use apis & streams instead of this */}
-              {lecture.type == "video" && <VideoLecture course={course} lecture={lecture} />}
+              {activity.type == "video" && <VideoActivity course={course} activity={activity} />}
 
               <ActivityMarkerWrapper>
-                {course.activity.lectures_marked_complete &&
-                course.activity.lectures_marked_complete.includes("lecture_" + lectureid) &&
+                {course.activity.activities_marked_complete &&
+                course.activity.activities_marked_complete.includes("activity_" + activityid) &&
                 course.activity.status == "ongoing" ? (
                   <button style={{ backgroundColor: "green" }}>
                     <i>
@@ -86,7 +86,7 @@ function LecturePage(params: any) {
                     Already completed
                   </button>
                 ) : (
-                  <button onClick={markLectureAsCompleteFront}>
+                  <button onClick={markActivityAsCompleteFront}>
                     {" "}
                     <i>
                       <Check size={20}></Check>
@@ -99,15 +99,15 @@ function LecturePage(params: any) {
           ) : (
             <div>Loading...</div>
           )}
-        </LectureLayout>
+        </ActivityLayout>
       )}
     </>
   );
 }
 
-const LectureLayout = styled.div``;
+const ActivityLayout = styled.div``;
 
-const LectureThumbnail = styled.div`
+const ActivityThumbnail = styled.div`
   padding-right: 30px;
   justify-self: center;
   img {
@@ -117,7 +117,7 @@ const LectureThumbnail = styled.div`
     height: 57px;
   }
 `;
-const LectureInfo = styled.div`
+const ActivityInfo = styled.div`
   h1 {
     margin-top: 0px;
   }
@@ -158,7 +158,7 @@ const ChapterIndicator = styled.div`
   }
 `;
 
-const LectureTopWrapper = styled.div`
+const ActivityTopWrapper = styled.div`
   width: 1300px;
   padding-top: 50px;
   margin: 0 auto;
@@ -215,4 +215,4 @@ const ActivityMarkerWrapper = styled.div`
   }
 `;
 
-export default LecturePage;
+export default ActivityPage;

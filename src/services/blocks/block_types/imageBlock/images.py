@@ -9,23 +9,23 @@ from src.services.blocks.utils.upload_files import upload_file_and_return_file_o
 from src.services.users.users import PublicUser
 
 
-async def create_image_block(request: Request, image_file: UploadFile, lecture_id: str):
+async def create_image_block(request: Request, image_file: UploadFile, activity_id: str):
     blocks = request.app.db["blocks"]
-    lecture = request.app.db["lectures"]
+    activity = request.app.db["activities"]
 
     block_type = "imageBlock"
 
-    # get org_id from lecture
-    lecture = await lecture.find_one({"lecture_id": lecture_id}, {"_id": 0, "org_id": 1})
-    org_id = lecture["org_id"]
+    # get org_id from activity
+    activity = await activity.find_one({"activity_id": activity_id}, {"_id": 0, "org_id": 1})
+    org_id = activity["org_id"]
 
     # get block id
     block_id = str(f"block_{uuid4()}")
 
-    block_data = await upload_file_and_return_file_object(request, image_file,  lecture_id, block_id, ["jpg", "jpeg", "png", "gif"], block_type)
+    block_data = await upload_file_and_return_file_object(request, image_file,  activity_id, block_id, ["jpg", "jpeg", "png", "gif"], block_type)
 
     # create block
-    block = Block(block_id=block_id, lecture_id=lecture_id,
+    block = Block(block_id=block_id, activity_id=activity_id,
                   block_type=block_type, block_data=block_data, org_id=org_id)
 
     # insert block

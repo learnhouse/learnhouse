@@ -2,7 +2,7 @@ import json
 from typing import List
 from uuid import uuid4
 from pydantic import BaseModel
-from src.services.courses.lectures.lectures import LectureInDB
+from src.services.courses.activities.activities import ActivityInDB
 from src.services.courses.thumbnails import upload_thumbnail
 from src.services.users.users import PublicUser
 from src.services.security import *
@@ -35,7 +35,7 @@ class CourseInDB(Course):
 class CourseChapter(BaseModel):
     name: str
     description: str
-    lectures: list
+    activities: list
 
 
 class CourseChapterInDB(CourseChapter):
@@ -75,7 +75,7 @@ async def get_course_meta(request: Request, course_id: str, current_user: Public
     activities = request.app.db["activities"]
 
     course = await courses.find_one({"course_id": course_id})
-    lectures = request.app.db["lectures"]
+    activities = request.app.db["activities"]
 
     # verify course rights
     await verify_rights(request, course_id, current_user, "read")
@@ -87,35 +87,35 @@ async def get_course_meta(request: Request, course_id: str, current_user: Public
     coursechapters = coursechapters.find(
         {"course_id": course_id}).sort("name", 1)
 
-    # lectures
-    coursechapter_lectureIds_global = []
+    # activities
+    coursechapter_activityIds_global = []
 
     # chapters
     chapters = {}
     for coursechapter in await coursechapters.to_list(length=100):
         coursechapter = CourseChapterInDB(**coursechapter)
-        coursechapter_lectureIds = []
+        coursechapter_activityIds = []
 
-        for lecture in coursechapter.lectures:
-            coursechapter_lectureIds.append(lecture)
-            coursechapter_lectureIds_global.append(lecture)
+        for activity in coursechapter.activities:
+            coursechapter_activityIds.append(activity)
+            coursechapter_activityIds_global.append(activity)
 
         chapters[coursechapter.coursechapter_id] = {
-            "id": coursechapter.coursechapter_id, "name": coursechapter.name,  "lectureIds": coursechapter_lectureIds
+            "id": coursechapter.coursechapter_id, "name": coursechapter.name,  "activityIds": coursechapter_activityIds
         }
 
-    # lectures
-    lectures_list = {}
-    for lecture in await lectures.find({"lecture_id": {"$in": coursechapter_lectureIds_global}}).to_list(length=100):
-        lecture = LectureInDB(**lecture)
-        lectures_list[lecture.lecture_id] = {
-            "id": lecture.lecture_id, "name": lecture.name, "type": lecture.type, "content": lecture.content
+    # activities
+    activities_list = {}
+    for activity in await activities.find({"activity_id": {"$in": coursechapter_activityIds_global}}).to_list(length=100):
+        activity = ActivityInDB(**activity)
+        activities_list[activity.activity_id] = {
+            "id": activity.activity_id, "name": activity.name, "type": activity.type, "content": activity.content
         }
 
-    chapters_list_with_lectures = []
+    chapters_list_with_activities = []
     for chapter in chapters:
-        chapters_list_with_lectures.append(
-            {"id": chapters[chapter]["id"], "name": chapters[chapter]["name"], "lectures": [lectures_list[lecture] for lecture in chapters[chapter]["lectureIds"]]})
+        chapters_list_with_activities.append(
+            {"id": chapters[chapter]["id"], "name": chapters[chapter]["name"], "activities": [activities_list[activity] for activity in chapters[chapter]["activityIds"]]})
     course = Course(**course)
 
     # Get activity by user
@@ -128,7 +128,7 @@ async def get_course_meta(request: Request, course_id: str, current_user: Public
 
     return {
         "course": course,
-        "chapters": chapters_list_with_lectures,
+        "chapters": chapters_list_with_activities,
         "activity": activity
     }
 

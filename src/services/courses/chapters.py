@@ -4,7 +4,7 @@ from typing import List
 from uuid import uuid4
 from pydantic import BaseModel
 from src.services.courses.courses import Course, CourseInDB
-from src.services.courses.lectures.lectures import Lecture, LectureInDB
+from src.services.courses.activities.activities import Activity, ActivityInDB
 from src.services.security import verify_user_rights_with_roles
 from src.services.users.users import PublicUser
 from fastapi import HTTPException, status, Request, Response, BackgroundTasks, UploadFile, File
@@ -13,7 +13,7 @@ from fastapi import HTTPException, status, Request, Response, BackgroundTasks, U
 class CourseChapter(BaseModel):
     name: str
     description: str
-    lectures: list
+    activities: list
 
 
 class CourseChapterInDB(CourseChapter):
@@ -27,7 +27,7 @@ class CourseChapterInDB(CourseChapter):
 class CourseChapterMetaData(BaseModel):
     chapterOrder: List[str]
     chapters: dict
-    lectures: object
+    activities: object
 
 #### Classes ####################################################
 
@@ -158,7 +158,7 @@ async def get_coursechapters(request: Request,course_id: str, page: int = 1, lim
 async def get_coursechapters_meta(request: Request, course_id: str, current_user: PublicUser):
     coursechapters = request.app.db["coursechapters"]
     courses = request.app.db["courses"]
-    lectures = request.app.db["lectures"]
+    activities = request.app.db["activities"]
 
     coursechapters = coursechapters.find(
         {"course_id": course_id}).sort("name", 1)
@@ -166,35 +166,35 @@ async def get_coursechapters_meta(request: Request, course_id: str, current_user
     course = await courses.find_one({"course_id": course_id})
     course = Course(**course)  # type: ignore
 
-    # lectures
-    coursechapter_lectureIds_global = []
+    # activities
+    coursechapter_activityIds_global = []
 
     # chapters
     chapters = {}
     for coursechapter in await coursechapters.to_list(length=100):
         coursechapter = CourseChapterInDB(**coursechapter)
-        coursechapter_lectureIds = []
+        coursechapter_activityIds = []
 
-        for lecture in coursechapter.lectures:
-            coursechapter_lectureIds.append(lecture)
-            coursechapter_lectureIds_global.append(lecture)
+        for activity in coursechapter.activities:
+            coursechapter_activityIds.append(activity)
+            coursechapter_activityIds_global.append(activity)
 
         chapters[coursechapter.coursechapter_id] = {
-            "id": coursechapter.coursechapter_id, "name": coursechapter.name,  "lectureIds": coursechapter_lectureIds
+            "id": coursechapter.coursechapter_id, "name": coursechapter.name,  "activityIds": coursechapter_activityIds
         }
 
-    # lectures
-    lectures_list = {}
-    for lecture in await lectures.find({"lecture_id": {"$in": coursechapter_lectureIds_global}}).to_list(length=100):
-        lecture = LectureInDB(**lecture)
-        lectures_list[lecture.lecture_id] = {
-            "id": lecture.lecture_id, "name": lecture.name, "type": lecture.type, "content": lecture.content
+    # activities
+    activities_list = {}
+    for activity in await activities.find({"activity_id": {"$in": coursechapter_activityIds_global}}).to_list(length=100):
+        activity = ActivityInDB(**activity)
+        activities_list[activity.activity_id] = {
+            "id": activity.activity_id, "name": activity.name, "type": activity.type, "content": activity.content
         }
 
     final = {
         "chapters": chapters,
         "chapterOrder": course.chapters,
-        "lectures": lectures_list
+        "activities": activities_list
     }
 
     return final
@@ -211,7 +211,7 @@ async def update_coursechapters_meta(request: Request,course_id: str, coursechap
     if coursechapters_metadata.chapters is not None:
         for coursechapter_id, chapter_metadata in coursechapters_metadata.chapters.items():
             filter_query = {"coursechapter_id": coursechapter_id}
-            update_query = {"$set": {"lectures": chapter_metadata["lectureIds"]}}
+            update_query = {"$set": {"activities": chapter_metadata["activityIds"]}}
             result = await coursechapters.update_one(filter_query, update_query)
             if result.matched_count == 0:
                 # handle error when no documents are matched by the filter query
