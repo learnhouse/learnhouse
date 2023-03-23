@@ -3,7 +3,7 @@ import React from "react";
 import {  Draggable } from "react-beautiful-dnd";
 import { EyeOpenIcon, Pencil2Icon } from '@radix-ui/react-icons'
 import styled from "styled-components";
-import { getUriWithOrg } from "@services/config";
+import { getUriWithOrg } from "@services/config/config";
 
 function Lecture(props: any) {
 

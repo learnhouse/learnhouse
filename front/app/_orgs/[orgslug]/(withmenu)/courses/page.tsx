@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import React from "react";
 import styled from "styled-components";
 import { Title } from "@components/UI/Elements/Styles/Title";
-import { getAPIUrl, getBackendUrl, getUriWithOrg } from "@services/config";
+import { getAPIUrl, getBackendUrl, getUriWithOrg } from "@services/config/config";
 import { deleteCourseFromBackend } from "@services/courses/courses";
 import useSWR, { mutate } from "swr";
 import { swrFetcher } from "@services/utils/requests";
