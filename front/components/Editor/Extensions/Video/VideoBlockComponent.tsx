@@ -3,12 +3,12 @@ import { AlertTriangle, Image, Video } from "lucide-react";
 import React from "react";
 import styled from "styled-components";
 import { getBackendUrl } from "../../../../services/config";
-import { uploadNewVideoFile } from "../../../../services/files/video";
+import { uploadNewVideoFile } from "../../../../services/blocks/Video/video";
 
 function VideoBlockComponents(props: any) {
   const [video, setVideo] = React.useState(null);
   const [isLoading, setIsLoading] = React.useState(false);
-  const [blockObject, setblockObject] = React.useState(props.node.attrs.fileObject);
+  const [blockObject, setblockObject] = React.useState(props.node.attrs.blockObject);
 
   const handleVideoChange = (event: React.ChangeEvent<any>) => {
     setVideo(event.target.files[0]);
