@@ -2,7 +2,7 @@ from typing import List, Literal
 from uuid import uuid4
 from fastapi import Request
 from pydantic import BaseModel
-from src.services.blocks.blocks import Block
+from src.services.blocks.schemas.blocks import Block
 from src.services.users.users import PublicUser
 
 
