@@ -2,10 +2,10 @@ import React, { useState } from "react";
 import { ArrowLeftIcon, Cross1Icon } from "@radix-ui/react-icons";
 import Modal from "../Modal";
 import styled from "styled-components";
-import DynamicCanvaModal from "./NewLectureModal/DynamicCanva";
-import VideoModal from "./NewLectureModal/Video";
+import DynamicCanvaModal from "./NewActivityModal/DynamicCanva";
+import VideoModal from "./NewActivityModal/Video";
 
-function NewLectureModal({ closeModal, submitLecture, submitFileLecture, chapterId }: any) {
+function NewActivityModal({ closeModal, submitActivity, submitFileActivity, chapterId }: any) {
   const [selectedView, setSelectedView] = useState("home");
 
   return (
@@ -16,29 +16,29 @@ function NewLectureModal({ closeModal, submitLecture, submitFileLecture, chapter
       <button onClick={closeModal}>
         <Cross1Icon />
       </button>
-      <h1>Add New Lecture</h1>
+      <h1>Add New Activity</h1>
       <br />
 
       {selectedView === "home" && (
-        <LectureChooserWrapper>
-          <LectureButton onClick={() => {setSelectedView("dynamic")}}>✨📄</LectureButton>
-          <LectureButton onClick={() => {setSelectedView("video")}}>📹</LectureButton>
-        </LectureChooserWrapper>
+        <ActivityChooserWrapper>
+          <ActivityButton onClick={() => {setSelectedView("dynamic")}}>✨📄</ActivityButton>
+          <ActivityButton onClick={() => {setSelectedView("video")}}>📹</ActivityButton>
+        </ActivityChooserWrapper>
       )}
 
       {selectedView === "dynamic" && (
-        <DynamicCanvaModal submitLecture={submitLecture} chapterId={chapterId} />
+        <DynamicCanvaModal submitActivity={submitActivity} chapterId={chapterId} />
       )}
 
       {selectedView === "video" && (
-        <VideoModal submitFileLecture={submitFileLecture} chapterId={chapterId} />
+        <VideoModal submitFileActivity={submitFileActivity} chapterId={chapterId} />
       )}
       
     </Modal>
   );
 }
 
-const LectureChooserWrapper = styled.div`
+const ActivityChooserWrapper = styled.div`
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -46,7 +46,7 @@ const LectureChooserWrapper = styled.div`
   gap: 20px;
 `;
 
-const LectureButton = styled.button`
+const ActivityButton = styled.button`
   padding: 40px;
   border-radius: 10px !important;
   border: none;
@@ -59,4 +59,4 @@ const LectureButton = styled.button`
   }
 `;
 
-export default NewLectureModal;
+export default NewActivityModal;

@@ -1,7 +1,7 @@
 import React from "react";
 import styled from "styled-components";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
-import Lecture, { LectureWrapper } from "./Lecture";
+import Activity, { ActivityWrapper } from "./Activity";
 
 function Chapter(props: any) {
   return (
@@ -18,10 +18,10 @@ function Chapter(props: any) {
             {props.info.list.chapter.name}{" "}
             <button
               onClick={() => {
-                props.openNewLectureModal(props.info.list.chapter.id);
+                props.openNewActivityModal(props.info.list.chapter.id);
               }}
             >
-              Create Lecture
+              Create Activity
             </button>
             <button
               onClick={() => {
@@ -31,14 +31,14 @@ function Chapter(props: any) {
               X
             </button>
           </h3>
-          <Droppable key={props.info.list.chapter.id} droppableId={props.info.list.chapter.id} type="lecture">
+          <Droppable key={props.info.list.chapter.id} droppableId={props.info.list.chapter.id} type="activity">
             {(provided) => (
-              <LecturesList {...provided.droppableProps} ref={provided.innerRef}>
-                {props.info.list.lectures.map((lecture: any, index: any) => (
-                  <Lecture orgslug={props.orgslug} courseid={props.courseid} key={lecture.id} lecture={lecture} index={index}></Lecture>
+              <ActivitiesList {...provided.droppableProps} ref={provided.innerRef}>
+                {props.info.list.activities.map((activity: any, index: any) => (
+                  <Activity orgslug={props.orgslug} courseid={props.courseid} key={activity.id} activity={activity} index={index}></Activity>
                 ))}
                 {provided.placeholder}
-              </LecturesList>
+              </ActivitiesList>
             )}
           </Droppable>
         </ChapterWrapper>
@@ -66,7 +66,7 @@ const ChapterWrapper = styled.div`
   }
 `;
 
-const LecturesList = styled.div`
+const ActivitiesList = styled.div`
   padding: 10px;
 `;
 

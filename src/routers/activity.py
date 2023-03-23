@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Request
 from src.dependencies.auth import get_current_user
-from src.services.activity import Activity, add_lecture_to_activity, close_activity, create_activity, get_user_activities, get_user_activities_orgslug
+from src.services.activity import Activity, add_activity_to_activity, close_activity, create_activity, get_user_activities, get_user_activities_orgslug
 
 
 router = APIRouter()
@@ -31,12 +31,12 @@ async def api_get_activity_by_orgslug(request: Request, org_slug: str, user=Depe
     return await get_user_activities_orgslug(request, user, org_slug=org_slug)
 
 
-@router.post("/{org_id}/add_lecture/{course_id}/{lecture_id}")
-async def api_add_lecture_to_activity(request: Request, org_id: str, course_id: str, lecture_id: str, user=Depends(get_current_user)):
+@router.post("/{org_id}/add_activity/{course_id}/{activity_id}")
+async def api_add_activity_to_activity(request: Request, org_id: str, course_id: str, activity_id: str, user=Depends(get_current_user)):
     """
-    Add lecture to activity
+    Add activity to activity
     """
-    return await add_lecture_to_activity(request, user, org_id, course_id, lecture_id)
+    return await add_activity_to_activity(request, user, org_id, course_id, activity_id)
 
 
 @router.patch("/{org_id}/close_activity/{activity_id}")
