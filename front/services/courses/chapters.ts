@@ -1,5 +1,5 @@
 import { initialData } from "../../components/Drags/data";
-import { getAPIUrl } from "@services/config";
+import { getAPIUrl } from "@services/config/config";
 import { RequestBody } from "@services/utils/requests";
 
 /*

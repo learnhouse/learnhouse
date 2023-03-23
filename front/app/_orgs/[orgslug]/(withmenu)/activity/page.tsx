@@ -1,5 +1,5 @@
 "use client";
-import { getAPIUrl, getBackendUrl } from "@services/config";
+import { getAPIUrl, getBackendUrl } from "@services/config/config";
 import { swrFetcher } from "@services/utils/requests";
 import React from "react";
 import { styled } from "styled-components";

@@ -3,7 +3,7 @@ import React from "react";
 import styled from "styled-components";
 import { AlertCircle, AlertTriangle, FileText, Image, ImagePlus, Info } from "lucide-react";
 import { getPDFFile, uploadNewPDFFile } from "../../../../services/blocks/Pdf/pdf";
-import { getBackendUrl } from "../../../../services/config";
+import { getBackendUrl } from "../../../../services/config/config";
 
 function PDFBlockComponent(props: any) {
   const [pdf, setPDF] = React.useState(null);
