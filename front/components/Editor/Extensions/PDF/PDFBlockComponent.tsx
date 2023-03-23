@@ -2,13 +2,13 @@ import { NodeViewWrapper } from "@tiptap/react";
 import React from "react";
 import styled from "styled-components";
 import { AlertCircle, AlertTriangle, FileText, Image, ImagePlus, Info } from "lucide-react";
-import { getPDFFile, uploadNewPDFFile } from "../../../../services/files/documents";
-import { getBackendUrl } from "../../../../services/config";
+import { getPDFFile, uploadNewPDFFile } from "../../../../services/blocks/Pdf/pdf";
+import { getBackendUrl } from "../../../../services/config/config";
 
 function PDFBlockComponent(props: any) {
   const [pdf, setPDF] = React.useState(null);
   const [isLoading, setIsLoading] = React.useState(false);
-  const [fileObject, setfileObject] = React.useState(props.node.attrs.fileObject);
+  const [blockObject, setblockObject] = React.useState(props.node.attrs.blockObject);
 
   const handlePDFChange = (event: React.ChangeEvent<any>) => {
     setPDF(event.target.files[0]);
@@ -19,15 +19,15 @@ function PDFBlockComponent(props: any) {
     setIsLoading(true);
     let object = await uploadNewPDFFile(pdf, props.extension.options.lecture.lecture_id);
     setIsLoading(false);
-    setfileObject(object);
+    setblockObject(object);
     props.updateAttributes({
-      fileObject: object,
+      blockObject: object,
     });
   };
 
   return (
     <NodeViewWrapper className="block-pdf">
-      {!fileObject && (
+      {!blockObject && (
         <BlockPDFWrapper contentEditable={props.extension.options.editable}>
           <div>
             <FileText color="#e1e0e0" size={50} />
@@ -38,11 +38,11 @@ function PDFBlockComponent(props: any) {
           <button onClick={handleSubmit}>Submit</button>
         </BlockPDFWrapper>
       )}
-      {fileObject && (
+      {blockObject && (
         <BlockPDF>
           <iframe
-            src={`${getBackendUrl()}content/uploads/files/documents/${props.extension.options.lecture.lecture_id}/${fileObject.file_id}.${
-              fileObject.file_format
+            src={`${getBackendUrl()}content/uploads/files/lectures/${props.extension.options.lecture.lecture_id}/blocks/pdfBlock/${blockObject.block_id}/${blockObject.block_data.file_id}.${
+              blockObject.block_data.file_format
             }`}
           />
         </BlockPDF>

@@ -2,7 +2,7 @@ from typing import List, Literal
 from uuid import uuid4
 from fastapi import Request
 from pydantic import BaseModel
-from src.services.blocks.blocks import Block
+from src.services.blocks.schemas.blocks import Block
 from src.services.users.users import PublicUser
 
 
@@ -30,11 +30,17 @@ class quizBlock(BaseModel):
 
 async def create_quiz_block(request: Request, quizBlock: quizBlock, lecture_id: str, user: PublicUser):
     blocks = request.app.db["blocks"]
+    lectures = request.app.db["lectures"]
+
+    # Get org_id from lecture
+    lecture = await lectures.find_one({"lecture_id": lecture_id}, {"_id": 0, "org_id": 1})
+    org_id = lecture["org_id"]
+
     block_id = str(f"block_{uuid4()}")
 
     # create block
     block = Block(block_id=block_id, lecture_id=lecture_id,
-                  block_type="quizBlock", block_data=quizBlock)
+                  block_type="quizBlock", block_data=quizBlock, org_id=org_id)
 
     # insert block
     await blocks.insert_one(block.dict())

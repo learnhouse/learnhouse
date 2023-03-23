@@ -1,4 +1,4 @@
-import { getBackendUrl } from "@services/config";
+import { getBackendUrl } from "@services/config/config";
 import React from "react";
 import styled from "styled-components";
 

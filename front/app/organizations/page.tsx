@@ -3,10 +3,10 @@ import Link from "next/link";
 import React from "react";
 import Layout from "../../components/UI/Layout";
 import { Title } from "../../components/UI/Elements/Styles/Title";
-import { deleteOrganizationFromBackend } from "@services/orgs";
+import { deleteOrganizationFromBackend } from "@services/organizations/orgs";
 import useSWR, { mutate } from "swr";
 import { swrFetcher } from "@services/utils/requests";
-import { getAPIUrl, getUriWithOrg } from "@services/config";
+import { getAPIUrl, getUriWithOrg } from "@services/config/config";
 
 const Organizations = () => {
   const { data : organizations , error } = useSWR(`${getAPIUrl()}orgs/user/page/1/limit/10`, swrFetcher)

@@ -4,7 +4,7 @@ import { closeActivity, createActivity } from "@services/courses/activity";
 import Link from "next/link";
 import React from "react";
 import styled from "styled-components";
-import { getAPIUrl, getBackendUrl, getUriWithOrg } from "@services/config";
+import { getAPIUrl, getBackendUrl, getUriWithOrg } from "@services/config/config";
 import useSWR, { mutate } from "swr";
 import { swrFetcher } from "@services/utils/requests";
 

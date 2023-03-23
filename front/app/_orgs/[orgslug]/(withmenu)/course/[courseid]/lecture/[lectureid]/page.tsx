@@ -4,7 +4,7 @@ import Link from "next/link";
 import React, { useMemo } from "react";
 import Layout from "@components/UI/Layout";
 import { getLecture } from "@services/courses/lectures";
-import { getAPIUrl, getBackendUrl, getUriWithOrg } from "@services/config";
+import { getAPIUrl, getBackendUrl, getUriWithOrg } from "@services/config/config";
 import Canva from "@components/LectureViews/DynamicCanva/DynamicCanva";
 import styled from "styled-components";
 import { getCourse } from "@services/courses/courses";
