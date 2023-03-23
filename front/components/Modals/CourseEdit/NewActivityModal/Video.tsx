@@ -1,6 +1,6 @@
 import React from "react";
 
-function VideoModal({ submitFileLecture, chapterId }: any) {
+function VideoModal({ submitFileActivity, chapterId }: any) {
   const [video, setVideo] = React.useState(null) as any;
   const [name, setName] = React.useState("");
 
@@ -14,11 +14,11 @@ function VideoModal({ submitFileLecture, chapterId }: any) {
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
-    let status = await submitFileLecture(video, "video", { name, type: "video" }, chapterId);
+    let status = await submitFileActivity(video, "video", { name, type: "video" }, chapterId);
   };
 
   /* TODO : implement some sort of progress bar for file uploads, it is not possible yet because i'm not using axios.
-   and the actual upload isn't happening here anyway, it's in the submitFileLecture function */
+   and the actual upload isn't happening here anyway, it's in the submitFileActivity function */
 
   return (
     <div>

@@ -14,11 +14,11 @@ router = APIRouter()
 ####################
 
 @router.post("/image")
-async def api_create_image_file_block(request: Request, file_object: UploadFile, lecture_id: str = Form(),  current_user: PublicUser = Depends(get_current_user)):
+async def api_create_image_file_block(request: Request, file_object: UploadFile, activity_id: str = Form(),  current_user: PublicUser = Depends(get_current_user)):
     """
     Create new image file
     """
-    return await create_image_block(request, file_object, lecture_id)
+    return await create_image_block(request, file_object, activity_id)
 
 
 @router.get("/image")
@@ -33,11 +33,11 @@ async def api_get_image_file_block(request: Request, file_id: str, current_user:
 ####################
 
 @router.post("/video")
-async def api_create_video_file_block(request: Request, file_object: UploadFile, lecture_id: str = Form(), current_user: PublicUser = Depends(get_current_user)):
+async def api_create_video_file_block(request: Request, file_object: UploadFile, activity_id: str = Form(), current_user: PublicUser = Depends(get_current_user)):
     """
     Create new video file
     """
-    return await create_video_block(request, file_object, lecture_id)
+    return await create_video_block(request, file_object, activity_id)
 
 
 @router.get("/video")
@@ -52,11 +52,11 @@ async def api_get_video_file_block(request: Request, file_id: str, current_user:
 ####################
 
 @router.post("/pdf")
-async def api_create_pdf_file_block(request: Request, file_object: UploadFile, lecture_id: str = Form(), current_user: PublicUser = Depends(get_current_user)):
+async def api_create_pdf_file_block(request: Request, file_object: UploadFile, activity_id: str = Form(), current_user: PublicUser = Depends(get_current_user)):
     """
     Create new pdf file
     """
-    return await create_pdf_block(request, file_object, lecture_id)
+    return await create_pdf_block(request, file_object, activity_id)
 
 
 @router.get("/pdf")
@@ -71,12 +71,12 @@ async def api_get_pdf_file_block(request: Request, file_id: str, current_user: P
 # Quiz Block
 ####################
 
-@router.post("/quiz/{lecture_id}")
-async def api_create_quiz_block(request: Request, quiz_block: quizBlock, lecture_id: str, current_user: PublicUser = Depends(get_current_user)):
+@router.post("/quiz/{activity_id}")
+async def api_create_quiz_block(request: Request, quiz_block: quizBlock, activity_id: str, current_user: PublicUser = Depends(get_current_user)):
     """
     Create new document file
     """
-    return await create_quiz_block(request, quiz_block, lecture_id, current_user)
+    return await create_quiz_block(request, quiz_block, activity_id, current_user)
 
 
 @router.get("/quiz/options")

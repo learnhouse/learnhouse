@@ -21,7 +21,7 @@ class Elements(BaseModel):
     collections: Permission
     organizations: Permission
     coursechapters: Permission
-    lectures: Permission
+    activities: Permission
 
     def __getitem__(self, item):
         return getattr(self, item)
