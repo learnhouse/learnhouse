@@ -4,7 +4,7 @@ import os
 from fastapi import HTTPException, status, UploadFile,Request
 from fastapi.responses import StreamingResponse
 
-from src.services.users import PublicUser
+from src.services.users.users import PublicUser
 
 
 class VideoFile(BaseModel):

@@ -13,7 +13,6 @@ async def upload_video(video_file,  lecture_id):
             f.close()
 
     except Exception as e:
-        print(e)
         return {"message": "There was an error uploading the file"}
     finally:
         video_file.file.close()

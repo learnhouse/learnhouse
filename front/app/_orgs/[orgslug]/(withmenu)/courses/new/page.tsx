@@ -1,11 +1,12 @@
 "use client";
 import { useRouter } from "next/navigation";
 import React from "react";
-import { Header } from "../../../../../components/UI/Header";
-import Layout from "../../../../../components/UI/Layout";
-import { Title } from "../../../../../components/UI/Elements/Styles/Title";
-import { createNewCourse } from "../../../../../services/courses/courses";
-import { getOrganizationContextInfo } from "../../../../../services/orgs";
+import { Header } from "@components/UI/Header";
+import Layout from "@components/UI/Layout";
+import { Title } from "@components/UI/Elements/Styles/Title";
+import { createNewCourse } from "@services/courses/courses";
+import { getOrganizationContextInfo } from "@services/orgs";
+import { getUriWithOrg } from "@services/config";
 
 const NewCoursePage = (params: any) => {
   const router = useRouter();
@@ -40,7 +41,7 @@ const NewCoursePage = (params: any) => {
 
     // TODO : wow this is terrible - fix this
     if (status.org_id == orgId) {
-      router.push(`/org/${orgslug}/courses`);
+      router.push(getUriWithOrg(orgslug, `/courses`));
     } else {
       alert("Error creating course, please see console logs");
       console.log(status);

@@ -9,7 +9,6 @@ async def upload_thumbnail(thumbnail_file, name_in_disk):
             f.close()
 
     except Exception as e:
-        print(e)
         return {"message": "There was an error uploading the file"}
     finally:
         thumbnail_file.file.close()
