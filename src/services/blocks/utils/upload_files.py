@@ -6,7 +6,7 @@ from src.services.blocks.schemas.files import BlockFile
 from src.services.users.schemas.users import PublicUser
 
 
-async def upload_file_and_return_file_object(request: Request, file: UploadFile, lecture_id: str, block_id: str, list_of_allowed_file_formats: list, type_of_block: str):
+async def upload_file_and_return_file_object(request: Request, file: UploadFile, activity_id: str, block_id: str, list_of_allowed_file_formats: list, type_of_block: str):
     # get file id
     file_id = str(uuid.uuid4())
 
@@ -37,16 +37,16 @@ async def upload_file_and_return_file_object(request: Request, file: UploadFile,
         file_name=file_name,
         file_size=file_size,
         file_type=file_type,
-        lecture_id=lecture_id
+        activity_id=activity_id
     )
 
-    # create folder for lecture
-    if not os.path.exists(f"content/uploads/files/lectures/{lecture_id}/blocks/{type_of_block}/{block_id}"):
-        # create folder for lecture
-        os.makedirs(f"content/uploads/files/lectures/{lecture_id}/blocks/{type_of_block}/{block_id}")
+    # create folder for activity
+    if not os.path.exists(f"content/uploads/files/activities/{activity_id}/blocks/{type_of_block}/{block_id}"):
+        # create folder for activity
+        os.makedirs(f"content/uploads/files/activities/{activity_id}/blocks/{type_of_block}/{block_id}")
 
     # upload file to server
-    with open(f"content/uploads/files/lectures/{lecture_id}/blocks/{type_of_block}/{block_id}/{file_id}.{file_format}", 'wb') as f:
+    with open(f"content/uploads/files/activities/{activity_id}/blocks/{type_of_block}/{block_id}/{file_id}.{file_format}", 'wb') as f:
         f.write(file_binary)
         f.close()
 

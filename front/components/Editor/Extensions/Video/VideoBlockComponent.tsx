@@ -17,7 +17,7 @@ function VideoBlockComponents(props: any) {
   const handleSubmit = async (e: any) => {
     e.preventDefault();
     setIsLoading(true);
-    let object = await uploadNewVideoFile(video, props.extension.options.lecture.lecture_id);
+    let object = await uploadNewVideoFile(video, props.extension.options.activity.activity_id);
     setIsLoading(false);
     setblockObject(object);
     props.updateAttributes({
@@ -42,7 +42,7 @@ function VideoBlockComponents(props: any) {
         <BlockVideo>
           <video
             controls
-            src={`${getBackendUrl()}content/uploads/files/lectures/${props.extension.options.lecture.lecture_id}/blocks/videoBlock/${blockObject.block_id}/${blockObject.block_data.file_id}.${
+            src={`${getBackendUrl()}content/uploads/files/activities/${props.extension.options.activity.activity_id}/blocks/videoBlock/${blockObject.block_id}/${blockObject.block_data.file_id}.${
               blockObject.block_data.file_format
             }`}
           ></video>

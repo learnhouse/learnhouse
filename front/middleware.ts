@@ -30,7 +30,7 @@ export default function middleware(req: NextRequest) {
       : hostname.replace(`.localhost:3000`, "");
 
   /*  Editor route */
-  if (url.pathname.match(/^\/course\/[^/]+\/lecture\/[^/]+\/edit$/)) {
+  if (url.pathname.match(/^\/course\/[^/]+\/activity\/[^/]+\/edit$/)) {
     url.pathname = `/_editor${url.pathname}`;
     console.log("editor route", url.pathname);
 

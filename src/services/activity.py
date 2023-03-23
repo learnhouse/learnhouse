@@ -16,8 +16,8 @@ class Activity(BaseModel):
     course_id: str
     status:  Optional[Literal['ongoing', 'done', 'closed']] = 'ongoing'
     masked: Optional[bool] = False
-    lectures_marked_complete: Optional[List[str]] = []
-    lectures_data: Optional[List[dict]] = []
+    activities_marked_complete: Optional[List[str]] = []
+    activities_data: Optional[List[dict]] = []
 
 
 class ActivityInDB(Activity):
@@ -74,12 +74,12 @@ async def get_user_activities(request: Request, user: PublicUser, org_id: str):
             status_code=status.HTTP_409_CONFLICT, detail="No activities found")
 
     for activity in await user_activities.to_list(length=100):
-        # get number of lectures in the course
+        # get number of activities in the course
         coursechapters = await get_coursechapters_meta(request, activity['course_id'], user)
 
-        # calculate progression using the number of lectures marked complete and the total number of lectures
+        # calculate progression using the number of activities marked complete and the total number of activities
         progression = round(
-            len(activity['lectures_marked_complete']) / len(coursechapters['lectures']) * 100, 2)  
+            len(activity['activities_marked_complete']) / len(coursechapters['activities']) * 100, 2)  
 
         course = await courses.find_one({"course_id": activity['course_id']}, {'_id': 0})
 
@@ -104,12 +104,12 @@ async def get_user_activities_orgslug(request: Request, user: PublicUser, org_sl
             status_code=status.HTTP_409_CONFLICT, detail="No activities found")
 
     for activity in await user_activities.to_list(length=100):
-        # get number of lectures in the course
+        # get number of activities in the course
         coursechapters = await get_coursechapters_meta(request, activity['course_id'], user)
 
-        # calculate progression using the number of lectures marked complete and the total number of lectures
+        # calculate progression using the number of activities marked complete and the total number of activities
         progression = round(
-            len(activity['lectures_marked_complete']) / len(coursechapters['lectures']) * 100, 2)  
+            len(activity['activities_marked_complete']) / len(coursechapters['activities']) * 100, 2)  
 
         course = await courses.find_one({"course_id": activity['course_id']}, {'_id': 0})
 
@@ -120,18 +120,18 @@ async def get_user_activities_orgslug(request: Request, user: PublicUser, org_sl
     return activities_metadata
 
 
-async def add_lecture_to_activity(request: Request, user: PublicUser, org_id: str, course_id: str, lecture_id: str):
+async def add_activity_to_activity(request: Request, user: PublicUser, org_id: str, course_id: str, activity_id: str):
     activities = request.app.db["activities"]
     course_id = f"course_{course_id}"
-    lecture_id = f"lecture_{lecture_id}"
+    activity_id = f"activity_{activity_id}"
    
     activity = await activities.find_one(
         {"course_id": course_id,
             "user_id": user.user_id
          },  {'_id': 0})
 
-    if lecture_id not in activity['lectures_marked_complete']:
-        activity['lectures_marked_complete'].append(str(lecture_id))
+    if activity_id not in activity['activities_marked_complete']:
+        activity['activities_marked_complete'].append(str(activity_id))
         await activities.update_one(
             {"activity_id": activity['activity_id']}, {"$set": activity})
         return activity
@@ -142,7 +142,7 @@ async def add_lecture_to_activity(request: Request, user: PublicUser, org_id: st
 
     else:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Lecture already marked complete")
+            status_code=status.HTTP_409_CONFLICT, detail="Activity already marked complete")
 
 
 async def close_activity(request: Request, user: PublicUser,  activity_id: str, org_id: str,):

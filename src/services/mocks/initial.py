@@ -5,7 +5,7 @@
 # from uuid import uuid4
 # from fastapi import File, UploadFile, Request
 # from src.services.courses.chapters import CourseChapter, create_coursechapter
-# from src.services.courses.lectures.lectures import Lecture, create_lecture
+# from src.services.courses.activities.activities import Activity, create_activity
 # from src.services.courses.thumbnails import upload_thumbnail
 # from src.services.users.users import PublicUser, User, UserInDB, UserWithPassword
 
@@ -107,7 +107,7 @@
 #             collections=["*"],
 #             organizations=["*"],
 #             coursechapters=["*"],
-#             lectures=["*"],
+#             activities=["*"],
 #         ))],
 #         linked_users=[admin_user.user_id],
 #     )
@@ -171,16 +171,16 @@
 #                     coursechapter = CourseChapter(
 #                         name=fake_multilang.unique.sentence(),
 #                         description=fake_multilang.unique.text(),
-#                         lectures=[],
+#                         activities=[],
 #                     )
 #                     coursechapter = await create_coursechapter(request,coursechapter, course_id, current_user)
 #                     pprint(coursechapter)
 #                     if coursechapter:
-#                         # create lectures
+#                         # create activities
 #                         for i in range(0, 5):
-#                             lecture = Lecture(
+#                             activity = Activity(
 #                                 name=fake_multilang.unique.sentence(),
 #                                 type="dynamic",
 #                                 content={},
 #                             )
-#                             lecture = await create_lecture(request,lecture, coursechapter['coursechapter_id'], current_user)
+#                             activity = await create_activity(request,activity, coursechapter['coursechapter_id'], current_user)
