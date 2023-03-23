@@ -2,13 +2,13 @@ import { NodeViewWrapper } from "@tiptap/react";
 import React from "react";
 import styled from "styled-components";
 import { AlertCircle, AlertTriangle, Image, ImagePlus, Info } from "lucide-react";
-import { getImageFile, uploadNewImageFile } from "../../../../services/files/images";
+import { getImageFile, uploadNewImageFile } from "../../../../services/blocks/Image/images";
 import { getBackendUrl } from "../../../../services/config";
 
 function ImageBlockComponent(props: any) {
   const [image, setImage] = React.useState(null);
   const [isLoading, setIsLoading] = React.useState(false);
-  const [fileObject, setfileObject] = React.useState(props.node.attrs.fileObject);
+  const [blockObject, setblockObject] = React.useState(props.node.attrs.blockObject);
 
   const handleImageChange = (event: React.ChangeEvent<any>) => {
     setImage(event.target.files[0]);
@@ -19,15 +19,15 @@ function ImageBlockComponent(props: any) {
     setIsLoading(true);
     let object = await uploadNewImageFile(image, props.extension.options.lecture.lecture_id);
     setIsLoading(false);
-    setfileObject(object);
+    setblockObject(object);
     props.updateAttributes({
-      fileObject: object,
+      blockObject: object,
     });
   };
 
   return (
     <NodeViewWrapper className="block-image">
-      {!fileObject && (
+      {!blockObject && (
         <BlockImageWrapper contentEditable={props.extension.options.editable}>
           <div>
             <Image color="#e1e0e0" size={50} />
@@ -38,11 +38,11 @@ function ImageBlockComponent(props: any) {
           <button onClick={handleSubmit}>Submit</button>
         </BlockImageWrapper>
       )}
-      {fileObject && (
+      {blockObject && (
         <BlockImage>
           <img
-            src={`${getBackendUrl()}content/uploads/files/images/${props.extension.options.lecture.lecture_id}/${fileObject.file_id}.${
-              fileObject.file_format
+            src={`${getBackendUrl()}content/uploads/files/lectures/${props.extension.options.lecture.lecture_id}/blocks/imageBlock/${blockObject.block_id}/${blockObject.block_data.file_id}.${
+              blockObject.block_data.file_format
             }`}
             alt=""
           />

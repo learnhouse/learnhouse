@@ -3,110 +3,45 @@ from pydantic import BaseModel
 from fastapi import HTTPException, status, UploadFile, Request
 from fastapi.responses import StreamingResponse
 import os
+from src.services.blocks.schemas.blocks import Block
+from src.services.blocks.utils.upload_files import upload_file_and_return_file_object
 
 from src.services.users.users import PublicUser
 
 
-class PhotoFile(BaseModel):
-    file_id: str
-    file_format: str
-    file_name: str
-    file_size: int
-    file_type: str
-    lecture_id: str
+async def create_image_block(request: Request, image_file: UploadFile, lecture_id: str):
+    blocks = request.app.db["blocks"]
+    lecture = request.app.db["lectures"]
+
+    block_type = "imageBlock"
+
+    # get org_id from lecture
+    lecture = await lecture.find_one({"lecture_id": lecture_id}, {"_id": 0, "org_id": 1})
+    org_id = lecture["org_id"]
+
+    # get block id
+    block_id = str(f"block_{uuid4()}")
+
+    block_data = await upload_file_and_return_file_object(request, image_file,  lecture_id, block_id, ["jpg", "jpeg", "png", "gif"], block_type)
+
+    # create block
+    block = Block(block_id=block_id, lecture_id=lecture_id,
+                  block_type=block_type, block_data=block_data, org_id=org_id)
+
+    # insert block
+    await blocks.insert_one(block.dict())
+
+    return block
 
 
-async def create_image_file(request: Request,image_file: UploadFile, lecture_id: str):
-    photos = request.app.db["files"]
+async def get_image_block(request: Request, file_id: str, current_user: PublicUser):
+    blocks = request.app.db["blocks"]
 
-    # generate file_id
-    file_id = str(f"file_{uuid4()}")
+    video_block = await blocks.find_one({"block_id": file_id})
 
-    # get file format
-    file_format = image_file.filename.split(".")[-1]
-
-    # validate file format
-    if file_format not in ["jpg", "jpeg", "png", "gif"]:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Image file format not supported")
-
-    # create file
-    file = await image_file.read()
-
-    # get file size
-    file_size = len(file)
-
-    # get file type
-    file_type = image_file.content_type
-
-    # get file name
-    file_name = image_file.filename
-
-    # create file object
-    uploadable_file = PhotoFile(
-        file_id=file_id,
-        file_format=file_format,
-        file_name=file_name,
-        file_size=file_size,
-        file_type=file_type,
-        lecture_id=lecture_id
-    )
-
-    # create folder for lecture
-    if not os.path.exists(f"content/uploads/files/images/{lecture_id}"):
-        os.mkdir(f"content/uploads/files/images/{lecture_id}")
-
-    # upload file to server
-    with open(f"content/uploads/files/images/{lecture_id}/{file_id}.{file_format}", 'wb') as f:
-        f.write(file)
-        f.close()
-
-    # insert file object into database
-    photo_file_in_db = await photos.insert_one(uploadable_file.dict())
-
-    if not photo_file_in_db:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Photo file could not be created")
-
-    return uploadable_file
-
-
-async def get_image_object(request: Request,file_id: str):
-    photos = request.app.db["files"]
-
-    photo_file = await photos.find_one({"file_id": file_id})
-
-    if photo_file:
-        photo_file = PhotoFile(**photo_file)
-        return photo_file
+    if video_block:
+        return Block(**video_block)
 
     else:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Photo file does not exist")
-
-
-async def get_image_file(request: Request,file_id: str, current_user: PublicUser):
-    photos = request.app.db["files"]
-
-    photo_file = await photos.find_one({"file_id": file_id})
-
-    # TODO : check if user has access to file
-
-    if photo_file:
-
-        # check media type
-        if photo_file.format not in ["jpg", "jpeg", "png", "gif"]:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT, detail="Photo file format not supported")
-
-        # stream file
-        photo_file = PhotoFile(**photo_file)
-        file_format = photo_file.file_format
-        lecture_id = photo_file.lecture_id
-        file = open(
-            f"content/uploads/files/images/{lecture_id}/{file_id}.{file_format}", 'rb')
-        return StreamingResponse(file, media_type=photo_file.file_type)
-
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Photo file does not exist")
+            status_code=status.HTTP_409_CONFLICT, detail="Image block does not exist")
