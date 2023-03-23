@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from src.services.security import verify_user_rights_with_roles
 from src.services.courses.lectures.uploads.videos import upload_video
-from src.services.users import PublicUser
+from src.services.users.users import PublicUser
 from src.services.courses.lectures.lectures import LectureInDB
 from fastapi import HTTPException, status, UploadFile, Request
 from uuid import uuid4
@@ -48,9 +48,7 @@ async def create_video_lecture(request: Request,name: str,  coursechapter_id: st
 
     # upload video
     if video_file:
-        print("uploading video")
         # get videofile format
-
         await upload_video(video_file,  lecture_id)
 
     # todo : choose whether to update the chapter or not

@@ -4,7 +4,7 @@ from uuid import uuid4
 from pydantic import BaseModel
 from src.services.courses.lectures.lectures import LectureInDB
 from src.services.courses.thumbnails import upload_thumbnail
-from src.services.users import PublicUser
+from src.services.users.users import PublicUser
 from src.services.security import *
 from fastapi import HTTPException, status, UploadFile
 from datetime import datetime
@@ -141,12 +141,9 @@ async def create_course(request: Request, course_object: Course, org_id: str, cu
 
     # TODO(fix) : the implementation here is clearly not the best one (this entire function)
     course_object.org_id = org_id
-    hasRoleRights = await verify_user_rights_with_roles(request, "create", current_user.user_id, course_id)
+    await verify_user_rights_with_roles(request, "create", current_user.user_id, course_id,org_id)
 
-    if not hasRoleRights:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Roles : Insufficient rights to perform this action")
-
+    
     if thumbnail_file:
         name_in_disk = f"{course_id}_thumbnail_{uuid4()}.{thumbnail_file.filename.split('.')[-1]}"
         await upload_thumbnail(thumbnail_file, name_in_disk)
@@ -290,7 +287,7 @@ async def verify_rights(request: Request, course_id: str, current_user: PublicUs
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail=f"Course/CourseChapter does not exist")
 
-    hasRoleRights = await verify_user_rights_with_roles(request, action, current_user.user_id, course_id)
+    hasRoleRights = await verify_user_rights_with_roles(request, action, current_user.user_id, course_id, course["org_id"])
     isAuthor = current_user.user_id in course["authors"]
 
     if not hasRoleRights and not isAuthor:

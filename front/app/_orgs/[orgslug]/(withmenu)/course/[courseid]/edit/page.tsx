@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 import NewChapterModal from "@components/Modals/CourseEdit/NewChapter";
 import NewLectureModal from "@components/Modals/CourseEdit/NewLecture";
 import { createLecture, createFileLecture } from "@services/courses/lectures";
+import { getOrganizationContextInfo } from "@services/orgs";
 
 function CourseEdit(params: any) {
   const router = useRouter();
@@ -30,6 +31,8 @@ function CourseEdit(params: any) {
   const [winReady, setwinReady] = useState(false);
   const courseid = params.params.courseid;
   const orgslug = params.params.orgslug;
+
+  
 
   async function getCourseChapters() {
     const courseChapters = await getCourseChaptersMetadata(courseid);
@@ -75,8 +78,9 @@ function CourseEdit(params: any) {
   // Submit new lecture
   const submitLecture = async (lecture: any) => {
     console.log("submitLecture", lecture);
+    let org = await getOrganizationContextInfo(orgslug);
     await updateChaptersMetadata(courseid, data);
-    await createLecture(lecture, lecture.chapterId);
+    await createLecture(lecture, lecture.chapterId, org.org_id);
     await getCourseChapters();
     setNewLectureModal(false);
   };
@@ -226,63 +230,63 @@ function CourseEdit(params: any) {
 
   return (
     <>
-    <Page>
-      <Title>
-        Edit Course {" "}
-        <button
-          onClick={() => {
-            setNewChapterModal(true);
-          }}
-        >
-          Add chapter +
-        </button>
-        <button
-          onClick={() => {
-            updateChapters();
-          }}
-        >
-          Save 
-        </button>
-      </Title>
-      {newChapterModal && <NewChapterModal closeModal={closeNewChapterModal} submitChapter={submitChapter}></NewChapterModal>}
-      {newLectureModal && (
-        <NewLectureModal
-          closeModal={closeNewLectureModal}
-          submitFileLecture={submitFileLecture}
-          submitLecture={submitLecture}
-          chapterId={newLectureModalData}
-        ></NewLectureModal>
-      )}
+      <Page>
+        <Title>
+          Edit Course {" "}
+          <button
+            onClick={() => {
+              setNewChapterModal(true);
+            }}
+          >
+            Add chapter +
+          </button>
+          <button
+            onClick={() => {
+              updateChapters();
+            }}
+          >
+            Save
+          </button>
+        </Title>
+        {newChapterModal && <NewChapterModal closeModal={closeNewChapterModal} submitChapter={submitChapter}></NewChapterModal>}
+        {newLectureModal && (
+          <NewLectureModal
+            closeModal={closeNewLectureModal}
+            submitFileLecture={submitFileLecture}
+            submitLecture={submitLecture}
+            chapterId={newLectureModalData}
+          ></NewLectureModal>
+        )}
 
-      <br />
-      {winReady && (
-        <ChapterlistWrapper>
-          <DragDropContext onDragEnd={onDragEnd}>
-            <Droppable key="chapters" droppableId="chapters" type="chapter">
-              {(provided) => (
-                <>
-                  <div key={"chapters"} {...provided.droppableProps} ref={provided.innerRef}>
-                    {getChapters().map((info: any, index: any) => (
-                      <>
-                        <Chapter
-                          orgslug={orgslug}
-                          courseid={courseid}
-                          openNewLectureModal={openNewLectureModal}
-                          deleteChapter={deleteChapterUI}
-                          key={index}
-                          info={info}
-                          index={index}
-                        ></Chapter>
-                      </>
-                    ))}
-                    {provided.placeholder}
-                  </div>
-                </>
-              )}
-            </Droppable>
-          </DragDropContext>
-        </ChapterlistWrapper>
-      )}
+        <br />
+        {winReady && (
+          <ChapterlistWrapper>
+            <DragDropContext onDragEnd={onDragEnd}>
+              <Droppable key="chapters" droppableId="chapters" type="chapter">
+                {(provided) => (
+                  <>
+                    <div key={"chapters"} {...provided.droppableProps} ref={provided.innerRef}>
+                      {getChapters().map((info: any, index: any) => (
+                        <>
+                          <Chapter
+                            orgslug={orgslug}
+                            courseid={courseid}
+                            openNewLectureModal={openNewLectureModal}
+                            deleteChapter={deleteChapterUI}
+                            key={index}
+                            info={info}
+                            index={index}
+                          ></Chapter>
+                        </>
+                      ))}
+                      {provided.placeholder}
+                    </div>
+                  </>
+                )}
+              </Droppable>
+            </DragDropContext>
+          </ChapterlistWrapper>
+        )}
       </Page>
     </>
   );

@@ -5,7 +5,7 @@ from src.services.blocks.imageBlock.images import create_image_file, get_image_f
 from src.services.blocks.videoBlock.videos import create_video_file, get_video_file
 from src.services.blocks.pdfBlock.documents import create_document_file, get_document_file
 from src.services.blocks.quizBlock.quizBlock import create_quiz_block, get_quiz_block_answers, get_quiz_block_options, quizBlock
-from src.services.users import PublicUser
+from src.services.users.users import PublicUser
 
 router = APIRouter()
 

@@ -2,7 +2,7 @@ from urllib.request import Request
 from fastapi import Depends, APIRouter, HTTPException, status, Request
 from fastapi.security import  OAuth2PasswordRequestForm
 from src.dependencies.auth import *
-from src.services.users import *
+from src.services.users.users import *
 from datetime import  timedelta
 from fastapi.responses import JSONResponse
 

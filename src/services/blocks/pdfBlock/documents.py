@@ -4,7 +4,7 @@ from fastapi import HTTPException, status, UploadFile, Request
 from fastapi.responses import StreamingResponse
 import os
 
-from src.services.users import PublicUser
+from src.services.users.users import PublicUser
 
 
 class DocumentFile(BaseModel):

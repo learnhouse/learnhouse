@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi_jwt_auth.exceptions import AuthJWTException
-from src.services.mocks.initial import create_initial_data
+# from src.services.mocks.initial import create_initial_data
 
 ########################
 # Pre-Alpha Version 0.1.0
@@ -64,8 +64,8 @@ async def root():
     return {"Message": "Welcome to LearnHouse ✨"}
 
 
-@app.get("/initial_data")
-async def initial_data(request: Request):
+# @app.get("/initial_data")
+# async def initial_data(request: Request):
 
-    await create_initial_data(request)
-    return {"Message": "Initial data created 🤖"}
+#     await create_initial_data(request)
+#     return {"Message": "Initial data created 🤖"}
