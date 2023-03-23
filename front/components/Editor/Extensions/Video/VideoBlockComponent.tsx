@@ -8,7 +8,7 @@ import { uploadNewVideoFile } from "../../../../services/files/video";
 function VideoBlockComponents(props: any) {
   const [video, setVideo] = React.useState(null);
   const [isLoading, setIsLoading] = React.useState(false);
-  const [fileObject, setfileObject] = React.useState(props.node.attrs.fileObject);
+  const [blockObject, setblockObject] = React.useState(props.node.attrs.fileObject);
 
   const handleVideoChange = (event: React.ChangeEvent<any>) => {
     setVideo(event.target.files[0]);
@@ -19,15 +19,15 @@ function VideoBlockComponents(props: any) {
     setIsLoading(true);
     let object = await uploadNewVideoFile(video, props.extension.options.lecture.lecture_id);
     setIsLoading(false);
-    setfileObject(object);
+    setblockObject(object);
     props.updateAttributes({
-      fileObject: object,
+      blockObject: object,
     });
   };
 
   return (
     <NodeViewWrapper className="block-video">
-      {!fileObject && (
+      {!blockObject && (
         <BlockVideoWrapper contentEditable={props.extension.options.editable}>
           <div>
             <Video color="#e1e0e0" size={50} />
@@ -38,12 +38,12 @@ function VideoBlockComponents(props: any) {
           <button onClick={handleSubmit}>Submit</button>
         </BlockVideoWrapper>
       )}
-      {fileObject && (
+      {blockObject && (
         <BlockVideo>
           <video
             controls
-            src={`${getBackendUrl()}content/uploads/files/videos/${props.extension.options.lecture.lecture_id}/${fileObject.file_id}.${
-              fileObject.file_format
+            src={`${getBackendUrl()}content/uploads/files/lectures/${props.extension.options.lecture.lecture_id}/blocks/videoBlock/${blockObject.block_id}/${blockObject.block_data.file_id}.${
+              blockObject.block_data.file_format
             }`}
           ></video>
         </BlockVideo>
