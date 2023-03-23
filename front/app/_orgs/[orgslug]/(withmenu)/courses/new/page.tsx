@@ -5,8 +5,8 @@ import { Header } from "@components/UI/Header";
 import Layout from "@components/UI/Layout";
 import { Title } from "@components/UI/Elements/Styles/Title";
 import { createNewCourse } from "@services/courses/courses";
-import { getOrganizationContextInfo } from "@services/orgs";
-import { getUriWithOrg } from "@services/config";
+import { getOrganizationContextInfo } from "@services/organizations/orgs";
+import { getUriWithOrg } from "@services/config/config";
 
 const NewCoursePage = (params: any) => {
   const router = useRouter();
