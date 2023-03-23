@@ -8,5 +8,6 @@ from pydantic import BaseModel
 class Block(BaseModel):
     block_id: str
     lecture_id: str
+    org_id: str
     block_type: Literal["quizBlock", "videoBlock", "pdfBlock"]
     block_data: Any
