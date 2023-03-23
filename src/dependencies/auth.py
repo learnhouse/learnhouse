@@ -4,7 +4,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
-from src.services.users import *
+from src.services.users.users import *
 from fastapi import Cookie, FastAPI
 from src.services.security import *
 from fastapi_jwt_auth import AuthJWT
