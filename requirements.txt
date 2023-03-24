@@ -9,3 +9,4 @@ passlib
 fastapi-jwt-auth
 faker
 requests
+pyyaml
