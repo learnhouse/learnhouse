@@ -1,6 +1,8 @@
+import asyncio
 import logging
 from fastapi import FastAPI, Request
 import re
+from config.config import LearnHouseConfig, get_learnhouse_config
 from src.core.config.config import Settings, get_settings
 from src.core.events.events import shutdown_app, startup_app
 from src.main import global_router
@@ -16,10 +18,13 @@ from fastapi_jwt_auth.exceptions import AuthJWTException
 # (c) LearnHouse 2022
 ########################
 
+# Get LearnHouse Config
+learnhouse_config: LearnHouseConfig = get_learnhouse_config()
+
 # Global Config
 app = FastAPI(
-    title="LearnHouse",
-    description="LearnHouse is a new open-source platform tailored for learning experiences.",
+    title=learnhouse_config.site_name,
+    description=learnhouse_config.site_description,
     version="0.1.0",
     root_path="/"
 )
@@ -45,7 +50,7 @@ app.add_event_handler("shutdown", shutdown_app(app))
 
 
 # JWT Exception Handler
-@app.exception_handler(AuthJWTException)
+@ app.exception_handler(AuthJWTException)
 def authjwt_exception_handler(request: Request, exc: AuthJWTException):
     return JSONResponse(
         status_code=exc.status_code,  # type: ignore
@@ -59,9 +64,18 @@ app.include_router(global_router)
 # General Routes
 
 
-@app.get("/")
+@ app.get("/")
 async def root():
     return {"Message": "Welcome to LearnHouse ✨"}
+
+# Get config
+
+
+@ app.get("/config")
+async def config():
+    logging.info("Getting config")
+    config = get_learnhouse_config()
+    return config.dict()
 
 
 # @app.get("/initial_data")
