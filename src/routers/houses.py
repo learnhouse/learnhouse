@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, Request
-from src.dependencies.auth import get_current_user
+from src.security.auth import get_current_user
 
 from src.services.houses import House, HouseInDB, create_house, get_house, get_houses, update_house, delete_house
 from src.services.users.users import PublicUser, User
