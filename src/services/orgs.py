@@ -16,12 +16,11 @@ class Organization(BaseModel):
     description: str
     email: str
     slug: str
+    default: bool
 
 
 class OrganizationInDB(Organization):
     org_id: str
-    owners: List[str]
-    admins: List[str]
 
 
 class PublicOrganization(Organization):
@@ -75,15 +74,13 @@ async def create_org(request: Request, org_object: Organization, current_user: P
     # generate org_id with uuid4
     org_id = str(f"org_{uuid4()}")
 
-    org = OrganizationInDB(org_id=org_id, owners=[
-        current_user.user_id], admins=[
-        current_user.user_id], **org_object.dict())
+    org = OrganizationInDB(org_id=org_id, **org_object.dict())
 
     org_in_db = await orgs.insert_one(org.dict())
 
     user_organization: UserOrganization = UserOrganization(
         org_id=org_id, org_role="owner")
-    
+
     # add org to user
     await user.update_one({"user_id": current_user.user_id}, {
         "$addToSet": {"orgs": user_organization.dict()}})
@@ -113,7 +110,7 @@ async def update_org(request: Request, org_object: Organization, org_id: str, cu
             status_code=status.HTTP_409_CONFLICT, detail="Organization does not exist")
 
     updated_org = OrganizationInDB(
-        org_id=org_id, owners=owners, admins=admins, **org_object.dict())
+        org_id=org_id, **org_object.dict())
 
     await orgs.update_one({"org_id": org_id}, {"$set": updated_org.dict()})
 
@@ -149,10 +146,10 @@ async def get_orgs_by_user(request: Request, user_id: str, page: int = 1, limit:
     orgs = request.app.db["organizations"]
     user = request.app.db["users"]
 
-    # get user orgs 
+    # get user orgs
     user_orgs = await user.find_one({"user_id": user_id})
 
-    org_ids : list[UserOrganization] = []
+    org_ids: list[UserOrganization] = []
 
     for org in user_orgs["orgs"]:
         if org["org_role"] == "owner" or org["org_role"] == "editor" or org["org_role"] == "member":
