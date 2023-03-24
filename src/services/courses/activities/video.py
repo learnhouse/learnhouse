@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from src.services.security import verify_user_rights_with_roles
+from src.security.security import verify_user_rights_with_roles
 from src.services.courses.activities.uploads.videos import upload_video
 from src.services.users.users import PublicUser
 from src.services.courses.activities.activities import ActivityInDB

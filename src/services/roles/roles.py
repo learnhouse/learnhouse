@@ -4,7 +4,7 @@ from uuid import uuid4
 from pydantic import BaseModel
 from src.services.roles.schemas.roles import Role, RoleInDB
 from src.services.users.schemas.users import PublicUser, User
-from src.services.security import *
+from src.security.security import *
 from src.services.houses import House
 from fastapi import HTTPException, status, Request
 from datetime import datetime

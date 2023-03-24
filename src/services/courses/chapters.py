@@ -5,7 +5,7 @@ from uuid import uuid4
 from pydantic import BaseModel
 from src.services.courses.courses import Course, CourseInDB
 from src.services.courses.activities.activities import Activity, ActivityInDB
-from src.services.security import verify_user_rights_with_roles
+from src.security.security import verify_user_rights_with_roles
 from src.services.users.users import PublicUser
 from fastapi import HTTPException, status, Request, Response, BackgroundTasks, UploadFile, File
 
