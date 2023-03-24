@@ -3,7 +3,7 @@ from typing import Literal
 from uuid import uuid4
 from fastapi import HTTPException, Request, status
 from src.services.roles.schemas.roles import Role
-from src.services.security import security_hash_password, security_verify_password
+from src.security.security import security_hash_password, security_verify_password
 from src.services.users.schemas.users import PasswordChangeForm, PublicUser, User, UserOrganization, UserWithPassword, UserInDB
 
 
