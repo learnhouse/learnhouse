@@ -5,7 +5,6 @@ from pydantic import BaseModel
 from src.services.roles.schemas.roles import Role, RoleInDB
 from src.services.users.schemas.users import PublicUser, User
 from src.security.security import *
-from src.services.houses import House
 from fastapi import HTTPException, status, Request
 from datetime import datetime
 
