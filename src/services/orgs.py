@@ -30,6 +30,9 @@ class PublicOrganization(Organization):
     slug: str
     org_id: str
 
+    def __getitem__(self, item):
+        return getattr(self, item)
+
 
 #### Classes ####################################################
 

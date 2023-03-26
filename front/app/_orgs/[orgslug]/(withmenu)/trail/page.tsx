@@ -5,42 +5,43 @@ import React from "react";
 import { styled } from "styled-components";
 import useSWR from "swr";
 
-function Activity(params: any) {
+function Trail(params: any) {
   let orgslug = params.params.orgslug;
-  const { data: activities, error: error } = useSWR(`${getAPIUrl()}activity/org_slug/${orgslug}/activities`, swrFetcher);
-
+  const { data: trail, error: error } = useSWR(`${getAPIUrl()}trail/org_slug/${orgslug}/trail`, swrFetcher);
+  
+  
   return (
-    <ActivityLayout>
-      <h1>Activity</h1>
+    <TrailLayout>
+      <h1>Trail</h1>
       <br />
       {error && <p>Failed to load</p>}
-      {!activities ? (
+      {!trail ? (
         <div>Loading...</div>
       ) : (
         <div>
-          {activities.map((activity: any) => (
-            <ActivityBox key={activity.activity_id}>
-              <ActivityMetadata>
-                <ActivityThumbnail>
-                  <img src={`${getBackendUrl()}content/uploads/img/${activity.course.thumbnail}`}></img>
-                </ActivityThumbnail>
-                <ActivityInfo>
+          {trail.courses.map((course: any) => (
+            <TrailBox key={trail.trail_id}>
+              <TrailMetadata>
+                <TrailThumbnail>
+                  <img src={`${getBackendUrl()}content/uploads/img/${course.course_object.thumbnail}`}></img>
+                </TrailThumbnail>
+                <TrailInfo>
                   <h2>Course</h2>
-                  <h3>{activity.course.name}</h3>
-                </ActivityInfo>
-              </ActivityMetadata>
-              <ActivityProgress progress={activity.progression} />
-            </ActivityBox>
+                  <h3>{course.course_object.name}</h3>
+                </TrailInfo>
+              </TrailMetadata>
+              <TrailProgress progress={course.progress} />
+            </TrailBox>
           ))}
         </div>
       )}
-    </ActivityLayout>
+    </TrailLayout>
   );
 }
 
-export default Activity;
+export default Trail;
 
-const ActivityLayout = styled.div`
+const TrailLayout = styled.div`
   display: flex;
   margin: 0 auto;
   width: 1300px;
@@ -48,13 +49,13 @@ const ActivityLayout = styled.div`
   flex-direction: column;
 `;
 
-const ActivityMetadata = styled.div`
+const TrailMetadata = styled.div`
   display: flex;
   flex-direction: row;
   width: 100%;
   height: 100%;
 `;
-const ActivityBox = styled.div`
+const TrailBox = styled.div`
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -67,7 +68,7 @@ const ActivityBox = styled.div`
   background: #ffffff;
 `;
 
-const ActivityThumbnail = styled.div`
+const TrailThumbnail = styled.div`
   padding-right: 30px;
   height: 100%;
   border-radius: 7px 0px 0px 7px;
@@ -78,7 +79,7 @@ const ActivityThumbnail = styled.div`
   }
 `;
 
-const ActivityInfo = styled.div`
+const TrailInfo = styled.div`
   width: 100%;
   height: 100%;
   background: #ffffff;
@@ -99,7 +100,7 @@ const ActivityInfo = styled.div`
   }
 `;
 
-const ActivityProgress = styled.div`
+const TrailProgress = styled.div`
   margin-top: 10px;
   border-radius: 20px;
   height: 10px;
