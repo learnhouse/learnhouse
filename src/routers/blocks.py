@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, UploadFile, Form, Request
-from src.dependencies.auth import get_current_user
+from src.security.auth import get_current_user
 from fastapi import HTTPException, status, UploadFile
 from src.services.blocks.block_types.imageBlock.images import create_image_block, get_image_block  
 from src.services.blocks.block_types.videoBlock.videoBlock import create_video_block, get_video_block
