@@ -1,6 +1,6 @@
 "use client";
 import { EyeOpenIcon, Pencil2Icon } from "@radix-ui/react-icons";
-import { closeActivity, createActivity } from "@services/courses/activity";
+import {  removeCourse, startCourse } from "@services/courses/activity";
 import Link from "next/link";
 import React from "react";
 import styled from "styled-components";
@@ -13,21 +13,18 @@ const CourseIdPage = (params: any) => {
   const orgslug = params.params.orgslug;
   const { data: course, error: error } = useSWR(`${getAPIUrl()}courses/meta/course_${courseid}`, swrFetcher);
 
-  async function startActivity() {
+  async function startCourseUI() {
     // Create activity
-    await createActivity("course_" + courseid);
+    await startCourse("course_" + courseid,  orgslug);
 
     // Mutate course
     mutate(`${getAPIUrl()}courses/meta/course_${courseid}`);
   }
 
-  async function quitActivity() {
-    // Get activity id and org id
-    let activity_id = course.activity.activity_id;
-    let org_id = course.activity.org_id;
+  async function quitCourse() {
 
     // Close activity
-    let activity = await closeActivity(activity_id, org_id);
+    let activity = await removeCourse("course_" + courseid,  orgslug);
     console.log(activity);
 
     // Mutate course
@@ -111,12 +108,12 @@ const CourseIdPage = (params: any) => {
               </BoxWrapper>
             </CourseMetaLeft>
             <CourseMetaRight>
-              {course.activity.status == "ongoing" ? (
-                <button style={{ backgroundColor: "red" }} onClick={quitActivity}>
-                  Quit Activity
+              {course.trail.status == "ongoing" ? (
+                <button style={{ backgroundColor: "red" }} onClick={quitCourse}>
+                  Quit Course
                 </button>
               ) : (
-                <button onClick={startActivity}>Start Activity</button>
+                <button onClick={startCourseUI}>Start Course</button>
               )}
             </CourseMetaRight>
           </CourseMetaWrapper>
