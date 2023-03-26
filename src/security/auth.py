@@ -6,7 +6,7 @@ from jose import JWTError, jwt
 from datetime import datetime, timedelta
 from src.services.users.users import *
 from fastapi import Cookie, FastAPI
-from src.services.security import *
+from src.security.security import *
 from fastapi_jwt_auth import AuthJWT
 from fastapi_jwt_auth.exceptions import AuthJWTException
 

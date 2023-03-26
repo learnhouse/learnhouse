@@ -1,7 +1,7 @@
 from fastapi import Depends, FastAPI, APIRouter
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel
-from src.dependencies.auth import *
+from src.security.auth import *
 from src.services.users.schemas.users import PasswordChangeForm, PublicUser, User, UserWithPassword
 from src.services.users.users import create_user, delete_user, get_profile_metadata, get_user_by_userid, read_user, update_user, update_user_password
 
