@@ -3,7 +3,7 @@ from typing import List
 from uuid import uuid4
 from pydantic import BaseModel
 from src.services.users.users import PublicUser, User
-from src.services.security import *
+from src.security.security import *
 from fastapi import FastAPI, HTTPException, status, Request, Response, BackgroundTasks
 from datetime import datetime
 

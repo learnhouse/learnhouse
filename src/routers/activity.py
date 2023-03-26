@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, Request
-from src.dependencies.auth import get_current_user
+from src.security.auth import get_current_user
 from src.services.activity import Activity, add_activity_to_activity, close_activity, create_activity, get_user_activities, get_user_activities_orgslug
 
 

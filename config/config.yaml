@@ -1,0 +1,22 @@
+site_name: LearnHouse
+site_description: LearnHouse is an open-source platform tailored for learning experiences.
+contact_email: hi@learnhouse.app
+
+hosting_config:
+  domain: learnhouse.app
+  port: 443
+  ssl: true
+  use_default_org: false
+  default_org: learnhouse
+  allowed_origins:
+    - https://learnhouse.app
+    - https://learnhouse.io
+  allowed_regexp: "^https://(.*\\.)?learnhouse\\.app$"
+  self_hosted: false
+
+database_config:
+  host: db.mongo
+  port: 5432
+  user: myuser
+  password: mypassword
+  database_name: mydatabase

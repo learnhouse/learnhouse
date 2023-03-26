@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, UploadFile, Form, Request
 from src.services.courses.activities.activities import *
-from src.dependencies.auth import get_current_user
+from src.security.auth import get_current_user
 from src.services.courses.activities.video import create_video_activity
 
 router = APIRouter()

@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from src.services.courses.activities.activities import ActivityInDB
 from src.services.courses.thumbnails import upload_thumbnail
 from src.services.users.users import PublicUser
-from src.services.security import *
+from src.security.security import *
 from fastapi import HTTPException, status, UploadFile
 from datetime import datetime
 
