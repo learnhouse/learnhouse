@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import React from "react";
 import styled from "styled-components";
 import { Title } from "@components/UI/Elements/Styles/Title";
-import { getAPIUrl, getBackendUrl, getUriWithOrg } from "@services/config/config";
+import { getAPIUrl, getBackendUrl, getSelfHostedOption, getUriWithOrg } from "@services/config/config";
 import { deleteCourseFromBackend } from "@services/courses/courses";
 import useSWR, { mutate } from "swr";
 import { swrFetcher } from "@services/utils/requests";
@@ -25,7 +25,7 @@ const CoursesIndexPage = (params: any) => {
   function removeCoursePrefix(course_id: string) {
     return course_id.replace("course_", "");
   }
-
+  
   return (
     <>
       <Title>
@@ -44,8 +44,8 @@ const CoursesIndexPage = (params: any) => {
               <button style={{ backgroundColor: "red", border: "none" }} onClick={() => deleteCourses(course.course_id)}>
                 Delete <Trash size={10}></Trash>
               </button>
-              <Link href={getUriWithOrg(orgslug,"") + "/course/" + removeCoursePrefix(course.course_id)}>
-                <Link href={getUriWithOrg(orgslug,"") + "/course/" + removeCoursePrefix(course.course_id) + "/edit"}>
+              <Link href={getUriWithOrg(orgslug, "/course/" + removeCoursePrefix(course.course_id))}>
+                <Link href={getUriWithOrg(orgslug, "/course/" + removeCoursePrefix(course.course_id) + "/edit")}>
                   <button>
                     Edit <Edit2 size={10}></Edit2>
                   </button>

@@ -2,13 +2,12 @@ const LEARNHOUSE_API_URL = "http://localhost:1338/api/";
 const LEARNHOUSE_BACKEND_URL = "http://localhost:1338/";
 
 export const getAPIUrl = () => LEARNHOUSE_API_URL;
-
 export const getBackendUrl = () => LEARNHOUSE_BACKEND_URL;
-
-export const getSelfHostedOption = () => false;
+export const getSelfHostedOption = () => (process.env.NEXT_PUBLIC_LEARNHOUSE_SELF_HOSTED === "true" ? true : false);
 
 export const getUriWithOrg = (orgslug: string, path: string) => {
   const selfHosted = getSelfHostedOption();
+
   if (selfHosted) {
     return `http://localhost:3000${path}`;
   }
@@ -20,16 +19,16 @@ export const getOrgFromUri = () => {
   if (selfHosted) {
     getDefaultOrg();
   } else {
-    const hostname = window.location.hostname;
-    // get the orgslug from the hostname
-    const orgslug = hostname.split(".")[0];
-    return orgslug;
+    if (typeof window !== "undefined") {
+      const hostname = window.location.hostname;
+      return hostname.replace(".localhost:3000", "");
+    }
   }
 };
 
 export const getDefaultOrg = () => {
   const selfHosted = getSelfHostedOption();
   if (selfHosted) {
-    return "test";
+    return process.env.NEXT_PUBLIC_LEARNHOUSE_DEFAULT_ORG;
   }
 };
