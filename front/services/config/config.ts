@@ -21,7 +21,8 @@ export const getOrgFromUri = () => {
   } else {
     if (typeof window !== "undefined") {
       const hostname = window.location.hostname;
-      return hostname.replace(".localhost:3000", "");
+      
+      return hostname.replace(".localhost", "");
     }
   }
 };

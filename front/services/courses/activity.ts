@@ -6,18 +6,15 @@ import { getAPIUrl } from "@services/config/config";
  GET requests are called from the frontend using SWR (https://swr.vercel.app/)
 */
 
-export async function createActivity(course_id: string) {
-  let data = {
-    course_id: course_id,
-  };
-  const result: any = await fetch(`${getAPIUrl()}activity/start`, RequestBody("POST", data))
+export async function startCourse(course_id: string, org_slug: string) {
+  const result: any = await fetch(`${getAPIUrl()}trail/${org_slug}/add_course/${course_id}`, RequestBody("POST", null))
     .then((result) => result.json())
     .catch((error) => console.log("error", error));
   return result;
 }
 
-export async function closeActivity(org_id: string, activity_id: string) {
-  const result: any = await fetch(`${getAPIUrl()}activity/${org_id}/close_activity/${activity_id}"`, RequestBody("PATCH", null))
+export async function removeCourse(course_id: string, org_slug: string) {
+  const result: any = await fetch(`${getAPIUrl()}trail/${org_slug}/remove_course/${course_id}`, RequestBody("POST", null))
     .then((result) => result.json())
     .catch((error) => console.log("error", error));
   return result;
@@ -29,4 +26,3 @@ export async function maskActivityAsComplete(org_id: string, course_id: string, 
     .catch((error) => console.log("error", error));
   return result;
 }
-
