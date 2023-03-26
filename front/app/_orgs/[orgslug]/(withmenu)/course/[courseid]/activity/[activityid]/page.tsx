@@ -11,8 +11,8 @@ import { getCourse } from "@services/courses/courses";
 import VideoActivity from "@components/ActivityViews/Video/Video";
 import useSWR, { mutate } from "swr";
 import { Check } from "lucide-react";
-import { maskActivityAsComplete } from "@services/courses/activity";
 import { swrFetcher } from "@services/utils/requests";
+import { markActivityAsComplete } from "@services/courses/activity";
 
 function ActivityPage(params: any) {
   const activityid = params.params.activityid;
@@ -20,12 +20,11 @@ function ActivityPage(params: any) {
   const orgslug = params.params.orgslug;
 
   const { data: course, error: error_course } = useSWR(`${getAPIUrl()}courses/meta/course_${courseid}`, swrFetcher);
-  const { data: activity, error: error_activity } = useSWR(`${getAPIUrl()}activities/activity_${activityid}`, swrFetcher);
+  const { data: activity, error: error_activity } = useSWR(`${getAPIUrl()}trail/org_slug/${orgslug}/trail`, swrFetcher);
 
-  console.log(course, activity);
 
   async function markActivityAsCompleteFront() {
-    const activity = await maskActivityAsComplete("" + activityid, courseid, activity.activity_id.replace("activity_", ""));
+    const trail = await markActivityAsComplete(orgslug, courseid, activityid);
     mutate(`${getAPIUrl()}activities/activity_${activityid}`);
     mutate(`${getAPIUrl()}courses/meta/course_${courseid}`);
   }
@@ -76,9 +75,10 @@ function ActivityPage(params: any) {
               {activity.type == "video" && <VideoActivity course={course} activity={activity} />}
 
               <ActivityMarkerWrapper>
-                {course.activity.activities_marked_complete &&
-                course.activity.activities_marked_complete.includes("activity_" + activityid) &&
-                course.activity.status == "ongoing" ? (
+                
+                {course.trail.activities_marked_complete &&
+                course.trail.activities_marked_complete.includes("activity_" + activityid) &&
+                course.trail.status == "ongoing" ? (
                   <button style={{ backgroundColor: "green" }}>
                     <i>
                       <Check size={20}></Check>

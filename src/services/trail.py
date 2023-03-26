@@ -130,18 +130,41 @@ async def get_user_trail_with_orgslug(request: Request, user: PublicUser, org_sl
     return Trail(**trail)
 
 
-async def add_activity_to_trail(request: Request, user: PublicUser, trail_id: str, course_id: str, activity_id: str) -> Trail:
+async def add_activity_to_trail(request: Request, user: PublicUser,  course_id: str, org_slug: str, activity_id: str) -> Trail:
     trails = request.app.db["trails"]
-    trail = await trails.find_one({"trail_id": trail_id, "user_id": user.user_id})
+    orgs = request.app.db["organizations"]
+    courseid = "course_" + course_id
+    activityid = "activity_" + activity_id
+
+    # get org_id from orgslug
+    org = await orgs.find_one({"slug": org_slug})
+    org_id = org["org_id"]
+   
+    
+    # find a trail with the user_id and course_id in the courses array 
+    trail = await trails.find_one({"user_id": user.user_id, "courses.course_id": courseid , "org_id": org_id})
+    
     if not trail:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Trail not found")
+    
+    # if a trail has course_id in the courses array, then add the activity_id to the activities_marked_complete array
     for element in trail["courses"]:
-        if element["course_id"] == course_id:
-            if activity_id not in element["activities_marked_complete"]:
-                element["activities_marked_complete"].append(activity_id)
-            break
-    await trails.replace_one({"trail_id": trail_id}, trail)
+        if element["course_id"] == courseid:
+            if "activities_marked_complete" in element:
+
+                # check if activity_id is already in the array
+                if activityid not in element["activities_marked_complete"]:
+                    element["activities_marked_complete"].append(activityid)
+                else: 
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST, detail="Activity already marked complete")
+            else:
+                element["activities_marked_complete"] = [activity_id]
+    
+    # modify trail object 
+    await trails.replace_one({"trail_id": trail["trail_id"]}, trail)
+
     return Trail(**trail)
 
 
@@ -164,7 +187,6 @@ async def add_course_to_trail(request: Request, user: PublicUser, orgslug: str, 
             status_code=status.HTTP_404_NOT_FOUND, detail="Trail not found")
 
     # check if course is already present in the trail
-
     for element in trail["courses"]:
         if element["course_id"] == course_id:
             raise HTTPException(

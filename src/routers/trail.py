@@ -30,8 +30,10 @@ async def api_get_trail_by_orgslug(request: Request, org_slug: str, user=Depends
     """
     return await get_user_trail_with_orgslug(request, user, org_slug=org_slug)
 
+# Courses in trail
 
-@router.post("/{org_slug}/add_course/{course_id}")
+
+@router.post("/org_slug/{org_slug}/add_course/{course_id}")
 async def api_add_course_to_trail(request: Request,  course_id: str, org_slug: str,   user=Depends(get_current_user)):
     """
     Add Course to trail
@@ -39,9 +41,17 @@ async def api_add_course_to_trail(request: Request,  course_id: str, org_slug: s
     return await add_course_to_trail(request, user,   org_slug, course_id)
 
 
-@router.post("/{org_slug}/remove_course/{course_id}")
+@router.post("/org_slug/{org_slug}/remove_course/{course_id}")
 async def api_remove_course_to_trail(request: Request,  course_id: str, org_slug: str,   user=Depends(get_current_user)):
     """
     Remove Course from trail
     """
     return await remove_course_from_trail(request, user,   org_slug, course_id)
+
+
+@router.post("/org_slug/{org_slug}/add_activity/course_id/{course_id}/activity_id/{activity_id}")
+async def api_add_activity_to_trail(request: Request, activity_id: str, course_id: str, org_slug: str,   user=Depends(get_current_user)):
+    """
+    Add Course to trail
+    """
+    return await add_activity_to_trail(request, user, course_id, org_slug, activity_id)
