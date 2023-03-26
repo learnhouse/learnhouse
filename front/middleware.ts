@@ -20,8 +20,8 @@ export default function middleware(req: NextRequest) {
   const isSelfHosted = getSelfHostedOption();
   const hostname = req.headers.get("host") || "learnhouse.app";
   let currentHost = hostname.replace(".localhost:3000", "");
-  
-  if (!isSelfHosted && currentHost === ("localhost:3000")) {
+
+  if (!isSelfHosted && currentHost === "localhost:3000" && !url.pathname.startsWith("/organizations")) {
     // Redirect to error page if not self-hosted and on localhost
     const errorUrl = "/error";
     return NextResponse.redirect(errorUrl, { status: 302 });
@@ -33,7 +33,11 @@ export default function middleware(req: NextRequest) {
   }
 
   if (url.pathname.startsWith("/organizations")) {
+    if (!isSelfHosted) {
+      currentHost = "";
+    }
     url.pathname = url.pathname.replace("/organizations", `/organizations${currentHost}`).replace("localhost:3000", "");
+
     return NextResponse.rewrite(url);
   }
 
