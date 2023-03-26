@@ -72,7 +72,7 @@ async def get_course(request: Request, course_id: str, current_user: PublicUser)
 async def get_course_meta(request: Request, course_id: str, current_user: PublicUser):
     courses = request.app.db["courses"]
     coursechapters = request.app.db["coursechapters"]
-    activities = request.app.db["activities"]
+    trails = request.app.db["trails"]
 
     course = await courses.find_one({"course_id": course_id})
     activities = request.app.db["activities"]
@@ -119,17 +119,20 @@ async def get_course_meta(request: Request, course_id: str, current_user: Public
     course = Course(**course)
 
     # Get activity by user
-    activity = await activities.find_one(
-        {"course_id": course_id, "user_id": current_user.user_id})
-    if activity:
-        activity = json.loads(json.dumps(activity, default=str))
+    trail = await trails.find_one(
+        {"courses.course_id": course_id, "user_id": current_user.user_id})
+    print(trail)
+    if trail:
+        # get only the course where course_id == course_id
+        trail_course = next(
+            (course for course in trail["courses"] if course["course_id"] == course_id), None)
     else:
-        activity = ""
+        trail_course = ""
 
     return {
         "course": course,
         "chapters": chapters_list_with_activities,
-        "activity": activity
+        "trail": trail_course
     }
 
 

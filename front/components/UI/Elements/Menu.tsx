@@ -10,10 +10,11 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { headers } from "next/headers";
 import { getOrgFromUri, getUriWithOrg } from "@services/config/config";
 
-export const Menu = (params : any) => {
+export const Menu = (props : any ) => {
   const router = useRouter();
   const pathname = usePathname();
-  const orgslug = getOrgFromUri();
+  const orgslug = props.orgslug;
+  
   
   return (
     <GlobalHeader>
@@ -41,7 +42,7 @@ export const Menu = (params : any) => {
           </li>
           <li>
             {" "}
-            <Link href={getUriWithOrg(orgslug, "/activity")}>Activity</Link>
+            <Link href={getUriWithOrg(orgslug, "/trail")}>Trail</Link>
           </li>
           <li>More</li>
         </ul>

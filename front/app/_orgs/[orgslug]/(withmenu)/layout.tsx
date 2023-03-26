@@ -7,7 +7,7 @@ export default function RootLayout({ children, params }: { children: React.React
   return (
     <>
       <AuthProvider>
-        <Menu></Menu>
+        <Menu orgslug={params.orgslug}></Menu>
         {children}
       </AuthProvider>
     </>
