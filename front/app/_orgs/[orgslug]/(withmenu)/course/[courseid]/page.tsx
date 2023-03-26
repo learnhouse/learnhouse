@@ -23,7 +23,6 @@ const CourseIdPage = (params: any) => {
 
   async function quitCourse() {
 
-
     // Close activity
     let activity = await removeCourse("course_" + courseid,  orgslug);
     console.log(activity);
