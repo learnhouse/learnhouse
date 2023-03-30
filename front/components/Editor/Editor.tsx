@@ -7,7 +7,7 @@ import { AuthContext } from "../Security/AuthProvider";
 import learnhouseIcon from "public/learnhouse_icon.png";
 import { ToolbarButtons } from "./Toolbar/ToolbarButtons";
 import { motion, AnimatePresence } from "framer-motion";
-import Image from "next/legacy/image";
+import Image from "next/image";
 import styled from "styled-components";
 import { getBackendUrl } from "@services/config/config";
 import { SlashIcon } from "@radix-ui/react-icons";
@@ -115,7 +115,7 @@ function Editor(props: Editor) {
                 <b>{props.course.course.name}</b> <SlashIcon /> {props.activity.name}{" "}
               </EditorInfoDocName>
               <EditorSaveButton onClick={() => props.setContent(editor.getJSON())}>
-                Save <Save size={12} />
+                Save <Save size={11} />
               </EditorSaveButton>
             </EditorInfoWrapper>
             <EditorButtonsWrapper>
@@ -212,7 +212,7 @@ const EditorUserProfileWrapper = styled.div`
 //..todo
 const EditorInfoLearnHouseLogo = styled(Image)`
   border-radius: 6px;
-  margin-right: 15px;
+  margin-right: 0px;
 `;
 const EditorInfoDocName = styled.div`
   font-size: 16px;
