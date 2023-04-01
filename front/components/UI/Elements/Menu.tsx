@@ -44,7 +44,6 @@ export const Menu = (props : any ) => {
             {" "}
             <Link href={getUriWithOrg(orgslug, "/trail")}>Trail</Link>
           </li>
-          <li>More</li>
         </ul>
       </MenuArea>
       <HeaderProfileBox></HeaderProfileBox>
