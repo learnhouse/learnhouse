@@ -31,7 +31,7 @@ class ActivityInDB(Activity):
 
 async def create_activity(request: Request, activity_object: Activity, org_id: str, coursechapter_id: str, current_user: PublicUser):
     activities = request.app.db["activities"]
-    coursechapters = request.app.db["coursechapters"]
+    courses = request.app.db["courses"]
 
     # generate activity_id
     activity_id = str(f"activity_{uuid4()}")
@@ -48,8 +48,8 @@ async def create_activity(request: Request, activity_object: Activity, org_id: s
     await activities.insert_one(activity.dict())
 
     # update chapter
-    await coursechapters.update_one({"coursechapter_id": coursechapter_id}, {
-        "$addToSet": {"activities": activity_id}})
+    await courses.update_one({"chapters_content.coursechapter_id": coursechapter_id}, {
+        "$addToSet": {"chapters_content.$.activities": activity_id}})
 
     return activity
 

@@ -1,5 +1,5 @@
 import json
-from typing import List
+from typing import List, Optional
 from uuid import uuid4
 from pydantic import BaseModel
 from src.services.courses.activities.activities import ActivityInDB
@@ -20,6 +20,7 @@ class Course(BaseModel):
     thumbnail: str
     public: bool
     chapters: List[str]
+    chapters_content: Optional[List]
     org_id: str
 
 
@@ -71,7 +72,6 @@ async def get_course(request: Request, course_id: str, current_user: PublicUser)
 
 async def get_course_meta(request: Request, course_id: str, current_user: PublicUser):
     courses = request.app.db["courses"]
-    coursechapters = request.app.db["coursechapters"]
     trails = request.app.db["trails"]
 
     course = await courses.find_one({"course_id": course_id})
@@ -84,25 +84,26 @@ async def get_course_meta(request: Request, course_id: str, current_user: Public
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Course does not exist")
 
-    coursechapters = coursechapters.find(
-        {"course_id": course_id}).sort("name", 1)
+    coursechapters = await courses.find_one({"course_id": course_id}, {
+        "chapters_content": 1, "_id": 0})
 
     # activities
     coursechapter_activityIds_global = []
 
     # chapters
     chapters = {}
-    for coursechapter in await coursechapters.to_list(length=100):
-        coursechapter = CourseChapterInDB(**coursechapter)
-        coursechapter_activityIds = []
+    if coursechapters["chapters_content"]:
+        for coursechapter in coursechapters["chapters_content"]:
+            coursechapter = CourseChapterInDB(**coursechapter)
+            coursechapter_activityIds = []
 
-        for activity in coursechapter.activities:
-            coursechapter_activityIds.append(activity)
-            coursechapter_activityIds_global.append(activity)
+            for activity in coursechapter.activities:
+                coursechapter_activityIds.append(activity)
+                coursechapter_activityIds_global.append(activity)
 
-        chapters[coursechapter.coursechapter_id] = {
-            "id": coursechapter.coursechapter_id, "name": coursechapter.name,  "activityIds": coursechapter_activityIds
-        }
+            chapters[coursechapter.coursechapter_id] = {
+                "id": coursechapter.coursechapter_id, "name": coursechapter.name,  "activityIds": coursechapter_activityIds
+            }
 
     # activities
     activities_list = {}
@@ -144,16 +145,16 @@ async def create_course(request: Request, course_object: Course, org_id: str, cu
 
     # TODO(fix) : the implementation here is clearly not the best one (this entire function)
     course_object.org_id = org_id
-    await verify_user_rights_with_roles(request, "create", current_user.user_id, course_id,org_id)
+    course_object.chapters_content = []
+    await verify_user_rights_with_roles(request, "create", current_user.user_id, course_id, org_id)
 
-    
     if thumbnail_file:
         name_in_disk = f"{course_id}_thumbnail_{uuid4()}.{thumbnail_file.filename.split('.')[-1]}"
         await upload_thumbnail(thumbnail_file, name_in_disk)
         course_object.thumbnail = name_in_disk
 
     course = CourseInDB(course_id=course_id, authors=[
-        current_user.user_id], creationDate=str(datetime.now()), updateDate=str(datetime.now()), **course_object.dict())
+        current_user.user_id],  creationDate=str(datetime.now()), updateDate=str(datetime.now()), **course_object.dict())
 
     course_in_db = await courses.insert_one(course.dict())
 
@@ -258,6 +259,7 @@ async def get_courses(request: Request, page: int = 1, limit: int = 10, org_id: 
 
     return [json.loads(json.dumps(course, default=str)) for course in await all_courses.to_list(length=100)]
 
+
 async def get_courses_orgslug(request: Request, page: int = 1, limit: int = 10, org_slug: str | None = None):
     courses = request.app.db["courses"]
     orgs = request.app.db["organizations"]
@@ -269,13 +271,12 @@ async def get_courses_orgslug(request: Request, page: int = 1, limit: int = 10, 
     if not org:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail=f"Organization does not exist")
-    
+
     # get all courses from database
     all_courses = courses.find({"org_id": org['org_id']}).sort(
         "name", 1).skip(10 * (page - 1)).limit(limit)
 
     return [json.loads(json.dumps(course, default=str)) for course in await all_courses.to_list(length=100)]
-
 
 
 #### Security ####################################################
