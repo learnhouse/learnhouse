@@ -11,6 +11,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi_jwt_auth.exceptions import AuthJWTException
 from fastapi.middleware.gzip import GZipMiddleware
 
+from src.services.mocks.initial import create_initial_data
+
 # from src.services.mocks.initial import create_initial_data
 
 ########################
@@ -83,8 +85,8 @@ async def config():
     return config.dict()
 
 
-# @app.get("/initial_data")
-# async def initial_data(request: Request):
+@app.get("/initial_data")
+async def initial_data(request: Request):
 
-#     await create_initial_data(request)
-#     return {"Message": "Initial data created 🤖"}
+    await create_initial_data(request)
+    return {"Message": "Initial data created 🤖"}
