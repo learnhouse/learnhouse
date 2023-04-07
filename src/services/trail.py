@@ -181,10 +181,13 @@ async def add_course_to_trail(request: Request, user: PublicUser, orgslug: str, 
 
     trail = await trails.find_one(
         {"user_id": user.user_id, "org_id": org["org_id"]})
+    
+    
 
     if not trail:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Trail not found")
+        trail = TrailInDB(trail_id=f"trail_{uuid4()}", user_id=user.user_id, org_id=org["org_id"], courses=[])
+        trail = await trails.insert_one(trail.dict())
+        trail = await trails.find_one({"trail_id": trail.inserted_id})
 
     # check if course is already present in the trail
     for element in trail["courses"]:
