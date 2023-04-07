@@ -9,6 +9,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi_jwt_auth.exceptions import AuthJWTException
+from fastapi.middleware.gzip import GZipMiddleware
+
 # from src.services.mocks.initial import create_initial_data
 
 ########################
@@ -38,6 +40,10 @@ app.add_middleware(
     allow_credentials=True,
     allow_headers=["*"]
 )
+
+# Gzip Middleware (will add brotli later)
+app.add_middleware(GZipMiddleware, minimum_size=1000)
+
 
 # Static Files
 app.mount("/content", StaticFiles(directory="content"), name="content")
