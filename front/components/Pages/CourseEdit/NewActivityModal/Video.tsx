@@ -1,4 +1,6 @@
-import React from "react";
+import FormLayout, { ButtonBlack, Flex, FormField, FormLabel, FormMessage, Input, Textarea } from "@components/UI/Form/Form";
+import React, { useState } from "react";
+import * as Form from '@radix-ui/react-form';
 
 function VideoModal({ submitFileActivity, chapterId }: any) {
   const [video, setVideo] = React.useState(null) as any;
@@ -21,16 +23,32 @@ function VideoModal({ submitFileActivity, chapterId }: any) {
    and the actual upload isn't happening here anyway, it's in the submitFileActivity function */
 
   return (
-    <div>
-      <input type="text" placeholder="video title" onChange={handleNameChange} />
-      <br />
-      <br />
-      <input type="file" onChange={handleVideoChange} name="video" id="" />
-      <br />
+      <FormLayout onSubmit={handleSubmit}>
+      <FormField name="video-activity-name">
+        <Flex css={{ alignItems: 'baseline', justifyContent: 'space-between' }}>
+          <FormLabel>Video name</FormLabel>
+          <FormMessage match="valueMissing">Please provide a name for your video activity</FormMessage>
+        </Flex>
+        <Form.Control asChild>
+          <Input onChange={handleNameChange} type="text" required />
+        </Form.Control>
+      </FormField>
+      <FormField name="video-activity-file">
+        <Flex css={{ alignItems: 'baseline', justifyContent: 'space-between' }}>
+          <FormLabel>Video file</FormLabel>
+          <FormMessage match="valueMissing">Please provide a video for your activity</FormMessage>
+        </Flex>
+        <Form.Control asChild>
+          <input type="file" onChange={handleVideoChange} required />
+        </Form.Control>
+      </FormField>
 
-      <br />
-      <button onClick={handleSubmit}>Send</button>
-    </div>
+      <Flex css={{ marginTop: 25, justifyContent: 'flex-end' }}>
+        <Form.Submit asChild>
+          <ButtonBlack type="submit" css={{ marginTop: 10 }}>Create Activity</ButtonBlack>
+        </Form.Submit>
+      </Flex>
+    </FormLayout>
   );
 }
 
