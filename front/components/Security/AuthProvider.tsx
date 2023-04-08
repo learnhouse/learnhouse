@@ -5,7 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 
 export const AuthContext: any = React.createContext({});
 
-const PRIVATE_ROUTES = ["/course/*/edit",];
+const PRIVATE_ROUTES = ["/course/*/edit", "/settings*"];
 const NON_AUTHENTICATED_ROUTES = ["/login", "/register"];
 
 export interface Auth {
@@ -48,7 +48,7 @@ const AuthProvider = ({ children }: any) => {
 
       } else {
         setAuth({ access_token, isAuthenticated: false, userInfo, isLoading });
-        
+
         // Redirect to login if user is trying to access a private route
         if (PRIVATE_ROUTES.some((route) => new RegExp(`^${route.replace("*", ".*")}$`).test(pathname))) {
           router.push("/login");
@@ -56,7 +56,7 @@ const AuthProvider = ({ children }: any) => {
 
       }
     } catch (error) {
-      
+
     }
   }
 
