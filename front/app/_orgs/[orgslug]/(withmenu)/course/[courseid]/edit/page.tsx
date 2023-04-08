@@ -13,6 +13,7 @@ import NewActivityModal from "@components/Pages/CourseEdit/NewActivity";
 import { createActivity, createFileActivity } from "@services/courses/activities";
 import { getOrganizationContextInfo } from "@services/organizations/orgs";
 import Modal from "@components/UI/Modal/Modal";
+import AuthProvider from "@components/Security/AuthProvider";
 
 function CourseEdit(params: any) {
   // Initial Course State
@@ -117,7 +118,7 @@ function CourseEdit(params: any) {
 
   const closeNewActivityModal = () => {
     console.log("closeNewActivityModal");
-    
+
     setNewActivityModal(false);
   };
 
@@ -225,6 +226,7 @@ function CourseEdit(params: any) {
 
   return (
     <>
+      <AuthProvider />
       <Page>
         <Title>
           Edit Course {" "}
@@ -252,8 +254,8 @@ function CourseEdit(params: any) {
             Save
           </button>
         </Title>-
-          
-          <Modal
+
+        <Modal
           isDialogOpen={newActivityModal}
           onOpenChange={setNewActivityModal}
           minHeight="no-min"
@@ -266,7 +268,7 @@ function CourseEdit(params: any) {
           ></NewActivityModal>}
           dialogTitle="Create Activity"
           dialogDescription="Choose between types of activities to add to the course"
-          
+
         />
 
         <br />

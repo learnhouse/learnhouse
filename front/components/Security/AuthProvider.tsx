@@ -5,7 +5,9 @@ import { useRouter, usePathname } from "next/navigation";
 
 export const AuthContext: any = React.createContext({});
 
-const NON_AUTHENTICATED_ROUTES = ["/login", "/signup"];
+const PRIVATE_ROUTES = ["/course/*/edit",];
+const NON_AUTHENTICATED_ROUTES = ["/login", "/register"];
+
 export interface Auth {
   access_token: string;
   isAuthenticated: boolean;
@@ -15,6 +17,8 @@ export interface Auth {
 
 const AuthProvider = ({ children }: any) => {
   const router = useRouter();
+  const pathname = usePathname();
+
   const [auth, setAuth] = React.useState<Auth>({ access_token: "", isAuthenticated: false, userInfo: {}, isLoading: true });
 
   async function checkRefreshToken() {
@@ -23,6 +27,7 @@ const AuthProvider = ({ children }: any) => {
       return data.access_token;
     }
   }
+
 
   async function checkAuth() {
     try {
@@ -34,13 +39,24 @@ const AuthProvider = ({ children }: any) => {
         userInfo = await getUserInfo(access_token);
         setAuth({ access_token, isAuthenticated: true, userInfo, isLoading });
 
-        
+        // Redirect to home if user is trying to access a NON_AUTHENTICATED_ROUTES route
+
+        if (NON_AUTHENTICATED_ROUTES.some((route) => new RegExp(`^${route.replace("*", ".*")}$`).test(pathname))) {
+          router.push("/");
+        }
+
+
       } else {
         setAuth({ access_token, isAuthenticated: false, userInfo, isLoading });
-        //router.push("/login");
+        
+        // Redirect to login if user is trying to access a private route
+        if (PRIVATE_ROUTES.some((route) => new RegExp(`^${route.replace("*", ".*")}$`).test(pathname))) {
+          router.push("/login");
+        }
+
       }
     } catch (error) {
-      router.push("/");
+      
     }
   }
 
