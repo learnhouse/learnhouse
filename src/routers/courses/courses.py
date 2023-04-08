@@ -14,7 +14,7 @@ async def api_create_course(request: Request, org_id: str, name: str = Form(), m
     Create new Course
     """
     course = Course(name=name, mini_description=mini_description, description=description,
-                    org_id=org_id, public=public, thumbnail="", chapters=[], learnings=[])
+                    org_id=org_id, public=public, thumbnail="", chapters=[], chapters_content=[], learnings=[])
     return await create_course(request, course, org_id,  current_user, thumbnail)
 
 
