@@ -90,4 +90,6 @@ async def get_current_user(request: Request, Authorize: AuthJWT = Depends()):
     else:
         return AnonymousUser()
     
-    
+async def non_public_endpoint(current_user: PublicUser ):
+    if isinstance(current_user, AnonymousUser):
+        raise HTTPException(status_code=401, detail="Not authenticated")
