@@ -14,6 +14,7 @@ import NewChapterModal from "@components/Modals/CourseEdit/NewChapter";
 import NewActivityModal from "@components/Modals/CourseEdit/NewActivity";
 import { createActivity, createFileActivity } from "@services/courses/activities";
 import { getOrganizationContextInfo } from "@services/organizations/orgs";
+import Modal from "@components/UI/Modal/Modal";
 
 function CourseEdit(params: any) {
   const router = useRouter();
@@ -32,7 +33,7 @@ function CourseEdit(params: any) {
   const courseid = params.params.courseid;
   const orgslug = params.params.orgslug;
 
-  
+
 
   async function getCourseChapters() {
     const courseChapters = await getCourseChaptersMetadata(courseid);
@@ -123,6 +124,8 @@ function CourseEdit(params: any) {
   };
 
   const closeNewActivityModal = () => {
+    console.log("closeNewActivityModal");
+    
     setNewActivityModal(false);
   };
 
@@ -233,13 +236,22 @@ function CourseEdit(params: any) {
       <Page>
         <Title>
           Edit Course {" "}
-          <button
-            onClick={() => {
-              setNewChapterModal(true);
-            }}
-          >
-            Add chapter +
-          </button>
+          <Modal
+            isDialogOpen={newChapterModal}
+            onOpenChange={setNewChapterModal}
+            minHeight="sm"
+            dialogContent={<NewChapterModal
+              closeModal={closeNewChapterModal}
+              submitChapter={submitChapter}
+            ></NewChapterModal>}
+            dialogTitle="Create chapter"
+            dialogDescription="Add a new chapter to the course"
+            dialogTrigger={
+              <button> Add chapter +
+              </button>
+            }
+          />
+
           <button
             onClick={() => {
               updateChapters();
@@ -247,16 +259,22 @@ function CourseEdit(params: any) {
           >
             Save
           </button>
-        </Title>
-        {newChapterModal && <NewChapterModal closeModal={closeNewChapterModal} submitChapter={submitChapter}></NewChapterModal>}
-        {newActivityModal && (
-          <NewActivityModal
+        </Title>-
+          
+          <Modal
+          isDialogOpen={newActivityModal}
+          onOpenChange={setNewActivityModal}
+          minHeight="md"
+          dialogContent={<NewActivityModal
             closeModal={closeNewActivityModal}
             submitFileActivity={submitFileActivity}
             submitActivity={submitActivity}
             chapterId={newActivityModalData}
-          ></NewActivityModal>
-        )}
+          ></NewActivityModal>}
+          dialogTitle="Create Activity"
+          dialogDescription="Choose between types of activities to add to the course"
+          
+        />
 
         <br />
         {winReady && (
@@ -287,7 +305,7 @@ function CourseEdit(params: any) {
             </DragDropContext>
           </ChapterlistWrapper>
         )}
-      </Page>
+      </Page >
     </>
   );
 }
