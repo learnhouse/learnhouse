@@ -21,7 +21,7 @@ const Modal = (params: ModalParams) => (
                 {params.dialogTrigger}
             </Dialog.Trigger>
         ) : null}
-        
+
         <Dialog.Portal>
             <DialogOverlay />
             <DialogContent minHeight={params.minHeight}>
@@ -32,10 +32,15 @@ const Modal = (params: ModalParams) => (
                     </DialogDescription>
                 </DialogTopBar>
                 {params.dialogContent}
-                <Dialog.Close asChild>
-                    {params.dialogClose}
-                </Dialog.Close>
+                {params.dialogClose ? (
+                    <Flex css={{ marginTop: 25, justifyContent: 'flex-end' }}>
+                        <Dialog.Close asChild>
+                            {params.dialogClose}
+                        </Dialog.Close>
+                    </Flex>
+                ) : null}
             </DialogContent>
+
         </Dialog.Portal>
     </Dialog.Root>
 );
