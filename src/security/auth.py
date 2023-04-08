@@ -4,6 +4,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
+from src.services.users.schemas.users import AnonymousUser
 from src.services.users.users import *
 from fastapi import Cookie, FastAPI
 from src.security.security import *
@@ -76,14 +77,17 @@ async def get_current_user(request: Request, Authorize: AuthJWT = Depends()):
     )
     
     try:
-        Authorize.jwt_required()
-        username = Authorize.get_jwt_subject()
+        Authorize.jwt_optional()
+        username = Authorize.get_jwt_subject() or None
         token_data = TokenData(username=username)  # type: ignore
     except JWTError:
         raise credentials_exception
-    user = await security_get_user(request, email=token_data.username) # type: ignore # treated as an email 
-    if user is None:
-        raise credentials_exception
-    return PublicUser(**user.dict())
+    if username: 
+        user = await security_get_user(request, email=token_data.username) # type: ignore # treated as an email 
+        if user is None:
+            raise credentials_exception
+        return PublicUser(**user.dict())
+    else:
+        return AnonymousUser()
     
     
