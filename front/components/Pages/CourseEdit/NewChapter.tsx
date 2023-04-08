@@ -1,6 +1,9 @@
+import FormLayout, { Flex, FormField, Input, Textarea, FormLabel, ButtonBlack } from "@components/UI/Form/Form";
+import { FormMessage } from "@radix-ui/react-form";
+import * as Form from '@radix-ui/react-form';
 import React, { useState } from "react";
 
-function NewChapterModal({ submitChapter , closeModal }: any) {
+function NewChapterModal({ submitChapter, closeModal }: any) {
   const [chapterName, setChapterName] = useState("");
   const [chapterDescription, setChapterDescription] = useState("");
 
@@ -15,17 +18,37 @@ function NewChapterModal({ submitChapter , closeModal }: any) {
   const handleSubmit = async (e: any) => {
     e.preventDefault();
     console.log({ chapterName, chapterDescription });
-    submitChapter({ name : chapterName, description : chapterDescription , activities : [] });
+    submitChapter({ name: chapterName, description: chapterDescription, activities: [] });
   };
 
   return (
-    <div>
-      <button onClick={closeModal}>X</button>
-      <input type="text" onChange={handleChapterNameChange} placeholder="Chapter Name" /> <br />
-      <input type="text" onChange={handleChapterDescriptionChange} placeholder="Chapter Description" />
-      <br />
-      <button onClick={handleSubmit}>Add Chapter</button>
-    </div>
+
+    <FormLayout onSubmit={handleSubmit}>
+      <FormField name="chapter-name">
+        <Flex css={{ alignItems: 'baseline', justifyContent: 'space-between' }}>
+          <FormLabel>Chapter name</FormLabel>
+          <FormMessage match="valueMissing">Please provide a chapter name</FormMessage>
+        </Flex>
+        <Form.Control asChild>
+          <Input onChange={handleChapterNameChange} type="text" required />
+        </Form.Control>
+      </FormField>
+      <FormField name="chapter-desc">
+        <Flex css={{ alignItems: 'baseline', justifyContent: 'space-between' }}>
+          <FormLabel>Chapter description</FormLabel>
+          <FormMessage match="valueMissing">Please provide a chapter description</FormMessage>
+        </Flex>
+        <Form.Control asChild>
+          <Textarea onChange={handleChapterDescriptionChange} required />
+        </Form.Control>
+      </FormField>
+
+      <Flex css={{ marginTop: 25, justifyContent: 'flex-end' }}>
+        <Form.Submit asChild>
+          <ButtonBlack type="submit" css={{ marginTop: 10 }}>Create chapter</ButtonBlack>
+        </Form.Submit>
+      </Flex>
+    </FormLayout>
   );
 }
 
