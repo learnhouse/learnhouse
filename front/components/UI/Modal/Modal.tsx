@@ -2,6 +2,7 @@ import React from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { styled, keyframes } from '@stitches/react';
 import { violet, blackA, mauve, green } from '@radix-ui/colors';
+import { ButtonBlack } from '../Form/Form';
 
 type ModalParams = {
     dialogTitle: string;
@@ -9,9 +10,10 @@ type ModalParams = {
     dialogContent: React.ReactNode;
     dialogClose?: React.ReactNode | null;
     dialogTrigger?: React.ReactNode;
+    addDefCloseButton?: boolean;
     onOpenChange: any;
     isDialogOpen?: boolean;
-    minHeight?: "sm" | "md" | "lg" | "xl"
+    minHeight?: "sm" | "md" | "lg" | "xl" | "no-min";
 };
 
 const Modal = (params: ModalParams) => (
@@ -39,6 +41,14 @@ const Modal = (params: ModalParams) => (
                         </Dialog.Close>
                     </Flex>
                 ) : null}
+                {params.addDefCloseButton ? (
+                    <Flex css={{ marginTop: 25, justifyContent: 'flex-end' }}>
+                        <Dialog.Close asChild>
+                        <ButtonBlack type="submit" css={{ marginTop: 10 }}>Close</ButtonBlack>
+                        </Dialog.Close>
+                    </Flex>
+                ) : null}
+
             </DialogContent>
 
         </Dialog.Portal>
@@ -80,6 +90,9 @@ const DialogContent = styled(Dialog.Content, {
 
     variants: {
         minHeight: {
+            'no-min': {
+                minHeight: '0px',
+            },
             'sm': {
                 minHeight: '300px',
             },

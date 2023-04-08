@@ -256,7 +256,8 @@ function CourseEdit(params: any) {
           <Modal
           isDialogOpen={newActivityModal}
           onOpenChange={setNewActivityModal}
-          minHeight="md"
+          minHeight="no-min"
+          addDefCloseButton={false}
           dialogContent={<NewActivityModal
             closeModal={closeNewActivityModal}
             submitFileActivity={submitFileActivity}
