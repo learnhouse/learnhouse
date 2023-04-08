@@ -1,8 +1,6 @@
 "use client";
 import { useRouter } from 'next/navigation';
 import React from "react";
-import { Header } from "../../components/UI/Header";
-import Layout from "../../components/UI/Layout";
 import { Title } from "../../components/UI/Elements/Styles/Title";
 import { loginAndGetToken } from "../../services/auth/auth";
 
@@ -35,7 +33,6 @@ const Login = () => {
   return (
     <div>
       < >
-      <Header></Header>
         <Title>Login</Title>
 
         <form>
