@@ -4,6 +4,7 @@ import pprint
 from typing import List
 from uuid import uuid4
 from pydantic import BaseModel
+from src.security.auth import non_public_endpoint
 from src.services.courses.courses import Course, CourseInDB
 from src.services.courses.activities.activities import Activity, ActivityInDB
 from src.security.security import verify_user_rights_with_roles
@@ -149,9 +150,15 @@ async def get_coursechapters_meta(request: Request, course_id: str, current_user
     courses = request.app.db["courses"]
     activities = request.app.db["activities"]
 
+    await non_public_endpoint(current_user)
+
     coursechapters = await courses.find_one({"course_id": course_id}, {"chapters": 1, "chapters_content": 1, "_id": 0})
 
     coursechapters = coursechapters
+
+    if not coursechapters:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="Course does not exist")
 
     # activities
     coursechapter_activityIds_global = []
