@@ -2,23 +2,19 @@
 import React from "react";
 import { useState, useEffect } from "react";
 import styled from "styled-components";
-import { Header } from "@components/UI/Header";
-import Layout from "@components/UI/Layout";
 import { Title } from "@components/UI/Elements/Styles/Title";
 import { DragDropContext, Droppable } from "react-beautiful-dnd";
-import { initialData, initialData2 } from "@components/Drags/data";
-import Chapter from "@components/Drags/Chapter";
+import { initialData, initialData2 } from "@components/Pages/CourseEdit/Draggables/data";
+import Chapter from "@components/Pages/CourseEdit/Draggables/Chapter";
 import { createChapter, deleteChapter, getCourseChaptersMetadata, updateChaptersMetadata } from "@services/courses/chapters";
 import { useRouter } from "next/navigation";
-import NewChapterModal from "@components/Modals/CourseEdit/NewChapter";
-import NewActivityModal from "@components/Modals/CourseEdit/NewActivity";
+import NewChapterModal from "@components/Pages/CourseEdit/NewChapter";
+import NewActivityModal from "@components/Pages/CourseEdit/NewActivity";
 import { createActivity, createFileActivity } from "@services/courses/activities";
 import { getOrganizationContextInfo } from "@services/organizations/orgs";
 import Modal from "@components/UI/Modal/Modal";
 
 function CourseEdit(params: any) {
-  const router = useRouter();
-
   // Initial Course State
   const [data, setData] = useState(initialData2) as any;
 
@@ -32,8 +28,6 @@ function CourseEdit(params: any) {
   const [winReady, setwinReady] = useState(false);
   const courseid = params.params.courseid;
   const orgslug = params.params.orgslug;
-
-
 
   async function getCourseChapters() {
     const courseChapters = await getCourseChaptersMetadata(courseid);
@@ -107,9 +101,7 @@ function CourseEdit(params: any) {
   };
 
   /* 
-  
   Modals
-
   */
 
   const openNewActivityModal = async (chapterId: any) => {
