@@ -113,8 +113,14 @@ async def delete_coursechapter(request: Request, coursechapter_id: str,  current
         # verify course rights
         await verify_rights(request, course["course_id"], current_user, "delete")
 
-        courses.update_one({"chapters_content.coursechapter_id": coursechapter_id}, {
+        # Remove coursechapter from course
+        res = await courses.update_one({"course_id": course["course_id"]}, {
+            "$pull": {"chapters": coursechapter_id}})
+
+        await courses.update_one({"chapters_content.coursechapter_id": coursechapter_id}, {
             "$pull": {"chapters_content": {"coursechapter_id": coursechapter_id}}})
+        
+        
 
         return {"message": "Coursechapter deleted"}
 
