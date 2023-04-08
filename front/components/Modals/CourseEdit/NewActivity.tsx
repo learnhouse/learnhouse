@@ -9,20 +9,18 @@ function NewActivityModal({ closeModal, submitActivity, submitFileActivity, chap
   const [selectedView, setSelectedView] = useState("home");
 
   return (
-    <Modal>
-      <button onClick={ () => {setSelectedView("home")}}>
+    <div>
+      <button onClick={() => { setSelectedView("home") }}>
         <ArrowLeftIcon />
       </button>
       <button onClick={closeModal}>
         <Cross1Icon />
       </button>
-      <h1>Add New Activity</h1>
-      <br />
 
       {selectedView === "home" && (
         <ActivityChooserWrapper>
-          <ActivityButton onClick={() => {setSelectedView("dynamic")}}>✨📄</ActivityButton>
-          <ActivityButton onClick={() => {setSelectedView("video")}}>📹</ActivityButton>
+          <ActivityButton onClick={() => { setSelectedView("dynamic") }}>✨📄</ActivityButton>
+          <ActivityButton onClick={() => { setSelectedView("video") }}>📹</ActivityButton>
         </ActivityChooserWrapper>
       )}
 
@@ -33,8 +31,8 @@ function NewActivityModal({ closeModal, submitActivity, submitFileActivity, chap
       {selectedView === "video" && (
         <VideoModal submitFileActivity={submitFileActivity} chapterId={chapterId} />
       )}
-      
-    </Modal>
+
+    </div>
   );
 }
 

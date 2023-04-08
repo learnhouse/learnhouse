@@ -20,13 +20,13 @@ function NewChapterModal({ submitChapter , closeModal }: any) {
   };
 
   return (
-    <Modal>
-      <h1>Add New Chapter <button onClick={closeModal}>X</button></h1>
+    <div>
+      <button onClick={closeModal}>X</button>
       <input type="text" onChange={handleChapterNameChange} placeholder="Chapter Name" /> <br />
       <input type="text" onChange={handleChapterDescriptionChange} placeholder="Chapter Description" />
       <br />
       <button onClick={handleSubmit}>Add Chapter</button>
-    </Modal>
+    </div>
   );
 }
 
