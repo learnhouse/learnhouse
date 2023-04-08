@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+
 import { useState, useEffect } from "react";
 import styled from "styled-components";
 import { Title } from "@components/UI/Elements/Styles/Title";
@@ -16,6 +17,8 @@ import Modal from "@components/UI/Modal/Modal";
 import AuthProvider from "@components/Security/AuthProvider";
 
 function CourseEdit(params: any) {
+
+  const router = useRouter();
   // Initial Course State
   const [data, setData] = useState(initialData2) as any;
 
@@ -31,9 +34,14 @@ function CourseEdit(params: any) {
   const orgslug = params.params.orgslug;
 
   async function getCourseChapters() {
-    const courseChapters = await getCourseChaptersMetadata(courseid);
-    setData(courseChapters);
-    console.log("courseChapters", courseChapters);
+    try {
+      const courseChapters = await getCourseChaptersMetadata(courseid);
+      setData(courseChapters);
+    } catch (error: any) {
+      if (error.status === 401) {
+        router.push("/login");
+      }
+    }
   }
 
   useEffect(() => {
@@ -226,7 +234,6 @@ function CourseEdit(params: any) {
 
   return (
     <>
-      <AuthProvider />
       <Page>
         <Title>
           Edit Course {" "}
