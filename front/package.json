@@ -11,6 +11,7 @@
   "dependencies": {
     "@radix-ui/colors": "^0.1.8",
     "@radix-ui/react-dialog": "^1.0.2",
+    "@radix-ui/react-form": "^0.0.2",
     "@radix-ui/react-icons": "^1.1.1",
     "@stitches/react": "^1.2.8",
     "@tiptap/extension-collaboration": "^2.0.0-beta.199",
