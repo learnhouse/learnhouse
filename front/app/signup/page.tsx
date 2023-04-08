@@ -1,7 +1,5 @@
 "use client";
 import React from "react";
-import { Header } from "../../components/UI/Header";
-import Layout from "../../components/UI/Layout";
 import { Title } from "../../components/UI/Elements/Styles/Title";
 import { signup } from "../../services/auth/auth";
 
@@ -31,8 +29,7 @@ const SignUp = () => {
 
   return (
     <div>
-      <Layout title="Sign up">
-      <Header></Header>
+      <div title="Sign up">
         <Title>Sign up </Title>
 
         <form>
@@ -43,7 +40,7 @@ const SignUp = () => {
             Sign up
           </button>
         </form>
-      </Layout>
+      </div>
     </div>
   );
 };

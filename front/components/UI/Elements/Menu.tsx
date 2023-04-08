@@ -6,13 +6,9 @@ import learnhouseIcon from "public/learnhouse_icon.png";
 import learnhouseLogo from "public/learnhouse_logo.png";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { headers } from "next/headers";
-import { getOrgFromUri, getUriWithOrg } from "@services/config/config";
+import { getUriWithOrg } from "@services/config/config";
 
 export const Menu = (props : any ) => {
-  const router = useRouter();
-  const pathname = usePathname();
   const orgslug = props.orgslug;
   
   

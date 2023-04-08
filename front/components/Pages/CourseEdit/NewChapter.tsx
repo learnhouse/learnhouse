@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import Modal from "../Modal";
 
 function NewChapterModal({ submitChapter , closeModal }: any) {
   const [chapterName, setChapterName] = useState("");

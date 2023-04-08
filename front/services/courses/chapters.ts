@@ -1,4 +1,4 @@
-import { initialData } from "../../components/Drags/data";
+import { initialData } from "../../components/Pages/CourseEdit/Draggables/data";
 import { getAPIUrl } from "@services/config/config";
 import { RequestBody } from "@services/utils/requests";
 
