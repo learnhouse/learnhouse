@@ -1,6 +1,5 @@
 "use client";
 import React from "react";
-import Layout from "../../../components/UI/Layout";
 import { Title } from "../../../components/UI/Elements/Styles/Title";
 import { createNewOrganization } from "../../../services/organizations/orgs";
 
@@ -34,7 +33,7 @@ const Organizations = () => {
   };
 
   return (
-    <Layout>
+    <div>
       <Title>New Organization</Title>
       Name: <input onChange={handleNameChange} type="text" />
       <br />
@@ -45,7 +44,7 @@ const Organizations = () => {
       Email Address: <input onChange={handleEmailChange} type="text" />
       <br />
       <button onClick={handleSubmit}>Create</button>
-    </Layout>
+    </div>
   );
 };
 

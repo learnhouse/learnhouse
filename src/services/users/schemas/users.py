@@ -43,6 +43,11 @@ class PublicUser(User):
     creation_date: str
     update_date: str
 
+class AnonymousUser(BaseModel):
+    user_id: str = "anonymous"
+    username: str = "anonymous"
+    
+
 
 # Forms ####################################################
 

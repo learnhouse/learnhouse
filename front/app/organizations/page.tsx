@@ -1,12 +1,12 @@
 "use client"; //todo: use server components
 import Link from "next/link";
 import React from "react";
-import Layout from "../../components/UI/Layout";
 import { Title } from "../../components/UI/Elements/Styles/Title";
 import { deleteOrganizationFromBackend } from "@services/organizations/orgs";
 import useSWR, { mutate } from "swr";
 import { swrFetcher } from "@services/utils/requests";
 import { getAPIUrl, getUriWithOrg } from "@services/config/config";
+import AuthProvider from "@components/Security/AuthProvider";
 
 const Organizations = () => {
   const { data : organizations , error } = useSWR(`${getAPIUrl()}orgs/user/page/1/limit/10`, swrFetcher)
@@ -18,6 +18,7 @@ const Organizations = () => {
 
   return (
     <>
+    <AuthProvider/>
       <Title>
         Your Organizations{" "}
         <Link href={"/organizations/new"}>

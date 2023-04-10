@@ -4,6 +4,7 @@ from uuid import uuid4
 from pydantic import BaseModel
 from src.services.courses.activities.activities import ActivityInDB
 from src.services.courses.thumbnails import upload_thumbnail
+from src.services.users.schemas.users import AnonymousUser
 from src.services.users.users import PublicUser
 from src.security.security import *
 from fastapi import HTTPException, status, UploadFile
@@ -282,10 +283,13 @@ async def get_courses_orgslug(request: Request, page: int = 1, limit: int = 10, 
 #### Security ####################################################
 
 
-async def verify_rights(request: Request, course_id: str, current_user: PublicUser, action: str):
+async def verify_rights(request: Request, course_id: str, current_user: PublicUser | AnonymousUser, action: str):
     courses = request.app.db["courses"]
 
     course = await courses.find_one({"course_id": course_id})
+
+    if current_user.user_id == "anonymous" and course["public"] == True:
+        return True
 
     if not course:
         raise HTTPException(
