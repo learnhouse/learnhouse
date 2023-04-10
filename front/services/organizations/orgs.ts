@@ -1,5 +1,5 @@
 import { getAPIUrl } from "@services/config/config";
-import { RequestBody } from "../utils/ts/requests";
+import { RequestBody, errorHandling } from "@services/utils/ts/requests";
 
 /*
  This file includes only POST, PUT, DELETE requests
@@ -7,19 +7,19 @@ import { RequestBody } from "../utils/ts/requests";
 */
 
 export async function createNewOrganization(body: any) {
-  return fetch(`${getAPIUrl()}orgs/`, RequestBody("POST", body))
-    .then((result) => result.json())
-    .catch((error) => console.log("error", error));
+  const result = await fetch(`${getAPIUrl()}orgs/`, RequestBody("POST", body));
+  const res = await errorHandling(result);
+  return res;
 }
 
 export async function deleteOrganizationFromBackend(org_id: any) {
-  return fetch(`${getAPIUrl()}orgs/${org_id}`, RequestBody("DELETE", null))
-    .then((result) => result.json())
-    .catch((error) => console.log("error", error));
+  const result = await fetch(`${getAPIUrl()}orgs/${org_id}`, RequestBody("DELETE", null));
+  const res = await errorHandling(result);
+  return res;
 }
 
 export async function getOrganizationContextInfo(org_slug: any) {
-  return fetch(`${getAPIUrl()}orgs/slug/${org_slug}`, RequestBody("GET", null))
-    .then((result) => result.json())
-    .catch((error) => console.log("error", error));
+  const result = await fetch(`${getAPIUrl()}orgs/slug/${org_slug}`, RequestBody("GET", null));
+  const res = await errorHandling(result);
+  return res;
 }

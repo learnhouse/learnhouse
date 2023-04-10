@@ -288,7 +288,7 @@ async def verify_rights(request: Request, course_id: str, current_user: PublicUs
 
     course = await courses.find_one({"course_id": course_id})
 
-    if current_user.user_id == "anonymous" and course["public"] == True:
+    if current_user.user_id == "anonymous" and course["public"] == True and action == "read":
         return True
 
     if not course:

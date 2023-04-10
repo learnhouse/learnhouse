@@ -53,6 +53,7 @@ export const swrFetcher = async (url: string, body: any, router?: AppRouterInsta
     if (router) {
       denyAccessToUser(error, router);
     }
+    throw error;
   }
 };
 
