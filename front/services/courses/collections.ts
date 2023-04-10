@@ -1,5 +1,5 @@
 import { getAPIUrl } from "../config/config";
-import { RequestBody } from "../utils/ts/requests";
+import { RequestBody, errorHandling } from "@services/utils/ts/requests";
 
 /*
  This file includes only POST, PUT, DELETE requests
@@ -7,14 +7,14 @@ import { RequestBody } from "../utils/ts/requests";
 */
 
 export async function deleteCollection(collection_id: any) {
-  return fetch(`${getAPIUrl()}collections/${collection_id}`, RequestBody("DELETE", null))
-    .then((result) => result.json())
-    .catch((error) => console.log("error", error));
+  const result: any = await fetch(`${getAPIUrl()}collections/${collection_id}`, RequestBody("DELETE", null));
+  const res = await errorHandling(result);
+  return res;
 }
 
 // Create a new collection
 export async function createCollection(collection: any) {
-  return fetch(`${getAPIUrl()}collections/`, RequestBody("POST", collection))
-    .then((result) => result.json())
-    .catch((error) => console.log("error", error));
+  const result: any = await fetch(`${getAPIUrl()}collections/`, RequestBody("POST", collection));
+  const res = await errorHandling(result);
+  return res;
 }
