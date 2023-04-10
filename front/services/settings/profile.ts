@@ -1,5 +1,5 @@
 import { getAPIUrl } from "@services/config/config";
-import { RequestBody } from "@services/utils/ts/requests";
+import { RequestBody, errorHandling } from "@services/utils/ts/requests";
 
 /*
  This file includes only POST, PUT, DELETE requests
@@ -8,8 +8,6 @@ import { RequestBody } from "@services/utils/ts/requests";
 
 export async function updateProfile(data: any) {
   const result: any = await fetch(`${getAPIUrl()}users/user_id/` + data.user_id, RequestBody("PUT", data))
-    .then((result) => result.json())
-    .catch((error) => console.log("error", error));
-
-  return result;
+  const res = await errorHandling(result);
+  return res;
 }

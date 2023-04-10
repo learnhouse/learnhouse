@@ -19,7 +19,7 @@ function ActivityPage(params: any) {
   const orgslug = params.params.orgslug;
 
   const { data: course, error: error_course } = useSWR(`${getAPIUrl()}courses/meta/course_${courseid}`, swrFetcher);
-  const { data: activity, error: error_activity } = useSWR(`${getAPIUrl()}trail/org_slug/${orgslug}/trail`, swrFetcher);
+  const { data: activity, error: error_activity } = useSWR(`${getAPIUrl()}activities/activity_${activityid}`, swrFetcher);
 
 
   async function markActivityAsCompleteFront() {
@@ -31,7 +31,7 @@ function ActivityPage(params: any) {
   return (
     <>
       {error_course && <p>Failed to load</p>}
-      {!course || !activity ? (
+      {!course && !activity ? (
         <div>Loading...</div>
       ) : (
         <ActivityLayout>
@@ -95,9 +95,8 @@ function ActivityPage(params: any) {
                 )}
               </ActivityMarkerWrapper>
             </CourseContent>
-          ) : (
-            <div>Loading...</div>
-          )}
+          ) : (<div></div>)}
+          {error_activity && <p>Failed to load {error_activity.message}</p>}
         </ActivityLayout>
       )}
     </>
