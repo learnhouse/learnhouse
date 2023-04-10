@@ -1,4 +1,4 @@
-import { RequestBody } from "@services/utils/requests";
+import { RequestBody } from "@services/utils/ts/requests";
 import { getAPIUrl } from "@services/config/config";
 
 /*

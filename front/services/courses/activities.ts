@@ -1,5 +1,5 @@
 import { getAPIUrl } from "@services/config/config";
-import { RequestBody, RequestBodyForm } from "@services/utils/requests";
+import { RequestBody, RequestBodyForm } from "@services/utils/ts/requests";
 
 export async function createActivity(data: any, chapter_id: any, org_id: any) {
   data.content = {};

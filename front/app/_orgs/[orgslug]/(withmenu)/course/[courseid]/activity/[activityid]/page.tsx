@@ -10,7 +10,7 @@ import { getCourse } from "@services/courses/courses";
 import VideoActivity from "@components/Pages/Activities/Video/Video";
 import useSWR, { mutate } from "swr";
 import { Check } from "lucide-react";
-import { swrFetcher } from "@services/utils/requests";
+import { swrFetcher } from "@services/utils/ts/requests";
 import { markActivityAsComplete } from "@services/courses/activity";
 
 function ActivityPage(params: any) {

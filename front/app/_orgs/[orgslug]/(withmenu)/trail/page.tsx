@@ -1,6 +1,6 @@
 "use client";
 import { getAPIUrl, getBackendUrl } from "@services/config/config";
-import { swrFetcher } from "@services/utils/requests";
+import { swrFetcher } from "@services/utils/ts/requests";
 import React from "react";
 import { styled } from "styled-components";
 import useSWR from "swr";
