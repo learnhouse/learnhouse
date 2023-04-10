@@ -7,7 +7,7 @@ import { Title } from "@components/UI/Elements/Styles/Title";
 import { getAPIUrl, getBackendUrl, getSelfHostedOption, getUriWithOrg } from "@services/config/config";
 import { deleteCourseFromBackend } from "@services/courses/courses";
 import useSWR, { mutate } from "swr";
-import { swrFetcher } from "@services/utils/requests";
+import { swrFetcher } from "@services/utils/ts/requests";
 import { Edit2, Trash } from "lucide-react";
 
 const CoursesIndexPage = (params: any) => {

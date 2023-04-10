@@ -1,5 +1,5 @@
 import { getAPIUrl } from "@services/config/config";
-import { RequestBody, RequestBodyForm } from "@services/utils/requests";
+import { RequestBody, RequestBodyForm } from "@services/utils/ts/requests";
 
 export async function uploadNewVideoFile(file: any, activity_id: string) {
   // Send file thumbnail as form data

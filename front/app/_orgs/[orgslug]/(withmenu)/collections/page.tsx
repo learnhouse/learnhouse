@@ -5,7 +5,7 @@ import styled from "styled-components";
 import { Title } from "@components/UI/Elements/Styles/Title";
 import { deleteCollection } from "@services/courses/collections";
 import { getAPIUrl, getBackendUrl, getUriWithOrg } from "@services/config/config";
-import { swrFetcher } from "@services/utils/requests";
+import { swrFetcher } from "@services/utils/ts/requests";
 import useSWR, { mutate } from "swr";
 
 function Collections(params: any) {
