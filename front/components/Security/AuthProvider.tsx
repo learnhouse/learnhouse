@@ -5,7 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 
 export const AuthContext: any = React.createContext({});
 
-const PRIVATE_ROUTES = ["/course/*/edit", "/settings*"];
+const PRIVATE_ROUTES = ["/course/*/edit", "/settings*", "/trail"];
 const NON_AUTHENTICATED_ROUTES = ["/login", "/register"];
 
 export interface Auth {
