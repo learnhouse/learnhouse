@@ -2,7 +2,6 @@
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import React, { useMemo } from "react";
-import Layout from "@components/UI/Layout";
 import { getActivity } from "@services/courses/activities";
 import { getAPIUrl, getBackendUrl, getUriWithOrg } from "@services/config/config";
 import Canva from "@components/Pages/Activities/DynamicCanva/DynamicCanva";
