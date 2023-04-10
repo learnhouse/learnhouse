@@ -9,7 +9,7 @@ import AuthProvider from "@components/Security/AuthProvider";
 import EditorWrapper from "@components/Editor/EditorWrapper";
 import useSWR, { mutate } from "swr";
 import { getAPIUrl } from "@services/config/config";
-import { swrFetcher } from "@services/utils/requests";
+import { swrFetcher } from "@services/utils/ts/requests";
 
 
 function EditActivity(params: any) {
