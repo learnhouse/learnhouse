@@ -3,18 +3,16 @@ import React, { createContext, useState } from 'react'
 import { styled } from '@stitches/react';
 import Link from 'next/link';
 import LearnHouseWhiteLogo from '@public/learnhouse_text_white.png';
-import { AuthContext } from '@components/Security/AuthProvider';
+import AuthProvider, { AuthContext } from '@components/Security/AuthProvider';
 import Avvvatars from 'avvvatars-react';
 import Image from 'next/image';
-
-
-
 
 function SettingsLayout({ children, params }: { children: React.ReactNode, params: any }) {
     const auth: any = React.useContext(AuthContext);
 
     return (
-        <>
+        <>  
+        <AuthProvider/>
             <Main>
                 <LeftWrapper>
                     <LeftTopArea>

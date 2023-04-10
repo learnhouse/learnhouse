@@ -1,4 +1,4 @@
-import { initialData } from "../../components/Drags/data";
+import { initialData } from "../../components/Pages/CourseEdit/Draggables/data";
 import { getAPIUrl } from "@services/config/config";
 import { RequestBody } from "@services/utils/requests";
 
@@ -9,10 +9,15 @@ import { RequestBody } from "@services/utils/requests";
 
 //TODO : depreciate this function
 export async function getCourseChaptersMetadata(course_id: any) {
-  const data: any = await fetch(`${getAPIUrl()}chapters/meta/course_${course_id}`, RequestBody("GET", null))
-    .then((result) => result.json())
-    .catch((error) => console.log("error", error));
+  const response = await fetch(`${getAPIUrl()}chapters/meta/course_${course_id}`, RequestBody("GET", null));
 
+  if (!response.ok) {
+    const error: any = new Error(`Error ${response.status}: ${response.statusText}`, {});
+    error.status = response.status;
+    throw error;
+  }
+
+  const data = await response.json();
   return data;
 }
 
@@ -20,7 +25,7 @@ export async function updateChaptersMetadata(course_id: any, data: any) {
   const result: any = await fetch(`${getAPIUrl()}chapters/meta/course_${course_id}`, RequestBody("PUT", data))
     .then((result) => result.json())
     .catch((error) => console.log("error", error));
-    
+
   return result;
 }
 

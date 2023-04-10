@@ -38,6 +38,18 @@ async def verify_user_rights_with_roles(request: Request, action: str, user_id: 
     roles = request.app.db["roles"]
     users = request.app.db["users"]
 
+    user = await users.find_one({"user_id": user_id})
+
+    # Check if user is available
+    if not user and user_id != "anonymous":
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    
+    # Check if user is anonymous
+    if user_id == "anonymous":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="The ressource you are trying to access is not publicly available")
+
     # Check if the user is an admin
     user: UserInDB = UserInDB(**await users.find_one({"user_id": user_id}))
 

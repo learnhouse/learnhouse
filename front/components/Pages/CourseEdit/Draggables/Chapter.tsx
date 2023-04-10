@@ -21,8 +21,11 @@ function Chapter(props: any) {
                 props.openNewActivityModal(props.info.list.chapter.id);
               }}
             >
+              
               Create Activity
             </button>
+
+            
             <button
               onClick={() => {
                 props.deleteChapter(props.info.list.chapter.id);
