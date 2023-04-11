@@ -1,4 +1,4 @@
-import { getDefaultOrg, getSelfHostedOption } from "@services/config/config";
+import { LEARNHOUSE_DOMAIN, getDefaultOrg, getSelfHostedOption } from "./services/config/config";
 import { NextRequest, NextResponse } from "next/server";
 
 export const config = {
@@ -19,7 +19,7 @@ export default function middleware(req: NextRequest) {
   const url = req.nextUrl;
   const isSelfHosted = getSelfHostedOption();
   const hostname = req.headers.get("host") || "learnhouse.app";
-  let currentHost = hostname.replace(".localhost:3000", "");
+  let currentHost = hostname.replace(`.${LEARNHOUSE_DOMAIN}`, "");
 
   if (!isSelfHosted && currentHost === "localhost:3000" && !url.pathname.startsWith("/organizations")) {
     // Redirect to error page if not self-hosted and on localhost
