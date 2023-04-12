@@ -1,6 +1,6 @@
 from typing import Callable
 from fastapi import FastAPI
-from src.core.config.config import LearnHouseConfig, get_learnhouse_config
+from config.config import LearnHouseConfig, get_learnhouse_config
 from src.core.events.database import close_database, connect_to_db
 from src.core.events.logs import create_logs_dir
 
