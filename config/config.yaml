@@ -20,3 +20,4 @@ database_config:
   user: myuser
   password: mypassword
   database_name: mydatabase
+  mongodb_connection_string: mongodb://learnhouse:learnhouse@mongo:27017/

@@ -5,7 +5,7 @@ import { Title } from "@components/UI/Elements/Styles/Title";
 import { createCollection } from "@services/courses/collections";
 import useSWR from "swr";
 import { getAPIUrl } from "@services/config/config";
-import { swrFetcher } from "@services/utils/requests";
+import { swrFetcher } from "@services/utils/ts/requests";
 import { getOrganizationContextInfo } from "@services/organizations/orgs";
 
 function NewCollection(params : any) {

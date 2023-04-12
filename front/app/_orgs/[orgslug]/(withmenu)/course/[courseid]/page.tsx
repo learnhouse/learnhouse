@@ -1,21 +1,26 @@
 "use client";
 import { EyeOpenIcon, Pencil2Icon } from "@radix-ui/react-icons";
-import {  removeCourse, startCourse } from "@services/courses/activity";
+import { removeCourse, startCourse } from "@services/courses/activity";
 import Link from "next/link";
 import React from "react";
 import styled from "styled-components";
 import { getAPIUrl, getBackendUrl, getUriWithOrg } from "@services/config/config";
 import useSWR, { mutate } from "swr";
-import { swrFetcher } from "@services/utils/requests";
+import { swrFetcher } from "@services/utils/ts/requests";
+import { useRouter } from "next/navigation";
 
 const CourseIdPage = (params: any) => {
   const courseid = params.params.courseid;
   const orgslug = params.params.orgslug;
-  const { data: course, error: error } = useSWR(`${getAPIUrl()}courses/meta/course_${courseid}`, swrFetcher);
+  const router = useRouter();
+  
+  const { data: course, error: error } = useSWR(`${getAPIUrl()}courses/meta/course_${courseid}`,
+    (url: string, body: any) => swrFetcher(url, body, router)
+  );
 
   async function startCourseUI() {
     // Create activity
-    await startCourse("course_" + courseid,  orgslug);
+    await startCourse("course_" + courseid, orgslug);
 
     // Mutate course
     mutate(`${getAPIUrl()}courses/meta/course_${courseid}`);
@@ -24,7 +29,7 @@ const CourseIdPage = (params: any) => {
   async function quitCourse() {
 
     // Close activity
-    let activity = await removeCourse("course_" + courseid,  orgslug);
+    let activity = await removeCourse("course_" + courseid, orgslug);
     console.log(activity);
 
     // Mutate course
@@ -42,7 +47,7 @@ const CourseIdPage = (params: any) => {
           <p>Course</p>
           <h1>
             {course.course.name}{" "}
-            <Link href={getUriWithOrg(orgslug,"") +`/course/${courseid}/edit`} rel="noopener noreferrer">
+            <Link href={getUriWithOrg(orgslug, "") + `/course/${courseid}/edit`} rel="noopener noreferrer">
               <Pencil2Icon />
             </Link>{" "}
           </h1>
@@ -53,7 +58,7 @@ const CourseIdPage = (params: any) => {
                   {chapter.activities.map((activity: any) => {
                     return (
                       <>
-                        <Link href={getUriWithOrg(orgslug,"") +`/course/${courseid}/activity/${activity.id.replace("activity_", "")}`}>
+                        <Link href={getUriWithOrg(orgslug, "") + `/course/${courseid}/activity/${activity.id.replace("activity_", "")}`}>
                           <ChapterIndicator />
                         </Link>{" "}
                       </>
@@ -94,7 +99,7 @@ const CourseIdPage = (params: any) => {
                           <>
                             <p>
                               Activity {activity.name}
-                              <Link href={getUriWithOrg(orgslug,"") +`/course/${courseid}/activity/${activity.id.replace("activity_", "")}`} rel="noopener noreferrer">
+                              <Link href={getUriWithOrg(orgslug, "") + `/course/${courseid}/activity/${activity.id.replace("activity_", "")}`} rel="noopener noreferrer">
                                 <EyeOpenIcon />
                               </Link>{" "}
                             </p>

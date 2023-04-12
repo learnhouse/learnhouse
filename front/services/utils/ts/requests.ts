@@ -1,3 +1,6 @@
+import { AppRouterInstance } from "next/dist/shared/lib/app-router-context";
+import { denyAccessToUser } from "../react/middlewares/views";
+
 export const RequestBody = (method: string, data: any) => {
   let HeadersConfig = new Headers({ "Content-Type": "application/json" });
   let options: any = {
@@ -24,7 +27,7 @@ export const RequestBodyForm = (method: string, data: any) => {
   return options;
 };
 
-export const swrFetcher = async (url: string, body: any) => {
+export const swrFetcher = async (url: string, body: any, router?: AppRouterInstance) => {
   // Create the request options
   let HeadersConfig = new Headers({ "Content-Type": "application/json" });
   let options: any = {
@@ -39,15 +42,26 @@ export const swrFetcher = async (url: string, body: any) => {
     options.body = JSON.stringify(body);
   }
 
-  // Fetch the data
-  const res = await fetch(url, options);
+  try {
+    // Fetch the data
+    const request = await fetch(url, options);
+    let res = errorHandling(request);
 
-  // If the response is not in the 200 range, throw an error
-  if (!res.ok) {
-    const error = new Error("An error occurred while fetching the data.");
+    // Return the data
+    return res;
+  } catch (error: any) {
+    if (router) {
+      denyAccessToUser(error, router);
+    }
     throw error;
   }
+};
 
-  // Return the data
+export const errorHandling = (res: any) => {
+  if (!res.ok) {
+    const error: any = new Error(`Error ${res.status}: ${res.statusText}`, {});
+    error.status = res.status;
+    throw error;
+  }
   return res.json();
 };
