@@ -45,7 +45,7 @@ export default function middleware(req: NextRequest) {
   }
 
   if (isSelfHosted) {
-    currentHost = getDefaultOrg() || currentHost;
+    currentHost =  defaultOrg || currentHost;
   }
 
   url.pathname = `/_orgs/${currentHost}${url.pathname}`;
