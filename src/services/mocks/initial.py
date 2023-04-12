@@ -1,3 +1,4 @@
+import os
 import requests
 from datetime import datetime
 from fileinput import filename
@@ -184,6 +185,11 @@ async def create_initial_data(request: Request):
 
                 image = requests.get(
                     "https://source.unsplash.com/random/800x600")
+                
+                # check if folder exists and create it if not
+                if not os.path.exists("content/uploads/img"):
+                    os.makedirs("content/uploads/img")
+                
                 with open(f"content/uploads/img/{name_in_disk}", "wb") as f:
                     f.write(image.content)
 
