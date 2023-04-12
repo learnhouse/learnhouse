@@ -32,12 +32,10 @@ app = FastAPI(
     root_path="/"
 )
 
-origin_regex = re.compile(r"^http://[\w.-]+\.localhost:3000$")
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=str(origin_regex.pattern),
-    allow_origins=["http://localhost:3000", "http://localhost:3001"],
+    allow_origin_regex=learnhouse_config.hosting_config.allowed_regexp,
+    allow_origins=learnhouse_config.hosting_config.allowed_origins,
     allow_methods=["*"],
     allow_credentials=True,
     allow_headers=["*"]
