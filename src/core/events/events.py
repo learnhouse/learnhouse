@@ -1,11 +1,16 @@
 from typing import Callable
 from fastapi import FastAPI
+from config.config import LearnHouseConfig, get_learnhouse_config
 from src.core.events.database import close_database, connect_to_db
 from src.core.events.logs import create_logs_dir
 
 
 def startup_app(app: FastAPI) -> Callable:
     async def start_app() -> None:
+        # Get LearnHouse Config
+        learnhouse_config: LearnHouseConfig = get_learnhouse_config()
+        app.learnhouse_config = learnhouse_config # type: ignore
+        
         # Connect to database
         await connect_to_db(app)
 

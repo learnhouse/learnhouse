@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import BaseModel
 import os
 import yaml
@@ -19,6 +20,7 @@ class DatabaseConfig(BaseModel):
     user: str
     password: str
     database_name: str
+    mongodb_connection_string: Optional[str]
 
 
 class LearnHouseConfig(BaseModel):
@@ -54,6 +56,8 @@ def get_learnhouse_config() -> LearnHouseConfig:
     env_user = os.environ.get('LEARNHOUSE_DB_USER')
     env_password = os.environ.get('LEARNHOUSE_DB_PASSWORD')
     env_database_name = os.environ.get('LEARNHOUSE_DB_NAME')
+    env_mongodb_connection_string = os.environ.get(
+        'LEARNHOUSE_MONGODB_CONNECTION_STRING')
 
     # Fill in values with YAML file if they are not provided
     site_name = env_site_name or yaml_config.get('site_name')
@@ -80,6 +84,8 @@ def get_learnhouse_config() -> LearnHouseConfig:
         'database_config', {}).get('password')
     database_name = env_database_name or yaml_config.get(
         'database_config', {}).get('database_name')
+    mongodb_connection_string = env_mongodb_connection_string or yaml_config.get(
+        'database_config', {}).get('mongodb_connection_string')
 
     # Create HostingConfig and DatabaseConfig objects
     hosting_config = HostingConfig(
@@ -96,7 +102,8 @@ def get_learnhouse_config() -> LearnHouseConfig:
         port=int(db_port),
         user=user,
         password=password,
-        database_name=database_name
+        database_name=database_name,
+        mongodb_connection_string=mongodb_connection_string
     )
 
     # Create LearnHouseConfig object
