@@ -48,7 +48,10 @@ def get_learnhouse_config() -> LearnHouseConfig:
     env_port = os.environ.get('LEARNHOUSE_PORT')
     env_ssl = os.environ.get('LEARNHOUSE_SSL')
     env_use_default_org = os.environ.get('LEARNHOUSE_USE_DEFAULT_ORG')
-    env_allowed_origins = os.environ.get('LEARNHOUSE_ALLOWED_ORIGINS')
+    env_allowed_origins = os.environ.get('LEARNHOUSE_ALLOWED_ORIGINS') 
+    # Allowed origins should be a comma separated string
+    if env_allowed_origins:
+        env_allowed_origins = env_allowed_origins.split(',')
     env_allowed_regexp = os.environ.get('LEARNHOUSE_ALLOWED_REGEXP')
     env_self_hosted = os.environ.get('LEARNHOUSE_SELF_HOSTED')
     env_host = os.environ.get('LEARNHOUSE_DB_HOST')
