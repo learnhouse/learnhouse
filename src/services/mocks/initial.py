@@ -184,11 +184,12 @@ async def create_initial_data(request: Request):
                 name_in_disk = f"test_mock{course_id}.jpeg"
 
                 image = requests.get(
-                    "https://source.unsplash.com/random/800x600")
+                    "https://source.unsplash.com/random/800x600/?img=1")
                 
                 # check if folder exists and create it if not
-                if not os.path.exists("content/uploads/img"):
-                    os.makedirs("content/uploads/img")
+                if not os.path.exists(f"content/uploads/img"):
+                
+                    os.makedirs(f"content/uploads/img")
                 
                 with open(f"content/uploads/img/{name_in_disk}", "wb") as f:
                     f.write(image.content)
