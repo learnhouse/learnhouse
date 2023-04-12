@@ -35,14 +35,7 @@ export default function middleware(req: NextRequest) {
     return NextResponse.rewrite(url, { headers: { orgslug: currentHost } });
   }
 
-  if (url.pathname.startsWith("/organizations")) {
-    if (!isSelfHosted) {
-      currentHost = "";
-    }
-    url.pathname = url.pathname.replace("/organizations", `/organizations${currentHost}`).replace("localhost:3000", "");
-
-    return NextResponse.rewrite(url);
-  }
+  
 
   if (isSelfHosted) {
     currentHost =  defaultOrg || currentHost;
