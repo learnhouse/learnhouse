@@ -15,6 +15,7 @@ import { createActivity, createFileActivity } from "@services/courses/activities
 import { getOrganizationContextInfo } from "@services/organizations/orgs";
 import Modal from "@components/UI/Modal/Modal";
 import AuthProvider from "@components/Security/AuthProvider";
+import { denyAccessToUser } from "@services/utils/react/middlewares/views";
 
 function CourseEdit(params: any) {
 
@@ -38,9 +39,7 @@ function CourseEdit(params: any) {
       const courseChapters = await getCourseChaptersMetadata(courseid);
       setData(courseChapters);
     } catch (error: any) {
-      if (error.status === 401) {
-        router.push("/login");
-      }
+      denyAccessToUser(error, router)
     }
   }
 

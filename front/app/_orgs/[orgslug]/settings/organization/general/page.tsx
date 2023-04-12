@@ -1,7 +1,7 @@
 "use client";
 import React from 'react'
 import useSWR, { mutate } from "swr";
-import { swrFetcher } from "@services/utils/requests";
+import { swrFetcher } from "@services/utils/ts/requests";
 import { getAPIUrl } from '@services/config/config';
 import { Field, Form, Formik } from 'formik';
 import { updateOrganization } from '@services/settings/org';
