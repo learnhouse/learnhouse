@@ -24,7 +24,7 @@
     "formik": "^2.2.9",
     "framer-motion": "^7.3.6",
     "lucide-react": "^0.104.1",
-    "next": "^13.2.0",
+    "next": "^13.2.4",
     "react": "^18.2.0",
     "react-beautiful-dnd": "^13.1.1",
     "react-dom": "^18.2.0",

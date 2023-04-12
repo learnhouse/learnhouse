@@ -1,19 +1,14 @@
 import { getAPIUrl } from "@services/config/config";
-import { RequestBody, RequestBodyForm } from "@services/utils/requests";
+import { RequestBody, RequestBodyForm } from "@services/utils/ts/requests";
 
 export async function createActivity(data: any, chapter_id: any, org_id: any) {
   data.content = {};
   // remove chapter_id from data
   delete data.chapterId;
-  
 
-  const result: any = await fetch(`${getAPIUrl()}activities/?coursechapter_id=${chapter_id}&org_id=${org_id}`, RequestBody("POST", data))
-    .then((result) => result.json())
-    .catch((error) => console.log("error", error));
-
-  console.log("result", result);
-
-  return result;
+  const result = await fetch(`${getAPIUrl()}activities/?coursechapter_id=${chapter_id}&org_id=${org_id}`, RequestBody("POST", data));
+  const res = await result.json();
+  return res;
 }
 
 export async function createFileActivity(file: File, type: string, data: any, chapter_id: any) {
@@ -29,27 +24,19 @@ export async function createFileActivity(file: File, type: string, data: any, ch
     endpoint = `${getAPIUrl()}activities/video`;
   }
 
-  const result: any = await fetch(endpoint, RequestBodyForm("POST", formData))
-    .then((result) => result.json())
-    .catch((error) => console.log("error", error));
-
-  console.log("result", result);
-
-  return result;
+  const result: any = await fetch(endpoint, RequestBodyForm("POST", formData));
+  const res = await result.json();
+  return res;
 }
 
 export async function getActivity(activity_id: any) {
-  const result: any = await fetch(`${getAPIUrl()}activities/${activity_id}`, RequestBody("GET", null))
-    .then((result) => result.json())
-    .catch((error) => console.log("error", error));
-
-  return result;
+  const result = await fetch(`${getAPIUrl()}activities/${activity_id}`, RequestBody("GET", null));
+  const res = await result.json();
+  return res;
 }
 
 export async function updateActivity(data: any, activity_id: any) {
-  const result: any = await fetch(`${getAPIUrl()}activities/${activity_id}`, RequestBody("PUT", data))
-    .then((result) => result.json())
-    .catch((error) => console.log("error", error));
-
-  return result;
+  const result = await fetch(`${getAPIUrl()}activities/${activity_id}`, RequestBody("PUT", data));
+  const res = await result.json();
+  return res;
 }

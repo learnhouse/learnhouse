@@ -1,6 +1,5 @@
-import { initialData } from "../../components/Pages/CourseEdit/Draggables/data";
 import { getAPIUrl } from "@services/config/config";
-import { RequestBody } from "@services/utils/requests";
+import { RequestBody, errorHandling } from "@services/utils/ts/requests";
 
 /*
  This file includes only POST, PUT, DELETE requests
@@ -9,38 +8,26 @@ import { RequestBody } from "@services/utils/requests";
 
 //TODO : depreciate this function
 export async function getCourseChaptersMetadata(course_id: any) {
-  const response = await fetch(`${getAPIUrl()}chapters/meta/course_${course_id}`, RequestBody("GET", null));
-
-  if (!response.ok) {
-    const error: any = new Error(`Error ${response.status}: ${response.statusText}`, {});
-    error.status = response.status;
-    throw error;
-  }
-
-  const data = await response.json();
-  return data;
+  const result = await fetch(`${getAPIUrl()}chapters/meta/course_${course_id}`, RequestBody("GET", null));
+  const res = await errorHandling(result);
+  return res;
 }
 
 export async function updateChaptersMetadata(course_id: any, data: any) {
-  const result: any = await fetch(`${getAPIUrl()}chapters/meta/course_${course_id}`, RequestBody("PUT", data))
-    .then((result) => result.json())
-    .catch((error) => console.log("error", error));
-
-  return result;
+  const result: any = await fetch(`${getAPIUrl()}chapters/meta/course_${course_id}`, RequestBody("PUT", data));
+  const res = await errorHandling(result);
+  return res;
 }
 
 export async function createChapter(data: any, course_id: any) {
-  const result: any = await fetch(`${getAPIUrl()}chapters/?course_id=course_${course_id}`, RequestBody("POST", data))
-    .then((result) => result.json())
-    .catch((error) => console.log("error", error));
+  const result: any = await fetch(`${getAPIUrl()}chapters/?course_id=course_${course_id}`, RequestBody("POST", data));
+  const res = await errorHandling(result);
 
-  return result;
+  return res;
 }
 
 export async function deleteChapter(coursechapter_id: any) {
-  const result: any = await fetch(`${getAPIUrl()}chapters/${coursechapter_id}`, RequestBody("DELETE", null))
-    .then((result) => result.json())
-    .catch((error) => console.log("error", error));
-
-  return result;
+  const result: any = await fetch(`${getAPIUrl()}chapters/${coursechapter_id}`, RequestBody("DELETE", null));
+  const res = await errorHandling(result);
+  return res;
 }

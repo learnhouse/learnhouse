@@ -4,7 +4,7 @@ import React from "react";
 import { Title } from "../../components/UI/Elements/Styles/Title";
 import { deleteOrganizationFromBackend } from "@services/organizations/orgs";
 import useSWR, { mutate } from "swr";
-import { swrFetcher } from "@services/utils/requests";
+import { swrFetcher } from "@services/utils/ts/requests";
 import { getAPIUrl, getUriWithOrg } from "@services/config/config";
 import AuthProvider from "@components/Security/AuthProvider";
 

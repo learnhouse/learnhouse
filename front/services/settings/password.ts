@@ -1,5 +1,5 @@
 import { getAPIUrl } from "@services/config/config";
-import { RequestBody } from "@services/utils/requests";
+import { RequestBody, errorHandling } from "@services/utils/ts/requests";
 
 /*
  This file includes only POST, PUT, DELETE requests
@@ -8,8 +8,6 @@ import { RequestBody } from "@services/utils/requests";
 
 export async function updatePassword(user_id : string, data: any) {
   const result: any = await fetch(`${getAPIUrl()}users/password/user_id/` + user_id, RequestBody("PUT", data))
-    .then((result) => result.json())
-    .catch((error) => console.log("error", error));
-
-  return result;
+  const res = await errorHandling(result);
+  return res;
 }
