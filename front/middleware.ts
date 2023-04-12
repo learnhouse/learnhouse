@@ -1,4 +1,4 @@
-
+import { LEARNHOUSE_DOMAIN, getDefaultOrg, getSelfHostedOption } from "./services/config/config";
 import { NextRequest, NextResponse } from "next/server";
 
 export const config = {
@@ -15,16 +15,13 @@ export const config = {
   ],
 };
 
-
 export default function middleware(req: NextRequest) {
-  const LEARNHOUSE_DOMAIN = process.env.NEXT_PUBLIC_LEARNHOUSE_DOMAIN;
   const url = req.nextUrl;
-  const isSelfHosted = process.env.NEXT_PUBLIC_LEARNHOUSE_SELF_HOSTED === "true" ? true : false
+  const isSelfHosted = getSelfHostedOption();
   const hostname = req.headers.get("host") || "learnhouse.app";
-  const defaultOrg = isSelfHosted ? process.env.NEXT_PUBLIC_LEARNHOUSE_DEFAULT_ORG : null;
   let currentHost = hostname.replace(`.${LEARNHOUSE_DOMAIN}`, "");
 
-  if (!isSelfHosted && currentHost === LEARNHOUSE_DOMAIN && !url.pathname.startsWith("/organizations")) {
+  if (!isSelfHosted && currentHost === "localhost:3000" && !url.pathname.startsWith("/organizations")) {
     // Redirect to error page if not self-hosted and on localhost
     const errorUrl = "/error";
     return NextResponse.redirect(errorUrl, { status: 302 });
@@ -35,10 +32,17 @@ export default function middleware(req: NextRequest) {
     return NextResponse.rewrite(url, { headers: { orgslug: currentHost } });
   }
 
-  
+  if (url.pathname.startsWith("/organizations")) {
+    if (!isSelfHosted) {
+      currentHost = "";
+    }
+    url.pathname = url.pathname.replace("/organizations", `/organizations${currentHost}`).replace("localhost:3000", "");
+
+    return NextResponse.rewrite(url);
+  }
 
   if (isSelfHosted) {
-    currentHost =  defaultOrg || currentHost;
+    currentHost = getDefaultOrg() || currentHost;
   }
 
   url.pathname = `/_orgs/${currentHost}${url.pathname}`;
