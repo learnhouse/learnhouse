@@ -5,6 +5,7 @@ import * as Form from '@radix-ui/react-form';
 function DynamicCanvaModal({ submitActivity, chapterId }: any) {
   const [activityName, setActivityName] = useState("");
   const [activityDescription, setActivityDescription] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleActivityNameChange = (e: any) => {
     setActivityName(e.target.value);
@@ -16,14 +17,14 @@ function DynamicCanvaModal({ submitActivity, chapterId }: any) {
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
-    console.log({ activityName, activityDescription, chapterId });
-    
-    submitActivity({
+    setIsSubmitting(true);
+    await submitActivity({
       name: activityName,
       chapterId: chapterId,
       type: "dynamic",
       org_id : "test", 
     });
+    setIsSubmitting(false);
   };
   return (
     <FormLayout onSubmit={handleSubmit}>
@@ -48,7 +49,9 @@ function DynamicCanvaModal({ submitActivity, chapterId }: any) {
 
       <Flex css={{ marginTop: 25, justifyContent: 'flex-end' }}>
         <Form.Submit asChild>
-          <ButtonBlack type="submit" css={{ marginTop: 10 }}>Create Activity</ButtonBlack>
+          <ButtonBlack state={isSubmitting ? "loading" : "none"} type="submit" css={{ marginTop: 10 }}>
+            {isSubmitting ? "Submitting..." : "Create activity"}
+          </ButtonBlack>
         </Form.Submit>
       </Flex>
     </FormLayout>

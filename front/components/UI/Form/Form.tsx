@@ -3,7 +3,7 @@ import * as Form from '@radix-ui/react-form';
 import { styled, keyframes } from '@stitches/react';
 import { blackA, violet, mauve } from '@radix-ui/colors';
 
-const FormLayout = (props: any, onSubmit : any ) => (
+const FormLayout = (props: any, onSubmit: any) => (
     <FormRoot onSubmit={props.onSubmit}>
         {props.children}
     </FormRoot>
@@ -48,7 +48,7 @@ export const inputStyles = {
     '&:hover': { boxShadow: `0 0 0 1px #edeeef` },
     '&:focus': { boxShadow: `0 0 0 2px #edeeef` },
     '&::selection': { backgroundColor: blackA.blackA9, color: 'white' },
-    
+
 };
 
 export const Input = styled('input', {
@@ -66,6 +66,16 @@ export const Textarea = styled('textarea', {
 });
 
 export const ButtonBlack = styled('button', {
+    variants: {
+        state: {
+            "loading": {
+                pointerEvents: 'none',
+                backgroundColor: "#808080",
+            },
+            "none": {
+            },
+        },
+    },
     all: 'unset',
     display: 'inline-flex',
     alignItems: 'center',
@@ -79,7 +89,7 @@ export const ButtonBlack = styled('button', {
 
     background: "#000000",
     color: "#FFFFFF",
-    '&:hover': { backgroundColor: "#181818" , cursor: "pointer"},
+    '&:hover': { backgroundColor: "#181818", cursor: "pointer" },
     '&:focus': { boxShadow: `0 0 0 2px black` },
 });
 

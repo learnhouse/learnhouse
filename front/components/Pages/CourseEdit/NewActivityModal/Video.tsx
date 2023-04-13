@@ -4,6 +4,7 @@ import * as Form from '@radix-ui/react-form';
 
 function VideoModal({ submitFileActivity, chapterId }: any) {
   const [video, setVideo] = React.useState(null) as any;
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [name, setName] = React.useState("");
 
   const handleVideoChange = (event: React.ChangeEvent<any>) => {
@@ -16,7 +17,9 @@ function VideoModal({ submitFileActivity, chapterId }: any) {
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
+    setIsSubmitting(true);
     let status = await submitFileActivity(video, "video", { name, type: "video" }, chapterId);
+    setIsSubmitting(false);
   };
 
   /* TODO : implement some sort of progress bar for file uploads, it is not possible yet because i'm not using axios.
@@ -45,7 +48,9 @@ function VideoModal({ submitFileActivity, chapterId }: any) {
 
       <Flex css={{ marginTop: 25, justifyContent: 'flex-end' }}>
         <Form.Submit asChild>
-          <ButtonBlack type="submit" css={{ marginTop: 10 }}>Create Activity</ButtonBlack>
+          <ButtonBlack state={isSubmitting ? "loading" : "none"} type="submit" css={{ marginTop: 10 }}>
+            {isSubmitting ? "Uploading..." : "Create activity"}
+          </ButtonBlack>
         </Form.Submit>
       </Flex>
     </FormLayout>
