@@ -4,6 +4,11 @@ import os
 async def upload_video(video_file,  activity_id):
     contents = video_file.file.read()
     video_format = video_file.filename.split(".")[-1]
+
+    if not os.path.exists("content/uploads/video"):
+        # create folder
+        os.mkdir("content/uploads/video")
+
     # create folder
     os.mkdir(f"content/uploads/video/{activity_id}")
 
