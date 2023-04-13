@@ -16,12 +16,14 @@ export async function createFileActivity(file: File, type: string, data: any, ch
   const formData = new FormData();
   formData.append("coursechapter_id", chapter_id);
 
-  let endpoint = `${getAPIUrl()}activities/video`;
+  let org_id = "test";
+
+  let endpoint = `${getAPIUrl()}activities/video?org_id=${org_id}`;
 
   if (type === "video") {
     formData.append("name", data.name);
     formData.append("video_file", file);
-    endpoint = `${getAPIUrl()}activities/video`;
+    endpoint = endpoint;
   }
 
   const result: any = await fetch(endpoint, RequestBodyForm("POST", formData));
