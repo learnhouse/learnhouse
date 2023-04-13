@@ -10,18 +10,37 @@ from datetime import datetime
 
 async def create_video_activity(request: Request,name: str,  coursechapter_id: str, current_user: PublicUser,  video_file: UploadFile | None = None):
     activities = request.app.db["activities"]
-    coursechapters = request.app.db["coursechapters"]
+    courses = request.app.db["courses"]
 
     # generate activity_id
     activity_id = str(f"activity_{uuid4()}")
+
+    # get org_id from course 
+    coursechapter = await courses.find_one(
+        {"chapters_content.coursechapter_id": coursechapter_id})
+    
+    org_id = coursechapter["org_id"]
+
 
     # check if video_file is not None
     if not video_file:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Video : No video file provided")
 
-    video_format = video_file.filename.split(".")[-1]
+    if video_file.content_type not in ["video/mp4", "video/webm"]:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="Video : Wrong video format")
+    
+    # get video format
+    if video_file.filename: 
+        video_format = video_file.filename.split(".")[-1]
+
+    else: 
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="Video : No video file provided")
+    
     activity_object = ActivityInDB(
+        org_id=org_id,
         activity_id=activity_id,
         coursechapter_id=coursechapter_id,
         name=name,
@@ -36,7 +55,7 @@ async def create_video_activity(request: Request,name: str,  coursechapter_id: s
         updateDate=str(datetime.now()),
     )
 
-    hasRoleRights = await verify_user_rights_with_roles(request,"create", current_user.user_id, activity_id)
+    hasRoleRights = await verify_user_rights_with_roles(request,"create", current_user.user_id, activity_id, element_org_id=org_id)
 
     if not hasRoleRights:
         raise HTTPException(
@@ -53,7 +72,7 @@ async def create_video_activity(request: Request,name: str,  coursechapter_id: s
 
     # todo : choose whether to update the chapter or not
     # update chapter
-    await coursechapters.update_one({"coursechapter_id": coursechapter_id}, {
-        "$addToSet": {"activities": activity_id}})
+    await courses.update_one({"chapters_content.coursechapter_id": coursechapter_id}, {
+        "$addToSet": {"chapters_content.$.activities": activity_id}})
 
     return activity

@@ -17,10 +17,12 @@ function DynamicCanvaModal({ submitActivity, chapterId }: any) {
   const handleSubmit = async (e: any) => {
     e.preventDefault();
     console.log({ activityName, activityDescription, chapterId });
+    
     submitActivity({
       name: activityName,
       chapterId: chapterId,
       type: "dynamic",
+      org_id : "test", 
     });
   };
   return (
