@@ -9,9 +9,9 @@ hosting_config:
   use_default_org: false
   default_org: learnhouse
   allowed_origins:
-    - https://learnhouse.app
-    - https://learnhouse.io
-  allowed_regexp: "^https://(.*\\.)?learnhouse\\.app$"
+    - http://localhost:3000
+    - http://localhost:3001 
+  allowed_regexp: '\b((?:https?://)[^\s/$.?#].[^\s]*)\b'
   self_hosted: false
 
 database_config:
