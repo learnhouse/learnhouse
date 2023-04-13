@@ -10,3 +10,4 @@ fastapi-jwt-auth
 faker
 requests
 pyyaml
+sentry-sdk[fastapi]
