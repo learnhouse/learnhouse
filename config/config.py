@@ -4,6 +4,12 @@ import os
 import yaml
 
 
+class SentryConfig(BaseModel):
+    dsn: str
+    environment: str
+    release: str
+
+
 class HostingConfig(BaseModel):
     domain: str
     port: int
@@ -12,6 +18,7 @@ class HostingConfig(BaseModel):
     allowed_origins: list
     allowed_regexp: str
     self_hosted: bool
+    sentry_config: Optional[SentryConfig]
 
 
 class DatabaseConfig(BaseModel):
@@ -48,7 +55,7 @@ def get_learnhouse_config() -> LearnHouseConfig:
     env_port = os.environ.get('LEARNHOUSE_PORT')
     env_ssl = os.environ.get('LEARNHOUSE_SSL')
     env_use_default_org = os.environ.get('LEARNHOUSE_USE_DEFAULT_ORG')
-    env_allowed_origins = os.environ.get('LEARNHOUSE_ALLOWED_ORIGINS') 
+    env_allowed_origins = os.environ.get('LEARNHOUSE_ALLOWED_ORIGINS')
     # Allowed origins should be a comma separated string
     if env_allowed_origins:
         env_allowed_origins = env_allowed_origins.split(',')
@@ -61,6 +68,11 @@ def get_learnhouse_config() -> LearnHouseConfig:
     env_database_name = os.environ.get('LEARNHOUSE_DB_NAME')
     env_mongodb_connection_string = os.environ.get(
         'LEARNHOUSE_MONGODB_CONNECTION_STRING')
+
+    # Sentry Config
+    env_sentry_dsn = os.environ.get('LEARNHOUSE_SENTRY_DSN')
+    env_sentry_environment = os.environ.get('LEARNHOUSE_SENTRY_ENVIRONMENT')
+    env_sentry_release = os.environ.get('LEARNHOUSE_SENTRY_RELEASE')
 
     # Fill in values with YAML file if they are not provided
     site_name = env_site_name or yaml_config.get('site_name')
@@ -90,6 +102,20 @@ def get_learnhouse_config() -> LearnHouseConfig:
     mongodb_connection_string = env_mongodb_connection_string or yaml_config.get(
         'database_config', {}).get('mongodb_connection_string')
 
+    # Sentry config
+    sentry_dsn = env_sentry_dsn or yaml_config.get(
+        'hosting_config', {}).get('sentry_config', {}).get('dsn')
+    sentry_environment = env_sentry_environment or yaml_config.get(
+        'hosting_config', {}).get('sentry_config', {}).get('environment')
+    sentry_release = env_sentry_release or yaml_config.get(
+        'hosting_config', {}).get('sentry_config', {}).get('release')
+
+    sentry_config = SentryConfig(
+        dsn=sentry_dsn,
+        environment=sentry_environment,
+        release=sentry_release
+    )
+
     # Create HostingConfig and DatabaseConfig objects
     hosting_config = HostingConfig(
         domain=domain,
@@ -98,7 +124,8 @@ def get_learnhouse_config() -> LearnHouseConfig:
         use_default_org=bool(use_default_org),
         allowed_origins=list(allowed_origins),
         allowed_regexp=allowed_regexp,
-        self_hosted=bool(self_hosted)
+        self_hosted=bool(self_hosted),
+        sentry_config=sentry_config
     )
     database_config = DatabaseConfig(
         host=host,
