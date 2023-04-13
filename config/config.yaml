@@ -8,9 +8,13 @@ hosting_config:
   ssl: true
   use_default_org: false
   default_org: learnhouse
+  sentry_config:
+    dsn: "https://1a6aa22656224851af492aae5d4155a1@o4505007882436608.ingest.sentry.io/4505007884599296"
+    environment: dev
+    release: "0.1.0"
   allowed_origins:
     - http://localhost:3000
-    - http://localhost:3001 
+    - http://localhost:3001
   allowed_regexp: '\b((?:https?://)[^\s/$.?#].[^\s]*)\b'
   self_hosted: false
 
