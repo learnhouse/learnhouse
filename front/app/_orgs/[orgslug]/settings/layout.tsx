@@ -17,7 +17,7 @@ function SettingsLayout({ children, params }: { children: React.ReactNode, param
                 <LeftWrapper>
                     <LeftTopArea>
                     
-                    <Image alt="Learnhouse logo" width={128}  src={LearnHouseWhiteLogo}/>
+                    <Link href={"/"}><Image alt="Learnhouse logo" width={128}  src={LearnHouseWhiteLogo}/></Link>
                     {auth.isAuthenticated && (
                         <Avvvatars value={auth.userInfo.user_object.user_id} style="shape" />
                     )}
@@ -64,6 +64,13 @@ const LeftTopArea = styled('div', {
 
     img: {
         marginRight: '20px',
+    },
+
+    a: {
+        display: 'flex',
+        placeItems: 'center',
+        placeContent: 'center',
+
     }
     
 })
