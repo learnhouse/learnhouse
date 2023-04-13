@@ -7,7 +7,7 @@ async def upload_video(video_file,  activity_id):
 
     if not os.path.exists("content/uploads/video"):
         # create folder
-        os.mkdir("content/uploads/video")
+        os.makedirs("content/uploads/video")
 
     # create folder
     os.mkdir(f"content/uploads/video/{activity_id}")
