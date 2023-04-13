@@ -31,7 +31,7 @@ function ActivityPage(params: any) {
   return (
     <>
       {error_course && <p>Failed to load</p>}
-      {!course && !activity ? (
+      {!course || !activity ? (
         <div>Loading...</div>
       ) : (
         <ActivityLayout>
