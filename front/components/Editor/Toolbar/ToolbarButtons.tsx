@@ -1,6 +1,7 @@
 import styled from "styled-components";
-import { FontBoldIcon, FontItalicIcon, StrikethroughIcon, ArrowLeftIcon, ArrowRightIcon, OpacityIcon } from "@radix-ui/react-icons";
+import { FontBoldIcon, FontItalicIcon, StrikethroughIcon, ArrowLeftIcon, ArrowRightIcon, OpacityIcon, DividerVerticalIcon } from "@radix-ui/react-icons";
 import { AlertCircle, AlertTriangle, FileText, GraduationCap, ImagePlus, Info, Sigma, Video, Youtube } from "lucide-react";
+import ToolTip from "@components/UI/Tooltip/Tooltip";
 
 export const ToolbarButtons = ({ editor, props }: any) => {
   if (!editor) {
@@ -55,80 +56,98 @@ export const ToolbarButtons = ({ editor, props }: any) => {
         <option value="6">Heading 6</option>
       </ToolSelect>
       {/* TODO: fix this : toggling only works one-way */}
-      <ToolBtn onClick={() => editor.chain().focus().toggleNode("calloutWarning").run()}>
-        <AlertTriangle size={15} />
-      </ToolBtn>
-      <ToolBtn onClick={() => editor.chain().focus().toggleNode("calloutInfo").run()}>
-        <AlertCircle size={15} />
-      </ToolBtn>
-      <ToolBtn
-        onClick={() =>
-          editor
-            .chain()
-            .focus()
-            .insertContent({
-              type: "blockImage",
-            })
-            .run()
-        }
-      >
-        <ImagePlus size={15} />
-      </ToolBtn>
-      <ToolBtn
-        onClick={() =>
-          editor
-            .chain()
-            .focus()
-            .insertContent({
-              type: "blockVideo",
-            })
-            .run()
-        }
-      >
-        <Video size={15} />
-      </ToolBtn>
-      <ToolBtn onClick={() => addYoutubeVideo()}>
-        <Youtube size={15} />
-      </ToolBtn>
-      <ToolBtn
-        onClick={() =>
-          editor
-            .chain()
-            .focus()
-            .insertContent({
-              type: "blockMathEquation",
-            })
-            .run()
-        }
-      >
-        <Sigma size={15} />
-      </ToolBtn>
-      <ToolBtn
-        onClick={() =>
-          editor
-            .chain()
-            .focus()
-            .insertContent({
-              type: "blockPDF",
-            })
-            .run()
-        }
-      >
-        <FileText size={15} />
-      </ToolBtn>
-      <ToolBtn
-        onClick={() =>
-          editor
-            .chain()
-            .focus()
-            .insertContent({
-              type: "blockQuiz",
-            })
-            .run()
-        }
-      >
-        <GraduationCap size={15} />
-      </ToolBtn>
+      <DividerVerticalIcon style={{margin:"auto", color : "grey"}}/>
+      <ToolTip content={"Info Callout"}>
+        <ToolBtn onClick={() => editor.chain().focus().toggleNode("calloutInfo").run()}>
+          <AlertCircle size={15} />
+        </ToolBtn>
+      </ToolTip>
+      <ToolTip content={"Warning Callout"}>
+        <ToolBtn onClick={() => editor.chain().focus().toggleNode("calloutWarning").run()}>
+          <AlertTriangle size={15} />
+        </ToolBtn>
+      </ToolTip>
+      <ToolTip content={"Image"}>
+        <ToolBtn
+          onClick={() =>
+            editor
+              .chain()
+              .focus()
+              .insertContent({
+                type: "blockImage",
+              })
+              .run()
+          }
+        >
+          <ImagePlus size={15} />
+        </ToolBtn>
+      </ToolTip>
+      <ToolTip
+        content={"Video"}>
+        <ToolBtn
+          onClick={() =>
+            editor
+              .chain()
+              .focus()
+              .insertContent({
+                type: "blockVideo",
+              })
+              .run()
+          }
+        >
+          <Video size={15} />
+        </ToolBtn>
+      </ToolTip>
+      <ToolTip content={"YouTube video"}>
+        <ToolBtn onClick={() => addYoutubeVideo()}>
+          <Youtube size={15} />
+        </ToolBtn>
+      </ToolTip>
+      <ToolTip content={"Math Equation (LaTeX)"}>
+        <ToolBtn
+          onClick={() =>
+            editor
+              .chain()
+              .focus()
+              .insertContent({
+                type: "blockMathEquation",
+              })
+              .run()
+          }
+        >
+          <Sigma size={15} />
+        </ToolBtn>
+      </ToolTip>
+      <ToolTip content={"PDF Document"}>
+        <ToolBtn
+          onClick={() =>
+            editor
+              .chain()
+              .focus()
+              .insertContent({
+                type: "blockPDF",
+              })
+              .run()
+          }
+        >
+          <FileText size={15} />
+        </ToolBtn>
+      </ToolTip>
+      <ToolTip content={"Interactive Quiz"}>
+        <ToolBtn
+          onClick={() =>
+            editor
+              .chain()
+              .focus()
+              .insertContent({
+                type: "blockQuiz",
+              })
+              .run()
+          }
+        >
+          <GraduationCap size={15} />
+        </ToolBtn>
+      </ToolTip>
     </ToolButtonsWrapper>
   );
 };
