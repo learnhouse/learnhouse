@@ -2,10 +2,12 @@ import FormLayout, { Flex, FormField, Input, Textarea, FormLabel, ButtonBlack } 
 import { FormMessage } from "@radix-ui/react-form";
 import * as Form from '@radix-ui/react-form';
 import React, { useState } from "react";
+import BarLoader from "react-spinners/BarLoader";
 
 function NewChapterModal({ submitChapter, closeModal }: any) {
   const [chapterName, setChapterName] = useState("");
   const [chapterDescription, setChapterDescription] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChapterNameChange = (e: any) => {
     setChapterName(e.target.value);
@@ -18,7 +20,9 @@ function NewChapterModal({ submitChapter, closeModal }: any) {
   const handleSubmit = async (e: any) => {
     e.preventDefault();
     console.log({ chapterName, chapterDescription });
-    submitChapter({ name: chapterName, description: chapterDescription, activities: [] });
+    setIsSubmitting(true);
+    await submitChapter({ name: chapterName, description: chapterDescription, activities: [] });
+    setIsSubmitting(false);
   };
 
   return (
@@ -45,7 +49,10 @@ function NewChapterModal({ submitChapter, closeModal }: any) {
 
       <Flex css={{ marginTop: 25, justifyContent: 'flex-end' }}>
         <Form.Submit asChild>
-          <ButtonBlack type="submit" css={{ marginTop: 10 }}>Create chapter</ButtonBlack>
+          <ButtonBlack type="submit" css={{ marginTop: 10 }}>
+          {isSubmitting ? <BarLoader cssOverride={{borderRadius:60,}} width={60} color="#ffffff" />
+             : "Create Chapter"}
+            </ButtonBlack>
         </Form.Submit>
       </Flex>
     </FormLayout>
