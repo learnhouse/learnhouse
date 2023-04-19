@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@radix-ui/colors": "^0.1.8",
+    "@radix-ui/react-aspect-ratio": "^1.0.2",
     "@radix-ui/react-dialog": "^1.0.2",
     "@radix-ui/react-form": "^0.0.2",
     "@radix-ui/react-icons": "^1.1.1",
@@ -27,6 +28,7 @@
     "framer-motion": "^7.3.6",
     "lucide-react": "^0.104.1",
     "next": "^13.2.4",
+    "re-resizable": "^6.9.9",
     "react": "^18.2.0",
     "react-beautiful-dnd": "^13.1.1",
     "react-dom": "^18.2.0",
