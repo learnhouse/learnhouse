@@ -16,7 +16,6 @@ export default Node.create({
       },
       size: {
         width: 300,
-        height: 200,
       },
     };
   },
