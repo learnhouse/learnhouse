@@ -14,6 +14,10 @@ export default Node.create({
       blockObject: {
         default: null,
       },
+      size: {
+        width: 300,
+        height: 200,
+      },
     };
   },
 

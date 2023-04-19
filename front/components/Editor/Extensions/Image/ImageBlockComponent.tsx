@@ -1,6 +1,9 @@
 import { NodeViewWrapper } from "@tiptap/react";
 import React from "react";
 import styled from "styled-components";
+import { Resizable } from 're-resizable';
+
+import * as AspectRatio from '@radix-ui/react-aspect-ratio';
 import { AlertCircle, AlertTriangle, Image, ImagePlus, Info } from "lucide-react";
 import { getImageFile, uploadNewImageFile } from "../../../../services/blocks/Image/images";
 import { getBackendUrl } from "../../../../services/config/config";
@@ -9,6 +12,7 @@ function ImageBlockComponent(props: any) {
   const [image, setImage] = React.useState(null);
   const [isLoading, setIsLoading] = React.useState(false);
   const [blockObject, setblockObject] = React.useState(props.node.attrs.blockObject);
+  const [imageSize, setImageSize] = React.useState({ width: 0, height: 0 });
 
   const handleImageChange = (event: React.ChangeEvent<any>) => {
     setImage(event.target.files[0]);
@@ -22,6 +26,7 @@ function ImageBlockComponent(props: any) {
     setblockObject(object);
     props.updateAttributes({
       blockObject: object,
+      size: imageSize,
     });
   };
 
@@ -39,14 +44,44 @@ function ImageBlockComponent(props: any) {
         </BlockImageWrapper>
       )}
       {blockObject && (
-        <BlockImage>
-          <img
-            src={`${getBackendUrl()}content/uploads/files/activities/${props.extension.options.activity.activity_id}/blocks/imageBlock/${blockObject.block_id}/${blockObject.block_data.file_id}.${
-              blockObject.block_data.file_format
-            }`}
-            alt=""
-          />
-        </BlockImage>
+        <BlockImageGlobal>
+          <Resizable defaultSize={{ width: blockObject.width, height: blockObject.height }}
+            handleStyles={{
+              right: { width: '10px', height: '100%', cursor: 'col-resize' },
+              top: { width: 0 },
+              bottom: { width: 0 },
+              left: { width: 0 },
+              topRight: { width: 0 },
+              bottomRight: { width: 0 },
+              bottomLeft: { width: 0 },
+              topLeft: { width: 0 },
+
+            }}
+            style={{ margin: "auto" }}
+            onResizeStop={(e, direction, ref, d) => {
+              props.updateAttributes({
+                blockObject: {
+                  ...blockObject,
+                  width: imageSize.width + d.width,
+                  height: imageSize.height + d.height,
+                },
+              });
+            }}
+          >
+
+            <BlockImage>
+              <AspectRatio.Root ratio={16 / 9}>
+                <img
+                  src={`${getBackendUrl()}content/uploads/files/activities/${props.extension.options.activity.activity_id}/blocks/imageBlock/${blockObject.block_id}/${blockObject.block_data.file_id}.${blockObject.block_data.file_format
+                    }`}
+                  alt=""
+                />
+              </AspectRatio.Root>
+
+
+            </BlockImage>
+          </Resizable>
+        </BlockImageGlobal>
       )}
       {isLoading && (
         <div>
@@ -77,13 +112,25 @@ const BlockImageWrapper = styled.div`
 
 const BlockImage = styled.div`
   display: flex;
-  flex-direction: column;
-  img {
+
+  // center
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 14px;
+
+  
+  img{
+    object-fit: "cover";
     width: 100%;
+    height: 100%;
     border-radius: 6px;
-    height: 300px;
-    // cover
-    object-fit: cover;
   }
+  
 `;
+
+const BlockImageGlobal = styled.div`
+
+  
+  `;
 const ImageNotFound = styled.div``;
