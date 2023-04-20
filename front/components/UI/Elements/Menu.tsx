@@ -7,6 +7,7 @@ import learnhouseLogo from "public/learnhouse_logo.png";
 import Link from "next/link";
 import Image from "next/image";
 import { getUriWithOrg } from "@services/config/config";
+import ToolTip from "../Tooltip/Tooltip";
 
 export const Menu = (props : any ) => {
   const orgslug = props.orgslug;
@@ -25,7 +26,9 @@ export const Menu = (props : any ) => {
       </LogoArea>
       <SearchArea>
         <Search>
-          <SearchInput placeholder="find something" type="text" />
+          <ToolTip content={<div>
+            <p>{process.env.VERCEL_GIT_COMMIT_SHA}</p>  
+          </div>}><PreAlphaLabel>pre-alpha</PreAlphaLabel></ToolTip>
         </Search>
       </SearchArea>
       <MenuArea>
@@ -58,6 +61,24 @@ const LogoArea = styled.div`
   display: flex;
   place-items: stretch;
 `;
+
+const PreAlphaLabel = styled.div`
+  display: flex;
+  place-items: center;
+  background: #FF9800;
+  border-radius: 6px;
+  height: 50%;
+  border: none;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  padding-left: 10px;
+  padding-right: 10px;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: bolder;
+  text-transform: uppercase;
+`;
+
 
 const Logo = styled.div`
   display: flex;
