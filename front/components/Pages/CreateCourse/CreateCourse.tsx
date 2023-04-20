@@ -1,6 +1,7 @@
-import FormLayout, { ButtonBlack, Flex, FormField, FormLabel, FormMessage, Input, Textarea } from '@components/UI/Form/Form'
+import FormLayout, { ButtonBlack, Flex, FormField, FormLabel,  Input, Textarea } from '@components/UI/Form/Form'
 import * as Form from '@radix-ui/react-form'
 import { getAPIUrl, getUriWithOrg } from '@services/config/config';
+import { FormMessage } from "@radix-ui/react-form";
 import { createNewCourse } from '@services/courses/courses';
 import { getOrganizationContextInfo } from '@services/organizations/orgs';
 import React, { useState } from 'react'
@@ -89,7 +90,7 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
             <FormField name="course-learnings">
                 <Flex css={{ alignItems: 'baseline', justifyContent: 'space-between' }}>
                     <FormLabel>Course Learnings</FormLabel>
-                    <FormMessage match="valueMissing">Please provide a learning elements, separated by comma (,)</FormMessage>
+                    <FormMessage match="valueMissing">Please provide learning elements, separated by comma (,)</FormMessage>
                 </Flex>
                 <Form.Control asChild>
                     <Textarea required />
