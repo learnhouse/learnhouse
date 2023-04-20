@@ -9,10 +9,13 @@ import { deleteCourseFromBackend } from "@services/courses/courses";
 import useSWR, { mutate } from "swr";
 import { swrFetcher } from "@services/utils/ts/requests";
 import { Edit2, Trash } from "lucide-react";
+import Modal from "@components/UI/Modal/Modal";
+import CreateCourseModal from "@components/Pages/CreateCourse/CreateCourse";
 
 const CoursesIndexPage = (params: any) => {
   const router = useRouter();
   const orgslug = params.params.orgslug;
+  const [newCourseModal, setNewCourseModal] = React.useState(false);
 
   const { data: courses, error: error } = useSWR(`${getAPIUrl()}courses/org_slug/${orgslug}/page/1/limit/10`, swrFetcher);
 
@@ -21,18 +24,34 @@ const CoursesIndexPage = (params: any) => {
     mutate(`${getAPIUrl()}courses/org_slug/${orgslug}/page/1/limit/10`);
   }
 
+  async function closeNewCourseModal() {
+    setNewCourseModal(false);
+  }
+
   // function to remove "course_" from the course_id
   function removeCoursePrefix(course_id: string) {
     return course_id.replace("course_", "");
   }
-  
+
   return (
     <>
       <Title>
-        Courses :{" "}
-        <Link href={getUriWithOrg(orgslug, "/courses/new")}>
-          <button>+</button>
-        </Link>{" "}
+        Courses {" "}
+        <Modal
+          isDialogOpen={newCourseModal}
+          onOpenChange={setNewCourseModal}
+          minHeight="md"
+          dialogContent={<CreateCourseModal
+            closeModal={closeNewCourseModal}
+            orgslug={orgslug}
+          ></CreateCourseModal>}
+          dialogTitle="Create Course"
+          dialogDescription="Create a new course"
+          dialogTrigger={
+            <button> Add Course +
+            </button>
+          }
+        />
       </Title>
       {error && <p>Failed to load</p>}
       {!courses ? (

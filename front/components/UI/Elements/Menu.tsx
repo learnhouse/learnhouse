@@ -27,7 +27,7 @@ export const Menu = (props : any ) => {
       <SearchArea>
         <Search>
           <ToolTip content={<div>
-            <p>{process.env.VERCEL_GIT_COMMIT_SHA}</p>  
+            <p>{process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA}</p>  
           </div>}><PreAlphaLabel>pre-alpha</PreAlphaLabel></ToolTip>
         </Search>
       </SearchArea>
