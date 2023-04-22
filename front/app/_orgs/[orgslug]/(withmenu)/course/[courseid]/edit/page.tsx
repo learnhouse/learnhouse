@@ -9,12 +9,11 @@ import { initialData, initialData2 } from "@components/Pages/CourseEdit/Draggabl
 import Chapter from "@components/Pages/CourseEdit/Draggables/Chapter";
 import { createChapter, deleteChapter, getCourseChaptersMetadata, updateChaptersMetadata } from "@services/courses/chapters";
 import { useRouter } from "next/navigation";
-import NewChapterModal from "@components/Pages/CourseEdit/NewChapter";
-import NewActivityModal from "@components/Pages/CourseEdit/NewActivity";
+import NewChapterModal from "@components/Modals/Chapters/NewChapter";
+import NewActivityModal from "@components/Modals/Activities/Create/NewActivity";
 import { createActivity, createFileActivity } from "@services/courses/activities";
 import { getOrganizationContextInfo } from "@services/organizations/orgs";
 import Modal from "@components/UI/Modal/Modal";
-import AuthProvider from "@components/Security/AuthProvider";
 import { denyAccessToUser } from "@services/utils/react/middlewares/views";
 
 function CourseEdit(params: any) {
