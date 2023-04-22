@@ -10,7 +10,7 @@ import useSWR, { mutate } from "swr";
 import { swrFetcher } from "@services/utils/ts/requests";
 import { Edit2, Trash } from "lucide-react";
 import Modal from "@components/UI/Modal/Modal";
-import CreateCourseModal from "@components/Pages/CreateCourse/CreateCourse";
+import CreateCourseModal from "@components/Modals/Course/Create/CreateCourse";
 
 const CoursesIndexPage = (params: any) => {
   const router = useRouter();
