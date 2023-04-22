@@ -26,7 +26,6 @@ function NewChapterModal({ submitChapter, closeModal }: any) {
   };
 
   return (
-
     <FormLayout onSubmit={handleSubmit}>
       <FormField name="chapter-name">
         <Flex css={{ alignItems: 'baseline', justifyContent: 'space-between' }}>
