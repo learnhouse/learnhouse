@@ -8,12 +8,13 @@ import { getAPIUrl, getBackendUrl, getUriWithOrg } from "@services/config/config
 import useSWR, { mutate } from "swr";
 import { swrFetcher } from "@services/utils/ts/requests";
 import { useRouter } from "next/navigation";
+import ToolTip from "@components/UI/Tooltip/Tooltip";
 
 const CourseIdPage = (params: any) => {
   const courseid = params.params.courseid;
   const orgslug = params.params.orgslug;
   const router = useRouter();
-  
+
   const { data: course, error: error } = useSWR(`${getAPIUrl()}courses/meta/course_${courseid}`,
     (url: string, body: any) => swrFetcher(url, body, router)
   );
@@ -54,18 +55,22 @@ const CourseIdPage = (params: any) => {
           <ChaptersWrapper>
             {course.chapters.map((chapter: any) => {
               return (
-                <>
+                <ChapterSeparator key={chapter}>
                   {chapter.activities.map((activity: any) => {
                     return (
                       <>
-                        <Link href={getUriWithOrg(orgslug, "") + `/course/${courseid}/activity/${activity.id.replace("activity_", "")}`}>
-                          <ChapterIndicator />
-                        </Link>{" "}
+                        <ToolTip sideOffset={-18} slateBlack content={activity.name}>
+                          <Link href={getUriWithOrg(orgslug, "") + `/course/${courseid}/activity/${activity.id.replace("activity_", "")}`}>
+                          <CourseIndicator
+                              done={course.trail.activities_marked_complete.includes(activity.id) && course.trail.status == "ongoing"}
+                             />
+                          </Link>
+                        </ToolTip>
+                        
                       </>
                     );
                   })}
-                  &nbsp;&nbsp;&nbsp;&nbsp;
-                </>
+                </ChapterSeparator>
               );
             })}
           </ChaptersWrapper>
@@ -93,12 +98,12 @@ const CourseIdPage = (params: any) => {
                 {course.chapters.map((chapter: any) => {
                   return (
                     <>
-                      <h3>Chapter : {chapter.name}</h3>
+                      <h3>{chapter.name}</h3>
                       {chapter.activities.map((activity: any) => {
                         return (
                           <>
                             <p>
-                              Activity {activity.name}
+                              {activity.name}
                               <Link href={getUriWithOrg(orgslug, "") + `/course/${courseid}/activity/${activity.id.replace("activity_", "")}`} rel="noopener noreferrer">
                                 <EyeOpenIcon />
                               </Link>{" "}
@@ -161,26 +166,31 @@ const CoursePageLayout = styled.div`
 
 const ChaptersWrapper = styled.div`
   display: flex;
-  justify-content: space-around;
   width: 100%;
 `;
-const ChapterIndicator = styled.div`
+const CourseIndicator = styled.div< { active?: boolean, done?: boolean } >`
   border-radius: 20px;
   height: 5px;
   background: #151515;
   border-radius: 3px;
 
-  width: 35px;
-  background-color: black;
+  background-color: ${props => props.done ? "green" : "black"};
+
+  width: 40px;
   margin: 10px;
   margin-bottom: 20px;
   margin-left: 0px;
-  transition: all 0.2s ease;
 
   &:hover {
-    width: 50px;
     cursor: pointer;
+    background-color: #9d9d9d;
   }
+`;
+
+const ChapterSeparator = styled.div`
+  display: flex;
+  flex-direction: row;
+  padding-right: 7px;
 `;
 
 const BoxWrapper = styled.div`
