@@ -62,7 +62,7 @@ const CourseIdPage = (params: any) => {
                         <ToolTip sideOffset={-18} slateBlack content={activity.name}>
                           <Link href={getUriWithOrg(orgslug, "") + `/course/${courseid}/activity/${activity.id.replace("activity_", "")}`}>
                           <CourseIndicator
-                              done={course.trail.activities_marked_complete.includes(activity.id) && course.trail.status == "ongoing"}
+                              done={course.trail.activities_marked_complete && course.trail.activities_marked_complete.includes(activity.id) && course.trail.status == "ongoing"}
                              />
                           </Link>
                         </ToolTip>

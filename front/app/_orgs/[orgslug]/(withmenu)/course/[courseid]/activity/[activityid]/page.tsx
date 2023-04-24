@@ -57,7 +57,7 @@ function ActivityPage(params: any) {
                         <ToolTip sideOffset={-5} slateBlack content={activity.name} key={activity.id}>
                           <Link href={getUriWithOrg(orgslug, "") + `/course/${courseid}/activity/${activity.id.replace("activity_", "")}`}>
                             <ChapterIndicator
-                              done={course.trail.activities_marked_complete.includes(activity.id) && course.trail.status == "ongoing"}
+                              done={course.trail.activities_marked_complete && course.trail.activities_marked_complete.includes(activity.id) && course.trail.status == "ongoing"}
                               active={"activity_" + activityid === activity.id ? true : false} key={activity.id}
                             />
                           </Link>
