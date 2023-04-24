@@ -5,13 +5,14 @@ import React, { useMemo } from "react";
 import { getActivity } from "@services/courses/activities";
 import { getAPIUrl, getBackendUrl, getUriWithOrg } from "@services/config/config";
 import Canva from "@components/Pages/Activities/DynamicCanva/DynamicCanva";
-import styled from "styled-components"; 
+import styled from "styled-components";
 import { getCourse } from "@services/courses/courses";
 import VideoActivity from "@components/Pages/Activities/Video/Video";
 import useSWR, { mutate } from "swr";
 import { Check } from "lucide-react";
 import { swrFetcher } from "@services/utils/ts/requests";
 import { markActivityAsComplete } from "@services/courses/activity";
+import ToolTip from "@components/UI/Tooltip/Tooltip";
 
 function ActivityPage(params: any) {
   const activityid = params.params.activityid;
@@ -37,7 +38,7 @@ function ActivityPage(params: any) {
         <ActivityLayout>
           <ActivityTopWrapper>
             <ActivityThumbnail>
-              <Link href={getUriWithOrg(orgslug,"") +`/course/${courseid}`}>
+              <Link href={getUriWithOrg(orgslug, "") + `/course/${courseid}`}>
                 <img src={`${getBackendUrl()}content/uploads/img/${course.course.thumbnail}`} alt="" />
               </Link>
             </ActivityThumbnail>
@@ -53,11 +54,14 @@ function ActivityPage(params: any) {
                   <div style={{ display: "flex", flexDirection: "row" }} key={chapter.chapter_id}>
                     {chapter.activities.map((activity: any) => {
                       return (
-                        <>
-                          <Link href={getUriWithOrg(orgslug,"") +`/course/${courseid}/activity/${activity.id.replace("activity_", "")}`}>
-                            <ChapterIndicator key={activity.id} />
-                          </Link>{" "}
-                        </>
+                        <ToolTip sideOffset={-5} slateBlack content={activity.name} key={activity.id}>
+                          <Link href={getUriWithOrg(orgslug, "") + `/course/${courseid}/activity/${activity.id.replace("activity_", "")}`}>
+                            <ChapterIndicator
+                              done={course.trail.activities_marked_complete && course.trail.activities_marked_complete.includes(activity.id) && course.trail.status == "ongoing"}
+                              active={"activity_" + activityid === activity.id ? true : false} key={activity.id}
+                            />
+                          </Link>
+                        </ToolTip>
                       );
                     })}
                   </div>
@@ -74,10 +78,10 @@ function ActivityPage(params: any) {
               {activity.type == "video" && <VideoActivity course={course} activity={activity} />}
 
               <ActivityMarkerWrapper>
-                
+
                 {course.trail.activities_marked_complete &&
-                course.trail.activities_marked_complete.includes("activity_" + activityid) &&
-                course.trail.status == "ongoing" ? (
+                  course.trail.activities_marked_complete.includes("activity_" + activityid) &&
+                  course.trail.status == "ongoing" ? (
                   <button style={{ backgroundColor: "green" }}>
                     <i>
                       <Check size={20}></Check>
@@ -131,28 +135,26 @@ const ChaptersWrapper = styled.div`
   display: flex;
   // row
   flex-direction: row;
-  justify-content: space-around;
   width: 100%;
   width: 1300px;
   margin: 0 auto;
 `;
 
-const ChapterIndicator = styled.div`
+const ChapterIndicator = styled.div < { active?: boolean, done?: boolean } > `
   border-radius: 20px;
   height: 5px;
   background: #151515;
   border-radius: 3px;
 
   width: 35px;
-  background-color: black;
+  background-color: ${props => props.done ? "green" : (props.active ? "#9d9d9d" : "black")};
   margin: 10px;
   margin-bottom: 0px;
   margin-left: 0px;
-  transition: all 0.2s ease;
 
   &:hover {
-    width: 50px;
     cursor: pointer;
+    background-color: #9d9d9d;
   }
 `;
 
