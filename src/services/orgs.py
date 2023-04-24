@@ -149,6 +149,12 @@ async def get_orgs_by_user(request: Request, user_id: str, page: int = 1, limit:
     orgs = request.app.db["organizations"]
     user = request.app.db["users"]
 
+    if user_id is "anonymous":
+
+        # raise error 
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="User not logged in")
+    
     # get user orgs
     user_orgs = await user.find_one({"user_id": user_id})
 
