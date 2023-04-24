@@ -5,22 +5,24 @@ import { violet, blackA } from '@radix-ui/colors';
 import { PlusIcon } from '@radix-ui/react-icons';
 
 
-type TooltipParams = {
+type TooltipProps = {
     sideOffset?: number;
     content: React.ReactNode;
     children: React.ReactNode;
+    slateBlack?: boolean;
 };
 
-const ToolTip = (params: TooltipParams) => {
+const ToolTip = (props: TooltipProps) => {
+  
   return (
     <Tooltip.Provider delayDuration={200}>
       <Tooltip.Root>
         <Tooltip.Trigger asChild>
-          {params.children}
+          {props.children}
         </Tooltip.Trigger>
         <Tooltip.Portal>
-          <TooltipContent side="bottom" sideOffset={params.sideOffset}>
-            {params.content}
+          <TooltipContent slateBlack={props.slateBlack} side="bottom" sideOffset={props.sideOffset}>
+            {props.content}
             <TooltipArrow />
           </TooltipContent>
         </Tooltip.Portal>
@@ -55,6 +57,16 @@ const closeAndFade = keyframes({
 });
 
 const TooltipContent = styled(Tooltip.Content, {
+
+  variants : {
+    slateBlack: {
+      true: {
+        backgroundColor:" #5a5a5a",
+        color: 'white',
+      },
+    },
+  },
+
   borderRadius: 4,
   padding: '5px 10px',
   fontSize: 12,
