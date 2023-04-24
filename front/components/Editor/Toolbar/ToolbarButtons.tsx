@@ -56,7 +56,7 @@ export const ToolbarButtons = ({ editor, props }: any) => {
         <option value="6">Heading 6</option>
       </ToolSelect>
       {/* TODO: fix this : toggling only works one-way */}
-      <DividerVerticalIcon style={{margin:"auto", color : "grey"}}/>
+      <DividerVerticalIcon style={{marginTop:"auto", marginBottom:"auto", color : "grey"}}/>
       <ToolTip content={"Info Callout"}>
         <ToolBtn onClick={() => editor.chain().focus().toggleNode("calloutInfo").run()}>
           <AlertCircle size={15} />
