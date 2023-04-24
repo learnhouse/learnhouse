@@ -103,6 +103,9 @@ def get_learnhouse_config() -> LearnHouseConfig:
         'database_config', {}).get('mongodb_connection_string')
 
     # Sentry config
+    # check if the sentry config is provided in the YAML file
+    sentry_config_verif = yaml_config.get('hosting_config', {}).get('sentry_config') or env_sentry_dsn or env_sentry_environment or env_sentry_release or None
+
     sentry_dsn = env_sentry_dsn or yaml_config.get(
         'hosting_config', {}).get('sentry_config', {}).get('dsn')
     sentry_environment = env_sentry_environment or yaml_config.get(
@@ -110,11 +113,16 @@ def get_learnhouse_config() -> LearnHouseConfig:
     sentry_release = env_sentry_release or yaml_config.get(
         'hosting_config', {}).get('sentry_config', {}).get('release')
 
-    sentry_config = SentryConfig(
-        dsn=sentry_dsn,
-        environment=sentry_environment,
-        release=sentry_release
-    )
+    if sentry_config_verif:
+        sentry_config = SentryConfig(
+            dsn=sentry_dsn,
+            environment=sentry_environment,
+            release=sentry_release
+        )
+    else:
+        sentry_config = None
+  
+  
 
     # Create HostingConfig and DatabaseConfig objects
     hosting_config = HostingConfig(

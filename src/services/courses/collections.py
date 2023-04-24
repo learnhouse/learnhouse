@@ -156,7 +156,7 @@ async def verify_collection_rights(request: Request,collection_id: str,  current
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Collection does not exist")
 
-    hasRoleRights = await verify_user_rights_with_roles(request, action, current_user.user_id, collection_id)
+    hasRoleRights = await verify_user_rights_with_roles(request, action, current_user.user_id, collection_id, collection["org_id"])
 
     if not hasRoleRights:
         raise HTTPException(
