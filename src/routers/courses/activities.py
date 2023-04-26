@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, UploadFile, Form, Request
 from src.services.courses.activities.activities import *
 from src.security.auth import get_current_user
+from src.services.courses.activities.pdf import create_documentpdf_activity
 from src.services.courses.activities.video import create_video_activity
 
 router = APIRouter()
@@ -45,7 +46,7 @@ async def api_delete_activity(request: Request, activity_id: str,  org_id: str, 
     """
     return await delete_activity(request, activity_id, current_user)
 
-# Video play
+# Video activity
 
 
 @router.post("/video")
@@ -54,3 +55,10 @@ async def api_create_video_activity(request: Request,  org_id: str, name: str = 
     Create new activity
     """
     return await create_video_activity(request, name, coursechapter_id, current_user, video_file)
+
+@router.post("/documentpdf")
+async def api_create_documentpdf_activity(request: Request,  org_id: str, name: str = Form(), coursechapter_id: str = Form(),  current_user: PublicUser = Depends(get_current_user), pdf_file: UploadFile | None = None):
+    """
+    Create new activity
+    """
+    return await create_documentpdf_activity(request, name, coursechapter_id, current_user, pdf_file)
