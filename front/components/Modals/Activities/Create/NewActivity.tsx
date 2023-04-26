@@ -2,15 +2,17 @@ import React, { useState } from "react";
 import { ArrowLeftIcon, Cross1Icon } from "@radix-ui/react-icons";
 import DynamicPageActivityImage from "public/activities_types/dynamic-page-activity.png";
 import VideoPageActivityImage from "public//activities_types/video-page-activity.png";
+import DocumentPdfPageActivityImage from "public//activities_types/documentpdf-page-activity.png";
 import { styled, keyframes } from '@stitches/react';
 import DynamicCanvaModal from "./NewActivityModal/DynamicCanva";
 import VideoModal from "./NewActivityModal/Video";
 import Image from "next/image";
+import DocumentPdfModal from "./NewActivityModal/DocumentPdf";
 
 function NewActivityModal({ closeModal, submitActivity, submitFileActivity, chapterId }: any) {
   const [selectedView, setSelectedView] = useState("home");
 
-  
+
   return (
     <div>
       {selectedView === "home" && (
@@ -27,11 +29,11 @@ function NewActivityModal({ closeModal, submitActivity, submitFileActivity, chap
             </ActivityTypeImage>
             <ActivityTypeTitle>Video Page</ActivityTypeTitle>
           </ActivityOption>
-          <ActivityOption onClick={() => { setSelectedView("video") }}>
+          <ActivityOption onClick={() => { setSelectedView("documentpdf") }}>
             <ActivityTypeImage>
-              <Image alt="Video Page" src={VideoPageActivityImage}></Image>
+              <Image alt="Document PDF Page" src={DocumentPdfPageActivityImage}></Image>
             </ActivityTypeImage>
-            <ActivityTypeTitle>Video Page</ActivityTypeTitle>
+            <ActivityTypeTitle>PDF Document Page</ActivityTypeTitle>
           </ActivityOption>
         </ActivityChooserWrapper>
       )}
@@ -42,6 +44,10 @@ function NewActivityModal({ closeModal, submitActivity, submitFileActivity, chap
 
       {selectedView === "video" && (
         <VideoModal submitFileActivity={submitFileActivity} chapterId={chapterId} />
+      )}
+
+      {selectedView === "documentpdf" && (
+        <DocumentPdfModal submitFileActivity={submitFileActivity} chapterId={chapterId} />
       )}
     </div>
   );

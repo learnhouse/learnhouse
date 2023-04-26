@@ -13,6 +13,7 @@ import { Check } from "lucide-react";
 import { swrFetcher } from "@services/utils/ts/requests";
 import { markActivityAsComplete } from "@services/courses/activity";
 import ToolTip from "@components/UI/Tooltip/Tooltip";
+import DocumentPdfActivity from "@components/Pages/Activities/DocumentPdf/DocumentPdf";
 
 function ActivityPage(params: any) {
   const activityid = params.params.activityid;
@@ -76,6 +77,8 @@ function ActivityPage(params: any) {
               {activity.type == "dynamic" && <Canva content={activity.content} activity={activity} />}
               {/* todo : use apis & streams instead of this */}
               {activity.type == "video" && <VideoActivity course={course} activity={activity} />}
+
+              {activity.type == "documentpdf" && <DocumentPdfActivity course={course} activity={activity} />}
 
               <ActivityMarkerWrapper>
 
