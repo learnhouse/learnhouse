@@ -30,7 +30,7 @@ interface Editor {
   ydoc: any;
   provider: any;
   activity: any;
-  orgslug : string
+  orgslug: string
   course: any;
   setContent: (content: string) => void;
 }
@@ -115,8 +115,12 @@ function Editor(props: Editor) {
         <EditorTop>
           <EditorDocSection>
             <EditorInfoWrapper>
-              <EditorInfoLearnHouseLogo width={25} height={25} src={learnhouseIcon} alt="" />
-              <EditorInfoThumbnail src={`${getBackendUrl()}content/uploads/img/${props.course.course.thumbnail}`} alt=""></EditorInfoThumbnail>
+              <Link href="/">
+                <EditorInfoLearnHouseLogo width={25} height={25} src={learnhouseIcon} alt="" />
+              </Link>
+              <Link target="_blank" href={`/course/${course_id}`}>
+                <EditorInfoThumbnail src={`${getBackendUrl()}content/uploads/img/${props.course.course.thumbnail}`} alt=""></EditorInfoThumbnail>
+              </Link>
               <EditorInfoDocName>
                 {" "}
                 <b>{props.course.course.name}</b> <SlashIcon /> {props.activity.name}{" "}
