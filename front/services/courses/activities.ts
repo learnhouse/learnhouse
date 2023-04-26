@@ -17,13 +17,18 @@ export async function createFileActivity(file: File, type: string, data: any, ch
   formData.append("coursechapter_id", chapter_id);
 
   let org_id = "test";
-
-  let endpoint = `${getAPIUrl()}activities/video?org_id=${org_id}`;
+  let endpoint = "";
 
   if (type === "video") {
     formData.append("name", data.name);
     formData.append("video_file", file);
-    endpoint = endpoint;
+    endpoint = `${getAPIUrl()}activities/video?org_id=${org_id}`;
+  } else if (type === "documentpdf") {
+    formData.append("pdf_file", file);
+    formData.append("name", data.name);
+    endpoint = `${getAPIUrl()}activities/documentpdf?org_id=${org_id}`;
+  } else {
+    // Handle other file types here
   }
 
   const result: any = await fetch(endpoint, RequestBodyForm("POST", formData));
