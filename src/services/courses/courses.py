@@ -118,7 +118,7 @@ async def get_course_meta(request: Request, course_id: str, current_user: Public
     for chapter in chapters:
         chapters_list_with_activities.append(
             {"id": chapters[chapter]["id"], "name": chapters[chapter]["name"], "activities": [activities_list[activity] for activity in chapters[chapter]["activityIds"]]})
-    course = Course(**course)
+    course = CourseInDB(**course)
 
     # Get activity by user
     trail = await trails.find_one(

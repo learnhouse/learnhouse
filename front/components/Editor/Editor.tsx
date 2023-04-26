@@ -9,7 +9,7 @@ import { ToolbarButtons } from "./Toolbar/ToolbarButtons";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import styled from "styled-components";
-import { getBackendUrl } from "@services/config/config";
+import { getBackendUrl, getUriWithOrg } from "@services/config/config";
 import { DividerVerticalIcon, EyeOpenIcon, SlashIcon } from "@radix-ui/react-icons";
 import Avvvatars from "avvvatars-react";
 // extensions
@@ -23,18 +23,25 @@ import MathEquationBlock from "./Extensions/MathEquation/MathEquationBlock";
 import PDFBlock from "./Extensions/PDF/PDFBlock";
 import QuizBlock from "./Extensions/Quiz/QuizBlock";
 import ToolTip from "@components/UI/Tooltip/Tooltip";
+import Link from "next/link";
 
 interface Editor {
   content: string;
   ydoc: any;
   provider: any;
   activity: any;
+  orgslug : string
   course: any;
   setContent: (content: string) => void;
 }
 
 function Editor(props: Editor) {
   const auth: any = React.useContext(AuthContext);
+  // remove course_ from course_id
+  const course_id = props.course.course.course_id.substring(7);
+
+  // remove activity_ from activity_id
+  const activity_id = props.activity.activity_id.substring(9);
 
   const editor: any = useEditor({
     editable: true,
@@ -128,7 +135,7 @@ function Editor(props: Editor) {
             <DividerVerticalIcon style={{ marginTop: "auto", marginBottom: "auto", color: "grey" }} />
             <EditorLeftOptionsSection>
               <EditorLeftOptionsSaveButton onClick={() => props.setContent(editor.getJSON())}> Save </EditorLeftOptionsSaveButton>
-              <ToolTip content="Preview"><EditorLeftOptionsPreviewButton> <Eye size={15} /> </EditorLeftOptionsPreviewButton></ToolTip>
+              <ToolTip content="Preview"><Link target="_blank" href={`/course/${course_id}/activity/${activity_id}`}><EditorLeftOptionsPreviewButton> <Eye size={15} /> </EditorLeftOptionsPreviewButton></Link></ToolTip>
             </EditorLeftOptionsSection>
           </EditorUsersSection>
         </EditorTop>

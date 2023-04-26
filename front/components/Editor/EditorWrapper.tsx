@@ -8,6 +8,7 @@ interface EditorWrapperProps {
   content: string;
   activity: any;
   course:any
+  orgslug: string;
 }
 
 function EditorWrapper(props: EditorWrapperProps) : JSX.Element {
@@ -35,7 +36,7 @@ function EditorWrapper(props: EditorWrapperProps) : JSX.Element {
     createRTCProvider();
     return <div>Loading...</div>;
   } else {
-    return <Editor course={props.course} activity={props.activity} content={props.content} setContent={setContent} provider={providerState} ydoc={ydocState}></Editor>;
+    return <Editor orgslug={props.orgslug} course={props.course} activity={props.activity} content={props.content} setContent={setContent} provider={providerState} ydoc={ydocState}></Editor>;
   }
 }
 
