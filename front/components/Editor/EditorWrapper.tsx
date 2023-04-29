@@ -3,15 +3,17 @@ import * as Y from "yjs";
 import { WebrtcProvider } from "y-webrtc";
 import Editor from "./Editor";
 import { updateActivity } from "@services/courses/activities";
+import { toast } from "react-hot-toast";
+import Toast from "@components/UI/Toast/Toast";
 
 interface EditorWrapperProps {
   content: string;
   activity: any;
-  course:any
+  course: any
   orgslug: string;
 }
 
-function EditorWrapper(props: EditorWrapperProps) : JSX.Element {
+function EditorWrapper(props: EditorWrapperProps): JSX.Element {
   // A new Y document
   const ydoc = new Y.Doc();
   const [providerState, setProviderState] = React.useState<any>({});
@@ -19,24 +21,37 @@ function EditorWrapper(props: EditorWrapperProps) : JSX.Element {
   const [isLoading, setIsLoading] = React.useState(true);
 
   function createRTCProvider() {
-   // const provider = new WebrtcProvider(props.activity.activity_id, ydoc);
-   // setYdocState(ydoc);
-   // setProviderState(provider);
+    // const provider = new WebrtcProvider(props.activity.activity_id, ydoc);
+    // setYdocState(ydoc);
+    // setProviderState(provider);
     setIsLoading(false);
   }
+
+
 
   async function setContent(content: any) {
     let activity = props.activity;
     activity.content = content;
-    const res = await updateActivity(activity, activity.activity_id);
-    alert(JSON.stringify(res));
+
+    toast.promise(
+      updateActivity(activity, activity.activity_id),
+      {
+        loading: 'Saving...',
+        success: <b>Activity saved!</b>,
+        error: <b>Could not save.</b>,
+      }
+    );
   }
 
   if (isLoading) {
     createRTCProvider();
     return <div>Loading...</div>;
   } else {
-    return <Editor orgslug={props.orgslug} course={props.course} activity={props.activity} content={props.content} setContent={setContent} provider={providerState} ydoc={ydocState}></Editor>;
+    return <>
+      <Toast></Toast>
+      <Editor orgslug={props.orgslug} course={props.course} activity={props.activity} content={props.content} setContent={setContent} provider={providerState} ydoc={ydocState}></Editor>;
+
+    </>
   }
 }
 
