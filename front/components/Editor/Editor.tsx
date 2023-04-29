@@ -9,8 +9,8 @@ import { ToolbarButtons } from "./Toolbar/ToolbarButtons";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import styled from "styled-components";
-import { getBackendUrl } from "@services/config/config";
-import { SlashIcon } from "@radix-ui/react-icons";
+import { getBackendUrl, getUriWithOrg } from "@services/config/config";
+import { DividerVerticalIcon, EyeOpenIcon, SlashIcon } from "@radix-ui/react-icons";
 import Avvvatars from "avvvatars-react";
 // extensions
 import InfoCallout from "./Extensions/Callout/Info/InfoCallout";
@@ -18,22 +18,30 @@ import WarningCallout from "./Extensions/Callout/Warning/WarningCallout";
 import ImageBlock from "./Extensions/Image/ImageBlock";
 import Youtube from "@tiptap/extension-youtube";
 import VideoBlock from "./Extensions/Video/VideoBlock";
-import { Save } from "lucide-react";
+import { Eye, Save } from "lucide-react";
 import MathEquationBlock from "./Extensions/MathEquation/MathEquationBlock";
 import PDFBlock from "./Extensions/PDF/PDFBlock";
 import QuizBlock from "./Extensions/Quiz/QuizBlock";
+import ToolTip from "@components/UI/Tooltip/Tooltip";
+import Link from "next/link";
 
 interface Editor {
   content: string;
   ydoc: any;
   provider: any;
   activity: any;
+  orgslug: string
   course: any;
   setContent: (content: string) => void;
 }
 
 function Editor(props: Editor) {
   const auth: any = React.useContext(AuthContext);
+  // remove course_ from course_id
+  const course_id = props.course.course.course_id.substring(7);
+
+  // remove activity_ from activity_id
+  const activity_id = props.activity.activity_id.substring(9);
 
   const editor: any = useEditor({
     editable: true,
@@ -107,18 +115,20 @@ function Editor(props: Editor) {
         <EditorTop>
           <EditorDocSection>
             <EditorInfoWrapper>
-              <EditorInfoLearnHouseLogo width={25} height={25} src={learnhouseIcon} alt="" />
-              <EditorInfoThumbnail src={`${getBackendUrl()}content/uploads/img/${props.course.course.thumbnail}`} alt=""></EditorInfoThumbnail>
+              <Link href="/">
+                <EditorInfoLearnHouseLogo width={25} height={25} src={learnhouseIcon} alt="" />
+              </Link>
+              <Link target="_blank" href={`/course/${course_id}`}>
+                <EditorInfoThumbnail src={`${getBackendUrl()}content/uploads/img/${props.course.course.thumbnail}`} alt=""></EditorInfoThumbnail>
+              </Link>
               <EditorInfoDocName>
                 {" "}
                 <b>{props.course.course.name}</b> <SlashIcon /> {props.activity.name}{" "}
               </EditorInfoDocName>
-              <EditorSaveButton onClick={() => props.setContent(editor.getJSON())}>
-                Save <Save size={11} />
-              </EditorSaveButton>
+
             </EditorInfoWrapper>
             <EditorButtonsWrapper>
-              <ToolbarButtons  editor={editor} />
+              <ToolbarButtons editor={editor} />
             </EditorButtonsWrapper>
           </EditorDocSection>
           <EditorUsersSection>
@@ -126,6 +136,11 @@ function Editor(props: Editor) {
               {!auth.isAuthenticated && <span>Loading</span>}
               {auth.isAuthenticated && <Avvvatars value={auth.userInfo.user_object.user_id} style="shape" />}
             </EditorUserProfileWrapper>
+            <DividerVerticalIcon style={{ marginTop: "auto", marginBottom: "auto", color: "grey" }} />
+            <EditorLeftOptionsSection>
+              <EditorLeftOptionsSaveButton onClick={() => props.setContent(editor.getJSON())}> Save </EditorLeftOptionsSaveButton>
+              <ToolTip content="Preview"><Link target="_blank" href={`/course/${course_id}/activity/${activity_id}`}><EditorLeftOptionsPreviewButton> <Eye size={15} /> </EditorLeftOptionsPreviewButton></Link></ToolTip>
+            </EditorLeftOptionsSection>
           </EditorUsersSection>
         </EditorTop>
       </motion.div>
@@ -186,10 +201,62 @@ const EditorDocSection = styled.div`
 `;
 const EditorUsersSection = styled.div`
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   justify-content: center;
   align-items: center;
 `;
+
+const EditorLeftOptionsSection = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+`;
+
+const EditorLeftOptionsSaveButton = styled.button`
+  background-color: #8783f7;
+  border-radius: 8px;
+  border: none;
+  color: white;
+  padding: 8px;
+  margin-left: 10px;
+  margin-right: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+
+
+  &:hover {
+    background-color: #4a44f9;
+    opacity: 0.8;
+  }
+`;
+
+const EditorLeftOptionsPreviewButton = styled.button`
+   background-color: #a4a4a449;
+  border-radius: 8px;
+  border: none;
+  color: #000000;
+  padding: 8px;
+  margin-right: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+
+  // center icon
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  &:hover {
+    background-color: #c0bfbf;
+    opacity: 0.8;
+  }
+
+`;
+
 
 // Inside EditorDocSection
 const EditorInfoWrapper = styled.div`
