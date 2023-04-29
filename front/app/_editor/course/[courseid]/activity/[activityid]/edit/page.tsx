@@ -8,7 +8,7 @@ import { getActivity } from "@services/courses/activities";
 import AuthProvider from "@components/Security/AuthProvider";
 import EditorWrapper from "@components/Editor/EditorWrapper";
 import useSWR, { mutate } from "swr";
-import { getAPIUrl } from "@services/config/config";
+import { getAPIUrl, getOrgFromUri } from "@services/config/config";
 import { swrFetcher } from "@services/utils/ts/requests";
 
 
@@ -16,15 +16,18 @@ function EditActivity(params: any) {
   const router = useRouter();
   const activityid = params.params.activityid;
   const courseid = params.params.courseid;
+  const orgslug = params.params.orgslug;
   const { data: courseInfo, error: error_course } = useSWR(`${getAPIUrl()}courses/meta/course_${courseid}`, swrFetcher);
   const { data: activity, error: error_activity } = useSWR(`${getAPIUrl()}activities/activity_${activityid}`, swrFetcher);
+
+  
 
 
   
 
   return (
     <AuthProvider>
-      {!courseInfo || !activity  ? <div>Loading...</div> : <EditorWrapper course={courseInfo} activity={activity} content={activity.content}></EditorWrapper>}
+      {!courseInfo || !activity  ? <div>Loading...</div> : <EditorWrapper orgslug={orgslug} course={courseInfo} activity={activity} content={activity.content}></EditorWrapper>}
     </AuthProvider>
   );
 }
