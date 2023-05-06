@@ -1,25 +1,37 @@
 "use client";
 import { useRouter } from 'next/navigation';
-import React from "react";
+import React, { useState } from "react";
+import { styled } from '@stitches/react';
 import { Title } from "../../components/UI/Elements/Styles/Title";
 import { loginAndGetToken } from "../../services/auth/auth";
+import FormLayout, { ButtonBlack, Flex, FormField, FormLabel, FormMessage, Input } from '@components/UI/Form/Form';
+import * as Form from '@radix-ui/react-form';
+import { BarLoader } from 'react-spinners';
+import Toast from '@components/UI/Toast/Toast';
+import { toast } from 'react-hot-toast';
 
 const Login = () => {
   const [email, setEmail] = React.useState("admin@admin.admin");
   const [password, setPassword] = React.useState("admin");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
 
   const handleSubmit = (e: any) => {
     e.preventDefault();
-    console.log({ email, password });
-    alert(JSON.stringify({ email, password }));
-    try {
-      loginAndGetToken(email, password);
-      router.push("/");
-    }
-    catch (e) {
-      console.log(e);
-    }
+    setIsSubmitting(true);
+    toast.promise(
+      loginAndGetToken(email, password),
+      {
+        loading: 'Logging in...',
+        success: () => {
+          router.push('/');
+          return <b>Logged in successfully</b>;
+        },
+        error: <b>Wrong credentials</b>,
+      }
+    );
+
+    setIsSubmitting(false);
   };
 
   const handleEmailChange = (e: any) => {
@@ -32,19 +44,68 @@ const Login = () => {
 
   return (
     <div>
-      < >
-        <Title>Login</Title>
+      <LoginPage>
+      <Toast></Toast>
+        <LoginBox>
+          <FormLayout onSubmit={handleSubmit}>
+            <FormField name="login-email">
+              <Flex css={{ alignItems: 'baseline', justifyContent: 'space-between' }}>
+                <FormLabel>Email</FormLabel>
+                <FormMessage style={{color:"black"}} match="valueMissing">Please provide an email</FormMessage>
+              </Flex>
+              <Form.Control asChild>
+                <Input onChange={handleEmailChange} type="text" />
+              </Form.Control>
+            </FormField>
+            <FormField name="login-password">
+              <Flex css={{ alignItems: 'baseline', justifyContent: 'space-between' }}>
+                <FormLabel>Password</FormLabel>
+                <FormMessage style={{color:"black"}} match="valueMissing">Please provide a password</FormMessage>
+              </Flex>
+              <Form.Control asChild>
+                <Input type="password" onChange={handlePasswordChange} />
+              </Form.Control>
+            </FormField>
 
-        <form>
-          <input onChange={handleEmailChange}  type="text" placeholder="email" />
-          <input onChange={handlePasswordChange} type="password" placeholder="password" />
-          <button onClick={handleSubmit} type="submit">
-            Login
-          </button>
-        </form>
-      </>
+            <Flex css={{ marginTop: 25, justifyContent: 'flex-end' }}>
+              <Form.Submit asChild>
+                <ButtonBlack type="submit" css={{ marginTop: 10 }}>
+                  {isSubmitting ? <BarLoader cssOverride={{ borderRadius: 60, }} width={60} color="#ffffff" /> : "Login"}
+                </ButtonBlack>
+              </Form.Submit>
+            </Flex>
+          </FormLayout>
+        </LoginBox>
+      </LoginPage>
+
     </div>
   );
 };
+
+const LoginPage = styled('div', {
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  height: '100vh',
+  width: '100vw',
+  backgroundColor: '#f5f5f5',
+});
+
+const LoginBox = styled('div', {
+  display: 'flex',
+  flexDirection: 'column',
+  justifyContent: 'center',
+  alignItems: 'center',
+  height: '40vh',
+  width: '40vw',
+  backgroundColor: '#ffffff',
+  borderRadius: 10,
+
+  '@media (max-width: 768px)': {
+    width: '100vw',
+    height: '100vh',
+    borderRadius: 0,
+  },
+});
 
 export default Login;
