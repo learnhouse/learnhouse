@@ -48,8 +48,7 @@ const CoursesIndexPage = (params: any) => {
           dialogTitle="Create Course"
           dialogDescription="Create a new course"
           dialogTrigger={
-            <button> Add Course +
-            </button>
+            <button className="rounded-md bg-black antialiased ring-offset-purple-800 p-2 px-5 font text-sm font-bold text-white drop-shadow-lg">Add Course + </button>
           }
         />
       </Title>
@@ -57,23 +56,25 @@ const CoursesIndexPage = (params: any) => {
       {!courses ? (
         <div>Loading...</div>
       ) : (
-        <CourseWrapper>
+        <CourseWrapper className="flex space-x-5">
           {courses.map((course: any) => (
             <div key={course.course_id}>
-              <button style={{ backgroundColor: "red", border: "none" }} onClick={() => deleteCourses(course.course_id)}>
-                Delete <Trash size={10}></Trash>
-              </button>
-              <Link href={getUriWithOrg(orgslug, "/course/" + removeCoursePrefix(course.course_id))}>
+              <div className="flex space-x-2 py-2">
+                <button className="rounded-md text-sm px-3 font-bold text-red-800 bg-red-200 w-16 flex justify-center items-center" onClick={() => deleteCourses(course.course_id)}>
+                  Delete <Trash size={10}></Trash>
+                </button>
                 <Link href={getUriWithOrg(orgslug, "/course/" + removeCoursePrefix(course.course_id) + "/edit")}>
-                  <button>
+                  <button className="rounded-md text-sm px-3 font-bold text-orange-800 bg-orange-200 w-16 flex justify-center items-center">
                     Edit <Edit2 size={10}></Edit2>
                   </button>
                 </Link>
-                <CourseThumbnail>
-                  <img src={`${getBackendUrl()}content/uploads/img/${course.thumbnail}`} alt="" />
-                </CourseThumbnail>
-                <h2>{course.name}</h2>
+              </div>
+              <Link href={getUriWithOrg(orgslug, "/course/" + removeCoursePrefix(course.course_id))}>
+              <CourseThumbnail className="inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl relative w-[249px] h-[131px] bg-cover" style={{backgroundImage : `url(${getBackendUrl()}content/uploads/img/${course.thumbnail})`}}>
+              
+              </CourseThumbnail>
               </Link>
+              <h2>{course.name}</h2>
             </div>
           ))}
         </CourseWrapper>
@@ -86,21 +87,15 @@ export default CoursesIndexPage;
 
 const CourseThumbnail = styled.div`
   display: flex;
+
   img {
     width: 249px;
     height: 131px;
 
-    background: url(), #d9d9d9;
-    border: 1px solid rgba(255, 255, 255, 0.19);
-    box-shadow: 0px 13px 33px -13px rgba(0, 0, 0, 0.42);
-    border-radius: 7px;
   }
 `;
 
 const CourseWrapper = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
   margin: 0 auto;
   max-width: 1500px;
   div {
@@ -113,19 +108,6 @@ const CourseWrapper = styled.div`
       width: 250px;
       height: 50px;
       color: #424242;
-    }
-    button {
-      margin: 4px 0;
-      border: none;
-      border-radius: 7px;
-      background: #000000;
-      opacity: 0.4;
-      font-family: "DM Sans", sans-serif;
-
-      color: #ffffff;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
     }
   }
 `;
