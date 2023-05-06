@@ -11,8 +11,8 @@ const OrgHomePage = (params: any) => {
   return (
     <div>
       <Title>Welcome {orgslug} 👋🏻</Title>
-      <Link href={getUriWithOrg(orgslug,"/courses")}>
-        <button>See Courses </button>
+      <Link href={getUriWithOrg(orgslug, "/courses")}>
+        <button className="rounded-md bg-black antialiased ring-offset-purple-800 p-2 px-5 font text-sm font-bold text-white drop-shadow-lg">See Courses </button>
       </Link>
     </div>
   );
