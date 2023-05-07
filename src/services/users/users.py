@@ -7,7 +7,7 @@ from src.security.security import security_hash_password, security_verify_passwo
 from src.services.users.schemas.users import PasswordChangeForm, PublicUser, User, UserOrganization, UserWithPassword, UserInDB
 
 
-async def create_user(request: Request, current_user: PublicUser | None,  user_object: UserWithPassword, org_id: str):
+async def create_user(request: Request, current_user: PublicUser | None,  user_object: UserWithPassword, org_slug: str):
     users = request.app.db["users"]
 
     isUsernameAvailable = await users.find_one({"username": user_object.username})
@@ -34,11 +34,25 @@ async def create_user(request: Request, current_user: PublicUser | None,  user_o
     user_object.username = user_object.username.lower()
     user_object.password = await security_hash_password(user_object.password)
 
+    # Get org_id from org_slug 
+    orgs = request.app.db["organizations"]
+
+    # Check if the org exists
+    isOrgExists = await orgs.find_one({"slug": org_slug})
+
+    # If the org does not exist, raise an error
+    if not isOrgExists:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="You are trying to create a user in an organization that does not exist")
+    
+    org_id = isOrgExists["org_id"]
+    
+
     # Create initial orgs list with the org_id passed in
     orgs = [UserOrganization(org_id=org_id, org_role="member")]
 
     # Give role
-    roles = ["role_1"]
+    roles = ["role_member"]
 
     # Create the user
     user = UserInDB(user_id=user_id, creation_date=str(datetime.now()),
