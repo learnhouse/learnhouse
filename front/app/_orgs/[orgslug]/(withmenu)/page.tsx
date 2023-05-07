@@ -23,9 +23,7 @@ const OrgHomePage = async (params: any) => {
   return (
     <div>
 
-      <AuthProvider>
-        <Menu orgslug={orgslug}></Menu>
-      </AuthProvider>
+      
       <div className="max-w-7xl mx-auto px-4 py-10">
         {/* Collections */}
         <Title title="Collections" type="col" />
