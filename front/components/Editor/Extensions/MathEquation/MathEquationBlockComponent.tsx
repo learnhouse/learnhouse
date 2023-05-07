@@ -4,10 +4,11 @@ import styled from "styled-components";
 import "katex/dist/katex.min.css";
 import { InlineMath, BlockMath } from "react-katex";
 import { Edit, Save } from "lucide-react";
+import Link from "next/link";
 
 function MathEquationBlockComponent(props: any) {
   const [equation, setEquation] = React.useState(props.node.attrs.math_equation);
-  const [isEditing, setIsEditing] = React.useState(false);
+  const [isEditing, setIsEditing] = React.useState(true);
   const isEditable = props.extension.options.editable;
 
   const handleEquationChange = (event: React.ChangeEvent<any>) => {
@@ -32,16 +33,21 @@ function MathEquationBlockComponent(props: any) {
             <button onClick={() => setIsEditing(true)}>
               <Edit size={15}></Edit>
             </button>
+            <span className="pl-2">Edit</span>
           </MathEqTopMenu>
         )}
         <BlockMath>{equation}</BlockMath>
         {isEditing && (
-          <EditBar>
-            <input value={equation} onChange={handleEquationChange} placeholder="Insert a Math Equation (LaTeX) " type="text" />
-            <button onClick={() => saveEquation()}>
-              <Save size={15}></Save>
-            </button>
-          </EditBar>
+          <>
+            <EditBar>
+              <input value={equation} onChange={handleEquationChange} placeholder="Insert a Math Equation (LaTeX) " type="text" />
+              <button onClick={() => saveEquation()}>
+                <Save size={15}></Save>
+              </button>
+            </EditBar>
+            <span className="pt-2 text-zinc-500 text-sm">Please refer to this <Link className="text-zinc-900 after:content-['↗']" href="https://katex.org/docs/supported.html" target="_blank"> guide</Link> for supported TeX functions </span>
+          </>
+
         )}
       </MathEqWrapper>
     </NodeViewWrapper>
@@ -63,7 +69,7 @@ const MathEqWrapper = styled.div`
 
 const MathEqTopMenu = styled.div`
   display: flex;
-  justify-content: flex-end;
+  justify-content: flex-start;
   button {
     margin-left: 10px;
     cursor: pointer;
