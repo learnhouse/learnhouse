@@ -7,8 +7,9 @@ import { RequestBody, RequestBodyForm, errorHandling } from "@services/utils/ts/
 */
 
 export async function getOrgCourses(org_id: number) {
-  const result: any = await fetch(`${getAPIUrl()}courses/${org_id}/page/1/limit/10`, RequestBody("GET", null));
+  const result: any = await fetch(`${getAPIUrl()}courses/org_slug/${org_id}/page/1/limit/10`, RequestBody("GET", null));
   const res = await errorHandling(result);
+  
   return res;
 }
 
