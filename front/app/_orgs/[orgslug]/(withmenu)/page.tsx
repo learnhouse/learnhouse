@@ -23,9 +23,7 @@ const OrgHomePage = async (params: any) => {
   return (
     <div>
 
-      <AuthProvider>
-        <Menu orgslug={orgslug}></Menu>
-      </AuthProvider>
+      
       <div className="max-w-7xl mx-auto px-4 py-10">
         {/* Collections */}
         <Title title="Collections" type="col" />
@@ -68,7 +66,7 @@ const OrgHomePage = async (params: any) => {
 };
 
 
-const Title = (props: any) => {
+export const Title = (props: any) => {
   return (
     <div className="home_category_title flex my-5">
       <div className="rounded-full ring-1 ring-slate-900/5 shadow-sm p-2 my-auto mr-4">
