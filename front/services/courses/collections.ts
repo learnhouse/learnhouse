@@ -18,3 +18,12 @@ export async function createCollection(collection: any) {
   const res = await errorHandling(result);
   return res;
 }
+
+// Get collections 
+// TODO : add per org filter
+export async function getOrgCollections() {
+  const result: any = await fetch(`${getAPIUrl()}collections/page/1/limit/10`);
+  const res = await errorHandling(result);
+  return res;
+}
+
