@@ -9,6 +9,7 @@ from src.security.security import security_hash_password
 from src.services.courses.chapters import CourseChapter, create_coursechapter
 from src.services.courses.activities.activities import Activity, create_activity
 from src.services.courses.thumbnails import upload_thumbnail
+from src.services.users.schemas.users import UserRolesInOrganization
 from src.services.users.users import PublicUser, User, UserInDB, UserWithPassword
 
 from src.services.orgs import OrganizationInDB, Organization, create_org
@@ -36,7 +37,7 @@ async def create_initial_data(request: Request):
         user_id="user_admin",
         creation_date=str(datetime.now()),
         update_date=str(datetime.now()),
-        roles=["role_admin"],
+        roles= [],
         orgs=[],
         username=f"admin",
         email=f"admin@admin.admin",

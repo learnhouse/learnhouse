@@ -9,6 +9,12 @@ class UserOrganization(BaseModel):
     def __getitem__(self, item):
         return getattr(self, item)
     
+class UserRolesInOrganization(BaseModel):
+    org_id: str
+    role_id: str
+
+    def __getitem__(self, item):
+        return getattr(self, item)
 
 
 
@@ -31,7 +37,7 @@ class UserInDB(User):
     verified: bool | None = False
     disabled: bool | None = False
     orgs: list[UserOrganization] = []
-    roles: list[str] = []
+    roles: list[UserRolesInOrganization] = []
     creation_date: str
     update_date: str
 
@@ -41,7 +47,7 @@ class UserInDB(User):
 class PublicUser(User):
     user_id: str
     orgs: list[UserOrganization] = []
-    roles: list[str] = []
+    roles: list[UserRolesInOrganization] = []
     creation_date: str
     update_date: str
 
