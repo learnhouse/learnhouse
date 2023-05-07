@@ -87,6 +87,10 @@ async def create_org(request: Request, org_object: Organization, current_user: P
     # add org to user
     await user.update_one({"user_id": current_user.user_id}, {
         "$addToSet": {"orgs": user_organization.dict()}})
+    
+    # add role admin to org 
+    await user.update_one({"user_id": current_user.user_id}, {
+        "$addToSet": {"roles": {"org_id": org_id, "role_id": "role_admin"}}})
 
     if not org_in_db:
         raise HTTPException(
