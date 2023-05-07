@@ -110,7 +110,7 @@ export const ToolbarButtons = ({ editor, props }: any) => {
               .chain()
               .focus()
               .insertContent({
-                type: "blockMathEquation",
+                type: "blockMathEquation", 
               })
               .run()
           }
