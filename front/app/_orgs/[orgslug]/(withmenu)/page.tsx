@@ -66,7 +66,7 @@ const OrgHomePage = async (params: any) => {
 };
 
 
-export const Title = (props: any) => {
+const Title = (props: any) => {
   return (
     <div className="home_category_title flex my-5">
       <div className="rounded-full ring-1 ring-slate-900/5 shadow-sm p-2 my-auto mr-4">
