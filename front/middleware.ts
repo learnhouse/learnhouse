@@ -11,7 +11,7 @@ export const config = {
      * 4. /examples (inside /public)
      * 5. all root files inside /public (e.g. /favicon.ico)
      */
-    "/((?!api|_next|fonts|login|signup|examples|[\\w-]+\\.\\w+).*)",
+    "/((?!api|_next|fonts|examples|[\\w-]+\\.\\w+).*)",
   ],
 };
 
