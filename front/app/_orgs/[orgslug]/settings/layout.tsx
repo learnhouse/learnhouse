@@ -12,7 +12,7 @@ function SettingsLayout({ children, params }: { children: React.ReactNode, param
 
     return (
         <>  
-        <AuthProvider/>
+        <AuthProvider>
             <Main>
                 <LeftWrapper>
                     <LeftTopArea>
@@ -37,7 +37,7 @@ function SettingsLayout({ children, params }: { children: React.ReactNode, param
                 <RightWrapper>
                     {children}
                 </RightWrapper>
-            </Main>
+            </Main></AuthProvider>
         </>
     )
 }

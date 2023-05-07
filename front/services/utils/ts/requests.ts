@@ -8,6 +8,10 @@ export const RequestBody = (method: string, data: any) => {
     headers: HeadersConfig,
     redirect: "follow",
     credentials: "include",
+    // Next.js 
+    next: {
+      revalidate: 1,
+    },
   };
   if (data) {
     options.body = JSON.stringify(data);
