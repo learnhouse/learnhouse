@@ -33,6 +33,7 @@ function MathEquationBlockComponent(props: any) {
             <button onClick={() => setIsEditing(true)}>
               <Edit size={15}></Edit>
             </button>
+            <span className="pl-2">Edit</span>
           </MathEqTopMenu>
         )}
         <BlockMath>{equation}</BlockMath>
@@ -44,7 +45,7 @@ function MathEquationBlockComponent(props: any) {
                 <Save size={15}></Save>
               </button>
             </EditBar>
-            <span className="pt-2 text-zinc-500 text-sm">Please refer to this <Link className="text-zinc-900 after:content-['↗']" href="https://katex.org/docs/supported.html" target="_blank"> guide</Link> for supported functions </span>
+            <span className="pt-2 text-zinc-500 text-sm">Please refer to this <Link className="text-zinc-900 after:content-['↗']" href="https://katex.org/docs/supported.html" target="_blank"> guide</Link> for supported TeX functions </span>
           </>
 
         )}
