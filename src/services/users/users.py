@@ -4,7 +4,7 @@ from uuid import uuid4
 from fastapi import HTTPException, Request, status
 from src.services.roles.schemas.roles import Role
 from src.security.security import security_hash_password, security_verify_password
-from src.services.users.schemas.users import PasswordChangeForm, PublicUser, User, UserOrganization, UserWithPassword, UserInDB
+from src.services.users.schemas.users import PasswordChangeForm, PublicUser, User, UserOrganization, UserRolesInOrganization, UserWithPassword, UserInDB
 
 
 async def create_user(request: Request, current_user: PublicUser | None,  user_object: UserWithPassword, org_slug: str):
@@ -52,7 +52,7 @@ async def create_user(request: Request, current_user: PublicUser | None,  user_o
     orgs = [UserOrganization(org_id=org_id, org_role="member")]
 
     # Give role
-    roles = ["role_member"]
+    roles = [UserRolesInOrganization(role_id="role_member", org_id=org_id)]
 
     # Create the user
     user = UserInDB(user_id=user_id, creation_date=str(datetime.now()),
