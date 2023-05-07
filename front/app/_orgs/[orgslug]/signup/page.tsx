@@ -1,18 +1,19 @@
 "use client";
 import React from "react";
-import { Title } from "../../components/UI/Elements/Styles/Title";
-import { signup } from "../../services/auth/auth";
+import { Title } from "../../../../components/UI/Elements/Styles/Title";
+import { signup } from "../../../../services/auth/auth";
 
-const SignUp = () => {
+const SignUp = (params : any) => {
+  const org_slug = params.params.orgslug;
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [username, setUsername] = React.useState("");
 
   const handleSubmit = (e: any) => {
     e.preventDefault();
-    console.log({ email, password, username });
-    alert(JSON.stringify({ email, password, username }));
-    signup({ email, password, username });
+    console.log({ email, password, username, org_slug });
+    alert(JSON.stringify({ email, password, username, org_slug }));
+    signup({ email, password, username, org_slug });
   };
 
   const handleEmailChange = (e: any) => {
