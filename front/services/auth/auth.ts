@@ -64,6 +64,7 @@ interface NewAccountBody {
   username: string;
   email: string;
   password: string;
+  org_slug: string;
 }
 
 export async function signup(body: NewAccountBody): Promise<any> {
@@ -76,7 +77,7 @@ export async function signup(body: NewAccountBody): Promise<any> {
     redirect: "follow",
   };
 
-  return fetch(`${getAPIUrl()}users/`, requestOptions)
+  return fetch(`${getAPIUrl()}users/?org_slug=${body.org_slug}`, requestOptions)
     .then((result) => result.json())
     .catch((error) => console.log("error", error));
 }

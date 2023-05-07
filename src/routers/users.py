@@ -37,11 +37,11 @@ async def api_get_user_by_userid(request: Request,user_id: str):
 
 
 @router.post("/")
-async def api_create_user(request: Request,user_object: UserWithPassword, org_id: str ):
+async def api_create_user(request: Request,user_object: UserWithPassword, org_slug: str ):
     """
     Create new user
     """
-    return await create_user(request, None, user_object, org_id)
+    return await create_user(request, None, user_object, org_slug)
 
 
 @router.delete("/user_id/{user_id}")
