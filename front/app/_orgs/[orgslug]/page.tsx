@@ -1,4 +1,4 @@
-
+export const runtime = 'edge'; 
 import { Menu } from "@components/UI/Elements/Menu";
 import { getBackendUrl, getUriWithOrg } from "@services/config/config";
 import { getOrgCourses } from "@services/courses/courses";
