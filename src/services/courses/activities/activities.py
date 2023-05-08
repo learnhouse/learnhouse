@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from src.security.security import verify_user_rights_with_roles
-from src.services.users.schemas.users import PublicUser, User
-from fastapi import FastAPI, HTTPException, status, Request, Response, BackgroundTasks, UploadFile, File
+from src.services.users.schemas.users import PublicUser
+from fastapi import HTTPException, status, Request
 from uuid import uuid4
 from datetime import datetime
 

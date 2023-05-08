@@ -1,0 +1,3 @@
+[tool.ruff]
+# E501 line too long (82 > 79 characters)
+ignore = ["E501"]

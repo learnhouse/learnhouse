@@ -271,7 +271,7 @@ async def get_courses_orgslug(request: Request, page: int = 1, limit: int = 10, 
 
     if not org:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail=f"Organization does not exist")
+            status_code=status.HTTP_409_CONFLICT, detail="Organization does not exist")
 
     # get all courses from database
     all_courses = courses.find({"org_id": org['org_id']}).sort(
@@ -288,12 +288,12 @@ async def verify_rights(request: Request, course_id: str, current_user: PublicUs
 
     course = await courses.find_one({"course_id": course_id})
 
-    if current_user.user_id == "anonymous" and course["public"] == True and action == "read":
+    if current_user.user_id == "anonymous" and course["public"] is True and action == "read":
         return True
 
     if not course:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail=f"Course/CourseChapter does not exist")
+            status_code=status.HTTP_409_CONFLICT, detail="Course/CourseChapter does not exist")
 
     hasRoleRights = await verify_user_rights_with_roles(request, action, current_user.user_id, course_id, course["org_id"])
     isAuthor = current_user.user_id in course["authors"]
