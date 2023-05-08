@@ -1,18 +1,16 @@
-name: Frontend Lint 
-on: [ push, pull_request ]
+name: Frontend Lint
+on: [push, pull_request]
 jobs:
   next-lint:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-        with:
-          path: front
       - name: Use Node.js
         uses: actions/setup-node@v2
         with:
           node-version: 18.x
       - name: Install dependencies
-        run: npm ci
+        run: cd front && npm ci
       - name: Lint code
-        run: npm run lint
+        run: cd front && npm run lint
