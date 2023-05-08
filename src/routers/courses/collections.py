@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Request
 from src.security.auth import get_current_user
-from src.services.users.users import PublicUser, User
+from src.services.users.users import PublicUser
 from src.services.courses.collections import Collection, create_collection, get_collection, get_collections, update_collection, delete_collection
 
 

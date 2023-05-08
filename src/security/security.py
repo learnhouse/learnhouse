@@ -1,10 +1,9 @@
-from pprint import pprint
 from fastapi import HTTPException, status, Request
 from passlib.context import CryptContext
 from passlib.hash import pbkdf2_sha256
 from src.services.roles.schemas.roles import RoleInDB
 
-from src.services.users.schemas.users import User, UserInDB
+from src.services.users.schemas.users import UserInDB
 
 ### 🔒 JWT ##############################################################
 

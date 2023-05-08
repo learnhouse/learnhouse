@@ -1,9 +1,7 @@
-import json
-from typing import List, Literal
+from typing import Literal
 from uuid import uuid4
-from pydantic import BaseModel
 from src.services.roles.schemas.roles import Role, RoleInDB
-from src.services.users.schemas.users import PublicUser, User
+from src.services.users.schemas.users import PublicUser
 from src.security.security import *
 from fastapi import HTTPException, status, Request
 from datetime import datetime
@@ -63,7 +61,7 @@ async def delete_role(request: Request, role_id: str, current_user: PublicUser):
 #### Security ####################################################
 
 async def verify_user_permissions_on_roles(request: Request, current_user: PublicUser, action: Literal["create", "read", "update", "delete"], role_id: str | None):
-    users = request.app.db["users"]
+    request.app.db["users"]
     roles = request.app.db["roles"]
 
     # If current user is not authenticated
