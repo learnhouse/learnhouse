@@ -37,7 +37,7 @@ function MathEquationBlockComponent(props: any) {
           </MathEqTopMenu>
         )}
         <BlockMath>{equation}</BlockMath>
-        {isEditing && (
+        {isEditing && isEditable && (
           <>
             <EditBar>
               <input value={equation} onChange={handleEquationChange} placeholder="Insert a Math Equation (LaTeX) " type="text" />
