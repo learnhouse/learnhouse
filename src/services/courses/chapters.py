@@ -1,15 +1,13 @@
 from datetime import datetime
-import json
-import pprint
 from typing import List
 from uuid import uuid4
 from pydantic import BaseModel
 from src.security.auth import non_public_endpoint
-from src.services.courses.courses import Course, CourseInDB
-from src.services.courses.activities.activities import Activity, ActivityInDB
+from src.services.courses.courses import Course
+from src.services.courses.activities.activities import ActivityInDB
 from src.security.security import verify_user_rights_with_roles
 from src.services.users.users import PublicUser
-from fastapi import HTTPException, status, Request, Response, BackgroundTasks, UploadFile, File
+from fastapi import HTTPException, status, Request
 
 
 class CourseChapter(BaseModel):
@@ -115,7 +113,7 @@ async def delete_coursechapter(request: Request, coursechapter_id: str,  current
         await verify_rights(request, course["course_id"], current_user, "delete")
 
         # Remove coursechapter from course
-        res = await courses.update_one({"course_id": course["course_id"]}, {
+        await courses.update_one({"course_id": course["course_id"]}, {
             "$pull": {"chapters": coursechapter_id}})
 
         await courses.update_one({"chapters_content.coursechapter_id": coursechapter_id}, {
@@ -200,7 +198,7 @@ async def update_coursechapters_meta(request: Request, course_id: str, coursecha
     courses = request.app.db["courses"]
 
     # update chapters in course
-    courseInDB = await courses.update_one({"course_id": course_id}, {
+    await courses.update_one({"course_id": course_id}, {
         "$set": {"chapters": coursechapters_metadata.chapterOrder}})
 
     if coursechapters_metadata.chapters is not None:
@@ -230,7 +228,7 @@ async def verify_rights(request: Request, course_id: str, current_user: PublicUs
 
     if not course:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail=f"Course does not exist")
+            status_code=status.HTTP_409_CONFLICT, detail="Course does not exist")
 
     hasRoleRights = await verify_user_rights_with_roles(request, action, current_user.user_id, course_id, course["org_id"])
     isAuthor = current_user.user_id in course["authors"]

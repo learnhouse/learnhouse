@@ -3,7 +3,6 @@ import uuid
 from fastapi import HTTPException, Request, UploadFile, status
 from src.services.blocks.schemas.files import BlockFile
 
-from src.services.users.schemas.users import PublicUser
 
 
 async def upload_file_and_return_file_object(request: Request, file: UploadFile, activity_id: str, block_id: str, list_of_allowed_file_formats: list, type_of_block: str):

@@ -17,7 +17,7 @@ async def upload_video(video_file,  activity_id):
             f.write(contents)
             f.close()
 
-    except Exception as e:
+    except Exception:
         return {"message": "There was an error uploading the file"}
     finally:
         video_file.file.close()
