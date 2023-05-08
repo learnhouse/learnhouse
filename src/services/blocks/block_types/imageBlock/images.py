@@ -1,8 +1,5 @@
 from uuid import uuid4
-from pydantic import BaseModel
 from fastapi import HTTPException, status, UploadFile, Request
-from fastapi.responses import StreamingResponse
-import os
 from src.services.blocks.schemas.blocks import Block
 from src.services.blocks.utils.upload_files import upload_file_and_return_file_object
 

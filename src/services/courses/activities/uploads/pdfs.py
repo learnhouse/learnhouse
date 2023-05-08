@@ -17,7 +17,7 @@ async def upload_pdf(pdf_file,  activity_id):
             f.write(contents)
             f.close()
 
-    except Exception as e:
+    except Exception:
         return {"message": "There was an error uploading the file"}
     finally:
         pdf_file.file.close()
