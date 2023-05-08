@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Request
 from src.security.auth import get_current_user
 from src.services.roles.schemas.roles import Role
 from src.services.roles.roles import create_role, delete_role, read_role,  update_role
-from src.services.users.schemas.users import PublicUser, User
+from src.services.users.schemas.users import PublicUser
 
 
 router = APIRouter()

@@ -1,22 +1,17 @@
 import os
 import requests
 from datetime import datetime
-from fileinput import filename
 from pprint import pprint
 from uuid import uuid4
-from fastapi import File, UploadFile, Request
+from fastapi import Request
 from src.security.security import security_hash_password
 from src.services.courses.chapters import CourseChapter, create_coursechapter
 from src.services.courses.activities.activities import Activity, create_activity
-from src.services.courses.thumbnails import upload_thumbnail
-from src.services.users.schemas.users import UserRolesInOrganization
-from src.services.users.users import PublicUser, User, UserInDB, UserWithPassword
+from src.services.users.users import PublicUser, UserInDB
 
-from src.services.orgs import OrganizationInDB, Organization, create_org
+from src.services.orgs import Organization, create_org
 from src.services.roles.schemas.roles import Permission, Elements, RoleInDB
-from src.services.users.users import create_user
-from src.services.courses.courses import Course, CourseInDB, create_course
-from src.services.roles.roles import Role, create_role
+from src.services.courses.courses import CourseInDB
 from faker import Faker
 
 
@@ -39,12 +34,12 @@ async def create_initial_data(request: Request):
         update_date=str(datetime.now()),
         roles= [],
         orgs=[],
-        username=f"admin",
-        email=f"admin@admin.admin",
+        username="admin",
+        email="admin@admin.admin",
         password=str(await security_hash_password("admin")),
     )
 
-    db_admin_user = await database_users.insert_one(admin_user.dict())
+    await database_users.insert_one(admin_user.dict())
 
     # find admin user
     users = request.app.db["users"]
@@ -188,9 +183,9 @@ async def create_initial_data(request: Request):
                     "https://source.unsplash.com/random/800x600/?img=1")
                 
                 # check if folder exists and create it if not
-                if not os.path.exists(f"content/uploads/img"):
+                if not os.path.exists("content/uploads/img"):
                 
-                    os.makedirs(f"content/uploads/img")
+                    os.makedirs("content/uploads/img")
                 
                 with open(f"content/uploads/img/{name_in_disk}", "wb") as f:
                     f.write(image.content)
@@ -198,7 +193,7 @@ async def create_initial_data(request: Request):
                 course.thumbnail = name_in_disk
 
                 course = CourseInDB(**course.dict())
-                course_in_db = await courses.insert_one(course.dict())
+                await courses.insert_one(course.dict())
 
                 # create chapters
                 for i in range(0, 5):

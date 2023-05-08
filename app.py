@@ -1,7 +1,5 @@
-import asyncio
 import logging
 from fastapi import FastAPI, Request
-import re
 from config.config import LearnHouseConfig, get_learnhouse_config
 from src.core.events.events import shutdown_app, startup_app
 from src.main import global_router
