@@ -80,7 +80,7 @@ function ActivityPage(params: any) {
 
               {activity.type == "documentpdf" && <DocumentPdfActivity course={course} activity={activity} />}
 
-              <ActivityMarkerWrapper>
+              <ActivityMarkerWrapper className="py-10">
 
                 {course.trail.activities_marked_complete &&
                   course.trail.activities_marked_complete.includes("activity_" + activityid) &&
@@ -92,7 +92,7 @@ function ActivityPage(params: any) {
                     Already completed
                   </button>
                 ) : (
-                  <button className="py-10" onClick={markActivityAsCompleteFront}>
+                  <button onClick={markActivityAsCompleteFront}>
                     {" "}
                     <i>
                       <Check size={20}></Check>
