@@ -92,7 +92,7 @@ function ActivityPage(params: any) {
                     Already completed
                   </button>
                 ) : (
-                  <button onClick={markActivityAsCompleteFront}>
+                  <button className="py-10" onClick={markActivityAsCompleteFront}>
                     {" "}
                     <i>
                       <Check size={20}></Check>
