@@ -1,4 +1,3 @@
-from typing import Optional
 from fastapi import APIRouter, Depends, Request
 from src.security.auth import get_current_user
 from src.services.trail import Trail, add_activity_to_trail, add_course_to_trail,  create_trail, get_user_trail_with_orgslug, get_user_trail, remove_course_from_trail

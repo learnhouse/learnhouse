@@ -2,7 +2,6 @@ from datetime import datetime
 from typing import Literal
 from uuid import uuid4
 from fastapi import HTTPException, Request, status
-from src.services.roles.schemas.roles import Role
 from src.security.security import security_hash_password, security_verify_password
 from src.services.users.schemas.users import PasswordChangeForm, PublicUser, User, UserOrganization, UserRolesInOrganization, UserWithPassword, UserInDB
 
@@ -195,7 +194,7 @@ async def get_user_by_userid(request: Request, user_id: str):
 
 async def get_profile_metadata(request: Request, user):
     users = request.app.db["users"]
-    roles = request.app.db["roles"]
+    request.app.db["roles"]
 
     user = await users.find_one({"user_id": user['user_id']})
 

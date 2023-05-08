@@ -1,12 +1,10 @@
 import json
-from typing import List
 from uuid import uuid4
 from pydantic import BaseModel
 from src.services.users.schemas.users import UserOrganization
-from src.services.users.users import PublicUser, User
+from src.services.users.users import PublicUser
 from src.security.security import *
-from fastapi import FastAPI, HTTPException, status, Request, Response, BackgroundTasks
-from datetime import datetime
+from fastapi import HTTPException, status, Request
 
 #### Classes ####################################################
 
@@ -109,8 +107,8 @@ async def update_org(request: Request, org_object: Organization, org_id: str, cu
     org = await orgs.find_one({"org_id": org_id})
 
     if org:
-        owners = org["owners"]
-        admins = org["admins"]
+        org["owners"]
+        org["admins"]
 
     else:
         raise HTTPException(
@@ -153,7 +151,7 @@ async def get_orgs_by_user(request: Request, user_id: str, page: int = 1, limit:
     orgs = request.app.db["organizations"]
     user = request.app.db["users"]
 
-    if user_id is "anonymous":
+    if user_id == "anonymous":
 
         # raise error 
         raise HTTPException(

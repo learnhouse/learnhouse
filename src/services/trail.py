@@ -1,6 +1,4 @@
-from cmath import log
 from datetime import datetime
-import json
 from typing import List, Literal, Optional
 from uuid import uuid4
 from fastapi import HTTPException, Request, status

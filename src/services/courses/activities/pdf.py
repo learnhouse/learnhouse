@@ -1,4 +1,3 @@
-from pydantic import BaseModel
 from src.security.security import verify_user_rights_with_roles
 from src.services.courses.activities.uploads.pdfs import upload_pdf
 from src.services.users.users import PublicUser
