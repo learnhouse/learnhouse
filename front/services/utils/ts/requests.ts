@@ -9,9 +9,7 @@ export const RequestBody = (method: string, data: any) => {
     redirect: "follow",
     credentials: "include",
     // Next.js 
-    next: {
-      revalidate: 1,
-    },
+    cache: 'no-store'
   };
   if (data) {
     options.body = JSON.stringify(data);
