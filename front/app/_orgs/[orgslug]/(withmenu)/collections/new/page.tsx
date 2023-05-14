@@ -8,7 +8,7 @@ import { getAPIUrl, getUriWithOrg } from "@services/config/config";
 import { swrFetcher } from "@services/utils/ts/requests";
 import { getOrganizationContextInfo } from "@services/organizations/orgs";
 
-function NewCollection(params : any) {
+function NewCollection(params: any) {
   const orgslug = params.params.orgslug;
   const [name, setName] = React.useState("");
   const [org, setOrg] = React.useState({}) as any;
@@ -50,38 +50,64 @@ function NewCollection(params : any) {
 
   return (
     <>
-      <Title>Add new</Title>
-      <br />
-      <input type="text" placeholder="Name" value={name} onChange={handleNameChange} />
-      {!courses ? (
-        <p>Loading...</p>
-      ) : (
-        <div>
-          {courses.map((course: any) => (
-            <div key={course.course_id}>
-              <input
-                type="checkbox"
-                id={course.course_id}
-                name={course.course_id}
-                value={course.course_id}
-                onChange={(e) => {
-                  if (e.target.checked) {
-                    setSelectedCourses([...selectedCourses, e.target.value]);
-                  } else {
-                    setSelectedCourses(selectedCourses.filter((item: any) => item !== e.target.value));
-                  }
-                }}
-              />
-              <label htmlFor={course.course_id}>{course.name}</label>
-            </div>
-          ))}
-        </div>
-      )}
+      <div className="w-64 m-auto py-20">
+      <Title className="mb-4">Add new</Title>
 
-      <br />
-      <input type="text" placeholder="Description" value={description} onChange={handleDescriptionChange} />
-      <br />
-      <button onClick={handleSubmit}>Submit</button>
+<input
+  type="text"
+  placeholder="Name"
+  value={name}
+  onChange={handleNameChange}
+  className="w-full px-4 py-2 mb-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+/>
+
+{!courses ? (
+  <p className="text-gray-500">Loading...</p>
+) : (
+  <div>
+    {courses.map((course: any) => (
+      <div key={course.course_id} className="flex items-center mb-2">
+        <input
+          type="checkbox"
+          id={course.course_id}
+          name={course.course_id}
+          value={course.course_id}
+          checked={selectedCourses.includes(course.course_id)}
+          onChange={(e) => {
+            const courseId = e.target.value;
+            setSelectedCourses((prevSelectedCourses: string[]) => {
+              if (e.target.checked) {
+                return [...prevSelectedCourses, courseId];
+              } else {
+                return prevSelectedCourses.filter((selectedCourse) => selectedCourse !== courseId);
+              }
+            });
+          }}
+          className="mr-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <label htmlFor={course.course_id} className="text-sm">{course.name}</label>
+      </div>
+    ))}
+
+  </div>
+)}
+
+<input
+  type="text"
+  placeholder="Description"
+  value={description}
+  onChange={handleDescriptionChange}
+  className="w-full px-4 py-2 mb-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+/>
+
+<button
+  onClick={handleSubmit}
+  className="px-6 py-3 text-white bg-black rounded-lg shadow-md hover:bg-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+>
+  Submit
+</button>
+      </div>
+
     </>
   );
 }
