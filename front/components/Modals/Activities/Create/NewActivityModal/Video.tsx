@@ -4,7 +4,14 @@ import * as Form from '@radix-ui/react-form';
 import BarLoader from "react-spinners/BarLoader";
 import { Youtube } from "lucide-react";
 
-function VideoModal({ submitFileActivity, chapterId }: any) {
+interface ExternalVideoObject {
+  name: string,
+  type: string,
+  uri: string
+}
+
+
+function VideoModal({ submitFileActivity, submitExternalVideo, chapterId }: any) {
   const [video, setVideo] = React.useState(null) as any;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [name, setName] = React.useState("");
@@ -26,15 +33,21 @@ function VideoModal({ submitFileActivity, chapterId }: any) {
   const handleSubmit = async (e: any) => {
     e.preventDefault();
     setIsSubmitting(true);
+    
     if (selectedView === "file") {
       let status = await submitFileActivity(video, "video", { name, type: "video" }, chapterId);
-    setIsSubmitting(false);
+      setIsSubmitting(false);
     }
     if (selectedView === "youtube") {
-      let status = await submitFileActivity(video, "video", { name, type: "video" }, chapterId);
-    setIsSubmitting(false);
+      let external_video_object: ExternalVideoObject = {
+        name,
+        type: "youtube",
+        uri: youtubeUrl
+      }
+      let status = await submitExternalVideo(external_video_object, 'activity' ,chapterId);
+      setIsSubmitting(false);
     }
-    
+
   };
 
   /* TODO : implement some sort of progress bar for file uploads, it is not possible yet because i'm not using axios.
@@ -69,7 +82,6 @@ function VideoModal({ submitFileActivity, chapterId }: any) {
             </FormField>
           </div>)}
           {selectedView === "youtube" && (
-
             <div className="p-4 justify-center m-auto align-middle">
               <FormField name="video-activity-file">
                 <Flex css={{ alignItems: 'baseline', justifyContent: 'space-between' }}>

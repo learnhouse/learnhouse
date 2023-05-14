@@ -28,6 +28,12 @@ async def create_video_activity(
         {"chapters_content.coursechapter_id": coursechapter_id}
     )
 
+    if not coursechapter:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="CourseChapter : No coursechapter found",
+        )
+
     org_id = coursechapter["org_id"]
 
     # check if video_file is not None
@@ -101,12 +107,14 @@ class ExternalVideo(BaseModel):
     name: str
     uri: str
     type: Literal["youtube", "vimeo"]
+    coursechapter_id: str
+
+class ExternalVideoInDB(BaseModel):
     activity_id: str
 
 
 async def create_external_video_activity(
     request: Request,
-    coursechapter_id: str,
     current_user: PublicUser,
     data: ExternalVideo,
 ):
@@ -118,15 +126,21 @@ async def create_external_video_activity(
 
     # get org_id from course
     coursechapter = await courses.find_one(
-        {"chapters_content.coursechapter_id": coursechapter_id}
+        {"chapters_content.coursechapter_id": data.coursechapter_id}
     )
+
+    if not coursechapter:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="CourseChapter : No coursechapter found",
+        )
 
     org_id = coursechapter["org_id"]
 
     activity_object = ActivityInDB(
         org_id=org_id,
         activity_id=activity_id,
-        coursechapter_id=coursechapter_id,
+        coursechapter_id=data.coursechapter_id,
         name=data.name,
         type="video",
         content={
@@ -157,7 +171,7 @@ async def create_external_video_activity(
     # todo : choose whether to update the chapter or not
     # update chapter
     await courses.update_one(
-        {"chapters_content.coursechapter_id": coursechapter_id},
+        {"chapters_content.coursechapter_id": data.coursechapter_id},
         {"$addToSet": {"chapters_content.$.activities": activity_id}},
     )
 

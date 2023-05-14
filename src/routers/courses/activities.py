@@ -99,21 +99,19 @@ async def api_create_video_activity(
 async def api_create_external_video_activity(
     request: Request,
     external_video: ExternalVideo,
-    coursechapter_id: str = Form(),
     current_user: PublicUser = Depends(get_current_user),
 ):
     """
     Create new activity
     """
     return await create_external_video_activity(
-        request, coursechapter_id, current_user, external_video
+        request, current_user, external_video
     )
 
 
 @router.post("/documentpdf")
 async def api_create_documentpdf_activity(
     request: Request,
-    org_id: str,
     name: str = Form(),
     coursechapter_id: str = Form(),
     current_user: PublicUser = Depends(get_current_user),

@@ -9,7 +9,7 @@ import VideoModal from "./NewActivityModal/Video";
 import Image from "next/image";
 import DocumentPdfModal from "./NewActivityModal/DocumentPdf";
 
-function NewActivityModal({ closeModal, submitActivity, submitFileActivity, chapterId }: any) {
+function NewActivityModal({ closeModal, submitActivity, submitFileActivity, submitExternalVideo, chapterId }: any) {
   const [selectedView, setSelectedView] = useState("home");
 
 
@@ -43,7 +43,8 @@ function NewActivityModal({ closeModal, submitActivity, submitFileActivity, chap
       )}
 
       {selectedView === "video" && (
-        <VideoModal submitFileActivity={submitFileActivity} chapterId={chapterId} />
+        <VideoModal submitFileActivity={submitFileActivity} submitExternalVideo={submitExternalVideo}
+          chapterId={chapterId} />
       )}
 
       {selectedView === "documentpdf" && (
