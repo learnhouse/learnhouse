@@ -36,6 +36,12 @@ export async function createFileActivity(file: File, type: string, data: any, ch
   return res;
 }
 
+export async function createYouTubeVideoActivity(data: any, activity: any, chapter_id: any) {
+  const result = await fetch(`${getAPIUrl()}activities/youtubevideo?coursechapter_id=${chapter_id}`, RequestBody("POST", data));
+  const res = await result.json();
+  return res;
+}
+
 export async function getActivity(activity_id: any) {
   const result = await fetch(`${getAPIUrl()}activities/${activity_id}`, RequestBody("GET", null));
   const res = await result.json();
