@@ -1,7 +1,7 @@
 import React from "react";
 import styled from "styled-components";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
-import Activity, { ActivityWrapper } from "./Activity";
+import Activity from "./Activity";
 
 function Chapter(props: any) {
   return (
@@ -14,8 +14,8 @@ function Chapter(props: any) {
           //  isDragging={snapshot.isDragging}
           key={props.info.list.chapter.id}
         >
-          <h3>
-            {props.info.list.chapter.name}{" "}
+          <h3 className="pt-3 font-bold text-md">
+            {props.info.list.chapter.name}
             <button
               onClick={() => {
                 props.openNewActivityModal(props.info.list.chapter.id);
