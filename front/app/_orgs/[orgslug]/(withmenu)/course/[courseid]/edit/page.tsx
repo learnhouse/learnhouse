@@ -266,7 +266,7 @@ function CourseEdit(params: any) {
           >
             Save
           </button>
-        </Title>-
+        </Title>
 
         <Modal
           isDialogOpen={newActivityModal}
