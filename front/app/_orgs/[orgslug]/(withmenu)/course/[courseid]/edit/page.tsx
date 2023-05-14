@@ -96,10 +96,10 @@ function CourseEdit(params: any) {
   };
 
   // Submit YouTube Video Upload
-  const submitExternalVideo = async (external_video_data : any, activity: any, chapterId: string) => {
+  const submitExternalVideo = async (external_video_data: any, activity: any, chapterId: string) => {
     console.log("submitExternalVideo", external_video_data);
     await updateChaptersMetadata(courseid, data);
-    await createExternalVideoActivity(external_video_data , activity, chapterId);
+    await createExternalVideoActivity(external_video_data, activity, chapterId);
     await getCourseChapters();
     setNewActivityModal(false);
   };
@@ -266,7 +266,7 @@ function CourseEdit(params: any) {
           >
             Save
           </button>
-        </Title>-
+        </Title>
 
         <Modal
           isDialogOpen={newActivityModal}

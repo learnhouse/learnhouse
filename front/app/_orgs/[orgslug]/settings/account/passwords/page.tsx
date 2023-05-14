@@ -21,7 +21,7 @@ function SettingsProfilePasswordsPage() {
 
             {auth.isAuthenticated && (
                 <div>
-                    <h1>Account Password</h1>
+                    <h1 className='text-3xl font-bold'>Account Password</h1>
                     <br /><br />
 
                     <Formik
@@ -35,13 +35,34 @@ function SettingsProfilePasswordsPage() {
                         }}
                     >
                         {({ isSubmitting }) => (
-                            <Form>
-                                Old Password  <Field type="password" name="old_password" /><br />
-                                New password  <Field type="password" name="new_password" /><br />
-                                <button type="submit" disabled={isSubmitting}>
-                                    Submit
-                                </button>
-                            </Form>
+                            <Form className="max-w-md">
+                            <label className="block mb-2 font-bold" htmlFor="old_password">
+                              Old Password
+                            </label>
+                            <Field
+                              className="w-full px-4 py-2 mb-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              type="password"
+                              name="old_password"
+                            />
+                          
+                            <label className="block mb-2 font-bold" htmlFor="new_password">
+                              New Password
+                            </label>
+                            <Field
+                              className="w-full px-4 py-2 mb-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              type="password"
+                              name="new_password"
+                            />
+                          
+                            <button
+                              type="submit"
+                              disabled={isSubmitting}
+                              className="px-6 py-3 text-white bg-black rounded-lg shadow-md hover:bg-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                              Submit
+                            </button>
+                          </Form>
+                          
                         )}
                     </Formik>
                 </div>

@@ -45,8 +45,8 @@ const CourseIdPage = (params: any) => {
       ) : (
         <CoursePageLayout>
           <br></br>
-          <p>Course</p>
-          <h1>
+          <p className="text-lg font-bold">Course</p>
+          <h1 className="text-3xl font-bold flex items-center space-x-5">
             {course.course.name}{" "}
             <Link href={getUriWithOrg(orgslug, "") + `/course/${courseid}/edit`} rel="noopener noreferrer">
               <Pencil2Icon />
@@ -61,12 +61,12 @@ const CourseIdPage = (params: any) => {
                       <>
                         <ToolTip sideOffset={-18} slateBlack content={activity.name}>
                           <Link href={getUriWithOrg(orgslug, "") + `/course/${courseid}/activity/${activity.id.replace("activity_", "")}`}>
-                          <CourseIndicator
+                            <CourseIndicator
                               done={course.trail.activities_marked_complete && course.trail.activities_marked_complete.includes(activity.id) && course.trail.status == "ongoing"}
-                             />
+                            />
                           </Link>
                         </ToolTip>
-                        
+
                       </>
                     );
                   })}
@@ -81,38 +81,42 @@ const CourseIdPage = (params: any) => {
 
           <CourseMetaWrapper>
             <CourseMetaLeft>
-              <h2>Description</h2>
+              <h2 className="py-3 font-bold">Description</h2>
 
               <BoxWrapper>
-                <p>{course.course.description}</p>
+                <p className="py-3">{course.course.description}</p>
               </BoxWrapper>
 
-              <h2>What you will learn</h2>
+              <h2 className="py-3 font-bold">What you will learn</h2>
               <BoxWrapper>
-                <p>{course.course.learnings == ![] ? "no data" : course.course.learnings}</p>
+                <p className="py-3">{course.course.learnings == ![] ? "no data" : course.course.learnings}</p>
               </BoxWrapper>
 
-              <h2>Course Lessons</h2>
+              <h2 className="py-3 font-bold">Course Lessons</h2>
 
               <BoxWrapper>
                 {course.chapters.map((chapter: any) => {
                   return (
-                    <>
-                      <h3>{chapter.name}</h3>
-                      {chapter.activities.map((activity: any) => {
+                    <div
+                      key={chapter}
+                      className="py-3"
+                    >
+                      <h3 className="text-lg">{chapter.name}</h3>
+                      <div
+                        className="py-3"
+                      >{chapter.activities.map((activity: any) => {
                         return (
                           <>
-                            <p>
+                            <p className="flex text-md">
                               {activity.name}
-                              <Link href={getUriWithOrg(orgslug, "") + `/course/${courseid}/activity/${activity.id.replace("activity_", "")}`} rel="noopener noreferrer">
+                              <Link className="pl-3" href={getUriWithOrg(orgslug, "") + `/course/${courseid}/activity/${activity.id.replace("activity_", "")}`} rel="noopener noreferrer">
                                 <EyeOpenIcon />
                               </Link>{" "}
                             </p>
                           </>
                         );
-                      })}
-                      &nbsp;&nbsp;&nbsp;&nbsp;
-                    </>
+                      })}</div>
+                    </div>
                   );
                 })}
               </BoxWrapper>
