@@ -37,7 +37,7 @@ function SettingsOrganizationGeneral(params: any) {
 
     return (
       <div>
-        <h1>Oganization Settings</h1>
+        <h1 className='text-3xl font-bold'>Oganization Settings</h1>
         <br /><br />
         {error && <p>Failed to load</p>}
         {!org ? (
@@ -55,15 +55,53 @@ function SettingsOrganizationGeneral(params: any) {
             }}
           >
             {({ isSubmitting }) => (
-              <Form>
-                Name  <Field type="text" name="name" /><br />
-                Description  <Field type="text" name="description" /><br />
-                Slug  <Field disabled type="text" name="slug" /> <br /> 
-                Email  <Field type="email" name="email" /><br />
-                <button type="submit" disabled={isSubmitting}>
-                  Submit
-                </button>
-              </Form>
+             <Form>
+             <label className="block mb-2 font-bold" htmlFor="name">
+               Name
+             </label>
+             <Field
+               className="w-full px-4 py-2 mb-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+               type="text"
+               name="name"
+             />
+           
+             <label className="block mb-2 font-bold" htmlFor="description">
+               Description
+             </label>
+             <Field
+               className="w-full px-4 py-2 mb-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+               type="text"
+               name="description"
+             />
+           
+             <label className="block mb-2 font-bold" htmlFor="slug">
+               Slug
+             </label>
+             <Field
+               className="w-full px-4 py-2 mb-4 border rounded-lg bg-gray-200 cursor-not-allowed"
+               disabled
+               type="text"
+               name="slug"
+             />
+           
+             <label className="block mb-2 font-bold" htmlFor="email">
+               Email
+             </label>
+             <Field
+               className="w-full px-4 py-2 mb-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+               type="email"
+               name="email"
+             />
+           
+             <button
+               type="submit"
+               disabled={isSubmitting}
+               className="px-6 py-3 text-white bg-black rounded-lg shadow-md hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black"
+             >
+               Submit
+             </button>
+           </Form>
+           
             )}
           </Formik>
         )}
