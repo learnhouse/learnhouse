@@ -9,8 +9,9 @@ const nextConfig = {
   reactStrictMode: false,
   experimental: {
     appDir : true,
+    swcFileReading: false,
   },
-  swcMinify: true,
+  swcMinify: false,
   compiler: {
     styledComponents: true,
   },

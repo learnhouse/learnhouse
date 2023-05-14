@@ -12,7 +12,7 @@ function SettingsProfilePage() {
 
             {auth.isAuthenticated && (
                 <div>
-                    <h1>Profile Settings</h1>
+                    <h1 className='text-3xl font-bold'>Profile Settings</h1>
                     <br /><br />
 
                     <Formik
@@ -27,14 +27,44 @@ function SettingsProfilePage() {
                         }}
                     >
                         {({ isSubmitting }) => (
-                            <Form>
-                                Full name  <Field type="textarea" name="full_name" /><br />
-                                Email  <Field type="email" name="email" /><br />
-                                Bio  <Field as="textarea" type="textarea" name="bio" /><br />
-                                <button type="submit" disabled={isSubmitting}>
+                            <Form className="max-w-md">
+                                <label className="block mb-2 font-bold" htmlFor="full_name">
+                                    Full Name
+                                </label>
+                                <Field
+                                    className="w-full px-4 py-2 mb-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    type="textarea"
+                                    name="full_name"
+                                />
+
+                                <label className="block mb-2 font-bold" htmlFor="email">
+                                    Email
+                                </label>
+                                <Field
+                                    className="w-full px-4 py-2 mb-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    type="email"
+                                    name="email"
+                                />
+
+                                <label className="block mb-2 font-bold" htmlFor="bio">
+                                    Bio
+                                </label>
+                                <Field
+                                    as="textarea"
+                                    className="w-full px-4 py-2 mb-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    type="textarea"
+                                    name="bio"
+                                />
+
+                                <button
+                                    type="submit"
+                                    disabled={isSubmitting}
+                                    className="px-6 py-3 text-white bg-black rounded-lg shadow-md hover:bg-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                >
                                     Submit
                                 </button>
                             </Form>
+
                         )}
                     </Formik>
                 </div>

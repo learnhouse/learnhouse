@@ -9,38 +9,47 @@ import { getAPIUrl, getUriWithOrg } from "@services/config/config";
 import AuthProvider from "@components/Security/AuthProvider";
 
 const Organizations = () => {
-  const { data : organizations , error } = useSWR(`${getAPIUrl()}orgs/user/page/1/limit/10`, swrFetcher)
+  const { data: organizations, error } = useSWR(`${getAPIUrl()}orgs/user/page/1/limit/10`, swrFetcher)
 
   async function deleteOrganization(org_id: any) {
     const response = await deleteOrganizationFromBackend(org_id);
-    response && mutate(`${getAPIUrl()}orgs/user/page/1/limit/10`, organizations.filter((org: any) => org.org_id !== org_id)); 
+    response && mutate(`${getAPIUrl()}orgs/user/page/1/limit/10`, organizations.filter((org: any) => org.org_id !== org_id));
   }
 
   return (
     <>
-    <AuthProvider/>
+      <AuthProvider />
       <Title>
         Your Organizations{" "}
-        <Link href={"/organizations/new"}>
-          <button>+</button>
+        <Link href="/organizations/new">
+          <button className="bg-blue-500 text-white px-2 py-1 rounded-md hover:bg-blue-600 focus:outline-none">
+            +
+          </button>
         </Link>
       </Title>
       <hr />
-      {error && <p>Failed to load</p>}
+
+      {error && <p className="text-red-500">Failed to load</p>}
       {!organizations ? (
-        <p>Loading...</p>
+        <p className="text-gray-500">Loading...</p>
       ) : (
         <div>
           {organizations.map((org: any) => (
-            <div key={org.org_id}>
-              <Link href={getUriWithOrg(org.slug,"/")}>
-                <h3>{org.name}</h3>
+            <div key={org.org_id} className="flex items-center justify-between mb-4">
+              <Link href={getUriWithOrg(org.slug, "/")}>
+                <h3 className="text-blue-500 cursor-pointer hover:underline">{org.name}</h3>
               </Link>
-              <button onClick={() => deleteOrganization(org.org_id)}>Delete</button>
+              <button
+                onClick={() => deleteOrganization(org.org_id)}
+                className="px-3 py-1 text-white bg-red-500 rounded-md hover:bg-red-600 focus:outline-none"
+              >
+                Delete
+              </button>
             </div>
           ))}
         </div>
       )}
+
     </>
   );
 };
