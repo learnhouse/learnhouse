@@ -36,6 +36,16 @@ export async function createFileActivity(file: File, type: string, data: any, ch
   return res;
 }
 
+export async function createExternalVideoActivity(data: any, activity: any, chapter_id: any) {
+  // add coursechapter_id to data
+  data.coursechapter_id = chapter_id;
+  data.activity_id = activity.id;
+  
+  const result = await fetch(`${getAPIUrl()}activities/external_video?coursechapter_id=${chapter_id}`, RequestBody("POST", data));
+  const res = await result.json();
+  return res;
+}
+
 export async function getActivity(activity_id: any) {
   const result = await fetch(`${getAPIUrl()}activities/${activity_id}`, RequestBody("GET", null));
   const res = await result.json();
