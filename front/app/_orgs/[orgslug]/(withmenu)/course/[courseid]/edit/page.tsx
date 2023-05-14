@@ -11,7 +11,7 @@ import { createChapter, deleteChapter, getCourseChaptersMetadata, updateChapters
 import { useRouter } from "next/navigation";
 import NewChapterModal from "@components/Modals/Chapters/NewChapter";
 import NewActivityModal from "@components/Modals/Activities/Create/NewActivity";
-import { createActivity, createFileActivity, createYouTubeVideoActivity } from "@services/courses/activities";
+import { createActivity, createFileActivity, createExternalVideoActivity } from "@services/courses/activities";
 import { getOrganizationContextInfo } from "@services/organizations/orgs";
 import Modal from "@components/UI/Modal/Modal";
 import { denyAccessToUser } from "@services/utils/react/middlewares/views";
@@ -96,9 +96,10 @@ function CourseEdit(params: any) {
   };
 
   // Submit YouTube Video Upload
-  const submitVideoYouTubeActivity = async (data : any, activity: any, chapterId: string) => {
+  const submitExternalVideo = async (external_video_data : any, activity: any, chapterId: string) => {
+    console.log("submitExternalVideo", external_video_data);
     await updateChaptersMetadata(courseid, data);
-    await createYouTubeVideoActivity(data, activity, chapterId);
+    await createExternalVideoActivity(external_video_data , activity, chapterId);
     await getCourseChapters();
     setNewActivityModal(false);
   };
@@ -275,6 +276,7 @@ function CourseEdit(params: any) {
           dialogContent={<NewActivityModal
             closeModal={closeNewActivityModal}
             submitFileActivity={submitFileActivity}
+            submitExternalVideo={submitExternalVideo}
             submitActivity={submitActivity}
             chapterId={newActivityModalData}
           ></NewActivityModal>}
