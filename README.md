@@ -2,7 +2,7 @@
 
 <p align="center">
   <a href="https://learnhouse.app">
-    <img src=".github/images/readme.png" height="400">
+    <img src=".github/images/readme.png" height="300">
   </a>
 </p>
 
