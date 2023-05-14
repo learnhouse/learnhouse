@@ -1,0 +1,80 @@
+
+
+<p align="center">
+  <a href="https://learnhouse.app">
+    <img src=".github/images/readme.png" height="400">
+  </a>
+</p>
+
+LearnHouse is an open source platform that makes it easy for anyone to provide world-class educational content and it offers a variety of content types : Dynamic Pages, Videos, Documents & more.. 
+
+## Progress 
+
+🚧 LearnHouse is still on early development (alpha) and should not be used (yet) on production, as we reach stability we will release a stable version and add more features.
+
+## Features
+
+- 📄✨Dynamic notion-like pages
+- 👨‍🎓 Easy to use
+- 👥 Multi-Organization
+- 📹 Supports Uploadable Videos and external videos like YouTube 
+- 📄 Supports documents like PDF
+- 🍱 Course Collections
+- 🙋 Quizzes 
+- 👟 Course progress 
+- ⚡ (Incoming) Live Collaboration 
+- More to come
+
+## Community 
+
+Please visit our  [Discord](https://discord.gg/CMyZjjYZ6x) community 👋
+
+## Contributing 
+
+Thank you for you interest 💖, here is how you can help :  
+ - Getting started 
+ - Submit a bug report 
+ - Check good first issues 
+ - Spread the word and share the project with your friends 
+
+## Documentation  
+
+ - Features 
+	 - Courses 
+	 - Activities 
+		 - Dynamic Activities 
+		 - Video Activities 
+		 - Documents Activities
+	- Collections 
+	- Trail 
+- Self Hosting 
+	- Overview
+	- Organization Hosting Modes 
+	- Docker / Kubernetes 
+	- Using Vercel
+	- Content Storage 
+		- Using the FileSystem
+		- Using AWS S3 or Cloudflare R2 
+- Technical Docs 
+	- Infrastructure Overview  
+	- Database overview 
+	- API Overview 
+
+## Tech
+
+LearnHouse uses a number of open source projects to work properly:
+
+- **Next.js** (13 with the App Directory) - The React Framework
+- **TailwindCSS** - Styling 
+- **Radix UI** - Accessible UI Components 
+- **Tiptap** - An editor framework and headless wrapper around ProseMirror
+- **FastAPI** - A high performance, async API framework for Python
+- **YJS** - Shared data types for building collaborative software
+- **MongoDB** - NoSQL Database
+- **React** - duh
+
+## A word
+
+Learnhouse is made with 💜, from the UI to the features it is carefully designed to make students and teachers lives easier and make education software more enjoyable. 
+
+Thank you and have fun using/developing/testing Learnhouse !
