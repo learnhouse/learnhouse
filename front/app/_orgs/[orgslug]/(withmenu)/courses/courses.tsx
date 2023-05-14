@@ -16,6 +16,11 @@ interface CourseProps {
     courses: any;
 }
 
+// function to remove "course_" from the course_id
+function removeCoursePrefix(course_id: string) {
+    return course_id.replace("course_", "");
+}
+
 function Courses(props: CourseProps) {
     const orgslug = props.orgslug;
     const courses = props.courses;
@@ -29,10 +34,7 @@ function Courses(props: CourseProps) {
         setNewCourseModal(false);
     }
 
-    // function to remove "course_" from the course_id
-    function removeCoursePrefix(course_id: string) {
-        return course_id.replace("course_", "");
-    }
+    
 
 
     return (
@@ -62,7 +64,7 @@ function Courses(props: CourseProps) {
 
                     {courses.map((course: any) => (
                         <div key={course.course_id}>
-                            <AdminEditsArea course={course} course_id={course.course_id} deleteCourses={deleteCourses} />
+                            <AdminEditsArea course={course} orgslug={orgslug} course_id={course.course_id} deleteCourses={deleteCourses} />
                             <Link href={getUriWithOrg(orgslug, "/course/" + removeCoursePrefix(course.course_id))}>
                                 <div className="inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl relative w-[249px] h-[131px] bg-cover" style={{ backgroundImage: `url(${getBackendUrl()}content/uploads/img/${course.thumbnail})` }}>
 
@@ -131,7 +133,7 @@ const AdminEditsArea = (props: any) => {
                     <button className="rounded-md text-sm px-3 font-bold text-red-800 bg-red-200 w-16 flex justify-center items-center" onClick={() => props.deleteCourses(props.course_id)}>
                         Delete <Trash size={10}></Trash>
                     </button>
-                    <Link href={getUriWithOrg(props.orgslug, "/course/" + props.course_id + "/edit")}>
+                    <Link href={getUriWithOrg(props.orgslug, "/course/" + removeCoursePrefix(props.course_id) + "/edit")}>
                         <button className="rounded-md text-sm px-3 font-bold text-orange-800 bg-orange-200 w-16 flex justify-center items-center">
                             Edit <Edit2 size={10}></Edit2>
                         </button>

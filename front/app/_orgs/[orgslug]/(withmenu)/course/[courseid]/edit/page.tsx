@@ -11,7 +11,7 @@ import { createChapter, deleteChapter, getCourseChaptersMetadata, updateChapters
 import { useRouter } from "next/navigation";
 import NewChapterModal from "@components/Modals/Chapters/NewChapter";
 import NewActivityModal from "@components/Modals/Activities/Create/NewActivity";
-import { createActivity, createFileActivity } from "@services/courses/activities";
+import { createActivity, createFileActivity, createYouTubeVideoActivity } from "@services/courses/activities";
 import { getOrganizationContextInfo } from "@services/organizations/orgs";
 import Modal from "@components/UI/Modal/Modal";
 import { denyAccessToUser } from "@services/utils/react/middlewares/views";
@@ -89,9 +89,16 @@ function CourseEdit(params: any) {
 
   // Submit File Upload
   const submitFileActivity = async (file: any, type: any, activity: any, chapterId: string) => {
-    console.log("submitFileActivity", file);
     await updateChaptersMetadata(courseid, data);
     await createFileActivity(file, type, activity, chapterId);
+    await getCourseChapters();
+    setNewActivityModal(false);
+  };
+
+  // Submit YouTube Video Upload
+  const submitVideoYouTubeActivity = async (data : any, activity: any, chapterId: string) => {
+    await updateChaptersMetadata(courseid, data);
+    await createYouTubeVideoActivity(data, activity, chapterId);
     await getCourseChapters();
     setNewActivityModal(false);
   };

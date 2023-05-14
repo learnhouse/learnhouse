@@ -2,11 +2,14 @@ import FormLayout, { ButtonBlack, Flex, FormField, FormLabel, FormMessage, Input
 import React, { useState } from "react";
 import * as Form from '@radix-ui/react-form';
 import BarLoader from "react-spinners/BarLoader";
+import { Youtube } from "lucide-react";
 
 function VideoModal({ submitFileActivity, chapterId }: any) {
   const [video, setVideo] = React.useState(null) as any;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [name, setName] = React.useState("");
+  const [youtubeUrl, setYoutubeUrl] = React.useState("");
+  const [selectedView, setSelectedView] = React.useState("file") as any;
 
   const handleVideoChange = (event: React.ChangeEvent<any>) => {
     setVideo(event.target.files[0]);
@@ -16,18 +19,29 @@ function VideoModal({ submitFileActivity, chapterId }: any) {
     setName(event.target.value);
   };
 
+  const handleYoutubeUrlChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setYoutubeUrl(event.target.value);
+  };
+
   const handleSubmit = async (e: any) => {
     e.preventDefault();
     setIsSubmitting(true);
-    let status = await submitFileActivity(video, "video", { name, type: "video" }, chapterId);
+    if (selectedView === "file") {
+      let status = await submitFileActivity(video, "video", { name, type: "video" }, chapterId);
     setIsSubmitting(false);
+    }
+    if (selectedView === "youtube") {
+      let status = await submitFileActivity(video, "video", { name, type: "video" }, chapterId);
+    setIsSubmitting(false);
+    }
+    
   };
 
   /* TODO : implement some sort of progress bar for file uploads, it is not possible yet because i'm not using axios.
    and the actual upload isn't happening here anyway, it's in the submitFileActivity function */
 
   return (
-      <FormLayout onSubmit={handleSubmit}>
+    <FormLayout onSubmit={handleSubmit}>
       <FormField name="video-activity-name">
         <Flex css={{ alignItems: 'baseline', justifyContent: 'space-between' }}>
           <FormLabel>Video name</FormLabel>
@@ -37,20 +51,44 @@ function VideoModal({ submitFileActivity, chapterId }: any) {
           <Input onChange={handleNameChange} type="text" required />
         </Form.Control>
       </FormField>
-      <FormField name="video-activity-file">
-        <Flex css={{ alignItems: 'baseline', justifyContent: 'space-between' }}>
-          <FormLabel>Video file</FormLabel>
-          <FormMessage match="valueMissing">Please provide a video for your activity</FormMessage>
-        </Flex>
-        <Form.Control asChild>
-          <input type="file" onChange={handleVideoChange} required />
-        </Form.Control>
-      </FormField>
+      <div className="flex flex-col rounded-md bg-gray-50 outline-dashed outline-gray-200">
+        <div className="">
+          <div className="flex m-4 justify-center space-x-2 mb-0">
+            <div onClick={() => { setSelectedView("file") }} className="rounded-full bg-slate-900 text-zinc-50 py-2 px-4 text-sm drop-shadow-md hover:cursor-pointer hover:bg-slate-700 ">Video upload</div>
+            <div onClick={() => { setSelectedView("youtube") }} className="rounded-full bg-slate-900 text-zinc-50 py-2 px-4 text-sm drop-shadow-md hover:cursor-pointer hover:bg-slate-700">YouTube Video</div>
+          </div>
+          {selectedView === "file" && (<div className="p-4 justify-center m-auto align-middle">
+            <FormField name="video-activity-file">
+              <Flex css={{ alignItems: 'baseline', justifyContent: 'space-between' }}>
+                <FormLabel>Video file</FormLabel>
+                <FormMessage match="valueMissing">Please provide a video for your activity</FormMessage>
+              </Flex>
+              <Form.Control asChild>
+                <input type="file" onChange={handleVideoChange} required />
+              </Form.Control>
+            </FormField>
+          </div>)}
+          {selectedView === "youtube" && (
+
+            <div className="p-4 justify-center m-auto align-middle">
+              <FormField name="video-activity-file">
+                <Flex css={{ alignItems: 'baseline', justifyContent: 'space-between' }}>
+                  <FormLabel className="flex justify-center align-middle"><Youtube className="m-auto pr-1" /><span className="flex">YouTube URL</span></FormLabel>
+                  <FormMessage match="valueMissing">Please provide a video for your activity</FormMessage>
+                </Flex>
+                <Form.Control asChild>
+                  <Input className="bg-white" onChange={handleYoutubeUrlChange} type="text" required />
+                </Form.Control>
+              </FormField>
+            </div>
+          )}
+        </div>
+      </div>
 
       <Flex css={{ marginTop: 25, justifyContent: 'flex-end' }}>
         <Form.Submit asChild>
-          <ButtonBlack  type="submit" css={{ marginTop: 10 }}>
-            {isSubmitting ? <BarLoader cssOverride={{borderRadius:60,}} width={60} color="#ffffff" /> : "Create activity"}
+          <ButtonBlack className="bg-black" type="submit" css={{ marginTop: 10 }}>
+            {isSubmitting ? <BarLoader cssOverride={{ borderRadius: 60, }} width={60} color="#ffffff" /> : "Create activity"}
           </ButtonBlack>
         </Form.Submit>
       </Flex>
