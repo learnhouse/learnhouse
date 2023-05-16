@@ -14,7 +14,9 @@ export const Menu = (props : any ) => {
   
   
   return (
-    <GlobalHeader>
+    <>
+    <div className="h-[60px]"></div>
+    <GlobalHeader className="backdrop-blur-lg bg-white/90 fixed top-0 left-0 right-0">
       <LogoArea>
         <Logo>
           <Image width={25} height={25} src={learnhouseIcon} alt="" />
@@ -28,7 +30,9 @@ export const Menu = (props : any ) => {
         <Search>
           <ToolTip content={<div>
             <p>{process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA}</p>  
-          </div>}><PreAlphaLabel>pre-alpha</PreAlphaLabel></ToolTip>
+          </div>}><PreAlphaLabel
+          className="opacity-90 outline-dashed outline-2 outline-orange-200 bg-orange-100 text-orange-500"
+          >pre-alpha</PreAlphaLabel></ToolTip>
         </Search>
       </SearchArea>
       <MenuArea>
@@ -46,7 +50,7 @@ export const Menu = (props : any ) => {
         </ul>
       </MenuArea>
       <HeaderProfileBox></HeaderProfileBox>
-    </GlobalHeader>
+    </GlobalHeader></>
   );
 };
 
@@ -104,17 +108,7 @@ const Search = styled.div`
   width: auto;
 `;
 
-const SearchInput = styled.input`
-  box-shadow: inset 5px 6px 16px rgba(0, 0, 0, 0.01);
-  background: rgb(244 242 242 / 35%);
-  border-radius: 6px;
-  height: 50%;
-  border: none;
-  margin-top: 20px;
-  margin-bottom: 20px;
-  padding-left: 10px;
-  color: #52525220;
-`;
+
 
 const MenuArea = styled.div`
   display: flex;
