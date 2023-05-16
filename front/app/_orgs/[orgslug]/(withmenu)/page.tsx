@@ -1,4 +1,5 @@
-// export const runtime = 'edge'; 
+export const dynamic = 'force-dynamic';
+
 import { Menu } from "@components/UI/Elements/Menu";
 import { getBackendUrl, getUriWithOrg } from "@services/config/config";
 import { getOrgCourses } from "@services/courses/courses";
@@ -12,6 +13,9 @@ import { getOrgCollections } from "@services/courses/collections";
 
 const OrgHomePage = async (params: any) => {
   const orgslug = params.params.orgslug;
+  // timeout to simulate a slow connection
+  // await new Promise((resolve) => setTimeout(resolve, 12000));
+
   const courses = await getOrgCourses(orgslug);
   const collections = await getOrgCollections();
 
@@ -23,7 +27,8 @@ const OrgHomePage = async (params: any) => {
   return (
     <div>
 
-      
+
+
       <div className="max-w-7xl mx-auto px-4 py-10">
         {/* Collections */}
         <Title title="Collections" type="col" />
@@ -34,7 +39,7 @@ const OrgHomePage = async (params: any) => {
                 <div className="inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl relative w-[249px] h-[180px] bg-cover flex flex-col items-center justify-center bg-indigo-600 font-bold text-zinc-50" >
                   <h1 className="font-bold text-lg py-2 justify-center mb-2">{collection.name}</h1>
                   <div className="flex -space-x-4">
-                    {collection.courses.slice(0,3).map((course: any) => (
+                    {collection.courses.slice(0, 3).map((course: any) => (
                       <Link key={course.course_id} href={getUriWithOrg(orgslug, "/course/" + course.course_id.substring(7))}>
                         <img className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg ring-2 ring-white z-50" key={course.course_id} src={`${getBackendUrl()}content/uploads/img/${course.thumbnail}`} alt={course.name} />
                       </Link>

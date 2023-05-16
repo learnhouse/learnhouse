@@ -1,4 +1,5 @@
 "use client";
+import PageLoading from "@components/Pages/PageLoading";
 import { getAPIUrl, getBackendUrl } from "@services/config/config";
 import { swrFetcher } from "@services/utils/ts/requests";
 import React from "react";
@@ -16,7 +17,7 @@ function Trail(params: any) {
       <br />
       {error && <p>Failed to load</p>}
       {!trail ? (
-        <div>Loading...</div>
+        <PageLoading></PageLoading>
       ) : (
         <div>
           {trail.courses.map((course: any) => (
