@@ -9,6 +9,7 @@ import useSWR, { mutate } from "swr";
 import { swrFetcher } from "@services/utils/ts/requests";
 import { useRouter } from "next/navigation";
 import ToolTip from "@components/UI/Tooltip/Tooltip";
+import PageLoading from "@components/Pages/PageLoading";
 
 const CourseIdPage = (params: any) => {
   const courseid = params.params.courseid;
@@ -41,7 +42,7 @@ const CourseIdPage = (params: any) => {
     <>
       {error && <p>Failed to load</p>}
       {!course ? (
-        <div>Loading...</div>
+        <PageLoading></PageLoading>
       ) : (
         <CoursePageLayout>
           <br></br>
