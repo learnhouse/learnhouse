@@ -1,5 +1,6 @@
-import { LEARNHOUSE_DOMAIN, getDefaultOrg, getSelfHostedOption } from "./services/config/config";
-import { NextRequest, NextResponse } from "next/server";
+import { LEARNHOUSE_DOMAIN, getDefaultOrg, isMultiOrgModeEnabled } from "./services/config/config";
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
 export const config = {
   matcher: [
@@ -16,35 +17,33 @@ export const config = {
 };
 
 export default function middleware(req: NextRequest) {
-  const url = req.nextUrl;
-  const isSelfHosted = getSelfHostedOption();
-  const hostname = req.headers.get("host") || "learnhouse.app";
-  let currentHost = hostname.replace(`.${LEARNHOUSE_DOMAIN}`, "");
+  // Get initial data
+  const hosting_mode = isMultiOrgModeEnabled() ? "multi" : "single";
+  const default_org = getDefaultOrg();
+  const pathname = req.nextUrl.pathname;
+  const fullhost = req.headers ? req.headers.get("host") : "";
 
-  if (!isSelfHosted && currentHost === "localhost:3000" && !url.pathname.startsWith("/organizations")) {
-    // Redirect to error page if not self-hosted and on localhost
-    const errorUrl = "/error";
-    return NextResponse.redirect(errorUrl, { status: 302 });
+  // Organizations & Global settings
+  if (pathname.startsWith("/organizations")) {
+    return NextResponse.rewrite(new URL("/organizations", req.url));
   }
 
-  if (url.pathname.match(/^\/course\/[^/]+\/activity\/[^/]+\/edit$/)) {
-    url.pathname = `/_editor${url.pathname}`;
-    return NextResponse.rewrite(url, { headers: { orgslug: currentHost } });
+  // Dynamic Pages Editor
+  if (pathname.match(/^\/course\/[^/]+\/activity\/[^/]+\/edit$/)) {
+    return NextResponse.rewrite(new URL(`/_editor${pathname}`, req.url));
   }
 
-  if (url.pathname.startsWith("/organizations")) {
-    if (!isSelfHosted) {
-      currentHost = "";
-    }
-    url.pathname = url.pathname.replace("/organizations", `/organizations${currentHost}`).replace("localhost:3000", "");
-
-    return NextResponse.rewrite(url);
+  // Multi Organization Mode
+  if (hosting_mode === "multi") {
+    // Get the organization slug from the URL
+    const orgslug = fullhost ? fullhost.replace(`.${LEARNHOUSE_DOMAIN}`, "") : default_org;
+    return NextResponse.rewrite(new URL(`/_orgs/${orgslug}${pathname}`, req.url));
   }
 
-  if (isSelfHosted) {
-    currentHost = getDefaultOrg() || currentHost;
+  // Single Organization Mode
+  if (hosting_mode === "single") {
+    // Get the default organization slug
+    const orgslug = default_org;
+    return NextResponse.rewrite(new URL(`/_orgs/${orgslug}${pathname}`, req.url));
   }
-
-  url.pathname = `/_orgs/${currentHost}${url.pathname}`;
-  return NextResponse.rewrite(url, { headers: { orgslug: currentHost } });
 }
