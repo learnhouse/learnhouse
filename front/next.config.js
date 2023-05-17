@@ -7,10 +7,6 @@ const { withSentryConfig } = require('@sentry/nextjs');
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: false,
-  experimental: {
-    appDir : true,
-    swcFileReading: false,
-  },
   swcMinify: false,
   compiler: {
     styledComponents: true,
