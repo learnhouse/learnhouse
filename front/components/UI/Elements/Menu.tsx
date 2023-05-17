@@ -69,7 +69,6 @@ const LogoArea = styled.div`
 const PreAlphaLabel = styled.div`
   display: flex;
   place-items: center;
-  background: #FF9800;
   border-radius: 6px;
   height: 50%;
   border: none;
@@ -77,7 +76,6 @@ const PreAlphaLabel = styled.div`
   margin-bottom: 20px;
   padding-left: 10px;
   padding-right: 10px;
-  color: #ffffff;
   font-size: 12px;
   font-weight: bolder;
   text-transform: uppercase;
