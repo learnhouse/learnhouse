@@ -30,20 +30,20 @@ export default function middleware(req: NextRequest) {
 
   // Dynamic Pages Editor
   if (pathname.match(/^\/course\/[^/]+\/activity\/[^/]+\/edit$/)) {
-    return NextResponse.rewrite(new URL(`/_editor${pathname}`, req.url));
+    return NextResponse.rewrite(new URL(`/editor${pathname}`, req.url));
   }
 
   // Multi Organization Mode
   if (hosting_mode === "multi") {
     // Get the organization slug from the URL
     const orgslug = fullhost ? fullhost.replace(`.${LEARNHOUSE_DOMAIN}`, "") : default_org;
-    return NextResponse.rewrite(new URL(`/_orgs/${orgslug}${pathname}`, req.url));
+    return NextResponse.rewrite(new URL(`/orgs/${orgslug}${pathname}`, req.url));
   }
 
   // Single Organization Mode
   if (hosting_mode === "single") {
     // Get the default organization slug
     const orgslug = default_org;
-    return NextResponse.rewrite(new URL(`/_orgs/${orgslug}${pathname}`, req.url));
+    return NextResponse.rewrite(new URL(`/orgs/${orgslug}${pathname}`, req.url));
   }
 }
