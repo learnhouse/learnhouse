@@ -7,19 +7,19 @@ import { RequestBody, errorHandling } from "@services/utils/ts/requests";
 */
 
 export async function createNewOrganization(body: any) {
-  const result = await fetch(`${getAPIUrl()}orgs/`, RequestBody("POST", body));
+  const result = await fetch(`${getAPIUrl()}orgs/`, RequestBody("POST", body, null));
   const res = await errorHandling(result);
   return res;
 }
 
 export async function deleteOrganizationFromBackend(org_id: any) {
-  const result = await fetch(`${getAPIUrl()}orgs/${org_id}`, RequestBody("DELETE", null));
+  const result = await fetch(`${getAPIUrl()}orgs/${org_id}`, RequestBody("DELETE", null, null));
   const res = await errorHandling(result);
   return res;
 }
 
-export async function getOrganizationContextInfo(org_slug: any) {
-  const result = await fetch(`${getAPIUrl()}orgs/slug/${org_slug}`, RequestBody("GET", null));
+export async function getOrganizationContextInfo(org_slug: any, next: any) {
+  const result = await fetch(`${getAPIUrl()}orgs/slug/${org_slug}`, RequestBody("GET", null,next));
   const res = await errorHandling(result);
   return res;
 }

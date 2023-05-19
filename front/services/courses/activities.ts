@@ -6,7 +6,7 @@ export async function createActivity(data: any, chapter_id: any, org_id: any) {
   // remove chapter_id from data
   delete data.chapterId;
 
-  const result = await fetch(`${getAPIUrl()}activities/?coursechapter_id=${chapter_id}&org_id=${org_id}`, RequestBody("POST", data));
+  const result = await fetch(`${getAPIUrl()}activities/?coursechapter_id=${chapter_id}&org_id=${org_id}`, RequestBody("POST", data, null));
   const res = await result.json();
   return res;
 }
@@ -31,7 +31,7 @@ export async function createFileActivity(file: File, type: string, data: any, ch
     // Handle other file types here
   }
 
-  const result: any = await fetch(endpoint, RequestBodyForm("POST", formData));
+  const result: any = await fetch(endpoint, RequestBodyForm("POST", formData, null));
   const res = await result.json();
   return res;
 }
@@ -41,19 +41,19 @@ export async function createExternalVideoActivity(data: any, activity: any, chap
   data.coursechapter_id = chapter_id;
   data.activity_id = activity.id;
   
-  const result = await fetch(`${getAPIUrl()}activities/external_video?coursechapter_id=${chapter_id}`, RequestBody("POST", data));
+  const result = await fetch(`${getAPIUrl()}activities/external_video?coursechapter_id=${chapter_id}`, RequestBody("POST", data, null));
   const res = await result.json();
   return res;
 }
 
-export async function getActivity(activity_id: any) {
-  const result = await fetch(`${getAPIUrl()}activities/${activity_id}`, RequestBody("GET", null));
+export async function getActivity(activity_id: any, next: any) {
+  const result = await fetch(`${getAPIUrl()}activities/${activity_id}`, RequestBody("GET", null,next));
   const res = await result.json();
   return res;
 }
 
 export async function updateActivity(data: any, activity_id: any) {
-  const result = await fetch(`${getAPIUrl()}activities/${activity_id}`, RequestBody("PUT", data));
+  const result = await fetch(`${getAPIUrl()}activities/${activity_id}`, RequestBody("PUT", data, null));
   const res = await result.json();
   return res;
 }
