@@ -35,7 +35,7 @@ function CourseEdit(params: any) {
 
   async function getCourseChapters() {
     try {
-      const courseChapters = await getCourseChaptersMetadata(courseid);
+      const courseChapters = await getCourseChaptersMetadata(courseid, { revalidate: 120 });
       setData(courseChapters);
     } catch (error: any) {
       denyAccessToUser(error, router)
@@ -80,7 +80,7 @@ function CourseEdit(params: any) {
   // Submit new activity
   const submitActivity = async (activity: any) => {
     console.log("submitActivity", activity);
-    let org = await getOrganizationContextInfo(orgslug);
+    let org = await getOrganizationContextInfo(orgslug, { revalidate: 1800 });
     await updateChaptersMetadata(courseid, data);
     await createActivity(activity, activity.chapterId, org.org_id);
     await getCourseChapters();
