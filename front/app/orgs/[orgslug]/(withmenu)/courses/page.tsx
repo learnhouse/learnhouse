@@ -3,11 +3,24 @@ import React from "react";
 import Courses from "./courses";
 import { getOrgCourses } from "@services/courses/courses";
 import { Metadata } from "next";
+import { getOrganizationContextInfo } from "@services/organizations/orgs";
 
-export const metadata: Metadata = {
-  title: 'LearnHouse - Courses',
-  description: 'courses',
+type MetadataProps = {
+  params: { orgslug: string };
+  searchParams: { [key: string]: string | string[] | undefined };
 };
+
+export async function generateMetadata(
+  { params }: MetadataProps,
+): Promise<Metadata> {
+
+  // Get Org context information 
+  const org = await getOrganizationContextInfo(params.orgslug, { revalidate: 1800, tags: ['organizations'] });
+  return {
+    title: org.name + " — Courses",
+    description: org.description,
+  };
+}
 
 const CoursesPage = async (params: any) => {
   const orgslug = params.params.orgslug;
