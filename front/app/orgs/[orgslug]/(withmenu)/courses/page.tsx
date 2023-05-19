@@ -11,11 +11,11 @@ export const metadata: Metadata = {
 
 const CoursesPage = async (params: any) => {
   const orgslug = params.params.orgslug;
-  const courses = await getOrgCourses(orgslug, { revalidate: 360 });
+  const courses = await getOrgCourses(orgslug, { revalidate: 360, tags: ['courses'] });
 
   return (
     <div>
-      <Courses orgslug={orgslug} courses={courses}/>
+      <Courses orgslug={orgslug} courses={courses} />
     </div>
   );
 };
