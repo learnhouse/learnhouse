@@ -1,5 +1,6 @@
 import { AppRouterInstance } from "next/dist/shared/lib/app-router-context";
 import { denyAccessToUser } from "../react/middlewares/views";
+import { LEARNHOUSE_DOMAIN, LEARNHOUSE_HTTP_PROTOCOL } from "@services/config/config";
 
 export const RequestBody = (method: string, data: any, next: any) => {
   let HeadersConfig = new Headers({ "Content-Type": "application/json" });
@@ -68,4 +69,10 @@ export const errorHandling = (res: any) => {
     throw error;
   }
   return res.json();
+};
+
+export const revalidateTags = (tags: string[]) => {
+  tags.forEach((tag) => {
+    fetch(`${LEARNHOUSE_HTTP_PROTOCOL}${LEARNHOUSE_DOMAIN}/api/revalidate?tag=${tag}`);
+  });
 };
