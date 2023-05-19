@@ -22,7 +22,7 @@ export async function generateMetadata(
 ): Promise<Metadata> {
 
   // Get Org context information 
-  const org = await getOrganizationContextInfo(params.orgslug, { revalidate: 1800 });
+  const org = await getOrganizationContextInfo(params.orgslug, { revalidate: 1800, tags: ['organizations'] });
   return {
     title: org.name + " — Home",
     description: org.description,
@@ -31,7 +31,7 @@ export async function generateMetadata(
 
 const OrgHomePage = async (params: any) => {
   const orgslug = params.params.orgslug;
-  const courses = await getOrgCourses(orgslug, { revalidate: 360 });
+  const courses = await getOrgCourses(orgslug, { revalidate: 360 , tags: ['courses'] });
   const collections = await getOrgCollections();
 
   // function to remove "course_" from the course_id
