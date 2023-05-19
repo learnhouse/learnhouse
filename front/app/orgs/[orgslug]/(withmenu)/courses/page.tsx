@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 const CoursesPage = async (params: any) => {
   const orgslug = params.params.orgslug;
-  const courses = await getOrgCourses(orgslug);
+  const courses = await getOrgCourses(orgslug, { revalidate: 360 });
 
   return (
     <div>
