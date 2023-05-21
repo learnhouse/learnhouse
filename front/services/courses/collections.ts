@@ -7,14 +7,14 @@ import { RequestBody, errorHandling } from "@services/utils/ts/requests";
 */
 
 export async function deleteCollection(collection_id: any) {
-  const result: any = await fetch(`${getAPIUrl()}collections/${collection_id}`, RequestBody("DELETE", null));
+  const result: any = await fetch(`${getAPIUrl()}collections/${collection_id}`, RequestBody("DELETE", null, null));
   const res = await errorHandling(result);
   return res;
 }
 
 // Create a new collection
 export async function createCollection(collection: any) {
-  const result: any = await fetch(`${getAPIUrl()}collections/`, RequestBody("POST", collection));
+  const result: any = await fetch(`${getAPIUrl()}collections/`, RequestBody("POST", collection, null));
   const res = await errorHandling(result);
   return res;
 }
@@ -22,7 +22,7 @@ export async function createCollection(collection: any) {
 // Get collections 
 // TODO : add per org filter
 export async function getOrgCollections() {
-  const result: any = await fetch(`${getAPIUrl()}collections/page/1/limit/10`);
+  const result: any = await fetch(`${getAPIUrl()}collections/page/1/limit/10`, { next: { revalidate: 10 } });
   const res = await errorHandling(result);
   return res;
 }

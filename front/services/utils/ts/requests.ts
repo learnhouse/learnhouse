@@ -1,15 +1,16 @@
 import { AppRouterInstance } from "next/dist/shared/lib/app-router-context";
 import { denyAccessToUser } from "../react/middlewares/views";
+import { LEARNHOUSE_DOMAIN, LEARNHOUSE_HTTP_PROTOCOL } from "@services/config/config";
 
-export const RequestBody = (method: string, data: any) => {
+export const RequestBody = (method: string, data: any, next: any) => {
   let HeadersConfig = new Headers({ "Content-Type": "application/json" });
   let options: any = {
     method: method,
     headers: HeadersConfig,
     redirect: "follow",
     credentials: "include",
-    // Next.js 
-    cache: 'no-store'
+    // Next.js
+    next: next,
   };
   if (data) {
     options.body = JSON.stringify(data);
@@ -17,7 +18,7 @@ export const RequestBody = (method: string, data: any) => {
   return options;
 };
 
-export const RequestBodyForm = (method: string, data: any) => {
+export const RequestBodyForm = (method: string, data: any, next: any) => {
   let HeadersConfig = new Headers({});
   let options: any = {
     method: method,
@@ -25,6 +26,8 @@ export const RequestBodyForm = (method: string, data: any) => {
     redirect: "follow",
     credentials: "include",
     body: data,
+    // Next.js
+    next: next,
   };
   return options;
 };
@@ -66,4 +69,10 @@ export const errorHandling = (res: any) => {
     throw error;
   }
   return res.json();
+};
+
+export const revalidateTags = (tags: string[]) => {
+  tags.forEach((tag) => {
+    fetch(`${LEARNHOUSE_HTTP_PROTOCOL}${LEARNHOUSE_DOMAIN}/api/revalidate?tag=${tag}`);
+  });
 };

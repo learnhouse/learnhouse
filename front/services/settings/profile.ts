@@ -7,7 +7,7 @@ import { RequestBody, errorHandling } from "@services/utils/ts/requests";
 */
 
 export async function updateProfile(data: any) {
-  const result: any = await fetch(`${getAPIUrl()}users/user_id/` + data.user_id, RequestBody("PUT", data))
+  const result: any = await fetch(`${getAPIUrl()}users/user_id/` + data.user_id, RequestBody("PUT", data, null))
   const res = await errorHandling(result);
   return res;
 }

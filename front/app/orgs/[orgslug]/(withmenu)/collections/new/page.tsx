@@ -20,7 +20,7 @@ function NewCollection(params: any) {
 
   React.useEffect(() => {
     async function getOrg() {
-      const org = await getOrganizationContextInfo(orgslug);
+      const org = await getOrganizationContextInfo(orgslug, { revalidate: 1800 });
       setOrg(org);
     }
     getOrg();

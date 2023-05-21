@@ -1,5 +1,5 @@
 export const dynamic = 'force-dynamic';
-
+import { Metadata, ResolvingMetadata } from 'next';
 import { Menu } from "@components/UI/Elements/Menu";
 import { getBackendUrl, getUriWithOrg } from "@services/config/config";
 import { getOrgCourses } from "@services/courses/courses";
@@ -10,13 +10,28 @@ import Image from "next/image";
 import { log } from "console";
 import AuthProvider from "@components/Security/AuthProvider";
 import { getOrgCollections } from "@services/courses/collections";
+import { getOrganizationContextInfo } from '@services/organizations/orgs';
+
+type MetadataProps = {
+  params: { orgslug: string };
+  searchParams: { [key: string]: string | string[] | undefined };
+};
+
+export async function generateMetadata(
+  { params }: MetadataProps,
+): Promise<Metadata> {
+
+  // Get Org context information 
+  const org = await getOrganizationContextInfo(params.orgslug, { revalidate: 1800, tags: ['organizations'] });
+  return {
+    title: org.name + " — Home",
+    description: org.description,
+  };
+}
 
 const OrgHomePage = async (params: any) => {
   const orgslug = params.params.orgslug;
-  // timeout to simulate a slow connection
-  // await new Promise((resolve) => setTimeout(resolve, 12000));
-
-  const courses = await getOrgCourses(orgslug);
+  const courses = await getOrgCourses(orgslug, { revalidate: 360 , tags: ['courses'] });
   const collections = await getOrgCollections();
 
   // function to remove "course_" from the course_id
@@ -26,9 +41,6 @@ const OrgHomePage = async (params: any) => {
 
   return (
     <div>
-
-
-
       <div className="max-w-7xl mx-auto px-4 py-10">
         {/* Collections */}
         <Title title="Collections" type="col" />
