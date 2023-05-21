@@ -7,27 +7,27 @@ import { RequestBody, errorHandling } from "@services/utils/ts/requests";
 */
 
 //TODO : depreciate this function
-export async function getCourseChaptersMetadata(course_id: any) {
-  const result = await fetch(`${getAPIUrl()}chapters/meta/course_${course_id}`, RequestBody("GET", null));
+export async function getCourseChaptersMetadata(course_id: any, next: any) {
+  const result = await fetch(`${getAPIUrl()}chapters/meta/course_${course_id}`, RequestBody("GET", null,next));
   const res = await errorHandling(result);
   return res;
 }
 
 export async function updateChaptersMetadata(course_id: any, data: any) {
-  const result: any = await fetch(`${getAPIUrl()}chapters/meta/course_${course_id}`, RequestBody("PUT", data));
+  const result: any = await fetch(`${getAPIUrl()}chapters/meta/course_${course_id}`, RequestBody("PUT", data, null));
   const res = await errorHandling(result);
   return res;
 }
 
 export async function createChapter(data: any, course_id: any) {
-  const result: any = await fetch(`${getAPIUrl()}chapters/?course_id=course_${course_id}`, RequestBody("POST", data));
+  const result: any = await fetch(`${getAPIUrl()}chapters/?course_id=course_${course_id}`, RequestBody("POST", data, null));
   const res = await errorHandling(result);
 
   return res;
 }
 
 export async function deleteChapter(coursechapter_id: any) {
-  const result: any = await fetch(`${getAPIUrl()}chapters/${coursechapter_id}`, RequestBody("DELETE", null));
+  const result: any = await fetch(`${getAPIUrl()}chapters/${coursechapter_id}`, RequestBody("DELETE", null, null));
   const res = await errorHandling(result);
   return res;
 }

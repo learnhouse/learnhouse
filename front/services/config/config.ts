@@ -1,4 +1,4 @@
-const LEARNHOUSE_HTTP_PROTOCOL = process.env.NEXT_PUBLIC_LEARNHOUSE_HTTPS === "true" ? "https://" : "http://";
+export const LEARNHOUSE_HTTP_PROTOCOL = process.env.NEXT_PUBLIC_LEARNHOUSE_HTTPS === "true" ? "https://" : "http://";
 const LEARNHOUSE_API_URL = `${process.env.NEXT_PUBLIC_LEARNHOUSE_API_URL}`;
 const LEARNHOUSE_BACKEND_URL = `${process.env.NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL}`;
 export const LEARNHOUSE_DOMAIN = process.env.NEXT_PUBLIC_LEARNHOUSE_DOMAIN;

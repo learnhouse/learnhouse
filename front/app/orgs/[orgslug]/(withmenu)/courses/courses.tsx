@@ -10,6 +10,7 @@ import Link from 'next/link';
 import React from 'react'
 import Image from 'next/image';
 import { AuthContext } from '@components/Security/AuthProvider';
+import { revalidateTags } from '@services/utils/ts/requests';
 
 interface CourseProps {
     orgslug: string;
@@ -28,13 +29,14 @@ function Courses(props: CourseProps) {
 
     async function deleteCourses(course_id: any) {
         await deleteCourseFromBackend(course_id);
+        revalidateTags(['courses']);
     }
 
     async function closeNewCourseModal() {
         setNewCourseModal(false);
     }
 
-    
+
 
 
     return (
@@ -103,7 +105,7 @@ const AdminEditsArea = (props: any) => {
 
     // this is amazingly terrible code, but gotta release that MVP
     // TODO: fix this
-    
+
     function isAuthorized() {
         const org_id = props.course.org_id;
         const org_roles = auth.userInfo.user_object.orgs;
