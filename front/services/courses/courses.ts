@@ -19,6 +19,11 @@ export async function getOrgCoursesWithAuthHeader(org_id: number, next: any, acc
   return res;
 }
 
+export async function getCourseMetadataWithAuthHeader(course_id: any, next: any, access_token: string) {
+  const result = await fetch(`${getAPIUrl()}courses/meta/course_${course_id}`, RequestBodyWithAuthHeader("GET", null, next, access_token));
+  const res = await errorHandling(result);
+  return res;
+}
 
 export async function getCourse(course_id: string, next: any) {
   const result: any = await fetch(`${getAPIUrl()}courses/${course_id}`, RequestBody("GET", null, next));
