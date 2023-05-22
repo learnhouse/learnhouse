@@ -19,7 +19,7 @@ export const RequestBody = (method: string, data: any, next: any) => {
 };
 
 export const RequestBodyWithAuthHeader = (method: string, data: any, next: any, token: string) => {
-  let HeadersConfig = new Headers({ Authorization: `Bearer ${token}` });
+  let HeadersConfig = new Headers(token ? { "Content-Type": "application/json", Authorization: `Bearer ${token}` } : { "Content-Type": "application/json" });
   let options: any = {
     method: method,
     headers: HeadersConfig,
