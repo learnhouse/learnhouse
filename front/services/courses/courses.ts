@@ -1,5 +1,5 @@
 import { getAPIUrl } from "@services/config/config";
-import { RequestBody, RequestBodyForm, errorHandling } from "@services/utils/ts/requests";
+import { RequestBody, RequestBodyForm, RequestBodyWithAuthHeader, errorHandling } from "@services/utils/ts/requests";
 
 /*
  This file includes only POST, PUT, DELETE requests
@@ -9,9 +9,16 @@ import { RequestBody, RequestBodyForm, errorHandling } from "@services/utils/ts/
 export async function getOrgCourses(org_id: number, next: any) {
   const result: any = await fetch(`${getAPIUrl()}courses/org_slug/${org_id}/page/1/limit/10`, RequestBody("GET", null, next));
   const res = await errorHandling(result);
-  
+
   return res;
 }
+
+export async function getOrgCoursesWithAuthHeader(org_id: number, next: any, access_token: string) {
+  const result: any = await fetch(`${getAPIUrl()}courses/org_slug/${org_id}/page/1/limit/10`, RequestBodyWithAuthHeader("GET", null, next, access_token));
+  const res = await errorHandling(result);
+  return res;
+}
+
 
 export async function getCourse(course_id: string, next: any) {
   const result: any = await fetch(`${getAPIUrl()}courses/${course_id}`, RequestBody("GET", null, next));
