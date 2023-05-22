@@ -1,5 +1,5 @@
 import { getAPIUrl } from "@services/config/config";
-import { RequestBody, errorHandling } from "@services/utils/ts/requests";
+import { RequestBody, RequestBodyWithAuthHeader, errorHandling } from "@services/utils/ts/requests";
 
 /*
  This file includes only POST, PUT, DELETE requests
@@ -8,10 +8,12 @@ import { RequestBody, errorHandling } from "@services/utils/ts/requests";
 
 //TODO : depreciate this function
 export async function getCourseChaptersMetadata(course_id: any, next: any) {
-  const result = await fetch(`${getAPIUrl()}chapters/meta/course_${course_id}`, RequestBody("GET", null,next));
+  const result = await fetch(`${getAPIUrl()}chapters/meta/course_${course_id}`, RequestBody("GET", null, next));
   const res = await errorHandling(result);
   return res;
 }
+
+
 
 export async function updateChaptersMetadata(course_id: any, data: any) {
   const result: any = await fetch(`${getAPIUrl()}chapters/meta/course_${course_id}`, RequestBody("PUT", data, null));
