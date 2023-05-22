@@ -1,3 +1,4 @@
+'use client';
 import React from 'react';
 import * as Tooltip from '@radix-ui/react-tooltip';
 import { styled, keyframes } from '@stitches/react';
@@ -6,14 +7,14 @@ import { PlusIcon } from '@radix-ui/react-icons';
 
 
 type TooltipProps = {
-    sideOffset?: number;
-    content: React.ReactNode;
-    children: React.ReactNode;
-    slateBlack?: boolean;
+  sideOffset?: number;
+  content: React.ReactNode;
+  children: React.ReactNode;
+  slateBlack?: boolean;
 };
 
 const ToolTip = (props: TooltipProps) => {
-  
+
   return (
     <Tooltip.Provider delayDuration={200}>
       <Tooltip.Root>
@@ -58,10 +59,10 @@ const closeAndFade = keyframes({
 
 const TooltipContent = styled(Tooltip.Content, {
 
-  variants : {
+  variants: {
     slateBlack: {
       true: {
-        backgroundColor:" #5a5a5a",
+        backgroundColor: " #5a5a5a",
         color: 'white',
       },
     },
@@ -71,7 +72,7 @@ const TooltipContent = styled(Tooltip.Content, {
   padding: '5px 10px',
   fontSize: 12,
   lineHeight: 1,
-  color:"black",
+  color: "black",
   backgroundColor: 'rgba(217, 217, 217, 0.50)',
   zIndex: 4,
   boxShadow: 'hsl(206 22% 7% / 35%) 0px 10px 38px -10px, hsl(206 22% 7% / 20%) 0px 10px 20px -15px',
@@ -97,7 +98,7 @@ const TooltipContent = styled(Tooltip.Content, {
 
 const TooltipArrow = styled(Tooltip.Arrow, {
   fill: 'white',
-  
+
 });
 
 const IconButton = styled('button', {

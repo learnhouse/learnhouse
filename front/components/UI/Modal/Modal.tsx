@@ -1,3 +1,4 @@
+'use client';
 import React from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { styled, keyframes } from '@stitches/react';
@@ -44,7 +45,7 @@ const Modal = (params: ModalParams) => (
                 {params.addDefCloseButton ? (
                     <Flex css={{ marginTop: 25, justifyContent: 'flex-end' }}>
                         <Dialog.Close asChild>
-                        <ButtonBlack type="submit" css={{ marginTop: 10 }}>Close</ButtonBlack>
+                            <ButtonBlack type="submit" css={{ marginTop: 10 }}>Close</ButtonBlack>
                         </Dialog.Close>
                     </Flex>
                 ) : null}

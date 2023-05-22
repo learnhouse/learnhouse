@@ -1,16 +1,15 @@
 export const dynamic = 'force-dynamic';
 import { Metadata, ResolvingMetadata } from 'next';
-import { Menu } from "@components/UI/Elements/Menu";
 import { getBackendUrl, getUriWithOrg } from "@services/config/config";
-import { getOrgCourses } from "@services/courses/courses";
+import { getCourse, getOrgCourses, getOrgCoursesWithAuthHeader } from "@services/courses/courses";
 import CoursesLogo from "public/svg/courses.svg";
 import CollectionsLogo from "public/svg/collections.svg";
 import Link from "next/link";
 import Image from "next/image";
-import { log } from "console";
-import AuthProvider from "@components/Security/AuthProvider";
-import { getOrgCollections } from "@services/courses/collections";
+import { getOrgCollections, getOrgCollectionsWithAuthHeader } from "@services/courses/collections";
 import { getOrganizationContextInfo } from '@services/organizations/orgs';
+
+import { cookies } from 'next/headers';
 
 type MetadataProps = {
   params: { orgslug: string };
@@ -21,18 +20,23 @@ export async function generateMetadata(
   { params }: MetadataProps,
 ): Promise<Metadata> {
 
+
   // Get Org context information 
   const org = await getOrganizationContextInfo(params.orgslug, { revalidate: 1800, tags: ['organizations'] });
   return {
-    title: org.name + " — Home",
+    title: `Home — ${org.name}`,
     description: org.description,
   };
 }
 
 const OrgHomePage = async (params: any) => {
   const orgslug = params.params.orgslug;
-  const courses = await getOrgCourses(orgslug, { revalidate: 360 , tags: ['courses'] });
-  const collections = await getOrgCollections();
+  const cookieStore = cookies();
+  const access_token_cookie: any = cookieStore.get('access_token_cookie');
+
+  const courses = await getOrgCoursesWithAuthHeader(orgslug, { revalidate: 0, tags: ['courses'] }, access_token_cookie ? access_token_cookie.value : null);
+  const collections = await getOrgCollectionsWithAuthHeader(access_token_cookie ? access_token_cookie.value : null);
+
 
   // function to remove "course_" from the course_id
   function removeCoursePrefix(course_id: string) {

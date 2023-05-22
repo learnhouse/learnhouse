@@ -1,13 +1,14 @@
 from urllib.request import Request
-from fastapi import Depends, APIRouter, HTTPException, status, Request
-from fastapi.security import  OAuth2PasswordRequestForm
+from fastapi import Depends, APIRouter, HTTPException, Response, status, Request
+from fastapi.security import OAuth2PasswordRequestForm
 from src.security.auth import *
 from src.services.users.users import *
 
 
 router = APIRouter()
 
-@router.post('/refresh')
+
+@router.post("/refresh")
 def refresh(Authorize: AuthJWT = Depends()):
     """
     The jwt_refresh_token_required() function insures a valid refresh
@@ -18,11 +19,17 @@ def refresh(Authorize: AuthJWT = Depends()):
     Authorize.jwt_refresh_token_required()
 
     current_user = Authorize.get_jwt_subject()
-    new_access_token = Authorize.create_access_token(subject=current_user) # type: ignore
+    new_access_token = Authorize.create_access_token(subject=current_user)  # type: ignore
     return {"access_token": new_access_token}
 
-@router.post('/login')
-async def login(request: Request,Authorize: AuthJWT = Depends(), form_data: OAuth2PasswordRequestForm = Depends()):
+
+@router.post("/login")
+async def login(
+    request: Request,
+    response: Response,
+    Authorize: AuthJWT = Depends(),
+    form_data: OAuth2PasswordRequestForm = Depends(),
+):
     user = await authenticate_user(request, form_data.username, form_data.password)
     if not user:
         raise HTTPException(
@@ -34,10 +41,17 @@ async def login(request: Request,Authorize: AuthJWT = Depends(), form_data: OAut
     access_token = Authorize.create_access_token(subject=form_data.username)
     refresh_token = Authorize.create_refresh_token(subject=form_data.username)
     Authorize.set_refresh_cookies(refresh_token)
-    Authorize.set_access_cookies(access_token)
-    return {"access_token": access_token , "refresh_token": refresh_token}
+    # set cookies using fastapi 
+    response.set_cookie(key="access_token_cookie", value=access_token , httponly=False)
 
-@router.delete('/logout')
+    result = {
+        "user": user,
+        "tokens": {"access_token": access_token, "refresh_token": refresh_token},
+    }
+    return result
+
+
+@router.delete("/logout")
 def logout(Authorize: AuthJWT = Depends()):
     """
     Because the JWT are stored in an httponly cookie now, we cannot
@@ -47,4 +61,4 @@ def logout(Authorize: AuthJWT = Depends()):
     Authorize.jwt_required()
 
     Authorize.unset_jwt_cookies()
-    return {"msg":"Successfully logout"}
+    return {"msg": "Successfully logout"}
