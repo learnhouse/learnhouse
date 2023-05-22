@@ -24,7 +24,7 @@ export async function generateMetadata(
   // Get Org context information 
   const org = await getOrganizationContextInfo(params.orgslug, { revalidate: 1800, tags: ['organizations'] });
   return {
-    title: org.name + " — Home",
+    title: `Home — ${org.name}`,
     description: org.description,
   };
 }
