@@ -12,8 +12,7 @@ export async function loginAndGetToken(username: string, password: string): Prom
   // Request Config
 
   // get origin 
-  const origin = window.location.origin;
-  const HeadersConfig = new Headers({ "Content-Type": "application/x-www-form-urlencoded" , Origin: origin  });
+  const HeadersConfig = new Headers({ "Content-Type": "application/x-www-form-urlencoded"  });
   const urlencoded = new URLSearchParams({ username: username, password: password });
 
   const requestOptions: any = {
