@@ -22,7 +22,7 @@ export async function generateMetadata(
   const access_token_cookie: any = cookieStore.get('access_token_cookie');
 
   // Get Org context information 
-  const course_meta = await getCourseMetadataWithAuthHeader(params.courseid, { revalidate: 360, tags: ['courses'] }, access_token_cookie.value)
+  const course_meta = await getCourseMetadataWithAuthHeader(params.courseid, { revalidate: 0, tags: ['courses'] }, access_token_cookie ? access_token_cookie.value : null)
 
   return {
     title: `Edit - ${course_meta.course.name} Activity`,
@@ -37,8 +37,8 @@ const EditActivity = async (params: any) => {
   const courseid = params.params.courseid;
   const orgslug = params.params.orgslug;
 
-  const courseInfo = await getCourseMetadataWithAuthHeader(courseid, { revalidate: 0, tags: ['courses'] }, access_token_cookie.value)
-  const activity = await getActivityWithAuthHeader(activityid, { revalidate: 0, tags: ['activities'] }, access_token_cookie.value)
+  const courseInfo = await getCourseMetadataWithAuthHeader(courseid, { revalidate: 0, tags: ['courses'] }, access_token_cookie ? access_token_cookie.value : null)
+  const activity = await getActivityWithAuthHeader(activityid, { revalidate: 0, tags: ['activities'] }, access_token_cookie ? access_token_cookie.value : null)
 
 
   return (

@@ -19,8 +19,8 @@ export async function generateMetadata(
 
     // Get Org context information 
     const org = await getOrganizationContextInfo(params.orgslug, { revalidate: 1800, tags: ['organizations'] });
-    const course_meta = await getCourseMetadataWithAuthHeader(params.courseid, { revalidate: 360, tags: ['courses'] }, access_token_cookie.value)
-    const activity = await getActivityWithAuthHeader(params.activityid, { revalidate: 0, tags: ['activities'] }, access_token_cookie.value)
+    const course_meta = await getCourseMetadataWithAuthHeader(params.courseid, { revalidate: 0, tags: ['courses'] }, access_token_cookie ? access_token_cookie.value : null )
+    const activity = await getActivityWithAuthHeader(params.activityid, { revalidate: 0, tags: ['activities'] }, access_token_cookie ? access_token_cookie.value : null)
 
     return {
         title: activity.name + ` — ${course_meta.course.name} Course`,
@@ -35,8 +35,8 @@ const ActivityPage = async (params: any) => {
     const courseid = params.params.courseid;
     const orgslug = params.params.orgslug;
 
-    const course_meta = await getCourseMetadataWithAuthHeader(courseid, { revalidate: 0, tags: ['courses'] }, access_token_cookie.value)
-    const activity = await getActivityWithAuthHeader(activityid, { revalidate: 0, tags: ['activities'] }, access_token_cookie.value)
+    const course_meta = await getCourseMetadataWithAuthHeader(courseid, { revalidate: 0, tags: ['courses'] }, access_token_cookie ? access_token_cookie.value : null)
+    const activity = await getActivityWithAuthHeader(activityid, { revalidate: 0, tags: ['activities'] }, access_token_cookie ? access_token_cookie.value : null)
     return (
         <>
             <ActivityClient
