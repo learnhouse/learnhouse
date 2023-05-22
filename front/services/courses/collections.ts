@@ -1,5 +1,5 @@
 import { getAPIUrl } from "../config/config";
-import { RequestBody, errorHandling } from "@services/utils/ts/requests";
+import { RequestBody, RequestBodyWithAuthHeader, errorHandling } from "@services/utils/ts/requests";
 
 /*
  This file includes only POST, PUT, DELETE requests
@@ -19,7 +19,7 @@ export async function createCollection(collection: any) {
   return res;
 }
 
-// Get collections 
+// Get collections
 // TODO : add per org filter
 export async function getOrgCollections() {
   const result: any = await fetch(`${getAPIUrl()}collections/page/1/limit/10`, { next: { revalidate: 10 } });
@@ -27,3 +27,8 @@ export async function getOrgCollections() {
   return res;
 }
 
+export async function getOrgCollectionsWithAuthHeader(access_token: string) {
+  const result: any = await fetch(`${getAPIUrl()}collections/page/1/limit/10`, RequestBodyWithAuthHeader("GET", null, { revalidate: 10 }, access_token));
+  const res = await errorHandling(result);
+  return res;
+}

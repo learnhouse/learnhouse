@@ -18,6 +18,20 @@ export const RequestBody = (method: string, data: any, next: any) => {
   return options;
 };
 
+export const RequestBodyWithAuthHeader = (method: string, data: any, next: any, token: string) => {
+  let HeadersConfig = new Headers({ Authorization: `Bearer ${token}` });
+  let options: any = {
+    method: method,
+    headers: HeadersConfig,
+    redirect: "follow",
+    credentials: "include",
+    body: data,
+    // Next.js
+    next: next,
+  };
+  return options;
+};
+
 export const RequestBodyForm = (method: string, data: any, next: any) => {
   let HeadersConfig = new Headers({});
   let options: any = {
