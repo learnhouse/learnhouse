@@ -1,3 +1,4 @@
+'use client';
 import { default as React, } from "react";
 import * as Y from "yjs";
 import { WebrtcProvider } from "y-webrtc";
