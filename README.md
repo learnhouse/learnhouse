@@ -32,7 +32,7 @@ Please visit our [Discord](https://discord.gg/CMyZjjYZ6x) community 👋
 Thank you for you interest 💖, here is how you can help :
 
 - [Getting Started](/CONTRIBUTING.md)
-- Submit a bug report
+- [Submit a bug report](https://github.com/learnhouse/learnhouse/issues/new?assignees=&labels=bug%2Ctriage&projects=&template=bug.yml&title=%5BBug%5D%3A+)
 - [Check good first issues & Help Wanted](https://github.com/learnhouse/learnhouse/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22+label%3A%22help+wanted%22)
 - Spread the word and share the project with your friends
 
