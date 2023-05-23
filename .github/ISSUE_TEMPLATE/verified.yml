@@ -1,0 +1,22 @@
+name: Verified
+description: Someone from the team allowed you to create an issue here
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for your interest in LearnHouse 💖
+
+        If you are not someone from the team or the team didn't ask you directly to create an issue here, please start the conversation in a [Question in GitHub Discussions](https://github.com/learnhouse/learnhouse/discussions/categories/questions) instead.
+  - type: checkboxes
+    id: verified
+    attributes:
+      label: Verified issue
+      description: Confirm that you are allowed to create an issue here.
+      options:
+        - label: Someone from the team allowed me to create an issue here
+          required: true
+  - type: textarea
+    id: content
+    attributes:
+      label: Issue Content
+      description: Add the content of the issue here.
