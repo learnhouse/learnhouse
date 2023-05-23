@@ -24,7 +24,7 @@ export async function generateMetadata(
 
 const CoursesPage = async (params: any) => {
   const orgslug = params.params.orgslug;
-  const courses = await getOrgCourses(orgslug, { revalidate: 360, tags: ['courses'] });
+  const courses = await getOrgCourses(orgslug, { revalidate: 0, tags: ['courses'] });
 
   return (
     <div>

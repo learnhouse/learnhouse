@@ -10,6 +10,7 @@ import { getOrgCollections, getOrgCollectionsWithAuthHeader } from "@services/co
 import { getOrganizationContextInfo } from '@services/organizations/orgs';
 
 import { cookies } from 'next/headers';
+import Error from '@components/UI/Error/Error';
 
 type MetadataProps = {
   params: { orgslug: string };
@@ -45,6 +46,7 @@ const OrgHomePage = async (params: any) => {
 
   return (
     <div>
+      <Error  ></Error>
       <div className="max-w-7xl mx-auto px-4 py-10">
         {/* Collections */}
         <Title title="Collections" type="col" />
