@@ -78,7 +78,7 @@ export const swrFetcher = async (url: string, body: any, router?: AppRouterInsta
 
 export const errorHandling = (res: any) => {
   if (!res.ok) {
-    const error: any = new Error(`Error ${res.status}: ${res.statusText}`, {});
+    const error: any = new Error(`${res.status}: ${res.statusText}`, {});
     error.status = res.status;
     throw error;
   }
