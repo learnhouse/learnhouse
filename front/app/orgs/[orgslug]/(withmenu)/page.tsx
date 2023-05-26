@@ -43,6 +43,10 @@ const OrgHomePage = async (params: any) => {
     return course_id.replace("course_", "");
   }
 
+  function removeCollectionPrefix(collection_id: string) {
+    return collection_id.replace("collection_", "");
+  }
+
   return (
     <div>
       <div className="max-w-7xl mx-auto px-4 py-10">
@@ -51,7 +55,7 @@ const OrgHomePage = async (params: any) => {
         <div className="home_collections flex flex-wrap">
           {collections.map((collection: any) => (
             <div className="pr-8 flex flex-col" key={collection.collection_id}>
-              <Link href={getUriWithOrg(orgslug, "/collection/" + removeCoursePrefix(collection.collection_id))}>
+              <Link href={getUriWithOrg(orgslug, "/collection/" + removeCollectionPrefix(collection.collection_id))}>
                 <div className="inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl relative w-[249px] h-[180px] bg-cover flex flex-col items-center justify-center bg-indigo-600 font-bold text-zinc-50" >
                   <h1 className="font-bold text-lg py-2 justify-center mb-2">{collection.name}</h1>
                   <div className="flex -space-x-4">
