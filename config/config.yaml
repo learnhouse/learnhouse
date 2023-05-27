@@ -9,7 +9,7 @@ hosting_config:
     - http://localhost:3000
     - http://localhost:3001
   cookies_config:
-    domain: ".localhosst"
+    domain: ".localhost"
   allowed_regexp: '\b((?:https?://)[^\s/$.?#].[^\s]*)\b'
 
 database_config:
