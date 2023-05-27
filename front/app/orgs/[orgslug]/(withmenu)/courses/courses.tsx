@@ -63,7 +63,6 @@ function Courses(props: CourseProps) {
 
 
                 <div className="flex space-x-5">
-
                     {courses.map((course: any) => (
                         <div key={course.course_id}>
                             <AdminEditsArea course={course} orgslug={orgslug} course_id={course.course_id} deleteCourses={deleteCourses} />
