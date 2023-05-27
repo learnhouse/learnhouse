@@ -5,7 +5,7 @@ import { Title } from "@components/UI/Elements/Styles/Title";
 import { createCollection } from "@services/courses/collections";
 import useSWR from "swr";
 import { getAPIUrl, getUriWithOrg } from "@services/config/config";
-import { swrFetcher } from "@services/utils/ts/requests";
+import { revalidateTags, swrFetcher } from "@services/utils/ts/requests";
 import { getOrganizationContextInfo } from "@services/organizations/orgs";
 
 function NewCollection(params: any) {
@@ -44,6 +44,7 @@ function NewCollection(params: any) {
       org_id: org.org_id,
     };
     await createCollection(collection);
+    revalidateTags(["collections"]);
     router.push(getUriWithOrg(orgslug, "/collections"));
   };
 
