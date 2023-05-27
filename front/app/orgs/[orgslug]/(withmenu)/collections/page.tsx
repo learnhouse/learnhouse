@@ -1,85 +1,77 @@
-"use client";
+import { getBackendUrl, getUriWithOrg } from "@services/config/config";
+import { deleteCollection, getOrgCollectionsWithAuthHeader } from "@services/courses/collections";
+import { getCourseMetadataWithAuthHeader } from "@services/courses/courses";
+import { getOrganizationContextInfo } from "@services/organizations/orgs";
+import { revalidateTags } from "@services/utils/ts/requests";
+import { Metadata } from "next";
+import { revalidateTag } from "next/cache";
+import { cookies } from "next/headers";
 import Link from "next/link";
-import React from "react";
-import styled from "styled-components";
-import { Title } from "@components/UI/Elements/Styles/Title";
-import { deleteCollection } from "@services/courses/collections";
-import { getAPIUrl, getBackendUrl, getUriWithOrg } from "@services/config/config";
-import { swrFetcher } from "@services/utils/ts/requests";
-import useSWR, { mutate } from "swr";
+import { Title } from "../courses/courses";
+import CollectionAdminEditsArea from "./admin";
 
-function Collections(params: any) {
-  const orgslug = params.params.orgslug;
-  const { data: collections, error: error } = useSWR(`${getAPIUrl()}collections/page/1/limit/10`, swrFetcher);
+type MetadataProps = {
+    params: { orgslug: string, courseid: string };
+    searchParams: { [key: string]: string | string[] | undefined };
+};
 
-  async function deleteCollectionAndFetch(collectionId: number) {
-    await deleteCollection(collectionId);
-    mutate(`${getAPIUrl()}collections/page/1/limit/10`);
-  }
+export async function generateMetadata(
+    { params }: MetadataProps,
+): Promise<Metadata> {
+    const cookieStore = cookies();
+    const access_token_cookie: any = cookieStore.get('access_token_cookie');
+    // Get Org context information 
+    const org = await getOrganizationContextInfo(params.orgslug, { revalidate: 1800, tags: ['organizations'] });
 
-  return (
-    <>
-      <Title>
-        {orgslug} Collections :{" "}
-        <Link href={getUriWithOrg(orgslug, "/collections/new")}>
-          <button>+</button>
-        </Link>{" "}
-      </Title>
-      {error && <p>Failed to load</p>}
-      {!collections ? (
-        <div>Loading...</div>
-      ) : (
-        <div>
-          {collections.map((collection: any) => (
-            <CollectionItem key={collection.collection_id}>
-              <Link href={"/org/" + orgslug + "/collections/" + collection.collection_id}>{collection.name}</Link>
-              <CourseMiniThumbnail>
-                {collection.courses.map((course: any) => (
-                  <Link key={course.course_id} href={"/org/" + orgslug + "/course/" + course.course_id.substring(7)}>
-                    <img key={course.course_id} src={`${getBackendUrl()}content/uploads/img/${course.thumbnail}`} alt={course.name} />
-                  </Link>
-                ))}
-              </CourseMiniThumbnail>
-              <button onClick={() => deleteCollectionAndFetch(collection.collection_id)}>Delete</button>
-            </CollectionItem>
-          ))}
-        </div>
-      )}
-    </>
-  );
+    return {
+        title: `Collections — ${org.name}`,
+        description: `Collections of courses from ${org.name}`,
+    };
 }
 
-const CollectionItem = styled.div`
-  display: flex;
-  flex-direction: row;
-  place-items: center;
-  width: 100%;
-  height: 100%;
-  padding: 10px;
-  border: 1px solid #e5e5e5;
-  border-radius: 5px;
-  box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.03);
-  background: #ffffff;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  &:hover {
-    box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.1);
-  }
-`;
+const removeCollectionPrefix = (collectionid: string) => {
+    return collectionid.replace("collection_", "")
+}
 
-const CourseMiniThumbnail = styled.div`
-  display: flex;
-  flex-direction: row;
-  img {
-    width: 20px;
-    height: 20px;
-    border-radius: 5px;
-    margin: 5px;
-    transition: all 0.2s ease-in-out;
-  }
 
-  &:hover {
-    opacity: 0.8;
-  }
-`;
-export default Collections;
+const CollectionsPage = async (params: any) => {
+    const cookieStore = cookies();
+    const access_token_cookie: any = cookieStore.get('access_token_cookie');
+    const orgslug = params.params.orgslug;
+    const collections = await getOrgCollectionsWithAuthHeader(access_token_cookie ? access_token_cookie.value : null);
+
+ 
+
+
+    return (
+        <div className="max-w-7xl mx-auto px-4 py-10" >
+            <div className="flex justify-between" >
+                <Title title="Collections" type="col" />
+                <Link className="flex justify-center" href={getUriWithOrg(orgslug, "/collections/new")}>
+                    <button className="rounded-md bg-black antialiased ring-offset-purple-800 p-2 px-5 my-auto font text-sm font-bold text-white drop-shadow-lg">Add Collection + </button>
+                </Link>
+            </div>
+            <div className="home_collections flex flex-wrap">
+                {collections.map((collection: any) => (
+                    <div className="pr-8 flex flex-col" key={collection.collection_id}>
+                        <CollectionAdminEditsArea collection_id={collection.collection_id} collection={collection} />
+                        <Link href={getUriWithOrg(orgslug, "/collection/" + removeCollectionPrefix(collection.collection_id))}>
+                            <div className="inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl relative w-[249px] h-[180px] bg-cover flex flex-col items-center justify-center bg-indigo-600 font-bold text-zinc-50" >
+                                <h1 className="font-bold text-lg py-2 justify-center mb-2">{collection.name}</h1>
+                                <div className="flex -space-x-4">
+                                    {collection.courses.slice(0, 3).map((course: any) => (
+                                        <Link key={course.course_id} href={getUriWithOrg(orgslug, "/course/" + course.course_id.substring(7))}>
+                                            <img className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg ring-2 ring-white z-50" key={course.course_id} src={`${getBackendUrl()}content/uploads/img/${course.thumbnail}`} alt={course.name} />
+                                        </Link>
+                                    ))}
+                                </div>
+                            </div>
+                        </Link>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+export default CollectionsPage

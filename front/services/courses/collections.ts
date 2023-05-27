@@ -42,7 +42,7 @@ export async function getOrgCollections() {
 }
 
 export async function getOrgCollectionsWithAuthHeader(access_token: string) {
-  const result: any = await fetch(`${getAPIUrl()}collections/page/1/limit/10`, RequestBodyWithAuthHeader("GET", null, { revalidate: 10 }, access_token));
+  const result: any = await fetch(`${getAPIUrl()}collections/page/1/limit/10`, RequestBodyWithAuthHeader("GET", null, { revalidate: 3 }, access_token));
   const res = await errorHandling(result);
   return res;
 }
