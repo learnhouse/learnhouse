@@ -38,6 +38,18 @@ async def get_collection(request: Request,collection_id: str, current_user: Publ
             status_code=status.HTTP_409_CONFLICT, detail="Collection does not exist")
 
     collection = Collection(**collection)
+
+    # add courses to collection
+    courses = request.app.db["courses"]
+    courseids = [course for course in collection.courses]
+
+    collection.courses = []
+    collection.courses = courses.find(
+        {"course_id": {"$in": courseids}}, {'_id': 0})
+    
+    collection.courses = [course for course in await collection.courses.to_list(length=100)]
+
+
     return collection
 
 

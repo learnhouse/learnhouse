@@ -18,7 +18,6 @@ const CourseClient = (props: any) => {
   async function startCourseUI() {
     // Create activity
     await startCourse("course_" + courseid, orgslug);
-
     revalidateTags(['courses']);
   }
 
@@ -26,8 +25,6 @@ const CourseClient = (props: any) => {
 
     // Close activity
     let activity = await removeCourse("course_" + courseid, orgslug);
-    console.log(activity);
-
     // Mutate course
     revalidateTags(['courses']);
   }

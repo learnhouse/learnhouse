@@ -15,6 +15,7 @@ export async function generateMetadata(
 ): Promise<Metadata> {
     const cookieStore = cookies();
     const access_token_cookie: any = cookieStore.get('access_token_cookie');
+   
 
     // Get Org context information 
     const org = await getOrganizationContextInfo(params.orgslug, { revalidate: 1800, tags: ['organizations'] });
