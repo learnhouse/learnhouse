@@ -1,3 +1,5 @@
+from webbrowser import get
+from config.config import get_learnhouse_config
 from pydantic import BaseModel
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -19,7 +21,7 @@ class Settings(BaseModel):
     authjwt_access_token_expires = False  # (pre-alpha only) # TODO: set to 1 hour
     authjwt_cookie_samesite = "lax"
     authjwt_cookie_secure = True
-    authjwt_cookie_domain = ".localhost"
+    authjwt_cookie_domain = get_learnhouse_config().hosting_config.cookie_config.domain
 
 
 @AuthJWT.load_config  # type: ignore
