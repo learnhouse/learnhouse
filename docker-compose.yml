@@ -6,6 +6,8 @@ services:
       - "1338:80"
     volumes:
       - .:/usr/learnhouse
+    environment:
+      - LEARNHOUSE_COOKIE_DOMAIN=.localhost
   mongo:
     image: mongo:5.0
     restart: always
