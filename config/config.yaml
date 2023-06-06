@@ -4,20 +4,13 @@ contact_email: hi@learnhouse.app
 
 hosting_config:
   domain: learnhouse.app
-  port: 443
   ssl: true
-  use_default_org: false
-  default_org: learnhouse
   allowed_origins:
     - http://localhost:3000
     - http://localhost:3001
+  cookies_config:
+    domain: ".localhost"
   allowed_regexp: '\b((?:https?://)[^\s/$.?#].[^\s]*)\b'
-  self_hosted: false
 
 database_config:
-  host: db.mongo
-  port: 5432
-  user: myuser
-  password: mypassword
-  database_name: mydatabase
   mongodb_connection_string: mongodb://learnhouse:learnhouse@mongo:27017/
