@@ -1,5 +1,5 @@
 import "@styles/globals.css";
-import { Menu } from "@components/UI/Elements/Menu";
+import { Menu } from "@components/UI/Elements/Menu/Menu";
 import AuthProvider from "@components/Security/AuthProvider";
 
 export default function RootLayout({ children, params }: { children: React.ReactNode , params:any}) {
