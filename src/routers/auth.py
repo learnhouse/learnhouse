@@ -43,6 +43,7 @@ async def login(
     Authorize.set_refresh_cookies(refresh_token)
     # set cookies using fastapi 
     response.set_cookie(key="access_token_cookie", value=access_token , httponly=False)
+    user = PublicUser(**user.dict())
 
     result = {
         "user": user,
