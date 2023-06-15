@@ -4,19 +4,19 @@ import learnhouseLogo from "public/learnhouse_logo.png";
 import Link from "next/link";
 import Image from "next/image";
 import { getUriWithOrg } from "@services/config/config";
-import { getOrganizationContextInfo } from "@services/organizations/orgs";
+import { getOrganizationContextInfo, getOrganizationContextInfoNoAsync } from "@services/organizations/orgs";
 import ClientComponentSkeleton from "@components/UI/Utils/ClientComp";
 import { HeaderProfileBox } from "@components/Security/HeaderProfileBox";
 
-export const Menu = async (props: any) => {
+export const Menu =  (props: any) => {
     const orgslug = props.orgslug;
-    const org = await getOrganizationContextInfo(orgslug, { revalidate: 1800, tags: ['organizations'] });
+    const org =  getOrganizationContextInfoNoAsync(orgslug, { revalidate: 1800, tags: ['organizations'] });
     console.log(org);
 
     return (
         <>
             <div className="h-[60px]"></div>
-            <div className="backdrop-blur-lg bg-white/90 fixed flex top-0 left-0 right-0 h-[60px] items-center pl-10 pr-10 space-x-4 shadow-[0px_4px_16px_rgba(0,0,0,0.02)] z-50">
+            <div className="backdrop-blur-lg bg-white/90 fixed flex top-0 left-0 right-0 h-[60px] items-center pl-5 pr-5 space-x-5 shadow-[0px_4px_16px_rgba(0,0,0,0.02)] z-50">
                 <div className="logo flex ">
                     <Link href={getUriWithOrg(orgslug, "/")}>
                         <div className="flex w-auto h-9 rounded-md items-center m-auto justify-center" >
@@ -46,7 +46,7 @@ const LinkItem = (props: any, orgslug: any) => {
     const link = props.link;
     return (
         <Link href={getUriWithOrg(orgslug, link)}>
-            <li className="flex space-x-2 items-center text-[#909192]">
+            <li className="flex space-x-2 items-center text-[#909192] font-medium">
                 {props.type == 'courses' &&
                     <>
                         <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
