@@ -1,5 +1,7 @@
 import json
+from typing import Optional
 from uuid import uuid4
+from click import Option
 from pydantic import BaseModel
 from src.services.users.schemas.users import UserOrganization
 from src.services.users.users import PublicUser
@@ -14,7 +16,7 @@ class Organization(BaseModel):
     description: str
     email: str
     slug: str
-    default: bool
+    default: Optional[bool] 
 
 
 class OrganizationInDB(Organization):
@@ -106,11 +108,8 @@ async def update_org(request: Request, org_object: Organization, org_id: str, cu
 
     org = await orgs.find_one({"org_id": org_id})
 
-    if org:
-        org["owners"]
-        org["admins"]
+    if not org:
 
-    else:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Organization does not exist")
 
@@ -185,12 +184,14 @@ async def verify_org_rights(request: Request, org_id: str,  current_user: Public
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Organization does not exist")
 
-    isOwner = current_user.user_id in org["owners"]
+    # check if is owner of org
+    # todo check if is admin of org
+
     hasRoleRights = await verify_user_rights_with_roles(request, action, current_user.user_id, org_id, org_id)
 
-    if not hasRoleRights and not isOwner:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="You do not have rights to this organization")
+    # if not hasRoleRights and not isOwner:
+    #     raise HTTPException(
+    #         status_code=status.HTTP_403_FORBIDDEN, detail="You do not have rights to this organization")
 
     return True
 
