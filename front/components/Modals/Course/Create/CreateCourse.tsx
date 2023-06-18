@@ -46,6 +46,9 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
 
         if (status.org_id == orgId) {
             closeModal();
+            // reload the page
+            // terrible, nextjs right now doesn't mutate the page when the data changes
+            window.location.reload();
         } else {
             alert("Error creating course, please see console logs");
             console.log(status);

@@ -1,23 +1,51 @@
 "use client";
-import React from 'react'
+import React, { useState } from 'react'
 import { Field, Form, Formik } from 'formik';
-import { updateOrganization } from '@services/settings/org';
+import { updateOrganization, uploadOrganizationLogo } from '@services/settings/org';
+import { UploadCloud } from 'lucide-react';
+import { revalidateTags } from '@services/utils/ts/requests';
 
 
 interface OrganizationValues {
     name: string;
     description: string;
     slug: string;
+    logo: string;
     email: string;
 }
 
 
 function OrganizationClient(props: any) {
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+    // ...
+
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (event.target.files && event.target.files.length > 0) {
+            const file = event.target.files[0];
+            setSelectedFile(file);
+        }
+    };
+
+    const uploadLogo = async () => {
+        if (selectedFile) {
+            let org_id = org.org_id;
+            await uploadOrganizationLogo(org_id, selectedFile);
+            setSelectedFile(null); // Reset the selected file
+            revalidateTags(['organizations']);
+            // reload the page
+            // terrible hack, it will fixed later
+            window.location.reload();
+        }
+    };
+
+
     const org = props.org;
     let orgValues: OrganizationValues = {
         name: org.name,
         description: org.description,
         slug: org.slug,
+        logo: org.logo,
         email: org.email
     }
 
@@ -25,6 +53,7 @@ function OrganizationClient(props: any) {
         let org_id = org.org_id;
         await updateOrganization(org_id, values);
     }
+
 
     return (
         <div>
@@ -61,6 +90,28 @@ function OrganizationClient(props: any) {
                             type="text"
                             name="description"
                         />
+
+                        <label className="block mb-2 font-bold" htmlFor="slug">
+                            Logo
+                        </label>
+
+                        <div className="flex items-center justify-center w-full ">
+                            <input
+                                className="w-full px-4 py-2 mr-1 border rounded-lg bg-gray-200 cursor-not-allowed"
+                                type="file"
+                                name="logo"
+                                onChange={handleFileChange}
+                            />
+                            <button
+                                type="button"
+                                onClick={uploadLogo}
+                                disabled={isSubmitting || selectedFile === null}
+                                className="px-6 py-3 text-white bg-gray-500 rounded-lg  hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-black"
+                            >
+                                <UploadCloud size={24} />
+                            </button>
+                        </div>
+
 
                         <label className="block mb-2 font-bold" htmlFor="slug">
                             Slug
