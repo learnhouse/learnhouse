@@ -4,7 +4,7 @@ from uuid import uuid4
 from fastapi import HTTPException, Request, status
 from pydantic import BaseModel
 from src.services.courses.chapters import get_coursechapters_meta
-from src.services.orgs import PublicOrganization
+from src.services.orgs.orgs import PublicOrganization
 
 from src.services.users.users import PublicUser
 

@@ -3,7 +3,7 @@ from passlib.context import CryptContext
 from passlib.hash import pbkdf2_sha256
 from src.services.roles.schemas.roles import RoleInDB
 
-from src.services.users.schemas.users import UserInDB
+from src.services.users.schemas.users import UserInDB, UserRolesInOrganization
 
 ### 🔒 JWT ##############################################################
 
@@ -108,7 +108,7 @@ async def check_element_type(element_id):
             status_code=status.HTTP_409_CONFLICT, detail="Issue verifying element nature")
 
 
-async def check_user_role_org_with_element_org(request: Request, element_id: str, roles_list: list[str]):
+async def check_user_role_org_with_element_org(request: Request, element_id: str, roles_list: list[UserRolesInOrganization]):
 
     element_type = await check_element_type(element_id)
     element = request.app.db[element_type]

@@ -46,6 +46,7 @@ class CourseChapterInDB(CourseChapter):
     creationDate: str
     updateDate: str
 
+
 #### Classes ####################################################
 
 # TODO : Add courses photo & cover upload and delete
@@ -54,6 +55,7 @@ class CourseChapterInDB(CourseChapter):
 ####################################################
 # CRUD
 ####################################################
+
 
 async def get_course(request: Request, course_id: str, current_user: PublicUser):
     courses = request.app.db["courses"]
@@ -65,7 +67,8 @@ async def get_course(request: Request, course_id: str, current_user: PublicUser)
 
     if not course:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Course does not exist")
+            status_code=status.HTTP_409_CONFLICT, detail="Course does not exist"
+        )
 
     course = Course(**course)
     return course
@@ -83,10 +86,12 @@ async def get_course_meta(request: Request, course_id: str, current_user: Public
 
     if not course:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Course does not exist")
+            status_code=status.HTTP_409_CONFLICT, detail="Course does not exist"
+        )
 
-    coursechapters = await courses.find_one({"course_id": course_id}, {
-        "chapters_content": 1, "_id": 0})
+    coursechapters = await courses.find_one(
+        {"course_id": course_id}, {"chapters_content": 1, "_id": 0}
+    )
 
     # activities
     coursechapter_activityIds_global = []
@@ -103,42 +108,66 @@ async def get_course_meta(request: Request, course_id: str, current_user: Public
                 coursechapter_activityIds_global.append(activity)
 
             chapters[coursechapter.coursechapter_id] = {
-                "id": coursechapter.coursechapter_id, "name": coursechapter.name,  "activityIds": coursechapter_activityIds
+                "id": coursechapter.coursechapter_id,
+                "name": coursechapter.name,
+                "activityIds": coursechapter_activityIds,
             }
 
     # activities
     activities_list = {}
-    for activity in await activities.find({"activity_id": {"$in": coursechapter_activityIds_global}}).to_list(length=100):
+    for activity in await activities.find(
+        {"activity_id": {"$in": coursechapter_activityIds_global}}
+    ).to_list(length=100):
         activity = ActivityInDB(**activity)
         activities_list[activity.activity_id] = {
-            "id": activity.activity_id, "name": activity.name, "type": activity.type, "content": activity.content
+            "id": activity.activity_id,
+            "name": activity.name,
+            "type": activity.type,
+            "content": activity.content,
         }
 
     chapters_list_with_activities = []
     for chapter in chapters:
         chapters_list_with_activities.append(
-            {"id": chapters[chapter]["id"], "name": chapters[chapter]["name"], "activities": [activities_list[activity] for activity in chapters[chapter]["activityIds"]]})
+            {
+                "id": chapters[chapter]["id"],
+                "name": chapters[chapter]["name"],
+                "activities": [
+                    activities_list[activity]
+                    for activity in chapters[chapter]["activityIds"]
+                ],
+            }
+        )
     course = CourseInDB(**course)
 
     # Get activity by user
     trail = await trails.find_one(
-        {"courses.course_id": course_id, "user_id": current_user.user_id})
+        {"courses.course_id": course_id, "user_id": current_user.user_id}
+    )
     print(trail)
     if trail:
         # get only the course where course_id == course_id
         trail_course = next(
-            (course for course in trail["courses"] if course["course_id"] == course_id), None)
+            (course for course in trail["courses"] if course["course_id"] == course_id),
+            None,
+        )
     else:
         trail_course = ""
 
     return {
         "course": course,
         "chapters": chapters_list_with_activities,
-        "trail": trail_course
+        "trail": trail_course,
     }
 
 
-async def create_course(request: Request, course_object: Course, org_id: str, current_user: PublicUser, thumbnail_file: UploadFile | None = None):
+async def create_course(
+    request: Request,
+    course_object: Course,
+    org_id: str,
+    current_user: PublicUser,
+    thumbnail_file: UploadFile | None = None,
+):
     courses = request.app.db["courses"]
 
     # generate course_id with uuid4
@@ -147,27 +176,42 @@ async def create_course(request: Request, course_object: Course, org_id: str, cu
     # TODO(fix) : the implementation here is clearly not the best one (this entire function)
     course_object.org_id = org_id
     course_object.chapters_content = []
-    await verify_user_rights_with_roles(request, "create", current_user.user_id, course_id, org_id)
+    await verify_user_rights_with_roles(
+        request, "create", current_user.user_id, course_id, org_id
+    )
 
-    if thumbnail_file:
-        name_in_disk = f"{course_id}_thumbnail_{uuid4()}.{thumbnail_file.filename.split('.')[-1]}"
+    if thumbnail_file and thumbnail_file.filename:
+        name_in_disk = (
+            f"{course_id}_thumbnail_{uuid4()}.{thumbnail_file.filename.split('.')[-1]}"
+        )
         await upload_thumbnail(thumbnail_file, name_in_disk)
         course_object.thumbnail = name_in_disk
 
-    course = CourseInDB(course_id=course_id, authors=[
-        current_user.user_id],  creationDate=str(datetime.now()), updateDate=str(datetime.now()), **course_object.dict())
+    course = CourseInDB(
+        course_id=course_id,
+        authors=[current_user.user_id],
+        creationDate=str(datetime.now()),
+        updateDate=str(datetime.now()),
+        **course_object.dict(),
+    )
 
     course_in_db = await courses.insert_one(course.dict())
 
     if not course_in_db:
         raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Unavailable database")
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Unavailable database",
+        )
 
     return course.dict()
 
 
-async def update_course_thumbnail(request: Request, course_id: str, current_user: PublicUser, thumbnail_file: UploadFile | None = None):
-
+async def update_course_thumbnail(
+    request: Request,
+    course_id: str,
+    current_user: PublicUser,
+    thumbnail_file: UploadFile | None = None,
+):
     # verify course rights
     await verify_rights(request, course_id, current_user, "update")
 
@@ -178,26 +222,34 @@ async def update_course_thumbnail(request: Request, course_id: str, current_user
     if course:
         creationDate = course["creationDate"]
         authors = course["authors"]
-        if thumbnail_file:
+        if thumbnail_file and thumbnail_file.filename:
             name_in_disk = f"{course_id}_thumbnail_{uuid4()}.{thumbnail_file.filename.split('.')[-1]}"
             course = Course(**course).copy(update={"thumbnail": name_in_disk})
             await upload_thumbnail(thumbnail_file, name_in_disk)
 
-            updated_course = CourseInDB(course_id=course_id, creationDate=creationDate,
-                                        authors=authors, updateDate=str(datetime.now()), **course.dict())
+            updated_course = CourseInDB(
+                course_id=course_id,
+                creationDate=creationDate,
+                authors=authors,
+                updateDate=str(datetime.now()),
+                **course.dict(),
+            )
 
-            await courses.update_one({"course_id": course_id}, {
-                "$set": updated_course.dict()})
+            await courses.update_one(
+                {"course_id": course_id}, {"$set": updated_course.dict()}
+            )
 
             return CourseInDB(**updated_course.dict())
 
     else:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Course does not exist")
+            status_code=status.HTTP_409_CONFLICT, detail="Course does not exist"
+        )
 
 
-async def update_course(request: Request, course_object: Course, course_id: str, current_user: PublicUser):
-
+async def update_course(
+    request: Request, course_object: Course, course_id: str, current_user: PublicUser
+):
     # verify course rights
     await verify_rights(request, course_id, current_user, "update")
 
@@ -213,20 +265,26 @@ async def update_course(request: Request, course_object: Course, course_id: str,
         datetime_object = datetime.now()
 
         updated_course = CourseInDB(
-            course_id=course_id, creationDate=creationDate, authors=authors, updateDate=str(datetime_object), **course_object.dict())
+            course_id=course_id,
+            creationDate=creationDate,
+            authors=authors,
+            updateDate=str(datetime_object),
+            **course_object.dict(),
+        )
 
-        await courses.update_one({"course_id": course_id}, {
-            "$set": updated_course.dict()})
+        await courses.update_one(
+            {"course_id": course_id}, {"$set": updated_course.dict()}
+        )
 
         return CourseInDB(**updated_course.dict())
 
     else:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Course does not exist")
+            status_code=status.HTTP_409_CONFLICT, detail="Course does not exist"
+        )
 
 
 async def delete_course(request: Request, course_id: str, current_user: PublicUser):
-
     # verify course rights
     await verify_rights(request, course_id, current_user, "delete")
 
@@ -236,7 +294,8 @@ async def delete_course(request: Request, course_id: str, current_user: PublicUs
 
     if not course:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Course does not exist")
+            status_code=status.HTTP_409_CONFLICT, detail="Course does not exist"
+        )
 
     isDeleted = await courses.delete_one({"course_id": course_id})
 
@@ -244,24 +303,38 @@ async def delete_course(request: Request, course_id: str, current_user: PublicUs
         return {"detail": "Course deleted"}
     else:
         raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Unavailable database")
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Unavailable database",
+        )
+
 
 ####################################################
 # Misc
 ####################################################
 
 
-async def get_courses(request: Request, page: int = 1, limit: int = 10, org_id: str | None = None):
+async def get_courses(
+    request: Request, page: int = 1, limit: int = 10, org_id: str | None = None
+):
     courses = request.app.db["courses"]
     # TODO : Get only courses that user is admin/has roles of
     # get all courses from database
-    all_courses = courses.find({"org_id": org_id}).sort(
-        "name", 1).skip(10 * (page - 1)).limit(limit)
+    all_courses = (
+        courses.find({"org_id": org_id})
+        .sort("name", 1)
+        .skip(10 * (page - 1))
+        .limit(limit)
+    )
 
-    return [json.loads(json.dumps(course, default=str)) for course in await all_courses.to_list(length=100)]
+    return [
+        json.loads(json.dumps(course, default=str))
+        for course in await all_courses.to_list(length=100)
+    ]
 
 
-async def get_courses_orgslug(request: Request, page: int = 1, limit: int = 10, org_slug: str | None = None):
+async def get_courses_orgslug(
+    request: Request, page: int = 1, limit: int = 10, org_slug: str | None = None
+):
     courses = request.app.db["courses"]
     orgs = request.app.db["organizations"]
     # TODO : Get only courses that user is admin/has roles of
@@ -271,37 +344,61 @@ async def get_courses_orgslug(request: Request, page: int = 1, limit: int = 10, 
 
     if not org:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Organization does not exist")
+            status_code=status.HTTP_409_CONFLICT, detail="Organization does not exist"
+        )
 
     # get all courses from database
-    all_courses = courses.find({"org_id": org['org_id']}).sort(
-        "name", 1).skip(10 * (page - 1)).limit(limit)
+    all_courses = (
+        courses.find({"org_id": org["org_id"]})
+        .sort("name", 1)
+        .skip(10 * (page - 1))
+        .limit(limit)
+    )
 
-    return [json.loads(json.dumps(course, default=str)) for course in await all_courses.to_list(length=100)]
+    return [
+        json.loads(json.dumps(course, default=str))
+        for course in await all_courses.to_list(length=100)
+    ]
 
 
 #### Security ####################################################
 
 
-async def verify_rights(request: Request, course_id: str, current_user: PublicUser | AnonymousUser, action: str):
+async def verify_rights(
+    request: Request,
+    course_id: str,
+    current_user: PublicUser | AnonymousUser,
+    action: str,
+):
     courses = request.app.db["courses"]
 
     course = await courses.find_one({"course_id": course_id})
 
-    if current_user.user_id == "anonymous" and course["public"] is True and action == "read":
+    if (
+        current_user.user_id == "anonymous"
+        and course["public"] is True
+        and action == "read"
+    ):
         return True
 
     if not course:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Course/CourseChapter does not exist")
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Course/CourseChapter does not exist",
+        )
 
-    hasRoleRights = await verify_user_rights_with_roles(request, action, current_user.user_id, course_id, course["org_id"])
+    hasRoleRights = await verify_user_rights_with_roles(
+        request, action, current_user.user_id, course_id, course["org_id"]
+    )
     isAuthor = current_user.user_id in course["authors"]
 
     if not hasRoleRights and not isAuthor:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Roles/Ownership : Insufficient rights to perform this action")
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Roles/Ownership : Insufficient rights to perform this action",
+        )
 
     return True
+
 
 #### Security ####################################################

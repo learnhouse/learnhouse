@@ -1,7 +1,7 @@
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, UploadFile
 from src.security.auth import get_current_user
-from src.services.orgs import Organization, create_org, delete_org, get_organization, get_organization_by_slug, get_orgs_by_user, update_org
+from src.services.orgs.orgs import Organization, create_org, delete_org, get_organization, get_organization_by_slug, get_orgs_by_user, update_org, update_org_logo
 from src.services.users.users import PublicUser, User
 
 
@@ -31,6 +31,12 @@ async def api_get_org_by_slug(request: Request, org_slug: str, current_user: Use
     """
     return await get_organization_by_slug(request, org_slug)
 
+@router.put("/{org_id}/logo")
+async def api_update_org_logo(request: Request, org_id: str, logo_file:UploadFile, current_user: PublicUser = Depends(get_current_user)):
+    """
+    Get single Org by Slug
+    """
+    return await update_org_logo(request=request,logo_file=logo_file, org_id=org_id, current_user=current_user)
 
 @router.get("/user/page/{page}/limit/{limit}")
 async def api_user_orgs(request: Request, page: int, limit: int, current_user: PublicUser = Depends(get_current_user)):
