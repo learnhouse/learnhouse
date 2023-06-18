@@ -9,7 +9,7 @@ from src.services.courses.chapters import CourseChapter, create_coursechapter
 from src.services.courses.activities.activities import Activity, create_activity
 from src.services.users.users import PublicUser, UserInDB
 
-from src.services.orgs import Organization, create_org
+from src.services.orgs.orgs import Organization, create_org
 from src.services.roles.schemas.roles import Permission, Elements, RoleInDB
 from src.services.courses.courses import CourseInDB
 from faker import Faker
@@ -133,6 +133,7 @@ async def create_initial_data(request: Request):
             description=fake.unique.text(),
             email=fake.unique.email(),
             slug=slug,
+            logo="",
             default=False
         )
         organizations.append(org)
