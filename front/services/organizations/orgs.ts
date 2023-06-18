@@ -19,7 +19,12 @@ export async function deleteOrganizationFromBackend(org_id: any) {
 }
 
 export async function getOrganizationContextInfo(org_slug: any, next: any) {
-  const result = await fetch(`${getAPIUrl()}orgs/slug/${org_slug}`, RequestBody("GET", null,next));
+  const result = await fetch(`${getAPIUrl()}orgs/slug/${org_slug}`, RequestBody("GET", null, next));
   const res = await errorHandling(result);
   return res;
+}
+
+export function getOrganizationContextInfoNoAsync(org_slug: any, next: any) {
+  const result = fetch(`${getAPIUrl()}orgs/slug/${org_slug}`, RequestBody("GET", null, next));
+  return result;
 }

@@ -49,6 +49,5 @@ async def upload_file_and_return_file_object(request: Request, file: UploadFile,
         f.write(file_binary)
         f.close()
 
-    # TODO: do some error handling here
 
     return uploadable_file
