@@ -30,6 +30,8 @@ function Courses(props: CourseProps) {
     async function deleteCourses(course_id: any) {
         await deleteCourseFromBackend(course_id);
         revalidateTags(['courses']);
+        // terrible, nextjs right now doesn't mutate the page when the data changes
+        window.location.reload();
     }
 
     async function closeNewCourseModal() {
