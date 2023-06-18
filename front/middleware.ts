@@ -25,7 +25,7 @@ export default function middleware(req: NextRequest) {
 
   // Organizations & Global settings
   if (pathname.startsWith("/organizations")) {
-    return NextResponse.rewrite(new URL("/organizations", req.url));
+    return NextResponse.rewrite(new URL(pathname, req.url));
   }
 
   // Dynamic Pages Editor

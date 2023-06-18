@@ -3,15 +3,16 @@ import React from "react";
 import learnhouseLogo from "public/learnhouse_logo.png";
 import Link from "next/link";
 import Image from "next/image";
-import { getUriWithOrg } from "@services/config/config";
+import { getBackendUrl, getUriWithOrg } from "@services/config/config";
 import { getOrganizationContextInfo, getOrganizationContextInfoNoAsync } from "@services/organizations/orgs";
 import ClientComponentSkeleton from "@components/UI/Utils/ClientComp";
 import { HeaderProfileBox } from "@components/Security/HeaderProfileBox";
 
-export const Menu =  (props: any) => {
+export const Menu = async (props: any) => {
     const orgslug = props.orgslug;
-    const org =  getOrganizationContextInfoNoAsync(orgslug, { revalidate: 1800, tags: ['organizations'] });
+    const org = await getOrganizationContextInfo(orgslug, { revalidate: 1800, tags: ['organizations'] });
     console.log(org);
+
 
     return (
         <>
@@ -20,8 +21,16 @@ export const Menu =  (props: any) => {
                 <div className="logo flex ">
                     <Link href={getUriWithOrg(orgslug, "/")}>
                         <div className="flex w-auto h-9 rounded-md items-center m-auto justify-center" >
-        <LearnHouseLogo></LearnHouseLogo>
-
+                            {org?.logo ? (
+                                <img
+                                    src={`${getBackendUrl()}content/uploads/logos/${org?.logo}`}
+                                    alt="Learnhouse"
+                                    style={{ width: "auto", height: "100%" }}
+                                    className="rounded-md"
+                                />
+                            ) : (
+                                <LearnHouseLogo></LearnHouseLogo>
+                            )}
                         </div>
                     </Link>
                 </div>

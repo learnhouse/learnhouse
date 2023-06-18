@@ -28,7 +28,8 @@ const Organizations = () => {
   const handleSubmit = async (e: any) => {
     e.preventDefault();
     console.log({ name, description, email });
-    const status = await createNewOrganization({ name, description, email, slug , default: false });
+    let logo = ''
+    const status = await createNewOrganization({ name, description, email, logo, slug, default: false });
     alert(JSON.stringify(status));
   };
 
