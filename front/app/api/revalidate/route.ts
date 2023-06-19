@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
   revalidateTag(tag);
 
   return NextResponse.json(
-    { revalidated: true, now: Date.now() },
+    { revalidated: true, now: Date.now(), tag },
     {
       status: 200,
       headers: {
