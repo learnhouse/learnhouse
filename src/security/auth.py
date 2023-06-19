@@ -1,13 +1,12 @@
-from webbrowser import get
 from config.config import get_learnhouse_config
 from pydantic import BaseModel
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
-from src.services.users.schemas.users import AnonymousUser
-from src.services.users.users import *
-from src.security.security import *
+from src.services.users.schemas.users import AnonymousUser, PublicUser
+from src.services.users.users import security_get_user, security_verify_password
+from src.security.security import ALGORITHM, SECRET_KEY
 from fastapi_jwt_auth import AuthJWT
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")

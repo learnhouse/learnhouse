@@ -2,7 +2,6 @@ from typing import Literal
 from uuid import uuid4
 from src.services.roles.schemas.roles import Role, RoleInDB
 from src.services.users.schemas.users import PublicUser
-from src.security.security import *
 from fastapi import HTTPException, status, Request
 from datetime import datetime
 
@@ -12,7 +11,6 @@ async def create_role(request: Request, role_object: Role, current_user: PublicU
 
     await verify_user_permissions_on_roles(request, current_user, "create", None)
 
-    
     # create the role object in the database and return the object
     role_id = "role_" + str(uuid4())
 
@@ -27,6 +25,7 @@ async def create_role(request: Request, role_object: Role, current_user: PublicU
 
     return role
 
+
 async def read_role(request: Request, role_id: str, current_user: PublicUser):
     roles = request.app.db["roles"]
 
@@ -36,7 +35,10 @@ async def read_role(request: Request, role_id: str, current_user: PublicUser):
 
     return role
 
-async def update_role(request: Request, role_id: str, role_object: Role, current_user: PublicUser):
+
+async def update_role(
+    request: Request, role_id: str, role_object: Role, current_user: PublicUser
+):
     roles = request.app.db["roles"]
 
     await verify_user_permissions_on_roles(request, current_user, "update", role_id)
@@ -44,9 +46,14 @@ async def update_role(request: Request, role_id: str, role_object: Role, current
     role_object.updated_at = datetime.now()
 
     # Update the role object in the database and return the object
-    updated_role = RoleInDB(**await roles.find_one_and_update({"role_id": role_id}, {"$set": role_object.dict()}, return_document=True))
+    updated_role = RoleInDB(
+        **await roles.find_one_and_update(
+            {"role_id": role_id}, {"$set": role_object.dict()}, return_document=True
+        )
+    )
 
     return updated_role
+
 
 async def delete_role(request: Request, role_id: str, current_user: PublicUser):
     roles = request.app.db["roles"]
@@ -58,9 +65,16 @@ async def delete_role(request: Request, role_id: str, current_user: PublicUser):
 
     return deleted_role
 
+
 #### Security ####################################################
 
-async def verify_user_permissions_on_roles(request: Request, current_user: PublicUser, action: Literal["create", "read", "update", "delete"], role_id: str | None):
+
+async def verify_user_permissions_on_roles(
+    request: Request,
+    current_user: PublicUser,
+    action: Literal["create", "read", "update", "delete"],
+    role_id: str | None,
+):
     request.app.db["users"]
     roles = request.app.db["roles"]
 
@@ -68,7 +82,8 @@ async def verify_user_permissions_on_roles(request: Request, current_user: Publi
 
     if not current_user:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Roles : Not authenticated")
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Roles : Not authenticated"
+        )
 
     if action == "create":
         if "owner" in [org.org_role for org in current_user.orgs]:

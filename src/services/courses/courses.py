@@ -6,8 +6,8 @@ from src.services.courses.activities.activities import ActivityInDB
 from src.services.courses.thumbnails import upload_thumbnail
 from src.services.users.schemas.users import AnonymousUser
 from src.services.users.users import PublicUser
-from src.security.security import *
-from fastapi import HTTPException, status, UploadFile
+from src.security.security import verify_user_rights_with_roles
+from fastapi import HTTPException, Request, status, UploadFile
 from datetime import datetime
 
 #### Classes ####################################################
