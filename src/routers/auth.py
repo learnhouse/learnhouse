@@ -1,4 +1,3 @@
-from urllib.request import Request
 from fastapi import Depends, APIRouter, HTTPException, Response, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from src.security.auth import AuthJWT, authenticate_user
@@ -41,8 +40,8 @@ async def login(
     access_token = Authorize.create_access_token(subject=form_data.username)
     refresh_token = Authorize.create_refresh_token(subject=form_data.username)
     Authorize.set_refresh_cookies(refresh_token)
-    # set cookies using fastapi 
-    response.set_cookie(key="access_token_cookie", value=access_token , httponly=False)
+    # set cookies using fastapi
+    response.set_cookie(key="access_token_cookie", value=access_token, httponly=False)
     user = PublicUser(**user.dict())
 
     result = {
