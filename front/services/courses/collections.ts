@@ -19,7 +19,6 @@ export async function createCollection(collection: any) {
   return res;
 }
 
-
 // Get a colletion by id
 export async function getCollectionById(collection_id: any) {
   const result: any = await fetch(`${getAPIUrl()}collections/${collection_id}`, { next: { revalidate: 10 } });
@@ -41,8 +40,8 @@ export async function getOrgCollections() {
   return res;
 }
 
-export async function getOrgCollectionsWithAuthHeader(access_token: string) {
-  const result: any = await fetch(`${getAPIUrl()}collections/page/1/limit/10`, RequestBodyWithAuthHeader("GET", null, { revalidate: 3 }, access_token));
+export async function getOrgCollectionsWithAuthHeader(org_id: string, access_token: string) {
+  const result: any = await fetch(`${getAPIUrl()}collections/org_id/${org_id}/page/1/limit/10`, RequestBodyWithAuthHeader("GET", null, { revalidate: 3 }, access_token));
   const res = await errorHandling(result);
   return res;
 }

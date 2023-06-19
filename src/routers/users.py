@@ -1,5 +1,5 @@
-from fastapi import Depends, APIRouter
-from src.security.auth import *
+from fastapi import Depends, APIRouter, Request
+from src.security.auth import get_current_user
 from src.services.users.schemas.users import PasswordChangeForm, PublicUser, User, UserWithPassword
 from src.services.users.users import create_user, delete_user, get_profile_metadata, get_user_by_userid, update_user, update_user_password
 
