@@ -34,7 +34,9 @@ async def get_collection(
     collection = await collections.find_one({"collection_id": collection_id})
 
     # verify collection rights
-    await verify_collection_rights(request, collection_id, current_user, "read")
+    await verify_collection_rights(
+        request, collection_id, current_user, "read", collection["org_id"]
+    )
 
     if not collection:
         raise HTTPException(
@@ -99,11 +101,14 @@ async def update_collection(
     current_user: PublicUser,
 ):
     # verify collection rights
-    await verify_collection_rights(request, collection_id, current_user, "update")
 
     collections = request.app.db["collections"]
 
     collection = await collections.find_one({"collection_id": collection_id})
+
+    await verify_collection_rights(
+        request, collection_id, current_user, "update", collection["org_id"]
+    )
 
     if not collection:
         raise HTTPException(
@@ -124,11 +129,13 @@ async def update_collection(
 async def delete_collection(
     request: Request, collection_id: str, current_user: PublicUser
 ):
-    await verify_collection_rights(request, collection_id, current_user, "delete")
-
     collections = request.app.db["collections"]
 
     collection = await collections.find_one({"collection_id": collection_id})
+
+    await verify_collection_rights(
+        request, collection_id, current_user, "delete", collection["org_id"]
+    )
 
     if not collection:
         raise HTTPException(
@@ -160,6 +167,8 @@ async def get_collections(
 ):
     collections = request.app.db["collections"]
 
+    print(org_id)
+
     # get all collections from database without ObjectId
     all_collections = (
         collections.find({"org_id": org_id})
@@ -168,7 +177,7 @@ async def get_collections(
         .limit(limit)
     )
 
-    await verify_collection_rights(request, "*", current_user, "read")
+    await verify_collection_rights(request, "*", current_user, "read", org_id)
 
     # create list of collections and include courses in each collection
     collections_list = []
@@ -195,19 +204,27 @@ async def get_collections(
 
 
 async def verify_collection_rights(
-    request: Request, collection_id: str, current_user: PublicUser, action: str
+    request: Request,
+    collection_id: str,
+    current_user: PublicUser,
+    action: str,
+    org_id: str,
 ):
     collections = request.app.db["collections"]
 
     collection = await collections.find_one({"collection_id": collection_id})
 
-    if not collection and action != "create":
+    if not collection and action != "create" and collection_id != "*":
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Collection does not exist"
         )
 
+    # Collections are public by default for now
+    if current_user.user_id == "anonymous" and action == "read":
+        return True
+
     hasRoleRights = await verify_user_rights_with_roles(
-        request, action, current_user.user_id, collection_id, collection["org_id"]
+        request, action, current_user.user_id, collection_id, org_id
     )
 
     if not hasRoleRights:

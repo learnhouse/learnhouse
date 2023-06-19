@@ -1,8 +1,8 @@
 from urllib.request import Request
 from fastapi import Depends, APIRouter, HTTPException, Response, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
-from src.security.auth import *
-from src.services.users.users import *
+from src.security.auth import AuthJWT, authenticate_user
+from src.services.users.users import PublicUser
 
 
 router = APIRouter()
