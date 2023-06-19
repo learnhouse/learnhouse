@@ -11,8 +11,7 @@ import { HeaderProfileBox } from "@components/Security/HeaderProfileBox";
 export const Menu = async (props: any) => {
     const orgslug = props.orgslug;
     const org = await getOrganizationContextInfo(orgslug, { revalidate: 1800, tags: ['organizations'] });
-    console.log(org);
-
+  
 
     return (
         <>
@@ -51,8 +50,9 @@ export const Menu = async (props: any) => {
     );
 };
 
-const LinkItem = (props: any, orgslug: any) => {
+const LinkItem = (props: any) => {
     const link = props.link;
+    const orgslug = props.orgslug;
     return (
         <Link href={getUriWithOrg(orgslug, link)}>
             <li className="flex space-x-2 items-center text-[#909192] font-medium">
