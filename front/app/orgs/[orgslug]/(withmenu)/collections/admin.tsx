@@ -9,10 +9,7 @@ import React from 'react'
 const CollectionAdminEditsArea = (props: any) => {
     const org_roles_values = ["admin", "owner"];
     const user_roles_values = ["role_admin"];
-    console.log("props: ", props);
-
     const auth: any = React.useContext(AuthContext);
-    console.log("auth: ", auth);
 
 
     // this is amazingly terrible code, but gotta release that MVP
