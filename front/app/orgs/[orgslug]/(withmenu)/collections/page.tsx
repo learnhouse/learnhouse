@@ -22,7 +22,6 @@ export async function generateMetadata(
     const access_token_cookie: any = cookieStore.get('access_token_cookie');
     // Get Org context information 
     const org = await getOrganizationContextInfo(params.orgslug, { revalidate: 1800, tags: ['organizations'] });
-
     return {
         title: `Collections — ${org.name}`,
         description: `Collections of courses from ${org.name}`,
@@ -38,10 +37,9 @@ const CollectionsPage = async (params: any) => {
     const cookieStore = cookies();
     const access_token_cookie: any = cookieStore.get('access_token_cookie');
     const orgslug = params.params.orgslug;
-    const collections = await getOrgCollectionsWithAuthHeader(access_token_cookie ? access_token_cookie.value : null);
-
- 
-
+    const org = await getOrganizationContextInfo(orgslug, { revalidate: 1800, tags: ['organizations'] });
+    const org_id = org.org_id;
+    const collections = await getOrgCollectionsWithAuthHeader(org_id, access_token_cookie ? access_token_cookie.value : null);
 
     return (
         <div className="max-w-7xl mx-auto px-4 py-10" >
