@@ -1,14 +1,17 @@
 'use client';
 
 import { AuthContext } from '@components/Security/AuthProvider';
+import { getUriWithOrg } from '@services/config/config';
 import { deleteCollection } from '@services/courses/collections';
 import { revalidateTags } from '@services/utils/ts/requests';
 import { Link, Trash } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import React from 'react'
 
 const CollectionAdminEditsArea = (props: any) => {
     const org_roles_values = ["admin", "owner"];
     const user_roles_values = ["role_admin"];
+    const router = useRouter();
     const auth: any = React.useContext(AuthContext);
 
 
@@ -38,7 +41,8 @@ const CollectionAdminEditsArea = (props: any) => {
         await deleteCollection(collectionId);
         revalidateTags(["collections"]);
         // reload the page
-        window.location.reload();
+        router.refresh();
+        router.push(getUriWithOrg(props.orgslug, "/collections"));
     }
 
     // this is amazingly terrible code, but gotta release that MVP
@@ -51,7 +55,7 @@ const CollectionAdminEditsArea = (props: any) => {
                     <button className="rounded-md text-sm px-3 font-bold text-red-800 bg-red-200 w-16 flex justify-center items-center" onClick={() => deleteCollectionUI(props.collection_id)}>
                         Delete <Trash size={10}></Trash>
                     </button>
-                    
+
                 </div>
             )
         } else {

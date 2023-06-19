@@ -45,7 +45,9 @@ function NewCollection(params: any) {
     };
     await createCollection(collection);
     revalidateTags(["collections"]);
+    router.prefetch(getUriWithOrg(orgslug, "/collections"));
     router.push(getUriWithOrg(orgslug, "/collections"));
+    router.refresh();
   };
 
 

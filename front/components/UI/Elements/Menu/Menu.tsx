@@ -1,10 +1,8 @@
 
 import React from "react";
-import learnhouseLogo from "public/learnhouse_logo.png";
 import Link from "next/link";
-import Image from "next/image";
 import { getBackendUrl, getUriWithOrg } from "@services/config/config";
-import { getOrganizationContextInfo, getOrganizationContextInfoNoAsync } from "@services/organizations/orgs";
+import { getOrganizationContextInfo } from "@services/organizations/orgs";
 import ClientComponentSkeleton from "@components/UI/Utils/ClientComp";
 import { HeaderProfileBox } from "@components/Security/HeaderProfileBox";
 

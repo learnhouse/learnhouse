@@ -11,6 +11,7 @@ import React from 'react'
 import Image from 'next/image';
 import { AuthContext } from '@components/Security/AuthProvider';
 import { revalidateTags } from '@services/utils/ts/requests';
+import { useRouter } from 'next/navigation';
 
 interface CourseProps {
     orgslug: string;
@@ -26,18 +27,18 @@ function Courses(props: CourseProps) {
     const orgslug = props.orgslug;
     const courses = props.courses;
     const [newCourseModal, setNewCourseModal] = React.useState(false);
+    const router = useRouter();
 
     async function deleteCourses(course_id: any) {
         await deleteCourseFromBackend(course_id);
         revalidateTags(['courses']);
-        // terrible, nextjs right now doesn't mutate the page when the data changes
-        window.location.reload();
+        
+        router.refresh();
     }
 
     async function closeNewCourseModal() {
         setNewCourseModal(false);
     }
-
 
 
 
