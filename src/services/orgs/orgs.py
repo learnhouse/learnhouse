@@ -1,5 +1,4 @@
 import json
-from typing import Optional
 from uuid import uuid4
 from src.services.orgs.logos import upload_org_logo
 from src.services.orgs.schemas.orgs import (
@@ -96,7 +95,7 @@ async def update_org(
 
     orgs = request.app.db["organizations"]
 
-    org = await orgs.find_one({"org_id": org_id})
+    await orgs.find_one({"org_id": org_id})
 
     updated_org = OrganizationInDB(org_id=org_id, **org_object.dict())
 
@@ -114,12 +113,12 @@ async def update_org_logo(
 
     orgs = request.app.db["organizations"]
 
-    org = await orgs.find_one({"org_id": org_id})
+    await orgs.find_one({"org_id": org_id})
 
     name_in_disk = await upload_org_logo(logo_file)
 
     # update org
-    org = await orgs.update_one({"org_id": org_id}, {"$set": {"logo": name_in_disk}})
+    await orgs.update_one({"org_id": org_id}, {"$set": {"logo": name_in_disk}})
 
     return {"detail": "Logo updated"}
 

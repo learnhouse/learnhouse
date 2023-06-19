@@ -1,4 +1,3 @@
-from calendar import c
 from typing import Optional
 from pydantic import BaseModel
 import os
@@ -51,7 +50,7 @@ def get_learnhouse_config() -> LearnHouseConfig:
     env_site_description = os.environ.get("LEARNHOUSE_SITE_DESCRIPTION")
     env_contact_email = os.environ.get("LEARNHOUSE_CONTACT_EMAIL")
     env_domain = os.environ.get("LEARNHOUSE_DOMAIN")
-    env_port = os.environ.get("LEARNHOUSE_PORT")
+    os.environ.get("LEARNHOUSE_PORT")
     env_ssl = os.environ.get("LEARNHOUSE_SSL")
     env_use_default_org = os.environ.get("LEARNHOUSE_USE_DEFAULT_ORG")
     env_allowed_origins = os.environ.get("LEARNHOUSE_ALLOWED_ORIGINS")
