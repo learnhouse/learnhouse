@@ -8,6 +8,7 @@ import React, { useState } from 'react'
 import { BarLoader } from 'react-spinners'
 import { mutate } from 'swr';
 import { revalidateTags } from '@services/utils/ts/requests';
+import { useRouter } from 'next/navigation';
 
 function CreateCourseModal({ closeModal, orgslug }: any) {
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -15,6 +16,7 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
     const [description, setDescription] = React.useState("");
     const [isLoading, setIsLoading] = React.useState(false);
     const [thumbnail, setThumbnail] = React.useState(null) as any;
+    const router = useRouter();
 
     const [orgId, setOrgId] = React.useState(null) as any;
 
@@ -46,9 +48,7 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
 
         if (status.org_id == orgId) {
             closeModal();
-            // reload the page
-            // terrible, nextjs right now doesn't mutate the page when the data changes
-            window.location.reload();
+            router.refresh();
         } else {
             alert("Error creating course, please see console logs");
             console.log(status);

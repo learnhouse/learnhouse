@@ -4,6 +4,7 @@ import { Field, Form, Formik } from 'formik';
 import { updateOrganization, uploadOrganizationLogo } from '@services/settings/org';
 import { UploadCloud } from 'lucide-react';
 import { revalidateTags } from '@services/utils/ts/requests';
+import { useRouter } from 'next/navigation';
 
 
 interface OrganizationValues {
@@ -17,7 +18,7 @@ interface OrganizationValues {
 
 function OrganizationClient(props: any) {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
-
+    const router = useRouter();
     // ...
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -33,9 +34,8 @@ function OrganizationClient(props: any) {
             await uploadOrganizationLogo(org_id, selectedFile);
             setSelectedFile(null); // Reset the selected file
             revalidateTags(['organizations']);
-            // reload the page
-            // terrible hack, it will fixed later
-            window.location.reload();
+            router.refresh();
+
         }
     };
 
