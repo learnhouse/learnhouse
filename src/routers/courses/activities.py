@@ -1,5 +1,12 @@
 from fastapi import APIRouter, Depends, UploadFile, Form, Request
-from src.services.courses.activities.activities import *
+from src.services.courses.activities.activities import (
+    Activity,
+    create_activity,
+    get_activity,
+    get_activities,
+    update_activity,
+    delete_activity,
+)
 from src.security.auth import get_current_user
 from src.services.courses.activities.pdf import create_documentpdf_activity
 from src.services.courses.activities.video import (
@@ -7,6 +14,7 @@ from src.services.courses.activities.video import (
     create_external_video_activity,
     create_video_activity,
 )
+from src.services.users.schemas.users import PublicUser
 
 router = APIRouter()
 
@@ -104,9 +112,7 @@ async def api_create_external_video_activity(
     """
     Create new activity
     """
-    return await create_external_video_activity(
-        request, current_user, external_video
-    )
+    return await create_external_video_activity(request, current_user, external_video)
 
 
 @router.post("/documentpdf")

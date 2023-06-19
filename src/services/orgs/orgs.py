@@ -1,5 +1,4 @@
 import json
-from typing import Optional
 from uuid import uuid4
 from src.services.orgs.logos import upload_org_logo
 from src.services.orgs.schemas.orgs import (
@@ -9,7 +8,7 @@ from src.services.orgs.schemas.orgs import (
 )
 from src.services.users.schemas.users import UserOrganization
 from src.services.users.users import PublicUser
-from src.security.security import *
+from src.security.security import verify_user_rights_with_roles
 from fastapi import HTTPException, UploadFile, status, Request
 
 
@@ -96,13 +95,12 @@ async def update_org(
 
     orgs = request.app.db["organizations"]
 
-    org = await orgs.find_one({"org_id": org_id})
+    await orgs.find_one({"org_id": org_id})
 
     updated_org = OrganizationInDB(org_id=org_id, **org_object.dict())
 
     # update org
     await orgs.update_one({"org_id": org_id}, {"$set": updated_org.dict()})
-
 
     return updated_org.dict()
 
@@ -115,18 +113,14 @@ async def update_org_logo(
 
     orgs = request.app.db["organizations"]
 
-    org = await orgs.find_one({"org_id": org_id})
-
+    await orgs.find_one({"org_id": org_id})
 
     name_in_disk = await upload_org_logo(logo_file)
 
-        # update org
-    org = await orgs.update_one({"org_id": org_id}, {"$set": {"logo": name_in_disk}})
-        
+    # update org
+    await orgs.update_one({"org_id": org_id}, {"$set": {"logo": name_in_disk}})
+
     return {"detail": "Logo updated"}
-
-    
-
 
 
 async def delete_org(request: Request, org_id: str, current_user: PublicUser):
