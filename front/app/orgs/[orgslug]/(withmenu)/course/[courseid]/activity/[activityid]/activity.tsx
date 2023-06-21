@@ -10,6 +10,7 @@ import { Check } from "lucide-react";
 import { markActivityAsComplete } from "@services/courses/activity";
 import ToolTip from "@components/UI/Tooltip/Tooltip";
 import DocumentPdfActivity from "@components/Pages/Activities/DocumentPdf/DocumentPdf";
+import ActivityIndicators from "@components/Pages/Courses/ActivityIndicators";
 
 interface ActivityClientProps {
   activityid: string;
@@ -35,81 +36,60 @@ function ActivityClient(props: ActivityClientProps) {
 
   return (
     <>
-      <ActivityLayout>
-          <pre style={{ display: "none" }}>{JSON.stringify(activity, null, 2)}</pre>
-          <ActivityTopWrapper>
-            <ActivityThumbnail>
-              <Link href={getUriWithOrg(orgslug, "") + `/course/${courseid}`}>
-                <img src={`${getBackendUrl()}content/uploads/img/${course.course.thumbnail}`} alt="" />
-              </Link>
-            </ActivityThumbnail>
-            <ActivityInfo>
-              <p>Course</p>
-              <h1>{course.course.name}</h1>
-            </ActivityInfo>
-          </ActivityTopWrapper>
-          <ChaptersWrapper>
-            {course.chapters.map((chapter: any) => {
-              return (
-                <>
-                  <div style={{ display: "flex", flexDirection: "row" }} key={chapter.chapter_id}>
-                    {chapter.activities.map((activity: any) => {
-                      return (
-                        <ToolTip sideOffset={-5} slateBlack content={activity.name} key={activity.id}>
-                          <Link href={getUriWithOrg(orgslug, "") + `/course/${courseid}/activity/${activity.id.replace("activity_", "")}`}>
-                            <ChapterIndicator
-                              done={course.trail.activities_marked_complete && course.trail.activities_marked_complete.includes(activity.id) && course.trail.status == "ongoing"}
-                              active={"activity_" + activityid === activity.id ? true : false} key={activity.id}
-                            />
-                          </Link>
-                        </ToolTip>
-                      );
-                    })}
-                  </div>
-                  &nbsp;&nbsp;&nbsp;&nbsp;
-                </>
-              );
-            })}
-          </ChaptersWrapper>
+      <div className="max-w-7xl mx-auto px-4  space-y-5 pt-0">
+        <pre style={{ display: "none" }}>{JSON.stringify(activity, null, 2)}</pre>
+        <ActivityTopWrapper>
+          <ActivityThumbnail>
+            <Link href={getUriWithOrg(orgslug, "") + `/course/${courseid}`}>
+              <img src={`${getBackendUrl()}content/uploads/img/${course.course.thumbnail}`} alt="" />
+            </Link>
+          </ActivityThumbnail>
+          <ActivityInfo>
+            <p>Course</p>
+            <h1>{course.course.name}</h1>
+          </ActivityInfo>
+        </ActivityTopWrapper>
+        <ActivityIndicators current_activity={activityid} orgslug={orgslug} course={course} />
 
-          {activity ? (
+        {activity ? (
+          <div className="p-7 pt-2 drop-shadow-sm rounded-lg bg-white">
             <CourseContent>
-              {activity.type == "dynamic" && <Canva content={activity.content} activity={activity} />}
-              {/* todo : use apis & streams instead of this */}
-              {activity.type == "video" && <VideoActivity course={course} activity={activity} />}
+            {activity.type == "dynamic" && <Canva content={activity.content} activity={activity} />}
+            {/* todo : use apis & streams instead of this */}
+            {activity.type == "video" && <VideoActivity course={course} activity={activity} />}
 
-              {activity.type == "documentpdf" && <DocumentPdfActivity course={course} activity={activity} />}
+            {activity.type == "documentpdf" && <DocumentPdfActivity course={course} activity={activity} />}
 
-              <ActivityMarkerWrapper className="py-10">
+            <ActivityMarkerWrapper className="py-10">
 
-                {course.trail.activities_marked_complete &&
-                  course.trail.activities_marked_complete.includes("activity_" + activityid) &&
-                  course.trail.status == "ongoing" ? (
-                  <button style={{ backgroundColor: "green" }}>
-                    <i>
-                      <Check size={20}></Check>
-                    </i>{" "}
-                    Already completed
-                  </button>
-                ) : (
-                  <button onClick={markActivityAsCompleteFront}>
-                    {" "}
-                    <i>
-                      <Check size={20}></Check>
-                    </i>{" "}
-                    Mark as complete
-                  </button>
-                )}
-              </ActivityMarkerWrapper>
-            </CourseContent>
-          ) : (<div></div>)}
-          {<div style={{ height: "100px" }}></div>}
-        </ActivityLayout>
+              {course.trail.activities_marked_complete &&
+                course.trail.activities_marked_complete.includes("activity_" + activityid) &&
+                course.trail.status == "ongoing" ? (
+                <button style={{ backgroundColor: "green" }}>
+                  <i>
+                    <Check size={20}></Check>
+                  </i>{" "}
+                  Already completed
+                </button>
+              ) : (
+                <button onClick={markActivityAsCompleteFront}>
+                  {" "}
+                  <i>
+                    <Check size={20}></Check>
+                  </i>{" "}
+                  Mark as complete
+                </button>
+              )}
+            </ActivityMarkerWrapper>
+          </CourseContent>
+          </div>
+        ) : (<div></div>)}
+        {<div style={{ height: "100px" }}></div>}
+      </div>
     </>
   );
 }
 
-const ActivityLayout = styled.div``;
 
 const ActivityThumbnail = styled.div`
   padding-right: 30px;
@@ -133,32 +113,8 @@ const ActivityInfo = styled.div`
   }
 `;
 
-const ChaptersWrapper = styled.div`
-  display: flex;
-  // row
-  flex-direction: row;
-  width: 100%;
-  width: 1300px;
-  margin: 0 auto;
-`;
 
-const ChapterIndicator = styled.div < { active?: boolean, done?: boolean } > `
-  border-radius: 20px;
-  height: 5px;
-  background: #151515;
-  border-radius: 3px;
 
-  width: 35px;
-  background-color: ${props => props.done ? "green" : (props.active ? "#9d9d9d" : "black")};
-  margin: 10px;
-  margin-bottom: 0px;
-  margin-left: 0px;
-
-  &:hover {
-    cursor: pointer;
-    background-color: #9d9d9d;
-  }
-`;
 
 const ActivityTopWrapper = styled.div`
   width: 1300px;
@@ -171,7 +127,6 @@ const CourseContent = styled.div`
   display: flex;
   flex-direction: column;
   background-color: white;
-  min-height: 600px;
 `;
 
 const ActivityMarkerWrapper = styled.div`

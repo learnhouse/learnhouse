@@ -79,7 +79,7 @@ const contentClose = keyframes({
 const DialogOverlay = styled(Dialog.Overlay, {
     backgroundColor: blackA.blackA9,
     position: 'fixed',
-
+    zIndex: 500,
     inset: 0,
     animation: `${overlayShow} 150ms cubic-bezier(0.16, 1, 0.3, 1)`,
     '&[data-state="closed"]': {
@@ -111,6 +111,7 @@ const DialogContent = styled(Dialog.Content, {
 
     backgroundColor: 'white',
     borderRadius: 18,
+    zIndex: 501,
     boxShadow: 'hsl(206 22% 7% / 35%) 0px 10px 38px -10px, hsl(206 22% 7% / 20%) 0px 10px 20px -15px',
     position: 'fixed',
     top: '50%',

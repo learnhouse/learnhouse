@@ -11,7 +11,7 @@ function Activity(props: any) {
     <Draggable key={props.activity.id} draggableId={props.activity.id} index={props.index}>
       {(provided) => (
         <div
-          className="flex flex-row items-center py-2 my-3 rounded-md justify-center bg-gray-50 hover:bg-gray-100 space-x-2" key={props.activity.id} {...provided.draggableProps} {...provided.dragHandleProps} ref={provided.innerRef}>
+          className="flex flex-row items-center py-2 my-3 rounded-md justify-center bg-gray-50 hover:bg-gray-100 space-x-2 w-auto" key={props.activity.id} {...provided.draggableProps} {...provided.dragHandleProps} ref={provided.innerRef}>
           <p>{props.activity.name} </p>
           <Link
             href={getUriWithOrg(props.orgslug, "") + `/course/${props.courseid}/activity/${props.activity.id.replace("activity_", "")}`}
