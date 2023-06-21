@@ -2,6 +2,7 @@ import React from "react";
 import styled from "styled-components";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import Activity from "./Activity";
+import { PlusSquare } from "lucide-react";
 
 function Chapter(props: any) {
   return (
@@ -16,16 +17,9 @@ function Chapter(props: any) {
         >
           <h3 className="pt-3 font-bold text-md">
             {props.info.list.chapter.name}
-            <button
-              onClick={() => {
-                props.openNewActivityModal(props.info.list.chapter.id);
-              }}
-            >
-              
-              Create Activity
-            </button>
 
-            
+
+
             <button
               onClick={() => {
                 props.deleteChapter(props.info.list.chapter.id);
@@ -37,13 +31,24 @@ function Chapter(props: any) {
           <Droppable key={props.info.list.chapter.id} droppableId={props.info.list.chapter.id} type="activity">
             {(provided) => (
               <ActivitiesList {...provided.droppableProps} ref={provided.innerRef}>
-                {props.info.list.activities.map((activity: any, index: any) => (
-                  <Activity orgslug={props.orgslug} courseid={props.courseid} key={activity.id} activity={activity} index={index}></Activity>
-                ))}
-                {provided.placeholder}
+                <div className="flex flex-col ">
+                  {props.info.list.activities.map((activity: any, index: any) => (
+                    <Activity orgslug={props.orgslug} courseid={props.courseid} key={activity.id} activity={activity} index={index}></Activity>
+                  ))}
+                  {provided.placeholder}
+
+                  <div onClick={() => {
+                    props.openNewActivityModal(props.info.list.chapter.id);
+                  }} className="flex space-x-2 items-center py-2 my-3 rounded-md justify-center outline outline-3 text-slate-500 outline-slate-200 bg-slate-50  hover:cursor-pointer">
+                    <PlusSquare className="" size={17} />
+                    <div className="text-sm mx-auto my-auto  items-center font-bold">Add Activity</div>
+                  </div>
+                </div>
               </ActivitiesList>
+
             )}
           </Droppable>
+
         </ChapterWrapper>
       )}
     </Draggable>

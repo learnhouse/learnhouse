@@ -15,6 +15,7 @@ import { createActivity, createFileActivity, createExternalVideoActivity } from 
 import { getOrganizationContextInfo } from "@services/organizations/orgs";
 import Modal from "@components/UI/Modal/Modal";
 import { denyAccessToUser } from "@services/utils/react/middlewares/views";
+import { Folders, Package2 } from "lucide-react";
 
 function CourseEdit(params: any) {
 
@@ -243,21 +244,7 @@ function CourseEdit(params: any) {
       <Page>
         <Title>
           Edit Course {" "}
-          <Modal
-            isDialogOpen={newChapterModal}
-            onOpenChange={setNewChapterModal}
-            minHeight="sm"
-            dialogContent={<NewChapterModal
-              closeModal={closeNewChapterModal}
-              submitChapter={submitChapter}
-            ></NewChapterModal>}
-            dialogTitle="Create chapter"
-            dialogDescription="Add a new chapter to the course"
-            dialogTrigger={
-              <button> Add chapter +
-              </button>
-            }
-          />
+
 
           <button
             onClick={() => {
@@ -287,7 +274,7 @@ function CourseEdit(params: any) {
 
         <br />
         {winReady && (
-          <ChapterlistWrapper>
+          <div className="flex flex-col max-w-7xl justify-center items-center mx-auto">
             <DragDropContext onDragEnd={onDragEnd}>
               <Droppable key="chapters" droppableId="chapters" type="chapter">
                 {(provided) => (
@@ -312,7 +299,24 @@ function CourseEdit(params: any) {
                 )}
               </Droppable>
             </DragDropContext>
-          </ChapterlistWrapper>
+            <Modal
+              isDialogOpen={newChapterModal}
+              onOpenChange={setNewChapterModal}
+              minHeight="sm"
+              dialogContent={<NewChapterModal
+                closeModal={closeNewChapterModal}
+                submitChapter={submitChapter}
+              ></NewChapterModal>}
+              dialogTitle="Create chapter"
+              dialogDescription="Add a new chapter to the course"
+              dialogTrigger={
+                <div className="flex max-w-7xl bg-black shadow rounded-md text-white justify-center space-x-2 p-3 w-72 hover:bg-gray-900 hover:cursor-pointer">
+                  <Folders size={20} />
+                  <div>Add chapter +</div>
+                </div>
+              }
+            />
+          </div>
         )}
       </Page >
     </>
@@ -351,9 +355,5 @@ const Page = styled.div`
     }
   }
 `;
-const ChapterlistWrapper = styled.div`
-  display: flex;
-  padding-left: 30px;
-  justify-content: center;
-`;
+
 export default CourseEdit;

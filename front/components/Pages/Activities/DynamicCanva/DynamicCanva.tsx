@@ -64,7 +64,7 @@ function Canva(props: Editor) {
 
 const CanvaWrapper = styled.div`
   padding-top: 20px;
-  width: 1300px;
+  width: 100%;
   margin: 0 auto;
 `;
 
