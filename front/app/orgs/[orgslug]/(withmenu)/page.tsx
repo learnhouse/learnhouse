@@ -73,6 +73,7 @@ const OrgHomePage = async (params: any) => {
         </div>
 
         {/* Courses */}
+        <div className='h-5'></div>
         <Title title="Courses" type="cou" />
         <div className="home_courses flex flex-wrap">
           {courses.map((course: any) => (
@@ -92,13 +93,13 @@ const OrgHomePage = async (params: any) => {
 };
 
 
-const Title = (props: any) => {
+ const Title = (props: any) => {
   return (
-    <div className="home_category_title flex my-5">
+    <div className="home_category_title flex my-5 items-center">
       <div className="rounded-full ring-1 ring-slate-900/5 shadow-sm p-2 my-auto mr-4">
         <Image className="" src={props.type == "col" ? CollectionsLogo : CoursesLogo} alt="Courses logo" />
       </div>
-      <h1 className="font-bold text-lg">{props.title}</h1>
+      <h1 className="font-bold text-2xl">{props.title}</h1>
     </div>
   )
 }
