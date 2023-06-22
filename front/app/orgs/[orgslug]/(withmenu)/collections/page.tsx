@@ -1,12 +1,10 @@
+import AuthenticatedClientElement from "@components/Security/AuthenticatedClientElement";
 import TypeOfContentTitle from "@components/StyledElements/Titles/TypeOfContentTitle";
 import GeneralWrapperStyled from "@components/StyledElements/Wrappers/GeneralWrapper";
 import { getBackendUrl, getUriWithOrg } from "@services/config/config";
 import { deleteCollection, getOrgCollectionsWithAuthHeader } from "@services/courses/collections";
-import { getCourseMetadataWithAuthHeader } from "@services/courses/courses";
 import { getOrganizationContextInfo } from "@services/organizations/orgs";
-import { revalidateTags } from "@services/utils/ts/requests";
 import { Metadata } from "next";
-import { revalidateTag } from "next/cache";
 import { cookies } from "next/headers";
 import Link from "next/link";
 import CollectionAdminEditsArea from "./admin";
@@ -46,9 +44,11 @@ const CollectionsPage = async (params: any) => {
         <GeneralWrapperStyled>
             <div className="flex justify-between" >
                 <TypeOfContentTitle title="Collections" type="col" />
+                <AuthenticatedClientElement checkMethod='authentication'>
                 <Link className="flex justify-center" href={getUriWithOrg(orgslug, "/collections/new")}>
                     <button className="rounded-md bg-black antialiased ring-offset-purple-800 p-2 px-5 my-auto font text-sm font-bold text-white drop-shadow-lg">Add Collection + </button>
                 </Link>
+                </AuthenticatedClientElement>
             </div>
             <div className="home_collections flex flex-wrap">
                 {collections.map((collection: any) => (
