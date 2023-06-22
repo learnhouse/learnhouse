@@ -54,7 +54,7 @@ function ActivityIndicators(props: Props) {
                         <div className='grid grid-flow-col justify-stretch space-x-2'>
                             {chapter.activities.map((activity: any) => {
                                 return (
-                                    <ToolTip sideOffset={-5} slateBlack content={activity.name} key={activity.id}>
+                                    <ToolTip sideOffset={8} slateBlack content={activity.name} key={activity.id}>
                                         <Link href={getUriWithOrg(orgslug, "") + `/course/${courseid}/activity/${activity.id.replace("activity_", "")}`}>
                                             <div className={`h-[7px] w-auto ${getActivityClass(activity)} rounded-lg shadow-md`}></div>
 

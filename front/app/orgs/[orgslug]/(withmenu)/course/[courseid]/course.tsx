@@ -56,7 +56,7 @@ const CourseClient = (props: any) => {
 
           <ActivityIndicators orgslug={orgslug} course={course} />
 
-          <div className="flex flex-row pt-10">
+          <div className="flex flex-row pt-10 flex-wrap">
             <div className="course_metadata_left grow space-y-2">
               <h2 className="py-3 text-2xl font-bold">Description</h2>
               <StyledBox>
