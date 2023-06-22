@@ -1,3 +1,5 @@
+import TypeOfContentTitle from "@components/StyledElements/Titles/TypeOfContentTitle";
+import GeneralWrapperStyled from "@components/StyledElements/Wrappers/GeneralWrapper";
 import { getBackendUrl, getUriWithOrg } from "@services/config/config";
 import { deleteCollection, getOrgCollectionsWithAuthHeader } from "@services/courses/collections";
 import { getCourseMetadataWithAuthHeader } from "@services/courses/courses";
@@ -7,7 +9,6 @@ import { Metadata } from "next";
 import { revalidateTag } from "next/cache";
 import { cookies } from "next/headers";
 import Link from "next/link";
-import { Title } from "../courses/courses";
 import CollectionAdminEditsArea from "./admin";
 
 type MetadataProps = {
@@ -42,16 +43,16 @@ const CollectionsPage = async (params: any) => {
     const collections = await getOrgCollectionsWithAuthHeader(org_id, access_token_cookie ? access_token_cookie.value : null);
 
     return (
-        <div className="max-w-7xl mx-auto px-4 py-10" >
+        <GeneralWrapperStyled>
             <div className="flex justify-between" >
-                <Title title="Collections" type="col" />
+                <TypeOfContentTitle title="Collections" type="col" />
                 <Link className="flex justify-center" href={getUriWithOrg(orgslug, "/collections/new")}>
                     <button className="rounded-md bg-black antialiased ring-offset-purple-800 p-2 px-5 my-auto font text-sm font-bold text-white drop-shadow-lg">Add Collection + </button>
                 </Link>
             </div>
             <div className="home_collections flex flex-wrap">
                 {collections.map((collection: any) => (
-                    <div className="pr-8 flex flex-col" key={collection.collection_id}>
+                    <div className="flex flex-col py-3 px-3" key={collection.collection_id}>
                         <CollectionAdminEditsArea org_id={org_id} collection_id={collection.collection_id} collection={collection} />
                         <Link href={getUriWithOrg(orgslug, "/collection/" + removeCollectionPrefix(collection.collection_id))}>
                             <div className="inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl relative w-[249px] h-[180px] bg-cover flex flex-col items-center justify-center bg-indigo-600 font-bold text-zinc-50" >
@@ -68,7 +69,7 @@ const CollectionsPage = async (params: any) => {
                     </div>
                 ))}
             </div>
-        </div>
+        </GeneralWrapperStyled>
     );
 }
 
