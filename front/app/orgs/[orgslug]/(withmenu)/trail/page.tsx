@@ -1,5 +1,7 @@
 "use client";
-import PageLoading from "@components/Pages/PageLoading";
+import PageLoading from "@components/Objects/Loaders/PageLoading";
+import TypeOfContentTitle from "@components/StyledElements/Titles/TypeOfContentTitle";
+import GeneralWrapperStyled from "@components/StyledElements/Wrappers/GeneralWrapper";
 import { getAPIUrl, getBackendUrl } from "@services/config/config";
 import { swrFetcher } from "@services/utils/ts/requests";
 import React from "react";
@@ -12,10 +14,8 @@ function Trail(params: any) {
   
   
   return (
-    <TrailLayout>
-      <h1>Trail</h1>
-      <br />
-      {error && <p>Failed to load</p>}
+    <GeneralWrapperStyled>
+      <TypeOfContentTitle title="Trail" type="tra" />
       {!trail ? (
         <PageLoading></PageLoading>
       ) : (
@@ -36,19 +36,13 @@ function Trail(params: any) {
           ))}
         </div>
       )}
-    </TrailLayout>
+    </GeneralWrapperStyled>
   );
 }
 
 export default Trail;
 
-const TrailLayout = styled.div`
-  display: flex;
-  margin: 0 auto;
-  width: 1300px;
-  height: 100%;
-  flex-direction: column;
-`;
+
 
 const TrailMetadata = styled.div`
   display: flex;
