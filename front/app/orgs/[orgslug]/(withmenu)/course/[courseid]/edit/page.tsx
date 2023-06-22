@@ -3,17 +3,16 @@ import React from "react";
 
 import { useState, useEffect } from "react";
 import styled from "styled-components";
-import { Title } from "@components/UI/Elements/Styles/Title";
 import { DragDropContext, Droppable } from "react-beautiful-dnd";
 import { initialData, initialData2 } from "@components/Pages/CourseEdit/Draggables/data";
 import Chapter from "@components/Pages/CourseEdit/Draggables/Chapter";
 import { createChapter, deleteChapter, getCourseChaptersMetadata, updateChaptersMetadata } from "@services/courses/chapters";
 import { useRouter } from "next/navigation";
-import NewChapterModal from "@components/Modals/Chapters/NewChapter";
-import NewActivityModal from "@components/Modals/Activities/Create/NewActivity";
+import NewChapterModal from "@components/Objects/Modals/Chapters/NewChapter";
+import NewActivityModal from "@components/Objects/Modals/Activities/Create/NewActivity";
 import { createActivity, createFileActivity, createExternalVideoActivity } from "@services/courses/activities";
 import { getOrganizationContextInfo } from "@services/organizations/orgs";
-import Modal from "@components/UI/Modal/Modal";
+import Modal from "@components/StyledElements/Modal/Modal";
 import { denyAccessToUser } from "@services/utils/react/middlewares/views";
 import { Folders, Package2 } from "lucide-react";
 
@@ -242,7 +241,7 @@ function CourseEdit(params: any) {
   return (
     <>
       <Page>
-        <Title>
+      <div className="font-bold text-lg">
           Edit Course {" "}
 
 
@@ -253,7 +252,7 @@ function CourseEdit(params: any) {
           >
             Save
           </button>
-        </Title>
+        </div>
 
         <Modal
           isDialogOpen={newActivityModal}

@@ -1,7 +1,6 @@
 "use client"; //todo: use server components
 import Link from "next/link";
 import React from "react";
-import { Title } from "../../components/UI/Elements/Styles/Title";
 import { deleteOrganizationFromBackend } from "@services/organizations/orgs";
 import useSWR, { mutate } from "swr";
 import { swrFetcher } from "@services/utils/ts/requests";
@@ -19,14 +18,14 @@ const Organizations = () => {
   return (
     <>
       <AuthProvider />
-      <Title>
+      <div className="font-bold text-lg">
         Your Organizations{" "}
         <Link href="/organizations/new">
           <button className="bg-blue-500 text-white px-2 py-1 rounded-md hover:bg-blue-600 focus:outline-none">
             +
           </button>
         </Link>
-      </Title>
+      </div>
       <hr />
 
       {error && <p className="text-red-500">Failed to load</p>}

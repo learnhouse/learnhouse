@@ -1,7 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
 import React from "react";
-import { Title } from "@components/UI/Elements/Styles/Title";
 import { createCollection } from "@services/courses/collections";
 import useSWR from "swr";
 import { getAPIUrl, getUriWithOrg } from "@services/config/config";
@@ -54,7 +53,7 @@ function NewCollection(params: any) {
   return (
     <>
       <div className="w-64 m-auto py-20">
-      <Title className="mb-4">Add new</Title>
+      <div className="font-bold text-lg mb-4">Add new</div>
 
 <input
   type="text"
