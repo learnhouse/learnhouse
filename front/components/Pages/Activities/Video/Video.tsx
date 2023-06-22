@@ -7,17 +7,6 @@ function VideoActivity({ activity, course }: { activity: any; course: any }) {
   const [videoId, setVideoId] = React.useState('');
   const [videoType, setVideoType] = React.useState('');
 
-  function getChapterName() {
-    let chapterName = "";
-    let chapterId = activity.chapter_id;
-    course.chapters.forEach((chapter: any) => {
-      if (chapter.chapter_id === chapterId) {
-        chapterName = chapter.name;
-      }
-    });
-    return chapterName;
-  }
-
   function getYouTubeEmbed(url: any) {
     // Extract video ID from the YouTube URL
     var videoId = url.match(/(?:\?v=|\/embed\/|\/\d\/|\/vi\/|\/v\/|https?:\/\/(?:www\.)?youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^#\&\?\/]+)/)[1];
@@ -34,7 +23,6 @@ function VideoActivity({ activity, course }: { activity: any; course: any }) {
 
 
   React.useEffect(() => {
-    console.log(activity);
     if (activity.content.video) {
       setVideoType('video');
     }
@@ -45,20 +33,16 @@ function VideoActivity({ activity, course }: { activity: any; course: any }) {
   }, [activity]);
 
   return (
-    <VideoActivityLayout>
-      <VideoTitle>
-        <p>{getChapterName()}</p>
-        <p>{activity.name}</p>
-      </VideoTitle>
+    <div>
       {videoType === 'video' && (
-        <VideoPlayerWrapper>
-          <video controls src={`${getBackendUrl()}content/uploads/video/${activity.content.video.activity_id}/${activity.content.video.filename}`}></video>
-        </VideoPlayerWrapper>
+        <div className="m-8 bg-zinc-900 rounded-md mt-14">
+          <video className="rounded-lg w-full h-[500px]" controls src={`${getBackendUrl()}content/uploads/video/${activity.content.video.activity_id}/${activity.content.video.filename}`}></video>
+        </div>
       )}
       {videoType === 'external_video' && (
-        <VideoPlayerWrapper>
+        <div>
           <YouTube 
-          className="rounded-md overflow-hidden"
+          className="rounded-md overflow-hidden m-8 bg-zinc-900  mt-14"
             opts={
               {
                 width: '1300',
@@ -70,10 +54,10 @@ function VideoActivity({ activity, course }: { activity: any; course: any }) {
               }
             }
             videoId={videoId} />
-        </VideoPlayerWrapper>
+        </div>
       )}
 
-    </VideoActivityLayout>
+    </div>
   );
 }
 
@@ -82,44 +66,4 @@ function VideoActivity({ activity, course }: { activity: any; course: any }) {
 
 export default VideoActivity;
 
-const VideoActivityLayout = styled.div`
-  display: flex;
-  flex-direction: column;
-  margin-top: 10px;
-  background: #141414;
-  min-width: 100%;
-  min-height: 1200px;
-`;
 
-const VideoTitle = styled.div`
-  display: flex;
-  width: 1300px;
-  margin: 0 auto;
-  padding-top: 20px;
-  font-size: 24px;
-  font-weight: 700;
-  color: #fff;
-  flex-direction: column;
-
-  p {
-    font-size: 14px;
-    padding: 0;
-    margin: 0;
-    color: #ffffffaa;
-  }
-`;
-
-const VideoPlayerWrapper = styled.div`
-  display: flex;
-  width: 1300px;
-  margin: 0 auto;
-  justify-content: center;
-  padding-top: 20px;
-
-  video {
-    width: 1300px;
-    height: 500px;
-    border-radius: 7px;
-    background-color: black;
-  }
-`;
