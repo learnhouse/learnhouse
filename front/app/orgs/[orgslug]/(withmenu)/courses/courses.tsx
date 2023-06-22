@@ -1,8 +1,8 @@
 'use client';
-import CreateCourseModal from '@components/Modals/Course/Create/CreateCourse';
-import Modal from '@components/UI/Modal/Modal';
+import CreateCourseModal from '@components/Objects/Modals/Course/Create/CreateCourse';
+import Modal from '@components/StyledElements/Modal/Modal';
 import { Edit2, Trash } from "lucide-react";
-import { getAPIUrl, getBackendUrl, getUriWithOrg } from '@services/config/config';
+import { getBackendUrl, getUriWithOrg } from '@services/config/config';
 import CoursesLogo from "public/svg/courses.svg";
 import CollectionsLogo from "public/svg/collections.svg";
 import { deleteCourseFromBackend } from '@services/courses/courses';
@@ -12,6 +12,8 @@ import Image from 'next/image';
 import { AuthContext } from '@components/Security/AuthProvider';
 import { revalidateTags } from '@services/utils/ts/requests';
 import { useRouter } from 'next/navigation';
+import GeneralWrapperStyled from '@components/StyledElements/Wrappers/GeneralWrapper';
+import TypeOfContentTitle from '@components/StyledElements/Titles/TypeOfContentTitle';
 
 interface CourseProps {
     orgslug: string;
@@ -32,7 +34,7 @@ function Courses(props: CourseProps) {
     async function deleteCourses(course_id: any) {
         await deleteCourseFromBackend(course_id);
         revalidateTags(['courses']);
-        
+
         router.refresh();
     }
 
@@ -40,13 +42,11 @@ function Courses(props: CourseProps) {
         setNewCourseModal(false);
     }
 
-
-
     return (
         <div>
-            <div className='max-w-7xl mx-auto px-4'>
+            <GeneralWrapperStyled>
                 <div className='flex flex-wrap justify-between'>
-                    <Title title="Courses" type="cou" />
+                    <TypeOfContentTitle title="Courses" type="cou" />
                     <Modal
                         isDialogOpen={newCourseModal}
                         onOpenChange={setNewCourseModal}
@@ -79,20 +79,9 @@ function Courses(props: CourseProps) {
                     ))}
                 </div>
 
-            </div>
+            </GeneralWrapperStyled>
 
 
-        </div>
-    )
-}
-
-export const Title = (props: any) => {
-    return (
-        <div className="home_category_title flex my-5">
-            <div className="rounded-full ring-1 ring-slate-900/5 shadow-sm p-2 my-auto mr-4">
-                <Image className="" src={props.type == "col" ? CollectionsLogo : CoursesLogo} alt="Courses logo" />
-            </div>
-            <h1 className="font-bold text-lg">{props.title}</h1>
         </div>
     )
 }

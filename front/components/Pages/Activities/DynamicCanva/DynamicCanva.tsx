@@ -4,12 +4,12 @@ import StarterKit from "@tiptap/starter-kit";
 import { styled } from "styled-components";
 import Youtube from "@tiptap/extension-youtube";
 // Custom Extensions
-import InfoCallout from "@editor/Extensions/Callout/Info/InfoCallout";
-import WarningCallout from "@editor/Extensions/Callout/Warning/WarningCallout";
-import ImageBlock from "@editor/Extensions/Image/ImageBlock";
-import VideoBlock from "@editor/Extensions/Video/VideoBlock";
-import MathEquationBlock from "@components/Editor/Extensions/MathEquation/MathEquationBlock";
-import PDFBlock from "@components/Editor/Extensions/PDF/PDFBlock";
+import InfoCallout from "@components/Objects/Editor/Extensions/Callout/Info/InfoCallout";
+import WarningCallout from "@components/Objects/Editor/Extensions/Callout/Warning/WarningCallout";
+import ImageBlock from "@components/Objects/Editor/Extensions/Image/ImageBlock";
+import VideoBlock from "@components/Objects/Editor/Extensions/Video/VideoBlock";
+import MathEquationBlock from "@components/Objects/Editor/Extensions/MathEquation/MathEquationBlock";
+import PDFBlock from "@components/Objects/Editor/Extensions/PDF/PDFBlock";
 
 interface Editor {
   content: string;

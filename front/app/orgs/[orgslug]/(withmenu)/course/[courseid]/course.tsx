@@ -6,11 +6,12 @@ import React, { use } from "react";
 import styled from "styled-components";
 import { getAPIUrl, getBackendUrl, getUriWithOrg } from "@services/config/config";
 import useSWR, { mutate } from "swr";
-import ToolTip from "@components/UI/Tooltip/Tooltip";
-import PageLoading from "@components/Pages/PageLoading";
+import ToolTip from "@components/StyledElements/Tooltip/Tooltip";
+import PageLoading from "@components/Objects/Loaders/PageLoading";
 import { revalidateTags } from "@services/utils/ts/requests";
 import ActivityIndicators from "@components/Pages/Courses/ActivityIndicators";
 import { useRouter } from "next/navigation";
+import GeneralWrapperStyled from "@components/StyledElements/Wrappers/GeneralWrapper";
 
 const CourseClient = (props: any) => {
   const courseid = props.courseid;
@@ -40,7 +41,7 @@ const CourseClient = (props: any) => {
       {!course ? (
         <PageLoading></PageLoading>
       ) : (
-        <div className="max-w-7xl mx-auto px-4 py-10 tracking-tight">
+        <GeneralWrapperStyled>
           <div className="pb-3">
             <p className="text-md font-bold text-gray-400 pb-2">Course</p>
             <h1 className="text-3xl -mt-3 font-bold">
@@ -107,7 +108,7 @@ const CourseClient = (props: any) => {
               )}
             </div>
           </div>
-        </div>
+        </GeneralWrapperStyled>
       )}
     </>
   );

@@ -1,6 +1,5 @@
 "use client";
 import React from "react";
-import { Title } from "../../../../components/UI/Elements/Styles/Title";
 import { signup } from "../../../../services/auth/auth";
 import { useRouter } from "next/navigation";
 
@@ -39,9 +38,8 @@ const SignUp = (params: any) => {
   return (
     <div>
       <div title="Sign up">
-        <Title>Sign up </Title>
+        <div className="font-bold text-lg">Sign up </div>
 
-        {/* Create a login ui with tailwindcss */}
         <div className="flex justify-center items-center h-screen">
           <div className="w-full max-w-md">
             <form onSubmit={handleSubmit}>

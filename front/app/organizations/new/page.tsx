@@ -1,6 +1,5 @@
 "use client";
 import React from "react";
-import { Title } from "../../../components/UI/Elements/Styles/Title";
 import { createNewOrganization } from "../../../services/organizations/orgs";
 
 const Organizations = () => {
@@ -35,7 +34,7 @@ const Organizations = () => {
 
   return (
     <div>
-      <Title>New Organization</Title>
+     <div className="font-bold text-lg">New Organization</div>
       Name: <input onChange={handleNameChange} type="text" />
       <br />
       Description: <input onChange={handleDescriptionChange} type="text" />

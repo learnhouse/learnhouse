@@ -8,7 +8,7 @@ import VideoActivity from "@components/Pages/Activities/Video/Video";
 import useSWR, { mutate } from "swr";
 import { Check } from "lucide-react";
 import { markActivityAsComplete } from "@services/courses/activity";
-import ToolTip from "@components/UI/Tooltip/Tooltip";
+import ToolTip from "@components/StyledElements/Tooltip/Tooltip";
 import DocumentPdfActivity from "@components/Pages/Activities/DocumentPdf/DocumentPdf";
 import ActivityIndicators from "@components/Pages/Courses/ActivityIndicators";
 
