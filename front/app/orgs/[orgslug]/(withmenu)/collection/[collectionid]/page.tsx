@@ -1,3 +1,4 @@
+import GeneralWrapperStyled from "@components/StyledElements/Wrappers/GeneralWrapper";
 import { getBackendUrl, getUriWithOrg } from "@services/config/config";
 import { getCollectionByIdWithAuthHeader } from "@services/courses/collections";
 import { getOrganizationContextInfo } from "@services/organizations/orgs";
@@ -38,7 +39,7 @@ const CollectionPage = async (params : any) => {
     }
 
 
-    return <div className="max-w-7xl mx-auto px-4 py-10" >
+    return <GeneralWrapperStyled>
         <h2 className="text-sm font-bold text-gray-400">Collection</h2>
         <h1 className="text-3xl font-bold">{col.name}</h1>
         <br />
@@ -56,7 +57,7 @@ const CollectionPage = async (params : any) => {
 
 
 
-    </div>;
+    </GeneralWrapperStyled>;
 };
 
 export default CollectionPage;

@@ -3,18 +3,19 @@ import React from "react";
 
 import { useState, useEffect } from "react";
 import styled from "styled-components";
-import { Title } from "@components/UI/Elements/Styles/Title";
 import { DragDropContext, Droppable } from "react-beautiful-dnd";
 import { initialData, initialData2 } from "@components/Pages/CourseEdit/Draggables/data";
 import Chapter from "@components/Pages/CourseEdit/Draggables/Chapter";
 import { createChapter, deleteChapter, getCourseChaptersMetadata, updateChaptersMetadata } from "@services/courses/chapters";
 import { useRouter } from "next/navigation";
-import NewChapterModal from "@components/Modals/Chapters/NewChapter";
-import NewActivityModal from "@components/Modals/Activities/Create/NewActivity";
+import NewChapterModal from "@components/Objects/Modals/Chapters/NewChapter";
+import NewActivityModal from "@components/Objects/Modals/Activities/Create/NewActivity";
 import { createActivity, createFileActivity, createExternalVideoActivity } from "@services/courses/activities";
 import { getOrganizationContextInfo } from "@services/organizations/orgs";
-import Modal from "@components/UI/Modal/Modal";
+import Modal from "@components/StyledElements/Modal/Modal";
 import { denyAccessToUser } from "@services/utils/react/middlewares/views";
+import { Folders, Package2, SaveIcon } from "lucide-react";
+import GeneralWrapperStyled from "@components/StyledElements/Wrappers/GeneralWrapper";
 
 function CourseEdit(params: any) {
 
@@ -240,120 +241,94 @@ function CourseEdit(params: any) {
 
   return (
     <>
-      <Page>
-        <Title>
-          Edit Course {" "}
+      <div
+        className="bg-gradient-radial bg-fixed bg-repeat bg-[0 0],[25px 25px] bg-[50px 50px] bg-[#4744446b 1px]"
+      >
+        <GeneralWrapperStyled>
+          <div className="font-bold text-lg flex space-x-2 items-center">
+            <p> Edit Course {" "}</p>
+
+
+            <div
+              className="bg-black hover:bg-gray-950 text-white font-bold p-1 px-2 text-sm rounded flex items-center cursor-pointer space-x-2"
+              onClick={() => {
+                updateChapters();
+              }}
+            >
+              <SaveIcon className="w-4 h-4" />
+              <p>Save</p>
+
+            </div>
+          </div>
+
           <Modal
-            isDialogOpen={newChapterModal}
-            onOpenChange={setNewChapterModal}
-            minHeight="sm"
-            dialogContent={<NewChapterModal
-              closeModal={closeNewChapterModal}
-              submitChapter={submitChapter}
-            ></NewChapterModal>}
-            dialogTitle="Create chapter"
-            dialogDescription="Add a new chapter to the course"
-            dialogTrigger={
-              <button> Add chapter +
-              </button>
-            }
+            isDialogOpen={newActivityModal}
+            onOpenChange={setNewActivityModal}
+            minHeight="no-min"
+            addDefCloseButton={false}
+            dialogContent={<NewActivityModal
+              closeModal={closeNewActivityModal}
+              submitFileActivity={submitFileActivity}
+              submitExternalVideo={submitExternalVideo}
+              submitActivity={submitActivity}
+              chapterId={newActivityModalData}
+            ></NewActivityModal>}
+            dialogTitle="Create Activity"
+            dialogDescription="Choose between types of activities to add to the course"
+
           />
 
-          <button
-            onClick={() => {
-              updateChapters();
-            }}
-          >
-            Save
-          </button>
-        </Title>
-
-        <Modal
-          isDialogOpen={newActivityModal}
-          onOpenChange={setNewActivityModal}
-          minHeight="no-min"
-          addDefCloseButton={false}
-          dialogContent={<NewActivityModal
-            closeModal={closeNewActivityModal}
-            submitFileActivity={submitFileActivity}
-            submitExternalVideo={submitExternalVideo}
-            submitActivity={submitActivity}
-            chapterId={newActivityModalData}
-          ></NewActivityModal>}
-          dialogTitle="Create Activity"
-          dialogDescription="Choose between types of activities to add to the course"
-
-        />
-
-        <br />
-        {winReady && (
-          <ChapterlistWrapper>
-            <DragDropContext onDragEnd={onDragEnd}>
-              <Droppable key="chapters" droppableId="chapters" type="chapter">
-                {(provided) => (
-                  <>
-                    <div key={"chapters"} {...provided.droppableProps} ref={provided.innerRef}>
-                      {getChapters().map((info: any, index: any) => (
-                        <>
-                          <Chapter
-                            orgslug={orgslug}
-                            courseid={courseid}
-                            openNewActivityModal={openNewActivityModal}
-                            deleteChapter={deleteChapterUI}
-                            key={index}
-                            info={info}
-                            index={index}
-                          ></Chapter>
-                        </>
-                      ))}
-                      {provided.placeholder}
-                    </div>
-                  </>
-                )}
-              </Droppable>
-            </DragDropContext>
-          </ChapterlistWrapper>
-        )}
-      </Page >
+          <br />
+          {winReady && (
+            <div className="flex flex-col max-w-7xl justify-center items-center mx-auto">
+              <DragDropContext onDragEnd={onDragEnd}>
+                <Droppable key="chapters" droppableId="chapters" type="chapter">
+                  {(provided) => (
+                    <>
+                      <div key={"chapters"} {...provided.droppableProps} ref={provided.innerRef}>
+                        {getChapters().map((info: any, index: any) => (
+                          <>
+                            <Chapter
+                              orgslug={orgslug}
+                              courseid={courseid}
+                              openNewActivityModal={openNewActivityModal}
+                              deleteChapter={deleteChapterUI}
+                              key={index}
+                              info={info}
+                              index={index}
+                            ></Chapter>
+                          </>
+                        ))}
+                        {provided.placeholder}
+                      </div>
+                    </>
+                  )}
+                </Droppable>
+              </DragDropContext>
+              <Modal
+                isDialogOpen={newChapterModal}
+                onOpenChange={setNewChapterModal}
+                minHeight="sm"
+                dialogContent={<NewChapterModal
+                  closeModal={closeNewChapterModal}
+                  submitChapter={submitChapter}
+                ></NewChapterModal>}
+                dialogTitle="Create chapter"
+                dialogDescription="Add a new chapter to the course"
+                dialogTrigger={
+                  <div className="flex max-w-7xl bg-black shadow rounded-md text-white justify-center space-x-2 p-3 w-72 hover:bg-gray-900 hover:cursor-pointer">
+                    <Folders size={20} />
+                    <div>Add chapter +</div>
+                  </div>
+                }
+              />
+            </div>
+          )}
+        </GeneralWrapperStyled >
+      </div>
     </>
   );
 }
 
-const Page = styled.div`
-  height: 100%;
-  width: 100%;
-  min-height: 100vh;
-  min-width: 100vw;
-  padding-top: 30px;
 
-  // dots background
-  background-image: radial-gradient(#4744446b 1px, transparent 1px), radial-gradient(#4744446b 1px, transparent 1px);
-  background-position: 0 0, 25px 25px;
-  background-size: 50px 50px;
-  background-attachment: fixed;
-  background-repeat: repeat;
-
-  button {
-    margin-left: 10px;
-    background-color: #000000;
-    border: none;
-    border-radius: 5px;
-    padding: 5px 10px;
-    color: white;
-    font-size: 13px;
-    cursor: pointer;
-    transition: 0.2s;
-    font-family: "DM Sans", sans-serif;
-    &:hover {
-      background-color: #474444;
-
-      transition: 0.2s;
-    }
-  }
-`;
-const ChapterlistWrapper = styled.div`
-  display: flex;
-  padding-left: 30px;
-  justify-content: center;
-`;
 export default CourseEdit;
