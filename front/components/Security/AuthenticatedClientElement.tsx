@@ -16,8 +16,9 @@ function AuthenticatedClientElement(props: AuthenticatedClientElementProps) {
     const org_roles_values = ["admin", "owner"];
     const user_roles_values = ["role_admin"];
 
+    
 
-    async function checkRoles() {
+    function checkRoles() {
         const org_id = props.orgId;
         const org_roles = auth.userInfo.user_object.orgs;
         const user_roles = auth.userInfo.user_object.roles;
