@@ -2,8 +2,6 @@
 import React from 'react';
 import * as Tooltip from '@radix-ui/react-tooltip';
 import { styled, keyframes } from '@stitches/react';
-import { violet, blackA } from '@radix-ui/colors';
-import { PlusIcon } from '@radix-ui/react-icons';
 
 
 type TooltipProps = {
@@ -24,7 +22,6 @@ const ToolTip = (props: TooltipProps) => {
         <Tooltip.Portal>
           <TooltipContent slateBlack={props.slateBlack} side="bottom" sideOffset={props.sideOffset}>
             {props.content}
-            <TooltipArrow />
           </TooltipContent>
         </Tooltip.Portal>
       </Tooltip.Root>
@@ -62,7 +59,7 @@ const TooltipContent = styled(Tooltip.Content, {
   variants: {
     slateBlack: {
       true: {
-        backgroundColor: " #5a5a5a",
+        backgroundColor: " #0d0d0d",
         color: 'white',
       },
     },
@@ -96,25 +93,6 @@ const TooltipContent = styled(Tooltip.Content, {
   },
 });
 
-const TooltipArrow = styled(Tooltip.Arrow, {
-  fill: 'white',
 
-});
-
-const IconButton = styled('button', {
-  all: 'unset',
-  fontFamily: 'inherit',
-  borderRadius: '100%',
-  height: 35,
-  width: 35,
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  color: violet.violet11,
-  backgroundColor: 'white',
-  boxShadow: `0 2px 10px ${blackA.blackA7}`,
-  '&:hover': { backgroundColor: violet.violet3 },
-  '&:focus': { boxShadow: `0 0 0 2px black` },
-});
 
 export default ToolTip;
