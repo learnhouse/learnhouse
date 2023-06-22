@@ -20,7 +20,6 @@ interface ActivityClientProps {
 }
 
 
-
 function ActivityClient(props: ActivityClientProps) {
   const activityid = props.activityid;
   const courseid = props.courseid;

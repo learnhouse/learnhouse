@@ -7,18 +7,6 @@ function VideoActivity({ activity, course }: { activity: any; course: any }) {
   const [videoId, setVideoId] = React.useState('');
   const [videoType, setVideoType] = React.useState('');
 
-  let chapterId = activity.chapter_id;
-
-  function getChapterName(chapterId: string) {
-    let chapterName = "";
-    course.chapters.forEach((chapter: any) => {
-      if (chapter.chapter_id === chapterId) {
-        chapterName = chapter.name;
-      }
-    });
-    return chapterName;
-  }
-
   function getYouTubeEmbed(url: any) {
     // Extract video ID from the YouTube URL
     var videoId = url.match(/(?:\?v=|\/embed\/|\/\d\/|\/vi\/|\/v\/|https?:\/\/(?:www\.)?youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^#\&\?\/]+)/)[1];
@@ -35,7 +23,6 @@ function VideoActivity({ activity, course }: { activity: any; course: any }) {
 
 
   React.useEffect(() => {
-    console.log(activity);
     if (activity.content.video) {
       setVideoType('video');
     }
@@ -55,7 +42,7 @@ function VideoActivity({ activity, course }: { activity: any; course: any }) {
       {videoType === 'external_video' && (
         <div>
           <YouTube 
-          className="rounded-md overflow-hidden"
+          className="rounded-md overflow-hidden m-8 bg-zinc-900  mt-14"
             opts={
               {
                 width: '1300',
