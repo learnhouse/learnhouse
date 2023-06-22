@@ -105,9 +105,22 @@ async def get_user_trail_with_orgslug(request: Request, user: PublicUser, org_sl
     org = await orgs.find_one({"slug": org_slug})
 
     trail = await trails.find_one({"user_id": user.user_id, "org_id": org["org_id"]})
+
     if not trail:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Trail not found")
+    
+    # Check if these courses still exist in the database
+    for course in trail["courses"]:
+
+        course_id = course["course_id"]
+        course_object = await courses_mongo.find_one({"course_id": course_id}, {"_id": 0})
+        if not course_object:
+            trail["courses"].remove(course)
+            continue
+
+        course["course_object"] = course_object
+    
     for courses in trail["courses"]:
         course_id = courses["course_id"]
         
