@@ -26,7 +26,7 @@
     "avvvatars-react": "^0.4.2",
     "formik": "^2.2.9",
     "framer-motion": "^7.3.6",
-    "lucide-react": "^0.104.1",
+    "lucide-react": "^0.248.0",
     "next": "^13.4.7-canary.4",
     "re-resizable": "^6.9.9",
     "react": "^18.2.0",
