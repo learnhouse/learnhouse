@@ -107,8 +107,7 @@ async def get_user_trail_with_orgslug(request: Request, user: PublicUser, org_sl
     trail = await trails.find_one({"user_id": user.user_id, "org_id": org["org_id"]})
 
     if not trail:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Trail not found")
+        return Trail(masked=False, courses=[])
     
     # Check if these courses still exist in the database
     for course in trail["courses"]:
@@ -156,8 +155,7 @@ async def add_activity_to_trail(request: Request, user: PublicUser,  course_id: 
     trail = await trails.find_one({"user_id": user.user_id, "courses.course_id": courseid , "org_id": org_id})
     
     if not trail:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Trail not found")
+        return Trail(masked=False, courses=[])
     
     # if a trail has course_id in the courses array, then add the activity_id to the activities_marked_complete array
     for element in trail["courses"]:
@@ -176,7 +174,7 @@ async def add_activity_to_trail(request: Request, user: PublicUser,  course_id: 
     # modify trail object 
     await trails.replace_one({"trail_id": trail["trail_id"]}, trail)
 
-    return Trail(**trail)
+    return Trail(**trail.dict())
 
 
 async def add_course_to_trail(request: Request, user: PublicUser, orgslug: str, course_id: str) -> Trail:
@@ -186,18 +184,17 @@ async def add_course_to_trail(request: Request, user: PublicUser, orgslug: str, 
 
     org = await orgs.find_one({"slug": orgslug})
 
-    org = PublicOrganization(**org)
-
-    
+    org = PublicOrganization(**org)    
 
     trail = await trails.find_one(
         {"user_id": user.user_id, "org_id": org["org_id"]})
-    
-    
+        
 
     if not trail:
         trail_to_insert = TrailInDB(trail_id=f"trail_{uuid4()}", user_id=user.user_id, org_id=org["org_id"], courses=[])
         trail_to_insert = await trails.insert_one(trail_to_insert.dict())
+
+        trail = await trails.find_one({"_id": trail_to_insert.inserted_id})
 
     # check if course is already present in the trail
     for element in trail["courses"]:
