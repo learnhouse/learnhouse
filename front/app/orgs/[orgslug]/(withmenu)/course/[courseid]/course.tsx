@@ -34,7 +34,6 @@ const CourseClient = (props: any) => {
     router.refresh();
   }
 
-  console.log(course);
 
   return (
     <>
@@ -54,7 +53,7 @@ const CourseClient = (props: any) => {
 
           </div>
 
-          <ActivityIndicators orgslug={orgslug} course={course} />
+          <ActivityIndicators course_id={props.course.course.course_id} orgslug={orgslug} course={course} />
 
           <div className="flex flex-row pt-10 flex-wrap">
             <div className="course_metadata_left grow space-y-2">
