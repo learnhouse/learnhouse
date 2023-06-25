@@ -1,5 +1,6 @@
 import os
 from uuid import uuid4
+from fastapi import HTTPException, status
 
 
 async def upload_org_logo(logo_file):
@@ -15,7 +16,10 @@ async def upload_org_logo(logo_file):
             f.close()
 
     except Exception:
-        return {"message": "There was an error uploading the file"}
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="There was an error uploading the file",
+        )
     finally:
         logo_file.file.close()
 

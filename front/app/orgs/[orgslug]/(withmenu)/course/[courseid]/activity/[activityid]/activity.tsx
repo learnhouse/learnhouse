@@ -56,7 +56,7 @@ function ActivityClient(props: ActivityClientProps) {
               <h1 className="font-bold text-gray-950 text-2xl first-letter:uppercase" >{course.course.name}</h1>
             </div>
           </div>
-          <ActivityIndicators current_activity={activityid} orgslug={orgslug} course={course} />
+          <ActivityIndicators course_id={courseid} current_activity={activityid} orgslug={orgslug} course={course} />
 
           <div className="flex justify-between items-center">
             <div className="flex flex-col -space-y-1">
