@@ -49,6 +49,9 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
         if (status.org_id == orgId) {
             closeModal();
             router.refresh();
+
+            // refresh page (FIX for Next.js BUG)
+            window.location.reload();
         } else {
             alert("Error creating course, please see console logs");
             console.log(status);

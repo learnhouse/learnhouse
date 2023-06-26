@@ -47,6 +47,9 @@ function NewCollection(params: any) {
     router.prefetch(getUriWithOrg(orgslug, "/collections"));
     router.push(getUriWithOrg(orgslug, "/collections"));
     router.refresh();
+
+    // refresh page (FIX for Next.js BUG)
+    window.location.reload();
   };
 
 

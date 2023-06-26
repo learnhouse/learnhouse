@@ -101,6 +101,10 @@ export function MarkStatus(props: { activityid: string, course: any, orgslug: st
   async function markActivityAsCompleteFront() {
     const trail = await markActivityAsComplete(props.orgslug, props.courseid, props.activityid);
     router.refresh();
+
+    // refresh page (FIX for Next.js BUG)
+    window.location.reload();
+
   }
 
   return (
