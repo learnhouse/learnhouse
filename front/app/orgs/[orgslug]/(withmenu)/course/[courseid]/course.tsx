@@ -24,6 +24,9 @@ const CourseClient = (props: any) => {
     await startCourse("course_" + courseid, orgslug);
     revalidateTags(['courses']);
     router.refresh();
+
+    // refresh page (FIX for Next.js BUG)
+    window.location.reload();
   }
 
   async function quitCourse() {
@@ -32,6 +35,9 @@ const CourseClient = (props: any) => {
     // Mutate course
     revalidateTags(['courses']);
     router.refresh();
+
+    // refresh page (FIX for Next.js BUG)
+    window.location.reload();
   }
 
 
