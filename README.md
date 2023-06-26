@@ -12,7 +12,8 @@ LearnHouse is an open source platform that makes it easy for anyone to provide w
 
 ## Features
 
-![image](https://github.com/learnhouse/learnhouse/assets/29493708/03cdbafd-6ed8-40da-8a41-70a5a63f3c56)
+![image](https://docs.learnhouse.app/img/pages/features.png)
+
 - 📄✨Dynamic notion-like pages
 - 👨‍🎓 Easy to use
 - 👥 Multi-Organization
