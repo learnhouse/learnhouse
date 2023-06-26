@@ -36,6 +36,9 @@ function OrganizationClient(props: any) {
             revalidateTags(['organizations']);
             router.refresh();
 
+            // refresh page (FIX for Next.js BUG)
+            window.location.reload();
+
         }
     };
 

@@ -18,6 +18,9 @@ const CollectionAdminEditsArea = (props: any) => {
         // reload the page
         router.refresh();
         router.push(getUriWithOrg(props.orgslug, "/collections"));
+
+        // refresh page (FIX for Next.js BUG)
+        window.location.reload();
     }
 
     return (

@@ -174,7 +174,7 @@ async def add_activity_to_trail(request: Request, user: PublicUser,  course_id: 
     # modify trail object 
     await trails.replace_one({"trail_id": trail["trail_id"]}, trail)
 
-    return Trail(**trail.dict())
+    return Trail(**trail)
 
 
 async def add_course_to_trail(request: Request, user: PublicUser, orgslug: str, course_id: str) -> Trail:
