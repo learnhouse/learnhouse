@@ -2,6 +2,12 @@ site_name: LearnHouse
 site_description: LearnHouse is an open-source platform tailored for learning experiences.
 contact_email: hi@learnhouse.app
 
+general:
+  development_mode: true
+
+security:
+  auth_jwt_secret_key: secret
+
 hosting_config:
   domain: learnhouse.app
   ssl: true
