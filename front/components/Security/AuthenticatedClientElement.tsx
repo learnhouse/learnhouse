@@ -9,7 +9,7 @@ interface AuthenticatedClientElementProps {
 
 }
 
-function AuthenticatedClientElement(props: AuthenticatedClientElementProps) {
+export const AuthenticatedClientElement = (props: AuthenticatedClientElementProps) => {
     const auth: any = React.useContext(AuthContext);
 
     // Available roles 

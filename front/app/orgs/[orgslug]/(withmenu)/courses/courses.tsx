@@ -34,7 +34,7 @@ function Courses(props: CourseProps) {
 
     async function deleteCourses(course_id: any) {
         await deleteCourseFromBackend(course_id);
-        revalidateTags(['courses']);
+        revalidateTags(['courses'], orgslug);
 
         router.refresh();
     }
