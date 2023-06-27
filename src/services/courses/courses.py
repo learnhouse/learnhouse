@@ -374,6 +374,11 @@ async def verify_rights(
 
     course = await courses.find_one({"course_id": course_id})
 
+    isAuthor = current_user.user_id in course["authors"]
+
+    if isAuthor:
+        return True
+
     if (
         current_user.user_id == "anonymous"
         and course["public"] is True
@@ -390,7 +395,7 @@ async def verify_rights(
     hasRoleRights = await verify_user_rights_with_roles(
         request, action, current_user.user_id, course_id, course["org_id"]
     )
-    isAuthor = current_user.user_id in course["authors"]
+    
 
     if not hasRoleRights and not isAuthor:
         raise HTTPException(

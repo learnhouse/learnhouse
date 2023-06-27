@@ -18,7 +18,7 @@ function TrailCourseElement(props: TrailCourseElementProps) {
         // Close activity
         let activity = await removeCourse(course_id, props.orgslug);
         // Mutate course
-        revalidateTags(['courses']);
+        revalidateTags(['courses'], props.orgslug);
 
         // Mutate 
         mutate(`${getAPIUrl()}trail/org_slug/${props.orgslug}/trail`);

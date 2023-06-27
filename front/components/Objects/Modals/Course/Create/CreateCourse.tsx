@@ -43,7 +43,7 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
         e.preventDefault();
         setIsSubmitting(true);
         let status = await createNewCourse(orgId, { name, description }, thumbnail);
-        revalidateTags(['courses']);
+        revalidateTags(['courses'], orgslug);
         setIsSubmitting(false);
 
         if (status.org_id == orgId) {
