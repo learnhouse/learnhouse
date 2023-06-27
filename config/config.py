@@ -14,6 +14,14 @@ class CookieConfig(BaseModel):
     domain: str
 
 
+class GeneralConfig(BaseModel):
+    development_mode: bool
+
+
+class SecurityConfig(BaseModel):
+    auth_jwt_secret_key: str
+
+
 class HostingConfig(BaseModel):
     domain: str
     ssl: bool
@@ -33,8 +41,10 @@ class LearnHouseConfig(BaseModel):
     site_name: str
     site_description: str
     contact_email: str
+    general_config: GeneralConfig
     hosting_config: HostingConfig
     database_config: DatabaseConfig
+    security_config: SecurityConfig
 
 
 def get_learnhouse_config() -> LearnHouseConfig:
@@ -44,7 +54,19 @@ def get_learnhouse_config() -> LearnHouseConfig:
     # Load the YAML file
     with open(yaml_path, "r") as f:
         yaml_config = yaml.safe_load(f)
-  
+
+    # General Config
+    env_development_mode = os.environ.get("LEARNHOUSE_DEVELOPMENT_MODE")
+    development_mode = env_development_mode or yaml_config.get("general", {}).get(
+        "development_mode"
+    )
+
+    # Security Config
+    env_auth_jwt_secret_key = os.environ.get("LEARNHOUSE_AUTH_JWT_SECRET_KEY")
+    auth_jwt_secret_key = env_auth_jwt_secret_key or yaml_config.get(
+        "security", {}
+    ).get("auth_jwt_secret_key")
+
     # Check if environment variables are defined
     env_site_name = os.environ.get("LEARNHOUSE_SITE_NAME")
     env_site_description = os.environ.get("LEARNHOUSE_SITE_DESCRIPTION")
@@ -89,10 +111,10 @@ def get_learnhouse_config() -> LearnHouseConfig:
         "self_hosted"
     )
 
-    cookies_domain = env_cookie_domain or yaml_config.get("hosting_config", {}).get("cookies_config", {}).get("domain")
-    cookie_config = CookieConfig(
-        domain=cookies_domain
-    )
+    cookies_domain = env_cookie_domain or yaml_config.get("hosting_config", {}).get(
+        "cookies_config", {}
+    ).get("domain")
+    cookie_config = CookieConfig(domain=cookies_domain)
 
     # Database config
     mongodb_connection_string = env_mongodb_connection_string or yaml_config.get(
@@ -146,8 +168,10 @@ def get_learnhouse_config() -> LearnHouseConfig:
         site_name=site_name,
         site_description=site_description,
         contact_email=contact_email,
+        general_config=GeneralConfig(development_mode=bool(development_mode)),
         hosting_config=hosting_config,
         database_config=database_config,
+        security_config=SecurityConfig(auth_jwt_secret_key=auth_jwt_secret_key),
     )
 
     return config

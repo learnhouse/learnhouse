@@ -52,7 +52,7 @@
     "@types/styled-components": "^5.1.26",
     "@types/uuid": "^9.0.0",
     "autoprefixer": "^10.4.14",
-    "eslint": "8.23.1",
+    "eslint": "^8.43.0",
     "eslint-config-next": "^13.0.6",
     "postcss": "^8.4.23",
     "tailwindcss": "^3.3.2",
