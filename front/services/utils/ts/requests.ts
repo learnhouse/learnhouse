@@ -1,6 +1,6 @@
 import { AppRouterInstance } from "next/dist/shared/lib/app-router-context";
 import { denyAccessToUser } from "../react/middlewares/views";
-import { LEARNHOUSE_DOMAIN, LEARNHOUSE_HTTP_PROTOCOL } from "@services/config/config";
+import { getUriWithOrg, LEARNHOUSE_DOMAIN, LEARNHOUSE_HTTP_PROTOCOL } from "@services/config/config";
 
 export const RequestBody = (method: string, data: any, next: any) => {
   let HeadersConfig = new Headers({ "Content-Type": "application/json" });
@@ -78,15 +78,16 @@ export const swrFetcher = async (url: string, body: any, router?: AppRouterInsta
 
 export const errorHandling = (res: any) => {
   if (!res.ok) {
-    const error: any = new Error(`${res.status}: ${res.statusText}`, {});
+    const error: any = new Error(`${res.statusText}`);
     error.status = res.status;
     throw error;
   }
   return res.json();
 };
 
-export const revalidateTags = (tags: string[]) => {
+export const revalidateTags = (tags: string[], orgslug: string) => {
+  const url = getUriWithOrg(orgslug, "");
   tags.forEach((tag) => {
-    fetch(`${LEARNHOUSE_HTTP_PROTOCOL}${LEARNHOUSE_DOMAIN}/api/revalidate?tag=${tag}`);
+    fetch(`${url}/api/revalidate?tag=${tag}`);
   });
 };
