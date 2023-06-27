@@ -1,6 +1,7 @@
 from fastapi import HTTPException, status, Request
 from passlib.context import CryptContext
 from passlib.hash import pbkdf2_sha256
+from config.config import get_learnhouse_config
 from src.services.roles.schemas.roles import RoleInDB
 
 from src.services.users.schemas.users import UserInDB, UserRolesInOrganization
@@ -10,7 +11,7 @@ from src.services.users.schemas.users import UserInDB, UserRolesInOrganization
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
-SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
+SECRET_KEY = get_learnhouse_config().security_config.auth_jwt_secret_key
 ALGORITHM = "HS256"
 
 ### 🔒 JWT ##############################################################
@@ -38,7 +39,7 @@ async def verify_user_rights_with_roles(
     """
     Check if the user has the right to perform the action on the element
     """
-    roles = request.app.db["roles"]
+    request.app.db["roles"]
     users = request.app.db["users"]
 
     user = await users.find_one({"user_id": user_id})
@@ -75,7 +76,9 @@ async def verify_user_rights_with_roles(
     user_roles = user.roles
 
     if action != "create":
-        return await check_user_role_org_with_element_org(request, element_id, user_roles, action)
+        return await check_user_role_org_with_element_org(
+            request, element_id, user_roles, action
+        )
 
     # If no role is found, raise an error
     raise HTTPException(
@@ -125,7 +128,6 @@ async def check_user_role_org_with_element_org(
     element_type_id = singular_form_element + "_id"
 
     element_org = await element.find_one({element_type_id: element_id})
-
 
     for role in roles_list:
         # Check if The role belongs to the same organization as the element
