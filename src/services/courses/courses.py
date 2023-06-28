@@ -313,31 +313,15 @@ async def delete_course(request: Request, course_id: str, current_user: PublicUs
 ####################################################
 
 
-async def get_courses(
-    request: Request, page: int = 1, limit: int = 10, org_id: str | None = None
-):
-    courses = request.app.db["courses"]
-    # TODO : Get only courses that user is admin/has roles of
-    # get all courses from database
-    all_courses = (
-        courses.find({"org_id": org_id})
-        .sort("name", 1)
-        .skip(10 * (page - 1))
-        .limit(limit)
-    )
-
-    return [
-        json.loads(json.dumps(course, default=str))
-        for course in await all_courses.to_list(length=100)
-    ]
-
-
 async def get_courses_orgslug(
-    request: Request, page: int = 1, limit: int = 10, org_slug: str | None = None
+    request: Request,
+    current_user: PublicUser,
+    page: int = 1,
+    limit: int = 10,
+    org_slug: str | None = None,
 ):
     courses = request.app.db["courses"]
     orgs = request.app.db["organizations"]
-    # TODO : Get only courses that user is admin/has roles of
 
     # get org_id from slug
     org = await orgs.find_one({"slug": org_slug})
@@ -347,13 +331,21 @@ async def get_courses_orgslug(
             status_code=status.HTTP_409_CONFLICT, detail="Organization does not exist"
         )
 
-    # get all courses from database
-    all_courses = (
-        courses.find({"org_id": org["org_id"]})
-        .sort("name", 1)
-        .skip(10 * (page - 1))
-        .limit(limit)
-    )
+    # show only public courses if user is not logged in
+    if current_user.user_id == "anonymous":
+        all_courses = (
+            courses.find({"org_id": org["org_id"], "public": True})
+            .sort("name", 1)
+            .skip(10 * (page - 1))
+            .limit(limit)
+        )
+    else:
+        all_courses = (
+            courses.find({"org_id": org["org_id"]})
+            .sort("name", 1)
+            .skip(10 * (page - 1))
+            .limit(limit)
+        )
 
     return [
         json.loads(json.dumps(course, default=str))
@@ -395,7 +387,6 @@ async def verify_rights(
     hasRoleRights = await verify_user_rights_with_roles(
         request, action, current_user.user_id, course_id, course["org_id"]
     )
-    
 
     if not hasRoleRights and not isAuthor:
         raise HTTPException(
