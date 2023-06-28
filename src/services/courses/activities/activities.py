@@ -1,3 +1,4 @@
+from calendar import c
 from pydantic import BaseModel
 from src.security.security import verify_user_rights_with_roles
 from src.services.users.schemas.users import PublicUser
@@ -16,6 +17,7 @@ class Activity(BaseModel):
 
 class ActivityInDB(Activity):
     activity_id: str
+    course_id: str
     coursechapter_id: str
     org_id: str
     creationDate: str
@@ -47,6 +49,9 @@ async def create_activity(
         request, "create", current_user.user_id, activity_id, org_id
     )
 
+    # get course_id from activity
+    course = await courses.find_one({"chapters": coursechapter_id})
+
     if not hasRoleRights:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -61,6 +66,7 @@ async def create_activity(
         updateDate=str(datetime.now()),
         activity_id=activity_id,
         org_id=org_id,
+        course_id=course["course_id"],
     )
     await activities.insert_one(activity.dict())
 
