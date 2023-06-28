@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, UploadFile, Form, Request
 from src.security.auth import get_current_user
 
-from src.services.courses.courses import Course,  create_course,  get_course, get_course_meta, get_courses, get_courses_orgslug, update_course, delete_course, update_course_thumbnail
+from src.services.courses.courses import Course,  create_course,  get_course, get_course_meta, get_courses_orgslug, update_course, delete_course, update_course_thumbnail
 from src.services.users.users import PublicUser
 
 
@@ -41,21 +41,12 @@ async def api_get_course_meta(request: Request, course_id: str,  current_user: P
     """
     return await get_course_meta(request, course_id, current_user=current_user)
 
-
-@router.get("/org_id/{org_id}/page/{page}/limit/{limit}")
-async def api_get_course_by(request: Request, page: int, limit: int, org_id: str):
-    """
-    Get houses by page and limit
-    """
-    return await get_courses(request, page, limit, org_id)
-
-
 @router.get("/org_slug/{org_slug}/page/{page}/limit/{limit}")
-async def api_get_course_by_orgslug(request: Request, page: int, limit: int, org_slug: str):
+async def api_get_course_by_orgslug(request: Request, page: int, limit: int, org_slug: str, current_user: PublicUser = Depends(get_current_user)):
     """
     Get houses by page and limit
     """
-    return await get_courses_orgslug(request, page, limit, org_slug)
+    return await get_courses_orgslug(request, current_user, page, limit, org_slug)
 
 
 @router.put("/{course_id}")
