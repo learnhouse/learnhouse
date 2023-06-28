@@ -115,7 +115,7 @@ async def update_org_logo(
 
     await orgs.find_one({"org_id": org_id})
 
-    name_in_disk = await upload_org_logo(logo_file)
+    name_in_disk = await upload_org_logo(logo_file, org_id)
 
     # update org
     await orgs.update_one({"org_id": org_id}, {"$set": {"logo": name_in_disk}})

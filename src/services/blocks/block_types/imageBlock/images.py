@@ -6,24 +6,51 @@ from src.services.blocks.utils.upload_files import upload_file_and_return_file_o
 from src.services.users.users import PublicUser
 
 
-async def create_image_block(request: Request, image_file: UploadFile, activity_id: str):
+async def create_image_block(
+    request: Request, image_file: UploadFile, activity_id: str
+):
     blocks = request.app.db["blocks"]
     activity = request.app.db["activities"]
+    courses = request.app.db["courses"]
 
     block_type = "imageBlock"
 
     # get org_id from activity
-    activity = await activity.find_one({"activity_id": activity_id}, {"_id": 0, "org_id": 1})
+    activity = await activity.find_one({"activity_id": activity_id}, {"_id": 0})
     org_id = activity["org_id"]
+
+    coursechapter_id = activity["coursechapter_id"]
+
+    # get course_id from coursechapter
+    course = await courses.find_one(
+        {"chapters": coursechapter_id},
+        {"_id": 0},
+    )
+
 
     # get block id
     block_id = str(f"block_{uuid4()}")
 
-    block_data = await upload_file_and_return_file_object(request, image_file,  activity_id, block_id, ["jpg", "jpeg", "png", "gif"], block_type)
+    block_data = await upload_file_and_return_file_object(
+        request,
+        image_file,
+        activity_id,
+        block_id,
+        ["jpg", "jpeg", "png", "gif"],
+        block_type,
+        org_id,
+        course["course_id"],
+    )
 
     # create block
-    block = Block(block_id=block_id, activity_id=activity_id,
-                  block_type=block_type, block_data=block_data, org_id=org_id)
+    block = Block(
+        block_id=block_id,
+        activity_id=activity_id,
+        block_type=block_type,
+        block_data=block_data,
+        org_id=org_id,
+        course_id=course["course_id"],
+    )
 
     # insert block
     await blocks.insert_one(block.dict())
@@ -41,4 +68,5 @@ async def get_image_block(request: Request, file_id: str, current_user: PublicUs
 
     else:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Image block does not exist")
+            status_code=status.HTTP_409_CONFLICT, detail="Image block does not exist"
+        )
