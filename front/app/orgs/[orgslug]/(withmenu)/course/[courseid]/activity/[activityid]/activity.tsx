@@ -10,6 +10,7 @@ import DocumentPdfActivity from "@components/Pages/Activities/DocumentPdf/Docume
 import ActivityIndicators from "@components/Pages/Courses/ActivityIndicators";
 import GeneralWrapperStyled from "@components/StyledElements/Wrappers/GeneralWrapper";
 import { useRouter } from "next/navigation";
+import AuthenticatedClientElement from "@components/Security/AuthenticatedClientElement";
 
 interface ActivityClientProps {
   activityid: string;
@@ -64,8 +65,10 @@ function ActivityClient(props: ActivityClientProps) {
               <h1 className="font-bold text-gray-950 text-2xl first-letter:uppercase" >{activity.name}</h1>
             </div>
             <div className="flex space-x-2">
-              <MarkStatus activityid={activityid} course={course} orgslug={orgslug} courseid={courseid} />
+              <AuthenticatedClientElement checkMethod="authentication">
+                <MarkStatus activityid={activityid} course={course} orgslug={orgslug} courseid={courseid} />
 
+              </AuthenticatedClientElement>
             </div>
           </div>
 

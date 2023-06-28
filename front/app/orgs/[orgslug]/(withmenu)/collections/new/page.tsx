@@ -43,13 +43,11 @@ function NewCollection(params: any) {
       org_id: org.org_id,
     };
     await createCollection(collection);
-    revalidateTags(["collections"]);
+    revalidateTags(["collections"], orgslug);
     router.prefetch(getUriWithOrg(orgslug, "/collections"));
     router.push(getUriWithOrg(orgslug, "/collections"));
     router.refresh();
 
-    // refresh page (FIX for Next.js BUG)
-    window.location.reload();
   };
 
 

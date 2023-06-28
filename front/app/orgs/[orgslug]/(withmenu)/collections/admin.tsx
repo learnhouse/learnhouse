@@ -14,13 +14,13 @@ const CollectionAdminEditsArea = (props: any) => {
 
     const deleteCollectionUI = async (collectionId: number) => {
         await deleteCollection(collectionId);
-        revalidateTags(["collections"]);
+        revalidateTags(["collections"], props.orgslug);
         // reload the page
         router.refresh();
         router.push(getUriWithOrg(props.orgslug, "/collections"));
 
         // refresh page (FIX for Next.js BUG)
-        window.location.reload();
+        //window.location.reload();
     }
 
     return (

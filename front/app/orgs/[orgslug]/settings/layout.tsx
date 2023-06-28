@@ -6,38 +6,45 @@ import LearnHouseWhiteLogo from '@public/learnhouse_text_white.png';
 import AuthProvider, { AuthContext } from '@components/Security/AuthProvider';
 import Avvvatars from 'avvvatars-react';
 import Image from 'next/image';
+import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement';
+import { getOrganizationContextInfo } from '@services/organizations/orgs';
 
-function SettingsLayout({ children, params }: { children: React.ReactNode, params: any }) {
+async function SettingsLayout({ children, params }: { children: React.ReactNode, params: any }) {
     const auth: any = React.useContext(AuthContext);
+    const orgslug = params.orgslug;
+
+    let org = await getOrganizationContextInfo(orgslug, {});
 
     return (
-        <>  
-        <AuthProvider>
-            <Main>
-                <LeftWrapper>
-                    <LeftTopArea>
-                    
-                    <Link href={"/"}><Image alt="Learnhouse logo" width={128}  src={LearnHouseWhiteLogo}/></Link>
-                    {auth.isAuthenticated && (
-                        <Avvvatars value={auth.userInfo.user_object.user_id} style="shape" />
-                    )}
-                    </LeftTopArea>
-                    <LeftMenuWrapper>
-                        <MenuTitle>Account</MenuTitle>
-                        <ul>
-                            <li><Link href="/settings/account/profile">Profile</Link></li>
-                            <li><Link href="/settings/account/passwords">Passwords</Link></li>
-                        </ul>
-                        <MenuTitle>Organization</MenuTitle>
-                        <ul>
-                            <li><Link href="/settings/organization/general">General</Link></li>
-                        </ul>
-                    </LeftMenuWrapper>
-                </LeftWrapper>
-                <RightWrapper>
-                    {children}
-                </RightWrapper>
-            </Main></AuthProvider>
+        <>
+            <AuthProvider>
+                <Main>
+                    <LeftWrapper>
+                        <LeftTopArea>
+
+                            <Link href={"/"}><Image alt="Learnhouse logo" width={128} src={LearnHouseWhiteLogo} /></Link>
+                            {auth.isAuthenticated && (
+                                <Avvvatars value={auth.userInfo.user_object.user_id} style="shape" />
+                            )}
+                        </LeftTopArea>
+                        <LeftMenuWrapper>
+                            <MenuTitle>Account</MenuTitle>
+                            <ul>
+                                <li><Link href="/settings/account/profile">Profile</Link></li>
+                                <li><Link href="/settings/account/passwords">Passwords</Link></li>
+                            </ul>
+                            <AuthenticatedClientElement checkMethod='roles' orgId={org.org_id}  >
+                                <MenuTitle>Organization</MenuTitle>
+                                <ul>
+                                    <li><Link href="/settings/organization/general">General</Link></li>
+                                </ul>
+                            </AuthenticatedClientElement>
+                        </LeftMenuWrapper>
+                    </LeftWrapper>
+                    <RightWrapper>
+                        {children}
+                    </RightWrapper>
+                </Main></AuthProvider>
         </>
     )
 }
@@ -59,7 +66,7 @@ const LeftWrapper = styled('div', {
 const LeftTopArea = styled('div', {
     display: 'flex',
     marginLeft: '20px',
-    
+
     alignItems: 'center',
 
     img: {
@@ -72,7 +79,7 @@ const LeftTopArea = styled('div', {
         placeContent: 'center',
 
     }
-    
+
 })
 
 const LeftMenuWrapper = styled('div', {
