@@ -1,9 +1,10 @@
 
 import React from "react";
 import Courses from "./courses";
-import { getOrgCourses } from "@services/courses/courses";
+import { getOrgCoursesWithAuthHeader } from "@services/courses/courses";
 import { Metadata } from "next";
 import { getOrganizationContextInfo } from "@services/organizations/orgs";
+import { cookies } from "next/headers";
 
 type MetadataProps = {
   params: { orgslug: string };
@@ -24,7 +25,9 @@ export async function generateMetadata(
 
 const CoursesPage = async (params: any) => {
   const orgslug = params.params.orgslug;
-  const courses = await getOrgCourses(orgslug, { revalidate: 0, tags: ['courses'] });
+  const cookieStore = cookies();
+  const access_token_cookie: any = cookieStore.get('access_token_cookie');
+  const courses = await getOrgCoursesWithAuthHeader(orgslug, { revalidate: 0, tags: ['courses'] }, access_token_cookie ? access_token_cookie.value : null);
 
   return (
     <div>
