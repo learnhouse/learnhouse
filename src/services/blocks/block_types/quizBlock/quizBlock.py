@@ -31,7 +31,7 @@ class quizBlock(BaseModel):
 async def create_quiz_block(request: Request, quizBlock: quizBlock, activity_id: str, user: PublicUser):
     blocks = request.app.db["blocks"]
     activities = request.app.db["activities"]
-    courses = request.app.db["courses"]
+    request.app.db["courses"]
 
     # Get org_id from activity
     activity = await activities.find_one({"activity_id": activity_id}, {"_id": 0, "org_id": 1})
