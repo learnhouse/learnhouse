@@ -15,6 +15,7 @@ import { useRouter } from 'next/navigation';
 import GeneralWrapperStyled from '@components/StyledElements/Wrappers/GeneralWrapper';
 import TypeOfContentTitle from '@components/StyledElements/Titles/TypeOfContentTitle';
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement';
+import { getCourseThumbnailMediaDirectory } from '@services/media/media';
 
 interface CourseProps {
     orgslug: string;
@@ -73,7 +74,7 @@ function Courses(props: CourseProps) {
                         <div className="px-3" key={course.course_id}>
                             <AdminEditsArea course={course} orgSlug={orgslug} courseId={course.course_id} deleteCourses={deleteCourses} />
                             <Link href={getUriWithOrg(orgslug, "/course/" + removeCoursePrefix(course.course_id))}>
-                                <div className="inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl relative w-[249px] h-[131px] bg-cover" style={{ backgroundImage: `url(${getBackendUrl()}content/uploads/img/${course.thumbnail})` }}>
+                                <div className="inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl relative w-[249px] h-[131px] bg-cover" style={{ backgroundImage: `url(${getCourseThumbnailMediaDirectory(course.org_id, course.course_id, course.thumbnail)})` }}>
 
                                 </div>
                             </Link>
