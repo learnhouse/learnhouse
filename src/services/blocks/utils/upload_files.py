@@ -1,4 +1,3 @@
-import os
 import uuid
 from fastapi import HTTPException, Request, UploadFile, status
 from src.services.blocks.schemas.files import BlockFile

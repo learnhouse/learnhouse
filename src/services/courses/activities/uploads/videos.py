@@ -1,4 +1,3 @@
-import os
 
 from src.services.utils.upload_content import upload_content
 

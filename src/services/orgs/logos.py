@@ -1,6 +1,4 @@
-import os
 from uuid import uuid4
-from fastapi import HTTPException, status
 
 from src.services.utils.upload_content import upload_content
 

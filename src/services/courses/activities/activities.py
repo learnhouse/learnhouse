@@ -1,4 +1,3 @@
-from calendar import c
 from pydantic import BaseModel
 from src.security.security import verify_user_rights_with_roles
 from src.services.users.schemas.users import PublicUser
