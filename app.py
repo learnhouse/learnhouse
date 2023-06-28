@@ -1,15 +1,13 @@
-import logging
 from fastapi import FastAPI, Request
 from config.config import LearnHouseConfig, get_learnhouse_config
 from src.core.events.events import shutdown_app, startup_app
-from src.main import global_router
+from src.router import v1_router
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi_jwt_auth.exceptions import AuthJWTException
 from fastapi.middleware.gzip import GZipMiddleware
 
-from src.services.mocks.initial import create_initial_data
 
 # from src.services.mocks.initial import create_initial_data
 
@@ -62,7 +60,7 @@ def authjwt_exception_handler(request: Request, exc: AuthJWTException):
 
 
 # Global Routes
-app.include_router(global_router)
+app.include_router(v1_router)
 
 # General Routes
 
@@ -71,18 +69,4 @@ app.include_router(global_router)
 async def root():
     return {"Message": "Welcome to LearnHouse ✨"}
 
-# Get config
 
-
-@ app.get("/config")
-async def config():
-    logging.info("Getting config")
-    config = get_learnhouse_config()
-    return config.dict()
-
-
-@app.get("/initial_data")
-async def initial_data(request: Request):
-
-    await create_initial_data(request)
-    return {"Message": "Initial data created 🤖"}

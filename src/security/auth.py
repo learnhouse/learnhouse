@@ -4,6 +4,7 @@ from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
+from src.services.dev.dev import isDevModeEnabled
 from src.services.users.schemas.users import AnonymousUser, PublicUser
 from src.services.users.users import security_get_user, security_verify_password
 from src.security.security import ALGORITHM, SECRET_KEY
@@ -14,10 +15,10 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 #### JWT Auth ####################################################
 class Settings(BaseModel):
-    authjwt_secret_key: str = "secret"
+    authjwt_secret_key: str = "secret" if isDevModeEnabled() else SECRET_KEY
     authjwt_token_location = {"cookies", "headers"}
     authjwt_cookie_csrf_protect = False
-    authjwt_access_token_expires = False  # (pre-alpha only) # TODO: set to 1 hour
+    authjwt_access_token_expires = False if isDevModeEnabled() else 3600
     authjwt_cookie_samesite = "lax"
     authjwt_cookie_secure = True
     authjwt_cookie_domain = get_learnhouse_config().hosting_config.cookie_config.domain

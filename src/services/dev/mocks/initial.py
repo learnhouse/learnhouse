@@ -124,7 +124,7 @@ async def create_initial_data(request: Request):
     await database_orgs.delete_many({})
 
     organizations = []
-    for i in range(0, 5):
+    for i in range(0, 2):
         company = fake.company()
         # remove whitespace and special characters and make lowercase
         slug = ''.join(e for e in company if e.isalnum()).lower()
