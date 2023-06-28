@@ -84,6 +84,11 @@ async def get_activity(request: Request, activity_id: str, current_user: PublicU
     course = await courses.find_one({"chapters": coursechapter_id})
 
     isCoursePublic = course["public"]
+    isAuthor = current_user.user_id in course["authors"]
+
+    if isAuthor:
+        activity = ActivityInDB(**activity)
+        return activity
 
     # verify course rights
     hasRoleRights = await verify_user_rights_with_roles(

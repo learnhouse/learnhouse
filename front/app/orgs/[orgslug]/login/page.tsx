@@ -10,8 +10,8 @@ import Toast from '@components/StyledElements/Toast/Toast';
 import { toast } from 'react-hot-toast';
 
 const Login = () => {
-  const [email, setEmail] = React.useState("admin@admin.admin");
-  const [password, setPassword] = React.useState("admin");
+  const [email, setEmail] = React.useState("");
+  const [password, setPassword] = React.useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
 
@@ -44,13 +44,13 @@ const Login = () => {
   return (
     <div>
       <LoginPage>
-      <Toast></Toast>
+        <Toast></Toast>
         <LoginBox>
           <FormLayout onSubmit={handleSubmit}>
             <FormField name="login-email">
               <Flex css={{ alignItems: 'baseline', justifyContent: 'space-between' }}>
                 <FormLabel>Email</FormLabel>
-                <FormMessage style={{color:"black"}} match="valueMissing">Please provide an email</FormMessage>
+                <FormMessage style={{ color: "black" }} match="valueMissing">Please provide an email</FormMessage>
               </Flex>
               <Form.Control asChild>
                 <Input onChange={handleEmailChange} type="text" />
@@ -59,7 +59,7 @@ const Login = () => {
             <FormField name="login-password">
               <Flex css={{ alignItems: 'baseline', justifyContent: 'space-between' }}>
                 <FormLabel>Password</FormLabel>
-                <FormMessage style={{color:"black"}} match="valueMissing">Please provide a password</FormMessage>
+                <FormMessage style={{ color: "black" }} match="valueMissing">Please provide a password</FormMessage>
               </Flex>
               <Form.Control asChild>
                 <Input type="password" onChange={handlePasswordChange} />

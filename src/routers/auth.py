@@ -1,5 +1,6 @@
 from fastapi import Depends, APIRouter, HTTPException, Response, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
+from config.config import get_learnhouse_config
 from src.security.auth import AuthJWT, authenticate_user
 from src.services.users.users import PublicUser
 
@@ -41,7 +42,7 @@ async def login(
     refresh_token = Authorize.create_refresh_token(subject=form_data.username)
     Authorize.set_refresh_cookies(refresh_token)
     # set cookies using fastapi
-    response.set_cookie(key="access_token_cookie", value=access_token, httponly=False)
+    response.set_cookie(key="access_token_cookie", value=access_token, httponly=False, domain=get_learnhouse_config().hosting_config.cookie_config.domain)
     user = PublicUser(**user.dict())
 
     result = {

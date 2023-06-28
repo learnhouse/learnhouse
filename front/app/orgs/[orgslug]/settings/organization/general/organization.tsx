@@ -33,11 +33,8 @@ function OrganizationClient(props: any) {
             let org_id = org.org_id;
             await uploadOrganizationLogo(org_id, selectedFile);
             setSelectedFile(null); // Reset the selected file
-            revalidateTags(['organizations']);
+            revalidateTags(['organizations'], org.slug);
             router.refresh();
-
-            // refresh page (FIX for Next.js BUG)
-            window.location.reload();
 
         }
     };
@@ -55,6 +52,10 @@ function OrganizationClient(props: any) {
     const updateOrg = async (values: OrganizationValues) => {
         let org_id = org.org_id;
         await updateOrganization(org_id, values);
+
+        // Mutate the org
+        revalidateTags(['organizations'], org.slug);
+        router.refresh();
     }
 
 

@@ -348,6 +348,42 @@ export const EditorContentWrapper = styled.div`
   // disable chrome outline
 
   .ProseMirror {
+
+    h1 {
+      font-size: 30px;  
+      font-weight: 600;
+      margin-top: 10px;
+      margin-bottom: 10px;
+    }
+
+    h2 {
+      font-size: 25px;
+      font-weight: 600;
+      margin-top: 10px;
+      margin-bottom: 10px;
+    }
+
+    h3 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-top: 10px;
+      margin-bottom: 10px;
+    }
+
+    h4 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-top: 10px;
+      margin-bottom: 10px;
+    }
+
+    h5 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-top: 10px;
+      margin-bottom: 10px;
+    }
+
     padding-left: 20px;
     padding-right: 20px;
     padding-bottom: 20px;
