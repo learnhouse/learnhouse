@@ -1,6 +1,7 @@
 'use client';
 import { getAPIUrl, getBackendUrl, getUriWithOrg } from '@services/config/config';
 import { removeCourse } from '@services/courses/activity';
+import { getCourseThumbnailMediaDirectory } from '@services/media/media';
 import { revalidateTags } from '@services/utils/ts/requests';
 import Link from 'next/link';
 import { mutate } from 'swr';
@@ -28,7 +29,7 @@ function TrailCourseElement(props: TrailCourseElementProps) {
         <div className='trailcoursebox flex p-3 bg-white rounded-xl' style={{ boxShadow: '0px 4px 7px 0px rgba(0, 0, 0, 0.03)' }}>
 
             <Link href={getUriWithOrg(props.orgslug, "/course/" + courseid)}>
-                <div className="course_tumbnail inset-0 ring-1 ring-inset ring-black/10 rounded-lg relative h-[50px] w-[72px] bg-cover bg-center" style={{ backgroundImage: `url(${getBackendUrl()}content/uploads/img/${props.course.course_object.thumbnail})`, boxShadow: '0px 4px 7px 0px rgba(0, 0, 0, 0.03)' }}></div>
+                <div className="course_tumbnail inset-0 ring-1 ring-inset ring-black/10 rounded-lg relative h-[50px] w-[72px] bg-cover bg-center" style={{ backgroundImage: `url(${getCourseThumbnailMediaDirectory(props.course.course_object.org_id, props.course.course_object.course_id, props.course.course_object.thumbnail)})`, boxShadow: '0px 4px 7px 0px rgba(0, 0, 0, 0.03)' }}></div>
             </Link>
             <div className="course_meta pl-5 flex-grow space-y-1">
                 <div className="course_top">
