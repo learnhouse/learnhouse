@@ -4,6 +4,8 @@ uvicorn==0.20.0
 pymongo==4.3.3
 motor==3.1.1
 python-multipart
+boto3
+botocore
 python-jose
 passlib
 fastapi-jwt-auth
