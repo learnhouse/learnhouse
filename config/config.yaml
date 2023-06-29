@@ -17,6 +17,11 @@ hosting_config:
   cookies_config:
     domain: ".localhost"
   allowed_regexp: '\b((?:https?://)[^\s/$.?#].[^\s]*)\b'
+  content_delivery:
+    type: "filesystem" # "filesystem" or "s3api"
+    s3api:
+      bucket_name: ""
+      endpoint_url: ""
 
 database_config:
   mongodb_connection_string: mongodb://learnhouse:learnhouse@mongo:27017/
