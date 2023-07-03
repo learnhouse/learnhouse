@@ -23,8 +23,8 @@ class SecurityConfig(BaseModel):
 
 
 class S3ApiConfig(BaseModel):
-    bucket_name: str
-    endpoint_url: str
+    bucket_name: str | None
+    endpoint_url: str | None
 
 
 class ContentDeliveryConfig(BaseModel):
