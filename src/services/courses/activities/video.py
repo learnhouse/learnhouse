@@ -62,6 +62,7 @@ async def create_video_activity(
         org_id=org_id,
         activity_id=activity_id,
         coursechapter_id=coursechapter_id,
+        course_id=coursechapter["course_id"],
         name=name,
         type="video",
         content={
@@ -91,7 +92,7 @@ async def create_video_activity(
     # upload video
     if video_file:
         # get videofile format
-        await upload_video(video_file, activity_id)
+        await upload_video(video_file, activity_id, org_id, coursechapter["course_id"])
 
     # todo : choose whether to update the chapter or not
     # update chapter
@@ -108,6 +109,7 @@ class ExternalVideo(BaseModel):
     uri: str
     type: Literal["youtube", "vimeo"]
     coursechapter_id: str
+
 
 class ExternalVideoInDB(BaseModel):
     activity_id: str
@@ -150,6 +152,7 @@ async def create_external_video_activity(
                 "type": data.type,
             }
         },
+        course_id=coursechapter["course_id"],
         creationDate=str(datetime.now()),
         updateDate=str(datetime.now()),
     )

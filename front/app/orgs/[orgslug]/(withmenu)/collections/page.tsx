@@ -8,6 +8,7 @@ import { Metadata } from "next";
 import { cookies } from "next/headers";
 import Link from "next/link";
 import CollectionAdminEditsArea from "./admin";
+import { getCourseThumbnailMediaDirectory } from "@services/media/media";
 
 type MetadataProps = {
     params: { orgslug: string, courseid: string };
@@ -45,9 +46,9 @@ const CollectionsPage = async (params: any) => {
             <div className="flex justify-between" >
                 <TypeOfContentTitle title="Collections" type="col" />
                 <AuthenticatedClientElement checkMethod='authentication'>
-                <Link className="flex justify-center" href={getUriWithOrg(orgslug, "/collections/new")}>
-                    <button className="rounded-md bg-black antialiased ring-offset-purple-800 p-2 px-5 my-auto font text-sm font-bold text-white drop-shadow-lg">Add Collection + </button>
-                </Link>
+                    <Link className="flex justify-center" href={getUriWithOrg(orgslug, "/collections/new")}>
+                        <button className="rounded-md bg-black antialiased ring-offset-purple-800 p-2 px-5 my-auto font text-sm font-bold text-white drop-shadow-lg">Add Collection + </button>
+                    </Link>
                 </AuthenticatedClientElement>
             </div>
             <div className="home_collections flex flex-wrap">
@@ -60,7 +61,7 @@ const CollectionsPage = async (params: any) => {
                                 <div className="flex -space-x-4">
                                     {collection.courses.slice(0, 3).map((course: any) => (
                                         <Link key={course.course_id} href={getUriWithOrg(orgslug, "/course/" + course.course_id.substring(7))}>
-                                            <img className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg ring-2 ring-white z-50" key={course.course_id} src={`${getBackendUrl()}content/uploads/img/${course.thumbnail}`} alt={course.name} />
+                                            <img className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg ring-2 ring-white z-50" key={course.course_id} src={`${getCourseThumbnailMediaDirectory(course.org_id, course.course_id, course.thumbnail)}`} alt={course.name} />
                                         </Link>
                                     ))}
                                 </div>

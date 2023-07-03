@@ -8,6 +8,7 @@ import ClientComponentSkeleton from "@components/Utils/ClientComp";
 import { HeaderProfileBox } from "@components/Security/HeaderProfileBox";
 import { swrFetcher } from "@services/utils/ts/requests";
 import MenuLinks from "./MenuLinks";
+import { getOrgLogoMediaDirectory } from "@services/media/media";
 
 export const Menu = async (props: any) => {
     const orgslug = props.orgslug;
@@ -22,7 +23,7 @@ export const Menu = async (props: any) => {
                         <div className="flex w-auto h-9 rounded-md items-center m-auto justify-center" >
                             {org?.logo ? (
                                 <img
-                                    src={`${getBackendUrl()}content/uploads/logos/${org?.logo}`}
+                                    src={`${getOrgLogoMediaDirectory(org.org_id, org?.logo)}`}
                                     alt="Learnhouse"
                                     style={{ width: "auto", height: "100%" }}
                                     className="rounded-md"

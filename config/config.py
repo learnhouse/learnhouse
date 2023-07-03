@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Literal, Optional
 from pydantic import BaseModel
 import os
 import yaml
@@ -22,6 +22,16 @@ class SecurityConfig(BaseModel):
     auth_jwt_secret_key: str
 
 
+class S3ApiConfig(BaseModel):
+    bucket_name: str | None
+    endpoint_url: str | None
+
+
+class ContentDeliveryConfig(BaseModel):
+    type: Literal["filesystem", "s3api"]
+    s3api: S3ApiConfig
+
+
 class HostingConfig(BaseModel):
     domain: str
     ssl: bool
@@ -31,6 +41,7 @@ class HostingConfig(BaseModel):
     self_hosted: bool
     sentry_config: Optional[SentryConfig]
     cookie_config: CookieConfig
+    content_delivery: ContentDeliveryConfig
 
 
 class DatabaseConfig(BaseModel):
@@ -116,6 +127,33 @@ def get_learnhouse_config() -> LearnHouseConfig:
     ).get("domain")
     cookie_config = CookieConfig(domain=cookies_domain)
 
+    env_content_delivery_type = os.environ.get("LEARNHOUSE_CONTENT_DELIVERY_TYPE")
+    content_delivery_type: str = (
+        (yaml_config.get("hosting_config", {}).get("content_delivery", {}).get("type"))
+        or env_content_delivery_type
+        or "filesystem"
+    )  # default to filesystem
+
+    env_bucket_name = os.environ.get("LEARNHOUSE_S3_API_BUCKET_NAME")
+    env_endpoint_url = os.environ.get("LEARNHOUSE_S3_API_ENDPOINT_URL")
+    bucket_name = (
+        yaml_config.get("hosting_config", {})
+        .get("content_delivery", {})
+        .get("s3api", {})
+        .get("bucket_name")
+    ) or env_bucket_name
+    endpoint_url = (
+        yaml_config.get("hosting_config", {})
+        .get("content_delivery", {})
+        .get("s3api", {})
+        .get("endpoint_url")
+    ) or env_endpoint_url
+
+    content_delivery = ContentDeliveryConfig(
+        type=content_delivery_type,  # type: ignore
+        s3api=S3ApiConfig(bucket_name=bucket_name, endpoint_url=endpoint_url),  # type: ignore
+    )
+
     # Database config
     mongodb_connection_string = env_mongodb_connection_string or yaml_config.get(
         "database_config", {}
@@ -158,6 +196,7 @@ def get_learnhouse_config() -> LearnHouseConfig:
         self_hosted=bool(self_hosted),
         sentry_config=sentry_config,
         cookie_config=cookie_config,
+        content_delivery=content_delivery,
     )
     database_config = DatabaseConfig(
         mongodb_connection_string=mongodb_connection_string

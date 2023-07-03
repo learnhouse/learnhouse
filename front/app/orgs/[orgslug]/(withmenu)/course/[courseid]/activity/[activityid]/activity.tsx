@@ -11,6 +11,7 @@ import ActivityIndicators from "@components/Pages/Courses/ActivityIndicators";
 import GeneralWrapperStyled from "@components/StyledElements/Wrappers/GeneralWrapper";
 import { useRouter } from "next/navigation";
 import AuthenticatedClientElement from "@components/Security/AuthenticatedClientElement";
+import { getCourseThumbnailMediaDirectory } from "@services/media/media";
 
 interface ActivityClientProps {
   activityid: string;
@@ -49,7 +50,7 @@ function ActivityClient(props: ActivityClientProps) {
           <div className="flex space-x-6">
             <div className="flex">
               <Link href={getUriWithOrg(orgslug, "") + `/course/${courseid}`}>
-                <img className="w-[100px] h-[57px] rounded-md drop-shadow-md" src={`${getBackendUrl()}content/uploads/img/${course.course.thumbnail}`} alt="" />
+                <img className="w-[100px] h-[57px] rounded-md drop-shadow-md" src={`${getCourseThumbnailMediaDirectory(course.course.org_id, course.course.course_id, course.course.thumbnail)}`} alt="" />
               </Link>
             </div>
             <div className="flex flex-col -space-y-1">

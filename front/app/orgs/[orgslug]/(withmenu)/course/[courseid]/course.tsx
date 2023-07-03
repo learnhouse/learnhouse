@@ -12,6 +12,7 @@ import { revalidateTags } from "@services/utils/ts/requests";
 import ActivityIndicators from "@components/Pages/Courses/ActivityIndicators";
 import { useRouter } from "next/navigation";
 import GeneralWrapperStyled from "@components/StyledElements/Wrappers/GeneralWrapper";
+import { getCourseThumbnailMediaDirectory } from "@services/media/media";
 
 const CourseClient = (props: any) => {
   const courseid = props.courseid;
@@ -55,7 +56,7 @@ const CourseClient = (props: any) => {
           </div>
 
 
-          <div className="inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl relative w-auto h-[300px] bg-cover bg-center mb-4" style={{ backgroundImage: `url(${getBackendUrl()}content/uploads/img/${course.course.thumbnail})` }}>
+          <div className="inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl relative w-auto h-[300px] bg-cover bg-center mb-4" style={{ backgroundImage: `url(${getCourseThumbnailMediaDirectory(course.course.org_id, course.course.course_id, course.course.thumbnail)})` }}>
 
           </div>
 

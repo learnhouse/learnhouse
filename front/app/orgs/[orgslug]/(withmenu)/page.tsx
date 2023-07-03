@@ -11,6 +11,7 @@ import { getOrganizationContextInfo } from '@services/organizations/orgs';
 import { cookies } from 'next/headers';
 import GeneralWrapperStyled from '@components/StyledElements/Wrappers/GeneralWrapper';
 import TypeOfContentTitle from '@components/StyledElements/Titles/TypeOfContentTitle';
+import { getCourseThumbnailMediaDirectory } from '@services/media/media';
 
 type MetadataProps = {
   params: { orgslug: string };
@@ -63,7 +64,7 @@ const OrgHomePage = async (params: any) => {
                   <div className="flex -space-x-4">
                     {collection.courses.slice(0, 3).map((course: any) => (
                       <Link key={course.course_id} href={getUriWithOrg(orgslug, "/course/" + course.course_id.substring(7))}>
-                        <img className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg ring-2 ring-white z-50" key={course.course_id} src={`${getBackendUrl()}content/uploads/img/${course.thumbnail}`} alt={course.name} />
+                        <img className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg ring-2 ring-white z-50" key={course.course_id} src={`url(${getCourseThumbnailMediaDirectory(course.org_id, course.course_id, course.thumbnail)})`} alt={course.name} />
                       </Link>
                     ))}
                   </div>
@@ -80,7 +81,7 @@ const OrgHomePage = async (params: any) => {
           {courses.map((course: any) => (
             <div className="py-3 px-3" key={course.course_id}>
               <Link href={getUriWithOrg(orgslug, "/course/" + removeCoursePrefix(course.course_id))}>
-                <div className="inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl relative w-[249px] h-[131px] bg-cover transition-all hover:scale-102" style={{ backgroundImage: `url(${getBackendUrl()}content/uploads/img/${course.thumbnail})` }}>
+                <div className="inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl relative w-[249px] h-[131px] bg-cover transition-all hover:scale-102" style={{ backgroundImage: `url(${getCourseThumbnailMediaDirectory(course.org_id, course.course_id, course.thumbnail)})` }}>
                 </div>
               </Link>
               <h2 className="font-bold text-lg w-[250px] py-2">{course.name}</h2>

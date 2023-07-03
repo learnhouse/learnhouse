@@ -184,7 +184,9 @@ async def create_course(
         name_in_disk = (
             f"{course_id}_thumbnail_{uuid4()}.{thumbnail_file.filename.split('.')[-1]}"
         )
-        await upload_thumbnail(thumbnail_file, name_in_disk)
+        await upload_thumbnail(
+            thumbnail_file, name_in_disk, course_object.org_id, course_id
+        )
         course_object.thumbnail = name_in_disk
 
     course = CourseInDB(
@@ -225,7 +227,9 @@ async def update_course_thumbnail(
         if thumbnail_file and thumbnail_file.filename:
             name_in_disk = f"{course_id}_thumbnail_{uuid4()}.{thumbnail_file.filename.split('.')[-1]}"
             course = Course(**course).copy(update={"thumbnail": name_in_disk})
-            await upload_thumbnail(thumbnail_file, name_in_disk)
+            await upload_thumbnail(
+                thumbnail_file, name_in_disk, course.org_id, course_id
+            )
 
             updated_course = CourseInDB(
                 course_id=course_id,

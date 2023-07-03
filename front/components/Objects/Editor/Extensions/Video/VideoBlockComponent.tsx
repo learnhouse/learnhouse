@@ -4,11 +4,13 @@ import React from "react";
 import styled from "styled-components";
 import { getBackendUrl } from "../../../../../services/config/config";
 import { uploadNewVideoFile } from "../../../../../services/blocks/Video/video";
+import { getActivityBlockMediaDirectory } from "@services/media/media";
 
 function VideoBlockComponents(props: any) {
   const [video, setVideo] = React.useState(null);
   const [isLoading, setIsLoading] = React.useState(false);
   const [blockObject, setblockObject] = React.useState(props.node.attrs.blockObject);
+  const fileId = blockObject ? `${blockObject.block_data.file_id}.${blockObject.block_data.file_format}` : null;
 
   const handleVideoChange = (event: React.ChangeEvent<any>) => {
     setVideo(event.target.files[0]);
@@ -42,9 +44,11 @@ function VideoBlockComponents(props: any) {
         <BlockVideo>
           <video
             controls
-            src={`${getBackendUrl()}content/uploads/files/activities/${props.extension.options.activity.activity_id}/blocks/videoBlock/${blockObject.block_id}/${blockObject.block_data.file_id}.${
-              blockObject.block_data.file_format
-            }`}
+            src={`${getActivityBlockMediaDirectory(props.extension.options.activity.org_id,
+              props.extension.options.activity.course_id,
+              props.extension.options.activity.activity_id,
+              blockObject.block_id,
+              blockObject ? fileId : ' ', 'videoBlock')}`}
           ></video>
         </BlockVideo>
       )}

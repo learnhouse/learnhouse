@@ -1,17 +1,16 @@
-import os
+
+from src.services.utils.upload_content import upload_content
 
 
-async def upload_thumbnail(thumbnail_file, name_in_disk):
+async def upload_thumbnail(thumbnail_file, name_in_disk, org_id, course_id):
     contents = thumbnail_file.file.read()
     try:
-        if not os.path.exists("content/uploads/img"):
-            os.makedirs("content/uploads/img")
-        
-        with open(f"content/uploads/img/{name_in_disk}", 'wb') as f:
-            f.write(contents)
-            f.close()
+        await upload_content(
+            f"courses/{course_id}/thumbnails",
+            org_id,
+            contents,
+            f"{name_in_disk}",
+        )
 
     except Exception:
         return {"message": "There was an error uploading the file"}
-    finally:
-        thumbnail_file.file.close()
