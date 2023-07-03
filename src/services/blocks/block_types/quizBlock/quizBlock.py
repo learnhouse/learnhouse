@@ -31,16 +31,20 @@ class quizBlock(BaseModel):
 async def create_quiz_block(request: Request, quizBlock: quizBlock, activity_id: str, user: PublicUser):
     blocks = request.app.db["blocks"]
     activities = request.app.db["activities"]
+    request.app.db["courses"]
 
     # Get org_id from activity
     activity = await activities.find_one({"activity_id": activity_id}, {"_id": 0, "org_id": 1})
     org_id = activity["org_id"]
 
+    # Get course_id from activity
+    course = await activities.find_one({"activity_id": activity_id}, {"_id": 0, "course_id": 1})
+
     block_id = str(f"block_{uuid4()}")
 
     # create block
     block = Block(block_id=block_id, activity_id=activity_id,
-                  block_type="quizBlock", block_data=quizBlock, org_id=org_id)
+                  block_type="quizBlock", block_data=quizBlock, org_id=org_id, course_id=course["course_id"])
 
     # insert block
     await blocks.insert_one(block.dict())

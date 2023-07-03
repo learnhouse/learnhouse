@@ -2,6 +2,7 @@ import { getBackendUrl } from "@services/config/config";
 import React from "react";
 import styled from "styled-components";
 import YouTube from 'react-youtube';
+import { getActivityMediaDirectory } from "@services/media/media";
 
 function VideoActivity({ activity, course }: { activity: any; course: any }) {
   const [videoId, setVideoId] = React.useState('');
@@ -36,13 +37,16 @@ function VideoActivity({ activity, course }: { activity: any; course: any }) {
     <div>
       {videoType === 'video' && (
         <div className="m-8 bg-zinc-900 rounded-md mt-14">
-          <video className="rounded-lg w-full h-[500px]" controls src={`${getBackendUrl()}content/uploads/video/${activity.content.video.activity_id}/${activity.content.video.filename}`}></video>
+          <video className="rounded-lg w-full h-[500px]" controls
+            src={getActivityMediaDirectory(activity.org_id, activity.course_id, activity.activity_id, activity.content.video.filename, 'video')}
+          ></video>
+
         </div>
       )}
       {videoType === 'external_video' && (
         <div>
-          <YouTube 
-          className="rounded-md overflow-hidden m-8 bg-zinc-900  mt-14"
+          <YouTube
+            className="rounded-md overflow-hidden m-8 bg-zinc-900  mt-14"
             opts={
               {
                 width: '1300',

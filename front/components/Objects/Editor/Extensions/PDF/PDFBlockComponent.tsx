@@ -4,11 +4,13 @@ import styled from "styled-components";
 import { AlertCircle, AlertTriangle, FileText, Image, ImagePlus, Info } from "lucide-react";
 import { getPDFFile, uploadNewPDFFile } from "../../../../../services/blocks/Pdf/pdf";
 import { getBackendUrl } from "../../../../../services/config/config";
+import { getActivityBlockMediaDirectory } from "@services/media/media";
 
 function PDFBlockComponent(props: any) {
   const [pdf, setPDF] = React.useState(null);
   const [isLoading, setIsLoading] = React.useState(false);
   const [blockObject, setblockObject] = React.useState(props.node.attrs.blockObject);
+  const fileId = blockObject ? `${blockObject.block_data.file_id}.${blockObject.block_data.file_format}` : null;
 
   const handlePDFChange = (event: React.ChangeEvent<any>) => {
     setPDF(event.target.files[0]);
@@ -41,9 +43,11 @@ function PDFBlockComponent(props: any) {
       {blockObject && (
         <BlockPDF>
           <iframe
-            src={`${getBackendUrl()}content/uploads/files/activities/${props.extension.options.activity.activity_id}/blocks/pdfBlock/${blockObject.block_id}/${blockObject.block_data.file_id}.${
-              blockObject.block_data.file_format
-            }`}
+            src={`${getActivityBlockMediaDirectory(props.extension.options.activity.org_id,
+              props.extension.options.activity.course_id,
+              props.extension.options.activity.activity_id,
+              blockObject.block_id,
+              blockObject ? fileId : ' ', 'pdfBlock')}`}
           />
         </BlockPDF>
       )}

@@ -1,23 +1,18 @@
-import os
+
+from src.services.utils.upload_content import upload_content
 
 
-async def upload_video(video_file,  activity_id):
+async def upload_video(video_file, activity_id, org_id, course_id):
     contents = video_file.file.read()
     video_format = video_file.filename.split(".")[-1]
 
-    if not os.path.exists("content/uploads/video"):
-        # create folder
-        os.makedirs("content/uploads/video")
-
-    # create folder
-    os.mkdir(f"content/uploads/video/{activity_id}")
-
     try:
-        with open(f"content/uploads/video/{activity_id}/video.{video_format}", 'wb') as f:
-            f.write(contents)
-            f.close()
+        await upload_content(
+            f"courses/{course_id}/activities/{activity_id}/video",
+            org_id,
+            contents,
+            f"video.{video_format}",
+        )
 
     except Exception:
         return {"message": "There was an error uploading the file"}
-    finally:
-        video_file.file.close()

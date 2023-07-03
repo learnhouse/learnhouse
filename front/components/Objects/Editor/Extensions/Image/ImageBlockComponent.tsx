@@ -7,12 +7,14 @@ import * as AspectRatio from '@radix-ui/react-aspect-ratio';
 import { AlertCircle, AlertTriangle, Image, ImagePlus, Info } from "lucide-react";
 import { getImageFile, uploadNewImageFile } from "../../../../../services/blocks/Image/images";
 import { getBackendUrl } from "../../../../../services/config/config";
+import { getActivityBlockMediaDirectory } from "@services/media/media";
 
 function ImageBlockComponent(props: any) {
   const [image, setImage] = React.useState(null);
   const [isLoading, setIsLoading] = React.useState(false);
   const [blockObject, setblockObject] = React.useState(props.node.attrs.blockObject);
   const [imageSize, setImageSize] = React.useState({ width: props.node.attrs.size ? props.node.attrs.size.width : 300 });
+  const fileId = blockObject ? `${blockObject.block_data.file_id}.${blockObject.block_data.file_format}` : null;
 
   const handleImageChange = (event: React.ChangeEvent<any>) => {
     setImage(event.target.files[0]);
@@ -29,11 +31,6 @@ function ImageBlockComponent(props: any) {
       size: imageSize,
     });
   };
-
-  console.log(props.node.attrs);
-  console.log(imageSize);
-
-
 
   return (
     <NodeViewWrapper className="block-image">
@@ -79,10 +76,14 @@ function ImageBlockComponent(props: any) {
           <BlockImage>
             <AspectRatio.Root ratio={16 / 9}>
               <img
-                src={`${getBackendUrl()}content/uploads/files/activities/${props.extension.options.activity.activity_id}/blocks/imageBlock/${blockObject.block_id}/${blockObject.block_data.file_id}.${blockObject.block_data.file_format
-                  }`}
+                src={`${getActivityBlockMediaDirectory(props.extension.options.activity.org_id,
+                  props.extension.options.activity.course_id,
+                  props.extension.options.activity.activity_id,
+                  blockObject.block_id,
+                  blockObject ? fileId : ' ', 'imageBlock')}`}
                 alt=""
               />
+              {blockObject.block_id}
             </AspectRatio.Root>
 
 
