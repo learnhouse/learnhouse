@@ -1,23 +1,18 @@
-import os
+
+from src.services.utils.upload_content import upload_content
 
 
-async def upload_pdf(pdf_file,  activity_id):
+async def upload_pdf(pdf_file, activity_id, org_id, course_id):
     contents = pdf_file.file.read()
     pdf_format = pdf_file.filename.split(".")[-1]
 
-    if not os.path.exists("content/uploads/documents/documentpdf"):
-        # create folder
-        os.makedirs("content/uploads/documents/documentpdf")
-
-    # create folder
-    os.mkdir(f"content/uploads/documents/documentpdf/{activity_id}")
-
     try:
-        with open(f"content/uploads/documents/documentpdf/{activity_id}/documentpdf.{pdf_format}", 'wb') as f:
-            f.write(contents)
-            f.close()
+        await upload_content(
+            f"courses/{course_id}/activities/{activity_id}/documentpdf",
+            org_id,
+            contents,
+            f"documentpdf.{pdf_format}",
+        )
 
     except Exception:
         return {"message": "There was an error uploading the file"}
-    finally:
-        pdf_file.file.close()
