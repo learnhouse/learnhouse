@@ -121,19 +121,13 @@ async def get_user_trail_with_orgslug(
     if not trail:
         return Trail(masked=False, courses=[])
 
-    # Check if these courses still exist in the database
-    for course in trail["courses"]:
-        course_id = course["course_id"]
-        course_object = await courses_mongo.find_one(
-            {"course_id": course_id}, {"_id": 0}
-        )
-        print('checking course ' + course_id)
-        if not course_object:
-            print("Course not found " + course_id)
-            trail["courses"].remove(course)
-            continue
+    course_ids = [course["course_id"] for course in trail["courses"]]
 
-        course["course_object"] = course_object
+    live_courses = await courses_mongo.find({"course_id": {"$in": course_ids}}).to_list(
+        length=None
+    )
+
+    trail["courses"] = live_courses
 
     for courses in trail["courses"]:
         course_id = courses["course_id"]
