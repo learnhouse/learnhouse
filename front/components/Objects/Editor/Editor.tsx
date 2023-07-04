@@ -25,6 +25,7 @@ import PDFBlock from "./Extensions/PDF/PDFBlock";
 import QuizBlock from "./Extensions/Quiz/QuizBlock";
 import ToolTip from "@components/StyledElements/Tooltip/Tooltip";
 import Link from "next/link";
+import { getCourseThumbnailMediaDirectory } from "@services/media/media";
 
 interface Editor {
   content: string;
@@ -120,7 +121,7 @@ function Editor(props: Editor) {
                 <EditorInfoLearnHouseLogo width={25} height={25} src={learnhouseIcon} alt="" />
               </Link>
               <Link target="_blank" href={`/course/${course_id}`}>
-                <EditorInfoThumbnail src={`${getBackendUrl()}content/uploads/img/${props.course.course.thumbnail}`} alt=""></EditorInfoThumbnail>
+                <EditorInfoThumbnail src={`${getCourseThumbnailMediaDirectory(props.course.course.org_id,props.course.course.course_id,props.course.course.thumbnail)}`} alt=""></EditorInfoThumbnail>
               </Link>
               <EditorInfoDocName>
                 {" "}
