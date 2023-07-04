@@ -148,6 +148,7 @@ async def update_activity(
             coursechapter_id=activity["coursechapter_id"],
             creationDate=creationDate,
             updateDate=str(datetime_object),
+            course_id=activity["course_id"],
             org_id=activity["org_id"],
             **activity_object.dict(),
         )
