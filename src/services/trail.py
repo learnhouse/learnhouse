@@ -127,10 +127,12 @@ async def get_user_trail_with_orgslug(
         length=None
     )
 
-    trail["courses"] = live_courses
+    for course in trail["courses"]:
+        course_id = course["course_id"]
 
-    for courses in trail["courses"]:
-        course_id = courses["course_id"]
+        if course_id not in [course["course_id"] for course in live_courses]:
+            course["masked"] = True
+            continue
 
         chapters_meta = await get_coursechapters_meta(request, course_id, user)
         activities = chapters_meta["activities"]
@@ -140,11 +142,11 @@ async def get_user_trail_with_orgslug(
             {"course_id": course_id}, {"_id": 0}
         )
 
-        courses["course_object"] = course_object
+        course["course_object"] = course_object
         num_activities = len(activities)
 
-        num_completed_activities = len(courses.get("activities_marked_complete", []))
-        courses["progress"] = (
+        num_completed_activities = len(course.get("activities_marked_complete", []))
+        course["progress"] = (
             round((num_completed_activities / num_activities) * 100, 2)
             if num_activities > 0
             else 0
@@ -248,9 +250,6 @@ async def remove_course_from_trail(
     org = await orgs.find_one({"slug": orgslug})
 
     org = PublicOrganization(**org)
-
-    print(org)
-
     trail = await trails.find_one({"user_id": user.user_id, "org_id": org["org_id"]})
 
     if not trail:
