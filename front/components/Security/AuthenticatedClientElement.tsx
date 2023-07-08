@@ -14,9 +14,9 @@ export const AuthenticatedClientElement = (props: AuthenticatedClientElementProp
 
     // Available roles 
     const org_roles_values = ["admin", "owner"];
-    const user_roles_values = ["role_admin"];
+    const user_roles_values = ["role_admin", "role_super_admin"];
 
-    
+
 
     function checkRoles() {
         const org_id = props.orgId;
