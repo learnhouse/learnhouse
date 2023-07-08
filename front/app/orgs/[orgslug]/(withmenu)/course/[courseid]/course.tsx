@@ -27,7 +27,7 @@ const CourseClient = (props: any) => {
     router.refresh();
 
     // refresh page (FIX for Next.js BUG)
-    window.location.reload();
+   // window.location.reload();
   }
 
   async function quitCourse() {
@@ -38,7 +38,7 @@ const CourseClient = (props: any) => {
     router.refresh();
 
     // refresh page (FIX for Next.js BUG)
-    window.location.reload();
+    //window.location.reload();
   }
 
 
