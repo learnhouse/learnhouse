@@ -62,7 +62,7 @@ async def api_install_user_sample(request: Request, username: str, org_slug: str
 
 @router.post("/update")
 async def api_update_install_instance(request: Request, data: dict, step: int):
-    installs = request.app.db["installs"]
+    request.app.db["installs"]
 
     # get latest created install
     install = await update_install_instance(request, data, step)

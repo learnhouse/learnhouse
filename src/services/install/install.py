@@ -1,6 +1,4 @@
 from datetime import datetime
-import os
-from re import A
 from uuid import uuid4
 from fastapi import HTTPException, Request, status
 from pydantic import BaseModel
@@ -9,8 +7,6 @@ from src.security.security import security_hash_password
 from src.services.courses.activities.activities import Activity, create_activity
 from src.services.courses.chapters import create_coursechapter, CourseChapter
 from src.services.courses.courses import CourseInDB
-from src.services.orgs.orgs import create_org
-from src.services.courses.thumbnails import upload_thumbnail
 
 from src.services.orgs.schemas.orgs import Organization, OrganizationInDB
 from faker import Faker
@@ -292,7 +288,7 @@ async def install_default_elements(request: Request, data: dict):
         )
         return True
 
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=400,
             detail="Error while inserting default roles",
@@ -305,7 +301,7 @@ async def install_create_organization(
     org_object: Organization,
 ):
     orgs = request.app.db["organizations"]
-    user = request.app.db["users"]
+    request.app.db["users"]
 
     # find if org already exists using name
 
@@ -396,7 +392,7 @@ async def install_create_organization_user(
 
 
 async def create_sample_data(org_slug: str, username: str, request: Request):
-    fake = Faker(["en_US"])
+    Faker(["en_US"])
     fake_multilang = Faker(
         ["en_US", "de_DE", "ja_JP", "es_ES", "it_IT", "pt_BR", "ar_PS"]
     )
@@ -435,7 +431,6 @@ async def create_sample_data(org_slug: str, username: str, request: Request):
         )
 
         courses = request.app.db["courses"]
-        name_in_disk = f"test_mock{course_id}.jpeg"
 
         
 
