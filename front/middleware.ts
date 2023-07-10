@@ -28,6 +28,11 @@ export default function middleware(req: NextRequest) {
     return NextResponse.rewrite(new URL(pathname, req.url));
   }
 
+  // Install Page
+  if (pathname.startsWith("/install")) {
+    return NextResponse.rewrite(new URL(pathname, req.url));
+  }
+
   // Dynamic Pages Editor
   if (pathname.match(/^\/course\/[^/]+\/activity\/[^/]+\/edit$/)) {
     return NextResponse.rewrite(new URL(`/editor${pathname}`, req.url));

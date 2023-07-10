@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 from src.routers import blocks, dev, trail, users, auth, orgs, roles
 from src.routers.courses import chapters, collections, courses, activities
+from src.routers.install import install
 from src.services.dev.dev import isDevModeEnabled
 
 
@@ -23,3 +24,6 @@ v1_router.include_router(trail.router, prefix="/trail", tags=["trail"])
 v1_router.include_router(
     dev.router, prefix="/dev", tags=["dev"], dependencies=[Depends(isDevModeEnabled)]
 )
+
+# Install Routes
+v1_router.include_router(install.router, prefix="/install", tags=["install"])
