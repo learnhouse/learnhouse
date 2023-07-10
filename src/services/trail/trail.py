@@ -172,6 +172,12 @@ async def add_activity_to_trail(
         {"user_id": user.user_id, "courses.course_id": courseid, "org_id": org_id}
     )
 
+    if user.user_id == "anonymous":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Anonymous users cannot add activity to trail",
+        )
+
     if not trail:
         return Trail(masked=False, courses=[])
 
@@ -201,7 +207,13 @@ async def add_course_to_trail(
 ) -> Trail:
     trails = request.app.db["trails"]
     orgs = request.app.db["organizations"]
-    
+
+    if user.user_id == "anonymous":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Anonymous users cannot add activity to trail",
+        )
+
     org = await orgs.find_one({"slug": orgslug})
 
     org = PublicOrganization(**org)
@@ -246,6 +258,12 @@ async def remove_course_from_trail(
 ) -> Trail:
     trails = request.app.db["trails"]
     orgs = request.app.db["organizations"]
+
+    if user.user_id == "anonymous":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Anonymous users cannot add activity to trail",
+        )
 
     org = await orgs.find_one({"slug": orgslug})
 
