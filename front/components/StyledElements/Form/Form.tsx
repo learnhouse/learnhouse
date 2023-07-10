@@ -2,11 +2,19 @@ import React from 'react';
 import * as Form from '@radix-ui/react-form';
 import { styled, keyframes } from '@stitches/react';
 import { blackA, violet, mauve } from '@radix-ui/colors';
+import { Info } from 'lucide-react';
 
 const FormLayout = (props: any, onSubmit: any) => (
     <FormRoot onSubmit={props.onSubmit}>
         {props.children}
     </FormRoot>
+);
+
+export const FormLabelAndMessage = (props: { label: string, message?: string }) => (
+    <div className='flex items-center space-x-3'>
+        <FormLabel className='grow'>{props.label}</FormLabel>
+        {props.message && <div className='text-red-700 text-sm items-center  rounded-md flex  space-x-1'><Info size={10} /><div>{props.message}</div></div> || <></>}
+    </div>
 );
 
 export const FormRoot = styled(Form.Root, {
