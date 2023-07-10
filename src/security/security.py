@@ -133,7 +133,7 @@ async def check_user_role_org_with_element_org(
         # Check if The role belongs to the same organization as the element
         role_db = await roles.find_one({"role_id": role.role_id})
         role = RoleInDB(**role_db)
-        if role.org_id == element_org["org_id"] or role.org_id == "*":
+        if (role.org_id == element_org["org_id"]) or role.org_id == "*":
             # Check if user has the right role
             for role in roles_list:
                 role_db = await roles.find_one({"role_id": role.role_id})

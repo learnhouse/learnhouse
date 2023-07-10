@@ -201,7 +201,7 @@ async def add_course_to_trail(
 ) -> Trail:
     trails = request.app.db["trails"]
     orgs = request.app.db["organizations"]
-
+    
     org = await orgs.find_one({"slug": orgslug})
 
     org = PublicOrganization(**org)
