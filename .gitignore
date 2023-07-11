@@ -10,7 +10,7 @@ __pycache__/
 .vscode/
 
 # Learnhouse
-content/*
+content/org_*
 
 # Flyio
 fly.toml
