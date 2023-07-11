@@ -128,9 +128,8 @@ def get_learnhouse_config() -> LearnHouseConfig:
     cookie_config = CookieConfig(domain=cookies_domain)
 
     env_content_delivery_type = os.environ.get("LEARNHOUSE_CONTENT_DELIVERY_TYPE")
-    content_delivery_type: str = (
-        (yaml_config.get("hosting_config", {}).get("content_delivery", {}).get("type"))
-        or env_content_delivery_type
+    content_delivery_type: str = env_content_delivery_type or (
+        (yaml_config.get("hosting_config", {}).get("content_delivery", {}).get("type")) 
         or "filesystem"
     )  # default to filesystem
 
