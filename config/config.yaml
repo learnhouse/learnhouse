@@ -11,9 +11,6 @@ security:
 hosting_config:
   domain: learnhouse.app
   ssl: true
-  allowed_origins:
-    - http://localhost:3000
-    - http://localhost:3001
   cookies_config:
     domain: ".localhost"
   allowed_regexp: '\b((?:https?://)[^\s/$.?#].[^\s]*)\b'

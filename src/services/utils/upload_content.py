@@ -30,6 +30,7 @@ async def upload_content(
     elif content_delivery == "s3api":
         # Upload to server then to s3 (AWS Keys are stored in environment variables and are loaded by boto3)
         # TODO: Improve implementation of this
+        print("Uploading to s3...")
         s3 = boto3.client(
             "s3",
             endpoint_url=learnhouse_config.hosting_config.content_delivery.s3api.endpoint_url,
