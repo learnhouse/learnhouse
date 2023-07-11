@@ -25,7 +25,7 @@ app = FastAPI(
     title=learnhouse_config.site_name,
     description=learnhouse_config.site_description,
     version="0.1.0",
-    root_path="/"
+    root_path="/",
 )
 
 app.add_middleware(
@@ -34,15 +34,11 @@ app.add_middleware(
     allow_origins=learnhouse_config.hosting_config.allowed_origins,
     allow_methods=["*"],
     allow_credentials=True,
-    allow_headers=["*"]
+    allow_headers=["*"],
 )
 
 # Gzip Middleware (will add brotli later)
 app.add_middleware(GZipMiddleware, minimum_size=1000)
-
-
-# Static Files
-app.mount("/content", StaticFiles(directory="content"), name="content")
 
 
 # Events
@@ -51,13 +47,16 @@ app.add_event_handler("shutdown", shutdown_app(app))
 
 
 # JWT Exception Handler
-@ app.exception_handler(AuthJWTException)
+@app.exception_handler(AuthJWTException)
 def authjwt_exception_handler(request: Request, exc: AuthJWTException):
     return JSONResponse(
         status_code=exc.status_code,  # type: ignore
-        content={"detail": exc.message}  # type: ignore
+        content={"detail": exc.message},  # type: ignore
     )
 
+
+# Static Files
+app.mount("/content", StaticFiles(directory="content"), name="content")
 
 # Global Routes
 app.include_router(v1_router)
@@ -65,8 +64,6 @@ app.include_router(v1_router)
 # General Routes
 
 
-@ app.get("/")
+@app.get("/")
 async def root():
     return {"Message": "Welcome to LearnHouse ✨"}
-
-
