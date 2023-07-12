@@ -107,7 +107,7 @@ export function MarkStatus(props: { activityid: string, course: any, orgslug: st
     router.refresh();
 
     // refresh page (FIX for Next.js BUG)
-    window.location.reload();
+    //window.location.reload();
 
   }
 

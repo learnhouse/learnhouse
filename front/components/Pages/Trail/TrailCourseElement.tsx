@@ -4,6 +4,7 @@ import { removeCourse } from '@services/courses/activity';
 import { getCourseThumbnailMediaDirectory } from '@services/media/media';
 import { revalidateTags } from '@services/utils/ts/requests';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { mutate } from 'swr';
 
 interface TrailCourseElementProps {
@@ -14,12 +15,14 @@ interface TrailCourseElementProps {
 function TrailCourseElement(props: TrailCourseElementProps) {
     const courseid = props.course.course_id.replace("course_", "")
     const course = props.course
+    const router = useRouter();
 
     async function quitCourse(course_id: string) {
         // Close activity
         let activity = await removeCourse(course_id, props.orgslug);
         // Mutate course
         revalidateTags(['courses'], props.orgslug);
+        router.refresh();
 
         // Mutate 
         mutate(`${getAPIUrl()}trail/org_slug/${props.orgslug}/trail`);
