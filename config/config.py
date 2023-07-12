@@ -1,4 +1,3 @@
-from gettext import install
 from typing import Literal, Optional
 from pydantic import BaseModel
 import os

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from src.routers import blocks, dev, trail, users, auth, orgs, roles
 from src.routers.courses import chapters, collections, courses, activities
 from src.routers.install import install
-from src.services.dev.dev import isDevModeEnabled, isDevModeEnabledOrRaise
+from src.services.dev.dev import isDevModeEnabledOrRaise
 from src.services.install.install import isInstallModeEnabled
 
 
