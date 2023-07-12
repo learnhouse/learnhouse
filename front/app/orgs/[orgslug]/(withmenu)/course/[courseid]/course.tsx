@@ -27,7 +27,7 @@ const CourseClient = (props: any) => {
     router.refresh();
 
     // refresh page (FIX for Next.js BUG)
-    window.location.reload();
+    // window.location.reload();
   }
 
   async function quitCourse() {
@@ -38,7 +38,7 @@ const CourseClient = (props: any) => {
     router.refresh();
 
     // refresh page (FIX for Next.js BUG)
-    window.location.reload();
+    //window.location.reload();
   }
 
 
@@ -62,7 +62,7 @@ const CourseClient = (props: any) => {
 
           <ActivityIndicators course_id={props.course.course.course_id} orgslug={orgslug} course={course} />
 
-          <div className="flex flex-row pt-10 flex-wrap">
+          <div className="flex flex-row pt-10">
             <div className="course_metadata_left grow space-y-2">
               <h2 className="py-3 text-2xl font-bold">Description</h2>
               <StyledBox>

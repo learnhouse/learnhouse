@@ -16,6 +16,7 @@ class CookieConfig(BaseModel):
 
 class GeneralConfig(BaseModel):
     development_mode: bool
+    install_mode: bool
 
 
 class SecurityConfig(BaseModel):
@@ -70,6 +71,10 @@ def get_learnhouse_config() -> LearnHouseConfig:
     env_development_mode = os.environ.get("LEARNHOUSE_DEVELOPMENT_MODE")
     development_mode = env_development_mode or yaml_config.get("general", {}).get(
         "development_mode"
+    )
+    env_install_mode = os.environ.get("LEARNHOUSE_INSTALL_MODE")
+    install_mode = env_install_mode or yaml_config.get("general", {}).get(
+        "install_mode"
     )
 
     # Security Config
@@ -128,9 +133,8 @@ def get_learnhouse_config() -> LearnHouseConfig:
     cookie_config = CookieConfig(domain=cookies_domain)
 
     env_content_delivery_type = os.environ.get("LEARNHOUSE_CONTENT_DELIVERY_TYPE")
-    content_delivery_type: str = (
+    content_delivery_type: str = env_content_delivery_type or (
         (yaml_config.get("hosting_config", {}).get("content_delivery", {}).get("type"))
-        or env_content_delivery_type
         or "filesystem"
     )  # default to filesystem
 
@@ -207,7 +211,9 @@ def get_learnhouse_config() -> LearnHouseConfig:
         site_name=site_name,
         site_description=site_description,
         contact_email=contact_email,
-        general_config=GeneralConfig(development_mode=bool(development_mode)),
+        general_config=GeneralConfig(
+            development_mode=bool(development_mode), install_mode=bool(install_mode)
+        ),
         hosting_config=hosting_config,
         database_config=database_config,
         security_config=SecurityConfig(auth_jwt_secret_key=auth_jwt_secret_key),

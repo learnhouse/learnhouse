@@ -22,7 +22,12 @@ function Trail(params: any) {
       ) : (
         <div className="space-y-6">
           {trail.courses.map((course: any) => (
-            <TrailCourseElement key={trail.trail_id} orgslug={orgslug} course={course} />
+            !course.masked ? (
+              <TrailCourseElement key={trail.trail_id} orgslug={orgslug} course={course} />
+            ) : (
+              <></>
+            )
+
           ))}
 
         </div>
