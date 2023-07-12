@@ -30,3 +30,13 @@ export async function createDefaultElements() {
   const res = await errorHandling(result);
   return res;
 }
+
+export async function isInstallModeEnabled() {
+  const result = await fetch(`${getAPIUrl()}install/latest`, RequestBody("GET", null, null));
+  if (result.status === 200) {
+    return true;
+  }
+  else {
+    return false;
+  }
+}
