@@ -3,6 +3,7 @@ from uuid import uuid4
 from fastapi import HTTPException, Request, status
 from pydantic import BaseModel
 import requests
+from config.config import get_learnhouse_config
 from src.security.security import security_hash_password
 from src.services.courses.activities.activities import Activity, create_activity
 from src.services.courses.chapters import create_coursechapter, CourseChapter
@@ -29,6 +30,18 @@ class InstallInstance(BaseModel):
     updated_date: str
     step: int
     data: dict
+
+
+async def isInstallModeEnabled():
+    config = get_learnhouse_config()
+
+    if config.general_config.install_mode:
+        return True
+    else:
+        raise HTTPException(
+            status_code=403,
+            detail="Install mode is not enabled",
+        )
 
 
 async def create_install_instance(request: Request, data: dict):
@@ -431,8 +444,6 @@ async def create_sample_data(org_slug: str, username: str, request: Request):
         )
 
         courses = request.app.db["courses"]
-
-        
 
         course = CourseInDB(**course.dict())
         await courses.insert_one(course.dict())
