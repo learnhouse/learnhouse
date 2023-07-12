@@ -16,6 +16,7 @@ import Modal from "@components/StyledElements/Modal/Modal";
 import { denyAccessToUser } from "@services/utils/react/middlewares/views";
 import { Folders, Package2, SaveIcon } from "lucide-react";
 import GeneralWrapperStyled from "@components/StyledElements/Wrappers/GeneralWrapper";
+import { revalidateTags } from "@services/utils/ts/requests";
 
 function CourseEdit(params: any) {
 
@@ -75,6 +76,8 @@ function CourseEdit(params: any) {
   const submitChapter = async (chapter: any) => {
     await createChapter(chapter, courseid);
     await getCourseChapters();
+    revalidateTags(['courses'], orgslug);
+    router.refresh();
     setNewChapterModal(false);
   };
 
@@ -86,6 +89,8 @@ function CourseEdit(params: any) {
     await createActivity(activity, activity.chapterId, org.org_id);
     await getCourseChapters();
     setNewActivityModal(false);
+    revalidateTags(['courses'], orgslug);
+    router.refresh();
   };
 
   // Submit File Upload
@@ -94,6 +99,8 @@ function CourseEdit(params: any) {
     await createFileActivity(file, type, activity, chapterId);
     await getCourseChapters();
     setNewActivityModal(false);
+    revalidateTags(['courses'], orgslug);
+    router.refresh();
   };
 
   // Submit YouTube Video Upload
@@ -103,17 +110,23 @@ function CourseEdit(params: any) {
     await createExternalVideoActivity(external_video_data, activity, chapterId);
     await getCourseChapters();
     setNewActivityModal(false);
+    revalidateTags(['courses'], orgslug);
+    router.refresh();
   };
 
   const deleteChapterUI = async (chapterId: any) => {
     console.log("deleteChapter", chapterId);
     await deleteChapter(chapterId);
     getCourseChapters();
+    revalidateTags(['courses'], orgslug);
+    router.refresh();
   };
 
   const updateChapters = () => {
     console.log(data);
     updateChaptersMetadata(courseid, data);
+    revalidateTags(['courses'], orgslug);
+    router.refresh();
   };
 
   /* 

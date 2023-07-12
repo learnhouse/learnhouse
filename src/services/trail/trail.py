@@ -121,22 +121,18 @@ async def get_user_trail_with_orgslug(
     if not trail:
         return Trail(masked=False, courses=[])
 
-    # Check if these courses still exist in the database
+    course_ids = [course["course_id"] for course in trail["courses"]]
+
+    live_courses = await courses_mongo.find({"course_id": {"$in": course_ids}}).to_list(
+        length=None
+    )
+
     for course in trail["courses"]:
         course_id = course["course_id"]
-        course_object = await courses_mongo.find_one(
-            {"course_id": course_id}, {"_id": 0}
-        )
-        print('checking course ' + course_id)
-        if not course_object:
-            print("Course not found " + course_id)
-            trail["courses"].remove(course)
+
+        if course_id not in [course["course_id"] for course in live_courses]:
+            course["masked"] = True
             continue
-
-        course["course_object"] = course_object
-
-    for courses in trail["courses"]:
-        course_id = courses["course_id"]
 
         chapters_meta = await get_coursechapters_meta(request, course_id, user)
         activities = chapters_meta["activities"]
@@ -146,11 +142,11 @@ async def get_user_trail_with_orgslug(
             {"course_id": course_id}, {"_id": 0}
         )
 
-        courses["course_object"] = course_object
+        course["course_object"] = course_object
         num_activities = len(activities)
 
-        num_completed_activities = len(courses.get("activities_marked_complete", []))
-        courses["progress"] = (
+        num_completed_activities = len(course.get("activities_marked_complete", []))
+        course["progress"] = (
             round((num_completed_activities / num_activities) * 100, 2)
             if num_activities > 0
             else 0
@@ -175,6 +171,12 @@ async def add_activity_to_trail(
     trail = await trails.find_one(
         {"user_id": user.user_id, "courses.course_id": courseid, "org_id": org_id}
     )
+
+    if user.user_id == "anonymous":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Anonymous users cannot add activity to trail",
+        )
 
     if not trail:
         return Trail(masked=False, courses=[])
@@ -205,6 +207,12 @@ async def add_course_to_trail(
 ) -> Trail:
     trails = request.app.db["trails"]
     orgs = request.app.db["organizations"]
+
+    if user.user_id == "anonymous":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Anonymous users cannot add activity to trail",
+        )
 
     org = await orgs.find_one({"slug": orgslug})
 
@@ -251,12 +259,15 @@ async def remove_course_from_trail(
     trails = request.app.db["trails"]
     orgs = request.app.db["organizations"]
 
+    if user.user_id == "anonymous":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Anonymous users cannot add activity to trail",
+        )
+
     org = await orgs.find_one({"slug": orgslug})
 
     org = PublicOrganization(**org)
-
-    print(org)
-
     trail = await trails.find_one({"user_id": user.user_id, "org_id": org["org_id"]})
 
     if not trail:
