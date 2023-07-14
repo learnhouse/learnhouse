@@ -25,13 +25,14 @@ export async function generateMetadata(
 
 const CoursesPage = async (params: any) => {
   const orgslug = params.params.orgslug;
+  const org = await getOrganizationContextInfo(orgslug, { revalidate: 1800, tags: ['organizations'] });
   const cookieStore = cookies();
   const access_token_cookie: any = cookieStore.get('access_token_cookie');
   const courses = await getOrgCoursesWithAuthHeader(orgslug, { revalidate: 0, tags: ['courses'] }, access_token_cookie ? access_token_cookie.value : null);
 
   return (
     <div>
-      <Courses orgslug={orgslug} courses={courses} />
+      <Courses org_id={org.org_id} orgslug={orgslug} courses={courses} />
     </div>
   );
 };

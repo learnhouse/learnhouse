@@ -9,19 +9,21 @@ function GetStarted() {
     const { data: install, error: error, isLoading } = useSWR(`${getAPIUrl()}install/latest`, swrFetcher);
     const router = useRouter()
 
-    function startInstallation() {
-        fetch(`${getAPIUrl()}install/start`, {
+    async function startInstallation() {
+        let res = await fetch(`${getAPIUrl()}install/start`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({})
-        }).then(res => res.json()).then(res => {
-            if (res.success) {
-                mutate(`${getAPIUrl()}install/latest`)
-                router.push(`/install?step=1`)
-            }
         })
+
+        if (res.status == 200) {
+            mutate(`${getAPIUrl()}install/latest`)
+            router.refresh();
+            router.push(`/install?step=1`)
+        }
+
 
     }
 
