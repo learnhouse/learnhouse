@@ -33,7 +33,7 @@ export async function createDefaultElements() {
 
 export async function isInstallModeEnabled() {
   const result = await fetch(`${getAPIUrl()}install/latest`, RequestBody("GET", null, null));
-  if (result.status === 200) {
+  if (result.status === 200 || result.status === 404) {
     return true;
   }
   else {

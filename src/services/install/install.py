@@ -125,8 +125,8 @@ async def install_default_elements(request: Request, data: dict):
     roles = request.app.db["roles"]
 
     # check if default roles ADMIN_ROLE and USER_ROLE already exist
-    admin_role = await roles.find_one({"role_id": "role_super_admin"})
-    user_role = await roles.find_one({"role_id": "role_user"})
+    admin_role = await roles.find_one({"role_id": "role_admin"})
+    user_role = await roles.find_one({"role_id": "role_member"})
 
     if admin_role is not None or user_role is not None:
         raise HTTPException(
@@ -135,61 +135,8 @@ async def install_default_elements(request: Request, data: dict):
         )
 
     # get default roles
-    SUPER_ADMIN_ROLE = RoleInDB(
-        name="SuperAdmin Role",
-        description="This role grants all permissions to the user",
-        elements=Elements(
-            courses=Permission(
-                action_create=True,
-                action_read=True,
-                action_update=True,
-                action_delete=True,
-            ),
-            users=Permission(
-                action_create=True,
-                action_read=True,
-                action_update=True,
-                action_delete=True,
-            ),
-            houses=Permission(
-                action_create=True,
-                action_read=True,
-                action_update=True,
-                action_delete=True,
-            ),
-            collections=Permission(
-                action_create=True,
-                action_read=True,
-                action_update=True,
-                action_delete=True,
-            ),
-            organizations=Permission(
-                action_create=True,
-                action_read=True,
-                action_update=True,
-                action_delete=True,
-            ),
-            coursechapters=Permission(
-                action_create=True,
-                action_read=True,
-                action_update=True,
-                action_delete=True,
-            ),
-            activities=Permission(
-                action_create=True,
-                action_read=True,
-                action_update=True,
-                action_delete=True,
-            ),
-        ),
-        org_id="*",
-        role_id="role_super_admin",
-        created_at=str(datetime.now()),
-        updated_at=str(datetime.now()),
-    )
-
     ADMIN_ROLE = RoleInDB(
-        name="SuperAdmin Role",
+        name="Admin Role",
         description="This role grants all permissions to the user",
         elements=Elements(
             courses=Permission(
@@ -236,13 +183,13 @@ async def install_default_elements(request: Request, data: dict):
             ),
         ),
         org_id="*",
-        role_id="role_super_admin",
+        role_id="role_admin",
         created_at=str(datetime.now()),
         updated_at=str(datetime.now()),
     )
 
     USER_ROLE = RoleInDB(
-        name="User role",
+        name="Member Role",
         description="This role grants read-only permissions to the user",
         elements=Elements(
             courses=Permission(
@@ -289,16 +236,14 @@ async def install_default_elements(request: Request, data: dict):
             ),
         ),
         org_id="*",
-        role_id="role_user",
+        role_id="role_member",
         created_at=str(datetime.now()),
         updated_at=str(datetime.now()),
     )
 
     try:
         # insert default roles
-        await roles.insert_many(
-            [ADMIN_ROLE.dict(), USER_ROLE.dict(), SUPER_ADMIN_ROLE.dict()]
-        )
+        await roles.insert_many([USER_ROLE.dict(), ADMIN_ROLE.dict()])
         return True
 
     except Exception:
@@ -386,7 +331,7 @@ async def install_create_organization_user(
     orgs = [UserOrganization(org_id=org_id, org_role="owner")]
 
     # Give role
-    roles = [UserRolesInOrganization(role_id="role_super_admin", org_id=org_id)]
+    roles = [UserRolesInOrganization(role_id="role_admin", org_id=org_id)]
 
     # Create the user
     user = UserInDB(
