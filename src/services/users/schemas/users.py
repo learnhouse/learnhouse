@@ -57,6 +57,9 @@ class PublicUser(User):
 class AnonymousUser(BaseModel):
     user_id: str = "anonymous"
     username: str = "anonymous"
+    roles: list[UserRolesInOrganization] = [
+        UserRolesInOrganization(org_id="anonymous", role_id="role_anonymous")
+    ]
     
 
 
