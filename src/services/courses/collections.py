@@ -1,7 +1,7 @@
 from typing import List, Literal
 from uuid import uuid4
 from pydantic import BaseModel
-from src.security.rbac.rbac import authorization_verify_based_on_roles_and_authorship
+from src.security.rbac.rbac import authorization_verify_based_on_roles_and_authorship, authorization_verify_if_user_is_anon
 from src.services.users.users import PublicUser
 from fastapi import HTTPException, status, Request
 
@@ -232,6 +232,8 @@ async def verify_collection_rights(
     # Collections are public by default for now
     if current_user.user_id == "anonymous" and action == "read":
         return True
+
+    await authorization_verify_if_user_is_anon(current_user.user_id)
 
     await authorization_verify_based_on_roles_and_authorship(
         request, current_user.user_id, action, user["roles"], collection_id

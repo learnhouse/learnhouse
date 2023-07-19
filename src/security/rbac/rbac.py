@@ -79,7 +79,6 @@ async def authorization_verify_based_on_roles(
     element_id: str,
 ):
     element_type = await check_element_type(element_id)
-    print(element_type)
     element = request.app.db[element_type]
     roles = request.app.db["roles"]
 
@@ -124,4 +123,12 @@ async def authorization_verify_based_on_roles_and_authorship(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="User rights (roles & authorship) : You don't have the right to perform this action",
+        )
+
+
+async def authorization_verify_if_user_is_anon(user_id: str):
+    if user_id == "anonymous":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You should be logged in to perform this action",
         )

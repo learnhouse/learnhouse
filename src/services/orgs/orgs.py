@@ -1,7 +1,10 @@
 import json
 from typing import Literal
 from uuid import uuid4
-from src.security.rbac.rbac import authorization_verify_based_on_roles
+from src.security.rbac.rbac import (
+    authorization_verify_based_on_roles,
+    authorization_verify_if_user_is_anon,
+)
 from src.services.orgs.logos import upload_org_logo
 from src.services.orgs.schemas.orgs import (
     Organization,
@@ -211,6 +214,8 @@ async def verify_org_rights(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Organization does not exist"
         )
+
+    await authorization_verify_if_user_is_anon(current_user.user_id)
 
     await authorization_verify_based_on_roles(
         request, current_user.user_id, action, user["roles"], org_id
