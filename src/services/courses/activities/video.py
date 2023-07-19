@@ -1,7 +1,9 @@
 from typing import Literal
 
 from pydantic import BaseModel
-from src.security.security import verify_user_rights_with_roles
+from src.security.rbac.rbac import (
+    authorization_verify_based_on_roles,
+)
 from src.services.courses.activities.uploads.videos import upload_video
 from src.services.users.users import PublicUser
 from src.services.courses.activities.activities import ActivityInDB
@@ -19,6 +21,10 @@ async def create_video_activity(
 ):
     activities = request.app.db["activities"]
     courses = request.app.db["courses"]
+    users = request.app.db["users"]
+
+    # get user
+    user = await users.find_one({"user_id": current_user.user_id})
 
     # generate activity_id
     activity_id = str(f"activity_{uuid4()}")
@@ -75,15 +81,13 @@ async def create_video_activity(
         updateDate=str(datetime.now()),
     )
 
-    hasRoleRights = await verify_user_rights_with_roles(
-        request, "create", current_user.user_id, activity_id, element_org_id=org_id
+    await authorization_verify_based_on_roles(
+        request,
+        current_user.user_id,
+        "create",
+        user["roles"],
+        activity_id,
     )
-
-    if not hasRoleRights:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Roles : Insufficient rights to perform this action",
-        )
 
     # create activity
     activity = ActivityInDB(**activity_object.dict())
@@ -122,6 +126,10 @@ async def create_external_video_activity(
 ):
     activities = request.app.db["activities"]
     courses = request.app.db["courses"]
+    users = request.app.db["users"]
+
+    # get user
+    user = await users.find_one({"user_id": current_user.user_id})
 
     # generate activity_id
     activity_id = str(f"activity_{uuid4()}")
@@ -157,15 +165,13 @@ async def create_external_video_activity(
         updateDate=str(datetime.now()),
     )
 
-    hasRoleRights = await verify_user_rights_with_roles(
-        request, "create", current_user.user_id, activity_id, element_org_id=org_id
+    await authorization_verify_based_on_roles(
+        request,
+        current_user.user_id,
+        "create",
+        user["roles"],
+        activity_id,
     )
-
-    if not hasRoleRights:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Roles : Insufficient rights to perform this action",
-        )
 
     # create activity
     activity = ActivityInDB(**activity_object.dict())

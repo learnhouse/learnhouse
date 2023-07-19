@@ -1,12 +1,16 @@
 import json
-from typing import List, Optional
+from typing import List, Literal, Optional
 from uuid import uuid4
 from pydantic import BaseModel
+from src.security.rbac.rbac import (
+    authorization_verify_based_on_roles,
+    authorization_verify_based_on_roles_and_authorship,
+    authorization_verify_if_element_is_public,
+)
 from src.services.courses.activities.activities import ActivityInDB
 from src.services.courses.thumbnails import upload_thumbnail
 from src.services.users.schemas.users import AnonymousUser
 from src.services.users.users import PublicUser
-from src.security.security import verify_user_rights_with_roles
 from fastapi import HTTPException, Request, status, UploadFile
 from datetime import datetime
 
@@ -144,7 +148,6 @@ async def get_course_meta(request: Request, course_id: str, current_user: Public
     trail = await trails.find_one(
         {"courses.course_id": course_id, "user_id": current_user.user_id}
     )
-    print(trail)
     if trail:
         # get only the course where course_id == course_id
         trail_course = next(
@@ -169,6 +172,8 @@ async def create_course(
     thumbnail_file: UploadFile | None = None,
 ):
     courses = request.app.db["courses"]
+    users = request.app.db["users"]
+    user = await users.find_one({"user_id": current_user.user_id})
 
     # generate course_id with uuid4
     course_id = str(f"course_{uuid4()}")
@@ -176,9 +181,15 @@ async def create_course(
     # TODO(fix) : the implementation here is clearly not the best one (this entire function)
     course_object.org_id = org_id
     course_object.chapters_content = []
-    await verify_user_rights_with_roles(
-        request, "create", current_user.user_id, course_id, org_id
+
+    await authorization_verify_based_on_roles(
+        request,
+        current_user.user_id,
+        "create",
+        user["roles"],
+        course_id,
     )
+
 
     if thumbnail_file and thumbnail_file.filename:
         name_in_disk = (
@@ -214,12 +225,13 @@ async def update_course_thumbnail(
     current_user: PublicUser,
     thumbnail_file: UploadFile | None = None,
 ):
-    # verify course rights
-    await verify_rights(request, course_id, current_user, "update")
-
     courses = request.app.db["courses"]
 
     course = await courses.find_one({"course_id": course_id})
+
+    # verify course rights
+    await verify_rights(request, course_id, current_user, "update")
+
     # TODO(fix) : the implementation here is clearly not the best one
     if course:
         creationDate = course["creationDate"]
@@ -254,12 +266,12 @@ async def update_course_thumbnail(
 async def update_course(
     request: Request, course_object: Course, course_id: str, current_user: PublicUser
 ):
-    # verify course rights
-    await verify_rights(request, course_id, current_user, "update")
-
     courses = request.app.db["courses"]
 
     course = await courses.find_one({"course_id": course_id})
+
+    # verify course rights
+    await verify_rights(request, course_id, current_user, "update")
 
     if course:
         creationDate = course["creationDate"]
@@ -289,12 +301,12 @@ async def update_course(
 
 
 async def delete_course(request: Request, course_id: str, current_user: PublicUser):
-    # verify course rights
-    await verify_rights(request, course_id, current_user, "delete")
-
     courses = request.app.db["courses"]
 
     course = await courses.find_one({"course_id": course_id})
+
+    # verify course rights
+    await verify_rights(request, course_id, current_user, "delete")
 
     if not course:
         raise HTTPException(
@@ -364,41 +376,35 @@ async def verify_rights(
     request: Request,
     course_id: str,
     current_user: PublicUser | AnonymousUser,
-    action: str,
+    action: Literal["create", "read", "update", "delete"],
 ):
-    courses = request.app.db["courses"]
+    if action == "read":
+        if current_user.user_id == "anonymous":
+            await authorization_verify_if_element_is_public(
+                request, course_id, current_user.user_id, action
+            )
+        else:
+            users = request.app.db["users"]
+            user = await users.find_one({"user_id": current_user.user_id})
 
-    course = await courses.find_one({"course_id": course_id})
+            await authorization_verify_based_on_roles_and_authorship(
+                request,
+                current_user.user_id,
+                action,
+                user["roles"],
+                course_id,
+            )
+    else:
+        users = request.app.db["users"]
+        user = await users.find_one({"user_id": current_user.user_id})
 
-    isAuthor = current_user.user_id in course["authors"]
-
-    if isAuthor:
-        return True
-
-    if (
-        current_user.user_id == "anonymous"
-        and course["public"] is True
-        and action == "read"
-    ):
-        return True
-
-    if not course:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Course/CourseChapter does not exist",
+        await authorization_verify_based_on_roles_and_authorship(
+            request,
+            current_user.user_id,
+            action,
+            user["roles"],
+            course_id,
         )
-
-    hasRoleRights = await verify_user_rights_with_roles(
-        request, action, current_user.user_id, course_id, course["org_id"]
-    )
-
-    if not hasRoleRights and not isAuthor:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Roles/Ownership : Insufficient rights to perform this action",
-        )
-
-    return True
 
 
 #### Security ####################################################
