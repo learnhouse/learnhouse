@@ -7,6 +7,7 @@ from src.security.rbac.rbac import (
     authorization_verify_based_on_roles,
     authorization_verify_based_on_roles_and_authorship,
     authorization_verify_if_element_is_public,
+    authorization_verify_if_user_is_anon,
 )
 from src.services.courses.courses import Course
 from src.services.courses.activities.activities import ActivityInDB
@@ -323,6 +324,8 @@ async def verify_rights(
             users = request.app.db["users"]
             user = await users.find_one({"user_id": current_user.user_id})
 
+            await authorization_verify_if_user_is_anon(current_user.user_id)
+
             await authorization_verify_based_on_roles_and_authorship(
                 request,
                 current_user.user_id,
@@ -333,6 +336,8 @@ async def verify_rights(
     else:
         users = request.app.db["users"]
         user = await users.find_one({"user_id": current_user.user_id})
+        
+        await authorization_verify_if_user_is_anon(current_user.user_id)
 
         await authorization_verify_based_on_roles_and_authorship(
             request,

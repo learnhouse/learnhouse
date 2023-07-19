@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Literal
 from uuid import uuid4
 from fastapi import HTTPException, Request, status
-from src.security.rbac.rbac import authorization_verify_based_on_roles
+from src.security.rbac.rbac import authorization_verify_based_on_roles, authorization_verify_if_user_is_anon
 from src.security.security import security_hash_password, security_verify_password
 from src.services.users.schemas.users import (
     PasswordChangeForm,
@@ -266,6 +266,9 @@ async def verify_user_rights_on_user(
         return True
 
     if action == "read":
+
+        await authorization_verify_if_user_is_anon(current_user.user_id)
+
         if current_user.user_id == user_id:
             return True
 
@@ -276,6 +279,9 @@ async def verify_user_rights_on_user(
         return False
 
     if action == "update":
+
+        await authorization_verify_if_user_is_anon(current_user.user_id)
+
         if current_user.user_id == user_id:
             return True
 
@@ -291,6 +297,9 @@ async def verify_user_rights_on_user(
         return False
 
     if action == "delete":
+
+        await authorization_verify_if_user_is_anon(current_user.user_id)
+        
         if current_user.user_id == user_id:
             return True
 
