@@ -41,6 +41,9 @@ class UserInDB(User):
     creation_date: str
     update_date: str
 
+    def __getitem__(self, item):
+        return getattr(self, item)
+
     
 
 

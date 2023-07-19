@@ -1,6 +1,10 @@
+from typing import Literal
 from pydantic import BaseModel
-from src.security.security import verify_user_rights_with_roles
-from src.services.users.schemas.users import PublicUser
+from src.security.rbac.rbac import (
+    authorization_verify_based_on_roles,
+    authorization_verify_if_element_is_public,
+)
+from src.services.users.schemas.users import AnonymousUser, PublicUser
 from fastapi import HTTPException, status, Request
 from uuid import uuid4
 from datetime import datetime
@@ -40,22 +44,25 @@ async def create_activity(
 ):
     activities = request.app.db["activities"]
     courses = request.app.db["courses"]
+    users = request.app.db["users"]
+
+    # get user
+    user = await users.find_one({"user_id": current_user.user_id})
 
     # generate activity_id
     activity_id = str(f"activity_{uuid4()}")
 
-    hasRoleRights = await verify_user_rights_with_roles(
-        request, "create", current_user.user_id, activity_id, org_id
+    # verify activity rights
+    await authorization_verify_based_on_roles(
+        request,
+        current_user.user_id,
+        "create",
+        user["roles"],
+        activity_id,
     )
 
     # get course_id from activity
     course = await courses.find_one({"chapters": coursechapter_id})
-
-    if not hasRoleRights:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Roles : Insufficient rights to perform this action",
-        )
 
     # create activity
     activity = ActivityInDB(
@@ -86,29 +93,10 @@ async def get_activity(request: Request, activity_id: str, current_user: PublicU
 
     # get course_id from activity
     coursechapter_id = activity["coursechapter_id"]
-    course = await courses.find_one({"chapters": coursechapter_id})
-
-    isCoursePublic = course["public"]
-    isAuthor = current_user.user_id in course["authors"]
-
-    if isAuthor:
-        activity = ActivityInDB(**activity)
-        return activity
+    await courses.find_one({"chapters": coursechapter_id})
 
     # verify course rights
-    hasRoleRights = await verify_user_rights_with_roles(
-        request,
-        "read",
-        current_user.user_id,
-        activity_id,
-        element_org_id=activity["org_id"],
-    )
-
-    if not hasRoleRights and not isCoursePublic:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Roles : Insufficient rights to perform this action",
-        )
+    await verify_rights(request, activity["course_id"], current_user, "read")
 
     if not activity:
         raise HTTPException(
@@ -128,14 +116,9 @@ async def update_activity(
     activities = request.app.db["activities"]
 
     activity = await activities.find_one({"activity_id": activity_id})
+
     # verify course rights
-    await verify_user_rights_with_roles(
-        request,
-        "update",
-        current_user.user_id,
-        activity_id,
-        element_org_id=activity["org_id"],
-    )
+    await verify_rights(request, activity_id, current_user, "update")
 
     if activity:
         creationDate = activity["creationDate"]
@@ -171,13 +154,7 @@ async def delete_activity(request: Request, activity_id: str, current_user: Publ
     activity = await activities.find_one({"activity_id": activity_id})
 
     # verify course rights
-    await verify_user_rights_with_roles(
-        request,
-        "delete",
-        current_user.user_id,
-        activity_id,
-        element_org_id=activity["org_id"],
-    )
+    await verify_rights(request, activity_id, current_user, "delete")
 
     if not activity:
         raise HTTPException(
@@ -217,3 +194,44 @@ async def get_activities(
     ]
 
     return activities
+
+
+#### Security ####################################################
+
+
+async def verify_rights(
+    request: Request,
+    activity_id: str,  # course_id in case of read
+    current_user: PublicUser | AnonymousUser,
+    action: Literal["create", "read", "update", "delete"],
+):
+    if action == "read":
+        if current_user.user_id == "anonymous":
+            await authorization_verify_if_element_is_public(
+                request, activity_id, current_user.user_id, action
+            )
+        else:
+            users = request.app.db["users"]
+            user = await users.find_one({"user_id": current_user.user_id})
+
+            await authorization_verify_based_on_roles(
+                request,
+                current_user.user_id,
+                action,
+                user["roles"],
+                activity_id,
+            )
+    else:
+        users = request.app.db["users"]
+        user = await users.find_one({"user_id": current_user.user_id})
+
+        await authorization_verify_based_on_roles(
+            request,
+            current_user.user_id,
+            action,
+            user["roles"],
+            activity_id,
+        )
+
+
+#### Security ####################################################
