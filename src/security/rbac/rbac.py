@@ -63,10 +63,7 @@ async def authorization_verify_if_user_is_author(
         if user_id in element["authors"]:
             return True
         else:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="User rights (author) : You don't have the right to perform this action",
-            )
+            return False
     else:
         return False
 
@@ -90,16 +87,34 @@ async def authorization_verify_based_on_roles(
     roles_id_list = [role["role_id"] for role in roles_list]
     roles = await roles.find({"role_id": {"$in": roles_id_list}}).to_list(length=100)
 
-    # Get the rights of the roles
-    for role in roles:
-        role = RoleInDB(**role)
-        if role.elements[element_type][f"action_{action}"] is True:
-            return True
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="User rights (roles) : You don't have the right to perform this action",
-            )
+    async def checkRoles():
+        # Check Roles
+        for role in roles:
+            role = RoleInDB(**role)
+            if role.elements[element_type][f"action_{action}"] is True:
+                return True
+            else:
+                return False
+
+    async def checkOrgRoles():
+        # Check Org Roles
+        users = request.app.db["users"]
+        user = await users.find_one({"user_id": user_id})
+        if element is not None:
+            for org in user["orgs"]:
+                if org["org_id"] == element["org_id"]:
+                    if org["org_role"] == "owner" or org["org_role"] == "editor":
+                        return True
+                    else:
+                        return False
+
+    if await checkRoles() or await checkOrgRoles():
+        return True
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User rights (roless) : You don't have the right to perform this action",
+        )
 
 
 async def authorization_verify_based_on_roles_and_authorship(

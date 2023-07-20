@@ -24,9 +24,9 @@ export const AuthenticatedClientElement = (props: AuthenticatedClientElementProp
         const user_roles = auth.userInfo.user_object.roles;
         const org_role = org_roles.find((org: any) => org.org_id == org_id);
         const user_role = user_roles.find((role: any) => role.org_id == org_id);
-        
+
         if (org_role && user_role) {
-            if (org_roles_values.includes(org_role.org_role) && user_roles_values.includes(user_role.role_id)) {
+            if (org_roles_values.includes(org_role.org_role) || user_roles_values.includes(user_role.role_id)) {
                 return true;
             }
             else {
