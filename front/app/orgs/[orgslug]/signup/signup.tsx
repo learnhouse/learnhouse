@@ -1,19 +1,19 @@
 "use client";
+import { useFormik } from 'formik';
+import { useRouter } from 'next/navigation';
 import learnhouseIcon from "public/learnhouse_bigicon_1.png";
-import FormLayout, { ButtonBlack, FormField, FormLabel, FormLabelAndMessage, FormMessage, Input } from '@components/StyledElements/Form/Form'
+import React from 'react'
+import FormLayout, { ButtonBlack, FormField, FormLabel, FormLabelAndMessage, FormMessage, Input, Textarea } from '@components/StyledElements/Form/Form'
 import Image from 'next/image';
 import * as Form from '@radix-ui/react-form';
-import { useFormik } from 'formik';
-import { getOrgLogoMediaDirectory } from "@services/media/media";
-import { BarLoader } from "react-spinners";
-import React from "react";
-import { loginAndGetToken } from "@services/auth/auth";
-import { AlertTriangle } from "lucide-react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { getUriWithOrg } from "@services/config/config";
+import { getOrgLogoMediaDirectory } from '@services/media/media';
+import { AlertTriangle } from 'lucide-react';
+import Link from 'next/link';
+import { signup } from '@services/auth/auth';
+import { getUriWithOrg } from '@services/config/config';
 
-interface LoginClientProps {
+
+interface SignUpClientProps {
     org: any;
 }
 
@@ -36,22 +36,44 @@ const validate = (values: any) => {
         errors.password = 'Password must be at least 8 characters';
     }
 
+    if (!values.username) {
+        errors.username = 'Required';
+    }
+
+    if (!values.username || values.username.length < 4) {
+        errors.username = 'Username must be at least 4 characters';
+    }
+
+    if (!values.full_name) {
+        errors.full_name = 'Required';
+    }
+
+    if (!values.bio) {
+        errors.bio = 'Required';
+    }
+
+
     return errors;
 };
 
-const LoginClient = (props: LoginClientProps) => {
+
+function SignUpClient(props: SignUpClientProps) {
     const [isSubmitting, setIsSubmitting] = React.useState(false);
     const router = useRouter();
     const [error, setError] = React.useState('');
     const formik = useFormik({
         initialValues: {
+            org_slug: props.org?.slug,
             email: '',
             password: '',
+            username: '',
+            bio: '',
+            full_name: '',
         },
         validate,
         onSubmit: async values => {
             setIsSubmitting(true);
-            let res = await loginAndGetToken(values.email, values.password);
+            let res = await signup(values);
             let message = await res.json();
             if (res.status == 200) {
                 router.push(`/`);
@@ -68,16 +90,18 @@ const LoginClient = (props: LoginClientProps) => {
 
         },
     });
+
     return (
-        <div className='grid grid-flow-col justify-stretch h-screen'>
+        <div><div className='grid grid-flow-col justify-stretch h-screen'>
             <div className="right-login-part" style={{ background: "linear-gradient(041.61deg, #202020 7.15%, #000000 90.96%)" }} >
                 <div className='login-topbar m-10'>
                     <Link prefetch href={getUriWithOrg(props.org.slug, "/")}>
                         <Image quality={100} width={30} height={30} src={learnhouseIcon} alt="" />
-                    </Link></div>
+                    </Link>
+                </div>
                 <div className="ml-10 h-4/6 flex flex-row text-white">
                     <div className="m-auto flex space-x-4 items-center flex-wrap">
-                        <div>Login to </div>
+                        <div>Join </div>
                         <div className="shadow-[0px_4px_16px_rgba(0,0,0,0.02)]" >
                             {props.org?.logo ? (
                                 <img
@@ -117,13 +141,39 @@ const LoginClient = (props: LoginClientProps) => {
                                 <Input onChange={formik.handleChange} value={formik.values.password} type="password" required />
                             </Form.Control>
                         </FormField>
+                        {/* for username  */}
+                        <FormField name="username">
+                            <FormLabelAndMessage label='Username' message={formik.errors.username} />
 
+                            <Form.Control asChild>
+                                <Input onChange={formik.handleChange} value={formik.values.username} type="text" required />
+                            </Form.Control>
+                        </FormField>
+
+                        {/* for full name  */}
+                        <FormField name="full_name">
+                            <FormLabelAndMessage label='Full Name' message={formik.errors.full_name} />
+
+                            <Form.Control asChild>
+                                <Input onChange={formik.handleChange} value={formik.values.full_name} type="text" required />
+                            </Form.Control>
+
+                        </FormField>
+
+                        {/* for bio  */}
+                        <FormField name="bio">
+                            <FormLabelAndMessage label='Bio' message={formik.errors.bio} />
+
+                            <Form.Control asChild>
+                                <Textarea onChange={formik.handleChange} value={formik.values.bio} required />
+                            </Form.Control>
+                        </FormField>
 
                         <div className="flex  py-4">
                             <Form.Submit asChild>
                                 <button className="w-full bg-black text-white font-bold text-center p-2 rounded-md shadow-md hover:cursor-pointer" >
                                     {isSubmitting ? "Loading..."
-                                        : "Login"}
+                                        : "Create an account"}
                                 </button>
                             </Form.Submit>
                         </div>
@@ -131,9 +181,8 @@ const LoginClient = (props: LoginClientProps) => {
                     </FormLayout>
                 </div>
             </div>
-        </div>
-    );
-};
+        </div></div>
+    )
+}
 
-export default LoginClient
-
+export default SignUpClient
