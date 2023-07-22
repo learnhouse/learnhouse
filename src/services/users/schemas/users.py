@@ -41,6 +41,9 @@ class UserInDB(User):
     creation_date: str
     update_date: str
 
+    def __getitem__(self, item):
+        return getattr(self, item)
+
     
 
 
@@ -54,6 +57,9 @@ class PublicUser(User):
 class AnonymousUser(BaseModel):
     user_id: str = "anonymous"
     username: str = "anonymous"
+    roles: list[UserRolesInOrganization] = [
+        UserRolesInOrganization(org_id="anonymous", role_id="role_anonymous")
+    ]
     
 
 

@@ -1,5 +1,6 @@
 from typing import Literal
 from uuid import uuid4
+from src.security.rbac.rbac import authorization_verify_if_user_is_anon
 from src.services.roles.schemas.roles import Role, RoleInDB
 from src.services.users.schemas.users import PublicUser
 from fastapi import HTTPException, status, Request
@@ -84,6 +85,8 @@ async def verify_user_permissions_on_roles(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Roles : Not authenticated"
         )
+
+    await authorization_verify_if_user_is_anon(current_user.user_id)
 
     if action == "create":
         if "owner" in [org.org_role for org in current_user.orgs]:
