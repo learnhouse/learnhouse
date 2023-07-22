@@ -1,5 +1,10 @@
 import json
+from typing import Literal
 from uuid import uuid4
+from src.security.rbac.rbac import (
+    authorization_verify_based_on_roles,
+    authorization_verify_if_user_is_anon,
+)
 from src.services.orgs.logos import upload_org_logo
 from src.services.orgs.schemas.orgs import (
     Organization,
@@ -8,7 +13,6 @@ from src.services.orgs.schemas.orgs import (
 )
 from src.services.users.schemas.users import UserOrganization
 from src.services.users.users import PublicUser
-from src.security.security import verify_user_rights_with_roles
 from fastapi import HTTPException, UploadFile, status, Request
 
 
@@ -197,9 +201,12 @@ async def verify_org_rights(
     request: Request,
     org_id: str,
     current_user: PublicUser,
-    action: str,
+    action: Literal["create", "read", "update", "delete"],
 ):
     orgs = request.app.db["organizations"]
+    users = request.app.db["users"]
+
+    user = await users.find_one({"user_id": current_user.user_id})
 
     org = await orgs.find_one({"org_id": org_id})
 
@@ -208,17 +215,11 @@ async def verify_org_rights(
             status_code=status.HTTP_409_CONFLICT, detail="Organization does not exist"
         )
 
-    hasRoleRights = await verify_user_rights_with_roles(
-        request, action, current_user.user_id, org_id, org_id
+    await authorization_verify_if_user_is_anon(current_user.user_id)
+
+    await authorization_verify_based_on_roles(
+        request, current_user.user_id, action, user["roles"], org_id
     )
-
-    if not hasRoleRights:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You do not have rights to this organization",
-        )
-
-    return True
 
 
 #### Security ####################################################

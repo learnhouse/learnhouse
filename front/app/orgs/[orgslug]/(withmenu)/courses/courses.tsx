@@ -20,6 +20,7 @@ import { getCourseThumbnailMediaDirectory } from '@services/media/media';
 interface CourseProps {
     orgslug: string;
     courses: any;
+    org_id: string;
 }
 
 // function to remove "course_" from the course_id
@@ -49,7 +50,7 @@ function Courses(props: CourseProps) {
             <GeneralWrapperStyled>
                 <div className='flex flex-wrap justify-between'>
                     <TypeOfContentTitle title="Courses" type="cou" />
-                    <AuthenticatedClientElement checkMethod='authentication'>
+                    <AuthenticatedClientElement checkMethod='roles' orgId={props.org_id}>
                         <Modal
                             isDialogOpen={newCourseModal}
                             onOpenChange={setNewCourseModal}
@@ -72,7 +73,7 @@ function Courses(props: CourseProps) {
                 <div className="flex flex-wrap">
                     {courses.map((course: any) => (
                         <div className="px-3" key={course.course_id}>
-                            <AdminEditsArea course={course} orgSlug={orgslug} courseId={course.course_id} deleteCourses={deleteCourses} />
+                            <AdminEditsArea  course={course} orgSlug={orgslug} courseId={course.course_id} deleteCourses={deleteCourses} />
                             <Link href={getUriWithOrg(orgslug, "/course/" + removeCoursePrefix(course.course_id))}>
                                 <div className="inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl relative w-[249px] h-[131px] bg-cover" style={{ backgroundImage: `url(${getCourseThumbnailMediaDirectory(course.org_id, course.course_id, course.thumbnail)})` }}>
 

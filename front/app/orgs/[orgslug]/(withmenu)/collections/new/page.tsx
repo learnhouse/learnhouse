@@ -40,6 +40,7 @@ function NewCollection(params: any) {
       name: name,
       description: description,
       courses: selectedCourses,
+      public: true,
       org_id: org.org_id,
     };
     await createCollection(collection);
