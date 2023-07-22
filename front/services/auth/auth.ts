@@ -8,7 +8,7 @@ interface LoginAndGetTokenResponse {
 // ⚠️ mvp phase code 
 // TODO : everything in this file need to be refactored including security issues fix 
 
-export async function loginAndGetToken(username: string, password: string): Promise<LoginAndGetTokenResponse> {
+export async function loginAndGetToken(username: string, password: string): Promise<any> {
   // Request Config
 
   // get origin 
@@ -25,8 +25,7 @@ export async function loginAndGetToken(username: string, password: string): Prom
 
   // fetch using await and async
   const response = await fetch(`${getAPIUrl()}auth/login`, requestOptions);
-  const data = await response.json();
-  return data;
+  return response;
 }
 
 export async function getUserInfo(token: string): Promise<any> {
