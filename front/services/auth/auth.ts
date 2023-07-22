@@ -5,14 +5,14 @@ interface LoginAndGetTokenResponse {
   token_type: "string";
 }
 
-// ⚠️ mvp phase code 
-// TODO : everything in this file need to be refactored including security issues fix 
+// ⚠️ mvp phase code
+// TODO : everything in this file need to be refactored including security issues fix
 
 export async function loginAndGetToken(username: string, password: string): Promise<any> {
   // Request Config
 
-  // get origin 
-  const HeadersConfig = new Headers({ "Content-Type": "application/x-www-form-urlencoded"  });
+  // get origin
+  const HeadersConfig = new Headers({ "Content-Type": "application/x-www-form-urlencoded" });
   const urlencoded = new URLSearchParams({ username: username, password: password });
 
   const requestOptions: any = {
@@ -21,7 +21,7 @@ export async function loginAndGetToken(username: string, password: string): Prom
     body: urlencoded,
     redirect: "follow",
     credentials: "include",
-  };  
+  };
 
   // fetch using await and async
   const response = await fetch(`${getAPIUrl()}auth/login`, requestOptions);
@@ -30,7 +30,7 @@ export async function loginAndGetToken(username: string, password: string): Prom
 
 export async function getUserInfo(token: string): Promise<any> {
   const origin = window.location.origin;
-  const HeadersConfig = new Headers({ Authorization: `Bearer ${token}`, Origin:origin });
+  const HeadersConfig = new Headers({ Authorization: `Bearer ${token}`, Origin: origin });
 
   const requestOptions: any = {
     method: "GET",
@@ -67,7 +67,7 @@ interface NewAccountBody {
 
 export async function signup(body: NewAccountBody): Promise<any> {
   const HeadersConfig = new Headers({ "Content-Type": "application/json" });
-  
+
   const requestOptions: any = {
     method: "POST",
     headers: HeadersConfig,
@@ -75,9 +75,6 @@ export async function signup(body: NewAccountBody): Promise<any> {
     redirect: "follow",
   };
 
-  return fetch(`${getAPIUrl()}users/?org_slug=${body.org_slug}`, requestOptions)
-    .then((result) => result.json())
-    .catch((error) => console.log("error", error));
+  const res = await fetch(`${getAPIUrl()}users/?org_slug=${body.org_slug}`, requestOptions);
+  return res;
 }
-
-
