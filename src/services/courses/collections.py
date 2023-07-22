@@ -1,8 +1,8 @@
-from typing import List
+from typing import List, Literal
 from uuid import uuid4
 from pydantic import BaseModel
+from src.security.rbac.rbac import authorization_verify_based_on_roles_and_authorship, authorization_verify_if_user_is_anon
 from src.services.users.users import PublicUser
-from src.security.security import verify_user_rights_with_roles
 from fastapi import HTTPException, status, Request
 
 #### Classes ####################################################
@@ -12,11 +12,13 @@ class Collection(BaseModel):
     name: str
     description: str
     courses: List[str]  # course_id
+    public: bool
     org_id: str  # org_id
 
 
 class CollectionInDB(Collection):
     collection_id: str
+    authors: List[str]  # user_id
 
 
 #### Classes ####################################################
@@ -81,7 +83,11 @@ async def create_collection(
     # generate collection_id with uuid4
     collection_id = str(f"collection_{uuid4()}")
 
-    collection = CollectionInDB(collection_id=collection_id, **collection_object.dict())
+    collection = CollectionInDB(
+        collection_id=collection_id,
+        authors=[current_user.user_id],
+        **collection_object.dict(),
+    )
 
     collection_in_db = await collections.insert_one(collection.dict())
 
@@ -169,15 +175,18 @@ async def get_collections(
 
     print(org_id)
 
-    # get all collections from database without ObjectId
-    all_collections = (
-        collections.find({"org_id": org_id})
-        .sort("name", 1)
-        .skip(10 * (page - 1))
-        .limit(limit)
-    )
-
-    await verify_collection_rights(request, "*", current_user, "read", org_id)
+    if current_user.user_id == "anonymous":
+        all_collections = collections.find(
+            {"org_id": org_id, "public": True}, {"_id": 0}
+        )
+    else:
+        # get all collections from database without ObjectId
+        all_collections = (
+            collections.find({"org_id": org_id})
+            .sort("name", 1)
+            .skip(10 * (page - 1))
+            .limit(limit)
+        )
 
     # create list of collections and include courses in each collection
     collections_list = []
@@ -207,11 +216,12 @@ async def verify_collection_rights(
     request: Request,
     collection_id: str,
     current_user: PublicUser,
-    action: str,
+    action: Literal["create", "read", "update", "delete"],
     org_id: str,
 ):
     collections = request.app.db["collections"]
-
+    users = request.app.db["users"]
+    user = await users.find_one({"user_id": current_user.user_id})
     collection = await collections.find_one({"collection_id": collection_id})
 
     if not collection and action != "create" and collection_id != "*":
@@ -223,17 +233,11 @@ async def verify_collection_rights(
     if current_user.user_id == "anonymous" and action == "read":
         return True
 
-    hasRoleRights = await verify_user_rights_with_roles(
-        request, action, current_user.user_id, collection_id, org_id
+    await authorization_verify_if_user_is_anon(current_user.user_id)
+
+    await authorization_verify_based_on_roles_and_authorship(
+        request, current_user.user_id, action, user["roles"], collection_id
     )
-
-    if not hasRoleRights:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You do not have rights to this Collection",
-        )
-
-    return True
 
 
 #### Security ####################################################

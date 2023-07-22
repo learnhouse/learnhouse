@@ -45,7 +45,7 @@ const CollectionsPage = async (params: any) => {
         <GeneralWrapperStyled>
             <div className="flex justify-between" >
                 <TypeOfContentTitle title="Collections" type="col" />
-                <AuthenticatedClientElement checkMethod='authentication'>
+                <AuthenticatedClientElement checkMethod='roles' orgId={org_id}>
                     <Link className="flex justify-center" href={getUriWithOrg(orgslug, "/collections/new")}>
                         <button className="rounded-md bg-black antialiased ring-offset-purple-800 p-2 px-5 my-auto font text-sm font-bold text-white drop-shadow-lg">Add Collection + </button>
                     </Link>

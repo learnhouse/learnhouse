@@ -14,7 +14,7 @@ export const AuthenticatedClientElement = (props: AuthenticatedClientElementProp
 
     // Available roles 
     const org_roles_values = ["admin", "owner"];
-    const user_roles_values = ["role_admin", "role_super_admin"];
+    const user_roles_values = ["role_admin"];
 
 
 
@@ -26,7 +26,7 @@ export const AuthenticatedClientElement = (props: AuthenticatedClientElementProp
         const user_role = user_roles.find((role: any) => role.org_id == org_id);
 
         if (org_role && user_role) {
-            if (org_roles_values.includes(org_role.org_role) && user_roles_values.includes(user_role.role_id)) {
+            if (org_roles_values.includes(org_role.org_role) || user_roles_values.includes(user_role.role_id)) {
                 return true;
             }
             else {
