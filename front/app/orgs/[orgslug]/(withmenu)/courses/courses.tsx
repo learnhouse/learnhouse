@@ -16,6 +16,7 @@ import GeneralWrapperStyled from '@components/StyledElements/Wrappers/GeneralWra
 import TypeOfContentTitle from '@components/StyledElements/Titles/TypeOfContentTitle';
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement';
 import { getCourseThumbnailMediaDirectory } from '@services/media/media';
+import ConfirmationModal from '@components/StyledElements/ConfirmationModal/ConfirmationModal';
 
 interface CourseProps {
     orgslug: string;
@@ -48,6 +49,7 @@ function Courses(props: CourseProps) {
     return (
         <div>
             <GeneralWrapperStyled>
+
                 <div className='flex flex-wrap justify-between'>
                     <TypeOfContentTitle title="Courses" type="cou" />
                     <AuthenticatedClientElement checkMethod='roles' orgId={props.org_id}>
@@ -73,7 +75,7 @@ function Courses(props: CourseProps) {
                 <div className="flex flex-wrap">
                     {courses.map((course: any) => (
                         <div className="px-3" key={course.course_id}>
-                            <AdminEditsArea  course={course} orgSlug={orgslug} courseId={course.course_id} deleteCourses={deleteCourses} />
+                            <AdminEditsArea course={course} orgSlug={orgslug} courseId={course.course_id} deleteCourses={deleteCourses} />
                             <Link href={getUriWithOrg(orgslug, "/course/" + removeCoursePrefix(course.course_id))}>
                                 <div className="inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl relative w-[249px] h-[131px] bg-cover" style={{ backgroundImage: `url(${getCourseThumbnailMediaDirectory(course.org_id, course.course_id, course.thumbnail)})` }}>
 
@@ -94,9 +96,17 @@ function Courses(props: CourseProps) {
 const AdminEditsArea = (props: { orgSlug: string, courseId: string, course: any, deleteCourses: any }) => {
     return (
         <AuthenticatedClientElement checkMethod='roles' orgId={props.course.org_id}><div className="flex space-x-2 py-2">
-            <button className="rounded-md text-sm px-3 font-bold text-red-800 bg-red-200 w-16 flex justify-center items-center" onClick={() => props.deleteCourses(props.courseId)}>
-                Delete <Trash size={10}></Trash>
-            </button>
+            <ConfirmationModal
+                confirmationButtonText='Delete Course'
+                confirmationMessage='Are you sure you want to delete this course?'
+                dialogTitle={'Delete ' + props.course.name + ' ?'}
+                dialogTrigger={
+                    <button className="rounded-md text-sm px-3 font-bold text-red-800 bg-red-200 w-16 flex justify-center items-center" >
+                        Delete <Trash size={10}></Trash>
+                    </button>}
+                functionToExecute={() => props.deleteCourses(props.courseId)}
+                status='warning'
+            ></ConfirmationModal>
             <Link href={getUriWithOrg(props.orgSlug, "/course/" + removeCoursePrefix(props.courseId) + "/edit")}>
                 <button className="rounded-md text-sm px-3 font-bold text-orange-800 bg-orange-200 w-16 flex justify-center items-center">
                     Edit <Edit2 size={10}></Edit2>
