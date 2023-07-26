@@ -64,7 +64,7 @@ const OrgHomePage = async (params: any) => {
                   <div className="flex -space-x-4">
                     {collection.courses.slice(0, 3).map((course: any) => (
                       <Link key={course.course_id} href={getUriWithOrg(orgslug, "/course/" + course.course_id.substring(7))}>
-                        <img className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg ring-2 ring-white z-50" key={course.course_id} src={`url(${getCourseThumbnailMediaDirectory(course.org_id, course.course_id, course.thumbnail)})`} alt={course.name} />
+                        <img className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg ring-2 ring-white z-50" key={course.course_id} src={`${getCourseThumbnailMediaDirectory(course.org_id, course.course_id, course.thumbnail)}`} alt={course.name} />
                       </Link>
                     ))}
                   </div>
