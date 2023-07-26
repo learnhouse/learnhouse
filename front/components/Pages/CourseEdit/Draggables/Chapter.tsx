@@ -3,6 +3,7 @@ import styled from "styled-components";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import Activity from "./Activity";
 import { PlusSquare, Trash, Trash2 } from "lucide-react";
+import ConfirmationModal from "@components/StyledElements/ConfirmationModal/ConfirmationModal";
 
 function Chapter(props: any) {
   return (
@@ -19,16 +20,18 @@ function Chapter(props: any) {
           <h3 className="flex space-x-2 pt-3 font-bold text-md items-center">
             <p>{props.info.list.chapter.name}
             </p>
+            <ConfirmationModal
+              confirmationButtonText="Delete Chapter"
+              confirmationMessage="Are you sure you want to delete this chapter?"
+              dialogTitle={"Delete " + props.info.list.chapter.name + " ?"}
+              dialogTrigger={
+                <button className="rounded-md text-sm px-3 font-bold text-red-800 bg-red-200 w-16 flex justify-center items-center" >
+                  Delete <Trash size={10}></Trash>
+                </button>}
+              functionToExecute={() => props.deleteChapter(props.info.list.chapter.id)}
+              status='warning'
+            ></ConfirmationModal>
 
-
-            <div
-              className="hover:cursor-pointer p-1 rounded-md bg-slate-100"
-              onClick={() => {
-                props.deleteChapter(props.info.list.chapter.id);
-              }}
-            >
-              <Trash2 className="text-slate-500" size={16} />
-            </div>
           </h3>
           <Droppable key={props.info.list.chapter.id} droppableId={props.info.list.chapter.id} type="activity">
             {(provided) => (
@@ -68,8 +71,6 @@ const ChapterWrapper = styled.div`
   border: 1px solid rgba(255, 255, 255, 0.19);
   box-shadow: 0px 13px 33px -13px rgb(0 0 0 / 12%);
   transition: all 0.2s ease;
-  
-
   h3{
     padding-left: 20px;
     padding-right: 20px;
