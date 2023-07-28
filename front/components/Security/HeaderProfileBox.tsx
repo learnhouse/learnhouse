@@ -12,14 +12,14 @@ export const HeaderProfileBox = () => {
   return (
     <ProfileArea>
       {!auth.isAuthenticated && (
-        <UnidentifiedArea>
-          <ul>
+        <UnidentifiedArea className="flex text-sm text-gray-700 font-bold p-1.5 px-2 rounded-lg">
+          <ul className="flex space-x-3 items-center">
             <li>
               <Link href="/login">
                 Login
               </Link>
             </li>
-            <li>
+            <li className="bg-black rounded-lg shadow-md p-2 px-3 text-white">
               <Link href="/signup">
                 Sign up
               </Link>
@@ -28,12 +28,14 @@ export const HeaderProfileBox = () => {
         </UnidentifiedArea>
       )}
       {auth.isAuthenticated && (
-        <AccountArea>
-          <div>{auth.userInfo.user_object.username}</div>
-          <div>
-            <Avvvatars value={auth.userInfo.user_object.user_id} style="shape" />
+        <AccountArea className="space-x-3">
+          <div className="text-sm text-gray-600 p-1.5 px-2 rounded-lg">{auth.userInfo.user_object.full_name}</div>
+          <div className="flex -space-x-2 items-center">
+            <div className="py-4">
+              <Avvvatars size={26} value={auth.userInfo.user_object.user_id} style="shape" />
+            </div>
+            <Link className="bg-slate-50 p-1.5 rounded-full" href={"/settings"}><GearIcon fontSize={26} /></Link>
           </div>
-          <Link href={"/settings"}><GearIcon/></Link>
         </AccountArea>
       )}
     </ProfileArea>
@@ -44,27 +46,7 @@ const AccountArea = styled.div`
   padding-right: 20px;
   display: flex;
   place-items: center;
-
-  a{
-    // center the gear icon
-    display: flex;
-    place-items: center;
-    place-content: center;
-    width: 29px;
-    height: 29px;
-    border-radius: 19px;
-    background: #F5F5F5;
-
-    // hover effect
-    &:hover{
-      background: #E5E5E5;
-
-    }
-  }
-
-  div {
-    margin-right: 10px;
-  }
+  
   img {
     width: 29px;
     border-radius: 19px;
@@ -82,17 +64,5 @@ const UnidentifiedArea = styled.div`
   place-items: stretch;
   flex-grow: 1;
 
-  ul {
-    display: flex;
-    place-items: center;
-    list-style: none;
-    padding-left: 20px;
-
-    li {
-      padding-right: 20px;
-      font-size: 16px;
-      font-weight: 500;
-      color: #171717;
-    }
-  }
+  
 `;
