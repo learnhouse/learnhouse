@@ -104,7 +104,7 @@ const CourseClient = (props: any) => {
               </StyledBox>
 
             </div>
-            <div className="course_metadata_right w-64 flex items-center ml-10 h-28 p-3 bg-white rounded-md justify-center drop-shadow-[0_33px_13px_rgba(0,0,0,0.042)] transition-all">
+            <div className="course_metadata_right w-64 flex items-center ml-10 h-28 p-3 bg-white shadow-sm justify-center ring-1 ring-inset ring-gray-400/10 rounded-lg transition-all">
               {course.trail.status == "ongoing" ? (
                 <button className="py-2 px-5 rounded-xl text-white font-bold h-12 w-[200px] drop-shadow-md bg-red-600 hover:bg-red-700 hover:cursor-pointer" onClick={quitCourse}>
                   Quit Course
@@ -122,7 +122,7 @@ const CourseClient = (props: any) => {
 
 
 const StyledBox = (props: any) => (
-  <div className="p-3 pl-10 bg-white rounded-md w-[100%] h-auto drop-shadow-[0_33px_13px_rgba(0,0,0,0.042)]">
+  <div className="p-3 pl-10 bg-white w-[100%] h-auto ring-1 ring-inset ring-gray-400/10 rounded-lg shadow-sm">
     {props.children}
   </div>
 

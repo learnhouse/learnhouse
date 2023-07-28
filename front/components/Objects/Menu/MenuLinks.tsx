@@ -21,7 +21,7 @@ const LinkItem = (props: any) => {
     const orgslug = props.orgslug;
     return (
         <Link href={getUriWithOrg(orgslug, link)}>
-            <li className="flex space-x-2 items-center text-[#909192] font-medium">
+            <li className="flex space-x-3 items-center text-[#909192] font-medium">
                 {props.type == 'courses' &&
                     <>
                         <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">

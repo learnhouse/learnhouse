@@ -255,7 +255,6 @@ function CourseEdit(params: any) {
   return (
     <>
       <div
-        className="bg-gradient-radial bg-fixed bg-repeat bg-[0 0],[25px 25px] bg-[50px 50px] bg-[#4744446b 1px]"
       >
         <GeneralWrapperStyled>
           <div className="font-bold text-lg flex space-x-2 items-center">
@@ -263,7 +262,7 @@ function CourseEdit(params: any) {
 
 
             <div
-              className="bg-black hover:bg-gray-950 text-white font-bold p-1 px-2 text-sm rounded flex items-center cursor-pointer space-x-2"
+              className="bg-black z-20 hover:bg-gray-950 text-white font-bold p-1 px-2 text-sm rounded flex items-center cursor-pointer space-x-2 hover:cursor-pointer"
               onClick={() => {
                 updateChapters();
               }}

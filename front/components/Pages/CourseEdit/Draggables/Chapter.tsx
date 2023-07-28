@@ -2,7 +2,7 @@ import React from "react";
 import styled from "styled-components";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import Activity from "./Activity";
-import { PlusSquare, Trash, Trash2 } from "lucide-react";
+import { PlusSquare, Sparkle, Sparkles, Trash, Trash2 } from "lucide-react";
 import ConfirmationModal from "@components/StyledElements/ConfirmationModal/ConfirmationModal";
 
 function Chapter(props: any) {
@@ -14,7 +14,7 @@ function Chapter(props: any) {
           {...provided.draggableProps}
           ref={provided.innerRef}
           //  isDragging={snapshot.isDragging}
-          className="backdrop-blur-md"
+          className=""
           key={props.info.list.chapter.id}
         >
           <h3 className="flex space-x-2 pt-3 font-bold text-md items-center">
@@ -36,7 +36,7 @@ function Chapter(props: any) {
           <Droppable key={props.info.list.chapter.id} droppableId={props.info.list.chapter.id} type="activity">
             {(provided) => (
               <ActivitiesList {...provided.droppableProps} ref={provided.innerRef}>
-                <div className="flex flex-col ">
+                <div className="flex flex-col">
                   {props.info.list.activities.map((activity: any, index: any) => (
                     <Activity orgslug={props.orgslug} courseid={props.courseid} key={activity.id} activity={activity} index={index}></Activity>
                   ))}
@@ -44,9 +44,9 @@ function Chapter(props: any) {
 
                   <div onClick={() => {
                     props.openNewActivityModal(props.info.list.chapter.id);
-                  }} className="flex space-x-2 items-center py-2 my-3 rounded-md justify-center text-slate-500 outline-slate-200 bg-slate-50  hover:cursor-pointer">
-                    <PlusSquare className="" size={17} />
-                    <div className="text-sm mx-auto my-auto  items-center font-bold">Add Activity</div>
+                  }} className="flex space-x-2 items-center py-2 my-3 rounded-md justify-center text-white  bg-black  hover:cursor-pointer">
+                    <Sparkles className="" size={17} />
+                    <div className="text-sm mx-auto my-auto  items-center font-bold">Add Activity + </div>
                   </div>
                 </div>
               </ActivitiesList>
