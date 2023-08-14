@@ -6,23 +6,15 @@ import styled from "styled-components";
 function WarningCalloutComponent(props: any) {
   return (
     <NodeViewWrapper>
-      <CalloutWrapper contentEditable={props.extension.options.editable}>
-        <AlertTriangle/> <NodeViewContent contentEditable={props.extension.options.editable} className="content" />
+      <CalloutWrapper className="flex space-x-2 items-center bg-yellow-200 rounded-lg text-yellow-900 px-3 shadow-inner" contentEditable={props.extension.options.editable}>
+        <AlertTriangle /> <NodeViewContent contentEditable={props.extension.options.editable} className="content" />
       </CalloutWrapper>
     </NodeViewWrapper>
   );
 }
 
 const CalloutWrapper = styled.div`
-  display: flex;
-  flex-direction: row;
-  background: #fefce8;
-  color: #713f11;
-  border: 1px solid #fff103;
-  border-radius: 16px;
-  margin: 1rem 0;
-  align-items: center;
-  padding-left: 15px;
+  
 
   svg {
     padding: 3px;

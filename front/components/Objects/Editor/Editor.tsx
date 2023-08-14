@@ -2,16 +2,13 @@
 import React from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import Collaboration from "@tiptap/extension-collaboration";
-import CollaborationCursor from "@tiptap/extension-collaboration-cursor";
 import { AuthContext } from "../../Security/AuthProvider";
 import learnhouseIcon from "public/learnhouse_icon.png";
 import { ToolbarButtons } from "./Toolbar/ToolbarButtons";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import Image from "next/image";
 import styled from "styled-components";
-import { getBackendUrl, getUriWithOrg } from "@services/config/config";
-import { DividerVerticalIcon, EyeOpenIcon, SlashIcon } from "@radix-ui/react-icons";
+import { DividerVerticalIcon, SlashIcon } from "@radix-ui/react-icons";
 import Avvvatars from "avvvatars-react";
 // extensions
 import InfoCallout from "./Extensions/Callout/Info/InfoCallout";
@@ -19,7 +16,7 @@ import WarningCallout from "./Extensions/Callout/Warning/WarningCallout";
 import ImageBlock from "./Extensions/Image/ImageBlock";
 import Youtube from "@tiptap/extension-youtube";
 import VideoBlock from "./Extensions/Video/VideoBlock";
-import { Eye, Save } from "lucide-react";
+import { Eye } from "lucide-react";
 import MathEquationBlock from "./Extensions/MathEquation/MathEquationBlock";
 import PDFBlock from "./Extensions/PDF/PDFBlock";
 import QuizBlock from "./Extensions/Quiz/QuizBlock";
@@ -120,7 +117,7 @@ function Editor(props: Editor) {
               <Link href="/">
                 <EditorInfoLearnHouseLogo width={25} height={25} src={learnhouseIcon} alt="" />
               </Link>
-              <Link target="_blank" href={`/course/${course_id}`}>
+              <Link target="_blank" href={`/course/${course_id}/edit`}>
                 <EditorInfoThumbnail src={`${getCourseThumbnailMediaDirectory(props.course.course.org_id,props.course.course.course_id,props.course.course.thumbnail)}`} alt=""></EditorInfoThumbnail>
               </Link>
               <EditorInfoDocName>
