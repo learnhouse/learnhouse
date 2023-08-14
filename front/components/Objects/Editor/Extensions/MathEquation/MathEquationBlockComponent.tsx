@@ -22,26 +22,18 @@ function MathEquationBlockComponent(props: any) {
     props.updateAttributes({
       math_equation: equation,
     });
-    setIsEditing(false);
+    //setIsEditing(false);
   };
 
   return (
     <NodeViewWrapper className="block-math-equation">
-      <MathEqWrapper>
-        {isEditable && (
-          <MathEqTopMenu>
-            <button onClick={() => setIsEditing(true)}>
-              <Edit size={15}></Edit>
-            </button>
-            <span className="pl-2">Edit</span>
-          </MathEqTopMenu>
-        )}
+      <MathEqWrapper className="flex flex-col space-y-2 bg-gray-50 shadow-inner rounded-lg py-7 px-5">
         <BlockMath>{equation}</BlockMath>
         {isEditing && isEditable && (
           <>
             <EditBar>
               <input value={equation} onChange={handleEquationChange} placeholder="Insert a Math Equation (LaTeX) " type="text" />
-              <button onClick={() => saveEquation()}>
+              <button className="opacity-1" onClick={() => saveEquation()}>
                 <Save size={15}></Save>
               </button>
             </EditBar>
@@ -57,27 +49,6 @@ function MathEquationBlockComponent(props: any) {
 export default MathEquationBlockComponent;
 
 const MathEqWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  background: #f9f9f9a2;
-  border-radius: 8px;
-  margin: 20px;
-  padding: 20px;
-  min-height: 74px;
-  border: ${(props) => (props.contentEditable ? "2px dashed #713f1117" : "none")};
-`;
-
-const MathEqTopMenu = styled.div`
-  display: flex;
-  justify-content: flex-start;
-  button {
-    margin-left: 10px;
-    cursor: pointer;
-    border: none;
-    background: none;
-    font-size: 14px;
-    color: #494949;
-  }
 `;
 
 const EditBar = styled.div`

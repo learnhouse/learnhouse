@@ -1,7 +1,6 @@
 'use client';
 import { default as React, } from "react";
 import * as Y from "yjs";
-import { WebrtcProvider } from "y-webrtc";
 import Editor from "./Editor";
 import { updateActivity } from "@services/courses/activities";
 import { toast } from "react-hot-toast";
