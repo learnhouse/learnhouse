@@ -1,7 +1,6 @@
 "use client";
 import Link from "next/link";
-import React from "react";
-import { getAPIUrl, getBackendUrl, getUriWithOrg } from "@services/config/config";
+import { getUriWithOrg } from "@services/config/config";
 import Canva from "@components/Pages/Activities/DynamicCanva/DynamicCanva";
 import VideoActivity from "@components/Pages/Activities/Video/Video";
 import { Check } from "lucide-react";
@@ -41,8 +40,6 @@ function ActivityClient(props: ActivityClientProps) {
 
 
 
-
-
   return (
     <>
       <GeneralWrapperStyled>
@@ -74,18 +71,12 @@ function ActivityClient(props: ActivityClientProps) {
           </div>
 
           {activity ? (
-            <div className={`p-7 pt-2 drop-shadow-sm rounded-lg ${activity.type == 'dynamic' ? 'bg-white' : 'bg-zinc-950'}`}>
+            <div className={`p-7 pt-4 drop-shadow-sm rounded-lg ${activity.type == 'dynamic' ? 'bg-white' : 'bg-zinc-950'}`}>
               <div>
                 {activity.type == "dynamic" && <Canva content={activity.content} activity={activity} />}
                 {/* todo : use apis & streams instead of this */}
                 {activity.type == "video" && <VideoActivity course={course} activity={activity} />}
-
                 {activity.type == "documentpdf" && <DocumentPdfActivity course={course} activity={activity} />}
-
-                <div className="py-10">
-
-
-                </div>
               </div>
             </div>
           ) : (<div></div>)}
