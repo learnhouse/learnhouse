@@ -19,7 +19,7 @@ function NewChapterModal({ submitChapter, closeModal }: any) {
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
-    console.log({ chapterName, chapterDescription });
+    
     setIsSubmitting(true);
     await submitChapter({ name: chapterName, description: chapterDescription, activities: [] });
     setIsSubmitting(false);

@@ -28,7 +28,7 @@ function DefaultElements() {
             setIsSubmitted(true)
         }
         catch (e) {
-            console.log(e)
+            
         }
     }
 

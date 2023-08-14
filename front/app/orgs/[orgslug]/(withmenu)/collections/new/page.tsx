@@ -35,7 +35,7 @@ function NewCollection(params: any) {
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
-    console.log("selectedCourses", selectedCourses);
+    
     const collection = {
       name: name,
       description: description,

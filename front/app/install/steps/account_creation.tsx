@@ -61,7 +61,7 @@ function AccountCreation() {
         },
         validate,
         onSubmit: values => {
-            console.log(install.data[1].slug)
+            
             let finalvalues = { ...values, org_slug: install.data[1].slug }
             let finalvalueswithoutpasswords = { ...values, password: '', confirmPassword: '', org_slug: install.data[1].slug }
             let install_data = { ...install.data, 3: finalvalues }
