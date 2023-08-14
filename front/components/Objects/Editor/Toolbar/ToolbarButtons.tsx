@@ -133,7 +133,7 @@ export const ToolbarButtons = ({ editor, props }: any) => {
           <FileText size={15} />
         </ToolBtn>
       </ToolTip>
-      <ToolTip content={"Interactive Quiz"}>
+      {/* <ToolTip content={"Interactive Quiz"}>
         <ToolBtn
           onClick={() =>
             editor
@@ -147,7 +147,7 @@ export const ToolbarButtons = ({ editor, props }: any) => {
         >
           <GraduationCap size={15} />
         </ToolBtn>
-      </ToolTip>
+      </ToolTip> */}
     </ToolButtonsWrapper>
   );
 };
