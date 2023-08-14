@@ -11,7 +11,7 @@ const Finish = () => {
   const router = useRouter()
 
   async function finishInstall() {
-    console.log('install_data')
+    
     let install_data = { ...install.data, 5: { status: 'OK' } }
 
     let data = await updateInstall(install_data, 6)
@@ -19,7 +19,7 @@ const Finish = () => {
       router.push('/install?step=6')
     }
     else {
-      console.log('Error')
+      
     }
   }
 

@@ -21,7 +21,7 @@ export async function generateMetadata(
   const org = await getOrganizationContextInfo(params.orgslug, { revalidate: 1800, tags: ['organizations'] });
   const col = await getCollectionByIdWithAuthHeader(params.collectionid, access_token_cookie ? access_token_cookie.value : null, { revalidate: 0, tags: ['collections'] });
 
-  console.log(col)
+  
 
   return {
     title: `Collection : ${col.name}  — ${org.name}`,

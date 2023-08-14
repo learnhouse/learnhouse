@@ -83,7 +83,7 @@ function CourseEdit(params: any) {
 
   // Submit new activity
   const submitActivity = async (activity: any) => {
-    console.log("submitActivity", activity);
+    
     let org = await getOrganizationContextInfo(orgslug, { revalidate: 1800 });
     await updateChaptersMetadata(courseid, data);
     await createActivity(activity, activity.chapterId, org.org_id);
@@ -105,7 +105,7 @@ function CourseEdit(params: any) {
 
   // Submit YouTube Video Upload
   const submitExternalVideo = async (external_video_data: any, activity: any, chapterId: string) => {
-    console.log("submitExternalVideo", external_video_data);
+    
     await updateChaptersMetadata(courseid, data);
     await createExternalVideoActivity(external_video_data, activity, chapterId);
     await getCourseChapters();
@@ -115,7 +115,7 @@ function CourseEdit(params: any) {
   };
 
   const deleteChapterUI = async (chapterId: any) => {
-    console.log("deleteChapter", chapterId);
+    
     await deleteChapter(chapterId);
     getCourseChapters();
     revalidateTags(['courses'], orgslug);
@@ -123,7 +123,7 @@ function CourseEdit(params: any) {
   };
 
   const updateChapters = () => {
-    console.log(data);
+    
     updateChaptersMetadata(courseid, data);
     revalidateTags(['courses'], orgslug);
     router.refresh();
@@ -134,7 +134,7 @@ function CourseEdit(params: any) {
   */
 
   const openNewActivityModal = async (chapterId: any) => {
-    console.log("openNewActivityModal", chapterId);
+    
     setNewActivityModal(true);
     setNewActivityModalData(chapterId);
   };
@@ -145,7 +145,7 @@ function CourseEdit(params: any) {
   };
 
   const closeNewActivityModal = () => {
-    console.log("closeNewActivityModal");
+    
 
     setNewActivityModal(false);
   };
@@ -156,7 +156,7 @@ function CourseEdit(params: any) {
   */
   const onDragEnd = (result: any) => {
     const { destination, source, draggableId, type } = result;
-    console.log(result);
+    
 
     // check if the activity is dropped outside the droppable area
     if (!destination) {
@@ -177,7 +177,7 @@ function CourseEdit(params: any) {
         ...data,
         chapterOrder: newChapterOrder,
       };
-      console.log(newState);
+      
 
       setData(newState);
       return;

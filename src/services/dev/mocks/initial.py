@@ -204,7 +204,6 @@ async def create_initial_data(request: Request):
                         activities=[],
                     )
                     coursechapter = await create_coursechapter(request,coursechapter, course_id, current_user)
-                    pprint(coursechapter)
                     if coursechapter:
                         # create activities
                         for i in range(0, 5):

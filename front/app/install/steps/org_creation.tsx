@@ -65,7 +65,7 @@ function OrgCreation() {
             setIsSubmitted(true)
         }
         catch (e) {
-            console.log(e)
+            
         }
 
     }
