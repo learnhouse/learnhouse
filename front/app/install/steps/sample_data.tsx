@@ -14,7 +14,7 @@ function SampleData() {
     try {
       let username = install.data[3].username
       let slug = install.data[1].slug
-      console.log(install.data)
+      
       createSampleDataInstall(username, slug)
 
       let install_data = { ...install.data, 4: { status: 'OK' } }
@@ -24,7 +24,7 @@ function SampleData() {
 
     }
     catch (e) {
-      console.log(e)
+      
     }
   }
 

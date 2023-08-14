@@ -364,7 +364,6 @@ async def create_sample_data(org_slug: str, username: str, request: Request):
 
     current_user = PublicUser(**user)
 
-    print(current_user)
     for i in range(0, 5):
         # get image in BinaryIO format from unsplash and save it to disk
         image = requests.get("https://source.unsplash.com/random/800x600")

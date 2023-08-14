@@ -8,7 +8,7 @@ import { updatePassword } from '@services/settings/password';
 function PasswordsClient() {
     const auth: any = React.useContext(AuthContext);
 
-    console.log('auth', auth)
+    
 
     const updatePasswordUI = async (values: any) => {
         let user_id = auth.userInfo.user_object.user_id;

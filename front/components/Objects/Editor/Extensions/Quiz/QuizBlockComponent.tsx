@@ -29,7 +29,7 @@ function ImageBlockComponent(props: any) {
     let modifiedQuestions = [...questions];
     modifiedQuestions.splice(index, 1);
     setQuestions(modifiedQuestions);
-    console.log(questions);
+    
 
     // remove the answers from the answers array
     let modifiedAnswers = [...answers];
@@ -79,17 +79,17 @@ function ImageBlockComponent(props: any) {
       option_id: option_id,
     };
     setAnswers([...answers, answer]);
-    console.log(answers);
+    
   };
 
   const saveQuiz = async () => {
     // save the questions and answers to the backend
-    console.log("saving quiz");
-    console.log(questions);
-    console.log(answers);
+    
+    
+    
     try {
       let res = await submitQuizBlock(props.extension.options.activity.activity_id, {questions : questions , answers : answers})
-      console.log(res.block_id);
+      
       props.updateAttributes({
         quizId: {
           value : res.block_id
@@ -98,7 +98,7 @@ function ImageBlockComponent(props: any) {
       
     }
     catch (error) {
-      console.log(error);
+      
     }
 
     
@@ -112,9 +112,9 @@ function ImageBlockComponent(props: any) {
 
   React.useEffect(() => {
     // fetch the questions and options from the backend
-    console.log("fetching questions");
-    console.log(questions);
-    console.log(answers);
+    
+    
+    
   }, [questions, answers]);
 
   return (

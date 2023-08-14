@@ -173,7 +173,6 @@ async def get_collections(
 ):
     collections = request.app.db["collections"]
 
-    print(org_id)
 
     if current_user.user_id == "anonymous":
         all_collections = collections.find(

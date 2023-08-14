@@ -64,45 +64,7 @@ app.mount("/content", StaticFiles(directory="content"), name="content")
 app.include_router(v1_router)
 
 # General Routes
-
-
 @app.get("/")
 async def root():
     return {"Message": "Welcome to LearnHouse ✨"}
 
-
-@app.get("/test")
-async def rootd(request: Request):
-    res = await authorization_verify_based_on_roles(
-        request=request,
-        user_id="user_c441e47e-5c04-4b03-9886-b0f5cb333c06",
-        action="read",
-        roles_list=[
-            UserRolesInOrganization(
-                org_id="org_e7085838-2efc-48f3-b414-77318572d9f5", role_id="role_admin"
-            ),
-        ],
-        element_id="collection_1c277b46-5a4b-440a-ac29-94b874ef7cf4",
-    )
-    return res
-
-
-@app.get("/test2")
-async def rootds(request: Request):
-    res = await authorization_verify_if_user_is_author(
-        request=request,
-        user_id="user_c441e47e-5c04-4b03-9886-b0f5cb333c06",
-        action="read",
-        element_id="course_1c277b46-5a4b-440a-ac29-94b874ef7cf4",
-    )
-    return res
-
-@app.get("/test3")
-async def rootdsc(request: Request):
-    res = await authorization_verify_if_element_is_public(
-        request=request,
-        user_id="anonymous",
-        action="read",
-        element_id="course_1c277b46-5a4b-440a-ac29-94b874ef7cf4",
-    )
-    return res
