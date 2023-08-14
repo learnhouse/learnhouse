@@ -1,10 +1,11 @@
 import { NodeViewWrapper } from "@tiptap/react";
-import { AlertTriangle, Image, Video } from "lucide-react";
+import { AlertTriangle, Image, Loader, Video } from "lucide-react";
 import React from "react";
 import styled from "styled-components";
 import { getBackendUrl } from "../../../../../services/config/config";
 import { uploadNewVideoFile } from "../../../../../services/blocks/Video/video";
 import { getActivityBlockMediaDirectory } from "@services/media/media";
+import { UploadIcon } from "@radix-ui/react-icons";
 
 function VideoBlockComponents(props: any) {
   const [video, setVideo] = React.useState(null);
@@ -30,20 +31,25 @@ function VideoBlockComponents(props: any) {
   return (
     <NodeViewWrapper className="block-video">
       {!blockObject && (
-        <BlockVideoWrapper contentEditable={props.extension.options.editable}>
-          <div>
-            <Video color="#e1e0e0" size={50} />
-            <br />
-          </div>
-          <input onChange={handleVideoChange} type="file" name="" id="" />
-          <br />
-          <button onClick={handleSubmit}>Submit</button>
+        <BlockVideoWrapper className="flex items-center space-x-3 py-7 bg-gray-50 rounded-xl text-gray-900 px-3 border-dashed border-gray-150 border-2" contentEditable={props.extension.options.editable}>
+          {isLoading ? (
+            <Loader className="animate-spin animate-pulse text-gray-200" size={50} />
+          ) : (
+            <>
+              <div>
+                <Video className="text-gray-200" size={50} />
+              </div>
+              <input className="p-3 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 hover:file:cursor-pointer  file:bg-gray-200 cursor-pointer file:text-gray-500" onChange={handleVideoChange} type="file" name="" id="" />
+              <button className='p-2 px-3 bg-gray-200 rounded-lg text-gray-500 hover:bg-gray-300 transition space-x-2 items-center flex' onClick={handleSubmit}><UploadIcon></UploadIcon><p>Submit</p></button>
+            </>
+          )}
         </BlockVideoWrapper>
       )}
       {blockObject && (
         <BlockVideo>
           <video
             controls
+            className="rounded-lg shadow h-96 w-full object-scale-down bg-black"
             src={`${getActivityBlockMediaDirectory(props.extension.options.activity.org_id,
               props.extension.options.activity.course_id,
               props.extension.options.activity.activity_id,
@@ -52,22 +58,13 @@ function VideoBlockComponents(props: any) {
           ></video>
         </BlockVideo>
       )}
-      {isLoading && (
-        <div>
-          <AlertTriangle color="#e1e0e0" size={50} />
-        </div>
-      )}
+
     </NodeViewWrapper>
   );
 }
 const BlockVideoWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  background: #f9f9f9;
-  border-radius: 3px;
-  padding: 30px;
-  min-height: 74px;
-  border: ${(props) => (props.contentEditable ? "2px dashed #713f1117" : "none")};
+  
+  //border: ${(props) => (props.contentEditable ? "2px dashed #713f1117" : "none")};
 
   // center
   align-items: center;
@@ -79,12 +76,5 @@ const BlockVideoWrapper = styled.div`
 const BlockVideo = styled.div`
   display: flex;
   flex-direction: column;
-  video {
-    width: 100%;
-    border-radius: 6px;
-    height: 300px;
-    // cover
-    object-fit: cover;
-  }
 `;
 export default VideoBlockComponents;

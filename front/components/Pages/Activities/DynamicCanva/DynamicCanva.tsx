@@ -1,4 +1,3 @@
-import React from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { styled } from "styled-components";
@@ -63,9 +62,54 @@ function Canva(props: Editor) {
 }
 
 const CanvaWrapper = styled.div`
-  padding-top: 20px;
   width: 100%;
   margin: 0 auto;
+
+  // disable chrome outline
+
+  .ProseMirror {
+
+h1 {
+  font-size: 30px;  
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+h2 {
+  font-size: 25px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+h3 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+h4 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+h5 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+
+&:focus {
+  outline: none !important;
+  outline-style: none !important;
+  box-shadow: none !important;
+}
+}
+
+
 `;
 
 export default Canva;

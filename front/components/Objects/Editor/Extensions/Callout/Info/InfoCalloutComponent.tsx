@@ -6,7 +6,7 @@ import styled from "styled-components";
 function InfoCalloutComponent(props: any) {
   return (
     <NodeViewWrapper>
-      <InfoCalloutWrapper contentEditable={props.extension.options.editable}>
+      <InfoCalloutWrapper className="flex space-x-2 items-center bg-blue-200 rounded-lg text-blue-900 px-3 shadow-inner" contentEditable={props.extension.options.editable}>
         <AlertCircle /> <NodeViewContent contentEditable={props.extension.options.editable} className="content" />
       </InfoCalloutWrapper>
     </NodeViewWrapper>
@@ -14,16 +14,6 @@ function InfoCalloutComponent(props: any) {
 }
 
 const InfoCalloutWrapper = styled.div`
-  display: flex;
-  flex-direction: row;
-  color: #1f3a8a;
-  background-color: #dbe9fe;
-  border: 1px solid #c1d9fb;
-  border-radius: 16px;
-  margin: 1rem 0;
-  align-items: center;
-  padding-left: 15px;
-  
   svg{
     padding: 3px;
   }
