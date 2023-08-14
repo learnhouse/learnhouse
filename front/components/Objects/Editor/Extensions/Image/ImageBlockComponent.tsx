@@ -2,11 +2,9 @@ import { NodeViewWrapper } from "@tiptap/react";
 import React from "react";
 import styled from "styled-components";
 import { Resizable } from 're-resizable';
-
-import * as AspectRatio from '@radix-ui/react-aspect-ratio';
-import { AlertCircle, AlertTriangle, Image, ImagePlus, Info } from "lucide-react";
-import { getImageFile, uploadNewImageFile } from "../../../../../services/blocks/Image/images";
-import { getBackendUrl } from "../../../../../services/config/config";
+import { AlertTriangle, Image, Loader } from "lucide-react";
+import { uploadNewImageFile } from "../../../../../services/blocks/Image/images";
+import { UploadIcon } from "@radix-ui/react-icons";
 import { getActivityBlockMediaDirectory } from "@services/media/media";
 
 function ImageBlockComponent(props: any) {
@@ -34,33 +32,30 @@ function ImageBlockComponent(props: any) {
 
   return (
     <NodeViewWrapper className="block-image">
-      {!blockObject && (
-        <BlockImageWrapper contentEditable={props.extension.options.editable}>
-          <div>
-            <Image color="#e1e0e0" size={50} />
-            <br />
-          </div>
-          <input onChange={handleImageChange} type="file" name="" id="" />
-          <br />
-          <button onClick={handleSubmit}>Submit</button>
+      {!blockObject && props.extension.options.editable && (
+        <BlockImageWrapper className="flex items-center space-x-3 py-7 bg-gray-50 rounded-xl text-gray-900 px-3 border-dashed border-gray-150 border-2" contentEditable={props.extension.options.editable}>
+          {isLoading ? (
+            <Loader className="animate-spin animate-pulse text-gray-200" size={50} />
+          ) : (
+            <>
+              <div>
+                <Image className="text-gray-200" size={50} />
+              </div>
+              <input className="p-3 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 hover:file:cursor-pointer  file:bg-gray-200 cursor-pointer file:text-gray-500" onChange={handleImageChange} type="file" name="" id="" />
+              <button className='p-2 px-3 bg-gray-200 rounded-lg text-gray-500 hover:bg-gray-300 transition space-x-2 items-center flex' onClick={handleSubmit}><UploadIcon></UploadIcon><p>Submit</p></button>
+            </>
+          )}
         </BlockImageWrapper>
       )}
       {blockObject && (
         <Resizable defaultSize={{ width: imageSize.width, height: "100%" }}
           handleStyles={{
-            right: { width: '10px', height: '100%', cursor: 'col-resize' },
-            top: { width: 0 },
-            bottom: { width: 0 },
-            left: { width: 0 },
-            topRight: { width: 0 },
-            bottomRight: { width: 0 },
-            bottomLeft: { width: 0 },
-            topLeft: { width: 0 },
+            right: { position: 'unset', width: 7, height: 30, borderRadius: 20, cursor: 'col-resize', backgroundColor: 'black', opacity: '0.3', margin: 'auto', marginLeft:5 },
 
           }}
-          style={{ margin: "auto" }}
-          maxWidth={850}
-          minWidth={400}
+          style={{ margin: "auto", display: "flex", justifyContent: "center", alignItems: "center", height: "100%"  }}
+          maxWidth={1000}
+          minWidth={200}
           onResizeStop={(e, direction, ref, d) => {
             props.updateAttributes({
               size: {
@@ -73,21 +68,17 @@ function ImageBlockComponent(props: any) {
           }}
         >
 
-          <BlockImage>
-            <AspectRatio.Root ratio={16 / 9}>
-              <img
-                src={`${getActivityBlockMediaDirectory(props.extension.options.activity.org_id,
-                  props.extension.options.activity.course_id,
-                  props.extension.options.activity.activity_id,
-                  blockObject.block_id,
-                  blockObject ? fileId : ' ', 'imageBlock')}`}
-                alt=""
-              />
-              {blockObject.block_id}
-            </AspectRatio.Root>
+            <img
+              src={`${getActivityBlockMediaDirectory(props.extension.options.activity.org_id,
+                props.extension.options.activity.course_id,
+                props.extension.options.activity.activity_id,
+                blockObject.block_id,
+                blockObject ? fileId : ' ', 'imageBlock')}`}
+              alt=""
+              className="rounded-lg shadow "
+            />
 
 
-          </BlockImage>
         </Resizable>
       )}
       {isLoading && (
@@ -102,19 +93,11 @@ function ImageBlockComponent(props: any) {
 export default ImageBlockComponent;
 
 const BlockImageWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  background: #f9f9f9;
-  border-radius: 3px;
-  padding: 30px;
-  min-height: 74px;
-  border: ${(props) => (props.contentEditable ? "2px dashed #713f1117" : "none")};
-
-  // center
   align-items: center;
   justify-content: center;
   text-align: center;
   font-size: 14px;
+  
 `;
 
 const BlockImage = styled.div`
@@ -128,11 +111,5 @@ const BlockImage = styled.div`
   font-size: 14px;
 
   
-  img{
-    object-fit: "cover";
-    width: 100%;
-    height: 100%;
-    border-radius: 6px;
-  }
   
 `;
