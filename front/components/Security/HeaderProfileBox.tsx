@@ -43,7 +43,6 @@ export const HeaderProfileBox = () => {
 };
 
 const AccountArea = styled.div`
-  padding-right: 20px;
   display: flex;
   place-items: center;
   
