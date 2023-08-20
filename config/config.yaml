@@ -3,7 +3,7 @@ site_description: LearnHouse is an open-source platform tailored for learning ex
 contact_email: hi@learnhouse.app
 
 general:
-  development_mode: false
+  development_mode: true
   install_mode: false
 
 security:
