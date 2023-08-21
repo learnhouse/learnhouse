@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import { FontBoldIcon, FontItalicIcon, StrikethroughIcon, ArrowLeftIcon, ArrowRightIcon, OpacityIcon, DividerVerticalIcon, ListBulletIcon } from "@radix-ui/react-icons";
-import { AlertCircle, AlertTriangle, FileText, GraduationCap, ImagePlus, Info, Sigma, Video, Youtube, ListOrdered } from "lucide-react";
+import { AlertCircle, AlertTriangle, FileText, GraduationCap, ImagePlus, Info, Sigma, Video, Youtube } from "lucide-react";
 import ToolTip from "@components/StyledElements/Tooltip/Tooltip";
 
 export const ToolbarButtons = ({ editor, props }: any) => {
