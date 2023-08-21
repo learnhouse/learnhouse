@@ -23,7 +23,7 @@ const CourseClient = (props: any) => {
   async function startCourseUI() {
     // Create activity
     await startCourse("course_" + courseid, orgslug);
-    revalidateTags(['courses'], orgslug);
+    await revalidateTags(['courses'], orgslug);
     router.refresh();
 
     // refresh page (FIX for Next.js BUG)
@@ -34,7 +34,7 @@ const CourseClient = (props: any) => {
     // Close activity
     let activity = await removeCourse("course_" + courseid, orgslug);
     // Mutate course
-    revalidateTags(['courses'], orgslug);
+    await revalidateTags(['courses'], orgslug);
     router.refresh();
 
     // refresh page (FIX for Next.js BUG)
