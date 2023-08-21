@@ -38,7 +38,7 @@ const OrgHomePage = async (params: any) => {
 
   const courses = await getOrgCoursesWithAuthHeader(orgslug, { revalidate: 0, tags: ['courses'] }, access_token_cookie ? access_token_cookie.value : null);
   const org = await getOrganizationContextInfo(orgslug, { revalidate: 1800, tags: ['organizations'] });
-  const collections = await getOrgCollectionsWithAuthHeader(org.org_id, access_token_cookie ? access_token_cookie.value : null);
+  const collections = await getOrgCollectionsWithAuthHeader(org.org_id, access_token_cookie ? access_token_cookie.value : null, { revalidate: 0, tags: ['courses'] });
 
 
   // function to remove "course_" from the course_id

@@ -64,7 +64,7 @@ function CourseContentEdition(props: any) {
         await createChapter(chapter, courseid);
         mutate(`${getAPIUrl()}chapters/meta/course_${courseid}`);
        // await getCourseChapters();
-        revalidateTags(['courses'], orgslug);
+        await revalidateTags(['courses'], orgslug);
         router.refresh();
         setNewChapterModal(false);
     };
@@ -77,7 +77,7 @@ function CourseContentEdition(props: any) {
         mutate(`${getAPIUrl()}chapters/meta/course_${courseid}`);
         // await getCourseChapters();
         setNewActivityModal(false);
-        revalidateTags(['courses'], orgslug);
+        await revalidateTags(['courses'], orgslug);
         router.refresh();
     };
 
@@ -88,7 +88,7 @@ function CourseContentEdition(props: any) {
         mutate(`${getAPIUrl()}chapters/meta/course_${courseid}`);
         // await getCourseChapters();
         setNewActivityModal(false);
-        revalidateTags(['courses'], orgslug);
+        await revalidateTags(['courses'], orgslug);
         router.refresh();
     };
 
@@ -99,7 +99,7 @@ function CourseContentEdition(props: any) {
         mutate(`${getAPIUrl()}chapters/meta/course_${courseid}`);
         // await getCourseChapters();
         setNewActivityModal(false);
-        revalidateTags(['courses'], orgslug);
+        await revalidateTags(['courses'], orgslug);
         router.refresh();
     };
 
@@ -108,7 +108,7 @@ function CourseContentEdition(props: any) {
         await deleteChapter(chapterId);
         mutate(`${getAPIUrl()}chapters/meta/course_${courseid}`);
         // await getCourseChapters();
-        revalidateTags(['courses'], orgslug);
+        await revalidateTags(['courses'], orgslug);
         router.refresh();
     };
 

@@ -15,7 +15,7 @@ const CollectionAdminEditsArea = (props: any) => {
 
     const deleteCollectionUI = async (collectionId: number) => {
         await deleteCollection(collectionId);
-        revalidateTags(["collections"], props.orgslug);
+        await revalidateTags(["collections"], props.orgslug);
         // reload the page
         router.refresh();
         router.push(getUriWithOrg(props.orgslug, "/collections"));

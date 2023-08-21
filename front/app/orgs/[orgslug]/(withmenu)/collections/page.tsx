@@ -39,7 +39,7 @@ const CollectionsPage = async (params: any) => {
     const orgslug = params.params.orgslug;
     const org = await getOrganizationContextInfo(orgslug, { revalidate: 1800, tags: ['organizations'] });
     const org_id = org.org_id;
-    const collections = await getOrgCollectionsWithAuthHeader(org_id, access_token_cookie ? access_token_cookie.value : null);
+    const collections = await getOrgCollectionsWithAuthHeader(org_id, access_token_cookie ? access_token_cookie.value : null, { revalidate: 0, tags: ['collections'] });
 
     return (
         <GeneralWrapperStyled>
