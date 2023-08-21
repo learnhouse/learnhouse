@@ -60,14 +60,14 @@ function CourseEditClient({ courseid, subpage, params }: { courseid: string, sub
             await updateChaptersMetadata(courseid, courseChaptersMetadata)
             dispatchSavedContent({ type: 'saved_content' })
             await mutate(`${getAPIUrl()}chapters/meta/course_${courseid}`)
-            await revalidateTags(['courses'], course.org_slug)
+            await revalidateTags(['courses'], params.params.orgslug)
             router.refresh()
         }
         else if (subpage.toString() === 'general') {
             await updateCourse(courseid, courseState)
             dispatchSavedContent({ type: 'saved_content' })
             await mutate(`${getAPIUrl()}courses/course_${courseid}`)
-            await revalidateTags(['courses'], course.org_slug)
+            await revalidateTags(['courses'], params.params.orgslug)
             router.refresh()
         }
     }
@@ -91,7 +91,7 @@ function CourseEditClient({ courseid, subpage, params }: { courseid: string, sub
                     {course && <>
                         <div className='flex items-center'><div className='info flex space-x-5 items-center grow'>
                             <div className='flex'>
-                                <Link href={getUriWithOrg(course.orgslug, "") + `/course/${courseid}`}>
+                                <Link href={getUriWithOrg(params.params.orgslug, "") + `/course/${courseid}`}>
                                     <img className="w-[100px] h-[57px] rounded-md drop-shadow-md" src={`${getCourseThumbnailMediaDirectory(course.org_id, "course_" + courseid, course.thumbnail)}`} alt="" />
                                 </Link>
                             </div>
