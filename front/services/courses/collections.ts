@@ -40,8 +40,8 @@ export async function getOrgCollections() {
   return res;
 }
 
-export async function getOrgCollectionsWithAuthHeader(org_id: string, access_token: string) {
-  const result: any = await fetch(`${getAPIUrl()}collections/org_id/${org_id}/page/1/limit/10`, RequestBodyWithAuthHeader("GET", null, { revalidate: 3 }, access_token));
+export async function getOrgCollectionsWithAuthHeader(org_id: string, access_token: string, next: any) {
+  const result: any = await fetch(`${getAPIUrl()}collections/org_id/${org_id}/page/1/limit/10`, RequestBodyWithAuthHeader("GET", null, next, access_token));
   const res = await errorHandling(result);
   return res;
 }
