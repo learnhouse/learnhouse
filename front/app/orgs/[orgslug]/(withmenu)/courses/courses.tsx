@@ -1,7 +1,6 @@
 'use client';
 import CreateCourseModal from '@components/Objects/Modals/Course/Create/CreateCourse';
 import Modal from '@components/StyledElements/Modal/Modal';
-import { Edit2, Trash } from "lucide-react";
 import { getBackendUrl, getUriWithOrg } from '@services/config/config';
 import CoursesLogo from "public/svg/courses.svg";
 import CollectionsLogo from "public/svg/collections.svg";
@@ -37,7 +36,7 @@ function Courses(props: CourseProps) {
 
     async function deleteCourses(course_id: any) {
         await deleteCourseFromBackend(course_id);
-        revalidateTags(['courses'], orgslug);
+        await revalidateTags(['courses'], orgslug);
 
         router.refresh();
     }
@@ -85,10 +84,7 @@ function Courses(props: CourseProps) {
                         </div>
                     ))}
                 </div>
-
             </GeneralWrapperStyled>
-
-
         </div>
     )
 }
@@ -102,14 +98,14 @@ const AdminEditsArea = (props: { orgSlug: string, courseId: string, course: any,
                 dialogTitle={'Delete ' + props.course.name + ' ?'}
                 dialogTrigger={
                     <button className="rounded-md text-sm px-3 font-bold text-red-800 bg-red-200 w-16 flex justify-center items-center" >
-                        Delete <Trash size={10}></Trash>
+                        Delete
                     </button>}
                 functionToExecute={() => props.deleteCourses(props.courseId)}
                 status='warning'
             ></ConfirmationModal>
             <Link href={getUriWithOrg(props.orgSlug, "/course/" + removeCoursePrefix(props.courseId) + "/edit")}>
                 <button className="rounded-md text-sm px-3 font-bold text-orange-800 bg-orange-200 w-16 flex justify-center items-center">
-                    Edit <Edit2 size={10}></Edit2>
+                    Edit
                 </button>
             </Link>
         </div>
