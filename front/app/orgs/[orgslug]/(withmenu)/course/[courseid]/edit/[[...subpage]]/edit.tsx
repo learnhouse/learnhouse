@@ -1,6 +1,6 @@
 "use client";
 import React, { FC, use, useEffect, useReducer } from 'react'
-import { swrFetcher } from "@services/utils/ts/requests";
+import { revalidateTags, swrFetcher } from "@services/utils/ts/requests";
 import { getAPIUrl, getUriWithOrg } from '@services/config/config';
 import useSWR, { mutate } from 'swr';
 import { getCourseThumbnailMediaDirectory } from '@services/media/media';
@@ -12,6 +12,7 @@ import { updateChaptersMetadata } from '@services/courses/chapters';
 import { Check, SaveAllIcon, Timer } from 'lucide-react';
 import Loading from '../../loading';
 import { updateCourse } from '@services/courses/courses';
+import { useRouter } from 'next/navigation';
 
 function CourseEditClient({ courseid, subpage, params }: { courseid: string, subpage: string, params: any }) {
     const { data: chapters_meta, error: chapters_meta_error, isLoading: chapters_meta_isloading } = useSWR(`${getAPIUrl()}chapters/meta/course_${courseid}`, swrFetcher);
@@ -19,6 +20,7 @@ function CourseEditClient({ courseid, subpage, params }: { courseid: string, sub
     const [courseChaptersMetadata, dispatchCourseChaptersMetadata] = useReducer(courseChaptersReducer, {});
     const [courseState, dispatchCourseMetadata] = useReducer(courseReducer, {});
     const [savedContent, dispatchSavedContent] = useReducer(savedContentReducer, true);
+    const router = useRouter();
 
 
 
@@ -58,11 +60,15 @@ function CourseEditClient({ courseid, subpage, params }: { courseid: string, sub
             await updateChaptersMetadata(courseid, courseChaptersMetadata)
             dispatchSavedContent({ type: 'saved_content' })
             await mutate(`${getAPIUrl()}chapters/meta/course_${courseid}`)
+            await revalidateTags(['courses'], course.org_slug)
+            router.refresh()
         }
         else if (subpage.toString() === 'general') {
             await updateCourse(courseid, courseState)
             dispatchSavedContent({ type: 'saved_content' })
             await mutate(`${getAPIUrl()}courses/course_${courseid}`)
+            await revalidateTags(['courses'], course.org_slug)
+            router.refresh()
         }
     }
 
