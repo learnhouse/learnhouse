@@ -9,6 +9,7 @@ import ImageBlock from "@components/Objects/Editor/Extensions/Image/ImageBlock";
 import VideoBlock from "@components/Objects/Editor/Extensions/Video/VideoBlock";
 import MathEquationBlock from "@components/Objects/Editor/Extensions/MathEquation/MathEquationBlock";
 import PDFBlock from "@components/Objects/Editor/Extensions/PDF/PDFBlock";
+import { OrderedList } from "@tiptap/extension-ordered-list";
 
 interface Editor {
   content: string;
@@ -49,6 +50,9 @@ function Canva(props: Editor) {
         controls: true,
         modestBranding: true,
       }),
+
+      OrderedList.configure()
+
     ],
 
     content: props.content,
@@ -99,6 +103,12 @@ h5 {
   font-weight: 600;
   margin-top: 10px;
   margin-bottom: 10px;
+}
+
+ul, ol {
+  padding: 0 1rem;
+  padding-left: 10px;
+  list-style-type: decimal;
 }
 
 
