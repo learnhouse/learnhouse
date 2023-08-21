@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import { FontBoldIcon, FontItalicIcon, StrikethroughIcon, ArrowLeftIcon, ArrowRightIcon, OpacityIcon, DividerVerticalIcon } from "@radix-ui/react-icons";
+import { FontBoldIcon, FontItalicIcon, StrikethroughIcon, ArrowLeftIcon, ArrowRightIcon, OpacityIcon, DividerVerticalIcon, ListBulletIcon } from "@radix-ui/react-icons";
 import { AlertCircle, AlertTriangle, FileText, GraduationCap, ImagePlus, Info, Sigma, Video, Youtube, ListOrdered } from "lucide-react";
 import ToolTip from "@components/StyledElements/Tooltip/Tooltip";
 
@@ -40,7 +40,7 @@ export const ToolbarButtons = ({ editor, props }: any) => {
         <StrikethroughIcon />
       </ToolBtn>
       <ToolBtn onClick={() => editor.chain().focus().toggleOrderedList().run()} className={editor.isActive('orderedList') ? 'is-active' : ''}>
-        <ListOrdered />
+        <ListBulletIcon />
       </ToolBtn>
       <ToolSelect
         onChange={(e) =>

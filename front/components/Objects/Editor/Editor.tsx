@@ -409,6 +409,14 @@ export const EditorContentWrapper = styled.div`
     display: block;
     outline: 0px solid transparent;
   }
+
+  ul, ol {
+    padding: 0 1rem;
+    padding-left: 10px;
+    list-style-type: decimal;
+  }
+  
+
 `;
 
 export default Editor;
