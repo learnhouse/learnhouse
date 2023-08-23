@@ -39,7 +39,7 @@ const CollectionsPage = async (params: any) => {
     const orgslug = params.params.orgslug;
     const org = await getOrganizationContextInfo(orgslug, { revalidate: 1800, tags: ['organizations'] });
     const org_id = org.org_id;
-    const collections = await getOrgCollectionsWithAuthHeader(org_id, access_token_cookie ? access_token_cookie.value : null);
+    const collections = await getOrgCollectionsWithAuthHeader(org_id, access_token_cookie ? access_token_cookie.value : null, { revalidate: 0, tags: ['collections'] });
 
     return (
         <GeneralWrapperStyled>
@@ -54,7 +54,7 @@ const CollectionsPage = async (params: any) => {
             <div className="home_collections flex flex-wrap">
                 {collections.map((collection: any) => (
                     <div className="flex flex-col py-3 px-3" key={collection.collection_id}>
-                        <CollectionAdminEditsArea org_id={org_id} collection_id={collection.collection_id} collection={collection} />
+                        <CollectionAdminEditsArea orgslug={orgslug} org_id={org_id} collection_id={collection.collection_id} collection={collection} />
                         <Link href={getUriWithOrg(orgslug, "/collection/" + removeCollectionPrefix(collection.collection_id))}>
                             <div className="inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl relative w-[249px] h-[180px] bg-cover flex flex-col items-center justify-center bg-indigo-600 font-bold text-zinc-50" >
                                 <h1 className="font-bold text-lg py-2 justify-center mb-2">{collection.name}</h1>

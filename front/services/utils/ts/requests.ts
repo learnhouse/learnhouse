@@ -85,7 +85,7 @@ export const errorHandling = (res: any) => {
   return res.json();
 };
 
-export const revalidateTags = (tags: string[], orgslug: string) => {
+export const revalidateTags = async (tags: string[], orgslug: string) => {
   const url = getUriWithOrg(orgslug, "");
   tags.forEach((tag) => {
     fetch(`${url}/api/revalidate?tag=${tag}`);

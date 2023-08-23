@@ -14,7 +14,7 @@ function Chapter(props: any) {
           {...provided.draggableProps}
           ref={provided.innerRef}
           //  isDragging={snapshot.isDragging}
-          className=""
+          className="max-w-screen-2xl mx-auto"
           key={props.info.list.chapter.id}
         >
           <h3 className="flex space-x-2 pt-3 font-bold text-md items-center">
@@ -64,7 +64,6 @@ const ChapterWrapper = styled.div`
   margin-bottom: 20px;
   padding: 4px;
   background-color: #ffffff9d;
-  width: 900px;
   font-size: 15px;
   display: block;
   border-radius: 9px;

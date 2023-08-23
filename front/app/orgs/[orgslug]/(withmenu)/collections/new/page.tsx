@@ -44,11 +44,10 @@ function NewCollection(params: any) {
       org_id: org.org_id,
     };
     await createCollection(collection);
-    revalidateTags(["collections"], orgslug);
+    await revalidateTags(["collections"], orgslug);
+    router.refresh();
     router.prefetch(getUriWithOrg(orgslug, "/collections"));
     router.push(getUriWithOrg(orgslug, "/collections"));
-    router.refresh();
-
   };
 
 

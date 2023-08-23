@@ -43,13 +43,13 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
         e.preventDefault();
         setIsSubmitting(true);
         let status = await createNewCourse(orgId, { name, description }, thumbnail);
-        revalidateTags(['courses'], orgslug);
+        await revalidateTags(['courses'], orgslug);
         setIsSubmitting(false);
 
         if (status.org_id == orgId) {
             closeModal();
             router.refresh();
-            revalidateTags(['courses'], orgslug);
+            await revalidateTags(['courses'], orgslug);
 
             // refresh page (FIX for Next.js BUG)
             // window.location.reload();
