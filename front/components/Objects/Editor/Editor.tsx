@@ -23,6 +23,9 @@ import QuizBlock from "./Extensions/Quiz/QuizBlock";
 import ToolTip from "@components/StyledElements/Tooltip/Tooltip";
 import Link from "next/link";
 import { getCourseThumbnailMediaDirectory } from "@services/media/media";
+import { OrderedList } from "@tiptap/extension-ordered-list";
+import {ListItem} from '@tiptap/extension-list-item'
+
 
 interface Editor {
   content: string;
@@ -80,6 +83,8 @@ function Editor(props: Editor) {
         controls: true,
         modestBranding: true,
       }),
+      OrderedList.configure(),
+
       // Register the document with Tiptap
       // Collaboration.configure({
       //   document: props.ydoc,
@@ -404,6 +409,14 @@ export const EditorContentWrapper = styled.div`
     display: block;
     outline: 0px solid transparent;
   }
+
+  ul, ol {
+    padding: 0 1rem;
+    padding-left: 10px;
+    list-style-type: decimal;
+  }
+  
+
 `;
 
 export default Editor;
