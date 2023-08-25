@@ -22,7 +22,6 @@ const AuthProvider = ({ children }: any) => {
   const [auth, setAuth] = React.useState<Auth>({ access_token: "", isAuthenticated: false, userInfo: {}, isLoading: true });
 
   function deleteCookie(cookieName: string) {
-    console.log("Deleting cookie: " + cookieName);
     document.cookie = cookieName + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
   }
 
@@ -70,7 +69,6 @@ const AuthProvider = ({ children }: any) => {
   useEffect(() => {
     checkRefreshToken();
     checkAuth();
-    console.log("pathname", pathname);
     return () => {
       auth.isLoading = false;
     };
