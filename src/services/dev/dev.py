@@ -8,11 +8,11 @@ def isDevModeEnabled():
         return True
     else:
         return False
-    
+
+
 def isDevModeEnabledOrRaise():
     config = get_learnhouse_config()
     if config.general_config.development_mode:
         return True
     else:
-        raise HTTPException(status_code=403, detail="Development mode is not enabled")
-    
+        raise HTTPException(status_code=403, detail="Development mode is disabled")

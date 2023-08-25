@@ -6,7 +6,7 @@ import ConfirmationModal from '@components/StyledElements/ConfirmationModal/Conf
 import { getUriWithOrg } from '@services/config/config';
 import { deleteCollection } from '@services/courses/collections';
 import { revalidateTags } from '@services/utils/ts/requests';
-import { Link, Trash } from 'lucide-react';
+import { Link, Trash, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React from 'react'
 
@@ -26,15 +26,17 @@ const CollectionAdminEditsArea = (props: any) => {
 
     return (
         <AuthenticatedClientElement orgId={props.org_id} checkMethod='roles'>
-            <div className="flex space-x-2 py-2">
+            <div className="flex space-x-2 relative top-8 z-20 left-2">
                 <ConfirmationModal
                     confirmationMessage="Are you sure you want to delete this collection?"
                     confirmationButtonText="Delete Collection"
                     dialogTitle={"Delete " + props.collection.name + " ?"}
                     dialogTrigger={
-                        <button className="rounded-md text-sm px-3 font-bold text-red-800 bg-red-200 w-16 flex justify-center items-center" >
-                            Delete <Trash size={10}></Trash>
-                        </button>}
+                        <div
+                            className=" hover:cursor-pointer p-1 px-4 bg-red-600 rounded-md"
+                            rel="noopener noreferrer">
+                            <X size={15} className="text-rose-200 font-bold" />
+                        </div>}
                     functionToExecute={() => deleteCollectionUI(props.collection_id)}
                     status='warning'
                 ></ConfirmationModal>

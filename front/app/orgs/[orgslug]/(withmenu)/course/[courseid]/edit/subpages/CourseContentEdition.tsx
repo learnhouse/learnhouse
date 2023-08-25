@@ -11,7 +11,7 @@ import { createActivity, createFileActivity, createExternalVideoActivity } from 
 import { getOrganizationContextInfo } from "@services/organizations/orgs";
 import Modal from "@components/StyledElements/Modal/Modal";
 import { denyAccessToUser } from "@services/utils/react/middlewares/views";
-import { Folders, SaveIcon } from "lucide-react";
+import { Folders, Hexagon, SaveIcon } from "lucide-react";
 import GeneralWrapperStyled from "@components/StyledElements/Wrappers/GeneralWrapper";
 import { revalidateTags, swrFetcher } from "@services/utils/ts/requests";
 import { mutate } from "swr";
@@ -33,7 +33,7 @@ function CourseContentEdition(props: any) {
     const courseid = props.courseid;
     const orgslug = props.orgslug;
 
-    
+
 
     useEffect(() => {
         setwinReady(true);
@@ -63,7 +63,7 @@ function CourseContentEdition(props: any) {
     const submitChapter = async (chapter: any) => {
         await createChapter(chapter, courseid);
         mutate(`${getAPIUrl()}chapters/meta/course_${courseid}`);
-       // await getCourseChapters();
+        // await getCourseChapters();
         await revalidateTags(['courses'], orgslug);
         router.refresh();
         setNewChapterModal(false);
@@ -80,6 +80,8 @@ function CourseContentEdition(props: any) {
         await revalidateTags(['courses'], orgslug);
         router.refresh();
     };
+
+    
 
     // Submit File Upload
     const submitFileActivity = async (file: any, type: any, activity: any, chapterId: string) => {
@@ -301,7 +303,7 @@ function CourseContentEdition(props: any) {
                                 dialogDescription="Add a new chapter to the course"
                                 dialogTrigger={
                                     <div className="flex max-w-7xl bg-black text-sm shadow rounded-md items-center text-white justify-center mx-auto space-x-2 p-3 w-72 hover:bg-gray-900 hover:cursor-pointer">
-                                        <Folders size={16} />
+                                        <Hexagon size={16} />
                                         <div>Add chapter +</div>
                                     </div>
                                 }
