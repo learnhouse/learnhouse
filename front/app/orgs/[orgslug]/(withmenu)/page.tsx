@@ -12,6 +12,7 @@ import { cookies } from 'next/headers';
 import GeneralWrapperStyled from '@components/StyledElements/Wrappers/GeneralWrapper';
 import TypeOfContentTitle from '@components/StyledElements/Titles/TypeOfContentTitle';
 import { getCourseThumbnailMediaDirectory } from '@services/media/media';
+import { getAccessTokenFromRefreshTokenCookie, getNewAccessTokenUsingRefreshTokenServer } from '@services/auth/auth';
 
 type MetadataProps = {
   params: { orgslug: string };
@@ -34,11 +35,11 @@ export async function generateMetadata(
 const OrgHomePage = async (params: any) => {
   const orgslug = params.params.orgslug;
   const cookieStore = cookies();
-  const access_token_cookie: any = cookieStore.get('access_token_cookie');
 
-  const courses = await getOrgCoursesWithAuthHeader(orgslug, { revalidate: 0, tags: ['courses'] }, access_token_cookie ? access_token_cookie.value : null);
+  const access_token = await getAccessTokenFromRefreshTokenCookie(cookieStore)
+  const courses = await getOrgCoursesWithAuthHeader(orgslug, { revalidate: 0, tags: ['courses'] }, access_token ? access_token : null);
   const org = await getOrganizationContextInfo(orgslug, { revalidate: 1800, tags: ['organizations'] });
-  const collections = await getOrgCollectionsWithAuthHeader(org.org_id, access_token_cookie ? access_token_cookie.value : null, { revalidate: 0, tags: ['courses'] });
+  const collections = await getOrgCollectionsWithAuthHeader(org.org_id, access_token ? access_token : null, { revalidate: 0, tags: ['courses'] });
 
 
   // function to remove "course_" from the course_id

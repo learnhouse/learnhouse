@@ -4,9 +4,10 @@ import styled from "styled-components";
 import Link from "next/link";
 import Avvvatars from "avvvatars-react";
 import { GearIcon } from "@radix-ui/react-icons";
-import { getRefreshToken, getUserInfo } from "@services/auth/auth";
+import { getNewAccessTokenUsingRefreshToken, getUserInfo } from "@services/auth/auth";
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/router";
+import path from "path";
 
 export interface Auth {
   access_token: string;
@@ -27,12 +28,16 @@ function ProfileArea() {
   const [auth, setAuth] = React.useState<Auth>({ access_token: "", isAuthenticated: false, userInfo: {}, isLoading: true });
 
   async function checkRefreshToken() {
-    let data = await getRefreshToken();
+    let data = await getNewAccessTokenUsingRefreshToken();
     if (data) {
       return data.access_token;
     }
   }
 
+  React.useEffect(() => {
+    checkAuth();
+    console.log("pathname", pathname);
+  }, [pathname]);
 
   async function checkAuth() {
     try {
