@@ -31,9 +31,9 @@ function ActivityClient(props: ActivityClientProps) {
   function getChapterName(chapterId: string) {
     let chapterName = "";
     course.chapters.forEach((chapter: any) => {
-      if (chapter.chapter_id === chapterId) {
+      if (chapter.id === chapterId) {
         chapterName = chapter.name;
-      }
+      } 
     });
     return chapterName;
   }
@@ -59,7 +59,7 @@ function ActivityClient(props: ActivityClientProps) {
 
           <div className="flex justify-between items-center">
             <div className="flex flex-col -space-y-1">
-              <p className="font-bold text-gray-700 text-md">Chapter : {getChapterName(activity.chapter_id)}</p>
+              <p className="font-bold text-gray-700 text-md">Chapter : {getChapterName(activity.coursechapter_id)}</p>
               <h1 className="font-bold text-gray-950 text-2xl first-letter:uppercase" >{activity.name}</h1>
             </div>
             <div className="flex space-x-2">
