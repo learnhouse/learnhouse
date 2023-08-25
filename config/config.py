@@ -68,13 +68,20 @@ def get_learnhouse_config() -> LearnHouseConfig:
         yaml_config = yaml.safe_load(f)
 
     # General Config
-    env_development_mode = os.environ.get("LEARNHOUSE_DEVELOPMENT_MODE")
-    development_mode = env_development_mode or yaml_config.get("general", {}).get(
-        "development_mode"
+
+    # Development Mode & Install Mode
+    env_development_mode = eval(os.environ.get("LEARNHOUSE_DEVELOPMENT_MODE", "None"))
+    development_mode = (
+        env_development_mode
+        if env_development_mode is not None
+        else yaml_config.get("general", {}).get("development_mode")
     )
-    env_install_mode = os.environ.get("LEARNHOUSE_INSTALL_MODE")
-    install_mode = env_install_mode or yaml_config.get("general", {}).get(
-        "install_mode"
+
+    env_install_mode = os.environ.get("LEARNHOUSE_INSTALL_MODE", "None")
+    install_mode = (
+        env_install_mode
+        if env_install_mode is not None
+        else yaml_config.get("general", {}).get("install_mode")
     )
 
     # Security Config

@@ -162,10 +162,18 @@ async def delete_activity(request: Request, activity_id: str, current_user: Publ
             status_code=status.HTTP_409_CONFLICT, detail="activity does not exist"
         )
 
+    # Remove Activity
     isDeleted = await activities.delete_one({"activity_id": activity_id})
 
-    if isDeleted:
-        return {"detail": "activity deleted"}
+    # Remove Activity from chapter
+    courses = request.app.db["courses"]
+    isDeletedFromChapter = await courses.update_one(
+        {"chapters_content.activities": activity_id},
+        {"$pull": {"chapters_content.$.activities": activity_id}},
+    )
+
+    if isDeleted and isDeletedFromChapter:
+        return {"detail": "Activity deleted"}
     else:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
