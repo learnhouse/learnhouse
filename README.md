@@ -34,32 +34,15 @@ Please visit our [Discord](https://discord.gg/CMyZjjYZ6x) community 👋
 Thank you for you interest 💖, here is how you can help :
 
 - [Getting Started](/CONTRIBUTING.md)
+- [Developers Quick start](https://docs.learnhouse.app/setup-dev-environment)
 - [Submit a bug report](https://github.com/learnhouse/learnhouse/issues/new?assignees=&labels=bug%2Ctriage&projects=&template=bug.yml&title=%5BBug%5D%3A+)
 - [Check good first issues & Help Wanted](https://github.com/learnhouse/learnhouse/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22+label%3A%22help+wanted%22)
 - Spread the word and share the project with your friends
 
 ## Documentation
 
-- Features
-  - [Courses](https://docs.learnhouse.app/features/courses)
-  - [Activities](https://docs.learnhouse.app/features/activities)
-    - [Dynamic Pages](https://docs.learnhouse.app/features/activities/dynamic-pages)
-    - [Video Activities](https://docs.learnhouse.app/features/activities/video)
-    - [Document Activities](https://docs.learnhouse.app/features/activities/documents)
-  - [Collections](https://docs.learnhouse.app/features/collections)
-  - [Trail](https://docs.learnhouse.app/features/trail)
-- Self Hosting
-  - [Overview](https://docs.learnhouse.app/technical-docs/self-hosting/overview)
-  - [Organization Hosting Modes](https://docs.learnhouse.app/technical-docs/self-hosting/organization-hosting-modes)
-  - [Docker & Kubernetes](https://docs.learnhouse.app/technical-docs/self-hosting/docker-and-kube)
-  - [Using Vercel](https://docs.learnhouse.app/technical-docs/self-hosting/vercel)
-  - Content Storage
-    - [Using the Filesystem](https://docs.learnhouse.app/technical-docs/self-hosting/content-storage/filesystem)
-    - [Using AWS S3 or CloudFlare R2](https://docs.learnhouse.app/technical-docs/self-hosting/content-storage/s3)
-- Technical Docs
-  - [Infrastructure Overview](https://docs.learnhouse.app/technical-docs/infra-overview)
-  - Database overview
-  - API Overview
+- [Overview](https://docs.learnhouse.app)
+- [Developers](https://docs.learnhouse.app/setup-dev-environment)
 
 ## Tech
 
