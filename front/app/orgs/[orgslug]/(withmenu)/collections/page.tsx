@@ -9,6 +9,7 @@ import { cookies } from "next/headers";
 import Link from "next/link";
 import CollectionAdminEditsArea from "./admin";
 import { getCourseThumbnailMediaDirectory } from "@services/media/media";
+import { getAccessTokenFromRefreshTokenCookie, getNewAccessTokenUsingRefreshTokenServer } from "@services/auth/auth";
 
 type MetadataProps = {
     params: { orgslug: string, courseid: string };
@@ -19,7 +20,6 @@ export async function generateMetadata(
     { params }: MetadataProps,
 ): Promise<Metadata> {
     const cookieStore = cookies();
-    const access_token_cookie: any = cookieStore.get('access_token_cookie');
     // Get Org context information 
     const org = await getOrganizationContextInfo(params.orgslug, { revalidate: 1800, tags: ['organizations'] });
     return {
@@ -35,11 +35,11 @@ const removeCollectionPrefix = (collectionid: string) => {
 
 const CollectionsPage = async (params: any) => {
     const cookieStore = cookies();
-    const access_token_cookie: any = cookieStore.get('access_token_cookie');
+    const access_token = await getAccessTokenFromRefreshTokenCookie(cookieStore)
     const orgslug = params.params.orgslug;
     const org = await getOrganizationContextInfo(orgslug, { revalidate: 1800, tags: ['organizations'] });
     const org_id = org.org_id;
-    const collections = await getOrgCollectionsWithAuthHeader(org_id, access_token_cookie ? access_token_cookie.value : null, { revalidate: 0, tags: ['collections'] });
+    const collections = await getOrgCollectionsWithAuthHeader(org_id, access_token ? access_token : null, { revalidate: 0, tags: ['collections'] });
 
     return (
         <GeneralWrapperStyled>
