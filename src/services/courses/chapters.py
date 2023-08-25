@@ -293,6 +293,22 @@ async def update_coursechapters_meta(
                 # handle error when no documents are matched by the filter query
                 print(f"No documents found for course chapter ID {coursechapter_id}")
 
+    # update activities in coursechapters
+    activity = request.app.db["activities"]
+    if coursechapters_metadata.chapters is not None:
+        for (
+            coursechapter_id,
+            chapter_metadata,
+        ) in coursechapters_metadata.chapters.items():
+            # Update coursechapter_id in activities
+            filter_query = {"activity_id": {"$in": chapter_metadata["activityIds"]}}
+            update_query = {"$set": {"coursechapter_id": coursechapter_id}}
+
+            result = await activity.update_many(filter_query, update_query)
+            if result.matched_count == 0:
+                # handle error when no documents are matched by the filter query
+                print(f"No documents found for course chapter ID {coursechapter_id}")
+
     return {"detail": "coursechapters metadata updated"}
 
 
@@ -336,7 +352,7 @@ async def verify_rights(
     else:
         users = request.app.db["users"]
         user = await users.find_one({"user_id": current_user.user_id})
-        
+
         await authorization_verify_if_user_is_anon(current_user.user_id)
 
         await authorization_verify_based_on_roles_and_authorship(
