@@ -2,7 +2,7 @@ import React from "react";
 import styled from "styled-components";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import Activity from "./Activity";
-import { PlusSquare, Sparkle, Sparkles, Trash, Trash2 } from "lucide-react";
+import { Folders, Hexagon, MoreVertical, PlusSquare, Sparkle, Sparkles, Trash, Trash2, X } from "lucide-react";
 import ConfirmationModal from "@components/StyledElements/ConfirmationModal/ConfirmationModal";
 
 function Chapter(props: any) {
@@ -14,25 +14,34 @@ function Chapter(props: any) {
           {...provided.draggableProps}
           ref={provided.innerRef}
           //  isDragging={snapshot.isDragging}
-          className="max-w-screen-2xl mx-auto"
+          className="max-w-screen-2xl mx-auto bg-white px-5"
           key={props.info.list.chapter.id}
         >
-          <h3 className="flex space-x-2 pt-3 font-bold text-md items-center">
-            <p>{props.info.list.chapter.name}
-            </p>
+          <div className="flex pt-3 pr-3 font-bold text-md items-center space-x-2">
+            <div className="flex grow text-lg space-x-3 items-center rounded-md px-3 py-1">
+              <div className="bg-neutral-100 rounded-md p-2">
+                <Hexagon strokeWidth={3} size={16} className="text-neutral-600 " />
+              </div>
+
+              <p className="text-neutral-700 first-letter:uppercase">{props.info.list.chapter.name}</p>
+            </div>
+            <MoreVertical size={15} className="text-gray-300" />
             <ConfirmationModal
               confirmationButtonText="Delete Chapter"
               confirmationMessage="Are you sure you want to delete this chapter?"
               dialogTitle={"Delete " + props.info.list.chapter.name + " ?"}
               dialogTrigger={
-                <button className="rounded-md text-sm px-3 font-bold text-red-800 bg-red-200 w-16 flex justify-center items-center" >
-                  Delete <Trash size={10}></Trash>
-                </button>}
+                <div
+                  className=" hover:cursor-pointer p-1 px-4 bg-red-600 rounded-md shadow flex space-x-1 items-center text-rose-100 text-sm"
+                  rel="noopener noreferrer">
+                  <X size={15} className="text-rose-200 font-bold" />
+                  <p>Delete Chapter</p>
+                </div>}
               functionToExecute={() => props.deleteChapter(props.info.list.chapter.id)}
               status='warning'
             ></ConfirmationModal>
 
-          </h3>
+          </div>
           <Droppable key={props.info.list.chapter.id} droppableId={props.info.list.chapter.id} type="activity">
             {(provided) => (
               <ActivitiesList {...provided.droppableProps} ref={provided.innerRef}>
@@ -62,8 +71,7 @@ function Chapter(props: any) {
 
 const ChapterWrapper = styled.div`
   margin-bottom: 20px;
-  padding: 4px;
-  background-color: #ffffff9d;
+  padding: 12px;
   font-size: 15px;
   display: block;
   border-radius: 9px;
