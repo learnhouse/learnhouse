@@ -36,14 +36,7 @@ function Activity(props: any) {
           </div>
 
           <div className="flex flex-row space-x-2">
-            <Link
-              href={getUriWithOrg(props.orgslug, "") + `/course/${props.courseid}/activity/${props.activity.id.replace("activity_", "")}`}
-              className=" hover:cursor-pointer p-1 px-3 bg-gray-200 rounded-md"
-              rel="noopener noreferrer">
-              <Eye strokeWidth={2} size={15} className="text-gray-600" />
-            </Link>
-
-            {props.activity.type === "dynamic" && <>
+          {props.activity.type === "dynamic" && <>
               <Link
                 href={getUriWithOrg(props.orgslug, "") + `/course/${props.courseid}/activity/${props.activity.id.replace("activity_", "")}/edit`}
                 className=" hover:cursor-pointer p-1 px-3 bg-sky-700 rounded-md items-center"
@@ -51,6 +44,14 @@ function Activity(props: any) {
                 <div className="text-sky-100 font-bold text-xs" >Edit </div>
               </Link>
             </>}
+            <Link
+              href={getUriWithOrg(props.orgslug, "") + `/course/${props.courseid}/activity/${props.activity.id.replace("activity_", "")}`}
+              className=" hover:cursor-pointer p-1 px-3 bg-gray-200 rounded-md"
+              rel="noopener noreferrer">
+              <Eye strokeWidth={2} size={15} className="text-gray-600" />
+            </Link>
+
+            
 
           </div>
           <div className="flex flex-row pr-3 space-x-1 items-center">
