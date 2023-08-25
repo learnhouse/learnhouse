@@ -36,7 +36,6 @@ function ProfileArea() {
 
   React.useEffect(() => {
     checkAuth();
-    console.log("pathname", pathname);
   }, [pathname]);
 
   async function checkAuth() {
