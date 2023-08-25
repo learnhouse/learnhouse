@@ -9,7 +9,7 @@ router = APIRouter()
 
 
 @router.post("/refresh")
-def refresh(Authorize: AuthJWT = Depends()):
+def refresh(response: Response,Authorize: AuthJWT = Depends()):
     """
     The jwt_refresh_token_required() function insures a valid refresh
     token is present in the request before running any code below that function.
@@ -20,6 +20,8 @@ def refresh(Authorize: AuthJWT = Depends()):
 
     current_user = Authorize.get_jwt_subject()
     new_access_token = Authorize.create_access_token(subject=current_user)  # type: ignore
+
+    response.set_cookie(key="access_token_cookie", value=new_access_token, httponly=False, domain=get_learnhouse_config().hosting_config.cookie_config.domain)
     return {"access_token": new_access_token}
 
 

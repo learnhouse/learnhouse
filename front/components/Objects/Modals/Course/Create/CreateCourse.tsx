@@ -55,7 +55,6 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
             // window.location.reload();
         } else {
             alert("Error creating course, please see console logs");
-            console.log(status);
         }
 
     };
