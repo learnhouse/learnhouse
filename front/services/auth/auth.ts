@@ -1,4 +1,5 @@
 import { getAPIUrl } from "@services/config/config";
+import { NextApiRequestCookies } from "next/dist/server/api-utils";
 
 interface LoginAndGetTokenResponse {
   access_token: "string";
@@ -44,7 +45,7 @@ export async function getUserInfo(token: string): Promise<any> {
     .catch((error) => console.log("error", error));
 }
 
-export async function getRefreshToken(): Promise<any> {
+export async function getNewAccessTokenUsingRefreshToken(): Promise<any> {
   const requestOptions: any = {
     method: "POST",
     redirect: "follow",
@@ -54,6 +55,28 @@ export async function getRefreshToken(): Promise<any> {
   return fetch(`${getAPIUrl()}auth/refresh`, requestOptions)
     .then((result) => result.json())
     .catch((error) => console.log("error", error));
+}
+
+export async function getNewAccessTokenUsingRefreshTokenServer(refresh_token_cookie: any): Promise<any> {
+  const requestOptions: any = {
+    method: "POST",
+    redirect: "follow",
+    headers: {
+      Cookie: `refresh_token_cookie=${refresh_token_cookie}`,
+    },
+    credentials: "include",
+  };
+  return fetch(`${getAPIUrl()}auth/refresh`, requestOptions)
+    .then((result) => result.json())
+    .catch((error) => console.log("error", error));
+}
+
+// cookies
+
+export async function getAccessTokenFromRefreshTokenCookie(cookieStore: any) {
+  const refresh_token_cookie: any = cookieStore.get("refresh_token_cookie");
+  const access_token_cookie: any = await getNewAccessTokenUsingRefreshTokenServer(refresh_token_cookie?.value);
+  return access_token_cookie && refresh_token_cookie ? access_token_cookie.access_token : null;
 }
 
 // signup

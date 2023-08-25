@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import ActivityClient from "./activity";
 import { getOrganizationContextInfo } from "@services/organizations/orgs";
 import { Metadata } from "next";
+import { getAccessTokenFromRefreshTokenCookie, getNewAccessTokenUsingRefreshTokenServer } from "@services/auth/auth";
 
 
 type MetadataProps = {
@@ -15,12 +16,12 @@ export async function generateMetadata(
     { params }: MetadataProps,
 ): Promise<Metadata> {
     const cookieStore = cookies();
-    const access_token_cookie: any = cookieStore.get('access_token_cookie');
+    const access_token = await getAccessTokenFromRefreshTokenCookie(cookieStore)
 
     // Get Org context information 
     const org = await getOrganizationContextInfo(params.orgslug, { revalidate: 1800, tags: ['organizations'] });
-    const course_meta = await getCourseMetadataWithAuthHeader(params.courseid, { revalidate: 0, tags: ['courses'] }, access_token_cookie ? access_token_cookie.value : null )
-    const activity = await getActivityWithAuthHeader(params.activityid, { revalidate: 0, tags: ['activities'] }, access_token_cookie ? access_token_cookie.value : null)
+    const course_meta = await getCourseMetadataWithAuthHeader(params.courseid, { revalidate: 0, tags: ['courses'] }, access_token ? access_token : null)
+    const activity = await getActivityWithAuthHeader(params.activityid, { revalidate: 0, tags: ['activities'] }, access_token ? access_token : null)
 
     return {
         title: activity.name + ` — ${course_meta.course.name} Course`,
@@ -30,13 +31,13 @@ export async function generateMetadata(
 
 const ActivityPage = async (params: any) => {
     const cookieStore = cookies();
-    const access_token_cookie: any = cookieStore.get('access_token_cookie');
+    const access_token = await getAccessTokenFromRefreshTokenCookie(cookieStore)
     const activityid = params.params.activityid;
     const courseid = params.params.courseid;
     const orgslug = params.params.orgslug;
 
-    const course_meta = await getCourseMetadataWithAuthHeader(courseid, { revalidate: 0, tags: ['courses'] }, access_token_cookie ? access_token_cookie.value : null)
-    const activity = await getActivityWithAuthHeader(activityid, { revalidate: 0, tags: ['activities'] }, access_token_cookie ? access_token_cookie.value : null)
+    const course_meta = await getCourseMetadataWithAuthHeader(courseid, { revalidate: 0, tags: ['courses'] }, access_token ? access_token : null)
+    const activity = await getActivityWithAuthHeader(activityid, { revalidate: 0, tags: ['activities'] }, access_token ? access_token : null)
     return (
         <>
             <ActivityClient

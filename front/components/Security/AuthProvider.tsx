@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect } from "react";
-import { getRefreshToken, getUserInfo } from "../../services/auth/auth";
+import { getNewAccessTokenUsingRefreshToken, getUserInfo } from "../../services/auth/auth";
 import { useRouter, usePathname } from "next/navigation";
 
 export const AuthContext: any = React.createContext({});
@@ -21,8 +21,14 @@ const AuthProvider = ({ children }: any) => {
 
   const [auth, setAuth] = React.useState<Auth>({ access_token: "", isAuthenticated: false, userInfo: {}, isLoading: true });
 
+  function deleteCookie(cookieName: string) {
+    document.cookie = cookieName + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+  }
+
+
   async function checkRefreshToken() {
-    let data = await getRefreshToken();
+    deleteCookie("access_token_cookie");
+    let data = await getNewAccessTokenUsingRefreshToken();
     if (data) {
       return data.access_token;
     }
@@ -61,13 +67,12 @@ const AuthProvider = ({ children }: any) => {
   }
 
   useEffect(() => {
-    if (auth.isLoading) {
-      checkAuth();
-    }
+    checkRefreshToken();
+    checkAuth();
     return () => {
       auth.isLoading = false;
     };
-  }, []);
+  }, [pathname]);
 
   return <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>;
 };
