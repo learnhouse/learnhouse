@@ -1,4 +1,5 @@
 import GeneralWrapperStyled from "@components/StyledElements/Wrappers/GeneralWrapper";
+import { getAccessTokenFromRefreshTokenCookie, getNewAccessTokenUsingRefreshTokenServer } from "@services/auth/auth";
 import { getBackendUrl, getUriWithOrg } from "@services/config/config";
 import { getCollectionByIdWithAuthHeader } from "@services/courses/collections";
 import { getCourseThumbnailMediaDirectory } from "@services/media/media";
@@ -16,12 +17,13 @@ export async function generateMetadata(
   { params }: MetadataProps,
 ): Promise<Metadata> {
   const cookieStore = cookies();
-  const access_token_cookie: any = cookieStore.get('access_token_cookie');
+  const access_token = await getAccessTokenFromRefreshTokenCookie(cookieStore)
+
   // Get Org context information 
   const org = await getOrganizationContextInfo(params.orgslug, { revalidate: 1800, tags: ['organizations'] });
-  const col = await getCollectionByIdWithAuthHeader(params.collectionid, access_token_cookie ? access_token_cookie.value : null, { revalidate: 0, tags: ['collections'] });
+  const col = await getCollectionByIdWithAuthHeader(params.collectionid, access_token ? access_token : null, { revalidate: 0, tags: ['collections'] });
 
-  
+
 
   return {
     title: `Collection : ${col.name}  — ${org.name}`,
@@ -31,9 +33,9 @@ export async function generateMetadata(
 
 const CollectionPage = async (params: any) => {
   const cookieStore = cookies();
-  const access_token_cookie: any = cookieStore.get('access_token_cookie');
+  const access_token = await getAccessTokenFromRefreshTokenCookie(cookieStore)
   const orgslug = params.params.orgslug;
-  const col = await getCollectionByIdWithAuthHeader(params.params.collectionid, access_token_cookie ? access_token_cookie.value : null, { revalidate: 0, tags: ['collections'] });
+  const col = await getCollectionByIdWithAuthHeader(params.params.collectionid, access_token ? access_token : null, { revalidate: 0, tags: ['collections'] });
 
   const removeCoursePrefix = (courseid: string) => {
     return courseid.replace("course_", "")
