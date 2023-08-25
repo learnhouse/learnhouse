@@ -1,7 +1,7 @@
 'use client';
 import React from "react";
 import Link from "next/link";
-import {  getUriWithOrg } from "@services/config/config";
+import { getUriWithOrg } from "@services/config/config";
 import { getOrganizationContextInfo } from "@services/organizations/orgs";
 import ClientComponentSkeleton from "@components/Utils/ClientComp";
 import { HeaderProfileBox } from "@components/Security/HeaderProfileBox";
@@ -10,23 +10,22 @@ import { getOrgLogoMediaDirectory } from "@services/media/media";
 
 export const Menu = async (props: any) => {
     const orgslug = props.orgslug;
-    const org = await getOrganizationContextInfo(orgslug, { revalidate: 1800, tags: ['organizations'] });
-
+    const org = await getOrganizationContextInfo(orgslug, { revalidate: 0, tags: ['organizations'] });
     return (
         <>
-            <div className="h-[60px] blur-3xl z-10" style={{
+            <div className="backdrop-blur-lg h-[60px] blur-3xl z-10" style={{
             }}>
                 <div className="h-[150px] blur-3xl z-0" style={{
                     background: "radial-gradient(1397.20% 56.18% at 75.99% 53.73%, rgba(253, 182, 207, 0.08) 0%, rgba(3, 110, 146, 0.08) 100%)"
                 }}></div>
 
             </div>
-            <div className="backdrop-blur-lg bg-white/90  fixed flex top-0 left-0 right-0 h-[60px] ring-1 ring-inset ring-gray-500/10 items-center space-x-5 shadow-[0px_4px_16px_rgba(0,0,0,0.03)] z-50">
+            <div className="backdrop-blur-lg bg-white/90 fixed flex top-0 left-0 right-0 h-[60px] ring-1 ring-inset ring-gray-500/10 items-center space-x-5 shadow-[0px_4px_16px_rgba(0,0,0,0.03)] z-50">
                 <div className="flex items-center space-x-5 w-full max-w-screen-2xl mx-auto px-16">
                     <div className="logo flex ">
                         <Link href={getUriWithOrg(orgslug, "/")}>
                             <div className="flex w-auto h-9 rounded-md items-center m-auto py-1 justify-center" >
-                                {org?.logo ? (
+                                {org.logo ? (
                                     <img
                                         src={`${getOrgLogoMediaDirectory(org.org_id, org?.logo)}`}
                                         alt="Learnhouse"

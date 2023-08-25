@@ -193,7 +193,7 @@ const ToolBtn = styled.div`
 
 const ToolSelect = styled.select`
   display: flex;
-  background: rgba(217, 217, 217, 0.24);
+  background: rgba(217, 217, 217, 0.185);
   border-radius: 6px;
   width: 100px;
   border: none;

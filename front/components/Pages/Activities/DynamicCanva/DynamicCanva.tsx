@@ -107,7 +107,7 @@ h5 {
 
 ul, ol {
   padding: 0 1rem;
-  padding-left: 10px;
+  padding-left: 20px;
   list-style-type: decimal;
 }
 
