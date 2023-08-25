@@ -24,7 +24,6 @@ import ToolTip from "@components/StyledElements/Tooltip/Tooltip";
 import Link from "next/link";
 import { getCourseThumbnailMediaDirectory } from "@services/media/media";
 import { OrderedList } from "@tiptap/extension-ordered-list";
-import {ListItem} from '@tiptap/extension-list-item'
 
 
 interface Editor {
@@ -116,14 +115,14 @@ function Editor(props: Editor) {
         }}
         exit={{ opacity: 0 }}
       >
-        <EditorTop>
+        <EditorTop className="fixed bg-white bg-opacity-95 backdrop-blur backdrop-brightness-125">
           <EditorDocSection>
             <EditorInfoWrapper>
               <Link href="/">
                 <EditorInfoLearnHouseLogo width={25} height={25} src={learnhouseIcon} alt="" />
               </Link>
               <Link target="_blank" href={`/course/${course_id}/edit`}>
-                <EditorInfoThumbnail src={`${getCourseThumbnailMediaDirectory(props.course.course.org_id,props.course.course.course_id,props.course.course.thumbnail)}`} alt=""></EditorInfoThumbnail>
+                <EditorInfoThumbnail src={`${getCourseThumbnailMediaDirectory(props.course.course.org_id, props.course.course.course_id, props.course.course.thumbnail)}`} alt=""></EditorInfoThumbnail>
               </Link>
               <EditorInfoDocName>
                 {" "}
@@ -140,10 +139,16 @@ function Editor(props: Editor) {
               {!auth.isAuthenticated && <span>Loading</span>}
               {auth.isAuthenticated && <Avvvatars value={auth.userInfo.user_object.user_id} style="shape" />}
             </EditorUserProfileWrapper>
-            <DividerVerticalIcon style={{ marginTop: "auto", marginBottom: "auto", color: "grey" }} />
-            <EditorLeftOptionsSection>
-              <EditorLeftOptionsSaveButton onClick={() => props.setContent(editor.getJSON())}> Save </EditorLeftOptionsSaveButton>
-              <ToolTip content="Preview"><Link target="_blank" href={`/course/${course_id}/activity/${activity_id}`}><EditorLeftOptionsPreviewButton> <Eye size={15} /> </EditorLeftOptionsPreviewButton></Link></ToolTip>
+            <DividerVerticalIcon style={{ marginTop: "auto", marginBottom: "auto", color: "grey", opacity:'0.5' }} />
+            <EditorLeftOptionsSection className="space-x-2 pl-2 pr-3">
+              <div className="bg-sky-600 hover:bg-sky-700 transition-all ease-linear px-3 py-2 font-black text-sm shadow text-teal-100 rounded-lg hover:cursor-pointer" onClick={() => props.setContent(editor.getJSON())}> Save </div>
+              <ToolTip content="Preview">
+                <Link target="_blank" href={`/course/${course_id}/activity/${activity_id}`}>
+                  <div className="flex bg-neutral-600 hover:bg-neutral-700 transition-all ease-linear h-9 px-3 py-2 font-black justify-center items-center text-sm shadow text-neutral-100 rounded-lg hover:cursor-pointer">
+                    <Eye className="mx-auto items-center" size={15} />
+                  </div>
+                </Link>
+              </ToolTip>
             </EditorLeftOptionsSection>
           </EditorUsersSection>
         </EditorTop>
@@ -170,8 +175,6 @@ function Editor(props: Editor) {
 const Page = styled.div`
   height: 100vh;
   width: 100%;
-  min-height: 100vh;
-  min-width: 100vw;
   padding-top: 30px;
 
   // dots background
@@ -183,9 +186,7 @@ const Page = styled.div`
 `;
 
 const EditorTop = styled.div`
-  background-color: #ffffffeb;
   border-radius: 15px;
-  backdrop-filter: saturate(180%) blur(14px);
   margin: 40px;
   margin-top: 0px;
   margin-bottom: 20px;
@@ -194,7 +195,7 @@ const EditorTop = styled.div`
   justify-content: space-between;
   box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.03);
   position: fixed;
-  z-index: 3;
+  z-index: 303;
   width: -webkit-fill-available;
 `;
 
@@ -215,50 +216,6 @@ const EditorLeftOptionsSection = styled.div`
   flex-direction: row;
   justify-content: center;
   align-items: center;
-`;
-
-const EditorLeftOptionsSaveButton = styled.button`
-  background-color: #8783f7;
-  border-radius: 8px;
-  border: none;
-  color: white;
-  padding: 8px;
-  margin-left: 10px;
-  margin-right: 10px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  outline: none;
-
-
-  &:hover {
-    background-color: #4a44f9;
-    opacity: 0.8;
-  }
-`;
-
-const EditorLeftOptionsPreviewButton = styled.button`
-   background-color: #a4a4a449;
-  border-radius: 8px;
-  border: none;
-  color: #000000;
-  padding: 8px;
-  margin-right: 10px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  outline: none;
-
-  // center icon
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  &:hover {
-    background-color: #c0bfbf;
-    opacity: 0.8;
-  }
-
 `;
 
 
@@ -300,33 +257,6 @@ const EditorInfoDocName = styled.div`
   }
 `;
 
-const EditorSaveButton = styled.div`
-  display: flex;
-  border-radius: 8px;
-  padding: 5px;
-  font-size: 12px;
-  margin-right: 5px;
-  margin-left: 7px;
-  background: #ffffff8d;
-  color: #5252528d;
-  border: solid 1px #52525257;
-  align-items: center;
-  justify-content: space-between;
-  width: 53px;
-
-  &.is-active {
-    background: rgba(176, 176, 176, 0.5);
-
-    &:hover {
-      background: rgba(31, 31, 31, 0.5);
-      cursor: pointer;
-    }
-  }
-
-  &:hover {
-    cursor: pointer;
-  }
-`;
 
 const EditorInfoThumbnail = styled.img`
   height: 25px;
@@ -346,6 +276,7 @@ export const EditorContentWrapper = styled.div`
   margin-top: 90px;
   background-color: white;
   border-radius: 10px;
+  z-index: 300;
   box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.03);
 
   // disable chrome outline
@@ -412,9 +343,11 @@ export const EditorContentWrapper = styled.div`
 
   ul, ol {
     padding: 0 1rem;
-    padding-left: 10px;
+    padding-left: 20px;
     list-style-type: decimal;
   }
+
+  
   
 
 `;

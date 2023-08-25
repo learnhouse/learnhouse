@@ -3,6 +3,7 @@ import CourseEditClient from "./edit";
 import { getCourseMetadataWithAuthHeader } from "@services/courses/courses";
 import { cookies } from "next/headers";
 import { Metadata } from 'next';
+import { getAccessTokenFromRefreshTokenCookie, getNewAccessTokenUsingRefreshTokenServer } from "@services/auth/auth";
 
 type MetadataProps = {
   params: { orgslug: string, courseid: string };
@@ -13,12 +14,12 @@ export async function generateMetadata(
   { params }: MetadataProps,
 ): Promise<Metadata> {
   const cookieStore = cookies();
-  const access_token_cookie: any = cookieStore.get('access_token_cookie');
+  const access_token = await getAccessTokenFromRefreshTokenCookie(cookieStore)
 
 
   // Get Org context information 
   const org = await getOrganizationContextInfo(params.orgslug, { revalidate: 1800, tags: ['organizations'] });
-  const course_meta = await getCourseMetadataWithAuthHeader(params.courseid, { revalidate: 0, tags: ['courses'] }, access_token_cookie ? access_token_cookie.value : null)
+  const course_meta = await getCourseMetadataWithAuthHeader(params.courseid, { revalidate: 0, tags: ['courses'] }, access_token ? access_token : null)
 
   return {
     title: `Edit Course - ` + course_meta.course.name,
@@ -31,7 +32,7 @@ function CourseEdit(params: any) {
   let subpage = params.params.subpage ? params.params.subpage : 'general';
   return (
     <>
-      <CourseEditClient  params={params} subpage={subpage} courseid={params.params.courseid} />
+      <CourseEditClient params={params} subpage={subpage} courseid={params.params.courseid} />
     </>
   );
 }
