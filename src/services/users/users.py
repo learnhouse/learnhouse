@@ -2,7 +2,10 @@ from datetime import datetime
 from typing import Literal
 from uuid import uuid4
 from fastapi import HTTPException, Request, status
-from src.security.rbac.rbac import authorization_verify_based_on_roles, authorization_verify_if_user_is_anon
+from src.security.rbac.rbac import (
+    authorization_verify_based_on_roles,
+    authorization_verify_if_user_is_anon,
+)
 from src.security.security import security_hash_password, security_verify_password
 from src.services.users.schemas.users import (
     PasswordChangeForm,
@@ -55,19 +58,27 @@ async def create_user(
     isOrgExists = await orgs.find_one({"slug": org_slug})
 
     # If the org does not exist, raise an error
-    if not isOrgExists:
+    if not isOrgExists and (org_slug != "None"):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="You are trying to create a user in an organization that does not exist",
         )
-
-    org_id = isOrgExists["org_id"]
+    
+    org_id = isOrgExists["org_id"] if org_slug != "None" else ''
 
     # Create initial orgs list with the org_id passed in
-    orgs = [UserOrganization(org_id=org_id, org_role="member")]
+    orgs = (
+        [UserOrganization(org_id=org_id, org_role="member")]
+        if org_slug !=  "None"
+        else []
+    )
 
     # Give role
-    roles = [UserRolesInOrganization(role_id="role_member", org_id=org_id)]
+    roles = (
+        [UserRolesInOrganization(role_id="role_member", org_id=org_id)]
+        if org_slug !=  "None"
+        else []
+    )
 
     # Create the user
     user = UserInDB(
@@ -266,7 +277,6 @@ async def verify_user_rights_on_user(
         return True
 
     if action == "read":
-
         await authorization_verify_if_user_is_anon(current_user.user_id)
 
         if current_user.user_id == user_id:
@@ -279,7 +289,6 @@ async def verify_user_rights_on_user(
         return False
 
     if action == "update":
-
         await authorization_verify_if_user_is_anon(current_user.user_id)
 
         if current_user.user_id == user_id:
@@ -297,9 +306,8 @@ async def verify_user_rights_on_user(
         return False
 
     if action == "delete":
-
         await authorization_verify_if_user_is_anon(current_user.user_id)
-        
+
         if current_user.user_id == user_id:
             return True
 
