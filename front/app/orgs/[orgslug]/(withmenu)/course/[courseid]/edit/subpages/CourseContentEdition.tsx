@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import NewChapterModal from "@components/Objects/Modals/Chapters/NewChapter";
 import NewActivityModal from "@components/Objects/Modals/Activities/Create/NewActivity";
 import { createActivity, createFileActivity, createExternalVideoActivity } from "@services/courses/activities";
-import { getOrganizationContextInfo } from "@services/organizations/orgs";
+import { getOrganizationContextInfo, getOrganizationContextInfoWithoutCredentials } from "@services/organizations/orgs";
 import Modal from "@components/StyledElements/Modal/Modal";
 import { denyAccessToUser } from "@services/utils/react/middlewares/views";
 import { Folders, Hexagon, SaveIcon } from "lucide-react";
@@ -71,7 +71,7 @@ function CourseContentEdition(props: any) {
 
     // Submit new activity
     const submitActivity = async (activity: any) => {
-        let org = await getOrganizationContextInfo(orgslug, { revalidate: 1800 });
+        let org = await getOrganizationContextInfoWithoutCredentials(orgslug, { revalidate: 1800 });
         await updateChaptersMetadata(courseid, data);
         await createActivity(activity, activity.chapterId, org.org_id);
         mutate(`${getAPIUrl()}chapters/meta/course_${courseid}`);
