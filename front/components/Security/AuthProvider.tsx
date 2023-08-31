@@ -62,12 +62,11 @@ const AuthProvider = ({ children }: any) => {
 
       }
     } catch (error) {
-
+      console.log(error);
     }
   }
 
   useEffect(() => {
-    checkRefreshToken();
     checkAuth();
     return () => {
       auth.isLoading = false;
