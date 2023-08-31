@@ -2,7 +2,7 @@
 import React from "react";
 import Link from "next/link";
 import { getUriWithOrg } from "@services/config/config";
-import { getOrganizationContextInfo } from "@services/organizations/orgs";
+import { getOrganizationContextInfo, getOrganizationContextInfoWithoutCredentials } from "@services/organizations/orgs";
 import ClientComponentSkeleton from "@components/Utils/ClientComp";
 import { HeaderProfileBox } from "@components/Security/HeaderProfileBox";
 import MenuLinks from "./MenuLinks";
@@ -10,7 +10,7 @@ import { getOrgLogoMediaDirectory } from "@services/media/media";
 
 export const Menu = async (props: any) => {
     const orgslug = props.orgslug;
-    const org = await getOrganizationContextInfo(orgslug, { revalidate: 0, tags: ['organizations'] });
+    const org = await getOrganizationContextInfoWithoutCredentials(orgslug, { revalidate: 0, tags: ['organizations'] });
     return (
         <>
             <div className="backdrop-blur-lg h-[60px] blur-3xl z-10" style={{

@@ -3,7 +3,7 @@ import * as Form from '@radix-ui/react-form'
 import { getAPIUrl, getUriWithOrg } from '@services/config/config';
 import { FormMessage } from "@radix-ui/react-form";
 import { createNewCourse } from '@services/courses/courses';
-import { getOrganizationContextInfo } from '@services/organizations/orgs';
+import { getOrganizationContextInfo, getOrganizationContextInfoWithoutCredentials } from '@services/organizations/orgs';
 import React, { useState } from 'react'
 import { BarLoader } from 'react-spinners'
 import { mutate } from 'swr';
@@ -22,7 +22,7 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
 
 
     const getOrgMetadata = async () => {
-        const org = await getOrganizationContextInfo(orgslug, { revalidate: 360, tags: ['organizations'] });
+        const org = await getOrganizationContextInfoWithoutCredentials(orgslug, { revalidate: 360, tags: ['organizations'] });
         setOrgId(org.org_id);
     }
 

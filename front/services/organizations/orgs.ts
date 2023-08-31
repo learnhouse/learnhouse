@@ -24,6 +24,21 @@ export async function getOrganizationContextInfo(org_slug: any, next: any) {
   return res;
 }
 
+export async function getOrganizationContextInfoWithoutCredentials(org_slug: any, next: any) {
+  let HeadersConfig = new Headers({ "Content-Type": "application/json" });
+  let options: any = {
+    method: 'GET',
+    headers: HeadersConfig,
+    redirect: "follow",
+    // Next.js
+    next: next,
+  };
+
+  const result = await fetch(`${getAPIUrl()}orgs/slug/${org_slug}`, options);
+  const res = await errorHandling(result);
+  return res;
+}
+
 export function getOrganizationContextInfoNoAsync(org_slug: any, next: any) {
   const result = fetch(`${getAPIUrl()}orgs/slug/${org_slug}`, RequestBody("GET", null, next));
   return result;
