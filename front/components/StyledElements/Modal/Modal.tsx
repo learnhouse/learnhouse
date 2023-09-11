@@ -28,7 +28,7 @@ const Modal = (params: ModalParams) => (
         <Dialog.Portal>
             <DialogOverlay />
             <DialogContent minHeight={params.minHeight}>
-                <DialogTopBar>
+                <DialogTopBar className='-space-y-1'>
                     <DialogTitle>{params.dialogTitle}</DialogTitle>
                     <DialogDescription>
                         {params.dialogDescription}
