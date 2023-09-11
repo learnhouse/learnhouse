@@ -1,16 +1,30 @@
 'use client';
-import React from "react";
+import React, { use, useEffect } from "react";
 import Link from "next/link";
-import { getUriWithOrg } from "@services/config/config";
+import { getAPIUrl, getUriWithOrg } from "@services/config/config";
 import { getOrganizationContextInfo, getOrganizationContextInfoWithoutCredentials } from "@services/organizations/orgs";
 import ClientComponentSkeleton from "@components/Utils/ClientComp";
 import { HeaderProfileBox } from "@components/Security/HeaderProfileBox";
 import MenuLinks from "./MenuLinks";
 import { getOrgLogoMediaDirectory } from "@services/media/media";
+import { MessageSquareIcon } from "lucide-react";
+import { Tooltip } from "@radix-ui/react-tooltip";
+import ToolTip from "@components/StyledElements/Tooltip/Tooltip";
+import Modal from "@components/StyledElements/Modal/Modal";
+import FeedbackModal from "../Modals/Feedback/Feedback";
+import useSWR from "swr";
+import { swrFetcher } from "@services/utils/ts/requests";
 
-export const Menu = async (props: any) => {
+export const Menu = (props: any) => {
     const orgslug = props.orgslug;
-    const org = await getOrganizationContextInfoWithoutCredentials(orgslug, { revalidate: 0, tags: ['organizations'] });
+    const [feedbackModal, setFeedbackModal] = React.useState(false);
+    const { data: org, error: error, isLoading } = useSWR(`${getAPIUrl()}orgs/slug/${orgslug}`, swrFetcher);
+
+    function closeFeedbackModal() {
+        setFeedbackModal(false);
+    }
+
+
     return (
         <>
             <div className="backdrop-blur-lg h-[60px] blur-3xl z-10" style={{
@@ -25,7 +39,7 @@ export const Menu = async (props: any) => {
                     <div className="logo flex ">
                         <Link href={getUriWithOrg(orgslug, "/")}>
                             <div className="flex w-auto h-9 rounded-md items-center m-auto py-1 justify-center" >
-                                {org.logo ? (
+                                {org?.logo ? (
                                     <img
                                         src={`${getOrgLogoMediaDirectory(org.org_id, org?.logo)}`}
                                         alt="Learnhouse"
@@ -39,15 +53,24 @@ export const Menu = async (props: any) => {
                         </Link>
                     </div>
                     <div className="links flex grow">
-                        <ClientComponentSkeleton>
-                            <MenuLinks orgslug={orgslug} />
-                        </ClientComponentSkeleton>
-
+                        <MenuLinks orgslug={orgslug} />
                     </div>
-                    <div className="profile flex">
-                        <ClientComponentSkeleton>
-                            <HeaderProfileBox />
-                        </ClientComponentSkeleton>
+                    <div className="profile flex items-center space-x-2">
+
+                        <Modal
+                            isDialogOpen={feedbackModal}
+                            onOpenChange={setFeedbackModal}
+                            minHeight="sm"
+                            dialogContent={<FeedbackModal></FeedbackModal>}
+                            dialogTitle="Feedback"
+                            dialogDescription="An issue? A suggestion? a bug ? Let us know!"
+                            dialogTrigger={
+                                <div className="feedback cursor-pointer block items-center h-fit p-2 rounded-2xl bg-orange-800 hover:bg-orange-900 text-orange-300 shadow">
+                                    <MessageSquareIcon size={12} />
+                                </div>
+                            }
+                        />
+                        <HeaderProfileBox />
                     </div>
                 </div>
             </div>
