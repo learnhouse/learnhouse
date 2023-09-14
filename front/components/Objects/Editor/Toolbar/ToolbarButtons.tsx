@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import { FontBoldIcon, FontItalicIcon, StrikethroughIcon, ArrowLeftIcon, ArrowRightIcon, OpacityIcon, DividerVerticalIcon, ListBulletIcon } from "@radix-ui/react-icons";
-import { AlertCircle, AlertTriangle, FileText, GraduationCap, ImagePlus, Info, Sigma, Video, Youtube } from "lucide-react";
+import { AlertCircle, AlertTriangle, FileText, GraduationCap, HelpCircle, ImagePlus, Info, Sigma, Video, Youtube } from "lucide-react";
 import ToolTip from "@components/StyledElements/Tooltip/Tooltip";
 
 export const ToolbarButtons = ({ editor, props }: any) => {
@@ -59,7 +59,7 @@ export const ToolbarButtons = ({ editor, props }: any) => {
         <option value="6">Heading 6</option>
       </ToolSelect>
       {/* TODO: fix this : toggling only works one-way */}
-      <DividerVerticalIcon style={{marginTop:"auto", marginBottom:"auto", color : "grey"}}/>
+      <DividerVerticalIcon style={{ marginTop: "auto", marginBottom: "auto", color: "grey" }} />
       <ToolTip content={"Info Callout"}>
         <ToolBtn onClick={() => editor.chain().focus().toggleNode("calloutInfo").run()}>
           <AlertCircle size={15} />
@@ -113,7 +113,7 @@ export const ToolbarButtons = ({ editor, props }: any) => {
               .chain()
               .focus()
               .insertContent({
-                type: "blockMathEquation", 
+                type: "blockMathEquation",
               })
               .run()
           }
@@ -136,7 +136,7 @@ export const ToolbarButtons = ({ editor, props }: any) => {
           <FileText size={15} />
         </ToolBtn>
       </ToolTip>
-      {/* <ToolTip content={"Interactive Quiz"}>
+      <ToolTip content={"Interactive Quiz"}>
         <ToolBtn
           onClick={() =>
             editor
@@ -148,9 +148,9 @@ export const ToolbarButtons = ({ editor, props }: any) => {
               .run()
           }
         >
-          <GraduationCap size={15} />
+          <HelpCircle size={15} />
         </ToolBtn>
-      </ToolTip> */}
+      </ToolTip>
     </ToolButtonsWrapper>
   );
 };
