@@ -264,7 +264,7 @@ function QuizBlockComponent(props: any) {
                     key={answer.answer_id}
                     className={twMerge(
                       'outline outline-3 pr-2 shadow w-full flex items-center space-x-2 h-[30px] bg-opacity-50 hover:bg-opacity-100 hover:shadow-md rounded-s rounded-lg bg-white text-sm hover:scale-105 active:scale-110 duration-150 cursor-pointer ease-linear',
-                      answer.correct && isEditable ? 'outline-lime-200' : 'outline-white',
+                      answer.correct && isEditable ? 'outline-lime-300' : 'outline-white',
                       userAnswers.find((userAnswer: any) => (userAnswer.question_id === question.question_id && userAnswer.answer_id === answer.answer_id) && !isEditable) ? 'outline-slate-300' : '',
                       (submitted && answer.correct) ? 'outline-lime-300 text-lime' : '',
                       (submitted && !answer.correct) && userAnswers.find((userAnswer: any) => userAnswer.question_id === question.question_id && userAnswer.answer_id === answer.answer_id) ? 'outline-red-400' : '',
@@ -274,7 +274,8 @@ function QuizBlockComponent(props: any) {
                   >
                     <div className={twMerge(
                       "bg-white font-bold  text-base flex items-center h-full w-[40px] rounded-l-md text-slate-800",
-                      (submitted && answer.correct) ? 'bg-lime-300 text-lime-800 ' : '',
+                      answer.correct && isEditable ? 'bg-lime-300 text-lime-800 outline-none' : 'bg-white',
+                      (submitted && answer.correct) ? 'bg-lime-300 text-lime-800 outline-none' : '',
                       (submitted && !answer.correct) && userAnswers.find((userAnswer: any) => userAnswer.question_id === question.question_id && userAnswer.answer_id === answer.answer_id) ? 'bg-red-400 text-red-800 outline-none' : '',
                       )}>
                       <p className="mx-auto font-bold text-sm ">{getAnswerID(question.answers.indexOf(answer),question.question_id)}</p>
@@ -288,7 +289,7 @@ function QuizBlockComponent(props: any) {
                       <div className="flex space-x-1 items-center">
                         <div
                           onClick={() => markAnswerCorrect(question.question_id, answer.answer_id)}
-                          className="w-[20px] flex-none flex items-center h-[20px] rounded-lg bg-lime-200 hover:bg-lime-300 transition-all ease-linear text-sm cursor-pointer ">
+                          className="w-[20px] flex-none flex items-center h-[20px] rounded-lg bg-lime-300 hover:bg-lime-400 transition-all ease-linear text-sm cursor-pointer ">
                           <Check
                             className="mx-auto text-lime-800" size={12} />
                         </div>
