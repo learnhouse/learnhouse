@@ -10,6 +10,7 @@ import VideoBlock from "@components/Objects/Editor/Extensions/Video/VideoBlock";
 import MathEquationBlock from "@components/Objects/Editor/Extensions/MathEquation/MathEquationBlock";
 import PDFBlock from "@components/Objects/Editor/Extensions/PDF/PDFBlock";
 import { OrderedList } from "@tiptap/extension-ordered-list";
+import QuizBlock from "@components/Objects/Editor/Extensions/Quiz/QuizBlock";
 
 interface Editor {
   content: string;
@@ -44,6 +45,10 @@ function Canva(props: Editor) {
       }),
       PDFBlock.configure({
         editable: true,
+        activity: props.activity,
+      }),
+      QuizBlock.configure({
+        editable: isEditable,
         activity: props.activity,
       }),
       Youtube.configure({
