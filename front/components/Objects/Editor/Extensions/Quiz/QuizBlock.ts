@@ -6,13 +6,15 @@ import QuizBlockComponent from "./QuizBlockComponent";
 export default Node.create({
   name: "blockQuiz",
   group: "block",
-
   atom: true,
 
   addAttributes() {
     return {
       quizId: {
         value: null,
+      },
+      questions: {
+        default: [],
       },
     };
   },
