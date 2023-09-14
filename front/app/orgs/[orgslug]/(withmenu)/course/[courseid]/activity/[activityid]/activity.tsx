@@ -1,11 +1,11 @@
 "use client";
 import Link from "next/link";
 import { getUriWithOrg } from "@services/config/config";
-import Canva from "@components/Pages/Activities/DynamicCanva/DynamicCanva";
-import VideoActivity from "@components/Pages/Activities/Video/Video";
+import Canva from "@components/Objects/Activities/DynamicCanva/DynamicCanva";
+import VideoActivity from "@components/Objects/Activities/Video/Video";
 import { Check } from "lucide-react";
 import { markActivityAsComplete } from "@services/courses/activity";
-import DocumentPdfActivity from "@components/Pages/Activities/DocumentPdf/DocumentPdf";
+import DocumentPdfActivity from "@components/Objects/Activities/DocumentPdf/DocumentPdf";
 import ActivityIndicators from "@components/Pages/Courses/ActivityIndicators";
 import GeneralWrapperStyled from "@components/StyledElements/Wrappers/GeneralWrapper";
 import { useRouter } from "next/navigation";
