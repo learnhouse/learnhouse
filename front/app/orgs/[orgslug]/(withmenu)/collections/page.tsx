@@ -22,9 +22,26 @@ export async function generateMetadata(
     const cookieStore = cookies();
     // Get Org context information 
     const org = await getOrganizationContextInfo(params.orgslug, { revalidate: 1800, tags: ['organizations'] });
+    
+    // SEO 
     return {
         title: `Collections — ${org.name}`,
         description: `Collections of courses from ${org.name}`,
+        robots: {
+            index: true,
+            follow: true,
+            nocache: true,
+            googleBot: {
+                index: true,
+                follow: true,
+                "max-image-preview": "large",
+            }
+        },
+        openGraph: {
+            title: `Collections — ${org.name}`,
+            description: `Collections of courses from ${org.name}`,
+            type: 'website',
+        },
     };
 }
 
