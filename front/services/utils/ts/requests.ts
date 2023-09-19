@@ -1,4 +1,5 @@
-import { AppRouterInstance } from "next/dist/shared/lib/app-router-context";
+
+import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import { denyAccessToUser } from "../react/middlewares/views";
 import { getUriWithOrg, LEARNHOUSE_DOMAIN, LEARNHOUSE_HTTP_PROTOCOL } from "@services/config/config";
 
