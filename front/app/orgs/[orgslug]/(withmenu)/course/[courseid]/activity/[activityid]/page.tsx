@@ -23,9 +23,28 @@ export async function generateMetadata(
     const course_meta = await getCourseMetadataWithAuthHeader(params.courseid, { revalidate: 0, tags: ['courses'] }, access_token ? access_token : null)
     const activity = await getActivityWithAuthHeader(params.activityid, { revalidate: 0, tags: ['activities'] }, access_token ? access_token : null)
 
+    // SEO
     return {
         title: activity.name + ` — ${course_meta.course.name} Course`,
         description: course_meta.course.mini_description,
+        keywords: course_meta.course.learnings,
+        robots: {
+            index: true,
+            follow: true,
+            nocache: true,
+            googleBot: {
+                index: true,
+                follow: true,
+                "max-image-preview": "large",
+            }
+        },
+        openGraph: {
+            title: activity.name + ` — ${course_meta.course.name} Course`,
+            description: course_meta.course.mini_description,
+            type: activity.type === 'video' ? 'video.other' : 'article',
+            publishedTime: course_meta.course.creationDate,
+            tags: course_meta.course.learnings,
+        },
     };
 }
 
