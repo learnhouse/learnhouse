@@ -13,6 +13,8 @@ import GeneralWrapperStyled from '@components/StyledElements/Wrappers/GeneralWra
 import TypeOfContentTitle from '@components/StyledElements/Titles/TypeOfContentTitle';
 import { getCourseThumbnailMediaDirectory } from '@services/media/media';
 import { getAccessTokenFromRefreshTokenCookie, getNewAccessTokenUsingRefreshTokenServer } from '@services/auth/auth';
+import CourseThumbnail from '@components/Objects/Other/CourseThumbnail';
+import CollectionThumbnail from '@components/Objects/Other/CollectionThumbnail';
 
 type MetadataProps = {
   params: { orgslug: string };
@@ -74,18 +76,7 @@ const OrgHomePage = async (params: any) => {
         <div className="home_collections flex flex-wrap">
           {collections.map((collection: any) => (
             <div className="flex flex-col py-3 px-3" key={collection.collection_id}>
-              <Link href={getUriWithOrg(orgslug, "/collection/" + removeCollectionPrefix(collection.collection_id))}>
-                <div className="inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl relative w-[249px] h-[180px] bg-cover flex flex-col items-center justify-center bg-indigo-600 font-bold text-zinc-50" >
-                  <h1 className="font-bold text-lg py-2 justify-center mb-2">{collection.name}</h1>
-                  <div className="flex -space-x-4">
-                    {collection.courses.slice(0, 3).map((course: any) => (
-                      <Link key={course.course_id} href={getUriWithOrg(orgslug, "/course/" + course.course_id.substring(7))}>
-                        <img className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg ring-2 ring-white z-50" key={course.course_id} src={`${getCourseThumbnailMediaDirectory(course.org_id, course.course_id, course.thumbnail)}`} alt={course.name} />
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              </Link>
+              <CollectionThumbnail collection={collection} orgslug={orgslug} org_id={org.org_id} />
             </div>
           ))}
         </div>
@@ -96,11 +87,7 @@ const OrgHomePage = async (params: any) => {
         <div className="home_courses flex flex-wrap">
           {courses.map((course: any) => (
             <div className="py-3 px-3" key={course.course_id}>
-              <Link href={getUriWithOrg(orgslug, "/course/" + removeCoursePrefix(course.course_id))}>
-                <div className="inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl relative w-[249px] h-[131px] bg-cover transition-all hover:scale-102" style={{ backgroundImage: `url(${getCourseThumbnailMediaDirectory(course.org_id, course.course_id, course.thumbnail)})` }}>
-                </div>
-              </Link>
-              <h2 className="font-bold text-lg w-[250px] py-2">{course.name}</h2>
+              <CourseThumbnail course={course} orgslug={orgslug} />
             </div>
           ))}
         </div>

@@ -17,6 +17,7 @@ import AuthenticatedClientElement from '@components/Security/AuthenticatedClient
 import { getCourseThumbnailMediaDirectory } from '@services/media/media';
 import ConfirmationModal from '@components/StyledElements/ConfirmationModal/ConfirmationModal';
 import { Pencil, X } from 'lucide-react';
+import CourseThumbnail from '@components/Objects/Other/CourseThumbnail';
 
 interface CourseProps {
     orgslug: string;
@@ -75,13 +76,7 @@ function Courses(props: CourseProps) {
                 <div className="flex flex-wrap">
                     {courses.map((course: any) => (
                         <div className="px-3" key={course.course_id}>
-                            <AdminEditsArea course={course} orgSlug={orgslug} courseId={course.course_id} deleteCourses={deleteCourses} />
-                            <Link href={getUriWithOrg(orgslug, "/course/" + removeCoursePrefix(course.course_id))}>
-                                <div className="inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl relative w-[249px] h-[131px] bg-cover" style={{ backgroundImage: `url(${getCourseThumbnailMediaDirectory(course.org_id, course.course_id, course.thumbnail)})` }}>
-
-                                </div>
-                            </Link>
-                            <h2 className="font-bold text-lg w-[250px] py-2">{course.name}</h2>
+                            <CourseThumbnail course={course} orgslug={orgslug} />
                         </div>
                     ))}
                 </div>
@@ -107,11 +102,11 @@ const AdminEditsArea = (props: { orgSlug: string, courseId: string, course: any,
                 status='warning'
             ></ConfirmationModal>
             <Link href={getUriWithOrg(props.orgSlug, "/course/" + removeCoursePrefix(props.courseId) + "/edit")}>
-            <div
-                        className=" hover:cursor-pointer p-1 px-4 bg-orange-600 rounded-md"
-                        rel="noopener noreferrer">
-                        <Pencil size={15} className="text-orange-200 font-bold" />
-                    </div>
+                <div
+                    className=" hover:cursor-pointer p-1 px-4 bg-orange-600 rounded-md"
+                    rel="noopener noreferrer">
+                    <Pencil size={15} className="text-orange-200 font-bold" />
+                </div>
             </Link>
         </div>
         </AuthenticatedClientElement>
