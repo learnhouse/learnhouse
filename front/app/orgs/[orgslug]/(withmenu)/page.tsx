@@ -22,13 +22,28 @@ type MetadataProps = {
 export async function generateMetadata(
   { params }: MetadataProps,
 ): Promise<Metadata> {
-
-
   // Get Org context information 
   const org = await getOrganizationContextInfo(params.orgslug, { revalidate: 1800, tags: ['organizations'] });
+
+  // SEO
   return {
     title: `Home — ${org.name}`,
     description: org.description,
+    robots: {
+      index: true,
+      follow: true,
+      nocache: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-image-preview": "large",
+      }
+    },
+    openGraph: {
+      title: `Home — ${org.name}`,
+      description: org.description,
+      type: 'website',
+    },
   };
 }
 

@@ -18,9 +18,27 @@ export async function generateMetadata(
 
   // Get Org context information 
   const org = await getOrganizationContextInfo(params.orgslug, { revalidate: 1800, tags: ['organizations'] });
+
+  // SEO
   return {
     title: "Courses — " + org.name,
     description: org.description,
+    keywords: `${org.name}, ${org.description}, courses, learning, education, online learning, edu, online courses, ${org.name} courses`,
+    robots: {
+      index: true,
+      follow: true,
+      nocache: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-image-preview": "large",
+      }
+    },
+    openGraph: {
+      title: "Courses — " + org.name,
+      description: org.description,
+      type: 'website',
+    },
   };
 }
 
