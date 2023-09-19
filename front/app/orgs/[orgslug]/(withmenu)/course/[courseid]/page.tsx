@@ -17,17 +17,35 @@ export async function generateMetadata(
     const cookieStore = cookies();
     const access_token = await getAccessTokenFromRefreshTokenCookie(cookieStore)
 
-
     // Get Org context information 
     const org = await getOrganizationContextInfo(params.orgslug, { revalidate: 1800, tags: ['organizations'] });
     const course_meta = await getCourseMetadataWithAuthHeader(params.courseid, { revalidate: 0, tags: ['courses'] }, access_token ? access_token : null)
+    
 
+    // SEO
     return {
         title: course_meta.course.name + ` — ${org.name}`,
         description: course_meta.course.mini_description,
+        keywords: course_meta.course.learnings,
+        robots: {
+            index: true,
+            follow: true,
+            nocache: true,
+            googleBot: {
+                index: true,
+                follow: true,
+                "max-image-preview": "large",
+            }
+        },
+        openGraph: {
+            title: course_meta.course.name + ` — ${org.name}`,
+            description: course_meta.course.mini_description,
+            type: 'article',
+            publishedTime: course_meta.course.creationDate,
+            tags: course_meta.course.learnings,
+        },
     };
 }
-
 
 
 const CoursePage = async (params: any) => {

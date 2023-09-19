@@ -23,11 +23,25 @@ export async function generateMetadata(
   const org = await getOrganizationContextInfo(params.orgslug, { revalidate: 1800, tags: ['organizations'] });
   const col = await getCollectionByIdWithAuthHeader(params.collectionid, access_token ? access_token : null, { revalidate: 0, tags: ['collections'] });
 
-
-
+  // SEO
   return {
     title: `Collection : ${col.name}  — ${org.name}`,
     description: `${col.description} `,
+    robots: {
+      index: true,
+      follow: true,
+      nocache: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-image-preview": "large",
+      }
+    },
+    openGraph: {
+      title: `Collection : ${col.name}  — ${org.name}`,
+      description: `${col.description} `,
+      type: 'website',
+    },
   };
 }
 
