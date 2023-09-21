@@ -1,15 +1,15 @@
 import AuthenticatedClientElement from "@components/Security/AuthenticatedClientElement";
 import TypeOfContentTitle from "@components/StyledElements/Titles/TypeOfContentTitle";
 import GeneralWrapperStyled from "@components/StyledElements/Wrappers/GeneralWrapper";
-import { getBackendUrl, getUriWithOrg } from "@services/config/config";
-import { deleteCollection, getOrgCollectionsWithAuthHeader } from "@services/courses/collections";
+import { getUriWithOrg } from "@services/config/config";
+import { getOrgCollectionsWithAuthHeader } from "@services/courses/collections";
 import { getOrganizationContextInfo } from "@services/organizations/orgs";
 import { Metadata } from "next";
 import { cookies } from "next/headers";
 import Link from "next/link";
-import CollectionAdminEditsArea from "./admin";
-import { getCourseThumbnailMediaDirectory } from "@services/media/media";
-import { getAccessTokenFromRefreshTokenCookie, getNewAccessTokenUsingRefreshTokenServer } from "@services/auth/auth";
+import { getAccessTokenFromRefreshTokenCookie } from "@services/auth/auth";
+import CollectionThumbnail from "@components/Objects/Other/CollectionThumbnail";
+import NewCollectionButton from "@components/StyledElements/Buttons/NewCollectionButton";
 
 type MetadataProps = {
     params: { orgslug: string, courseid: string };
@@ -19,10 +19,9 @@ type MetadataProps = {
 export async function generateMetadata(
     { params }: MetadataProps,
 ): Promise<Metadata> {
-    const cookieStore = cookies();
     // Get Org context information 
     const org = await getOrganizationContextInfo(params.orgslug, { revalidate: 1800, tags: ['organizations'] });
-    
+
     // SEO 
     return {
         title: `Collections — ${org.name}`,
@@ -45,11 +44,6 @@ export async function generateMetadata(
     };
 }
 
-const removeCollectionPrefix = (collectionid: string) => {
-    return collectionid.replace("collection_", "")
-}
-
-
 const CollectionsPage = async (params: any) => {
     const cookieStore = cookies();
     const access_token = await getAccessTokenFromRefreshTokenCookie(cookieStore)
@@ -64,28 +58,37 @@ const CollectionsPage = async (params: any) => {
                 <TypeOfContentTitle title="Collections" type="col" />
                 <AuthenticatedClientElement checkMethod='roles' orgId={org_id}>
                     <Link className="flex justify-center" href={getUriWithOrg(orgslug, "/collections/new")}>
-                        <button className="rounded-md bg-black antialiased ring-offset-purple-800 p-2 px-5 my-auto font text-sm font-bold text-white drop-shadow-lg">Add Collection + </button>
+                        <NewCollectionButton />
                     </Link>
                 </AuthenticatedClientElement>
             </div>
             <div className="home_collections flex flex-wrap">
                 {collections.map((collection: any) => (
-                    <div className="flex flex-col py-3 px-3" key={collection.collection_id}>
-                        <CollectionAdminEditsArea orgslug={orgslug} org_id={org_id} collection_id={collection.collection_id} collection={collection} />
-                        <Link href={getUriWithOrg(orgslug, "/collection/" + removeCollectionPrefix(collection.collection_id))}>
-                            <div className="inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl relative w-[249px] h-[180px] bg-cover flex flex-col items-center justify-center bg-indigo-600 font-bold text-zinc-50" >
-                                <h1 className="font-bold text-lg py-2 justify-center mb-2">{collection.name}</h1>
-                                <div className="flex -space-x-4">
-                                    {collection.courses.slice(0, 3).map((course: any) => (
-                                        <Link key={course.course_id} href={getUriWithOrg(orgslug, "/course/" + course.course_id.substring(7))}>
-                                            <img className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg ring-2 ring-white z-50" key={course.course_id} src={`${getCourseThumbnailMediaDirectory(course.org_id, course.course_id, course.thumbnail)}`} alt={course.name} />
-                                        </Link>
-                                    ))}
-                                </div>
-                            </div>
-                        </Link>
+                    <div className="flex flex-col py-1 px-3" key={collection.collection_id}>
+                        <CollectionThumbnail collection={collection} orgslug={orgslug} org_id={org_id} />
                     </div>
                 ))}
+                {collections.length == 0 &&
+                    <div className="flex mx-auto h-[400px]">
+                        <div className="flex flex-col justify-center text-center items-center space-y-5">
+                            <div className='mx-auto'>
+                                <svg width="120" height="120" viewBox="0 0 295 295" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <rect opacity="0.51" x="10" y="10" width="275" height="275" rx="75" stroke="#4B5564" stroke-opacity="0.15" stroke-width="20" />
+                                    <path d="M135.8 200.8V130L122.2 114.6L135.8 110.4V102.8L122.2 87.4L159.8 76V200.8L174.6 218H121L135.8 200.8Z" fill="#4B5564" fill-opacity="0.08" />
+                                </svg>
+                            </div>
+                            <div className="space-y-0">
+                                <h1 className="text-3xl font-bold text-gray-600">No collections yet</h1>
+                                <p className="text-lg text-gray-400">Create a collection to group courses together</p>
+                            </div>
+                            <AuthenticatedClientElement checkMethod='roles' orgId={org_id}>
+                                <Link href={getUriWithOrg(orgslug, "/collections/new")}>
+                                    <NewCollectionButton />
+                                </Link>
+                            </AuthenticatedClientElement>
+                        </div>
+                    </div>
+                }
             </div>
         </GeneralWrapperStyled>
     );
