@@ -65,8 +65,8 @@ function Courses(props: CourseProps) {
                             <div className="flex flex-col justify-center text-center items-center space-y-5">
                                 <div className='mx-auto'>
                                     <svg width="120" height="120" viewBox="0 0 295 295" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <rect opacity="0.51" x="10" y="10" width="275" height="275" rx="75" stroke="#4B5564" stroke-opacity="0.15" stroke-width="20" />
-                                        <path d="M135.8 200.8V130L122.2 114.6L135.8 110.4V102.8L122.2 87.4L159.8 76V200.8L174.6 218H121L135.8 200.8Z" fill="#4B5564" fill-opacity="0.08" />
+                                        <rect opacity="0.51" x="10" y="10" width="275" height="275" rx="75" stroke="#4B5564" strokeOpacity="0.15" strokeWidth="20" />
+                                        <path d="M135.8 200.8V130L122.2 114.6L135.8 110.4V102.8L122.2 87.4L159.8 76V200.8L174.6 218H121L135.8 200.8Z" fill="#4B5564" fillOpacity="0.08" />
                                     </svg>
                                 </div>
                                 <div className="space-y-0">
