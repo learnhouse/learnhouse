@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import { FontBoldIcon, FontItalicIcon, StrikethroughIcon, ArrowLeftIcon, ArrowRightIcon, OpacityIcon, DividerVerticalIcon, ListBulletIcon } from "@radix-ui/react-icons";
-import { AlertCircle, AlertTriangle, FileText, GraduationCap, HelpCircle, ImagePlus, Info, Sigma, Video, Youtube } from "lucide-react";
+import { AlertCircle, AlertTriangle, BadgeHelp, Code, FileText, GraduationCap, HelpCircle, ImagePlus, Info, ListChecks, Sigma, Video, Youtube } from "lucide-react";
 import ToolTip from "@components/StyledElements/Tooltip/Tooltip";
 
 export const ToolbarButtons = ({ editor, props }: any) => {
@@ -148,7 +148,15 @@ export const ToolbarButtons = ({ editor, props }: any) => {
               .run()
           }
         >
-          <HelpCircle size={15} />
+          <BadgeHelp size={15} />
+        </ToolBtn>
+      </ToolTip>
+      <ToolTip content={"Code Block"}>
+        <ToolBtn
+          onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+          className={editor.isActive('codeBlock') ? 'is-active' : ''}
+        >
+          <Code size={15} />
         </ToolBtn>
       </ToolTip>
     </ToolButtonsWrapper>
