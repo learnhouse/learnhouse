@@ -26,6 +26,18 @@ import { getCourseThumbnailMediaDirectory } from "@services/media/media";
 import { OrderedList } from "@tiptap/extension-ordered-list";
 
 
+// Lowlight
+import { common, createLowlight } from 'lowlight'
+const lowlight = createLowlight(common)
+import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
+import css from 'highlight.js/lib/languages/css'
+import js from 'highlight.js/lib/languages/javascript'
+import ts from 'highlight.js/lib/languages/typescript'
+import html from 'highlight.js/lib/languages/xml'
+import python from 'highlight.js/lib/languages/python'
+import java from 'highlight.js/lib/languages/java'
+
+
 interface Editor {
   content: string;
   ydoc: any;
@@ -43,6 +55,14 @@ function Editor(props: Editor) {
 
   // remove activity_ from activity_id
   const activity_id = props.activity.activity_id.substring(9);
+
+  // Code Block Languages for Lowlight
+  lowlight.register('html', html)
+  lowlight.register('css', css)
+  lowlight.register('js', js)
+  lowlight.register('ts', ts)
+  lowlight.register('python', python)
+  lowlight.register('java', java)
 
   const editor: any = useEditor({
     editable: true,
@@ -83,6 +103,10 @@ function Editor(props: Editor) {
         modestBranding: true,
       }),
       OrderedList.configure(),
+      CodeBlockLowlight.configure({
+        lowlight,
+      }),
+
 
       // Register the document with Tiptap
       // Collaboration.configure({
@@ -139,7 +163,7 @@ function Editor(props: Editor) {
               {!auth.isAuthenticated && <span>Loading</span>}
               {auth.isAuthenticated && <Avvvatars value={auth.userInfo.user_object.user_id} style="shape" />}
             </EditorUserProfileWrapper>
-            <DividerVerticalIcon style={{ marginTop: "auto", marginBottom: "auto", color: "grey", opacity:'0.5' }} />
+            <DividerVerticalIcon style={{ marginTop: "auto", marginBottom: "auto", color: "grey", opacity: '0.5' }} />
             <EditorLeftOptionsSection className="space-x-2 pl-2 pr-3">
               <div className="bg-sky-600 hover:bg-sky-700 transition-all ease-linear px-3 py-2 font-black text-sm shadow text-teal-100 rounded-lg hover:cursor-pointer" onClick={() => props.setContent(editor.getJSON())}> Save </div>
               <ToolTip content="Preview">
@@ -328,6 +352,75 @@ export const EditorContentWrapper = styled.div`
       outline-style: none !important;
       box-shadow: none !important;
     }
+
+    // Code Block
+    pre {
+    background: #0d0d0d;
+    border-radius: 0.5rem;
+    color: #fff;
+    font-family: "JetBrainsMono", monospace;
+    padding: 0.75rem 1rem;
+
+    code {
+      background: none;
+      color: inherit;
+      font-size: 0.8rem;
+      padding: 0;
+    }
+
+    .hljs-comment,
+    .hljs-quote {
+      color: #616161;
+    }
+
+    .hljs-variable,
+    .hljs-template-variable,
+    .hljs-attribute,
+    .hljs-tag,
+    .hljs-name,
+    .hljs-regexp,
+    .hljs-link,
+    .hljs-name,
+    .hljs-selector-id,
+    .hljs-selector-class {
+      color: #f98181;
+    }
+
+    .hljs-number,
+    .hljs-meta,
+    .hljs-built_in,
+    .hljs-builtin-name,
+    .hljs-literal,
+    .hljs-type,
+    .hljs-params {
+      color: #fbbc88;
+    }
+
+    .hljs-string,
+    .hljs-symbol,
+    .hljs-bullet {
+      color: #b9f18d;
+    }
+
+    .hljs-title,
+    .hljs-section {
+      color: #faf594;
+    }
+
+    .hljs-keyword,
+    .hljs-selector-tag {
+      color: #70cff8;
+    }
+
+    .hljs-emphasis {
+      font-style: italic;
+    }
+
+    .hljs-strong {
+      font-weight: 700;
+    }
+  }
+
   }
 
   iframe {
