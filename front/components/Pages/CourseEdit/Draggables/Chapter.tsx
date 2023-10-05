@@ -2,10 +2,39 @@ import React from "react";
 import styled from "styled-components";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import Activity from "./Activity";
-import { Folders, Hexagon, MoreVertical, PlusSquare, Sparkle, Sparkles, Trash, Trash2, X } from "lucide-react";
+import { Folders, Hexagon, MoreVertical, Pencil, PlusSquare, Save, Sparkle, Sparkles, Trash, Trash2, X } from "lucide-react";
 import ConfirmationModal from "@components/StyledElements/ConfirmationModal/ConfirmationModal";
+import { useRouter } from "next/navigation";
+import { updateChapter } from "@services/courses/chapters";
+import { mutate } from "swr";
+import { getAPIUrl } from "@services/config/config";
+import { revalidateTags } from "@services/utils/ts/requests";
+
+interface ModifiedChapterInterface {
+  chapterId: string;
+  chapterName: string;
+}
 
 function Chapter(props: any) {
+  const router = useRouter();
+  const [modifiedChapter, setModifiedChapter] = React.useState<ModifiedChapterInterface | undefined>(undefined);
+  const [selectedChapter, setSelectedChapter] = React.useState<string | undefined>(undefined);
+
+  async function updateChapterName(chapterId: string) {
+    if (modifiedChapter?.chapterId === chapterId) {
+      setSelectedChapter(undefined);
+      let modifiedChapterCopy = {
+        name: modifiedChapter.chapterName,
+        description: '',
+        activities: props.info.list.chapter.activityIds,
+      }
+      await updateChapter(chapterId, modifiedChapterCopy)
+      await mutate(`${getAPIUrl()}chapters/meta/course_${props.courseid}`)
+      await revalidateTags(['courses'], props.orgslug)
+      router.refresh();
+    }
+  }
+
   return (
     <Draggable key={props.info.list.chapter.id} draggableId={props.info.list.chapter.id} index={props.index}>
       {(provided, snapshot) => (
@@ -23,7 +52,17 @@ function Chapter(props: any) {
                 <Hexagon strokeWidth={3} size={16} className="text-neutral-600 " />
               </div>
 
-              <p className="text-neutral-700 first-letter:uppercase">{props.info.list.chapter.name}</p>
+              <div className="flex space-x-2 items-center">
+
+                {selectedChapter === props.info.list.chapter.id ?
+                  (<div className="chapter-modification-zone bg-neutral-100 py-1 px-4 rounded-lg space-x-3">
+                    <input type="text" className="bg-transparent outline-none text-sm text-neutral-700" placeholder="Chapter name" value={modifiedChapter?.chapterName} onChange={(e) => setModifiedChapter({ chapterId: props.info.list.chapter.id, chapterName: e.target.value })} />
+                    <button onClick={() => updateChapterName(props.info.list.chapter.id)} className="bg-transparent text-neutral-700 hover:cursor-pointer hover:text-neutral-900">
+                      <Save size={15} onClick={() => updateChapterName(props.info.list.chapter.id)} />
+                    </button>
+                  </div>) : (<p className="text-neutral-700 first-letter:uppercase">{props.info.list.chapter.name}</p>)}
+                <Pencil size={15} className="text-neutral-600 hover:cursor-pointer" onClick={() => setSelectedChapter(props.info.list.chapter.id)} />
+              </div>
             </div>
             <MoreVertical size={15} className="text-gray-300" />
             <ConfirmationModal
