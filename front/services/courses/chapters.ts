@@ -21,6 +21,12 @@ export async function updateChaptersMetadata(course_id: any, data: any) {
   return res;
 }
 
+export async function updateChapter(coursechapter_id: any, data: any) {
+  const result: any = await fetch(`${getAPIUrl()}chapters/${coursechapter_id}`, RequestBody("PUT", data, null));
+  const res = await errorHandling(result);
+  return res;
+}
+
 export async function createChapter(data: any, course_id: any) {
   const result: any = await fetch(`${getAPIUrl()}chapters/?course_id=course_${course_id}`, RequestBody("POST", data, null));
   const res = await errorHandling(result);
