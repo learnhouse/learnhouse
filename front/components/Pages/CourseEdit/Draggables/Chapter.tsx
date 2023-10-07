@@ -56,7 +56,7 @@ function Chapter(props: any) {
 
                 {selectedChapter === props.info.list.chapter.id ?
                   (<div className="chapter-modification-zone bg-neutral-100 py-1 px-4 rounded-lg space-x-3">
-                    <input type="text" className="bg-transparent outline-none text-sm text-neutral-700" placeholder="Chapter name" value={modifiedChapter?.chapterName} onChange={(e) => setModifiedChapter({ chapterId: props.info.list.chapter.id, chapterName: e.target.value })} />
+                    <input type="text" className="bg-transparent outline-none text-sm text-neutral-700" placeholder="Chapter name" value={modifiedChapter ? modifiedChapter?.chapterName : props.info.list.chapter.name} onChange={(e) => setModifiedChapter({ chapterId: props.info.list.chapter.id, chapterName: e.target.value })} />
                     <button onClick={() => updateChapterName(props.info.list.chapter.id)} className="bg-transparent text-neutral-700 hover:cursor-pointer hover:text-neutral-900">
                       <Save size={15} onClick={() => updateChapterName(props.info.list.chapter.id)} />
                     </button>
