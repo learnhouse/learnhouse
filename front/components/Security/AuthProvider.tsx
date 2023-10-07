@@ -27,7 +27,7 @@ const AuthProvider = ({ children }: any) => {
 
 
   async function checkRefreshToken() {
-    deleteCookie("access_token_cookie");
+    //deleteCookie("access_token_cookie");
     let data = await getNewAccessTokenUsingRefreshToken();
     if (data) {
       return data.access_token;
