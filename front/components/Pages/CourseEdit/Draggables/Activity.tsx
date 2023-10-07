@@ -1,16 +1,23 @@
+import React from "react";
 import Link from "next/link";
 import { Draggable } from "react-beautiful-dnd";
-import { EyeOpenIcon, Pencil2Icon, TrashIcon } from '@radix-ui/react-icons'
 import { getAPIUrl, getUriWithOrg } from "@services/config/config";
-import { FileText, Video, Sparkles, XSquare, X, Pencil, MoreVertical, Eye } from "lucide-react";
+import { FileText, Video, Sparkles, X, Pencil, MoreVertical, Eye, Save, File } from "lucide-react";
 import { mutate } from "swr";
 import { revalidateTags } from "@services/utils/ts/requests";
 import { useRouter } from "next/navigation";
 import ConfirmationModal from "@components/StyledElements/ConfirmationModal/ConfirmationModal";
-import { deleteActivity } from "@services/courses/activities";
+import { deleteActivity, updateActivity } from "@services/courses/activities";
+
+interface ModifiedActivityInterface {
+  activityId: string;
+  activityName: string;
+}
 
 function Activity(props: any) {
   const router = useRouter();
+  const [modifiedActivity, setModifiedActivity] = React.useState<ModifiedActivityInterface | undefined>(undefined);
+  const [selectedActivity, setSelectedActivity] = React.useState<string | undefined>(undefined);
 
   async function removeActivity() {
     await deleteActivity(props.activity.id);
@@ -19,6 +26,22 @@ function Activity(props: any) {
     router.refresh();
   }
 
+  async function updateActivityName(activityId: string) {
+    if ((modifiedActivity?.activityId === activityId) && selectedActivity !== undefined) {
+      setSelectedActivity(undefined);
+      let modifiedActivityCopy = {
+        name: modifiedActivity.activityName,
+        description: '',
+        type: props.activity.type,
+        content: props.activity.content,
+      }
+
+      await updateActivity(modifiedActivityCopy, activityId)
+      await mutate(`${getAPIUrl()}chapters/meta/course_${props.courseid}`)
+      await revalidateTags(['courses'], props.orgslug)
+      router.refresh();
+    }
+  }
 
   return (
     <Draggable key={props.activity.id} draggableId={props.activity.id} index={props.index}>
@@ -26,17 +49,27 @@ function Activity(props: any) {
         <div
           className="flex flex-row py-2 my-2 rounded-md bg-gray-50 text-gray-500 hover:bg-gray-100 hover:scale-102 hover:shadow space-x-1 w-auto items-center ring-1 ring-inset ring-gray-400/10 shadow-sm transition-all delay-100 duration-75 ease-linear" key={props.activity.id} {...provided.draggableProps} {...provided.dragHandleProps} ref={provided.innerRef}>
           <div className="px-3 text-gray-300 space-x-1 w-28" >
-            {props.activity.type === "video" && <><div className="flex space-x-2 items-center"><Video size={16} /> <div className="text-xs bg-gray-200 text-gray-400 font-bold px-2 py-1 rounded-full">Video</div> </div></>}
-            {props.activity.type === "documentpdf" && <><div className="flex space-x-2 items-center"><FileText size={16} /> <div className="text-xs bg-gray-200 text-gray-400 font-bold px-2 py-1 rounded-full">Document</div> </div></>}
+            {props.activity.type === "video" && <>
+              <div className="flex space-x-2 items-center"><Video size={16} /> <div className="text-xs bg-gray-200 text-gray-400 font-bold px-2 py-1 rounded-full mx-auto justify-center align-middle">Video</div> </div></>}
+            {props.activity.type === "documentpdf" && <><div className="flex space-x-2 items-center"><div className="w-[30px]"><File size={16} /> </div><div className="text-xs bg-gray-200 text-gray-400 font-bold px-2 py-1 rounded-full">Document</div> </div></>}
             {props.activity.type === "dynamic" && <><div className="flex space-x-2 items-center"><Sparkles size={16} /> <div className="text-xs bg-gray-200 text-gray-400 font-bold px-2 py-1 rounded-full">Dynamic</div> </div></>}
           </div>
 
-          <div className="grow items-center space-x-1 flex">
-            <p className="first-letter:uppercase"> {props.activity.name} </p>
+          <div className="grow items-center space-x-2 flex mx-auto justify-center">
+
+            {selectedActivity === props.activity.id ?
+              (<div className="chapter-modification-zone text-[7px] text-gray-600 shadow-inner bg-gray-200/60 py-1 px-4 rounded-lg space-x-3">
+                <input type="text" className="bg-transparent outline-none text-xs text-gray-500" placeholder="Activity name" value={modifiedActivity ? modifiedActivity?.activityName : props.activity.name} onChange={(e) => setModifiedActivity({ activityId: props.activity.id, activityName: e.target.value })} />
+                <button onClick={() => updateActivityName(props.activity.id)} className="bg-transparent text-neutral-700 hover:cursor-pointer hover:text-neutral-900">
+                  <Save size={11} onClick={() => updateActivityName(props.activity.id)} />
+                </button>
+              </div>) : (<p className="first-letter:uppercase"> {props.activity.name} </p>)}
+            <Pencil onClick={() => setSelectedActivity(props.activity.id)}
+              size={12} className="text-neutral-400 hover:cursor-pointer" />
           </div>
 
           <div className="flex flex-row space-x-2">
-          {props.activity.type === "dynamic" && <>
+            {props.activity.type === "dynamic" && <>
               <Link
                 href={getUriWithOrg(props.orgslug, "") + `/course/${props.courseid}/activity/${props.activity.id.replace("activity_", "")}/edit`}
                 className=" hover:cursor-pointer p-1 px-3 bg-sky-700 rounded-md items-center"
@@ -51,7 +84,7 @@ function Activity(props: any) {
               <Eye strokeWidth={2} size={15} className="text-gray-600" />
             </Link>
 
-            
+
 
           </div>
           <div className="flex flex-row pr-3 space-x-1 items-center">
