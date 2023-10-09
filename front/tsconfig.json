@@ -23,7 +23,7 @@
     "paths": {
       "@components/*": ["components/*"],
       "@public/*": ["public/*"],
-      "@images/*": ["public/img/*"],
+      "@images/*": ["public/*"],
       "@styles/*": ["styles/*"],
       "@services/*": ["services/*"],
       "@editor/*": ["components/Objects/Editor/*"]

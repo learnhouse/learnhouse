@@ -40,6 +40,11 @@ export default async function middleware(req: NextRequest) {
     }
   }
 
+  // OG Image
+  if (pathname.startsWith("/og")) {
+    return NextResponse.rewrite(new URL(pathname, req.url));
+  }
+
   // Dynamic Pages Editor
   if (pathname.match(/^\/course\/[^/]+\/activity\/[^/]+\/edit$/)) {
     return NextResponse.rewrite(new URL(`/editor${pathname}`, req.url));
