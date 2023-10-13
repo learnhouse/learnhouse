@@ -1,7 +1,4 @@
-
-import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
-import { denyAccessToUser } from "../react/middlewares/views";
-import { getUriWithOrg, LEARNHOUSE_DOMAIN, LEARNHOUSE_HTTP_PROTOCOL } from "@services/config/config";
+import { getUriWithOrg } from "@services/config/config";
 
 export const RequestBody = (method: string, data: any, next: any) => {
   let HeadersConfig = new Headers({ "Content-Type": "application/json" });
@@ -47,7 +44,7 @@ export const RequestBodyForm = (method: string, data: any, next: any) => {
   return options;
 };
 
-export const swrFetcher = async (url: string, body: any, router?: AppRouterInstance) => {
+export const swrFetcher = async (url: string) => {
   // Create the request options
   let HeadersConfig = new Headers({ "Content-Type": "application/json" });
   let options: any = {
@@ -57,11 +54,6 @@ export const swrFetcher = async (url: string, body: any, router?: AppRouterInsta
     credentials: "include",
   };
 
-  // If there is a body, add it to the request options
-  if (body) {
-    options.body = JSON.stringify(body);
-  }
-
   try {
     // Fetch the data
     const request = await fetch(url, options);
@@ -70,9 +62,6 @@ export const swrFetcher = async (url: string, body: any, router?: AppRouterInsta
     // Return the data
     return res;
   } catch (error: any) {
-    if (router) {
-      denyAccessToUser(error, router);
-    }
     throw error;
   }
 };
