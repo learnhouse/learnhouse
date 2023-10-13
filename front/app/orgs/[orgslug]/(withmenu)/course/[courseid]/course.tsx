@@ -9,7 +9,7 @@ import ActivityIndicators from "@components/Pages/Courses/ActivityIndicators";
 import { useRouter } from "next/navigation";
 import GeneralWrapperStyled from "@components/StyledElements/Wrappers/GeneralWrapper";
 import { getCourseThumbnailMediaDirectory } from "@services/media/media";
-import { ArrowRight, File, Sparkles, Star, Video } from "lucide-react";
+import { ArrowRight, Check, File, Sparkles, Star, Video } from "lucide-react";
 
 const CourseClient = (props: any) => {
   const courseid = props.courseid;
@@ -68,8 +68,8 @@ const CourseClient = (props: any) => {
                   return (
                     <div key={learning}
                       className="flex space-x-2 items-center font-semibold text-gray-500 capitalize">
-                      <div className="bg-gray-100 px-2 py-2 rounded-full">
-                        <Star className="text-gray-400" size={13} />
+                      <div className="px-2 py-2 rounded-full">
+                        <Check className="text-gray-400" size={15} />
                       </div>
                       <p>{learning}</p>
                     </div>
