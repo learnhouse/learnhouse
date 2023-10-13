@@ -1,6 +1,6 @@
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { styled } from "styled-components";
+import styled from "styled-components"
 import Youtube from "@tiptap/extension-youtube";
 // Custom Extensions
 import InfoCallout from "@components/Objects/Editor/Extensions/Callout/Info/InfoCallout";
