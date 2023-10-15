@@ -1,7 +1,7 @@
 version: "3.9"
 services:
   api:
-    build: .
+    build: apps/api/.
     ports:
       - "1338:80"
     volumes:

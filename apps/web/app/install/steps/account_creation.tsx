@@ -1,3 +1,4 @@
+"use client";
 import FormLayout, { ButtonBlack, FormField, FormLabel, FormLabelAndMessage, FormMessage, Input } from '@components/StyledElements/Form/Form'
 import * as Form from '@radix-ui/react-form';
 import { getAPIUrl } from '@services/config/config';
