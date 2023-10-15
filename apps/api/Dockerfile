@@ -2,7 +2,7 @@
 FROM python:3.11
 
 # 
-WORKDIR /usr/learnhouse
+WORKDIR /usr/learnhouse/apps/api
 
 # 
 COPY ./requirements.txt /usr/learnhouse/requirements.txt
