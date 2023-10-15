@@ -1,5 +1,11 @@
-name: Frontend Lint
-on: [push, pull_request]
+name: Web Lint
+on:
+  push:
+    paths:
+      - "apps/web/**"
+  pull_request:
+    paths:
+      - "apps/web/**"
 jobs:
   next-lint:
     runs-on: ubuntu-latest
@@ -11,6 +17,8 @@ jobs:
         with:
           node-version: 18.x
       - name: Install dependencies
-        run: cd front && npm ci
+        run: npm ci
+        working-directory: ./apps/web
       - name: Lint code
-        run: cd front && npm run lint
+        run: npm run lint
+        working-directory: ./apps/web
