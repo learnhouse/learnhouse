@@ -1,10 +1,6 @@
 import { default as React, } from "react";
-import { useRouter } from "next/navigation";
 import AuthProvider from "@components/Security/AuthProvider";
 import EditorWrapper from "@components/Objects/Editor/EditorWrapper";
-import { getAPIUrl } from "@services/config/config";
-import { swrFetcher } from "@services/utils/ts/requests";
-import { getOrganizationContextInfo } from "@services/organizations/orgs";
 import { getCourseMetadataWithAuthHeader } from "@services/courses/courses";
 import { cookies } from "next/headers";
 import { Metadata } from "next";
