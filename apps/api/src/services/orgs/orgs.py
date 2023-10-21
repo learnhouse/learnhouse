@@ -62,7 +62,12 @@ async def create_org(
     # generate org_id with uuid4
     org_id = str(f"org_{uuid4()}")
 
-    org = OrganizationInDB(org_id=org_id, **org_object.dict())
+    # force lowercase slug
+    org_object.slug = org_object.slug.lower()
+
+    org = OrganizationInDB(
+        org_id=org_id, **org_object.dict()
+    )
 
     org_in_db = await orgs.insert_one(org.dict())
 
