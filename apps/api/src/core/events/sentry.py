@@ -6,8 +6,8 @@ from config.config import LearnHouseConfig
 
 async def init_sentry(app: FastAPI) -> None:
     
-    leanrhouse_config : LearnHouseConfig = app.learnhouse_config # type: ignore 
-    if leanrhouse_config.hosting_config.sentry_config is not None:
+    learnhouse_config : LearnHouseConfig = app.learnhouse_config # type: ignore 
+    if learnhouse_config.hosting_config.sentry_config is not None:
         sentry_sdk.init(
         dsn=app.learnhouse_config.hosting_config.sentry_config.dsn, # type: ignore
         environment=app.learnhouse_config.hosting_config.sentry_config.environment, # type: ignore
