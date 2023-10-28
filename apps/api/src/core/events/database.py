@@ -1,19 +1,27 @@
 import logging
 from fastapi import FastAPI
 import motor.motor_asyncio
+from sqlmodel import Field, SQLModel, Session, create_engine
+from src.rewrite.services.db import users
 
+engine = create_engine('postgresql://learnhouse:learnhouse@db:5432/learnhouse', echo=True)
+SQLModel.metadata.create_all(engine)
 
 async def connect_to_db(app: FastAPI):
-    logging.info("Connecting to database...")
-    try:
-        app.mongodb_client = motor.motor_asyncio.AsyncIOMotorClient(  # type: ignore
-            app.learnhouse_config.database_config.mongodb_connection_string)  # type: ignore
-        app.db = app.mongodb_client["learnhouse"]  # type: ignore
-        logging.info("Connected to database!")
-    except Exception as e:
-        logging.error("Failed to connect to database!")
-        logging.error(e)
+    app.db_engine = engine  # type: ignore
+    logging.info("LearnHouse database has been started.")
 
+    
+    SQLModel.metadata.create_all(engine)
+
+    # mongodb 
+    app.mongodb_client = motor.motor_asyncio.AsyncIOMotorClient(  # type: ignore
+            app.learnhouse_config.database_config.mongodb_connection_string)  # type: ignore
+    app.db = app.mongodb_client["learnhouse"] # type: ignore
+
+def get_db_session():
+    with Session(engine) as session:
+        yield session
 
 async def close_database(app: FastAPI):
     app.mongodb_client.close()  # type: ignore
