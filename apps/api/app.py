@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request
 from config.config import LearnHouseConfig, get_learnhouse_config
 from src.core.events.events import shutdown_app, startup_app
-from src.router import v1_router
+from src.router import v1_router, rewrite
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -60,6 +60,7 @@ app.mount("/content", StaticFiles(directory="content"), name="content")
 
 # Global Routes
 app.include_router(v1_router)
+app.include_router(rewrite)
 
 # General Routes
 @app.get("/")
