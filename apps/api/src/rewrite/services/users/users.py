@@ -1,6 +1,6 @@
 from datetime import datetime
 from uuid import uuid4
-from fastapi import Depends, Request
+from fastapi import Request
 from sqlmodel import Session
 from src.rewrite.services.db.users import User, UserCreate
 from src.security.security import security_hash_password
