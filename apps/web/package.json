@@ -15,7 +15,7 @@
     "@radix-ui/react-form": "^0.0.2",
     "@radix-ui/react-icons": "^1.1.1",
     "@radix-ui/react-tooltip": "^1.0.5",
-    "@sentry/nextjs": "^7.47.0",
+    "@sentry/nextjs": "^7.77.0",
     "@stitches/react": "^1.2.8",
     "@tiptap/extension-code-block-lowlight": "^2.1.11",
     "@tiptap/extension-collaboration": "^2.0.0-beta.199",
