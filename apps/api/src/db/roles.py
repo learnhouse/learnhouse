@@ -7,7 +7,7 @@ from sqlmodel import Field, SQLModel
 class RoleTypeEnum(str, Enum):
     ORGANIZATION = "ORGANIZATION"
     ORGANIZATION_API_TOKEN = "ORGANIZATION_API_TOKEN"
-    DEFAULT = "DEFAULT"
+    GLOBAL = "GLOBAL"
 
 
 class RoleBase(SQLModel):
@@ -19,7 +19,7 @@ class RoleBase(SQLModel):
 class Role(RoleBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     org_id: int = Field(default=None, foreign_key="organization.id")
-    role_type: RoleTypeEnum = RoleTypeEnum.DEFAULT
+    role_type: RoleTypeEnum = RoleTypeEnum.GLOBAL
     role_uuid: str
     creation_date: str
     update_date: str
