@@ -3,7 +3,7 @@ from fastapi import FastAPI
 import motor.motor_asyncio
 from sqlmodel import Field, SQLModel, Session, create_engine
 
-from src.rewrite.services.db import (
+from src.db import (
     user_organizations,
     users,
     roles,

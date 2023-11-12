@@ -1,5 +1,8 @@
 from fastapi import Depends, APIRouter, HTTPException, Response, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
+from sqlmodel import Session
+from src.db.users import UserRead
+from src.core.events.database import get_db_session
 from config.config import get_learnhouse_config
 from src.security.auth import AuthJWT, authenticate_user
 from src.services.users.users import PublicUser
@@ -9,7 +12,7 @@ router = APIRouter()
 
 
 @router.post("/refresh")
-def refresh(response: Response,Authorize: AuthJWT = Depends()):
+def refresh(response: Response, Authorize: AuthJWT = Depends()):
     """
     The jwt_refresh_token_required() function insures a valid refresh
     token is present in the request before running any code below that function.
@@ -21,7 +24,12 @@ def refresh(response: Response,Authorize: AuthJWT = Depends()):
     current_user = Authorize.get_jwt_subject()
     new_access_token = Authorize.create_access_token(subject=current_user)  # type: ignore
 
-    response.set_cookie(key="access_token_cookie", value=new_access_token, httponly=False, domain=get_learnhouse_config().hosting_config.cookie_config.domain)
+    response.set_cookie(
+        key="access_token_cookie",
+        value=new_access_token,
+        httponly=False,
+        domain=get_learnhouse_config().hosting_config.cookie_config.domain,
+    )
     return {"access_token": new_access_token}
 
 
@@ -31,8 +39,11 @@ async def login(
     response: Response,
     Authorize: AuthJWT = Depends(),
     form_data: OAuth2PasswordRequestForm = Depends(),
+    db_session: Session = Depends(get_db_session),
 ):
-    user = await authenticate_user(request, form_data.username, form_data.password)
+    user = await authenticate_user(
+        request, form_data.username, form_data.password, db_session
+    )
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -44,8 +55,14 @@ async def login(
     refresh_token = Authorize.create_refresh_token(subject=form_data.username)
     Authorize.set_refresh_cookies(refresh_token)
     # set cookies using fastapi
-    response.set_cookie(key="access_token_cookie", value=access_token, httponly=False, domain=get_learnhouse_config().hosting_config.cookie_config.domain)
-    user = PublicUser(**user.dict())
+    response.set_cookie(
+        key="access_token_cookie",
+        value=access_token,
+        httponly=False,
+        domain=get_learnhouse_config().hosting_config.cookie_config.domain,
+    )
+    
+    user = UserRead.from_orm(user)
 
     result = {
         "user": user,

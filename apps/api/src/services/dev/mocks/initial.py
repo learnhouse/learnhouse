@@ -3,10 +3,11 @@ import requests
 from datetime import datetime
 from uuid import uuid4
 from fastapi import Request
+from src.services.users.schemas.users import UserInDB
 from src.security.security import security_hash_password
 from src.services.courses.chapters import CourseChapter, create_coursechapter
 from src.services.courses.activities.activities import Activity, create_activity
-from src.services.users.users import PublicUser, UserInDB
+from src.services.users.users import PublicUser
 
 from src.services.orgs.orgs import Organization, create_org
 from src.services.roles.schemas.roles import Permission, Elements, RoleInDB
