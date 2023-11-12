@@ -16,7 +16,18 @@ class UserCreate(UserBase):
 
 
 class UserUpdate(UserBase):
-    password: Optional[str] = None
+    username: str
+    first_name: Optional[str]
+    last_name: Optional[str]
+    email: str
+    avatar_image: Optional[str] = ""
+    bio: Optional[str] = ""
+
+
+class UserUpdatePassword(SQLModel):
+    user_id: int
+    old_password: str
+    new_password: str
 
 
 class UserRead(UserBase):

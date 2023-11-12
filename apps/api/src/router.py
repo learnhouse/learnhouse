@@ -1,7 +1,5 @@
 from fastapi import APIRouter, Depends
-from src import rewrite
 from src.routers import blocks, dev, trail, users, auth, orgs, roles
-from src.rewrite.routers import users as rw_users
 from src.routers.courses import chapters, collections, courses, activities
 from src.routers.install import install
 from src.services.dev.dev import isDevModeEnabledOrRaise
@@ -9,7 +7,6 @@ from src.services.install.install import isInstallModeEnabled
 
 
 v1_router = APIRouter(prefix="/api/v1")
-rewrite = APIRouter(prefix="/api/rewrite")
 
 
 # API Routes
@@ -39,5 +36,3 @@ v1_router.include_router(
     dependencies=[Depends(isInstallModeEnabled)],
 )
 
-# Rewrite Routes
-rewrite.include_router(rw_users.router, prefix="/users", tags=["users"])
