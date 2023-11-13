@@ -33,6 +33,8 @@ class UserUpdatePassword(SQLModel):
 class UserRead(UserBase):
     id: int
 
+class PublicUser(UserRead):
+    pass
 
 class User(UserBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
