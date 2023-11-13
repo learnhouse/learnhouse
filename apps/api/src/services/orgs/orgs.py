@@ -1,230 +1,230 @@
+from datetime import datetime
 import json
+from operator import or_
 from typing import Literal
 from uuid import uuid4
+from sqlmodel import Session, select
+from src.db.users import UserRead, PublicUser
+from src.db.user_organizations import UserOrganization
+from src.db.organizations import (
+    Organization,
+    OrganizationCreate,
+    OrganizationRead,
+    OrganizationUpdate,
+)
 from src.security.rbac.rbac import (
     authorization_verify_based_on_roles,
     authorization_verify_if_user_is_anon,
 )
 from src.services.orgs.logos import upload_org_logo
-from src.services.orgs.schemas.orgs import (
-    Organization,
-    OrganizationInDB,
-    PublicOrganization,
-)
-from src.services.users.schemas.users import UserOrganization
-from src.services.users.users import PublicUser
 from fastapi import HTTPException, UploadFile, status, Request
 
 
-async def get_organization(request: Request, org_id: str):
-    orgs = request.app.db["organizations"]
+async def get_organization(request: Request, org_id: str, db_session: Session):
+    statement = select(Organization).where(Organization.id == org_id)
+    result = db_session.exec(statement)
 
-    org = await orgs.find_one({"org_id": org_id})
+    org = result.first()
 
     if not org:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Organization does not exist"
+            status_code=404,
+            detail="Organization not found",
         )
 
-    org = PublicOrganization(**org)
     return org
 
 
-async def get_organization_by_slug(request: Request, org_slug: str):
-    orgs = request.app.db["organizations"]
+async def get_organization_by_slug(
+    request: Request, org_slug: str, db_session: Session
+):
+    statement = select(Organization).where(Organization.slug == org_slug)
+    result = db_session.exec(statement)
 
-    org = await orgs.find_one({"slug": org_slug})
+    org = result.first()
 
     if not org:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Organization does not exist"
+            status_code=404,
+            detail="Organization not found",
         )
 
-    org = PublicOrganization(**org)
     return org
 
 
 async def create_org(
-    request: Request, org_object: Organization, current_user: PublicUser
+    request: Request,
+    org_object: OrganizationCreate,
+    current_user: PublicUser,
+    db_session: Session,
 ):
-    orgs = request.app.db["organizations"]
-    user = request.app.db["users"]
+    statement = select(Organization).where(Organization.slug == org_object.slug)
+    result = db_session.exec(statement)
 
-    # find if org already exists using name
-    isOrgAvailable = await orgs.find_one({"slug": org_object.slug})
+    org = result.first()
 
-    if isOrgAvailable:
+    if org:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Organization already exists",
+        )
+
+    org = Organization.from_orm(org_object)
+
+    # Complete the org object
+    org.org_uuid = f"org_{uuid4()}"
+    org.creation_date = str(datetime.now())
+    org.update_date = str(datetime.now())
+
+    db_session.add(org)
+    db_session.commit()
+    db_session.refresh(org)
+
+    # Link user to org
+    user_org = UserOrganization(
+        user_id=int(current_user.id),
+        org_id=int(org.id is not None),
+        role_id=1,
+        creation_date=str(datetime.now()),
+        update_date=str(datetime.now()),
+    )
+
+    db_session.add(user_org)
+    db_session.commit()
+    db_session.refresh(user_org)
+
+    return OrganizationRead.from_orm(org)
+
+
+async def update_org(
+    request: Request,
+    org_object: OrganizationUpdate,
+    current_user: PublicUser,
+    db_session: Session,
+):
+    statement = select(Organization).where(Organization.id == org_object.org_id)
+    result = db_session.exec(statement)
+
+    org = result.first()
+
+    if not org:
+        raise HTTPException(
+            status_code=404,
+            detail="Organization slug not found",
+        )
+
+    org = Organization.from_orm(org_object)
+
+    # Verify if the new slug is already in use
+    statement = select(Organization).where(Organization.slug == org_object.slug)
+    result = db_session.exec(statement)
+
+    slug_available = result.first()
+
+    if slug_available:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Organization slug already exists",
         )
 
-    # generate org_id with uuid4
-    org_id = str(f"org_{uuid4()}")
+    # Remove the org_id from the org_object
+    del org_object.org_id
 
-    # force lowercase slug
-    org_object.slug = org_object.slug.lower()
+    # Update only the fields that were passed in
+    for var, value in vars(org_object).items():
+        if value is not None:
+            setattr(org, var, value)
 
-    org = OrganizationInDB(
-        org_id=org_id, **org_object.dict()
-    )
+    # Complete the org object
+    org.update_date = str(datetime.now())
 
-    org_in_db = await orgs.insert_one(org.dict())
+    db_session.add(org)
+    db_session.commit()
+    db_session.refresh(org)
 
-    user_organization: UserOrganization = UserOrganization(
-        org_id=org_id, org_role="owner"
-    )
-
-    # add org to user
-    await user.update_one(
-        {"user_id": current_user.user_id},
-        {"$addToSet": {"orgs": user_organization.dict()}},
-    )
-
-    # add role admin to org
-    await user.update_one(
-        {"user_id": current_user.user_id},
-        {"$addToSet": {"roles": {"org_id": org_id, "role_id": "role_admin"}}},
-    )
-
-    if not org_in_db:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Unavailable database",
-        )
-
-    return org.dict()
-
-
-async def update_org(
-    request: Request, org_object: Organization, org_id: str, current_user: PublicUser
-):
-    # verify org rights
-    await verify_org_rights(request, org_id, current_user, "update")
-
-    orgs = request.app.db["organizations"]
-
-    await orgs.find_one({"org_id": org_id})
-
-    updated_org = OrganizationInDB(org_id=org_id, **org_object.dict())
-
-    # update org
-    await orgs.update_one({"org_id": org_id}, {"$set": updated_org.dict()})
-
-    return updated_org.dict()
+    return org
 
 
 async def update_org_logo(
-    request: Request, logo_file: UploadFile, org_id: str, current_user: PublicUser
+    request: Request,
+    logo_file: UploadFile,
+    org_id: str,
+    current_user: PublicUser,
+    db_session: Session,
 ):
-    # verify org rights
-    await verify_org_rights(request, org_id, current_user, "update")
+    statement = select(Organization).where(Organization.id == org_id)
+    result = db_session.exec(statement)
 
-    orgs = request.app.db["organizations"]
+    org = result.first()
 
-    await orgs.find_one({"org_id": org_id})
+    if not org:
+        raise HTTPException(
+            status_code=404,
+            detail="Organization not found",
+        )
 
+    # Upload logo
     name_in_disk = await upload_org_logo(logo_file, org_id)
 
-    # update org
-    await orgs.update_one({"org_id": org_id}, {"$set": {"logo": name_in_disk}})
+    # Update org
+    org.logo_image = name_in_disk
+
+    # Complete the org object
+    org.update_date = str(datetime.now())
+
+    db_session.add(org)
+    db_session.commit()
+    db_session.refresh(org)
 
     return {"detail": "Logo updated"}
 
 
-async def delete_org(request: Request, org_id: str, current_user: PublicUser):
-    await verify_org_rights(request, org_id, current_user, "delete")
+async def delete_org(
+    request: Request, org_id: str, current_user: PublicUser, db_session: Session
+):
+    statement = select(Organization).where(Organization.id == org_id)
+    result = db_session.exec(statement)
 
-    orgs = request.app.db["organizations"]
-
-    org = await orgs.find_one({"org_id": org_id})
+    org = result.first()
 
     if not org:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Organization does not exist"
+            status_code=404,
+            detail="Organization not found",
         )
 
-    isDeleted = await orgs.delete_one({"org_id": org_id})
+    db_session.delete(org)
+    db_session.commit()
 
-    # remove org from all users
-    users = request.app.db["users"]
-    await users.update_many({}, {"$pull": {"orgs": {"org_id": org_id}}})
+    # Delete links to org
+    statement = select(UserOrganization).where(UserOrganization.org_id == org_id)
+    result = db_session.exec(statement)
 
-    if isDeleted:
-        return {"detail": "Org deleted"}
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Unavailable database",
-        )
+    user_orgs = result.all()
+
+    for user_org in user_orgs:
+        db_session.delete(user_org)
+        db_session.commit()
+
+    db_session.refresh(org)
+
+    return {"detail": "Organization deleted"}
 
 
 async def get_orgs_by_user(
-    request: Request, user_id: str, page: int = 1, limit: int = 10
-):
-    orgs = request.app.db["organizations"]
-    user = request.app.db["users"]
-
-    if user_id == "anonymous":
-        # raise error
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="User not logged in"
-        )
-
-    # get user orgs
-    user_orgs = await user.find_one({"user_id": user_id})
-
-    org_ids: list[UserOrganization] = []
-
-    for org in user_orgs["orgs"]:
-        if (
-            org["org_role"] == "owner"
-            or org["org_role"] == "editor"
-            or org["org_role"] == "member"
-        ):
-            org_ids.append(org["org_id"])
-
-    # find all orgs where org_id is in org_ids array
-
-    all_orgs = (
-        orgs.find({"org_id": {"$in": org_ids}})
-        .sort("name", 1)
-        .skip(10 * (page - 1))
-        .limit(100)
-    )
-
-    return [
-        json.loads(json.dumps(org, default=str))
-        for org in await all_orgs.to_list(length=100)
-    ]
-
-
-#### Security ####################################################
-
-
-async def verify_org_rights(
     request: Request,
-    org_id: str,
-    current_user: PublicUser,
-    action: Literal["create", "read", "update", "delete"],
+    db_session: Session,
+    user_id: str,
+    page: int = 1,
+    limit: int = 10,
 ):
-    orgs = request.app.db["organizations"]
-    users = request.app.db["users"]
-
-    user = await users.find_one({"user_id": current_user.user_id})
-
-    org = await orgs.find_one({"org_id": org_id})
-
-    if not org:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Organization does not exist"
-        )
-
-    await authorization_verify_if_user_is_anon(current_user.user_id)
-
-    await authorization_verify_based_on_roles(
-        request, current_user.user_id, action, user["roles"], org_id
+    statement = (
+        select(Organization)
+        .join(UserOrganization)
+        .where(Organization.id == UserOrganization.org_id)
     )
+    result = db_session.exec(statement)
 
+    orgs = result.all()
 
-#### Security ####################################################
+    return orgs

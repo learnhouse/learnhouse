@@ -12,10 +12,12 @@ class OrganizationBase(SQLModel):
 
 class Organization(OrganizationBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    org_uuid: str
-    creation_date: str
-    update_date: str
+    org_uuid: str = ""
+    creation_date: str = ""
+    update_date: str = ""
 
+class OrganizationUpdate(OrganizationBase):
+    org_id: int
 
 class OrganizationCreate(OrganizationBase):
     pass
