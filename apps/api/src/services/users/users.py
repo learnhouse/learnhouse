@@ -164,6 +164,8 @@ async def update_user(
     for key, value in user_data.items():
         setattr(user, key, value)
 
+    user.update_date = str(datetime.now())
+
     # Update user in database
     db_session.add(user)
     db_session.commit()
@@ -197,6 +199,8 @@ async def update_user_password(
 
     # Update user
     user.password = await security_hash_password(form.new_password)
+    user.update_date = str(datetime.now())
+
 
     # Update user in database
     db_session.add(user)
