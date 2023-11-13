@@ -11,7 +11,7 @@ class RoleTypeEnum(str, Enum):
 
 
 class RoleBase(SQLModel):
-    name: str
+    name: str 
     description: Optional[str] = ""
     rights: dict = Field(default={}, sa_column=Column(JSON))
 
@@ -19,12 +19,18 @@ class RoleBase(SQLModel):
 class Role(RoleBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     org_id: int = Field(default=None, foreign_key="organization.id")
-    role_type: RoleTypeEnum = RoleTypeEnum.GLOBAL
-    role_uuid: str
-    creation_date: str
-    update_date: str
+    role_type: RoleTypeEnum = RoleTypeEnum.ORGANIZATION
+    role_uuid: str = ""
+    creation_date: str = ""
+    update_date: str = ""
 
 
 class RoleCreate(RoleBase):
     org_id: int = Field(default=None, foreign_key="organization.id")
-    pass
+
+
+class RoleUpdate(SQLModel):
+    role_id: int = Field(default=None, foreign_key="role.id")
+    name: Optional[str] = ""
+    description: Optional[str] = ""
+    rights: Optional[dict] = Field(default={}, sa_column=Column(JSON))

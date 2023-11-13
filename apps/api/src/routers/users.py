@@ -52,7 +52,6 @@ async def api_create_user_without_org(
     request: Request,
     db_session: Session = Depends(get_db_session),
     user_object: UserCreate,
-    org_id: int,
 ) -> UserRead:
     """
     Create User
