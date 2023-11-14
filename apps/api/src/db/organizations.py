@@ -4,10 +4,10 @@ from sqlmodel import Field, SQLModel
 
 class OrganizationBase(SQLModel):
     name: str
-    description: Optional[str] = ""
+    description: Optional[str] 
     slug: str
     email: str
-    logo_image: Optional[str] = ""
+    logo_image: Optional[str] 
 
 
 class Organization(OrganizationBase, table=True):

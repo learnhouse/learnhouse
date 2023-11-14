@@ -1,4 +1,7 @@
 from fastapi import APIRouter, Depends, UploadFile, Form, Request
+from src.db.activities import ActivityCreate, ActivityUpdate
+from src.db.users import PublicUser
+from src.core.events.database import get_db_session
 from src.services.courses.activities.activities import (
     Activity,
     create_activity,
@@ -14,7 +17,6 @@ from src.services.courses.activities.video import (
     create_external_video_activity,
     create_video_activity,
 )
-from src.services.users.schemas.users import PublicUser
 
 router = APIRouter()
 
@@ -22,17 +24,14 @@ router = APIRouter()
 @router.post("/")
 async def api_create_activity(
     request: Request,
-    activity_object: Activity,
-    org_id: str,
-    coursechapter_id: str,
+    activity_object: ActivityCreate,
     current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
 ):
     """
     Create new activity
     """
-    return await create_activity(
-        request, activity_object, org_id, coursechapter_id, current_user
-    )
+    return await create_activity(request, activity_object, current_user, db_session)
 
 
 @router.get("/{activity_id}")
@@ -40,11 +39,14 @@ async def api_get_activity(
     request: Request,
     activity_id: str,
     current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
 ):
     """
     Get single activity by activity_id
     """
-    return await get_activity(request, activity_id, current_user=current_user)
+    return await get_activity(
+        request, activity_id, current_user=current_user, db_session=db_session
+    )
 
 
 @router.get("/coursechapter/{coursechapter_id}")
@@ -52,24 +54,25 @@ async def api_get_activities(
     request: Request,
     coursechapter_id: str,
     current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
 ):
     """
     Get CourseChapter activities
     """
-    return await get_activities(request, coursechapter_id, current_user)
+    return await get_activities(request, coursechapter_id, current_user, db_session)
 
 
-@router.put("/{activity_id}")
+@router.put("/")
 async def api_update_activity(
     request: Request,
-    activity_object: Activity,
-    activity_id: str,
+    activity_object: ActivityUpdate,
     current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
 ):
     """
     Update activity by activity_id
     """
-    return await update_activity(request, activity_object, activity_id, current_user)
+    return await update_activity(request, activity_object, current_user, db_session)
 
 
 @router.delete("/{activity_id}")
@@ -77,11 +80,12 @@ async def api_delete_activity(
     request: Request,
     activity_id: str,
     current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
 ):
     """
     Delete activity by activity_id
     """
-    return await delete_activity(request, activity_id, current_user)
+    return await delete_activity(request, activity_id, current_user, db_session)
 
 
 # Video activity
@@ -91,15 +95,21 @@ async def api_delete_activity(
 async def api_create_video_activity(
     request: Request,
     name: str = Form(),
-    coursechapter_id: str = Form(),
+    chapter_id: str = Form(),
     current_user: PublicUser = Depends(get_current_user),
     video_file: UploadFile | None = None,
+    db_session=Depends(get_db_session),
 ):
     """
     Create new activity
     """
     return await create_video_activity(
-        request, name, coursechapter_id, current_user, video_file
+        request,
+        name,
+        chapter_id,
+        current_user,
+        db_session,
+        video_file,
     )
 
 
@@ -108,24 +118,28 @@ async def api_create_external_video_activity(
     request: Request,
     external_video: ExternalVideo,
     current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
 ):
     """
     Create new activity
     """
-    return await create_external_video_activity(request, current_user, external_video)
+    return await create_external_video_activity(
+        request, current_user, external_video, db_session
+    )
 
 
 @router.post("/documentpdf")
 async def api_create_documentpdf_activity(
     request: Request,
     name: str = Form(),
-    coursechapter_id: str = Form(),
+    chapter_id: str = Form(),
     current_user: PublicUser = Depends(get_current_user),
     pdf_file: UploadFile | None = None,
+    db_session=Depends(get_db_session),
 ):
     """
     Create new activity
     """
     return await create_documentpdf_activity(
-        request, name, coursechapter_id, current_user, pdf_file
+        request, name, chapter_id, current_user, db_session, pdf_file
     )
