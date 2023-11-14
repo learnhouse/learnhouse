@@ -1,12 +1,16 @@
 from typing import Literal
 
 from pydantic import BaseModel
+from sqlmodel import Session, select
+from src.db.chapters import Chapter
+from src.db.activities import Activity, ActivityRead, ActivitySubTypeEnum, ActivityTypeEnum
+from src.db.chapter_activities import ChapterActivity
+from src.db.course_chapters import CourseChapter
+from src.db.users import PublicUser
 from src.security.rbac.rbac import (
     authorization_verify_based_on_roles,
 )
 from src.services.courses.activities.uploads.videos import upload_video
-from src.services.users.users import PublicUser
-from src.services.courses.activities.activities import ActivityInDB
 from fastapi import HTTPException, status, UploadFile, Request
 from uuid import uuid4
 from datetime import datetime
@@ -15,32 +19,32 @@ from datetime import datetime
 async def create_video_activity(
     request: Request,
     name: str,
-    coursechapter_id: str,
+    chapter_id: str,
     current_user: PublicUser,
+    db_session: Session,
     video_file: UploadFile | None = None,
 ):
-    activities = request.app.db["activities"]
-    courses = request.app.db["courses"]
-    users = request.app.db["users"]
+    # get chapter_id
+    statement = select(Chapter).where(Chapter.id == chapter_id)
+    chapter = db_session.exec(statement).first()
 
-    # get user
-    user = await users.find_one({"user_id": current_user.user_id})
+    if not chapter:
+        raise HTTPException(
+            status_code=404,
+            detail="Chapter not found",
+        )
 
-    # generate activity_id
-    activity_id = str(f"activity_{uuid4()}")
-
-    # get org_id from course
-    coursechapter = await courses.find_one(
-        {"chapters_content.coursechapter_id": coursechapter_id}
-    )
+    statement = select(CourseChapter).where(CourseChapter.chapter_id == chapter_id)
+    coursechapter = db_session.exec(statement).first()
 
     if not coursechapter:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="CourseChapter : No coursechapter found",
+            status_code=404,
+            detail="CourseChapter not found",
         )
 
-    org_id = coursechapter["org_id"]
+    # generate activity_uuid
+    activity_uuid = str(f"activity_{uuid4()}")
 
     # check if video_file is not None
     if not video_file:
@@ -64,55 +68,57 @@ async def create_video_activity(
             detail="Video : No video file provided",
         )
 
-    activity_object = ActivityInDB(
-        org_id=org_id,
-        activity_id=activity_id,
-        coursechapter_id=coursechapter_id,
-        course_id=coursechapter["course_id"],
+    activity_object = Activity(
         name=name,
-        type="video",
+        activity_type=ActivityTypeEnum.TYPE_VIDEO,
+        activity_sub_type=ActivitySubTypeEnum.SUBTYPE_VIDEO_HOSTED,
+        activity_uuid=activity_uuid,
+        published_version=1,
         content={
-            "video": {
-                "filename": "video." + video_format,
-                "activity_id": activity_id,
-            }
+            "filename": "video." + video_format,
+            "activity_uuid": activity_uuid,
         },
-        creationDate=str(datetime.now()),
-        updateDate=str(datetime.now()),
-    )
-
-    await authorization_verify_based_on_roles(
-        request,
-        current_user.user_id,
-        "create",
-        user["roles"],
-        activity_id,
+        version=1,
+        creation_date=str(datetime.now()),
+        update_date=str(datetime.now()),
     )
 
     # create activity
-    activity = ActivityInDB(**activity_object.dict())
-    await activities.insert_one(activity.dict())
+    activity = Activity.from_orm(activity_object)
+    db_session.add(activity)
+    db_session.commit()
+    db_session.refresh(activity)
 
     # upload video
     if video_file:
         # get videofile format
-        await upload_video(video_file, activity_id, org_id, coursechapter["course_id"])
+        await upload_video(
+            video_file, activity.id, coursechapter.org_id, coursechapter.course_id
+        )
 
-    # todo : choose whether to update the chapter or not
     # update chapter
-    await courses.update_one(
-        {"chapters_content.coursechapter_id": coursechapter_id},
-        {"$addToSet": {"chapters_content.$.activities": activity_id}},
+    chapter_activity_object = ChapterActivity(
+        chapter_id=coursechapter.id is not None,
+        activity_id=activity.id is not None,
+        course_id=coursechapter.course_id,
+        org_id=coursechapter.org_id,
+        creation_date=str(datetime.now()),
+        update_date=str(datetime.now()),
+        order=1,
     )
 
-    return activity
+    # Insert ChapterActivity link in DB
+    db_session.add(chapter_activity_object)
+    db_session.commit()
+    db_session.refresh(chapter_activity_object)
 
+    return ActivityRead.from_orm(activity)
 
 class ExternalVideo(BaseModel):
     name: str
     uri: str
     type: Literal["youtube", "vimeo"]
-    coursechapter_id: str
+    chapter_id: str
 
 
 class ExternalVideoInDB(BaseModel):
@@ -123,65 +129,63 @@ async def create_external_video_activity(
     request: Request,
     current_user: PublicUser,
     data: ExternalVideo,
+    db_session: Session,
 ):
-    activities = request.app.db["activities"]
-    courses = request.app.db["courses"]
-    users = request.app.db["users"]
+    # get chapter_id
+    statement = select(Chapter).where(Chapter.id == data.chapter_id)
+    chapter = db_session.exec(statement).first()
 
-    # get user
-    user = await users.find_one({"user_id": current_user.user_id})
+    if not chapter:
+        raise HTTPException(
+            status_code=404,
+            detail="Chapter not found",
+        )
 
-    # generate activity_id
-    activity_id = str(f"activity_{uuid4()}")
-
-    # get org_id from course
-    coursechapter = await courses.find_one(
-        {"chapters_content.coursechapter_id": data.coursechapter_id}
-    )
+    statement = select(CourseChapter).where(CourseChapter.chapter_id == data.chapter_id)
+    coursechapter = db_session.exec(statement).first()
 
     if not coursechapter:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="CourseChapter : No coursechapter found",
+            status_code=404,
+            detail="CourseChapter not found",
         )
 
-    org_id = coursechapter["org_id"]
+    # generate activity_uuid
+    activity_uuid = str(f"activity_{uuid4()}")
 
-    activity_object = ActivityInDB(
-        org_id=org_id,
-        activity_id=activity_id,
-        coursechapter_id=data.coursechapter_id,
+    activity_object = Activity(
         name=data.name,
-        type="video",
+        activity_type=ActivityTypeEnum.TYPE_VIDEO,
+        activity_sub_type=ActivitySubTypeEnum.SUBTYPE_VIDEO_YOUTUBE,
+        activity_uuid=activity_uuid,
+        published_version=1,
         content={
-            "external_video": {
-                "uri": data.uri,
-                "activity_id": activity_id,
-                "type": data.type,
-            }
+            "uri": data.uri,
+            "type": data.type,
+            "activity_uuid": activity_uuid,
         },
-        course_id=coursechapter["course_id"],
-        creationDate=str(datetime.now()),
-        updateDate=str(datetime.now()),
-    )
-
-    await authorization_verify_based_on_roles(
-        request,
-        current_user.user_id,
-        "create",
-        user["roles"],
-        activity_id,
+        version=1,
+        creation_date=str(datetime.now()),
+        update_date=str(datetime.now()),
     )
 
     # create activity
-    activity = ActivityInDB(**activity_object.dict())
-    await activities.insert_one(activity.dict())
+    activity = Activity.from_orm(activity_object)
+    db_session.add(activity)
+    db_session.commit()
+    db_session.refresh(activity)
 
-    # todo : choose whether to update the chapter or not
     # update chapter
-    await courses.update_one(
-        {"chapters_content.coursechapter_id": data.coursechapter_id},
-        {"$addToSet": {"chapters_content.$.activities": activity_id}},
+    chapter_activity_object = ChapterActivity(
+        chapter_id=coursechapter.id is not None,
+        activity_id=activity.id is not None,
+        creation_date=str(datetime.now()),
+        update_date=str(datetime.now()),
+        order=1,
     )
 
-    return activity
+    # Insert ChapterActivity link in DB
+    db_session.add(chapter_activity_object)
+    db_session.commit()
+
+    return ActivityRead.from_orm(activity)

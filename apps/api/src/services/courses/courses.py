@@ -12,7 +12,6 @@ from src.security.rbac.rbac import (
     authorization_verify_if_element_is_public,
     authorization_verify_if_user_is_anon,
 )
-from src.services.courses.activities.activities import ActivityInDB
 from src.services.courses.thumbnails import upload_thumbnail
 from fastapi import HTTPException, Request, status, UploadFile
 from datetime import datetime
