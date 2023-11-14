@@ -12,7 +12,7 @@ class RoleTypeEnum(str, Enum):
 
 class RoleBase(SQLModel):
     name: str 
-    description: Optional[str] = ""
+    description: Optional[str] 
     rights: dict = Field(default={}, sa_column=Column(JSON))
 
 
@@ -31,6 +31,6 @@ class RoleCreate(RoleBase):
 
 class RoleUpdate(SQLModel):
     role_id: int = Field(default=None, foreign_key="role.id")
-    name: Optional[str] = ""
-    description: Optional[str] = ""
+    name: Optional[str] 
+    description: Optional[str] 
     rights: Optional[dict] = Field(default={}, sa_column=Column(JSON))
