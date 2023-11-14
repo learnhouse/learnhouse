@@ -11,7 +11,6 @@ from src.services.users.users import PublicUser
 
 from src.services.orgs.orgs import Organization, create_org
 from src.services.roles.schemas.roles import Permission, Elements, RoleInDB
-from src.services.courses.courses import CourseInDB
 from faker import Faker
 
 
@@ -128,16 +127,16 @@ async def create_initial_data(request: Request):
         company = fake.company()
         # remove whitespace and special characters and make lowercase
         slug = ''.join(e for e in company if e.isalnum()).lower()
-        org = Organization(
-            name=company,
-            description=fake.unique.text(),
-            email=fake.unique.email(),
-            slug=slug,
-            logo="",
-            default=False
-        )
-        organizations.append(org)
-        await create_org(request, org, current_user)
+        # org = Organization(
+        #     name=company,
+        #     description=fake.unique.text(),
+        #     email=fake.unique.email(),
+        #     slug=slug,
+        #     logo="",
+        #     default=False
+        # )
+        # organizations.append(org)
+        # await create_org(request, org, current_user)
 
 
     # Generate Courses and CourseChapters
@@ -160,22 +159,22 @@ async def create_initial_data(request: Request):
                     f.write(image.content)
 
                 course_id = f"course_{uuid4()}"
-                course = CourseInDB(
-                    name=fake_multilang.unique.sentence(),
-                    description=fake_multilang.unique.text(),
-                    mini_description=fake_multilang.unique.text(),
-                    thumbnail="thumbnail",
-                    org_id=org['org_id'],
-                    learnings=[fake_multilang.unique.sentence()
-                               for i in range(0, 5)],
-                    public=True,
-                    chapters=[],
-                    course_id=course_id,
-                    creationDate=str(datetime.now()),
-                    updateDate=str(datetime.now()),
-                    authors=[current_user.user_id],
-                    chapters_content=[],
-                )
+                # course = CourseInDB(
+                #     name=fake_multilang.unique.sentence(),
+                #     description=fake_multilang.unique.text(),
+                #     mini_description=fake_multilang.unique.text(),
+                #     thumbnail="thumbnail",
+                #     org_id=org['org_id'],
+                #     learnings=[fake_multilang.unique.sentence()
+                #                for i in range(0, 5)],
+                #     public=True,
+                #     chapters=[],
+                #     course_id=course_id,
+                #     creationDate=str(datetime.now()),
+                #     updateDate=str(datetime.now()),
+                #     authors=[current_user.user_id],
+                #     chapters_content=[],
+                # )
 
                 courses = request.app.db["courses"]
                 name_in_disk = f"test_mock{course_id}.jpeg"
@@ -191,10 +190,10 @@ async def create_initial_data(request: Request):
                 with open(f"content/uploads/img/{name_in_disk}", "wb") as f:
                     f.write(image.content)
 
-                course.thumbnail = name_in_disk
+                # course.thumbnail = name_in_disk
 
-                course = CourseInDB(**course.dict())
-                await courses.insert_one(course.dict())
+                # course = CourseInDB(**course.dict())
+                # await courses.insert_one(course.dict())
 
                 # create chapters
                 for i in range(0, 5):
