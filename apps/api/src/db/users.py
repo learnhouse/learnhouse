@@ -36,6 +36,10 @@ class UserRead(UserBase):
 class PublicUser(UserRead):
     pass
 
+class AnonymousUser(UserRead):
+    id: str = "anonymous"
+    username: str = "anonymous"
+
 class User(UserBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     password: str = ""

@@ -7,7 +7,6 @@ from config.config import get_learnhouse_config
 from src.security.security import security_hash_password
 from src.services.courses.activities.activities import Activity, create_activity
 from src.services.courses.chapters import create_coursechapter, CourseChapter
-from src.services.courses.courses import CourseInDB
 
 from src.services.orgs.schemas.orgs import Organization, OrganizationInDB
 from faker import Faker
@@ -370,50 +369,50 @@ async def create_sample_data(org_slug: str, username: str, request: Request):
         with open("thumbnail.jpg", "wb") as f:
             f.write(image.content)
 
-        course_id = f"course_{uuid4()}"
-        course = CourseInDB(
-            name=fake_multilang.unique.sentence(),
-            description=fake_multilang.unique.text(),
-            mini_description=fake_multilang.unique.text(),
-            thumbnail="thumbnail",
-            org_id=org_id,
-            learnings=[fake_multilang.unique.sentence() for i in range(0, 5)],
-            public=True,
-            chapters=[],
-            course_id=course_id,
-            creationDate=str(datetime.now()),
-            updateDate=str(datetime.now()),
-            authors=[user_id],
-            chapters_content=[],
-        )
+        # course_id = f"course_{uuid4()}"
+        # course = CourseInDB(
+        #     name=fake_multilang.unique.sentence(),
+        #     description=fake_multilang.unique.text(),
+        #     mini_description=fake_multilang.unique.text(),
+        #     thumbnail="thumbnail",
+        #     org_id=org_id,
+        #     learnings=[fake_multilang.unique.sentence() for i in range(0, 5)],
+        #     public=True,
+        #     chapters=[],
+        #     course_id=course_id,
+        #     creationDate=str(datetime.now()),
+        #     updateDate=str(datetime.now()),
+        #     authors=[user_id],
+        #     chapters_content=[],
+        # )
 
-        courses = request.app.db["courses"]
+        # courses = request.app.db["courses"]
 
-        course = CourseInDB(**course.dict())
-        await courses.insert_one(course.dict())
+        # course = CourseInDB(**course.dict())
+        # await courses.insert_one(course.dict())
 
-        # create chapters
-        for i in range(0, 5):
-            coursechapter = CourseChapter(
-                name=fake_multilang.unique.sentence(),
-                description=fake_multilang.unique.text(),
-                activities=[],
-            )
-            coursechapter = await create_coursechapter(
-                request, coursechapter, course_id, current_user
-            )
-            if coursechapter:
-                # create activities
-                for i in range(0, 5):
-                    activity = Activity(
-                        name=fake_multilang.unique.sentence(),
-                        type="dynamic",
-                        content={},
-                    )
-                    activity = await create_activity(
-                        request,
-                        activity,
-                        org_id,
-                        coursechapter["coursechapter_id"],
-                        current_user,
-                    )
+        # # create chapters
+        # for i in range(0, 5):
+        #     coursechapter = CourseChapter(
+        #         name=fake_multilang.unique.sentence(),
+        #         description=fake_multilang.unique.text(),
+        #         activities=[],
+        #     )
+        #     coursechapter = await create_coursechapter(
+        #         request, coursechapter, course_id, current_user
+        #     )
+        #     if coursechapter:
+        #         # create activities
+        #         for i in range(0, 5):
+        #             activity = Activity(
+        #                 name=fake_multilang.unique.sentence(),
+        #                 type="dynamic",
+        #                 content={},
+        #             )
+        #             activity = await create_activity(
+        #                 request,
+        #                 activity,
+        #                 org_id,
+        #                 coursechapter["coursechapter_id"],
+        #                 current_user,
+        #             )
