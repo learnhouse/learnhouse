@@ -10,10 +10,22 @@ from src.security.rbac.rbac import (
     authorization_verify_if_user_is_anon,
 )
 from src.services.courses.courses import Course
-from src.services.courses.activities.activities import ActivityInDB
 from src.services.users.users import PublicUser
 from fastapi import HTTPException, status, Request
 
+
+class Activity(BaseModel):
+    name: str
+    type: str
+    content: object
+
+class ActivityInDB(Activity):
+    activity_id: str
+    course_id: str
+    coursechapter_id: str
+    org_id: str
+    creationDate: str
+    updateDate: str
 
 class CourseChapter(BaseModel):
     name: str
