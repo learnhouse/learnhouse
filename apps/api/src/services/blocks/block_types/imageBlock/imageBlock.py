@@ -6,12 +6,11 @@ from src.db.activities import Activity
 from src.db.blocks import Block, BlockTypeEnum
 from src.db.courses import Course
 from src.services.blocks.utils.upload_files import upload_file_and_return_file_object
-
 from src.services.users.users import PublicUser
 
 
-async def create_video_block(
-    request: Request, video_file: UploadFile, activity_id: str, db_session: Session
+async def create_image_block(
+    request: Request, image_file: UploadFile, activity_id: str, db_session: Session
 ):
     statement = select(Activity).where(Activity.id == activity_id)
     activity = db_session.exec(statement).first()
@@ -21,7 +20,7 @@ async def create_video_block(
             status_code=status.HTTP_404_NOT_FOUND, detail="Activity not found"
         )
 
-    block_type = "videoBlock"
+    block_type = "imageBlock"
 
     # get org_id from activity
     org_id = activity.org_id
@@ -40,10 +39,10 @@ async def create_video_block(
 
     block_data = await upload_file_and_return_file_object(
         request,
-        video_file,
+        image_file,
         activity_id,
         block_uuid,
-        ["mp4", "webm", "ogg"],
+        ["jpg", "jpeg", "png", "gif"],
         block_type,
         str(org_id),
         str(course.id),
@@ -52,7 +51,7 @@ async def create_video_block(
     # create block
     block = Block(
         activity_id=activity.id is not None,
-        block_type=BlockTypeEnum.BLOCK_VIDEO,
+        block_type=BlockTypeEnum.BLOCK_IMAGE,
         content=block_data.dict(),
         org_id=org_id,
         course_id=course.id is not None,
@@ -69,15 +68,15 @@ async def create_video_block(
     return block
 
 
-async def get_video_block(
+async def get_image_block(
     request: Request, block_uuid: str, current_user: PublicUser, db_session: Session
 ):
     statement = select(Block).where(Block.block_uuid == block_uuid)
     block = db_session.exec(statement).first()
 
-    if not block:
+    if block:
+        return block
+    else:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Video file does not exist"
+            status_code=status.HTTP_409_CONFLICT, detail="Image block does not exist"
         )
-    
-    return block

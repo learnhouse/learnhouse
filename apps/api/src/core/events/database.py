@@ -15,8 +15,8 @@ from src.db import (
     activities,
     course_chapters,
     chapter_activities,
-    blocks,
     collections,
+    blocks,
 )
 
 engine = create_engine(
