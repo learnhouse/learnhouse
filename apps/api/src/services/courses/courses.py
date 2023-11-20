@@ -54,7 +54,6 @@ async def get_course_meta(
 async def create_course(
     request: Request,
     course_object: CourseCreate,
-    org_id: int,
     current_user: PublicUser,
     db_session: Session,
     thumbnail_file: UploadFile | None = None,
@@ -62,7 +61,7 @@ async def create_course(
     course = Course.from_orm(course_object)
 
     # Complete course object
-    course.org_id = org_id
+    course.org_id = course.org_id
     course.course_uuid = str(uuid4())
     course.creation_date = str(datetime.now())
     course.update_date = str(datetime.now())
@@ -70,7 +69,7 @@ async def create_course(
     # Upload thumbnail
     if thumbnail_file and thumbnail_file.filename:
         name_in_disk = f"{course.course_uuid}_thumbnail_{uuid4()}.{thumbnail_file.filename.split('.')[-1]}"
-        await upload_thumbnail(thumbnail_file, name_in_disk, org_id, course.course_uuid)
+        await upload_thumbnail(thumbnail_file, name_in_disk, course_object.org_id, course.course_uuid)
         course_object.thumbnail = name_in_disk
 
     # Insert course
@@ -80,7 +79,7 @@ async def create_course(
 
     # Make the user the creator of the course
     course_author = CourseAuthor(
-        course_id=course.id is not None,
+        course_id=course.id if course.id else 0,
         user_id=current_user.id,
         authorship=CourseAuthorshipEnum.CREATOR,
         creation_date=str(datetime.now()),

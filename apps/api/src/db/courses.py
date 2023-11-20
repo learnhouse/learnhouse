@@ -1,5 +1,7 @@
-from typing import Optional
+from typing import List, Optional
 from sqlmodel import Field, SQLModel
+
+from src.db.chapters import ChapterRead
 
 
 class CourseBase(SQLModel):
@@ -40,4 +42,14 @@ class CourseRead(CourseBase):
     course_uuid: str
     creation_date: str
     update_date: str
+    pass
+
+
+class FullCourseRead(CourseBase):
+    id: int
+    course_uuid: str
+    creation_date: str
+    update_date: str
+    # Chapters, Activities
+    chapters: List[ChapterRead]
     pass

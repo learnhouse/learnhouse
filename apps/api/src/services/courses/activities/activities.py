@@ -2,6 +2,7 @@ import stat
 from typing import Literal
 from pydantic import BaseModel
 from sqlmodel import Session, select
+from src.db.chapters import Chapter
 from src.db.organizations import Organization
 from src import db
 from src.db.activities import ActivityCreate, Activity, ActivityRead, ActivityUpdate
@@ -49,15 +50,26 @@ async def create_activity(
     db_session.commit()
     db_session.refresh(activity)
 
+    # Find the last activity in the Chapter and add it to the list
+    statement = (
+        select(ChapterActivity)
+        .where(ChapterActivity.chapter_id == activity_object.chapter_id)
+        .order_by(ChapterActivity.order)
+    )
+    chapter_activities = db_session.exec(statement).all()
+
+    last_order = chapter_activities[-1].order if chapter_activities else 0
+    to_be_used_order = last_order + 1
+
     # Add activity to chapter
     activity_chapter = ChapterActivity(
         chapter_id=activity_object.chapter_id,
-        activity_id=activity.id is not None,
+        activity_id=activity.id if activity.id else 0,
         course_id=activity_object.course_id,
         org_id=activity_object.org_id,
         creation_date=str(datetime.now()),
         update_date=str(datetime.now()),
-        order=activity_object.order,
+        order=to_be_used_order,
     )
 
     # Insert ChapterActivity link in DB
