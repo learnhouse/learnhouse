@@ -50,7 +50,7 @@ class ActivityCreate(ActivityBase):
     order: int
     org_id: int = Field(default=None, foreign_key="organization.id")
     course_id: int = Field(default=None, foreign_key="course.id")
-    chapter_id : int
+    chapter_id: int
     pass
 
 
