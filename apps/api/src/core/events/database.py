@@ -1,23 +1,8 @@
 import logging
 from fastapi import FastAPI
 import motor.motor_asyncio
-from sqlmodel import Field, SQLModel, Session, create_engine
+from sqlmodel import SQLModel, Session, create_engine
 
-from src.db import (
-    user_organizations,
-    users,
-    roles,
-    organization_settings,
-    organizations,
-    courses,
-    course_authors,
-    chapters,
-    activities,
-    course_chapters,
-    chapter_activities,
-    collections,
-    blocks,
-)
 
 engine = create_engine(
     "postgresql://learnhouse:learnhouse@db:5432/learnhouse", echo=True

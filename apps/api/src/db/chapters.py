@@ -1,7 +1,7 @@
 from typing import List, Optional
 from pydantic import BaseModel
 from sqlmodel import Field, SQLModel
-from src.db.activities import Activity, ActivityRead, ActivityUpdate
+from src.db.activities import ActivityRead
 
 
 class ChapterBase(SQLModel):

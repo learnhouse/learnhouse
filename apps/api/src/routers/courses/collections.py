@@ -4,7 +4,6 @@ from src.db.collections import CollectionCreate, CollectionUpdate
 from src.security.auth import get_current_user
 from src.services.users.users import PublicUser
 from src.services.courses.collections import (
-    Collection,
     create_collection,
     get_collection,
     get_collections,

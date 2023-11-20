@@ -2,7 +2,6 @@ from datetime import datetime
 from typing import List
 from uuid import uuid4
 from sqlmodel import Session, select
-from src import db
 from src.db.course_chapters import CourseChapter
 from src.db.activities import Activity, ActivityRead
 from src.db.chapter_activities import ChapterActivity
@@ -13,13 +12,6 @@ from src.db.chapters import (
     ChapterUpdate,
     ChapterUpdateOrder,
     DepreceatedChaptersRead,
-)
-from src.security.auth import non_public_endpoint
-from src.security.rbac.rbac import (
-    authorization_verify_based_on_roles,
-    authorization_verify_based_on_roles_and_authorship,
-    authorization_verify_if_element_is_public,
-    authorization_verify_if_user_is_anon,
 )
 from src.services.courses.courses import Course
 from src.services.users.users import PublicUser
