@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, UploadFile, Form, Request
 from sqlmodel import Session
 from src.core.events.database import get_db_session
 from src.db.users import PublicUser
-from src.db.courses import Course, CourseCreate, CourseUpdate
+from src.db.courses import CourseCreate, CourseUpdate
 from src.security.auth import get_current_user
 
 from src.services.courses.courses import (

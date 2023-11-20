@@ -1,19 +1,9 @@
-import stat
-from typing import Literal
-from pydantic import BaseModel
 from sqlmodel import Session, select
-from src.db.chapters import Chapter
 from src.db.organizations import Organization
-from src import db
 from src.db.activities import ActivityCreate, Activity, ActivityRead, ActivityUpdate
 from src.db.chapter_activities import ChapterActivity
-from src.security.rbac.rbac import (
-    authorization_verify_based_on_roles,
-    authorization_verify_if_element_is_public,
-    authorization_verify_if_user_is_anon,
-)
-from src.db.users import AnonymousUser, PublicUser
-from fastapi import HTTPException, status, Request
+from src.db.users import PublicUser
+from fastapi import HTTPException, Request
 from uuid import uuid4
 from datetime import datetime
 

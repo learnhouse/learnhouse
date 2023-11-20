@@ -1,7 +1,6 @@
-from typing import Literal, Optional
-from click import Option
+from typing import Optional
 from sqlalchemy import JSON, Column
-from sqlmodel import Field, Session, SQLModel, create_engine, select
+from sqlmodel import Field, SQLModel
 from enum import Enum
 
 

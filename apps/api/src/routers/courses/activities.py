@@ -3,7 +3,6 @@ from src.db.activities import ActivityCreate, ActivityUpdate
 from src.db.users import PublicUser
 from src.core.events.database import get_db_session
 from src.services.courses.activities.activities import (
-    Activity,
     create_activity,
     get_activity,
     get_activities,

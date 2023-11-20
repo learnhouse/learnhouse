@@ -1,13 +1,11 @@
 import json
-from typing import List, Literal, Optional
+from typing import Literal
 from uuid import uuid4
-from pydantic import BaseModel
 from sqlmodel import Session, select
 from src.db.course_authors import CourseAuthor, CourseAuthorshipEnum
 from src.db.users import PublicUser, AnonymousUser
 from src.db.courses import Course, CourseCreate, CourseRead, CourseUpdate
 from src.security.rbac.rbac import (
-    authorization_verify_based_on_roles,
     authorization_verify_based_on_roles_and_authorship,
     authorization_verify_if_element_is_public,
     authorization_verify_if_user_is_anon,
