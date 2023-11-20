@@ -80,7 +80,7 @@ async def create_documentpdf_activity(
         },
         published_version=1,
         version=1,
-        org_id=org_id is not None,
+        org_id=org_id if org_id else 0,
         course_id=coursechapter.course_id,
         activity_uuid=activity_uuid,
         creation_date=str(datetime.now()),

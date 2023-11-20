@@ -51,11 +51,11 @@ async def create_pdf_block(
 
     # create block
     block = Block(
-        activity_id=activity.id is not None,
+        activity_id=activity.id if activity.id else 0,
         block_type=BlockTypeEnum.BLOCK_DOCUMENT_PDF,
         content=block_data.dict(),
         org_id=org_id,
-        course_id=course.id is not None,
+        course_id=course.id if course.id else 0,
         block_uuid=block_uuid,
         creation_date=str(datetime.now()),
         update_date=str(datetime.now()),
