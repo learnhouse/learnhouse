@@ -5,7 +5,6 @@ from uuid import uuid4
 from fastapi import Request
 from src.services.users.schemas.users import UserInDB
 from src.security.security import security_hash_password
-from src.services.courses.chapters import CourseChapter, create_coursechapter
 from src.services.courses.activities.activities import Activity, create_activity
 from src.services.users.users import PublicUser
 
@@ -196,19 +195,19 @@ async def create_initial_data(request: Request):
                 # await courses.insert_one(course.dict())
 
                 # create chapters
-                for i in range(0, 5):
-                    coursechapter = CourseChapter(
-                        name=fake_multilang.unique.sentence(),
-                        description=fake_multilang.unique.text(),
-                        activities=[],
-                    )
-                    coursechapter = await create_coursechapter(request,coursechapter, course_id, current_user)
-                    if coursechapter:
-                        # create activities
-                        for i in range(0, 5):
-                            activity = Activity(
-                                name=fake_multilang.unique.sentence(),
-                                type="dynamic",
-                                content={},
-                            )
-                            activity = await create_activity(request,activity, "org_test", coursechapter['coursechapter_id'], current_user)
+                # for i in range(0, 5):
+                #     coursechapter = CourseChapter(
+                #         name=fake_multilang.unique.sentence(),
+                #         description=fake_multilang.unique.text(),
+                #         activities=[],
+                #     )
+                #     coursechapter = await create_coursechapter(request,coursechapter, course_id, current_user)
+                #     if coursechapter:
+                #         # create activities
+                #         for i in range(0, 5):
+                #             activity = Activity(
+                #                 name=fake_multilang.unique.sentence(),
+                #                 type="dynamic",
+                #                 content={},
+                #             )
+                #             activity = await create_activity(request,activity, "org_test", coursechapter['coursechapter_id'], current_user)

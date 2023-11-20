@@ -75,7 +75,7 @@ async def create_user(
 
     # Link user and organization
     user_organization = UserOrganization(
-        user_id=user.id is not None,
+        user_id=user.id if user.id else 0,
         org_id=int(org_id),
         role_id=1,
         creation_date=str(datetime.now()),
@@ -200,7 +200,6 @@ async def update_user_password(
     # Update user
     user.password = await security_hash_password(form.new_password)
     user.update_date = str(datetime.now())
-
 
     # Update user in database
     db_session.add(user)
