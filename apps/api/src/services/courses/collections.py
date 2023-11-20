@@ -1,8 +1,6 @@
 from datetime import datetime
-from gc import collect
-from typing import List, Literal
+from typing import List
 from uuid import uuid4
-from pydantic import BaseModel
 from sqlmodel import Session, select
 from src.db.collections import (
     Collection,
@@ -12,10 +10,6 @@ from src.db.collections import (
 )
 from src.db.collections_courses import CollectionCourse
 from src.db.courses import Course
-from src.security.rbac.rbac import (
-    authorization_verify_based_on_roles_and_authorship,
-    authorization_verify_if_user_is_anon,
-)
 from src.services.users.users import PublicUser
 from fastapi import HTTPException, status, Request
 from typing import List

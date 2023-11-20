@@ -1,10 +1,8 @@
 from typing import Optional
 from pydantic import BaseModel
 from sqlmodel import Field, SQLModel
-from enum import Enum
-from src.db.trail_runs import TrailRun, TrailRunRead
+from src.db.trail_runs import TrailRunRead
 
-from src.db.trail_steps import TrailStep
 
 
 class TrailBase(SQLModel):

@@ -7,9 +7,6 @@ from src.db.activities import Activity, ActivityRead, ActivitySubTypeEnum, Activ
 from src.db.chapter_activities import ChapterActivity
 from src.db.course_chapters import CourseChapter
 from src.db.users import PublicUser
-from src.security.rbac.rbac import (
-    authorization_verify_based_on_roles,
-)
 from src.services.courses.activities.uploads.videos import upload_video
 from fastapi import HTTPException, status, UploadFile, Request
 from uuid import uuid4

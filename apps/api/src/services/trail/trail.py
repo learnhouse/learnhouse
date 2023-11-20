@@ -1,12 +1,9 @@
 from datetime import datetime
-import stat
-from typing import List, Literal, Optional
 from uuid import uuid4
 from fastapi import HTTPException, Request, status
-from pydantic import BaseModel
 from sqlmodel import Session, select
 from src.db.courses import Course
-from src.db.trail_runs import TrailRun, TrailRunCreate, TrailRunRead
+from src.db.trail_runs import TrailRun, TrailRunRead
 from src.db.trail_steps import TrailStep
 from src.db.trails import Trail, TrailCreate, TrailRead
 from src.db.users import PublicUser

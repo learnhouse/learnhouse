@@ -3,7 +3,6 @@ from sqlmodel import Session
 from src.core.events.database import get_db_session
 from src.db.roles import RoleCreate, RoleUpdate
 from src.security.auth import get_current_user
-from src.services.roles.schemas.roles import Role
 from src.services.roles.roles import create_role, delete_role, read_role, update_role
 from src.services.users.schemas.users import PublicUser
 

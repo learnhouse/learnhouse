@@ -5,7 +5,6 @@ from src.db.users import UserRead
 from src.core.events.database import get_db_session
 from config.config import get_learnhouse_config
 from src.security.auth import AuthJWT, authenticate_user
-from src.services.users.users import PublicUser
 
 
 router = APIRouter()
