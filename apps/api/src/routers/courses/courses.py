@@ -47,7 +47,7 @@ async def api_create_course(
         tags=tags,
     )
     return await create_course(
-        request, course, org_id, current_user, db_session, thumbnail
+        request, course, current_user, db_session, thumbnail
     )
 
 
