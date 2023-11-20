@@ -10,8 +10,6 @@ from src.db.trail_runs import TrailRun, TrailRunCreate, TrailRunRead
 from src.db.trail_steps import TrailStep
 from src.db.trails import Trail, TrailCreate, TrailRead
 from src.db.users import PublicUser
-from src.services.orgs.schemas.orgs import PublicOrganization
-from src.services.courses.chapters import get_coursechapters_meta
 
 
 async def create_user_trail(
@@ -164,8 +162,8 @@ async def add_activity_to_trail(
 
     if not trailrun:
         trailrun = TrailRun(
-            trail_id=trail.id is not None,
-            course_id=course.id is not None,
+            trail_id=trail.id if trail.id is not None else 0,
+            course_id=course.id if course.id is not None else 0 ,
             org_id=course.org_id,
             user_id=user.id,
             creation_date=str(datetime.now()),
@@ -182,9 +180,9 @@ async def add_activity_to_trail(
 
     if not trailstep:
         trailstep = TrailStep(
-            trailrun_id=trailrun.id is not None,
+            trailrun_id=trailrun.id if trailrun.id is not None else 0 ,
             activity_id=activity_id,
-            course_id=course.id is not None,
+            course_id=course.id if course.id is not None else 0,
             org_id=course.org_id,
             complete=False,
             teacher_verified=False,
@@ -265,8 +263,8 @@ async def add_course_to_trail(
 
     if not trail_run:
         trail_run = TrailRun(
-            trail_id=trail.id is not None,
-            course_id=course.id is not None,
+            trail_id=trail.id if trail.id is not None else 0,
+            course_id=course.id if course.id is not None else 0,
             org_id=course.org_id,
             user_id=user.id,
             creation_date=str(datetime.now()),

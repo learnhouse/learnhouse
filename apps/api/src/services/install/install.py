@@ -6,7 +6,6 @@ import requests
 from config.config import get_learnhouse_config
 from src.security.security import security_hash_password
 from src.services.courses.activities.activities import Activity, create_activity
-from src.services.courses.chapters import create_coursechapter, CourseChapter
 
 from src.services.orgs.schemas.orgs import Organization, OrganizationInDB
 from faker import Faker

@@ -83,7 +83,7 @@ async def create_org(
     # Link user to org
     user_org = UserOrganization(
         user_id=int(current_user.id),
-        org_id=int(org.id is not None),
+        org_id=int(org.id if org.id else 0),
         role_id=1,
         creation_date=str(datetime.now()),
         update_date=str(datetime.now()),
