@@ -1,5 +1,5 @@
 'use client';
-import React, { use, useEffect } from "react";
+import React, { useEffect } from "react";
 import Link from "next/link";
 import { getAPIUrl, getUriWithOrg } from "@services/config/config";
 import { getOrganizationContextInfo, getOrganizationContextInfoWithoutCredentials } from "@services/organizations/orgs";
@@ -15,14 +15,16 @@ import FeedbackModal from "../Modals/Feedback/Feedback";
 import useSWR from "swr";
 import { swrFetcher } from "@services/utils/ts/requests";
 
-export const Menu = (props: any) => {
+type MenuProps = {
+    orgslug: string;
+    dict: any;
+};
+
+export const Menu = (props: MenuProps) => {
     const orgslug = props.orgslug;
     const [feedbackModal, setFeedbackModal] = React.useState(false);
     const { data: org, error: error, isLoading } = useSWR(`${getAPIUrl()}orgs/slug/${orgslug}`, swrFetcher);
 
-    function closeFeedbackModal() {
-        setFeedbackModal(false);
-    }
 
 
     return (
@@ -53,7 +55,7 @@ export const Menu = (props: any) => {
                         </Link>
                     </div>
                     <div className="links flex grow">
-                        <MenuLinks orgslug={orgslug} />
+                        <MenuLinks dict={props.dict} orgslug={orgslug} />
                     </div>
                     <div className="profile flex items-center space-x-2">
 
