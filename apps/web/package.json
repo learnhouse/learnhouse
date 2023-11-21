@@ -9,13 +9,14 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@formatjs/intl-localematcher": "^0.5.2",
     "@radix-ui/colors": "^0.1.8",
     "@radix-ui/react-aspect-ratio": "^1.0.2",
     "@radix-ui/react-dialog": "^1.0.2",
     "@radix-ui/react-form": "^0.0.2",
     "@radix-ui/react-icons": "^1.1.1",
     "@radix-ui/react-tooltip": "^1.0.5",
-    "@sentry/nextjs": "^7.77.0",
+    "@sentry/nextjs": "^7.81.0",
     "@stitches/react": "^1.2.8",
     "@tiptap/extension-code-block-lowlight": "^2.1.11",
     "@tiptap/extension-collaboration": "^2.0.0-beta.199",
@@ -29,7 +30,8 @@
     "framer-motion": "^10.16.1",
     "lowlight": "^3.0.0",
     "lucide-react": "^0.268.0",
-    "next": "^13.5.4",
+    "negotiator": "^0.6.3",
+    "next": "^13.5.6",
     "re-resizable": "^6.9.9",
     "react": "^18.2.0",
     "react-beautiful-dnd": "^13.1.1",
@@ -48,6 +50,7 @@
     "yjs": "^13.5.42"
   },
   "devDependencies": {
+    "@types/negotiator": "^0.6.3",
     "@types/node": "18.7.18",
     "@types/react": "18.2.8",
     "@types/react-beautiful-dnd": "^13.1.2",

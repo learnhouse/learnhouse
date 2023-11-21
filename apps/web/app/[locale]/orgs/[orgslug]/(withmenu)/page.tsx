@@ -15,9 +15,10 @@ import AuthenticatedClientElement from '@components/Security/AuthenticatedClient
 import { Plus, PlusCircle } from 'lucide-react';
 import NewCourseButton from '@components/StyledElements/Buttons/NewCourseButton';
 import NewCollectionButton from '@components/StyledElements/Buttons/NewCollectionButton';
+import { getDictionary } from 'i18n/get-dictionary';
 
 type MetadataProps = {
-  params: { orgslug: string };
+  params: { orgslug: string, lang: string };
   searchParams: { [key: string]: string | string[] | undefined };
 };
 
@@ -52,6 +53,9 @@ export async function generateMetadata(
 const OrgHomePage = async (params: any) => {
   const orgslug = params.params.orgslug;
   const cookieStore = cookies();
+
+  // i18n 
+  const dict = await getDictionary(params.params.locale)
 
   const access_token = await getAccessTokenFromRefreshTokenCookie(cookieStore)
   const courses = await getOrgCoursesWithAuthHeader(orgslug, { revalidate: 0, tags: ['courses'] }, access_token ? access_token : null);

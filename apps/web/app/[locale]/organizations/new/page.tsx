@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { createNewOrganization } from "../../../services/organizations/orgs";
+import { createNewOrganization } from "../../../../services/organizations/orgs";
 
 const Organizations = () => {
   const [name, setName] = React.useState("");

@@ -1,0 +1,10 @@
+{
+  "Menus" : {
+    "Courses": "Courses",
+    "Collections": "Collections",
+    "Trail": "Trail"
+  },
+  "Index": {
+    "title": "Hello world!"
+  }
+}
