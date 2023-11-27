@@ -1,7 +1,7 @@
 from uuid import uuid4
 from sqlmodel import Session, select
+from src.db.users import PublicUser
 from src.db.roles import Role, RoleCreate, RoleUpdate
-from src.services.users.schemas.users import PublicUser
 from fastapi import HTTPException, Request
 from datetime import datetime
 
