@@ -1,6 +1,6 @@
 from sqlmodel import Session
 from src.core.events.database import get_db_session
-from src.db.users import User, UserRead
+from src.db.users import AnonymousUser, User, UserRead
 from src.services.users.users import security_get_user
 from config.config import get_learnhouse_config
 from pydantic import BaseModel
@@ -9,7 +9,6 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
 from src.services.dev.dev import isDevModeEnabled
-from src.services.users.schemas.users import AnonymousUser, PublicUser
 from src.services.users.users import security_verify_password
 from src.security.security import ALGORITHM, SECRET_KEY
 from fastapi_jwt_auth import AuthJWT
@@ -100,6 +99,6 @@ async def get_current_user(
         return AnonymousUser()
 
 
-async def non_public_endpoint(current_user: PublicUser):
+async def non_public_endpoint(current_user: UserRead | AnonymousUser):
     if isinstance(current_user, AnonymousUser):
         raise HTTPException(status_code=401, detail="Not authenticated")

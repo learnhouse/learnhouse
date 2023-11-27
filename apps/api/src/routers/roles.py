@@ -4,7 +4,7 @@ from src.core.events.database import get_db_session
 from src.db.roles import RoleCreate, RoleUpdate
 from src.security.auth import get_current_user
 from src.services.roles.roles import create_role, delete_role, read_role, update_role
-from src.services.users.schemas.users import PublicUser
+from src.db.users import PublicUser
 
 
 router = APIRouter()

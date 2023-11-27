@@ -4,6 +4,7 @@ from fastapi import HTTPException, Request, status
 from sqlmodel import Session, select
 from src.db.organizations import Organization
 from src.db.users import (
+    PublicUser,
     User,
     UserCreate,
     UserRead,
@@ -12,7 +13,6 @@ from src.db.users import (
 )
 from src.db.user_organizations import UserOrganization
 from src.security.security import security_hash_password, security_verify_password
-from src.services.users.schemas.users import PublicUser
 
 
 async def create_user(

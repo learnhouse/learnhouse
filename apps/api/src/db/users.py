@@ -36,7 +36,7 @@ class UserRead(UserBase):
 class PublicUser(UserRead):
     pass
 
-class AnonymousUser(UserRead):
+class AnonymousUser(SQLModel):
     id: str = "anonymous"
     username: str = "anonymous"
 
