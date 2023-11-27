@@ -214,7 +214,10 @@ async def get_orgs_by_user(
     statement = (
         select(Organization)
         .join(UserOrganization)
-        .where(Organization.id == UserOrganization.org_id)
+        .where(
+            Organization.id == UserOrganization.org_id,
+            UserOrganization.user_id == user_id,
+        )
     )
     result = db_session.exec(statement)
 

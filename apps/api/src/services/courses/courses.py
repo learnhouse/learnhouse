@@ -1,8 +1,10 @@
 import json
+import resource
 from typing import Literal
 from uuid import uuid4
 from sqlmodel import Session, select
-from src.db.course_authors import CourseAuthor, CourseAuthorshipEnum
+from src import db
+from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum
 from src.db.users import PublicUser, AnonymousUser
 from src.db.courses import Course, CourseCreate, CourseRead, CourseUpdate
 from src.security.rbac.rbac import (
@@ -60,7 +62,7 @@ async def create_course(
 
     # Complete course object
     course.org_id = course.org_id
-    course.course_uuid = str(uuid4())
+    course.course_uuid = str(f"course_{uuid4()}")
     course.creation_date = str(datetime.now())
     course.update_date = str(datetime.now())
 
@@ -76,18 +78,18 @@ async def create_course(
     db_session.refresh(course)
 
     # Make the user the creator of the course
-    course_author = CourseAuthor(
-        course_id=course.id if course.id else 0,
+    resource_author = ResourceAuthor(
+        resource_uuid=course.course_uuid,
         user_id=current_user.id,
-        authorship=CourseAuthorshipEnum.CREATOR,
+        authorship=ResourceAuthorshipEnum.CREATOR,
         creation_date=str(datetime.now()),
         update_date=str(datetime.now()),
     )
 
     # Insert course author
-    db_session.add(course_author)
+    db_session.add(resource_author)
     db_session.commit()
-    db_session.refresh(course_author)
+    db_session.refresh(resource_author)
 
     return CourseRead.from_orm(course)
 
@@ -241,26 +243,23 @@ async def verify_rights(
     course_id: str,
     current_user: PublicUser | AnonymousUser,
     action: Literal["create", "read", "update", "delete"],
+    db_session: Session,
 ):
     if action == "read":
         if current_user.id == "anonymous":
             await authorization_verify_if_element_is_public(
-                request, course_id, str(current_user.id), action
+                request, course_id, str(current_user.id), action, db_session
             )
         else:
-            users = request.app.db["users"]
-            user = await users.find_one({"user_id": str(current_user.id)})
 
             await authorization_verify_based_on_roles_and_authorship(
                 request,
                 str(current_user.id),
                 action,
-                user["roles"],
                 course_id,
+                db_session,
             )
     else:
-        users = request.app.db["users"]
-        user = await users.find_one({"user_id": str(current_user.id)})
 
         await authorization_verify_if_user_is_anon(str(current_user.id))
 
@@ -268,8 +267,8 @@ async def verify_rights(
             request,
             str(current_user.id),
             action,
-            user["roles"],
             course_id,
+            db_session,
         )
 
 
