@@ -17,13 +17,6 @@ from src.db.collections_courses import CollectionCourse
 from src.db.courses import Course
 from src.services.users.users import PublicUser
 from fastapi import HTTPException, status, Request
-from typing import List
-from fastapi import HTTPException, Request
-from sqlmodel import Session, select
-from src.db.collections import Collection
-from src.db.courses import Course
-from src.db.collections_courses import CollectionCourse
-from src.services.users.users import PublicUser
 
 
 ####################################################

@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, Request
 from sqlmodel import Session
-from src.security.rbac.rbac import authorization_verify_based_on_roles, authorization_verify_if_element_is_public, authorization_verify_if_user_is_author
 from src.security.auth import get_current_user
 from src.core.events.database import get_db_session
 
