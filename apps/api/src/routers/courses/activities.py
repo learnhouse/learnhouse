@@ -1,5 +1,6 @@
+from typing import List
 from fastapi import APIRouter, Depends, UploadFile, Form, Request
-from src.db.activities import ActivityCreate, ActivityUpdate
+from src.db.activities import ActivityCreate, ActivityRead, ActivityUpdate
 from src.db.users import PublicUser
 from src.core.events.database import get_db_session
 from src.services.courses.activities.activities import (
@@ -26,7 +27,7 @@ async def api_create_activity(
     activity_object: ActivityCreate,
     current_user: PublicUser = Depends(get_current_user),
     db_session=Depends(get_db_session),
-):
+) -> ActivityRead:
     """
     Create new activity
     """
@@ -39,7 +40,7 @@ async def api_get_activity(
     activity_id: str,
     current_user: PublicUser = Depends(get_current_user),
     db_session=Depends(get_db_session),
-):
+) -> ActivityRead:
     """
     Get single activity by activity_id
     """
@@ -54,7 +55,7 @@ async def api_get_activities(
     coursechapter_id: str,
     current_user: PublicUser = Depends(get_current_user),
     db_session=Depends(get_db_session),
-):
+) -> List[ActivityRead]:
     """
     Get CourseChapter activities
     """
@@ -67,7 +68,7 @@ async def api_update_activity(
     activity_object: ActivityUpdate,
     current_user: PublicUser = Depends(get_current_user),
     db_session=Depends(get_db_session),
-):
+) -> ActivityRead:
     """
     Update activity by activity_id
     """
@@ -98,7 +99,7 @@ async def api_create_video_activity(
     current_user: PublicUser = Depends(get_current_user),
     video_file: UploadFile | None = None,
     db_session=Depends(get_db_session),
-):
+) -> ActivityRead:
     """
     Create new activity
     """
@@ -118,7 +119,7 @@ async def api_create_external_video_activity(
     external_video: ExternalVideo,
     current_user: PublicUser = Depends(get_current_user),
     db_session=Depends(get_db_session),
-):
+) -> ActivityRead:
     """
     Create new activity
     """
@@ -135,7 +136,7 @@ async def api_create_documentpdf_activity(
     current_user: PublicUser = Depends(get_current_user),
     pdf_file: UploadFile | None = None,
     db_session=Depends(get_db_session),
-):
+) -> ActivityRead:
     """
     Create new activity
     """

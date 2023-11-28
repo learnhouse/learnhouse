@@ -26,3 +26,5 @@ class OrganizationCreate(OrganizationBase):
 class OrganizationRead(OrganizationBase):
     id: int
     org_uuid: str
+    creation_date: str 
+    update_date: str 

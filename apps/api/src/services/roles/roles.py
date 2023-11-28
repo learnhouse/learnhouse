@@ -7,7 +7,7 @@ from src.security.rbac.rbac import (
     authorization_verify_if_user_is_author,
 )
 from src.db.users import AnonymousUser, PublicUser
-from src.db.roles import Role, RoleCreate, RoleUpdate
+from src.db.roles import Role, RoleCreate, RoleRead, RoleUpdate
 from fastapi import HTTPException, Request
 from datetime import datetime
 
@@ -32,6 +32,8 @@ async def create_role(
     db_session.commit()
     db_session.refresh(role)
 
+    role = RoleRead(**role.dict())
+
     return role
 
 
@@ -51,6 +53,8 @@ async def read_role(
 
     # RBAC check
     await rbac_check(request, current_user, "read", role.role_uuid, db_session)
+
+    role = RoleRead(**role.dict())
 
     return role
 
@@ -89,6 +93,8 @@ async def update_role(
     db_session.add(role)
     db_session.commit()
     db_session.refresh(role)
+
+    role = RoleRead(**role.dict())
 
     return role
 

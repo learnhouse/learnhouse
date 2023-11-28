@@ -1,8 +1,9 @@
+from typing import List
 from fastapi import APIRouter, Depends, UploadFile, Form, Request
 from sqlmodel import Session
 from src.core.events.database import get_db_session
 from src.db.users import PublicUser
-from src.db.courses import CourseCreate, CourseUpdate
+from src.db.courses import CourseCreate, CourseRead, CourseUpdate, FullCourseReadWithTrail
 from src.security.auth import get_current_user
 from src.services.courses.courses import (
     create_course,
@@ -31,7 +32,7 @@ async def api_create_course(
     current_user: PublicUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
     thumbnail: UploadFile | None = None,
-):
+) -> CourseRead:
     """
     Create new Course
     """
@@ -55,7 +56,7 @@ async def api_create_course_thumbnail(
     thumbnail: UploadFile | None = None,
     db_session: Session = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
-):
+) -> CourseRead:
     """
     Update new Course Thumbnail
     """
@@ -70,7 +71,7 @@ async def api_get_course(
     course_id: str,
     db_session: Session = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
-):
+) -> CourseRead:
     """
     Get single Course by course_id
     """
@@ -85,7 +86,7 @@ async def api_get_course_meta(
     course_id: int,
     db_session: Session = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
-):
+) -> FullCourseReadWithTrail:
     """
     Get single Course Metadata (chapters, activities) by course_id
     """
@@ -102,9 +103,9 @@ async def api_get_course_by_orgslug(
     org_slug: str,
     db_session: Session = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
-):
+) -> List[CourseRead]:
     """
-    Get houses by page and limit
+    Get courses by page and limit
     """
     return await get_courses_orgslug(
         request, current_user, org_slug, db_session, page, limit
@@ -117,7 +118,7 @@ async def api_update_course(
     course_object: CourseUpdate,
     db_session: Session = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
-):
+) -> CourseRead:
     """
     Update Course by course_id
     """

@@ -38,9 +38,7 @@ async def api_get_user_trail(
     """
     Get a user trails
     """
-    return await get_user_trails(
-        request, user=user, db_session=db_session
-    )
+    return await get_user_trails(request, user=user, db_session=db_session)
 
 
 @router.get("/org_slug/{org_id}/trail")
@@ -56,9 +54,6 @@ async def api_get_trail_by_org_id(
     return await get_user_trail_with_orgid(
         request, user, org_id=org_id, db_session=db_session
     )
-
-
-# Courses in trail
 
 
 @router.post("/add_course/{course_id}")
