@@ -3,9 +3,7 @@ from typing import Literal
 from uuid import uuid4
 from fastapi import HTTPException, Request, status
 from sqlmodel import Session, select
-from src import db
 from src.security.rbac.rbac import (
-    authorization_verify_based_on_roles,
     authorization_verify_based_on_roles_and_authorship,
     authorization_verify_if_user_is_anon,
 )
@@ -338,7 +336,7 @@ async def rbac_check(
         if current_user.id == 0:  # if user is anonymous
             return True
         else:
-            res = await authorization_verify_based_on_roles_and_authorship(
+            await authorization_verify_based_on_roles_and_authorship(
                 request, current_user.id, "create", "user_x", db_session
             )
             

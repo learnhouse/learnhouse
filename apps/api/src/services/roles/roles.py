@@ -4,7 +4,6 @@ from sqlmodel import Session, select
 from src.security.rbac.rbac import (
     authorization_verify_based_on_roles_and_authorship,
     authorization_verify_if_user_is_anon,
-    authorization_verify_if_user_is_author,
 )
 from src.db.users import AnonymousUser, PublicUser
 from src.db.roles import Role, RoleCreate, RoleRead, RoleUpdate

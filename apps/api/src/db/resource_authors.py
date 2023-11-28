@@ -1,7 +1,5 @@
 from enum import Enum
-from typing import Optional, Union
-from pydantic import BaseModel
-from sqlalchemy import JSON, Column
+from typing import Optional
 from sqlmodel import Field, SQLModel
 
 
