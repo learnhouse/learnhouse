@@ -6,7 +6,7 @@ from src.db.courses import Course
 from src.db.trail_runs import TrailRun, TrailRunRead
 from src.db.trail_steps import TrailStep
 from src.db.trails import Trail, TrailCreate, TrailRead
-from src.db.users import PublicUser
+from src.db.users import AnonymousUser, PublicUser
 
 
 async def create_user_trail(
@@ -80,7 +80,7 @@ async def get_user_trails(
 
 
 async def get_user_trail_with_orgid(
-    request: Request, user: PublicUser, org_id: int, db_session: Session
+    request: Request, user: PublicUser | AnonymousUser, org_id: int, db_session: Session
 ) -> TrailRead:
     statement = select(Trail).where(Trail.org_id == org_id, Trail.user_id == user.id)
     trail = db_session.exec(statement).first()

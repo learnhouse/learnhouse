@@ -4,7 +4,6 @@ from src.core.events.database import get_db_session
 from src.db.users import PublicUser
 from src.db.courses import CourseCreate, CourseUpdate
 from src.security.auth import get_current_user
-
 from src.services.courses.courses import (
     create_course,
     get_course,
@@ -46,9 +45,7 @@ async def api_create_course(
         learnings=learnings,
         tags=tags,
     )
-    return await create_course(
-        request, course, current_user, db_session, thumbnail
-    )
+    return await create_course(request, course, current_user, db_session, thumbnail)
 
 
 @router.put("/thumbnail/{course_id}")
@@ -85,7 +82,7 @@ async def api_get_course(
 @router.get("/meta/{course_id}")
 async def api_get_course_meta(
     request: Request,
-    course_id: str,
+    course_id: int,
     db_session: Session = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ):
@@ -109,7 +106,9 @@ async def api_get_course_by_orgslug(
     """
     Get houses by page and limit
     """
-    return await get_courses_orgslug(request, current_user, page, limit, org_slug)
+    return await get_courses_orgslug(
+        request, current_user, org_slug, db_session, page, limit
+    )
 
 
 @router.put("/")

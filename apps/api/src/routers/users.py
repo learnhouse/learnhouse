@@ -1,9 +1,11 @@
 from fastapi import APIRouter, Depends, Request
 from sqlmodel import Session
+from src.security.rbac.rbac import authorization_verify_based_on_roles, authorization_verify_if_element_is_public, authorization_verify_if_user_is_author
 from src.security.auth import get_current_user
 from src.core.events.database import get_db_session
 
 from src.db.users import (
+    PublicUser,
     User,
     UserCreate,
     UserRead,
@@ -37,13 +39,14 @@ async def api_create_user_with_orgid(
     *,
     request: Request,
     db_session: Session = Depends(get_db_session),
+    current_user: PublicUser = Depends(get_current_user),
     user_object: UserCreate,
     org_id: int,
 ) -> UserRead:
     """
     Create User with Org ID
     """
-    return await create_user(request, db_session, None, user_object, org_id)
+    return await create_user(request, db_session, current_user, user_object, org_id)
 
 
 @router.post("/", response_model=UserRead, tags=["users"])
@@ -51,12 +54,13 @@ async def api_create_user_without_org(
     *,
     request: Request,
     db_session: Session = Depends(get_db_session),
+    current_user: PublicUser = Depends(get_current_user),
     user_object: UserCreate,
 ) -> UserRead:
     """
     Create User
     """
-    return await create_user_without_org(request, db_session, None, user_object)
+    return await create_user_without_org(request, db_session, current_user, user_object)
 
 
 @router.get("/user_id/{user_id}", response_model=UserRead, tags=["users"])
@@ -64,12 +68,13 @@ async def api_get_user_by_id(
     *,
     request: Request,
     db_session: Session = Depends(get_db_session),
+    current_user: PublicUser = Depends(get_current_user),
     user_id: int,
 ) -> UserRead:
     """
     Get User by ID
     """
-    return await read_user_by_id(request, db_session, None, user_id)
+    return await read_user_by_id(request, db_session, current_user, user_id)
 
 
 @router.get("/user_uuid/{user_uuid}", response_model=UserRead, tags=["users"])
@@ -77,12 +82,13 @@ async def api_get_user_by_uuid(
     *,
     request: Request,
     db_session: Session = Depends(get_db_session),
+    current_user: PublicUser = Depends(get_current_user),
     user_uuid: str,
 ) -> UserRead:
     """
     Get User by UUID
     """
-    return await read_user_by_uuid(request, db_session, None, user_uuid)
+    return await read_user_by_uuid(request, db_session, current_user, user_uuid)
 
 
 @router.put("/", response_model=UserRead, tags=["users"])
@@ -90,12 +96,13 @@ async def api_update_user(
     *,
     request: Request,
     db_session: Session = Depends(get_db_session),
+    current_user: PublicUser = Depends(get_current_user),
     user_object: UserUpdate,
 ) -> UserRead:
     """
     Update User
     """
-    return await update_user(request, db_session, None, user_object)
+    return await update_user(request, db_session, current_user, user_object)
 
 
 @router.put("/change_password/", response_model=UserRead, tags=["users"])
@@ -103,12 +110,13 @@ async def api_update_user_password(
     *,
     request: Request,
     db_session: Session = Depends(get_db_session),
+    current_user: PublicUser = Depends(get_current_user),
     form: UserUpdatePassword,
 ) -> UserRead:
     """
     Update User Password
     """
-    return await update_user_password(request, db_session, None, form)
+    return await update_user_password(request, db_session, current_user, form)
 
 
 @router.delete("/user_id/{user_id}", tags=["users"])
@@ -116,9 +124,10 @@ async def api_delete_user(
     *,
     request: Request,
     db_session: Session = Depends(get_db_session),
+    current_user: PublicUser = Depends(get_current_user),
     user_id: int,
 ):
     """
     Delete User
     """
-    return await delete_user_by_id(request, db_session, None, user_id)
+    return await delete_user_by_id(request, db_session, current_user, user_id)

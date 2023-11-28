@@ -17,7 +17,7 @@ class Collection(CollectionBase, table=True):
 
 
 class CollectionCreate(CollectionBase):
-    courses: list
+    courses: list[int]
     org_id: int = Field(default=None, foreign_key="organization.id")
 
     pass

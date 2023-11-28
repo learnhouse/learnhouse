@@ -1,12 +1,28 @@
+from calendar import c
 import json
+from queue import Full
 import resource
 from typing import Literal
 from uuid import uuid4
 from sqlmodel import Session, select
+from src.db import chapters
+from src.db.activities import Activity, ActivityRead
+from src.db.chapter_activities import ChapterActivity
+from src.db.chapters import Chapter, ChapterRead
+from src.db.organizations import Organization
+from src.db.trails import TrailRead
+
+from src.services.trail.trail import get_user_trail_with_orgid
 from src import db
 from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum
 from src.db.users import PublicUser, AnonymousUser
-from src.db.courses import Course, CourseCreate, CourseRead, CourseUpdate
+from src.db.courses import (
+    Course,
+    CourseCreate,
+    CourseRead,
+    CourseUpdate,
+    FullCourseReadWithTrail,
+)
 from src.security.rbac.rbac import (
     authorization_verify_based_on_roles_and_authorship,
     authorization_verify_if_element_is_public,
@@ -18,7 +34,10 @@ from datetime import datetime
 
 
 async def get_course(
-    request: Request, course_id: str, current_user: PublicUser, db_session: Session
+    request: Request,
+    course_id: str,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
 ):
     statement = select(Course).where(Course.id == course_id)
     course = db_session.exec(statement).first()
@@ -29,12 +48,21 @@ async def get_course(
             detail="Course not found",
         )
 
+    # RBAC check
+    await rbac_check(request, course.course_uuid, current_user, "read", db_session)
+
     return course
 
 
 async def get_course_meta(
-    request: Request, course_id: str, current_user: PublicUser, db_session: Session
-):
+    request: Request,
+    course_id: int,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+) -> FullCourseReadWithTrail:
+    # Avoid circular import
+    from src.services.courses.chapters import get_course_chapters
+
     course_statement = select(Course).where(Course.id == course_id)
     course = db_session.exec(course_statement).first()
 
@@ -44,21 +72,39 @@ async def get_course_meta(
             detail="Course not found",
         )
 
-    # todo : get course chapters
-    # todo : get course activities
-    # todo : get trail
+    # RBAC check
+    await rbac_check(request, course.course_uuid, current_user, "read", db_session)
 
-    return course
+    course = CourseRead.from_orm(course)
+
+    # Get course chapters
+    chapters = await get_course_chapters(request, course.id, db_session, current_user)
+
+    # Trail
+    trail = await get_user_trail_with_orgid(
+        request, current_user, course.org_id, db_session
+    )
+
+    trail = TrailRead.from_orm(trail)
+
+    return FullCourseReadWithTrail(
+        **course.dict(),
+        chapters=chapters,
+        trail=trail,
+    )
 
 
 async def create_course(
     request: Request,
     course_object: CourseCreate,
-    current_user: PublicUser,
+    current_user: PublicUser | AnonymousUser,
     db_session: Session,
     thumbnail_file: UploadFile | None = None,
 ):
     course = Course.from_orm(course_object)
+
+    # RBAC check
+    await rbac_check(request, "course_x", current_user, "create", db_session)
 
     # Complete course object
     course.org_id = course.org_id
@@ -69,7 +115,9 @@ async def create_course(
     # Upload thumbnail
     if thumbnail_file and thumbnail_file.filename:
         name_in_disk = f"{course.course_uuid}_thumbnail_{uuid4()}.{thumbnail_file.filename.split('.')[-1]}"
-        await upload_thumbnail(thumbnail_file, name_in_disk, course_object.org_id, course.course_uuid)
+        await upload_thumbnail(
+            thumbnail_file, name_in_disk, course_object.org_id, course.course_uuid
+        )
         course_object.thumbnail = name_in_disk
 
     # Insert course
@@ -97,7 +145,7 @@ async def create_course(
 async def update_course_thumbnail(
     request: Request,
     course_id: str,
-    current_user: PublicUser,
+    current_user: PublicUser | AnonymousUser,
     db_session: Session,
     thumbnail_file: UploadFile | None = None,
 ):
@@ -111,6 +159,9 @@ async def update_course_thumbnail(
             status_code=404,
             detail="Course not found",
         )
+
+    # RBAC check
+    await rbac_check(request, course.course_uuid, current_user, "update", db_session)
 
     # Upload thumbnail
     if thumbnail_file and thumbnail_file.filename:
@@ -143,7 +194,7 @@ async def update_course_thumbnail(
 async def update_course(
     request: Request,
     course_object: CourseUpdate,
-    current_user: PublicUser,
+    current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
     statement = select(Course).where(Course.id == course_object.course_id)
@@ -154,7 +205,10 @@ async def update_course(
             status_code=404,
             detail="Course not found",
         )
-    
+
+    # RBAC check
+    await rbac_check(request, course.course_uuid, current_user, "update", db_session)
+
     del course_object.course_id
 
     # Update only the fields that were passed in
@@ -173,7 +227,10 @@ async def update_course(
 
 
 async def delete_course(
-    request: Request, course_id: str, current_user: PublicUser, db_session: Session
+    request: Request,
+    course_id: str,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
 ):
     statement = select(Course).where(Course.id == course_id)
     course = db_session.exec(statement).first()
@@ -184,92 +241,74 @@ async def delete_course(
             detail="Course not found",
         )
 
+    # RBAC check
+    await rbac_check(request, course.course_uuid, current_user, "delete", db_session)
+
     db_session.delete(course)
     db_session.commit()
 
     return {"detail": "Course deleted"}
 
 
-####################################################
-# Misc
-####################################################
-
-
 async def get_courses_orgslug(
     request: Request,
-    current_user: PublicUser,
+    current_user: PublicUser | AnonymousUser,
+    org_slug: str,
+    db_session: Session,
     page: int = 1,
     limit: int = 10,
-    org_slug: str | None = None,
 ):
-    courses = request.app.db["courses"]
-    orgs = request.app.db["organizations"]
+    statement_public = (
+        select(Course)
+        .join(Organization)
+        .where(Organization.slug == org_slug, Course.public == True)
+    )
+    statement_all = (
+        select(Course).join(Organization).where(Organization.slug == org_slug)
+    )
 
-    # get org_id from slug
-    org = await orgs.find_one({"slug": org_slug})
-
-    if not org:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Organization does not exist"
-        )
-
-    # show only public courses if user is not logged in
-    if current_user.id == "anonymous":
-        all_courses = (
-            courses.find({"org_id": org["org_id"], "public": True})
-            .sort("name", 1)
-            .skip(10 * (page - 1))
-            .limit(limit)
-        )
+    if current_user.id == 0:
+        statement = statement_public
     else:
-        all_courses = (
-            courses.find({"org_id": org["org_id"]})
-            .sort("name", 1)
-            .skip(10 * (page - 1))
-            .limit(limit)
-        )
+        # RBAC check
+        await authorization_verify_if_user_is_anon(current_user.id)
 
-    return [
-        json.loads(json.dumps(course, default=str))
-        for course in await all_courses.to_list(length=100)
-    ]
+        statement = statement_all
+
+    courses = db_session.exec(statement)
+
+    return courses
 
 
-#### Security ####################################################
+## 🔒 RBAC Utils ##
 
 
-async def verify_rights(
+async def rbac_check(
     request: Request,
-    course_id: str,
+    course_uuid: str,
     current_user: PublicUser | AnonymousUser,
     action: Literal["create", "read", "update", "delete"],
     db_session: Session,
 ):
     if action == "read":
-        if current_user.id == "anonymous":
+        if current_user.id == 0:  # Anonymous user
             await authorization_verify_if_element_is_public(
-                request, course_id, str(current_user.id), action, db_session
+                request, course_uuid, action, db_session
             )
         else:
-
             await authorization_verify_based_on_roles_and_authorship(
-                request,
-                str(current_user.id),
-                action,
-                course_id,
-                db_session,
+                request, current_user.id, action, course_uuid, db_session
             )
     else:
-
-        await authorization_verify_if_user_is_anon(str(current_user.id))
+        await authorization_verify_if_user_is_anon(current_user.id)
 
         await authorization_verify_based_on_roles_and_authorship(
             request,
-            str(current_user.id),
+            current_user.id,
             action,
-            course_id,
+            course_uuid,
             db_session,
         )
 
 
-#### Security ####################################################
+## 🔒 RBAC Utils ##

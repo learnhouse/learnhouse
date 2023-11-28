@@ -1,6 +1,6 @@
 from sqlmodel import Session
 from src.core.events.database import get_db_session
-from src.db.users import AnonymousUser, User, UserRead
+from src.db.users import AnonymousUser, PublicUser, User, UserRead
 from src.services.users.users import security_get_user
 from config.config import get_learnhouse_config
 from pydantic import BaseModel
@@ -94,7 +94,7 @@ async def get_current_user(
         user = await security_get_user(request, db_session, email=token_data.username)  # type: ignore # treated as an email
         if user is None:
             raise credentials_exception
-        return UserRead(**user.dict())
+        return PublicUser(**user.dict())
     else:
         return AnonymousUser()
 
