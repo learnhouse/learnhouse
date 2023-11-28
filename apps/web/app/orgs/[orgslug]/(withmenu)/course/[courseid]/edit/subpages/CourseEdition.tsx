@@ -4,6 +4,7 @@ import * as Form from '@radix-ui/react-form';
 import { useFormik } from 'formik';
 import { AlertTriangle } from "lucide-react";
 import React from "react";
+import ThumbnailUploader from './ThumbnailUpdate';
 
 const validate = (values: any) => {
   const errors: any = {};
@@ -81,6 +82,7 @@ function CourseEdition(props: any) {
             <div className="font-bold text-sm">{error}</div>
           </div>
         )}
+         <ThumbnailUploader courseid={props.courseid} />
         <FormLayout onSubmit={formik.handleSubmit}>
           <FormField name="name">
             <FormLabelAndMessage label='Name' message={formik.errors.name} />

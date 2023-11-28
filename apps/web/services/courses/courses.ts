@@ -30,6 +30,22 @@ export async function updateCourse(course_id: any, data: any) {
   return res;
 }
 
+export async function updateCourseThumbnail(course_id: any, newThumbnail: any) {
+  // Send the new thumbnail as form data
+  const formData = new FormData();
+  formData.append("thumbnail", newThumbnail);
+
+  // Update the course's thumbnail using a PUT request
+  try {
+    const result: any = await fetch(`${getAPIUrl()}courses/update-thumbnail/${course_id}`, RequestBodyForm("PUT", formData, null));
+    const res = await errorHandling(result);
+    return res;
+  } catch (error) {
+    console.error('Error updating course thumbnail:', error);
+    throw error;
+  }
+}
+
 export async function getCourse(course_id: string, next: any) {
   const result: any = await fetch(`${getAPIUrl()}courses/${course_id}`, RequestBody("GET", null, next));
   const res = await errorHandling(result);
