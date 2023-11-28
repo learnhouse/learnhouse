@@ -1,8 +1,13 @@
+from typing import Literal
 from sqlmodel import Session, select
+from src.security.rbac.rbac import (
+    authorization_verify_based_on_roles_and_authorship,
+    authorization_verify_if_user_is_anon,
+)
 from src.db.organizations import Organization
 from src.db.activities import ActivityCreate, Activity, ActivityRead, ActivityUpdate
 from src.db.chapter_activities import ChapterActivity
-from src.db.users import PublicUser
+from src.db.users import AnonymousUser, PublicUser
 from fastapi import HTTPException, Request
 from uuid import uuid4
 from datetime import datetime
@@ -16,7 +21,7 @@ from datetime import datetime
 async def create_activity(
     request: Request,
     activity_object: ActivityCreate,
-    current_user: PublicUser,
+    current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
     activity = Activity.from_orm(activity_object)
@@ -30,6 +35,9 @@ async def create_activity(
             status_code=404,
             detail="Organization not found",
         )
+
+    # RBAC check
+    await rbac_check(request, org.org_uuid, current_user, "create", db_session)
 
     activity.activity_uuid = str(f"activity_{uuid4()}")
     activity.creation_date = str(datetime.now())
@@ -85,13 +93,16 @@ async def get_activity(
             detail="Activity not found",
         )
 
+    # RBAC check
+    await rbac_check(request, activity.activity_uuid, current_user, "read", db_session)
+
     return activity
 
 
 async def update_activity(
     request: Request,
     activity_object: ActivityUpdate,
-    current_user: PublicUser,
+    current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
     statement = select(Activity).where(Activity.id == activity_object.activity_id)
@@ -102,6 +113,11 @@ async def update_activity(
             status_code=404,
             detail="Activity not found",
         )
+
+    # RBAC check
+    await rbac_check(
+        request, activity.activity_uuid, current_user, "update", db_session
+    )
 
     del activity_object.activity_id
 
@@ -120,7 +136,7 @@ async def update_activity(
 async def delete_activity(
     request: Request,
     activity_id: str,
-    current_user: PublicUser,
+    current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
     statement = select(Activity).where(Activity.id == activity_id)
@@ -131,6 +147,11 @@ async def delete_activity(
             status_code=404,
             detail="Activity not found",
         )
+
+    # RBAC check
+    await rbac_check(
+        request, activity.activity_uuid, current_user, "delete", db_session
+    )
 
     # Delete activity from chapter
     statement = select(ChapterActivity).where(
@@ -159,7 +180,7 @@ async def delete_activity(
 async def get_activities(
     request: Request,
     coursechapter_id: str,
-    current_user: PublicUser,
+    current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
     statement = select(ChapterActivity).where(
@@ -173,4 +194,31 @@ async def get_activities(
             detail="No activities found",
         )
 
+    # RBAC check
+    await rbac_check(request, "activity_x", current_user, "read", db_session)
+
     return activities
+
+
+## 🔒 RBAC Utils ##
+
+
+async def rbac_check(
+    request: Request,
+    course_id: str,
+    current_user: PublicUser | AnonymousUser,
+    action: Literal["create", "read", "update", "delete"],
+    db_session: Session,
+):
+    await authorization_verify_if_user_is_anon(current_user.id)
+
+    await authorization_verify_based_on_roles_and_authorship(
+        request,
+        current_user.id,
+        action,
+        course_id,
+        db_session,
+    )
+
+
+## 🔒 RBAC Utils ##

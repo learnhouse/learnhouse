@@ -11,27 +11,21 @@ from src.db.user_organizations import UserOrganization
 from src.security.rbac.utils import check_element_type
 
 
+# Tested and working
 async def authorization_verify_if_element_is_public(
     request,
     element_uuid: str,
-    user_id: str,
     action: Literal["read"],
     db_session: Session,
 ):
     element_nature = await check_element_type(element_uuid)
-
     # Verifies if the element is public
-    if (
-        element_nature == ("courses" or "collections")
-        and action == "read"
-        and user_id == "anonymous"
-    ):
+    if element_nature == ("courses" or "collections") and action == "read":
         if element_nature == "courses":
             statement = select(Course).where(
                 Course.public == True, Course.course_uuid == element_uuid
             )
             course = db_session.exec(statement).first()
-
             if course:
                 return True
             else:
@@ -60,9 +54,10 @@ async def authorization_verify_if_element_is_public(
         )
 
 
+# Tested and working
 async def authorization_verify_if_user_is_author(
     request,
-    user_id: str,
+    user_id: int,
     action: Literal["read", "update", "delete", "create"],
     element_uuid: str,
     db_session: Session,
@@ -74,26 +69,23 @@ async def authorization_verify_if_user_is_author(
         resource_author = db_session.exec(statement).first()
 
         if resource_author:
-            if resource_author.user_id == user_id:
+            if resource_author.user_id == int(user_id):
                 if (resource_author.authorship == ResourceAuthorshipEnum.CREATOR) or (
                     resource_author.authorship == ResourceAuthorshipEnum.MAINTAINER
                 ):
                     return True
+                else:
+                    return False
             else:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="User rights (authorship) : You don't have the right to perform this action",
-                )
+                return False
         else:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Wrong action (create)",
-            )
+            return False
 
 
+# Tested and working
 async def authorization_verify_based_on_roles(
     request: Request,
-    user_id: str,
+    user_id: int,
     action: Literal["read", "update", "delete", "create"],
     element_uuid: str,
     db_session: Session,
@@ -104,8 +96,8 @@ async def authorization_verify_based_on_roles(
     statement = (
         select(Role)
         .join(UserOrganization)
+        .where((UserOrganization.org_id == Role.org_id) | (Role.org_id == null()))
         .where(UserOrganization.user_id == user_id)
-        .where((UserOrganization.id == Role.org_id) | (UserOrganization.id == null))
     )
 
     user_roles_in_organization_and_standard_roles = db_session.exec(statement).all()
@@ -120,15 +112,13 @@ async def authorization_verify_based_on_roles(
             else:
                 return False
     else:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="User rights (roles) : You don't have the right to perform this action",
-        )
+        return False
 
 
+# Tested and working
 async def authorization_verify_based_on_roles_and_authorship(
     request: Request,
-    user_id: str,
+    user_id: int,
     action: Literal["read", "update", "delete", "create"],
     element_uuid: str,
     db_session: Session,
@@ -150,8 +140,8 @@ async def authorization_verify_based_on_roles_and_authorship(
         )
 
 
-async def authorization_verify_if_user_is_anon(user_id: str):
-    if user_id == "anonymous":
+async def authorization_verify_if_user_is_anon(user_id: int):
+    if user_id == 0:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You should be logged in to perform this action",

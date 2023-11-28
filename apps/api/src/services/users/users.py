@@ -1,9 +1,17 @@
 from datetime import datetime
+from typing import Literal
 from uuid import uuid4
 from fastapi import HTTPException, Request, status
 from sqlmodel import Session, select
+from src import db
+from src.security.rbac.rbac import (
+    authorization_verify_based_on_roles,
+    authorization_verify_based_on_roles_and_authorship,
+    authorization_verify_if_user_is_anon,
+)
 from src.db.organizations import Organization
 from src.db.users import (
+    AnonymousUser,
     PublicUser,
     User,
     UserCreate,
@@ -18,11 +26,14 @@ from src.security.security import security_hash_password, security_verify_passwo
 async def create_user(
     request: Request,
     db_session: Session,
-    current_user: PublicUser | None,
+    current_user: PublicUser | AnonymousUser,
     user_object: UserCreate,
     org_id: int,
 ):
     user = User.from_orm(user_object)
+
+    # RBAC check
+    await rbac_check(request, current_user, "create", "user_x", db_session)
 
     # Complete the user object
     user.user_uuid = f"user_{uuid4()}"
@@ -94,10 +105,13 @@ async def create_user(
 async def create_user_without_org(
     request: Request,
     db_session: Session,
-    current_user: PublicUser | None,
+    current_user: PublicUser | AnonymousUser,
     user_object: UserCreate,
 ):
     user = User.from_orm(user_object)
+
+    # RBAC check
+    await rbac_check(request, current_user, "create", "user_x", db_session)
 
     # Complete the user object
     user.user_uuid = f"user_{uuid4()}"
@@ -146,7 +160,7 @@ async def create_user_without_org(
 async def update_user(
     request: Request,
     db_session: Session,
-    current_user: PublicUser | None,
+    current_user: PublicUser | AnonymousUser,
     user_object: UserUpdate,
 ):
     # Get user
@@ -158,6 +172,9 @@ async def update_user(
             status_code=400,
             detail="User does not exist",
         )
+    
+    # RBAC check
+    await rbac_check(request, current_user, "update", user.user_uuid, db_session)
 
     # Update user
     user_data = user_object.dict(exclude_unset=True)
@@ -179,7 +196,7 @@ async def update_user(
 async def update_user_password(
     request: Request,
     db_session: Session,
-    current_user: PublicUser | None,
+    current_user: PublicUser | AnonymousUser,
     form: UserUpdatePassword,
 ):
     # Get user
@@ -191,6 +208,9 @@ async def update_user_password(
             status_code=400,
             detail="User does not exist",
         )
+    
+    # RBAC check
+    await rbac_check(request, current_user, "update", user.user_uuid, db_session)
 
     if not await security_verify_password(form.old_password, user.password):
         raise HTTPException(
@@ -214,7 +234,7 @@ async def update_user_password(
 async def read_user_by_id(
     request: Request,
     db_session: Session,
-    current_user: PublicUser | None,
+    current_user: PublicUser | AnonymousUser,
     user_id: int,
 ):
     # Get user
@@ -226,6 +246,9 @@ async def read_user_by_id(
             status_code=400,
             detail="User does not exist",
         )
+
+    # RBAC check
+    await rbac_check(request, current_user, "read", user.user_uuid, db_session)
 
     user = UserRead.from_orm(user)
 
@@ -235,11 +258,11 @@ async def read_user_by_id(
 async def read_user_by_uuid(
     request: Request,
     db_session: Session,
-    current_user: PublicUser | None,
-    uuid: str,
+    current_user: PublicUser | AnonymousUser,
+    user_uuid: str,
 ):
     # Get user
-    statement = select(User).where(User.user_uuid == uuid)
+    statement = select(User).where(User.user_uuid == user_uuid)
     user = db_session.exec(statement).first()
 
     if not user:
@@ -247,6 +270,9 @@ async def read_user_by_uuid(
             status_code=400,
             detail="User does not exist",
         )
+
+    # RBAC check
+    await rbac_check(request, current_user, "read", user.user_uuid, db_session)
 
     user = UserRead.from_orm(user)
 
@@ -256,7 +282,7 @@ async def read_user_by_uuid(
 async def delete_user_by_id(
     request: Request,
     db_session: Session,
-    current_user: PublicUser | None,
+    current_user: PublicUser | AnonymousUser,
     user_id: int,
 ):
     # Get user
@@ -268,6 +294,9 @@ async def delete_user_by_id(
             status_code=400,
             detail="User does not exist",
         )
+
+    # RBAC check
+    await rbac_check(request, current_user, "delete", user.user_uuid, db_session)
 
     # Delete user
     db_session.delete(user)
@@ -293,3 +322,37 @@ async def security_get_user(request: Request, db_session: Session, email: str) -
     user = User(**user.dict())
 
     return user
+
+
+## 🔒 RBAC Utils ##
+
+
+async def rbac_check(
+    request: Request,
+    current_user: PublicUser | AnonymousUser,
+    action: Literal["create", "read", "update", "delete"],
+    user_uuid: str,
+    db_session: Session,
+):
+    if action == "create":
+        if current_user.id == 0:  # if user is anonymous
+            return True
+        else:
+            res = await authorization_verify_based_on_roles_and_authorship(
+                request, current_user.id, "create", "user_x", db_session
+            )
+            
+
+    else:
+        await authorization_verify_if_user_is_anon(current_user.id)
+
+        # if user is the same as the one being read
+        if current_user.user_uuid == user_uuid:
+            return True
+
+        await authorization_verify_based_on_roles_and_authorship(
+            request, current_user.id, "read", action, db_session
+        )
+
+
+## 🔒 RBAC Utils ##

@@ -1,6 +1,6 @@
 from typing import List, Optional
 from sqlmodel import Field, SQLModel
-
+from src.db.trails import TrailRead
 from src.db.chapters import ChapterRead
 
 
@@ -39,6 +39,7 @@ class CourseUpdate(CourseBase):
 
 class CourseRead(CourseBase):
     id: int
+    org_id: int = Field(default=None, foreign_key="organization.id")
     course_uuid: str
     creation_date: str
     update_date: str
@@ -52,4 +53,16 @@ class FullCourseRead(CourseBase):
     update_date: str
     # Chapters, Activities
     chapters: List[ChapterRead]
+    pass
+
+
+class FullCourseReadWithTrail(CourseBase):
+    id: int
+    course_uuid: str
+    creation_date: str
+    update_date: str
+    # Chapters, Activities
+    chapters: List[ChapterRead]
+    # Trail
+    trail: TrailRead
     pass

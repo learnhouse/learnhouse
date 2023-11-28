@@ -1,7 +1,12 @@
 from datetime import datetime
-from typing import List
+from typing import List, Literal
 from uuid import uuid4
 from sqlmodel import Session, select
+from src.db.users import AnonymousUser
+from src.security.rbac.rbac import (
+    authorization_verify_based_on_roles_and_authorship,
+    authorization_verify_if_user_is_anon,
+)
 from src.db.course_chapters import CourseChapter
 from src.db.activities import Activity, ActivityRead
 from src.db.chapter_activities import ChapterActivity
@@ -26,10 +31,13 @@ from fastapi import HTTPException, status, Request
 async def create_chapter(
     request: Request,
     chapter_object: ChapterCreate,
-    current_user: PublicUser,
+    current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ) -> ChapterRead:
     chapter = Chapter.from_orm(chapter_object)
+
+    # RBAC check
+    await rbac_check(request, "chapter_x", current_user, "create", db_session)
 
     # complete chapter object
     chapter.course_id = chapter_object.course_id
@@ -87,7 +95,7 @@ async def create_chapter(
 async def get_chapter(
     request: Request,
     chapter_id: int,
-    current_user: PublicUser,
+    current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ) -> ChapterRead:
     statement = select(Chapter).where(Chapter.id == chapter_id)
@@ -97,6 +105,9 @@ async def get_chapter(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Chapter does not exist"
         )
+
+    # RBAC check
+    await rbac_check(request, chapter.chapter_uuid, current_user, "read", db_session)
 
     # Get activities for this chapter
     statement = (
@@ -119,7 +130,7 @@ async def get_chapter(
 async def update_chapter(
     request: Request,
     chapter_object: ChapterUpdate,
-    current_user: PublicUser,
+    current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ) -> ChapterRead:
     statement = select(Chapter).where(Chapter.id == chapter_object.chapter_id)
@@ -129,6 +140,9 @@ async def update_chapter(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Chapter does not exist"
         )
+
+    # RBAC check
+    await rbac_check(request, chapter.chapter_uuid, current_user, "update", db_session)
 
     # Update only the fields that were passed in
     for var, value in vars(chapter_object).items():
@@ -148,7 +162,7 @@ async def update_chapter(
 async def delete_chapter(
     request: Request,
     chapter_id: str,
-    current_user: PublicUser,
+    current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
     statement = select(Chapter).where(Chapter.id == chapter_id)
@@ -158,6 +172,9 @@ async def delete_chapter(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Chapter does not exist"
         )
+
+    # RBAC check
+    await rbac_check(request, chapter.chapter_uuid, current_user, "delete", db_session)
 
     db_session.delete(chapter)
     db_session.commit()
@@ -173,15 +190,12 @@ async def delete_chapter(
     return {"detail": "chapter deleted"}
 
 
-####################################################
-# Misc
-####################################################
-
 
 async def get_course_chapters(
     request: Request,
     course_id: int,
     db_session: Session,
+    current_user: PublicUser | AnonymousUser,
     page: int = 1,
     limit: int = 10,
 ) -> List[ChapterRead]:
@@ -194,6 +208,9 @@ async def get_course_chapters(
         )
 
     chapters = [ChapterRead(**chapter.dict(), activities=[]) for chapter in chapters]
+
+    # RBAC check
+    await rbac_check(request, "chapter_x", current_user, "read", db_session)
 
     # Get activities for each chapter
     for chapter in chapters:
@@ -232,6 +249,9 @@ async def get_depreceated_course_chapters(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Course does not exist"
         )
+
+    # RBAC check
+    await rbac_check(request, course.course_uuid, current_user, "read", db_session)
 
     # Get chapters that are linked to his course and order them by order, using the order field in the CourseChapter table
     statement = (
@@ -309,6 +329,9 @@ async def reorder_chapters_and_activities(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Course does not exist"
         )
+
+    # RBAC check
+    await rbac_check(request, course.course_uuid, current_user, "update", db_session)
 
     ###########
     # Chapters
@@ -469,3 +492,27 @@ async def reorder_chapters_and_activities(
                 db_session.commit()
 
     return {"detail": "Chapters reordered"}
+
+
+## 🔒 RBAC Utils ##
+
+
+async def rbac_check(
+    request: Request,
+    course_id: str,
+    current_user: PublicUser | AnonymousUser,
+    action: Literal["create", "read", "update", "delete"],
+    db_session: Session,
+):
+    await authorization_verify_if_user_is_anon(current_user.id)
+
+    await authorization_verify_based_on_roles_and_authorship(
+        request,
+        current_user.id,
+        action,
+        course_id,
+        db_session,
+    )
+
+
+## 🔒 RBAC Utils ##

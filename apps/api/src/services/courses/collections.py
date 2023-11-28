@@ -1,7 +1,12 @@
 from datetime import datetime
-from typing import List
+from typing import List, Literal
 from uuid import uuid4
 from sqlmodel import Session, select
+from src.db.users import AnonymousUser
+from src.security.rbac.rbac import (
+    authorization_verify_based_on_roles_and_authorship,
+    authorization_verify_if_user_is_anon,
+)
 from src.db.collections import (
     Collection,
     CollectionCreate,
@@ -37,6 +42,11 @@ async def get_collection(
             status_code=status.HTTP_409_CONFLICT, detail="Collection does not exist"
         )
 
+    # RBAC check
+    await rbac_check(
+        request, collection.collection_uuid, current_user, "read", db_session
+    )
+
     # get courses in collection
     statement = (
         select(Course)
@@ -58,6 +68,9 @@ async def create_collection(
 ) -> CollectionRead:
     collection = Collection.from_orm(collection_object)
 
+    # RBAC check
+    await rbac_check(request, "collection_x", current_user, "create", db_session)
+
     # Complete the collection object
     collection.collection_uuid = f"collection_{uuid4()}"
     collection.creation_date = str(datetime.now())
@@ -70,16 +83,17 @@ async def create_collection(
     db_session.refresh(collection)
 
     # Link courses to collection
-    for course in collection_object.courses:
-        collection_course = CollectionCourse(
-            collection_id=int(collection.id is not None),
-            course_id=int(course),
-            org_id=int(collection_object.org_id),
-            creation_date=str(datetime.now()),
-            update_date=str(datetime.now()),
-        )
-        # Add collection_course to database
-        db_session.add(collection_course)
+    if collection:
+        for course_id in collection_object.courses:
+            collection_course = CollectionCourse(
+                collection_id=int(collection.id),  # type: ignore
+                course_id=course_id,
+                org_id=int(collection_object.org_id),
+                creation_date=str(datetime.now()),
+                update_date=str(datetime.now()),
+            )
+            # Add collection_course to database
+            db_session.add(collection_course)
 
     db_session.commit()
     db_session.refresh(collection)
@@ -113,6 +127,11 @@ async def update_collection(
             status_code=status.HTTP_409_CONFLICT, detail="Collection does not exist"
         )
 
+    # RBAC check
+    await rbac_check(
+        request, collection.collection_uuid, current_user, "update", db_session
+    )
+
     courses = collection_object.courses
 
     del collection_object.collection_id
@@ -142,7 +161,7 @@ async def update_collection(
     # Add new collection_courses
     for course in courses or []:
         collection_course = CollectionCourse(
-            collection_id=int(collection.id is not None),
+            collection_id=int(collection.id),  # type: ignore
             course_id=int(course),
             org_id=int(collection.org_id),
             creation_date=str(datetime.now()),
@@ -180,6 +199,11 @@ async def delete_collection(
             detail="Collection not found",
         )
 
+    # RBAC check
+    await rbac_check(
+        request, collection.collection_uuid, current_user, "delete", db_session
+    )
+
     # delete collection from database
     db_session.delete(collection)
     db_session.commit()
@@ -195,11 +219,14 @@ async def delete_collection(
 async def get_collections(
     request: Request,
     org_id: str,
-    current_user: PublicUser,
+    current_user: PublicUser | AnonymousUser,
     db_session: Session,
     page: int = 1,
     limit: int = 10,
 ) -> List[CollectionRead]:
+    # RBAC check
+    await rbac_check(request, "collection_x", current_user, "read", db_session)
+
     statement = (
         select(Collection).where(Collection.org_id == org_id).distinct(Collection.id)
     )
@@ -223,3 +250,27 @@ async def get_collections(
         collections_with_courses.append(collection)
 
     return collections_with_courses
+
+
+## 🔒 RBAC Utils ##
+
+
+async def rbac_check(
+    request: Request,
+    course_id: str,
+    current_user: PublicUser | AnonymousUser,
+    action: Literal["create", "read", "update", "delete"],
+    db_session: Session,
+):
+    await authorization_verify_if_user_is_anon(current_user.id)
+
+    await authorization_verify_based_on_roles_and_authorship(
+        request,
+        current_user.id,
+        action,
+        course_id,
+        db_session,
+    )
+
+
+## 🔒 RBAC Utils ##
