@@ -1,19 +1,10 @@
-from calendar import c
-import json
-from queue import Full
-import resource
 from typing import Literal
 from uuid import uuid4
 from sqlmodel import Session, select
-from src.db import chapters
-from src.db.activities import Activity, ActivityRead
-from src.db.chapter_activities import ChapterActivity
-from src.db.chapters import Chapter, ChapterRead
 from src.db.organizations import Organization
 from src.db.trails import TrailRead
 
 from src.services.trail.trail import get_user_trail_with_orgid
-from src import db
 from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum
 from src.db.users import PublicUser, AnonymousUser
 from src.db.courses import (
@@ -29,7 +20,7 @@ from src.security.rbac.rbac import (
     authorization_verify_if_user_is_anon,
 )
 from src.services.courses.thumbnails import upload_thumbnail
-from fastapi import HTTPException, Request, status, UploadFile
+from fastapi import HTTPException, Request, UploadFile
 from datetime import datetime
 
 
@@ -267,7 +258,7 @@ async def get_courses_orgslug(
     statement_public = (
         select(Course)
         .join(Organization)
-        .where(Organization.slug == org_slug, Course.public == True)
+        .where(Organization.slug == org_slug, Course.public is True)
     )
     statement_all = (
         select(Course).join(Organization).where(Organization.slug == org_slug)

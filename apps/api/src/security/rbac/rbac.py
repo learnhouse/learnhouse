@@ -1,7 +1,6 @@
-from math import e
 from typing import Literal
 from fastapi import HTTPException, status, Request
-from sqlalchemy import func, null, or_
+from sqlalchemy import null
 from sqlmodel import Session, select
 from src.db.collections import Collection
 from src.db.courses import Course
@@ -23,7 +22,7 @@ async def authorization_verify_if_element_is_public(
     if element_nature == ("courses" or "collections") and action == "read":
         if element_nature == "courses":
             statement = select(Course).where(
-                Course.public == True, Course.course_uuid == element_uuid
+                Course.public is True, Course.course_uuid == element_uuid
             )
             course = db_session.exec(statement).first()
             if course:
@@ -36,7 +35,7 @@ async def authorization_verify_if_element_is_public(
 
         if element_nature == "collections":
             statement = select(Collection).where(
-                Collection.public == True, Collection.collection_uuid == element_uuid
+                Collection.public is True, Collection.collection_uuid == element_uuid
             )
             collection = db_session.exec(statement).first()
 
