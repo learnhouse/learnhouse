@@ -1,7 +1,13 @@
+from typing import List
 from fastapi import APIRouter, Depends, Request, UploadFile
 from sqlmodel import Session
 from src.db.users import PublicUser
-from src.db.organizations import OrganizationCreate, OrganizationUpdate
+from src.db.organizations import (
+    Organization,
+    OrganizationCreate,
+    OrganizationRead,
+    OrganizationUpdate,
+)
 from src.core.events.database import get_db_session
 from src.security.auth import get_current_user
 from src.services.orgs.orgs import (
@@ -24,7 +30,7 @@ async def api_create_org(
     org_object: OrganizationCreate,
     current_user: PublicUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
-):
+) -> OrganizationRead:
     """
     Create new organization
     """
@@ -37,7 +43,7 @@ async def api_get_org(
     org_id: str,
     current_user: PublicUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
-):
+) -> OrganizationRead:
     """
     Get single Org by ID
     """
@@ -50,7 +56,7 @@ async def api_get_org_by_slug(
     org_slug: str,
     current_user: PublicUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
-):
+) -> OrganizationRead:
     """
     Get single Org by Slug
     """
@@ -84,7 +90,7 @@ async def api_user_orgs(
     limit: int,
     current_user: PublicUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
-):
+) -> List[Organization]:
     """
     Get orgs by page and limit by user
     """
@@ -99,7 +105,7 @@ async def api_update_org(
     org_object: OrganizationUpdate,
     current_user: PublicUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
-):
+) -> OrganizationRead:
     """
     Update Org by ID
     """

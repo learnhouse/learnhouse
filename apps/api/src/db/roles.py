@@ -40,7 +40,7 @@ class RoleTypeEnum(str, Enum):
 class RoleBase(SQLModel):
     name: str
     description: Optional[str]
-    rights: Optional[Union[Rights,dict]]  = Field(default={}, sa_column=Column(JSON))
+    rights: Optional[Union[Rights, dict]] = Field(default={}, sa_column=Column(JSON))
 
 
 class Role(RoleBase, table=True):
@@ -52,13 +52,21 @@ class Role(RoleBase, table=True):
     update_date: str = ""
 
 
+class RoleRead(RoleBase):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    org_id: int = Field(default=None, foreign_key="organization.id")
+    role_type: RoleTypeEnum = RoleTypeEnum.TYPE_GLOBAL
+    role_uuid: str
+    creation_date: str
+    update_date: str
+
+
 class RoleCreate(RoleBase):
     org_id: Optional[int] = Field(default=None, foreign_key="organization.id")
-    
 
 
 class RoleUpdate(SQLModel):
     role_id: int = Field(default=None, foreign_key="role.id")
     name: Optional[str]
     description: Optional[str]
-    rights: Optional[Union[Rights,dict]] = Field(default={}, sa_column=Column(JSON))
+    rights: Optional[Union[Rights, dict]] = Field(default={}, sa_column=Column(JSON))

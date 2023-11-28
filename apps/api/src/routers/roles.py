@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Request
 from sqlmodel import Session
 from src.core.events.database import get_db_session
-from src.db.roles import RoleCreate, RoleUpdate
+from src.db.roles import RoleCreate, RoleRead, RoleUpdate
 from src.security.auth import get_current_user
 from src.services.roles.roles import create_role, delete_role, read_role, update_role
 from src.db.users import PublicUser
@@ -16,7 +16,7 @@ async def api_create_role(
     role_object: RoleCreate,
     current_user: PublicUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
-):
+)-> RoleRead:
     """
     Create new role
     """
@@ -29,7 +29,7 @@ async def api_get_role(
     role_id: str,
     current_user: PublicUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
-):
+)-> RoleRead:
     """
     Get single role by role_id
     """
@@ -42,7 +42,7 @@ async def api_update_role(
     role_object: RoleUpdate,
     current_user: PublicUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
-):
+)-> RoleRead:
     """
     Update role by role_id
     """
