@@ -1,6 +1,12 @@
+from typing import Literal
 from uuid import uuid4
 from sqlmodel import Session, select
-from src.db.users import PublicUser
+from src.security.rbac.rbac import (
+    authorization_verify_based_on_roles_and_authorship,
+    authorization_verify_if_user_is_anon,
+    authorization_verify_if_user_is_author,
+)
+from src.db.users import AnonymousUser, PublicUser
 from src.db.roles import Role, RoleCreate, RoleUpdate
 from fastapi import HTTPException, Request
 from datetime import datetime
@@ -13,6 +19,9 @@ async def create_role(
     current_user: PublicUser,
 ):
     role = Role.from_orm(role_object)
+
+    # RBAC check
+    await rbac_check(request, current_user, "create", "role_xxx", db_session)
 
     # Complete the role object
     role.role_uuid = f"role_{uuid4()}"
@@ -40,6 +49,9 @@ async def read_role(
             detail="Role not found",
         )
 
+    # RBAC check
+    await rbac_check(request, current_user, "read", role.role_uuid, db_session)
+
     return role
 
 
@@ -59,6 +71,9 @@ async def update_role(
             status_code=404,
             detail="Role not found",
         )
+
+    # RBAC check
+    await rbac_check(request, current_user, "update", role.role_uuid, db_session)
 
     # Complete the role object
     role.update_date = str(datetime.now())
@@ -81,6 +96,9 @@ async def update_role(
 async def delete_role(
     request: Request, db_session: Session, role_id: str, current_user: PublicUser
 ):
+    # RBAC check
+    await rbac_check(request, current_user, "delete", role_id, db_session)
+
     statement = select(Role).where(Role.id == role_id)
     result = db_session.exec(statement)
 
@@ -96,3 +114,23 @@ async def delete_role(
     db_session.commit()
 
     return "Role deleted"
+
+
+## 🔒 RBAC Utils ##
+
+
+async def rbac_check(
+    request: Request,
+    current_user: PublicUser | AnonymousUser,
+    action: Literal["create", "read", "update", "delete"],
+    role_uuid: str,
+    db_session: Session,
+):
+    await authorization_verify_if_user_is_anon(current_user.id)
+
+    await authorization_verify_based_on_roles_and_authorship(
+        request, current_user.id, action, role_uuid, db_session
+    )
+
+
+## 🔒 RBAC Utils ##

@@ -1,7 +1,12 @@
 from datetime import datetime
+from typing import Literal
 from uuid import uuid4
 from sqlmodel import Session, select
-from src.db.users import PublicUser
+from src.security.rbac.rbac import (
+    authorization_verify_based_on_roles_and_authorship,
+    authorization_verify_if_user_is_anon,
+)
+from src.db.users import AnonymousUser, PublicUser
 from src.db.user_organizations import UserOrganization
 from src.db.organizations import (
     Organization,
@@ -13,7 +18,12 @@ from src.services.orgs.logos import upload_org_logo
 from fastapi import HTTPException, UploadFile, status, Request
 
 
-async def get_organization(request: Request, org_id: str, db_session: Session):
+async def get_organization(
+    request: Request,
+    org_id: str,
+    db_session: Session,
+    current_user: PublicUser | AnonymousUser,
+):
     statement = select(Organization).where(Organization.id == org_id)
     result = db_session.exec(statement)
 
@@ -25,11 +35,17 @@ async def get_organization(request: Request, org_id: str, db_session: Session):
             detail="Organization not found",
         )
 
+    # RBAC check
+    await rbac_check(request, org.org_uuid, current_user, "read", db_session)
+
     return org
 
 
 async def get_organization_by_slug(
-    request: Request, org_slug: str, db_session: Session
+    request: Request,
+    org_slug: str,
+    db_session: Session,
+    current_user: PublicUser | AnonymousUser,
 ):
     statement = select(Organization).where(Organization.slug == org_slug)
     result = db_session.exec(statement)
@@ -42,13 +58,16 @@ async def get_organization_by_slug(
             detail="Organization not found",
         )
 
+    # RBAC check
+    await rbac_check(request, org.org_uuid, current_user, "read", db_session)
+
     return org
 
 
 async def create_org(
     request: Request,
     org_object: OrganizationCreate,
-    current_user: PublicUser,
+    current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
     statement = select(Organization).where(Organization.slug == org_object.slug)
@@ -63,6 +82,9 @@ async def create_org(
         )
 
     org = Organization.from_orm(org_object)
+
+    # RBAC check
+    await rbac_check(request, org.org_uuid, current_user, "create", db_session)
 
     # Complete the org object
     org.org_uuid = f"org_{uuid4()}"
@@ -92,7 +114,7 @@ async def create_org(
 async def update_org(
     request: Request,
     org_object: OrganizationUpdate,
-    current_user: PublicUser,
+    current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
     statement = select(Organization).where(Organization.id == org_object.org_id)
@@ -105,6 +127,9 @@ async def update_org(
             status_code=404,
             detail="Organization slug not found",
         )
+
+    # RBAC check
+    await rbac_check(request, org.org_uuid, current_user, "update", db_session)
 
     org = Organization.from_orm(org_object)
 
@@ -142,7 +167,7 @@ async def update_org_logo(
     request: Request,
     logo_file: UploadFile,
     org_id: str,
-    current_user: PublicUser,
+    current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
     statement = select(Organization).where(Organization.id == org_id)
@@ -155,6 +180,9 @@ async def update_org_logo(
             status_code=404,
             detail="Organization not found",
         )
+
+    # RBAC check
+    await rbac_check(request, org.org_uuid, current_user, "update", db_session)
 
     # Upload logo
     name_in_disk = await upload_org_logo(logo_file, org_id)
@@ -173,7 +201,10 @@ async def update_org_logo(
 
 
 async def delete_org(
-    request: Request, org_id: str, current_user: PublicUser, db_session: Session
+    request: Request,
+    org_id: int,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
 ):
     statement = select(Organization).where(Organization.id == org_id)
     result = db_session.exec(statement)
@@ -185,6 +216,9 @@ async def delete_org(
             status_code=404,
             detail="Organization not found",
         )
+
+    # RBAC check
+    await rbac_check(request, org.org_uuid, current_user, "delete", db_session)
 
     db_session.delete(org)
     db_session.commit()
@@ -224,3 +258,28 @@ async def get_orgs_by_user(
     orgs = result.all()
 
     return orgs
+
+
+## 🔒 RBAC Utils ##
+
+
+async def rbac_check(
+    request: Request,
+    org_id: str,
+    current_user: PublicUser | AnonymousUser,
+    action: Literal["create", "read", "update", "delete"],
+    db_session: Session,
+):
+    # Organizations are readable by anyone
+    if action == "read":
+        return True
+
+    else:
+        await authorization_verify_if_user_is_anon(current_user.id)
+
+        await authorization_verify_based_on_roles_and_authorship(
+            request, current_user.id, action, org_id, db_session
+        )
+
+
+## 🔒 RBAC Utils ##

@@ -32,12 +32,14 @@ class UserUpdatePassword(SQLModel):
 
 class UserRead(UserBase):
     id: int
+    user_uuid: str
 
 class PublicUser(UserRead):
     pass
 
 class AnonymousUser(SQLModel):
-    id: str = "anonymous"
+    id: int = 0
+    user_uuid: str = "user_anonymous"
     username: str = "anonymous"
 
 class User(UserBase, table=True):

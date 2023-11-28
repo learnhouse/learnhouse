@@ -41,7 +41,7 @@ async def api_get_org(
     """
     Get single Org by ID
     """
-    return await get_organization(request, org_id, db_session)
+    return await get_organization(request, org_id, db_session, current_user)
 
 
 @router.get("/slug/{org_slug}")
@@ -54,7 +54,7 @@ async def api_get_org_by_slug(
     """
     Get single Org by Slug
     """
-    return await get_organization_by_slug(request, org_slug, db_session)
+    return await get_organization_by_slug(request, org_slug, db_session, current_user)
 
 
 @router.put("/{org_id}/logo")
@@ -109,7 +109,7 @@ async def api_update_org(
 @router.delete("/{org_id}")
 async def api_delete_org(
     request: Request,
-    org_id: str,
+    org_id: int,
     current_user: PublicUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
 ):
