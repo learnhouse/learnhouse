@@ -60,7 +60,9 @@ async def api_get_chapter_meta(
     """
     Get Chapters metadata
     """
-    return await get_depreceated_course_chapters(request, course_id, current_user, db_session)
+    return await get_depreceated_course_chapters(
+        request, course_id, current_user, db_session
+    )
 
 
 @router.put("/order/{course_id}")
@@ -85,12 +87,15 @@ async def api_get_chapter_by(
     course_id: int,
     page: int,
     limit: int,
+    current_user: PublicUser = Depends(get_current_user),
     db_session=Depends(get_db_session),
 ) -> List[ChapterRead]:
     """
     Get Course Chapters by page and limit
     """
-    return await get_course_chapters(request, course_id, db_session, page, limit)
+    return await get_course_chapters(
+        request, course_id, db_session, current_user, page, limit
+    )
 
 
 @router.put("/{coursechapter_id}")
@@ -118,6 +123,4 @@ async def api_delete_coursechapter(
     Delete CourseChapters by ID
     """
 
-    return await delete_chapter(
-        request, coursechapter_id, current_user, db_session
-    )
+    return await delete_chapter(request, coursechapter_id, current_user, db_session)

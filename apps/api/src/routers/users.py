@@ -126,7 +126,7 @@ async def api_delete_user(
     db_session: Session = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
     user_id: int,
-):
+) :
     """
     Delete User
     """

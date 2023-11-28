@@ -96,6 +96,8 @@ async def get_activity(
     # RBAC check
     await rbac_check(request, activity.activity_uuid, current_user, "read", db_session)
 
+    activity = ActivityRead.from_orm(activity)
+
     return activity
 
 
@@ -129,6 +131,8 @@ async def update_activity(
     db_session.add(activity)
     db_session.commit()
     db_session.refresh(activity)
+
+    activity = ActivityRead.from_orm(activity)
 
     return activity
 
@@ -182,7 +186,7 @@ async def get_activities(
     coursechapter_id: str,
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
-):
+) -> list[ActivityRead]:
     statement = select(ChapterActivity).where(
         ChapterActivity.chapter_id == coursechapter_id
     )
@@ -196,6 +200,8 @@ async def get_activities(
 
     # RBAC check
     await rbac_check(request, "activity_x", current_user, "read", db_session)
+
+    activities = [ActivityRead.from_orm(activity) for activity in activities]
 
     return activities
 

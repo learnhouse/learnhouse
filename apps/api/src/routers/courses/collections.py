@@ -1,6 +1,7 @@
+from typing import List
 from fastapi import APIRouter, Depends, Request
 from src.core.events.database import get_db_session
-from src.db.collections import CollectionCreate, CollectionUpdate
+from src.db.collections import CollectionCreate, CollectionRead, CollectionUpdate
 from src.security.auth import get_current_user
 from src.services.users.users import PublicUser
 from src.services.courses.collections import (
@@ -21,7 +22,7 @@ async def api_create_collection(
     collection_object: CollectionCreate,
     current_user: PublicUser = Depends(get_current_user),
     db_session=Depends(get_db_session),
-):
+) -> CollectionRead:
     """
     Create new Collection
     """
@@ -34,7 +35,7 @@ async def api_get_collection(
     collection_id: str,
     current_user: PublicUser = Depends(get_current_user),
     db_session=Depends(get_db_session),
-):
+) -> CollectionRead:
     """
     Get single collection by ID
     """
@@ -49,7 +50,7 @@ async def api_get_collections_by(
     org_id: str,
     current_user: PublicUser = Depends(get_current_user),
     db_session=Depends(get_db_session),
-):
+) -> List[CollectionRead]:
     """
     Get collections by page and limit
     """
@@ -62,7 +63,7 @@ async def api_update_collection(
     collection_object: CollectionUpdate,
     current_user: PublicUser = Depends(get_current_user),
     db_session=Depends(get_db_session),
-):
+) -> CollectionRead:
     """
     Update collection by ID
     """

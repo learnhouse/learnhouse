@@ -3,7 +3,7 @@ from uuid import uuid4
 from fastapi import HTTPException, Request
 from sqlalchemy import desc
 from sqlmodel import Session, select
-from src.db.install import Install
+from src.db.install import Install, InstallRead
 from src.db.organizations import Organization, OrganizationCreate
 from src.db.roles import Permission, Rights, Role, RoleTypeEnum
 from src.db.user_organizations import UserOrganization
@@ -41,6 +41,8 @@ async def create_install_instance(request: Request, data: dict, db_session: Sess
     # refresh install instance
     db_session.refresh(install)
 
+    install = InstallRead.from_orm(install)
+
     return install
 
 
@@ -53,6 +55,8 @@ async def get_latest_install_instance(request: Request, db_session: Session):
             status_code=404,
             detail="No install instance found",
         )
+    
+    install = InstallRead.from_orm(install)
 
     return install
 
@@ -77,6 +81,8 @@ async def update_install_instance(
 
     # refresh install instance
     db_session.refresh(install)
+
+    install = InstallRead.from_orm(install)
 
     return install
 

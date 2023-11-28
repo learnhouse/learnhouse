@@ -51,6 +51,8 @@ async def get_course(
     # RBAC check
     await rbac_check(request, course.course_uuid, current_user, "read", db_session)
 
+    course = CourseRead.from_orm(course)
+
     return course
 
 
@@ -188,6 +190,8 @@ async def update_course_thumbnail(
     db_session.commit()
     db_session.refresh(course)
 
+    course = CourseRead.from_orm(course)
+
     return course
 
 
@@ -222,6 +226,8 @@ async def update_course(
     db_session.add(course)
     db_session.commit()
     db_session.refresh(course)
+
+    course = CourseRead.from_orm(course)
 
     return course
 
@@ -276,6 +282,8 @@ async def get_courses_orgslug(
         statement = statement_all
 
     courses = db_session.exec(statement)
+
+    courses = [CourseRead.from_orm(course) for course in courses]
 
     return courses
 

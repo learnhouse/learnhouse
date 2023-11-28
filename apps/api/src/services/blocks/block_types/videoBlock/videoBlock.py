@@ -3,7 +3,7 @@ from uuid import uuid4
 from fastapi import HTTPException, status, UploadFile, Request
 from sqlmodel import Session, select
 from src.db.activities import Activity
-from src.db.blocks import Block, BlockTypeEnum
+from src.db.blocks import Block, BlockRead, BlockTypeEnum
 from src.db.courses import Course
 from src.services.blocks.utils.upload_files import upload_file_and_return_file_object
 
@@ -66,6 +66,8 @@ async def create_video_block(
     db_session.commit()
     db_session.refresh(block)
 
+    block = BlockRead.from_orm(block)
+
     return block
 
 
@@ -79,5 +81,7 @@ async def get_video_block(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Video file does not exist"
         )
-    
+
+    block = BlockRead.from_orm(block)
+
     return block

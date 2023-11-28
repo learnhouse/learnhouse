@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, Request
+from src.db.install import InstallRead
 from src.core.events.database import get_db_session
 from src.db.organizations import OrganizationCreate
 from src.db.users import UserCreate
@@ -18,8 +19,10 @@ router = APIRouter()
 
 @router.post("/start")
 async def api_create_install_instance(
-    request: Request, data: dict, db_session=Depends(get_db_session),
-):
+    request: Request,
+    data: dict,
+    db_session=Depends(get_db_session),
+) -> InstallRead:
     # create install
     install = await create_install_instance(request, data, db_session)
 
@@ -27,7 +30,9 @@ async def api_create_install_instance(
 
 
 @router.get("/latest")
-async def api_get_latest_install_instance(request: Request, db_session=Depends(get_db_session),):
+async def api_get_latest_install_instance(
+    request: Request, db_session=Depends(get_db_session)
+) -> InstallRead:
     # get latest created install
     install = await get_latest_install_instance(request, db_session=db_session)
 
@@ -35,7 +40,10 @@ async def api_get_latest_install_instance(request: Request, db_session=Depends(g
 
 
 @router.post("/default_elements")
-async def api_install_def_elements(request: Request, db_session=Depends(get_db_session),):
+async def api_install_def_elements(
+    request: Request,
+    db_session=Depends(get_db_session),
+):
     elements = await install_default_elements(request, {}, db_session)
 
     return elements
@@ -43,7 +51,9 @@ async def api_install_def_elements(request: Request, db_session=Depends(get_db_s
 
 @router.post("/org")
 async def api_install_org(
-    request: Request, org: OrganizationCreate, db_session=Depends(get_db_session),
+    request: Request,
+    org: OrganizationCreate,
+    db_session=Depends(get_db_session),
 ):
     organization = await install_create_organization(request, org, db_session)
 
@@ -52,7 +62,10 @@ async def api_install_org(
 
 @router.post("/user")
 async def api_install_user(
-    request: Request, data: UserCreate, org_slug: str, db_session=Depends(get_db_session),
+    request: Request,
+    data: UserCreate,
+    org_slug: str,
+    db_session=Depends(get_db_session),
 ):
     user = await install_create_organization_user(request, data, org_slug, db_session)
 
@@ -61,8 +74,11 @@ async def api_install_user(
 
 @router.post("/update")
 async def api_update_install_instance(
-    request: Request, data: dict, step: int, db_session=Depends(get_db_session),
-):
+    request: Request,
+    data: dict,
+    step: int,
+    db_session=Depends(get_db_session),
+) -> InstallRead:
     request.app.db["installs"]
 
     # get latest created install

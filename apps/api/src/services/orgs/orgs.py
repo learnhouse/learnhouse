@@ -38,6 +38,8 @@ async def get_organization(
     # RBAC check
     await rbac_check(request, org.org_uuid, current_user, "read", db_session)
 
+    org = OrganizationRead.from_orm(org)
+
     return org
 
 
@@ -60,6 +62,8 @@ async def get_organization_by_slug(
 
     # RBAC check
     await rbac_check(request, org.org_uuid, current_user, "read", db_session)
+
+    org = OrganizationRead.from_orm(org)
 
     return org
 
@@ -160,6 +164,8 @@ async def update_org(
     db_session.commit()
     db_session.refresh(org)
 
+    org = OrganizationRead.from_orm(org)
+
     return org
 
 
@@ -196,6 +202,7 @@ async def update_org_logo(
     db_session.add(org)
     db_session.commit()
     db_session.refresh(org)
+
 
     return {"detail": "Logo updated"}
 
@@ -244,7 +251,7 @@ async def get_orgs_by_user(
     user_id: str,
     page: int = 1,
     limit: int = 10,
-):
+) -> list[Organization]:
     statement = (
         select(Organization)
         .join(UserOrganization)
