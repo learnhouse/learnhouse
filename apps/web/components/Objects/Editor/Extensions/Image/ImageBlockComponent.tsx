@@ -70,7 +70,7 @@ function ImageBlockComponent(props: any) {
 
             <img
               src={`${getActivityBlockMediaDirectory(props.extension.options.activity.org_id,
-                props.extension.options.activity.course_id,
+                props.extension.options.activity.course_uuid,
                 props.extension.options.activity.activity_id,
                 blockObject.block_id,
                 blockObject ? fileId : ' ', 'imageBlock')}`}

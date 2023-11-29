@@ -15,16 +15,16 @@ type PropsType = {
     orgslug: string
 }
 
-// function to remove "course_" from the course_id
-function removeCoursePrefix(course_id: string) {
-    return course_id.replace("course_", "");
+// function to remove "course_" from the course_uuid
+function removeCoursePrefix(course_uuid: string) {
+    return course_uuid.replace("course_", "");
 }
 
 function CourseThumbnail(props: PropsType) {
     const router = useRouter();
 
-    async function deleteCourses(course_id: any) {
-        await deleteCourseFromBackend(course_id);
+    async function deleteCourses(course_uuid: any) {
+        await deleteCourseFromBackend(course_uuid);
         await revalidateTags(['courses'], props.orgslug);
 
         router.refresh();
@@ -32,9 +32,9 @@ function CourseThumbnail(props: PropsType) {
 
     return (
         <div className='relative'>
-            <AdminEditsArea course={props.course} orgSlug={props.orgslug} courseId={props.course.course_id} deleteCourses={deleteCourses} />
-            <Link href={getUriWithOrg(props.orgslug, "/course/" + removeCoursePrefix(props.course.course_id))}>
-                <div className="inset-0 ring-1 ring-inset ring-black/10 rounded-xl shadow-xl w-[249px] h-[131px] bg-cover" style={{ backgroundImage: `url(${getCourseThumbnailMediaDirectory(props.course.org_id, props.course.course_id, props.course.thumbnail)})` }}>
+            <AdminEditsArea course={props.course} orgSlug={props.orgslug} courseId={props.course.course_uuid} deleteCourses={deleteCourses} />
+            <Link href={getUriWithOrg(props.orgslug, "/course/" + removeCoursePrefix(props.course.course_uuid))}>
+                <div className="inset-0 ring-1 ring-inset ring-black/10 rounded-xl shadow-xl w-[249px] h-[131px] bg-cover" style={{ backgroundImage: `url(${getCourseThumbnailMediaDirectory(props.course.org_id, props.course.course_uuid, props.course.thumbnail)})` }}>
         
                 </div>
             </Link>
@@ -45,7 +45,10 @@ function CourseThumbnail(props: PropsType) {
 
 const AdminEditsArea = (props: { orgSlug: string, courseId: string, course: any, deleteCourses: any }) => {
     return (
-        <AuthenticatedClientElement checkMethod='roles' orgId={props.course.org_id}>
+        <AuthenticatedClientElement 
+        action="update"
+        ressourceType="course"
+        checkMethod='roles' orgId={props.course.org_id}>
             <div className="flex space-x-1 absolute justify-center mx-auto z-20 bottom-14 left-1/2 transform -translate-x-1/2">
                 <Link href={getUriWithOrg(props.orgSlug, "/course/" + removeCoursePrefix(props.courseId) + "/edit")}>
                     <div

@@ -1,5 +1,5 @@
 from typing import Optional
-from sqlalchemy import JSON, Column
+from sqlalchemy import JSON, Column, ForeignKey
 from sqlmodel import Field, SQLModel
 from enum import Enum
 
@@ -22,9 +22,9 @@ class Block(BlockBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     content: dict = Field(default={}, sa_column=Column(JSON))
     org_id: int = Field(default=None, foreign_key="organization.id")
-    course_id: int = Field(default=None, foreign_key="course.id")
-    chapter_id: int = Field(default=None, foreign_key="chapter.id")
-    activity_id: int = Field(default=None, foreign_key="activity.id")
+    course_id: int = Field(sa_column= Column("course_id", ForeignKey("course.id", ondelete="CASCADE")))
+    chapter_id: int = Field(sa_column= Column("chapter_id", ForeignKey("chapter.id", ondelete="CASCADE")))
+    activity_id: int = Field(sa_column= Column("activity_id", ForeignKey("activity.id", ondelete="CASCADE")))
     block_uuid: str
     creation_date: str
     update_date: str

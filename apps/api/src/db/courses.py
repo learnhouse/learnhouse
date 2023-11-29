@@ -1,5 +1,6 @@
 from typing import List, Optional
 from sqlmodel import Field, SQLModel
+from src.db.users import User, UserRead
 from src.db.trails import TrailRead
 from src.db.chapters import ChapterRead
 
@@ -22,7 +23,6 @@ class Course(CourseBase, table=True):
     update_date: str = ""
 
 
-
 class CourseCreate(CourseBase):
     org_id: int = Field(default=None, foreign_key="organization.id")
     pass
@@ -40,6 +40,7 @@ class CourseUpdate(CourseBase):
 class CourseRead(CourseBase):
     id: int
     org_id: int = Field(default=None, foreign_key="organization.id")
+    authors: List[UserRead] 
     course_uuid: str
     creation_date: str
     update_date: str
@@ -53,6 +54,7 @@ class FullCourseRead(CourseBase):
     update_date: str
     # Chapters, Activities
     chapters: List[ChapterRead]
+    authors: List[UserRead] 
     pass
 
 
@@ -61,8 +63,9 @@ class FullCourseReadWithTrail(CourseBase):
     course_uuid: str
     creation_date: str
     update_date: str
+    authors: List[UserRead] 
     # Chapters, Activities
     chapters: List[ChapterRead]
     # Trail
-    trail: TrailRead
+    trail: TrailRead | None
     pass

@@ -7,7 +7,7 @@ import { Metadata } from 'next';
 import { getAccessTokenFromRefreshTokenCookie, getNewAccessTokenUsingRefreshTokenServer } from '@services/auth/auth';
 
 type MetadataProps = {
-    params: { orgslug: string, courseid: string };
+    params: { orgslug: string, courseuuid: string };
     searchParams: { [key: string]: string | string[] | undefined };
 };
 
@@ -19,14 +19,14 @@ export async function generateMetadata(
 
     // Get Org context information 
     const org = await getOrganizationContextInfo(params.orgslug, { revalidate: 1800, tags: ['organizations'] });
-    const course_meta = await getCourseMetadataWithAuthHeader(params.courseid, { revalidate: 0, tags: ['courses'] }, access_token ? access_token : null)
+    const course_meta = await getCourseMetadataWithAuthHeader(params.courseuuid, { revalidate: 0, tags: ['courses'] }, access_token ? access_token : null)
     
 
     // SEO
     return {
-        title: course_meta.course.name + ` — ${org.name}`,
-        description: course_meta.course.mini_description,
-        keywords: course_meta.course.learnings,
+        title: course_meta.name + ` — ${org.name}`,
+        description: course_meta.description,
+        keywords: course_meta.learnings,
         robots: {
             index: true,
             follow: true,
@@ -38,11 +38,11 @@ export async function generateMetadata(
             }
         },
         openGraph: {
-            title: course_meta.course.name + ` — ${org.name}`,
-            description: course_meta.course.mini_description,
+            title: course_meta.name + ` — ${org.name}`,
+            description: course_meta.description,
             type: 'article',
-            publishedTime: course_meta.course.creationDate,
-            tags: course_meta.course.learnings,
+            publishedTime: course_meta.creation_date,
+            tags: course_meta.learnings,
         },
     };
 }
@@ -50,14 +50,14 @@ export async function generateMetadata(
 
 const CoursePage = async (params: any) => {
     const cookieStore = cookies();
-    const courseid = params.params.courseid
+    const courseuuid = params.params.courseuuid
     const orgslug = params.params.orgslug;
     const access_token = await getAccessTokenFromRefreshTokenCookie(cookieStore)
-    const course_meta = await getCourseMetadataWithAuthHeader(courseid, { revalidate: 0, tags: ['courses'] }, access_token ? access_token : null)
+    const course_meta = await getCourseMetadataWithAuthHeader(courseuuid, { revalidate: 0, tags: ['courses'] }, access_token ? access_token : null)
 
     return (
         <div>
-            <CourseClient courseid={courseid} orgslug={orgslug} course={course_meta} />
+            <CourseClient courseuuid={courseuuid} orgslug={orgslug} course={course_meta} />
         </div>
     )
 }

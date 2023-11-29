@@ -56,33 +56,33 @@ async def api_get_trail_by_org_id(
     )
 
 
-@router.post("/add_course/{course_id}")
+@router.post("/add_course/{course_uuid}")
 async def api_add_course_to_trail(
     request: Request,
-    course_id: str,
+    course_uuid: str,
     user=Depends(get_current_user),
     db_session=Depends(get_db_session),
 ) -> TrailRead:
     """
     Add Course to trail
     """
-    return await add_course_to_trail(request, user, course_id, db_session)
+    return await add_course_to_trail(request, user, course_uuid, db_session)
 
 
-@router.delete("/remove_course/{course_id}")
+@router.delete("/remove_course/{course_uuid}")
 async def api_remove_course_to_trail(
     request: Request,
-    course_id: str,
+    course_uuid: str,
     user=Depends(get_current_user),
     db_session=Depends(get_db_session),
 ) -> TrailRead:
     """
     Remove Course from trail
     """
-    return await remove_course_from_trail(request, user, course_id, db_session)
+    return await remove_course_from_trail(request, user, course_uuid, db_session)
 
 
-@router.post("/add_activity/{activity_id}")
+@router.post("/add_activity/{activity_uuid}")
 async def api_add_activity_to_trail(
     request: Request,
     activity_id: int,

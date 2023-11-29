@@ -56,8 +56,8 @@ const OrgHomePage = async (params: any) => {
   const access_token = await getAccessTokenFromRefreshTokenCookie(cookieStore)
   const courses = await getOrgCoursesWithAuthHeader(orgslug, { revalidate: 0, tags: ['courses'] }, access_token ? access_token : null);
   const org = await getOrganizationContextInfo(orgslug, { revalidate: 1800, tags: ['organizations'] });
-  const org_id = org.org_id;
-  const collections = await getOrgCollectionsWithAuthHeader(org.org_id, access_token ? access_token : null, { revalidate: 0, tags: ['courses'] });
+  const org_id = org.id;
+  const collections = await getOrgCollectionsWithAuthHeader(org.id, access_token ? access_token : null, { revalidate: 0, tags: ['courses'] });
 
   return (
     <div>
@@ -67,7 +67,11 @@ const OrgHomePage = async (params: any) => {
           <div className='flex grow'>
             <TypeOfContentTitle title="Collections" type="col" />
           </div>
-          <AuthenticatedClientElement checkMethod='roles' orgId={org_id}>
+          <AuthenticatedClientElement
+            checkMethod='roles'
+            ressourceType='collection'
+            action='create'
+            orgId={org_id}>
             <Link href={getUriWithOrg(orgslug, "/collections/new")}>
               <NewCollectionButton />
             </Link>
@@ -105,7 +109,11 @@ const OrgHomePage = async (params: any) => {
           <div className='flex grow'>
             <TypeOfContentTitle title="Courses" type="cou" />
           </div>
-          <AuthenticatedClientElement checkMethod='roles' orgId={org_id}>
+          <AuthenticatedClientElement
+            ressourceType='course'
+            action='create'
+            checkMethod='roles'
+            orgId={org_id}>
             <Link href={getUriWithOrg(orgslug, "/courses?new=true")}>
               <NewCourseButton />
             </Link>
@@ -113,7 +121,7 @@ const OrgHomePage = async (params: any) => {
         </div>
         <div className="home_courses flex flex-wrap">
           {courses.map((course: any) => (
-            <div className="py-3 px-3" key={course.course_id}>
+            <div className="py-3 px-3" key={course.course_uuid}>
               <CourseThumbnail course={course} orgslug={orgslug} />
             </div>
           ))}

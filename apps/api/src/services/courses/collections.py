@@ -25,9 +25,9 @@ from fastapi import HTTPException, status, Request
 
 
 async def get_collection(
-    request: Request, collection_id: str, current_user: PublicUser, db_session: Session
+    request: Request, collection_uuid: str, current_user: PublicUser, db_session: Session
 ) -> CollectionRead:
-    statement = select(Collection).where(Collection.id == collection_id)
+    statement = select(Collection).where(Collection.collection_uuid == collection_uuid)
     collection = db_session.exec(statement).first()
 
     if not collection:
@@ -107,12 +107,11 @@ async def create_collection(
 async def update_collection(
     request: Request,
     collection_object: CollectionUpdate,
+    collection_uuid: str,
     current_user: PublicUser,
     db_session: Session,
 ) -> CollectionRead:
-    statement = select(Collection).where(
-        Collection.id == collection_object.collection_id
-    )
+    statement = select(Collection).where(Collection.collection_uuid == collection_uuid)
     collection = db_session.exec(statement).first()
 
     if not collection:
@@ -127,7 +126,6 @@ async def update_collection(
 
     courses = collection_object.courses
 
-    del collection_object.collection_id
     del collection_object.courses
 
     # Update only the fields that were passed in
@@ -181,9 +179,9 @@ async def update_collection(
 
 
 async def delete_collection(
-    request: Request, collection_id: str, current_user: PublicUser, db_session: Session
+    request: Request, collection_uuid: str, current_user: PublicUser, db_session: Session
 ):
-    statement = select(Collection).where(Collection.id == collection_id)
+    statement = select(Collection).where(Collection.collection_uuid == collection_uuid)
     collection = db_session.exec(statement).first()
 
     if not collection:
@@ -225,10 +223,7 @@ async def get_collections(
     )
     collections = db_session.exec(statement).all()
 
-    if not collections:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="No collections found"
-        )
+
 
     collections_with_courses = []
     for collection in collections:

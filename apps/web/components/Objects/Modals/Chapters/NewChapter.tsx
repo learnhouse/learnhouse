@@ -4,7 +4,7 @@ import * as Form from '@radix-ui/react-form';
 import React, { useState } from "react";
 import BarLoader from "react-spinners/BarLoader";
 
-function NewChapterModal({ submitChapter, closeModal }: any) {
+function NewChapterModal({ submitChapter, closeModal, course }: any) {
   const [chapterName, setChapterName] = useState("");
   const [chapterDescription, setChapterDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -19,9 +19,17 @@ function NewChapterModal({ submitChapter, closeModal }: any) {
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
-    
+
     setIsSubmitting(true);
-    await submitChapter({ name: chapterName, description: chapterDescription, activities: [] });
+    const chapter_object = {
+      name: chapterName,
+      description: chapterDescription,
+      thumbnail_image: "",
+      course_id: course.id,
+      org_id: course.org_id
+
+    };
+    await submitChapter(chapter_object);
     setIsSubmitting(false);
   };
 
@@ -49,9 +57,9 @@ function NewChapterModal({ submitChapter, closeModal }: any) {
       <Flex css={{ marginTop: 25, justifyContent: 'flex-end' }}>
         <Form.Submit asChild>
           <ButtonBlack type="submit" css={{ marginTop: 10 }}>
-          {isSubmitting ? <BarLoader cssOverride={{borderRadius:60,}} width={60} color="#ffffff" />
-             : "Create Chapter"}
-            </ButtonBlack>
+            {isSubmitting ? <BarLoader cssOverride={{ borderRadius: 60, }} width={60} color="#ffffff" />
+              : "Create Chapter"}
+          </ButtonBlack>
         </Form.Submit>
       </Flex>
     </FormLayout>

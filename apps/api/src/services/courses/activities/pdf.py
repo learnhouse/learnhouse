@@ -51,7 +51,7 @@ async def create_documentpdf_activity(
         )
 
     # get org_id
-    org_id = coursechapter.id
+    org_id = coursechapter.org_id
 
     # create activity uuid
     activity_uuid = f"activity_{uuid4()}"

@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import * as Form from '@radix-ui/react-form';
 import BarLoader from "react-spinners/BarLoader";
 
-function DocumentPdfModal({ submitFileActivity, chapterId }: any) {
+function DocumentPdfModal({ submitFileActivity, chapterId, course }: any) {
   const [documentpdf, setDocumentPdf] = React.useState(null) as any;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [name, setName] = React.useState("");
@@ -19,7 +19,13 @@ function DocumentPdfModal({ submitFileActivity, chapterId }: any) {
   const handleSubmit = async (e: any) => {
     e.preventDefault();
     setIsSubmitting(true);
-    let status = await submitFileActivity(documentpdf, "documentpdf", { name, type: "documentpdf" }, chapterId);
+    let status = await submitFileActivity(documentpdf, "documentpdf", { name: name,
+      chapter_id: chapterId,
+      activity_type: "TYPE_DOCUMENT",
+      activity_sub_type:"SUBTYPE_DOCUMENT_PDF",
+      published_version:1,
+      version:1,
+      course_id: course.id, }, chapterId);
     setIsSubmitting(false);
   };
 
