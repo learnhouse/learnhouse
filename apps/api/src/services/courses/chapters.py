@@ -130,10 +130,11 @@ async def get_chapter(
 async def update_chapter(
     request: Request,
     chapter_object: ChapterUpdate,
+    chapter_id: int,
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ) -> ChapterRead:
-    statement = select(Chapter).where(Chapter.id == chapter_object.chapter_id)
+    statement = select(Chapter).where(Chapter.id == chapter_id)
     chapter = db_session.exec(statement).first()
 
     if not chapter:
@@ -161,7 +162,7 @@ async def update_chapter(
 
 async def delete_chapter(
     request: Request,
-    chapter_id: str,
+    chapter_id: int,
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
@@ -188,7 +189,6 @@ async def delete_chapter(
         db_session.commit()
 
     return {"detail": "chapter deleted"}
-
 
 
 async def get_course_chapters(

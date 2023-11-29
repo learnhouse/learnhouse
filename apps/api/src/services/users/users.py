@@ -158,11 +158,12 @@ async def create_user_without_org(
 async def update_user(
     request: Request,
     db_session: Session,
+    user_id: int,
     current_user: PublicUser | AnonymousUser,
     user_object: UserUpdate,
 ):
     # Get user
-    statement = select(User).where(User.username == user_object.username)
+    statement = select(User).where(User.id == user_id)
     user = db_session.exec(statement).first()
 
     if not user:
@@ -170,7 +171,7 @@ async def update_user(
             status_code=400,
             detail="User does not exist",
         )
-    
+
     # RBAC check
     await rbac_check(request, current_user, "update", user.user_uuid, db_session)
 
@@ -195,10 +196,11 @@ async def update_user_password(
     request: Request,
     db_session: Session,
     current_user: PublicUser | AnonymousUser,
+    user_id: int,
     form: UserUpdatePassword,
 ):
     # Get user
-    statement = select(User).where(User.username == form.user_id)
+    statement = select(User).where(User.id == user_id)
     user = db_session.exec(statement).first()
 
     if not user:
@@ -206,7 +208,7 @@ async def update_user_password(
             status_code=400,
             detail="User does not exist",
         )
-    
+
     # RBAC check
     await rbac_check(request, current_user, "update", user.user_uuid, db_session)
 
@@ -339,7 +341,6 @@ async def rbac_check(
             await authorization_verify_based_on_roles_and_authorship(
                 request, current_user.id, "create", "user_x", db_session
             )
-            
 
     else:
         await authorization_verify_if_user_is_anon(current_user.id)

@@ -104,10 +104,11 @@ async def get_activity(
 async def update_activity(
     request: Request,
     activity_object: ActivityUpdate,
+    activity_id: int,
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
-    statement = select(Activity).where(Activity.id == activity_object.activity_id)
+    statement = select(Activity).where(Activity.id == activity_id)
     activity = db_session.exec(statement).first()
 
     if not activity:
@@ -120,8 +121,6 @@ async def update_activity(
     await rbac_check(
         request, activity.activity_uuid, current_user, "update", db_session
     )
-
-    del activity_object.activity_id
 
     # Update only the fields that were passed in
     for var, value in vars(activity_object).items():
@@ -183,7 +182,7 @@ async def delete_activity(
 
 async def get_activities(
     request: Request,
-    coursechapter_id: str,
+    coursechapter_id: int,
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ) -> list[ActivityRead]:

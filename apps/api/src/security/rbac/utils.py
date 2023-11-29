@@ -5,6 +5,7 @@ async def check_element_type(element_id):
     """
     Check if the element is a course, a user, a house or a collection, by checking its prefix
     """
+    print("element_id", element_id)
     if element_id.startswith("course_"):
         return "courses"
     elif element_id.startswith("user_"):
@@ -13,12 +14,14 @@ async def check_element_type(element_id):
         return "houses"
     elif element_id.startswith("org_"):
         return "organizations"
-    elif element_id.startswith("coursechapter_"):
+    elif element_id.startswith("chapter_"):
         return "coursechapters"
     elif element_id.startswith("collection_"):
         return "collections"
     elif element_id.startswith("activity_"):
         return "activities"
+    elif element_id.startswith("role_"):
+        return "roles"
     else:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
