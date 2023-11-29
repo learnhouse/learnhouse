@@ -107,12 +107,11 @@ async def create_collection(
 async def update_collection(
     request: Request,
     collection_object: CollectionUpdate,
+    collection_id: int,
     current_user: PublicUser,
     db_session: Session,
 ) -> CollectionRead:
-    statement = select(Collection).where(
-        Collection.id == collection_object.collection_id
-    )
+    statement = select(Collection).where(Collection.id == collection_id)
     collection = db_session.exec(statement).first()
 
     if not collection:
@@ -127,7 +126,6 @@ async def update_collection(
 
     courses = collection_object.courses
 
-    del collection_object.collection_id
     del collection_object.courses
 
     # Update only the fields that were passed in

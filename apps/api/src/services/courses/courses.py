@@ -65,8 +65,6 @@ async def get_course_meta(
             detail="Course not found",
         )
 
-    print('cd',course.course_uuid)
-
     # RBAC check
     await rbac_check(request, course.course_uuid, current_user, "read", db_session)
 

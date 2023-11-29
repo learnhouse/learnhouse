@@ -61,13 +61,16 @@ async def api_get_collections_by(
 async def api_update_collection(
     request: Request,
     collection_object: CollectionUpdate,
+    collection_id: int,
     current_user: PublicUser = Depends(get_current_user),
     db_session=Depends(get_db_session),
 ) -> CollectionRead:
     """
     Update collection by ID
     """
-    return await update_collection(request, collection_object, current_user, db_session)
+    return await update_collection(
+        request, collection_object, collection_id, current_user, db_session
+    )
 
 
 @router.delete("/{collection_id}")
