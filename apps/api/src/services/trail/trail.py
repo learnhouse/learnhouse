@@ -2,6 +2,7 @@ from datetime import datetime
 from uuid import uuid4
 from fastapi import HTTPException, Request, status
 from sqlmodel import Session, select
+from src.db.activities import Activity
 from src.db.courses import Course
 from src.db.trail_runs import TrailRun, TrailRunRead
 from src.db.trail_steps import TrailStep
@@ -120,13 +121,20 @@ async def get_user_trail_with_orgid(
 async def add_activity_to_trail(
     request: Request,
     user: PublicUser,
-    course_id: int,
     activity_id: int,
     db_session: Session,
 ) -> TrailRead:
-    
+    # Look for the activity
+    statement = select(Activity).where(Activity.id == activity_id)
+    activity = db_session.exec(statement).first()
+
+    if not activity:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Activity not found"
+        )
+
     # check if run already exists
-    statement = select(TrailRun).where(TrailRun.course_id == course_id)
+    statement = select(TrailRun).where(TrailRun.course_id == activity.course_id)
     trailrun = db_session.exec(statement).first()
 
     if trailrun:
@@ -134,7 +142,7 @@ async def add_activity_to_trail(
             status_code=status.HTTP_400_BAD_REQUEST, detail="TrailRun already exists"
         )
 
-    statement = select(Course).where(Course.id == course_id)
+    statement = select(Course).where(Course.id == activity.course_id)
     course = db_session.exec(statement).first()
 
     if not course:
@@ -160,7 +168,7 @@ async def add_activity_to_trail(
     if not trailrun:
         trailrun = TrailRun(
             trail_id=trail.id if trail.id is not None else 0,
-            course_id=course.id if course.id is not None else 0 ,
+            course_id=course.id if course.id is not None else 0,
             org_id=course.org_id,
             user_id=user.id,
             creation_date=str(datetime.now()),
@@ -177,7 +185,7 @@ async def add_activity_to_trail(
 
     if not trailstep:
         trailstep = TrailStep(
-            trailrun_id=trailrun.id if trailrun.id is not None else 0 ,
+            trailrun_id=trailrun.id if trailrun.id is not None else 0,
             activity_id=activity_id,
             course_id=course.id if course.id is not None else 0,
             org_id=course.org_id,
@@ -225,7 +233,6 @@ async def add_course_to_trail(
     course_id: str,
     db_session: Session,
 ) -> TrailRead:
-    
     # check if run already exists
     statement = select(TrailRun).where(TrailRun.course_id == course_id)
     trailrun = db_session.exec(statement).first()
@@ -234,7 +241,7 @@ async def add_course_to_trail(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="TrailRun already exists"
         )
-    
+
     statement = select(Course).where(Course.id == course_id)
     course = db_session.exec(statement).first()
 

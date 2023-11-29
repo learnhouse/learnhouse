@@ -16,7 +16,7 @@ async def authorization_verify_if_element_is_public(
     element_uuid: str,
     action: Literal["read"],
     db_session: Session,
-):
+):  
     element_nature = await check_element_type(element_uuid)
     # Verifies if the element is public
     if element_nature == ("courses" or "collections") and action == "read":

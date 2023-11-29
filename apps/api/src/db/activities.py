@@ -53,7 +53,6 @@ class ActivityCreate(ActivityBase):
 
 
 class ActivityUpdate(ActivityBase):
-    activity_id: int
     name: Optional[str]
     activity_type: Optional[ActivityTypeEnum]
     activity_sub_type: Optional[ActivitySubTypeEnum]

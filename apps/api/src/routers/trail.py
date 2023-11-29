@@ -41,7 +41,7 @@ async def api_get_user_trail(
     return await get_user_trails(request, user=user, db_session=db_session)
 
 
-@router.get("/org_slug/{org_id}/trail")
+@router.get("/org/{org_id}/trail")
 async def api_get_trail_by_org_id(
     request: Request,
     org_id: int,
@@ -69,7 +69,7 @@ async def api_add_course_to_trail(
     return await add_course_to_trail(request, user, course_id, db_session)
 
 
-@router.post("/remove_course/{course_id}")
+@router.delete("/remove_course/{course_id}")
 async def api_remove_course_to_trail(
     request: Request,
     course_id: str,
@@ -82,11 +82,10 @@ async def api_remove_course_to_trail(
     return await remove_course_from_trail(request, user, course_id, db_session)
 
 
-@router.post("/add_activity/course_id/{course_id}/activity_id/{activity_id}")
+@router.post("/add_activity/{activity_id}")
 async def api_add_activity_to_trail(
     request: Request,
     activity_id: int,
-    course_id: int,
     user=Depends(get_current_user),
     db_session=Depends(get_db_session),
 ) -> TrailRead:
@@ -94,5 +93,5 @@ async def api_add_activity_to_trail(
     Add Course to trail
     """
     return await add_activity_to_trail(
-        request, user, course_id, activity_id, db_session
+        request, user, activity_id, db_session
     )

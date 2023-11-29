@@ -4,7 +4,6 @@ from sqlmodel import Field, SQLModel
 from src.db.trail_runs import TrailRunRead
 
 
-
 class TrailBase(SQLModel):
     org_id: int = Field(default=None, foreign_key="organization.id")
     user_id: int = Field(default=None, foreign_key="user.id")
@@ -14,7 +13,7 @@ class Trail(TrailBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     trail_uuid: str = ""
     creation_date: str = ""
-    update_date: str    = ""
+    update_date: str = ""
 
 
 class TrailCreate(TrailBase):
@@ -30,3 +29,6 @@ class TrailRead(BaseModel):
     creation_date: str
     update_date: str
     runs: list[TrailRunRead]
+
+    class Config:
+        orm_mode = True

@@ -42,7 +42,7 @@ async def api_get_collection(
     return await get_collection(request, collection_id, current_user, db_session)
 
 
-@router.get("/org_id/{org_id}/page/{page}/limit/{limit}")
+@router.get("/org/{org_id}/page/{page}/limit/{limit}")
 async def api_get_collections_by(
     request: Request,
     page: int,

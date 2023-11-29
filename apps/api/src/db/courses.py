@@ -22,13 +22,13 @@ class Course(CourseBase, table=True):
     update_date: str = ""
 
 
+
 class CourseCreate(CourseBase):
     org_id: int = Field(default=None, foreign_key="organization.id")
     pass
 
 
 class CourseUpdate(CourseBase):
-    course_id: int
     name: str
     description: Optional[str]
     about: Optional[str]

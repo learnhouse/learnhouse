@@ -49,30 +49,33 @@ async def api_get_activity(
     )
 
 
-@router.get("/coursechapter/{coursechapter_id}")
-async def api_get_activities(
+@router.get("/chapter/{chapter_id}")
+async def api_get_chapter_activities(
     request: Request,
-    coursechapter_id: str,
+    chapter_id: int,
     current_user: PublicUser = Depends(get_current_user),
     db_session=Depends(get_db_session),
 ) -> List[ActivityRead]:
     """
-    Get CourseChapter activities
+    Get Activities for a chapter
     """
-    return await get_activities(request, coursechapter_id, current_user, db_session)
+    return await get_activities(request, chapter_id, current_user, db_session)
 
 
-@router.put("/")
+@router.put("/{activity_id}")
 async def api_update_activity(
     request: Request,
     activity_object: ActivityUpdate,
+    activity_id: int,
     current_user: PublicUser = Depends(get_current_user),
     db_session=Depends(get_db_session),
 ) -> ActivityRead:
     """
     Update activity by activity_id
     """
-    return await update_activity(request, activity_object, current_user, db_session)
+    return await update_activity(
+        request, activity_object, activity_id, current_user, db_session
+    )
 
 
 @router.delete("/{activity_id}")

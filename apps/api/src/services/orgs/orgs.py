@@ -118,10 +118,11 @@ async def create_org(
 async def update_org(
     request: Request,
     org_object: OrganizationUpdate,
+    org_id: int,
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
-    statement = select(Organization).where(Organization.id == org_object.org_id)
+    statement = select(Organization).where(Organization.id == org_id)
     result = db_session.exec(statement)
 
     org = result.first()
@@ -148,9 +149,6 @@ async def update_org(
             status_code=status.HTTP_409_CONFLICT,
             detail="Organization slug already exists",
         )
-
-    # Remove the org_id from the org_object
-    del org_object.org_id
 
     # Update only the fields that were passed in
     for var, value in vars(org_object).items():
@@ -202,7 +200,6 @@ async def update_org_logo(
     db_session.add(org)
     db_session.commit()
     db_session.refresh(org)
-
 
     return {"detail": "Logo updated"}
 

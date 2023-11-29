@@ -65,6 +65,8 @@ async def get_course_meta(
             detail="Course not found",
         )
 
+    print('cd',course.course_uuid)
+
     # RBAC check
     await rbac_check(request, course.course_uuid, current_user, "read", db_session)
 
@@ -189,10 +191,11 @@ async def update_course_thumbnail(
 async def update_course(
     request: Request,
     course_object: CourseUpdate,
+    course_id: int,
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
-    statement = select(Course).where(Course.id == course_object.course_id)
+    statement = select(Course).where(Course.id == course_id)
     course = db_session.exec(statement).first()
 
     if not course:
@@ -203,8 +206,6 @@ async def update_course(
 
     # RBAC check
     await rbac_check(request, course.course_uuid, current_user, "update", db_session)
-
-    del course_object.course_id
 
     # Update only the fields that were passed in
     for var, value in vars(course_object).items():

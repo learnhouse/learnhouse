@@ -50,7 +50,7 @@ async def api_get_coursechapter(
     return await get_chapter(request, chapter_id, current_user, db_session)
 
 
-@router.get("/meta/{course_id}")
+@router.get("/course/{course_id}/meta")
 async def api_get_chapter_meta(
     request: Request,
     course_id: int,
@@ -65,7 +65,7 @@ async def api_get_chapter_meta(
     )
 
 
-@router.put("/order/{course_id}")
+@router.put("/course/{course_id}/order")
 async def api_update_chapter_meta(
     request: Request,
     course_id: int,
@@ -81,7 +81,7 @@ async def api_update_chapter_meta(
     )
 
 
-@router.get("/{course_id}/page/{page}/limit/{limit}")
+@router.get("/course/{course_id}/page/{page}/limit/{limit}")
 async def api_get_chapter_by(
     request: Request,
     course_id: int,
@@ -98,24 +98,26 @@ async def api_get_chapter_by(
     )
 
 
-@router.put("/{coursechapter_id}")
+@router.put("/{chapter_id}")
 async def api_update_coursechapter(
     request: Request,
     coursechapter_object: ChapterUpdate,
-    coursechapter_id: str,
+    chapter_id: int,
     current_user: PublicUser = Depends(get_current_user),
     db_session=Depends(get_db_session),
 ) -> ChapterRead:
     """
     Update CourseChapters by course_id
     """
-    return await update_chapter(request, coursechapter_object, current_user, db_session)
+    return await update_chapter(
+        request, coursechapter_object, chapter_id, current_user, db_session
+    )
 
 
-@router.delete("/{coursechapter_id}")
+@router.delete("/{chapter_id}")
 async def api_delete_coursechapter(
     request: Request,
-    coursechapter_id: str,
+    chapter_id: int,
     current_user: PublicUser = Depends(get_current_user),
     db_session=Depends(get_db_session),
 ):
@@ -123,4 +125,4 @@ async def api_delete_coursechapter(
     Delete CourseChapters by ID
     """
 
-    return await delete_chapter(request, coursechapter_id, current_user, db_session)
+    return await delete_chapter(request, chapter_id, current_user, db_session)
