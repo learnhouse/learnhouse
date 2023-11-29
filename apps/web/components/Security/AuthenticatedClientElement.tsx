@@ -1,45 +1,46 @@
 'use client';
 import React from "react";
 import { AuthContext } from "./AuthProvider";
+import useSWR, { mutate } from "swr";
+import { getAPIUrl } from "@services/config/config";
+import { swrFetcher } from "@services/utils/ts/requests";
 
 interface AuthenticatedClientElementProps {
     children: React.ReactNode;
     checkMethod: 'authentication' | 'roles';
     orgId?: string;
+    ressourceType?: 'collection' | 'course' | 'activity' | 'user' | 'organization';
+    action?: 'create' | 'update' | 'delete' | 'read';
+}
 
+function generateRessourceId(ressourceType: string) {
+    // for every type of ressource, we need to generate a ressource id, example for a collection: col_XXXXX 
+    if (ressourceType == 'collection') {
+        return `collection_xxxx`
+    }
+    else if (ressourceType == 'course') {
+        return `course_xxxx`
+    }
+    else if (ressourceType == 'activity') {
+        return `activity_xxxx`
+    }
+    else if (ressourceType == 'user') {
+        return `user_xxxx`
+    }
+    else if (ressourceType == 'organization') {
+        return `org_xxxx`
+    }
+    else if (ressourceType === null) {
+        return `n/a`
+    }
 }
 
 export const AuthenticatedClientElement = (props: AuthenticatedClientElementProps) => {
     const auth: any = React.useContext(AuthContext);
+    const { data: authorization_status, error: error } = useSWR(props.checkMethod == 'roles' && props.ressourceType ? `${getAPIUrl()}users/authorize/ressource/${generateRessourceId(props.ressourceType)}/action/${props.action}` : null, swrFetcher);
+    console.log(authorization_status);
 
-    // Available roles 
-    const org_roles_values = ["admin", "owner"];
-    const user_roles_values = ["role_admin"];
-
-
-
-    function checkRoles() {
-        const org_id = props.orgId;
-        const org_roles = auth.userInfo.user_object.orgs;
-        const user_roles = auth.userInfo.user_object.roles;
-        const org_role = org_roles.find((org: any) => org.org_id == org_id);
-        const user_role = user_roles.find((role: any) => role.org_id == org_id);
-
-        if (org_role && user_role) {
-            if (org_roles_values.includes(org_role.org_role) || user_roles_values.includes(user_role.role_id)) {
-                return true;
-            }
-            else {
-                return false;
-            }
-        } else {
-            return false;
-        }
-    }
-
-
-
-    if ((props.checkMethod == 'authentication' && auth.isAuthenticated) || (auth.isAuthenticated && props.checkMethod == 'roles' && checkRoles())) {
+    if ((props.checkMethod == 'authentication' && auth.isAuthenticated) || (auth.isAuthenticated && props.checkMethod == 'roles' && authorization_status)) {
         return <>{props.children}</>;
     }
     return <></>;

@@ -62,9 +62,9 @@ const CollectionPage = async (params: any) => {
     <br />
     <div className="home_courses flex flex-wrap">
       {col.courses.map((course: any) => (
-        <div className="pr-8" key={course.course_id}>
-          <Link href={getUriWithOrg(orgslug, "/course/" + removeCoursePrefix(course.course_id))}>
-            <div className="inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl relative w-[249px] h-[131px] bg-cover" style={{ backgroundImage: `url(${getCourseThumbnailMediaDirectory(course.org_id, course.course_id, course.thumbnail)})` }}>
+        <div className="pr-8" key={course.course_uuid}>
+          <Link href={getUriWithOrg(orgslug, "/course/" + removeCoursePrefix(course.course_uuid))}>
+            <div className="inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl relative w-[249px] h-[131px] bg-cover" style={{ backgroundImage: `url(${getCourseThumbnailMediaDirectory(course.org_id, course.course_uuid, course.thumbnail)})` }}>
             </div>
           </Link>
           <h2 className="font-bold text-lg w-[250px] py-2">{course.name}</h2>

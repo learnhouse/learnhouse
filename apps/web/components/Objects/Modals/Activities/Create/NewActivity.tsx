@@ -9,7 +9,7 @@ import VideoModal from "./NewActivityModal/Video";
 import Image from "next/image";
 import DocumentPdfModal from "./NewActivityModal/DocumentPdf";
 
-function NewActivityModal({ closeModal, submitActivity, submitFileActivity, submitExternalVideo, chapterId }: any) {
+function NewActivityModal({ closeModal, submitActivity, submitFileActivity, submitExternalVideo, chapterId, course }: any) {
   const [selectedView, setSelectedView] = useState("home");
 
 
@@ -39,16 +39,16 @@ function NewActivityModal({ closeModal, submitActivity, submitFileActivity, subm
       )}
 
       {selectedView === "dynamic" && (
-        <DynamicCanvaModal submitActivity={submitActivity} chapterId={chapterId} />
+        <DynamicCanvaModal submitActivity={submitActivity} chapterId={chapterId} course={course} />
       )}
 
       {selectedView === "video" && (
         <VideoModal submitFileActivity={submitFileActivity} submitExternalVideo={submitExternalVideo}
-          chapterId={chapterId} />
+        chapterId={chapterId} course={course} />
       )}
 
       {selectedView === "documentpdf" && (
-        <DocumentPdfModal submitFileActivity={submitFileActivity} chapterId={chapterId} />
+        <DocumentPdfModal submitFileActivity={submitFileActivity} chapterId={chapterId} course={course} />
       )}
     </div>
   );

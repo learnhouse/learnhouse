@@ -5,7 +5,7 @@ from sqlmodel import SQLModel, Session, create_engine
 
 
 engine = create_engine(
-    "postgresql://learnhouse:learnhouse@db:5432/learnhouse", echo=True
+    "postgresql://learnhouse:learnhouse@db:5432/learnhouse", echo=False
 )
 SQLModel.metadata.create_all(engine)
 

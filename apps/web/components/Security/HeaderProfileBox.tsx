@@ -29,10 +29,10 @@ export const HeaderProfileBox = () => {
       )}
       {auth.isAuthenticated && (
         <AccountArea className="-space-x-2">
-          <div className="text-xs px-4 text-gray-600 p-1.5 rounded-full bg-gray-50">{auth.userInfo.user_object.full_name}</div>
+          <div className="text-xs px-4 text-gray-600 p-1.5 rounded-full bg-gray-50">{auth.userInfo.username}</div>
           <div className="flex -space-x-2 items-center">
             <div className="py-4">
-              <Avvvatars size={26} value={auth.userInfo.user_object.user_id} style="shape" />
+              <Avvvatars size={26} value={auth.userInfo.user_uuid} style="shape" />
             </div>
             <Link className="bg-gray-50 p-1.5 rounded-full" href={"/settings"}><GearIcon fontSize={26} /></Link>
           </div>

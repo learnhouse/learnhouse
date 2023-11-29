@@ -41,7 +41,7 @@ function NewCollection(params: any) {
       description: description,
       courses: selectedCourses,
       public: true,
-      org_id: org.org_id,
+      org_id: org.id,
     };
     await createCollection(collection);
     await revalidateTags(["collections"], orgslug);
@@ -69,26 +69,29 @@ function NewCollection(params: any) {
 ) : (
   <div>
     {courses.map((course: any) => (
-      <div key={course.course_id} className="flex items-center mb-2">
-        <input
-          type="checkbox"
-          id={course.course_id}
-          name={course.course_id}
-          value={course.course_id}
-          checked={selectedCourses.includes(course.course_id)}
-          onChange={(e) => {
-            const courseId = e.target.value;
-            setSelectedCourses((prevSelectedCourses: string[]) => {
-              if (e.target.checked) {
-                return [...prevSelectedCourses, courseId];
-              } else {
-                return prevSelectedCourses.filter((selectedCourse) => selectedCourse !== courseId);
-              }
-            });
-          }}
-          className="mr-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-        <label htmlFor={course.course_id} className="text-sm">{course.name}</label>
+      <div key={course.course_uuid} className="flex items-center mb-2">
+
+<input
+
+  type="checkbox"
+  id={course.id}
+  name={course.name}
+  value={course.id}
+// id is an integer, not a string
+
+  onChange={(e) => {
+    if (e.target.checked) {
+      setSelectedCourses([...selectedCourses, course.id]);
+    }
+    else {
+      setSelectedCourses(selectedCourses.filter((course_uuid: any) => course_uuid !== course.course_uuid));
+    }
+  }
+  }
+  className="mr-2"
+/>
+
+        <label htmlFor={course.course_uuid} className="text-sm">{course.name}</label>
       </div>
     ))}
 
