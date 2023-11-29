@@ -17,7 +17,7 @@ class Organization(OrganizationBase, table=True):
     update_date: str = ""
 
 class OrganizationUpdate(OrganizationBase):
-    org_id: int
+    pass
 
 class OrganizationCreate(OrganizationBase):
     pass

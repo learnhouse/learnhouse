@@ -92,24 +92,25 @@ async def api_user_orgs(
     db_session: Session = Depends(get_db_session),
 ) -> List[Organization]:
     """
-    Get orgs by page and limit by user
+    Get orgs by page and limit by current user
     """
     return await get_orgs_by_user(
         request, db_session, str(current_user.id), page, limit
     )
 
 
-@router.put("/")
+@router.put("/{org_id}")
 async def api_update_org(
     request: Request,
     org_object: OrganizationUpdate,
+    org_id: int,
     current_user: PublicUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
 ) -> OrganizationRead:
     """
     Update Org by ID
     """
-    return await update_org(request, org_object, current_user, db_session)
+    return await update_org(request, org_object,org_id, current_user, db_session)
 
 
 @router.delete("/{org_id}")

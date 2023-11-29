@@ -25,7 +25,6 @@ class UserUpdate(UserBase):
 
 
 class UserUpdatePassword(SQLModel):
-    user_id: int
     old_password: str
     new_password: str
 

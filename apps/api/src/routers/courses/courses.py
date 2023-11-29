@@ -3,7 +3,12 @@ from fastapi import APIRouter, Depends, UploadFile, Form, Request
 from sqlmodel import Session
 from src.core.events.database import get_db_session
 from src.db.users import PublicUser
-from src.db.courses import CourseCreate, CourseRead, CourseUpdate, FullCourseReadWithTrail
+from src.db.courses import (
+    CourseCreate,
+    CourseRead,
+    CourseUpdate,
+    FullCourseReadWithTrail,
+)
 from src.security.auth import get_current_user
 from src.services.courses.courses import (
     create_course,
@@ -49,7 +54,7 @@ async def api_create_course(
     return await create_course(request, course, current_user, db_session, thumbnail)
 
 
-@router.put("/thumbnail/{course_id}")
+@router.put("/{course_id}/thumbnail")
 async def api_create_course_thumbnail(
     request: Request,
     course_id: str,
@@ -80,7 +85,7 @@ async def api_get_course(
     )
 
 
-@router.get("/meta/{course_id}")
+@router.get("/{course_id}/meta")
 async def api_get_course_meta(
     request: Request,
     course_id: int,
@@ -112,17 +117,20 @@ async def api_get_course_by_orgslug(
     )
 
 
-@router.put("/")
+@router.put("/{course_id}")
 async def api_update_course(
     request: Request,
     course_object: CourseUpdate,
+    course_id: int,
     db_session: Session = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ) -> CourseRead:
     """
     Update Course by course_id
     """
-    return await update_course(request, course_object, current_user, db_session)
+    return await update_course(
+        request, course_object, course_id, current_user, db_session
+    )
 
 
 @router.delete("/{course_id}")

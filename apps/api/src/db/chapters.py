@@ -21,6 +21,7 @@ class Chapter(ChapterBase, table=True):
     update_date: str = ""
 
 
+
 class ChapterCreate(ChapterBase):
     # referenced order here will be ignored and just used for validation
     # used order will be the next available.
@@ -28,7 +29,6 @@ class ChapterCreate(ChapterBase):
 
 
 class ChapterUpdate(ChapterBase):
-    chapter_id: int
     name: Optional[str]
     description: Optional[str]
     thumbnail_image: Optional[str]

@@ -33,7 +33,7 @@ async def api_get_current_user(current_user: User = Depends(get_current_user)):
     return current_user.dict()
 
 
-@router.post("/org_id/{org_id}", response_model=UserRead, tags=["users"])
+@router.post("/{org_id}", response_model=UserRead, tags=["users"])
 async def api_create_user_with_orgid(
     *,
     request: Request,
@@ -62,7 +62,7 @@ async def api_create_user_without_org(
     return await create_user_without_org(request, db_session, current_user, user_object)
 
 
-@router.get("/user_id/{user_id}", response_model=UserRead, tags=["users"])
+@router.get("/id/{user_id}", response_model=UserRead, tags=["users"])
 async def api_get_user_by_id(
     *,
     request: Request,
@@ -76,7 +76,7 @@ async def api_get_user_by_id(
     return await read_user_by_id(request, db_session, current_user, user_id)
 
 
-@router.get("/user_uuid/{user_uuid}", response_model=UserRead, tags=["users"])
+@router.get("/uuid/{user_uuid}", response_model=UserRead, tags=["users"])
 async def api_get_user_by_uuid(
     *,
     request: Request,
@@ -90,32 +90,34 @@ async def api_get_user_by_uuid(
     return await read_user_by_uuid(request, db_session, current_user, user_uuid)
 
 
-@router.put("/", response_model=UserRead, tags=["users"])
+@router.put("/{user_id}", response_model=UserRead, tags=["users"])
 async def api_update_user(
     *,
     request: Request,
     db_session: Session = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
+    user_id: int,
     user_object: UserUpdate,
 ) -> UserRead:
     """
     Update User
     """
-    return await update_user(request, db_session, current_user, user_object)
+    return await update_user(request, db_session, user_id, current_user, user_object)
 
 
-@router.put("/change_password/", response_model=UserRead, tags=["users"])
+@router.put("/change_password/{user_id}", response_model=UserRead, tags=["users"])
 async def api_update_user_password(
     *,
     request: Request,
     db_session: Session = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
+    user_id: int,
     form: UserUpdatePassword,
 ) -> UserRead:
     """
     Update User Password
     """
-    return await update_user_password(request, db_session, current_user, form)
+    return await update_user_password(request, db_session, current_user, user_id, form)
 
 
 @router.delete("/user_id/{user_id}", tags=["users"])
@@ -125,7 +127,7 @@ async def api_delete_user(
     db_session: Session = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
     user_id: int,
-) :
+):
     """
     Delete User
     """
