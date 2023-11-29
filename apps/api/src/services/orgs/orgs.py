@@ -136,8 +136,6 @@ async def update_org(
     # RBAC check
     await rbac_check(request, org.org_uuid, current_user, "update", db_session)
 
-    org = Organization.from_orm(org_object)
-
     # Verify if the new slug is already in use
     statement = select(Organization).where(Organization.slug == org_object.slug)
     result = db_session.exec(statement)

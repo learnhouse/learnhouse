@@ -24,7 +24,6 @@ class CollectionCreate(CollectionBase):
 
 
 class CollectionUpdate(CollectionBase):
-    collection_id: int
     courses: Optional[list]
     name: Optional[str]
     public: Optional[bool]

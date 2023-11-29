@@ -27,17 +27,17 @@ function CollectionThumbnail(props: PropsType) {
                 <div className="flex -space-x-5">
                     {props.collection.courses.slice(0, 2).map((course: any) => (
                         <>
-                            <Link href={getUriWithOrg(props.orgslug, "/collection/" + removeCollectionPrefix(props.collection.collection_id))}>
-                                <div className="inset-0 rounded-full shadow-2xl bg-cover w-12 h-8 justify-center ring-indigo-800 ring-4" style={{ backgroundImage: `url(${getCourseThumbnailMediaDirectory(props.collection.org_id, course.course_id, course.thumbnail)})` }}>
+                            <Link href={getUriWithOrg(props.orgslug, "/collection/" + removeCollectionPrefix(props.collection.collection_uuid))}>
+                                <div className="inset-0 rounded-full shadow-2xl bg-cover w-12 h-8 justify-center ring-indigo-800 ring-4" style={{ backgroundImage: `url(${getCourseThumbnailMediaDirectory(props.collection.org_id, course.course_uuid, course.thumbnail)})` }}>
                                 </div>
                             </Link>
                         </>
                     ))}
                 </div>
-                <Link href={getUriWithOrg(props.orgslug, "/collection/" + removeCollectionPrefix(props.collection.collection_id))}>
+                <Link href={getUriWithOrg(props.orgslug, "/collection/" + removeCollectionPrefix(props.collection.collection_uuid))}>
                     <h1 className="font-bold text-md justify-center">{props.collection.name}</h1>
                 </Link>
-                <CollectionAdminEditsArea orgslug={props.orgslug} org_id={props.org_id} collection_id={props.collection.collection_id} collection={props.collection} />
+                <CollectionAdminEditsArea orgslug={props.orgslug} org_id={props.org_id} collection_uuid={props.collection.collection_uuid} collection={props.collection} />
             </div>
         </div>
     )
@@ -54,7 +54,10 @@ const CollectionAdminEditsArea = (props: any) => {
     }
 
     return (
-        <AuthenticatedClientElement orgId={props.org_id} checkMethod='roles'>
+        <AuthenticatedClientElement 
+        action="delete"
+        ressourceType="collection"
+        orgId={props.org_id} checkMethod='roles'>
             <div className="flex space-x-1  justify-center mx-auto z-20 ">
                 <ConfirmationModal
                     confirmationMessage="Are you sure you want to delete this collection?"
@@ -66,7 +69,7 @@ const CollectionAdminEditsArea = (props: any) => {
                             rel="noopener noreferrer">
                             <X size={10} className="text-rose-200 font-bold" />
                         </div>}
-                    functionToExecute={() => deleteCollectionUI(props.collection_id)}
+                    functionToExecute={() => deleteCollectionUI(props.collection_uuid)}
                     status='warning'
                 ></ConfirmationModal>
             </div>
