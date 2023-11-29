@@ -8,7 +8,7 @@ function DocumentPdfActivity({ activity, course }: { activity: any; course: any 
     <div className="m-8 bg-zinc-900 rounded-md mt-14">
       <iframe
         className="rounded-lg w-full h-[900px]"
-        src={getActivityMediaDirectory(activity.org_id, activity.course_id, activity.activity_id, activity.content.documentpdf.filename, 'documentpdf')}
+        src={getActivityMediaDirectory(activity.org_id, activity.course_uuid, activity.activity_id, activity.content.documentpdf.filename, 'documentpdf')}
       />
     </div>
   );

@@ -279,6 +279,37 @@ async def read_user_by_uuid(
     return user
 
 
+async def authorize_user_action(
+    request: Request,
+    db_session: Session,
+    current_user: PublicUser | AnonymousUser,
+    ressource_uuid: str,
+    action: Literal["create", "read", "update", "delete"],
+):
+    # Get user
+    statement = select(User).where(User.user_uuid == current_user.user_uuid)
+    user = db_session.exec(statement).first()
+
+    if not user:
+        raise HTTPException(
+            status_code=400,
+            detail="User does not exist",
+        )
+
+    # RBAC check
+    authorized = await authorization_verify_based_on_roles_and_authorship(
+        request, current_user.id, action, ressource_uuid, db_session
+    )
+
+    if authorized:
+        return True
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You are not authorized to perform this action",
+        )
+
+
 async def delete_user_by_id(
     request: Request,
     db_session: Session,
@@ -350,7 +381,7 @@ async def rbac_check(
             return True
 
         await authorization_verify_based_on_roles_and_authorship(
-            request, current_user.id, "read", action, db_session
+            request, current_user.id, action, user_uuid, db_session
         )
 
 

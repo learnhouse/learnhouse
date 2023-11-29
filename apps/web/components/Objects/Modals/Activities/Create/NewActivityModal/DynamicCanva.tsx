@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import * as Form from '@radix-ui/react-form';
 import BarLoader from "react-spinners/BarLoader";
 
-function DynamicCanvaModal({ submitActivity, chapterId }: any) {
+function DynamicCanvaModal({ submitActivity, chapterId, course }: any) {
   const [activityName, setActivityName] = useState("");
   const [activityDescription, setActivityDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -21,9 +21,12 @@ function DynamicCanvaModal({ submitActivity, chapterId }: any) {
     setIsSubmitting(true);
     await submitActivity({
       name: activityName,
-      chapterId: chapterId,
-      type: "dynamic",
-      org_id : "test", 
+      chapter_id: chapterId,
+      activity_type: "TYPE_DYNAMIC",
+      activity_sub_type:"SUBTYPE_DYNAMIC_PAGE",
+      published_version:1,
+      version:1,
+      course_id: course.id,
     });
     setIsSubmitting(false);
   };

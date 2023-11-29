@@ -50,8 +50,8 @@ interface Editor {
 
 function Editor(props: Editor) {
   const auth: any = React.useContext(AuthContext);
-  // remove course_ from course_id
-  const course_id = props.course.course.course_id.substring(7);
+  // remove course_ from course_uuid
+  const course_uuid = props.course.course.course_uuid.substring(7);
 
   // remove activity_ from activity_id
   const activity_id = props.activity.activity_id.substring(9);
@@ -145,8 +145,8 @@ function Editor(props: Editor) {
               <Link href="/">
                 <EditorInfoLearnHouseLogo width={25} height={25} src={learnhouseIcon} alt="" />
               </Link>
-              <Link target="_blank" href={`/course/${course_id}/edit`}>
-                <EditorInfoThumbnail src={`${getCourseThumbnailMediaDirectory(props.course.course.org_id, props.course.course.course_id, props.course.course.thumbnail)}`} alt=""></EditorInfoThumbnail>
+              <Link target="_blank" href={`/course/${course_uuid}/edit`}>
+                <EditorInfoThumbnail src={`${getCourseThumbnailMediaDirectory(props.course.course.org_id, props.course.course.course_uuid, props.course.course.thumbnail)}`} alt=""></EditorInfoThumbnail>
               </Link>
               <EditorInfoDocName>
                 {" "}
@@ -167,7 +167,7 @@ function Editor(props: Editor) {
             <EditorLeftOptionsSection className="space-x-2 pl-2 pr-3">
               <div className="bg-sky-600 hover:bg-sky-700 transition-all ease-linear px-3 py-2 font-black text-sm shadow text-teal-100 rounded-lg hover:cursor-pointer" onClick={() => props.setContent(editor.getJSON())}> Save </div>
               <ToolTip content="Preview">
-                <Link target="_blank" href={`/course/${course_id}/activity/${activity_id}`}>
+                <Link target="_blank" href={`/course/${course_uuid}/activity/${activity_id}`}>
                   <div className="flex bg-neutral-600 hover:bg-neutral-700 transition-all ease-linear h-9 px-3 py-2 font-black justify-center items-center text-sm shadow text-neutral-100 rounded-lg hover:cursor-pointer">
                     <Eye className="mx-auto items-center" size={15} />
                   </div>

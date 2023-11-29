@@ -230,24 +230,24 @@ async def add_activity_to_trail(
 async def add_course_to_trail(
     request: Request,
     user: PublicUser,
-    course_id: str,
+    course_uuid: str,
     db_session: Session,
 ) -> TrailRead:
-    # check if run already exists
-    statement = select(TrailRun).where(TrailRun.course_id == course_id)
-    trailrun = db_session.exec(statement).first()
-
-    if trailrun:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="TrailRun already exists"
-        )
-
-    statement = select(Course).where(Course.id == course_id)
+    statement = select(Course).where(Course.course_uuid == course_uuid)
     course = db_session.exec(statement).first()
 
     if not course:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Course not found"
+        )
+
+    # check if run already exists
+    statement = select(TrailRun).where(TrailRun.course_id == course.id)
+    trailrun = db_session.exec(statement).first()
+
+    if trailrun:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="TrailRun already exists"
         )
 
     statement = select(Trail).where(
@@ -308,10 +308,10 @@ async def add_course_to_trail(
 async def remove_course_from_trail(
     request: Request,
     user: PublicUser,
-    course_id: str,
+    course_uuid: str,
     db_session: Session,
 ) -> TrailRead:
-    statement = select(Course).where(Course.id == course_id)
+    statement = select(Course).where(Course.course_uuid == course_uuid)
     course = db_session.exec(statement).first()
 
     if not course:

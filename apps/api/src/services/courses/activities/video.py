@@ -82,6 +82,8 @@ async def create_video_activity(
         activity_type=ActivityTypeEnum.TYPE_VIDEO,
         activity_sub_type=ActivitySubTypeEnum.SUBTYPE_VIDEO_HOSTED,
         activity_uuid=activity_uuid,
+        org_id=coursechapter.org_id,
+        course_id=coursechapter.course_id,
         published_version=1,
         content={
             "filename": "video." + video_format,
@@ -171,6 +173,8 @@ async def create_external_video_activity(
         activity_type=ActivityTypeEnum.TYPE_VIDEO,
         activity_sub_type=ActivitySubTypeEnum.SUBTYPE_VIDEO_YOUTUBE,
         activity_uuid=activity_uuid,
+        course_id=coursechapter.course_id,
+        org_id=coursechapter.org_id,
         published_version=1,
         content={
             "uri": data.uri,
@@ -192,6 +196,8 @@ async def create_external_video_activity(
     chapter_activity_object = ChapterActivity(
         chapter_id=coursechapter.id,  # type: ignore
         activity_id=activity.id,  # type: ignore
+        course_id=coursechapter.course_id,
+        org_id=coursechapter.org_id,
         creation_date=str(datetime.now()),
         update_date=str(datetime.now()),
         order=1,

@@ -47,7 +47,7 @@ function ActivityClient(props: ActivityClientProps) {
           <div className="flex space-x-6">
             <div className="flex">
               <Link href={getUriWithOrg(orgslug, "") + `/course/${courseid}`}>
-                <img className="w-[100px] h-[57px] rounded-md drop-shadow-md" src={`${getCourseThumbnailMediaDirectory(course.course.org_id, course.course.course_id, course.course.thumbnail)}`} alt="" />
+                <img className="w-[100px] h-[57px] rounded-md drop-shadow-md" src={`${getCourseThumbnailMediaDirectory(course.course.org_id, course.course.course_uuid, course.course.thumbnail)}`} alt="" />
               </Link>
             </div>
             <div className="flex flex-col -space-y-1">
@@ -55,7 +55,7 @@ function ActivityClient(props: ActivityClientProps) {
               <h1 className="font-bold text-gray-950 text-2xl first-letter:uppercase" >{course.course.name}</h1>
             </div>
           </div>
-          <ActivityIndicators course_id={courseid} current_activity={activityid} orgslug={orgslug} course={course} />
+          <ActivityIndicators course_uuid={courseid} current_activity={activityid} orgslug={orgslug} course={course} />
 
           <div className="flex justify-between items-center">
             <div className="flex flex-col -space-y-1">

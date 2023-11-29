@@ -14,40 +14,43 @@ import { denyAccessToUser } from "@services/utils/react/middlewares/views";
 import { Folders, Hexagon, SaveIcon } from "lucide-react";
 import GeneralWrapperStyled from "@components/StyledElements/Wrappers/GeneralWrapper";
 import { revalidateTags, swrFetcher } from "@services/utils/ts/requests";
-import { mutate } from "swr";
 import { getAPIUrl } from "@services/config/config";
+import { mutate } from "swr";
 
 function CourseContentEdition(props: any) {
     const router = useRouter();
-    // Initial Course State
-    const data = props.data;
+    // Initial Course Chapters State
+    const course_chapters_with_orders_and_activities = props.course_chapters_with_orders_and_activities;
 
     // New Chapter Modal State
     const [newChapterModal, setNewChapterModal] = useState(false) as any;
     // New Activity Modal State
     const [newActivityModal, setNewActivityModal] = useState(false) as any;
-    const [newActivityModalData, setNewActivityModalData] = useState("") as any;
+    const [selectedChapterToAddActivityTo, setSelectedChapterToAddActivityTo] = useState("") as any;
 
     // Check window availability
     const [winReady, setwinReady] = useState(false);
-    const courseid = props.courseid;
+    const course = props.course;
+    const course_uuid = props.course ? props.course.course_uuid : ''
     const orgslug = props.orgslug;
+
+    // 
 
 
 
     useEffect(() => {
         setwinReady(true);
-    }, [courseid, orgslug]);
+    }, [course_uuid, orgslug]);
 
     // get a list of chapters order by chapter order
     const getChapters = () => {
-        const chapterOrder = data.chapterOrder ? data.chapterOrder : [];
+        const chapterOrder = course_chapters_with_orders_and_activities.chapterOrder ? course_chapters_with_orders_and_activities.chapterOrder : [];
         return chapterOrder.map((chapterId: any) => {
-            const chapter = data.chapters[chapterId];
+            const chapter = course_chapters_with_orders_and_activities.chapters[chapterId];
             let activities = [];
-            if (data.activities) {
-                activities = chapter.activityIds.map((activityId: any) => data.activities[activityId])
-                    ? chapter.activityIds.map((activityId: any) => data.activities[activityId])
+            if (course_chapters_with_orders_and_activities.activities) {
+                activities = chapter.activityIds.map((activityId: any) => course_chapters_with_orders_and_activities.activities[activityId])
+                    ? chapter.activityIds.map((activityId: any) => course_chapters_with_orders_and_activities.activities[activityId])
                     : [];
             }
             return {
@@ -61,9 +64,9 @@ function CourseContentEdition(props: any) {
 
     // Submit new chapter
     const submitChapter = async (chapter: any) => {
-        await createChapter(chapter, courseid);
-        mutate(`${getAPIUrl()}chapters/meta/course_${courseid}`);
-        // await getCourseChapters();
+        await createChapter(chapter);
+
+        mutate(`${getAPIUrl()}chapters/course/${course_uuid}/meta`,true);
         await revalidateTags(['courses'], orgslug);
         router.refresh();
         setNewChapterModal(false);
@@ -72,22 +75,21 @@ function CourseContentEdition(props: any) {
     // Submit new activity
     const submitActivity = async (activity: any) => {
         let org = await getOrganizationContextInfoWithoutCredentials(orgslug, { revalidate: 1800 });
-        await updateChaptersMetadata(courseid, data);
         await createActivity(activity, activity.chapterId, org.org_id);
-        mutate(`${getAPIUrl()}chapters/meta/course_${courseid}`);
+        mutate(`${getAPIUrl()}chapters/course/${course_uuid}/meta`);
         // await getCourseChapters();
         setNewActivityModal(false);
         await revalidateTags(['courses'], orgslug);
         router.refresh();
     };
 
-    
+
 
     // Submit File Upload
     const submitFileActivity = async (file: any, type: any, activity: any, chapterId: string) => {
-        await updateChaptersMetadata(courseid, data);
+        //await updateChaptersMetadata(course_uuid, course_chapters_with_orders_and_activities);
         await createFileActivity(file, type, activity, chapterId);
-        mutate(`${getAPIUrl()}chapters/meta/course_${courseid}`);
+        mutate(`${getAPIUrl()}chapters/course/${course_uuid}/meta`);
         // await getCourseChapters();
         setNewActivityModal(false);
         await revalidateTags(['courses'], orgslug);
@@ -96,9 +98,9 @@ function CourseContentEdition(props: any) {
 
     // Submit YouTube Video Upload
     const submitExternalVideo = async (external_video_data: any, activity: any, chapterId: string) => {
-        await updateChaptersMetadata(courseid, data);
+        //await updateChaptersMetadata(course_uuid, course_chapters_with_orders_and_activities);
         await createExternalVideoActivity(external_video_data, activity, chapterId);
-        mutate(`${getAPIUrl()}chapters/meta/course_${courseid}`);
+        mutate(`${getAPIUrl()}chapters/course/${course_uuid}/meta`);
         // await getCourseChapters();
         setNewActivityModal(false);
         await revalidateTags(['courses'], orgslug);
@@ -106,19 +108,15 @@ function CourseContentEdition(props: any) {
     };
 
     const deleteChapterUI = async (chapterId: any) => {
-
         await deleteChapter(chapterId);
-        mutate(`${getAPIUrl()}chapters/meta/course_${courseid}`);
+
+        mutate(`${getAPIUrl()}chapters/course/${course_uuid}/meta`,true);
         // await getCourseChapters();
         await revalidateTags(['courses'], orgslug);
         router.refresh();
     };
 
-    const updateChapters = () => {
-        updateChaptersMetadata(courseid, data);
-        revalidateTags(['courses'], orgslug);
-        router.refresh();
-    };
+    
 
     /* 
     Modals
@@ -126,7 +124,7 @@ function CourseContentEdition(props: any) {
 
     const openNewActivityModal = async (chapterId: any) => {
         setNewActivityModal(true);
-        setNewActivityModalData(chapterId);
+        setSelectedChapterToAddActivityTo(chapterId);
     };
 
     // Close new chapter modal
@@ -157,12 +155,12 @@ function CourseContentEdition(props: any) {
         }
         //////////////////////////// CHAPTERS ////////////////////////////
         if (type === "chapter") {
-            const newChapterOrder = Array.from(data.chapterOrder);
+            const newChapterOrder = Array.from(course_chapters_with_orders_and_activities.chapterOrder);
             newChapterOrder.splice(source.index, 1);
             newChapterOrder.splice(destination.index, 0, draggableId);
 
             const newState = {
-                ...data,
+                ...course_chapters_with_orders_and_activities,
                 chapterOrder: newChapterOrder,
             };
 
@@ -174,13 +172,13 @@ function CourseContentEdition(props: any) {
 
         //////////////////////// ACTIVITIES IN SAME CHAPTERS ////////////////////////////
         // check if the activity is dropped in the same chapter
-        const start = data.chapters[source.droppableId];
-        const finish = data.chapters[destination.droppableId];
+        const start = course_chapters_with_orders_and_activities.chapters[source.droppableId];
+        const finish = course_chapters_with_orders_and_activities.chapters[destination.droppableId];
 
         // check if the activity is dropped in the same chapter
         if (start === finish) {
             // create new arrays for chapters and activities
-            const chapter = data.chapters[source.droppableId];
+            const chapter = course_chapters_with_orders_and_activities.chapters[source.droppableId];
             const newActivityIds = Array.from(chapter.activityIds);
 
             // remove the activity from the old position
@@ -195,9 +193,9 @@ function CourseContentEdition(props: any) {
             };
 
             const newState = {
-                ...data,
+                ...course_chapters_with_orders_and_activities,
                 chapters: {
-                    ...data.chapters,
+                    ...course_chapters_with_orders_and_activities.chapters,
                     [newChapter.id]: newChapter,
                 },
             };
@@ -229,9 +227,9 @@ function CourseContentEdition(props: any) {
             };
 
             const newState = {
-                ...data,
+                ...course_chapters_with_orders_and_activities,
                 chapters: {
-                    ...data.chapters,
+                    ...course_chapters_with_orders_and_activities.chapters,
                     [newStart.id]: newStart,
                     [newFinish.id]: newFinish,
                 },
@@ -259,7 +257,8 @@ function CourseContentEdition(props: any) {
                             submitFileActivity={submitFileActivity}
                             submitExternalVideo={submitExternalVideo}
                             submitActivity={submitActivity}
-                            chapterId={newActivityModalData}
+                            chapterId={selectedChapterToAddActivityTo}
+                            course={course}
                         ></NewActivityModal>}
                         dialogTitle="Create Activity"
                         dialogDescription="Choose between types of activities to add to the course"
@@ -276,7 +275,7 @@ function CourseContentEdition(props: any) {
                                                     <>
                                                         <Chapter
                                                             orgslug={orgslug}
-                                                            courseid={courseid}
+                                                            course_uuid={course_uuid}
                                                             openNewActivityModal={openNewActivityModal}
                                                             deleteChapter={deleteChapterUI}
                                                             key={index}
@@ -296,6 +295,7 @@ function CourseContentEdition(props: any) {
                                 onOpenChange={setNewChapterModal}
                                 minHeight="sm"
                                 dialogContent={<NewChapterModal
+                                    course={props.course ? props.course : null}
                                     closeModal={closeNewChapterModal}
                                     submitChapter={submitChapter}
                                 ></NewChapterModal>}

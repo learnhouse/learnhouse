@@ -40,7 +40,7 @@ export async function getUserInfo(token: string): Promise<any> {
     credentials: "include",
   };
 
-  return fetch(`${getAPIUrl()}users/profile_metadata`, requestOptions)
+  return fetch(`${getAPIUrl()}users/profile`, requestOptions)
     .then((result) => result.json())
     .catch((error) => console.log("error", error));
 }

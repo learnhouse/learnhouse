@@ -1,5 +1,6 @@
-from typing import List, Optional
+from typing import Any, List, Optional
 from pydantic import BaseModel
+from sqlalchemy import Column, ForeignKey
 from sqlmodel import Field, SQLModel
 from src.db.activities import ActivityRead
 
@@ -9,17 +10,19 @@ class ChapterBase(SQLModel):
     description: Optional[str] = ""
     thumbnail_image: Optional[str] = ""
     org_id: int = Field(default=None, foreign_key="organization.id")
-    course_id: int = Field(default=None, foreign_key="course.id")
-    creation_date: str
-    update_date: str
+    course_id: int = Field(
+        sa_column=Column("course_id", ForeignKey("course.id", ondelete="CASCADE"))
+    )
 
 
 class Chapter(ChapterBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
+    course_id: int = Field(
+        sa_column=Column("course_id", ForeignKey("course.id", ondelete="CASCADE"))
+    )
     chapter_uuid: str = ""
     creation_date: str = ""
     update_date: str = ""
-
 
 
 class ChapterCreate(ChapterBase):
@@ -32,6 +35,8 @@ class ChapterUpdate(ChapterBase):
     name: Optional[str]
     description: Optional[str]
     thumbnail_image: Optional[str]
+    course_id: Optional[int]
+    org_id: Optional[int]
 
 
 class ChapterRead(ChapterBase):
@@ -57,7 +62,7 @@ class ChapterUpdateOrder(BaseModel):
 
 
 class DepreceatedChaptersRead(BaseModel):
-    chapter_order: list[str]
-    chapters: List[ChapterRead]
-    activities: List[ActivityRead]
+    chapterOrder: Any
+    chapters: Any
+    activities: Any
     pass

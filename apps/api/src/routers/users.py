@@ -1,3 +1,4 @@
+from typing import Literal
 from fastapi import APIRouter, Depends, Request
 from sqlmodel import Session
 from src.security.auth import get_current_user
@@ -12,6 +13,7 @@ from src.db.users import (
     UserUpdatePassword,
 )
 from src.services.users.users import (
+    authorize_user_action,
     create_user,
     create_user_without_org,
     delete_user_by_id,
@@ -31,6 +33,22 @@ async def api_get_current_user(current_user: User = Depends(get_current_user)):
     Get current user
     """
     return current_user.dict()
+
+
+@router.get("/authorize/ressource/{ressource_uuid}/action/{action}")
+async def api_get_authorization_status(
+    request: Request,
+    ressource_uuid: str,
+    action: Literal["create", "read", "update", "delete"],
+    db_session: Session = Depends(get_db_session),
+    current_user: PublicUser = Depends(get_current_user),
+):
+    """
+    Get current user authorization status
+    """
+    return await authorize_user_action(
+        request, db_session, current_user, ressource_uuid, action
+    )
 
 
 @router.post("/{org_id}", response_model=UserRead, tags=["users"])

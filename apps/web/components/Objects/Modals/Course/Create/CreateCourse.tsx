@@ -1,3 +1,4 @@
+'use client';
 import FormLayout, { ButtonBlack, Flex, FormField, FormLabel, Input, Textarea } from '@components/StyledElements/Form/Form'
 import * as Form from '@radix-ui/react-form'
 import { FormMessage } from "@radix-ui/react-form";
@@ -12,16 +13,21 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [name, setName] = React.useState("");
     const [description, setDescription] = React.useState("");
+    const [learnings, setLearnings] = React.useState("");
+    const [visibility, setVisibility] = React.useState("");
+    const [tags, setTags] = React.useState("");
     const [isLoading, setIsLoading] = React.useState(false);
     const [thumbnail, setThumbnail] = React.useState(null) as any;
     const router = useRouter();
 
     const [orgId, setOrgId] = React.useState(null) as any;
+    const [org, setOrg] = React.useState(null) as any;
 
 
     const getOrgMetadata = async () => {
         const org = await getOrganizationContextInfoWithoutCredentials(orgslug, { revalidate: 360, tags: ['organizations'] });
-        setOrgId(org.org_id);
+
+        setOrgId(org.id);
     }
 
 
@@ -33,6 +39,20 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
         setDescription(event.target.value);
     };
 
+    const handleLearningsChange = (event: React.ChangeEvent<any>) => {
+        setLearnings(event.target.value);
+    }
+
+    const handleVisibilityChange = (event: React.ChangeEvent<any>) => {
+        setVisibility(event.target.value);
+        console.log(event.target.value);
+    }
+
+    const handleTagsChange = (event: React.ChangeEvent<any>) => {
+        setTags(event.target.value);
+    }
+
+
     const handleThumbnailChange = (event: React.ChangeEvent<any>) => {
         setThumbnail(event.target.files[0]);
     };
@@ -40,7 +60,9 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
     const handleSubmit = async (e: any) => {
         e.preventDefault();
         setIsSubmitting(true);
-        let status = await createNewCourse(orgId, { name, description }, thumbnail);
+
+
+        let status = await createNewCourse(orgId, { name, description, tags, visibility }, thumbnail);
         await revalidateTags(['courses'], orgslug);
         setIsSubmitting(false);
 
@@ -92,13 +114,25 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
                     <Input onChange={handleThumbnailChange} type="file" required />
                 </Form.Control>
             </FormField>
-            <FormField name="course-learnings">
+            <FormField name="course-tags">
                 <Flex css={{ alignItems: 'baseline', justifyContent: 'space-between' }}>
-                    <FormLabel>Course keywords</FormLabel>
+                    <FormLabel>Course tags (separated by comma)</FormLabel>
                     <FormMessage match="valueMissing">Please provide learning elements, separated by comma (,)</FormMessage>
                 </Flex>
                 <Form.Control asChild>
-                    <Textarea required />
+                    <Textarea onChange={handleTagsChange} required />
+                </Form.Control>
+            </FormField>
+            <FormField name="course-visibility">
+                <Flex css={{ alignItems: 'baseline', justifyContent: 'space-between' }}>
+                    <FormLabel>Course Visibility</FormLabel>
+                    <FormMessage match="valueMissing">Please choose cours visibility</FormMessage>
+                </Flex>
+                <Form.Control asChild>
+                    <select onChange={handleVisibilityChange} className='border border-gray-300 rounded-md p-2' required>
+                        <option value="true">Public (Available to see on the internet) </option>
+                        <option value="false">Private (Private to users) </option>
+                    </select>
                 </Form.Control>
             </FormField>
 

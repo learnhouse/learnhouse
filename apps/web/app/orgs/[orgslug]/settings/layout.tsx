@@ -8,12 +8,15 @@ import Avvvatars from 'avvvatars-react';
 import Image from 'next/image';
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement';
 import { getOrganizationContextInfo } from '@services/organizations/orgs';
+import useSWR, { mutate } from "swr";
+import { getAPIUrl } from '@services/config/config';
+import { swrFetcher } from '@services/utils/ts/requests';
 
-async function SettingsLayout({ children, params }: { children: React.ReactNode, params: any }) {
+function SettingsLayout({ children, params }: { children: React.ReactNode, params: any }) {
     const auth: any = React.useContext(AuthContext);
     const orgslug = params.orgslug;
 
-    let org = await getOrganizationContextInfo(orgslug, {});
+    const { data: org, error: error } = useSWR(`${getAPIUrl()}orgs/slug/${orgslug}`, swrFetcher);
 
     return (
         <>
@@ -33,7 +36,10 @@ async function SettingsLayout({ children, params }: { children: React.ReactNode,
                                 <li><Link href="/settings/account/profile">Profile</Link></li>
                                 <li><Link href="/settings/account/passwords">Passwords</Link></li>
                             </ul>
-                            <AuthenticatedClientElement checkMethod='roles' orgId={org.org_id}  >
+                            <AuthenticatedClientElement
+                                ressourceType='organization'
+                                action='update'
+                                checkMethod='roles'  >
                                 <MenuTitle>Organization</MenuTitle>
                                 <ul>
                                     <li><Link href="/settings/organization/general">General</Link></li>

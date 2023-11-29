@@ -1,5 +1,6 @@
 from typing import Literal
 from sqlmodel import Session, select
+from src.db.chapters import Chapter
 from src.security.rbac.rbac import (
     authorization_verify_based_on_roles_and_authorship,
     authorization_verify_if_user_is_anon,
@@ -27,21 +28,22 @@ async def create_activity(
     activity = Activity.from_orm(activity_object)
 
     # CHeck if org exists
-    statement = select(Organization).where(Organization.id == activity_object.org_id)
-    org = db_session.exec(statement).first()
+    statement = select(Chapter).where(Chapter.id == activity_object.chapter_id)
+    chapter = db_session.exec(statement).first()
 
-    if not org:
+    if not chapter:
         raise HTTPException(
             status_code=404,
-            detail="Organization not found",
+            detail="Chapter not found",
         )
 
     # RBAC check
-    await rbac_check(request, org.org_uuid, current_user, "create", db_session)
+    await rbac_check(request, chapter.chapter_uuid, current_user, "create", db_session)
 
     activity.activity_uuid = str(f"activity_{uuid4()}")
     activity.creation_date = str(datetime.now())
     activity.update_date = str(datetime.now())
+    activity.org_id = chapter.org_id
 
     # Insert Activity in DB
     db_session.add(activity)
@@ -64,7 +66,7 @@ async def create_activity(
         chapter_id=activity_object.chapter_id,
         activity_id=activity.id if activity.id else 0,
         course_id=activity_object.course_id,
-        org_id=activity_object.org_id,
+        org_id=chapter.org_id,
         creation_date=str(datetime.now()),
         update_date=str(datetime.now()),
         order=to_be_used_order,

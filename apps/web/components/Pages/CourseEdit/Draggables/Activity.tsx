@@ -44,7 +44,7 @@ function Activity(props: any) {
   }
 
   return (
-    <Draggable key={props.activity.id} draggableId={props.activity.id} index={props.index}>
+    <Draggable key={props.activity.uuid} draggableId={String(props.activity.uuid)} index={props.index}>
       {(provided) => (
         <div
           className="flex flex-row py-2 my-2 rounded-md bg-gray-50 text-gray-500 hover:bg-gray-100 hover:scale-102 hover:shadow space-x-1 w-auto items-center ring-1 ring-inset ring-gray-400/10 shadow-sm transition-all delay-100 duration-75 ease-linear" key={props.activity.id} {...provided.draggableProps} {...provided.dragHandleProps} ref={provided.innerRef}>
@@ -69,16 +69,16 @@ function Activity(props: any) {
           </div>
 
           <div className="flex flex-row space-x-2">
-            {props.activity.type === "dynamic" && <>
+            {props.activity.type === "TYPE_DYNAMIC" && <>
               <Link
-                href={getUriWithOrg(props.orgslug, "") + `/course/${props.courseid}/activity/${props.activity.id.replace("activity_", "")}/edit`}
+                href={getUriWithOrg(props.orgslug, "") + `/course/${props.courseid}/activity/${props.activity.uuid.replace("activity_", "")}/edit`}
                 className=" hover:cursor-pointer p-1 px-3 bg-sky-700 rounded-md items-center"
                 rel="noopener noreferrer">
                 <div className="text-sky-100 font-bold text-xs" >Edit </div>
               </Link>
             </>}
             <Link
-              href={getUriWithOrg(props.orgslug, "") + `/course/${props.courseid}/activity/${props.activity.id.replace("activity_", "")}`}
+              href={getUriWithOrg(props.orgslug, "") + `/course/${props.courseid}/activity/${props.activity.uuid.replace("activity_", "")}`}
               className=" hover:cursor-pointer p-1 px-3 bg-gray-200 rounded-md"
               rel="noopener noreferrer">
               <Eye strokeWidth={2} size={15} className="text-gray-600" />

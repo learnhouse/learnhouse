@@ -7,16 +7,14 @@ import { RequestBody, RequestBodyWithAuthHeader, errorHandling } from "@services
 */
 
 //TODO : depreciate this function
-export async function getCourseChaptersMetadata(course_id: any, next: any) {
-  const result = await fetch(`${getAPIUrl()}chapters/meta/course_${course_id}`, RequestBody("GET", null, next));
+export async function getCourseChaptersMetadata(course_uuid: any, next: any) {
+  const result = await fetch(`${getAPIUrl()}chapters/meta/course_${course_uuid}`, RequestBody("GET", null, next));
   const res = await errorHandling(result);
   return res;
 }
 
-
-
-export async function updateChaptersMetadata(course_id: any, data: any) {
-  const result: any = await fetch(`${getAPIUrl()}chapters/meta/course_${course_id}`, RequestBody("PUT", data, null));
+export async function updateChaptersMetadata(course_uuid: any, data: any) {
+  const result: any = await fetch(`${getAPIUrl()}chapters/course/course_${course_uuid}/order`, RequestBody("PUT", data, null));
   const res = await errorHandling(result);
   return res;
 }
@@ -27,8 +25,8 @@ export async function updateChapter(coursechapter_id: any, data: any) {
   return res;
 }
 
-export async function createChapter(data: any, course_id: any) {
-  const result: any = await fetch(`${getAPIUrl()}chapters/?course_id=course_${course_id}`, RequestBody("POST", data, null));
+export async function createChapter(data: any) {
+  const result: any = await fetch(`${getAPIUrl()}chapters/`, RequestBody("POST", data, null));
   const res = await errorHandling(result);
 
   return res;

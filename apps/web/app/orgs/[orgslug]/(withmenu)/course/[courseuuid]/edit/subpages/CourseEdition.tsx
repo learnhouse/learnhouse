@@ -45,10 +45,10 @@ function CourseEdition(props: any) {
   const [error, setError] = React.useState('');
   const formik = useFormik({
     initialValues: {
-      name: String(props.data.name),
-      mini_description: String(props.data.mini_description),
-      description: String(props.data.description),
-      learnings: String(props.data.learnings),
+      name: String(props.course_chapters_with_orders_and_activities.name),
+      mini_description: String(props.course_chapters_with_orders_and_activities.mini_description),
+      description: String(props.course_chapters_with_orders_and_activities.description),
+      learnings: String(props.course_chapters_with_orders_and_activities.learnings),
     },
     validate,
     onSubmit: async values => {
@@ -61,11 +61,10 @@ function CourseEdition(props: any) {
     if (formik.values !== formik.initialValues) {
       props.dispatchSavedContent({ type: 'unsaved_content' });
       const updatedCourse = {
-        ...props.data,
+        ...props.course_chapters_with_orders_and_activities,
         name: formik.values.name,
-        mini_description: formik.values.mini_description,
         description: formik.values.description,
-        learnings: formik.values.learnings.split(", "),
+        learnings: formik.values.learnings,
       };
       props.dispatchCourseMetadata({ type: 'updated_course', payload: updatedCourse });
     }
@@ -88,12 +87,7 @@ function CourseEdition(props: any) {
               <Input style={{ backgroundColor: "white" }} onChange={formik.handleChange} value={formik.values.name} type="text" required />
             </Form.Control>
           </FormField>
-          <FormField name="mini_description">
-            <FormLabelAndMessage label='Mini description' message={formik.errors.mini_description} />
-            <Form.Control asChild>
-              <Input style={{ backgroundColor: "white" }} onChange={formik.handleChange} value={formik.values.mini_description} type="text" required />
-            </Form.Control>
-          </FormField>
+         
           <FormField name="description">
             <FormLabelAndMessage label='Description' message={formik.errors.description} />
             <Form.Control asChild>
