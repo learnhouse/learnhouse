@@ -202,10 +202,6 @@ async def get_course_chapters(
     statement = select(Chapter).where(Chapter.course_id == course_id)
     chapters = db_session.exec(statement).all()
 
-    if not chapters:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Course do not have chapters"
-        )
 
     chapters = [ChapterRead(**chapter.dict(), activities=[]) for chapter in chapters]
 

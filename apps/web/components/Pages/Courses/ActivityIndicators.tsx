@@ -7,14 +7,14 @@ import React from 'react'
 interface Props {
     course: any
     orgslug: string
-    course_id: string
+    course_uuid: string
     current_activity?: any
 }
 
 function ActivityIndicators(props: Props) {
     const course = props.course
     const orgslug = props.orgslug
-    const courseid = props.course_id.replace("course_", "")
+    const courseid = props.course_uuid.replace("course_", "")
 
     const done_activity_style = 'bg-teal-600 hover:bg-teal-700'
     const black_activity_style = 'bg-black hover:bg-gray-700'

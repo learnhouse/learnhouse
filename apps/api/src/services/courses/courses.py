@@ -6,7 +6,7 @@ from src.db.trails import TrailRead
 
 from src.services.trail.trail import get_user_trail_with_orgid
 from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum
-from src.db.users import PublicUser, AnonymousUser
+from src.db.users import PublicUser, AnonymousUser, User, UserRead
 from src.db.courses import (
     Course,
     CourseCreate,
@@ -26,11 +26,11 @@ from datetime import datetime
 
 async def get_course(
     request: Request,
-    course_id: str,
+    course_uuid: str,
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
-    statement = select(Course).where(Course.id == course_id)
+    statement = select(Course).where(Course.course_uuid == course_uuid)
     course = db_session.exec(statement).first()
 
     if not course:
@@ -42,21 +42,32 @@ async def get_course(
     # RBAC check
     await rbac_check(request, course.course_uuid, current_user, "read", db_session)
 
-    course = CourseRead.from_orm(course)
+    # Get course authors
+    authors_statement = (
+        select(User)
+        .join(ResourceAuthor)
+        .where(ResourceAuthor.resource_uuid == course.course_uuid)
+    )
+    authors = db_session.exec(authors_statement).all()
+
+    # convert from User to UserRead
+    authors = [UserRead.from_orm(author) for author in authors]
+
+    course = CourseRead(**course.dict(), authors=authors)
 
     return course
 
 
 async def get_course_meta(
     request: Request,
-    course_id: int,
+    course_uuid: str,
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ) -> FullCourseReadWithTrail:
     # Avoid circular import
     from src.services.courses.chapters import get_course_chapters
 
-    course_statement = select(Course).where(Course.id == course_id)
+    course_statement = select(Course).where(Course.course_uuid == course_uuid)
     course = db_session.exec(course_statement).first()
 
     if not course:
@@ -68,7 +79,18 @@ async def get_course_meta(
     # RBAC check
     await rbac_check(request, course.course_uuid, current_user, "read", db_session)
 
-    course = CourseRead.from_orm(course)
+    # Get course authors
+    authors_statement = (
+        select(User)
+        .join(ResourceAuthor)
+        .where(ResourceAuthor.resource_uuid == course.course_uuid)
+    )
+    authors = db_session.exec(authors_statement).all()
+
+    # convert from User to UserRead
+    authors = [UserRead.from_orm(author) for author in authors]
+
+    course = CourseRead(**course.dict(), authors=authors)
 
     # Get course chapters
     chapters = await get_course_chapters(request, course.id, db_session, current_user)
@@ -83,7 +105,7 @@ async def get_course_meta(
     return FullCourseReadWithTrail(
         **course.dict(),
         chapters=chapters,
-        trail=trail,
+        trail=trail if trail else None,
     )
 
 
@@ -132,17 +154,30 @@ async def create_course(
     db_session.commit()
     db_session.refresh(resource_author)
 
+    # Get course authors
+    authors_statement = (
+        select(User)
+        .join(ResourceAuthor)
+        .where(ResourceAuthor.resource_uuid == course.course_uuid)
+    )
+    authors = db_session.exec(authors_statement).all()
+
+    # convert from User to UserRead
+    authors = [UserRead.from_orm(author) for author in authors]
+
+    course = CourseRead(**course.dict(), authors=authors)
+
     return CourseRead.from_orm(course)
 
 
 async def update_course_thumbnail(
     request: Request,
-    course_id: str,
+    course_uuid: str,
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
     thumbnail_file: UploadFile | None = None,
 ):
-    statement = select(Course).where(Course.id == course_id)
+    statement = select(Course).where(Course.course_uuid == course_uuid)
     course = db_session.exec(statement).first()
 
     name_in_disk = None
@@ -158,9 +193,7 @@ async def update_course_thumbnail(
 
     # Upload thumbnail
     if thumbnail_file and thumbnail_file.filename:
-        name_in_disk = (
-            f"{course_id}_thumbnail_{uuid4()}.{thumbnail_file.filename.split('.')[-1]}"
-        )
+        name_in_disk = f"{course_uuid}_thumbnail_{uuid4()}.{thumbnail_file.filename.split('.')[-1]}"
         await upload_thumbnail(
             thumbnail_file, name_in_disk, course.org_id, course.course_uuid
         )
@@ -181,7 +214,18 @@ async def update_course_thumbnail(
     db_session.commit()
     db_session.refresh(course)
 
-    course = CourseRead.from_orm(course)
+    # Get course authors
+    authors_statement = (
+        select(User)
+        .join(ResourceAuthor)
+        .where(ResourceAuthor.resource_uuid == course.course_uuid)
+    )
+    authors = db_session.exec(authors_statement).all()
+
+    # convert from User to UserRead
+    authors = [UserRead.from_orm(author) for author in authors]
+
+    course = CourseRead(**course.dict(), authors=authors)
 
     return course
 
@@ -189,11 +233,11 @@ async def update_course_thumbnail(
 async def update_course(
     request: Request,
     course_object: CourseUpdate,
-    course_id: int,
+    course_uuid: str,
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
-    statement = select(Course).where(Course.id == course_id)
+    statement = select(Course).where(Course.course_uuid == course_uuid)
     course = db_session.exec(statement).first()
 
     if not course:
@@ -217,18 +261,29 @@ async def update_course(
     db_session.commit()
     db_session.refresh(course)
 
-    course = CourseRead.from_orm(course)
+    # Get course authors
+    authors_statement = (
+        select(User)
+        .join(ResourceAuthor)
+        .where(ResourceAuthor.resource_uuid == course.course_uuid)
+    )
+    authors = db_session.exec(authors_statement).all()
+
+    # convert from User to UserRead
+    authors = [UserRead.from_orm(author) for author in authors]
+
+    course = CourseRead(**course.dict(), authors=authors)
 
     return course
 
 
 async def delete_course(
     request: Request,
-    course_id: str,
+    course_uuid: str,
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
-    statement = select(Course).where(Course.id == course_id)
+    statement = select(Course).where(Course.course_uuid == course_uuid)
     course = db_session.exec(statement).first()
 
     if not course:
@@ -273,7 +328,21 @@ async def get_courses_orgslug(
 
     courses = db_session.exec(statement)
 
-    courses = [CourseRead.from_orm(course) for course in courses]
+    courses = [CourseRead(**course.dict(),authors=[]) for course in courses]
+
+    # for every course, get the authors
+    for course in courses:
+        authors_statement = (
+            select(User)
+            .join(ResourceAuthor)
+            .where(ResourceAuthor.resource_uuid == course.course_uuid)
+        )
+        authors = db_session.exec(authors_statement).all()
+
+        # convert from User to UserRead
+        authors = [UserRead.from_orm(author) for author in authors]
+
+        course.authors = authors
 
     return courses
 

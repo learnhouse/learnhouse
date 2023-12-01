@@ -24,9 +24,9 @@ export async function generateMetadata(
 
     // SEO
     return {
-        title: course_meta.course.name + ` — ${org.name}`,
-        description: course_meta.course.mini_description,
-        keywords: course_meta.course.learnings,
+        title: course_meta.name + ` — ${org.name}`,
+        description: course_meta.description,
+        keywords: course_meta.learnings,
         robots: {
             index: true,
             follow: true,
@@ -38,11 +38,11 @@ export async function generateMetadata(
             }
         },
         openGraph: {
-            title: course_meta.course.name + ` — ${org.name}`,
-            description: course_meta.course.mini_description,
+            title: course_meta.name + ` — ${org.name}`,
+            description: course_meta.description,
             type: 'article',
-            publishedTime: course_meta.course.creationDate,
-            tags: course_meta.course.learnings,
+            publishedTime: course_meta.creation_date,
+            tags: course_meta.learnings,
         },
     };
 }

@@ -29,17 +29,17 @@ async def api_create_collection(
     return await create_collection(request, collection_object, current_user, db_session)
 
 
-@router.get("/{collection_id}")
+@router.get("/{collection_uuid}")
 async def api_get_collection(
     request: Request,
-    collection_id: str,
+    collection_uuid: str,
     current_user: PublicUser = Depends(get_current_user),
     db_session=Depends(get_db_session),
 ) -> CollectionRead:
     """
     Get single collection by ID
     """
-    return await get_collection(request, collection_id, current_user, db_session)
+    return await get_collection(request, collection_uuid, current_user, db_session)
 
 
 @router.get("/org/{org_id}/page/{page}/limit/{limit}")
@@ -57,11 +57,11 @@ async def api_get_collections_by(
     return await get_collections(request, org_id, current_user, db_session, page, limit)
 
 
-@router.put("/{collection_id}")
+@router.put("/{collection_uuid}")
 async def api_update_collection(
     request: Request,
     collection_object: CollectionUpdate,
-    collection_id: int,
+    collection_uuid: str,
     current_user: PublicUser = Depends(get_current_user),
     db_session=Depends(get_db_session),
 ) -> CollectionRead:
@@ -69,14 +69,14 @@ async def api_update_collection(
     Update collection by ID
     """
     return await update_collection(
-        request, collection_object, collection_id, current_user, db_session
+        request, collection_object, collection_uuid, current_user, db_session
     )
 
 
-@router.delete("/{collection_id}")
+@router.delete("/{collection_uuid}")
 async def api_delete_collection(
     request: Request,
-    collection_id: str,
+    collection_uuid: str,
     current_user: PublicUser = Depends(get_current_user),
     db_session=Depends(get_db_session),
 ):
@@ -84,4 +84,4 @@ async def api_delete_collection(
     Delete collection by ID
     """
 
-    return await delete_collection(request, collection_id, current_user, db_session)
+    return await delete_collection(request, collection_uuid, current_user, db_session)

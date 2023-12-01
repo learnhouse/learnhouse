@@ -25,9 +25,9 @@ from fastapi import HTTPException, status, Request
 
 
 async def get_collection(
-    request: Request, collection_id: str, current_user: PublicUser, db_session: Session
+    request: Request, collection_uuid: str, current_user: PublicUser, db_session: Session
 ) -> CollectionRead:
-    statement = select(Collection).where(Collection.id == collection_id)
+    statement = select(Collection).where(Collection.collection_uuid == collection_uuid)
     collection = db_session.exec(statement).first()
 
     if not collection:
@@ -79,7 +79,7 @@ async def create_collection(
     if collection:
         for course_id in collection_object.courses:
             collection_course = CollectionCourse(
-                collection_id=int(collection.id),  # type: ignore
+                collection_uuid=int(collection.id),  # type: ignore
                 course_id=course_id,
                 org_id=int(collection_object.org_id),
                 creation_date=str(datetime.now()),
@@ -107,11 +107,11 @@ async def create_collection(
 async def update_collection(
     request: Request,
     collection_object: CollectionUpdate,
-    collection_id: int,
+    collection_uuid: str,
     current_user: PublicUser,
     db_session: Session,
 ) -> CollectionRead:
-    statement = select(Collection).where(Collection.id == collection_id)
+    statement = select(Collection).where(Collection.collection_uuid == collection_uuid)
     collection = db_session.exec(statement).first()
 
     if not collection:
@@ -152,7 +152,7 @@ async def update_collection(
     # Add new collection_courses
     for course in courses or []:
         collection_course = CollectionCourse(
-            collection_id=int(collection.id),  # type: ignore
+            collection_uuid=int(collection.id),  # type: ignore
             course_id=int(course),
             org_id=int(collection.org_id),
             creation_date=str(datetime.now()),
@@ -179,9 +179,9 @@ async def update_collection(
 
 
 async def delete_collection(
-    request: Request, collection_id: str, current_user: PublicUser, db_session: Session
+    request: Request, collection_uuid: str, current_user: PublicUser, db_session: Session
 ):
-    statement = select(Collection).where(Collection.id == collection_id)
+    statement = select(Collection).where(Collection.collection_uuid == collection_uuid)
     collection = db_session.exec(statement).first()
 
     if not collection:
@@ -223,10 +223,7 @@ async def get_collections(
     )
     collections = db_session.exec(statement).all()
 
-    if not collections:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="No collections found"
-        )
+
 
     collections_with_courses = []
     for collection in collections:

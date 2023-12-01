@@ -54,10 +54,10 @@ async def api_create_course(
     return await create_course(request, course, current_user, db_session, thumbnail)
 
 
-@router.put("/{course_id}/thumbnail")
+@router.put("/{course_uuid}/thumbnail")
 async def api_create_course_thumbnail(
     request: Request,
-    course_id: str,
+    course_uuid: str,
     thumbnail: UploadFile | None = None,
     db_session: Session = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
@@ -66,37 +66,37 @@ async def api_create_course_thumbnail(
     Update new Course Thumbnail
     """
     return await update_course_thumbnail(
-        request, course_id, current_user, db_session, thumbnail
+        request, course_uuid, current_user, db_session, thumbnail
     )
 
 
-@router.get("/{course_id}")
+@router.get("/{course_uuid}")
 async def api_get_course(
     request: Request,
-    course_id: str,
+    course_uuid: str,
     db_session: Session = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ) -> CourseRead:
     """
-    Get single Course by course_id
+    Get single Course by course_uuid
     """
     return await get_course(
-        request, course_id, current_user=current_user, db_session=db_session
+        request, course_uuid, current_user=current_user, db_session=db_session
     )
 
 
-@router.get("/{course_id}/meta")
+@router.get("/{course_uuid}/meta")
 async def api_get_course_meta(
     request: Request,
-    course_id: int,
+    course_uuid: str,
     db_session: Session = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ) -> FullCourseReadWithTrail:
     """
-    Get single Course Metadata (chapters, activities) by course_id
+    Get single Course Metadata (chapters, activities) by course_uuid
     """
     return await get_course_meta(
-        request, course_id, current_user=current_user, db_session=db_session
+        request, course_uuid, current_user=current_user, db_session=db_session
     )
 
 
@@ -117,26 +117,26 @@ async def api_get_course_by_orgslug(
     )
 
 
-@router.put("/{course_id}")
+@router.put("/{course_uuid}")
 async def api_update_course(
     request: Request,
     course_object: CourseUpdate,
-    course_id: int,
+    course_uuid: str,
     db_session: Session = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ) -> CourseRead:
     """
-    Update Course by course_id
+    Update Course by course_uuid
     """
     return await update_course(
-        request, course_object, course_id, current_user, db_session
+        request, course_object, course_uuid, current_user, db_session
     )
 
 
-@router.delete("/{course_id}")
+@router.delete("/{course_uuid}")
 async def api_delete_course(
     request: Request,
-    course_id: str,
+    course_uuid: str,
     db_session: Session = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ):
@@ -144,4 +144,4 @@ async def api_delete_course(
     Delete Course by ID
     """
 
-    return await delete_course(request, course_id, current_user, db_session)
+    return await delete_course(request, course_uuid, current_user, db_session)

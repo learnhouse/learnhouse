@@ -38,7 +38,7 @@ function VideoActivity({ activity, course }: { activity: any; course: any }) {
       {videoType === 'video' && (
         <div className="m-8 bg-zinc-900 rounded-md mt-14">
           <video className="rounded-lg w-full h-[500px]" controls
-            src={getActivityMediaDirectory(activity.org_id, activity.course_id, activity.activity_id, activity.content.video.filename, 'video')}
+            src={getActivityMediaDirectory(activity.org_id, activity.course_uuid, activity.activity_id, activity.content.video.filename, 'video')}
           ></video>
 
         </div>
