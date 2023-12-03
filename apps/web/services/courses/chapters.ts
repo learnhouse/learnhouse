@@ -13,8 +13,6 @@ export async function getCourseChaptersMetadata(course_uuid: any, next: any) {
   return res;
 }
 
-
-
 export async function updateChaptersMetadata(course_uuid: any, data: any) {
   const result: any = await fetch(`${getAPIUrl()}chapters/meta/course_${course_uuid}`, RequestBody("PUT", data, null));
   const res = await errorHandling(result);
@@ -27,8 +25,8 @@ export async function updateChapter(coursechapter_id: any, data: any) {
   return res;
 }
 
-export async function createChapter(data: any, course_uuid: any) {
-  const result: any = await fetch(`${getAPIUrl()}chapters/?course_uuid=course_${course_uuid}`, RequestBody("POST", data, null));
+export async function createChapter(data: any) {
+  const result: any = await fetch(`${getAPIUrl()}chapters/`, RequestBody("POST", data, null));
   const res = await errorHandling(result);
 
   return res;

@@ -39,11 +39,13 @@ export async function getCourse(course_uuid: string, next: any) {
 export async function createNewCourse(org_id: string, course_body: any, thumbnail: any) {
   // Send file thumbnail as form data
   const formData = new FormData();
-  formData.append("thumbnail", thumbnail);
   formData.append("name", course_body.name);
   formData.append("description", course_body.description);
-  formData.append("mini_description", "course_body.mini_description");
-  formData.append("public", "true");
+  formData.append("public", course_body.visibility);
+  formData.append("learnings", course_body.tags);
+  formData.append("tags", course_body.tags);
+  formData.append("about", course_body.description);
+  formData.append("thumbnail", thumbnail);
 
   const result = await fetch(`${getAPIUrl()}courses/?org_id=${org_id}`, RequestBodyForm("POST", formData, null));
   const res = await errorHandling(result);

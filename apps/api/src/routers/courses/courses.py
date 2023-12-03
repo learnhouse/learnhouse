@@ -51,7 +51,7 @@ async def api_create_course(
         learnings=learnings,
         tags=tags,
     )
-    return await create_course(request, course, current_user, db_session, thumbnail)
+    return await create_course(request, org_id, course, current_user, db_session, thumbnail)
 
 
 @router.put("/{course_uuid}/thumbnail")

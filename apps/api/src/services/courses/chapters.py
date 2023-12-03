@@ -234,11 +234,11 @@ async def get_course_chapters(
 
 async def get_depreceated_course_chapters(
     request: Request,
-    course_id: int,
+    course_uuid: str,
     current_user: PublicUser,
     db_session: Session,
 ) -> DepreceatedChaptersRead:
-    statement = select(Course).where(Course.id == course_id)
+    statement = select(Course).where(Course.course_uuid == course_uuid)
     course = db_session.exec(statement).first()
 
     if not course:
@@ -253,11 +253,10 @@ async def get_depreceated_course_chapters(
     statement = (
         select(Chapter)
         .join(CourseChapter, Chapter.id == CourseChapter.chapter_id)
-        .where(CourseChapter.course_id == course_id)
+        .where(CourseChapter.course_id == course.id)
         .order_by(CourseChapter.order)
         .group_by(Chapter.id, CourseChapter.order)
     )
-    print("ded", statement)
     chapters = db_session.exec(statement).all()
 
     chapters = [ChapterRead(**chapter.dict(), activities=[]) for chapter in chapters]
@@ -313,12 +312,12 @@ async def get_depreceated_course_chapters(
 
 async def reorder_chapters_and_activities(
     request: Request,
-    course_id: int,
+    course_uuid: str,
     chapters_order: ChapterUpdateOrder,
     current_user: PublicUser,
     db_session: Session,
 ):
-    statement = select(Course).where(Course.id == course_id)
+    statement = select(Course).where(Course.course_uuid == course_uuid)
     course = db_session.exec(statement).first()
 
     if not course:
@@ -337,7 +336,7 @@ async def reorder_chapters_and_activities(
     statement = (
         select(CourseChapter)
         .where(
-            CourseChapter.course_id == course_id, CourseChapter.org_id == course.org_id
+            CourseChapter.course_id == course.id, CourseChapter.org_id == course.org_id
         )
         .order_by(CourseChapter.order)
     )
@@ -353,7 +352,7 @@ async def reorder_chapters_and_activities(
             db_session.commit()
 
     # Delete Chapters that are not in the list of chapters_order
-    statement = select(Chapter).where(Chapter.course_id == course_id)
+    statement = select(Chapter).where(Chapter.course_id == course.id)
     chapters = db_session.exec(statement).all()
 
     chapter_ids_to_keep = [
@@ -372,7 +371,7 @@ async def reorder_chapters_and_activities(
             select(CourseChapter)
             .where(
                 CourseChapter.chapter_id == chapter_order.chapter_id,
-                CourseChapter.course_id == course_id,
+                CourseChapter.course_id == course.id,
             )
             .order_by(CourseChapter.order)
         )
@@ -382,7 +381,7 @@ async def reorder_chapters_and_activities(
             # Add CourseChapter link
             course_chapter = CourseChapter(
                 chapter_id=chapter_order.chapter_id,
-                course_id=course_id,
+                course_id=course.id, # type: ignore
                 org_id=course.org_id,
                 creation_date=str(datetime.now()),
                 update_date=str(datetime.now()),
@@ -399,7 +398,7 @@ async def reorder_chapters_and_activities(
             select(CourseChapter)
             .where(
                 CourseChapter.chapter_id == chapter_order.chapter_id,
-                CourseChapter.course_id == course_id,
+                CourseChapter.course_id == course.id,
             )
             .order_by(CourseChapter.order)
         )
@@ -420,7 +419,7 @@ async def reorder_chapters_and_activities(
     statement = (
         select(ChapterActivity)
         .where(
-            ChapterActivity.course_id == course_id,
+            ChapterActivity.course_id == course.id,
             ChapterActivity.org_id == course.org_id,
         )
         .order_by(ChapterActivity.order)
@@ -457,7 +456,7 @@ async def reorder_chapters_and_activities(
                     chapter_id=chapter_order.chapter_id,
                     activity_id=activity_order.activity_id,
                     org_id=course.org_id,
-                    course_id=course_id,
+                    course_id=course.id, # type: ignore
                     creation_date=str(datetime.now()),
                     update_date=str(datetime.now()),
                     order=activity_order.activity_id,

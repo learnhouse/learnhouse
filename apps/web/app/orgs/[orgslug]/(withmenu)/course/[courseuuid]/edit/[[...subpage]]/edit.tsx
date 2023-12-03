@@ -14,9 +14,9 @@ import Loading from '../../loading';
 import { updateCourse } from '@services/courses/courses';
 import { useRouter } from 'next/navigation';
 
-function CourseEditClient({ courseid, subpage, params }: { courseid: string, subpage: string, params: any }) {
-    const { data: chapters_meta, error: chapters_meta_error, isLoading: chapters_meta_isloading } = useSWR(`${getAPIUrl()}chapters/meta/course_${courseid}`, swrFetcher);
-    const { data: course, error: course_error, isLoading: course_isloading } = useSWR(`${getAPIUrl()}courses/course_${courseid}`, swrFetcher);
+function CourseEditClient({ courseuuid, courseid, subpage, params }: { courseid: number, courseuuid: string, subpage: string, params: any }) {
+    const { data: chapters_meta, error: chapters_meta_error, isLoading: chapters_meta_isloading } = useSWR(`${getAPIUrl()}chapters/course/course_${courseuuid}/meta`, swrFetcher);
+    const { data: course, error: course_error, isLoading: course_isloading } = useSWR(`${getAPIUrl()}courses/course_${courseuuid}/meta`, swrFetcher);
     const [courseChaptersMetadata, dispatchCourseChaptersMetadata] = useReducer(courseChaptersReducer, {});
     const [courseState, dispatchCourseMetadata] = useReducer(courseReducer, {});
     const [savedContent, dispatchSavedContent] = useReducer(savedContentReducer, true);
@@ -57,16 +57,16 @@ function CourseEditClient({ courseid, subpage, params }: { courseid: string, sub
 
     async function saveCourse() {
         if (subpage.toString() === 'content') {
-            await updateChaptersMetadata(courseid, courseChaptersMetadata)
+            await updateChaptersMetadata(courseuuid, courseChaptersMetadata)
             dispatchSavedContent({ type: 'saved_content' })
-            await mutate(`${getAPIUrl()}chapters/meta/course_${courseid}`)
+            await mutate(`${getAPIUrl()}chapters/meta/course_${courseuuid}`)
             await revalidateTags(['courses'], params.params.orgslug)
             router.refresh()
         }
         else if (subpage.toString() === 'general') {
-            await updateCourse(courseid, courseState)
+            await updateCourse(courseuuid, courseState)
             dispatchSavedContent({ type: 'saved_content' })
-            await mutate(`${getAPIUrl()}courses/course_${courseid}`)
+            await mutate(`${getAPIUrl()}courses/course_${courseuuid}`)
             await revalidateTags(['courses'], params.params.orgslug)
             router.refresh()
         }
@@ -91,8 +91,8 @@ function CourseEditClient({ courseid, subpage, params }: { courseid: string, sub
                     {course && <>
                         <div className='flex items-center'><div className='info flex space-x-5 items-center grow'>
                             <div className='flex'>
-                                <Link href={getUriWithOrg(params.params.orgslug, "") + `/course/${courseid}`}>
-                                    <img className="w-[100px] h-[57px] rounded-md drop-shadow-md" src={`${getCourseThumbnailMediaDirectory(course.org_id, "course_" + courseid, course.thumbnail)}`} alt="" />
+                                <Link href={getUriWithOrg(params.params.orgslug, "") + `/course/${courseuuid}`}>
+                                    <img className="w-[100px] h-[57px] rounded-md drop-shadow-md" src={`${getCourseThumbnailMediaDirectory(course.org_id, "course_" + courseuuid, course.thumbnail)}`} alt="" />
                                 </Link>
                             </div>
                             <div className="flex flex-col ">
@@ -118,27 +118,28 @@ function CourseEditClient({ courseid, subpage, params }: { courseid: string, sub
                         </div>
                     </>}
                     <div className='flex space-x-5 pt-3 font-black text-sm'>
-                        <Link href={getUriWithOrg(params.params.orgslug, "") + `/course/${courseid}/edit/general`}>
+                        <Link href={getUriWithOrg(params.params.orgslug, "") + `/course/${courseuuid}/edit/general`}>
                             <div className={`py-2 w-16 text-center border-black transition-all ease-linear ${subpage.toString() === 'general' ? 'border-b-4' : 'opacity-50'} cursor-pointer`}>General</div>
                         </Link>
-                        <Link href={getUriWithOrg(params.params.orgslug, "") + `/course/${courseid}/edit/content`}>
+                        <Link href={getUriWithOrg(params.params.orgslug, "") + `/course/${courseuuid}/edit/content`}>
                             <div className={`py-2 w-16 text-center border-black transition-all ease-linear ${subpage.toString() === 'content' ? 'border-b-4' : 'opacity-50'} cursor-pointer`}>Content</div>
                         </Link>
                     </div>
                 </div>
             </div>
-            <CoursePageViewer dispatchSavedContent={dispatchSavedContent} courseState={courseState} courseChaptersMetadata={courseChaptersMetadata} dispatchCourseMetadata={dispatchCourseMetadata} dispatchCourseChaptersMetadata={dispatchCourseChaptersMetadata} subpage={subpage} courseid={courseid} orgslug={params.params.orgslug} />
+            <CoursePageViewer course={course} dispatchSavedContent={dispatchSavedContent} courseState={courseState} courseChaptersMetadata={courseChaptersMetadata} dispatchCourseMetadata={dispatchCourseMetadata} dispatchCourseChaptersMetadata={dispatchCourseChaptersMetadata} subpage={subpage} courseuuid={courseuuid} orgslug={params.params.orgslug} />
         </>
 
     )
 }
 
-const CoursePageViewer = ({ subpage, courseid, orgslug, dispatchCourseMetadata, dispatchCourseChaptersMetadata, courseChaptersMetadata, dispatchSavedContent, courseState }: { subpage: string, courseid: string, orgslug: string, dispatchCourseChaptersMetadata: React.Dispatch<any>, dispatchCourseMetadata: React.Dispatch<any>, dispatchSavedContent: React.Dispatch<any>, courseChaptersMetadata: any, courseState: any }) => {
+const CoursePageViewer = ({ subpage, course, courseuuid, orgslug, dispatchCourseMetadata, dispatchCourseChaptersMetadata, courseChaptersMetadata, dispatchSavedContent, courseState }: { subpage: string, courseuuid: string, orgslug: string, dispatchCourseChaptersMetadata: React.Dispatch<any>, dispatchCourseMetadata: React.Dispatch<any>, dispatchSavedContent: React.Dispatch<any>, courseChaptersMetadata: any, courseState: any, course: any }) => {
+   
     if (subpage.toString() === 'general' && Object.keys(courseState).length !== 0) {
-        return <CourseEdition data={courseState} dispatchCourseMetadata={dispatchCourseMetadata} dispatchSavedContent={dispatchSavedContent} />
+        return <CourseEdition coursedata={course} course_chapters_with_orders_and_activities={courseState} dispatchCourseMetadata={dispatchCourseMetadata} dispatchSavedContent={dispatchSavedContent} />
     }
     else if (subpage.toString() === 'content' && Object.keys(courseChaptersMetadata).length !== 0) {
-        return <CourseContentEdition data={courseChaptersMetadata} dispatchSavedContent={dispatchSavedContent} dispatchCourseChaptersMetadata={dispatchCourseChaptersMetadata} courseid={courseid} orgslug={orgslug} />
+        return <CourseContentEdition coursedata={course} course_chapters_with_orders_and_activities={courseChaptersMetadata} dispatchSavedContent={dispatchSavedContent} dispatchCourseChaptersMetadata={dispatchCourseChaptersMetadata} courseuuid={courseuuid} orgslug={orgslug} />
     }
     else if (subpage.toString() === 'content' || subpage.toString() === 'general') {
         return <Loading />

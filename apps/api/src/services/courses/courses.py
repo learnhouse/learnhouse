@@ -49,7 +49,7 @@ async def get_course(
         .where(ResourceAuthor.resource_uuid == course.course_uuid)
     )
     authors = db_session.exec(authors_statement).all()
-
+    
     # convert from User to UserRead
     authors = [UserRead.from_orm(author) for author in authors]
 
@@ -111,6 +111,7 @@ async def get_course_meta(
 
 async def create_course(
     request: Request,
+    org_id: int,
     course_object: CourseCreate,
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
@@ -131,9 +132,9 @@ async def create_course(
     if thumbnail_file and thumbnail_file.filename:
         name_in_disk = f"{course.course_uuid}_thumbnail_{uuid4()}.{thumbnail_file.filename.split('.')[-1]}"
         await upload_thumbnail(
-            thumbnail_file, name_in_disk, course_object.org_id, course.course_uuid
+            thumbnail_file, name_in_disk, org_id, course.course_uuid
         )
-        course_object.thumbnail = name_in_disk
+        course_object.thumbnail_image = name_in_disk
 
     # Insert course
     db_session.add(course)
@@ -221,6 +222,8 @@ async def update_course_thumbnail(
         .where(ResourceAuthor.resource_uuid == course.course_uuid)
     )
     authors = db_session.exec(authors_statement).all()
+
+
 
     # convert from User to UserRead
     authors = [UserRead.from_orm(author) for author in authors]

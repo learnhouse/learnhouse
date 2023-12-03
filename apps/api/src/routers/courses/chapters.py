@@ -50,10 +50,10 @@ async def api_get_coursechapter(
     return await get_chapter(request, chapter_id, current_user, db_session)
 
 
-@router.get("/course/{course_id}/meta")
+@router.get("/course/{course_uuid}/meta")
 async def api_get_chapter_meta(
     request: Request,
-    course_id: int,
+    course_uuid: str,
     current_user: PublicUser = Depends(get_current_user),
     db_session=Depends(get_db_session),
 ) -> DepreceatedChaptersRead:
@@ -61,14 +61,14 @@ async def api_get_chapter_meta(
     Get Chapters metadata
     """
     return await get_depreceated_course_chapters(
-        request, course_id, current_user, db_session
+        request, course_uuid, current_user, db_session
     )
 
 
-@router.put("/course/{course_id}/order")
+@router.put("/course/{course_uuid}/order")
 async def api_update_chapter_meta(
     request: Request,
-    course_id: int,
+    course_uuid: str,
     order: ChapterUpdateOrder,
     current_user: PublicUser = Depends(get_current_user),
     db_session=Depends(get_db_session),
@@ -77,7 +77,7 @@ async def api_update_chapter_meta(
     Update Chapter metadata
     """
     return await reorder_chapters_and_activities(
-        request, course_id, order, current_user, db_session
+        request, course_uuid, order, current_user, db_session
     )
 
 

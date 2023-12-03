@@ -13,8 +13,6 @@ class ChapterBase(SQLModel):
     course_id: int = Field(
         sa_column=Column("course_id", ForeignKey("course.id", ondelete="CASCADE"))
     )
-    creation_date: str
-    update_date: str
 
 
 class Chapter(ChapterBase, table=True):
