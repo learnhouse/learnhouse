@@ -35,6 +35,8 @@ class ChapterUpdate(ChapterBase):
     name: Optional[str]
     description: Optional[str]
     thumbnail_image: Optional[str]
+    course_id: Optional[int]
+    org_id: Optional[int]
 
 
 class ChapterRead(ChapterBase):

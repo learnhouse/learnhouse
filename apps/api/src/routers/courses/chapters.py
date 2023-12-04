@@ -114,10 +114,10 @@ async def api_update_coursechapter(
     )
 
 
-@router.delete("/{chapter_uuid}")
+@router.delete("/{chapter_id}")
 async def api_delete_coursechapter(
     request: Request,
-    chapter_uuid: str,
+    chapter_id: str,
     current_user: PublicUser = Depends(get_current_user),
     db_session=Depends(get_db_session),
 ):
@@ -125,4 +125,4 @@ async def api_delete_coursechapter(
     Delete CourseChapters by ID
     """
 
-    return await delete_chapter(request, chapter_uuid, current_user, db_session)
+    return await delete_chapter(request, chapter_id, current_user, db_session)

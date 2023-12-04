@@ -25,11 +25,9 @@ function Chapter(props: any) {
       setSelectedChapter(undefined);
       let modifiedChapterCopy = {
         name: modifiedChapter.chapterName,
-        description: '',
-        activities: props.info.list.chapter.activityIds,
       }
       await updateChapter(chapterId, modifiedChapterCopy)
-      await mutate(`${getAPIUrl()}chapters/course/course_${props.courseid}/meta`)
+      await mutate(`${getAPIUrl()}chapters/course/${props.course_uuid}/meta`)
       await revalidateTags(['courses'], props.orgslug)
       router.refresh();
     }

@@ -155,18 +155,21 @@ async def update_chapter(
     db_session.commit()
     db_session.refresh(chapter)
 
-    chapter = ChapterRead(**chapter.dict())
+    chapter = await get_chapter(
+        request,chapter.id,current_user,db_session
+    )
+
 
     return chapter
 
 
 async def delete_chapter(
     request: Request,
-    chapter_uuid: str,
+    chapter_id: str,
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
-    statement = select(Chapter).where(Chapter.chapter_uuid == chapter_uuid)
+    statement = select(Chapter).where(Chapter.id == chapter_id)
     chapter = db_session.exec(statement).first()
 
     if not chapter:
@@ -182,7 +185,7 @@ async def delete_chapter(
 
     # Remove all linked activities
     statement = select(ChapterActivity).where(
-        ChapterActivity.chapter_id == chapter.chapter_uuid
+        ChapterActivity.id == chapter.id
     )
     chapter_activities = db_session.exec(statement).all()
 
