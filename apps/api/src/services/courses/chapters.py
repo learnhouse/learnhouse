@@ -162,11 +162,11 @@ async def update_chapter(
 
 async def delete_chapter(
     request: Request,
-    chapter_id: int,
+    chapter_uuid: str,
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
-    statement = select(Chapter).where(Chapter.id == chapter_id)
+    statement = select(Chapter).where(Chapter.chapter_uuid == chapter_uuid)
     chapter = db_session.exec(statement).first()
 
     if not chapter:
@@ -181,7 +181,9 @@ async def delete_chapter(
     db_session.commit()
 
     # Remove all linked activities
-    statement = select(ChapterActivity).where(ChapterActivity.chapter_id == chapter_id)
+    statement = select(ChapterActivity).where(
+        ChapterActivity.chapter_id == chapter.chapter_uuid
+    )
     chapter_activities = db_session.exec(statement).all()
 
     for chapter_activity in chapter_activities:
@@ -201,7 +203,6 @@ async def get_course_chapters(
 ) -> List[ChapterRead]:
     statement = select(Chapter).where(Chapter.course_id == course_id)
     chapters = db_session.exec(statement).all()
-
 
     chapters = [ChapterRead(**chapter.dict(), activities=[]) for chapter in chapters]
 
@@ -232,12 +233,15 @@ async def get_course_chapters(
     return chapters
 
 
-async def get_depreceated_course_chapters(
+# Important Note : this is legacy code that has been used because
+# the frontend is still not adapted for the new data structure, this implementation is absolutely not the best one
+# and should not be used for future features
+async def DEPRECEATED_get_course_chapters(
     request: Request,
     course_uuid: str,
     current_user: PublicUser,
     db_session: Session,
-) -> DepreceatedChaptersRead:
+):
     statement = select(Course).where(Course.course_uuid == course_uuid)
     course = db_session.exec(statement).first()
 
@@ -259,55 +263,71 @@ async def get_depreceated_course_chapters(
     )
     chapters = db_session.exec(statement).all()
 
-    chapters = [ChapterRead(**chapter.dict(), activities=[]) for chapter in chapters]
+    chapters_in_db = [
+        ChapterRead(**chapter.dict(), activities=[]) for chapter in chapters
+    ]
 
-    # Get activities for each chapter
-    for chapter in chapters:
-        statement = (
-            select(Activity)
-            .join(ChapterActivity, Activity.id == ChapterActivity.activity_id)
-            .where(ChapterActivity.chapter_id == chapter.id)
-            .order_by(ChapterActivity.order)
-            .distinct(Activity.id, ChapterActivity.order)
-        )
-        chapter_activities = db_session.exec(statement).all()
+    # activities
+    chapter_activityIdsGlobal = []
 
-        for chapter_activity in chapter_activities:
-            statement = (
-                select(Activity)
-                .join(ChapterActivity, Activity.id == ChapterActivity.activity_id)
-                .where(Activity.id == chapter_activity.id)
-                .distinct(Activity.id, ChapterActivity.order)
-                .order_by(ChapterActivity.order)
-            )
-            activity = db_session.exec(statement).first()
+    # chapters
+    chapters = {}
 
-            if activity:
-                chapter.activities.append(ActivityRead(**activity.dict()))
+    for chapter in chapters_in_db:
+        chapter_activityIds = []
 
-    # Get a list of chapter ids
-    chapter_order: List[str] = [str(chapter.id) for chapter in chapters]
+        for activity in chapter.activities:
+            chapter_activityIds.append(activity)
+            chapter_activityIdsGlobal.append(activity)
 
-    # Get activities for each chapter
-    activities = []
-    for chapter_id in chapter_order:
-        # order by activity order
-        statement = (
-            select(Activity)
-            .join(ChapterActivity, Activity.id == ChapterActivity.activity_id)
-            .where(ChapterActivity.chapter_id == chapter_id)
-            .order_by(ChapterActivity.order)
-            .distinct(Activity.id, ChapterActivity.order)
-        )
-        chapter_activities = db_session.exec(statement).all()
+        chapters[chapter.chapter_uuid] = {
+            "uuid": chapter.chapter_uuid,
+            "id": chapter.id,
+            "name": chapter.name,
+            "activityIds": chapter_activityIds,
+        }
 
-        activities.extend(chapter_activities)
-
-    result = DepreceatedChaptersRead(
-        chapter_order=chapter_order, chapters=chapters, activities=activities
+    # activities
+    activities_list = {}
+    statement = (
+        select(Activity)
+        .join(ChapterActivity, ChapterActivity.activity_id == Activity.id)
+        .where(ChapterActivity.activity_id == Activity.id)
+        .group_by(Activity.id)
     )
+    activities_in_db = db_session.exec(statement).all()
 
-    return result
+    for activity in activities_in_db:
+        activities_list[activity.activity_uuid] = {
+            "uuid": activity.activity_uuid,
+            "id": activity.id,
+            "name": activity.name,
+            "type": activity.activity_type,
+            "content": activity.content,
+        }
+
+    # get chapter order
+    statement = (
+        select(Chapter)
+        .join(CourseChapter, CourseChapter.chapter_id == Chapter.id)
+        .where(CourseChapter.chapter_id == Chapter.id)
+        .group_by(Chapter.id, CourseChapter.order)
+        .order_by(CourseChapter.order)
+    )
+    chapters_in_db = db_session.exec(statement).all()
+
+    chapterOrder = []
+
+    for chapter in chapters_in_db:
+        chapterOrder.append(chapter.chapter_uuid)
+
+    final = {
+        "chapters": chapters,
+        "chapterOrder": chapterOrder,
+        "activities": activities_list,
+    }
+
+    return final
 
 
 async def reorder_chapters_and_activities(
@@ -381,7 +401,7 @@ async def reorder_chapters_and_activities(
             # Add CourseChapter link
             course_chapter = CourseChapter(
                 chapter_id=chapter_order.chapter_id,
-                course_id=course.id, # type: ignore
+                course_id=course.id,  # type: ignore
                 org_id=course.org_id,
                 creation_date=str(datetime.now()),
                 update_date=str(datetime.now()),
@@ -456,7 +476,7 @@ async def reorder_chapters_and_activities(
                     chapter_id=chapter_order.chapter_id,
                     activity_id=activity_order.activity_id,
                     org_id=course.org_id,
-                    course_id=course.id, # type: ignore
+                    course_id=course.id,  # type: ignore
                     creation_date=str(datetime.now()),
                     update_date=str(datetime.now()),
                     order=activity_order.activity_id,

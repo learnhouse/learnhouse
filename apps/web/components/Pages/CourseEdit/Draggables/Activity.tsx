@@ -44,7 +44,7 @@ function Activity(props: any) {
   }
 
   return (
-    <Draggable key={props.activity.id} draggableId={props.activity.id} index={props.index}>
+    <Draggable key={props.activity.uuid} draggableId={String(props.activity.uuid)} index={props.index}>
       {(provided) => (
         <div
           className="flex flex-row py-2 my-2 rounded-md bg-gray-50 text-gray-500 hover:bg-gray-100 hover:scale-102 hover:shadow space-x-1 w-auto items-center ring-1 ring-inset ring-gray-400/10 shadow-sm transition-all delay-100 duration-75 ease-linear" key={props.activity.id} {...provided.draggableProps} {...provided.dragHandleProps} ref={provided.innerRef}>

@@ -14,14 +14,14 @@ import { denyAccessToUser } from "@services/utils/react/middlewares/views";
 import { Folders, Hexagon, SaveIcon } from "lucide-react";
 import GeneralWrapperStyled from "@components/StyledElements/Wrappers/GeneralWrapper";
 import { revalidateTags, swrFetcher } from "@services/utils/ts/requests";
-import { mutate } from "swr";
 import { getAPIUrl } from "@services/config/config";
+import { mutate } from "swr";
 
 function CourseContentEdition(props: any) {
     const router = useRouter();
     // Initial Course Chapters State
     const course_chapters_with_orders_and_activities = props.course_chapters_with_orders_and_activities;
-
+    console.log('dev', course_chapters_with_orders_and_activities)
 
     // New Chapter Modal State
     const [newChapterModal, setNewChapterModal] = useState(false) as any;
@@ -31,9 +31,11 @@ function CourseContentEdition(props: any) {
 
     // Check window availability
     const [winReady, setwinReady] = useState(false);
-    const course_uuid = props.course_uuid;
-    const course = props.coursedata;
+    const course = props.course;
+    const course_uuid = props.course ? props.course.course_uuid : ''
     const orgslug = props.orgslug;
+
+    // 
 
 
 
@@ -63,11 +65,9 @@ function CourseContentEdition(props: any) {
 
     // Submit new chapter
     const submitChapter = async (chapter: any) => {
-        console.log(chapter);
         await createChapter(chapter);
 
-        mutate(`${getAPIUrl()}chapters/meta/course_${course_uuid}`);
-        // await getCourseChapters();
+        mutate(`${getAPIUrl()}chapters/course/${course_uuid}/meta`,true);
         await revalidateTags(['courses'], orgslug);
         router.refresh();
         setNewChapterModal(false);
@@ -78,7 +78,7 @@ function CourseContentEdition(props: any) {
         let org = await getOrganizationContextInfoWithoutCredentials(orgslug, { revalidate: 1800 });
         await updateChaptersMetadata(course_uuid, course_chapters_with_orders_and_activities);
         await createActivity(activity, activity.chapterId, org.org_id);
-        mutate(`${getAPIUrl()}chapters/meta/course_${course_uuid}`);
+        mutate(`${getAPIUrl()}chapters/course/${course_uuid}/meta`);
         // await getCourseChapters();
         setNewActivityModal(false);
         await revalidateTags(['courses'], orgslug);
@@ -91,7 +91,7 @@ function CourseContentEdition(props: any) {
     const submitFileActivity = async (file: any, type: any, activity: any, chapterId: string) => {
         await updateChaptersMetadata(course_uuid, course_chapters_with_orders_and_activities);
         await createFileActivity(file, type, activity, chapterId);
-        mutate(`${getAPIUrl()}chapters/meta/course_${course_uuid}`);
+        mutate(`${getAPIUrl()}chapters/course/${course_uuid}/meta`);
         // await getCourseChapters();
         setNewActivityModal(false);
         await revalidateTags(['courses'], orgslug);
@@ -102,7 +102,7 @@ function CourseContentEdition(props: any) {
     const submitExternalVideo = async (external_video_data: any, activity: any, chapterId: string) => {
         await updateChaptersMetadata(course_uuid, course_chapters_with_orders_and_activities);
         await createExternalVideoActivity(external_video_data, activity, chapterId);
-        mutate(`${getAPIUrl()}chapters/meta/course_${course_uuid}`);
+        mutate(`${getAPIUrl()}chapters/course/${course_uuid}/meta`);
         // await getCourseChapters();
         setNewActivityModal(false);
         await revalidateTags(['courses'], orgslug);
@@ -110,19 +110,15 @@ function CourseContentEdition(props: any) {
     };
 
     const deleteChapterUI = async (chapterId: any) => {
-
         await deleteChapter(chapterId);
-        mutate(`${getAPIUrl()}chapters/meta/course_${course_uuid}`);
+
+        mutate(`${getAPIUrl()}chapters/course/${course_uuid}/meta`,true);
         // await getCourseChapters();
         await revalidateTags(['courses'], orgslug);
         router.refresh();
     };
 
-    const updateChapters = () => {
-        updateChaptersMetadata(course_uuid, course_chapters_with_orders_and_activities);
-        revalidateTags(['courses'], orgslug);
-        router.refresh();
-    };
+    
 
     /* 
     Modals
@@ -300,7 +296,7 @@ function CourseContentEdition(props: any) {
                                 onOpenChange={setNewChapterModal}
                                 minHeight="sm"
                                 dialogContent={<NewChapterModal
-                                    coursedata={props.coursedata ? props.coursedata : null}
+                                    course={props.course ? props.course : null}
                                     closeModal={closeNewChapterModal}
                                     submitChapter={submitChapter}
                                 ></NewChapterModal>}

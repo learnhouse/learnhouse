@@ -14,7 +14,7 @@ export async function getCourseChaptersMetadata(course_uuid: any, next: any) {
 }
 
 export async function updateChaptersMetadata(course_uuid: any, data: any) {
-  const result: any = await fetch(`${getAPIUrl()}chapters/meta/course_${course_uuid}`, RequestBody("PUT", data, null));
+  const result: any = await fetch(`${getAPIUrl()}chapters/course/course_${course_uuid}/order`, RequestBody("PUT", data, null));
   const res = await errorHandling(result);
   return res;
 }

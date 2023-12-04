@@ -1,5 +1,5 @@
 "use client";
-import React, { FC, use, useEffect, useReducer } from 'react'
+import React, { FC, useEffect, useReducer } from 'react'
 import { revalidateTags, swrFetcher } from "@services/utils/ts/requests";
 import { getAPIUrl, getUriWithOrg } from '@services/config/config';
 import useSWR, { mutate } from 'swr';
@@ -14,13 +14,38 @@ import Loading from '../../loading';
 import { updateCourse } from '@services/courses/courses';
 import { useRouter } from 'next/navigation';
 
-function CourseEditClient({ courseuuid, courseid, subpage, params }: { courseid: number, courseuuid: string, subpage: string, params: any }) {
+function CourseEditClient({ courseuuid, courseid, subpage, params }: { courseid: any, courseuuid: string, subpage: string, params: any }) {
     const { data: chapters_meta, error: chapters_meta_error, isLoading: chapters_meta_isloading } = useSWR(`${getAPIUrl()}chapters/course/course_${courseuuid}/meta`, swrFetcher);
     const { data: course, error: course_error, isLoading: course_isloading } = useSWR(`${getAPIUrl()}courses/course_${courseuuid}/meta`, swrFetcher);
     const [courseChaptersMetadata, dispatchCourseChaptersMetadata] = useReducer(courseChaptersReducer, {});
     const [courseState, dispatchCourseMetadata] = useReducer(courseReducer, {});
     const [savedContent, dispatchSavedContent] = useReducer(savedContentReducer, true);
     const router = useRouter();
+
+
+    // This function is a quick fix to transform the payload object from what was used before to the new and improved format
+    // The entire course edition frontend code will be remade in the future in a proper way.
+    const ConvertToNewAPIOrderUpdatePayload = (courseChaptersMetadata: any) => {
+        const old_format = courseChaptersMetadata
+        console.log()
+
+        // Convert originalObject to the desired format
+        const convertedObject = {
+            "chapter_order_by_ids": old_format.chapterOrder.map((chapterId: string | number, chapterIndex: any) => {
+                const chapter = old_format.chapters[chapterId];
+                return {
+                    "chapter_id": chapter.id,
+                    "activities_order_by_ids": chapter.activityIds.map((activityId: any, activityIndex: any) => {
+                        return {
+                            "activity_id": activityIndex
+                        };
+                    })
+                };
+            })
+        };
+
+        return convertedObject
+    }
 
 
 
@@ -57,9 +82,10 @@ function CourseEditClient({ courseuuid, courseid, subpage, params }: { courseid:
 
     async function saveCourse() {
         if (subpage.toString() === 'content') {
-            await updateChaptersMetadata(courseuuid, courseChaptersMetadata)
+            let payload = ConvertToNewAPIOrderUpdatePayload(courseChaptersMetadata)
+            await updateChaptersMetadata(courseuuid, payload)
             dispatchSavedContent({ type: 'saved_content' })
-            await mutate(`${getAPIUrl()}chapters/meta/course_${courseuuid}`)
+            await mutate(`${getAPIUrl()}chapters/course/course_${courseuuid}/meta`)
             await revalidateTags(['courses'], params.params.orgslug)
             router.refresh()
         }
@@ -67,12 +93,14 @@ function CourseEditClient({ courseuuid, courseid, subpage, params }: { courseid:
             await updateCourse(courseuuid, courseState)
             dispatchSavedContent({ type: 'saved_content' })
             await mutate(`${getAPIUrl()}courses/course_${courseuuid}`)
+            await mutate(`${getAPIUrl()}chapters/course/course_${courseuuid}/meta`)
             await revalidateTags(['courses'], params.params.orgslug)
             router.refresh()
         }
     }
 
     useEffect(() => {
+
         if (chapters_meta) {
             dispatchCourseChaptersMetadata({ type: 'updated_chapter', payload: chapters_meta })
             dispatchSavedContent({ type: 'saved_content' })
@@ -133,13 +161,13 @@ function CourseEditClient({ courseuuid, courseid, subpage, params }: { courseid:
     )
 }
 
-const CoursePageViewer = ({ subpage, course, courseuuid, orgslug, dispatchCourseMetadata, dispatchCourseChaptersMetadata, courseChaptersMetadata, dispatchSavedContent, courseState }: { subpage: string, courseuuid: string, orgslug: string, dispatchCourseChaptersMetadata: React.Dispatch<any>, dispatchCourseMetadata: React.Dispatch<any>, dispatchSavedContent: React.Dispatch<any>, courseChaptersMetadata: any, courseState: any, course: any }) => {
-   
-    if (subpage.toString() === 'general' && Object.keys(courseState).length !== 0) {
-        return <CourseEdition coursedata={course} course_chapters_with_orders_and_activities={courseState} dispatchCourseMetadata={dispatchCourseMetadata} dispatchSavedContent={dispatchSavedContent} />
+const CoursePageViewer = ({ subpage, course, orgslug, dispatchCourseMetadata, dispatchCourseChaptersMetadata, courseChaptersMetadata, dispatchSavedContent, courseState }: { subpage: string, courseuuid: string, orgslug: string, dispatchCourseChaptersMetadata: React.Dispatch<any>, dispatchCourseMetadata: React.Dispatch<any>, dispatchSavedContent: React.Dispatch<any>, courseChaptersMetadata: any, courseState: any, course: any }) => {
+
+    if (subpage.toString() === 'general' && Object.keys(courseState).length !== 0 && course) {
+        return <CourseEdition course={course} orgslug={orgslug} course_chapters_with_orders_and_activities={courseState} dispatchCourseMetadata={dispatchCourseMetadata} dispatchSavedContent={dispatchSavedContent} />
     }
-    else if (subpage.toString() === 'content' && Object.keys(courseChaptersMetadata).length !== 0) {
-        return <CourseContentEdition coursedata={course} course_chapters_with_orders_and_activities={courseChaptersMetadata} dispatchSavedContent={dispatchSavedContent} dispatchCourseChaptersMetadata={dispatchCourseChaptersMetadata} courseuuid={courseuuid} orgslug={orgslug} />
+    else if (subpage.toString() === 'content' && Object.keys(courseChaptersMetadata).length !== 0 && course) {
+        return <CourseContentEdition course={course} orgslug={orgslug} course_chapters_with_orders_and_activities={courseChaptersMetadata} dispatchSavedContent={dispatchSavedContent} dispatchCourseChaptersMetadata={dispatchCourseChaptersMetadata} />
     }
     else if (subpage.toString() === 'content' || subpage.toString() === 'general') {
         return <Loading />

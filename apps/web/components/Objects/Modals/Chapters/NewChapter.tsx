@@ -4,12 +4,10 @@ import * as Form from '@radix-ui/react-form';
 import React, { useState } from "react";
 import BarLoader from "react-spinners/BarLoader";
 
-function NewChapterModal({ submitChapter, closeModal, coursedata }: any) {
+function NewChapterModal({ submitChapter, closeModal, course }: any) {
   const [chapterName, setChapterName] = useState("");
   const [chapterDescription, setChapterDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  console.log(coursedata)
 
   const handleChapterNameChange = (e: any) => {
     setChapterName(e.target.value);
@@ -27,8 +25,8 @@ function NewChapterModal({ submitChapter, closeModal, coursedata }: any) {
       name: chapterName,
       description: chapterDescription,
       thumbnail_image: "",
-      course_id: coursedata.id,
-      org_id: coursedata.org_id
+      course_id: course.id,
+      org_id: course.org_id
 
     };
     await submitChapter(chapter_object);

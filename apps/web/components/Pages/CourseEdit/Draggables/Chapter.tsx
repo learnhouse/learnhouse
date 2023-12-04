@@ -29,14 +29,14 @@ function Chapter(props: any) {
         activities: props.info.list.chapter.activityIds,
       }
       await updateChapter(chapterId, modifiedChapterCopy)
-      await mutate(`${getAPIUrl()}chapters/meta/course_${props.courseid}`)
+      await mutate(`${getAPIUrl()}chapters/course/course_${props.courseid}/meta`)
       await revalidateTags(['courses'], props.orgslug)
       router.refresh();
     }
   }
 
   return (
-    <Draggable key={props.info.list.chapter.id} draggableId={props.info.list.chapter.id} index={props.index}>
+    <Draggable key={props.info.list.chapter.uuid} draggableId={String(props.info.list.chapter.uuid)} index={props.index}>
       {(provided, snapshot) => (
         <ChapterWrapper
           {...provided.dragHandleProps}
@@ -81,7 +81,7 @@ function Chapter(props: any) {
             ></ConfirmationModal>
 
           </div>
-          <Droppable key={props.info.list.chapter.id} droppableId={props.info.list.chapter.id} type="activity">
+          <Droppable key={props.info.list.chapter.id} droppableId={String(props.info.list.chapter.id)} type="activity">
             {(provided) => (
               <ActivitiesList {...provided.droppableProps} ref={provided.innerRef}>
                 <div className="flex flex-col">

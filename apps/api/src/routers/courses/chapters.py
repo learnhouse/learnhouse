@@ -9,11 +9,11 @@ from src.db.chapters import (
     DepreceatedChaptersRead,
 )
 from src.services.courses.chapters import (
+    DEPRECEATED_get_course_chapters,
     create_chapter,
     delete_chapter,
     get_chapter,
     get_course_chapters,
-    get_depreceated_course_chapters,
     reorder_chapters_and_activities,
     update_chapter,
 )
@@ -50,17 +50,17 @@ async def api_get_coursechapter(
     return await get_chapter(request, chapter_id, current_user, db_session)
 
 
-@router.get("/course/{course_uuid}/meta")
+@router.get("/course/{course_uuid}/meta", deprecated=True)
 async def api_get_chapter_meta(
     request: Request,
     course_uuid: str,
     current_user: PublicUser = Depends(get_current_user),
     db_session=Depends(get_db_session),
-) -> DepreceatedChaptersRead:
+):
     """
     Get Chapters metadata
     """
-    return await get_depreceated_course_chapters(
+    return await DEPRECEATED_get_course_chapters(
         request, course_uuid, current_user, db_session
     )
 
@@ -114,10 +114,10 @@ async def api_update_coursechapter(
     )
 
 
-@router.delete("/{chapter_id}")
+@router.delete("/{chapter_uuid}")
 async def api_delete_coursechapter(
     request: Request,
-    chapter_id: int,
+    chapter_uuid: str,
     current_user: PublicUser = Depends(get_current_user),
     db_session=Depends(get_db_session),
 ):
@@ -125,4 +125,4 @@ async def api_delete_coursechapter(
     Delete CourseChapters by ID
     """
 
-    return await delete_chapter(request, chapter_id, current_user, db_session)
+    return await delete_chapter(request, chapter_uuid, current_user, db_session)

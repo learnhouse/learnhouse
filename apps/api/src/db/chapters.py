@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Any, List, Optional
 from pydantic import BaseModel
 from sqlalchemy import Column, ForeignKey
 from sqlmodel import Field, SQLModel
@@ -60,7 +60,7 @@ class ChapterUpdateOrder(BaseModel):
 
 
 class DepreceatedChaptersRead(BaseModel):
-    chapter_order: list[str]
-    chapters: List[ChapterRead]
-    activities: List[ActivityRead]
+    chapterOrder: Any
+    chapters: Any
+    activities: Any
     pass
