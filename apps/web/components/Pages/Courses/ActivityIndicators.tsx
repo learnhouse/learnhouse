@@ -53,7 +53,6 @@ function ActivityIndicators(props: Props) {
         return black_activity_style
     }
 
-
     return (
         <div className='grid grid-flow-col justify-stretch space-x-6'>
             {course.chapters.map((chapter: any) => {

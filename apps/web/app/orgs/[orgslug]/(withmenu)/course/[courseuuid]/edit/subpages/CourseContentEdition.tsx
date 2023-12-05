@@ -21,13 +21,12 @@ function CourseContentEdition(props: any) {
     const router = useRouter();
     // Initial Course Chapters State
     const course_chapters_with_orders_and_activities = props.course_chapters_with_orders_and_activities;
-    console.log('dev', course_chapters_with_orders_and_activities)
 
     // New Chapter Modal State
     const [newChapterModal, setNewChapterModal] = useState(false) as any;
     // New Activity Modal State
     const [newActivityModal, setNewActivityModal] = useState(false) as any;
-    const [newActivityModalData, setNewActivityModalData] = useState("") as any;
+    const [selectedChapterToAddActivityTo, setSelectedChapterToAddActivityTo] = useState("") as any;
 
     // Check window availability
     const [winReady, setwinReady] = useState(false);
@@ -76,7 +75,6 @@ function CourseContentEdition(props: any) {
     // Submit new activity
     const submitActivity = async (activity: any) => {
         let org = await getOrganizationContextInfoWithoutCredentials(orgslug, { revalidate: 1800 });
-        await updateChaptersMetadata(course_uuid, course_chapters_with_orders_and_activities);
         await createActivity(activity, activity.chapterId, org.org_id);
         mutate(`${getAPIUrl()}chapters/course/${course_uuid}/meta`);
         // await getCourseChapters();
@@ -89,7 +87,7 @@ function CourseContentEdition(props: any) {
 
     // Submit File Upload
     const submitFileActivity = async (file: any, type: any, activity: any, chapterId: string) => {
-        await updateChaptersMetadata(course_uuid, course_chapters_with_orders_and_activities);
+        //await updateChaptersMetadata(course_uuid, course_chapters_with_orders_and_activities);
         await createFileActivity(file, type, activity, chapterId);
         mutate(`${getAPIUrl()}chapters/course/${course_uuid}/meta`);
         // await getCourseChapters();
@@ -100,7 +98,7 @@ function CourseContentEdition(props: any) {
 
     // Submit YouTube Video Upload
     const submitExternalVideo = async (external_video_data: any, activity: any, chapterId: string) => {
-        await updateChaptersMetadata(course_uuid, course_chapters_with_orders_and_activities);
+        //await updateChaptersMetadata(course_uuid, course_chapters_with_orders_and_activities);
         await createExternalVideoActivity(external_video_data, activity, chapterId);
         mutate(`${getAPIUrl()}chapters/course/${course_uuid}/meta`);
         // await getCourseChapters();
@@ -126,7 +124,7 @@ function CourseContentEdition(props: any) {
 
     const openNewActivityModal = async (chapterId: any) => {
         setNewActivityModal(true);
-        setNewActivityModalData(chapterId);
+        setSelectedChapterToAddActivityTo(chapterId);
     };
 
     // Close new chapter modal
@@ -259,7 +257,8 @@ function CourseContentEdition(props: any) {
                             submitFileActivity={submitFileActivity}
                             submitExternalVideo={submitExternalVideo}
                             submitActivity={submitActivity}
-                            chapterId={newActivityModalData}
+                            chapterId={selectedChapterToAddActivityTo}
+                            course={course}
                         ></NewActivityModal>}
                         dialogTitle="Create Activity"
                         dialogDescription="Choose between types of activities to add to the course"

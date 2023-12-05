@@ -36,6 +36,11 @@ async def create_chapter(
 ) -> ChapterRead:
     chapter = Chapter.from_orm(chapter_object)
 
+    # Get COurse
+    statement = select(Course).where(Course.id == chapter_object.course_id)
+
+    course = db_session.exec(statement).one()
+
     # RBAC check
     await rbac_check(request, "chapter_x", current_user, "create", db_session)
 
@@ -44,6 +49,7 @@ async def create_chapter(
     chapter.chapter_uuid = f"chapter_{uuid4()}"
     chapter.creation_date = str(datetime.now())
     chapter.update_date = str(datetime.now())
+    chapter.org_id = course.org_id
 
     # Find the last chapter in the course and add it to the list
     statement = (
@@ -155,10 +161,10 @@ async def update_chapter(
     db_session.commit()
     db_session.refresh(chapter)
 
-    chapter = await get_chapter(
-        request,chapter.id,current_user,db_session
-    )
-
+    if chapter:
+        chapter = await get_chapter(
+            request, chapter.id, current_user, db_session  # type: ignore
+        )
 
     return chapter
 
@@ -184,9 +190,7 @@ async def delete_chapter(
     db_session.commit()
 
     # Remove all linked activities
-    statement = select(ChapterActivity).where(
-        ChapterActivity.id == chapter.id
-    )
+    statement = select(ChapterActivity).where(ChapterActivity.id == chapter.id)
     chapter_activities = db_session.exec(statement).all()
 
     for chapter_activity in chapter_activities:
@@ -204,7 +208,14 @@ async def get_course_chapters(
     page: int = 1,
     limit: int = 10,
 ) -> List[ChapterRead]:
-    statement = select(Chapter).where(Chapter.course_id == course_id)
+    statement = (
+        select(Chapter)
+        .join(CourseChapter, Chapter.id == CourseChapter.chapter_id)
+        .where(CourseChapter.course_id == course_id)
+        .where(Chapter.course_id == course_id)
+        .order_by(CourseChapter.order)
+        .group_by(Chapter.id, CourseChapter.order)
+    )
     chapters = db_session.exec(statement).all()
 
     chapters = [ChapterRead(**chapter.dict(), activities=[]) for chapter in chapters]
@@ -256,19 +267,7 @@ async def DEPRECEATED_get_course_chapters(
     # RBAC check
     await rbac_check(request, course.course_uuid, current_user, "read", db_session)
 
-    # Get chapters that are linked to his course and order them by order, using the order field in the CourseChapter table
-    statement = (
-        select(Chapter)
-        .join(CourseChapter, Chapter.id == CourseChapter.chapter_id)
-        .where(CourseChapter.course_id == course.id)
-        .order_by(CourseChapter.order)
-        .group_by(Chapter.id, CourseChapter.order)
-    )
-    chapters = db_session.exec(statement).all()
-
-    chapters_in_db = [
-        ChapterRead(**chapter.dict(), activities=[]) for chapter in chapters
-    ]
+    chapters_in_db = await get_course_chapters(request, course.id, db_session, current_user)  # type: ignore
 
     # activities
     chapter_activityIdsGlobal = []
@@ -280,8 +279,8 @@ async def DEPRECEATED_get_course_chapters(
         chapter_activityIds = []
 
         for activity in chapter.activities:
-            chapter_activityIds.append(activity)
-            chapter_activityIdsGlobal.append(activity)
+            print("test", activity)
+            chapter_activityIds.append(activity.activity_uuid)
 
         chapters[chapter.chapter_uuid] = {
             "uuid": chapter.chapter_uuid,

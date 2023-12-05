@@ -69,16 +69,16 @@ function Activity(props: any) {
           </div>
 
           <div className="flex flex-row space-x-2">
-            {props.activity.type === "dynamic" && <>
+            {props.activity.type === "TYPE_DYNAMIC" && <>
               <Link
-                href={getUriWithOrg(props.orgslug, "") + `/course/${props.courseid}/activity/${props.activity.id.replace("activity_", "")}/edit`}
+                href={getUriWithOrg(props.orgslug, "") + `/course/${props.courseid}/activity/${props.activity.uuid.replace("activity_", "")}/edit`}
                 className=" hover:cursor-pointer p-1 px-3 bg-sky-700 rounded-md items-center"
                 rel="noopener noreferrer">
                 <div className="text-sky-100 font-bold text-xs" >Edit </div>
               </Link>
             </>}
             <Link
-              href={getUriWithOrg(props.orgslug, "") + `/course/${props.courseid}/activity/${props.activity.id.replace("activity_", "")}`}
+              href={getUriWithOrg(props.orgslug, "") + `/course/${props.courseid}/activity/${props.activity.uuid.replace("activity_", "")}`}
               className=" hover:cursor-pointer p-1 px-3 bg-gray-200 rounded-md"
               rel="noopener noreferrer">
               <Eye strokeWidth={2} size={15} className="text-gray-600" />

@@ -57,7 +57,6 @@ class Activity(ActivityBase, table=True):
 
 
 class ActivityCreate(ActivityBase):
-    org_id: int = Field(default=None, foreign_key="organization.id")
     course_id: int = Field(
         sa_column=Column("course_id", ForeignKey("course.id", ondelete="CASCADE"))
     )
