@@ -1,4 +1,5 @@
 "use client";
+import { useOrg } from '@components/Contexts/OrgContext';
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
 import ConfirmationModal from '@components/StyledElements/ConfirmationModal/ConfirmationModal'
 import { getUriWithOrg } from '@services/config/config'
@@ -21,6 +22,7 @@ const removeCollectionPrefix = (collectionid: string) => {
 }
 
 function CollectionThumbnail(props: PropsType) {
+    const org = useOrg() as any;
     return (
         <div className=''>
             <div className="flex flex-row space-x-4 inset-0 ring-1 ring-inset my-auto ring-black/10 rounded-xl shadow-xl relative w-[300px] h-[80px] bg-cover items-center justify-center bg-indigo-600 font-bold text-zinc-50" >
@@ -28,7 +30,7 @@ function CollectionThumbnail(props: PropsType) {
                     {props.collection.courses.slice(0, 2).map((course: any) => (
                         <>
                             <Link href={getUriWithOrg(props.orgslug, "/collection/" + removeCollectionPrefix(props.collection.collection_uuid))}>
-                                <div className="inset-0 rounded-full shadow-2xl bg-cover w-12 h-8 justify-center ring-indigo-800 ring-4" style={{ backgroundImage: `url(${getCourseThumbnailMediaDirectory(props.collection.org_id, course.course_uuid, course.thumbnail)})` }}>
+                                <div className="inset-0 rounded-full shadow-2xl bg-cover w-12 h-8 justify-center ring-indigo-800 ring-4" style={{ backgroundImage: `url(${getCourseThumbnailMediaDirectory(org?.org_uuid, course.course_uuid, course.thumbnail_image)})` }}>
                                 </div>
                             </Link>
                         </>

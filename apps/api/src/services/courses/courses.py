@@ -49,7 +49,7 @@ async def get_course(
         .where(ResourceAuthor.resource_uuid == course.course_uuid)
     )
     authors = db_session.exec(authors_statement).all()
-    
+
     # convert from User to UserRead
     authors = [UserRead.from_orm(author) for author in authors]
 
@@ -124,6 +124,11 @@ async def create_course(
 
     # Complete course object
     course.org_id = course.org_id
+
+    # Get org uuid
+    org_statement = select(Organization).where(Organization.id == org_id)
+    org = db_session.exec(org_statement).first()
+
     course.course_uuid = str(f"course_{uuid4()}")
     course.creation_date = str(datetime.now())
     course.update_date = str(datetime.now())
@@ -132,9 +137,9 @@ async def create_course(
     if thumbnail_file and thumbnail_file.filename:
         name_in_disk = f"{course.course_uuid}_thumbnail_{uuid4()}.{thumbnail_file.filename.split('.')[-1]}"
         await upload_thumbnail(
-            thumbnail_file, name_in_disk, org_id, course.course_uuid
+            thumbnail_file, name_in_disk, org.org_uuid, course.course_uuid
         )
-        course_object.thumbnail_image = name_in_disk
+        course.thumbnail_image = name_in_disk
 
     # Insert course
     db_session.add(course)
@@ -192,11 +197,15 @@ async def update_course_thumbnail(
     # RBAC check
     await rbac_check(request, course.course_uuid, current_user, "update", db_session)
 
+    # Get org uuid
+    org_statement = select(Organization).where(Organization.id == course.org_id)
+    org = db_session.exec(org_statement).first()
+
     # Upload thumbnail
     if thumbnail_file and thumbnail_file.filename:
         name_in_disk = f"{course_uuid}_thumbnail_{uuid4()}.{thumbnail_file.filename.split('.')[-1]}"
         await upload_thumbnail(
-            thumbnail_file, name_in_disk, course.org_id, course.course_uuid
+            thumbnail_file, name_in_disk, org.org_uuid, course.course_uuid
         )
 
     # Update course
@@ -222,8 +231,6 @@ async def update_course_thumbnail(
         .where(ResourceAuthor.resource_uuid == course.course_uuid)
     )
     authors = db_session.exec(authors_statement).all()
-
-
 
     # convert from User to UserRead
     authors = [UserRead.from_orm(author) for author in authors]
@@ -331,7 +338,7 @@ async def get_courses_orgslug(
 
     courses = db_session.exec(statement)
 
-    courses = [CourseRead(**course.dict(),authors=[]) for course in courses]
+    courses = [CourseRead(**course.dict(), authors=[]) for course in courses]
 
     # for every course, get the authors
     for course in courses:

@@ -6,6 +6,7 @@ import { cookies } from "next/headers";
 import { Metadata } from "next";
 import { getActivityWithAuthHeader } from "@services/courses/activities";
 import { getAccessTokenFromRefreshTokenCookie, getNewAccessTokenUsingRefreshTokenServer } from "@services/auth/auth";
+import { getOrganizationContextInfo } from "@services/organizations/orgs";
 
 type MetadataProps = {
   params: { orgslug: string, courseid: string, activityid: string };
@@ -32,6 +33,7 @@ const EditActivity = async (params: any) => {
   const activityid = params.params.activityid;
   const courseid = params.params.courseid;
   const orgslug = params.params.orgslug;
+  const org = await getOrganizationContextInfo(orgslug, { revalidate: 1800, tags: ['organizations'] });
 
   const courseInfo = await getCourseMetadataWithAuthHeader(courseid, { revalidate: 0, tags: ['courses'] }, access_token ? access_token : null)
   const activity = await getActivityWithAuthHeader(activityid, { revalidate: 0, tags: ['activities'] }, access_token ? access_token : null)
@@ -40,7 +42,7 @@ const EditActivity = async (params: any) => {
   return (
     <div>
       <AuthProvider>
-        <EditorWrapper orgslug={orgslug} course={courseInfo} activity={activity} content={activity.content}></EditorWrapper>
+        <EditorWrapper org={org} orgslug={orgslug} course={courseInfo} activity={activity} content={activity.content}></EditorWrapper>
       </AuthProvider>
     </div>
   );

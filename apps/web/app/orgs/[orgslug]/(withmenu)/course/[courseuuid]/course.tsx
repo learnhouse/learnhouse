@@ -12,6 +12,7 @@ import { getCourseThumbnailMediaDirectory } from "@services/media/media";
 import { ArrowRight, Check, File, Sparkles, Star, Video } from "lucide-react";
 import Avvvatars from "avvvatars-react";
 import { getUser } from "@services/users/users";
+import { useOrg } from "@components/Contexts/OrgContext";
 
 const CourseClient = (props: any) => {
   const [user, setUser] = useState<any>({});
@@ -19,6 +20,7 @@ const CourseClient = (props: any) => {
   const courseuuid = props.courseuuid;
   const orgslug = props.orgslug;
   const course = props.course;
+  const org = useOrg() as any;
   const router = useRouter();
 
   function getLearningTags() {
@@ -28,7 +30,6 @@ const CourseClient = (props: any) => {
 
   }
 
-  console.log(course);
 
   async function startCourseUI() {
     // Create activity
@@ -57,7 +58,7 @@ const CourseClient = (props: any) => {
   useEffect(() => {
 
   }
-    , []);
+    , [org]);
 
   return (
     <>
@@ -73,10 +74,10 @@ const CourseClient = (props: any) => {
           </div>
 
 
-          <div className="inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl relative w-auto h-[300px] bg-cover bg-center mb-4" style={{ backgroundImage: `url(${getCourseThumbnailMediaDirectory(course.org_id, course.course_uuid, course.thumbnail)})` }}>
+          <div className="inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl relative w-auto h-[300px] bg-cover bg-center mb-4" style={{ backgroundImage: `url(${getCourseThumbnailMediaDirectory(org?.org_uuid, course.course_uuid, course.thumbnail_image)})` }}>
           </div>
 
-        <ActivityIndicators course_uuid={props.course.course_uuid} orgslug={orgslug} course={course} /> 
+          <ActivityIndicators course_uuid={props.course.course_uuid} orgslug={orgslug} course={course} />
 
           <div className="flex flex-row pt-10">
             <div className="course_metadata_left grow space-y-2">
@@ -198,7 +199,7 @@ const CourseClient = (props: any) => {
               }
               {console.log(course)}
 
-              {isCourseStarted()  ? (
+              {isCourseStarted() ? (
                 <button className="py-2 px-5 mx-auto rounded-xl text-white font-bold h-12 w-[200px] drop-shadow-md bg-red-600 hover:bg-red-700 hover:cursor-pointer" onClick={quitCourse}>
                   Quit Course
                 </button>
