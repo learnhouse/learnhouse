@@ -22,7 +22,7 @@ export type CourseOverviewParams = {
     subpage: string
 }
 
-export const CourseStructureContext = createContext({}) as any;
+
 
 function CourseOverviewPage({ params }: { params: CourseOverviewParams }) {
 

@@ -15,7 +15,7 @@ import { useOrg } from "@components/Contexts/OrgContext";
 
 interface ActivityClientProps {
   activityid: string;
-  courseid: string;
+  courseuuid: string;
   orgslug: string;
   activity: any;
   course: any;
@@ -24,7 +24,7 @@ interface ActivityClientProps {
 
 function ActivityClient(props: ActivityClientProps) {
   const activityid = props.activityid;
-  const courseid = props.courseid;
+  const courseuuid = props.courseuuid;
   const orgslug = props.orgslug;
   const activity = props.activity;
   const course = props.course;
@@ -35,7 +35,7 @@ function ActivityClient(props: ActivityClientProps) {
     course.chapters.forEach((chapter: any) => {
       if (chapter.id === chapterId) {
         chapterName = chapter.name;
-      } 
+      }
     });
     return chapterName;
   }
@@ -48,16 +48,16 @@ function ActivityClient(props: ActivityClientProps) {
         <div className="space-y-4 pt-4">
           <div className="flex space-x-6">
             <div className="flex">
-              <Link href={getUriWithOrg(orgslug, "") + `/course/${courseid}`}>
-                <img className="w-[100px] h-[57px] rounded-md drop-shadow-md" src={`${getCourseThumbnailMediaDirectory(org?.org_uuid, course.course.course_uuid, course.course.thumbnail_image)}`} alt="" />
+              <Link href={getUriWithOrg(orgslug, "") + `/course/${courseuuid}`}>
+                <img className="w-[100px] h-[57px] rounded-md drop-shadow-md" src={`${getCourseThumbnailMediaDirectory(org?.org_uuid, course.course_uuid, course.thumbnail_image)}`} alt="" />
               </Link>
             </div>
             <div className="flex flex-col -space-y-1">
               <p className="font-bold text-gray-700 text-md">Course </p>
-              <h1 className="font-bold text-gray-950 text-2xl first-letter:uppercase" >{course.course.name}</h1>
+              <h1 className="font-bold text-gray-950 text-2xl first-letter:uppercase" >{course.name}</h1>
             </div>
           </div>
-          <ActivityIndicators course_uuid={courseid} current_activity={activityid} orgslug={orgslug} course={course} />
+          <ActivityIndicators course_uuid={courseuuid} current_activity={activityid} orgslug={orgslug} course={course} />
 
           <div className="flex justify-between items-center">
             <div className="flex flex-col -space-y-1">
@@ -66,19 +66,19 @@ function ActivityClient(props: ActivityClientProps) {
             </div>
             <div className="flex space-x-2">
               <AuthenticatedClientElement checkMethod="authentication">
-                <MarkStatus activityid={activityid} course={course} orgslug={orgslug} courseid={courseid} />
+                <MarkStatus activityid={activityid} course={course} orgslug={orgslug} courseid={courseuuid} />
 
               </AuthenticatedClientElement>
             </div>
           </div>
 
           {activity ? (
-            <div className={`p-7 pt-4 drop-shadow-sm rounded-lg ${activity.type == 'dynamic' ? 'bg-white' : 'bg-zinc-950'}`}>
+            <div className={`p-7 pt-4 drop-shadow-sm rounded-lg ${activity.activity_type == 'TYPE_DYNAMIC' ? 'bg-white' : 'bg-zinc-950'}`}>
               <div>
-                {activity.type == "dynamic" && <Canva content={activity.content} activity={activity} />}
+                {activity.activity_type == "TYPE_DYNAMIC" && <Canva content={activity.content} activity={activity} />}
                 {/* todo : use apis & streams instead of this */}
-                {activity.type == "video" && <VideoActivity course={course} activity={activity} />}
-                {activity.type == "documentpdf" && <DocumentPdfActivity course={course} activity={activity} />}
+                {activity.activity_type == "TYPE_VIDEO" && <VideoActivity course={course} activity={activity} />}
+                {activity.activity_type == "TYPE_DOCUMENT" && <DocumentPdfActivity course={course} activity={activity} />}
               </div>
             </div>
           ) : (<div></div>)}

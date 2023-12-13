@@ -63,6 +63,7 @@ class FullCourseReadWithTrail(CourseBase):
     course_uuid: str
     creation_date: str
     update_date: str
+    org_id: int = Field(default=None, foreign_key="organization.id")
     authors: List[UserRead] 
     # Chapters, Activities
     chapters: List[ChapterRead]

@@ -6,7 +6,7 @@ import { cookies } from "next/headers";
 import { Metadata } from "next";
 import { getActivityWithAuthHeader } from "@services/courses/activities";
 import { getAccessTokenFromRefreshTokenCookie, getNewAccessTokenUsingRefreshTokenServer } from "@services/auth/auth";
-import { getOrganizationContextInfo } from "@services/organizations/orgs";
+import { getOrganizationContextInfo, getOrganizationContextInfoWithId } from "@services/organizations/orgs";
 
 type MetadataProps = {
   params: { orgslug: string, courseid: string, activityid: string };
@@ -22,27 +22,25 @@ export async function generateMetadata(
   const course_meta = await getCourseMetadataWithAuthHeader(params.courseid, { revalidate: 0, tags: ['courses'] }, access_token ? access_token : null)
 
   return {
-    title: `Edit - ${course_meta.course.name} Activity`,
-    description: course_meta.course.mini_description,
+    title: `Edit - ${course_meta.name} Activity`,
+    description: course_meta.mini_description,
   };
 }
 
 const EditActivity = async (params: any) => {
   const cookieStore = cookies();
   const access_token = await getAccessTokenFromRefreshTokenCookie(cookieStore)
-  const activityid = params.params.activityid;
+  const activityuuid = params.params.activityuuid;
   const courseid = params.params.courseid;
-  const orgslug = params.params.orgslug;
-  const org = await getOrganizationContextInfo(orgslug, { revalidate: 1800, tags: ['organizations'] });
-
   const courseInfo = await getCourseMetadataWithAuthHeader(courseid, { revalidate: 0, tags: ['courses'] }, access_token ? access_token : null)
-  const activity = await getActivityWithAuthHeader(activityid, { revalidate: 0, tags: ['activities'] }, access_token ? access_token : null)
-
+  const activity = await getActivityWithAuthHeader(activityuuid, { revalidate: 0, tags: ['activities'] }, access_token ? access_token : null)
+  const org = await getOrganizationContextInfoWithId(courseInfo.org_id, { revalidate: 1800, tags: ['organizations'] });
+  console.log('courseInfo', courseInfo )
 
   return (
     <div>
       <AuthProvider>
-        <EditorWrapper org={org} orgslug={orgslug} course={courseInfo} activity={activity} content={activity.content}></EditorWrapper>
+        <EditorWrapper org={org} course={courseInfo} activity={activity} content={activity.content}></EditorWrapper>
       </AuthProvider>
     </div>
   );

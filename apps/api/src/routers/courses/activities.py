@@ -62,11 +62,11 @@ async def api_get_chapter_activities(
     return await get_activities(request, chapter_id, current_user, db_session)
 
 
-@router.put("/{activity_id}")
+@router.put("/{activity_uuid}")
 async def api_update_activity(
     request: Request,
     activity_object: ActivityUpdate,
-    activity_id: int,
+    activity_uuid: str,
     current_user: PublicUser = Depends(get_current_user),
     db_session=Depends(get_db_session),
 ) -> ActivityRead:
@@ -74,7 +74,7 @@ async def api_update_activity(
     Update activity by activity_id
     """
     return await update_activity(
-        request, activity_object, activity_id, current_user, db_session
+        request, activity_object, activity_uuid, current_user, db_session
     )
 
 

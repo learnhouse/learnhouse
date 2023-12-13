@@ -1,4 +1,6 @@
 from typing import Literal
+from src.db.courses import Course
+from src.db.organizations import Organization
 from sqlmodel import Session, select
 from src.security.rbac.rbac import (
     authorization_verify_based_on_roles_and_authorship,
@@ -52,6 +54,14 @@ async def create_documentpdf_activity(
 
     # get org_id
     org_id = coursechapter.org_id
+
+    # Get org_uuid
+    statement = select(Organization).where(Organization.id == coursechapter.org_id)
+    organization = db_session.exec(statement).first()
+
+    # Get course_uuid
+    statement = select(Course).where(Course.id == coursechapter.course_id)
+    course = db_session.exec(statement).first()
 
     # create activity uuid
     activity_uuid = f"activity_{uuid4()}"
@@ -113,7 +123,12 @@ async def create_documentpdf_activity(
     # upload pdf
     if pdf_file:
         # get pdffile format
-        await upload_pdf(pdf_file, activity.id, org_id, coursechapter.course_id)
+        await upload_pdf(
+            pdf_file,
+            activity.activity_uuid,
+            organization.org_uuid,
+            course.course_uuid,
+        )
 
     # Insert ChapterActivity link in DB
     db_session.add(activity_chapter)
