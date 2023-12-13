@@ -2,7 +2,7 @@
 import { getAPIUrl } from '@services/config/config';
 import { updateCourseOrderStructure } from '@services/courses/chapters';
 import { revalidateTags } from '@services/utils/ts/requests';
-import { useCourse, useCourseDispatch } from '@components/DashboardPages/CourseContext'
+import { useCourse, useCourseDispatch } from '@components/Contexts/CourseContext'
 import { Check, SaveAllIcon, Timer } from 'lucide-react'
 import { useRouter } from 'next/navigation';
 import React, { useEffect } from 'react'

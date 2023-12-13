@@ -1,4 +1,5 @@
 "use client";
+import { useOrg } from '@components/Contexts/OrgContext';
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement';
 import ConfirmationModal from '@components/StyledElements/ConfirmationModal/ConfirmationModal';
 import { getUriWithOrg } from '@services/config/config';
@@ -8,7 +9,7 @@ import { revalidateTags } from '@services/utils/ts/requests';
 import { FileEdit, X } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import React from 'react'
+import React, { use, useEffect } from 'react'
 
 type PropsType = {
     course: any,
@@ -22,6 +23,7 @@ function removeCoursePrefix(course_uuid: string) {
 
 function CourseThumbnail(props: PropsType) {
     const router = useRouter();
+    const org = useOrg() as any;
 
     async function deleteCourses(course_uuid: any) {
         await deleteCourseFromBackend(course_uuid);
@@ -30,12 +32,16 @@ function CourseThumbnail(props: PropsType) {
         router.refresh();
     }
 
+    useEffect(() => {
+
+    }, [org]);
+
     return (
         <div className='relative'>
             <AdminEditsArea course={props.course} orgSlug={props.orgslug} courseId={props.course.course_uuid} deleteCourses={deleteCourses} />
             <Link href={getUriWithOrg(props.orgslug, "/course/" + removeCoursePrefix(props.course.course_uuid))}>
-                <div className="inset-0 ring-1 ring-inset ring-black/10 rounded-xl shadow-xl w-[249px] h-[131px] bg-cover" style={{ backgroundImage: `url(${getCourseThumbnailMediaDirectory(props.course.org_id, props.course.course_uuid, props.course.thumbnail)})` }}>
-        
+                <div className="inset-0 ring-1 ring-inset ring-black/10 rounded-xl shadow-xl w-[249px] h-[131px] bg-cover" style={{ backgroundImage: `url(${getCourseThumbnailMediaDirectory(org?.org_uuid, props.course.course_uuid, props.course.thumbnail_image)})` }}>
+
                 </div>
             </Link>
             <h2 className="font-bold text-lg w-[250px] py-2">{props.course.name}</h2>
@@ -45,10 +51,10 @@ function CourseThumbnail(props: PropsType) {
 
 const AdminEditsArea = (props: { orgSlug: string, courseId: string, course: any, deleteCourses: any }) => {
     return (
-        <AuthenticatedClientElement 
-        action="update"
-        ressourceType="course"
-        checkMethod='roles' orgId={props.course.org_id}>
+        <AuthenticatedClientElement
+            action="update"
+            ressourceType="course"
+            checkMethod='roles' orgId={props.course.org_id}>
             <div className="flex space-x-1 absolute justify-center mx-auto z-20 bottom-14 left-1/2 transform -translate-x-1/2">
                 <Link href={getUriWithOrg(props.orgSlug, "/dash/courses/course/" + removeCoursePrefix(props.courseId) + "/general")}>
                     <div

@@ -11,6 +11,7 @@ import GeneralWrapperStyled from "@components/StyledElements/Wrappers/GeneralWra
 import { useRouter } from "next/navigation";
 import AuthenticatedClientElement from "@components/Security/AuthenticatedClientElement";
 import { getCourseThumbnailMediaDirectory } from "@services/media/media";
+import { useOrg } from "@components/Contexts/OrgContext";
 
 interface ActivityClientProps {
   activityid: string;
@@ -27,6 +28,7 @@ function ActivityClient(props: ActivityClientProps) {
   const orgslug = props.orgslug;
   const activity = props.activity;
   const course = props.course;
+  const org = useOrg() as any;
 
   function getChapterName(chapterId: string) {
     let chapterName = "";
@@ -47,7 +49,7 @@ function ActivityClient(props: ActivityClientProps) {
           <div className="flex space-x-6">
             <div className="flex">
               <Link href={getUriWithOrg(orgslug, "") + `/course/${courseid}`}>
-                <img className="w-[100px] h-[57px] rounded-md drop-shadow-md" src={`${getCourseThumbnailMediaDirectory(course.course.org_id, course.course.course_uuid, course.course.thumbnail)}`} alt="" />
+                <img className="w-[100px] h-[57px] rounded-md drop-shadow-md" src={`${getCourseThumbnailMediaDirectory(org?.org_uuid, course.course.course_uuid, course.course.thumbnail_image)}`} alt="" />
               </Link>
             </div>
             <div className="flex flex-col -space-y-1">

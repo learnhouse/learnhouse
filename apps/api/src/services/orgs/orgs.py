@@ -187,7 +187,7 @@ async def update_org_logo(
     await rbac_check(request, org.org_uuid, current_user, "update", db_session)
 
     # Upload logo
-    name_in_disk = await upload_org_logo(logo_file, org_id)
+    name_in_disk = await upload_org_logo(logo_file, org.org_uuid)
 
     # Update org
     org.logo_image = name_in_disk

@@ -1,5 +1,5 @@
 'use client';
-import BreadCrumbs from '@components/DashboardPages/UI/BreadCrumbs'
+import BreadCrumbs from '@components/Dashboard/UI/BreadCrumbs'
 import CreateCourseModal from '@components/Objects/Modals/Course/Create/CreateCourse';
 import CourseThumbnail from '@components/Objects/Other/CourseThumbnail';
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement';
@@ -34,7 +34,7 @@ function CoursesHome(params: CourseProps) {
                     <BreadCrumbs type='courses' />
 
                     <div className='w-100 flex justify-between'>
-                        <div className='flex font-bold text-4xl'>Courses</div>
+                        <div className='pt-3 flex font-bold text-4xl'>Courses</div>
                         <AuthenticatedClientElement checkMethod='roles'
                             action='create'
                             ressourceType='course'

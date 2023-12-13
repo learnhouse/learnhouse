@@ -45,6 +45,7 @@ interface Editor {
   activity: any;
   orgslug: string
   course: any;
+  org: any;
   setContent: (content: string) => void;
 }
 
@@ -146,7 +147,7 @@ function Editor(props: Editor) {
                 <EditorInfoLearnHouseLogo width={25} height={25} src={learnhouseIcon} alt="" />
               </Link>
               <Link target="_blank" href={`/course/${course_uuid}/edit`}>
-                <EditorInfoThumbnail src={`${getCourseThumbnailMediaDirectory(props.course.course.org_id, props.course.course.course_uuid, props.course.course.thumbnail)}`} alt=""></EditorInfoThumbnail>
+                <EditorInfoThumbnail src={`${getCourseThumbnailMediaDirectory(props.org?.org_uuid, props.course.course.course_uuid, props.course.course.thumbnail_image)}`} alt=""></EditorInfoThumbnail>
               </Link>
               <EditorInfoDocName>
                 {" "}

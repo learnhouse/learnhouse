@@ -1,4 +1,4 @@
-import { useCourse } from '@components/DashboardPages/CourseContext'
+import { useCourse } from '@components/Contexts/CourseContext'
 import { Book, ChevronRight, User } from 'lucide-react'
 import Link from 'next/link'
 import React, { use, useEffect } from 'react'
