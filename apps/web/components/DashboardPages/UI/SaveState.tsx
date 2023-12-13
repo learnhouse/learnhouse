@@ -2,11 +2,12 @@
 import { getAPIUrl } from '@services/config/config';
 import { updateCourseOrderStructure } from '@services/courses/chapters';
 import { revalidateTags } from '@services/utils/ts/requests';
-import { useCourse, useCourseDispatch } from '@components/Dashboard/CourseContext'
+import { useCourse, useCourseDispatch } from '@components/DashboardPages/CourseContext'
 import { Check, SaveAllIcon, Timer } from 'lucide-react'
 import { useRouter } from 'next/navigation';
 import React, { useEffect } from 'react'
 import { mutate } from 'swr';
+import { updateCourse } from '@services/courses/courses';
 
 function SaveState(props: { orgslug: string }) {
     const course = useCourse() as any;
@@ -16,10 +17,14 @@ function SaveState(props: { orgslug: string }) {
     const course_structure = course.courseStructure;
 
     const saveCourseState = async () => {
-        // Course structure & order 
+        // Course  order 
         if (saved) return;
         await changeOrderBackend();
         mutate(`${getAPIUrl()}courses/${course.courseStructure.course_uuid}/meta`);
+        // Course metadata
+        await changeMetadataBackend();
+        mutate(`${getAPIUrl()}courses/${course.courseStructure.course_uuid}/meta`);
+        await revalidateTags(['courses'], props.orgslug)
         dispatchCourse({ type: 'setIsSaved' })
     }
 
@@ -29,6 +34,15 @@ function SaveState(props: { orgslug: string }) {
     const changeOrderBackend = async () => {
         mutate(`${getAPIUrl()}courses/${course.courseStructure.course_uuid}/meta`);
         await updateCourseOrderStructure(course.courseStructure.course_uuid, course.courseOrder);
+        await revalidateTags(['courses'], props.orgslug)
+        router.refresh();
+        dispatchCourse({ type: 'setIsSaved' })
+    }
+
+    // Course metadata
+    const changeMetadataBackend = async () => {
+        mutate(`${getAPIUrl()}courses/${course.courseStructure.course_uuid}/meta`);
+        await updateCourse(course.courseStructure.course_uuid, course.courseStructure);
         await revalidateTags(['courses'], props.orgslug)
         router.refresh();
         dispatchCourse({ type: 'setIsSaved' })

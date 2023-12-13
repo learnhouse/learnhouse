@@ -8,6 +8,7 @@ type TooltipProps = {
   sideOffset?: number;
   content: React.ReactNode;
   children: React.ReactNode;
+  side?: 'top' | 'right' | 'bottom' | 'left'; // default is bottom 
   slateBlack?: boolean;
 };
 
@@ -20,7 +21,7 @@ const ToolTip = (props: TooltipProps) => {
           {props.children}
         </Tooltip.Trigger>
         <Tooltip.Portal>
-          <TooltipContent slateBlack={props.slateBlack} side="bottom" sideOffset={props.sideOffset}>
+          <TooltipContent slateBlack={props.slateBlack} side={props.side ? props.side : 'bottom'} sideOffset={props.sideOffset}>
             {props.content}
           </TooltipContent>
         </Tooltip.Portal>

@@ -1,4 +1,5 @@
 
+import ToolTip from '@components/StyledElements/Tooltip/Tooltip'
 import { Book } from 'lucide-react'
 import Link from 'next/link'
 import React from 'react'
@@ -10,7 +11,9 @@ function LeftMenu() {
             className='flex flex-col w-20 justifiy-center bg-black h-screen justify-center text-white'>
 
             <div className='flex items-center mx-auto'>
-                <Link className='bg-white/5 rounded-lg p-2 hover:bg-white/10 transition-all ease-linear' href={`/dash/courses`} ><Book size={18}/></Link>
+                <ToolTip content={"Courses"} slateBlack sideOffset={8} side='right'  >
+                    <Link className='bg-white/5 rounded-lg p-2 hover:bg-white/10 transition-all ease-linear' href={`/dash/courses`} ><Book size={18} /></Link>
+                </ToolTip>
             </div>
 
 
