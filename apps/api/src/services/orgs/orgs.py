@@ -142,7 +142,7 @@ async def update_org(
 
     slug_available = result.first()
 
-    if slug_available:
+    if slug_available and slug_available.id != org_id:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Organization slug already exists",

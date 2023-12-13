@@ -8,8 +8,6 @@ import { HeaderProfileBox } from "@components/Security/HeaderProfileBox";
 import MenuLinks from "./MenuLinks";
 import { getOrgLogoMediaDirectory } from "@services/media/media";
 import { MessageSquareIcon } from "lucide-react";
-import { Tooltip } from "@radix-ui/react-tooltip";
-import ToolTip from "@components/StyledElements/Tooltip/Tooltip";
 import Modal from "@components/StyledElements/Modal/Modal";
 import FeedbackModal from "../Modals/Feedback/Feedback";
 import useSWR from "swr";
@@ -39,9 +37,9 @@ export const Menu = (props: any) => {
                     <div className="logo flex ">
                         <Link href={getUriWithOrg(orgslug, "/")}>
                             <div className="flex w-auto h-9 rounded-md items-center m-auto py-1 justify-center" >
-                                {org?.logo ? (
+                                {org?.logo_image ? (
                                     <img
-                                        src={`${getOrgLogoMediaDirectory(org.org_id, org?.logo)}`}
+                                        src={`${getOrgLogoMediaDirectory(org.org_uuid, org?.logo_image)}`}
                                         alt="Learnhouse"
                                         style={{ width: "auto", height: "100%" }}
                                         className="rounded-md"
