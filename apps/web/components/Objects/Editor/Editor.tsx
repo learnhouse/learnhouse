@@ -2,7 +2,7 @@
 import React from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { AuthContext } from "../../Security/AuthProvider";
+import { AuthContext } from "../../Security/AuthProviderDepreceated";
 import learnhouseIcon from "public/learnhouse_icon.png";
 import { ToolbarButtons } from "./Toolbar/ToolbarButtons";
 import { motion } from "framer-motion";

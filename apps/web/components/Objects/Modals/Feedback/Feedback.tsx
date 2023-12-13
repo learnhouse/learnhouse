@@ -4,7 +4,7 @@ import * as Form from '@radix-ui/react-form'
 import React, { useState } from "react";
 import * as Sentry from '@sentry/browser';
 import { CheckCircleIcon } from "lucide-react";
-import { AuthContext } from "@components/Security/AuthProvider";
+import { AuthContext } from "@components/Security/AuthProviderDepreceated";
 import { randomUUID } from "crypto";
 
 export const FeedbackModal = (user: any) => {

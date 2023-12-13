@@ -1,5 +1,5 @@
 import { default as React, } from "react";
-import AuthProvider from "@components/Security/AuthProvider";
+import AuthProvider from "@components/Security/AuthProviderDepreceated";
 import EditorWrapper from "@components/Objects/Editor/EditorWrapper";
 import { getCourseMetadataWithAuthHeader } from "@services/courses/courses";
 import { cookies } from "next/headers";
