@@ -3,7 +3,7 @@ import React, { createContext, useState } from 'react'
 import { styled } from '@stitches/react';
 import Link from 'next/link';
 import LearnHouseWhiteLogo from '@public/learnhouse_text_white.png';
-import AuthProvider, { AuthContext } from '@components/Security/AuthProvider';
+import AuthProvider, { AuthContext } from '@components/Security/AuthProviderDepreceated';
 import Avvvatars from 'avvvatars-react';
 import Image from 'next/image';
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement';

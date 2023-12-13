@@ -1,5 +1,5 @@
 "use client";
-import { AuthContext } from '@components/Security/AuthProvider';
+import { AuthContext } from '@components/Security/AuthProviderDepreceated';
 import React, { useEffect } from 'react'
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import { updatePassword } from '@services/settings/password';
