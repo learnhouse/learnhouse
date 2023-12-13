@@ -5,7 +5,6 @@ from src.security.rbac.rbac import (
     authorization_verify_based_on_roles_and_authorship,
     authorization_verify_if_user_is_anon,
 )
-from src.db.organizations import Organization
 from src.db.activities import ActivityCreate, Activity, ActivityRead, ActivityUpdate
 from src.db.chapter_activities import ChapterActivity
 from src.db.users import AnonymousUser, PublicUser
@@ -44,6 +43,7 @@ async def create_activity(
     activity.creation_date = str(datetime.now())
     activity.update_date = str(datetime.now())
     activity.org_id = chapter.org_id
+    activity.course_id = chapter.course_id
 
     # Insert Activity in DB
     db_session.add(activity)
@@ -65,7 +65,7 @@ async def create_activity(
     activity_chapter = ChapterActivity(
         chapter_id=activity_object.chapter_id,
         activity_id=activity.id if activity.id else 0,
-        course_id=activity_object.course_id,
+        course_id=chapter.course_id,
         org_id=chapter.org_id,
         creation_date=str(datetime.now()),
         update_date=str(datetime.now()),

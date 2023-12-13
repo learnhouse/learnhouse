@@ -40,7 +40,7 @@ export async function createExternalVideoActivity(data: any, activity: any, chap
   data.chapter_id = chapter_id;
   data.activity_id = activity.id;
 
-  const result = await fetch(`${getAPIUrl()}activities/external_video?coursechapter_id=${chapter_id}`, RequestBody("POST", data, null));
+  const result = await fetch(`${getAPIUrl()}activities/external_video`, RequestBody("POST", data, null));
   const res = await result.json();
   return res;
 }
