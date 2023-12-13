@@ -48,6 +48,7 @@ export async function generateMetadata(
 const CollectionPage = async (params: any) => {
   const cookieStore = cookies();
   const access_token = await getAccessTokenFromRefreshTokenCookie(cookieStore)
+  const org = await getOrganizationContextInfo(params.params.orgslug, { revalidate: 1800, tags: ['organizations'] });
   const orgslug = params.params.orgslug;
   const col = await getCollectionByIdWithAuthHeader(params.params.collectionid, access_token ? access_token : null, { revalidate: 0, tags: ['collections'] });
 
@@ -64,7 +65,7 @@ const CollectionPage = async (params: any) => {
       {col.courses.map((course: any) => (
         <div className="pr-8" key={course.course_uuid}>
           <Link href={getUriWithOrg(orgslug, "/course/" + removeCoursePrefix(course.course_uuid))}>
-            <div className="inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl relative w-[249px] h-[131px] bg-cover" style={{ backgroundImage: `url(${getCourseThumbnailMediaDirectory(course.org_id, course.course_uuid, course.thumbnail)})` }}>
+            <div className="inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl relative w-[249px] h-[131px] bg-cover" style={{ backgroundImage: `url(${getCourseThumbnailMediaDirectory(org.org_uuid, course.course_uuid, course.thumbnail_image)})` }}>
             </div>
           </Link>
           <h2 className="font-bold text-lg w-[250px] py-2">{course.name}</h2>

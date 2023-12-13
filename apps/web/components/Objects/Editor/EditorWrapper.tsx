@@ -11,6 +11,7 @@ interface EditorWrapperProps {
   activity: any;
   course: any
   orgslug: string;
+  org: any;
 }
 
 function EditorWrapper(props: EditorWrapperProps): JSX.Element {
@@ -49,7 +50,7 @@ function EditorWrapper(props: EditorWrapperProps): JSX.Element {
   } else {
     return <>
       <Toast></Toast>
-      <Editor orgslug={props.orgslug} course={props.course} activity={props.activity} content={props.content} setContent={setContent} provider={providerState} ydoc={ydocState}></Editor>;
+      <Editor org={props.org} orgslug={props.orgslug} course={props.course} activity={props.activity} content={props.content} setContent={setContent} provider={providerState} ydoc={ydocState}></Editor>;
 
     </>
   }

@@ -1,4 +1,4 @@
-import { useCourse } from '@components/DashboardPages/CourseContext';
+import { useCourse } from '@components/Contexts/CourseContext';
 import NewActivityModal from '@components/Objects/Modals/Activities/Create/NewActivity';
 import Modal from '@components/StyledElements/Modal/Modal';
 import { getAPIUrl } from '@services/config/config';
