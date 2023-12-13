@@ -1,5 +1,5 @@
 import LeftMenu from '@components/Dashboard/UI/LeftMenu'
-import AuthProvider from '@components/Security/AuthProvider'
+import AuthProvider from '@components/Security/AuthProviderDepreceated'
 import React from 'react'
 
 function DashboardLayout({ children, params }: { children: React.ReactNode, params: any }) {

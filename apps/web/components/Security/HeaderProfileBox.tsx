@@ -2,7 +2,7 @@
 import React from "react";
 import styled from "styled-components";
 import Link from "next/link";
-import { AuthContext } from "./AuthProvider";
+import { AuthContext } from "./AuthProviderDepreceated";
 import Avvvatars from "avvvatars-react";
 import { GearIcon } from "@radix-ui/react-icons";
 
