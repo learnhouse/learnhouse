@@ -6,7 +6,6 @@ from src.db.chapters import (
     ChapterRead,
     ChapterUpdate,
     ChapterUpdateOrder,
-    DepreceatedChaptersRead,
 )
 from src.services.courses.chapters import (
     DEPRECEATED_get_course_chapters,

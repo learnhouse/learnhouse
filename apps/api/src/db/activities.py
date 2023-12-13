@@ -34,12 +34,6 @@ class ActivityBase(SQLModel):
     content: dict = Field(default={}, sa_column=Column(JSON))
     published_version: int
     version: int
-    course_id: int = Field(
-        default=None,
-        sa_column=Column(
-            BigInteger, ForeignKey("course.id", ondelete="CASCADE")
-        ),
-    )
 
 
 class Activity(ActivityBase, table=True):
@@ -57,9 +51,6 @@ class Activity(ActivityBase, table=True):
 
 
 class ActivityCreate(ActivityBase):
-    course_id: int = Field(
-        sa_column=Column("course_id", ForeignKey("course.id", ondelete="CASCADE"))
-    )
     chapter_id: int
     pass
 
