@@ -82,11 +82,11 @@ async def create_activity(
 
 async def get_activity(
     request: Request,
-    activity_id: str,
+    activity_uuid: str,
     current_user: PublicUser,
     db_session: Session,
 ):
-    statement = select(Activity).where(Activity.id == activity_id)
+    statement = select(Activity).where(Activity.activity_uuid == activity_uuid)
     activity = db_session.exec(statement).first()
 
     if not activity:
@@ -106,11 +106,11 @@ async def get_activity(
 async def update_activity(
     request: Request,
     activity_object: ActivityUpdate,
-    activity_id: int,
+    activity_uuid: str,
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
-    statement = select(Activity).where(Activity.id == activity_id)
+    statement = select(Activity).where(Activity.activity_uuid == activity_uuid)
     activity = db_session.exec(statement).first()
 
     if not activity:
@@ -140,11 +140,11 @@ async def update_activity(
 
 async def delete_activity(
     request: Request,
-    activity_id: str,
+    activity_uuid: str,
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
-    statement = select(Activity).where(Activity.id == activity_id)
+    statement = select(Activity).where(Activity.activity_uuid == activity_uuid)
     activity = db_session.exec(statement).first()
 
     if not activity:
@@ -160,7 +160,7 @@ async def delete_activity(
 
     # Delete activity from chapter
     statement = select(ChapterActivity).where(
-        ChapterActivity.activity_id == activity_id
+        ChapterActivity.activity_id == activity.id
     )
     activity_chapter = db_session.exec(statement).first()
 

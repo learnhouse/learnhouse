@@ -1,4 +1,6 @@
 from typing import Literal
+from src.db.courses import Course
+from src.db.organizations import Organization
 
 from pydantic import BaseModel
 from sqlmodel import Session, select
@@ -52,6 +54,14 @@ async def create_video_activity(
             detail="CourseChapter not found",
         )
 
+    # Get org_uuid
+    statement = select(Organization).where(Organization.id == coursechapter.org_id)
+    organization = db_session.exec(statement).first()
+
+    # Get course_uuid
+    statement = select(Course).where(Course.id == coursechapter.course_id)
+    course = db_session.exec(statement).first()
+
     # generate activity_uuid
     activity_uuid = str(f"activity_{uuid4()}")
 
@@ -104,7 +114,10 @@ async def create_video_activity(
     if video_file:
         # get videofile format
         await upload_video(
-            video_file, activity.id, coursechapter.org_id, coursechapter.course_id
+            video_file,
+            activity.activity_uuid,
+            organization.org_uuid,
+            course.course_uuid,
         )
 
     # update chapter

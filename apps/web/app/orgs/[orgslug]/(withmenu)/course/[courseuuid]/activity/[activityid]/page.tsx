@@ -8,7 +8,7 @@ import { getAccessTokenFromRefreshTokenCookie, getNewAccessTokenUsingRefreshToke
 
 
 type MetadataProps = {
-    params: { orgslug: string, courseid: string, activityid: string };
+    params: { orgslug: string, courseuuid: string, activityid: string };
     searchParams: { [key: string]: string | string[] | undefined };
 };
 
@@ -20,14 +20,14 @@ export async function generateMetadata(
 
     // Get Org context information 
     const org = await getOrganizationContextInfo(params.orgslug, { revalidate: 1800, tags: ['organizations'] });
-    const course_meta = await getCourseMetadataWithAuthHeader(params.courseid, { revalidate: 0, tags: ['courses'] }, access_token ? access_token : null)
+    const course_meta = await getCourseMetadataWithAuthHeader(params.courseuuid, { revalidate: 0, tags: ['courses'] }, access_token ? access_token : null)
     const activity = await getActivityWithAuthHeader(params.activityid, { revalidate: 0, tags: ['activities'] }, access_token ? access_token : null)
 
     // SEO
     return {
-        title: activity.name + ` — ${course_meta.course.name} Course`,
-        description: course_meta.course.mini_description,
-        keywords: course_meta.course.learnings,
+        title: activity.name + ` — ${course_meta.name} Course`,
+        description: course_meta.description,
+        keywords: course_meta.learnings,
         robots: {
             index: true,
             follow: true,
@@ -39,11 +39,11 @@ export async function generateMetadata(
             }
         },
         openGraph: {
-            title: activity.name + ` — ${course_meta.course.name} Course`,
-            description: course_meta.course.mini_description,
+            title: activity.name + ` — ${course_meta.name} Course`,
+            description: course_meta.description,
             type: activity.type === 'video' ? 'video.other' : 'article',
-            publishedTime: course_meta.course.creationDate,
-            tags: course_meta.course.learnings,
+            publishedTime: course_meta.creation_date,
+            tags: course_meta.learnings,
         },
     };
 }
@@ -52,16 +52,16 @@ const ActivityPage = async (params: any) => {
     const cookieStore = cookies();
     const access_token = await getAccessTokenFromRefreshTokenCookie(cookieStore)
     const activityid = params.params.activityid;
-    const courseid = params.params.courseid;
+    const courseuuid = params.params.courseuuid;
     const orgslug = params.params.orgslug;
 
-    const course_meta = await getCourseMetadataWithAuthHeader(courseid, { revalidate: 0, tags: ['courses'] }, access_token ? access_token : null)
+    const course_meta = await getCourseMetadataWithAuthHeader(courseuuid, { revalidate: 0, tags: ['courses'] }, access_token ? access_token : null)
     const activity = await getActivityWithAuthHeader(activityid, { revalidate: 0, tags: ['activities'] }, access_token ? access_token : null)
     return (
         <>
             <ActivityClient
                 activityid={activityid}
-                courseid={courseid}
+                courseuuid={courseuuid}
                 orgslug={orgslug}
                 activity={activity}
                 course={course_meta}

@@ -27,7 +27,7 @@ function ActivityElement(props: ActivitiyElementProps) {
     const [selectedActivity, setSelectedActivity] = React.useState<string | undefined>(undefined);
 
     async function deleteActivityUI() {
-        await deleteActivity(props.activity.id);
+        await deleteActivity(props.activity.activity_uuid);
         mutate(`${getAPIUrl()}courses/${props.course_uuid}/meta`);
         await revalidateTags(['courses'], props.orgslug);
         router.refresh();
@@ -80,14 +80,14 @@ function ActivityElement(props: ActivitiyElementProps) {
                     <div className="flex flex-row space-x-2">
                         {props.activity.activity_type === "TYPE_DYNAMIC" && <>
                             <Link
-                                href={''}
+                                href={getUriWithOrg(props.orgslug, "") + `/course/${props.course_uuid.replace("course_", "")}/activity/${props.activity.activity_uuid.replace("activity_", "")}/edit`}
                                 className=" hover:cursor-pointer p-1 px-3 bg-sky-700 rounded-md items-center"
                                 rel="noopener noreferrer">
                                 <div className="text-sky-100 font-bold text-xs" >Edit  </div>
                             </Link>
                         </>}
                         <Link
-                            href={''}
+                            href={getUriWithOrg(props.orgslug, "") + `/course/${props.course_uuid.replace("course_", "")}/activity/${props.activity.activity_uuid.replace("activity_", "")}`}
                             className=" hover:cursor-pointer p-1 px-3 bg-gray-200 rounded-md"
                             rel="noopener noreferrer">
                             <Eye strokeWidth={2} size={15} className="text-gray-600" />

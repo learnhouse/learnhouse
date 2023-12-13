@@ -8,7 +8,6 @@ import ChapterElement from './DraggableElements/ChapterElement';
 import PageLoading from '@components/Objects/Loaders/PageLoading';
 import { createChapter, updateCourseOrderStructure } from '@services/courses/chapters';
 import { useRouter } from 'next/navigation';
-import { CourseStructureContext } from 'app/orgs/[orgslug]/dash/courses/course/[courseuuid]/[subpage]/page';
 import { useCourse, useCourseDispatch } from '@components/Contexts/CourseContext';
 import { Hexagon } from 'lucide-react';
 import Modal from '@components/StyledElements/Modal/Modal';
