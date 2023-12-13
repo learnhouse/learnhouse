@@ -1,6 +1,6 @@
 'use client';
 import React from "react";
-import { AuthContext } from "./AuthProvider";
+import { AuthContext } from "./AuthProviderDepreceated";
 import useSWR, { mutate } from "swr";
 import { getAPIUrl } from "@services/config/config";
 import { swrFetcher } from "@services/utils/ts/requests";

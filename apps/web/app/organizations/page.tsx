@@ -5,7 +5,7 @@ import { deleteOrganizationFromBackend } from "@services/organizations/orgs";
 import useSWR, { mutate } from "swr";
 import { swrFetcher } from "@services/utils/ts/requests";
 import { getAPIUrl, getUriWithOrg } from "@services/config/config";
-import AuthProvider from "@components/Security/AuthProvider";
+import AuthProvider from "@components/Security/AuthProviderDepreceated";
 
 const Organizations = () => {
   const { data: organizations, error } = useSWR(`${getAPIUrl()}orgs/user/page/1/limit/10`, swrFetcher)
