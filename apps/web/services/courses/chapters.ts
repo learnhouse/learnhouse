@@ -1,3 +1,4 @@
+import { OrderPayload } from "@components/Dashboard/EditCourseStructure/EditCourseStructure";
 import { getAPIUrl } from "@services/config/config";
 import { RequestBody, RequestBodyWithAuthHeader, errorHandling } from "@services/utils/ts/requests";
 
@@ -21,6 +22,12 @@ export async function updateChaptersMetadata(course_uuid: any, data: any) {
 
 export async function updateChapter(coursechapter_id: any, data: any) {
   const result: any = await fetch(`${getAPIUrl()}chapters/${coursechapter_id}`, RequestBody("PUT", data, null));
+  const res = await errorHandling(result);
+  return res;
+}
+
+export async function updateCourseOrderStructure(course_uuid: any, data: OrderPayload) {
+  const result: any = await fetch(`${getAPIUrl()}chapters/course/${course_uuid}/order`, RequestBody("PUT", data, null));
   const res = await errorHandling(result);
   return res;
 }

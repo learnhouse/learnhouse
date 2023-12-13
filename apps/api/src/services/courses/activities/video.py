@@ -194,7 +194,7 @@ async def create_external_video_activity(
 
     # update chapter
     chapter_activity_object = ChapterActivity(
-        chapter_id=coursechapter.id,  # type: ignore
+        chapter_id=coursechapter.chapter_id,  # type: ignore
         activity_id=activity.id,  # type: ignore
         course_id=coursechapter.course_id,
         org_id=coursechapter.org_id,
