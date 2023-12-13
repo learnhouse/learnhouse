@@ -43,7 +43,6 @@ interface Editor {
   ydoc: any;
   provider: any;
   activity: any;
-  orgslug: string
   course: any;
   org: any;
   setContent: (content: string) => void;
@@ -52,10 +51,10 @@ interface Editor {
 function Editor(props: Editor) {
   const auth: any = React.useContext(AuthContext);
   // remove course_ from course_uuid
-  const course_uuid = props.course.course.course_uuid.substring(7);
+  const course_uuid = props.course.course_uuid.substring(7);
 
-  // remove activity_ from activity_id
-  const activity_id = props.activity.activity_id.substring(9);
+  // remove activity_ from activity_uuid
+  const activity_uuid = props.activity.activity_uuid.substring(9);
 
   // Code Block Languages for Lowlight
   lowlight.register('html', html)
@@ -147,11 +146,11 @@ function Editor(props: Editor) {
                 <EditorInfoLearnHouseLogo width={25} height={25} src={learnhouseIcon} alt="" />
               </Link>
               <Link target="_blank" href={`/course/${course_uuid}/edit`}>
-                <EditorInfoThumbnail src={`${getCourseThumbnailMediaDirectory(props.org?.org_uuid, props.course.course.course_uuid, props.course.course.thumbnail_image)}`} alt=""></EditorInfoThumbnail>
+                <EditorInfoThumbnail src={`${getCourseThumbnailMediaDirectory(props.org?.org_uuid, props.course.course_uuid, props.course.thumbnail_image)}`} alt=""></EditorInfoThumbnail>
               </Link>
               <EditorInfoDocName>
                 {" "}
-                <b>{props.course.course.name}</b> <SlashIcon /> {props.activity.name}{" "}
+                <b>{props.course.name}</b> <SlashIcon /> {props.activity.name}{" "}
               </EditorInfoDocName>
 
             </EditorInfoWrapper>
@@ -162,13 +161,13 @@ function Editor(props: Editor) {
           <EditorUsersSection>
             <EditorUserProfileWrapper>
               {!auth.isAuthenticated && <span>Loading</span>}
-              {auth.isAuthenticated && <Avvvatars value={auth.userInfo.user_object.user_id} style="shape" />}
+              {auth.isAuthenticated && <Avvvatars value={auth.userInfo.user_uuid} style="shape" />}
             </EditorUserProfileWrapper>
             <DividerVerticalIcon style={{ marginTop: "auto", marginBottom: "auto", color: "grey", opacity: '0.5' }} />
             <EditorLeftOptionsSection className="space-x-2 pl-2 pr-3">
               <div className="bg-sky-600 hover:bg-sky-700 transition-all ease-linear px-3 py-2 font-black text-sm shadow text-teal-100 rounded-lg hover:cursor-pointer" onClick={() => props.setContent(editor.getJSON())}> Save </div>
               <ToolTip content="Preview">
-                <Link target="_blank" href={`/course/${course_uuid}/activity/${activity_id}`}>
+                <Link target="_blank" href={`/course/${course_uuid}/activity/${activity_uuid}`}>
                   <div className="flex bg-neutral-600 hover:bg-neutral-700 transition-all ease-linear h-9 px-3 py-2 font-black justify-center items-center text-sm shadow text-neutral-100 rounded-lg hover:cursor-pointer">
                     <Eye className="mx-auto items-center" size={15} />
                   </div>

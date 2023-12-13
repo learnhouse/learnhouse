@@ -10,7 +10,6 @@ interface EditorWrapperProps {
   content: string;
   activity: any;
   course: any
-  orgslug: string;
   org: any;
 }
 
@@ -27,6 +26,7 @@ function EditorWrapper(props: EditorWrapperProps): JSX.Element {
     // setProviderState(provider);
     setIsLoading(false);
   }
+  
 
 
 
@@ -35,7 +35,7 @@ function EditorWrapper(props: EditorWrapperProps): JSX.Element {
     activity.content = content;
 
     toast.promise(
-      updateActivity(activity, activity.activity_id),
+      updateActivity(activity, activity.activity_uuid),
       {
         loading: 'Saving...',
         success: <b>Activity saved!</b>,
@@ -50,7 +50,7 @@ function EditorWrapper(props: EditorWrapperProps): JSX.Element {
   } else {
     return <>
       <Toast></Toast>
-      <Editor org={props.org} orgslug={props.orgslug} course={props.course} activity={props.activity} content={props.content} setContent={setContent} provider={providerState} ydoc={ydocState}></Editor>;
+      <Editor org={props.org} course={props.course} activity={props.activity} content={props.content} setContent={setContent} provider={providerState} ydoc={ydocState}></Editor>;
 
     </>
   }
