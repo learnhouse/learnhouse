@@ -1,5 +1,5 @@
 'use client';
-import EditCourseStructure from '../../../../../../../../components/Dashboard/EditCourseStructure/EditCourseStructure'
+import EditCourseStructure from '../../../../../../../../components/Dashboard/Course/EditCourseStructure/EditCourseStructure'
 import BreadCrumbs from '@components/Dashboard/UI/BreadCrumbs'
 import PageLoading from '@components/Objects/Loaders/PageLoading';
 import ClientComponentSkeleton from '@components/Utils/ClientComp';
@@ -13,7 +13,7 @@ import Link from 'next/link';
 import { CourseOverviewTop } from '@components/Dashboard/UI/CourseOverviewTop';
 import { CSSTransition } from 'react-transition-group';
 import { motion } from 'framer-motion';
-import EditCourseGeneral from '@components/Dashboard/EditCourseGeneral/EditCourseGeneral';
+import EditCourseGeneral from '@components/Dashboard/Course/EditCourseGeneral/EditCourseGeneral';
 import { GalleryVertical, GalleryVerticalEnd, Info } from 'lucide-react';
 
 export type CourseOverviewParams = {
@@ -33,7 +33,6 @@ function CourseOverviewPage({ params }: { params: CourseOverviewParams }) {
 
     return (
         <div className='h-full w-full bg-[#f8f8f8]'>
-             
             <CourseProvider courseuuid={getEntireCourseUUID(params.courseuuid)}>
                 <div className='pl-10 pr-10  tracking-tight bg-[#fcfbfc] shadow-[0px_4px_16px_rgba(0,0,0,0.02)]'>
                     <CourseOverviewTop params={params} />
