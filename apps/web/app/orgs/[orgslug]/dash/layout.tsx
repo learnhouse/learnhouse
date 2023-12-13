@@ -1,4 +1,4 @@
-import LeftMenu from '@components/DashboardPages/UI/LeftMenu'
+import LeftMenu from '@components/Dashboard/UI/LeftMenu'
 import AuthProvider from '@components/Security/AuthProvider'
 import React from 'react'
 
