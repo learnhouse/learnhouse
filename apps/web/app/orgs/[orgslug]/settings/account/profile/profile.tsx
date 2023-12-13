@@ -6,6 +6,8 @@ import { updateProfile } from '@services/settings/profile';
 
 function ProfileClient() {
     const auth: any = React.useContext(AuthContext);
+    
+    
 
     return (
         <div>
@@ -51,7 +53,7 @@ function ProfileClient() {
                                 </label>
                                 <Field
                                     as="textarea"
-                                    className="w-full px-4 py-2 mb-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full h-64 px-4 py-2 mb-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     type="textarea"
                                     name="bio"
                                 />
