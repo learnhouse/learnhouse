@@ -14,7 +14,7 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
     const [name, setName] = React.useState("");
     const [description, setDescription] = React.useState("");
     const [learnings, setLearnings] = React.useState("");
-    const [visibility, setVisibility] = React.useState("");
+    const [visibility, setVisibility] = React.useState(true);
     const [tags, setTags] = React.useState("");
     const [isLoading, setIsLoading] = React.useState(false);
     const [thumbnail, setThumbnail] = React.useState(null) as any;
@@ -45,7 +45,7 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
 
     const handleVisibilityChange = (event: React.ChangeEvent<any>) => {
         setVisibility(event.target.value);
-        console.log(event.target.value);
+        console.log(visibility);
     }
 
     const handleTagsChange = (event: React.ChangeEvent<any>) => {

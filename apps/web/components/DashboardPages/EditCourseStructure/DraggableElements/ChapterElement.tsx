@@ -6,7 +6,7 @@ import { Draggable, Droppable } from 'react-beautiful-dnd';
 import ActivityElement from './ActivityElement';
 import NewActivity from '../Buttons/NewActivityButton';
 import NewActivityButton from '../Buttons/NewActivityButton';
-import { deleteChapter } from '@services/courses/chapters';
+import { deleteChapter, updateChapter } from '@services/courses/chapters';
 import { revalidateTags } from '@services/utils/ts/requests';
 import { useRouter } from 'next/navigation';
 import { getAPIUrl } from '@services/config/config';
@@ -19,8 +19,16 @@ type ChapterElementProps = {
     course_uuid: string
 }
 
+interface ModifiedChapterInterface {
+    chapterId: string;
+    chapterName: string;
+}
+
 function ChapterElement(props: ChapterElementProps) {
     const activities = props.chapter.activities || [];
+    const [modifiedChapter, setModifiedChapter] = React.useState<ModifiedChapterInterface | undefined>(undefined);
+    const [selectedChapter, setSelectedChapter] = React.useState<string | undefined>(undefined);
+
     const router = useRouter();
 
     const deleteChapterUI = async () => {
@@ -30,6 +38,19 @@ function ChapterElement(props: ChapterElementProps) {
         router.refresh();
     };
 
+    async function updateChapterName(chapterId: string) {
+        if (modifiedChapter?.chapterId === chapterId) {
+            setSelectedChapter(undefined);
+            let modifiedChapterCopy = {
+                name: modifiedChapter.chapterName,
+            }
+            await updateChapter(chapterId, modifiedChapterCopy)
+            mutate(`${getAPIUrl()}courses/${props.course_uuid}/meta`);
+            await revalidateTags(['courses'], props.orgslug)
+            router.refresh();
+        }
+    }
+
     return (
         <Draggable
             key={props.chapter.chapter_uuid}
@@ -38,7 +59,7 @@ function ChapterElement(props: ChapterElementProps) {
         >
             {(provided, snapshot) => (
                 <div
-                    className="max-w-screen-2xl mx-auto bg-white rounded-xl shadow-sm px-6 pt-6"
+                    className="ml-10 mr-10 mx-auto bg-white rounded-xl shadow-sm px-6 pt-6"
                     key={props.chapter.chapter_uuid}
                     {...provided.draggableProps}
                     {...provided.dragHandleProps}
@@ -50,8 +71,14 @@ function ChapterElement(props: ChapterElementProps) {
                                 <Hexagon strokeWidth={3} size={16} className="text-neutral-600 " />
                             </div>
                             <div className="flex space-x-2 items-center">
-                                <p className="text-neutral-700 first-letter:uppercase">{props.chapter.name}   </p>
-                                <Pencil size={15} className="text-neutral-600 hover:cursor-pointer" />
+                                {selectedChapter === props.chapter.id ?
+                                    (<div className="chapter-modification-zone bg-neutral-100 py-1 px-4 rounded-lg space-x-3">
+                                        <input type="text" className="bg-transparent outline-none text-sm text-neutral-700" placeholder="Chapter name" value={modifiedChapter ? modifiedChapter?.chapterName : props.chapter.name} onChange={(e) => setModifiedChapter({ chapterId: props.chapter.id, chapterName: e.target.value })} />
+                                        <button onClick={() => updateChapterName(props.chapter.id)} className="bg-transparent text-neutral-700 hover:cursor-pointer hover:text-neutral-900">
+                                            <Save size={15} onClick={() => updateChapterName(props.chapter.id)} />
+                                        </button>
+                                    </div>) : (<p className="text-neutral-700 first-letter:uppercase">{props.chapter.name}</p>)}
+                                <Pencil size={15} onClick={() => setSelectedChapter(props.chapter.id)} className="text-neutral-600 hover:cursor-pointer" />
                             </div>
                         </div>
                         <MoreVertical size={15} className="text-gray-300" />
