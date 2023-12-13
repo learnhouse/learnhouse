@@ -35,12 +35,12 @@ function LeftMenu() {
             className='flex flex-col w-24 bg-black h-screen  text-white shadow-xl'>
             <div className='flex flex-col h-full'>
                 <div className='flex h-20 mt-6'>
-                    <Link className='mx-auto' href={"/dash"}>
+                    <Link className='flex flex-col items-center mx-auto space-y-1' href={"/dash"}>
                         <Image alt="Learnhouse logo" width={40} src={LearnHouseDashboardLogo} />
                     </Link>
                 </div>
                 <div className='flex grow flex-col justify-center space-y-5 items-center mx-auto'>
-                    <ToolTip content={"Back to " + org?.name} slateBlack sideOffset={8} side='right'  >
+                    <ToolTip content={"Back to " + org?.name + "'s Home"} slateBlack sideOffset={8} side='right'  >
                         <Link className='bg-white text-black hover:text-white rounded-lg p-2 hover:bg-white/10 transition-all ease-linear' href={`/`} ><ArrowLeft className='hover:text-white' size={18} /></Link>
                     </ToolTip>
                     <ToolTip content={"Home"} slateBlack sideOffset={8} side='right'  >
@@ -51,15 +51,21 @@ function LeftMenu() {
                     </ToolTip>
                 </div>
                 <div className='flex flex-col mx-auto pb-7 space-y-2'>
-                    <Link href={'/dash/user/settings'} className='py-3'>
-                        <Settings className='mx-auto text-neutral-400 cursor-pointer' size={18} />
-                    </Link>
-                    <div className="flex items-center">
-                        <div className="mx-auto shadow-lg">
-                            <Avvvatars radius={3} border borderColor='white' borderSize={3} size={35} value={auth.user.user_uuid} style="shape" />
-                        </div>
+                    <ToolTip content={auth.user.username+ "'s Settings"} slateBlack sideOffset={8} side='right'  >
+                        <Link href={'/dash/user/settings/general'} className='py-3'>
+                            <Settings className='mx-auto text-neutral-400 cursor-pointer' size={18} />
+                        </Link>
+                    </ToolTip>
+                    <div className="flex items-center flex-col space-y-4">
+                        <ToolTip content={auth.user.username} slateBlack sideOffset={8} side='right'  >
+                            <div className="mx-auto shadow-lg">
+                                <Avvvatars radius={3} border borderColor='white' borderSize={3} size={35} value={auth.user.user_uuid} style="shape" />
+                            </div>
+                        </ToolTip>
+                        <ToolTip content={'Learnhouse Version'} slateBlack sideOffset={8} side='right'  >
+                        <div className='py-1 px-3 bg-white/10 opacity-40 rounded-full text-[10px] uppercase justify-center text-center'>alpha</div>
+                        </ToolTip>
                     </div>
-                    <div className="text-xs px-4 text-gray-200 ">{auth.user.username}</div>
 
                 </div>
             </div>
