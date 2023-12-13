@@ -1,6 +1,6 @@
 from typing import List, Optional
 from sqlmodel import Field, SQLModel
-from src.db.users import User, UserRead
+from src.db.users import UserRead
 from src.db.trails import TrailRead
 from src.db.chapters import ChapterRead
 

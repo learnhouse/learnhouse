@@ -16,7 +16,6 @@ from src.db.chapters import (
     ChapterRead,
     ChapterUpdate,
     ChapterUpdateOrder,
-    DepreceatedChaptersRead,
 )
 from src.services.courses.courses import Course
 from src.services.users.users import PublicUser
@@ -270,7 +269,6 @@ async def DEPRECEATED_get_course_chapters(
     chapters_in_db = await get_course_chapters(request, course.id, db_session, current_user)  # type: ignore
 
     # activities
-    chapter_activityIdsGlobal = []
 
     # chapters
     chapters = {}
@@ -437,7 +435,7 @@ async def reorder_chapters_and_activities(
     # Activities
     ###########
 
-    # Delete ChapterActivities that are not linked to chapter_id and activity_id and org_id and course_id
+    # Delete ChapterActivities that are no longer part of the new order
     statement = (
         select(ChapterActivity)
         .where(
@@ -448,20 +446,36 @@ async def reorder_chapters_and_activities(
     )
     chapter_activities = db_session.exec(statement).all()
 
-    activity_ids_to_keep = [
-        activity_order.activity_id
-        for chapter_order in chapters_order.chapter_order_by_ids
-        for activity_order in chapter_order.activities_order_by_ids
-    ]
-
+    activity_ids_to_delete = []
     for chapter_activity in chapter_activities:
-        if chapter_activity.activity_id not in activity_ids_to_keep:
-            db_session.delete(chapter_activity)
-            db_session.commit()
+        if (
+            chapter_activity.chapter_id not in chapter_ids_to_keep
+            or chapter_activity.activity_id not in activity_ids_to_delete
+        ):
+            activity_ids_to_delete.append(chapter_activity.activity_id)
 
-    # If links do not exists, create them
+    for activity_id in activity_ids_to_delete:
+        statement = (
+            select(ChapterActivity)
+            .where(
+                ChapterActivity.activity_id == activity_id,
+                ChapterActivity.course_id == course.id,
+            )
+            .order_by(ChapterActivity.order)
+        )
+        chapter_activity = db_session.exec(statement).first()
+
+        db_session.delete(chapter_activity)
+        db_session.commit()
+
+    
+    # If links do not exist, create them
+    chapter_activity_map = {}
     for chapter_order in chapters_order.chapter_order_by_ids:
         for activity_order in chapter_order.activities_order_by_ids:
+            if activity_order.activity_id in chapter_activity_map and chapter_activity_map[activity_order.activity_id] != chapter_order.chapter_id:
+                continue
+
             statement = (
                 select(ChapterActivity)
                 .where(
@@ -487,6 +501,8 @@ async def reorder_chapters_and_activities(
                 # Insert ChapterActivity link in DB
                 db_session.add(chapter_activity)
                 db_session.commit()
+
+            chapter_activity_map[activity_order.activity_id] = chapter_order.chapter_id
 
     # Update order of activities
     for chapter_order in chapters_order.chapter_order_by_ids:
