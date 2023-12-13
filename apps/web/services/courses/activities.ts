@@ -57,8 +57,8 @@ export async function deleteActivity(activity_id: any) {
   return res;
 }
 
-export async function getActivityWithAuthHeader(activity_id: any, next: any, access_token: string) {
-  const result = await fetch(`${getAPIUrl()}activities/activity_${activity_id}`, RequestBodyWithAuthHeader("GET", null, next, access_token));
+export async function getActivityWithAuthHeader(activity_uuid: any, next: any, access_token: string) {
+  const result = await fetch(`${getAPIUrl()}activities/activity_${activity_uuid}`, RequestBodyWithAuthHeader("GET", null, next, access_token));
   const res = await result.json();
   return res;
 }
