@@ -6,10 +6,13 @@ import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import useSWR, { mutate } from 'swr';
 import ChapterElement from './DraggableElements/ChapterElement';
 import PageLoading from '@components/Objects/Loaders/PageLoading';
-import { updateCourseOrderStructure } from '@services/courses/chapters';
+import { createChapter, updateCourseOrderStructure } from '@services/courses/chapters';
 import { useRouter } from 'next/navigation';
 import { CourseStructureContext } from 'app/orgs/[orgslug]/dash/courses/course/[courseuuid]/[subpage]/page';
-import { useCourse, useCourseDispatch } from '@components/Dashboard/CourseContext';
+import { useCourse, useCourseDispatch } from '@components/DashboardPages/CourseContext';
+import { Hexagon } from 'lucide-react';
+import Modal from '@components/StyledElements/Modal/Modal';
+import NewChapterModal from '@components/Objects/Modals/Chapters/NewChapter';
 
 type EditCourseStructureProps = {
     orgslug: string,
@@ -41,7 +44,21 @@ const EditCourseStructure = (props: EditCourseStructureProps) => {
     const course_structure = course ? course.courseStructure : {};
     const course_uuid = course ? course.courseStructure.course_uuid : '';
 
+    // New Chapter creation 
+    const [newChapterModal, setNewChapterModal] = useState(false);
 
+    const closeNewChapterModal = async () => {
+        setNewChapterModal(false);
+    };
+
+    // Submit new chapter
+    const submitChapter = async (chapter: any) => {
+        await createChapter(chapter);
+        mutate(`${getAPIUrl()}courses/${course.courseStructure.course_uuid}/meta`);
+        await revalidateTags(['courses'], props.orgslug);
+        router.refresh();
+        setNewChapterModal(false);
+    };
 
     const updateStructure = (result: any) => {
         const { destination, source, draggableId, type } = result;
@@ -99,6 +116,27 @@ const EditCourseStructure = (props: EditCourseStructureProps) => {
                             </div>
                         )}
                     </Droppable>
+
+                    {/* New Chapter Modal */}
+                    <Modal
+                        isDialogOpen={newChapterModal}
+                        onOpenChange={setNewChapterModal}
+                        minHeight="sm"
+                        dialogContent={<NewChapterModal
+                            course={course ? course.courseStructure : null}
+                            closeModal={closeNewChapterModal}
+                            submitChapter={submitChapter}
+                        ></NewChapterModal>}
+                        dialogTitle="Create chapter"
+                        dialogDescription="Add a new chapter to the course"
+                        dialogTrigger={
+                            <div className="mt-4 w-44 max-w-screen-2xl mx-auto bg-cyan-800 text-white rounded-xl shadow-sm px-6 items-center flex flex-row h-10">
+                                <div className='mx-auto flex space-x-2 items-center hover:cursor-pointer'>
+                                    <Hexagon strokeWidth={3} size={16} className="text-white text-sm " />
+                                    <div className='font-bold text-sm'>Add Chapter</div></div>
+                            </div>
+                        }
+                    />
                 </DragDropContext>
 
                 : <></>}

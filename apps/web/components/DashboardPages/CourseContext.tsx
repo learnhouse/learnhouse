@@ -1,4 +1,5 @@
 'use client';
+import PageLoading from '@components/Objects/Loaders/PageLoading';
 import { getAPIUrl } from '@services/config/config';
 import { swrFetcher } from '@services/utils/ts/requests';
 import React, { createContext, useContext, useEffect, useReducer } from 'react'
@@ -26,7 +27,7 @@ export function CourseProvider({ children, courseuuid }: { children: React.React
     }, [courseStructureData]);
 
 
-    if (!courseStructureData) return <div>Loading...</div>
+    if (!courseStructureData) return <PageLoading></PageLoading>
 
 
     return (

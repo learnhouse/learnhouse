@@ -1,4 +1,4 @@
-import { useCourse } from "@components/Dashboard/CourseContext";
+import { useCourse } from "@components/DashboardPages/CourseContext";
 import { useEffect } from "react";
 import BreadCrumbs from "./BreadCrumbs";
 import SaveState from "./SaveState";

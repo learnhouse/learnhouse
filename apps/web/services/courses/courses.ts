@@ -25,7 +25,7 @@ export async function getCourseMetadataWithAuthHeader(course_uuid: any, next: an
 }
 
 export async function updateCourse(course_uuid: any, data: any) {
-  const result: any = await fetch(`${getAPIUrl()}courses/course_${course_uuid}`, RequestBody("PUT", data, null));
+  const result: any = await fetch(`${getAPIUrl()}courses/${course_uuid}`, RequestBody("PUT", data, null));
   const res = await errorHandling(result);
   return res;
 }

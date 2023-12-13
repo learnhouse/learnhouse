@@ -1,11 +1,11 @@
-import { useCourse } from '@components/Dashboard/CourseContext';
+import { useCourse } from '@components/DashboardPages/CourseContext';
 import NewActivityModal from '@components/Objects/Modals/Activities/Create/NewActivity';
 import Modal from '@components/StyledElements/Modal/Modal';
 import { getAPIUrl } from '@services/config/config';
 import { createActivity, createExternalVideoActivity, createFileActivity } from '@services/courses/activities';
 import { getOrganizationContextInfoWithoutCredentials } from '@services/organizations/orgs';
 import { revalidateTags } from '@services/utils/ts/requests';
-import { Sparkles } from 'lucide-react'
+import { Layers, Sparkles } from 'lucide-react'
 import { useRouter } from 'next/navigation';
 import React, { use, useEffect } from 'react'
 import { mutate } from 'swr';
@@ -62,7 +62,7 @@ function NewActivityButton(props: NewActivityButtonProps) {
         , [course])
 
     return (
-        <div>
+        <div className='flex justify-center'>
             <Modal
                 isDialogOpen={newActivityModal}
                 onOpenChange={setNewActivityModal}
@@ -82,9 +82,9 @@ function NewActivityButton(props: NewActivityButtonProps) {
             />
             <div onClick={() => {
                 openNewActivityModal(props.chapterId)
-            }} className="flex space-x-2 items-center py-2 my-3 rounded-md justify-center text-white  bg-black  hover:cursor-pointer">
-                <Sparkles className="" size={17} />
-                <div className="text-sm mx-auto my-auto  items-center font-bold">Add Activity + </div>
+            }} className="flex w-44 h-10 space-x-2 items-center py-2 my-3 rounded-xl justify-center text-white  bg-black  hover:cursor-pointer">
+                <Layers className="" size={17} />
+                <div className="text-sm mx-auto my-auto  items-center font-bold">Add Activity</div>
             </div>
         </div>
     )

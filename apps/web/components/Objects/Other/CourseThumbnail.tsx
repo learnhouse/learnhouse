@@ -50,7 +50,7 @@ const AdminEditsArea = (props: { orgSlug: string, courseId: string, course: any,
         ressourceType="course"
         checkMethod='roles' orgId={props.course.org_id}>
             <div className="flex space-x-1 absolute justify-center mx-auto z-20 bottom-14 left-1/2 transform -translate-x-1/2">
-                <Link href={getUriWithOrg(props.orgSlug, "/course/" + removeCoursePrefix(props.courseId) + "/edit")}>
+                <Link href={getUriWithOrg(props.orgSlug, "/dash/courses/course/" + removeCoursePrefix(props.courseId) + "/general")}>
                     <div
                         className=" hover:cursor-pointer p-1 px-4 bg-orange-600 rounded-xl items-center justify-center flex shadow-xl"
                         rel="noopener noreferrer">
