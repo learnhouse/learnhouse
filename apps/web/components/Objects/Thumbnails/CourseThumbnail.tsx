@@ -2,11 +2,12 @@
 import { useOrg } from '@components/Contexts/OrgContext';
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement';
 import ConfirmationModal from '@components/StyledElements/ConfirmationModal/ConfirmationModal';
+import { DotsHorizontalIcon } from '@radix-ui/react-icons';
 import { getUriWithOrg } from '@services/config/config';
 import { deleteCourseFromBackend } from '@services/courses/courses';
 import { getCourseThumbnailMediaDirectory } from '@services/media/media';
 import { revalidateTags } from '@services/utils/ts/requests';
-import { FileEdit, X } from 'lucide-react';
+import { FileEdit, MoreHorizontal, Settings, X } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React, { use, useEffect } from 'react'
@@ -55,12 +56,12 @@ const AdminEditsArea = (props: { orgSlug: string, courseId: string, course: any,
             action="update"
             ressourceType="course"
             checkMethod='roles' orgId={props.course.org_id}>
-            <div className="flex space-x-1 absolute justify-center mx-auto z-20 bottom-14 left-1/2 transform -translate-x-1/2">
+            <div className="flex space-x-2 absolute z-20 bottom-14 right-[15px] transform">
                 <Link href={getUriWithOrg(props.orgSlug, "/dash/courses/course/" + removeCoursePrefix(props.courseId) + "/general")}>
                     <div
-                        className=" hover:cursor-pointer p-1 px-4 bg-orange-600 rounded-xl items-center justify-center flex shadow-xl"
+                        className=" hover:cursor-pointer p-1 px-4 bg-slate-700 rounded-xl items-center  flex shadow-xl"
                         rel="noopener noreferrer">
-                        <FileEdit size={14} className="text-orange-200 font-bold" />
+                        <Settings size={14} className="text-slate-200 font-bold" />
                     </div>
                 </Link>
                 <ConfirmationModal

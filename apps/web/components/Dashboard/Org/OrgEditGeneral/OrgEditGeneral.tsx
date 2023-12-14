@@ -69,7 +69,6 @@ function OrgEditGeneral(props: any) {
         initialValues={orgValues}
         onSubmit={(values, { setSubmitting }) => {
           setTimeout(() => {
-            alert(JSON.stringify(values, null, 2));
             setSubmitting(false);
             updateOrg(values)
           }, 400);

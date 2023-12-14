@@ -6,7 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import GeneralWrapperStyled from '@components/StyledElements/Wrappers/GeneralWrapper';
 import TypeOfContentTitle from '@components/StyledElements/Titles/TypeOfContentTitle';
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement';
-import CourseThumbnail from '@components/Objects/Other/CourseThumbnail';
+import CourseThumbnail from '@components/Objects/Thumbnails/CourseThumbnail';
 import NewCourseButton from '@components/StyledElements/Buttons/NewCourseButton';
 
 interface CourseProps {
