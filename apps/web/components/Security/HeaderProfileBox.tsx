@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AuthContext } from "./AuthProviderDepreceated";
 import Avvvatars from "avvvatars-react";
 import { GearIcon } from "@radix-ui/react-icons";
+import { Settings } from "lucide-react";
 
 export const HeaderProfileBox = () => {
   const auth: any = React.useContext(AuthContext);
@@ -28,13 +29,15 @@ export const HeaderProfileBox = () => {
         </UnidentifiedArea>
       )}
       {auth.isAuthenticated && (
-        <AccountArea className="-space-x-2">
-          <div className="text-xs px-4 text-gray-600 p-1.5 rounded-full bg-gray-50">{auth.userInfo.username}</div>
-          <div className="flex items-center">
+        <AccountArea className="space-x-0">
+          <div className="flex items-center space-x-2">
+            <div className="text-xs">{auth.userInfo.username} </div>
             <div className="py-4">
-              <Avvvatars size={26} value={auth.userInfo.user_uuid} style="shape" />
+              <div className="shadow-sm rounded-xl">
+              <Avvvatars radius={3} size={30} value={auth.userInfo.user_uuid} style="shape" />
+              </div>
             </div>
-            <Link className="" href={"/dash"}><GearIcon fontSize={26} /></Link>
+            <Link className="text-gray-600" href={"/dash"}><Settings size={14} /></Link>
           </div>
         </AccountArea>
       )}
