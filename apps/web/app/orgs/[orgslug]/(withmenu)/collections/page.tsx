@@ -8,7 +8,7 @@ import { Metadata } from "next";
 import { cookies } from "next/headers";
 import Link from "next/link";
 import { getAccessTokenFromRefreshTokenCookie } from "@services/auth/auth";
-import CollectionThumbnail from "@components/Objects/Other/CollectionThumbnail";
+import CollectionThumbnail from "@components/Objects/Thumbnails/CollectionThumbnail";
 import NewCollectionButton from "@components/StyledElements/Buttons/NewCollectionButton";
 
 type MetadataProps = {
