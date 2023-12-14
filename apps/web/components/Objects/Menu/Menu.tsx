@@ -53,9 +53,9 @@ export const Menu = (props: any) => {
                     <div className="links flex grow">
                         <MenuLinks orgslug={orgslug} />
                     </div>
-                    <div className="profile flex items-center space-x-2">
+                    <div className="profile flex items-center">
 
-                        <Modal
+                        {/* <Modal
                             isDialogOpen={feedbackModal}
                             onOpenChange={setFeedbackModal}
                             minHeight="sm"
@@ -67,7 +67,7 @@ export const Menu = (props: any) => {
                                     <MessageSquareIcon size={12} />
                                 </div>
                             }
-                        />
+                        /> */}
                         <HeaderProfileBox />
                     </div>
                 </div>
