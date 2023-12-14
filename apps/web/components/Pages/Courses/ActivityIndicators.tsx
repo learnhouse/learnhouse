@@ -8,7 +8,6 @@ interface Props {
     course: any
     orgslug: string
     course_uuid: string
-    activity: any
     current_activity?: any
 }
 
