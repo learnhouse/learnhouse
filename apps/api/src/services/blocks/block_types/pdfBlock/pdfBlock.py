@@ -1,5 +1,6 @@
 from datetime import datetime
 from uuid import uuid4
+from src.db.organizations import Organization
 from fastapi import HTTPException, status, UploadFile, Request
 from sqlmodel import Session, select
 from src.db.activities import Activity
@@ -11,9 +12,9 @@ from src.services.users.users import PublicUser
 
 
 async def create_pdf_block(
-    request: Request, pdf_file: UploadFile, activity_id: str, db_session: Session
+    request: Request, pdf_file: UploadFile, activity_uuid: str, db_session: Session
 ):
-    statement = select(Activity).where(Activity.id == activity_id)
+    statement = select(Activity).where(Activity.activity_uuid == activity_uuid)
     activity = db_session.exec(statement).first()
 
     if not activity:
@@ -23,8 +24,9 @@ async def create_pdf_block(
 
     block_type = "pdfBlock"
 
-    # get org_id from activity
-    org_id = activity.org_id
+    # get org_uuid
+    statement = select(Organization).where(Organization.id == activity.org_id)
+    org = db_session.exec(statement).first()
 
     # get course
     statement = select(Course).where(Course.id == activity.course_id)
@@ -41,12 +43,12 @@ async def create_pdf_block(
     block_data = await upload_file_and_return_file_object(
         request,
         pdf_file,
-        activity_id,
+        activity_uuid,
         block_uuid,
         ["pdf"],
         block_type,
-        str(org_id),
-        str(course.id),
+        org.org_uuid,
+        str(course.course_uuid),
     )
 
     # create block
@@ -54,7 +56,7 @@ async def create_pdf_block(
         activity_id=activity.id if activity.id else 0,
         block_type=BlockTypeEnum.BLOCK_DOCUMENT_PDF,
         content=block_data.dict(),
-        org_id=org_id,
+        org_id=org.id if org.id else 0,
         course_id=course.id if course.id else 0,
         block_uuid=block_uuid,
         creation_date=str(datetime.now()),

@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import AuthenticatedClientElement from "@components/Security/AuthenticatedClientElement";
 import { getCourseThumbnailMediaDirectory } from "@services/media/media";
 import { useOrg } from "@components/Contexts/OrgContext";
+import { CourseProvider } from "@components/Contexts/CourseContext";
 
 interface ActivityClientProps {
   activityid: string;
@@ -44,47 +45,49 @@ function ActivityClient(props: ActivityClientProps) {
 
   return (
     <>
-      <GeneralWrapperStyled>
-        <div className="space-y-4 pt-4">
-          <div className="flex space-x-6">
-            <div className="flex">
-              <Link href={getUriWithOrg(orgslug, "") + `/course/${courseuuid}`}>
-                <img className="w-[100px] h-[57px] rounded-md drop-shadow-md" src={`${getCourseThumbnailMediaDirectory(org?.org_uuid, course.course_uuid, course.thumbnail_image)}`} alt="" />
-              </Link>
-            </div>
-            <div className="flex flex-col -space-y-1">
-              <p className="font-bold text-gray-700 text-md">Course </p>
-              <h1 className="font-bold text-gray-950 text-2xl first-letter:uppercase" >{course.name}</h1>
-            </div>
-          </div>
-          <ActivityIndicators course_uuid={courseuuid} current_activity={activityid} activity={activity} orgslug={orgslug} course={course} />
-
-          <div className="flex justify-between items-center">
-            <div className="flex flex-col -space-y-1">
-              <p className="font-bold text-gray-700 text-md">Chapter : {getChapterName(activity.coursechapter_id)}</p>
-              <h1 className="font-bold text-gray-950 text-2xl first-letter:uppercase" >{activity.name}</h1>
-            </div>
-            <div className="flex space-x-2">
-              <AuthenticatedClientElement checkMethod="authentication">
-                <MarkStatus activity={activity} activityid={activityid} course={course} orgslug={orgslug} />
-
-              </AuthenticatedClientElement>
-            </div>
-          </div>
-
-          {activity ? (
-            <div className={`p-7 pt-4 drop-shadow-sm rounded-lg ${activity.activity_type == 'TYPE_DYNAMIC' ? 'bg-white' : 'bg-zinc-950'}`}>
-              <div>
-                {activity.activity_type == "TYPE_DYNAMIC" && <Canva content={activity.content} activity={activity} />}
-                {/* todo : use apis & streams instead of this */}
-                {activity.activity_type == "TYPE_VIDEO" && <VideoActivity course={course} activity={activity} />}
-                {activity.activity_type == "TYPE_DOCUMENT" && <DocumentPdfActivity course={course} activity={activity} />}
+      <CourseProvider courseuuid={course?.course_uuid}>
+        <GeneralWrapperStyled>
+          <div className="space-y-4 pt-4">
+            <div className="flex space-x-6">
+              <div className="flex">
+                <Link href={getUriWithOrg(orgslug, "") + `/course/${courseuuid}`}>
+                  <img className="w-[100px] h-[57px] rounded-md drop-shadow-md" src={`${getCourseThumbnailMediaDirectory(org?.org_uuid, course.course_uuid, course.thumbnail_image)}`} alt="" />
+                </Link>
+              </div>
+              <div className="flex flex-col -space-y-1">
+                <p className="font-bold text-gray-700 text-md">Course </p>
+                <h1 className="font-bold text-gray-950 text-2xl first-letter:uppercase" >{course.name}</h1>
               </div>
             </div>
-          ) : (<div></div>)}
-          {<div style={{ height: "100px" }}></div>}
-        </div>
-      </GeneralWrapperStyled>
+            <ActivityIndicators course_uuid={courseuuid} current_activity={activityid} activity={activity} orgslug={orgslug} course={course} />
+
+            <div className="flex justify-between items-center">
+              <div className="flex flex-col -space-y-1">
+                <p className="font-bold text-gray-700 text-md">Chapter : {getChapterName(activity.coursechapter_id)}</p>
+                <h1 className="font-bold text-gray-950 text-2xl first-letter:uppercase" >{activity.name}</h1>
+              </div>
+              <div className="flex space-x-2">
+                <AuthenticatedClientElement checkMethod="authentication">
+                  <MarkStatus activity={activity} activityid={activityid} course={course} orgslug={orgslug} />
+
+                </AuthenticatedClientElement>
+              </div>
+            </div>
+
+            {activity ? (
+              <div className={`p-7 pt-4 drop-shadow-sm rounded-lg ${activity.activity_type == 'TYPE_DYNAMIC' ? 'bg-white' : 'bg-zinc-950'}`}>
+                <div>
+                  {activity.activity_type == "TYPE_DYNAMIC" && <Canva content={activity.content} activity={activity} />}
+                  {/* todo : use apis & streams instead of this */}
+                  {activity.activity_type == "TYPE_VIDEO" && <VideoActivity course={course} activity={activity} />}
+                  {activity.activity_type == "TYPE_DOCUMENT" && <DocumentPdfActivity course={course} activity={activity} />}
+                </div>
+              </div>
+            ) : (<div></div>)}
+            {<div style={{ height: "100px" }}></div>}
+          </div>
+        </GeneralWrapperStyled>
+      </CourseProvider>
     </>
   );
 }
@@ -110,7 +113,7 @@ export function MarkStatus(props: { activity: any, activityid: string, course: a
   console.log('isActivityCompleted', isActivityCompleted());
 
   return (
-    <>{ isActivityCompleted() ? (
+    <>{isActivityCompleted() ? (
       <div className="bg-teal-600 rounded-md drop-shadow-md flex flex-col p-3 text-sm text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out" >
         <i>
           <Check size={15}></Check>
