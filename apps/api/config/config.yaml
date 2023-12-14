@@ -13,8 +13,8 @@ hosting_config:
   domain: learnhouse.app
   ssl: true
   allowed_origins:
-  - http://localhost:3000
-  - http://localhost:3001
+    - http://localhost:3000
+    - http://localhost:3001
   cookies_config:
     domain: ".localhost"
   allowed_regexp: '\b((?:https?://)[^\s/$.?#].[^\s]*)\b'
@@ -25,4 +25,4 @@ hosting_config:
       endpoint_url: ""
 
 database_config:
-  mongodb_connection_string: mongodb://learnhouse:learnhouse@mongo:27017/
+  sql_connection_string: postgresql://learnhouse:learnhouse@db:5432/learnhouse
