@@ -8,6 +8,7 @@ interface Props {
     course: any
     orgslug: string
     course_uuid: string
+    activity: any
     current_activity?: any
 }
 
@@ -24,15 +25,11 @@ function ActivityIndicators(props: Props) {
 
 
     function isActivityDone(activity: any) {
-        const runs = course.trail.runs;
-        for (let run of runs) {
-            for (let step of run.steps) {
-                if (step.activity_id === activity.id && step.complete === true) {
-                    return false;
-                }
-            }
+        let run = props.course.trail.runs.find((run: any) => run.course_id == props.course.id);
+        if (run) {
+            return run.steps.find((step: any) => step.activity_id == activity.id);
         }
-        return false;
+
     }
 
     function isActivityCurrent(activity: any) {
