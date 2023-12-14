@@ -28,14 +28,14 @@ router = APIRouter()
 async def api_create_image_file_block(
     request: Request,
     file_object: UploadFile,
-    activity_id: str = Form(),
+    activity_uuid: str = Form(),
     db_session=Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ) -> BlockRead:
     """
     Create new image file
     """
-    return await create_image_block(request, file_object, activity_id, db_session)
+    return await create_image_block(request, file_object, activity_uuid, db_session)
 
 
 @router.get("/image")
@@ -60,14 +60,14 @@ async def api_get_image_file_block(
 async def api_create_video_file_block(
     request: Request,
     file_object: UploadFile,
-    activity_id: str = Form(),
+    activity_uuid: str = Form(),
     db_session=Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ) -> BlockRead:
     """
     Create new video file
     """
-    return await create_video_block(request, file_object, activity_id, db_session)
+    return await create_video_block(request, file_object, activity_uuid, db_session)
 
 
 @router.get("/video")
@@ -92,14 +92,14 @@ async def api_get_video_file_block(
 async def api_create_pdf_file_block(
     request: Request,
     file_object: UploadFile,
-    activity_id: str = Form(),
+    activity_uuid: str = Form(),
     db_session=Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ) -> BlockRead:
     """
     Create new pdf file
     """
-    return await create_pdf_block(request, file_object, activity_id, db_session)
+    return await create_pdf_block(request, file_object, activity_uuid, db_session)
 
 
 @router.get("/pdf")

@@ -1,17 +1,21 @@
 import { NodeViewWrapper } from "@tiptap/react";
 import { AlertTriangle, Image, Loader, Video } from "lucide-react";
-import React from "react";
+import React, { useEffect } from "react";
 import styled from "styled-components";
 import { getBackendUrl } from "../../../../../services/config/config";
 import { uploadNewVideoFile } from "../../../../../services/blocks/Video/video";
 import { getActivityBlockMediaDirectory } from "@services/media/media";
 import { UploadIcon } from "@radix-ui/react-icons";
+import { useOrg } from "@components/Contexts/OrgContext";
+import { useCourse } from "@components/Contexts/CourseContext";
 
 function VideoBlockComponents(props: any) {
+  const org = useOrg() as any;
+  const course = useCourse() as any;
   const [video, setVideo] = React.useState(null);
   const [isLoading, setIsLoading] = React.useState(false);
   const [blockObject, setblockObject] = React.useState(props.node.attrs.blockObject);
-  const fileId = blockObject ? `${blockObject.block_data.file_id}.${blockObject.block_data.file_format}` : null;
+  const fileId = blockObject ? `${blockObject.content.file_id}.${blockObject.content.file_format}` : null;
 
   const handleVideoChange = (event: React.ChangeEvent<any>) => {
     setVideo(event.target.files[0]);
@@ -20,13 +24,17 @@ function VideoBlockComponents(props: any) {
   const handleSubmit = async (e: any) => {
     e.preventDefault();
     setIsLoading(true);
-    let object = await uploadNewVideoFile(video, props.extension.options.activity.activity_id);
+    let object = await uploadNewVideoFile(video, props.extension.options.activity.activity_uuid);
     setIsLoading(false);
     setblockObject(object);
     props.updateAttributes({
       blockObject: object,
     });
   };
+
+  useEffect(() => {
+  }
+    , [course, org]);
 
   return (
     <NodeViewWrapper className="block-video">
@@ -50,10 +58,10 @@ function VideoBlockComponents(props: any) {
           <video
             controls
             className="rounded-lg shadow h-96 w-full object-scale-down bg-black"
-            src={`${getActivityBlockMediaDirectory(props.extension.options.activity.org_id,
-              props.extension.options.activity.course_uuid,
-              props.extension.options.activity.activity_id,
-              blockObject.block_id,
+            src={`${getActivityBlockMediaDirectory(org?.org_uuid,
+              course?.courseStructure.course_uuid,
+              props.extension.options.activity.activity_uuid,
+              blockObject.block_uuid,
               blockObject ? fileId : ' ', 'videoBlock')}`}
           ></video>
         </BlockVideo>
