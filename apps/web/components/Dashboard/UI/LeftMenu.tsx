@@ -4,7 +4,7 @@ import { useAuth } from '@components/Security/AuthContext';
 import ToolTip from '@components/StyledElements/Tooltip/Tooltip'
 import LearnHouseDashboardLogo from '@public/dashLogo.png';
 import Avvvatars from 'avvvatars-react';
-import { ArrowLeft, Book, Home, School, Settings } from 'lucide-react'
+import { ArrowLeft, Book, BookCopy, Home, School, Settings } from 'lucide-react'
 import Image from 'next/image';
 import Link from 'next/link'
 import React, { use, useEffect } from 'react'
@@ -52,7 +52,7 @@ function LeftMenu() {
                         <Link className='bg-white/5 rounded-lg p-2 hover:bg-white/10 transition-all ease-linear' href={`/dash`} ><Home size={18} /></Link>
                     </ToolTip>
                     <ToolTip content={"Courses"} slateBlack sideOffset={8} side='right'  >
-                        <Link className='bg-white/5 rounded-lg p-2 hover:bg-white/10 transition-all ease-linear' href={`/dash/courses`} ><Book size={18} /></Link>
+                        <Link className='bg-white/5 rounded-lg p-2 hover:bg-white/10 transition-all ease-linear' href={`/dash/courses`} ><BookCopy size={18} /></Link>
                     </ToolTip>
                     <ToolTip content={"Organization"} slateBlack sideOffset={8} side='right'  >
                         <Link className='bg-white/5 rounded-lg p-2 hover:bg-white/10 transition-all ease-linear' href={`/dash/org/settings/general`} ><School size={18} /></Link>

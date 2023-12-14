@@ -1,7 +1,7 @@
 'use client';
 import BreadCrumbs from '@components/Dashboard/UI/BreadCrumbs'
 import CreateCourseModal from '@components/Objects/Modals/Course/Create/CreateCourse';
-import CourseThumbnail from '@components/Objects/Other/CourseThumbnail';
+import CourseThumbnail from '@components/Objects/Thumbnails/CourseThumbnail';
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement';
 import NewCourseButton from '@components/StyledElements/Buttons/NewCourseButton';
 import Modal from '@components/StyledElements/Modal/Modal';

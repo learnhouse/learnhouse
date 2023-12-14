@@ -57,7 +57,7 @@ function ActivityClient(props: ActivityClientProps) {
               <h1 className="font-bold text-gray-950 text-2xl first-letter:uppercase" >{course.name}</h1>
             </div>
           </div>
-          <ActivityIndicators course_uuid={courseuuid} current_activity={activityid} orgslug={orgslug} course={course} />
+          <ActivityIndicators course_uuid={courseuuid} current_activity={activityid} activity={activity} orgslug={orgslug} course={course} />
 
           <div className="flex justify-between items-center">
             <div className="flex flex-col -space-y-1">
@@ -66,7 +66,7 @@ function ActivityClient(props: ActivityClientProps) {
             </div>
             <div className="flex space-x-2">
               <AuthenticatedClientElement checkMethod="authentication">
-                <MarkStatus activityid={activityid} course={course} orgslug={orgslug} courseid={courseuuid} />
+                <MarkStatus activity={activity} activityid={activityid} course={course} orgslug={orgslug} />
 
               </AuthenticatedClientElement>
             </div>
@@ -91,23 +91,26 @@ function ActivityClient(props: ActivityClientProps) {
 
 
 
-export function MarkStatus(props: { activityid: string, course: any, orgslug: string, courseid: string }) {
+export function MarkStatus(props: { activity: any, activityid: string, course: any, orgslug: string }) {
   const router = useRouter();
-
+  console.log(props.course.trail)
 
   async function markActivityAsCompleteFront() {
-    const trail = await markActivityAsComplete(props.orgslug, props.courseid, props.activityid);
+    const trail = await markActivityAsComplete(props.orgslug, props.course.course_uuid, 'activity_' + props.activityid);
     router.refresh();
-
-    // refresh page (FIX for Next.js BUG)
-    //window.location.reload();
-
   }
 
+  const isActivityCompleted = () => {
+    let run = props.course.trail.runs.find((run: any) => run.course_id == props.course.id);
+    if (run) {
+      return run.steps.find((step: any) => step.activity_id == props.activity.id);
+    }
+  }
+
+  console.log('isActivityCompleted', isActivityCompleted());
+
   return (
-    <>{props.course.trail.activities_marked_complete &&
-      props.course.trail.activities_marked_complete.includes("activity_" + props.activityid) &&
-      props.course.trail.status == "ongoing" ? (
+    <>{ isActivityCompleted() ? (
       <div className="bg-teal-600 rounded-md drop-shadow-md flex flex-col p-3 text-sm text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out" >
         <i>
           <Check size={15}></Check>

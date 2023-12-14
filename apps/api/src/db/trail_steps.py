@@ -2,6 +2,8 @@ from enum import Enum
 from typing import Optional
 from sqlalchemy import JSON, Column
 from sqlmodel import Field, SQLModel
+from sqlalchemy import BigInteger, Column, ForeignKey
+from sqlmodel import Field, SQLModel
 
 
 class TrailStepTypeEnum(str, Enum):
@@ -17,7 +19,9 @@ class TrailStep(SQLModel, table=True):
     grade: str
     data: dict = Field(default={}, sa_column=Column(JSON))
     # foreign keys
-    trailrun_id: int = Field(default=None, foreign_key="trailrun.id")
+    trailrun_id: int = Field(
+        sa_column=Column(BigInteger, ForeignKey("trailrun.id", ondelete="CASCADE"))
+    )
     trail_id: int = Field(default=None, foreign_key="trail.id")
     activity_id: int = Field(default=None, foreign_key="activity.id")
     course_id: int = Field(default=None, foreign_key="course.id")

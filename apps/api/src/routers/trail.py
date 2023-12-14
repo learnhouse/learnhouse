@@ -85,7 +85,7 @@ async def api_remove_course_to_trail(
 @router.post("/add_activity/{activity_uuid}")
 async def api_add_activity_to_trail(
     request: Request,
-    activity_id: int,
+    activity_uuid: str,
     user=Depends(get_current_user),
     db_session=Depends(get_db_session),
 ) -> TrailRead:
@@ -93,5 +93,5 @@ async def api_add_activity_to_trail(
     Add Course to trail
     """
     return await add_activity_to_trail(
-        request, user, activity_id, db_session
+        request, user, activity_uuid, db_session
     )
