@@ -193,7 +193,7 @@ const CourseClient = (props: any) => {
                   </div>
                   <div className="-space-y-2 ">
                     <div className="text-[12px] text-neutral-400 font-semibold">Author</div>
-                    <div className="text-xl font-bold text-neutral-800">{course.authors[0].first_name} {course.authors[0].last_name}</div>
+                    <div className="text-xl font-bold text-neutral-800">{course.authors[0].first_name} {course.authors[0].last_name} { (course.authors[0].first_name && course.authors[0].last_name) ? course.authors[0].first_name + ' ' + course.authors[0].last_name : course.authors[0].username }</div>
                   </div>
                 </div>
               }
