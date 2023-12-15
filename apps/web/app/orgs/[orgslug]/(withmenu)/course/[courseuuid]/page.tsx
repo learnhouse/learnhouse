@@ -39,10 +39,10 @@ export async function generateMetadata(
         },
         openGraph: {
             title: course_meta.name + ` — ${org.name}`,
-            description: course_meta.description,
+            description: course_meta.description ? course_meta.description : '',
             type: 'article',
-            publishedTime: course_meta.creation_date,
-            tags: course_meta.learnings,
+            publishedTime: course_meta.creation_date ? course_meta.creation_date : '',
+            tags: course_meta.learnings ? course_meta.learnings : [],
         },
     };
 }

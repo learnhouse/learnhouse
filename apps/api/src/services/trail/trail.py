@@ -96,16 +96,42 @@ async def get_user_trails(
     return trail_read
 
 
-async def get_user_trail_with_orgid(
-    request: Request, user: PublicUser | AnonymousUser, org_id: int, db_session: Session
-) -> TrailRead:
+async def check_trail_presence(
+    org_id: int,
+    user_id: int,
+    request: Request,
+    user: PublicUser,
+    db_session: Session,
+):
     statement = select(Trail).where(Trail.org_id == org_id, Trail.user_id == user.id)
     trail = db_session.exec(statement).first()
 
     if not trail:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Trail not found"
+        trail = await create_user_trail(
+            request,
+            user,
+            TrailCreate(
+                org_id=org_id,
+                user_id=user.id,
+            ),
+            db_session,
         )
+        return trail
+
+    return trail
+
+
+async def get_user_trail_with_orgid(
+    request: Request, user: PublicUser, org_id: int, db_session: Session
+) -> TrailRead:
+    
+    trail = await check_trail_presence(
+        org_id=org_id,
+        user_id=user.id,
+        request=request,
+        user=user,
+        db_session=db_session,
+    )
 
     statement = select(TrailRun).where(TrailRun.trail_id == trail.id)
     trail_runs = db_session.exec(statement).all()
@@ -172,15 +198,13 @@ async def add_activity_to_trail(
             status_code=status.HTTP_404_NOT_FOUND, detail="Course not found"
         )
 
-    statement = select(Trail).where(
-        Trail.org_id == course.org_id, Trail.user_id == user.id
+    trail = await check_trail_presence(
+        org_id=course.org_id,
+        user_id=user.id,
+        request=request,
+        user=user,
+        db_session=db_session,
     )
-    trail = db_session.exec(statement).first()
-
-    if not trail:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Trail not found"
-        )
 
     statement = select(TrailRun).where(
         TrailRun.trail_id == trail.id, TrailRun.course_id == course.id
@@ -208,7 +232,7 @@ async def add_activity_to_trail(
     if not trailstep:
         trailstep = TrailStep(
             trailrun_id=trailrun.id if trailrun.id is not None else 0,
-            activity_id=activity.id,
+            activity_id=activity.id if activity.id is not None else 0,
             course_id=course.id if course.id is not None else 0,
             trail_id=trail.id if trail.id is not None else 0,
             org_id=course.org_id,
@@ -306,7 +330,8 @@ async def add_course_to_trail(
     trail_runs = db_session.exec(statement).all()
 
     trail_runs = [
-        TrailRunRead(**trail_run.__dict__, course={}, steps=[], course_total_steps=0 ) for trail_run in trail_runs
+        TrailRunRead(**trail_run.__dict__, course={}, steps=[], course_total_steps=0)
+        for trail_run in trail_runs
     ]
 
     for trail_run in trail_runs:
@@ -374,7 +399,8 @@ async def remove_course_from_trail(
     trail_runs = db_session.exec(statement).all()
 
     trail_runs = [
-        TrailRunRead(**trail_run.__dict__, course={}, steps=[], course_total_steps=0    ) for trail_run in trail_runs
+        TrailRunRead(**trail_run.__dict__, course={}, steps=[], course_total_steps=0)
+        for trail_run in trail_runs
     ]
 
     for trail_run in trail_runs:
