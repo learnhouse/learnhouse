@@ -47,6 +47,7 @@ class HostingConfig(BaseModel):
 
 class DatabaseConfig(BaseModel):
     sql_connection_string: Optional[str]
+    mongo_connection_string: Optional[str]
 
 
 class LearnHouseConfig(BaseModel):
@@ -105,9 +106,7 @@ def get_learnhouse_config() -> LearnHouseConfig:
         env_allowed_origins = env_allowed_origins.split(",")
     env_allowed_regexp = os.environ.get("LEARNHOUSE_ALLOWED_REGEXP")
     env_self_hosted = os.environ.get("LEARNHOUSE_SELF_HOSTED")
-    env_sql_connection_string = os.environ.get(
-        "LEARNHOUSE_SQL_CONNECTION_STRING"
-    )
+    env_sql_connection_string = os.environ.get("LEARNHOUSE_SQL_CONNECTION_STRING")
 
     # Sentry Config
     env_sentry_dsn = os.environ.get("LEARNHOUSE_SENTRY_DSN")
@@ -170,6 +169,10 @@ def get_learnhouse_config() -> LearnHouseConfig:
         "database_config", {}
     ).get("sql_connection_string")
 
+    mongo_connection_string = yaml_config.get("database_config", {}).get(
+        "mongo_connection_string"
+    )
+
     # Sentry config
     # check if the sentry config is provided in the YAML file
     sentry_config_verif = (
@@ -210,7 +213,8 @@ def get_learnhouse_config() -> LearnHouseConfig:
         content_delivery=content_delivery,
     )
     database_config = DatabaseConfig(
-        sql_connection_string=sql_connection_string
+        sql_connection_string=sql_connection_string,
+        mongo_connection_string=mongo_connection_string,
     )
 
     # Create LearnHouseConfig object

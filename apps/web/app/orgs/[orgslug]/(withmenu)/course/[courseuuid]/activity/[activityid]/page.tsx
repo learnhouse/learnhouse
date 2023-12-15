@@ -41,7 +41,6 @@ export async function generateMetadata(
         openGraph: {
             title: activity.name + ` — ${course_meta.name} Course`,
             description: course_meta.description,
-            type: activity.type === 'video' ? 'video.other' : 'article',
             publishedTime: course_meta.creation_date,
             tags: course_meta.learnings,
         },
