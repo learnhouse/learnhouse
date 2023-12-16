@@ -8,6 +8,7 @@ import { getNewAccessTokenUsingRefreshToken, getUserInfo } from "@services/auth/
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/router";
 import path from "path";
+import { Settings } from "lucide-react";
 
 export interface Auth {
   access_token: string;
@@ -92,7 +93,7 @@ function ProfileArea() {
           <div>
             <Avvvatars value={auth.userInfo.user_object.user_id} style="shape" />
           </div>
-          <Link href={"/settings"}><GearIcon /></Link>
+          <Link href={"/dash"}><Settings /></Link>
         </AccountArea>
       )}
     </ProfileAreaStyled>
@@ -104,22 +105,7 @@ const AccountArea = styled.div`
   display: flex;
   place-items: center;
 
-  a{
-    // center the gear icon
-    display: flex;
-    place-items: center;
-    place-content: center;
-    width: 29px;
-    height: 29px;
-    border-radius: 19px;
-    background: #F5F5F5;
-
-    // hover effect
-    &:hover{
-      background: #E5E5E5;
-
-    }
-  }
+  
 
   div {
     margin-right: 10px;

@@ -24,10 +24,16 @@ export async function getOrganizationContextInfo(org_slug: any, next: any) {
   return res;
 }
 
+export async function getOrganizationContextInfoWithId(org_id: any, next: any) {
+  const result = await fetch(`${getAPIUrl()}orgs/${org_id}`, RequestBody("GET", null, next));
+  const res = await errorHandling(result);
+  return res;
+}
+
 export async function getOrganizationContextInfoWithoutCredentials(org_slug: any, next: any) {
   let HeadersConfig = new Headers({ "Content-Type": "application/json" });
   let options: any = {
-    method: 'GET',
+    method: "GET",
     headers: HeadersConfig,
     redirect: "follow",
     // Next.js

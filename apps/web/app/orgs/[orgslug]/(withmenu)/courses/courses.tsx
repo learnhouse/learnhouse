@@ -6,7 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import GeneralWrapperStyled from '@components/StyledElements/Wrappers/GeneralWrapper';
 import TypeOfContentTitle from '@components/StyledElements/Titles/TypeOfContentTitle';
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement';
-import CourseThumbnail from '@components/Objects/Other/CourseThumbnail';
+import CourseThumbnail from '@components/Objects/Thumbnails/CourseThumbnail';
 import NewCourseButton from '@components/StyledElements/Buttons/NewCourseButton';
 
 interface CourseProps {
@@ -32,7 +32,10 @@ function Courses(props: CourseProps) {
 
                 <div className='flex flex-wrap justify-between'>
                     <TypeOfContentTitle title="Courses" type="cou" />
-                    <AuthenticatedClientElement checkMethod='roles' orgId={props.org_id}>
+                    <AuthenticatedClientElement checkMethod='roles'
+                        action='create'
+                        ressourceType='course'
+                        orgId={props.org_id}>
                         <Modal
                             isDialogOpen={newCourseModal}
                             onOpenChange={setNewCourseModal}
@@ -56,7 +59,7 @@ function Courses(props: CourseProps) {
 
                 <div className="flex flex-wrap">
                     {courses.map((course: any) => (
-                        <div className="px-3" key={course.course_id}>
+                        <div className="px-3" key={course.course_uuid}>
                             <CourseThumbnail course={course} orgslug={orgslug} />
                         </div>
                     ))}
@@ -73,7 +76,10 @@ function Courses(props: CourseProps) {
                                     <h1 className="text-3xl font-bold text-gray-600">No courses yet</h1>
                                     <p className="text-lg text-gray-400">Create a course to add content</p>
                                 </div>
-                                <AuthenticatedClientElement checkMethod='roles' orgId={props.org_id}>
+                                <AuthenticatedClientElement
+                                    action='create'
+                                    ressourceType='course'
+                                    checkMethod='roles' orgId={props.org_id}>
                                     <Modal
                                         isDialogOpen={newCourseModal}
                                         onOpenChange={setNewCourseModal}

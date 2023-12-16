@@ -1,27 +1,23 @@
+from datetime import datetime
 from typing import List, Literal
 from uuid import uuid4
-from pydantic import BaseModel
-from src.security.rbac.rbac import authorization_verify_based_on_roles_and_authorship, authorization_verify_if_user_is_anon
+from sqlmodel import Session, select
+from src.db.users import AnonymousUser
+from src.security.rbac.rbac import (
+    authorization_verify_based_on_roles_and_authorship,
+    authorization_verify_if_user_is_anon,
+)
+from src.db.collections import (
+    Collection,
+    CollectionCreate,
+    CollectionRead,
+    CollectionUpdate,
+)
+from src.db.collections_courses import CollectionCourse
+from src.db.courses import Course
 from src.services.users.users import PublicUser
 from fastapi import HTTPException, status, Request
 
-#### Classes ####################################################
-
-
-class Collection(BaseModel):
-    name: str
-    description: str
-    courses: List[str]  # course_id
-    public: bool
-    org_id: str  # org_id
-
-
-class CollectionInDB(Collection):
-    collection_id: str
-    authors: List[str]  # user_id
-
-
-#### Classes ####################################################
 
 ####################################################
 # CRUD
@@ -29,134 +25,181 @@ class CollectionInDB(Collection):
 
 
 async def get_collection(
-    request: Request, collection_id: str, current_user: PublicUser
-):
-    collections = request.app.db["collections"]
-
-    collection = await collections.find_one({"collection_id": collection_id})
-
-    # verify collection rights
-    await verify_collection_rights(
-        request, collection_id, current_user, "read", collection["org_id"]
-    )
+    request: Request, collection_uuid: str, current_user: PublicUser, db_session: Session
+) -> CollectionRead:
+    statement = select(Collection).where(Collection.collection_uuid == collection_uuid)
+    collection = db_session.exec(statement).first()
 
     if not collection:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Collection does not exist"
         )
 
-    collection = Collection(**collection)
+    # RBAC check
+    await rbac_check(
+        request, collection.collection_uuid, current_user, "read", db_session
+    )
 
-    # add courses to collection
-    courses = request.app.db["courses"]
-    courseids = [course for course in collection.courses]
+    # get courses in collection
+    statement = (
+        select(Course)
+        .join(CollectionCourse, Course.id == CollectionCourse.course_id)
+        .distinct(Course.id)
+    )
+    courses = db_session.exec(statement).all()
 
-    collection.courses = []
-    collection.courses = courses.find({"course_id": {"$in": courseids}}, {"_id": 0})
-
-    collection.courses = [
-        course for course in await collection.courses.to_list(length=100)
-    ]
+    collection = CollectionRead(**collection.dict(), courses=courses)
 
     return collection
 
 
 async def create_collection(
-    request: Request, collection_object: Collection, current_user: PublicUser
-):
-    collections = request.app.db["collections"]
+    request: Request,
+    collection_object: CollectionCreate,
+    current_user: PublicUser,
+    db_session: Session,
+) -> CollectionRead:
+    collection = Collection.from_orm(collection_object)
 
-    # find if collection already exists using name
-    isCollectionNameAvailable = await collections.find_one(
-        {"name": collection_object.name}
+    # RBAC check
+    await rbac_check(request, "collection_x", current_user, "create", db_session)
+
+    # Complete the collection object
+    collection.collection_uuid = f"collection_{uuid4()}"
+    collection.creation_date = str(datetime.now())
+    collection.update_date = str(datetime.now())
+
+    # Add collection to database
+    db_session.add(collection)
+    db_session.commit()
+
+    db_session.refresh(collection)
+
+    # Link courses to collection
+    if collection:
+        for course_id in collection_object.courses:
+            collection_course = CollectionCourse(
+                collection_id=int(collection.id),  # type: ignore
+                course_id=course_id,
+                org_id=int(collection_object.org_id),
+                creation_date=str(datetime.now()),
+                update_date=str(datetime.now()),
+            )
+            # Add collection_course to database
+            db_session.add(collection_course)
+
+    db_session.commit()
+    db_session.refresh(collection)
+
+    # Get courses once again
+    statement = (
+        select(Course)
+        .join(CollectionCourse, Course.id == CollectionCourse.course_id)
+        .distinct(Course.id)
     )
+    courses = db_session.exec(statement).all()
 
-    # TODO
-    # await verify_collection_rights("*", current_user, "create")
+    collection = CollectionRead(**collection.dict(), courses=courses)
 
-    if isCollectionNameAvailable:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Collection name already exists",
-        )
-
-    # generate collection_id with uuid4
-    collection_id = str(f"collection_{uuid4()}")
-
-    collection = CollectionInDB(
-        collection_id=collection_id,
-        authors=[current_user.user_id],
-        **collection_object.dict(),
-    )
-
-    collection_in_db = await collections.insert_one(collection.dict())
-
-    if not collection_in_db:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Unavailable database",
-        )
-
-    return collection.dict()
+    return CollectionRead.from_orm(collection)
 
 
 async def update_collection(
     request: Request,
-    collection_object: Collection,
-    collection_id: str,
+    collection_object: CollectionUpdate,
+    collection_uuid: str,
     current_user: PublicUser,
-):
-    # verify collection rights
-
-    collections = request.app.db["collections"]
-
-    collection = await collections.find_one({"collection_id": collection_id})
-
-    await verify_collection_rights(
-        request, collection_id, current_user, "update", collection["org_id"]
-    )
+    db_session: Session,
+) -> CollectionRead:
+    statement = select(Collection).where(Collection.collection_uuid == collection_uuid)
+    collection = db_session.exec(statement).first()
 
     if not collection:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Collection does not exist"
         )
 
-    updated_collection = CollectionInDB(
-        collection_id=collection_id, **collection_object.dict()
+    # RBAC check
+    await rbac_check(
+        request, collection.collection_uuid, current_user, "update", db_session
     )
 
-    await collections.update_one(
-        {"collection_id": collection_id}, {"$set": updated_collection.dict()}
+    courses = collection_object.courses
+
+    del collection_object.courses
+
+    # Update only the fields that were passed in
+    for var, value in vars(collection_object).items():
+        if value is not None:
+            setattr(collection, var, value)
+
+    collection.update_date = str(datetime.now())
+
+    # Update only the fields that were passed in
+    for var, value in vars(collection_object).items():
+        if value is not None:
+            setattr(collection, var, value)
+
+    statement = select(CollectionCourse).where(
+        CollectionCourse.collection_id == collection.id
+    )
+    collection_courses = db_session.exec(statement).all()
+
+    # Delete all collection_courses
+    for collection_course in collection_courses:
+        db_session.delete(collection_course)
+
+    # Add new collection_courses
+    for course in courses or []:
+        collection_course = CollectionCourse(
+            collection_id=int(collection.id),  # type: ignore
+            course_id=int(course),
+            org_id=int(collection.org_id),
+            creation_date=str(datetime.now()),
+            update_date=str(datetime.now()),
+        )
+        # Add collection_course to database
+        db_session.add(collection_course)
+
+    db_session.commit()
+    db_session.refresh(collection)
+
+    # Get courses once again
+    statement = (
+        select(Course)
+        .join(CollectionCourse, Course.id == CollectionCourse.course_id)
+        .distinct(Course.id)
     )
 
-    return Collection(**updated_collection.dict())
+    courses = db_session.exec(statement).all()
+
+    collection = CollectionRead(**collection.dict(), courses=courses)
+
+    return collection
 
 
 async def delete_collection(
-    request: Request, collection_id: str, current_user: PublicUser
+    request: Request, collection_uuid: str, current_user: PublicUser, db_session: Session
 ):
-    collections = request.app.db["collections"]
-
-    collection = await collections.find_one({"collection_id": collection_id})
-
-    await verify_collection_rights(
-        request, collection_id, current_user, "delete", collection["org_id"]
-    )
+    statement = select(Collection).where(Collection.collection_uuid == collection_uuid)
+    collection = db_session.exec(statement).first()
 
     if not collection:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Collection does not exist"
+            status_code=404,
+            detail="Collection not found",
         )
 
-    isDeleted = await collections.delete_one({"collection_id": collection_id})
+    # RBAC check
+    await rbac_check(
+        request, collection.collection_uuid, current_user, "delete", db_session
+    )
 
-    if isDeleted:
-        return {"detail": "collection deleted"}
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Unavailable database",
-        )
+    # delete collection from database
+    db_session.delete(collection)
+    db_session.commit()
+
+    return {"detail": "Collection deleted"}
 
 
 ####################################################
@@ -167,76 +210,55 @@ async def delete_collection(
 async def get_collections(
     request: Request,
     org_id: str,
-    current_user: PublicUser,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
     page: int = 1,
     limit: int = 10,
-):
-    collections = request.app.db["collections"]
+) -> List[CollectionRead]:
+    # RBAC check
+    await rbac_check(request, "collection_x", current_user, "read", db_session)
+
+    statement = (
+        select(Collection).where(Collection.org_id == org_id).distinct(Collection.id)
+    )
+    collections = db_session.exec(statement).all()
 
 
-    if current_user.user_id == "anonymous":
-        all_collections = collections.find(
-            {"org_id": org_id, "public": True}, {"_id": 0}
+
+    collections_with_courses = []
+    for collection in collections:
+        statement = (
+            select(Course)
+            .join(CollectionCourse, Course.id == CollectionCourse.course_id)
+            .distinct(Course.id)
         )
-    else:
-        # get all collections from database without ObjectId
-        all_collections = (
-            collections.find({"org_id": org_id})
-            .sort("name", 1)
-            .skip(10 * (page - 1))
-            .limit(limit)
-        )
+        courses = db_session.exec(statement).all()
 
-    # create list of collections and include courses in each collection
-    collections_list = []
-    for collection in await all_collections.to_list(length=100):
-        collection = CollectionInDB(**collection)
-        collections_list.append(collection)
+        collection = CollectionRead(**collection.dict(), courses=courses)
+        collections_with_courses.append(collection)
 
-        collection_courses = [course for course in collection.courses]
-        # add courses to collection
-        courses = request.app.db["courses"]
-        collection.courses = []
-        collection.courses = courses.find(
-            {"course_id": {"$in": collection_courses}}, {"_id": 0}
-        )
-
-        collection.courses = [
-            course for course in await collection.courses.to_list(length=100)
-        ]
-
-    return collections_list
+    return collections_with_courses
 
 
-#### Security ####################################################
+## 🔒 RBAC Utils ##
 
 
-async def verify_collection_rights(
+async def rbac_check(
     request: Request,
-    collection_id: str,
-    current_user: PublicUser,
+    course_id: str,
+    current_user: PublicUser | AnonymousUser,
     action: Literal["create", "read", "update", "delete"],
-    org_id: str,
+    db_session: Session,
 ):
-    collections = request.app.db["collections"]
-    users = request.app.db["users"]
-    user = await users.find_one({"user_id": current_user.user_id})
-    collection = await collections.find_one({"collection_id": collection_id})
-
-    if not collection and action != "create" and collection_id != "*":
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Collection does not exist"
-        )
-
-    # Collections are public by default for now
-    if current_user.user_id == "anonymous" and action == "read":
-        return True
-
-    await authorization_verify_if_user_is_anon(current_user.user_id)
+    await authorization_verify_if_user_is_anon(current_user.id)
 
     await authorization_verify_based_on_roles_and_authorship(
-        request, current_user.user_id, action, user["roles"], collection_id
+        request,
+        current_user.id,
+        action,
+        course_id,
+        db_session,
     )
 
 
-#### Security ####################################################
+## 🔒 RBAC Utils ##

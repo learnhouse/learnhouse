@@ -6,8 +6,8 @@ import { RequestBody, RequestBodyWithAuthHeader, errorHandling } from "@services
  GET requests are called from the frontend using SWR (https://swr.vercel.app/)
 */
 
-export async function deleteCollection(collection_id: any) {
-  const result: any = await fetch(`${getAPIUrl()}collections/${collection_id}`, RequestBody("DELETE", null, null));
+export async function deleteCollection(collection_uuid: any) {
+  const result: any = await fetch(`${getAPIUrl()}collections/${collection_uuid}`, RequestBody("DELETE", null, null));
   const res = await errorHandling(result);
   return res;
 }
@@ -20,14 +20,14 @@ export async function createCollection(collection: any) {
 }
 
 // Get a colletion by id
-export async function getCollectionById(collection_id: any) {
-  const result: any = await fetch(`${getAPIUrl()}collections/${collection_id}`, { next: { revalidate: 10 } });
+export async function getCollectionById(collection_uuid: any) {
+  const result: any = await fetch(`${getAPIUrl()}collections/${collection_uuid}`, { next: { revalidate: 10 } });
   const res = await errorHandling(result);
   return res;
 }
 
-export async function getCollectionByIdWithAuthHeader(collection_id: any, access_token: string, next: any) {
-  const result: any = await fetch(`${getAPIUrl()}collections/collection_${collection_id}`, RequestBodyWithAuthHeader("GET", null, next, access_token));
+export async function getCollectionByIdWithAuthHeader(collection_uuid: any, access_token: string, next: any) {
+  const result: any = await fetch(`${getAPIUrl()}collections/collection_${collection_uuid}`, RequestBodyWithAuthHeader("GET", null, next, access_token));
   const res = await errorHandling(result);
   return res;
 }
@@ -41,7 +41,7 @@ export async function getOrgCollections() {
 }
 
 export async function getOrgCollectionsWithAuthHeader(org_id: string, access_token: string, next: any) {
-  const result: any = await fetch(`${getAPIUrl()}collections/org_id/${org_id}/page/1/limit/10`, RequestBodyWithAuthHeader("GET", null, next, access_token));
+  const result: any = await fetch(`${getAPIUrl()}collections/org/${org_id}/page/1/limit/10`, RequestBodyWithAuthHeader("GET", null, next, access_token));
   const res = await errorHandling(result);
   return res;
 }

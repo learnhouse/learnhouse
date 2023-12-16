@@ -1,367 +1,551 @@
 from datetime import datetime
 from typing import List, Literal
 from uuid import uuid4
-from pydantic import BaseModel
-from src.security.auth import non_public_endpoint
+from sqlmodel import Session, select
+from src.db.users import AnonymousUser
 from src.security.rbac.rbac import (
-    authorization_verify_based_on_roles,
     authorization_verify_based_on_roles_and_authorship,
-    authorization_verify_if_element_is_public,
     authorization_verify_if_user_is_anon,
 )
+from src.db.course_chapters import CourseChapter
+from src.db.activities import Activity, ActivityRead
+from src.db.chapter_activities import ChapterActivity
+from src.db.chapters import (
+    Chapter,
+    ChapterCreate,
+    ChapterRead,
+    ChapterUpdate,
+    ChapterUpdateOrder,
+)
 from src.services.courses.courses import Course
-from src.services.courses.activities.activities import ActivityInDB
 from src.services.users.users import PublicUser
 from fastapi import HTTPException, status, Request
 
-
-class CourseChapter(BaseModel):
-    name: str
-    description: str
-    activities: list
-
-
-class CourseChapterInDB(CourseChapter):
-    coursechapter_id: str
-    course_id: str
-    creationDate: str
-    updateDate: str
-
-
-# Frontend
-class CourseChapterMetaData(BaseModel):
-    chapterOrder: List[str]
-    chapters: dict
-    activities: object
-
-
-#### Classes ####################################################
 
 ####################################################
 # CRUD
 ####################################################
 
 
-async def create_coursechapter(
+async def create_chapter(
     request: Request,
-    coursechapter_object: CourseChapter,
-    course_id: str,
-    current_user: PublicUser,
-):
-    courses = request.app.db["courses"]
-    users = request.app.db["users"]
-    # get course org_id and verify rights
-    await courses.find_one({"course_id": course_id})
-    user = await users.find_one({"user_id": current_user.user_id})
+    chapter_object: ChapterCreate,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+) -> ChapterRead:
+    chapter = Chapter.from_orm(chapter_object)
 
-    # generate coursechapter_id with uuid4
-    coursechapter_id = str(f"coursechapter_{uuid4()}")
+    # Get COurse
+    statement = select(Course).where(Course.id == chapter_object.course_id)
 
-    hasRoleRights = await authorization_verify_based_on_roles(
-        request, current_user.user_id, "create", user["roles"], course_id
+    course = db_session.exec(statement).one()
+
+    # RBAC check
+    await rbac_check(request, "chapter_x", current_user, "create", db_session)
+
+    # complete chapter object
+    chapter.course_id = chapter_object.course_id
+    chapter.chapter_uuid = f"chapter_{uuid4()}"
+    chapter.creation_date = str(datetime.now())
+    chapter.update_date = str(datetime.now())
+    chapter.org_id = course.org_id
+
+    # Find the last chapter in the course and add it to the list
+    statement = (
+        select(CourseChapter)
+        .where(CourseChapter.course_id == chapter.course_id)
+        .order_by(CourseChapter.order)
     )
+    course_chapters = db_session.exec(statement).all()
 
-    if not hasRoleRights:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Roles : Insufficient rights to perform this action",
+    # get last chapter order
+    last_order = course_chapters[-1].order if course_chapters else 0
+    to_be_used_order = last_order + 1
+
+    # Add chapter to database
+    db_session.add(chapter)
+    db_session.commit()
+    db_session.refresh(chapter)
+
+    chapter = ChapterRead(**chapter.dict(), activities=[])
+
+    # Check if COurseChapter link exists
+
+    statement = (
+        select(CourseChapter)
+        .where(CourseChapter.chapter_id == chapter.id)
+        .where(CourseChapter.course_id == chapter.course_id)
+        .where(CourseChapter.order == to_be_used_order)
+    )
+    course_chapter = db_session.exec(statement).first()
+
+    if not course_chapter:
+        # Add CourseChapter link
+        course_chapter = CourseChapter(
+            course_id=chapter.course_id,
+            chapter_id=chapter.id,
+            org_id=chapter.org_id,
+            creation_date=str(datetime.now()),
+            update_date=str(datetime.now()),
+            order=to_be_used_order,
         )
 
-    coursechapter = CourseChapterInDB(
-        coursechapter_id=coursechapter_id,
-        creationDate=str(datetime.now()),
-        updateDate=str(datetime.now()),
-        course_id=course_id,
-        **coursechapter_object.dict(),
-    )
+        # Insert CourseChapter link in DB
+        db_session.add(course_chapter)
+        db_session.commit()
 
-    courses.update_one(
-        {"course_id": course_id},
-        {
-            "$addToSet": {
-                "chapters": coursechapter_id,
-                "chapters_content": coursechapter.dict(),
-            }
-        },
-    )
-
-    return coursechapter.dict()
+    return chapter
 
 
-async def get_coursechapter(
-    request: Request, coursechapter_id: str, current_user: PublicUser
-):
-    courses = request.app.db["courses"]
-
-    coursechapter = await courses.find_one(
-        {"chapters_content.coursechapter_id": coursechapter_id}
-    )
-
-    if coursechapter:
-        # verify course rights
-        await verify_rights(request, coursechapter["course_id"], current_user, "read")
-        coursechapter = CourseChapter(**coursechapter)
-
-        return coursechapter
-
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="CourseChapter does not exist"
-        )
-
-
-async def update_coursechapter(
+async def get_chapter(
     request: Request,
-    coursechapter_object: CourseChapter,
-    coursechapter_id: str,
-    current_user: PublicUser,
-):
-    courses = request.app.db["courses"]
+    chapter_id: int,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+) -> ChapterRead:
+    statement = select(Chapter).where(Chapter.id == chapter_id)
+    chapter = db_session.exec(statement).first()
 
-    coursechapter = await courses.find_one(
-        {"chapters_content.coursechapter_id": coursechapter_id}
+    if not chapter:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="Chapter does not exist"
+        )
+
+    # RBAC check
+    await rbac_check(request, chapter.chapter_uuid, current_user, "read", db_session)
+
+    # Get activities for this chapter
+    statement = (
+        select(Activity)
+        .join(ChapterActivity, Activity.id == ChapterActivity.activity_id)
+        .where(ChapterActivity.chapter_id == chapter_id)
+        .distinct(Activity.id)
     )
 
-    if coursechapter:
-        # verify course rights
-        await verify_rights(request, coursechapter["course_id"], current_user, "update")
+    activities = db_session.exec(statement).all()
 
-        coursechapter = CourseChapterInDB(
-            coursechapter_id=coursechapter_id,
-            creationDate=str(datetime.now()),
-            updateDate=str(datetime.now()),
-            course_id=coursechapter["course_id"],
-            **coursechapter_object.dict(),
-        )
-
-        courses.update_one(
-            {"chapters_content.coursechapter_id": coursechapter_id},
-            {"$set": {"chapters_content.$": coursechapter.dict()}},
-        )
-
-        return coursechapter
-
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Coursechapter does not exist"
-        )
-
-
-async def delete_coursechapter(
-    request: Request, coursechapter_id: str, current_user: PublicUser
-):
-    courses = request.app.db["courses"]
-
-    course = await courses.find_one(
-        {"chapters_content.coursechapter_id": coursechapter_id}
+    chapter = ChapterRead(
+        **chapter.dict(),
+        activities=[ActivityRead(**activity.dict()) for activity in activities],
     )
 
-    if course:
-        # verify course rights
-        await verify_rights(request, course["course_id"], current_user, "delete")
-
-        # Remove coursechapter from course
-        await courses.update_one(
-            {"course_id": course["course_id"]},
-            {"$pull": {"chapters": coursechapter_id}},
-        )
-
-        await courses.update_one(
-            {"chapters_content.coursechapter_id": coursechapter_id},
-            {"$pull": {"chapters_content": {"coursechapter_id": coursechapter_id}}},
-        )
-
-        return {"message": "Coursechapter deleted"}
-
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Course does not exist"
-        )
+    return chapter
 
 
-####################################################
-# Misc
-####################################################
-
-
-async def get_coursechapters(
-    request: Request, course_id: str, page: int = 1, limit: int = 10
-):
-    courses = request.app.db["courses"]
-
-    course = await courses.find_one({"course_id": course_id})
-
-    if course:
-        course = Course(**course)
-        coursechapters = course.chapters_content
-
-        return coursechapters
-
-
-async def get_coursechapters_meta(
-    request: Request, course_id: str, current_user: PublicUser
-):
-    courses = request.app.db["courses"]
-    activities = request.app.db["activities"]
-
-    await non_public_endpoint(current_user)
-
-    await verify_rights(request, course_id, current_user, "read")
-
-    coursechapters = await courses.find_one(
-        {"course_id": course_id}, {"chapters": 1, "chapters_content": 1, "_id": 0}
-    )
-
-    coursechapters = coursechapters
-
-    if not coursechapters:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Course does not exist"
-        )
-
-    # activities
-    coursechapter_activityIds_global = []
-
-    # chapters
-    chapters = {}
-    if coursechapters["chapters_content"]:
-        for coursechapter in coursechapters["chapters_content"]:
-            coursechapter = CourseChapterInDB(**coursechapter)
-            coursechapter_activityIds = []
-
-            for activity in coursechapter.activities:
-                coursechapter_activityIds.append(activity)
-                coursechapter_activityIds_global.append(activity)
-
-            chapters[coursechapter.coursechapter_id] = {
-                "id": coursechapter.coursechapter_id,
-                "name": coursechapter.name,
-                "activityIds": coursechapter_activityIds,
-            }
-
-    # activities
-    activities_list = {}
-    for activity in await activities.find(
-        {"activity_id": {"$in": coursechapter_activityIds_global}}
-    ).to_list(length=100):
-        activity = ActivityInDB(**activity)
-        activities_list[activity.activity_id] = {
-            "id": activity.activity_id,
-            "name": activity.name,
-            "type": activity.type,
-            "content": activity.content,
-        }
-
-    final = {
-        "chapters": chapters,
-        "chapterOrder": coursechapters["chapters"],
-        "activities": activities_list,
-    }
-
-    return final
-
-
-async def update_coursechapters_meta(
+async def update_chapter(
     request: Request,
-    course_id: str,
-    coursechapters_metadata: CourseChapterMetaData,
-    current_user: PublicUser,
-):
-    courses = request.app.db["courses"]
+    chapter_object: ChapterUpdate,
+    chapter_id: int,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+) -> ChapterRead:
+    statement = select(Chapter).where(Chapter.id == chapter_id)
+    chapter = db_session.exec(statement).first()
 
-    await verify_rights(request, course_id, current_user, "update")
+    if not chapter:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="Chapter does not exist"
+        )
 
-    # update chapters in course
-    await courses.update_one(
-        {"course_id": course_id},
-        {"$set": {"chapters": coursechapters_metadata.chapterOrder}},
-    )
+    # RBAC check
+    await rbac_check(request, chapter.chapter_uuid, current_user, "update", db_session)
 
-    if coursechapters_metadata.chapters is not None:
-        for (
-            coursechapter_id,
-            chapter_metadata,
-        ) in coursechapters_metadata.chapters.items():
-            filter_query = {"chapters_content.coursechapter_id": coursechapter_id}
-            update_query = {
-                "$set": {
-                    "chapters_content.$.activities": chapter_metadata["activityIds"]
-                }
-            }
-            result = await courses.update_one(filter_query, update_query)
-            if result.matched_count == 0:
-                # handle error when no documents are matched by the filter query
-                print(f"No documents found for course chapter ID {coursechapter_id}")
+    # Update only the fields that were passed in
+    for var, value in vars(chapter_object).items():
+        if value is not None:
+            setattr(chapter, var, value)
 
-    # update activities in coursechapters
-    activity = request.app.db["activities"]
-    if coursechapters_metadata.chapters is not None:
-        for (
-            coursechapter_id,
-            chapter_metadata,
-        ) in coursechapters_metadata.chapters.items():
-            # Update coursechapter_id in activities
-            filter_query = {"activity_id": {"$in": chapter_metadata["activityIds"]}}
-            update_query = {"$set": {"coursechapter_id": coursechapter_id}}
+    chapter.update_date = str(datetime.now())
 
-            result = await activity.update_many(filter_query, update_query)
-            if result.matched_count == 0:
-                # handle error when no documents are matched by the filter query
-                print(f"No documents found for course chapter ID {coursechapter_id}")
+    db_session.commit()
+    db_session.refresh(chapter)
 
-    return {"detail": "coursechapters metadata updated"}
+    if chapter:
+        chapter = await get_chapter(
+            request, chapter.id, current_user, db_session  # type: ignore
+        )
+
+    return chapter
 
 
-#### Security ####################################################
-
-
-async def verify_rights(
+async def delete_chapter(
     request: Request,
-    course_id: str,
-    current_user: PublicUser,
-    action: Literal["read", "update", "delete"],
+    chapter_id: str,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
 ):
-    courses = request.app.db["courses"]
-    users = request.app.db["users"]
-    user = await users.find_one({"user_id": current_user.user_id})
-    course = await courses.find_one({"course_id": course_id})
+    statement = select(Chapter).where(Chapter.id == chapter_id)
+    chapter = db_session.exec(statement).first()
+
+    if not chapter:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="Chapter does not exist"
+        )
+
+    # RBAC check
+    await rbac_check(request, chapter.chapter_uuid, current_user, "delete", db_session)
+
+    db_session.delete(chapter)
+    db_session.commit()
+
+    # Remove all linked activities
+    statement = select(ChapterActivity).where(ChapterActivity.id == chapter.id)
+    chapter_activities = db_session.exec(statement).all()
+
+    for chapter_activity in chapter_activities:
+        db_session.delete(chapter_activity)
+        db_session.commit()
+
+    return {"detail": "chapter deleted"}
+
+
+async def get_course_chapters(
+    request: Request,
+    course_id: int,
+    db_session: Session,
+    current_user: PublicUser | AnonymousUser,
+    page: int = 1,
+    limit: int = 10,
+) -> List[ChapterRead]:
+    statement = (
+        select(Chapter)
+        .join(CourseChapter, Chapter.id == CourseChapter.chapter_id)
+        .where(CourseChapter.course_id == course_id)
+        .where(Chapter.course_id == course_id)
+        .order_by(CourseChapter.order)
+        .group_by(Chapter.id, CourseChapter.order)
+    )
+    chapters = db_session.exec(statement).all()
+
+    chapters = [ChapterRead(**chapter.dict(), activities=[]) for chapter in chapters]
+
+    # RBAC check
+    await rbac_check(request, "chapter_x", current_user, "read", db_session)
+
+    # Get activities for each chapter
+    for chapter in chapters:
+        statement = (
+            select(ChapterActivity)
+            .where(ChapterActivity.chapter_id == chapter.id)
+            .order_by(ChapterActivity.order)
+            .distinct(ChapterActivity.id, ChapterActivity.order)
+        )
+        chapter_activities = db_session.exec(statement).all()
+
+        for chapter_activity in chapter_activities:
+            statement = (
+                select(Activity)
+                .where(Activity.id == chapter_activity.activity_id)
+                .distinct(Activity.id)
+            )
+            activity = db_session.exec(statement).first()
+
+            if activity:
+                chapter.activities.append(ActivityRead(**activity.dict()))
+
+    return chapters
+
+
+# Important Note : this is legacy code that has been used because
+# the frontend is still not adapted for the new data structure, this implementation is absolutely not the best one
+# and should not be used for future features
+async def DEPRECEATED_get_course_chapters(
+    request: Request,
+    course_uuid: str,
+    current_user: PublicUser,
+    db_session: Session,
+):
+    statement = select(Course).where(Course.course_uuid == course_uuid)
+    course = db_session.exec(statement).first()
 
     if not course:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Course does not exist"
         )
 
-    if action == "read":
-        if current_user.user_id == "anonymous":
-            await authorization_verify_if_element_is_public(
-                request, course_id, current_user.user_id, action
-            )
-        else:
-            users = request.app.db["users"]
-            user = await users.find_one({"user_id": current_user.user_id})
+    # RBAC check
+    await rbac_check(request, course.course_uuid, current_user, "read", db_session)
 
-            await authorization_verify_if_user_is_anon(current_user.user_id)
+    chapters_in_db = await get_course_chapters(request, course.id, db_session, current_user)  # type: ignore
 
-            await authorization_verify_based_on_roles_and_authorship(
-                request,
-                current_user.user_id,
-                action,
-                user["roles"],
-                course_id,
-            )
-    else:
-        users = request.app.db["users"]
-        user = await users.find_one({"user_id": current_user.user_id})
+    # activities
 
-        await authorization_verify_if_user_is_anon(current_user.user_id)
+    # chapters
+    chapters = {}
 
-        await authorization_verify_based_on_roles_and_authorship(
-            request,
-            current_user.user_id,
-            action,
-            user["roles"],
-            course_id,
+    for chapter in chapters_in_db:
+        chapter_activityIds = []
+
+        for activity in chapter.activities:
+            print("test", activity)
+            chapter_activityIds.append(activity.activity_uuid)
+
+        chapters[chapter.chapter_uuid] = {
+            "uuid": chapter.chapter_uuid,
+            "id": chapter.id,
+            "name": chapter.name,
+            "activityIds": chapter_activityIds,
+        }
+
+    # activities
+    activities_list = {}
+    statement = (
+        select(Activity)
+        .join(ChapterActivity, ChapterActivity.activity_id == Activity.id)
+        .where(ChapterActivity.activity_id == Activity.id)
+        .group_by(Activity.id)
+    )
+    activities_in_db = db_session.exec(statement).all()
+
+    for activity in activities_in_db:
+        activities_list[activity.activity_uuid] = {
+            "uuid": activity.activity_uuid,
+            "id": activity.id,
+            "name": activity.name,
+            "type": activity.activity_type,
+            "content": activity.content,
+        }
+
+    # get chapter order
+    statement = (
+        select(Chapter)
+        .join(CourseChapter, CourseChapter.chapter_id == Chapter.id)
+        .where(CourseChapter.chapter_id == Chapter.id)
+        .group_by(Chapter.id, CourseChapter.order)
+        .order_by(CourseChapter.order)
+    )
+    chapters_in_db = db_session.exec(statement).all()
+
+    chapterOrder = []
+
+    for chapter in chapters_in_db:
+        chapterOrder.append(chapter.chapter_uuid)
+
+    final = {
+        "chapters": chapters,
+        "chapterOrder": chapterOrder,
+        "activities": activities_list,
+    }
+
+    return final
+
+
+async def reorder_chapters_and_activities(
+    request: Request,
+    course_uuid: str,
+    chapters_order: ChapterUpdateOrder,
+    current_user: PublicUser,
+    db_session: Session,
+):
+    statement = select(Course).where(Course.course_uuid == course_uuid)
+    course = db_session.exec(statement).first()
+
+    if not course:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="Course does not exist"
         )
 
+    # RBAC check
+    await rbac_check(request, course.course_uuid, current_user, "update", db_session)
 
-#### Security ####################################################
+    ###########
+    # Chapters
+    ###########
+
+    # Delete CourseChapters that are not linked to chapter_id and activity_id and org_id and course_id
+    statement = (
+        select(CourseChapter)
+        .where(
+            CourseChapter.course_id == course.id, CourseChapter.org_id == course.org_id
+        )
+        .order_by(CourseChapter.order)
+    )
+    course_chapters = db_session.exec(statement).all()
+
+    chapter_ids_to_keep = [
+        chapter_order.chapter_id
+        for chapter_order in chapters_order.chapter_order_by_ids
+    ]
+    for course_chapter in course_chapters:
+        if course_chapter.chapter_id not in chapter_ids_to_keep:
+            db_session.delete(course_chapter)
+            db_session.commit()
+
+    # Delete Chapters that are not in the list of chapters_order
+    statement = select(Chapter).where(Chapter.course_id == course.id)
+    chapters = db_session.exec(statement).all()
+
+    chapter_ids_to_keep = [
+        chapter_order.chapter_id
+        for chapter_order in chapters_order.chapter_order_by_ids
+    ]
+
+    for chapter in chapters:
+        if chapter.id not in chapter_ids_to_keep:
+            db_session.delete(chapter)
+            db_session.commit()
+
+    # If links do not exists, create them
+    for chapter_order in chapters_order.chapter_order_by_ids:
+        statement = (
+            select(CourseChapter)
+            .where(
+                CourseChapter.chapter_id == chapter_order.chapter_id,
+                CourseChapter.course_id == course.id,
+            )
+            .order_by(CourseChapter.order)
+        )
+        course_chapter = db_session.exec(statement).first()
+
+        if not course_chapter:
+            # Add CourseChapter link
+            course_chapter = CourseChapter(
+                chapter_id=chapter_order.chapter_id,
+                course_id=course.id,  # type: ignore
+                org_id=course.org_id,
+                creation_date=str(datetime.now()),
+                update_date=str(datetime.now()),
+                order=chapter_order.chapter_id,
+            )
+
+            # Insert CourseChapter link in DB
+            db_session.add(course_chapter)
+            db_session.commit()
+
+    # Update order of chapters
+    for chapter_order in chapters_order.chapter_order_by_ids:
+        statement = (
+            select(CourseChapter)
+            .where(
+                CourseChapter.chapter_id == chapter_order.chapter_id,
+                CourseChapter.course_id == course.id,
+            )
+            .order_by(CourseChapter.order)
+        )
+        course_chapter = db_session.exec(statement).first()
+
+        if course_chapter:
+            # Get the order from the index of the chapter_order_by_ids list
+            course_chapter.order = chapters_order.chapter_order_by_ids.index(
+                chapter_order
+            )
+            db_session.commit()
+
+    ###########
+    # Activities
+    ###########
+
+    # Delete ChapterActivities that are no longer part of the new order
+    statement = (
+        select(ChapterActivity)
+        .where(
+            ChapterActivity.course_id == course.id,
+            ChapterActivity.org_id == course.org_id,
+        )
+        .order_by(ChapterActivity.order)
+    )
+    chapter_activities = db_session.exec(statement).all()
+
+    activity_ids_to_delete = []
+    for chapter_activity in chapter_activities:
+        if (
+            chapter_activity.chapter_id not in chapter_ids_to_keep
+            or chapter_activity.activity_id not in activity_ids_to_delete
+        ):
+            activity_ids_to_delete.append(chapter_activity.activity_id)
+
+    for activity_id in activity_ids_to_delete:
+        statement = (
+            select(ChapterActivity)
+            .where(
+                ChapterActivity.activity_id == activity_id,
+                ChapterActivity.course_id == course.id,
+            )
+            .order_by(ChapterActivity.order)
+        )
+        chapter_activity = db_session.exec(statement).first()
+
+        db_session.delete(chapter_activity)
+        db_session.commit()
+
+    
+    # If links do not exist, create them
+    chapter_activity_map = {}
+    for chapter_order in chapters_order.chapter_order_by_ids:
+        for activity_order in chapter_order.activities_order_by_ids:
+            if activity_order.activity_id in chapter_activity_map and chapter_activity_map[activity_order.activity_id] != chapter_order.chapter_id:
+                continue
+
+            statement = (
+                select(ChapterActivity)
+                .where(
+                    ChapterActivity.chapter_id == chapter_order.chapter_id,
+                    ChapterActivity.activity_id == activity_order.activity_id,
+                )
+                .order_by(ChapterActivity.order)
+            )
+            chapter_activity = db_session.exec(statement).first()
+
+            if not chapter_activity:
+                # Add ChapterActivity link
+                chapter_activity = ChapterActivity(
+                    chapter_id=chapter_order.chapter_id,
+                    activity_id=activity_order.activity_id,
+                    org_id=course.org_id,
+                    course_id=course.id,  # type: ignore
+                    creation_date=str(datetime.now()),
+                    update_date=str(datetime.now()),
+                    order=activity_order.activity_id,
+                )
+
+                # Insert ChapterActivity link in DB
+                db_session.add(chapter_activity)
+                db_session.commit()
+
+            chapter_activity_map[activity_order.activity_id] = chapter_order.chapter_id
+
+    # Update order of activities
+    for chapter_order in chapters_order.chapter_order_by_ids:
+        for activity_order in chapter_order.activities_order_by_ids:
+            statement = (
+                select(ChapterActivity)
+                .where(
+                    ChapterActivity.chapter_id == chapter_order.chapter_id,
+                    ChapterActivity.activity_id == activity_order.activity_id,
+                )
+                .order_by(ChapterActivity.order)
+            )
+            chapter_activity = db_session.exec(statement).first()
+
+            if chapter_activity:
+                # Get the order from the index of the chapter_order_by_ids list
+                chapter_activity.order = chapter_order.activities_order_by_ids.index(
+                    activity_order
+                )
+                db_session.commit()
+
+    return {"detail": "Chapters reordered"}
+
+
+## 🔒 RBAC Utils ##
+
+
+async def rbac_check(
+    request: Request,
+    course_id: str,
+    current_user: PublicUser | AnonymousUser,
+    action: Literal["create", "read", "update", "delete"],
+    db_session: Session,
+):
+    await authorization_verify_if_user_is_anon(current_user.id)
+
+    await authorization_verify_based_on_roles_and_authorship(
+        request,
+        current_user.id,
+        action,
+        course_id,
+        db_session,
+    )
+
+
+## 🔒 RBAC Utils ##
