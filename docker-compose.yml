@@ -8,6 +8,15 @@ services:
       - .:/usr/learnhouse
     environment:
       - LEARNHOUSE_COOKIE_DOMAIN=.localhost
+  db:
+    image: postgres:16-alpine
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=learnhouse
+      - POSTGRES_PASSWORD=learnhouse
+      - POSTGRES_DB=learnhouse
   mongo:
     image: mongo:5.0
     restart: always

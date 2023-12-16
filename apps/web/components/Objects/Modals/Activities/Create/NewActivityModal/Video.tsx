@@ -8,10 +8,11 @@ interface ExternalVideoObject {
   name: string,
   type: string,
   uri: string
+  chapter_id: string
 }
 
 
-function VideoModal({ submitFileActivity, submitExternalVideo, chapterId }: any) {
+function VideoModal({ submitFileActivity, submitExternalVideo, chapterId, course }: any) {
   const [video, setVideo] = React.useState(null) as any;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [name, setName] = React.useState("");
@@ -33,18 +34,30 @@ function VideoModal({ submitFileActivity, submitExternalVideo, chapterId }: any)
   const handleSubmit = async (e: any) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
+
     if (selectedView === "file") {
-      let status = await submitFileActivity(video, "video", { name, type: "video" }, chapterId);
+      let status = await submitFileActivity(video, "video", {
+        name: name,
+        chapter_id: chapterId,
+        activity_type: "TYPE_VIDEO",
+        activity_sub_type: "SUBTYPE_VIDEO_HOSTED",
+        published_version: 1,
+        version: 1,
+        course_id: course.id,
+      }, chapterId);
+
       setIsSubmitting(false);
     }
     if (selectedView === "youtube") {
       let external_video_object: ExternalVideoObject = {
         name,
         type: "youtube",
-        uri: youtubeUrl
+        uri: youtubeUrl,
+        chapter_id: chapterId
       }
-      let status = await submitExternalVideo(external_video_object, 'activity' ,chapterId);
+
+
+      let status = await submitExternalVideo(external_video_object, 'activity', chapterId);
       setIsSubmitting(false);
     }
 

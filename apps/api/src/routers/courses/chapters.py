@@ -1,6 +1,22 @@
+from typing import List
 from fastapi import APIRouter, Depends, Request
+from src.core.events.database import get_db_session
+from src.db.chapters import (
+    ChapterCreate,
+    ChapterRead,
+    ChapterUpdate,
+    ChapterUpdateOrder,
+)
+from src.services.courses.chapters import (
+    DEPRECEATED_get_course_chapters,
+    create_chapter,
+    delete_chapter,
+    get_chapter,
+    get_course_chapters,
+    reorder_chapters_and_activities,
+    update_chapter,
+)
 
-from src.services.courses.chapters import CourseChapter, CourseChapterMetaData, create_coursechapter, delete_coursechapter, get_coursechapter, get_coursechapters, get_coursechapters_meta, update_coursechapter, update_coursechapters_meta
 from src.services.users.users import PublicUser
 from src.security.auth import get_current_user
 
@@ -8,57 +24,104 @@ router = APIRouter()
 
 
 @router.post("/")
-async def api_create_coursechapter(request: Request,coursechapter_object: CourseChapter, course_id: str, current_user: PublicUser = Depends(get_current_user)):
+async def api_create_coursechapter(
+    request: Request,
+    coursechapter_object: ChapterCreate,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+) -> ChapterRead:
     """
-    Create new CourseChapter
+    Create new Course Chapter
     """
-    return await create_coursechapter(request, coursechapter_object, course_id, current_user)
+    return await create_chapter(request, coursechapter_object, current_user, db_session)
 
 
-@router.get("/{coursechapter_id}")
-async def api_get_coursechapter(request: Request,coursechapter_id: str, current_user: PublicUser = Depends(get_current_user)):
+@router.get("/{chapter_id}")
+async def api_get_coursechapter(
+    request: Request,
+    chapter_id: int,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+) -> ChapterRead:
     """
-    Get single CourseChapter by coursechapter_id
+    Get single CourseChapter by chapter_id
     """
-    return await get_coursechapter(request, coursechapter_id, current_user=current_user)
+    return await get_chapter(request, chapter_id, current_user, db_session)
 
 
-@router.get("/meta/{course_id}")
-async def api_get_coursechapter_meta(request: Request,course_id: str, current_user: PublicUser = Depends(get_current_user)):
+@router.get("/course/{course_uuid}/meta", deprecated=True)
+async def api_get_chapter_meta(
+    request: Request,
+    course_uuid: str,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+):
     """
-    Get coursechapter metadata
+    Get Chapters metadata
     """
-    return await get_coursechapters_meta(request, course_id, current_user=current_user)
+    return await DEPRECEATED_get_course_chapters(
+        request, course_uuid, current_user, db_session
+    )
 
 
-@router.put("/meta/{course_id}")
-async def api_update_coursechapter_meta(request: Request,course_id: str, coursechapters_metadata: CourseChapterMetaData, current_user: PublicUser = Depends(get_current_user)):
+@router.put("/course/{course_uuid}/order")
+async def api_update_chapter_meta(
+    request: Request,
+    course_uuid: str,
+    order: ChapterUpdateOrder,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+):
     """
-    Update coursechapter metadata
+    Update Chapter metadata
     """
-    return await update_coursechapters_meta(request, course_id, coursechapters_metadata, current_user=current_user)
+    return await reorder_chapters_and_activities(
+        request, course_uuid, order, current_user, db_session
+    )
 
 
-@router.get("/{course_id}/page/{page}/limit/{limit}")
-async def api_get_coursechapter_by(request: Request,course_id: str, page: int, limit: int):
+@router.get("/course/{course_id}/page/{page}/limit/{limit}")
+async def api_get_chapter_by(
+    request: Request,
+    course_id: int,
+    page: int,
+    limit: int,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+) -> List[ChapterRead]:
     """
-    Get CourseChapters by page and limit
+    Get Course Chapters by page and limit
     """
-    return await get_coursechapters(request, course_id, page, limit)
+    return await get_course_chapters(
+        request, course_id, db_session, current_user, page, limit
+    )
 
 
-@router.put("/{coursechapter_id}")
-async def api_update_coursechapter(request: Request,coursechapter_object: CourseChapter, coursechapter_id: str, current_user: PublicUser = Depends(get_current_user)):
+@router.put("/{chapter_id}")
+async def api_update_coursechapter(
+    request: Request,
+    coursechapter_object: ChapterUpdate,
+    chapter_id: int,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+) -> ChapterRead:
     """
     Update CourseChapters by course_id
     """
-    return await update_coursechapter(request, coursechapter_object, coursechapter_id, current_user)
+    return await update_chapter(
+        request, coursechapter_object, chapter_id, current_user, db_session
+    )
 
 
-@router.delete("/{coursechapter_id}")
-async def api_delete_coursechapter(request: Request,coursechapter_id: str, current_user: PublicUser = Depends(get_current_user)):
+@router.delete("/{chapter_id}")
+async def api_delete_coursechapter(
+    request: Request,
+    chapter_id: str,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+):
     """
     Delete CourseChapters by ID
     """
 
-    return await delete_coursechapter(request,coursechapter_id, current_user)
+    return await delete_chapter(request, chapter_id, current_user, db_session)

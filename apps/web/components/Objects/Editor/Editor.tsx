@@ -2,7 +2,7 @@
 import React from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { AuthContext } from "../../Security/AuthProvider";
+import { AuthContext } from "../../Security/AuthProviderDepreceated";
 import learnhouseIcon from "public/learnhouse_icon.png";
 import { ToolbarButtons } from "./Toolbar/ToolbarButtons";
 import { motion } from "framer-motion";
@@ -36,6 +36,8 @@ import ts from 'highlight.js/lib/languages/typescript'
 import html from 'highlight.js/lib/languages/xml'
 import python from 'highlight.js/lib/languages/python'
 import java from 'highlight.js/lib/languages/java'
+import { CourseProvider } from "@components/Contexts/CourseContext";
+import { OrgProvider } from "@components/Contexts/OrgContext";
 
 
 interface Editor {
@@ -43,18 +45,18 @@ interface Editor {
   ydoc: any;
   provider: any;
   activity: any;
-  orgslug: string
   course: any;
+  org: any;
   setContent: (content: string) => void;
 }
 
 function Editor(props: Editor) {
   const auth: any = React.useContext(AuthContext);
-  // remove course_ from course_id
-  const course_id = props.course.course.course_id.substring(7);
+  // remove course_ from course_uuid
+  const course_uuid = props.course.course_uuid.substring(7);
 
-  // remove activity_ from activity_id
-  const activity_id = props.activity.activity_id.substring(9);
+  // remove activity_ from activity_uuid
+  const activity_uuid = props.activity.activity_uuid.substring(9);
 
   // Code Block Languages for Lowlight
   lowlight.register('html', html)
@@ -127,71 +129,75 @@ function Editor(props: Editor) {
 
   return (
     <Page>
-      <motion.div
-        initial={{ opacity: 0, scale: 0.98 }}
-        animate={{ opacity: 1, scale: 1 }}
-        key="modal"
-        transition={{
-          type: "spring",
-          stiffness: 360,
-          damping: 70,
-          delay: 0.02,
-        }}
-        exit={{ opacity: 0 }}
-      >
-        <EditorTop className="fixed bg-white bg-opacity-95 backdrop-blur backdrop-brightness-125">
-          <EditorDocSection>
-            <EditorInfoWrapper>
-              <Link href="/">
-                <EditorInfoLearnHouseLogo width={25} height={25} src={learnhouseIcon} alt="" />
-              </Link>
-              <Link target="_blank" href={`/course/${course_id}/edit`}>
-                <EditorInfoThumbnail src={`${getCourseThumbnailMediaDirectory(props.course.course.org_id, props.course.course.course_id, props.course.course.thumbnail)}`} alt=""></EditorInfoThumbnail>
-              </Link>
-              <EditorInfoDocName>
-                {" "}
-                <b>{props.course.course.name}</b> <SlashIcon /> {props.activity.name}{" "}
-              </EditorInfoDocName>
+      <OrgProvider orgslug={props.org?.slug}>
+        <CourseProvider courseuuid={props.course.course_uuid}>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            key="modal"
+            transition={{
+              type: "spring",
+              stiffness: 360,
+              damping: 70,
+              delay: 0.02,
+            }}
+            exit={{ opacity: 0 }}
+          >
+            <EditorTop className="fixed bg-white bg-opacity-95 backdrop-blur backdrop-brightness-125">
+              <EditorDocSection>
+                <EditorInfoWrapper>
+                  <Link href="/">
+                    <EditorInfoLearnHouseLogo width={25} height={25} src={learnhouseIcon} alt="" />
+                  </Link>
+                  <Link target="_blank" href={`/course/${course_uuid}/edit`}>
+                    <EditorInfoThumbnail src={`${getCourseThumbnailMediaDirectory(props.org?.org_uuid, props.course.course_uuid, props.course.thumbnail_image)}`} alt=""></EditorInfoThumbnail>
+                  </Link>
+                  <EditorInfoDocName>
+                    {" "}
+                    <b>{props.course.name}</b> <SlashIcon /> {props.activity.name}{" "}
+                  </EditorInfoDocName>
 
-            </EditorInfoWrapper>
-            <EditorButtonsWrapper>
-              <ToolbarButtons editor={editor} />
-            </EditorButtonsWrapper>
-          </EditorDocSection>
-          <EditorUsersSection>
-            <EditorUserProfileWrapper>
-              {!auth.isAuthenticated && <span>Loading</span>}
-              {auth.isAuthenticated && <Avvvatars value={auth.userInfo.user_object.user_id} style="shape" />}
-            </EditorUserProfileWrapper>
-            <DividerVerticalIcon style={{ marginTop: "auto", marginBottom: "auto", color: "grey", opacity: '0.5' }} />
-            <EditorLeftOptionsSection className="space-x-2 pl-2 pr-3">
-              <div className="bg-sky-600 hover:bg-sky-700 transition-all ease-linear px-3 py-2 font-black text-sm shadow text-teal-100 rounded-lg hover:cursor-pointer" onClick={() => props.setContent(editor.getJSON())}> Save </div>
-              <ToolTip content="Preview">
-                <Link target="_blank" href={`/course/${course_id}/activity/${activity_id}`}>
-                  <div className="flex bg-neutral-600 hover:bg-neutral-700 transition-all ease-linear h-9 px-3 py-2 font-black justify-center items-center text-sm shadow text-neutral-100 rounded-lg hover:cursor-pointer">
-                    <Eye className="mx-auto items-center" size={15} />
-                  </div>
-                </Link>
-              </ToolTip>
-            </EditorLeftOptionsSection>
-          </EditorUsersSection>
-        </EditorTop>
-      </motion.div>
-      <motion.div
-        initial={{ opacity: 0, scale: 0.99 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{
-          type: "spring",
-          stiffness: 360,
-          damping: 70,
-          delay: 0.5,
-        }}
-        exit={{ opacity: 0 }}
-      >
-        <EditorContentWrapper>
-          <EditorContent editor={editor} />
-        </EditorContentWrapper>
-      </motion.div>
+                </EditorInfoWrapper>
+                <EditorButtonsWrapper>
+                  <ToolbarButtons editor={editor} />
+                </EditorButtonsWrapper>
+              </EditorDocSection>
+              <EditorUsersSection>
+                <EditorUserProfileWrapper>
+                  {!auth.isAuthenticated && <span>Loading</span>}
+                  {auth.isAuthenticated && <Avvvatars value={auth.userInfo.user_uuid} style="shape" />}
+                </EditorUserProfileWrapper>
+                <DividerVerticalIcon style={{ marginTop: "auto", marginBottom: "auto", color: "grey", opacity: '0.5' }} />
+                <EditorLeftOptionsSection className="space-x-2 pl-2 pr-3">
+                  <div className="bg-sky-600 hover:bg-sky-700 transition-all ease-linear px-3 py-2 font-black text-sm shadow text-teal-100 rounded-lg hover:cursor-pointer" onClick={() => props.setContent(editor.getJSON())}> Save </div>
+                  <ToolTip content="Preview">
+                    <Link target="_blank" href={`/course/${course_uuid}/activity/${activity_uuid}`}>
+                      <div className="flex bg-neutral-600 hover:bg-neutral-700 transition-all ease-linear h-9 px-3 py-2 font-black justify-center items-center text-sm shadow text-neutral-100 rounded-lg hover:cursor-pointer">
+                        <Eye className="mx-auto items-center" size={15} />
+                      </div>
+                    </Link>
+                  </ToolTip>
+                </EditorLeftOptionsSection>
+              </EditorUsersSection>
+            </EditorTop>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.99 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{
+              type: "spring",
+              stiffness: 360,
+              damping: 70,
+              delay: 0.5,
+            }}
+            exit={{ opacity: 0 }}
+          >
+            <EditorContentWrapper>
+              <EditorContent editor={editor} />
+            </EditorContentWrapper>
+          </motion.div>
+        </CourseProvider>
+      </OrgProvider>
     </Page>
   );
 }
