@@ -8,7 +8,7 @@ import { Metadata } from "next";
 import { cookies } from "next/headers";
 import Link from "next/link";
 import { getAccessTokenFromRefreshTokenCookie } from "@services/auth/auth";
-import CollectionThumbnail from "@components/Objects/Other/CollectionThumbnail";
+import CollectionThumbnail from "@components/Objects/Thumbnails/CollectionThumbnail";
 import NewCollectionButton from "@components/StyledElements/Buttons/NewCollectionButton";
 
 type MetadataProps = {
@@ -49,14 +49,17 @@ const CollectionsPage = async (params: any) => {
     const access_token = await getAccessTokenFromRefreshTokenCookie(cookieStore)
     const orgslug = params.params.orgslug;
     const org = await getOrganizationContextInfo(orgslug, { revalidate: 1800, tags: ['organizations'] });
-    const org_id = org.org_id;
+    const org_id = org.id;
     const collections = await getOrgCollectionsWithAuthHeader(org_id, access_token ? access_token : null, { revalidate: 0, tags: ['collections'] });
 
     return (
         <GeneralWrapperStyled>
             <div className="flex justify-between" >
                 <TypeOfContentTitle title="Collections" type="col" />
-                <AuthenticatedClientElement checkMethod='roles' orgId={org_id}>
+                <AuthenticatedClientElement
+                    ressourceType="collection"
+                    action="create"
+                    checkMethod='roles' orgId={org_id}>
                     <Link className="flex justify-center" href={getUriWithOrg(orgslug, "/collections/new")}>
                         <NewCollectionButton />
                     </Link>
@@ -64,7 +67,7 @@ const CollectionsPage = async (params: any) => {
             </div>
             <div className="home_collections flex flex-wrap">
                 {collections.map((collection: any) => (
-                    <div className="flex flex-col py-1 px-3" key={collection.collection_id}>
+                    <div className="flex flex-col py-1 px-3" key={collection.collection_uuid}>
                         <CollectionThumbnail collection={collection} orgslug={orgslug} org_id={org_id} />
                     </div>
                 ))}
@@ -81,7 +84,10 @@ const CollectionsPage = async (params: any) => {
                                 <h1 className="text-3xl font-bold text-gray-600">No collections yet</h1>
                                 <p className="text-lg text-gray-400">Create a collection to group courses together</p>
                             </div>
-                            <AuthenticatedClientElement checkMethod='roles' orgId={org_id}>
+                            <AuthenticatedClientElement checkMethod='roles'
+                                ressourceType="collection"
+                                action="create"
+                                orgId={org_id}>
                                 <Link href={getUriWithOrg(orgslug, "/collections/new")}>
                                     <NewCollectionButton />
                                 </Link>

@@ -1,70 +1,87 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Depends, Request
+from src.db.install import InstallRead
+from src.core.events.database import get_db_session
+from src.db.organizations import OrganizationCreate
+from src.db.users import UserCreate
 
 from src.services.install.install import (
     create_install_instance,
-    create_sample_data,
     get_latest_install_instance,
     install_create_organization,
     install_create_organization_user,
     install_default_elements,
     update_install_instance,
 )
-from src.services.orgs.schemas.orgs import Organization
-from src.services.users.schemas.users import UserWithPassword
 
 
 router = APIRouter()
 
 
 @router.post("/start")
-async def api_create_install_instance(request: Request, data: dict):
+async def api_create_install_instance(
+    request: Request,
+    data: dict,
+    db_session=Depends(get_db_session),
+) -> InstallRead:
     # create install
-    install = await create_install_instance(request, data)
+    install = await create_install_instance(request, data, db_session)
 
     return install
 
 
 @router.get("/latest")
-async def api_get_latest_install_instance(request: Request):
+async def api_get_latest_install_instance(
+    request: Request, db_session=Depends(get_db_session)
+) -> InstallRead:
     # get latest created install
-    install = await get_latest_install_instance(request)
+    install = await get_latest_install_instance(request, db_session=db_session)
 
     return install
 
 
 @router.post("/default_elements")
-async def api_install_def_elements(request: Request):
-    elements = await install_default_elements(request, {})
+async def api_install_def_elements(
+    request: Request,
+    db_session=Depends(get_db_session),
+):
+    elements = await install_default_elements(request, {}, db_session)
 
     return elements
 
 
 @router.post("/org")
-async def api_install_org(request: Request, org: Organization):
-    organization = await install_create_organization(request, org)
+async def api_install_org(
+    request: Request,
+    org: OrganizationCreate,
+    db_session=Depends(get_db_session),
+):
+    organization = await install_create_organization(request, org, db_session)
 
     return organization
 
 
 @router.post("/user")
-async def api_install_user(request: Request, data: UserWithPassword, org_slug: str):
-    user = await install_create_organization_user(request, data, org_slug)
+async def api_install_user(
+    request: Request,
+    data: UserCreate,
+    org_slug: str,
+    db_session=Depends(get_db_session),
+):
+    user = await install_create_organization_user(request, data, org_slug, db_session)
 
     return user
 
 
-@router.post("/sample")
-async def api_install_user_sample(request: Request, username: str, org_slug: str):
-    sample = await create_sample_data(org_slug, username, request)
-
-    return sample
-
-
 @router.post("/update")
-async def api_update_install_instance(request: Request, data: dict, step: int):
+async def api_update_install_instance(
+    request: Request,
+    data: dict,
+    step: int,
+    db_session=Depends(get_db_session),
+) -> InstallRead:
     request.app.db["installs"]
 
     # get latest created install
-    install = await update_install_instance(request, data, step)
+    install = await update_install_instance(request, data, step, db_session)
 
     return install

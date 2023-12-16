@@ -18,20 +18,20 @@ export async function getOrgCoursesWithAuthHeader(org_id: number, next: any, acc
   return res;
 }
 
-export async function getCourseMetadataWithAuthHeader(course_id: any, next: any, access_token: string) {
-  const result = await fetch(`${getAPIUrl()}courses/meta/course_${course_id}`, RequestBodyWithAuthHeader("GET", null, next, access_token));
+export async function getCourseMetadataWithAuthHeader(course_uuid: any, next: any, access_token: string) {
+  const result = await fetch(`${getAPIUrl()}courses/course_${course_uuid}/meta`, RequestBodyWithAuthHeader("GET", null, next, access_token));
   const res = await errorHandling(result);
   return res;
 }
 
-export async function updateCourse(course_id: any, data: any) {
-  const result: any = await fetch(`${getAPIUrl()}courses/course_${course_id}`, RequestBody("PUT", data, null));
+export async function updateCourse(course_uuid: any, data: any) {
+  const result: any = await fetch(`${getAPIUrl()}courses/${course_uuid}`, RequestBody("PUT", data, null));
   const res = await errorHandling(result);
   return res;
 }
 
-export async function getCourse(course_id: string, next: any) {
-  const result: any = await fetch(`${getAPIUrl()}courses/${course_id}`, RequestBody("GET", null, next));
+export async function getCourse(course_uuid: string, next: any) {
+  const result: any = await fetch(`${getAPIUrl()}courses/${course_uuid}`, RequestBody("GET", null, next));
   const res = await errorHandling(result);
   return res;
 }
@@ -39,19 +39,21 @@ export async function getCourse(course_id: string, next: any) {
 export async function createNewCourse(org_id: string, course_body: any, thumbnail: any) {
   // Send file thumbnail as form data
   const formData = new FormData();
-  formData.append("thumbnail", thumbnail);
   formData.append("name", course_body.name);
   formData.append("description", course_body.description);
-  formData.append("mini_description", "course_body.mini_description");
-  formData.append("public", "true");
+  formData.append("public", course_body.visibility);
+  formData.append("learnings", course_body.tags);
+  formData.append("tags", course_body.tags);
+  formData.append("about", course_body.description);
+  formData.append("thumbnail", thumbnail);
 
   const result = await fetch(`${getAPIUrl()}courses/?org_id=${org_id}`, RequestBodyForm("POST", formData, null));
   const res = await errorHandling(result);
   return res;
 }
 
-export async function deleteCourseFromBackend(course_id: any) {
-  const result: any = await fetch(`${getAPIUrl()}courses/${course_id}`, RequestBody("DELETE", null, null));
+export async function deleteCourseFromBackend(course_uuid: any) {
+  const result: any = await fetch(`${getAPIUrl()}courses/${course_uuid}`, RequestBody("DELETE", null, null));
   const res = await errorHandling(result);
   return res;
 }

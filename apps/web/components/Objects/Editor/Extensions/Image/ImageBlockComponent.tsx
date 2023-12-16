@@ -1,19 +1,22 @@
 import { NodeViewWrapper } from "@tiptap/react";
-import React from "react";
+import React, { useEffect } from "react";
 import styled from "styled-components";
 import { Resizable } from 're-resizable';
 import { AlertTriangle, Image, Loader } from "lucide-react";
 import { uploadNewImageFile } from "../../../../../services/blocks/Image/images";
 import { UploadIcon } from "@radix-ui/react-icons";
 import { getActivityBlockMediaDirectory } from "@services/media/media";
+import { useOrg } from "@components/Contexts/OrgContext";
+import { useCourse } from "@components/Contexts/CourseContext";
 
 function ImageBlockComponent(props: any) {
+  const org = useOrg() as any;
+  const course = useCourse() as any;
   const [image, setImage] = React.useState(null);
   const [isLoading, setIsLoading] = React.useState(false);
   const [blockObject, setblockObject] = React.useState(props.node.attrs.blockObject);
   const [imageSize, setImageSize] = React.useState({ width: props.node.attrs.size ? props.node.attrs.size.width : 300 });
-  const fileId = blockObject ? `${blockObject.block_data.file_id}.${blockObject.block_data.file_format}` : null;
-
+  const fileId = blockObject ? `${blockObject.content.file_id}.${blockObject.content.file_format}` : null;
   const handleImageChange = (event: React.ChangeEvent<any>) => {
     setImage(event.target.files[0]);
   };
@@ -21,7 +24,7 @@ function ImageBlockComponent(props: any) {
   const handleSubmit = async (e: any) => {
     e.preventDefault();
     setIsLoading(true);
-    let object = await uploadNewImageFile(image, props.extension.options.activity.activity_id);
+    let object = await uploadNewImageFile(image, props.extension.options.activity.activity_uuid);
     setIsLoading(false);
     setblockObject(object);
     props.updateAttributes({
@@ -29,6 +32,10 @@ function ImageBlockComponent(props: any) {
       size: imageSize,
     });
   };
+
+  useEffect(() => {
+  }
+    , [course, org]);
 
   return (
     <NodeViewWrapper className="block-image">
@@ -50,10 +57,10 @@ function ImageBlockComponent(props: any) {
       {blockObject && (
         <Resizable defaultSize={{ width: imageSize.width, height: "100%" }}
           handleStyles={{
-            right: { position: 'unset', width: 7, height: 30, borderRadius: 20, cursor: 'col-resize', backgroundColor: 'black', opacity: '0.3', margin: 'auto', marginLeft:5 },
+            right: { position: 'unset', width: 7, height: 30, borderRadius: 20, cursor: 'col-resize', backgroundColor: 'black', opacity: '0.3', margin: 'auto', marginLeft: 5 },
 
           }}
-          style={{ margin: "auto", display: "flex", justifyContent: "center", alignItems: "center", height: "100%"  }}
+          style={{ margin: "auto", display: "flex", justifyContent: "center", alignItems: "center", height: "100%" }}
           maxWidth={1000}
           minWidth={200}
           onResizeStop={(e, direction, ref, d) => {
@@ -68,15 +75,15 @@ function ImageBlockComponent(props: any) {
           }}
         >
 
-            <img
-              src={`${getActivityBlockMediaDirectory(props.extension.options.activity.org_id,
-                props.extension.options.activity.course_id,
-                props.extension.options.activity.activity_id,
-                blockObject.block_id,
-                blockObject ? fileId : ' ', 'imageBlock')}`}
-              alt=""
-              className="rounded-lg shadow "
-            />
+          <img
+            src={`${getActivityBlockMediaDirectory(org?.org_uuid,
+              course?.courseStructure.course_uuid,
+              props.extension.options.activity.activity_uuid,
+              blockObject.block_uuid,
+              blockObject ? fileId : ' ', 'imageBlock')}`}
+            alt=""
+            className="rounded-lg shadow "
+          />
 
 
         </Resizable>

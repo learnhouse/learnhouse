@@ -1,286 +1,423 @@
 from datetime import datetime
-from typing import List, Literal, Optional
 from uuid import uuid4
+from src.db.chapter_activities import ChapterActivity
 from fastapi import HTTPException, Request, status
-from pydantic import BaseModel
-from src.services.courses.chapters import get_coursechapters_meta
-from src.services.orgs.orgs import PublicOrganization
-
-from src.services.users.users import PublicUser
-
-#### Classes ####################################################
-
-
-class ActivityData(BaseModel):
-    activity_id: str
-    activity_type: str
-    data: Optional[dict]
+from sqlmodel import Session, select
+from src.db.activities import Activity
+from src.db.courses import Course
+from src.db.trail_runs import TrailRun, TrailRunRead
+from src.db.trail_steps import TrailStep
+from src.db.trails import Trail, TrailCreate, TrailRead
+from src.db.users import PublicUser
 
 
-class TrailCourse(BaseModel):
-    course_id: str
-    elements_type: Optional[Literal["course"]] = "course"
-    status: Optional[Literal["ongoing", "done", "closed"]] = "ongoing"
-    course_object: dict
-    masked: Optional[bool] = False
-    activities_marked_complete: Optional[List[str]]
-    activities_data: Optional[List[ActivityData]]
-    progress: Optional[int]
-
-
-class Trail(BaseModel):
-    status: Optional[Literal["ongoing", "done", "closed"]] = "ongoing"
-    masked: Optional[bool] = False
-    courses: Optional[List[TrailCourse]]
-
-
-class TrailInDB(Trail):
-    trail_id: str
-    org_id: str
-    user_id: str
-    creationDate: str = datetime.now().isoformat()
-    updateDate: str = datetime.now().isoformat()
-
-
-#### Classes ####################################################
-
-
-async def create_trail(
-    request: Request, user: PublicUser, org_id: str, trail_object: Trail
+async def create_user_trail(
+    request: Request,
+    user: PublicUser,
+    trail_object: TrailCreate,
+    db_session: Session,
 ) -> Trail:
-    trails = request.app.db["trails"]
+    statement = select(Trail).where(Trail.org_id == trail_object.org_id)
+    trail = db_session.exec(statement).first()
 
-    # get list of courses
-    if trail_object.courses:
-        courses = trail_object.courses
-        # get course ids
-        course_ids = [course.course_id for course in courses]
-
-        # find if the user has already started the course
-        existing_trail = await trails.find_one(
-            {"user_id": user.user_id, "courses.course_id": {"$in": course_ids}}
+    if trail:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Trail already exists",
         )
-        if existing_trail:
-            # update the status of the element with the matching course_id to "ongoing"
-            for element in existing_trail["courses"]:
-                if element["course_id"] in course_ids:
-                    element["status"] = "ongoing"
-            # update the existing trail in the database
-            await trails.replace_one(
-                {"trail_id": existing_trail["trail_id"]}, existing_trail
-            )
 
-    # create trail id
-    trail_id = f"trail_{uuid4()}"
+    trail = Trail.from_orm(trail_object)
+
+    trail.creation_date = str(datetime.now())
+    trail.update_date = str(datetime.now())
+    trail.org_id = trail_object.org_id
+    trail.trail_uuid = str(f"trail_{uuid4()}")
 
     # create trail
-    trail = TrailInDB(
-        **trail_object.dict(), trail_id=trail_id, user_id=user.user_id, org_id=org_id
-    )
-
-    await trails.insert_one(trail.dict())
+    db_session.add(trail)
+    db_session.commit()
+    db_session.refresh(trail)
 
     return trail
 
 
-async def get_user_trail(request: Request, org_slug: str, user: PublicUser) -> Trail:
-    trails = request.app.db["trails"]
-    trail = await trails.find_one({"user_id": user.user_id})
+async def get_user_trails(
+    request: Request,
+    user: PublicUser,
+    db_session: Session,
+) -> TrailRead:
+    statement = select(Trail).where(Trail.user_id == user.id)
+    trail = db_session.exec(statement).first()
+
     if not trail:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Trail not found"
         )
-    for element in trail["courses"]:
-        course_id = element["course_id"]
-        chapters_meta = await get_coursechapters_meta(request, course_id, user)
-        activities = chapters_meta["activities"]
-        num_activities = len(activities)
 
-        num_completed_activities = len(element.get("activities_marked_complete", []))
-        element["progress"] = (
-            round((num_completed_activities / num_activities) * 100, 2)
-            if num_activities > 0
-            else 0
+    statement = select(TrailRun).where(TrailRun.trail_id == trail.id)
+    trail_runs = db_session.exec(statement).all()
+
+    trail_runs = [
+        TrailRunRead(**trail_run.__dict__, course={}, steps=[], course_total_steps=0)
+        for trail_run in trail_runs
+    ]
+
+    # Add course object and total activities in a course to trail runs
+    for trail_run in trail_runs:
+        statement = select(Course).where(Course.id == trail_run.course_id)
+        course = db_session.exec(statement).first()
+        trail_run.course = course
+
+        # Add number of activities (steps) in a course
+        statement = select(ChapterActivity).where(
+            ChapterActivity.course_id == trail_run.course_id
         )
+        course_total_steps = db_session.exec(statement)
+        # count number of activities in a this list
+        trail_run.course_total_steps = len(course_total_steps.all())
 
-    return Trail(**trail)
+    for trail_run in trail_runs:
+        statement = select(TrailStep).where(TrailStep.trailrun_id == trail_run.id)
+        trail_steps = db_session.exec(statement).all()
 
+        trail_steps = [TrailStep(**trail_step.__dict__) for trail_step in trail_steps]
+        trail_run.steps = trail_steps
 
-async def get_user_trail_with_orgslug(
-    request: Request, user: PublicUser, org_slug: str
-) -> Trail:
-    trails = request.app.db["trails"]
-    orgs = request.app.db["organizations"]
-    courses_mongo = request.app.db["courses"]
+        for trail_step in trail_steps:
+            statement = select(Course).where(Course.id == trail_step.course_id)
+            course = db_session.exec(statement).first()
+            trail_step.data = dict(course=course)
 
-    # get org_id from orgslug
-    org = await orgs.find_one({"slug": org_slug})
-
-    trail = await trails.find_one({"user_id": user.user_id, "org_id": org["org_id"]})
-
-    if not trail:
-        return Trail(masked=False, courses=[])
-
-    course_ids = [course["course_id"] for course in trail["courses"]]
-
-    live_courses = await courses_mongo.find({"course_id": {"$in": course_ids}}).to_list(
-        length=None
+    trail_read = TrailRead(
+        **trail.dict(),
+        runs=trail_runs,
     )
 
-    for course in trail["courses"]:
-        course_id = course["course_id"]
+    return trail_read
 
-        if course_id not in [course["course_id"] for course in live_courses]:
-            course["masked"] = True
-            continue
 
-        chapters_meta = await get_coursechapters_meta(request, course_id, user)
-        activities = chapters_meta["activities"]
+async def check_trail_presence(
+    org_id: int,
+    user_id: int,
+    request: Request,
+    user: PublicUser,
+    db_session: Session,
+):
+    statement = select(Trail).where(Trail.org_id == org_id, Trail.user_id == user.id)
+    trail = db_session.exec(statement).first()
 
-        # get course object without _id
-        course_object = await courses_mongo.find_one(
-            {"course_id": course_id}, {"_id": 0}
+    if not trail:
+        trail = await create_user_trail(
+            request,
+            user,
+            TrailCreate(
+                org_id=org_id,
+                user_id=user.id,
+            ),
+            db_session,
         )
+        return trail
 
-        course["course_object"] = course_object
-        num_activities = len(activities)
+    return trail
 
-        num_completed_activities = len(course.get("activities_marked_complete", []))
-        course["progress"] = (
-            round((num_completed_activities / num_activities) * 100, 2)
-            if num_activities > 0
-            else 0
+
+async def get_user_trail_with_orgid(
+    request: Request, user: PublicUser, org_id: int, db_session: Session
+) -> TrailRead:
+    
+    trail = await check_trail_presence(
+        org_id=org_id,
+        user_id=user.id,
+        request=request,
+        user=user,
+        db_session=db_session,
+    )
+
+    statement = select(TrailRun).where(TrailRun.trail_id == trail.id)
+    trail_runs = db_session.exec(statement).all()
+
+    trail_runs = [
+        TrailRunRead(**trail_run.__dict__, course={}, steps=[], course_total_steps=0)
+        for trail_run in trail_runs
+    ]
+
+    # Add course object and total activities in a course to trail runs
+    for trail_run in trail_runs:
+        statement = select(Course).where(Course.id == trail_run.course_id)
+        course = db_session.exec(statement).first()
+        trail_run.course = course
+
+        # Add number of activities (steps) in a course
+        statement = select(ChapterActivity).where(
+            ChapterActivity.course_id == trail_run.course_id
         )
+        course_total_steps = db_session.exec(statement)
+        # count number of activities in a this list
+        trail_run.course_total_steps = len(course_total_steps.all())
 
-    return Trail(**trail)
+    for trail_run in trail_runs:
+        statement = select(TrailStep).where(TrailStep.trailrun_id == trail_run.id)
+        trail_steps = db_session.exec(statement).all()
+
+        trail_steps = [TrailStep(**trail_step.__dict__) for trail_step in trail_steps]
+        trail_run.steps = trail_steps
+
+        for trail_step in trail_steps:
+            statement = select(Course).where(Course.id == trail_step.course_id)
+            course = db_session.exec(statement).first()
+            trail_step.data = dict(course=course)
+
+    trail_read = TrailRead(
+        **trail.dict(),
+        runs=trail_runs,
+    )
+
+    return trail_read
 
 
 async def add_activity_to_trail(
-    request: Request, user: PublicUser, course_id: str, org_slug: str, activity_id: str
-) -> Trail:
-    trails = request.app.db["trails"]
-    orgs = request.app.db["organizations"]
-    courseid = "course_" + course_id
-    activityid = "activity_" + activity_id
+    request: Request,
+    user: PublicUser,
+    activity_uuid: str,
+    db_session: Session,
+) -> TrailRead:
+    # Look for the activity
+    statement = select(Activity).where(Activity.activity_uuid == activity_uuid)
+    activity = db_session.exec(statement).first()
 
-    # get org_id from orgslug
-    org = await orgs.find_one({"slug": org_slug})
-    org_id = org["org_id"]
-
-    # find a trail with the user_id and course_id in the courses array
-    trail = await trails.find_one(
-        {"user_id": user.user_id, "courses.course_id": courseid, "org_id": org_id}
-    )
-
-    if user.user_id == "anonymous":
+    if not activity:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Anonymous users cannot add activity to trail",
+            status_code=status.HTTP_404_NOT_FOUND, detail="Activity not found"
         )
 
-    if not trail:
-        return Trail(masked=False, courses=[])
+    statement = select(Course).where(Course.id == activity.course_id)
+    course = db_session.exec(statement).first()
 
-    # if a trail has course_id in the courses array, then add the activity_id to the activities_marked_complete array
-    for element in trail["courses"]:
-        if element["course_id"] == courseid:
-            if "activities_marked_complete" in element:
-                # check if activity_id is already in the array
-                if activityid not in element["activities_marked_complete"]:
-                    element["activities_marked_complete"].append(activityid)
-                else:
-                    raise HTTPException(
-                        status_code=status.HTTP_400_BAD_REQUEST,
-                        detail="Activity already marked complete",
-                    )
-            else:
-                element["activities_marked_complete"] = [activity_id]
+    if not course:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Course not found"
+        )
 
-    # modify trail object
-    await trails.replace_one({"trail_id": trail["trail_id"]}, trail)
+    trail = await check_trail_presence(
+        org_id=course.org_id,
+        user_id=user.id,
+        request=request,
+        user=user,
+        db_session=db_session,
+    )
 
-    return Trail(**trail)
+    statement = select(TrailRun).where(
+        TrailRun.trail_id == trail.id, TrailRun.course_id == course.id
+    )
+    trailrun = db_session.exec(statement).first()
+
+    if not trailrun:
+        trailrun = TrailRun(
+            trail_id=trail.id if trail.id is not None else 0,
+            course_id=course.id if course.id is not None else 0,
+            org_id=course.org_id,
+            user_id=user.id,
+            creation_date=str(datetime.now()),
+            update_date=str(datetime.now()),
+        )
+        db_session.add(trailrun)
+        db_session.commit()
+        db_session.refresh(trailrun)
+
+    statement = select(TrailStep).where(
+        TrailStep.trailrun_id == trailrun.id, TrailStep.activity_id == activity.id
+    )
+    trailstep = db_session.exec(statement).first()
+
+    if not trailstep:
+        trailstep = TrailStep(
+            trailrun_id=trailrun.id if trailrun.id is not None else 0,
+            activity_id=activity.id if activity.id is not None else 0,
+            course_id=course.id if course.id is not None else 0,
+            trail_id=trail.id if trail.id is not None else 0,
+            org_id=course.org_id,
+            complete=False,
+            teacher_verified=False,
+            grade="",
+            user_id=user.id,
+            creation_date=str(datetime.now()),
+            update_date=str(datetime.now()),
+        )
+        db_session.add(trailstep)
+        db_session.commit()
+        db_session.refresh(trailstep)
+
+    statement = select(TrailRun).where(TrailRun.trail_id == trail.id)
+    trail_runs = db_session.exec(statement).all()
+
+    trail_runs = [
+        TrailRunRead(**trail_run.__dict__, course={}, steps=[], course_total_steps=0)
+        for trail_run in trail_runs
+    ]
+
+    for trail_run in trail_runs:
+        statement = select(TrailStep).where(TrailStep.trailrun_id == trail_run.id)
+        trail_steps = db_session.exec(statement).all()
+
+        trail_steps = [TrailStep(**trail_step.__dict__) for trail_step in trail_steps]
+        trail_run.steps = trail_steps
+
+        for trail_step in trail_steps:
+            statement = select(Course).where(Course.id == trail_step.course_id)
+            course = db_session.exec(statement).first()
+            trail_step.data = dict(course=course)
+
+    trail_read = TrailRead(
+        **trail.dict(),
+        runs=trail_runs,
+    )
+
+    return trail_read
 
 
 async def add_course_to_trail(
-    request: Request, user: PublicUser, orgslug: str, course_id: str
-) -> Trail:
-    trails = request.app.db["trails"]
-    orgs = request.app.db["organizations"]
+    request: Request,
+    user: PublicUser,
+    course_uuid: str,
+    db_session: Session,
+) -> TrailRead:
+    statement = select(Course).where(Course.course_uuid == course_uuid)
+    course = db_session.exec(statement).first()
 
-    if user.user_id == "anonymous":
+    if not course:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Anonymous users cannot add activity to trail",
+            status_code=status.HTTP_404_NOT_FOUND, detail="Course not found"
         )
 
-    org = await orgs.find_one({"slug": orgslug})
+    # check if run already exists
+    statement = select(TrailRun).where(TrailRun.course_id == course.id)
+    trailrun = db_session.exec(statement).first()
 
-    org = PublicOrganization(**org)
-
-    trail = await trails.find_one({"user_id": user.user_id, "org_id": org["org_id"]})
-
-    if not trail:
-        trail_to_insert = TrailInDB(
-            trail_id=f"trail_{uuid4()}",
-            user_id=user.user_id,
-            org_id=org["org_id"],
-            courses=[],
+    if trailrun:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="TrailRun already exists"
         )
-        trail_to_insert = await trails.insert_one(trail_to_insert.dict())
 
-        trail = await trails.find_one({"_id": trail_to_insert.inserted_id})
-
-    # check if course is already present in the trail
-    for element in trail["courses"]:
-        if element["course_id"] == course_id:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Course already present in the trail",
-            )
-
-    updated_trail = TrailCourse(
-        course_id=course_id,
-        activities_data=[],
-        activities_marked_complete=[],
-        progress=0,
-        course_object={},
-        status="ongoing",
-        masked=False,
+    statement = select(Trail).where(
+        Trail.org_id == course.org_id, Trail.user_id == user.id
     )
-    trail["courses"].append(updated_trail.dict())
-    await trails.replace_one({"trail_id": trail["trail_id"]}, trail)
-    return Trail(**trail)
-
-
-async def remove_course_from_trail(
-    request: Request, user: PublicUser, orgslug: str, course_id: str
-) -> Trail:
-    trails = request.app.db["trails"]
-    orgs = request.app.db["organizations"]
-
-    if user.user_id == "anonymous":
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Anonymous users cannot add activity to trail",
-        )
-
-    org = await orgs.find_one({"slug": orgslug})
-
-    org = PublicOrganization(**org)
-    trail = await trails.find_one({"user_id": user.user_id, "org_id": org["org_id"]})
+    trail = db_session.exec(statement).first()
 
     if not trail:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Trail not found"
         )
 
-    # check if course is already present in the trail
+    statement = select(TrailRun).where(
+        TrailRun.trail_id == trail.id, TrailRun.course_id == course.id
+    )
+    trail_run = db_session.exec(statement).first()
 
-    for element in trail["courses"]:
-        if element["course_id"] == course_id:
-            trail["courses"].remove(element)
-            break
+    if not trail_run:
+        trail_run = TrailRun(
+            trail_id=trail.id if trail.id is not None else 0,
+            course_id=course.id if course.id is not None else 0,
+            org_id=course.org_id,
+            user_id=user.id,
+            creation_date=str(datetime.now()),
+            update_date=str(datetime.now()),
+        )
+        db_session.add(trail_run)
+        db_session.commit()
+        db_session.refresh(trail_run)
 
-    await trails.replace_one({"trail_id": trail["trail_id"]}, trail)
-    return Trail(**trail)
+    statement = select(TrailRun).where(TrailRun.trail_id == trail.id)
+    trail_runs = db_session.exec(statement).all()
+
+    trail_runs = [
+        TrailRunRead(**trail_run.__dict__, course={}, steps=[], course_total_steps=0)
+        for trail_run in trail_runs
+    ]
+
+    for trail_run in trail_runs:
+        statement = select(TrailStep).where(TrailStep.trailrun_id == trail_run.id)
+        trail_steps = db_session.exec(statement).all()
+
+        trail_steps = [TrailStep(**trail_step.__dict__) for trail_step in trail_steps]
+        trail_run.steps = trail_steps
+
+        for trail_step in trail_steps:
+            statement = select(Course).where(Course.id == trail_step.course_id)
+            course = db_session.exec(statement).first()
+            trail_step.data = dict(course=course)
+
+    trail_read = TrailRead(
+        **trail.dict(),
+        runs=trail_runs,
+    )
+
+    return trail_read
+
+
+async def remove_course_from_trail(
+    request: Request,
+    user: PublicUser,
+    course_uuid: str,
+    db_session: Session,
+) -> TrailRead:
+    statement = select(Course).where(Course.course_uuid == course_uuid)
+    course = db_session.exec(statement).first()
+
+    if not course:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Course not found"
+        )
+
+    statement = select(Trail).where(
+        Trail.org_id == course.org_id, Trail.user_id == user.id
+    )
+    trail = db_session.exec(statement).first()
+
+    if not trail:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Trail not found"
+        )
+
+    statement = select(TrailRun).where(
+        TrailRun.trail_id == trail.id, TrailRun.course_id == course.id
+    )
+    trail_run = db_session.exec(statement).first()
+
+    if trail_run:
+        db_session.delete(trail_run)
+        db_session.commit()
+
+    # Delete all trail steps for this course
+    statement = select(TrailStep).where(TrailStep.course_id == course.id)
+    trail_steps = db_session.exec(statement).all()
+
+    for trail_step in trail_steps:
+        db_session.delete(trail_step)
+        db_session.commit()
+
+    statement = select(TrailRun).where(TrailRun.trail_id == trail.id)
+    trail_runs = db_session.exec(statement).all()
+
+    trail_runs = [
+        TrailRunRead(**trail_run.__dict__, course={}, steps=[], course_total_steps=0)
+        for trail_run in trail_runs
+    ]
+
+    for trail_run in trail_runs:
+        statement = select(TrailStep).where(TrailStep.trailrun_id == trail_run.id)
+        trail_steps = db_session.exec(statement).all()
+
+        trail_steps = [TrailStep(**trail_step.__dict__) for trail_step in trail_steps]
+        trail_run.steps = trail_steps
+
+        for trail_step in trail_steps:
+            statement = select(Course).where(Course.id == trail_step.course_id)
+            course = db_session.exec(statement).first()
+            trail_step.data = dict(course=course)
+
+    trail_read = TrailRead(
+        **trail.dict(),
+        runs=trail_runs,
+    )
+
+    return trail_read

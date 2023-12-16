@@ -1,6 +1,8 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Depends, Request
+from sqlmodel import Session
+from src.core.events.database import get_db_session
+from src.services.dev.migration_from_mongo import start_migrate_from_mongo
 from config.config import get_learnhouse_config
-from src.services.dev.mocks.initial import create_initial_data
 
 
 router = APIRouter()
@@ -12,7 +14,9 @@ async def config():
     return config.dict()
 
 
-@router.get("/mock/initial")
-async def initial_data(request: Request):
-    await create_initial_data(request)
-    return {"Message": "Initial data created 🤖"}
+@router.get("/migrate_from_mongo")
+async def migrate_from_mongo(
+    request: Request,
+    db_session: Session = Depends(get_db_session),
+):
+    return await start_migrate_from_mongo(request, db_session)

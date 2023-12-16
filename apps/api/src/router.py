@@ -35,3 +35,4 @@ v1_router.include_router(
     tags=["install"],
     dependencies=[Depends(isInstallModeEnabled)],
 )
+
