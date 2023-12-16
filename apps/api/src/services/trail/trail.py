@@ -8,7 +8,7 @@ from src.db.courses import Course
 from src.db.trail_runs import TrailRun, TrailRunRead
 from src.db.trail_steps import TrailStep
 from src.db.trails import Trail, TrailCreate, TrailRead
-from src.db.users import AnonymousUser, PublicUser
+from src.db.users import PublicUser
 
 
 async def create_user_trail(

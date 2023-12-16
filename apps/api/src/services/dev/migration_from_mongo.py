@@ -1,4 +1,3 @@
-from datetime import date
 import datetime
 from fastapi import Request
 from sqlmodel import Session, select
