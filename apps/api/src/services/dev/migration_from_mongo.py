@@ -68,7 +68,7 @@ async def start_migrate_from_mongo(request: Request, db_session: Session):
 
             user_org_object = UserOrganization(
                 user_id=user_from_db.id,  # type: ignore
-                org_id=org_from_db.id,  # type: ignore
+                org_id=org_from_db.id if org_from_db is not None else None,  # type: ignore
                 role_id=1,
                 creation_date=str(datetime.datetime.now()),
                 update_date=str(datetime.datetime.now()),
@@ -98,7 +98,7 @@ async def start_migrate_from_mongo(request: Request, db_session: Session):
             course_uuid=course["course_id"],
             thumbnail_image=course["thumbnail"],
             tags="",
-            org_id=org_from_db.id,  # type: ignore
+            org_id=org_from_db.id if org_from_db is not None else None,  # type: ignore
             public=course["public"],
             creation_date=str(course["creationDate"]),
             update_date=str(course["updateDate"]),
@@ -120,7 +120,7 @@ async def start_migrate_from_mongo(request: Request, db_session: Session):
 
             authorship = ResourceAuthor(
                 resource_uuid=course_from_db.course_uuid,  # type: ignore
-                user_id=user_from_db.id,  # type: ignore
+                user_id=user_from_db.id if user_from_db is not None else None,  # type: ignore
                 authorship=ResourceAuthorshipEnum.CREATOR,
                 creation_date=str(datetime.datetime.now()),
                 update_date=str(datetime.datetime.now()),
@@ -141,7 +141,7 @@ async def start_migrate_from_mongo(request: Request, db_session: Session):
                 chapter_uuid=chapter["coursechapter_id"].replace(
                     "coursechapter", "chapter"
                 ),
-                org_id=org_from_db.id,  # type: ignore
+                org_id=org_from_db.id if org_from_db is not None else None, # type: ignore
                 course_id=course_from_db.id,  # type: ignore
                 creation_date=str(datetime.datetime.now()),
                 update_date=str(datetime.datetime.now()),
@@ -161,7 +161,7 @@ async def start_migrate_from_mongo(request: Request, db_session: Session):
                 chapter_id=chapter_from_db.id,  # type: ignore
                 course_id=course_from_db.id,  # type: ignore
                 order=order,
-                org_id=org_from_db.id,  # type: ignore
+                org_id=org_from_db.id if org_from_db is not None else None,  # type: ignore
                 creation_date=str(datetime.datetime.now()),
                 update_date=str(datetime.datetime.now()),
             )
@@ -187,7 +187,7 @@ async def start_migrate_from_mongo(request: Request, db_session: Session):
                     type_to_use = ActivityTypeEnum.TYPE_VIDEO
                     sub_type_to_use = ActivitySubTypeEnum.SUBTYPE_VIDEO_HOSTED
 
-                if activity["type"] == "external_video":
+                if "external_video" in activity["content"]:
                     type_to_use = ActivityTypeEnum.TYPE_VIDEO
                     sub_type_to_use = ActivitySubTypeEnum.SUBTYPE_VIDEO_YOUTUBE
 
@@ -205,9 +205,10 @@ async def start_migrate_from_mongo(request: Request, db_session: Session):
                     version=1,
                     published_version=1,
                     activity_type=type_to_use,
+                    content=activity["content"],
                     activity_sub_type=sub_type_to_use,
                     chapter_id=chapter_from_db.id,  # type: ignore
-                    org_id=org_from_db.id,  # type: ignore
+                    org_id=org_from_db.id if org_from_db is not None else None,  # type: ignore
                     course_id=course_from_db.id,  # type: ignore
                     creation_date=str(activity["creationDate"]),
                     update_date=str(activity["updateDate"]),
@@ -227,7 +228,7 @@ async def start_migrate_from_mongo(request: Request, db_session: Session):
                     activity_id=activity_from_db.id,  # type: ignore
                     order=activity_order,
                     course_id=course_from_db.id,  # type: ignore
-                    org_id=org_from_db.id,  # type: ignore
+                    org_id=org_from_db.id if org_from_db is not None else None,  # type: ignore
                     creation_date=str(datetime.datetime.now()),
                     update_date=str(datetime.datetime.now()),
                 )
@@ -263,7 +264,7 @@ async def start_migrate_from_mongo(request: Request, db_session: Session):
                         content=block["block_data"],
                         block_type=type_to_use,
                         activity_id=activity_from_db.id,  # type: ignore
-                        org_id=org_from_db.id,  # type: ignore
+                        org_id=org_from_db.id if org_from_db is not None else None,  # type: ignore
                         course_id=course_from_db.id,  # type: ignore
                         chapter_id=chapter_from_db.id,  # type: ignore
                         creation_date=str(datetime.datetime.now()),
