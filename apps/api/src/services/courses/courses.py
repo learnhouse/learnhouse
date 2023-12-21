@@ -96,11 +96,16 @@ async def get_course_meta(
     chapters = await get_course_chapters(request, course.id, db_session, current_user)
 
     # Trail
-    trail = await get_user_trail_with_orgid(
-        request, current_user, course.org_id, db_session
-    )
+    trail = None
 
-    trail = TrailRead.from_orm(trail)
+    if isinstance(current_user, AnonymousUser):
+        trail = None
+    else:
+        trail = await get_user_trail_with_orgid(
+            request, current_user, course.org_id, db_session
+        )
+        trail = TrailRead.from_orm(trail)
+
 
     return FullCourseReadWithTrail(
         **course.dict(),

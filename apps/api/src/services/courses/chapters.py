@@ -207,6 +207,10 @@ async def get_course_chapters(
     page: int = 1,
     limit: int = 10,
 ) -> List[ChapterRead]:
+    
+    statement = select(Course).where(Course.id == course_id)
+    course = db_session.exec(statement).first()
+
     statement = (
         select(Chapter)
         .join(CourseChapter, Chapter.id == CourseChapter.chapter_id)
@@ -220,7 +224,7 @@ async def get_course_chapters(
     chapters = [ChapterRead(**chapter.dict(), activities=[]) for chapter in chapters]
 
     # RBAC check
-    await rbac_check(request, "chapter_x", current_user, "read", db_session)
+    await rbac_check(request, course.course_uuid, current_user, "read", db_session)
 
     # Get activities for each chapter
     for chapter in chapters:
@@ -532,7 +536,7 @@ async def reorder_chapters_and_activities(
 
 async def rbac_check(
     request: Request,
-    course_id: str,
+    course_uuid: str,
     current_user: PublicUser | AnonymousUser,
     action: Literal["create", "read", "update", "delete"],
     db_session: Session,
@@ -543,7 +547,7 @@ async def rbac_check(
         request,
         current_user.id,
         action,
-        course_id,
+        course_uuid,
         db_session,
     )
 
