@@ -7,7 +7,7 @@ import FormLayout, { ButtonBlack, FormField, FormLabel, FormLabelAndMessage, For
 import Image from 'next/image';
 import * as Form from '@radix-ui/react-form';
 import { getOrgLogoMediaDirectory } from '@services/media/media';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Check, User } from 'lucide-react';
 import Link from 'next/link';
 import { signup } from '@services/auth/auth';
 import { getUriWithOrg } from '@services/config/config';
@@ -44,10 +44,6 @@ const validate = (values: any) => {
         errors.username = 'Username must be at least 4 characters';
     }
 
-    if (!values.full_name) {
-        errors.full_name = 'Required';
-    }
-
     if (!values.bio) {
         errors.bio = 'Required';
     }
@@ -61,6 +57,7 @@ function SignUpClient(props: SignUpClientProps) {
     const [isSubmitting, setIsSubmitting] = React.useState(false);
     const router = useRouter();
     const [error, setError] = React.useState('');
+    const [message, setMessage] = React.useState('');
     const formik = useFormik({
         initialValues: {
             org_slug: props.org?.slug,
@@ -68,7 +65,8 @@ function SignUpClient(props: SignUpClientProps) {
             password: '',
             username: '',
             bio: '',
-            full_name: '',
+            first_name: '',
+            last_name: '',
         },
         validate,
         onSubmit: async values => {
@@ -76,7 +74,8 @@ function SignUpClient(props: SignUpClientProps) {
             let res = await signup(values);
             let message = await res.json();
             if (res.status == 200) {
-                router.push(`/`);
+                //router.push(`/login`);
+                setMessage('Your account was successfully created')
                 setIsSubmitting(false);
             }
             else if (res.status == 401 || res.status == 400 || res.status == 404 || res.status == 409) {
@@ -126,6 +125,16 @@ function SignUpClient(props: SignUpClientProps) {
                             <div className="font-bold text-sm">{error}</div>
                         </div>
                     )}
+                    {message && (
+                        <div className="flex flex-col space-y-4 justify-center bg-green-200 rounded-md text-green-950 space-x-2 items-center p-4 transition-all shadow-sm">
+                            <div className='flex space-x-2'>
+                                <Check size={18} />
+                                <div className="font-bold text-sm">{message}</div>
+                            </div>
+                            <hr className='border-green-900/20 800 w-40 border' />
+                            <Link className='flex space-x-2 items-center' href={'/login'}><User size={14} /> <div>Login </div></Link>
+                        </div>
+                    )}
                     <FormLayout onSubmit={formik.handleSubmit}>
                         <FormField name="email">
                             <FormLabelAndMessage label='Email' message={formik.errors.email} />
@@ -148,16 +157,6 @@ function SignUpClient(props: SignUpClientProps) {
                             <Form.Control asChild>
                                 <Input onChange={formik.handleChange} value={formik.values.username} type="text" required />
                             </Form.Control>
-                        </FormField>
-
-                        {/* for full name  */}
-                        <FormField name="full_name">
-                            <FormLabelAndMessage label='Full Name' message={formik.errors.full_name} />
-
-                            <Form.Control asChild>
-                                <Input onChange={formik.handleChange} value={formik.values.full_name} type="text" required />
-                            </Form.Control>
-
                         </FormField>
 
                         {/* for bio  */}
