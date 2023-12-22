@@ -93,7 +93,7 @@ async def update_install_instance(
 
 
 # Install Default roles
-async def install_default_elements(request: Request, data: dict, db_session: Session):
+async def install_default_elements( data: dict, db_session: Session):
     # remove all default roles
     statement = select(Role).where(Role.role_type == RoleTypeEnum.TYPE_GLOBAL)
     roles = db_session.exec(statement).all()
@@ -279,7 +279,7 @@ async def install_default_elements(request: Request, data: dict, db_session: Ses
 
 # Organization creation
 async def install_create_organization(
-    request: Request, org_object: OrganizationCreate, db_session: Session
+     org_object: OrganizationCreate, db_session: Session
 ):
     org = Organization.from_orm(org_object)
 
@@ -296,7 +296,7 @@ async def install_create_organization(
 
 
 async def install_create_organization_user(
-    request: Request, user_object: UserCreate, org_slug: str, db_session: Session
+     user_object: UserCreate, org_slug: str, db_session: Session
 ):
     user = User.from_orm(user_object)
 
