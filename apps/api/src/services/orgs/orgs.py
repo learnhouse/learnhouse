@@ -87,8 +87,11 @@ async def create_org(
 
     org = Organization.from_orm(org_object)
 
-    # RBAC check
-    await rbac_check(request, org.org_uuid, current_user, "create", db_session)
+    if isinstance(current_user,AnonymousUser): 
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="You should be logged in to be able to achieve this action",
+        )
 
     # Complete the org object
     org.org_uuid = f"org_{uuid4()}"
