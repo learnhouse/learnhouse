@@ -17,7 +17,7 @@ async def create_user_trail(
     trail_object: TrailCreate,
     db_session: Session,
 ) -> Trail:
-    statement = select(Trail).where(Trail.org_id == trail_object.org_id)
+    statement = select(Trail).where(Trail.org_id == trail_object.org_id, Trail.user_id == user.id)
     trail = db_session.exec(statement).first()
 
     if trail:
@@ -103,7 +103,7 @@ async def check_trail_presence(
     user: PublicUser,
     db_session: Session,
 ):
-    statement = select(Trail).where(Trail.org_id == org_id, Trail.user_id == user.id)
+    statement = select(Trail).where(Trail.org_id == org_id, Trail.user_id == user_id)
     trail = db_session.exec(statement).first()
 
     if not trail:
