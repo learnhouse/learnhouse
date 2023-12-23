@@ -42,7 +42,8 @@ const CourseClient = (props: any) => {
   }
 
   function isCourseStarted() {
-    const runs = course.trail.runs;
+    const runs = course.trail?.runs;
+    if (!runs) return false;
     return runs.some((run: any) => run.status === "STATUS_IN_PROGRESS" && run.course_id === course.id);
   }
 
