@@ -3,22 +3,33 @@ import { useOrg } from '@components/Contexts/OrgContext';
 import { useSession } from '@components/Contexts/SessionContext';
 import ToolTip from '@components/StyledElements/Tooltip/Tooltip'
 import LearnHouseDashboardLogo from '@public/dashLogo.png';
+import { logout } from '@services/auth/auth';
 import Avvvatars from 'avvvatars-react';
-import { ArrowLeft, Book, BookCopy, Home, School, Settings } from 'lucide-react'
+import { ArrowLeft, Book, BookCopy, Home, LogOut, School, Settings } from 'lucide-react'
 import Image from 'next/image';
 import Link from 'next/link'
+import { useRouter } from 'next/navigation';
 import React, { use, useEffect } from 'react'
 
 function LeftMenu() {
     const org = useOrg() as any;
     const session = useSession() as any;
     const [loading, setLoading] = React.useState(true);
+    const route = useRouter();
 
     function waitForEverythingToLoad() {
         if (org && session) {
             return true;
         }
         return false;
+    }
+
+    async function logOutUI() {
+        const res = await logout();
+        if (res) {
+            route.push('/login');
+        }
+
     }
 
     useEffect(() => {
@@ -59,20 +70,23 @@ function LeftMenu() {
                     </ToolTip>
                 </div>
                 <div className='flex flex-col mx-auto pb-7 space-y-2'>
-                    <ToolTip content={session.user.username + "'s Settings"} slateBlack sideOffset={8} side='right'  >
-                        <Link href={'/dash/user/settings/general'} className='py-3'>
-                            <Settings className='mx-auto text-neutral-400 cursor-pointer' size={18} />
-                        </Link>
-                    </ToolTip>
-                    <div className="flex items-center flex-col space-y-4">
+
+                    <div className="flex items-center flex-col space-y-2">
                         <ToolTip content={session.user.username} slateBlack sideOffset={8} side='right'  >
                             <div className="mx-auto shadow-lg">
                                 <Avvvatars radius={3} border borderColor='white' borderSize={3} size={35} value={session.user.user_uuid} style="shape" />
                             </div>
                         </ToolTip>
-                        <ToolTip content={'Learnhouse Version'} slateBlack sideOffset={8} side='right'  >
-                            <div className='py-1 px-3 bg-white/10 opacity-40 rounded-full text-[10px] uppercase justify-center text-center'>alpha</div>
-                        </ToolTip>
+                        <div className='flex items-center flex-col space-y-1'>
+                            <ToolTip content={session.user.username + "'s Settings"} slateBlack sideOffset={8} side='right'  >
+                                <Link href={'/dash/user/settings/general'} className='py-3'>
+                                    <Settings className='mx-auto text-neutral-400 cursor-pointer' size={18} />
+                                </Link>
+                            </ToolTip>
+                            <ToolTip content={'Logout'} slateBlack sideOffset={8} side='right'  >
+                                <LogOut onClick={() => logOutUI()} className='mx-auto text-neutral-400 cursor-pointer' size={14} />
+                            </ToolTip>
+                        </div>
                     </div>
 
                 </div>
