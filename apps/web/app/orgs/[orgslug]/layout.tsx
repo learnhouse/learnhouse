@@ -1,20 +1,17 @@
 'use client';
 import { OrgProvider } from "@components/Contexts/OrgContext";
-import AuthProvider from "@components/Security/AuthContext";
-import { getAPIUrl } from "@services/config/config";
-import { swrFetcher } from "@services/utils/ts/requests";
+import SessionProvider from "@components/Contexts/SessionContext";
 import "@styles/globals.css";
-import useSWR from "swr";
 
 export default function RootLayout({ children, params }: { children: React.ReactNode, params: any }) {
 
   return (
     <div>
-      <AuthProvider orgslug={params.orgslug}>
-        <OrgProvider orgslug={params.orgslug}>
+      <OrgProvider orgslug={params.orgslug}>
+        <SessionProvider>
           {children}
-        </OrgProvider>
-      </AuthProvider>
+        </SessionProvider>
+      </OrgProvider>
     </div>
   );
 }

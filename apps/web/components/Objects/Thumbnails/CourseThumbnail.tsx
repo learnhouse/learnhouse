@@ -54,7 +54,7 @@ const AdminEditsArea = (props: { orgSlug: string, courseId: string, course: any,
     return (
         <AuthenticatedClientElement
             action="update"
-            ressourceType="course"
+            ressourceType="courses"
             checkMethod='roles' orgId={props.course.org_id}>
             <div className="flex space-x-2 absolute z-20 bottom-14 right-[15px] transform">
                 <Link href={getUriWithOrg(props.orgSlug, "/dash/courses/course/" + removeCoursePrefix(props.courseId) + "/general")}>
