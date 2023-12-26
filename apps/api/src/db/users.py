@@ -1,5 +1,9 @@
 from typing import Optional
+from pydantic import BaseModel
 from sqlmodel import Field, SQLModel
+
+from src.db.roles import RoleRead
+from src.db.organizations import OrganizationRead
 
 
 class UserBase(SQLModel):
@@ -33,13 +37,26 @@ class UserRead(UserBase):
     id: int
     user_uuid: str
 
+
 class PublicUser(UserRead):
     pass
+
+
+class UserRoleWithOrg(BaseModel):
+    role: RoleRead
+    org: OrganizationRead
+
+
+class UserSession(BaseModel):
+    user: UserRead
+    roles: list[UserRoleWithOrg]
+
 
 class AnonymousUser(SQLModel):
     id: int = 0
     user_uuid: str = "user_anonymous"
     username: str = "anonymous"
+
 
 class User(UserBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)

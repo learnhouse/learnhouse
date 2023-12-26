@@ -69,7 +69,7 @@ const OrgHomePage = async (params: any) => {
           </div>
           <AuthenticatedClientElement
             checkMethod='roles'
-            ressourceType='collection'
+            ressourceType='collections'
             action='create'
             orgId={org_id}>
             <Link href={getUriWithOrg(orgslug, "/collections/new")}>
@@ -110,7 +110,7 @@ const OrgHomePage = async (params: any) => {
             <TypeOfContentTitle title="Courses" type="cou" />
           </div>
           <AuthenticatedClientElement
-            ressourceType='course'
+            ressourceType='courses'
             action='create'
             checkMethod='roles'
             orgId={org_id}>

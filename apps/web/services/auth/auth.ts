@@ -45,6 +45,22 @@ export async function getUserInfo(token: string): Promise<any> {
     .catch((error) => console.log("error", error));
 }
 
+export async function getUserSession(token: string): Promise<any> {
+  const origin = window.location.origin;
+  const HeadersConfig = new Headers({ Authorization: `Bearer ${token}`, Origin: origin });
+
+  const requestOptions: any = {
+    method: "GET",
+    headers: HeadersConfig,
+    redirect: "follow",
+    credentials: "include",
+  };
+
+  return fetch(`${getAPIUrl()}users/session`, requestOptions)
+    .then((result) => result.json())
+    .catch((error) => console.log("error", error));
+}
+
 export async function getNewAccessTokenUsingRefreshToken(): Promise<any> {
   const requestOptions: any = {
     method: "POST",

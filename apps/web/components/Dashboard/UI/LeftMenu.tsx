@@ -1,6 +1,6 @@
 'use client';
 import { useOrg } from '@components/Contexts/OrgContext';
-import { useAuth } from '@components/Security/AuthContext';
+import { useSession } from '@components/Contexts/SessionContext';
 import ToolTip from '@components/StyledElements/Tooltip/Tooltip'
 import LearnHouseDashboardLogo from '@public/dashLogo.png';
 import Avvvatars from 'avvvatars-react';
@@ -11,11 +11,11 @@ import React, { use, useEffect } from 'react'
 
 function LeftMenu() {
     const org = useOrg() as any;
-    const auth = useAuth() as any;
+    const session = useSession() as any;
     const [loading, setLoading] = React.useState(true);
 
     function waitForEverythingToLoad() {
-        if (org && auth) {
+        if (org && session) {
             return true;
         }
         return false;
@@ -59,15 +59,15 @@ function LeftMenu() {
                     </ToolTip>
                 </div>
                 <div className='flex flex-col mx-auto pb-7 space-y-2'>
-                    <ToolTip content={auth.user.username + "'s Settings"} slateBlack sideOffset={8} side='right'  >
+                    <ToolTip content={session.user.username + "'s Settings"} slateBlack sideOffset={8} side='right'  >
                         <Link href={'/dash/user/settings/general'} className='py-3'>
                             <Settings className='mx-auto text-neutral-400 cursor-pointer' size={18} />
                         </Link>
                     </ToolTip>
                     <div className="flex items-center flex-col space-y-4">
-                        <ToolTip content={auth.user.username} slateBlack sideOffset={8} side='right'  >
+                        <ToolTip content={session.user.username} slateBlack sideOffset={8} side='right'  >
                             <div className="mx-auto shadow-lg">
-                                <Avvvatars radius={3} border borderColor='white' borderSize={3} size={35} value={auth.user.user_uuid} style="shape" />
+                                <Avvvatars radius={3} border borderColor='white' borderSize={3} size={35} value={session.user.user_uuid} style="shape" />
                             </div>
                         </ToolTip>
                         <ToolTip content={'Learnhouse Version'} slateBlack sideOffset={8} side='right'  >
