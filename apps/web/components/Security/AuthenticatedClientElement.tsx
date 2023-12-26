@@ -1,49 +1,73 @@
 'use client';
 import React from "react";
-import { AuthContext } from "./AuthProviderDepreceated";
 import useSWR, { mutate } from "swr";
 import { getAPIUrl } from "@services/config/config";
 import { swrFetcher } from "@services/utils/ts/requests";
+import { useSession } from "@components/Contexts/SessionContext";
+import { useOrg } from "@components/Contexts/OrgContext";
 
 interface AuthenticatedClientElementProps {
     children: React.ReactNode;
     checkMethod: 'authentication' | 'roles';
     orgId?: string;
-    ressourceType?: 'collection' | 'course' | 'activity' | 'user' | 'organization';
+    ressourceType?: 'collections' | 'courses' | 'activities' | 'users' | 'organizations';
     action?: 'create' | 'update' | 'delete' | 'read';
 }
 
-function generateRessourceId(ressourceType: string) {
-    // for every type of ressource, we need to generate a ressource id, example for a collection: col_XXXXX 
-    if (ressourceType == 'collection') {
-        return `collection_xxxx`
-    }
-    else if (ressourceType == 'course') {
-        return `course_xxxx`
-    }
-    else if (ressourceType == 'activity') {
-        return `activity_xxxx`
-    }
-    else if (ressourceType == 'user') {
-        return `user_xxxx`
-    }
-    else if (ressourceType == 'organization') {
-        return `org_xxxx`
-    }
-    else if (ressourceType === null) {
-        return `n/a`
-    }
-}
+
 
 export const AuthenticatedClientElement = (props: AuthenticatedClientElementProps) => {
-    const auth: any = React.useContext(AuthContext);
-    const { data: authorization_status, error: error } = useSWR(props.checkMethod == 'roles' && props.ressourceType ? `${getAPIUrl()}users/authorize/ressource/${generateRessourceId(props.ressourceType)}/action/${props.action}` : null, swrFetcher);
-    console.log(authorization_status);
+    const [isAllowed, setIsAllowed] = React.useState(false);
+    const session = useSession() as any;
+    const org = useOrg() as any;
+    
 
-    if ((props.checkMethod == 'authentication' && auth.isAuthenticated) || (auth.isAuthenticated && props.checkMethod == 'roles' && authorization_status)) {
-        return <>{props.children}</>;
+    function isUserAllowed(roles: any[], action: string, resourceType: string, org_uuid: string): boolean {
+        // Iterate over the user's roles
+        for (const role of roles) {
+           
+            // Check if the role is for the right organization
+            if (role.org.org_uuid === org_uuid) {
+                // Check if the user has the role for the resource type
+                if (role.role.rights && role.role.rights[resourceType]) {
+
+                
+                    // Check if the user is allowed to execute the action
+                    const actionKey = `action_${action}`;
+                    if (role.role.rights[resourceType][actionKey] === true) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        // If no role matches the organization, resource type, and action, return false
+        return false;
     }
-    return <></>;
+
+    function check() {
+
+        if (props.checkMethod === 'authentication') {
+            setIsAllowed(session.isAuthenticated);
+        } else if (props.checkMethod === 'roles') {
+            return setIsAllowed(isUserAllowed(session.roles, props.action!, props.ressourceType!, org.org_uuid));
+        }
+
+    }
+
+    React.useEffect(() => {
+        if (session.isLoading) {
+            return;
+        }
+
+        check();
+    }, [session, org])
+
+    return (
+        <>
+            {isAllowed && props.children}
+        </>
+    )
 
 
 }

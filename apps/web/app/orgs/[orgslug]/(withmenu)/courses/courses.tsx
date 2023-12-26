@@ -34,7 +34,7 @@ function Courses(props: CourseProps) {
                     <TypeOfContentTitle title="Courses" type="cou" />
                     <AuthenticatedClientElement checkMethod='roles'
                         action='create'
-                        ressourceType='course'
+                        ressourceType='courses'
                         orgId={props.org_id}>
                         <Modal
                             isDialogOpen={newCourseModal}
@@ -78,7 +78,7 @@ function Courses(props: CourseProps) {
                                 </div>
                                 <AuthenticatedClientElement
                                     action='create'
-                                    ressourceType='course'
+                                    ressourceType='courses'
                                     checkMethod='roles' orgId={props.org_id}>
                                     <Modal
                                         isDialogOpen={newCourseModal}

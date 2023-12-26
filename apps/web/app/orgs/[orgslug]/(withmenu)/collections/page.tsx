@@ -57,7 +57,7 @@ const CollectionsPage = async (params: any) => {
             <div className="flex justify-between" >
                 <TypeOfContentTitle title="Collections" type="col" />
                 <AuthenticatedClientElement
-                    ressourceType="collection"
+                    ressourceType="collections"
                     action="create"
                     checkMethod='roles' orgId={org_id}>
                     <Link className="flex justify-center" href={getUriWithOrg(orgslug, "/collections/new")}>
@@ -85,7 +85,7 @@ const CollectionsPage = async (params: any) => {
                                 <p className="text-lg text-gray-400">Create a collection to group courses together</p>
                             </div>
                             <AuthenticatedClientElement checkMethod='roles'
-                                ressourceType="collection"
+                                ressourceType="collections"
                                 action="create"
                                 orgId={org_id}>
                                 <Link href={getUriWithOrg(orgslug, "/collections/new")}>

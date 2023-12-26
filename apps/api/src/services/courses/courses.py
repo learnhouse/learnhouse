@@ -327,7 +327,7 @@ async def get_courses_orgslug(
     statement_public = (
         select(Course)
         .join(Organization)
-        .where(Organization.slug == org_slug, Course.public == True)
+        .where(Organization.slug == org_slug, Course.public is True)
     )
     statement_all = (
         select(Course).join(Organization).where(Organization.slug == org_slug)

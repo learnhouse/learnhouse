@@ -58,7 +58,7 @@ const CollectionAdminEditsArea = (props: any) => {
     return (
         <AuthenticatedClientElement 
         action="delete"
-        ressourceType="collection"
+        ressourceType="collections"
         orgId={props.org_id} checkMethod='roles'>
             <div className="flex space-x-1  justify-center mx-auto z-20 ">
                 <ConfirmationModal
