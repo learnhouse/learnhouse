@@ -327,7 +327,7 @@ async def get_courses_orgslug(
     statement_public = (
         select(Course)
         .join(Organization)
-        .where(Organization.slug == org_slug, Course.public is True)
+        .where(Organization.slug == org_slug, Course.public == True)
     )
     statement_all = (
         select(Course).join(Organization).where(Organization.slug == org_slug)
@@ -376,7 +376,6 @@ async def rbac_check(
             res = await authorization_verify_if_element_is_public(
                 request, course_uuid, action, db_session
             )
-            print('res',res)
             return res
         else:
             res = await authorization_verify_based_on_roles_and_authorship(
