@@ -1,5 +1,4 @@
 import { default as React, } from "react";
-import AuthProvider from "@components/Security/AuthProviderDepreceated";
 import EditorWrapper from "@components/Objects/Editor/EditorWrapper";
 import { getCourseMetadataWithAuthHeader } from "@services/courses/courses";
 import { cookies } from "next/headers";
@@ -7,6 +6,7 @@ import { Metadata } from "next";
 import { getActivityWithAuthHeader } from "@services/courses/activities";
 import { getAccessTokenFromRefreshTokenCookie, getNewAccessTokenUsingRefreshTokenServer } from "@services/auth/auth";
 import { getOrganizationContextInfo, getOrganizationContextInfoWithId } from "@services/organizations/orgs";
+import SessionProvider from "@components/Contexts/SessionContext";
 
 type MetadataProps = {
   params: { orgslug: string, courseid: string, activityid: string };
@@ -35,13 +35,13 @@ const EditActivity = async (params: any) => {
   const courseInfo = await getCourseMetadataWithAuthHeader(courseid, { revalidate: 0, tags: ['courses'] }, access_token ? access_token : null)
   const activity = await getActivityWithAuthHeader(activityuuid, { revalidate: 0, tags: ['activities'] }, access_token ? access_token : null)
   const org = await getOrganizationContextInfoWithId(courseInfo.org_id, { revalidate: 1800, tags: ['organizations'] });
-  console.log('courseInfo', courseInfo )
+  console.log('courseInfo', courseInfo)
 
   return (
     <div>
-      <AuthProvider>
+      <SessionProvider>
         <EditorWrapper org={org} course={courseInfo} activity={activity} content={activity.content}></EditorWrapper>
-      </AuthProvider>
+      </SessionProvider>
     </div>
   );
 }

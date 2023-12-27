@@ -37,7 +37,7 @@ function CoursesHome(params: CourseProps) {
                         <div className='pt-3 flex font-bold text-4xl'>Courses</div>
                         <AuthenticatedClientElement checkMethod='roles'
                             action='create'
-                            ressourceType='course'
+                            ressourceType='courses'
                             orgId={params.org_id}>
                             <Modal
                                 isDialogOpen={newCourseModal}
@@ -80,7 +80,7 @@ function CoursesHome(params: CourseProps) {
                             </div>
                             <AuthenticatedClientElement
                                 action='create'
-                                ressourceType='course'
+                                ressourceType='courses'
                                 checkMethod='roles' orgId={params.org_id}>
                                 <Modal
                                     isDialogOpen={newCourseModal}

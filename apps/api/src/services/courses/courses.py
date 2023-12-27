@@ -96,11 +96,16 @@ async def get_course_meta(
     chapters = await get_course_chapters(request, course.id, db_session, current_user)
 
     # Trail
-    trail = await get_user_trail_with_orgid(
-        request, current_user, course.org_id, db_session
-    )
+    trail = None
 
-    trail = TrailRead.from_orm(trail)
+    if isinstance(current_user, AnonymousUser):
+        trail = None
+    else:
+        trail = await get_user_trail_with_orgid(
+            request, current_user, course.org_id, db_session
+        )
+        trail = TrailRead.from_orm(trail)
+
 
     return FullCourseReadWithTrail(
         **course.dict(),
@@ -359,7 +364,6 @@ async def get_courses_orgslug(
 
 ## 🔒 RBAC Utils ##
 
-
 async def rbac_check(
     request: Request,
     course_uuid: str,
@@ -369,13 +373,16 @@ async def rbac_check(
 ):
     if action == "read":
         if current_user.id == 0:  # Anonymous user
-            await authorization_verify_if_element_is_public(
+            res = await authorization_verify_if_element_is_public(
                 request, course_uuid, action, db_session
             )
+            print('res',res)
+            return res
         else:
-            await authorization_verify_based_on_roles_and_authorship(
+            res = await authorization_verify_based_on_roles_and_authorship(
                 request, current_user.id, action, course_uuid, db_session
             )
+            return res
     else:
         await authorization_verify_if_user_is_anon(current_user.id)
 

@@ -11,6 +11,8 @@ botocore
 python-jose
 passlib
 fastapi-jwt-auth
+pytest
+httpx
 faker
 requests
 pyyaml
