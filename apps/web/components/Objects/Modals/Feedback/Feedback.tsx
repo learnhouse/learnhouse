@@ -4,11 +4,11 @@ import * as Form from '@radix-ui/react-form'
 import React, { useState } from "react";
 import * as Sentry from '@sentry/browser';
 import { CheckCircleIcon } from "lucide-react";
-import { AuthContext } from "@components/Security/AuthProviderDepreceated";
 import { randomUUID } from "crypto";
+import { useSession } from "@components/Contexts/SessionContext";
 
 export const FeedbackModal = (user: any) => {
-    const auth: any = React.useContext(AuthContext);
+    const session = useSession() as any;
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [view, setView] = useState<"feedbackForm" | "success">("feedbackForm")
@@ -19,7 +19,7 @@ export const FeedbackModal = (user: any) => {
         e.preventDefault();
         setIsSubmitting(true);
 
-        const user = auth.userInfo.user_object ? auth.userInfo.user_object : null;
+        const user = session.user ? session.user : null;
         const eventId = Sentry.captureMessage(`Feedback from ${user ? user.email : 'Anonymous'} - ${feedbackMessage}`);
 
         const userFeedback = {
