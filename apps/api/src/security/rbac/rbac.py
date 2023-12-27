@@ -23,7 +23,7 @@ async def authorization_verify_if_element_is_public(
         if element_nature == "courses":
             print("looking for course")
             statement = select(Course).where(
-                Course.public is True, Course.course_uuid == element_uuid
+                Course.public == True, Course.course_uuid == element_uuid
             )
             course = db_session.exec(statement).first()
             if course:
@@ -33,7 +33,7 @@ async def authorization_verify_if_element_is_public(
 
         if element_nature == "collections":
             statement = select(Collection).where(
-                Collection.public is True, Collection.collection_uuid == element_uuid
+                Collection.public == True, Collection.collection_uuid == element_uuid
             )
             collection = db_session.exec(statement).first()
 
