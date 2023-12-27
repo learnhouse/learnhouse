@@ -1,14 +1,14 @@
 import "@styles/globals.css";
 import { Menu } from "@components/Objects/Menu/Menu";
-import AuthProvider from "@components/Security/AuthProviderDepreceated";
+import SessionProvider from "@components/Contexts/SessionContext";
 
 export default function RootLayout({ children, params }: { children: React.ReactNode , params :any}) {
   return (
     <>
-      <AuthProvider>
+      <SessionProvider>
         <Menu orgslug={params?.orgslug}></Menu>
         {children}
-      </AuthProvider>
+      </SessionProvider>
     </>
   );
 }

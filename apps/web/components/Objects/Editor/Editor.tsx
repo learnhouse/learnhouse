@@ -2,7 +2,6 @@
 import React from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { AuthContext } from "../../Security/AuthProviderDepreceated";
 import learnhouseIcon from "public/learnhouse_icon.png";
 import { ToolbarButtons } from "./Toolbar/ToolbarButtons";
 import { motion } from "framer-motion";
@@ -38,6 +37,7 @@ import python from 'highlight.js/lib/languages/python'
 import java from 'highlight.js/lib/languages/java'
 import { CourseProvider } from "@components/Contexts/CourseContext";
 import { OrgProvider } from "@components/Contexts/OrgContext";
+import { useSession } from "@components/Contexts/SessionContext";
 
 
 interface Editor {
@@ -51,7 +51,7 @@ interface Editor {
 }
 
 function Editor(props: Editor) {
-  const auth: any = React.useContext(AuthContext);
+  const session = useSession() as any;
   // remove course_ from course_uuid
   const course_uuid = props.course.course_uuid.substring(7);
 
@@ -164,8 +164,8 @@ function Editor(props: Editor) {
               </EditorDocSection>
               <EditorUsersSection>
                 <EditorUserProfileWrapper>
-                  {!auth.isAuthenticated && <span>Loading</span>}
-                  {auth.isAuthenticated && <Avvvatars value={auth.userInfo.user_uuid} style="shape" />}
+                  {!session.isAuthenticated && <span>Loading</span>}
+                  {session.isAuthenticated && <Avvvatars value={session.user.user_uuid} style="shape" />}
                 </EditorUserProfileWrapper>
                 <DividerVerticalIcon style={{ marginTop: "auto", marginBottom: "auto", color: "grey", opacity: '0.5' }} />
                 <EditorLeftOptionsSection className="space-x-2 pl-2 pr-3">

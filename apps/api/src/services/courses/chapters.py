@@ -5,6 +5,7 @@ from sqlmodel import Session, select
 from src.db.users import AnonymousUser
 from src.security.rbac.rbac import (
     authorization_verify_based_on_roles_and_authorship,
+    authorization_verify_if_element_is_public,
     authorization_verify_if_user_is_anon,
 )
 from src.db.course_chapters import CourseChapter
@@ -207,6 +208,10 @@ async def get_course_chapters(
     page: int = 1,
     limit: int = 10,
 ) -> List[ChapterRead]:
+    
+    statement = select(Course).where(Course.id == course_id)
+    course = db_session.exec(statement).first()
+
     statement = (
         select(Chapter)
         .join(CourseChapter, Chapter.id == CourseChapter.chapter_id)
@@ -220,7 +225,7 @@ async def get_course_chapters(
     chapters = [ChapterRead(**chapter.dict(), activities=[]) for chapter in chapters]
 
     # RBAC check
-    await rbac_check(request, "chapter_x", current_user, "read", db_session)
+    await rbac_check(request, course.course_uuid, current_user, "read", db_session)
 
     # Get activities for each chapter
     for chapter in chapters:
@@ -532,20 +537,33 @@ async def reorder_chapters_and_activities(
 
 async def rbac_check(
     request: Request,
-    course_id: str,
+    course_uuid: str,
     current_user: PublicUser | AnonymousUser,
     action: Literal["create", "read", "update", "delete"],
     db_session: Session,
 ):
-    await authorization_verify_if_user_is_anon(current_user.id)
+    if action == "read":
+        if current_user.id == 0:  # Anonymous user
+            res = await authorization_verify_if_element_is_public(
+                request, course_uuid, action, db_session
+            )
+            print('res',res)
+            return res
+        else:
+            res = await authorization_verify_based_on_roles_and_authorship(
+                request, current_user.id, action, course_uuid, db_session
+            )
+            return res
+    else:
+        await authorization_verify_if_user_is_anon(current_user.id)
 
-    await authorization_verify_based_on_roles_and_authorship(
-        request,
-        current_user.id,
-        action,
-        course_id,
-        db_session,
-    )
+        await authorization_verify_based_on_roles_and_authorship(
+            request,
+            current_user.id,
+            action,
+            course_uuid,
+            db_session,
+        )
 
 
 ## 🔒 RBAC Utils ##

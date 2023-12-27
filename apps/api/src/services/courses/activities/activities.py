@@ -3,6 +3,7 @@ from sqlmodel import Session, select
 from src.db.chapters import Chapter
 from src.security.rbac.rbac import (
     authorization_verify_based_on_roles_and_authorship,
+    authorization_verify_if_element_is_public,
     authorization_verify_if_user_is_anon,
 )
 from src.db.activities import ActivityCreate, Activity, ActivityRead, ActivityUpdate
@@ -212,20 +213,33 @@ async def get_activities(
 
 async def rbac_check(
     request: Request,
-    course_id: str,
+    course_uuid: str,
     current_user: PublicUser | AnonymousUser,
     action: Literal["create", "read", "update", "delete"],
     db_session: Session,
 ):
-    await authorization_verify_if_user_is_anon(current_user.id)
+    if action == "read":
+        if current_user.id == 0:  # Anonymous user
+            res = await authorization_verify_if_element_is_public(
+                request, course_uuid, action, db_session
+            )
+            print('res',res)
+            return res
+        else:
+            res = await authorization_verify_based_on_roles_and_authorship(
+                request, current_user.id, action, course_uuid, db_session
+            )
+            return res
+    else:
+        await authorization_verify_if_user_is_anon(current_user.id)
 
-    await authorization_verify_based_on_roles_and_authorship(
-        request,
-        current_user.id,
-        action,
-        course_id,
-        db_session,
-    )
+        await authorization_verify_based_on_roles_and_authorship(
+            request,
+            current_user.id,
+            action,
+            course_uuid,
+            db_session,
+        )
 
 
 ## 🔒 RBAC Utils ##

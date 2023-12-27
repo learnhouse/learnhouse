@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { getUriWithOrg } from '@services/config/config';
 import { Info, Lock } from 'lucide-react';
 import BreadCrumbs from '@components/Dashboard/UI/BreadCrumbs';
-import { useAuth } from '@components/Security/AuthContext';
+import { useSession } from '@components/Contexts/SessionContext';
 
 export type SettingsParams = {
     subpage: string
@@ -15,17 +15,17 @@ export type SettingsParams = {
 }
 
 function SettingsPage({ params }: { params: SettingsParams }) {
-    const auth = useAuth() as any;
+    const session = useSession() as any;
 
 
     useEffect(() => {
     }
-        , [auth])
+        , [session])
 
     return (
         <div className='h-full w-full bg-[#f8f8f8]'>
             <div className='pl-10 pr-10  tracking-tight bg-[#fcfbfc] shadow-[0px_4px_16px_rgba(0,0,0,0.02)]'>
-                <BreadCrumbs type='user' last_breadcrumb={auth?.user?.username} ></BreadCrumbs>
+                <BreadCrumbs type='user' last_breadcrumb={session?.user?.username} ></BreadCrumbs>
                 <div className='my-2 tracking-tighter'>
                     <div className='w-100 flex justify-between'>
                         <div className='pt-3 flex font-bold text-4xl'>Account Settings</div>

@@ -24,9 +24,12 @@ function ActivityIndicators(props: Props) {
 
 
     function isActivityDone(activity: any) {
-        let run = props.course.trail.runs.find((run: any) => run.course_id == props.course.id);
+        let run = props.course.trail?.runs.find((run: any) => run.course_id == props.course.id);
         if (run) {
             return run.steps.find((step: any) => step.activity_id == activity.id);
+        }
+        else {
+            return false
         }
 
     }

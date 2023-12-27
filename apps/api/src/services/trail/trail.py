@@ -8,7 +8,7 @@ from src.db.courses import Course
 from src.db.trail_runs import TrailRun, TrailRunRead
 from src.db.trail_steps import TrailStep
 from src.db.trails import Trail, TrailCreate, TrailRead
-from src.db.users import PublicUser
+from src.db.users import AnonymousUser, PublicUser
 
 
 async def create_user_trail(
@@ -17,7 +17,7 @@ async def create_user_trail(
     trail_object: TrailCreate,
     db_session: Session,
 ) -> Trail:
-    statement = select(Trail).where(Trail.org_id == trail_object.org_id)
+    statement = select(Trail).where(Trail.org_id == trail_object.org_id, Trail.user_id == user.id)
     trail = db_session.exec(statement).first()
 
     if trail:
@@ -103,7 +103,7 @@ async def check_trail_presence(
     user: PublicUser,
     db_session: Session,
 ):
-    statement = select(Trail).where(Trail.org_id == org_id, Trail.user_id == user.id)
+    statement = select(Trail).where(Trail.org_id == org_id, Trail.user_id == user_id)
     trail = db_session.exec(statement).first()
 
     if not trail:
@@ -122,9 +122,15 @@ async def check_trail_presence(
 
 
 async def get_user_trail_with_orgid(
-    request: Request, user: PublicUser, org_id: int, db_session: Session
+    request: Request, user: PublicUser | AnonymousUser, org_id: int, db_session: Session
 ) -> TrailRead:
     
+    if isinstance(user, AnonymousUser):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Anonymous users cannot access this endpoint",
+        )
+
     trail = await check_trail_presence(
         org_id=org_id,
         user_id=user.id,

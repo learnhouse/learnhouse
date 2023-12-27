@@ -23,11 +23,11 @@ class TrailCreate(TrailBase):
 # trick because Lists are not supported in SQLModel (runs: list[TrailRun] )
 class TrailRead(BaseModel):
     id: Optional[int] = Field(default=None, primary_key=True)
-    trail_uuid: str
+    trail_uuid: Optional[str]
     org_id: int = Field(default=None, foreign_key="organization.id")
     user_id: int = Field(default=None, foreign_key="user.id")
-    creation_date: str
-    update_date: str
+    creation_date: Optional[str]
+    update_date: Optional[str]
     runs: list[TrailRunRead]
 
     class Config:

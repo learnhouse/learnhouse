@@ -21,6 +21,7 @@ async def authorization_verify_if_element_is_public(
     # Verifies if the element is public
     if element_nature == ("courses" or "collections") and action == "read":
         if element_nature == "courses":
+            print("looking for course")
             statement = select(Course).where(
                 Course.public is True, Course.course_uuid == element_uuid
             )
@@ -28,10 +29,7 @@ async def authorization_verify_if_element_is_public(
             if course:
                 return True
             else:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="User rights (public content) : You don't have the right to perform this action",
-                )
+                return False
 
         if element_nature == "collections":
             statement = select(Collection).where(
@@ -42,15 +40,9 @@ async def authorization_verify_if_element_is_public(
             if collection:
                 return True
             else:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="User rights (public content) : You don't have the right to perform this action",
-                )
+                return False
     else:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="User rights (public content) : You don't have the right to perform this action",
-        )
+        return False
 
 
 # Tested and working

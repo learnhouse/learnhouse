@@ -1,33 +1,33 @@
-import { useAuth } from '@components/Security/AuthContext';
 import { updateProfile } from '@services/settings/profile';
 import React, { useEffect } from 'react'
 import { Formik, Form, Field, ErrorMessage } from 'formik';
+import { useSession } from '@components/Contexts/SessionContext';
 
 function UserEditGeneral() {
-  const auth = useAuth() as any;
+  const session = useSession() as any;
 
   
   useEffect(() => {
   }
-    , [auth, auth.user])
+    , [session, session.user])
 
   return (
     <div className='ml-10 mr-10 mx-auto bg-white rounded-xl shadow-sm px-6 py-5'>
-      {auth.user && (
+      {session.user && (
         <Formik
         enableReinitialize
         initialValues={{
-          username: auth.user.username,
-          first_name: auth.user.first_name,
-          last_name: auth.user.last_name,
-          email: auth.user.email,
-          bio: auth.user.bio,
+          username: session.user.username,
+          first_name: session.user.first_name,
+          last_name: session.user.last_name,
+          email: session.user.email,
+          bio: session.user.bio,
         }}
         onSubmit={(values, { setSubmitting }) => {
           setTimeout(() => {
 
             setSubmitting(false);
-            updateProfile(values,auth.user.id)
+            updateProfile(values,session.user.id)
           }, 400);
         }}
       >

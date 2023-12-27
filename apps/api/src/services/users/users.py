@@ -3,17 +3,20 @@ from typing import Literal
 from uuid import uuid4
 from fastapi import HTTPException, Request, status
 from sqlmodel import Session, select
+from src.db.roles import Role, RoleRead
 from src.security.rbac.rbac import (
     authorization_verify_based_on_roles_and_authorship,
     authorization_verify_if_user_is_anon,
 )
-from src.db.organizations import Organization
+from src.db.organizations import Organization, OrganizationRead
 from src.db.users import (
     AnonymousUser,
     PublicUser,
     User,
     UserCreate,
     UserRead,
+    UserRoleWithOrg,
+    UserSession,
     UserUpdate,
     UserUpdatePassword,
 )
@@ -277,6 +280,57 @@ async def read_user_by_uuid(
     user = UserRead.from_orm(user)
 
     return user
+
+
+async def get_user_session(
+    request: Request,
+    db_session: Session,
+    current_user: PublicUser | AnonymousUser,
+) -> UserSession:
+    # Get user
+    statement = select(User).where(User.user_uuid == current_user.user_uuid)
+    user = db_session.exec(statement).first()
+
+    if not user:
+        raise HTTPException(
+            status_code=400,
+            detail="User does not exist",
+        )
+
+    user = UserRead.from_orm(user)
+
+    # Get roles and orgs
+    statement = (
+        select(UserOrganization)
+        .where(UserOrganization.user_id == user.id)
+        .join(Organization)
+    )
+    user_organizations = db_session.exec(statement).all()
+
+    roles = []
+
+    for user_organization in user_organizations:
+        role_statement = select(Role).where(Role.id == user_organization.role_id)
+        role = db_session.exec(role_statement).first()
+
+        org_statement = select(Organization).where(
+            Organization.id == user_organization.org_id
+        )
+        org = db_session.exec(org_statement).first()
+
+        roles.append(
+            UserRoleWithOrg(
+                role=RoleRead.from_orm(role),
+                org=OrganizationRead.from_orm(org),
+            )
+        )
+
+    user_session = UserSession(
+        user=user,
+        roles=roles,
+    )
+
+    return user_session
 
 
 async def authorize_user_action(

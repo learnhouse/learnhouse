@@ -42,9 +42,9 @@ const CourseClient = (props: any) => {
   }
 
   function isCourseStarted() {
-    const runs = course.trail.runs;
-    // checks if one of the obejcts in the array has the property "STATUS_IN_PROGRESS"
-    return runs.some((run: any) => run.status === "STATUS_IN_PROGRESS");
+    const runs = course.trail?.runs;
+    if (!runs) return false;
+    return runs.some((run: any) => run.status === "STATUS_IN_PROGRESS" && run.course_id === course.id);
   }
 
   async function quitCourse() {
@@ -193,11 +193,10 @@ const CourseClient = (props: any) => {
                   </div>
                   <div className="-space-y-2 ">
                     <div className="text-[12px] text-neutral-400 font-semibold">Author</div>
-                    <div className="text-xl font-bold text-neutral-800">{course.authors[0].first_name} {course.authors[0].last_name} { (course.authors[0].first_name && course.authors[0].last_name) ? course.authors[0].first_name + ' ' + course.authors[0].last_name : course.authors[0].username }</div>
+                    <div className="text-xl font-bold text-neutral-800">{course.authors[0].first_name} {course.authors[0].last_name} {(course.authors[0].first_name && course.authors[0].last_name) ? course.authors[0].first_name + ' ' + course.authors[0].last_name : course.authors[0].username}</div>
                   </div>
                 </div>
               }
-              {console.log(course)}
 
               {isCourseStarted() ? (
                 <button className="py-2 px-5 mx-auto rounded-xl text-white font-bold h-12 w-[200px] drop-shadow-md bg-red-600 hover:bg-red-700 hover:cursor-pointer" onClick={quitCourse}>
