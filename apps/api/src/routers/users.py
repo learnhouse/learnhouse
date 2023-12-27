@@ -9,6 +9,7 @@ from src.db.users import (
     User,
     UserCreate,
     UserRead,
+    UserSession,
     UserUpdate,
     UserUpdatePassword,
 )
@@ -17,6 +18,7 @@ from src.services.users.users import (
     create_user,
     create_user_without_org,
     delete_user_by_id,
+    get_user_session,
     read_user_by_id,
     read_user_by_uuid,
     update_user,
@@ -33,6 +35,18 @@ async def api_get_current_user(current_user: User = Depends(get_current_user)):
     Get current user
     """
     return current_user.dict()
+
+
+@router.get("/session")
+async def api_get_current_user_session(
+    request: Request,
+    db_session: Session = Depends(get_db_session),
+    current_user: PublicUser = Depends(get_current_user),
+) -> UserSession:
+    """
+    Get current user
+    """
+    return await get_user_session(request, db_session, current_user)
 
 
 @router.get("/authorize/ressource/{ressource_uuid}/action/{action}")

@@ -1,19 +1,19 @@
-import { useAuth } from '@components/Security/AuthContext';
+import { useSession } from '@components/Contexts/SessionContext';
 import { updatePassword } from '@services/settings/password';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import React, { useEffect } from 'react'
 
 function UserEditPassword() {
-    const auth = useAuth() as any;
+    const session = useSession() as any;
 
     const updatePasswordUI = async (values: any) => {
-        let user_id = auth.userInfo.user_object.user_id;
+        let user_id = session.user.user_id;
         await updatePassword(user_id, values)
     }
 
     useEffect(() => {
     }
-        , [auth])
+        , [session])
 
 
     return (

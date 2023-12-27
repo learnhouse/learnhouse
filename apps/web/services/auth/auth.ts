@@ -29,6 +29,26 @@ export async function loginAndGetToken(username: string, password: string): Prom
   return response;
 }
 
+export async function logout(): Promise<any> {
+  // Request Config
+
+  // get origin
+  const HeadersConfig = new Headers({ "Content-Type": "application/x-www-form-urlencoded" });
+  const urlencoded = new URLSearchParams();
+
+  const requestOptions: any = {
+    method: "DELETE",
+    headers: HeadersConfig,
+    body: urlencoded,
+    redirect: "follow",
+    credentials: "include",
+  };
+
+  // fetch using await and async
+  const response = await fetch(`${getAPIUrl()}auth/logout`, requestOptions);
+  return response;
+}
+
 export async function getUserInfo(token: string): Promise<any> {
   const origin = window.location.origin;
   const HeadersConfig = new Headers({ Authorization: `Bearer ${token}`, Origin: origin });
@@ -41,6 +61,22 @@ export async function getUserInfo(token: string): Promise<any> {
   };
 
   return fetch(`${getAPIUrl()}users/profile`, requestOptions)
+    .then((result) => result.json())
+    .catch((error) => console.log("error", error));
+}
+
+export async function getUserSession(token: string): Promise<any> {
+  const origin = window.location.origin;
+  const HeadersConfig = new Headers({ Authorization: `Bearer ${token}`, Origin: origin });
+
+  const requestOptions: any = {
+    method: "GET",
+    headers: HeadersConfig,
+    redirect: "follow",
+    credentials: "include",
+  };
+
+  return fetch(`${getAPIUrl()}users/session`, requestOptions)
     .then((result) => result.json())
     .catch((error) => console.log("error", error));
 }

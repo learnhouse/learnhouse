@@ -40,7 +40,7 @@ class CourseUpdate(CourseBase):
 class CourseRead(CourseBase):
     id: int
     org_id: int = Field(default=None, foreign_key="organization.id")
-    authors: List[UserRead] 
+    authors: List[UserRead]
     course_uuid: str
     creation_date: str
     update_date: str
@@ -49,22 +49,22 @@ class CourseRead(CourseBase):
 
 class FullCourseRead(CourseBase):
     id: int
-    course_uuid: str
-    creation_date: str
-    update_date: str
+    course_uuid: Optional[str]
+    creation_date: Optional[str]
+    update_date: Optional[str]
     # Chapters, Activities
     chapters: List[ChapterRead]
-    authors: List[UserRead] 
+    authors: List[UserRead]
     pass
 
 
 class FullCourseReadWithTrail(CourseBase):
     id: int
-    course_uuid: str
-    creation_date: str
-    update_date: str
+    course_uuid: Optional[str]
+    creation_date: Optional[str]
+    update_date: Optional[str]
     org_id: int = Field(default=None, foreign_key="organization.id")
-    authors: List[UserRead] 
+    authors: List[UserRead]
     # Chapters, Activities
     chapters: List[ChapterRead]
     # Trail
