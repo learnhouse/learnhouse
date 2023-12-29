@@ -71,6 +71,8 @@ function SignUpClient(props: SignUpClientProps) {
         },
         validate,
         onSubmit: async values => {
+            setError('')
+            setMessage('')
             setIsSubmitting(true);
             let res = await signup(values);
             let message = await res.json();
@@ -82,6 +84,7 @@ function SignUpClient(props: SignUpClientProps) {
             else if (res.status == 401 || res.status == 400 || res.status == 404 || res.status == 409) {
                 setError(message.detail);
                 setIsSubmitting(false);
+                
             }
             else {
                 setError("Something went wrong");
