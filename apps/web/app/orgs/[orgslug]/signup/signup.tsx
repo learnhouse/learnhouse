@@ -61,6 +61,7 @@ function SignUpClient(props: SignUpClientProps) {
     const formik = useFormik({
         initialValues: {
             org_slug: props.org?.slug,
+            org_id: props.org?.id,
             email: '',
             password: '',
             username: '',
