@@ -122,6 +122,7 @@ interface NewAccountBody {
   email: string;
   password: string;
   org_slug: string;
+  org_id:string;
 }
 
 export async function signup(body: NewAccountBody): Promise<any> {
@@ -134,6 +135,7 @@ export async function signup(body: NewAccountBody): Promise<any> {
     redirect: "follow",
   };
 
-  const res = await fetch(`${getAPIUrl()}users/?org_slug=${body.org_slug}`, requestOptions);
+  const res = await fetch(`${getAPIUrl()}users/${body.org_id}`, requestOptions);
+  
   return res;
 }
