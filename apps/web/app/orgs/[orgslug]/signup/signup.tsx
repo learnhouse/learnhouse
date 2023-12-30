@@ -61,6 +61,7 @@ function SignUpClient(props: SignUpClientProps) {
     const formik = useFormik({
         initialValues: {
             org_slug: props.org?.slug,
+            org_id: props.org?.id,
             email: '',
             password: '',
             username: '',
@@ -70,6 +71,8 @@ function SignUpClient(props: SignUpClientProps) {
         },
         validate,
         onSubmit: async values => {
+            setError('')
+            setMessage('')
             setIsSubmitting(true);
             let res = await signup(values);
             let message = await res.json();
@@ -81,6 +84,7 @@ function SignUpClient(props: SignUpClientProps) {
             else if (res.status == 401 || res.status == 400 || res.status == 404 || res.status == 409) {
                 setError(message.detail);
                 setIsSubmitting(false);
+                
             }
             else {
                 setError("Something went wrong");
