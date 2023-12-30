@@ -1,6 +1,7 @@
 from typing import Literal, Optional
 from pydantic import BaseModel
 import os
+from dotenv import load_dotenv
 import yaml
 
 
@@ -21,6 +22,11 @@ class GeneralConfig(BaseModel):
 
 class SecurityConfig(BaseModel):
     auth_jwt_secret_key: str
+
+
+class AIConfig(BaseModel):
+    openai_api_key: str | None
+    is_ai_enabled: bool | None
 
 
 class S3ApiConfig(BaseModel):
@@ -58,9 +64,13 @@ class LearnHouseConfig(BaseModel):
     hosting_config: HostingConfig
     database_config: DatabaseConfig
     security_config: SecurityConfig
+    ai_config: AIConfig
 
 
 def get_learnhouse_config() -> LearnHouseConfig:
+
+    load_dotenv()
+
     # Get the YAML file
     yaml_path = os.path.join(os.path.dirname(__file__), "config.yaml")
 
@@ -173,6 +183,16 @@ def get_learnhouse_config() -> LearnHouseConfig:
         "mongo_connection_string"
     )
 
+    # AI Config
+    env_openai_api_key = os.environ.get("LEARNHOUSE_OPENAI_API_KEY")
+    env_is_ai_enabled = os.environ.get("LEARNHOUSE_IS_AI_ENABLED")
+    openai_api_key = env_openai_api_key or yaml_config.get("ai_config", {}).get(
+        "openai_api_key"
+    )
+    is_ai_enabled = env_is_ai_enabled or yaml_config.get("ai_config", {}).get(
+        "is_ai_enabled"
+    )
+
     # Sentry config
     # check if the sentry config is provided in the YAML file
     sentry_config_verif = (
@@ -217,6 +237,12 @@ def get_learnhouse_config() -> LearnHouseConfig:
         mongo_connection_string=mongo_connection_string,
     )
 
+    # AI Config
+    ai_config = AIConfig(
+        openai_api_key=openai_api_key,
+        is_ai_enabled=bool(is_ai_enabled),
+    )
+
     # Create LearnHouseConfig object
     config = LearnHouseConfig(
         site_name=site_name,
@@ -228,6 +254,7 @@ def get_learnhouse_config() -> LearnHouseConfig:
         hosting_config=hosting_config,
         database_config=database_config,
         security_config=SecurityConfig(auth_jwt_secret_key=auth_jwt_secret_key),
+        ai_config=ai_config,
     )
 
     return config
