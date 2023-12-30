@@ -40,7 +40,7 @@ class CourseUpdate(CourseBase):
 class CourseRead(CourseBase):
     id: int
     org_id: int = Field(default=None, foreign_key="organization.id")
-    authors: List[UserRead]
+    authors: Optional[List[UserRead]]
     course_uuid: str
     creation_date: str
     update_date: str
