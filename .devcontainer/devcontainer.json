@@ -8,6 +8,7 @@
       "extensions": [
         "eamodio.gitlens",
         "ms-python.python",
+        "ms-python.black-formatter",
         "ms-python.vscode-pylance",
         "styled-components.vscode-styled-components",
         "dbaeumer.vscode-eslint",

@@ -17,6 +17,11 @@ services:
       - POSTGRES_USER=learnhouse
       - POSTGRES_PASSWORD=learnhouse
       - POSTGRES_DB=learnhouse
+  redis:
+    image: redis:7.2.3
+    restart: always
+    ports:
+      - "6379:6379"
   mongo:
     image: mongo:5.0
     restart: always

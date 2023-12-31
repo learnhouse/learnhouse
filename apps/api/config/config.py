@@ -55,6 +55,8 @@ class DatabaseConfig(BaseModel):
     sql_connection_string: Optional[str]
     mongo_connection_string: Optional[str]
 
+class RedisConfig(BaseModel):
+    redis_connection_string: Optional[str]
 
 class LearnHouseConfig(BaseModel):
     site_name: str
@@ -63,6 +65,7 @@ class LearnHouseConfig(BaseModel):
     general_config: GeneralConfig
     hosting_config: HostingConfig
     database_config: DatabaseConfig
+    redis_config: RedisConfig
     security_config: SecurityConfig
     ai_config: AIConfig
 
@@ -183,6 +186,13 @@ def get_learnhouse_config() -> LearnHouseConfig:
         "mongo_connection_string"
     )
 
+    # Redis config 
+    env_redis_connection_string = os.environ.get("LEARNHOUSE_REDIS_CONNECTION_STRING")
+    redis_connection_string = env_redis_connection_string or yaml_config.get(
+        "redis_config", {}
+    ).get("redis_connection_string")
+
+
     # AI Config
     env_openai_api_key = os.environ.get("LEARNHOUSE_OPENAI_API_KEY")
     env_is_ai_enabled = os.environ.get("LEARNHOUSE_IS_AI_ENABLED")
@@ -255,6 +265,7 @@ def get_learnhouse_config() -> LearnHouseConfig:
         database_config=database_config,
         security_config=SecurityConfig(auth_jwt_secret_key=auth_jwt_secret_key),
         ai_config=ai_config,
+        redis_config=RedisConfig(redis_connection_string=redis_connection_string),
     )
 
     return config
