@@ -115,11 +115,13 @@ function ActivityChatMessageBox(props: ActivityChatMessageBoxProps) {
     }, [messages, session]);
 
 
-    if (props.isAIModalOpen) {
-        return (
+    return (
+        <AnimatePresence>
+            {props.isAIModalOpen && (
             <motion.div
                 initial={{ y: 20, opacity: 0.3, filter: 'blur(5px)' }}
                 animate={{ y: 0, opacity: 1, filter: 'blur(0px)' }}
+                exit={{ y: 50, opacity: 0, filter: 'blur(25px)' }}
                 transition={{ type: "spring", bounce: 0.35, duration: 1.7, mass: 0.2, velocity: 2 }}
                 className='fixed top-0 left-0 w-full h-full z-50 flex justify-center items-center '
                 style={{ pointerEvents: 'none' }}
@@ -171,8 +173,9 @@ function ActivityChatMessageBox(props: ActivityChatMessageBoxProps) {
                     </div>
                 </div>
             </motion.div>
-        )
-    }
+            )}
+        </AnimatePresence>
+    )
 }
 
 type AIMessageProps = {
@@ -211,14 +214,14 @@ function AIMessage(props: AIMessageProps) {
     )
 }
 
-const AIMessagePlaceHolder = (props : {activity_uuid : string, sendMessage : any}) => {
+const AIMessagePlaceHolder = (props: { activity_uuid: string, sendMessage: any }) => {
     const session = useSession() as any;
     return (
         <div className='flex-col h-[237px] w-full'>
             <div className='flex flex-col text-center justify-center pt-12'>
-                <Image width={80} className='mx-auto' src={learnhouseAI_logo_black} alt="" />
+                <Image width={100} className='mx-auto' src={learnhouseAI_logo_black} alt="" />
                 <p className='pt-3 text-2xl font-semibold text-white/60'>Hello {session.user.username}, How can we help today ?</p>
-                <div className='questions flex space-x-3 mx-auto pt-14 flex-wrap   justify-center'>
+                <div className='questions flex space-x-3 mx-auto pt-12 flex-wrap   justify-center'>
                     <span onClick={() => props.sendMessage('Explain this Course in Simple examples.')} className='py-1.5 px-6 text-xs font-semibold text-white/30 rounded-full shadow-2xl bg-black/20 mb-3 outline outline-gray-400/5 cursor-pointer'>Explain in simple examples</span>
                     <span onClick={() => props.sendMessage('Generate flashcards about this course and this lecture.')} className='py-1.5 px-6 text-xs font-semibold text-white/30 rounded-full shadow-2xl bg-black/20 mb-3 outline outline-gray-400/5 cursor-pointer'>Generate flashcards</span>
                     <span onClick={() => props.sendMessage('Break down this Course in concepts.')} className='py-1.5 px-6 text-xs font-semibold text-white/30 rounded-full shadow-2xl bg-black/20 mb-3 outline outline-gray-400/5 cursor-pointer'>Break down in concepts</span>
