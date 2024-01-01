@@ -3,7 +3,7 @@ import Link from "next/link";
 import { getUriWithOrg } from "@services/config/config";
 import Canva from "@components/Objects/Activities/DynamicCanva/DynamicCanva";
 import VideoActivity from "@components/Objects/Activities/Video/Video";
-import { Check } from "lucide-react";
+import { Check, MoreVertical } from "lucide-react";
 import { markActivityAsComplete } from "@services/courses/activity";
 import DocumentPdfActivity from "@components/Objects/Activities/DocumentPdf/DocumentPdf";
 import ActivityIndicators from "@components/Pages/Courses/ActivityIndicators";
@@ -13,6 +13,7 @@ import AuthenticatedClientElement from "@components/Security/AuthenticatedClient
 import { getCourseThumbnailMediaDirectory } from "@services/media/media";
 import { useOrg } from "@components/Contexts/OrgContext";
 import { CourseProvider } from "@components/Contexts/CourseContext";
+import AIActivityAsk from "@components/AI/AIActivityAsk";
 
 interface ActivityClientProps {
   activityid: string;
@@ -31,14 +32,17 @@ function ActivityClient(props: ActivityClientProps) {
   const course = props.course;
   const org = useOrg() as any;
 
-  function getChapterName(chapterId: string) {
-    let chapterName = "";
-    course.chapters.forEach((chapter: any) => {
-      if (chapter.id === chapterId) {
-        chapterName = chapter.name;
+  function getChapterNameByActivityId(course: any, activity_id: any) {
+    for (let i = 0; i < course.chapters.length; i++) {
+      let chapter = course.chapters[i];
+      for (let j = 0; j < chapter.activities.length; j++) {
+        let activity = chapter.activities[j];
+        if (activity.id === activity_id) {
+          return chapter.name;
+        }
       }
-    });
-    return chapterName;
+    }
+    return null; // return null if no matching activity is found
   }
 
 
@@ -63,13 +67,14 @@ function ActivityClient(props: ActivityClientProps) {
 
             <div className="flex justify-between items-center">
               <div className="flex flex-col -space-y-1">
-                <p className="font-bold text-gray-700 text-md">Chapter : {getChapterName(activity.coursechapter_id)}</p>
+                <p className="font-bold text-gray-700 text-md">Chapter : {getChapterNameByActivityId(course, activity.id)}</p>
                 <h1 className="font-bold text-gray-950 text-2xl first-letter:uppercase" >{activity.name}</h1>
               </div>
-              <div className="flex space-x-2">
+              <div className="flex space-x-1 items-center">
                 <AuthenticatedClientElement checkMethod="authentication">
+                  <AIActivityAsk activity={activity} />
+                  <MoreVertical size={17} className="text-gray-300 " />
                   <MarkStatus activity={activity} activityid={activityid} course={course} orgslug={orgslug} />
-
                 </AuthenticatedClientElement>
               </div>
             </div>
@@ -114,19 +119,19 @@ export function MarkStatus(props: { activity: any, activityid: string, course: a
 
   return (
     <>{isActivityCompleted() ? (
-      <div className="bg-teal-600 rounded-md drop-shadow-md flex flex-col p-3 text-sm text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out" >
+      <div className="bg-teal-600 rounded-full px-5 drop-shadow-md flex items-center space-x-1  p-2.5  text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out" >
         <i>
-          <Check size={15}></Check>
+          <Check size={17}></Check>
         </i>{" "}
-        Already completed
+        <i className="not-italic text-xs font-bold">Already completed</i>
       </div>
     ) : (
-      <div className="bg-zinc-600 rounded-md drop-shadow-md flex flex-col p-3 text-sm text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out" onClick={markActivityAsCompleteFront}>
+      <div className="bg-gray-800 rounded-full px-5 drop-shadow-md flex  items-center space-x-1 p-2.5  text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out" onClick={markActivityAsCompleteFront}>
         {" "}
         <i>
-          <Check size={15}></Check>
+          <Check size={17}></Check>
         </i>{" "}
-        Mark as complete
+        <i className="not-italic text-xs font-bold">Mark as complete</i>
       </div>
     )}</>
   )
