@@ -93,7 +93,9 @@ async def update_install_instance(
 
 
 # Install Default roles
-async def install_default_elements( data: dict, db_session: Session):
+async def install_default_elements(db_session: Session):
+    """
+    """
     # remove all default roles
     statement = select(Role).where(Role.role_type == RoleTypeEnum.TYPE_GLOBAL)
     roles = db_session.exec(statement).all()
@@ -315,7 +317,7 @@ async def install_create_organization_user(
 
     if not org.first():
         raise HTTPException(
-            status_code=400,
+            status_code=409,
             detail="Organization does not exist",
         )
 
@@ -325,7 +327,7 @@ async def install_create_organization_user(
 
     if result.first():
         raise HTTPException(
-            status_code=400,
+            status_code=409,
             detail="Username already exists",
         )
 
@@ -335,7 +337,7 @@ async def install_create_organization_user(
 
     if result.first():
         raise HTTPException(
-            status_code=400,
+            status_code=409,
             detail="Email already exists",
         )
 
