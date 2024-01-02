@@ -13,8 +13,8 @@ export async function createNewOrgInstall(body: any) {
   return res;
 }
 
-export async function createNewUserInstall(body: any) {
-  const result = await fetch(`${getAPIUrl()}install/user?org_slug=${body.org_slug}`, RequestBody("POST", body, null));
+export async function createNewUserInstall(body: any,org_slug:string) {
+  const result = await fetch(`${getAPIUrl()}install/user?org_slug=${org_slug}`, RequestBody("POST", body, null));
   const res = await errorHandling(result);
   return res;
 }
