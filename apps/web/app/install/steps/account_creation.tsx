@@ -61,14 +61,12 @@ function AccountCreation() {
             username: '',
         },
         validate,
-        onSubmit: values => {
+        onSubmit: async values => {
             
-            let finalvalues = { ...values, org_slug: install.data[1].slug }
             let finalvalueswithoutpasswords = { ...values, password: '', confirmPassword: '', org_slug: install.data[1].slug }
-            let install_data = { ...install.data, 3: finalvalues }
             let install_data_without_passwords = { ...install.data, 3: finalvalueswithoutpasswords }
-            updateInstall({ ...install_data_without_passwords }, 4)
-            createNewUserInstall(finalvalues)
+            await updateInstall({ ...install_data_without_passwords }, 4)
+            await createNewUserInstall({email:values.email,username:values.username,password:values.password},install.data[1].slug)
 
             // await 2 seconds
             setTimeout(() => {

@@ -41,33 +41,30 @@ async def api_get_latest_install_instance(
 
 @router.post("/default_elements")
 async def api_install_def_elements(
-    request: Request,
     db_session=Depends(get_db_session),
 ):
-    elements = await install_default_elements(request, {}, db_session)
+    elements = await install_default_elements(db_session)
 
     return elements
 
 
 @router.post("/org")
 async def api_install_org(
-    request: Request,
-    org: OrganizationCreate,
-    db_session=Depends(get_db_session),
+        org: OrganizationCreate,
+        db_session=Depends(get_db_session),
 ):
-    organization = await install_create_organization(request, org, db_session)
+    organization = await install_create_organization(org, db_session)
 
     return organization
 
 
 @router.post("/user")
 async def api_install_user(
-    request: Request,
     data: UserCreate,
     org_slug: str,
     db_session=Depends(get_db_session),
 ):
-    user = await install_create_organization_user(request, data, org_slug, db_session)
+    user = await install_create_organization_user(data, org_slug, db_session)
 
     return user
 

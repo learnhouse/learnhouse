@@ -1,5 +1,5 @@
 from typing import Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from sqlmodel import Field, SQLModel
 
 from src.db.roles import RoleRead
@@ -10,12 +10,14 @@ class UserBase(SQLModel):
     username: str
     first_name: str
     last_name: str
-    email: str
+    email: EmailStr
     avatar_image: Optional[str] = ""
     bio: Optional[str] = ""
 
 
 class UserCreate(UserBase):
+    first_name: str = ""
+    last_name: str = ""
     password: str
 
 
