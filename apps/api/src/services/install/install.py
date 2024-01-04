@@ -31,7 +31,7 @@ async def create_install_instance(request: Request, data: dict, db_session: Sess
     install.install_uuid = str(f"install_{uuid4()}")
     install.update_date = str(datetime.now())
     install.creation_date = str(datetime.now())
-
+    install.step = 1
     # insert install instance
     db_session.add(install)
 
