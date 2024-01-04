@@ -1,6 +1,6 @@
 'use client';
 import React from "react";
-import { useEditor, EditorContent } from "@tiptap/react";
+import { useEditor, EditorContent, BubbleMenu } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import learnhouseIcon from "public/learnhouse_icon.png";
 import { ToolbarButtons } from "./Toolbar/ToolbarButtons";
