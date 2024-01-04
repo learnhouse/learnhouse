@@ -29,7 +29,7 @@
     "formik": "^2.2.9",
     "framer-motion": "^10.16.1",
     "lowlight": "^3.0.0",
-    "lucide-react": "^0.268.0",
+    "lucide-react": "^0.307.0",
     "next": "14.0.4",
     "re-resizable": "^6.9.9",
     "react": "^18.2.0",
