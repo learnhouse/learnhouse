@@ -8,10 +8,14 @@ import { UploadIcon } from "@radix-ui/react-icons";
 import { getActivityBlockMediaDirectory } from "@services/media/media";
 import { useOrg } from "@components/Contexts/OrgContext";
 import { useCourse } from "@components/Contexts/CourseContext";
+import { useEditorProvider } from "@components/Contexts/Editor/EditorContext";
 
 function ImageBlockComponent(props: any) {
   const org = useOrg() as any;
   const course = useCourse() as any;
+  const editorState = useEditorProvider() as any;
+  
+  const isEditable = editorState.isEditable;
   const [image, setImage] = React.useState(null);
   const [isLoading, setIsLoading] = React.useState(false);
   const [blockObject, setblockObject] = React.useState(props.node.attrs.blockObject);
@@ -39,8 +43,8 @@ function ImageBlockComponent(props: any) {
 
   return (
     <NodeViewWrapper className="block-image">
-      {!blockObject && props.extension.options.editable && (
-        <BlockImageWrapper className="flex items-center space-x-3 py-7 bg-gray-50 rounded-xl text-gray-900 px-3 border-dashed border-gray-150 border-2" contentEditable={props.extension.options.editable}>
+      {!blockObject && isEditable && (
+        <BlockImageWrapper className="flex items-center space-x-3 py-7 bg-gray-50 rounded-xl text-gray-900 px-3 border-dashed border-gray-150 border-2" contentEditable={isEditable}>
           {isLoading ? (
             <Loader className="animate-spin animate-pulse text-gray-200" size={50} />
           ) : (

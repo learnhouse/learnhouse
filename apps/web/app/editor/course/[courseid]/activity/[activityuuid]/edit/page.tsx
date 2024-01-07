@@ -7,6 +7,7 @@ import { getActivityWithAuthHeader } from "@services/courses/activities";
 import { getAccessTokenFromRefreshTokenCookie, getNewAccessTokenUsingRefreshTokenServer } from "@services/auth/auth";
 import { getOrganizationContextInfo, getOrganizationContextInfoWithId } from "@services/organizations/orgs";
 import SessionProvider from "@components/Contexts/SessionContext";
+import EditorOptionsProvider from "@components/Contexts/Editor/EditorContext";
 
 type MetadataProps = {
   params: { orgslug: string, courseid: string, activityid: string };
@@ -38,11 +39,11 @@ const EditActivity = async (params: any) => {
   console.log('courseInfo', courseInfo)
 
   return (
-    <div>
+    <EditorOptionsProvider options={{ isEditable: true }}>
       <SessionProvider>
         <EditorWrapper org={org} course={courseInfo} activity={activity} content={activity.content}></EditorWrapper>
       </SessionProvider>
-    </div>
+    </EditorOptionsProvider>
   );
 }
 
