@@ -18,7 +18,8 @@ requests
 pyyaml
 sentry-sdk[fastapi]
 pydantic[email]>=1.8.0,<2.0.0
-langchain
+langchain==0.1.0
+langchain-community
 tiktoken
 openai
 chromadb
