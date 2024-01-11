@@ -31,10 +31,10 @@ function AIActivityAsk(props: AIActivityAskProps) {
                 style={{
                     background: 'conic-gradient(from 32deg at 53.75% 50%, rgb(35, 40, 93) 4deg, rgba(20, 0, 52, 0.95) 59deg, rgba(164, 45, 238, 0.88) 281deg)',
                 }}
-                className="rounded-full px-5 drop-shadow-md flex  items-center space-x-1 p-2.5 text-sm text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out hover:scale-105">
+                className="rounded-full px-5 drop-shadow-md flex  items-center space-x-1.5 p-2.5 text-sm text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out hover:scale-105">
                 {" "}
                 <i>
-                    <Image width={20} src={learnhouseAI_icon} alt="" />
+                    <Image className='outline outline-1 outline-neutral-200/20 rounded-md' width={20} src={learnhouseAI_icon} alt="" />
                 </i>{" "}
                 <i className="not-italic text-xs font-bold">Ask AI</i>
             </div>
@@ -59,8 +59,8 @@ function ActivityChatMessageBox(props: ActivityChatMessageBoxProps) {
 
     // TODO : come up with a better way to handle this
     const inputClass = aiChatBotState.isWaitingForResponse
-        ? 'ring-1 ring-inset ring-white/10 bg-transparent w-full rounded-lg outline-none px-4 py-2 text-white text-sm placeholder:text-white/30 opacity-30 '
-        : 'ring-1 ring-inset ring-white/10 bg-transparent w-full rounded-lg outline-none px-4 py-2 text-white text-sm placeholder:text-white/30';
+        ? 'ring-1 ring-inset ring-white/10 bg-gray-950/40 w-full rounded-lg outline-none px-4 py-2 text-white text-sm placeholder:text-white/30 opacity-30 '
+        : 'ring-1 ring-inset ring-white/10 bg-gray-950/40 w-full rounded-lg outline-none px-4 py-2 text-white text-sm placeholder:text-white/30';
 
     useEffect(() => {
         if (aiChatBotState.isModalOpen) {
@@ -141,7 +141,7 @@ function ActivityChatMessageBox(props: ActivityChatMessageBoxProps) {
 
                                 </div>
                                 <div className={`flex space-x-2 items-center -ml-[100px] ${aiChatBotState.isWaitingForResponse ? 'animate-pulse' : ''}`}>
-                                    <Image className={`${aiChatBotState.isWaitingForResponse ? 'animate-pulse' : ''}`} width={24} src={learnhouseAI_icon} alt="" />
+                                    <Image className={`outline outline-1 outline-neutral-200/20 rounded-lg ${aiChatBotState.isWaitingForResponse ? 'animate-pulse' : ''}`} width={24} src={learnhouseAI_icon} alt="" />
                                     <span className='text-sm font-semibold text-white/70'> AI</span>
                                 </div>
                                 <div className='bg-white/5 text-white/40 py-0.5 px-3 flex space-x-1 rounded-full items-center'>

@@ -101,7 +101,7 @@ function Canva(props: Editor) {
 
     <EditorOptionsProvider options={{ isEditable: false }}>
       <CanvaWrapper>
-          <AICanvaToolkit activity={props.activity} editor={editor} />
+        <AICanvaToolkit activity={props.activity} editor={editor} />
         <EditorContent editor={editor} />
       </CanvaWrapper>
     </EditorOptionsProvider>

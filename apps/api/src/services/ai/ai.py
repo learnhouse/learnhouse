@@ -117,7 +117,7 @@ def ai_send_activity_chat_message(
         )
 
     # Get Activity Content Blocks
-    content = activity.content
+    content = activity.content 
 
     # Serialize Activity Content Blocks to a text comprehensible by the AI
     structured = structure_activity_content_by_type(content)
