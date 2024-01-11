@@ -21,7 +21,7 @@ function AICanvaToolkit(props: AICanvaToolkitProps) {
             <div style={{ background: 'linear-gradient(0deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.2) 100%), radial-gradient(105.16% 105.16% at 50% -5.16%, rgba(255, 255, 255, 0.18) 0%, rgba(0, 0, 0, 0) 100%), rgba(2, 1, 25, 0.98)' }}
                 className='py-1 h-10 px-2 w-max text-white rounded-xl shadow-md cursor-pointer flex items-center space-x-2 antialiased'
             >
-                <div className='flex w-full space-x-1 font-bold text-white/80'><Image width={24} src={learnhouseAI_icon} alt="" /> <div>AI</div> </div>
+                <div className='flex w-full space-x-2 font-bold text-white/80'><Image className='outline outline-1 outline-neutral-200/10 rounded-lg' width={24} src={learnhouseAI_icon} alt="" /> <div>AI</div> </div>
                 <div>
                     <MoreVertical className='text-white/50' size={12} />
                 </div>
@@ -39,15 +39,13 @@ function AICanvaToolkit(props: AICanvaToolkitProps) {
 function AIActionButton(props: { editor: Editor, label: string, activity: any }) {
     const dispatchAIChatBot = useAIChatBotDispatch() as any;
     const aiChatBotState = useAIChatBot() as AIChatBotStateTypes;
-    const [aichat_uuid, setAichat_uuid] = React.useState('');
 
     async function handleAction(label: string) {
         const selection = getTipTapEditorSelectedText();
         const prompt = getPrompt(label, selection);
         dispatchAIChatBot({ type: 'setIsModalOpen' });
         await sendMessage(prompt);
-        
-
+    
     }
 
     const getTipTapEditorSelectedText = () => {
