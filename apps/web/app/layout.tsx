@@ -1,7 +1,6 @@
 "use client";
 import "../styles/globals.css";
 import StyledComponentsRegistry from "../components/Utils/libs/styled-registry";
-import { GeistSans } from 'geist/font/sans';
 
 import { motion } from "framer-motion";
 
