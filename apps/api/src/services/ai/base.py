@@ -59,7 +59,7 @@ def ask_ai(
     memory_key = "history"
 
     memory = AgentTokenBufferMemory(
-        memory_key=memory_key, llm=llm, chat_memory=message_history
+        memory_key=memory_key, llm=llm, chat_memory=message_history, max_tokens=1000
     )
 
     system_message = SystemMessage(content=(message_for_the_prompt))
@@ -77,6 +77,7 @@ def ask_ai(
         memory=memory,
         verbose=True,
         return_intermediate_steps=True,
+        handle_parsing_errors=True,
     )
 
     return agent_executor({"input": question})

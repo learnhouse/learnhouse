@@ -1,0 +1,308 @@
+import React from 'react'
+import learnhouseAI_icon from "public/learnhouse_ai_simple.png";
+import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
+import { BetweenHorizontalStart, FastForward, Feather, FileStack, HelpCircle, Languages, MessageCircle, MoreVertical, Pen, X } from 'lucide-react';
+import { Editor } from '@tiptap/react';
+import { AIChatBotStateTypes, useAIChatBot, useAIChatBotDispatch } from '@components/Contexts/AI/AIChatBotContext';
+import { AIEditorStateTypes, useAIEditor, useAIEditorDispatch } from '@components/Contexts/AI/AIEditorContext';
+import { sendActivityAIChatMessage, startActivityAIChatSession } from '@services/ai/ai';
+
+type AIEditorToolkitProps = {
+    editor: Editor,
+    activity: any
+}
+
+type AIPromptsLabels = {
+    label: 'Writer' | 'ContinueWriting' | 'MakeLonger' | 'GenerateQuiz' | 'Translate',
+    selection: string
+
+}
+
+function AIEditorToolkit(props: AIEditorToolkitProps) {
+    const dispatchAIEditor = useAIEditorDispatch() as any;
+    const aiEditorState = useAIEditor() as AIEditorStateTypes;
+
+
+    return (
+        <AnimatePresence>
+            {aiEditorState.isModalOpen && <motion.div
+                initial={{ y: 20, opacity: 0.3, filter: 'blur(5px)' }}
+                animate={{ y: 0, opacity: 1, filter: 'blur(0px)' }}
+                exit={{ y: 50, opacity: 0, filter: 'blur(3px)' }}
+                transition={{ type: "spring", bounce: 0.35, duration: 1.7, mass: 0.2, velocity: 2 }}
+                className='fixed top-0 left-0 w-full h-full z-50 flex justify-center items-center '
+                style={{ pointerEvents: 'none' }}
+            >
+                <>
+                    {aiEditorState.isFeedbackModalOpen && <UserFeedbackModal activity={props.activity} editor={props.editor} />}
+                    <div
+                        style={{
+                            pointerEvents: 'auto',
+                            background: 'linear-gradient(0deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.2) 100%), radial-gradient(105.16% 105.16% at 50% -5.16%, rgba(255, 255, 255, 0.18) 0%, rgba(0, 0, 0, 0) 100%), rgb(2 1 25 / 98%)'
+                        }}
+                        className="z-50 rounded-2xl max-w-screen-2xl my-10 mx-auto w-fit fixed bottom-0 left-1/2 transform -translate-x-1/2 shadow-xl ring-1 ring-inset ring-white/10 text-white p-3 flex-col-reverse backdrop-blur-md">
+                        <div className='flex space-x-2'>
+                            <div className='pr-1'>
+                                <div className='flex w-full space-x-2 font-bold text-white/80 items-center'>
+                                    <Image className='outline outline-1 outline-neutral-200/20 rounded-lg' width={24} src={learnhouseAI_icon} alt="" />
+                                    <div >AI Editor</div>
+                                    <MoreVertical className='text-white/50' size={12} />
+                                </div>
+                            </div>
+                            <div className='tools flex space-x-2'>
+                                <AiEditorToolButton label='Writer' />
+                                <AiEditorToolButton label='ContinueWriting' />
+                                <AiEditorToolButton label='MakeLonger' />
+                                <AiEditorToolButton label='GenerateQuiz' />
+                                <AiEditorToolButton label='Translate' />
+                            </div>
+                            <div className='flex space-x-2 items-center'>
+                                <X onClick={() => Promise.all([dispatchAIEditor({ type: 'setIsModalClose' }), dispatchAIEditor({ type: 'setIsFeedbackModalClose' })])} size={20} className='text-white/50 hover:cursor-pointer bg-white/10 p-1 rounded-full items-center' />
+                            </div>
+                        </div>
+                    </div></>
+            </motion.div>}
+        </AnimatePresence>
+    )
+}
+
+
+const UserFeedbackModal = (props: AIEditorToolkitProps) => {
+    const dispatchAIEditor = useAIEditorDispatch() as any;
+    const aiEditorState = useAIEditor() as AIEditorStateTypes;
+
+    const handleChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        await dispatchAIEditor({ type: 'setChatInputValue', payload: event.currentTarget.value });
+
+    }
+
+    const sendReqWithMessage = async (message: string) => {
+        if (aiEditorState.aichat_uuid) {
+            await dispatchAIEditor({ type: 'addMessage', payload: { sender: 'user', message: message, type: 'user' } });
+            await dispatchAIEditor({ type: 'setIsWaitingForResponse' });
+            const response = await sendActivityAIChatMessage(message, aiEditorState.aichat_uuid, props.activity.activity_uuid)
+            await dispatchAIEditor({ type: 'setIsNoLongerWaitingForResponse' });
+            await dispatchAIEditor({ type: 'setChatInputValue', payload: '' });
+            await dispatchAIEditor({ type: 'addMessage', payload: { sender: 'ai', message: response.message, type: 'ai' } });
+            return response.message;
+
+        } else {
+            await dispatchAIEditor({ type: 'addMessage', payload: { sender: 'user', message: message, type: 'user' } });
+            await dispatchAIEditor({ type: 'setIsWaitingForResponse' });
+            const response = await startActivityAIChatSession(message, props.activity.activity_uuid)
+            await dispatchAIEditor({ type: 'setAichat_uuid', payload: response.aichat_uuid });
+            await dispatchAIEditor({ type: 'setIsNoLongerWaitingForResponse' });
+            await dispatchAIEditor({ type: 'setChatInputValue', payload: '' });
+            await dispatchAIEditor({ type: 'addMessage', payload: { sender: 'ai', message: response.message, type: 'ai' } });
+            return response.message;
+        }
+    }
+
+    const handleKeyPress = async (event: React.KeyboardEvent<HTMLInputElement>) => {
+        if (event.key === 'Enter') {
+            await handleOperation(aiEditorState.selectedTool, aiEditorState.chatInputValue);
+        }
+    }
+
+    const handleOperation = async (label: 'Writer' | 'ContinueWriting' | 'MakeLonger' | 'GenerateQuiz' | 'Translate', message: string) => {
+        // Set selected tool
+        await dispatchAIEditor({ type: 'setSelectedTool', payload: label });
+
+        // Check what operation that was
+        if (label === 'Writer') {
+            let ai_message = '';
+            let prompt = getPrompt({ label: label, selection: message });
+            if (prompt) {
+                ai_message = await sendReqWithMessage(prompt);
+                await fillEditorWithText(ai_message);
+            }
+        } else if (label === 'ContinueWriting') {
+            let ai_message = '';
+            let text_selection = getTipTapEditorSelectedText();
+            let prompt = getPrompt({ label: label, selection: text_selection });
+            if (prompt) {
+                ai_message = await sendReqWithMessage(prompt);
+                const message_without_original_text = await removeSentences(text_selection, ai_message);
+                await fillEditorWithText(message_without_original_text);
+            }
+        } else if (label === 'MakeLonger') {
+            // Send message to AI
+            // Wait for response
+            // Add response to editor
+            // Close modal
+
+        } else if (label === 'GenerateQuiz') {
+            // Send message to AI
+            // Wait for response
+            // Add response to editor
+            // Close modal
+        } else if (label === 'Translate') {
+            // Send message to AI
+            // Wait for response
+            // Add response to editor
+            // Close modal
+        }
+    }
+
+    const removeSentences = async (textToRemove: string, originalText: string) => {
+        const phrase = textToRemove.toLowerCase();
+        const original = originalText.toLowerCase();
+    
+        if (original.includes(phrase)) {
+            const regex = new RegExp(phrase, 'g');
+            const newText = original.replace(regex, '');
+            return newText;
+        } else {
+            return originalText;
+        }
+    }
+
+    async function fillEditorWithText(text: string) {
+        const words = text.split(' ');
+
+        for (let i = 0; i < words.length; i++) {
+            const textNode = {
+                type: 'text',
+                text: words[i],
+            };
+
+            props.editor.chain().focus().insertContent(textNode).run();
+
+            // Add a space after each word except the last one
+            if (i < words.length - 1) {
+                const spaceNode = {
+                    type: 'text',
+                    text: ' ',
+                };
+
+                props.editor.chain().focus().insertContent(spaceNode).run();
+            }
+
+            // Wait for 0.3 seconds before adding the next word
+            await new Promise(resolve => setTimeout(resolve, 120));
+        }
+    }
+
+    const getPrompt = (args: AIPromptsLabels) => {
+        const { label, selection } = args;
+
+        if (label === 'Writer') {
+            return `Write 3 sentences about ${selection}`;
+        } else if (label === 'ContinueWriting') {
+            return `Continue writing 3 more sentences based on "${selection}"`;
+        } else if (label === 'MakeLonger') {
+            return `Make longer this paragraph "${selection}"`;
+        } else if (label === 'GenerateQuiz') {
+            return `Generate a quiz about "${selection}", only return an array of objects, every object should respect the following interface:
+            interface Answer {
+                answer_id: string;
+                answer: string;
+                correct: boolean;
+              }
+              interface Question {
+                question_id: string;
+                question: string;
+                type: "multiple_choice" 
+                answers: Answer[];
+              }
+            " `;
+        } else if (label === 'Translate') {
+            return `Translate ${selection} to selected language`;
+        }
+    }
+
+    const getTipTapEditorSelectedText = () => {
+        const pos = props.editor.state.selection.$from.pos; // get the cursor position
+        const resolvedPos = props.editor.state.doc.resolve(pos); // resolve the position in the document
+        const start = resolvedPos.before(1); // get the start position of the node
+        const end = resolvedPos.after(1); // get the end position of the node
+        const paragraph = props.editor.state.doc.textBetween(start, end, '\n', '\n'); // get the text of the node
+        return paragraph;
+    }
+
+
+    return (
+        <motion.div
+            initial={{ y: 20, opacity: 0.3, filter: 'blur(5px)' }}
+            animate={{ y: 0, opacity: 1, filter: 'blur(0px)' }}
+            exit={{ y: 50, opacity: 0, filter: 'blur(3px)' }}
+            transition={{ type: "spring", bounce: 0.35, duration: 1.7, mass: 0.2, velocity: 2 }}
+            className='fixed top-0 left-0 w-full h-full z-50 flex justify-center items-center '
+            style={{ pointerEvents: 'none' }}
+        >
+            <div
+                style={{
+                    pointerEvents: 'auto',
+                    background: 'linear-gradient(0deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.2) 100%), radial-gradient(105.16% 105.16% at 50% -5.16%, rgba(255, 255, 255, 0.18) 0%, rgba(0, 0, 0, 0) 100%), rgb(2 1 25 / 90%)'
+                }}
+                className="z-50 rounded-2xl max-w-screen-2xl my-10 mx-auto w-[500px] h-[200px] fixed bottom-16 left-1/2 transform -translate-x-1/2 shadow-xl ring-1 ring-inset ring-white/10 text-white p-3 flex-col-reverse backdrop-blur-md">
+                <div className='flex space-x-2 justify-center'>
+                    <Image className='outline outline-1 outline-neutral-200/20 rounded-lg' width={24} src={learnhouseAI_icon} alt="" />
+                </div>
+                <div className='flex h-[115px] justify-center mx-auto antialiased'>
+                    <div className='flex items-center justify-center '>
+                        <AiEditorActionScreen handleOperation={handleOperation} />
+                    </div>
+                </div>
+                {aiEditorState.isUserInputEnabled && <div className="flex items-center space-x-2 cursor-pointer">
+                    <input onKeyDown={handleKeyPress} value={aiEditorState.chatInputValue} onChange={handleChange} placeholder='Ask AI' className='ring-1 ring-inset ring-white/20 w-full bg-gray-950/20 rounded-lg outline-none px-4 py-2 text-white text-sm placeholder:text-white/30'></input>
+                    <div className='bg-white/10 px-3  rounded-md outline outline-1 outline-neutral-200/20 py-2 hover:bg-white/20 hover:outline-neutral-200/40 delay-75 ease-linear transition-all'>
+                        <BetweenHorizontalStart size={20} className='text-white/50 hover:cursor-pointer' />
+                    </div>
+                </div>}
+            </div>
+        </motion.div>
+    )
+}
+
+const AiEditorToolButton = (props: any) => {
+    const dispatchAIEditor = useAIEditorDispatch() as any;
+    const aiEditorState = useAIEditor() as AIEditorStateTypes;
+
+    const handleToolButtonClick = async (label: 'Writer' | 'ContinueWriting' | 'MakeLonger' | 'GenerateQuiz' | 'Translate') => {
+        if (label === 'Writer') {
+            await dispatchAIEditor({ type: 'setSelectedTool', payload: label });
+            await dispatchAIEditor({ type: 'setIsUserInputEnabled', payload: true });
+            await dispatchAIEditor({ type: 'setIsFeedbackModalOpen' });
+        }
+        if (label === 'ContinueWriting') {
+            await dispatchAIEditor({ type: 'setSelectedTool', payload: label });
+            await dispatchAIEditor({ type: 'setIsUserInputEnabled', payload: false });
+            await dispatchAIEditor({ type: 'setIsFeedbackModalOpen' });
+        }
+    }
+
+    return (
+        <button onClick={() => handleToolButtonClick(props.label)} className='flex space-x-1.5 items-center bg-white/10 px-2 py-0.5 rounded-md outline outline-1 outline-neutral-200/20 text-sm font-semibold text-white/70 hover:bg-white/20 hover:outline-neutral-200/40 delay-75 ease-linear transition-all'>
+            {props.label === 'Writer' && <Feather size={14} />}
+            {props.label === 'ContinueWriting' && <FastForward size={14} />}
+            {props.label === 'MakeLonger' && <FileStack size={14} />}
+            {props.label === 'GenerateQuiz' && <HelpCircle size={14} />}
+            {props.label === 'Translate' && <Languages size={14} />}
+            <span>{props.label}</span>
+        </button>
+    )
+}
+
+const AiEditorActionScreen = ({ handleOperation }: { handleOperation: any }) => {
+    const dispatchAIEditor = useAIEditorDispatch() as any;
+    const aiEditorState = useAIEditor() as AIEditorStateTypes;
+    return (
+        <div>
+            {aiEditorState.selectedTool === 'Writer' &&
+                <div className='text-xl text-white/80 font-extrabold space-x-2'>
+                    <span>Write about...</span>
+                </div>}
+            {aiEditorState.selectedTool === 'ContinueWriting' &&
+                <div onClick={() => {
+                    handleOperation(aiEditorState.selectedTool, aiEditorState.chatInputValue)
+                }} className='flex cursor-pointer space-x-1.5 p-4 items-center bg-white/10  rounded-md outline outline-1 outline-neutral-200/20 text-2xl font-semibold text-white/70 hover:bg-white/20 hover:outline-neutral-200/40 delay-75 ease-linear transition-all'>
+                    <FastForward size={24} />
+                </div>}
+        </div>
+    )
+}
+
+
+export default AIEditorToolkit
