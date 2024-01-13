@@ -1,7 +1,20 @@
+import json
+import logging
 from datetime import datetime
+from logging import config
 from typing import Literal
 from uuid import uuid4
 from sqlmodel import Session, select
+from src.db.organization_config import (
+    AIConfig,
+    AIEnabledFeatures,
+    AILimitsSettings,
+    GeneralConfig,
+    LimitSettings,
+    OrgUserConfig,
+    OrganizationConfig,
+    OrganizationConfigBase,
+)
 from src.security.rbac.rbac import (
     authorization_verify_based_on_roles_and_authorship,
     authorization_verify_if_user_is_anon,
@@ -23,7 +36,7 @@ async def get_organization(
     org_id: str,
     db_session: Session,
     current_user: PublicUser | AnonymousUser,
-):
+) -> OrganizationRead:
     statement = select(Organization).where(Organization.id == org_id)
     result = db_session.exec(statement)
 
@@ -38,7 +51,18 @@ async def get_organization(
     # RBAC check
     await rbac_check(request, org.org_uuid, current_user, "read", db_session)
 
-    org = OrganizationRead.from_orm(org)
+    # Get org config
+    statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
+    result = db_session.exec(statement)
+
+    org_config = result.first()
+
+    if org_config is None:
+        logging.error(f"Organization {org_id} has no config")
+
+    config = OrganizationConfig.from_orm(org_config) if org_config else {}
+
+    org = OrganizationRead(**org.dict(), config=config)
 
     return org
 
@@ -48,7 +72,7 @@ async def get_organization_by_slug(
     org_slug: str,
     db_session: Session,
     current_user: PublicUser | AnonymousUser,
-):
+) -> OrganizationRead:
     statement = select(Organization).where(Organization.slug == org_slug)
     result = db_session.exec(statement)
 
@@ -63,7 +87,18 @@ async def get_organization_by_slug(
     # RBAC check
     await rbac_check(request, org.org_uuid, current_user, "read", db_session)
 
-    org = OrganizationRead.from_orm(org)
+    # Get org config
+    statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
+    result = db_session.exec(statement)
+
+    org_config = result.first()
+
+    if org_config is None:
+        logging.error(f"Organization {org_slug} has no config")
+
+    config = OrganizationConfig.from_orm(org_config) if org_config else {}
+
+    org = OrganizationRead(**org.dict(), config=config)
 
     return org
 
@@ -87,7 +122,7 @@ async def create_org(
 
     org = Organization.from_orm(org_object)
 
-    if isinstance(current_user,AnonymousUser): 
+    if isinstance(current_user, AnonymousUser):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="You should be logged in to be able to achieve this action",
@@ -115,7 +150,64 @@ async def create_org(
     db_session.commit()
     db_session.refresh(user_org)
 
-    return OrganizationRead.from_orm(org)
+    org_config = OrganizationConfigBase(
+        GeneralConfig=GeneralConfig(
+            color="#000000",
+            limits=LimitSettings(
+                limits_enabled=False,
+                max_users=0,
+                max_storage=0,
+                max_staff=0,
+            ),
+            users=OrgUserConfig(
+                signup_mechanism="open",
+            ),
+            active=True,
+        ),
+        AIConfig=AIConfig(
+            limits=AILimitsSettings(
+                limits_enabled=False,
+                max_asks=0,
+            ),
+            embeddings="all-MiniLM-L6-v2",
+            ai_model="gpt-3.5-turbo",
+            features=AIEnabledFeatures(
+                editor=False,
+                activity_ask=False,
+                course_ask=False,
+                global_ai_ask=False,
+            ),
+        ),
+    )
+
+    org_config = json.loads(org_config.json())
+
+    # OrgSettings
+    org_settings = OrganizationConfig(
+        org_id=int(org.id if org.id else 0),
+        config=org_config,
+        creation_date=str(datetime.now()),
+        update_date=str(datetime.now()),
+    )
+
+    db_session.add(org_settings)
+    db_session.commit()
+    db_session.refresh(org_settings)
+
+    # Get org config
+    statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
+    result = db_session.exec(statement)
+
+    org_config = result.first()
+
+    if org_config is None:
+        logging.error(f"Organization {org.id} has no config")
+
+    config = OrganizationConfig.from_orm(org_config)
+
+    org = OrganizationRead(**org.dict(), config=config)
+
+    return org
 
 
 async def update_org(
