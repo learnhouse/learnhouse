@@ -7,7 +7,6 @@ from src.core.events.database import get_db_session
 from src.db.users import PublicUser
 from src.db.activities import Activity, ActivityRead
 from src.security.auth import get_current_user
-from langchain.memory.chat_message_histories import RedisChatMessageHistory
 from src.services.ai.base import ask_ai, get_chat_session_history
 
 from src.services.ai.schemas.ai import (

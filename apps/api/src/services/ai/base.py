@@ -3,16 +3,15 @@ from uuid import uuid4
 from langchain.agents import AgentExecutor
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.embeddings.sentence_transformer import SentenceTransformerEmbeddings
-from langchain.vectorstores import Chroma
-from langchain_core.messages import BaseMessage
+from langchain_community.vectorstores import Chroma
 from langchain.agents.openai_functions_agent.base import OpenAIFunctionsAgent
 from langchain.prompts import MessagesPlaceholder
-from langchain.memory.chat_message_histories import RedisChatMessageHistory
+from langchain_community.chat_message_histories import RedisChatMessageHistory
 from langchain_core.messages import SystemMessage
 from langchain.agents.openai_functions_agent.agent_token_buffer_memory import (
     AgentTokenBufferMemory,
 )
-from langchain.chat_models import ChatOpenAI
+from langchain_community.chat_models import ChatOpenAI
 from langchain.agents.agent_toolkits import (
     create_retriever_tool,
 )
@@ -54,7 +53,7 @@ def ask_ai(
     )
     tools = [tool]
 
-    llm = ChatOpenAI(temperature=0, api_key=openai_api_key)
+    llm = ChatOpenAI(temperature=0, api_key=openai_api_key, model_name="gpt-3.5-turbo")
 
     memory_key = "history"
 
