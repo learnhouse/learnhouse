@@ -11,7 +11,13 @@ function useGetAIFeatures(props: UseGetAIFeatures) {
   const [isEnabled, setisEnabled] = React.useState(false)
 
   function checkAvailableAIFeaturesOnOrg(feature: string) {
-    const config = org.config.config.AIConfig;
+    const config = org?.config?.config?.AIConfig;
+
+    if (!config) {
+      console.log("AI or Organization config is not defined.");
+      return false;
+    }
+
     if (!config.enabled) {
       console.log("AI is not enabled for this Organization.");
       return false;
