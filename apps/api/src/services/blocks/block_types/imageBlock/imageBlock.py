@@ -44,12 +44,12 @@ async def create_image_block(
         image_file,
         activity_uuid,
         block_uuid,
-        ["jpg", "jpeg", "png", "gif"],
+        ["jpg", "jpeg", "png", "gif", "webp"],
         block_type,
         org.org_uuid,
         str(course.course_uuid),
     )
-
+    
     # create block
     block = Block(
         activity_id=activity.id if activity.id else 0,

@@ -15,7 +15,12 @@
         "esbenp.prettier-vscode",
         "ms-python.isort",
         "redhat.vscode-yaml"
-      ]
+      ],
+      "settings": {
+        "[python]": {
+          "editor.defaultFormatter": "ms-python.python"
+        }
+      }
     }
   },
   "shutdownAction": "stopCompose"
