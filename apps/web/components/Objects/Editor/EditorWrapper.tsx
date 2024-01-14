@@ -5,6 +5,7 @@ import Editor from "./Editor";
 import { updateActivity } from "@services/courses/activities";
 import { toast } from "react-hot-toast";
 import Toast from "@components/StyledElements/Toast/Toast";
+import { OrgProvider } from "@components/Contexts/OrgContext";
 
 interface EditorWrapperProps {
   content: string;
@@ -26,7 +27,7 @@ function EditorWrapper(props: EditorWrapperProps): JSX.Element {
     // setProviderState(provider);
     setIsLoading(false);
   }
-  
+
 
 
 
@@ -50,8 +51,9 @@ function EditorWrapper(props: EditorWrapperProps): JSX.Element {
   } else {
     return <>
       <Toast></Toast>
-      <Editor org={props.org} course={props.course} activity={props.activity} content={props.content} setContent={setContent} provider={providerState} ydoc={ydocState}></Editor>;
-
+      <OrgProvider orgslug={props.org.slug}>
+        <Editor org={props.org} course={props.course} activity={props.activity} content={props.content} setContent={setContent} provider={providerState} ydoc={ydocState}></Editor>;
+      </OrgProvider>
     </>
   }
 }

@@ -8,10 +8,11 @@ import Image from 'next/image';
 import { send } from 'process';
 import learnhouseAI_icon from "public/learnhouse_ai_simple.png";
 import learnhouseAI_logo_black from "public/learnhouse_ai_black_logo.png";
-import React, { useEffect, useRef } from 'react'
+import React, { use, useEffect, useRef } from 'react'
 import { AIChatBotStateTypes, useAIChatBot, useAIChatBotDispatch } from '@components/Contexts/AI/AIChatBotContext';
 import FeedbackModal from '@components/Objects/Modals/Feedback/Feedback';
 import Modal from '@components/StyledElements/Modal/Modal';
+import useGetAIFeatures from '../../../AI/Hooks/useGetAIFeatures';
 
 
 type AIActivityAskProps = {
@@ -20,25 +21,38 @@ type AIActivityAskProps = {
 
 
 function AIActivityAsk(props: AIActivityAskProps) {
-
+    const is_ai_feature_enabled = useGetAIFeatures({ feature: 'activity_ask' });
+    const [isButtonAvailable, setIsButtonAvailable] = React.useState(false);
     const dispatchAIChatBot = useAIChatBotDispatch() as any;
 
+    useEffect(() => {
+        if (is_ai_feature_enabled) {
+            setIsButtonAvailable(true);
+        }
+    }
+        , [is_ai_feature_enabled]);
+
     return (
-        <div className=''>
-            <ActivityChatMessageBox activity={props.activity} />
-            <div
-                onClick={() => dispatchAIChatBot({ type: 'setIsModalOpen' })}
-                style={{
-                    background: 'conic-gradient(from 32deg at 53.75% 50%, rgb(35, 40, 93) 4deg, rgba(20, 0, 52, 0.95) 59deg, rgba(164, 45, 238, 0.88) 281deg)',
-                }}
-                className="rounded-full px-5 drop-shadow-md flex  items-center space-x-1.5 p-2.5 text-sm text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out hover:scale-105">
-                {" "}
-                <i>
-                    <Image className='outline outline-1 outline-neutral-200/20 rounded-md' width={20} src={learnhouseAI_icon} alt="" />
-                </i>{" "}
-                <i className="not-italic text-xs font-bold">Ask AI</i>
-            </div>
-        </div>
+        <>
+            {isButtonAvailable  && (
+                <div >
+                    <ActivityChatMessageBox activity={props.activity} />
+                    <div
+                        onClick={() => dispatchAIChatBot({ type: 'setIsModalOpen' })}
+                        style={{
+                            background: 'conic-gradient(from 32deg at 53.75% 50%, rgb(35, 40, 93) 4deg, rgba(20, 0, 52, 0.95) 59deg, rgba(164, 45, 238, 0.88) 281deg)',
+                        }}
+                        className="rounded-full px-5 drop-shadow-md flex  items-center space-x-1.5 p-2.5 text-sm text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out hover:scale-105">
+                        {" "}
+                        <i>
+                            <Image className='outline outline-1 outline-neutral-200/20 rounded-md' width={20} src={learnhouseAI_icon} alt="" />
+                        </i>{" "}
+                        <i className="not-italic text-xs font-bold">Ask AI</i>
+                    </div>
+                </div>
+            )}
+        </>
+
     )
 }
 

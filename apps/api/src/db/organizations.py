@@ -29,6 +29,6 @@ class OrganizationCreate(OrganizationBase):
 class OrganizationRead(OrganizationBase):
     id: int
     org_uuid: str
-    config: OrganizationConfig | dict
+    config: Optional[OrganizationConfig | dict]
     creation_date: str
     update_date: str

@@ -165,6 +165,7 @@ async def create_org(
             active=True,
         ),
         AIConfig=AIConfig(
+            enabled=False,
             limits=AILimitsSettings(
                 limits_enabled=False,
                 max_asks=0,
@@ -179,6 +180,87 @@ async def create_org(
             ),
         ),
     )
+
+    org_config = json.loads(org_config.json())
+
+    # OrgSettings
+    org_settings = OrganizationConfig(
+        org_id=int(org.id if org.id else 0),
+        config=org_config,
+        creation_date=str(datetime.now()),
+        update_date=str(datetime.now()),
+    )
+
+    db_session.add(org_settings)
+    db_session.commit()
+    db_session.refresh(org_settings)
+
+    # Get org config
+    statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
+    result = db_session.exec(statement)
+
+    org_config = result.first()
+
+    if org_config is None:
+        logging.error(f"Organization {org.id} has no config")
+
+    config = OrganizationConfig.from_orm(org_config)
+
+    org = OrganizationRead(**org.dict(), config=config)
+
+    return org
+
+
+# Temporary pre-alpha code
+async def create_org_with_config(
+    request: Request,
+    org_object: OrganizationCreate,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+    submitted_config: OrganizationConfigBase,
+):
+    statement = select(Organization).where(Organization.slug == org_object.slug)
+    result = db_session.exec(statement)
+
+    org = result.first()
+
+    if org:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Organization already exists",
+        )
+
+    org = Organization.from_orm(org_object)
+
+    if isinstance(current_user, AnonymousUser):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="You should be logged in to be able to achieve this action",
+        )
+
+    # Complete the org object
+    org.org_uuid = f"org_{uuid4()}"
+    org.creation_date = str(datetime.now())
+    org.update_date = str(datetime.now())
+
+    db_session.add(org)
+    db_session.commit()
+    db_session.refresh(org)
+
+    # Link user to org
+    user_org = UserOrganization(
+        user_id=int(current_user.id),
+        org_id=int(org.id if org.id else 0),
+        role_id=1,
+        creation_date=str(datetime.now()),
+        update_date=str(datetime.now()),
+    )
+
+    db_session.add(user_org)
+    db_session.commit()
+    db_session.refresh(user_org)
+
+    org_config = submitted_config
 
     org_config = json.loads(org_config.json())
 

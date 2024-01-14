@@ -38,6 +38,8 @@ sentence-transformers = "^2.2.2"
 python-dotenv = "^1.0.0"
 redis = "^5.0.1"
 langchain-community = "^0.0.11"
+langchain-openai = "^0.0.2.post1"
+
 
 [build-system]
 requires = ["poetry-core"]
