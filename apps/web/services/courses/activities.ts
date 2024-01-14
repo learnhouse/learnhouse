@@ -63,8 +63,8 @@ export async function getActivityWithAuthHeader(activity_uuid: any, next: any, a
   return res;
 }
 
-export async function updateActivity(data: any, activity_id: any) {
-  const result = await fetch(`${getAPIUrl()}activities/${activity_id}`, RequestBody("PUT", data, null));
+export async function updateActivity(data: any, activity_uuid: string) {
+  const result = await fetch(`${getAPIUrl()}activities/${activity_uuid}`, RequestBody("PUT", data, null));
   const res = await result.json();
   return res;
 }
