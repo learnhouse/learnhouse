@@ -39,10 +39,9 @@ import html from 'highlight.js/lib/languages/xml'
 import python from 'highlight.js/lib/languages/python'
 import java from 'highlight.js/lib/languages/java'
 import { CourseProvider } from "@components/Contexts/CourseContext";
-import { OrgProvider } from "@components/Contexts/OrgContext";
 import { useSession } from "@components/Contexts/SessionContext";
-import AIEditorTools from "./AI/AIEditorToolkit";
 import AIEditorToolkit from "./AI/AIEditorToolkit";
+import useGetAIFeatures from "@components/AI/Hooks/useGetAIFeatures";
 
 
 interface Editor {
@@ -59,6 +58,14 @@ function Editor(props: Editor) {
   const session = useSession() as any;
   const dispatchAIEditor = useAIEditorDispatch() as any;
   const aiEditorState = useAIEditor() as AIEditorStateTypes;
+  const is_ai_feature_enabled = useGetAIFeatures({ feature: 'editor' });
+  const [isButtonAvailable, setIsButtonAvailable] = React.useState(false);
+
+  React.useEffect(() => {
+    if (is_ai_feature_enabled) {
+      setIsButtonAvailable(true);
+    }
+  }, [is_ai_feature_enabled])
 
   // remove course_ from course_uuid
   const course_uuid = props.course.course_uuid.substring(7);
@@ -137,7 +144,6 @@ function Editor(props: Editor) {
 
   return (
     <Page>
-      <OrgProvider orgslug={props.org?.slug}>
         <CourseProvider courseuuid={props.course.course_uuid}>
           <motion.div
             initial={{ opacity: 0, scale: 0.98 }}
@@ -172,7 +178,7 @@ function Editor(props: Editor) {
               <EditorUsersSection className="space-x-2">
                 <div>
                   <div className="transition-all ease-linear text-teal-100 rounded-md hover:cursor-pointer" >
-                    <div
+                    {isButtonAvailable && <div
                       onClick={() => dispatchAIEditor({ type: aiEditorState.isModalOpen ? 'setIsModalClose' : 'setIsModalOpen' })}
                       style={{
                         background: 'conic-gradient(from 32deg at 53.75% 50%, rgb(35, 40, 93) 4deg, rgba(20, 0, 52, 0.95) 59deg, rgba(164, 45, 238, 0.88) 281deg)',
@@ -183,7 +189,7 @@ function Editor(props: Editor) {
                         <Image className='' width={20} src={learnhouseAI_icon} alt="" />
                       </i>{" "}
                       <i className="not-italic text-xs font-bold">AI Editor</i>
-                    </div>
+                    </div>}
                   </div>
                 </div>
                 <DividerVerticalIcon style={{ marginTop: "auto", marginBottom: "auto", color: "grey", opacity: '0.5' }} />
@@ -224,7 +230,6 @@ function Editor(props: Editor) {
             </EditorContentWrapper>
           </motion.div>
         </CourseProvider>
-      </OrgProvider>
     </Page>
   );
 }

@@ -7,6 +7,7 @@ import { BubbleMenu } from '@tiptap/react';
 import ToolTip from '@components/StyledElements/Tooltip/Tooltip';
 import { AIChatBotStateTypes, useAIChatBot, useAIChatBotDispatch } from '@components/Contexts/AI/AIChatBotContext';
 import { sendActivityAIChatMessage, startActivityAIChatSession } from '@services/ai/ai';
+import useGetAIFeatures from '../../../../AI/Hooks/useGetAIFeatures';
 
 
 
@@ -16,23 +17,35 @@ type AICanvaToolkitProps = {
 }
 
 function AICanvaToolkit(props: AICanvaToolkitProps) {
+    const is_ai_feature_enabled = useGetAIFeatures({ feature: 'activity_ask' });
+    const [isBubbleMenuAvailable, setIsButtonAvailable] = React.useState(false);
+
+    React.useEffect(() => {
+        if (is_ai_feature_enabled) {
+            setIsButtonAvailable(true);
+        }
+    }, [is_ai_feature_enabled])
+
+
     return (
-        <BubbleMenu className="w-fit" tippyOptions={{ duration: 100 }} editor={props.editor}>
-            <div style={{ background: 'linear-gradient(0deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.2) 100%), radial-gradient(105.16% 105.16% at 50% -5.16%, rgba(255, 255, 255, 0.18) 0%, rgba(0, 0, 0, 0) 100%), rgba(2, 1, 25, 0.98)' }}
-                className='py-1 h-10 px-2 w-max text-white rounded-xl shadow-md cursor-pointer flex items-center space-x-2 antialiased'
-            >
-                <div className='flex w-full space-x-2 font-bold text-white/80'><Image className='outline outline-1 outline-neutral-200/10 rounded-lg' width={24} src={learnhouseAI_icon} alt="" /> <div>AI</div> </div>
-                <div>
-                    <MoreVertical className='text-white/50' size={12} />
+        <>
+            {isBubbleMenuAvailable && <BubbleMenu className="w-fit" tippyOptions={{ duration: 100 }} editor={props.editor}>
+                <div style={{ background: 'linear-gradient(0deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.2) 100%), radial-gradient(105.16% 105.16% at 50% -5.16%, rgba(255, 255, 255, 0.18) 0%, rgba(0, 0, 0, 0) 100%), rgba(2, 1, 25, 0.98)' }}
+                    className='py-1 h-10 px-2 w-max text-white rounded-xl shadow-md cursor-pointer flex items-center space-x-2 antialiased'
+                >
+                    <div className='flex w-full space-x-2 font-bold text-white/80'><Image className='outline outline-1 outline-neutral-200/10 rounded-lg' width={24} src={learnhouseAI_icon} alt="" /> <div>AI</div> </div>
+                    <div>
+                        <MoreVertical className='text-white/50' size={12} />
+                    </div>
+                    <div className='flex space-x-2'>
+                        <AIActionButton editor={props.editor} activity={props.activity} label='Explain' />
+                        <AIActionButton editor={props.editor} activity={props.activity} label='Summarize' />
+                        <AIActionButton editor={props.editor} activity={props.activity} label='Translate' />
+                        <AIActionButton editor={props.editor} activity={props.activity} label='Examples' />
+                    </div>
                 </div>
-                <div className='flex space-x-2'>
-                    <AIActionButton editor={props.editor} activity={props.activity} label='Explain' />
-                    <AIActionButton editor={props.editor} activity={props.activity} label='Summarize' />
-                    <AIActionButton editor={props.editor} activity={props.activity} label='Translate' />
-                    <AIActionButton editor={props.editor} activity={props.activity} label='Examples' />
-                </div>
-            </div>
-        </BubbleMenu>
+            </BubbleMenu>}
+        </>
     )
 }
 
@@ -45,7 +58,7 @@ function AIActionButton(props: { editor: Editor, label: string, activity: any })
         const prompt = getPrompt(label, selection);
         dispatchAIChatBot({ type: 'setIsModalOpen' });
         await sendMessage(prompt);
-    
+
     }
 
     const getTipTapEditorSelectedText = () => {

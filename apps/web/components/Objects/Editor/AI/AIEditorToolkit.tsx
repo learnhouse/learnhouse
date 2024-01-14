@@ -7,6 +7,7 @@ import { Editor } from '@tiptap/react';
 import { AIChatBotStateTypes, useAIChatBot, useAIChatBotDispatch } from '@components/Contexts/AI/AIChatBotContext';
 import { AIEditorStateTypes, useAIEditor, useAIEditorDispatch } from '@components/Contexts/AI/AIEditorContext';
 import { sendActivityAIChatMessage, startActivityAIChatSession } from '@services/ai/ai';
+import useGetAIFeatures from '@components/AI/Hooks/useGetAIFeatures';
 
 type AIEditorToolkitProps = {
     editor: Editor,
@@ -22,48 +23,61 @@ type AIPromptsLabels = {
 function AIEditorToolkit(props: AIEditorToolkitProps) {
     const dispatchAIEditor = useAIEditorDispatch() as any;
     const aiEditorState = useAIEditor() as AIEditorStateTypes;
+    const is_ai_feature_enabled = useGetAIFeatures({ feature: 'editor' });
+    const [isToolkitAvailable, setIsToolkitAvailable] = React.useState(true);
+
+    React.useEffect(() => {
+        if (is_ai_feature_enabled) {
+            setIsToolkitAvailable(true);
+        }
+    }, [is_ai_feature_enabled])
 
 
     return (
-        <AnimatePresence>
-            {aiEditorState.isModalOpen && <motion.div
-                initial={{ y: 20, opacity: 0.3, filter: 'blur(5px)' }}
-                animate={{ y: 0, opacity: 1, filter: 'blur(0px)' }}
-                exit={{ y: 50, opacity: 0, filter: 'blur(3px)' }}
-                transition={{ type: "spring", bounce: 0.35, duration: 1.7, mass: 0.2, velocity: 2 }}
-                className='fixed top-0 left-0 w-full h-full z-50 flex justify-center items-center '
-                style={{ pointerEvents: 'none' }}
-            >
-                <>
-                    {aiEditorState.isFeedbackModalOpen && <UserFeedbackModal activity={props.activity} editor={props.editor} />}
-                    <div
-                        style={{
-                            pointerEvents: 'auto',
-                            background: 'linear-gradient(0deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.2) 100%), radial-gradient(105.16% 105.16% at 50% -5.16%, rgba(255, 255, 255, 0.18) 0%, rgba(0, 0, 0, 0) 100%), rgb(2 1 25 / 98%)'
-                        }}
-                        className="z-50 rounded-2xl max-w-screen-2xl my-10 mx-auto w-fit fixed bottom-0 left-1/2 transform -translate-x-1/2 shadow-xl ring-1 ring-inset ring-white/10 text-white p-3 flex-col-reverse backdrop-blur-md">
-                        <div className='flex space-x-2'>
-                            <div className='pr-1'>
-                                <div className='flex w-full space-x-2 font-bold text-white/80 items-center'>
-                                    <Image className='outline outline-1 outline-neutral-200/20 rounded-lg' width={24} src={learnhouseAI_icon} alt="" />
-                                    <div >AI Editor</div>
-                                    <MoreVertical className='text-white/50' size={12} />
-                                </div>
-                            </div>
-                            <div className='tools flex space-x-2'>
-                                <AiEditorToolButton label='Writer' />
-                                <AiEditorToolButton label='ContinueWriting' />
-                                <AiEditorToolButton label='MakeLonger' />
+        <>
+            {isToolkitAvailable && <div className='flex space-x-2'>
+                <AnimatePresence>
+                    {aiEditorState.isModalOpen && <motion.div
+                        initial={{ y: 20, opacity: 0.3, filter: 'blur(5px)' }}
+                        animate={{ y: 0, opacity: 1, filter: 'blur(0px)' }}
+                        exit={{ y: 50, opacity: 0, filter: 'blur(3px)' }}
+                        transition={{ type: "spring", bounce: 0.35, duration: 1.7, mass: 0.2, velocity: 2 }}
+                        className='fixed top-0 left-0 w-full h-full z-50 flex justify-center items-center '
+                        style={{ pointerEvents: 'none' }}
+                    >
+                        <>
+                            {aiEditorState.isFeedbackModalOpen && <UserFeedbackModal activity={props.activity} editor={props.editor} />}
+                            <div
+                                style={{
+                                    pointerEvents: 'auto',
+                                    background: 'linear-gradient(0deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.2) 100%), radial-gradient(105.16% 105.16% at 50% -5.16%, rgba(255, 255, 255, 0.18) 0%, rgba(0, 0, 0, 0) 100%), rgb(2 1 25 / 98%)'
+                                }}
+                                className="z-50 rounded-2xl max-w-screen-2xl my-10 mx-auto w-fit fixed bottom-0 left-1/2 transform -translate-x-1/2 shadow-xl ring-1 ring-inset ring-white/10 text-white p-3 flex-col-reverse backdrop-blur-md">
+                                <div className='flex space-x-2'>
+                                    <div className='pr-1'>
+                                        <div className='flex w-full space-x-2 font-bold text-white/80 items-center'>
+                                            <Image className='outline outline-1 outline-neutral-200/20 rounded-lg' width={24} src={learnhouseAI_icon} alt="" />
+                                            <div >AI Editor</div>
+                                            <MoreVertical className='text-white/50' size={12} />
+                                        </div>
+                                    </div>
+                                    <div className='tools flex space-x-2'>
+                                        <AiEditorToolButton label='Writer' />
+                                        <AiEditorToolButton label='ContinueWriting' />
+                                        <AiEditorToolButton label='MakeLonger' />
 
-                                <AiEditorToolButton label='Translate' />
-                            </div>
-                            <div className='flex space-x-2 items-center'>
-                                <X onClick={() => Promise.all([dispatchAIEditor({ type: 'setIsModalClose' }), dispatchAIEditor({ type: 'setIsFeedbackModalClose' })])} size={20} className='text-white/50 hover:cursor-pointer bg-white/10 p-1 rounded-full items-center' />
-                            </div>
-                        </div>
-                    </div></>
-            </motion.div>}
-        </AnimatePresence>
+                                        <AiEditorToolButton label='Translate' />
+                                    </div>
+                                    <div className='flex space-x-2 items-center'>
+                                        <X onClick={() => Promise.all([dispatchAIEditor({ type: 'setIsModalClose' }), dispatchAIEditor({ type: 'setIsFeedbackModalClose' })])} size={20} className='text-white/50 hover:cursor-pointer bg-white/10 p-1 rounded-full items-center' />
+                                    </div>
+                                </div>
+                            </div></>
+                    </motion.div>}
+                </AnimatePresence>
+            </div>}
+        </>
+
     )
 }
 

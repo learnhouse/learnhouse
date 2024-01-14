@@ -24,7 +24,7 @@ import python from 'highlight.js/lib/languages/python'
 import java from 'highlight.js/lib/languages/java'
 import { NoTextInput } from "@components/Objects/Editor/Extensions/NoTextInput/NoTextInput";
 import EditorOptionsProvider from "@components/Contexts/Editor/EditorContext";
-import AICanvaToolkit from "./Elements/AICanvaToolkit";
+import AICanvaToolkit from "./AI/AICanvaToolkit";
 
 
 interface Editor {

@@ -1,7 +1,4 @@
-from json import JSONEncoder
-import json
 from typing import Literal, Optional
-from click import Option
 from pydantic import BaseModel
 from sqlalchemy import JSON, BigInteger, Column, ForeignKey
 from sqlmodel import Field, SQLModel
@@ -21,6 +18,7 @@ class AIEnabledFeatures(BaseModel):
 
 
 class AIConfig(BaseModel):
+    enabled : bool = True
     limits: AILimitsSettings = AILimitsSettings()
     embeddings: Literal[
         "text-embedding-ada-002", "all-MiniLM-L6-v2"

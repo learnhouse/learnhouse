@@ -1,6 +1,7 @@
 from typing import List
 from fastapi import APIRouter, Depends, Request, UploadFile
 from sqlmodel import Session
+from src.db.organization_config import OrganizationConfigBase
 from src.db.users import PublicUser
 from src.db.organizations import (
     Organization,
@@ -12,6 +13,7 @@ from src.core.events.database import get_db_session
 from src.security.auth import get_current_user
 from src.services.orgs.orgs import (
     create_org,
+    create_org_with_config,
     delete_org,
     get_organization,
     get_organization_by_slug,
@@ -35,6 +37,23 @@ async def api_create_org(
     Create new organization
     """
     return await create_org(request, org_object, current_user, db_session)
+
+
+# Temporary pre-alpha code
+@router.post("/withconfig/")
+async def api_create_org_withconfig(
+    request: Request,
+    org_object: OrganizationCreate,
+    config_object: OrganizationConfigBase,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+) -> OrganizationRead:
+    """
+    Create new organization
+    """
+    return await create_org_with_config(
+        request, org_object, current_user, db_session, config_object
+    )
 
 
 @router.get("/{org_id}")
@@ -110,7 +129,7 @@ async def api_update_org(
     """
     Update Org by ID
     """
-    return await update_org(request, org_object,org_id, current_user, db_session)
+    return await update_org(request, org_object, org_id, current_user, db_session)
 
 
 @router.delete("/{org_id}")
