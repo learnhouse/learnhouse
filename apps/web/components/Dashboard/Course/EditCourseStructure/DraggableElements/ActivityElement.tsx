@@ -25,6 +25,7 @@ function ActivityElement(props: ActivitiyElementProps) {
     const router = useRouter();
     const [modifiedActivity, setModifiedActivity] = React.useState<ModifiedActivityInterface | undefined>(undefined);
     const [selectedActivity, setSelectedActivity] = React.useState<string | undefined>(undefined);
+    const activityUUID = props.activity.activity_uuid;
 
     async function deleteActivityUI() {
         await deleteActivity(props.activity.activity_uuid);
@@ -43,7 +44,7 @@ function ActivityElement(props: ActivitiyElementProps) {
                 content: props.activity.content,
             }
 
-            await updateActivity(modifiedActivityCopy, activityId)
+            await updateActivity(modifiedActivityCopy, activityUUID)
             mutate(`${getAPIUrl()}courses/${props.course_uuid}/meta`);
             await revalidateTags(['courses'], props.orgslug)
             router.refresh();
