@@ -5,12 +5,18 @@ export const AIChatBotContext = createContext(null) as any;
 export const AIChatBotDispatchContext = createContext(null) as any;
 
 export type AIChatBotStateTypes = {
-
     messages: AIMessage[],
     isModalOpen: boolean,
     aichat_uuid: string,
     isWaitingForResponse: boolean,
     chatInputValue: string
+    error: AIError
+}
+
+type AIError = {
+    isError: boolean
+    status: number
+    error_message: string
 }
 
 function AIChatBotProvider({ children }: { children: React.ReactNode }) {
@@ -20,7 +26,8 @@ function AIChatBotProvider({ children }: { children: React.ReactNode }) {
             isModalOpen: false,
             aichat_uuid: null,
             isWaitingForResponse: false,
-            chatInputValue: ''
+            chatInputValue: '',
+            error: { isError: false, status: 0, error_message: ' ' } as AIError
         }
     );
     return (
@@ -60,6 +67,8 @@ function aiChatBotReducer(state: any, action: any) {
             return { ...state, isWaitingForResponse: false };
         case 'setChatInputValue':
             return { ...state, chatInputValue: action.payload };
+        case 'setError':
+            return { ...state, error: action.payload };
 
         default:
             throw new Error(`Unhandled action type: ${action.type}`)
