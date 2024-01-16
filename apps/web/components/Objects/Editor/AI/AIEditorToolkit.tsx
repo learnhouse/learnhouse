@@ -331,7 +331,7 @@ const UserFeedbackModal = (props: AIEditorToolkitProps) => {
                 </div>
                 {aiEditorState.isUserInputEnabled && !aiEditorState.error.isError && <div className="flex items-center space-x-2 cursor-pointer">
                     <input onKeyDown={handleKeyPress} value={aiEditorState.chatInputValue} onChange={handleChange} placeholder='Ask AI' className='ring-1 ring-inset ring-white/20 w-full bg-gray-950/20 rounded-lg outline-none px-4 py-2 text-white text-sm placeholder:text-white/30'></input>
-                    <div className='bg-white/10 px-3  rounded-md outline outline-1 outline-neutral-200/20 py-2 hover:bg-white/20 hover:outline-neutral-200/40 delay-75 ease-linear transition-all'>
+                    <div onClick={() => handleOperation(aiEditorState.selectedTool, aiEditorState.chatInputValue)} className='bg-white/10 px-3  rounded-md outline outline-1 outline-neutral-200/20 py-2 hover:bg-white/20 hover:outline-neutral-200/40 delay-75 ease-linear transition-all'>
                         <BetweenHorizontalStart size={20} className='text-white/50 hover:cursor-pointer' />
                     </div>
                 </div>}
