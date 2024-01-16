@@ -2,7 +2,7 @@ import React from 'react'
 import learnhouseAI_icon from "public/learnhouse_ai_simple.png";
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
-import { BetweenHorizontalStart, FastForward, Feather, FileStack, HelpCircle, Languages, MessageCircle, MoreVertical, Pen, X } from 'lucide-react';
+import { AlertTriangle, BetweenHorizontalStart, FastForward, Feather, FileStack, HelpCircle, Languages, MessageCircle, MoreVertical, Pen, X } from 'lucide-react';
 import { Editor } from '@tiptap/react';
 import { AIChatBotStateTypes, useAIChatBot, useAIChatBotDispatch } from '@components/Contexts/AI/AIChatBotContext';
 import { AIEditorStateTypes, useAIEditor, useAIEditorDispatch } from '@components/Contexts/AI/AIEditorContext';
@@ -96,20 +96,38 @@ const UserFeedbackModal = (props: AIEditorToolkitProps) => {
             await dispatchAIEditor({ type: 'addMessage', payload: { sender: 'user', message: message, type: 'user' } });
             await dispatchAIEditor({ type: 'setIsWaitingForResponse' });
             const response = await sendActivityAIChatMessage(message, aiEditorState.aichat_uuid, props.activity.activity_uuid)
+            if (response.success === false) {
+                await dispatchAIEditor({ type: 'setIsNoLongerWaitingForResponse' });
+                await dispatchAIEditor({ type: 'setIsModalClose' });
+                // wait for 200ms before opening the modal again
+                await new Promise(resolve => setTimeout(resolve, 200));
+                await dispatchAIEditor({ type: 'setError', payload: { isError: true, status: response.status, error_message: response.data.detail } });
+                await dispatchAIEditor({ type: 'setIsModalOpen' });
+                return '';
+            }
             await dispatchAIEditor({ type: 'setIsNoLongerWaitingForResponse' });
             await dispatchAIEditor({ type: 'setChatInputValue', payload: '' });
-            await dispatchAIEditor({ type: 'addMessage', payload: { sender: 'ai', message: response.message, type: 'ai' } });
-            return response.message;
+            await dispatchAIEditor({ type: 'addMessage', payload: { sender: 'ai', message: response.data.message, type: 'ai' } });
+            return response.data.message;
 
         } else {
             await dispatchAIEditor({ type: 'addMessage', payload: { sender: 'user', message: message, type: 'user' } });
             await dispatchAIEditor({ type: 'setIsWaitingForResponse' });
             const response = await startActivityAIChatSession(message, props.activity.activity_uuid)
-            await dispatchAIEditor({ type: 'setAichat_uuid', payload: response.aichat_uuid });
+            if (response.success === false) {
+                await dispatchAIEditor({ type: 'setIsNoLongerWaitingForResponse' });
+                await dispatchAIEditor({ type: 'setIsModalClose' });
+                // wait for 200ms before opening the modal again
+                await new Promise(resolve => setTimeout(resolve, 200));
+                await dispatchAIEditor({ type: 'setError', payload: { isError: true, status: response.status, error_message: response.data.detail } });
+                await dispatchAIEditor({ type: 'setIsModalOpen' });
+                return '';
+            }
+            await dispatchAIEditor({ type: 'setAichat_uuid', payload: response.data.aichat_uuid });
             await dispatchAIEditor({ type: 'setIsNoLongerWaitingForResponse' });
             await dispatchAIEditor({ type: 'setChatInputValue', payload: '' });
-            await dispatchAIEditor({ type: 'addMessage', payload: { sender: 'ai', message: response.message, type: 'ai' } });
-            return response.message;
+            await dispatchAIEditor({ type: 'addMessage', payload: { sender: 'ai', message: response.data.message, type: 'ai' } });
+            return response.data.message;
         }
     }
 
@@ -158,10 +176,7 @@ const UserFeedbackModal = (props: AIEditorToolkitProps) => {
                 await dispatchAIEditor({ type: 'setIsNoLongerWaitingForResponse' });
             }
         } else if (label === 'GenerateQuiz') {
-            // Send message to AI
-            // Wait for response
-            // Add response to editor
-            // Close modal
+            // will be implemented in future stages
         } else if (label === 'Translate') {
             let ai_message = '';
             let text_selection = getTipTapEditorSelectedText();
@@ -211,6 +226,7 @@ const UserFeedbackModal = (props: AIEditorToolkitProps) => {
 
             // Wait for 0.3 seconds before adding the next word
             await new Promise(resolve => setTimeout(resolve, 120));
+
         }
     }
 
@@ -313,7 +329,7 @@ const UserFeedbackModal = (props: AIEditorToolkitProps) => {
                         <AiEditorActionScreen handleOperation={handleOperation} />
                     </div>
                 </div>
-                {aiEditorState.isUserInputEnabled && <div className="flex items-center space-x-2 cursor-pointer">
+                {aiEditorState.isUserInputEnabled && !aiEditorState.error.isError && <div className="flex items-center space-x-2 cursor-pointer">
                     <input onKeyDown={handleKeyPress} value={aiEditorState.chatInputValue} onChange={handleChange} placeholder='Ask AI' className='ring-1 ring-inset ring-white/20 w-full bg-gray-950/20 rounded-lg outline-none px-4 py-2 text-white text-sm placeholder:text-white/30'></input>
                     <div className='bg-white/10 px-3  rounded-md outline outline-1 outline-neutral-200/20 py-2 hover:bg-white/20 hover:outline-neutral-200/40 delay-75 ease-linear transition-all'>
                         <BetweenHorizontalStart size={20} className='text-white/50 hover:cursor-pointer' />
@@ -379,11 +395,11 @@ const AiEditorActionScreen = ({ handleOperation }: { handleOperation: any }) => 
 
     return (
         <div>
-            {aiEditorState.selectedTool === 'Writer' && !aiEditorState.isWaitingForResponse &&
+            {aiEditorState.selectedTool === 'Writer' && !aiEditorState.isWaitingForResponse && !aiEditorState.error.isError &&
                 <div className='text-xl text-white/90 font-extrabold space-x-2'>
                     <span>Write about...</span>
                 </div>}
-            {aiEditorState.selectedTool === 'ContinueWriting' && !aiEditorState.isWaitingForResponse &&
+            {aiEditorState.selectedTool === 'ContinueWriting' && !aiEditorState.isWaitingForResponse && !aiEditorState.error.isError &&
                 <div className='flex flex-col mx-auto justify-center align-middle items-center'>
                     <p className='mx-auto flex p-2 text-white/80 mt-4 font-bold justify-center text-sm align-middle'>Place your cursor at the end of a sentence to continue writing </p>
                     <div onClick={() => {
@@ -393,7 +409,7 @@ const AiEditorActionScreen = ({ handleOperation }: { handleOperation: any }) => 
                         <FastForward size={24} />
                     </div>
                 </div>}
-            {aiEditorState.selectedTool === 'MakeLonger' && !aiEditorState.isWaitingForResponse &&
+            {aiEditorState.selectedTool === 'MakeLonger' && !aiEditorState.isWaitingForResponse && !aiEditorState.error.isError &&
                 <div className='flex flex-col mx-auto justify-center align-middle items-center'>
                     <p className='mx-auto flex p-2 text-white/80 mt-4 font-bold justify-center text-sm align-middle'>Select text to make longer </p>
                     <div onClick={() => {
@@ -403,7 +419,7 @@ const AiEditorActionScreen = ({ handleOperation }: { handleOperation: any }) => 
                         <FileStack size={24} />
                     </div>
                 </div>}
-            {aiEditorState.selectedTool === 'Translate' && !aiEditorState.isWaitingForResponse &&
+            {aiEditorState.selectedTool === 'Translate' && !aiEditorState.isWaitingForResponse && !aiEditorState.error.isError &&
                 <div className='flex flex-col mx-auto justify-center align-middle items-center'>
                     <div className='mx-auto flex p-2 text-white/80 mt-4 font-bold justify-center text-sm align-middle space-x-6'>
                         <p>Translate selected text to  </p>
@@ -416,14 +432,27 @@ const AiEditorActionScreen = ({ handleOperation }: { handleOperation: any }) => 
                         <Languages size={24} />
                     </div>
                 </div>}
-            {aiEditorState.isWaitingForResponse && <div className='flex flex-col mx-auto justify-center align-middle items-center'>
-
+            {aiEditorState.isWaitingForResponse && !aiEditorState.error.isError && <div className='flex flex-col mx-auto justify-center align-middle items-center'>
                 <svg className="animate-spin mt-10 h-10 w-10 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
                 <p className='font-bold mt-4 text-white/90'>Thinking...</p>
             </div>}
+
+            {aiEditorState.error.isError && (
+                <div className='flex items-center h-auto pt-7'>
+                    <div className='flex flex-col mx-auto w-full space-y-2 p-5 rounded-lg bg-red-500/20 outline outline-1 outline-red-500'>
+                        <AlertTriangle size={20} className='text-red-500' />
+                        <div className='flex flex-col'>
+                            <h3 className='font-semibold text-red-200'>Something wrong happened</h3>
+                            <span className='text-red-100 text-sm '>{aiEditorState.error.error_message}</span>
+                        </div>
+                    </div>
+                </div>
+
+            )
+            }
 
         </div>
     )

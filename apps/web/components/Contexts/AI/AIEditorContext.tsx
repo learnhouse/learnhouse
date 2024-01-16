@@ -14,6 +14,13 @@ export type AIEditorStateTypes = {
     chatInputValue: string,
     selectedTool: 'Writer' | 'ContinueWriting' | 'MakeLonger' | 'GenerateQuiz' | 'Translate'
     isUserInputEnabled: boolean
+    error: AIError
+}
+
+type AIError = {
+    isError: boolean
+    status: number
+    error_message: string
 }
 
 function AIEditorProvider({ children }: { children: React.ReactNode }) {
@@ -26,7 +33,8 @@ function AIEditorProvider({ children }: { children: React.ReactNode }) {
             isWaitingForResponse: false,
             chatInputValue: '',
             selectedTool: 'Writer',
-            isUserInputEnabled: true
+            isUserInputEnabled: true,
+            error: { isError: false, status: 0, error_message: ' ' } as AIError
         }
     );
     return (
@@ -74,7 +82,9 @@ function aIEditorReducer(state: any, action: any) {
             return { ...state, isFeedbackModalOpen: false };
         case 'setIsUserInputEnabled':
             return { ...state, isUserInputEnabled: action.payload };
-            
+        case 'setError':
+            return { ...state, error: action.payload };
+
 
         default:
             throw new Error(`Unhandled action type: ${action.type}`)

@@ -1,6 +1,6 @@
 import { useSession } from '@components/Contexts/SessionContext'
 import { sendActivityAIChatMessage, startActivityAIChatSession } from '@services/ai/ai';
-import { BadgeInfo, NotebookTabs } from 'lucide-react';
+import { AlertTriangle, BadgeInfo, NotebookTabs } from 'lucide-react';
 import Avvvatars from 'avvvatars-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FlaskConical, Keyboard, MessageCircle, MessageSquareIcon, Sparkle, Sparkles, X } from 'lucide-react'
@@ -34,7 +34,7 @@ function AIActivityAsk(props: AIActivityAskProps) {
 
     return (
         <>
-            {isButtonAvailable  && (
+            {isButtonAvailable && (
                 <div >
                     <ActivityChatMessageBox activity={props.activity} />
                     <div
@@ -101,18 +101,30 @@ function ActivityChatMessageBox(props: ActivityChatMessageBoxProps) {
             await dispatchAIChatBot({ type: 'addMessage', payload: { sender: 'user', message: message, type: 'user' } });
             await dispatchAIChatBot({ type: 'setIsWaitingForResponse' });
             const response = await sendActivityAIChatMessage(message, aiChatBotState.aichat_uuid, props.activity.activity_uuid)
+            if (response.success == false) {
+                await dispatchAIChatBot({ type: 'setIsNoLongerWaitingForResponse' });
+                await dispatchAIChatBot({ type: 'setChatInputValue', payload: '' });
+                await dispatchAIChatBot({ type: 'setError', payload: { isError: true, status: response.status, error_message: response.data.detail } });
+                return;
+            }
             await dispatchAIChatBot({ type: 'setIsNoLongerWaitingForResponse' });
             await dispatchAIChatBot({ type: 'setChatInputValue', payload: '' });
-            await dispatchAIChatBot({ type: 'addMessage', payload: { sender: 'ai', message: response.message, type: 'ai' } });
+            await dispatchAIChatBot({ type: 'addMessage', payload: { sender: 'ai', message: response.data.message, type: 'ai' } });
 
         } else {
             await dispatchAIChatBot({ type: 'addMessage', payload: { sender: 'user', message: message, type: 'user' } });
             await dispatchAIChatBot({ type: 'setIsWaitingForResponse' });
             const response = await startActivityAIChatSession(message, props.activity.activity_uuid)
-            await dispatchAIChatBot({ type: 'setAichat_uuid', payload: response.aichat_uuid });
+            if (response.success == false) {
+                await dispatchAIChatBot({ type: 'setIsNoLongerWaitingForResponse' });
+                await dispatchAIChatBot({ type: 'setChatInputValue', payload: '' });
+                await dispatchAIChatBot({ type: 'setError', payload: { isError: true, status: response.status, error_message: response.data.detail } });
+                return;
+            }
+            await dispatchAIChatBot({ type: 'setAichat_uuid', payload: response.data.aichat_uuid });
             await dispatchAIChatBot({ type: 'setIsNoLongerWaitingForResponse' });
             await dispatchAIChatBot({ type: 'setChatInputValue', payload: '' });
-            await dispatchAIChatBot({ type: 'addMessage', payload: { sender: 'ai', message: response.message, type: 'ai' } });
+            await dispatchAIChatBot({ type: 'addMessage', payload: { sender: 'ai', message: response.data.message, type: 'ai' } });
         }
     }
 
@@ -165,7 +177,7 @@ function ActivityChatMessageBox(props: ActivityChatMessageBoxProps) {
 
                             </div>
                             <div className={`w-100 h-0.5 bg-white/5 rounded-full mx-auto mb-3 ${aiChatBotState.isWaitingForResponse ? 'animate-pulse' : ''}`}></div>
-                            {aiChatBotState.messages.length > 0 ? (
+                            {aiChatBotState.messages.length > 0 && !aiChatBotState.error.isError ? (
                                 <div className='flex-col h-[237px] w-full  space-y-4 overflow-scroll scrollbar-w-2 scrollbar scrollbar-thumb-white/20 scrollbar-thumb-rounded-full scrollbar-track-rounded-full'>
                                     {aiChatBotState.messages.map((message: AIMessage, index: number) => {
                                         return (
@@ -177,6 +189,19 @@ function ActivityChatMessageBox(props: ActivityChatMessageBoxProps) {
                             ) : (
                                 <AIMessagePlaceHolder sendMessage={sendMessage} activity_uuid={props.activity.activity_uuid} />
                             )}
+                            {aiChatBotState.error.isError && (
+                                <div className='flex items-center h-[237px]'>
+                                    <div className='flex flex-col mx-auto w-[600px] space-y-2 p-5 rounded-lg bg-red-500/20 outline outline-1 outline-red-500'>
+                                        <AlertTriangle size={20} className='text-red-500' />
+                                        <div className='flex flex-col'>
+                                            <h3 className='font-semibold text-red-200'>Something wrong happened</h3>
+                                            <span className='text-red-100 text-sm '>{aiChatBotState.error.error_message}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            )
+                            }
                             <div className='flex space-x-2 items-center'>
                                 <div className=''>
                                     <Avvvatars radius={3} border borderColor='white' borderSize={3} size={35} value={session.user.user_uuid} style="shape" />
@@ -235,10 +260,11 @@ function AIMessage(props: AIMessageProps) {
 
 const AIMessagePlaceHolder = (props: { activity_uuid: string, sendMessage: any }) => {
     const session = useSession() as any;
-
     const [feedbackModal, setFeedbackModal] = React.useState(false);
-    return (
-        <div className='flex-col h-[237px] w-full'>
+    const aiChatBotState = useAIChatBot() as AIChatBotStateTypes;
+
+    if (!aiChatBotState.error.isError) {
+        return <div className='flex-col h-[237px] w-full'>
             <div className='flex flex-col text-center justify-center pt-12'>
                 <motion.div
                     initial={{ y: 20, opacity: 0, filter: 'blur(5px)' }}
@@ -271,7 +297,7 @@ const AIMessagePlaceHolder = (props: { activity_uuid: string, sendMessage: any }
                 </motion.div>
             </div>
         </div>
-    )
+    }
 }
 
 const AIChatPredefinedQuestion = (props: { sendMessage: any, label: string }) => {
