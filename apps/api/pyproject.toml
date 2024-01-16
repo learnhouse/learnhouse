@@ -1,6 +1,6 @@
 [tool.ruff]
 # E501 line too long (82 > 79 characters)
-ignore = ["E501"]
+ignore = ["E501", "E712"]
 
 [tool.poetry]
 name = "learnhouse-api"

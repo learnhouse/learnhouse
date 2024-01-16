@@ -1,6 +1,4 @@
-from uuid import uuid4
 from fastapi import Depends, HTTPException, Request
-from requests import session
 from sqlmodel import Session, select
 from src.db.organization_config import OrganizationConfig
 from src.db.organizations import Organization

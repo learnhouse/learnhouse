@@ -1,7 +1,6 @@
 import json
 import logging
 from datetime import datetime
-from logging import config
 from typing import Literal
 from uuid import uuid4
 from sqlmodel import Session, select
