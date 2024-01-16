@@ -58,7 +58,6 @@ function AIActionButton(props: { editor: Editor, label: string, activity: any })
         const prompt = getPrompt(label, selection);
         dispatchAIChatBot({ type: 'setIsModalOpen' });
         await sendMessage(prompt);
-
     }
 
     const getTipTapEditorSelectedText = () => {
@@ -86,18 +85,30 @@ function AIActionButton(props: { editor: Editor, label: string, activity: any })
             await dispatchAIChatBot({ type: 'addMessage', payload: { sender: 'user', message: message, type: 'user' } });
             await dispatchAIChatBot({ type: 'setIsWaitingForResponse' });
             const response = await sendActivityAIChatMessage(message, aiChatBotState.aichat_uuid, props.activity.activity_uuid)
+            if (response.success == false) {
+                await dispatchAIChatBot({ type: 'setIsNoLongerWaitingForResponse' });
+                await dispatchAIChatBot({ type: 'setChatInputValue', payload: '' });
+                await dispatchAIChatBot({ type: 'setError', payload: { isError: true, status: response.status, error_message: response.data.detail } });
+                return;
+            }
             await dispatchAIChatBot({ type: 'setIsNoLongerWaitingForResponse' });
             await dispatchAIChatBot({ type: 'setChatInputValue', payload: '' });
-            await dispatchAIChatBot({ type: 'addMessage', payload: { sender: 'ai', message: response.message, type: 'ai' } });
+            await dispatchAIChatBot({ type: 'addMessage', payload: { sender: 'ai', message: response.data.message, type: 'ai' } });
 
         } else {
             await dispatchAIChatBot({ type: 'addMessage', payload: { sender: 'user', message: message, type: 'user' } });
             await dispatchAIChatBot({ type: 'setIsWaitingForResponse' });
             const response = await startActivityAIChatSession(message, props.activity.activity_uuid)
-            await dispatchAIChatBot({ type: 'setAichat_uuid', payload: response.aichat_uuid });
+            if (response.success == false) {
+                await dispatchAIChatBot({ type: 'setIsNoLongerWaitingForResponse' });
+                await dispatchAIChatBot({ type: 'setChatInputValue', payload: '' });
+                await dispatchAIChatBot({ type: 'setError', payload: { isError: true, status: response.status, error_message: response.data.detail } });
+                return;
+            }
+            await dispatchAIChatBot({ type: 'setAichat_uuid', payload: response.data.aichat_uuid });
             await dispatchAIChatBot({ type: 'setIsNoLongerWaitingForResponse' });
             await dispatchAIChatBot({ type: 'setChatInputValue', payload: '' });
-            await dispatchAIChatBot({ type: 'addMessage', payload: { sender: 'ai', message: response.message, type: 'ai' } });
+            await dispatchAIChatBot({ type: 'addMessage', payload: { sender: 'ai', message: response.data.message, type: 'ai' } });
         }
     }
 
