@@ -73,9 +73,13 @@ const CourseClient = (props: any) => {
             </h1>
           </div>
 
-
-          <div className="inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl relative w-auto h-[300px] bg-cover bg-center mb-4" style={{ backgroundImage: `url(${getCourseThumbnailMediaDirectory(org?.org_uuid, course.course_uuid, course.thumbnail_image)})` }}>
-          </div>
+          {props.course.thumbnail_image ?
+            <div className="inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl relative w-auto h-[300px] bg-cover bg-center mb-4" style={{ backgroundImage: `url(${getCourseThumbnailMediaDirectory(org?.org_uuid, course.course_uuid, course.thumbnail_image)})` }}>
+            </div>
+            :
+            <div className="inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl relative w-auto h-[300px] bg-cover bg-center mb-4" style={{ backgroundImage: `url('../empty_thumbnail.png')`, backgroundSize: 'auto' }}>
+            </div>
+          }
 
           <ActivityIndicators course_uuid={props.course.course_uuid} orgslug={orgslug} course={course} />
 
@@ -185,15 +189,24 @@ const CourseClient = (props: any) => {
               </div>
 
             </div>
-            <div className="course_metadata_right space-y-3 w-64 antialiased flex flex-col ml-10 h-fit p-3 py-5 bg-white shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40 rounded-lg overflow-hidden">
+            <div className="course_metadata_right space-y-3 w-72 antialiased flex flex-col ml-10 h-fit p-3 py-5 bg-white shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40 rounded-lg overflow-hidden">
               {user &&
-                <div className="flex mx-auto space-x-3 px-2 py-2 items-center">
+                <div className="flex flex-col mx-auto space-y-3 px-2 py-2 items-center">
                   <div className="">
-                    <Avvvatars border borderSize={5} borderColor="white" size={50} shadow value={course.authors[0].username} style='shape' />
+                    <Avvvatars radius={20} border borderSize={5} borderColor="white" size={80} shadow value={course.authors[0].user_uuid} style='shape' />
                   </div>
                   <div className="-space-y-2 ">
                     <div className="text-[12px] text-neutral-400 font-semibold">Author</div>
-                    <div className="text-xl font-bold text-neutral-800">{course.authors[0].first_name} {course.authors[0].last_name} {(course.authors[0].first_name && course.authors[0].last_name) ? course.authors[0].first_name + ' ' + course.authors[0].last_name : course.authors[0].username}</div>
+                    <div className="text-xl font-bold text-neutral-800">
+                      {course.authors[0].first_name && course.authors[0].last_name && (
+                      <div className="flex space-x-2 items-center">
+                        <p>{course.authors[0].first_name + ' ' + course.authors[0].last_name}</p><span className="text-xs bg-neutral-100 p-1 px-3 rounded-full text-neutral-400 font-semibold"> @{course.authors[0].username }</span>
+                      </div>)}
+                      {!course.authors[0].first_name && !course.authors[0].last_name && (
+                      <div className="flex space-x-2 items-center">
+                        <p>@{course.authors[0].username}</p>
+                      </div>)}
+                      </div>
                   </div>
                 </div>
               }

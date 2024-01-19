@@ -111,16 +111,16 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
                     <FormMessage match="valueMissing">Please provide a thumbnail for your course</FormMessage>
                 </Flex>
                 <Form.Control asChild>
-                    <Input onChange={handleThumbnailChange} type="file" required />
+                    <Input onChange={handleThumbnailChange} type="file" />
                 </Form.Control>
             </FormField>
             <FormField name="course-tags">
                 <Flex css={{ alignItems: 'baseline', justifyContent: 'space-between' }}>
-                    <FormLabel>Course tags (separated by comma)</FormLabel>
+                    <FormLabel>Course Learnings (separated by comma)</FormLabel>
                     <FormMessage match="valueMissing">Please provide learning elements, separated by comma (,)</FormMessage>
                 </Flex>
                 <Form.Control asChild>
-                    <Textarea onChange={handleTagsChange} required />
+                    <Textarea onChange={handleTagsChange} />
                 </Form.Control>
             </FormField>
             <FormField name="course-visibility">
