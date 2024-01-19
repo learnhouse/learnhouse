@@ -1,5 +1,5 @@
 from typing import Literal
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, UploadFile
 from sqlmodel import Session
 from src.security.auth import get_current_user
 from src.core.events.database import get_db_session
@@ -22,6 +22,7 @@ from src.services.users.users import (
     read_user_by_id,
     read_user_by_uuid,
     update_user,
+    update_user_avatar,
     update_user_password,
 )
 
@@ -135,6 +136,20 @@ async def api_update_user(
     Update User
     """
     return await update_user(request, db_session, user_id, current_user, user_object)
+
+
+@router.put("/update_avatar/{user_id}", response_model=UserRead, tags=["users"])
+async def api_update_avatar_user(
+    *,
+    request: Request,
+    db_session: Session = Depends(get_db_session),
+    current_user: PublicUser = Depends(get_current_user),
+    avatar_file: UploadFile | None = None,
+) -> UserRead:
+    """
+    Update User
+    """
+    return await update_user_avatar(request, db_session, current_user, avatar_file)
 
 
 @router.put("/change_password/{user_id}", response_model=UserRead, tags=["users"])
