@@ -5,6 +5,7 @@ import * as Switch from '@radix-ui/react-switch';
 import * as Form from '@radix-ui/react-form';
 import React from 'react'
 import { useCourse, useCourseDispatch } from '../../../Contexts/CourseContext';
+import ThumbnailUpdate from './ThumbnailUpdate';
 
 
 type EditCourseStructureProps = {
@@ -128,6 +129,13 @@ function EditCourseGeneral(props: EditCourseStructureProps) {
                                 <FormLabelAndMessage label='Tags' message={formik.errors.tags} />
                                 <Form.Control asChild>
                                     <Textarea style={{ backgroundColor: "white" }} onChange={formik.handleChange} value={formik.values.tags} required />
+                                </Form.Control>
+                            </FormField>
+
+                            <FormField name="thumbnail">
+                                <FormLabelAndMessage label='Thumbnail' />
+                                <Form.Control asChild>
+                                    <ThumbnailUpdate />
                                 </Form.Control>
                             </FormField>
 
