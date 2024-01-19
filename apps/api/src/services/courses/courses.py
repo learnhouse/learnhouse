@@ -213,7 +213,7 @@ async def update_course_thumbnail(
     if thumbnail_file and thumbnail_file.filename:
         name_in_disk = f"{course_uuid}_thumbnail_{uuid4()}.{thumbnail_file.filename.split('.')[-1]}"
         await upload_thumbnail(
-            thumbnail_file, name_in_disk, org.org_uuid, course.course_uuid
+            thumbnail_file, name_in_disk, 'users', course.course_uuid
         )
 
     # Update course
