@@ -23,7 +23,7 @@ export function CourseOverviewTop({ params }: { params: CourseOverviewParams }) 
             <div className='flex'>
                 <div className='flex py-5 grow items-center'>
                     <Link href={getUriWithOrg(org?.slug, "") + `/course/${params.courseuuid}`}>
-                        {course?.courseStructure?.thumbnail ?
+                        {course?.courseStructure?.thumbnail_image ?
                         <img className="w-[100px] h-[57px] rounded-md drop-shadow-md" src={`${getCourseThumbnailMediaDirectory(org?.org_uuid, "course_" + params.courseuuid, course.courseStructure.thumbnail_image)}`} alt="" />
                         :
                         <Image width={100} className="h-[57px] rounded-md drop-shadow-md" src={EmptyThumbnailImage} alt="" />}

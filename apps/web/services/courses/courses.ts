@@ -1,5 +1,5 @@
 import { getAPIUrl } from "@services/config/config";
-import { RequestBody, RequestBodyForm, RequestBodyWithAuthHeader, errorHandling } from "@services/utils/ts/requests";
+import { RequestBody, RequestBodyForm, RequestBodyWithAuthHeader, errorHandling, getResponseMetadata } from "@services/utils/ts/requests";
 
 /*
  This file includes only POST, PUT, DELETE requests
@@ -36,6 +36,14 @@ export async function getCourse(course_uuid: string, next: any) {
   return res;
 }
 
+export async function updateCourseThumbnail(course_uuid: any, thumbnail: any) {
+  const formData = new FormData();
+  formData.append("thumbnail", thumbnail);
+  const result: any = await fetch(`${getAPIUrl()}courses/${course_uuid}/thumbnail`, RequestBodyForm("PUT", formData, null));
+  const res = await getResponseMetadata(result);
+  return res;
+}
+
 export async function createNewCourse(org_id: string, course_body: any, thumbnail: any) {
   // Send file thumbnail as form data
   const formData = new FormData();
@@ -45,7 +53,7 @@ export async function createNewCourse(org_id: string, course_body: any, thumbnai
   formData.append("learnings", course_body.tags);
   formData.append("tags", course_body.tags);
   formData.append("about", course_body.description);
-  
+
   if (thumbnail) {
     formData.append("thumbnail", thumbnail);
   }
