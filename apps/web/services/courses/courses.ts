@@ -45,7 +45,10 @@ export async function createNewCourse(org_id: string, course_body: any, thumbnai
   formData.append("learnings", course_body.tags);
   formData.append("tags", course_body.tags);
   formData.append("about", course_body.description);
-  formData.append("thumbnail", thumbnail);
+  
+  if (thumbnail) {
+    formData.append("thumbnail", thumbnail);
+  }
 
   const result = await fetch(`${getAPIUrl()}courses/?org_id=${org_id}`, RequestBodyForm("POST", formData, null));
   const res = await errorHandling(result);
