@@ -1,3 +1,4 @@
+from typing import Literal
 import boto3
 from botocore.exceptions import ClientError
 import os
@@ -6,7 +7,11 @@ from config.config import get_learnhouse_config
 
 
 async def upload_content(
-    directory: str, org_uuid: str, file_binary: bytes, file_and_format: str
+    directory: str,
+    type_of_dir: Literal["orgs", "users"],
+    uuid: str, # org_uuid or user_uuid
+    file_binary: bytes,
+    file_and_format: str,
 ):
     # Get Learnhouse Config
     learnhouse_config = get_learnhouse_config()
@@ -16,12 +21,12 @@ async def upload_content(
 
     if content_delivery == "filesystem":
         # create folder for activity
-        if not os.path.exists(f"content/{org_uuid}/{directory}"):
+        if not os.path.exists(f"content/{type_of_dir}/{uuid}/{directory}"):
             # create folder for activity
-            os.makedirs(f"content/{org_uuid}/{directory}")
+            os.makedirs(f"content/{type_of_dir}/{uuid}/{directory}")
         # upload file to server
         with open(
-            f"content/{org_uuid}/{directory}/{file_and_format}",
+            f"content/{type_of_dir}/{uuid}/{directory}/{file_and_format}",
             "wb",
         ) as f:
             f.write(file_binary)
@@ -37,13 +42,13 @@ async def upload_content(
         )
 
         # Create folder for activity
-        if not os.path.exists(f"content/{org_uuid}/{directory}"):
+        if not os.path.exists(f"content/{type_of_dir}/{uuid}/{directory}"):
             # create folder for activity
-            os.makedirs(f"content/{org_uuid}/{directory}")
+            os.makedirs(f"content/{type_of_dir}/{uuid}/{directory}")
 
         # Upload file to server
         with open(
-            f"content/{org_uuid}/{directory}/{file_and_format}",
+            f"content/{type_of_dir}/{uuid}/{directory}/{file_and_format}",
             "wb",
         ) as f:
             f.write(file_binary)
@@ -52,9 +57,9 @@ async def upload_content(
         print("Uploading to s3 using boto3...")
         try:
             s3.upload_file(
-                f"content/{org_uuid}/{directory}/{file_and_format}",
+                f"content/{type_of_dir}/{uuid}/{directory}/{file_and_format}",
                 "learnhouse-media",
-                f"content/{org_uuid}/{directory}/{file_and_format}",
+                f"content/{type_of_dir}/{uuid}/{directory}/{file_and_format}",
             )
         except ClientError as e:
             print(e)
@@ -63,7 +68,7 @@ async def upload_content(
         try:
             s3.head_object(
                 Bucket="learnhouse-media",
-                Key=f"content/{org_uuid}/{directory}/{file_and_format}",
+                Key=f"content/{type_of_dir}/{uuid}/{directory}/{file_and_format}",
             )
             print("File upload successful!")
         except Exception as e:
