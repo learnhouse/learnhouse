@@ -30,7 +30,7 @@
     "framer-motion": "^10.16.1",
     "lowlight": "^3.0.0",
     "lucide-react": "^0.307.0",
-    "next": "14.0.4",
+    "next": "14.1.0",
     "re-resizable": "^6.9.9",
     "react": "^18.2.0",
     "react-beautiful-dnd": "^13.1.1",
