@@ -42,6 +42,7 @@ import { CourseProvider } from "@components/Contexts/CourseContext";
 import { useSession } from "@components/Contexts/SessionContext";
 import AIEditorToolkit from "./AI/AIEditorToolkit";
 import useGetAIFeatures from "@components/AI/Hooks/useGetAIFeatures";
+import UserAvatar from "../UserAvatar";
 
 
 interface Editor {
@@ -207,7 +208,7 @@ function Editor(props: Editor) {
 
                 <EditorUserProfileWrapper>
                   {!session.isAuthenticated && <span>Loading</span>}
-                  {session.isAuthenticated && <Avvvatars value={session.user.user_uuid} style="shape" />}
+                  {session.isAuthenticated && <UserAvatar width={40} border="border-4" rounded="rounded-full"/>}
                 </EditorUserProfileWrapper>
 
               </EditorUsersSection>
