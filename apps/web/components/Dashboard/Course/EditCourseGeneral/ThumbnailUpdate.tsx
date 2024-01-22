@@ -62,7 +62,7 @@ function ThumbnailUpdate() {
                         <div className='flex justify-center items-center'>
                             <input type="file" id="fileInput" style={{ display: 'none' }} onChange={handleFileChange} />
                             <button
-                                className='font-bold antialiased items-center bg-gray-200 text-gray text-sm rounded-md px-4 py-2 mt-4 flex'
+                                className='font-bold antialiased items-center  text-gray text-sm rounded-md px-4  mt-6 flex'
                                 onClick={() => document.getElementById('fileInput')?.click()}
                             >
                                 <UploadCloud size={16} className='mr-2' />

@@ -5,7 +5,7 @@ async def upload_avatar(avatar_file, name_in_disk, user_uuid):
     contents = avatar_file.file.read()
     try:
         await upload_content(
-            f"avatars",
+            "avatars",
             "users",
             user_uuid,
             contents,
