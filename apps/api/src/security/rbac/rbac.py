@@ -16,7 +16,7 @@ async def authorization_verify_if_element_is_public(
     element_uuid: str,
     action: Literal["read"],
     db_session: Session,
-):  
+):
     element_nature = await check_element_type(element_uuid)
     # Verifies if the element is public
     if element_nature == ("courses" or "collections") and action == "read":
@@ -102,6 +102,34 @@ async def authorization_verify_based_on_roles(
                 return True
             else:
                 return False
+    else:
+        return False
+
+
+async def authorization_verify_based_on_org_admin_status(
+    request: Request,
+    user_id: int,
+    action: Literal["read", "update", "delete", "create"],
+    element_uuid: str,
+    db_session: Session,
+):
+    await check_element_type(element_uuid)
+
+    # Get user roles bound to an organization and standard roles
+    statement = (
+        select(Role)
+        .join(UserOrganization)
+        .where((UserOrganization.org_id == Role.org_id) | (Role.org_id == null()))
+        .where(UserOrganization.user_id == user_id)
+    )
+
+    user_roles_in_organization_and_standard_roles = db_session.exec(statement).all()
+
+    # Find in roles list if there is a role that matches users action for this type of element
+    for role in user_roles_in_organization_and_standard_roles:
+        role = Role.from_orm(role)
+        if role.id == 1 or role.id == 2:
+            return True
     else:
         return False
 

@@ -126,7 +126,7 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
             <FormField name="course-visibility">
                 <Flex css={{ alignItems: 'baseline', justifyContent: 'space-between' }}>
                     <FormLabel>Course Visibility</FormLabel>
-                    <FormMessage match="valueMissing">Please choose cours visibility</FormMessage>
+                    <FormMessage match="valueMissing">Please choose course visibility</FormMessage>
                 </Flex>
                 <Form.Control asChild>
                     <select onChange={handleVisibilityChange} className='border border-gray-300 rounded-md p-2' required>

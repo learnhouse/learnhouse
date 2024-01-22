@@ -1,9 +1,8 @@
 from typing import Optional
 from pydantic import BaseModel, EmailStr
 from sqlmodel import Field, SQLModel
-
 from src.db.roles import RoleRead
-from src.db.organizations import OrganizationRead
+
 
 
 class UserBase(SQLModel):
@@ -45,6 +44,7 @@ class PublicUser(UserRead):
 
 
 class UserRoleWithOrg(BaseModel):
+    from src.db.organizations import OrganizationRead
     role: RoleRead
     org: OrganizationRead
 
