@@ -5,7 +5,7 @@ import { blackA, violet, mauve } from '@radix-ui/colors';
 import { Info } from 'lucide-react';
 
 const FormLayout = (props: any, onSubmit: any) => (
-    <FormRoot onSubmit={props.onSubmit}>
+    <FormRoot className='h-fit' onSubmit={props.onSubmit}>
         {props.children}
     </FormRoot>
 );

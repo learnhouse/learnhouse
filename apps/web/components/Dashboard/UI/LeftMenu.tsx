@@ -4,7 +4,7 @@ import { useSession } from '@components/Contexts/SessionContext';
 import ToolTip from '@components/StyledElements/Tooltip/Tooltip'
 import LearnHouseDashboardLogo from '@public/dashLogo.png';
 import { logout } from '@services/auth/auth';
-import { ArrowLeft, Book, BookCopy, Home, LogOut, School, Settings } from 'lucide-react'
+import { ArrowLeft, Book, BookCopy, Home, LogOut, School, Settings, Users } from 'lucide-react'
 import Image from 'next/image';
 import Link from 'next/link'
 import { useRouter } from 'next/navigation';
@@ -65,6 +65,9 @@ function LeftMenu() {
                     <ToolTip content={"Courses"} slateBlack sideOffset={8} side='right'  >
                         <Link className='bg-white/5 rounded-lg p-2 hover:bg-white/10 transition-all ease-linear' href={`/dash/courses`} ><BookCopy size={18} /></Link>
                     </ToolTip>
+                    <ToolTip content={"Users"} slateBlack sideOffset={8} side='right'  >
+                        <Link className='bg-white/5 rounded-lg p-2 hover:bg-white/10 transition-all ease-linear' href={`/dash/users/settings/users`} ><Users size={18} /></Link>
+                    </ToolTip>
                     <ToolTip content={"Organization"} slateBlack sideOffset={8} side='right'  >
                         <Link className='bg-white/5 rounded-lg p-2 hover:bg-white/10 transition-all ease-linear' href={`/dash/org/settings/general`} ><School size={18} /></Link>
                     </ToolTip>
@@ -79,7 +82,7 @@ function LeftMenu() {
                         </ToolTip>
                         <div className='flex items-center flex-col space-y-1'>
                             <ToolTip content={session.user.username + "'s Settings"} slateBlack sideOffset={8} side='right'  >
-                                <Link href={'/dash/user/settings/general'} className='py-3'>
+                                <Link href={'/dash/user-account/settings/general'} className='py-3'>
                                     <Settings className='mx-auto text-neutral-400 cursor-pointer' size={18} />
                                 </Link>
                             </ToolTip>

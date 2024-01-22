@@ -8,6 +8,7 @@ from src.db.organizations import (
     OrganizationCreate,
     OrganizationRead,
     OrganizationUpdate,
+    OrganizationUser,
 )
 from src.core.events.database import get_db_session
 from src.security.auth import get_current_user
@@ -17,9 +18,12 @@ from src.services.orgs.orgs import (
     delete_org,
     get_organization,
     get_organization_by_slug,
+    get_organization_users,
     get_orgs_by_user,
+    remove_user_from_org,
     update_org,
     update_org_logo,
+    update_user_role,
 )
 
 
@@ -67,6 +71,52 @@ async def api_get_org(
     Get single Org by ID
     """
     return await get_organization(request, org_id, db_session, current_user)
+
+
+@router.get("/{org_id}/users")
+async def api_get_org_users(
+    request: Request,
+    org_id: str,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+) -> list[OrganizationUser]:
+    """
+    Get single Org by ID
+    """
+    return await get_organization_users(request, org_id, db_session, current_user)
+
+
+@router.put("/{org_id}/users/{user_id}/role/{role_uuid}")
+async def api_update_user_role(
+    request: Request,
+    org_id: str,
+    user_id: str,
+    role_uuid: str,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+):
+    """
+    Update user role
+    """
+    return await update_user_role(
+        request, org_id, user_id, role_uuid, db_session, current_user
+    )
+
+
+@router.delete("/{org_id}/users/{user_id}")
+async def api_remove_user_from_org(
+    request: Request,
+    org_id: int,
+    user_id: int,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+):
+    """
+    Remove user from org
+    """
+    return await remove_user_from_org(
+        request, org_id, user_id, db_session, current_user
+    )
 
 
 @router.get("/slug/{org_slug}")

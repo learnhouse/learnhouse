@@ -1,5 +1,5 @@
 import { getAPIUrl } from "@services/config/config";
-import { RequestBody, errorHandling } from "@services/utils/ts/requests";
+import { RequestBody, errorHandling, getResponseMetadata } from "@services/utils/ts/requests";
 
 /*
  This file includes only POST, PUT, DELETE requests
@@ -48,4 +48,16 @@ export async function getOrganizationContextInfoWithoutCredentials(org_slug: any
 export function getOrganizationContextInfoNoAsync(org_slug: any, next: any) {
   const result = fetch(`${getAPIUrl()}orgs/slug/${org_slug}`, RequestBody("GET", null, next));
   return result;
+}
+
+export async function updateUserRole(org_id: any, user_id: any, role_uuid: any) {
+  const result = await fetch(`${getAPIUrl()}orgs/${org_id}/users/${user_id}/role/${role_uuid}`, RequestBody("PUT", null, null));
+  const res = await getResponseMetadata(result);
+  return res;
+}
+
+export async function removeUserFromOrg(org_id: any, user_id: any) {
+  const result = await fetch(`${getAPIUrl()}orgs/${org_id}/users/${user_id}`, RequestBody("DELETE", null, null));
+  const res = await getResponseMetadata(result);
+  return res;
 }
