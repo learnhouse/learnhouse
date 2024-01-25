@@ -9,7 +9,7 @@ async def upload_org_logo(logo_file, org_uuid):
 
     await upload_content(
         "logos",
-        org_uuid,
+        "orgs",
         org_uuid,
         contents,
         name_in_disk,

@@ -26,6 +26,7 @@
     "@tiptap/react": "^2.0.0-beta.199",
     "@tiptap/starter-kit": "^2.0.0-beta.199",
     "avvvatars-react": "^0.4.2",
+    "dayjs": "^1.11.10",
     "formik": "^2.2.9",
     "framer-motion": "^10.16.1",
     "lowlight": "^3.0.0",

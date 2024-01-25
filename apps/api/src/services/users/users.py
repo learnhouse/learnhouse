@@ -3,6 +3,7 @@ from typing import Literal
 from uuid import uuid4
 from fastapi import HTTPException, Request, UploadFile, status
 from sqlmodel import Session, select
+from src.services.orgs.invites import get_invite_code
 from src.services.users.avatars import upload_avatar
 from src.db.roles import Role, RoleRead
 from src.security.rbac.rbac import (
@@ -103,6 +104,27 @@ async def create_user(
 
     return user
 
+async def create_user_with_invite(
+    request: Request,
+    db_session: Session,
+    current_user: PublicUser | AnonymousUser,
+    user_object: UserCreate,
+    org_id: int,
+    invite_code: str,
+):
+    
+    # Check if invite code exists
+    isInviteCodeCorrect = await get_invite_code(request, org_id, invite_code, current_user, db_session)
+
+    if not isInviteCodeCorrect:
+        raise HTTPException(
+            status_code=400,
+            detail="Invite code is incorrect",
+        )
+    
+    user = await create_user(request, db_session, current_user, user_object, org_id)
+
+    return user
 
 async def create_user_without_org(
     request: Request,
