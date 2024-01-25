@@ -240,12 +240,14 @@ async def delete_invite_code(
         )
 
     # Delete invite code
-    invite_code = r.delete(f"{invite_code_uuid}:org:{org.org_uuid}:code:*")
+    keys = r.keys(f"{invite_code_uuid}:org:{org.org_uuid}:code:*")
+    if keys:
+        r.delete(*keys)
 
-    if not invite_code:
+    if not keys:
         raise HTTPException(
             status_code=404,
             detail="Invite code not found",
         )
 
-    return invite_code
+    return keys
