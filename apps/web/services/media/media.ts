@@ -46,6 +46,6 @@ export function getActivityMediaDirectory(orgUUID: string, courseId: string, act
 }
 
 export function getOrgLogoMediaDirectory(orgUUID: string, fileId: string) {
-  let uri = `${getMediaUrl()}content/${orgUUID}/logos/${fileId}`;
+  let uri = `${getMediaUrl()}content/orgs/${orgUUID}/logos/${fileId}`;
   return uri;
 }

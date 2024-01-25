@@ -49,6 +49,10 @@ function OrgUsers() {
                     <Toast></Toast>
                     <div className="h-6"></div>
                     <div className='ml-10 mr-10 mx-auto bg-white rounded-xl shadow-sm px-4 py-4  '>
+                        <div className='flex flex-col bg-gray-50 -space-y-1  px-5 py-3 rounded-md mb-3 '>
+                            <h1 className='font-bold text-xl text-gray-800'>Active users</h1>
+                            <h2 className='text-gray-500  text-md'> Manage your organization users, assign roles and permissions  </h2>
+                        </div>
                         <table className="table-auto w-full text-left whitespace-nowrap rounded-md overflow-hidden">
                             <thead className='bg-gray-100 text-gray-500 rounded-xl uppercase'>
                                 <tr className='font-bolder text-sm'>
@@ -92,7 +96,7 @@ function OrgUsers() {
                                                     confirmationMessage='Are you sure you want remove this user from the organization?'
                                                     dialogTitle={'Delete ' + user.user.username + ' ?'}
                                                     dialogTrigger={
-                                                        <button  className='mr-2 flex space-x-2 hover:cursor-pointer p-1 px-3 bg-rose-700 rounded-md font-bold items-center text-sm text-rose-100'>
+                                                        <button className='mr-2 flex space-x-2 hover:cursor-pointer p-1 px-3 bg-rose-700 rounded-md font-bold items-center text-sm text-rose-100'>
                                                             <LogOut className='w-4 h-4' />
                                                             <span> Remove from organization</span>
                                                         </button>}

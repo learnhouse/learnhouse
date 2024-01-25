@@ -1,8 +1,9 @@
 
-import React from "react";
-import SignUpClient from "./signup";
 import { Metadata } from "next";
 import { getOrganizationContextInfo } from "@services/organizations/orgs";
+import SignUpClient from "./signup";
+import { Suspense } from "react";
+import PageLoading from "@components/Objects/Loaders/PageLoading";
 
 type MetadataProps = {
   params: { orgslug: string, courseid: string };
@@ -26,9 +27,11 @@ const SignUp = async (params: any) => {
   const org = await getOrganizationContextInfo(orgslug, { revalidate: 1800, tags: ['organizations'] });
 
   return (
-    <div>
-      <SignUpClient org={org}></SignUpClient>
-    </div>
+    <>
+      <Suspense fallback={<PageLoading/>}>
+        <SignUpClient org={org} />
+      </Suspense>
+    </>
   );
 };
 export default SignUp;

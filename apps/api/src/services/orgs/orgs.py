@@ -4,7 +4,6 @@ from datetime import datetime
 from typing import Literal
 from uuid import uuid4
 from sqlmodel import Session, select
-from src.db.roles import Role, RoleRead
 from src.db.organization_config import (
     AIConfig,
     AIEnabledFeatures,
@@ -17,17 +16,15 @@ from src.db.organization_config import (
 )
 from src.security.rbac.rbac import (
     authorization_verify_based_on_org_admin_status,
-    authorization_verify_based_on_roles,
     authorization_verify_if_user_is_anon,
 )
-from src.db.users import AnonymousUser, PublicUser, User, UserRead
+from src.db.users import AnonymousUser, PublicUser
 from src.db.user_organizations import UserOrganization
 from src.db.organizations import (
     Organization,
     OrganizationCreate,
     OrganizationRead,
     OrganizationUpdate,
-    OrganizationUser,
 )
 from src.services.orgs.logos import upload_org_logo
 from fastapi import HTTPException, UploadFile, status, Request
@@ -67,199 +64,6 @@ async def get_organization(
     org = OrganizationRead(**org.dict(), config=config)
 
     return org
-
-
-async def get_organization_users(
-    request: Request,
-    org_id: str,
-    db_session: Session,
-    current_user: PublicUser | AnonymousUser,
-) -> list[OrganizationUser]:
-    statement = select(Organization).where(Organization.id == org_id)
-    result = db_session.exec(statement)
-
-    org = result.first()
-
-    if not org:
-        raise HTTPException(
-            status_code=404,
-            detail="Organization not found",
-        )
-
-    # RBAC check
-    await rbac_check(request, org.org_uuid, current_user, "read", db_session)
-
-    statement = (
-        select(User)
-        .join(UserOrganization)
-        .join(Organization)
-        .where(Organization.id == org_id)
-    )
-    users = db_session.exec(statement)
-    users = users.all()
-
-    org_users_list = []
-
-    for user in users:
-        statement = select(UserOrganization).where(
-            UserOrganization.user_id == user.id, UserOrganization.org_id == org_id
-        )
-        result = db_session.exec(statement)
-        user_org = result.first()
-
-        if not user_org:
-            logging.error(f"User {user.id} not found")
-
-            # skip this user
-            continue
-
-
-        statement = select(Role).where(Role.id == user_org.role_id)
-        result = db_session.exec(statement)
-
-        role = result.first()
-
-        if not role:
-            logging.error(f"Role {user_org.role_id} not found")
-
-            # skip this user
-            continue
-
-        statement = select(User).where(User.id == user_org.user_id)
-        result = db_session.exec(statement)
-
-        user = result.first()
-
-        if not user:
-            logging.error(f"User {user_org.user_id} not found")
-
-            # skip this user
-            continue
-
-        user = UserRead.from_orm(user)
-        role = RoleRead.from_orm(role)
-
-        org_user = OrganizationUser(
-            user=user,
-            role=role,
-        )
-
-        org_users_list.append(org_user)
-
-    return org_users_list
-
-
-async def remove_user_from_org(
-    request: Request,
-    org_id: int,
-    user_id: int,
-    db_session: Session,
-    current_user: PublicUser | AnonymousUser,
-):
-    statement = select(Organization).where(Organization.id == org_id)
-    result = db_session.exec(statement)
-
-    org = result.first()
-
-    if not org:
-        raise HTTPException(
-            status_code=404,
-            detail="Organization not found",
-        )
-
-    # RBAC check
-    await rbac_check(request, org.org_uuid, current_user, "read", db_session)
-
-    statement = select(UserOrganization).where(
-        UserOrganization.user_id == user_id, UserOrganization.org_id == org.id
-    )
-    result = db_session.exec(statement)
-
-    user_org = result.first()
-
-    if not user_org:
-        raise HTTPException(
-            status_code=404,
-            detail="User not found",
-        )
-    
-    # Check if user is the last admin
-    statement = select(UserOrganization).where(
-        UserOrganization.org_id == org.id, UserOrganization.role_id == 1
-    )
-    result = db_session.exec(statement)
-    admins = result.all()
-
-    if len(admins) == 1 and admins[0].user_id == user_id:
-        raise HTTPException(
-            status_code=400,
-            detail="You can't remove the last admin of the organization",
-        )
-
-
-    db_session.delete(user_org)
-    db_session.commit()
-
-    return {"detail": "User removed from org"}
-
-
-async def update_user_role(
-    request: Request,
-    org_id: str,
-    user_id: str,
-    role_uuid: str,
-    db_session: Session,
-    current_user: PublicUser | AnonymousUser,
-):
-    # find role 
-    statement = select(Role).where(Role.role_uuid == role_uuid)
-    result = db_session.exec(statement)
-
-    role = result.first()
-
-    if not role:
-        raise HTTPException(
-            status_code=404,
-            detail="Role not found",
-        )
-    
-    role_id = role.id
-    
-    statement = select(Organization).where(Organization.id == org_id)
-    result = db_session.exec(statement)
-
-    org = result.first()
-
-    if not org:
-        raise HTTPException(
-            status_code=404,
-            detail="Organization not found",
-        )
-
-    # RBAC check
-    await rbac_check(request, org.org_uuid, current_user, "read", db_session)
-
-    statement = select(UserOrganization).where(
-        UserOrganization.user_id == user_id, UserOrganization.org_id == org.id
-    )
-    result = db_session.exec(statement)
-
-    user_org = result.first()
-
-    if not user_org:
-        raise HTTPException(
-            status_code=404,
-            detail="User not found",
-        )
-
-    if role_id is not None:
-        user_org.role_id = role_id
-
-    db_session.add(user_org)
-    db_session.commit()
-    db_session.refresh(user_org)
-
-    return {"detail": "User role updated"}
 
 
 async def get_organization_by_slug(
@@ -634,6 +438,102 @@ async def get_orgs_by_user(
     return orgs
 
 
+# Config related
+async def update_org_signup_mechanism(
+    request: Request,
+    signup_mechanism: Literal["open", "inviteOnly"],
+    org_id: int,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+):
+    statement = select(Organization).where(Organization.id == org_id)
+    result = db_session.exec(statement)
+
+    org = result.first()
+
+    if not org:
+        raise HTTPException(
+            status_code=404,
+            detail="Organization not found",
+        )
+
+    # RBAC check
+    await rbac_check(request, org.org_uuid, current_user, "update", db_session)
+
+    # Get org config
+    statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
+    result = db_session.exec(statement)
+
+    org_config = result.first()
+
+    if org_config is None:
+        logging.error(f"Organization {org_id} has no config")
+        raise HTTPException(
+            status_code=404,
+            detail="Organization config not found",
+        )
+
+    updated_config = org_config.config
+
+    # Update config
+    updated_config = OrganizationConfigBase(**updated_config)
+    updated_config.GeneralConfig.users.signup_mechanism = signup_mechanism
+
+    # Update the database
+    org_config.config = json.loads(updated_config.json())
+    org_config.update_date = str(datetime.now())
+
+    db_session.add(org_config)
+    db_session.commit()
+    db_session.refresh(org_config)
+
+    return {"detail": "Signup mechanism updated"}
+
+
+async def get_org_join_mechanism(
+    request: Request,
+    org_id: int,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+):
+    statement = select(Organization).where(Organization.id == org_id)
+    result = db_session.exec(statement)
+
+    org = result.first()
+
+    if not org:
+        raise HTTPException(
+            status_code=404,
+            detail="Organization not found",
+        )
+
+    # RBAC check
+    await rbac_check(request, org.org_uuid, current_user, "read", db_session)
+
+    # Get org config
+    statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
+    result = db_session.exec(statement)
+
+    org_config = result.first()
+
+    if org_config is None:
+        logging.error(f"Organization {org_id} has no config")
+        raise HTTPException(
+            status_code=404,
+            detail="Organization config not found",
+        )
+
+    config = org_config.config
+
+    # Get the signup mechanism
+    config = OrganizationConfigBase(**config)
+    signup_mechanism = config.GeneralConfig.users.signup_mechanism
+
+    return signup_mechanism
+
+    
+
+
 ## 🔒 RBAC Utils ##
 
 
@@ -649,15 +549,25 @@ async def rbac_check(
         return True
 
     else:
-        await authorization_verify_if_user_is_anon(current_user.id)
+        isUserAnon = await authorization_verify_if_user_is_anon(current_user.id)
 
-        await authorization_verify_based_on_roles(
-            request, current_user.id, action, org_uuid, db_session
+        isAllowedOnOrgAdminStatus = (
+            await authorization_verify_based_on_org_admin_status(
+                request, current_user.id, action, org_uuid, db_session
+            )
         )
 
-        await authorization_verify_based_on_org_admin_status(
-            request, current_user.id, action, org_uuid, db_session
-        )
+        if isUserAnon:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="You should be logged in to be able to achieve this action",
+            )
+
+        if not isAllowedOnOrgAdminStatus:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="User rights (admin status) : You don't have the right to perform this action",
+            )
 
 
 ## 🔒 RBAC Utils ##
