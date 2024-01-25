@@ -42,8 +42,8 @@ function LeftMenu() {
 
     return (
         <div
-            style={{ background: "linear-gradient(0deg, rgba(0, 0, 0, 0.20) 0%, rgba(0, 0, 0, 0.20) 100%), radial-gradient(271.56% 105.16% at 50% -5.16%, rgba(255, 255, 255, 0.18) 0%, rgba(0, 0, 0, 0.00) 100%), #2E2D2D" }}
-            className='flex flex-col w-28 bg-black h-screen  text-white shadow-xl'>
+            style={{ background: "linear-gradient(0deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.2) 100%), radial-gradient(271.56% 105.16% at 50% -5.16%, rgba(255, 255, 255, 0.18) 0%, rgba(0, 0, 0, 0) 100%), rgb(20 19 19)"}}
+            className='flex flex-col w-[90px] bg-black h-screen  text-white shadow-xl'>
             <div className='flex flex-col h-full'>
                 <div className='flex h-20 mt-6'>
                     <Link className='flex flex-col items-center mx-auto space-y-3' href={"/"}>

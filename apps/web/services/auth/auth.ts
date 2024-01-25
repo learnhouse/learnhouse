@@ -1,5 +1,4 @@
 import { getAPIUrl } from "@services/config/config";
-import { NextApiRequestCookies } from "next/dist/server/api-utils";
 
 interface LoginAndGetTokenResponse {
   access_token: "string";
@@ -136,6 +135,21 @@ export async function signup(body: NewAccountBody): Promise<any> {
   };
 
   const res = await fetch(`${getAPIUrl()}users/${body.org_id}`, requestOptions);
+  
+  return res;
+}
+
+export async function signUpWithInviteCode(body: NewAccountBody,invite_code:string): Promise<any> {
+  const HeadersConfig = new Headers({ "Content-Type": "application/json" });
+
+  const requestOptions: any = {
+    method: "POST",
+    headers: HeadersConfig,
+    body: JSON.stringify(body),
+    redirect: "follow",
+  };
+
+  const res = await fetch(`${getAPIUrl()}users/${body.org_id}/invite/${invite_code}`, requestOptions);
   
   return res;
 }
