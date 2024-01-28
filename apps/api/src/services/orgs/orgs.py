@@ -169,7 +169,7 @@ async def create_org(
                 limits_enabled=False,
                 max_asks=0,
             ),
-            embeddings="all-MiniLM-L6-v2",
+            embeddings="text-embedding-ada-002",
             ai_model="gpt-3.5-turbo",
             features=AIEnabledFeatures(
                 editor=False,
@@ -530,8 +530,6 @@ async def get_org_join_mechanism(
     signup_mechanism = config.GeneralConfig.users.signup_mechanism
 
     return signup_mechanism
-
-    
 
 
 ## 🔒 RBAC Utils ##
