@@ -1,6 +1,7 @@
 "use client";
 import "../styles/globals.css";
 import StyledComponentsRegistry from "../components/Utils/libs/styled-registry";
+
 import { motion } from "framer-motion";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

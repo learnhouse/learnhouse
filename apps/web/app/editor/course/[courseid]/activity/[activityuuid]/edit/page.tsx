@@ -7,6 +7,9 @@ import { getActivityWithAuthHeader } from "@services/courses/activities";
 import { getAccessTokenFromRefreshTokenCookie, getNewAccessTokenUsingRefreshTokenServer } from "@services/auth/auth";
 import { getOrganizationContextInfo, getOrganizationContextInfoWithId } from "@services/organizations/orgs";
 import SessionProvider from "@components/Contexts/SessionContext";
+import EditorOptionsProvider from "@components/Contexts/Editor/EditorContext";
+import AIChatBotProvider from "@components/Contexts/AI/AIChatBotContext";
+import AIEditorProvider from "@components/Contexts/AI/AIEditorContext";
 
 type MetadataProps = {
   params: { orgslug: string, courseid: string, activityid: string };
@@ -35,14 +38,15 @@ const EditActivity = async (params: any) => {
   const courseInfo = await getCourseMetadataWithAuthHeader(courseid, { revalidate: 0, tags: ['courses'] }, access_token ? access_token : null)
   const activity = await getActivityWithAuthHeader(activityuuid, { revalidate: 0, tags: ['activities'] }, access_token ? access_token : null)
   const org = await getOrganizationContextInfoWithId(courseInfo.org_id, { revalidate: 1800, tags: ['organizations'] });
-  console.log('courseInfo', courseInfo)
 
   return (
-    <div>
-      <SessionProvider>
-        <EditorWrapper org={org} course={courseInfo} activity={activity} content={activity.content}></EditorWrapper>
-      </SessionProvider>
-    </div>
+    <EditorOptionsProvider options={{ isEditable: true }}>
+      <AIEditorProvider>
+        <SessionProvider>
+          <EditorWrapper org={org} course={courseInfo} activity={activity} content={activity.content}></EditorWrapper>
+        </SessionProvider>
+      </AIEditorProvider>
+    </EditorOptionsProvider>
   );
 }
 

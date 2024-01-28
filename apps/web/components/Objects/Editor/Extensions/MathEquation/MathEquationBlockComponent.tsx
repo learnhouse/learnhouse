@@ -5,11 +5,13 @@ import "katex/dist/katex.min.css";
 import { InlineMath, BlockMath } from "react-katex";
 import { Edit, Save } from "lucide-react";
 import Link from "next/link";
+import { useEditorProvider } from "@components/Contexts/Editor/EditorContext";
 
 function MathEquationBlockComponent(props: any) {
   const [equation, setEquation] = React.useState(props.node.attrs.math_equation);
   const [isEditing, setIsEditing] = React.useState(true);
-  const isEditable = props.extension.options.editable;
+  const editorState = useEditorProvider() as any;
+  const isEditable = editorState.isEditable;
 
   const handleEquationChange = (event: React.ChangeEvent<any>) => {
     setEquation(event.target.value);

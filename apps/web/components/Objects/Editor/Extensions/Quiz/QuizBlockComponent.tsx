@@ -4,6 +4,7 @@ import { twJoin, twMerge } from 'tailwind-merge'
 import React from "react";
 import { BadgeHelp, Check, Info, Minus, MoreVertical, Plus, RefreshCcw, X } from "lucide-react";
 import ReactConfetti from "react-confetti";
+import { useEditorProvider } from "@components/Contexts/Editor/EditorContext";
 
 interface Answer {
   answer_id: string;
@@ -22,7 +23,8 @@ function QuizBlockComponent(props: any) {
   const [userAnswers, setUserAnswers] = React.useState([]) as [any[], any];
   const [submitted, setSubmitted] = React.useState(false) as [boolean, any];
   const [submissionMessage, setSubmissionMessage] = React.useState("") as [string, any];
-  const isEditable = props.extension.options.editable;
+  const editorState = useEditorProvider() as any;
+  const isEditable = editorState.isEditable;
 
   const handleAnswerClick = (question_id: string, answer_id: string) => {
     // if the quiz is submitted, do nothing

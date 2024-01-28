@@ -8,8 +8,6 @@ export default Node.create({
   group: "block",
   draggable: true,
   content: "text*",
-  marks: "",
-  defining: true,
 
   // TODO : multi line support
 

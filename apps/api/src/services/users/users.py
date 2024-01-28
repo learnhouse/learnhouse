@@ -7,7 +7,7 @@ from src.db.roles import Role, RoleRead
 from src.security.rbac.rbac import (
     authorization_verify_based_on_roles_and_authorship,
     authorization_verify_if_user_is_anon,
-)
+)  
 from src.db.organizations import Organization, OrganizationRead
 from src.db.users import (
     AnonymousUser,

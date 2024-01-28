@@ -1,15 +1,15 @@
 import styled from "styled-components";
-import { FontBoldIcon, FontItalicIcon, StrikethroughIcon, ArrowLeftIcon, ArrowRightIcon, OpacityIcon, DividerVerticalIcon, ListBulletIcon } from "@radix-ui/react-icons";
-import { AlertCircle, AlertTriangle, BadgeHelp, Code, FileText, GraduationCap, HelpCircle, ImagePlus, Info, ListChecks, Sigma, Video, Youtube } from "lucide-react";
+import { FontBoldIcon, FontItalicIcon, StrikethroughIcon, ArrowLeftIcon, ArrowRightIcon, DividerVerticalIcon, ListBulletIcon } from "@radix-ui/react-icons";
+import { AlertCircle, AlertTriangle, BadgeHelp, Code, FileText, ImagePlus, Sigma, Video, Youtube } from "lucide-react";
 import ToolTip from "@components/StyledElements/Tooltip/Tooltip";
 
 export const ToolbarButtons = ({ editor, props }: any) => {
+
   if (!editor) {
     return null;
   }
 
   // YouTube extension
-
   const addYoutubeVideo = () => {
     const url = prompt("Enter YouTube URL");
 
