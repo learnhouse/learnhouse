@@ -27,3 +27,6 @@ hosting_config:
 database_config:
   sql_connection_string: postgresql://learnhouse:learnhouse@db:5432/learnhouse
   mongo_connection_string: mongodb://learnhouse:learnhouse@mongo:27017/
+
+redis_config:
+  redis_connection_string: redis://redis:6379/learnhouse

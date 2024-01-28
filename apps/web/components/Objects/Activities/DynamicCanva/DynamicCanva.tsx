@@ -1,4 +1,4 @@
-import { useEditor, EditorContent } from "@tiptap/react";
+import { useEditor, EditorContent, BubbleMenu, EditorProvider } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import styled from "styled-components"
 import Youtube from "@tiptap/extension-youtube";
@@ -22,16 +22,24 @@ import ts from 'highlight.js/lib/languages/typescript'
 import html from 'highlight.js/lib/languages/xml'
 import python from 'highlight.js/lib/languages/python'
 import java from 'highlight.js/lib/languages/java'
+import { NoTextInput } from "@components/Objects/Editor/Extensions/NoTextInput/NoTextInput";
+import EditorOptionsProvider from "@components/Contexts/Editor/EditorContext";
+import AICanvaToolkit from "./AI/AICanvaToolkit";
 
 
 interface Editor {
   content: string;
   activity: any;
-  //course: any;
 }
 
 function Canva(props: Editor) {
-  const isEditable = false;
+  /** 
+  * Important Note : This is a workaround to enable user interaction features to be implemented easily, like text selection, AI features and other planned features, this is set to true but otherwise it should be set to false.
+  * Another workaround is implemented below to disable the editor from being edited by the user by setting the caret-color to transparent and using a custom extension to filter out transactions that add/edit/remove text.
+  * To let the various Custom Extensions know that the editor is not editable, React context (EditorOptionsProvider) will be used instead of props.extension.options.editable. 
+  */
+  const isEditable = true;
+
 
   // Code Block Languages for Lowlight
   lowlight.register('html', html)
@@ -46,6 +54,7 @@ function Canva(props: Editor) {
     editable: isEditable,
     extensions: [
       StarterKit,
+      NoTextInput,
       // Custom Extensions
       InfoCallout.configure({
         editable: isEditable,
@@ -87,20 +96,53 @@ function Canva(props: Editor) {
     content: props.content,
   });
 
+
   return (
-    <CanvaWrapper>
-      <EditorContent editor={editor} />
-    </CanvaWrapper>
+
+    <EditorOptionsProvider options={{ isEditable: false }}>
+      <CanvaWrapper>
+        <AICanvaToolkit activity={props.activity} editor={editor} />
+        <EditorContent editor={editor} />
+      </CanvaWrapper>
+    </EditorOptionsProvider>
+
   );
 }
+
+
 
 const CanvaWrapper = styled.div`
   width: 100%;
   margin: 0 auto;
 
+  .bubble-menu {
+  display: flex;
+  background-color: #0D0D0D;
+  padding: 0.2rem;
+  border-radius: 0.5rem;
+
+  button {
+    border: none;
+    background: none;
+    color: #FFF;
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 0 0.2rem;
+    opacity: 0.6;
+
+    &:hover,
+    &.is-active {
+      opacity: 1;
+    }
+  }
+}
+
   // disable chrome outline
 
   .ProseMirror {
+
+    // Workaround to disable editor from being edited by the user.
+    caret-color: transparent;
 
     h1 {
       font-size: 30px;  

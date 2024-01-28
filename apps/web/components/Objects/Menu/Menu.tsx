@@ -1,5 +1,5 @@
 'use client';
-import React, { use, useEffect } from "react";
+import React, {  useEffect } from "react";
 import Link from "next/link";
 import { getAPIUrl, getUriWithOrg } from "@services/config/config";
 import { getOrganizationContextInfo, getOrganizationContextInfoWithoutCredentials } from "@services/organizations/orgs";

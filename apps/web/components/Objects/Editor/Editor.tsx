@@ -1,6 +1,6 @@
 'use client';
 import React from "react";
-import { useEditor, EditorContent } from "@tiptap/react";
+import { useEditor, EditorContent, BubbleMenu } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import learnhouseIcon from "public/learnhouse_icon.png";
 import { ToolbarButtons } from "./Toolbar/ToolbarButtons";
@@ -9,6 +9,9 @@ import Image from "next/image";
 import styled from "styled-components";
 import { DividerVerticalIcon, SlashIcon } from "@radix-ui/react-icons";
 import Avvvatars from "avvvatars-react";
+import learnhouseAI_icon from "public/learnhouse_ai_simple.png";
+import { AIEditorStateTypes, useAIEditor, useAIEditorDispatch } from "@components/Contexts/AI/AIEditorContext";
+
 // extensions
 import InfoCallout from "./Extensions/Callout/Info/InfoCallout";
 import WarningCallout from "./Extensions/Callout/Warning/WarningCallout";
@@ -36,8 +39,9 @@ import html from 'highlight.js/lib/languages/xml'
 import python from 'highlight.js/lib/languages/python'
 import java from 'highlight.js/lib/languages/java'
 import { CourseProvider } from "@components/Contexts/CourseContext";
-import { OrgProvider } from "@components/Contexts/OrgContext";
 import { useSession } from "@components/Contexts/SessionContext";
+import AIEditorToolkit from "./AI/AIEditorToolkit";
+import useGetAIFeatures from "@components/AI/Hooks/useGetAIFeatures";
 
 
 interface Editor {
@@ -52,6 +56,17 @@ interface Editor {
 
 function Editor(props: Editor) {
   const session = useSession() as any;
+  const dispatchAIEditor = useAIEditorDispatch() as any;
+  const aiEditorState = useAIEditor() as AIEditorStateTypes;
+  const is_ai_feature_enabled = useGetAIFeatures({ feature: 'editor' });
+  const [isButtonAvailable, setIsButtonAvailable] = React.useState(false);
+
+  React.useEffect(() => {
+    if (is_ai_feature_enabled) {
+      setIsButtonAvailable(true);
+    }
+  }, [is_ai_feature_enabled])
+
   // remove course_ from course_uuid
   const course_uuid = props.course.course_uuid.substring(7);
 
@@ -129,7 +144,6 @@ function Editor(props: Editor) {
 
   return (
     <Page>
-      <OrgProvider orgslug={props.org?.slug}>
         <CourseProvider courseuuid={props.course.course_uuid}>
           <motion.div
             initial={{ opacity: 0, scale: 0.98 }}
@@ -156,19 +170,30 @@ function Editor(props: Editor) {
                     {" "}
                     <b>{props.course.name}</b> <SlashIcon /> {props.activity.name}{" "}
                   </EditorInfoDocName>
-
                 </EditorInfoWrapper>
                 <EditorButtonsWrapper>
                   <ToolbarButtons editor={editor} />
                 </EditorButtonsWrapper>
               </EditorDocSection>
-              <EditorUsersSection>
-                <EditorUserProfileWrapper>
-                  {!session.isAuthenticated && <span>Loading</span>}
-                  {session.isAuthenticated && <Avvvatars value={session.user.user_uuid} style="shape" />}
-                </EditorUserProfileWrapper>
+              <EditorUsersSection className="space-x-2">
+                <div>
+                  <div className="transition-all ease-linear text-teal-100 rounded-md hover:cursor-pointer" >
+                    {isButtonAvailable && <div
+                      onClick={() => dispatchAIEditor({ type: aiEditorState.isModalOpen ? 'setIsModalClose' : 'setIsModalOpen' })}
+                      style={{
+                        background: 'conic-gradient(from 32deg at 53.75% 50%, rgb(35, 40, 93) 4deg, rgba(20, 0, 52, 0.95) 59deg, rgba(164, 45, 238, 0.88) 281deg)',
+                      }}
+                      className="rounded-md px-3 py-2 drop-shadow-md flex  items-center space-x-1.5 text-sm text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out hover:scale-105">
+                      {" "}
+                      <i>
+                        <Image className='' width={20} src={learnhouseAI_icon} alt="" />
+                      </i>{" "}
+                      <i className="not-italic text-xs font-bold">AI Editor</i>
+                    </div>}
+                  </div>
+                </div>
                 <DividerVerticalIcon style={{ marginTop: "auto", marginBottom: "auto", color: "grey", opacity: '0.5' }} />
-                <EditorLeftOptionsSection className="space-x-2 pl-2 pr-3">
+                <EditorLeftOptionsSection className="space-x-2 ">
                   <div className="bg-sky-600 hover:bg-sky-700 transition-all ease-linear px-3 py-2 font-black text-sm shadow text-teal-100 rounded-lg hover:cursor-pointer" onClick={() => props.setContent(editor.getJSON())}> Save </div>
                   <ToolTip content="Preview">
                     <Link target="_blank" href={`/course/${course_uuid}/activity/${activity_uuid}`}>
@@ -178,6 +203,13 @@ function Editor(props: Editor) {
                     </Link>
                   </ToolTip>
                 </EditorLeftOptionsSection>
+                <DividerVerticalIcon style={{ marginTop: "auto", marginBottom: "auto", color: "grey", opacity: '0.5' }} />
+
+                <EditorUserProfileWrapper>
+                  {!session.isAuthenticated && <span>Loading</span>}
+                  {session.isAuthenticated && <Avvvatars value={session.user.user_uuid} style="shape" />}
+                </EditorUserProfileWrapper>
+
               </EditorUsersSection>
             </EditorTop>
           </motion.div>
@@ -193,11 +225,11 @@ function Editor(props: Editor) {
             exit={{ opacity: 0 }}
           >
             <EditorContentWrapper>
+              <AIEditorToolkit activity={props.activity} editor={editor} />
               <EditorContent editor={editor} />
             </EditorContentWrapper>
           </motion.div>
         </CourseProvider>
-      </OrgProvider>
     </Page>
   );
 }
