@@ -21,8 +21,8 @@ class AIConfig(BaseModel):
     enabled : bool = True
     limits: AILimitsSettings = AILimitsSettings()
     embeddings: Literal[
-        "text-embedding-ada-002", "all-MiniLM-L6-v2"
-    ] = "all-MiniLM-L6-v2"
+        "text-embedding-ada-002",
+    ] = "text-embedding-ada-002"
     ai_model: Literal["gpt-3.5-turbo", "gpt-4-1106-preview"] = "gpt-3.5-turbo"
     features: AIEnabledFeatures = AIEnabledFeatures()
 
