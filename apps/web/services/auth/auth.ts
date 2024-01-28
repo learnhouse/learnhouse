@@ -82,7 +82,7 @@ export async function getUserSession(token: string): Promise<any> {
 
 export async function getNewAccessTokenUsingRefreshToken(): Promise<any> {
   const requestOptions: any = {
-    method: "POST",
+    method: "GET",
     redirect: "follow",
     credentials: "include",
   };
@@ -94,7 +94,7 @@ export async function getNewAccessTokenUsingRefreshToken(): Promise<any> {
 
 export async function getNewAccessTokenUsingRefreshTokenServer(refresh_token_cookie: any): Promise<any> {
   const requestOptions: any = {
-    method: "POST",
+    method: "GET",
     redirect: "follow",
     headers: {
       Cookie: `refresh_token_cookie=${refresh_token_cookie}`,

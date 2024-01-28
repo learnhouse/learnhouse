@@ -11,7 +11,7 @@ from src.security.auth import AuthJWT, authenticate_user
 router = APIRouter()
 
 
-@router.post("/refresh")
+@router.get("/refresh")
 def refresh(response: Response, Authorize: AuthJWT = Depends()):
     """
     The jwt_refresh_token_required() function insures a valid refresh
