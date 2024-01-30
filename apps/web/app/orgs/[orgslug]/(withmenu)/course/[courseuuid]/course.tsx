@@ -57,7 +57,7 @@ const CourseClient = (props: any) => {
   }
 
   useEffect(() => {
-
+    getLearningTags();
   }
     , [org]);
 
@@ -75,10 +75,10 @@ const CourseClient = (props: any) => {
           </div>
 
           {props.course.thumbnail_image ?
-            <div className="inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl relative w-auto h-[300px] bg-cover bg-center mb-4" style={{ backgroundImage: `url(${getCourseThumbnailMediaDirectory(org?.org_uuid, course.course_uuid, course.thumbnail_image)})` }}>
+            <div className="inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl relative w-auto h-[400px] bg-cover bg-center mb-4" style={{ backgroundImage: `url(${getCourseThumbnailMediaDirectory(org?.org_uuid, course.course_uuid, course.thumbnail_image)})` }}>
             </div>
             :
-            <div className="inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl relative w-auto h-[300px] bg-cover bg-center mb-4" style={{ backgroundImage: `url('../empty_thumbnail.png')`, backgroundSize: 'auto' }}>
+            <div className="inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl relative w-auto h-[400px] bg-cover bg-center mb-4" style={{ backgroundImage: `url('../empty_thumbnail.png')`, backgroundSize: 'auto' }}>
             </div>
           }
 
@@ -96,7 +96,7 @@ const CourseClient = (props: any) => {
                 {learnings.map((learning: any) => {
                   return (
                     <div key={learning}
-                      className="flex space-x-2 items-center font-semibold text-gray-500 capitalize">
+                      className="flex space-x-2 items-center font-semibold text-gray-500">
                       <div className="px-2 py-2 rounded-full">
                         <Check className="text-gray-400" size={15} />
                       </div>
