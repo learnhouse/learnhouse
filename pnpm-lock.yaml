@@ -11,6 +11,9 @@ importers:
       eslint:
         specifier: ^8.51.0
         version: 8.51.0
+      husky:
+        specifier: ^9.0.10
+        version: 9.0.10
       prettier:
         specifier: ^3.0.3
         version: 3.0.3
@@ -4394,6 +4397,12 @@ packages:
     transitivePeerDependencies:
       - supports-color
     dev: false
+
+  /husky@9.0.10:
+    resolution: {integrity: sha512-TQGNknoiy6bURzIO77pPRu+XHi6zI7T93rX+QnJsoYFf3xdjKOur+IlfqzJGMHIK/wXrLg+GsvMs8Op7vI2jVA==}
+    engines: {node: '>=18'}
+    hasBin: true
+    dev: true
 
   /ieee754@1.2.1:
     resolution: {integrity: sha512-dcyqhDvX1C46lXZcVqCpK+FtMRQVdIMN6/Df5js2zouUsqG7I6sFxitIC+7KYK29KdXOLHdu9zL4sFnoVQnqaA==}
