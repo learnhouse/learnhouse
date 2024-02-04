@@ -16,7 +16,7 @@ function InstallClient() {
         <GeneralWrapperStyled>
             <Suspense>
                 <>
-
+                    <Stepscomp />
                 </>
             </Suspense>
         </GeneralWrapperStyled>
