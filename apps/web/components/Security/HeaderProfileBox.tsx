@@ -1,5 +1,5 @@
 'use client';
-import React, { use, useEffect } from "react";
+import React, { useEffect } from "react";
 import styled from "styled-components";
 import Link from "next/link";
 import Avvvatars from "avvvatars-react";
