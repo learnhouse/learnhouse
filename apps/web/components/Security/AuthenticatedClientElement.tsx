@@ -1,8 +1,5 @@
 'use client';
 import React from "react";
-import useSWR, { mutate } from "swr";
-import { getAPIUrl } from "@services/config/config";
-import { swrFetcher } from "@services/utils/ts/requests";
 import { useSession } from "@components/Contexts/SessionContext";
 import { useOrg } from "@components/Contexts/OrgContext";
 
