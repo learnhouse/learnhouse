@@ -8,7 +8,7 @@ import { revalidateTags } from "@services/utils/ts/requests";
 import ActivityIndicators from "@components/Pages/Courses/ActivityIndicators";
 import { useRouter } from "next/navigation";
 import GeneralWrapperStyled from "@components/StyledElements/Wrappers/GeneralWrapper";
-import { getCourseThumbnailMediaDirectory } from "@services/media/media";
+import { getCourseThumbnailMediaDirectory, getUserAvatarMediaDirectory } from "@services/media/media";
 import { ArrowRight, Check, File, Sparkles, Star, Video } from "lucide-react";
 import Avvvatars from "avvvatars-react";
 import { getUser } from "@services/users/users";
@@ -193,7 +193,7 @@ const CourseClient = (props: any) => {
             <div className="course_metadata_right space-y-3 w-72 antialiased flex flex-col ml-10 h-fit p-3 py-5 bg-white shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40 rounded-lg overflow-hidden">
               {user &&
                 <div className="flex flex-col mx-auto space-y-3 px-2 py-2 items-center">
-                  <UserAvatar border="border-8" avatar_url={course.authors[0].avatar_url} width={100} />
+                  <UserAvatar border="border-8" avatar_url={getUserAvatarMediaDirectory(course.authors[0].user_uuid,course.authors[0].avatar_image)} width={100} />
                   <div className="-space-y-2 ">
                     <div className="text-[12px] text-neutral-400 font-semibold">Author</div>
                     <div className="text-xl font-bold text-neutral-800">
