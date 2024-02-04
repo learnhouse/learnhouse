@@ -19,9 +19,8 @@ async def authorization_verify_if_element_is_public(
 ):
     element_nature = await check_element_type(element_uuid)
     # Verifies if the element is public
-    if element_nature == ("courses" or "collections") and action == "read":
+    if element_nature == ("courses") and action == "read":
         if element_nature == "courses":
-            print("looking for course")
             statement = select(Course).where(
                 Course.public == True, Course.course_uuid == element_uuid
             )
@@ -29,20 +28,29 @@ async def authorization_verify_if_element_is_public(
             if course:
                 return True
             else:
-                return False
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="User rights : You don't have the right to perform this action",
+                )
 
-        if element_nature == "collections":
+        if element_nature == "collections" and action == "read":
+
             statement = select(Collection).where(
                 Collection.public == True, Collection.collection_uuid == element_uuid
             )
             collection = db_session.exec(statement).first()
-
             if collection:
                 return True
             else:
-                return False
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="User rights : You don't have the right to perform this action",
+                )
     else:
-        return False
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User rights : You don't have the right to perform this action",
+        )
 
 
 # Tested and working

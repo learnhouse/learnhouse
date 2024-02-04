@@ -17,7 +17,7 @@ export default function Error({
  
   return (
     <div>
-      <ErrorUI></ErrorUI>
+      <ErrorUI ></ErrorUI>
     </div>
   );
 }
