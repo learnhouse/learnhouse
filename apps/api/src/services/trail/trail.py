@@ -17,7 +17,9 @@ async def create_user_trail(
     trail_object: TrailCreate,
     db_session: Session,
 ) -> Trail:
-    statement = select(Trail).where(Trail.org_id == trail_object.org_id, Trail.user_id == user.id)
+    statement = select(Trail).where(
+        Trail.org_id == trail_object.org_id, Trail.user_id == user.id
+    )
     trail = db_session.exec(statement).first()
 
     if trail:
@@ -124,7 +126,7 @@ async def check_trail_presence(
 async def get_user_trail_with_orgid(
     request: Request, user: PublicUser | AnonymousUser, org_id: int, db_session: Session
 ) -> TrailRead:
-    
+
     if isinstance(user, AnonymousUser):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -151,7 +153,7 @@ async def get_user_trail_with_orgid(
     for trail_run in trail_runs:
         statement = select(Course).where(Course.id == trail_run.course_id)
         course = db_session.exec(statement).first()
-        trail_run.course = course
+        trail_run.course = course 
 
         # Add number of activities (steps) in a course
         statement = select(ChapterActivity).where(
@@ -213,7 +215,7 @@ async def add_activity_to_trail(
     )
 
     statement = select(TrailRun).where(
-        TrailRun.trail_id == trail.id, TrailRun.course_id == course.id
+        TrailRun.trail_id == trail.id, TrailRun.course_id == course.id, TrailRun.user_id == user.id
     )
     trailrun = db_session.exec(statement).first()
 
@@ -231,7 +233,7 @@ async def add_activity_to_trail(
         db_session.refresh(trailrun)
 
     statement = select(TrailStep).where(
-        TrailStep.trailrun_id == trailrun.id, TrailStep.activity_id == activity.id
+        TrailStep.trailrun_id == trailrun.id, TrailStep.activity_id == activity.id, TrailStep.user_id == user.id
     )
     trailstep = db_session.exec(statement).first()
 
@@ -253,7 +255,7 @@ async def add_activity_to_trail(
         db_session.commit()
         db_session.refresh(trailstep)
 
-    statement = select(TrailRun).where(TrailRun.trail_id == trail.id)
+    statement = select(TrailRun).where(TrailRun.trail_id == trail.id , TrailRun.user_id == user.id)
     trail_runs = db_session.exec(statement).all()
 
     trail_runs = [
@@ -262,7 +264,7 @@ async def add_activity_to_trail(
     ]
 
     for trail_run in trail_runs:
-        statement = select(TrailStep).where(TrailStep.trailrun_id == trail_run.id)
+        statement = select(TrailStep).where(TrailStep.trailrun_id == trail_run.id, TrailStep.user_id == user.id)
         trail_steps = db_session.exec(statement).all()
 
         trail_steps = [TrailStep(**trail_step.__dict__) for trail_step in trail_steps]
@@ -296,7 +298,9 @@ async def add_course_to_trail(
         )
 
     # check if run already exists
-    statement = select(TrailRun).where(TrailRun.course_id == course.id)
+    statement = select(TrailRun).where(
+        TrailRun.course_id == course.id, TrailRun.user_id == user.id
+    )
     trailrun = db_session.exec(statement).first()
 
     if trailrun:
@@ -315,7 +319,7 @@ async def add_course_to_trail(
         )
 
     statement = select(TrailRun).where(
-        TrailRun.trail_id == trail.id, TrailRun.course_id == course.id
+        TrailRun.trail_id == trail.id, TrailRun.course_id == course.id, TrailRun.user_id == user.id
     )
     trail_run = db_session.exec(statement).first()
 
@@ -332,7 +336,7 @@ async def add_course_to_trail(
         db_session.commit()
         db_session.refresh(trail_run)
 
-    statement = select(TrailRun).where(TrailRun.trail_id == trail.id)
+    statement = select(TrailRun).where(TrailRun.trail_id == trail.id, TrailRun.user_id == user.id)
     trail_runs = db_session.exec(statement).all()
 
     trail_runs = [
@@ -341,7 +345,7 @@ async def add_course_to_trail(
     ]
 
     for trail_run in trail_runs:
-        statement = select(TrailStep).where(TrailStep.trailrun_id == trail_run.id)
+        statement = select(TrailStep).where(TrailStep.trailrun_id == trail_run.id , TrailStep.user_id == user.id)
         trail_steps = db_session.exec(statement).all()
 
         trail_steps = [TrailStep(**trail_step.__dict__) for trail_step in trail_steps]
@@ -385,7 +389,7 @@ async def remove_course_from_trail(
         )
 
     statement = select(TrailRun).where(
-        TrailRun.trail_id == trail.id, TrailRun.course_id == course.id
+        TrailRun.trail_id == trail.id, TrailRun.course_id == course.id, TrailRun.user_id == user.id
     )
     trail_run = db_session.exec(statement).first()
 
@@ -394,14 +398,14 @@ async def remove_course_from_trail(
         db_session.commit()
 
     # Delete all trail steps for this course
-    statement = select(TrailStep).where(TrailStep.course_id == course.id)
+    statement = select(TrailStep).where(TrailStep.course_id == course.id, TrailStep.user_id == user.id)
     trail_steps = db_session.exec(statement).all()
 
     for trail_step in trail_steps:
         db_session.delete(trail_step)
         db_session.commit()
 
-    statement = select(TrailRun).where(TrailRun.trail_id == trail.id)
+    statement = select(TrailRun).where(TrailRun.trail_id == trail.id, TrailRun.user_id == user.id)
     trail_runs = db_session.exec(statement).all()
 
     trail_runs = [
@@ -410,7 +414,7 @@ async def remove_course_from_trail(
     ]
 
     for trail_run in trail_runs:
-        statement = select(TrailStep).where(TrailStep.trailrun_id == trail_run.id)
+        statement = select(TrailStep).where(TrailStep.trailrun_id == trail_run.id, TrailStep.user_id == user.id)
         trail_steps = db_session.exec(statement).all()
 
         trail_steps = [TrailStep(**trail_step.__dict__) for trail_step in trail_steps]
