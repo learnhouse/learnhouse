@@ -14,6 +14,7 @@ type UserAvatarProps = {
     use_with_session?: boolean
     rounded?: 'rounded-md' | 'rounded-xl' | 'rounded-lg' | 'rounded-full' | 'rounded'
     border?: 'border-2' | 'border-4' | 'border-8'
+    borderColor? : string
     predefined_avatar?: 'ai'
 }
 
@@ -56,7 +57,7 @@ function UserAvatar(props: UserAvatarProps) {
             width={props.width ? props.width : 50}
             height={props.width ? props.width : 50}
             src={useAvatar()}
-            className={`${props.avatar_url && session.user.avatar_image ? '' : 'bg-gray-700'}  ${props.border ? 'border ' + props.border : ''} border-white shadow-xl aspect-square w-[${props.width ? props.width : 50}px] h-[${props.width ? props.width : 50}px] ${props.rounded ? props.rounded : 'rounded-xl'}`}
+            className={`${props.avatar_url && session.user.avatar_image ? '' : 'bg-gray-700'}  ${props.border ? 'border ' + props.border : ''} ${props.borderColor ?  props.borderColor : 'border-white'} shadow-xl aspect-square w-[${props.width ? props.width : 50}px] h-[${props.width ? props.width : 50}px] ${props.rounded ? props.rounded : 'rounded-xl'}`}
         />
     )
 }

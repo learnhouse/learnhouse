@@ -164,7 +164,7 @@ function Editor(props: Editor) {
                   <Link href="/">
                     <EditorInfoLearnHouseLogo width={25} height={25} src={learnhouseIcon} alt="" />
                   </Link>
-                  <Link target="_blank" href={`/course/${course_uuid}/edit`}>
+                  <Link target="_blank" href={`/course/${course_uuid}`}>
                     <EditorInfoThumbnail src={`${getCourseThumbnailMediaDirectory(props.org?.org_uuid, props.course.course_uuid, props.course.thumbnail_image)}`} alt=""></EditorInfoThumbnail>
                   </Link>
                   <EditorInfoDocName>
