@@ -26,7 +26,7 @@ const CourseClient = (props: any) => {
 
   function getLearningTags() {
     // create array of learnings from a string object (comma separated)
-    let learnings = course.learnings.split(",");
+    let learnings = course?.learnings ? course?.learnings.split(",") : [];
     setLearnings(learnings);
 
   }
@@ -91,21 +91,25 @@ const CourseClient = (props: any) => {
                 <p className="py-5 px-5">{course.description}</p>
               </div>
 
-              <h2 className="py-3 text-2xl font-bold">What you will learn</h2>
-              <div className="bg-white shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40 rounded-lg overflow-hidden px-5 py-5 space-y-2">
-                {learnings.map((learning: any) => {
-                  return (
-                    <div key={learning}
-                      className="flex space-x-2 items-center font-semibold text-gray-500">
-                      <div className="px-2 py-2 rounded-full">
-                        <Check className="text-gray-400" size={15} />
-                      </div>
-                      <p>{learning}</p>
-                    </div>
-                  );
-                }
-                )}
-              </div>
+              {learnings.length > 0 && learnings[0] !== "null" &&
+                <div>
+                  <h2 className="py-3 text-2xl font-bold">What you will learn</h2>
+                  <div className="bg-white shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40 rounded-lg overflow-hidden px-5 py-5 space-y-2">
+                    {learnings.map((learning: any) => {
+                      return (
+                        <div key={learning}
+                          className="flex space-x-2 items-center font-semibold text-gray-500">
+                          <div className="px-2 py-2 rounded-full">
+                            <Check className="text-gray-400" size={15} />
+                          </div>
+                          <p>{learning}</p>
+                        </div>
+                      );
+                    }
+                    )}
+                  </div>
+                </div>
+              }
 
               <h2 className="py-3 text-2xl font-bold">Course Lessons</h2>
               <div className="bg-white shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40 rounded-lg overflow-hidden">
