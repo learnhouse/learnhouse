@@ -173,7 +173,7 @@ function ActivityChatMessageBox(props: ActivityChatMessageBoxProps) {
                                 </div>
                                 <div className='bg-white/5 text-white/40 py-0.5 px-3 flex space-x-1 rounded-full items-center'>
                                     <FlaskConical size={14} />
-                                    <span className='text-xs font-semibold '>Experimental</span>
+                                    <span className='text-xs font-semibold antialiased '>Experimental</span>
                                 </div>
 
                             </div>
@@ -205,7 +205,7 @@ function ActivityChatMessageBox(props: ActivityChatMessageBoxProps) {
                             }
                             <div className='flex space-x-2 items-center'>
                                 <div className=''>
-                                    <UserAvatar rounded='rounded-xl' border='border-2' width={35} />
+                                    <UserAvatar rounded='rounded-lg' border='border-2' width={35} />
                                 </div>
                                 <div className='w-full'>
                                     <input onKeyDown={handleKeyDown} onChange={handleChange} disabled={aiChatBotState.isWaitingForResponse} value={aiChatBotState.chatInputValue} placeholder='Ask AI About this Lecture' type="text" className={inputClass} name="" id="" />
@@ -237,9 +237,9 @@ function AIMessage(props: AIMessageProps) {
         <div className='flex space-x-2 w-full antialiased font-medium'>
             <div className=''>
                 {props.message.sender == 'ai' ? (
-                    <UserAvatar rounded='rounded-xl' border='border-2' predefined_avatar='ai' width={35} />
+                    <UserAvatar rounded='rounded-lg' border='border-2' predefined_avatar='ai' width={35} />
                 ) : (
-                    <UserAvatar rounded='rounded-xl' border='border-2' width={35} />
+                    <UserAvatar rounded='rounded-lg' border='border-2' width={35} />
                 )}
             </div>
             <div className='w-full'>
@@ -283,7 +283,7 @@ const AIMessagePlaceHolder = (props: { activity_uuid: string, sendMessage: any }
                     <p className='pt-3 text-2xl font-semibold text-white/70 flex justify-center space-x-2 items-center'>
                         <span className='items-center'>Hello</span>
                         <span className='capitalize flex space-x-2 items-center'> 
-                        <UserAvatar rounded='rounded-xl' border='border-2' width={35} />
+                        <UserAvatar rounded='rounded-lg' border='border-2' width={35} />
                             <span>{session.user.username},</span>
                         </span>
                         <span>how can we help today ?</span>
