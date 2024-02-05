@@ -25,7 +25,7 @@ async def create_activity(
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
-    activity = Activity.from_orm(activity_object)
+    
 
     # CHeck if org exists
     statement = select(Chapter).where(Chapter.id == activity_object.chapter_id)
@@ -39,6 +39,9 @@ async def create_activity(
 
     # RBAC check
     await rbac_check(request, chapter.chapter_uuid, current_user, "create", db_session)
+
+    # Create Activity
+    activity = Activity(**activity_object.dict())
 
     activity.activity_uuid = str(f"activity_{uuid4()}")
     activity.creation_date = str(datetime.now())
