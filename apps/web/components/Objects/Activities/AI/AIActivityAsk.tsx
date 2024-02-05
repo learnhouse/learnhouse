@@ -1,6 +1,6 @@
 import { useSession } from '@components/Contexts/SessionContext'
 import { sendActivityAIChatMessage, startActivityAIChatSession } from '@services/ai/ai';
-import { AlertTriangle, BadgeInfo, NotebookTabs } from 'lucide-react';
+import { AlertTriangle, BadgeInfo, NotebookTabs, User } from 'lucide-react';
 import Avvvatars from 'avvvatars-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FlaskConical, Keyboard, MessageCircle, MessageSquareIcon, Sparkle, Sparkles, X } from 'lucide-react'
@@ -13,6 +13,7 @@ import { AIChatBotStateTypes, useAIChatBot, useAIChatBotDispatch } from '@compon
 import FeedbackModal from '@components/Objects/Modals/Feedback/Feedback';
 import Modal from '@components/StyledElements/Modal/Modal';
 import useGetAIFeatures from '../../../AI/Hooks/useGetAIFeatures';
+import UserAvatar from '@components/Objects/UserAvatar';
 
 
 type AIActivityAskProps = {
@@ -172,7 +173,7 @@ function ActivityChatMessageBox(props: ActivityChatMessageBoxProps) {
                                 </div>
                                 <div className='bg-white/5 text-white/40 py-0.5 px-3 flex space-x-1 rounded-full items-center'>
                                     <FlaskConical size={14} />
-                                    <span className='text-xs font-semibold '>Experimental</span>
+                                    <span className='text-xs font-semibold antialiased '>Experimental</span>
                                 </div>
 
                             </div>
@@ -204,7 +205,7 @@ function ActivityChatMessageBox(props: ActivityChatMessageBoxProps) {
                             }
                             <div className='flex space-x-2 items-center'>
                                 <div className=''>
-                                    <Avvvatars radius={3} border borderColor='white' borderSize={3} size={35} value={session.user.user_uuid} style="shape" />
+                                    <UserAvatar rounded='rounded-lg' border='border-2' width={35} />
                                 </div>
                                 <div className='w-full'>
                                     <input onKeyDown={handleKeyDown} onChange={handleChange} disabled={aiChatBotState.isWaitingForResponse} value={aiChatBotState.chatInputValue} placeholder='Ask AI About this Lecture' type="text" className={inputClass} name="" id="" />
@@ -235,7 +236,11 @@ function AIMessage(props: AIMessageProps) {
     return (
         <div className='flex space-x-2 w-full antialiased font-medium'>
             <div className=''>
-                <Avvvatars radius={3} border borderColor='white' borderSize={3} size={35} value={props.message.type == 'ai' ? 'ai' : session.user.user_uuid} style="shape" />
+                {props.message.sender == 'ai' ? (
+                    <UserAvatar rounded='rounded-lg' border='border-2' predefined_avatar='ai' width={35} />
+                ) : (
+                    <UserAvatar rounded='rounded-lg' border='border-2' width={35} />
+                )}
             </div>
             <div className='w-full'>
                 <p className='w-full rounded-lg outline-none px-2 py-1 text-white text-md placeholder:text-white/30' id="">
@@ -277,7 +282,8 @@ const AIMessagePlaceHolder = (props: { activity_uuid: string, sendMessage: any }
                     <Image width={100} className='mx-auto' src={learnhouseAI_logo_black} alt="" />
                     <p className='pt-3 text-2xl font-semibold text-white/70 flex justify-center space-x-2 items-center'>
                         <span className='items-center'>Hello</span>
-                        <span className='capitalize flex space-x-2 items-center'> <Avvvatars radius={3} border borderColor='white' borderSize={3} size={25} value={session.user.user_uuid} style="shape" />
+                        <span className='capitalize flex space-x-2 items-center'> 
+                        <UserAvatar rounded='rounded-lg' border='border-2' width={35} />
                             <span>{session.user.username},</span>
                         </span>
                         <span>how can we help today ?</span>

@@ -5,6 +5,7 @@ import * as Switch from '@radix-ui/react-switch';
 import * as Form from '@radix-ui/react-form';
 import React from 'react'
 import { useCourse, useCourseDispatch } from '../../../Contexts/CourseContext';
+import ThumbnailUpdate from './ThumbnailUpdate';
 
 
 type EditCourseStructureProps = {
@@ -84,71 +85,80 @@ function EditCourseGeneral(props: EditCourseStructureProps) {
     }, [course, formik.values, formik.initialValues]);
 
     return (
-        <div className='ml-10 mr-10 mx-auto bg-white rounded-xl shadow-sm px-6 py-5'>
+        <div> <div className="h-6"></div>
+            <div className='ml-10 mr-10 mx-auto bg-white rounded-xl shadow-sm px-6 py-5'>
 
-            {course.courseStructure && (
-                <div className="editcourse-form">
-                    {error && (
-                        <div className="flex justify-center bg-red-200 rounded-md text-red-950 space-x-2 items-center p-4 transition-all shadow-sm">
-                            <AlertTriangle size={18} />
-                            <div className="font-bold text-sm">{error}</div>
-                        </div>
-                    )}
-                    <FormLayout onSubmit={formik.handleSubmit}>
-                        <FormField name="name">
-                            <FormLabelAndMessage label='Name' message={formik.errors.name} />
-                            <Form.Control asChild>
-                                <Input style={{ backgroundColor: "white" }} onChange={formik.handleChange} value={formik.values.name} type="text" required />
-                            </Form.Control>
-                        </FormField>
-
-                        <FormField name="description">
-                            <FormLabelAndMessage label='Description' message={formik.errors.description} />
-                            <Form.Control asChild>
-                                <Textarea style={{ backgroundColor: "white" }} onChange={formik.handleChange} value={formik.values.description} required />
-                            </Form.Control>
-                        </FormField>
-
-                        <FormField name="about">
-                            <FormLabelAndMessage label='About' message={formik.errors.about} />
-                            <Form.Control asChild>
-                                <Textarea style={{ backgroundColor: "white" }} onChange={formik.handleChange} value={formik.values.about} required />
-                            </Form.Control>
-                        </FormField>
-
-                        <FormField name="learnings">
-                            <FormLabelAndMessage label='Learnings' message={formik.errors.learnings} />
-                            <Form.Control asChild>
-                                <Textarea style={{ backgroundColor: "white" }} onChange={formik.handleChange} value={formik.values.learnings} required />
-                            </Form.Control>
-                        </FormField>
-
-                        <FormField name="tags">
-                            <FormLabelAndMessage label='Tags' message={formik.errors.tags} />
-                            <Form.Control asChild>
-                                <Textarea style={{ backgroundColor: "white" }} onChange={formik.handleChange} value={formik.values.tags} required />
-                            </Form.Control>
-                        </FormField>
-
-                        <FormField className="flex items-center h-10" name="public">
-                            <div className='flex my-auto items-center'>
-                                <label className="text-black text-[15px] leading-none pr-[15px]" htmlFor="public-course">
-                                    Public Course
-                                </label>
-                                <Switch.Root
-                                    className="w-[42px] h-[25px] bg-neutral-200 rounded-full relative  data-[state=checked]:bg-neutral-500 outline-none cursor-default"
-                                    id="public-course"
-                                    onCheckedChange={checked => formik.setFieldValue('public', checked)}
-                                    checked={formik.values.public === 'true'}
-                                >
-                                    <Switch.Thumb className="block w-[21px] h-[21px] bg-white rounded-full shadow-[0_2px_2px] shadow-neutral-300 transition-transform duration-100 translate-x-0.5 will-change-transform data-[state=checked]:translate-x-[19px]" />
-                                </Switch.Root>
+                {course.courseStructure && (
+                    <div className="editcourse-form">
+                        {error && (
+                            <div className="flex justify-center bg-red-200 rounded-md text-red-950 space-x-2 items-center p-4 transition-all shadow-sm">
+                                <AlertTriangle size={18} />
+                                <div className="font-bold text-sm">{error}</div>
                             </div>
-                        </FormField>
+                        )}
+                        <FormLayout onSubmit={formik.handleSubmit}>
+                            <FormField name="name">
+                                <FormLabelAndMessage label='Name' message={formik.errors.name} />
+                                <Form.Control asChild>
+                                    <Input style={{ backgroundColor: "white" }} onChange={formik.handleChange} value={formik.values.name} type="text" required />
+                                </Form.Control>
+                            </FormField>
 
-                    </FormLayout>
-                </div>
-            )}
+                            <FormField name="description">
+                                <FormLabelAndMessage label='Description' message={formik.errors.description} />
+                                <Form.Control asChild>
+                                    <Textarea style={{ backgroundColor: "white" }} onChange={formik.handleChange} value={formik.values.description} required />
+                                </Form.Control>
+                            </FormField>
+
+                            <FormField name="about">
+                                <FormLabelAndMessage label='About' message={formik.errors.about} />
+                                <Form.Control asChild>
+                                    <Textarea style={{ backgroundColor: "white" }} onChange={formik.handleChange} value={formik.values.about} required />
+                                </Form.Control>
+                            </FormField>
+
+                            <FormField name="learnings">
+                                <FormLabelAndMessage label='Learnings' message={formik.errors.learnings} />
+                                <Form.Control asChild>
+                                    <Textarea style={{ backgroundColor: "white" }} onChange={formik.handleChange} value={formik.values.learnings} required />
+                                </Form.Control>
+                            </FormField>
+
+                            <FormField name="tags">
+                                <FormLabelAndMessage label='Tags' message={formik.errors.tags} />
+                                <Form.Control asChild>
+                                    <Textarea style={{ backgroundColor: "white" }} onChange={formik.handleChange} value={formik.values.tags} required />
+                                </Form.Control>
+                            </FormField>
+
+                            <FormField name="thumbnail">
+                                <FormLabelAndMessage label='Thumbnail' />
+                                <Form.Control asChild>
+                                    <ThumbnailUpdate />
+                                </Form.Control>
+                            </FormField>
+
+                            <FormField className="flex items-center h-10" name="public">
+                                <div className='flex my-auto items-center'>
+                                    <label className="text-black text-[15px] leading-none pr-[15px]" htmlFor="public-course">
+                                        Public Course
+                                    </label>
+                                    <Switch.Root
+                                        className="w-[42px] h-[25px] bg-neutral-200 rounded-full relative  data-[state=checked]:bg-neutral-500 outline-none cursor-default"
+                                        id="public-course"
+                                        onCheckedChange={checked => formik.setFieldValue('public', checked)}
+                                        checked={formik.values.public === 'true'}
+                                    >
+                                        <Switch.Thumb className="block w-[21px] h-[21px] bg-white rounded-full shadow-[0_2px_2px] shadow-neutral-300 transition-transform duration-100 translate-x-0.5 will-change-transform data-[state=checked]:translate-x-[19px]" />
+                                    </Switch.Root>
+                                </div>
+                            </FormField>
+
+                        </FormLayout>
+                    </div>
+                )}
+            </div>
         </div>
     )
 }

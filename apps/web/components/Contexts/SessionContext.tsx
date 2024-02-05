@@ -1,12 +1,8 @@
 'use client';
 import { getNewAccessTokenUsingRefreshToken, getUserSession } from '@services/auth/auth';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import React, { useContext, createContext, useEffect } from 'react'
-import { useOrg } from './OrgContext';
 
 export const SessionContext = createContext({}) as any;
-
-const PATHS_THAT_REQUIRE_AUTH = ['/dash'];
 
 type Session = {
     access_token: string;
@@ -18,10 +14,6 @@ type Session = {
 
 function SessionProvider({ children }: { children: React.ReactNode }) {
     const [session, setSession] = React.useState<Session>({ access_token: "", user: {}, roles: {}, isLoading: true, isAuthenticated: false });
-    const org = useOrg() as any;
-    const pathname = usePathname()
-    const router = useRouter()
-
 
     async function getNewAccessTokenUsingRefreshTokenUI() {
         let data = await getNewAccessTokenUsingRefreshToken();
@@ -39,6 +31,10 @@ function SessionProvider({ children }: { children: React.ReactNode }) {
             // Set session
             setSession({ access_token: access_token, user: user_session.user, roles: user_session.roles, isLoading: false, isAuthenticated: true });
         }
+
+        if (!access_token) {
+            setSession({ access_token: "", user: {}, roles: {}, isLoading: false, isAuthenticated: false });
+        }
     }
 
 
@@ -46,8 +42,6 @@ function SessionProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         // Check session
         checkSession();
-
-
 
     }, [])
 

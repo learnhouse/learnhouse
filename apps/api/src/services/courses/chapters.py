@@ -225,7 +225,7 @@ async def get_course_chapters(
     chapters = [ChapterRead(**chapter.dict(), activities=[]) for chapter in chapters]
 
     # RBAC check
-    await rbac_check(request, course.course_uuid, current_user, "read", db_session)
+    await rbac_check(request, course.course_uuid, current_user, "read", db_session) # type: ignore
 
     # Get activities for each chapter
     for chapter in chapters:

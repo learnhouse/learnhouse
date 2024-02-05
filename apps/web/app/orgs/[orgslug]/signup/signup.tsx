@@ -1,117 +1,62 @@
 "use client";
-import { useFormik } from 'formik';
-import { useRouter } from 'next/navigation';
 import learnhouseIcon from "public/learnhouse_bigicon_1.png";
-import React from 'react'
-import FormLayout, { ButtonBlack, FormField, FormLabel, FormLabelAndMessage, FormMessage, Input, Textarea } from '@components/StyledElements/Form/Form'
 import Image from 'next/image';
-import * as Form from '@radix-ui/react-form';
 import { getOrgLogoMediaDirectory } from '@services/media/media';
-import { AlertTriangle, Check, User } from 'lucide-react';
 import Link from 'next/link';
-import { signup } from '@services/auth/auth';
 import { getUriWithOrg } from '@services/config/config';
-
+import { useSession } from "@components/Contexts/SessionContext";
+import React, { useEffect } from "react";
+import { MailWarning, Shield, UserPlus } from "lucide-react";
+import { useOrg } from "@components/Contexts/OrgContext";
+import UserAvatar from "@components/Objects/UserAvatar";
+import OpenSignUpComponent from "./OpenSignup";
+import InviteOnlySignUpComponent from "./InviteOnlySignUp";
+import { useRouter, useSearchParams } from "next/navigation";
+import { validateInviteCode } from "@services/organizations/invites";
+import PageLoading from "@components/Objects/Loaders/PageLoading";
+import Toast from "@components/StyledElements/Toast/Toast";
+import toast from "react-hot-toast";
 
 interface SignUpClientProps {
     org: any;
 }
 
-const validate = (values: any) => {
-    const errors: any = {};
-
-    if (!values.email) {
-        errors.email = 'Required';
-    }
-    else if (
-        !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email)
-    ) {
-        errors.email = 'Invalid email address';
-    }
-
-    if (!values.password) {
-        errors.password = 'Required';
-    }
-    else if (values.password.length < 8) {
-        errors.password = 'Password must be at least 8 characters';
-    }
-
-    if (!values.username) {
-        errors.username = 'Required';
-    }
-
-    if (!values.username || values.username.length < 4) {
-        errors.username = 'Username must be at least 4 characters';
-    }
-
-    if (!values.bio) {
-        errors.bio = 'Required';
-    }
-
-
-    return errors;
-};
-
-
 function SignUpClient(props: SignUpClientProps) {
-    const [isSubmitting, setIsSubmitting] = React.useState(false);
-    const router = useRouter();
-    const [error, setError] = React.useState('');
-    const [message, setMessage] = React.useState('');
-    const formik = useFormik({
-        initialValues: {
-            org_slug: props.org?.slug,
-            org_id: props.org?.id,
-            email: '',
-            password: '',
-            username: '',
-            bio: '',
-            first_name: '',
-            last_name: '',
-        },
-        validate,
-        onSubmit: async values => {
-            setError('')
-            setMessage('')
-            setIsSubmitting(true);
-            let res = await signup(values);
-            let message = await res.json();
-            if (res.status == 200) {
-                //router.push(`/login`);
-                setMessage('Your account was successfully created')
-                setIsSubmitting(false);
-            }
-            else if (res.status == 401 || res.status == 400 || res.status == 404 || res.status == 409) {
-                setError(message.detail);
-                setIsSubmitting(false);
-                
-            }
-            else {
-                setError("Something went wrong");
-                setIsSubmitting(false);
-            }
+    const session = useSession() as any;
+    const [joinMethod, setJoinMethod] = React.useState('open');
+    const [inviteCode, setInviteCode] = React.useState('');
+    const searchParams = useSearchParams()
+    const inviteCodeParam = searchParams.get('inviteCode')
 
-        },
-    });
+    useEffect(() => {
+        if (props.org.config) {
+            setJoinMethod(props.org?.config?.config?.GeneralConfig.users.signup_mechanism);
+            console.log(props.org?.config?.config?.GeneralConfig.users.signup_mechanism)
+        }
+        if (inviteCodeParam) {
+            setInviteCode(inviteCodeParam);
+        }
+    }
+        , [props.org, inviteCodeParam]);
 
     return (
-        <div><div className='grid grid-flow-col justify-stretch h-screen'>
+        <div className='grid grid-flow-col justify-stretch h-screen'>
             <div className="right-login-part" style={{ background: "linear-gradient(041.61deg, #202020 7.15%, #000000 90.96%)" }} >
                 <div className='login-topbar m-10'>
                     <Link prefetch href={getUriWithOrg(props.org.slug, "/")}>
                         <Image quality={100} width={30} height={30} src={learnhouseIcon} alt="" />
                     </Link>
                 </div>
-                <div className="ml-10 h-4/6 flex flex-row text-white">
+                <div className="ml-10 h-3/4 flex flex-row text-white">
                     <div className="m-auto flex space-x-4 items-center flex-wrap">
-                        <div>Join </div>
+                        <div>You've been invited to join </div>
                         <div className="shadow-[0px_4px_16px_rgba(0,0,0,0.02)]" >
-                            {props.org?.logo ? (
+                            {props.org?.logo_image ? (
                                 <img
-                                    src={`${getOrgLogoMediaDirectory(props.org.org_id, props.org?.logo)}`}
+                                    src={`${getOrgLogoMediaDirectory(props.org.org_uuid, props.org?.logo_image)}`}
                                     alt="Learnhouse"
                                     style={{ width: "auto", height: 70 }}
-                                    className="rounded-md shadow-xl inset-0 ring-1 ring-inset ring-black/10 bg-white"
+                                    className="rounded-xl shadow-xl inset-0 ring-1 ring-inset ring-black/10 bg-white"
                                 />
                             ) : (
                                 <Image quality={100} width={70} height={70} src={learnhouseIcon} alt="" />
@@ -121,70 +66,113 @@ function SignUpClient(props: SignUpClientProps) {
                     </div>
                 </div>
             </div>
-            <div className="left-login-part bg-white flex flex-row">
-                <div className="login-form m-auto w-72">
-                    {error && (
-                        <div className="flex justify-center bg-red-200 rounded-md text-red-950 space-x-2 items-center p-4 transition-all shadow-sm">
-                            <AlertTriangle size={18} />
-                            <div className="font-bold text-sm">{error}</div>
-                        </div>
-                    )}
-                    {message && (
-                        <div className="flex flex-col space-y-4 justify-center bg-green-200 rounded-md text-green-950 space-x-2 items-center p-4 transition-all shadow-sm">
-                            <div className='flex space-x-2'>
-                                <Check size={18} />
-                                <div className="font-bold text-sm">{message}</div>
-                            </div>
-                            <hr className='border-green-900/20 800 w-40 border' />
-                            <Link className='flex space-x-2 items-center' href={'/login'}><User size={14} /> <div>Login </div></Link>
-                        </div>
-                    )}
-                    <FormLayout onSubmit={formik.handleSubmit}>
-                        <FormField name="email">
-                            <FormLabelAndMessage label='Email' message={formik.errors.email} />
-                            <Form.Control asChild>
-                                <Input onChange={formik.handleChange} value={formik.values.email} type="email" required />
-                            </Form.Control>
-                        </FormField>
-                        {/* for password  */}
-                        <FormField name="password">
-                            <FormLabelAndMessage label='Password' message={formik.errors.password} />
-
-                            <Form.Control asChild>
-                                <Input onChange={formik.handleChange} value={formik.values.password} type="password" required />
-                            </Form.Control>
-                        </FormField>
-                        {/* for username  */}
-                        <FormField name="username">
-                            <FormLabelAndMessage label='Username' message={formik.errors.username} />
-
-                            <Form.Control asChild>
-                                <Input onChange={formik.handleChange} value={formik.values.username} type="text" required />
-                            </Form.Control>
-                        </FormField>
-
-                        {/* for bio  */}
-                        <FormField name="bio">
-                            <FormLabelAndMessage label='Bio' message={formik.errors.bio} />
-
-                            <Form.Control asChild>
-                                <Textarea onChange={formik.handleChange} value={formik.values.bio} required />
-                            </Form.Control>
-                        </FormField>
-
-                        <div className="flex  py-4">
-                            <Form.Submit asChild>
-                                <button className="w-full bg-black text-white font-bold text-center p-2 rounded-md shadow-md hover:cursor-pointer" >
-                                    {isSubmitting ? "Loading..."
-                                        : "Create an account"}
-                                </button>
-                            </Form.Submit>
-                        </div>
-
-                    </FormLayout>
-                </div>
+            <div className="left-join-part bg-white flex flex-row">
+                {joinMethod == 'open' && (
+                    session.isAuthenticated ? <LoggedInJoinScreen inviteCode={inviteCode} /> : <OpenSignUpComponent />
+                )}
+                {joinMethod == 'inviteOnly' && (
+                    inviteCode ? (
+                        session.isAuthenticated ? <LoggedInJoinScreen /> : <InviteOnlySignUpComponent inviteCode={inviteCode} />
+                    ) : <NoTokenScreen />
+                )}
             </div>
-        </div></div>
+        </div>
+    )
+}
+
+
+
+
+
+const LoggedInJoinScreen = (props: any) => {
+    const session = useSession() as any;
+    const org = useOrg() as any;
+    const [isLoading, setIsLoading] = React.useState(true);
+
+    useEffect(() => {
+        if (session && org) {
+            setIsLoading(false);
+        }
+
+    }
+        , [org, session]);
+
+
+    return (
+        <div className="flex flex-row  items-center mx-auto">
+            <div className="flex space-y-7 flex-col justify-center items-center">
+                <p className='pt-3 text-2xl font-semibold text-black/70 flex justify-center space-x-2 items-center'>
+                    <span className='items-center'>Hi</span>
+                    <span className='capitalize flex space-x-2 items-center'>
+                        <UserAvatar rounded='rounded-xl' border='border-4' width={35} />
+                        <span>{session.user.username},</span>
+                    </span>
+                    <span>join {org?.name} ?</span>
+                </p>
+                <button className="flex w-fit space-x-2 bg-black px-6 py-2 text-md rounded-lg font-semibold h-fit text-white items-center shadow-md">
+                    <UserPlus size={18} />
+                    <p>Join </p>
+                </button>
+            </div>
+        </div>
+    )
+
+}
+
+const NoTokenScreen = (props: any) => {
+    const session = useSession() as any;
+    const org = useOrg() as any;
+    const router = useRouter();
+    const [isLoading, setIsLoading] = React.useState(true);
+    const [inviteCode, setInviteCode] = React.useState('');
+    const [messsage, setMessage] = React.useState('bruh');
+
+    const handleInviteCodeChange = (e: any) => {
+        setInviteCode(e.target.value);
+    }
+
+    const validateCode = async () => {
+        setIsLoading(true);
+        let res = await validateInviteCode(org?.id, inviteCode);
+        //wait for 1s 
+        if (res.success) {
+            toast.success("Invite code is valid, you'll be redirected to the signup page in a few seconds");
+            setTimeout(() => {
+                router.push(`/signup?inviteCode=${inviteCode}`);
+            }, 2000);
+        }
+        else {
+            toast.error("Invite code is invalid");
+            setIsLoading(false);
+        }
+
+    }
+
+
+    useEffect(() => {
+        if (session && org) {
+            setIsLoading(false);
+        }
+
+    }
+        , [org, session]);
+
+    return (
+        <div className="flex flex-row  items-center mx-auto">
+            <Toast />
+            {isLoading ? <div className="flex space-y-7 flex-col w-[300px] justify-center items-center"><PageLoading /></div> : <div className="flex space-y-7 flex-col justify-center items-center">
+
+                <p className="flex space-x-2 text-lg font-medium text-red-800 items-center">
+                    <MailWarning size={18} />
+                    <span>An invite code is required to join {org?.name}</span>
+                </p>
+                <input onChange={handleInviteCodeChange} className="bg-white outline-2 outline outline-gray-200 rounded-lg px-5 w-[300px] h-[50px]" placeholder="Please enter an invite code" type="text" />
+                <button onClick={validateCode} className="flex w-fit space-x-2 bg-black px-6 py-2 text-md rounded-lg font-semibold h-fit text-white items-center shadow-md">
+                    <Shield size={18} />
+                    <p>Submit </p>
+                </button>
+            </div>}
+        </div>
     )
 }
 
