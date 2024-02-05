@@ -1,3 +1,4 @@
+from datetime import timedelta
 from fastapi import Depends, APIRouter, HTTPException, Response, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import Session
@@ -10,7 +11,7 @@ from src.security.auth import AuthJWT, authenticate_user
 router = APIRouter()
 
 
-@router.post("/refresh")
+@router.get("/refresh")
 def refresh(response: Response, Authorize: AuthJWT = Depends()):
     """
     The jwt_refresh_token_required() function insures a valid refresh
@@ -28,6 +29,7 @@ def refresh(response: Response, Authorize: AuthJWT = Depends()):
         value=new_access_token,
         httponly=False,
         domain=get_learnhouse_config().hosting_config.cookie_config.domain,
+        expires=int(timedelta(hours=8).total_seconds()),
     )
     return {"access_token": new_access_token}
 
@@ -53,14 +55,16 @@ async def login(
     access_token = Authorize.create_access_token(subject=form_data.username)
     refresh_token = Authorize.create_refresh_token(subject=form_data.username)
     Authorize.set_refresh_cookies(refresh_token)
+
     # set cookies using fastapi
     response.set_cookie(
         key="access_token_cookie",
         value=access_token,
         httponly=False,
         domain=get_learnhouse_config().hosting_config.cookie_config.domain,
+        expires=int(timedelta(hours=8).total_seconds()),
     )
-    
+
     user = UserRead.from_orm(user)
 
     result = {

@@ -1,5 +1,8 @@
 from typing import Optional
+from pydantic import BaseModel
 from sqlmodel import Field, SQLModel
+from src.db.roles import RoleRead
+
 from src.db.organization_config import OrganizationConfig
 
 
@@ -32,3 +35,9 @@ class OrganizationRead(OrganizationBase):
     config: Optional[OrganizationConfig | dict]
     creation_date: str
     update_date: str
+
+
+class OrganizationUser(BaseModel):
+    from src.db.users import UserRead
+    user: UserRead
+    role: RoleRead

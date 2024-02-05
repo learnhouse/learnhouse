@@ -67,8 +67,11 @@ def ai_start_activity_chat_session(
 
     # Serialize Activity Content Blocks to a text comprehensible by the AI
     structured = structure_activity_content_by_type(content)
+
+    isEmpty = structured == []
+
     ai_friendly_text = serialize_activity_text_to_ai_comprehensible_text(
-        structured, course, activity
+        structured, course, activity, isActivityEmpty=isEmpty
     )
 
     # Get Activity Organization

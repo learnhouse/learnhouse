@@ -32,9 +32,9 @@ function CourseOverviewPage({ params }: { params: CourseOverviewParams }) {
     }
 
     return (
-        <div className='h-full w-full bg-[#f8f8f8]'>
+        <div className='h-screen w-full bg-[#f8f8f8] grid grid-rows-[auto,1fr]'>
             <CourseProvider courseuuid={getEntireCourseUUID(params.courseuuid)}>
-                <div className='pl-10 pr-10  tracking-tight bg-[#fcfbfc] shadow-[0px_4px_16px_rgba(0,0,0,0.02)]'>
+                <div className='pl-10 pr-10  tracking-tight bg-[#fcfbfc] z-10 shadow-[0px_4px_16px_rgba(0,0,0,0.06)]'>
                     <CourseOverviewTop params={params} />
                     <div className='flex space-x-5 font-black text-sm'>
                         <Link href={getUriWithOrg(params.orgslug, "") + `/dash/courses/course/${params.courseuuid}/general`}>
@@ -57,12 +57,12 @@ function CourseOverviewPage({ params }: { params: CourseOverviewParams }) {
                         </Link>
                     </div>
                 </div>
-                <div className='h-6'></div>
                 <motion.div
                     initial={{ opacity: 0, }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.10, type: "spring", stiffness: 80 }}
+                    className='h-full overflow-y-auto'
                 >
                     {params.subpage == 'content' ? <EditCourseStructure orgslug={params.orgslug} /> : ''}
                     {params.subpage == 'general' ? <EditCourseGeneral orgslug={params.orgslug} /> : ''}

@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Optional, Union
 from pydantic import BaseModel
-from sqlalchemy import JSON, Column
+from sqlalchemy import JSON, Column, ForeignKey, Integer
 from sqlmodel import Field, SQLModel
 
 
@@ -45,7 +45,10 @@ class RoleBase(SQLModel):
 
 class Role(RoleBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    org_id: int = Field(default=None, foreign_key="organization.id")
+    org_id: Optional[int] = Field(
+        default=None,
+        sa_column=Column(Integer, ForeignKey("organization.id", ondelete="CASCADE"))
+    )
     role_type: RoleTypeEnum = RoleTypeEnum.TYPE_GLOBAL
     role_uuid: str = ""
     creation_date: str = ""

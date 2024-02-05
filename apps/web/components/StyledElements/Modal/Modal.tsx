@@ -27,7 +27,7 @@ const Modal = (params: ModalParams) => (
 
         <Dialog.Portal>
             <DialogOverlay />
-            <DialogContent minHeight={params.minHeight}>
+            <DialogContent className='overflow-auto scrollbar-w-2 scrollbar-h-2 scrollbar scrollbar-thumb-black/20 scrollbar-thumb-rounded-full scrollbar-track-rounded-full' minHeight={params.minHeight}>
                 <DialogTopBar className='-space-y-1'>
                     <DialogTitle>{params.dialogTitle}</DialogTitle>
                     <DialogDescription>
@@ -118,7 +118,6 @@ const DialogContent = styled(Dialog.Content, {
     left: '50%',
     transform: 'translate(-50%, -50%)',
     width: '90vw',
-    overflow: 'hidden',
     maxHeight: '85vh',
     minHeight: '300px',
     maxWidth: '600px',
