@@ -11,7 +11,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.11"
-fastapi = "0.104.1"
+fastapi = "0.109.1"
 pydantic = {version = ">=1.8.0,<2.0.0", extras = ["email"]}
 sqlmodel = "0.0.10"
 uvicorn = "0.23.2"
