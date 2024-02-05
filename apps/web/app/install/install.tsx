@@ -1,13 +1,24 @@
 'use client'
-import React, { use, useEffect } from 'react'
+import React, { useEffect } from 'react'
 import { INSTALL_STEPS } from './steps/steps'
 import GeneralWrapperStyled from '@components/StyledElements/Wrappers/GeneralWrapper'
 import { useRouter, useSearchParams } from 'next/navigation'
-
-
+import { Suspense } from 'react'
 
 
 function InstallClient() {
+    return (
+        <GeneralWrapperStyled>
+            <Suspense>
+                <>
+                    <Stepscomp />
+                </>
+            </Suspense>
+        </GeneralWrapperStyled>
+    )
+}
+
+const Stepscomp = () => {
     const searchParams = useSearchParams()
     const router = useRouter()
     const step: any = parseInt(searchParams.get('step') || '0');
@@ -24,7 +35,7 @@ function InstallClient() {
     }, [step])
 
     return (
-        <GeneralWrapperStyled>
+        <div>
             <div className='flex justify-center '>
                 <div className='grow'>
                     <LearnHouseLogo />
@@ -54,7 +65,7 @@ function InstallClient() {
                     {stepsState[stepNumber].component}
                 </div>
             </div>
-        </GeneralWrapperStyled>
+        </div>
     )
 }
 

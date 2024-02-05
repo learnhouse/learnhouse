@@ -21,7 +21,9 @@ class Settings(BaseModel):
     authjwt_secret_key: str = "secret" if isDevModeEnabled() else SECRET_KEY
     authjwt_token_location = {"cookies", "headers"}
     authjwt_cookie_csrf_protect = False
-    authjwt_access_token_expires = False if isDevModeEnabled() else 28800
+    authjwt_access_token_expires = (
+        False if isDevModeEnabled() else timedelta(hours=8).total_seconds()
+    )
     authjwt_cookie_samesite = "lax"
     authjwt_cookie_secure = True
     authjwt_cookie_domain = get_learnhouse_config().hosting_config.cookie_config.domain

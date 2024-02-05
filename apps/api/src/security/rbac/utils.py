@@ -5,7 +5,6 @@ async def check_element_type(element_id):
     """
     Check if the element is a course, a user, a house or a collection, by checking its prefix
     """
-    print("element_id", element_id)
     if element_id.startswith("course_"):
         return "courses"
     elif element_id.startswith("user_"):

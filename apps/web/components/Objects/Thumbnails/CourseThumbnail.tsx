@@ -41,9 +41,10 @@ function CourseThumbnail(props: PropsType) {
         <div className='relative'>
             <AdminEditsArea course={props.course} orgSlug={props.orgslug} courseId={props.course.course_uuid} deleteCourses={deleteCourses} />
             <Link href={getUriWithOrg(props.orgslug, "/course/" + removeCoursePrefix(props.course.course_uuid))}>
-                <div className="inset-0 ring-1 ring-inset ring-black/10 rounded-xl shadow-xl w-[249px] h-[131px] bg-cover" style={{ backgroundImage: `url(${getCourseThumbnailMediaDirectory(org?.org_uuid, props.course.course_uuid, props.course.thumbnail_image)})` }}>
 
-                </div>
+                {props.course.thumbnail_image ? <div className="inset-0 ring-1 ring-inset ring-black/10 rounded-xl shadow-xl w-[249px] h-[131px] bg-cover" style={{ backgroundImage: `url(${getCourseThumbnailMediaDirectory(org?.org_uuid, props.course.course_uuid, props.course.thumbnail_image)})` }} />
+                    : <div className="inset-0 ring-1 ring-inset ring-black/10 rounded-xl shadow-xl w-[249px] h-[131px] bg-cover" style={{ backgroundImage: `url('../empty_thumbnail.png')` , backgroundSize:'contain' }} />}
+
             </Link>
             <h2 className="font-bold text-lg w-[250px] py-2">{props.course.name}</h2>
         </div>

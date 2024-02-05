@@ -75,6 +75,23 @@ export const errorHandling = (res: any) => {
   return res.json();
 };
 
+
+type CustomResponseTyping = {
+  success: boolean;
+  data: any;
+  status: number;
+  HTTPmessage: string;
+};
+
+export const getResponseMetadata = async (fetch_result: any): Promise<CustomResponseTyping> => {
+  const json = await fetch_result.json();
+  if (fetch_result.status === 200) {
+    return { success: true, data: json, status: fetch_result.status, HTTPmessage: fetch_result.statusText };
+  } else {
+    return { success: false, data: json, status: fetch_result.status, HTTPmessage: fetch_result.statusText };
+  }
+};
+
 export const revalidateTags = async (tags: string[], orgslug: string) => {
   const url = getUriWithOrg(orgslug, "");
   tags.forEach((tag) => {

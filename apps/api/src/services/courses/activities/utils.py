@@ -4,6 +4,10 @@ from src.db.courses import CourseRead
 
 def structure_activity_content_by_type(activity):
     ### Get Headings, Texts, Callouts, Answers and Paragraphs from the activity as a big list of strings (text only) and return it
+
+    if "content" not in activity or not activity["content"]:
+        return []
+
     content = activity["content"]
 
     headings = []
@@ -11,10 +15,12 @@ def structure_activity_content_by_type(activity):
     paragraphs = []
 
     for item in content:
-        if 'content' in item:
+        if "content" in item:
             if item["type"] == "heading" and "text" in item["content"][0]:
                 headings.append(item["content"][0]["text"])
-            elif item["type"] in ["calloutInfo", "calloutWarning"] and all("text" in text_item for text_item in item["content"]):
+            elif item["type"] in ["calloutInfo", "calloutWarning"] and all(
+                "text" in text_item for text_item in item["content"]
+            ):
                 callouts.append(
                     "".join([text_item["text"] for text_item in item["content"]])
                 )
@@ -34,15 +40,29 @@ def structure_activity_content_by_type(activity):
     # Add Paragraphs
     data_array.append({"Paragraphs": paragraphs})
 
-    print(data_array)
-
     return data_array
 
 
 def serialize_activity_text_to_ai_comprehensible_text(
-    data_array, course: CourseRead, activity: ActivityRead
+    data_array,
+    course: CourseRead,
+    activity: ActivityRead,
+    isActivityEmpty: bool = False,
 ):
-    ### Serialize the text to a format that is comprehensible by the AI
+
+    if isActivityEmpty:
+        text = (
+            "Use this as a context "
+            + 'This is a course about "'
+            + course.name
+            + '". '
+            + 'This is a lecture about "'
+            + activity.name
+            + '". '
+            + "There is no content yet in this lecture."
+        )
+
+        return text
 
     # Serialize Headings
     serialized_headings = ""
@@ -51,7 +71,6 @@ def serialize_activity_text_to_ai_comprehensible_text(
 
     # Serialize Callouts
     serialized_callouts = ""
-
     for callout in data_array[1]["Callouts"]:
         serialized_callouts += callout + " "
 

@@ -42,7 +42,7 @@ importers:
         specifier: ^1.0.5
         version: 1.0.7(@types/react-dom@18.0.6)(@types/react@18.2.8)(react-dom@18.2.0)(react@18.2.0)
       '@sentry/nextjs':
-        specifier: ^7.92.0
+        specifier: ^7.93.0
         version: 7.93.0(next@14.0.4)(react@18.2.0)
       '@stitches/react':
         specifier: ^1.2.8
@@ -71,6 +71,9 @@ importers:
       avvvatars-react:
         specifier: ^0.4.2
         version: 0.4.2(csstype@3.1.2)(react-dom@18.2.0)(react@18.2.0)
+      dayjs:
+        specifier: ^1.11.10
+        version: 1.11.10
       formik:
         specifier: ^2.2.9
         version: 2.4.5(react@18.2.0)
@@ -3398,6 +3401,10 @@ packages:
   /caniuse-lite@1.0.30001547:
     resolution: {integrity: sha512-W7CrtIModMAxobGhz8iXmDfuJiiKg1WADMO/9x7/CLNin5cpSbuBjooyoIUVB5eyCc36QuTVlkVa1iB2S5+/eA==}
 
+  /caniuse-lite@1.0.30001579:
+    resolution: {integrity: sha512-u5AUVkixruKHJjw/pj9wISlcMpgFWzSrczLZbrqBSxukQixmg0SJ5sZTpvaFvxU0HoQKd4yoyAogyrAz9pzJnA==}
+    dev: false
+
   /case-anything@2.1.13:
     resolution: {integrity: sha512-zlOQ80VrQ2Ue+ymH5OuM/DlDq64mEm+B9UTdHULv5osUMD6HalNTblf2b1u/m6QecjsnOkBpqVZ+XPwIVsy7Ng==}
     engines: {node: '>=12.13'}
@@ -3542,6 +3549,10 @@ packages:
 
   /dash-get@1.0.2:
     resolution: {integrity: sha512-4FbVrHDwfOASx7uQVxeiCTo7ggSdYZbqs8lH+WU6ViypPlDbe9y6IP5VVUDQBv9DcnyaiPT5XT0UWHgJ64zLeQ==}
+    dev: false
+
+  /dayjs@1.11.10:
+    resolution: {integrity: sha512-vjAczensTgRcqDERK0SR2XMwsF/tSvnvlv6VcF2GIhg6Sx4yOIt/irsr1RDJsKiIyBzJDpCoXiWWq28MqH2cnQ==}
     dev: false
 
   /debug@2.6.9:
@@ -4949,7 +4960,7 @@ packages:
       '@next/env': 14.0.4
       '@swc/helpers': 0.5.2
       busboy: 1.6.0
-      caniuse-lite: 1.0.30001547
+      caniuse-lite: 1.0.30001579
       graceful-fs: 4.2.11
       postcss: 8.4.31
       react: 18.2.0
