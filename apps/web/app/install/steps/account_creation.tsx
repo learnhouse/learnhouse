@@ -1,5 +1,5 @@
 "use client";
-import FormLayout, { ButtonBlack, FormField, FormLabel, FormLabelAndMessage, FormMessage, Input } from '@components/StyledElements/Form/Form'
+import FormLayout, { ButtonBlack, FormField, FormLabelAndMessage, Input } from '@components/StyledElements/Form/Form'
 import * as Form from '@radix-ui/react-form';
 import { getAPIUrl } from '@services/config/config';
 import { createNewUserInstall, updateInstall } from '@services/install/install';
@@ -8,7 +8,7 @@ import { useFormik } from 'formik';
 import { useRouter } from 'next/navigation';
 import React from 'react'
 import { BarLoader } from 'react-spinners';
-import useSWR, { mutate } from "swr";
+import useSWR from "swr";
 
 const validate = (values: any) => {
     const errors: any = {};

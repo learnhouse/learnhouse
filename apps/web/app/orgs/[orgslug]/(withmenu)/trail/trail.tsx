@@ -5,10 +5,9 @@ import TrailCourseElement from "@components/Pages/Trail/TrailCourseElement";
 import TypeOfContentTitle from "@components/StyledElements/Titles/TypeOfContentTitle";
 import GeneralWrapperStyled from "@components/StyledElements/Wrappers/GeneralWrapper";
 import { getAPIUrl } from "@services/config/config";
-import { removeCourse } from "@services/courses/activity";
-import { revalidateTags, swrFetcher } from "@services/utils/ts/requests";
+import { swrFetcher } from "@services/utils/ts/requests";
 import React, { useEffect } from "react";
-import useSWR, { mutate } from "swr";
+import useSWR from "swr";
 
 function Trail(params: any) {
   let orgslug = params.orgslug;

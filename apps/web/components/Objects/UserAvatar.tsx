@@ -1,10 +1,6 @@
 import { useSession } from '@components/Contexts/SessionContext';
-import emptyAvatar from '@public/empty_avatar.png';
-import aiAvatar from '@public/ai_avatar.png';
-import Image from 'next/image';
-import React, { use, useEffect } from 'react'
+import React, { useEffect } from 'react'
 import { getUriWithOrg } from '@services/config/config';
-import { useOrg } from '@components/Contexts/OrgContext';
 import { useParams } from 'next/navigation';
 import { getUserAvatarMediaDirectory } from '@services/media/media';
 

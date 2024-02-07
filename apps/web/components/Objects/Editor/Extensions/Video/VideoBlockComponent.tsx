@@ -1,8 +1,7 @@
 import { NodeViewWrapper } from "@tiptap/react";
-import { AlertTriangle, Image, Loader, Video } from "lucide-react";
+import { Loader, Video } from "lucide-react";
 import React, { useEffect } from "react";
 import styled from "styled-components";
-import { getBackendUrl } from "../../../../../services/config/config";
 import { uploadNewVideoFile } from "../../../../../services/blocks/Video/video";
 import { getActivityBlockMediaDirectory } from "@services/media/media";
 import { UploadIcon } from "@radix-ui/react-icons";

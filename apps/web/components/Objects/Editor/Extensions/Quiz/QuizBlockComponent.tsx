@@ -1,8 +1,8 @@
 import { NodeViewWrapper } from "@tiptap/react";
 import { v4 as uuidv4 } from "uuid";
-import { twJoin, twMerge } from 'tailwind-merge'
+import { twMerge } from 'tailwind-merge'
 import React from "react";
-import { BadgeHelp, Check, Info, Minus, MoreVertical, Plus, RefreshCcw, X } from "lucide-react";
+import { BadgeHelp, Check, Minus, Plus, RefreshCcw } from "lucide-react";
 import ReactConfetti from "react-confetti";
 import { useEditorProvider } from "@components/Contexts/Editor/EditorContext";
 
