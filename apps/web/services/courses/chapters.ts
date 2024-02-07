@@ -1,6 +1,6 @@
 import { OrderPayload } from "@components/Dashboard/Course/EditCourseStructure/EditCourseStructure";
 import { getAPIUrl } from "@services/config/config";
-import { RequestBody, RequestBodyWithAuthHeader, errorHandling } from "@services/utils/ts/requests";
+import { RequestBody, errorHandling } from "@services/utils/ts/requests";
 
 /*
  This file includes only POST, PUT, DELETE requests

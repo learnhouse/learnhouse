@@ -2,15 +2,14 @@
 import { useOrg } from '@components/Contexts/OrgContext';
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement';
 import ConfirmationModal from '@components/StyledElements/ConfirmationModal/ConfirmationModal';
-import { DotsHorizontalIcon } from '@radix-ui/react-icons';
 import { getUriWithOrg } from '@services/config/config';
 import { deleteCourseFromBackend } from '@services/courses/courses';
 import { getCourseThumbnailMediaDirectory } from '@services/media/media';
 import { revalidateTags } from '@services/utils/ts/requests';
-import { FileEdit, MoreHorizontal, Settings, X } from 'lucide-react';
+import { Settings, X } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import React, { use, useEffect } from 'react'
+import React, { useEffect } from 'react'
 
 type PropsType = {
     course: any,

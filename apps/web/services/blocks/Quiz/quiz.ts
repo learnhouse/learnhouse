@@ -1,5 +1,5 @@
 import { getAPIUrl } from "@services/config/config";
-import { RequestBody, RequestBodyForm } from "@services/utils/ts/requests";
+import { RequestBody } from "@services/utils/ts/requests";
 
 
 export async function submitQuizBlock(activity_id: string, data: any) {

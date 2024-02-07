@@ -1,11 +1,10 @@
 'use client';
 import { useOrg } from '@components/Contexts/OrgContext';
-import FormLayout, { ButtonBlack, Flex, FormField, FormLabel, Input, Textarea } from '@components/StyledElements/Form/Form'
+import FormLayout, { ButtonBlack, Flex, FormField, FormLabel } from '@components/StyledElements/Form/Form'
 import * as Form from '@radix-ui/react-form'
 import { FormMessage } from "@radix-ui/react-form";
 import { getAPIUrl } from '@services/config/config';
 import { updateUserRole } from '@services/organizations/orgs';
-import { swrFetcher } from '@services/utils/ts/requests';
 import React, { useEffect } from 'react'
 import { BarLoader } from 'react-spinners';
 import { mutate } from 'swr';
