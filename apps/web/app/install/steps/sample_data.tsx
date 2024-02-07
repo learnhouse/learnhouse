@@ -3,7 +3,7 @@ import { createSampleDataInstall, updateInstall } from '@services/install/instal
 import { swrFetcher } from '@services/utils/ts/requests';
 import { useRouter } from 'next/navigation';
 import React from 'react'
-import useSWR, { mutate } from "swr";
+import useSWR from "swr";
 
 function SampleData() {
   const { data: install, error: error, isLoading } = useSWR(`${getAPIUrl()}install/latest`, swrFetcher);

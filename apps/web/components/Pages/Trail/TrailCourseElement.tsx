@@ -1,12 +1,12 @@
 'use client';
 import { useOrg } from '@components/Contexts/OrgContext';
-import { getAPIUrl, getBackendUrl, getUriWithOrg } from '@services/config/config';
+import { getAPIUrl, getUriWithOrg } from '@services/config/config';
 import { removeCourse } from '@services/courses/activity';
 import { getCourseThumbnailMediaDirectory } from '@services/media/media';
 import { revalidateTags } from '@services/utils/ts/requests';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { use, useEffect } from 'react';
+import { useEffect } from 'react';
 import { mutate } from 'swr';
 
 interface TrailCourseElementProps {

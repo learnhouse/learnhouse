@@ -1,4 +1,4 @@
-import { useEditor, EditorContent, BubbleMenu, EditorProvider } from "@tiptap/react";
+import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import styled from "styled-components"
 import Youtube from "@tiptap/extension-youtube";

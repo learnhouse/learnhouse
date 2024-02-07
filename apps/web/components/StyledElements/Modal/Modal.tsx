@@ -2,7 +2,7 @@
 import React from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { styled, keyframes } from '@stitches/react';
-import { violet, blackA, mauve, green } from '@radix-ui/colors';
+import { blackA, mauve } from '@radix-ui/colors';
 import { ButtonBlack } from '../Form/Form';
 
 type ModalParams = {

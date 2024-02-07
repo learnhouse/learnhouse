@@ -1,7 +1,7 @@
 import { useCourse } from '@components/Contexts/CourseContext'
 import { Book, ChevronRight, School, User, Users } from 'lucide-react'
 import Link from 'next/link'
-import React, { use, useEffect } from 'react'
+import React from 'react'
 
 type BreadCrumbsProps = {
     type: 'courses' | 'user' | 'users' | 'org' | 'orgusers'

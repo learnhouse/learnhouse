@@ -5,7 +5,7 @@ import { getAPIUrl, getUriWithOrg } from '@services/config/config';
 import { swrFetcher } from '@services/utils/ts/requests';
 import { Globe, Shield, X } from 'lucide-react'
 import Link from 'next/link';
-import React, { use, useEffect } from 'react'
+import React, { useEffect } from 'react'
 import useSWR, { mutate } from 'swr';
 import dayjs from 'dayjs';
 import { changeSignupMechanism, createInviteCode, deleteInviteCode } from '@services/organizations/invites';

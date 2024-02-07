@@ -1,15 +1,10 @@
 'use client';
-import React, {  useEffect } from "react";
+import React from "react";
 import Link from "next/link";
 import { getAPIUrl, getUriWithOrg } from "@services/config/config";
-import { getOrganizationContextInfo, getOrganizationContextInfoWithoutCredentials } from "@services/organizations/orgs";
-import ClientComponentSkeleton from "@components/Utils/ClientComp";
 import { HeaderProfileBox } from "@components/Security/HeaderProfileBox";
 import MenuLinks from "./MenuLinks";
 import { getOrgLogoMediaDirectory } from "@services/media/media";
-import { MessageSquareIcon } from "lucide-react";
-import Modal from "@components/StyledElements/Modal/Modal";
-import FeedbackModal from "../Modals/Feedback/Feedback";
 import useSWR from "swr";
 import { swrFetcher } from "@services/utils/ts/requests";
 
