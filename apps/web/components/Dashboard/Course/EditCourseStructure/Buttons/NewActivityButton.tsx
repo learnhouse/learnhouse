@@ -5,9 +5,9 @@ import { getAPIUrl } from '@services/config/config';
 import { createActivity, createExternalVideoActivity, createFileActivity } from '@services/courses/activities';
 import { getOrganizationContextInfoWithoutCredentials } from '@services/organizations/orgs';
 import { revalidateTags } from '@services/utils/ts/requests';
-import { Layers, Sparkles } from 'lucide-react'
+import { Layers } from 'lucide-react'
 import { useRouter } from 'next/navigation';
-import React, { use, useEffect } from 'react'
+import React, { useEffect } from 'react'
 import { mutate } from 'swr';
 
 type NewActivityButtonProps = {

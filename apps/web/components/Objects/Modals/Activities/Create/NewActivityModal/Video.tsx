@@ -1,4 +1,4 @@
-import FormLayout, { ButtonBlack, Flex, FormField, FormLabel, FormMessage, Input, Textarea } from "@components/StyledElements/Form/Form";
+import FormLayout, { ButtonBlack, Flex, FormField, FormLabel, FormMessage, Input } from "@components/StyledElements/Form/Form";
 import React, { useState } from "react";
 import * as Form from '@radix-ui/react-form';
 import BarLoader from "react-spinners/BarLoader";

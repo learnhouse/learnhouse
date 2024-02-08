@@ -1,11 +1,9 @@
 'use client';
 import React, { useEffect } from 'react'
 import { motion } from 'framer-motion';
-import UserEditGeneral from '@components/Dashboard/UserAccount/UserEditGeneral/UserEditGeneral';
-import UserEditPassword from '@components/Dashboard/UserAccount/UserEditPassword/UserEditPassword';
 import Link from 'next/link';
 import { getUriWithOrg } from '@services/config/config';
-import { Info, Lock, ScanEye, User, UserCog, UserPlus, Users } from 'lucide-react';
+import { ScanEye, UserPlus, Users } from 'lucide-react';
 import BreadCrumbs from '@components/Dashboard/UI/BreadCrumbs';
 import { useSession } from '@components/Contexts/SessionContext';
 import { useOrg } from '@components/Contexts/OrgContext';

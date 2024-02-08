@@ -1,8 +1,8 @@
 import React from "react";
 import styled from "styled-components";
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import { Droppable, Draggable } from "react-beautiful-dnd";
 import Activity from "./Activity";
-import { Folders, Hexagon, MoreVertical, Pencil, PlusSquare, Save, Sparkle, Sparkles, Trash, Trash2, X } from "lucide-react";
+import { Hexagon, MoreVertical, Pencil, Save, Sparkles, X } from "lucide-react";
 import ConfirmationModal from "@components/StyledElements/ConfirmationModal/ConfirmationModal";
 import { useRouter } from "next/navigation";
 import { updateChapter } from "@services/courses/chapters";

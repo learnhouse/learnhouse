@@ -1,9 +1,7 @@
 'use client';
-import React, { useEffect } from "react";
+import React from "react";
 import styled from "styled-components";
 import Link from "next/link";
-import Avvvatars from "avvvatars-react";
-import { GearIcon } from "@radix-ui/react-icons";
 import { Settings } from "lucide-react";
 import { useSession } from "@components/Contexts/SessionContext";
 import UserAvatar from "@components/Objects/UserAvatar";
