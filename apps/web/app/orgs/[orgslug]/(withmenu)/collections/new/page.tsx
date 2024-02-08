@@ -5,7 +5,6 @@ import { createCollection } from "@services/courses/collections";
 import useSWR from "swr";
 import { getAPIUrl, getUriWithOrg } from "@services/config/config";
 import { revalidateTags, swrFetcher } from "@services/utils/ts/requests";
-import { getOrganizationContextInfo } from "@services/organizations/orgs";
 import { useOrg } from "@components/Contexts/OrgContext";
 
 function NewCollection(params: any) {

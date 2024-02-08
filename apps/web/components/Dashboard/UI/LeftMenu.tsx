@@ -4,7 +4,7 @@ import { useSession } from '@components/Contexts/SessionContext';
 import ToolTip from '@components/StyledElements/Tooltip/Tooltip'
 import LearnHouseDashboardLogo from '@public/dashLogo.png';
 import { logout } from '@services/auth/auth';
-import { ArrowLeft, Book, BookCopy, Home, LogOut, School, Settings, Users } from 'lucide-react'
+import { BookCopy, Home, LogOut, School, Settings, Users } from 'lucide-react'
 import Image from 'next/image';
 import Link from 'next/link'
 import { useRouter } from 'next/navigation';

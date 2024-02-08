@@ -2,9 +2,8 @@ import React from 'react'
 import learnhouseAI_icon from "public/learnhouse_ai_simple.png";
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
-import { AlertTriangle, BetweenHorizontalStart, FastForward, Feather, FileStack, HelpCircle, Languages, MessageCircle, MoreVertical, Pen, X } from 'lucide-react';
+import { AlertTriangle, BetweenHorizontalStart, FastForward, Feather, FileStack, HelpCircle, Languages, MoreVertical, X } from 'lucide-react';
 import { Editor } from '@tiptap/react';
-import { AIChatBotStateTypes, useAIChatBot, useAIChatBotDispatch } from '@components/Contexts/AI/AIChatBotContext';
 import { AIEditorStateTypes, useAIEditor, useAIEditorDispatch } from '@components/Contexts/AI/AIEditorContext';
 import { sendActivityAIChatMessage, startActivityAIChatSession } from '@services/ai/ai';
 import useGetAIFeatures from '@components/AI/Hooks/useGetAIFeatures';

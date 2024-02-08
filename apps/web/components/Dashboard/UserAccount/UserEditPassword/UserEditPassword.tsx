@@ -1,6 +1,6 @@
 import { useSession } from '@components/Contexts/SessionContext';
 import { updatePassword } from '@services/settings/password';
-import { Formik, Form, Field, ErrorMessage } from 'formik';
+import { Formik, Form, Field } from 'formik';
 import React, { useEffect } from 'react'
 
 function UserEditPassword() {

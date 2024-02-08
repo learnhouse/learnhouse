@@ -1,17 +1,13 @@
 import { useSession } from '@components/Contexts/SessionContext'
 import { sendActivityAIChatMessage, startActivityAIChatSession } from '@services/ai/ai';
-import { AlertTriangle, BadgeInfo, NotebookTabs, User } from 'lucide-react';
-import Avvvatars from 'avvvatars-react';
+import { AlertTriangle, BadgeInfo, NotebookTabs } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FlaskConical, Keyboard, MessageCircle, MessageSquareIcon, Sparkle, Sparkles, X } from 'lucide-react'
+import { FlaskConical, MessageCircle, X } from 'lucide-react'
 import Image from 'next/image';
-import { send } from 'process';
 import learnhouseAI_icon from "public/learnhouse_ai_simple.png";
 import learnhouseAI_logo_black from "public/learnhouse_ai_black_logo.png";
-import React, { use, useEffect, useRef } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { AIChatBotStateTypes, useAIChatBot, useAIChatBotDispatch } from '@components/Contexts/AI/AIChatBotContext';
-import FeedbackModal from '@components/Objects/Modals/Feedback/Feedback';
-import Modal from '@components/StyledElements/Modal/Modal';
 import useGetAIFeatures from '../../../AI/Hooks/useGetAIFeatures';
 import UserAvatar from '@components/Objects/UserAvatar';
 

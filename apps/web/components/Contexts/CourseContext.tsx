@@ -3,7 +3,7 @@ import PageLoading from '@components/Objects/Loaders/PageLoading';
 import { getAPIUrl } from '@services/config/config';
 import { swrFetcher } from '@services/utils/ts/requests';
 import React, { createContext, useContext, useEffect, useReducer } from 'react'
-import useSWR, { mutate } from 'swr';
+import useSWR from 'swr';
 
 export const CourseContext = createContext(null) as any;
 export const CourseDispatchContext = createContext(null) as any;

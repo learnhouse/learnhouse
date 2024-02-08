@@ -1,6 +1,6 @@
 import { updateProfile } from '@services/settings/profile';
 import React, { useEffect } from 'react'
-import { Formik, Form, Field, ErrorMessage } from 'formik';
+import { Formik, Form, Field } from 'formik';
 import { useSession } from '@components/Contexts/SessionContext';
 import { ArrowBigUpDash, Check, FileWarning, Info, UploadCloud } from 'lucide-react';
 import UserAvatar from '@components/Objects/UserAvatar';

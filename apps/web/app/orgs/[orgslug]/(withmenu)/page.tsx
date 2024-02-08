@@ -12,7 +12,6 @@ import { getAccessTokenFromRefreshTokenCookie } from '@services/auth/auth';
 import CourseThumbnail from '@components/Objects/Thumbnails/CourseThumbnail';
 import CollectionThumbnail from '@components/Objects/Thumbnails/CollectionThumbnail';
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement';
-import { Plus, PlusCircle } from 'lucide-react';
 import NewCourseButton from '@components/StyledElements/Buttons/NewCourseButton';
 import NewCollectionButton from '@components/StyledElements/Buttons/NewCollectionButton';
 
