@@ -1,5 +1,5 @@
 import { getAPIUrl } from "@services/config/config";
-import { RequestBody, errorHandling, getResponseMetadata } from "@services/utils/ts/requests";
+import { RequestBody, getResponseMetadata } from "@services/utils/ts/requests";
 
 export async function createInviteCode(org_id: any) {
   const result = await fetch(`${getAPIUrl()}orgs/${org_id}/invites`, RequestBody("POST", null, null));

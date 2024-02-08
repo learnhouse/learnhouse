@@ -1,12 +1,12 @@
 'use client';
 import { getAPIUrl } from '@services/config/config';
-import { revalidateTags, swrFetcher } from '@services/utils/ts/requests';
-import React, { useContext, useEffect, useState } from 'react'
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import useSWR, { mutate } from 'swr';
+import { revalidateTags } from '@services/utils/ts/requests';
+import React, { useEffect, useState } from 'react'
+import { DragDropContext, Droppable } from 'react-beautiful-dnd';
+import { mutate } from 'swr';
 import ChapterElement from './DraggableElements/ChapterElement';
 import PageLoading from '@components/Objects/Loaders/PageLoading';
-import { createChapter, updateCourseOrderStructure } from '@services/courses/chapters';
+import { createChapter } from '@services/courses/chapters';
 import { useRouter } from 'next/navigation';
 import { useCourse, useCourseDispatch } from '@components/Contexts/CourseContext';
 import { Hexagon } from 'lucide-react';

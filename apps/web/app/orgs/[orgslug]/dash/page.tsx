@@ -1,7 +1,6 @@
 import Image from 'next/image'
 import React from 'react'
 import learnhousetextlogo from '../../../../public/learnhouse_logo.png'
-import learnhouseiconlogo from '../../../../public/learnhouse_bigicon.png'
 import { BookCopy, School, Settings, Users } from 'lucide-react'
 import Link from 'next/link'
 import AdminAuthorization from '@components/Security/AdminAuthorization'

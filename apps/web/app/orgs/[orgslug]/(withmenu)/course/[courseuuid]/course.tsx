@@ -1,7 +1,7 @@
 "use client";
 import { removeCourse, startCourse } from "@services/courses/activity";
 import Link from "next/link";
-import React, { use, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { getUriWithOrg } from "@services/config/config";
 import PageLoading from "@components/Objects/Loaders/PageLoading";
 import { revalidateTags } from "@services/utils/ts/requests";
@@ -9,9 +9,7 @@ import ActivityIndicators from "@components/Pages/Courses/ActivityIndicators";
 import { useRouter } from "next/navigation";
 import GeneralWrapperStyled from "@components/StyledElements/Wrappers/GeneralWrapper";
 import { getCourseThumbnailMediaDirectory, getUserAvatarMediaDirectory } from "@services/media/media";
-import { ArrowRight, Check, File, Sparkles, Star, Video } from "lucide-react";
-import Avvvatars from "avvvatars-react";
-import { getUser } from "@services/users/users";
+import { ArrowRight, Check, File, Sparkles, Video } from "lucide-react";
 import { useOrg } from "@components/Contexts/OrgContext";
 import UserAvatar from "@components/Objects/UserAvatar";
 

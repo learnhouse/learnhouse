@@ -2,7 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { Draggable } from "react-beautiful-dnd";
 import { getAPIUrl, getUriWithOrg } from "@services/config/config";
-import { FileText, Video, Sparkles, X, Pencil, MoreVertical, Eye, Save, File } from "lucide-react";
+import { Video, Sparkles, X, Pencil, MoreVertical, Eye, Save, File } from "lucide-react";
 import { mutate } from "swr";
 import { revalidateTags } from "@services/utils/ts/requests";
 import { useRouter } from "next/navigation";

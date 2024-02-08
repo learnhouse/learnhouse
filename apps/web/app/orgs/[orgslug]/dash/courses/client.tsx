@@ -5,7 +5,6 @@ import CourseThumbnail from '@components/Objects/Thumbnails/CourseThumbnail';
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement';
 import NewCourseButton from '@components/StyledElements/Buttons/NewCourseButton';
 import Modal from '@components/StyledElements/Modal/Modal';
-import Link from 'next/link'
 import { useSearchParams } from 'next/navigation';
 import React from 'react'
 

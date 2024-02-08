@@ -1,20 +1,13 @@
 'use client';
 import EditCourseStructure from '../../../../../../../../components/Dashboard/Course/EditCourseStructure/EditCourseStructure'
-import BreadCrumbs from '@components/Dashboard/UI/BreadCrumbs'
-import PageLoading from '@components/Objects/Loaders/PageLoading';
-import ClientComponentSkeleton from '@components/Utils/ClientComp';
-import { getAPIUrl, getUriWithOrg } from '@services/config/config';
-import { swrFetcher } from '@services/utils/ts/requests';
-import React, { createContext, use, useEffect, useState } from 'react'
-import useSWR from 'swr';
-import { CourseProvider, useCourse } from '../../../../../../../../components/Contexts/CourseContext';
-import SaveState from '@components/Dashboard/UI/SaveState';
+import { getUriWithOrg } from '@services/config/config';
+import React from 'react'
+import { CourseProvider } from '../../../../../../../../components/Contexts/CourseContext';
 import Link from 'next/link';
 import { CourseOverviewTop } from '@components/Dashboard/UI/CourseOverviewTop';
-import { CSSTransition } from 'react-transition-group';
 import { motion } from 'framer-motion';
 import EditCourseGeneral from '@components/Dashboard/Course/EditCourseGeneral/EditCourseGeneral';
-import { GalleryVertical, GalleryVerticalEnd, Info } from 'lucide-react';
+import { GalleryVerticalEnd, Info } from 'lucide-react';
 
 export type CourseOverviewParams = {
     orgslug: string,

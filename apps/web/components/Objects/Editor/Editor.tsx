@@ -1,6 +1,6 @@
 'use client';
 import React from "react";
-import { useEditor, EditorContent, BubbleMenu } from "@tiptap/react";
+import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import learnhouseIcon from "public/learnhouse_icon.png";
 import { ToolbarButtons } from "./Toolbar/ToolbarButtons";
@@ -8,7 +8,6 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import styled from "styled-components";
 import { DividerVerticalIcon, SlashIcon } from "@radix-ui/react-icons";
-import Avvvatars from "avvvatars-react";
 import learnhouseAI_icon from "public/learnhouse_ai_simple.png";
 import { AIEditorStateTypes, useAIEditor, useAIEditorDispatch } from "@components/Contexts/AI/AIEditorContext";
 

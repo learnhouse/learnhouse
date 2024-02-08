@@ -7,8 +7,8 @@ import Toast from '@components/StyledElements/Toast/Toast';
 import { getAPIUrl } from '@services/config/config';
 import { removeUserFromOrg } from '@services/organizations/orgs';
 import { swrFetcher } from '@services/utils/ts/requests';
-import { KeyRound, LogOut, X } from 'lucide-react';
-import React, { use, useEffect } from 'react'
+import { KeyRound, LogOut } from 'lucide-react';
+import React, { useEffect } from 'react'
 import toast from 'react-hot-toast';
 import useSWR, { mutate } from 'swr';
 
