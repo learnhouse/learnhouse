@@ -9,7 +9,6 @@ from fastapi_jwt_auth.exceptions import AuthJWTException
 from fastapi.middleware.gzip import GZipMiddleware
 
 
-
 # from src.services.mocks.initial import create_initial_data
 
 ########################
@@ -26,7 +25,6 @@ app = FastAPI(
     title=learnhouse_config.site_name,
     description=learnhouse_config.site_description,
     version="0.1.0",
-    root_path="/",
 )
 
 app.add_middleware(
@@ -61,8 +59,8 @@ app.mount("/content", StaticFiles(directory="content"), name="content")
 # Global Routes
 app.include_router(v1_router)
 
+
 # General Routes
 @app.get("/")
 async def root():
     return {"Message": "Welcome to LearnHouse ✨"}
-
