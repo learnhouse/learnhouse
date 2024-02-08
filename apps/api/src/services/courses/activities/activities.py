@@ -1,5 +1,6 @@
 from typing import Literal
 from sqlmodel import Session, select
+from src.db.courses import Course
 from src.db.chapters import Chapter
 from src.security.rbac.rbac import (
     authorization_verify_based_on_roles_and_authorship,
@@ -25,7 +26,6 @@ async def create_activity(
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
-    
 
     # CHeck if org exists
     statement = select(Chapter).where(Chapter.id == activity_object.chapter_id)
@@ -99,8 +99,18 @@ async def get_activity(
             detail="Activity not found",
         )
 
+    # Get course from that activity
+    statement = select(Course).where(Course.id == activity.course_id)
+    course = db_session.exec(statement).first()
+
+    if not course:
+        raise HTTPException(
+            status_code=404,
+            detail="Course not found",
+        )
+
     # RBAC check
-    await rbac_check(request, activity.activity_uuid, current_user, "read", db_session)
+    await rbac_check(request, course.course_uuid, current_user, "read", db_session)
 
     activity = ActivityRead.from_orm(activity)
 
