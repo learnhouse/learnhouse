@@ -26,8 +26,8 @@ services:
       - POSTGRES_DB=learnhouse
     healthcheck:
       test: ["CMD-SHELL", "pg_isready"]
-      interval: 10s
-      timeout: 5s
+      interval: 5s
+      timeout: 4s
       retries: 5
   redis:
     image: redis:7.2.3
@@ -35,7 +35,10 @@ services:
     ports:
       - "6379:6379"
     healthcheck:
-      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 4s
+      retries: 5
   mongo:
     image: mongo:5.0
     restart: always
@@ -43,6 +46,4 @@ services:
       - "27017:27017"
     environment:
       - MONGO_INITDB_ROOT_USERNAME=learnhouse
-      - MONGO_INITDB_ROOT_PASSWORD=learnhouse
-    healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      - MONGO_INITDB_ROOT_PASSWORD=learnhous
