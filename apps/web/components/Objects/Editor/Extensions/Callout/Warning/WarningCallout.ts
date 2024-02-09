@@ -1,29 +1,29 @@
-import { mergeAttributes, Node } from "@tiptap/core";
-import { ReactNodeViewRenderer } from "@tiptap/react";
+import { mergeAttributes, Node } from '@tiptap/core'
+import { ReactNodeViewRenderer } from '@tiptap/react'
 
-import WarningCalloutComponent from "./WarningCalloutComponent";
+import WarningCalloutComponent from './WarningCalloutComponent'
 
 export default Node.create({
-  name: "calloutWarning",
-  group: "block",
+  name: 'calloutWarning',
+  group: 'block',
   draggable: true,
-  content: "text*",
+  content: 'text*',
 
   // TODO : multi line support
 
   parseHTML() {
     return [
       {
-        tag: "callout-warning",
+        tag: 'callout-warning',
       },
-    ];
+    ]
   },
 
   renderHTML({ HTMLAttributes }) {
-    return ["callout-info", mergeAttributes(HTMLAttributes), 0];
+    return ['callout-info', mergeAttributes(HTMLAttributes), 0]
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(WarningCalloutComponent);
+    return ReactNodeViewRenderer(WarningCalloutComponent)
   },
-});
+})

@@ -1,37 +1,41 @@
-"use client";
-import { useRouter } from "next/navigation";
-import React, { useState } from "react";
-import { createCollection } from "@services/courses/collections";
-import useSWR from "swr";
-import { getAPIUrl, getUriWithOrg } from "@services/config/config";
-import { revalidateTags, swrFetcher } from "@services/utils/ts/requests";
-import { useOrg } from "@components/Contexts/OrgContext";
+'use client'
+import { useRouter } from 'next/navigation'
+import React, { useState } from 'react'
+import { createCollection } from '@services/courses/collections'
+import useSWR from 'swr'
+import { getAPIUrl, getUriWithOrg } from '@services/config/config'
+import { revalidateTags, swrFetcher } from '@services/utils/ts/requests'
+import { useOrg } from '@components/Contexts/OrgContext'
 
 function NewCollection(params: any) {
-  const org = useOrg() as any;
-  const orgslug = params.params.orgslug;
-  const [name, setName] = React.useState("");
-  const [description, setDescription] = React.useState("");
-  const [selectedCourses, setSelectedCourses] = React.useState([]) as any;
-  const router = useRouter();
-  const { data: courses, error: error } = useSWR(`${getAPIUrl()}courses/org_slug/${orgslug}/page/1/limit/10`, swrFetcher);
-  const [isPublic, setIsPublic] = useState('true');
+  const org = useOrg() as any
+  const orgslug = params.params.orgslug
+  const [name, setName] = React.useState('')
+  const [description, setDescription] = React.useState('')
+  const [selectedCourses, setSelectedCourses] = React.useState([]) as any
+  const router = useRouter()
+  const { data: courses, error: error } = useSWR(
+    `${getAPIUrl()}courses/org_slug/${orgslug}/page/1/limit/10`,
+    swrFetcher
+  )
+  const [isPublic, setIsPublic] = useState('true')
 
   const handleVisibilityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setIsPublic(e.target.value);
-  };
-
+    setIsPublic(e.target.value)
+  }
 
   const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setName(event.target.value);
-  };
+    setName(event.target.value)
+  }
 
-  const handleDescriptionChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setDescription(event.target.value);
-  };
+  const handleDescriptionChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setDescription(event.target.value)
+  }
 
   const handleSubmit = async (e: any) => {
-    e.preventDefault();
+    e.preventDefault()
 
     const collection = {
       name: name,
@@ -39,19 +43,17 @@ function NewCollection(params: any) {
       courses: selectedCourses,
       public: isPublic,
       org_id: org.id,
-    };
-    await createCollection(collection);
-    await revalidateTags(["collections"], org.slug);
+    }
+    await createCollection(collection)
+    await revalidateTags(['collections'], org.slug)
     // reload the page
-    router.refresh();
+    router.refresh()
 
     // wait for 2s before reloading the page
     setTimeout(() => {
-      router.push(getUriWithOrg(orgslug, "/collections"));
-    }
-      , 1000);
-  };
-
+      router.push(getUriWithOrg(orgslug, '/collections'))
+    }, 1000)
+  }
 
   return (
     <>
@@ -75,36 +77,46 @@ function NewCollection(params: any) {
           <option value="true">Public Collection </option>
         </select>
 
-
         {!courses ? (
-  <p className="text-gray-500">Loading...</p>
-) : (
-  <div className="space-y-4 p-3">
-    <p>Courses</p>
-    {courses.map((course: any) => (
-      <div key={course.course_uuid} className="flex items-center space-x-2">
+          <p className="text-gray-500">Loading...</p>
+        ) : (
+          <div className="space-y-4 p-3">
+            <p>Courses</p>
+            {courses.map((course: any) => (
+              <div
+                key={course.course_uuid}
+                className="flex items-center space-x-2"
+              >
+                <input
+                  type="checkbox"
+                  id={course.id}
+                  name={course.name}
+                  value={course.id}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedCourses([...selectedCourses, course.id])
+                    } else {
+                      setSelectedCourses(
+                        selectedCourses.filter(
+                          (course_uuid: any) =>
+                            course_uuid !== course.course_uuid
+                        )
+                      )
+                    }
+                  }}
+                  className="text-blue-500 rounded  focus:ring-2 focus:ring-blue-500"
+                />
 
-        <input
-          type="checkbox"
-          id={course.id}
-          name={course.name}
-          value={course.id}
-          onChange={(e) => {
-            if (e.target.checked) {
-              setSelectedCourses([...selectedCourses, course.id]);
-            }
-            else {
-              setSelectedCourses(selectedCourses.filter((course_uuid: any) => course_uuid !== course.course_uuid));
-            }
-          }}
-          className="text-blue-500 rounded  focus:ring-2 focus:ring-blue-500"
-        />
-
-        <label htmlFor={course.course_uuid} className="text-sm text-gray-700">{course.name}</label>
-      </div>
-    ))}
-  </div>
-)}
+                <label
+                  htmlFor={course.course_uuid}
+                  className="text-sm text-gray-700"
+                >
+                  {course.name}
+                </label>
+              </div>
+            ))}
+          </div>
+        )}
 
         <input
           type="text"
@@ -121,9 +133,8 @@ function NewCollection(params: any) {
           Submit
         </button>
       </div>
-
     </>
-  );
+  )
 }
 
-export default NewCollection;
+export default NewCollection
