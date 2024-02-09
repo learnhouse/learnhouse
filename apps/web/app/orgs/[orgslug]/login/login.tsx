@@ -1,11 +1,10 @@
-"use client";
+"use client";;
 import learnhouseIcon from "public/learnhouse_bigicon_1.png";
-import FormLayout, { ButtonBlack, FormField, FormLabel, FormLabelAndMessage, FormMessage, Input } from '@components/StyledElements/Form/Form'
+import FormLayout, { FormField, FormLabelAndMessage, Input } from '@components/StyledElements/Form/Form';
 import Image from 'next/image';
 import * as Form from '@radix-ui/react-form';
 import { useFormik } from 'formik';
 import { getOrgLogoMediaDirectory } from "@services/media/media";
-import { BarLoader } from "react-spinners";
 import React from "react";
 import { loginAndGetToken } from "@services/auth/auth";
 import { AlertTriangle } from "lucide-react";
@@ -79,14 +78,14 @@ const LoginClient = (props: LoginClientProps) => {
                     <div className="m-auto flex space-x-4 items-center flex-wrap">
                         <div>Login to </div>
                         <div className="shadow-[0px_4px_16px_rgba(0,0,0,0.02)]" >
-                            {props.org?.logo ? (
+                        {props.org?.logo_image ? (
                                 <img
-                                    src={`${getOrgLogoMediaDirectory(props.org.org_id, props.org?.logo)}`}
+                                    src={`${getOrgLogoMediaDirectory(props.org.org_uuid, props.org?.logo_image)}`}
                                     alt="Learnhouse"
                                     style={{ width: "auto", height: 70 }}
-                                    className="rounded-md shadow-xl inset-0 ring-1 ring-inset ring-black/10 bg-white"
+                                    className="rounded-xl shadow-xl inset-0 ring-1 ring-inset ring-black/10 bg-white"
                                 />
-                            ) : (
+                            )  : (
                                 <Image quality={100} width={70} height={70} src={learnhouseIcon} alt="" />
                             )}
                         </div>

@@ -1,11 +1,11 @@
 import React from 'react';
 import * as Form from '@radix-ui/react-form';
-import { styled, keyframes } from '@stitches/react';
-import { blackA, violet, mauve } from '@radix-ui/colors';
+import { styled } from '@stitches/react';
+import { blackA } from '@radix-ui/colors';
 import { Info } from 'lucide-react';
 
 const FormLayout = (props: any, onSubmit: any) => (
-    <FormRoot onSubmit={props.onSubmit}>
+    <FormRoot className='h-fit' onSubmit={props.onSubmit}>
         {props.children}
     </FormRoot>
 );

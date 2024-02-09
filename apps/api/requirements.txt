@@ -24,6 +24,5 @@ langchain-openai
 tiktoken
 openai
 chromadb
-sentence-transformers
 python-dotenv
 redis

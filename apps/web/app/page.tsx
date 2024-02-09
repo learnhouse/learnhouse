@@ -1,5 +1,4 @@
 "use client";
-import type { NextPage } from "next";
 import { motion } from "framer-motion";
 import styled from "styled-components";
 import learnhouseBigIcon from "public/learnhouse_bigicon.png";

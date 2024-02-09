@@ -50,7 +50,8 @@ async def upload_file_and_return_file_object(
 
     await upload_content(
         f"courses/{course_uuid}/activities/{activity_uuid}/dynamic/blocks/{type_of_block}/{block_id}",
-        org_uuid=org_uuid,
+        type_of_dir='orgs',
+        uuid=org_uuid,
         file_binary=file_binary,
         file_and_format=f"{file_id}.{file_format}",
     )

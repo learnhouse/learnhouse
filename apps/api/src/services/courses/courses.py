@@ -146,6 +146,9 @@ async def create_course(
         )
         course.thumbnail_image = name_in_disk
 
+    else:
+        course.thumbnail_image = ""
+
     # Insert course
     db_session.add(course)
     db_session.commit()

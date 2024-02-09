@@ -1,9 +1,8 @@
 import { NodeViewWrapper } from "@tiptap/react";
 import React, { useEffect } from "react";
 import styled from "styled-components";
-import { AlertCircle, AlertTriangle, FileText, Image, ImagePlus, Info, Loader } from "lucide-react";
-import { getPDFFile, uploadNewPDFFile } from "../../../../../services/blocks/Pdf/pdf";
-import { getBackendUrl } from "../../../../../services/config/config";
+import { AlertTriangle, FileText, Loader } from "lucide-react";
+import { uploadNewPDFFile } from "../../../../../services/blocks/Pdf/pdf";
 import { UploadIcon } from "@radix-ui/react-icons";
 import { getActivityBlockMediaDirectory } from "@services/media/media";
 import { useOrg } from "@components/Contexts/OrgContext";

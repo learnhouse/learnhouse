@@ -2,8 +2,8 @@ import { NodeViewWrapper } from "@tiptap/react";
 import React from "react";
 import styled from "styled-components";
 import "katex/dist/katex.min.css";
-import { InlineMath, BlockMath } from "react-katex";
-import { Edit, Save } from "lucide-react";
+import { BlockMath } from "react-katex";
+import { Save } from "lucide-react";
 import Link from "next/link";
 import { useEditorProvider } from "@components/Contexts/Editor/EditorContext";
 

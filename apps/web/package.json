@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "lint:fix": "eslint --fix ."
   },
   "dependencies": {
     "@radix-ui/colors": "^0.1.8",
@@ -16,7 +17,7 @@
     "@radix-ui/react-icons": "^1.1.1",
     "@radix-ui/react-switch": "^1.0.3",
     "@radix-ui/react-tooltip": "^1.0.5",
-    "@sentry/nextjs": "^7.92.0",
+    "@sentry/nextjs": "^7.93.0",
     "@stitches/react": "^1.2.8",
     "@tiptap/extension-code-block-lowlight": "^2.1.11",
     "@tiptap/extension-collaboration": "^2.0.0-beta.199",
@@ -26,6 +27,7 @@
     "@tiptap/react": "^2.0.0-beta.199",
     "@tiptap/starter-kit": "^2.0.0-beta.199",
     "avvvatars-react": "^0.4.2",
+    "dayjs": "^1.11.10",
     "formik": "^2.2.9",
     "framer-motion": "^10.16.1",
     "lowlight": "^3.0.0",
@@ -61,6 +63,7 @@
     "autoprefixer": "^10.4.14",
     "eslint": "^8.43.0",
     "eslint-config-next": "^13.5.1",
+    "eslint-plugin-unused-imports": "^3.0.0",
     "postcss": "^8.4.23",
     "tailwindcss": "^3.3.2",
     "typescript": "5.1.3"

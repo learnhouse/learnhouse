@@ -2,9 +2,8 @@ import React from 'react'
 import learnhouseAI_icon from "public/learnhouse_ai_simple.png";
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
-import { AlertTriangle, BetweenHorizontalStart, FastForward, Feather, FileStack, HelpCircle, Languages, MessageCircle, MoreVertical, Pen, X } from 'lucide-react';
+import { AlertTriangle, BetweenHorizontalStart, FastForward, Feather, FileStack, HelpCircle, Languages, MoreVertical, X } from 'lucide-react';
 import { Editor } from '@tiptap/react';
-import { AIChatBotStateTypes, useAIChatBot, useAIChatBotDispatch } from '@components/Contexts/AI/AIChatBotContext';
 import { AIEditorStateTypes, useAIEditor, useAIEditorDispatch } from '@components/Contexts/AI/AIEditorContext';
 import { sendActivityAIChatMessage, startActivityAIChatSession } from '@services/ai/ai';
 import useGetAIFeatures from '@components/AI/Hooks/useGetAIFeatures';
@@ -57,7 +56,7 @@ function AIEditorToolkit(props: AIEditorToolkitProps) {
                                     <div className='pr-1'>
                                         <div className='flex w-full space-x-2 font-bold text-white/80 items-center'>
                                             <Image className='outline outline-1 outline-neutral-200/20 rounded-lg' width={24} src={learnhouseAI_icon} alt="" />
-                                            <div >AI Editor</div>
+                                            <div className='flex items-center'>AI Editor <span className='text-[10px] px-2 py-1 rounded-3xl ml-3 bg-white/10 uppercase'>PRE-ALPHA</span></div>
                                             <MoreVertical className='text-white/50' size={12} />
                                         </div>
                                     </div>

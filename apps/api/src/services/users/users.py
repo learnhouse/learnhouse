@@ -1,13 +1,15 @@
 from datetime import datetime
 from typing import Literal
 from uuid import uuid4
-from fastapi import HTTPException, Request, status
+from fastapi import HTTPException, Request, UploadFile, status
 from sqlmodel import Session, select
+from src.services.orgs.invites import get_invite_code
+from src.services.users.avatars import upload_avatar
 from src.db.roles import Role, RoleRead
 from src.security.rbac.rbac import (
     authorization_verify_based_on_roles_and_authorship,
     authorization_verify_if_user_is_anon,
-)  
+)
 from src.db.organizations import Organization, OrganizationRead
 from src.db.users import (
     AnonymousUser,
@@ -102,6 +104,27 @@ async def create_user(
 
     return user
 
+async def create_user_with_invite(
+    request: Request,
+    db_session: Session,
+    current_user: PublicUser | AnonymousUser,
+    user_object: UserCreate,
+    org_id: int,
+    invite_code: str,
+):
+    
+    # Check if invite code exists
+    isInviteCodeCorrect = await get_invite_code(request, org_id, invite_code, current_user, db_session)
+
+    if not isInviteCodeCorrect:
+        raise HTTPException(
+            status_code=400,
+            detail="Invite code is incorrect",
+        )
+    
+    user = await create_user(request, db_session, current_user, user_object, org_id)
+
+    return user
 
 async def create_user_without_org(
     request: Request,
@@ -184,6 +207,49 @@ async def update_user(
         setattr(user, key, value)
 
     user.update_date = str(datetime.now())
+
+    # Update user in database
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+
+    user = UserRead.from_orm(user)
+
+    return user
+
+
+async def update_user_avatar(
+    request: Request,
+    db_session: Session,
+    current_user: PublicUser | AnonymousUser,
+    avatar_file: UploadFile | None = None,
+):
+    # Get user
+    statement = select(User).where(User.id == current_user.id)
+    user = db_session.exec(statement).first()
+
+    if not user:
+        raise HTTPException(
+            status_code=400,
+            detail="User does not exist",
+        )
+
+    # RBAC check
+    await rbac_check(request, current_user, "update", user.user_uuid, db_session)
+
+    # Upload thumbnail
+    if avatar_file and avatar_file.filename:
+        name_in_disk = f"{user.user_uuid}_avatar_{uuid4()}.{avatar_file.filename.split('.')[-1]}"
+        await upload_avatar(avatar_file, name_in_disk, user.user_uuid)
+
+        # Update course
+        if name_in_disk:
+            user.avatar_image = name_in_disk
+        else:
+            raise HTTPException(
+                status_code=500,
+                detail="Issue with Avatar upload",
+            )
 
     # Update user in database
     db_session.add(user)
