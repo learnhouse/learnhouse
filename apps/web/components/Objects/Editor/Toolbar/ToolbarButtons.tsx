@@ -1,26 +1,43 @@
-import styled from "styled-components";
-import { FontBoldIcon, FontItalicIcon, StrikethroughIcon, ArrowLeftIcon, ArrowRightIcon, DividerVerticalIcon, ListBulletIcon } from "@radix-ui/react-icons";
-import { AlertCircle, AlertTriangle, BadgeHelp, Code, FileText, ImagePlus, Sigma, Video, Youtube } from "lucide-react";
-import ToolTip from "@components/StyledElements/Tooltip/Tooltip";
+import styled from 'styled-components'
+import {
+  FontBoldIcon,
+  FontItalicIcon,
+  StrikethroughIcon,
+  ArrowLeftIcon,
+  ArrowRightIcon,
+  DividerVerticalIcon,
+  ListBulletIcon,
+} from '@radix-ui/react-icons'
+import {
+  AlertCircle,
+  AlertTriangle,
+  BadgeHelp,
+  Code,
+  FileText,
+  ImagePlus,
+  Sigma,
+  Video,
+  Youtube,
+} from 'lucide-react'
+import ToolTip from '@components/StyledElements/Tooltip/Tooltip'
 
 export const ToolbarButtons = ({ editor, props }: any) => {
-
   if (!editor) {
-    return null;
+    return null
   }
 
   // YouTube extension
   const addYoutubeVideo = () => {
-    const url = prompt("Enter YouTube URL");
+    const url = prompt('Enter YouTube URL')
 
     if (url) {
       editor.commands.setYoutubeVideo({
         src: url,
         width: 640,
         height: 480,
-      });
+      })
     }
-  };
+  }
 
   return (
     <ToolButtonsWrapper>
@@ -30,16 +47,28 @@ export const ToolbarButtons = ({ editor, props }: any) => {
       <ToolBtn onClick={() => editor.chain().focus().redo().run()}>
         <ArrowRightIcon />
       </ToolBtn>
-      <ToolBtn onClick={() => editor.chain().focus().toggleBold().run()} className={editor.isActive("bold") ? "is-active" : ""}>
+      <ToolBtn
+        onClick={() => editor.chain().focus().toggleBold().run()}
+        className={editor.isActive('bold') ? 'is-active' : ''}
+      >
         <FontBoldIcon />
       </ToolBtn>
-      <ToolBtn onClick={() => editor.chain().focus().toggleItalic().run()} className={editor.isActive("italic") ? "is-active" : ""}>
+      <ToolBtn
+        onClick={() => editor.chain().focus().toggleItalic().run()}
+        className={editor.isActive('italic') ? 'is-active' : ''}
+      >
         <FontItalicIcon />
       </ToolBtn>
-      <ToolBtn onClick={() => editor.chain().focus().toggleStrike().run()} className={editor.isActive("strike") ? "is-active" : ""}>
+      <ToolBtn
+        onClick={() => editor.chain().focus().toggleStrike().run()}
+        className={editor.isActive('strike') ? 'is-active' : ''}
+      >
         <StrikethroughIcon />
       </ToolBtn>
-      <ToolBtn onClick={() => editor.chain().focus().toggleOrderedList().run()} className={editor.isActive('orderedList') ? 'is-active' : ''}>
+      <ToolBtn
+        onClick={() => editor.chain().focus().toggleOrderedList().run()}
+        className={editor.isActive('orderedList') ? 'is-active' : ''}
+      >
         <ListBulletIcon />
       </ToolBtn>
       <ToolSelect
@@ -59,25 +88,33 @@ export const ToolbarButtons = ({ editor, props }: any) => {
         <option value="6">Heading 6</option>
       </ToolSelect>
       {/* TODO: fix this : toggling only works one-way */}
-      <DividerVerticalIcon style={{ marginTop: "auto", marginBottom: "auto", color: "grey" }} />
-      <ToolTip content={"Info Callout"}>
-        <ToolBtn onClick={() => editor.chain().focus().toggleNode("calloutInfo").run()}>
+      <DividerVerticalIcon
+        style={{ marginTop: 'auto', marginBottom: 'auto', color: 'grey' }}
+      />
+      <ToolTip content={'Info Callout'}>
+        <ToolBtn
+          onClick={() => editor.chain().focus().toggleNode('calloutInfo').run()}
+        >
           <AlertCircle size={15} />
         </ToolBtn>
       </ToolTip>
-      <ToolTip content={"Warning Callout"}>
-        <ToolBtn onClick={() => editor.chain().focus().toggleNode("calloutWarning").run()}>
+      <ToolTip content={'Warning Callout'}>
+        <ToolBtn
+          onClick={() =>
+            editor.chain().focus().toggleNode('calloutWarning').run()
+          }
+        >
           <AlertTriangle size={15} />
         </ToolBtn>
       </ToolTip>
-      <ToolTip content={"Image"}>
+      <ToolTip content={'Image'}>
         <ToolBtn
           onClick={() =>
             editor
               .chain()
               .focus()
               .insertContent({
-                type: "blockImage",
+                type: 'blockImage',
               })
               .run()
           }
@@ -85,15 +122,14 @@ export const ToolbarButtons = ({ editor, props }: any) => {
           <ImagePlus size={15} />
         </ToolBtn>
       </ToolTip>
-      <ToolTip
-        content={"Video"}>
+      <ToolTip content={'Video'}>
         <ToolBtn
           onClick={() =>
             editor
               .chain()
               .focus()
               .insertContent({
-                type: "blockVideo",
+                type: 'blockVideo',
               })
               .run()
           }
@@ -101,19 +137,19 @@ export const ToolbarButtons = ({ editor, props }: any) => {
           <Video size={15} />
         </ToolBtn>
       </ToolTip>
-      <ToolTip content={"YouTube video"}>
+      <ToolTip content={'YouTube video'}>
         <ToolBtn onClick={() => addYoutubeVideo()}>
           <Youtube size={15} />
         </ToolBtn>
       </ToolTip>
-      <ToolTip content={"Math Equation (LaTeX)"}>
+      <ToolTip content={'Math Equation (LaTeX)'}>
         <ToolBtn
           onClick={() =>
             editor
               .chain()
               .focus()
               .insertContent({
-                type: "blockMathEquation",
+                type: 'blockMathEquation',
               })
               .run()
           }
@@ -121,14 +157,14 @@ export const ToolbarButtons = ({ editor, props }: any) => {
           <Sigma size={15} />
         </ToolBtn>
       </ToolTip>
-      <ToolTip content={"PDF Document"}>
+      <ToolTip content={'PDF Document'}>
         <ToolBtn
           onClick={() =>
             editor
               .chain()
               .focus()
               .insertContent({
-                type: "blockPDF",
+                type: 'blockPDF',
               })
               .run()
           }
@@ -136,14 +172,14 @@ export const ToolbarButtons = ({ editor, props }: any) => {
           <FileText size={15} />
         </ToolBtn>
       </ToolTip>
-      <ToolTip content={"Interactive Quiz"}>
+      <ToolTip content={'Interactive Quiz'}>
         <ToolBtn
           onClick={() =>
             editor
               .chain()
               .focus()
               .insertContent({
-                type: "blockQuiz",
+                type: 'blockQuiz',
               })
               .run()
           }
@@ -151,7 +187,7 @@ export const ToolbarButtons = ({ editor, props }: any) => {
           <BadgeHelp size={15} />
         </ToolBtn>
       </ToolTip>
-      <ToolTip content={"Code Block"}>
+      <ToolTip content={'Code Block'}>
         <ToolBtn
           onClick={() => editor.chain().focus().toggleCodeBlock().run()}
           className={editor.isActive('codeBlock') ? 'is-active' : ''}
@@ -160,15 +196,15 @@ export const ToolbarButtons = ({ editor, props }: any) => {
         </ToolBtn>
       </ToolTip>
     </ToolButtonsWrapper>
-  );
-};
+  )
+}
 
 const ToolButtonsWrapper = styled.div`
   display: flex;
   flex-direction: row;
   align-items: left;
   justify-content: left;
-`;
+`
 
 const ToolBtn = styled.div`
   display: flex;
@@ -197,7 +233,7 @@ const ToolBtn = styled.div`
     background: rgba(217, 217, 217, 0.48);
     cursor: pointer;
   }
-`;
+`
 
 const ToolSelect = styled.select`
   display: flex;
@@ -208,6 +244,6 @@ const ToolSelect = styled.select`
   height: 25px;
   padding: 5px;
   font-size: 11px;
-  font-family: "DM Sans";
+  font-family: 'DM Sans';
   margin-right: 5px;
-`;
+`

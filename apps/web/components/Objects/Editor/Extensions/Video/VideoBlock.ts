@@ -1,34 +1,34 @@
-import { mergeAttributes, Node } from "@tiptap/core";
-import { ReactNodeViewRenderer } from "@tiptap/react";
+import { mergeAttributes, Node } from '@tiptap/core'
+import { ReactNodeViewRenderer } from '@tiptap/react'
 
-import VideoBlockComponent from "./VideoBlockComponent";
+import VideoBlockComponent from './VideoBlockComponent'
 
 export default Node.create({
-  name: "blockVideo",
-  group: "block",
+  name: 'blockVideo',
+  group: 'block',
   atom: true,
-  
+
   addAttributes() {
     return {
       blockObject: {
         default: null,
       },
-    };
+    }
   },
 
   parseHTML() {
     return [
       {
-        tag: "block-video",
+        tag: 'block-video',
       },
-    ];
+    ]
   },
 
   renderHTML({ HTMLAttributes }) {
-    return ["block-video", mergeAttributes(HTMLAttributes), 0];
+    return ['block-video', mergeAttributes(HTMLAttributes), 0]
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(VideoBlockComponent);
+    return ReactNodeViewRenderer(VideoBlockComponent)
   },
-});
+})
