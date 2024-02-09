@@ -1,15 +1,19 @@
-"use client";
-import "../styles/globals.css";
-import StyledComponentsRegistry from "../components/Utils/libs/styled-registry";
+'use client'
+import '../styles/globals.css'
+import StyledComponentsRegistry from '../components/Utils/libs/styled-registry'
 
-import { motion } from "framer-motion";
+import { motion } from 'framer-motion'
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   const variants = {
     hidden: { opacity: 0, x: 0, y: 0 },
     enter: { opacity: 1, x: 0, y: 0 },
     exit: { opacity: 0, x: 0, y: 0 },
-  };
+  }
   return (
     <html className="" lang="en">
       <head />
@@ -20,7 +24,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             initial="hidden" // Set the initial state to variants.hidden
             animate="enter" // Animated state to variants.enter
             exit="exit" // Exit state (used later) to variants.exit
-            transition={{ type: "linear" }} // Set the transition to linear
+            transition={{ type: 'linear' }} // Set the transition to linear
             className=""
           >
             {children}
@@ -28,5 +32,5 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </StyledComponentsRegistry>
       </body>
     </html>
-  );
+  )
 }
