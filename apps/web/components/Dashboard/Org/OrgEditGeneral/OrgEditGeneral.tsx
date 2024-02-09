@@ -1,77 +1,75 @@
-"use client";
+'use client'
 import React, { useEffect, useState } from 'react'
-import { Field, Form, Formik } from 'formik';
-import { updateOrganization, uploadOrganizationLogo } from '@services/settings/org';
-import { UploadCloud } from 'lucide-react';
-import { revalidateTags } from '@services/utils/ts/requests';
-import { useRouter } from 'next/navigation';
-import { useOrg } from '@components/Contexts/OrgContext';
+import { Field, Form, Formik } from 'formik'
+import {
+  updateOrganization,
+  uploadOrganizationLogo,
+} from '@services/settings/org'
+import { UploadCloud } from 'lucide-react'
+import { revalidateTags } from '@services/utils/ts/requests'
+import { useRouter } from 'next/navigation'
+import { useOrg } from '@components/Contexts/OrgContext'
 
 interface OrganizationValues {
-  name: string;
-  description: string;
-  slug: string;
-  logo: string;
-  email: string;
+  name: string
+  description: string
+  slug: string
+  logo: string
+  email: string
 }
 
 function OrgEditGeneral(props: any) {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const router = useRouter();
-  const org = useOrg() as any;
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const router = useRouter()
+  const org = useOrg() as any
   // ...
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
-      const file = event.target.files[0];
-      setSelectedFile(file);
+      const file = event.target.files[0]
+      setSelectedFile(file)
     }
-  };
+  }
 
   const uploadLogo = async () => {
     if (selectedFile) {
-      let org_id = org.id;
-      await uploadOrganizationLogo(org_id, selectedFile);
-      setSelectedFile(null); // Reset the selected file
-      await revalidateTags(['organizations'], org.slug);
-      router.refresh();
-
+      let org_id = org.id
+      await uploadOrganizationLogo(org_id, selectedFile)
+      setSelectedFile(null) // Reset the selected file
+      await revalidateTags(['organizations'], org.slug)
+      router.refresh()
     }
-  };
-
+  }
 
   let orgValues: OrganizationValues = {
     name: org?.name,
     description: org?.description,
     slug: org?.slug,
     logo: org?.logo,
-    email: org?.email
+    email: org?.email,
   }
 
   const updateOrg = async (values: OrganizationValues) => {
-    let org_id = org.id;
-    await updateOrganization(org_id, values);
+    let org_id = org.id
+    await updateOrganization(org_id, values)
 
     // Mutate the org
-    await revalidateTags(['organizations'], org.slug);
-    router.refresh();
+    await revalidateTags(['organizations'], org.slug)
+    router.refresh()
   }
 
-  useEffect(() => {
-
-  }
-    , [org])
+  useEffect(() => {}, [org])
 
   return (
-    <div className='ml-10 mr-10 mx-auto bg-white rounded-xl shadow-sm px-6 py-5'>
+    <div className="ml-10 mr-10 mx-auto bg-white rounded-xl shadow-sm px-6 py-5">
       <Formik
-      enableReinitialize
+        enableReinitialize
         initialValues={orgValues}
         onSubmit={(values, { setSubmitting }) => {
           setTimeout(() => {
-            setSubmitting(false);
+            setSubmitting(false)
             updateOrg(values)
-          }, 400);
+          }, 400)
         }}
       >
         {({ isSubmitting }) => (
@@ -115,7 +113,6 @@ function OrgEditGeneral(props: any) {
               </button>
             </div>
 
-
             <label className="block mb-2 font-bold" htmlFor="slug">
               Slug
             </label>
@@ -143,7 +140,6 @@ function OrgEditGeneral(props: any) {
               Submit
             </button>
           </Form>
-
         )}
       </Formik>
     </div>

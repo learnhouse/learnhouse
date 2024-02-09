@@ -1,1 +1,1 @@
-export const EDITOR = "main";
+export const EDITOR = 'main'

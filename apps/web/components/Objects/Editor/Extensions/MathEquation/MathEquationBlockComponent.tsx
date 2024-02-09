@@ -1,31 +1,31 @@
-import { NodeViewWrapper } from "@tiptap/react";
-import React from "react";
-import styled from "styled-components";
-import "katex/dist/katex.min.css";
-import { BlockMath } from "react-katex";
-import { Save } from "lucide-react";
-import Link from "next/link";
-import { useEditorProvider } from "@components/Contexts/Editor/EditorContext";
+import { NodeViewWrapper } from '@tiptap/react'
+import React from 'react'
+import styled from 'styled-components'
+import 'katex/dist/katex.min.css'
+import { BlockMath } from 'react-katex'
+import { Save } from 'lucide-react'
+import Link from 'next/link'
+import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 
 function MathEquationBlockComponent(props: any) {
-  const [equation, setEquation] = React.useState(props.node.attrs.math_equation);
-  const [isEditing, setIsEditing] = React.useState(true);
-  const editorState = useEditorProvider() as any;
-  const isEditable = editorState.isEditable;
+  const [equation, setEquation] = React.useState(props.node.attrs.math_equation)
+  const [isEditing, setIsEditing] = React.useState(true)
+  const editorState = useEditorProvider() as any
+  const isEditable = editorState.isEditable
 
   const handleEquationChange = (event: React.ChangeEvent<any>) => {
-    setEquation(event.target.value);
+    setEquation(event.target.value)
     props.updateAttributes({
       math_equation: equation,
-    });
-  };
+    })
+  }
 
   const saveEquation = () => {
     props.updateAttributes({
       math_equation: equation,
-    });
+    })
     //setIsEditing(false);
-  };
+  }
 
   return (
     <NodeViewWrapper className="block-math-equation">
@@ -34,24 +34,38 @@ function MathEquationBlockComponent(props: any) {
         {isEditing && isEditable && (
           <>
             <EditBar>
-              <input value={equation} onChange={handleEquationChange} placeholder="Insert a Math Equation (LaTeX) " type="text" />
+              <input
+                value={equation}
+                onChange={handleEquationChange}
+                placeholder="Insert a Math Equation (LaTeX) "
+                type="text"
+              />
               <button className="opacity-1" onClick={() => saveEquation()}>
                 <Save size={15}></Save>
               </button>
             </EditBar>
-            <span className="pt-2 text-zinc-500 text-sm">Please refer to this <Link className="text-zinc-900 after:content-['↗']" href="https://katex.org/docs/supported.html" target="_blank"> guide</Link> for supported TeX functions </span>
+            <span className="pt-2 text-zinc-500 text-sm">
+              Please refer to this{' '}
+              <Link
+                className="text-zinc-900 after:content-['↗']"
+                href="https://katex.org/docs/supported.html"
+                target="_blank"
+              >
+                {' '}
+                guide
+              </Link>{' '}
+              for supported TeX functions{' '}
+            </span>
           </>
-
         )}
       </MathEqWrapper>
     </NodeViewWrapper>
-  );
+  )
 }
 
-export default MathEquationBlockComponent;
+export default MathEquationBlockComponent
 
-const MathEqWrapper = styled.div`
-`;
+const MathEqWrapper = styled.div``
 
 const EditBar = styled.div`
   display: flex;
@@ -82,7 +96,7 @@ const EditBar = styled.div`
     font-size: 14px;
     color: #494949;
     width: 100%;
-    font-family: "DM Sans", sans-serif;
+    font-family: 'DM Sans', sans-serif;
     padding-left: 10px;
     &:focus {
       outline: none;
@@ -92,4 +106,4 @@ const EditBar = styled.div`
       color: #49494936;
     }
   }
-`;
+`
