@@ -4,11 +4,10 @@ import { getCourseMetadataWithAuthHeader } from "@services/courses/courses";
 import { cookies } from "next/headers";
 import { Metadata } from "next";
 import { getActivityWithAuthHeader } from "@services/courses/activities";
-import { getAccessTokenFromRefreshTokenCookie, getNewAccessTokenUsingRefreshTokenServer } from "@services/auth/auth";
-import { getOrganizationContextInfo, getOrganizationContextInfoWithId } from "@services/organizations/orgs";
+import { getAccessTokenFromRefreshTokenCookie } from "@services/auth/auth";
+import { getOrganizationContextInfoWithId } from "@services/organizations/orgs";
 import SessionProvider from "@components/Contexts/SessionContext";
 import EditorOptionsProvider from "@components/Contexts/Editor/EditorContext";
-import AIChatBotProvider from "@components/Contexts/AI/AIChatBotContext";
 import AIEditorProvider from "@components/Contexts/AI/AIEditorContext";
 
 type MetadataProps = {

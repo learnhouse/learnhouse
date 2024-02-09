@@ -1,6 +1,4 @@
-import { getBackendUrl } from "@services/config/config";
 import React from "react";
-import styled from "styled-components";
 import YouTube from 'react-youtube';
 import { getActivityMediaDirectory } from "@services/media/media";
 import { useOrg } from "@components/Contexts/OrgContext";

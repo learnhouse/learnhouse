@@ -12,7 +12,7 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   const orgslug = params.orgslug;
   // Get Org context information 
-  const org = await getOrganizationContextInfo(orgslug, { revalidate: 1800, tags: ['organizations'] });
+  const org = await getOrganizationContextInfo(orgslug, { revalidate: 0, tags: ['organizations'] });
 
   return {
     title: 'Login' + ` — ${org.name}`,
@@ -21,7 +21,7 @@ export async function generateMetadata(
 
 const Login = async (params: any) => {
   const orgslug = params.params.orgslug;
-  const org = await getOrganizationContextInfo(orgslug, { revalidate: 1800, tags: ['organizations'] });
+  const org = await getOrganizationContextInfo(orgslug, { revalidate: 0, tags: ['organizations'] });
 
   return (
     <div>

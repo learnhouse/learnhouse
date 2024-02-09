@@ -112,8 +112,17 @@ async def get_chapter(
             status_code=status.HTTP_409_CONFLICT, detail="Chapter does not exist"
         )
 
+    # get COurse
+    statement = select(Course).where(Course.id == chapter.course_id)
+    course = db_session.exec(statement).first()
+
+    if not course:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="Course does not exist"
+        )
+
     # RBAC check
-    await rbac_check(request, chapter.chapter_uuid, current_user, "read", db_session)
+    await rbac_check(request, course.course_uuid, current_user, "read", db_session)
 
     # Get activities for this chapter
     statement = (
@@ -208,7 +217,7 @@ async def get_course_chapters(
     page: int = 1,
     limit: int = 10,
 ) -> List[ChapterRead]:
-    
+
     statement = select(Course).where(Course.id == course_id)
     course = db_session.exec(statement).first()
 
@@ -225,7 +234,7 @@ async def get_course_chapters(
     chapters = [ChapterRead(**chapter.dict(), activities=[]) for chapter in chapters]
 
     # RBAC check
-    await rbac_check(request, course.course_uuid, current_user, "read", db_session)
+    await rbac_check(request, course.course_uuid, current_user, "read", db_session)  # type: ignore
 
     # Get activities for each chapter
     for chapter in chapters:
@@ -473,12 +482,15 @@ async def reorder_chapters_and_activities(
         db_session.delete(chapter_activity)
         db_session.commit()
 
-    
     # If links do not exist, create them
     chapter_activity_map = {}
     for chapter_order in chapters_order.chapter_order_by_ids:
         for activity_order in chapter_order.activities_order_by_ids:
-            if activity_order.activity_id in chapter_activity_map and chapter_activity_map[activity_order.activity_id] != chapter_order.chapter_id:
+            if (
+                activity_order.activity_id in chapter_activity_map
+                and chapter_activity_map[activity_order.activity_id]
+                != chapter_order.chapter_id
+            ):
                 continue
 
             statement = (
@@ -547,7 +559,7 @@ async def rbac_check(
             res = await authorization_verify_if_element_is_public(
                 request, course_uuid, action, db_session
             )
-            print('res',res)
+            print("res", res)
             return res
         else:
             res = await authorization_verify_based_on_roles_and_authorship(

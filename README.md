@@ -15,14 +15,15 @@ LearnHouse is an open source platform that makes it easy for anyone to provide w
 ![image](https://docs.learnhouse.app/img/pages/features.png)
 
 - 📄✨Dynamic notion-like pages
-- 👨‍🎓 Easy to use
+- 🏎️ Easy to use
 - 👥 Multi-Organization
 - 📹 Supports Uploadable Videos and external videos like YouTube
 - 📄 Supports documents like PDF
 - 🍱 Course Collections
+- 👨‍🎓 Users Management
 - 🙋 Quizzes
 - 👟 Course progress
-- ⚡ (Incoming) Live Collaboration
+- ✨ LearnHouse AI : The Teachers and Students copilot
 - More to come
 
 ## Community
@@ -48,13 +49,14 @@ Thank you for you interest 💖, here is how you can help :
 
 LearnHouse uses a number of open source projects to work properly:
 
-- **Next.js** (13 with the App Directory) - The React Framework
+- **Next.js** (14 with the App Directory) - The React Framework
 - **TailwindCSS** - Styling
 - **Radix UI** - Accessible UI Components
 - **Tiptap** - An editor framework and headless wrapper around ProseMirror
 - **FastAPI** - A high performance, async API framework for Python
 - **YJS** - Shared data types for building collaborative software
-- **MongoDB** - NoSQL Database
+- **PostgreSQL** - SQL Database
+- **LangChain** - LangChain is a framework for developing applications powered by language models
 - **React** - duh
 
 ## A word

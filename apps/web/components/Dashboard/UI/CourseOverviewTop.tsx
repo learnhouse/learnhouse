@@ -7,6 +7,8 @@ import { getUriWithOrg } from "@services/config/config";
 import { useOrg } from "@components/Contexts/OrgContext";
 import { getCourseThumbnailMediaDirectory } from "@services/media/media";
 import Link from "next/link";
+import Image from "next/image";
+import EmptyThumbnailImage from '../../../public/empty_thumbnail.png';
 
 export function CourseOverviewTop({ params }: { params: CourseOverviewParams }) {
     const course = useCourse() as any;
@@ -21,7 +23,10 @@ export function CourseOverviewTop({ params }: { params: CourseOverviewParams }) 
             <div className='flex'>
                 <div className='flex py-5 grow items-center'>
                     <Link href={getUriWithOrg(org?.slug, "") + `/course/${params.courseuuid}`}>
+                        {course?.courseStructure?.thumbnail_image ?
                         <img className="w-[100px] h-[57px] rounded-md drop-shadow-md" src={`${getCourseThumbnailMediaDirectory(org?.org_uuid, "course_" + params.courseuuid, course.courseStructure.thumbnail_image)}`} alt="" />
+                        :
+                        <Image width={100} className="h-[57px] rounded-md drop-shadow-md" src={EmptyThumbnailImage} alt="" />}
                     </Link>
                     <div className="flex flex-col course_metadata justify-center pl-5">
                         <div className='text-gray-400 font-semibold text-sm'>Course</div>

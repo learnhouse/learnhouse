@@ -1,5 +1,4 @@
 import { useOrg } from "@components/Contexts/OrgContext";
-import { getBackendUrl } from "@services/config/config";
 import { getActivityMediaDirectory } from "@services/media/media";
 import React from "react";
 

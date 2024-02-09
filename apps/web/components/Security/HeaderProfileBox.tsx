@@ -1,11 +1,10 @@
 'use client';
-import React, { use, useEffect } from "react";
+import React from "react";
 import styled from "styled-components";
 import Link from "next/link";
-import Avvvatars from "avvvatars-react";
-import { GearIcon } from "@radix-ui/react-icons";
 import { Settings } from "lucide-react";
 import { useSession } from "@components/Contexts/SessionContext";
+import UserAvatar from "@components/Objects/UserAvatar";
 
 export const HeaderProfileBox = () => {
   const session = useSession() as any;
@@ -33,9 +32,7 @@ export const HeaderProfileBox = () => {
           <div className="flex items-center space-x-2">
             <div className="text-xs">{session.user.username} </div>
             <div className="py-4">
-              <div className="shadow-sm rounded-xl">
-                <Avvvatars radius={3} size={30} value={session.user.user_uuid} style="shape" />
-              </div>
+              <UserAvatar border="border-4" rounded='rounded-lg' width={30} />
             </div>
             <Link className="text-gray-600" href={"/dash"}><Settings size={14} /></Link>
           </div>
@@ -51,7 +48,6 @@ const AccountArea = styled.div`
   
   img {
     width: 29px;
-    border-radius: 19px;
   }
 `;
 
