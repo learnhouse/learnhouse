@@ -26,7 +26,10 @@ from fastapi import HTTPException, status, Request
 
 
 async def get_collection(
-    request: Request, collection_uuid: str, current_user: PublicUser, db_session: Session
+    request: Request,
+    collection_uuid: str,
+    current_user: PublicUser,
+    db_session: Session,
 ) -> CollectionRead:
     statement = select(Collection).where(Collection.collection_uuid == collection_uuid)
     collection = db_session.exec(statement).first()
@@ -42,11 +45,23 @@ async def get_collection(
     )
 
     # get courses in collection
-    statement = (
+    statement_all = (
         select(Course)
         .join(CollectionCourse, Course.id == CollectionCourse.course_id)
         .distinct(Course.id)
     )
+
+    statement_public = (
+        select(Course)
+        .join(CollectionCourse, Course.id == CollectionCourse.course_id)
+        .where(CollectionCourse.org_id == collection.org_id, Course.public == True)
+    )
+
+    if current_user.id == 0:
+        statement = statement_public
+    else:
+        statement = statement_all
+
     courses = db_session.exec(statement).all()
 
     collection = CollectionRead(**collection.dict(), courses=courses)
@@ -180,7 +195,10 @@ async def update_collection(
 
 
 async def delete_collection(
-    request: Request, collection_uuid: str, current_user: PublicUser, db_session: Session
+    request: Request,
+    collection_uuid: str,
+    current_user: PublicUser,
+    db_session: Session,
 ):
     statement = select(Collection).where(Collection.collection_uuid == collection_uuid)
     collection = db_session.exec(statement).first()
@@ -216,23 +234,40 @@ async def get_collections(
     page: int = 1,
     limit: int = 10,
 ) -> List[CollectionRead]:
-    # RBAC check
-    await rbac_check(request, "collection_x", current_user, "read", db_session)
 
-    statement = (
+    statement_public = select(Collection).where(
+        Collection.org_id == org_id, Collection.public == True
+    )
+    statement_all = (
         select(Collection).where(Collection.org_id == org_id).distinct(Collection.id)
     )
+
+    if current_user.id == 0:
+        statement = statement_public
+    else:
+        statement = statement_all
+
     collections = db_session.exec(statement).all()
 
-
-
     collections_with_courses = []
+
     for collection in collections:
-        statement = (
+        statement_all = (
             select(Course)
             .join(CollectionCourse, Course.id == CollectionCourse.course_id)
             .distinct(Course.id)
         )
+        statement_public = (
+            select(Course)
+            .join(CollectionCourse, Course.id == CollectionCourse.course_id)
+            .where(CollectionCourse.org_id == org_id, Course.public == True)
+        )
+        if current_user.id == 0:
+            statement = statement_public
+        else:
+            # RBAC check
+            statement = statement_all
+
         courses = db_session.exec(statement).all()
 
         collection = CollectionRead(**collection.dict(), courses=courses)
@@ -256,8 +291,11 @@ async def rbac_check(
             res = await authorization_verify_if_element_is_public(
                 request, collection_uuid, action, db_session
             )
-            print('res',res)
-            return res
+            if res == False:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="User rights : You are not allowed to read this collection",
+                )
         else:
             res = await authorization_verify_based_on_roles_and_authorship(
                 request, current_user.id, action, collection_uuid, db_session
@@ -276,4 +314,3 @@ async def rbac_check(
 
 
 ## 🔒 RBAC Utils ##
-

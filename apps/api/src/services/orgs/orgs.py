@@ -15,7 +15,7 @@ from src.db.organization_config import (
     OrganizationConfigBase,
 )
 from src.security.rbac.rbac import (
-    authorization_verify_based_on_roles_and_authorship,
+    authorization_verify_based_on_org_admin_status,
     authorization_verify_if_user_is_anon,
 )
 from src.db.users import AnonymousUser, PublicUser
@@ -169,7 +169,7 @@ async def create_org(
                 limits_enabled=False,
                 max_asks=0,
             ),
-            embeddings="all-MiniLM-L6-v2",
+            embeddings="text-embedding-ada-002",
             ai_model="gpt-3.5-turbo",
             features=AIEnabledFeatures(
                 editor=False,
@@ -438,12 +438,106 @@ async def get_orgs_by_user(
     return orgs
 
 
+# Config related
+async def update_org_signup_mechanism(
+    request: Request,
+    signup_mechanism: Literal["open", "inviteOnly"],
+    org_id: int,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+):
+    statement = select(Organization).where(Organization.id == org_id)
+    result = db_session.exec(statement)
+
+    org = result.first()
+
+    if not org:
+        raise HTTPException(
+            status_code=404,
+            detail="Organization not found",
+        )
+
+    # RBAC check
+    await rbac_check(request, org.org_uuid, current_user, "update", db_session)
+
+    # Get org config
+    statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
+    result = db_session.exec(statement)
+
+    org_config = result.first()
+
+    if org_config is None:
+        logging.error(f"Organization {org_id} has no config")
+        raise HTTPException(
+            status_code=404,
+            detail="Organization config not found",
+        )
+
+    updated_config = org_config.config
+
+    # Update config
+    updated_config = OrganizationConfigBase(**updated_config)
+    updated_config.GeneralConfig.users.signup_mechanism = signup_mechanism
+
+    # Update the database
+    org_config.config = json.loads(updated_config.json())
+    org_config.update_date = str(datetime.now())
+
+    db_session.add(org_config)
+    db_session.commit()
+    db_session.refresh(org_config)
+
+    return {"detail": "Signup mechanism updated"}
+
+
+async def get_org_join_mechanism(
+    request: Request,
+    org_id: int,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+):
+    statement = select(Organization).where(Organization.id == org_id)
+    result = db_session.exec(statement)
+
+    org = result.first()
+
+    if not org:
+        raise HTTPException(
+            status_code=404,
+            detail="Organization not found",
+        )
+
+    # RBAC check
+    await rbac_check(request, org.org_uuid, current_user, "read", db_session)
+
+    # Get org config
+    statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
+    result = db_session.exec(statement)
+
+    org_config = result.first()
+
+    if org_config is None:
+        logging.error(f"Organization {org_id} has no config")
+        raise HTTPException(
+            status_code=404,
+            detail="Organization config not found",
+        )
+
+    config = org_config.config
+
+    # Get the signup mechanism
+    config = OrganizationConfigBase(**config)
+    signup_mechanism = config.GeneralConfig.users.signup_mechanism
+
+    return signup_mechanism
+
+
 ## 🔒 RBAC Utils ##
 
 
 async def rbac_check(
     request: Request,
-    org_id: str,
+    org_uuid: str,
     current_user: PublicUser | AnonymousUser,
     action: Literal["create", "read", "update", "delete"],
     db_session: Session,
@@ -453,11 +547,25 @@ async def rbac_check(
         return True
 
     else:
-        await authorization_verify_if_user_is_anon(current_user.id)
+        isUserAnon = await authorization_verify_if_user_is_anon(current_user.id)
 
-        await authorization_verify_based_on_roles_and_authorship(
-            request, current_user.id, action, org_id, db_session
+        isAllowedOnOrgAdminStatus = (
+            await authorization_verify_based_on_org_admin_status(
+                request, current_user.id, action, org_uuid, db_session
+            )
         )
+
+        if isUserAnon:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="You should be logged in to be able to achieve this action",
+            )
+
+        if not isAllowedOnOrgAdminStatus:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="User rights (admin status) : You don't have the right to perform this action",
+            )
 
 
 ## 🔒 RBAC Utils ##

@@ -1,6 +1,6 @@
 import GeneralWrapperStyled from "@components/StyledElements/Wrappers/GeneralWrapper";
-import { getAccessTokenFromRefreshTokenCookie, getNewAccessTokenUsingRefreshTokenServer } from "@services/auth/auth";
-import { getBackendUrl, getUriWithOrg } from "@services/config/config";
+import { getAccessTokenFromRefreshTokenCookie } from "@services/auth/auth";
+import { getUriWithOrg } from "@services/config/config";
 import { getCollectionByIdWithAuthHeader } from "@services/courses/collections";
 import { getCourseThumbnailMediaDirectory } from "@services/media/media";
 import { getOrganizationContextInfo } from "@services/organizations/orgs";

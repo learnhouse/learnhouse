@@ -1,6 +1,6 @@
 from typing import Optional
 from pydantic import BaseModel
-from sqlalchemy import JSON, Column
+from sqlalchemy import JSON, Column, ForeignKey, Integer
 from sqlmodel import Field, SQLModel
 from enum import Enum
 
@@ -23,10 +23,18 @@ class TrailRun(SQLModel, table=True):
     data: dict = Field(default={}, sa_column=Column(JSON))
     status: StatusEnum = StatusEnum.STATUS_IN_PROGRESS
     # foreign keys
-    trail_id: int = Field(default=None, foreign_key="trail.id")
-    course_id: int = Field(default=None, foreign_key="course.id")
-    org_id: int = Field(default=None, foreign_key="organization.id")
-    user_id: int = Field(default=None, foreign_key="user.id")
+    trail_id: int = Field(
+        sa_column=Column(Integer, ForeignKey("trail.id", ondelete="CASCADE"))
+    )
+    course_id: int = Field(
+        sa_column=Column(Integer, ForeignKey("course.id", ondelete="CASCADE"))
+    )
+    org_id: int = Field(
+        sa_column=Column(Integer, ForeignKey("organization.id", ondelete="CASCADE"))
+    )
+    user_id: int = Field(
+        sa_column=Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))
+    )
     # timestamps
     creation_date: str
     update_date: str

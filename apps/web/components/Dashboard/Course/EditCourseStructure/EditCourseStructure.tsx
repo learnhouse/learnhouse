@@ -1,12 +1,12 @@
 'use client';
 import { getAPIUrl } from '@services/config/config';
-import { revalidateTags, swrFetcher } from '@services/utils/ts/requests';
-import React, { useContext, useEffect, useState } from 'react'
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import useSWR, { mutate } from 'swr';
+import { revalidateTags } from '@services/utils/ts/requests';
+import React, { useEffect, useState } from 'react'
+import { DragDropContext, Droppable } from 'react-beautiful-dnd';
+import { mutate } from 'swr';
 import ChapterElement from './DraggableElements/ChapterElement';
 import PageLoading from '@components/Objects/Loaders/PageLoading';
-import { createChapter, updateCourseOrderStructure } from '@services/courses/chapters';
+import { createChapter } from '@services/courses/chapters';
 import { useRouter } from 'next/navigation';
 import { useCourse, useCourseDispatch } from '@components/Contexts/CourseContext';
 import { Hexagon } from 'lucide-react';
@@ -92,6 +92,7 @@ const EditCourseStructure = (props: EditCourseStructureProps) => {
 
     return (
         <div className='flex flex-col'>
+            <div className="h-6"></div>
             {winReady ?
                 <DragDropContext onDragEnd={updateStructure}>
                     <Droppable type='chapter' droppableId='chapters'>
@@ -129,7 +130,7 @@ const EditCourseStructure = (props: EditCourseStructureProps) => {
                         dialogTitle="Create chapter"
                         dialogDescription="Add a new chapter to the course"
                         dialogTrigger={
-                            <div className="mt-4 w-44 max-w-screen-2xl mx-auto bg-cyan-800 text-white rounded-xl shadow-sm px-6 items-center flex flex-row h-10">
+                            <div className="w-44 my-16 py-5 max-w-screen-2xl mx-auto bg-cyan-800 text-white rounded-xl shadow-sm px-6 items-center flex flex-row h-10">
                                 <div className='mx-auto flex space-x-2 items-center hover:cursor-pointer'>
                                     <Hexagon strokeWidth={3} size={16} className="text-white text-sm " />
                                     <div className='font-bold text-sm'>Add Chapter</div></div>

@@ -8,6 +8,7 @@ async def upload_pdf(pdf_file, activity_uuid, org_uuid, course_uuid):
     try:
         await upload_content(
             f"courses/{course_uuid}/activities/{activity_uuid}/documentpdf",
+            "orgs",
             org_uuid,
             contents,
             f"documentpdf.{pdf_format}",

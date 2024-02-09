@@ -1,10 +1,8 @@
 import ConfirmationModal from '@components/StyledElements/ConfirmationModal/ConfirmationModal';
-import { Activity, Hexagon, MoreHorizontal, MoreVertical, Pencil, Save, Sparkles, X } from 'lucide-react';
+import { Hexagon, MoreHorizontal, MoreVertical, Pencil, Save, X } from 'lucide-react';
 import React from 'react'
-import ActivitiyElement from './ActivityElement';
 import { Draggable, Droppable } from 'react-beautiful-dnd';
 import ActivityElement from './ActivityElement';
-import NewActivity from '../Buttons/NewActivityButton';
 import NewActivityButton from '../Buttons/NewActivityButton';
 import { deleteChapter, updateChapter } from '@services/courses/chapters';
 import { revalidateTags } from '@services/utils/ts/requests';

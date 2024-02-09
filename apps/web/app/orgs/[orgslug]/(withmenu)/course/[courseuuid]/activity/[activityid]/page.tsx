@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import ActivityClient from "./activity";
 import { getOrganizationContextInfo } from "@services/organizations/orgs";
 import { Metadata } from "next";
-import { getAccessTokenFromRefreshTokenCookie, getNewAccessTokenUsingRefreshTokenServer } from "@services/auth/auth";
+import { getAccessTokenFromRefreshTokenCookie } from "@services/auth/auth";
 
 
 type MetadataProps = {

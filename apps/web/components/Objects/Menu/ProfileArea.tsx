@@ -2,13 +2,11 @@
 import React from "react";
 import styled from "styled-components";
 import Link from "next/link";
-import Avvvatars from "avvvatars-react";
-import { GearIcon } from "@radix-ui/react-icons";
 import { getNewAccessTokenUsingRefreshToken, getUserInfo } from "@services/auth/auth";
 import { usePathname } from "next/navigation";
 import { useRouter } from "next/router";
-import path from "path";
 import { Settings } from "lucide-react";
+import UserAvatar from "@components/Objects/UserAvatar";
 
 export interface Auth {
   access_token: string;
@@ -91,7 +89,7 @@ function ProfileArea() {
         <AccountArea>
           <div>{auth.userInfo.user_object.username}</div>
           <div>
-            <Avvvatars value={auth.userInfo.user_object.user_id} style="shape" />
+          <UserAvatar width={40} />
           </div>
           <Link href={"/dash"}><Settings /></Link>
         </AccountArea>

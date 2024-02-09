@@ -1,5 +1,5 @@
 "use client";
-import React, { use, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Field, Form, Formik } from 'formik';
 import { updateOrganization, uploadOrganizationLogo } from '@services/settings/org';
 import { UploadCloud } from 'lucide-react';

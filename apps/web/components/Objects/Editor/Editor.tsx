@@ -1,6 +1,6 @@
 'use client';
 import React from "react";
-import { useEditor, EditorContent, BubbleMenu } from "@tiptap/react";
+import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import learnhouseIcon from "public/learnhouse_icon.png";
 import { ToolbarButtons } from "./Toolbar/ToolbarButtons";
@@ -8,7 +8,6 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import styled from "styled-components";
 import { DividerVerticalIcon, SlashIcon } from "@radix-ui/react-icons";
-import Avvvatars from "avvvatars-react";
 import learnhouseAI_icon from "public/learnhouse_ai_simple.png";
 import { AIEditorStateTypes, useAIEditor, useAIEditorDispatch } from "@components/Contexts/AI/AIEditorContext";
 
@@ -42,6 +41,7 @@ import { CourseProvider } from "@components/Contexts/CourseContext";
 import { useSession } from "@components/Contexts/SessionContext";
 import AIEditorToolkit from "./AI/AIEditorToolkit";
 import useGetAIFeatures from "@components/AI/Hooks/useGetAIFeatures";
+import UserAvatar from "../UserAvatar";
 
 
 interface Editor {
@@ -163,7 +163,7 @@ function Editor(props: Editor) {
                   <Link href="/">
                     <EditorInfoLearnHouseLogo width={25} height={25} src={learnhouseIcon} alt="" />
                   </Link>
-                  <Link target="_blank" href={`/course/${course_uuid}/edit`}>
+                  <Link target="_blank" href={`/course/${course_uuid}`}>
                     <EditorInfoThumbnail src={`${getCourseThumbnailMediaDirectory(props.org?.org_uuid, props.course.course_uuid, props.course.thumbnail_image)}`} alt=""></EditorInfoThumbnail>
                   </Link>
                   <EditorInfoDocName>
@@ -207,7 +207,7 @@ function Editor(props: Editor) {
 
                 <EditorUserProfileWrapper>
                   {!session.isAuthenticated && <span>Loading</span>}
-                  {session.isAuthenticated && <Avvvatars value={session.user.user_uuid} style="shape" />}
+                  {session.isAuthenticated && <UserAvatar width={40} border="border-4" rounded="rounded-full"/>}
                 </EditorUserProfileWrapper>
 
               </EditorUsersSection>

@@ -5,7 +5,7 @@ import { getOrgCoursesWithAuthHeader } from "@services/courses/courses";
 import { Metadata } from "next";
 import { getOrganizationContextInfo } from "@services/organizations/orgs";
 import { cookies } from "next/headers";
-import { getAccessTokenFromRefreshTokenCookie, getNewAccessTokenUsingRefreshTokenServer } from "@services/auth/auth";
+import { getAccessTokenFromRefreshTokenCookie } from "@services/auth/auth";
 
 type MetadataProps = {
   params: { orgslug: string };
