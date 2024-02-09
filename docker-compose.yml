@@ -8,6 +8,12 @@ services:
       - .:/usr/learnhouse
     environment:
       - LEARNHOUSE_COOKIE_DOMAIN=.localhost
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
   db:
     image: postgres:16-alpine
     restart: always
@@ -17,11 +23,21 @@ services:
       - POSTGRES_USER=learnhouse
       - POSTGRES_PASSWORD=learnhouse
       - POSTGRES_DB=learnhouse
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 5s
+      timeout: 4s
+      retries: 5
   redis:
     image: redis:7.2.3
     restart: always
     ports:
       - "6379:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 4s
+      retries: 5
   mongo:
     image: mongo:5.0
     restart: always
@@ -29,4 +45,4 @@ services:
       - "27017:27017"
     environment:
       - MONGO_INITDB_ROOT_USERNAME=learnhouse
-      - MONGO_INITDB_ROOT_PASSWORD=learnhouse
+      - MONGO_INITDB_ROOT_PASSWORD=learnhous
