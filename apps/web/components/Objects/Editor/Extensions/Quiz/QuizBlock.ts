@@ -1,11 +1,11 @@
-import { mergeAttributes, Node } from "@tiptap/core";
-import { ReactNodeViewRenderer } from "@tiptap/react";
+import { mergeAttributes, Node } from '@tiptap/core'
+import { ReactNodeViewRenderer } from '@tiptap/react'
 
-import QuizBlockComponent from "./QuizBlockComponent";
+import QuizBlockComponent from './QuizBlockComponent'
 
 export default Node.create({
-  name: "blockQuiz",
-  group: "block",
+  name: 'blockQuiz',
+  group: 'block',
   atom: true,
 
   addAttributes() {
@@ -16,22 +16,22 @@ export default Node.create({
       questions: {
         default: [],
       },
-    };
+    }
   },
 
   parseHTML() {
     return [
       {
-        tag: "block-quiz",
+        tag: 'block-quiz',
       },
-    ];
+    ]
   },
 
   renderHTML({ HTMLAttributes }) {
-    return ["block-quiz", mergeAttributes(HTMLAttributes), 0];
+    return ['block-quiz', mergeAttributes(HTMLAttributes), 0]
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(QuizBlockComponent);
+    return ReactNodeViewRenderer(QuizBlockComponent)
   },
-});
+})

@@ -1,35 +1,35 @@
-import { mergeAttributes, Node } from "@tiptap/core";
-import { ReactNodeViewRenderer } from "@tiptap/react";
+import { mergeAttributes, Node } from '@tiptap/core'
+import { ReactNodeViewRenderer } from '@tiptap/react'
 
-import MathEquationBlockComponent from "./MathEquationBlockComponent";
+import MathEquationBlockComponent from './MathEquationBlockComponent'
 
 export default Node.create({
-  name: "blockMathEquation",
-  group: "block",
+  name: 'blockMathEquation',
+  group: 'block',
 
   atom: true,
 
   addAttributes() {
     return {
       math_equation: {
-        default: "",
+        default: '',
       },
-    };
+    }
   },
 
   parseHTML() {
     return [
       {
-        tag: "block-math-equation",
+        tag: 'block-math-equation',
       },
-    ];
+    ]
   },
 
   renderHTML({ HTMLAttributes }) {
-    return ["block-math-equation", mergeAttributes(HTMLAttributes), 0];
+    return ['block-math-equation', mergeAttributes(HTMLAttributes), 0]
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(MathEquationBlockComponent);
+    return ReactNodeViewRenderer(MathEquationBlockComponent)
   },
-});
+})

@@ -1,9 +1,9 @@
-"use client";
-import { motion } from "framer-motion";
-import styled from "styled-components";
-import learnhouseBigIcon from "public/learnhouse_bigicon.png";
-import Image from "next/legacy/image";
-import Link from "next/link";
+'use client'
+import { motion } from 'framer-motion'
+import styled from 'styled-components'
+import learnhouseBigIcon from 'public/learnhouse_bigicon.png'
+import Image from 'next/legacy/image'
+import Link from 'next/link'
 
 export default function Home() {
   return (
@@ -12,14 +12,20 @@ export default function Home() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{
-          type: "spring",
+          type: 'spring',
           stiffness: 260,
           damping: 70,
           delay: 0.2,
         }}
         exit={{ opacity: 1 }}
       >
-        <Image alt="Learnhouse Icon" height={260} width={260} quality={100} src={learnhouseBigIcon}></Image>
+        <Image
+          alt="Learnhouse Icon"
+          height={260}
+          width={260}
+          quality={100}
+          src={learnhouseBigIcon}
+        ></Image>
       </motion.div>
       <br />
       <br />
@@ -29,7 +35,7 @@ export default function Home() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{
-          type: "spring",
+          type: 'spring',
           stiffness: 260,
           damping: 70,
           delay: 0.8,
@@ -37,19 +43,19 @@ export default function Home() {
         exit={{ opacity: 1 }}
       >
         <div>
-          <Link href={"/organizations"}>
+          <Link href={'/organizations'}>
             <OrgsButton>See Organizations</OrgsButton>
           </Link>
           <br />
           <br />
-          <Link href={"/login"}>
+          <Link href={'/login'}>
             <OrgsButton>Login</OrgsButton>
           </Link>
         </div>
       </motion.div>
     </HomePage>
-  );
-};
+  )
+}
 
 const OrgsButton = styled.button`
   background: #151515;
@@ -63,7 +69,7 @@ const OrgsButton = styled.button`
   margin: 0 10px;
   margin: auto;
   cursor: pointer;
-  font-family: "DM Sans";
+  font-family: 'DM Sans';
   font-weight: 500;
   border-radius: 12px;
   -webkit-transition: all 0.2s ease-in-out;
@@ -71,7 +77,7 @@ const OrgsButton = styled.button`
   &:hover {
     background: #191919;
   }
-`;
+`
 
 const HomePage = styled.div`
   display: flex;
@@ -86,5 +92,4 @@ const HomePage = styled.div`
   img {
     width: 60px;
   }
-`;
-
+`

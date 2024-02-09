@@ -1,8 +1,14 @@
-import "@styles/globals.css";
-import { Menu } from "@components/Objects/Menu/Menu";
-import SessionProvider from "@components/Contexts/SessionContext";
+import '@styles/globals.css'
+import { Menu } from '@components/Objects/Menu/Menu'
+import SessionProvider from '@components/Contexts/SessionContext'
 
-export default function RootLayout({ children, params }: { children: React.ReactNode , params :any}) {
+export default function RootLayout({
+  children,
+  params,
+}: {
+  children: React.ReactNode
+  params: any
+}) {
   return (
     <>
       <SessionProvider>
@@ -10,5 +16,5 @@ export default function RootLayout({ children, params }: { children: React.React
         {children}
       </SessionProvider>
     </>
-  );
+  )
 }
