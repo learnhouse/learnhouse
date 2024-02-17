@@ -1,4 +1,4 @@
-fastapi==0.104.1
+fastapi==0.109.1
 pydantic>=1.8.0,<2.0.0
 sqlmodel==0.0.10
 uvicorn==0.23.2
