@@ -13,7 +13,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-
   db:
     image: postgres:16-alpine
     restart: always
@@ -38,11 +37,3 @@ services:
       interval: 5s
       timeout: 4s
       retries: 5
-  mongo:
-    image: mongo:5.0
-    restart: always
-    ports:
-      - "27017:27017"
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=learnhouse
-      - MONGO_INITDB_ROOT_PASSWORD=learnhous

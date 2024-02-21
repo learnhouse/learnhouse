@@ -27,7 +27,7 @@ Initiate a dev environment, please check the official guide [here](https://docs.
 - **Radix UI** - Accessible UI Components
 - **Tiptap** - An editor framework and headless wrapper around ProseMirror
 - **YJS** - Shared data types for building collaborative software
-- **MongoDB** - NoSQL Database
+- **PostgreSQL** - SQL Database
 - **React** - duh
 
 ### Get started
