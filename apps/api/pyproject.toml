@@ -1,5 +1,4 @@
 [tool.ruff]
-# E501 line too long (82 > 79 characters)
 ignore = ["E501", "E712"]
 
 [tool.poetry]
@@ -10,11 +9,11 @@ authors = ["Badr B. (swve)"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.11"
-fastapi = "0.109.1"
+python = "^3.12"
+fastapi = "0.109.2"
 pydantic = {version = ">=1.8.0,<2.0.0", extras = ["email"]}
 sqlmodel = "0.0.10"
-uvicorn = "0.23.2"
+uvicorn = "0.27.1"
 pymongo = "4.3.3"
 motor = "3.1.1"
 psycopg2 = "^2.9.9"
