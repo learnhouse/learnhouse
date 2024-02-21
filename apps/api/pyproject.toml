@@ -14,8 +14,6 @@ fastapi = "0.109.2"
 pydantic = {version = ">=1.8.0,<2.0.0", extras = ["email"]}
 sqlmodel = "0.0.10"
 uvicorn = "0.27.1"
-pymongo = "4.3.3"
-motor = "3.1.1"
 psycopg2 = "^2.9.9"
 python-multipart = "^0.0.7"
 boto3 = "^1.34.17"

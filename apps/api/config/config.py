@@ -53,7 +53,6 @@ class HostingConfig(BaseModel):
 
 class DatabaseConfig(BaseModel):
     sql_connection_string: Optional[str]
-    mongo_connection_string: Optional[str]
 
 class RedisConfig(BaseModel):
     redis_connection_string: Optional[str]
@@ -182,9 +181,7 @@ def get_learnhouse_config() -> LearnHouseConfig:
         "database_config", {}
     ).get("sql_connection_string")
 
-    mongo_connection_string = yaml_config.get("database_config", {}).get(
-        "mongo_connection_string"
-    )
+    
 
     # Redis config 
     env_redis_connection_string = os.environ.get("LEARNHOUSE_REDIS_CONNECTION_STRING")
@@ -244,7 +241,6 @@ def get_learnhouse_config() -> LearnHouseConfig:
     )
     database_config = DatabaseConfig(
         sql_connection_string=sql_connection_string,
-        mongo_connection_string=mongo_connection_string,
     )
 
     # AI Config

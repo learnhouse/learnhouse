@@ -2,7 +2,6 @@ import logging
 from config.config import get_learnhouse_config
 from fastapi import FastAPI
 from sqlmodel import SQLModel, Session, create_engine
-import motor.motor_asyncio
 
 learnhouse_config = get_learnhouse_config()
 engine = create_engine(
@@ -16,12 +15,7 @@ async def connect_to_db(app: FastAPI):
     logging.info("LearnHouse database has been started.")
     SQLModel.metadata.create_all(engine)
 
-    # MongoDB for migration purposes
-    # mongodb
-    app.mongodb_client = motor.motor_asyncio.AsyncIOMotorClient(  # type: ignore
-        app.learnhouse_config.database_config.mongo_connection_string  # type: ignore
-    )  # type: ignore
-    app.db = app.mongodb_client["learnhouse"]  # type: ignore
+
 
 
 def get_db_session():
