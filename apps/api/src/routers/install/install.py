@@ -76,7 +76,6 @@ async def api_update_install_instance(
     step: int,
     db_session=Depends(get_db_session),
 ) -> InstallRead:
-    request.app.db["installs"]
 
     # get latest created install
     install = await update_install_instance(request, data, step, db_session)
