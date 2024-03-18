@@ -24,6 +24,10 @@ hosting_config:
       bucket_name: ""
       endpoint_url: ""
 
+mailing_config:
+  resend_api_key: ""
+  system_email_adress: ""
+
 database_config:
   sql_connection_string: postgresql://learnhouse:learnhouse@db:5432/learnhouse
 
