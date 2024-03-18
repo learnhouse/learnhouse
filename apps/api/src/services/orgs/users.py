@@ -5,6 +5,7 @@ import logging
 import redis
 from fastapi import HTTPException, Request
 from sqlmodel import Session, select
+from src.services.orgs.invites import send_invite_email
 from config.config import get_learnhouse_config
 from src.services.orgs.orgs import rbac_check
 from src.db.roles import Role, RoleRead
@@ -12,6 +13,7 @@ from src.db.users import AnonymousUser, PublicUser, User, UserRead
 from src.db.user_organizations import UserOrganization
 from src.db.organizations import (
     Organization,
+    OrganizationRead,
     OrganizationUser,
 )
 
@@ -259,6 +261,10 @@ async def invite_batch_users(
             detail="Organization not found",
         )
 
+    # get User sender
+    statement = select(User).where(User.id == current_user.id)
+    user = db_session.exec(statement).first()
+
     # RBAC check
     await rbac_check(request, org.org_uuid, current_user, "create", db_session)
 
@@ -287,12 +293,22 @@ async def invite_batch_users(
             # skip this user
             continue
 
+        org = OrganizationRead.from_orm(org)
+        user = UserRead.from_orm(user)
+
+        isEmailSent = send_invite_email(
+            org,
+            invite_code_uuid,
+            user,
+            email,
+        )
+
         invited_user_object = {
             "email": email,
             "org_id": org.id,
             "invite_code_uuid": invite_code_uuid,
             "pending": True,
-            "email_sent": False,
+            "email_sent": isEmailSent,
             "expires": ttl,
             "created_at": datetime.now().isoformat(),
             "created_by": current_user.user_uuid,

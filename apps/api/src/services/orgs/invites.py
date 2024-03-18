@@ -5,11 +5,13 @@ import uuid
 import redis
 from datetime import datetime, timedelta
 from sqlmodel import Session, select
+from src.services.email.utils import send_email
 from config.config import get_learnhouse_config
 from src.services.orgs.orgs import rbac_check
-from src.db.users import AnonymousUser, PublicUser
+from src.db.users import AnonymousUser, PublicUser, UserRead
 from src.db.organizations import (
     Organization,
+    OrganizationRead,
 )
 from fastapi import HTTPException, Request
 
@@ -142,6 +144,7 @@ async def get_invite_codes(
 
     return invite_codes_list
 
+
 async def get_invite_code(
     request: Request,
     org_id: int,
@@ -181,23 +184,21 @@ async def get_invite_code(
             status_code=500,
             detail="Could not connect to Redis",
         )
-    
 
     # Get invite code
-    invite_code = r.keys(f"org_invite_code_*:org:{org.org_uuid}:code:{invite_code}") # type: ignore
+    invite_code = r.keys(f"org_invite_code_*:org:{org.org_uuid}:code:{invite_code}")  # type: ignore
 
     if not invite_code:
         raise HTTPException(
             status_code=404,
             detail="Invite code not found",
         )
-    
-    invite_code = r.get(invite_code[0]) # type: ignore
+
+    invite_code = r.get(invite_code[0])  # type: ignore
     invite_code = json.loads(invite_code)
 
     return invite_code
-    
-    
+
 
 async def delete_invite_code(
     request: Request,
@@ -251,3 +252,57 @@ async def delete_invite_code(
         )
 
     return keys
+
+
+def send_invite_email(
+    org: OrganizationRead,
+    invite_code_uuid: str,
+    user: UserRead,
+    email: str,
+):
+    LH_CONFIG = get_learnhouse_config()
+    redis_conn_string = LH_CONFIG.redis_config.redis_connection_string
+
+    if not redis_conn_string:
+        raise HTTPException(
+            status_code=500,
+            detail="Redis connection string not found",
+        )
+
+    # Connect to Redis
+    r = redis.Redis.from_url(redis_conn_string)
+
+    if not r:
+        raise HTTPException(
+            status_code=500,
+            detail="Could not connect to Redis",
+        )
+
+    # Get invite code
+    invite = r.keys(f"{invite_code_uuid}:org:{org.org_uuid}:code:*")  # type: ignore
+
+    # Send email
+    if invite:
+        invite = r.get(invite[0])
+        invite = json.loads(invite)
+
+        # send email
+        send_email(
+            to=email,
+            subject=f"You have been invited to {org.name}",
+            body=f"""
+<html>
+    <body>
+        <p>Hello {email}</p>
+        <p>You have been invited to {org.name} by @{user.username}. Your invite code is {invite['invite_code']}.</p>
+        <p>Click <a href="{org.slug}.learnhouse.io/signup?inviteCode={invite['invite_code']}">here</a> to sign up.</p>
+        <p>Thank you</p>
+    </body>
+</html>
+""",
+        )
+
+        return True
+
+    else:
+        return False
