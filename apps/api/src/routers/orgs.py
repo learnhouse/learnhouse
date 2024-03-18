@@ -174,6 +174,7 @@ async def api_get_invite_codes(
     """
     return await get_invite_codes(request, org_id, current_user, db_session)
 
+
 @router.get("/{org_id}/invites/code/{invite_code}")
 async def api_get_invite_code(
     request: Request,
@@ -186,7 +187,7 @@ async def api_get_invite_code(
     Get invite code
     """
     print(f"org_id: {org_id}, invite_code: {invite_code}")
-    return await get_invite_code(request, org_id,invite_code, current_user, db_session)
+    return await get_invite_code(request, org_id, invite_code, current_user, db_session)
 
 
 @router.delete("/{org_id}/invites/{org_invite_code_uuid}")
@@ -209,14 +210,17 @@ async def api_delete_invite_code(
 async def api_invite_batch_users(
     request: Request,
     org_id: int,
-    users: str,
+    emails: str,
+    invite_code_uuid: str,
     current_user: PublicUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
 ):
     """
-    Invite batch users
+    Invite batch users by emails
     """
-    return await invite_batch_users(request, org_id, users, db_session, current_user)
+    return await invite_batch_users(
+        request, org_id, emails, invite_code_uuid, db_session, current_user
+    )
 
 
 @router.get("/{org_id}/invites/users")
@@ -230,6 +234,7 @@ async def api_get_org_users_invites(
     Get org users invites
     """
     return await get_list_of_invited_users(request, org_id, db_session, current_user)
+
 
 @router.delete("/{org_id}/invites/users/{email}")
 async def api_delete_org_users_invites(

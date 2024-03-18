@@ -7,7 +7,7 @@ function UserEditPassword() {
   const session = useSession() as any
 
   const updatePasswordUI = async (values: any) => {
-    let user_id = session.user.user_id
+    let user_id = session.user.id
     await updatePassword(user_id, values)
   }
 
