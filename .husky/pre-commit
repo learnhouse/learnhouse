@@ -1,1 +1,0 @@
-pnpm run format && cd ./apps/web && pnpm run lint:fix

@@ -104,6 +104,7 @@ async def create_user(
 
     return user
 
+
 async def create_user_with_invite(
     request: Request,
     db_session: Session,
@@ -112,19 +113,22 @@ async def create_user_with_invite(
     org_id: int,
     invite_code: str,
 ):
-    
+
     # Check if invite code exists
-    isInviteCodeCorrect = await get_invite_code(request, org_id, invite_code, current_user, db_session)
+    isInviteCodeCorrect = await get_invite_code(
+        request, org_id, invite_code, current_user, db_session
+    )
 
     if not isInviteCodeCorrect:
         raise HTTPException(
             status_code=400,
             detail="Invite code is incorrect",
         )
-    
+
     user = await create_user(request, db_session, current_user, user_object, org_id)
 
     return user
+
 
 async def create_user_without_org(
     request: Request,
@@ -201,6 +205,32 @@ async def update_user(
     # RBAC check
     await rbac_check(request, current_user, "update", user.user_uuid, db_session)
 
+    # Verifications
+
+    # Username
+    statement = select(User).where(User.username == user_object.username)
+    username_user = db_session.exec(statement).first()
+
+    if username_user:
+        isSameUser = username_user.id == current_user.id
+        if not isSameUser:
+            raise HTTPException(
+                status_code=400,
+                detail="Username already exists",
+            )
+
+    # Email
+    statement = select(User).where(User.email == user_object.email)
+    email_user = db_session.exec(statement).first()
+
+    if email_user:
+        isSameUser = email_user.id == current_user.id
+        if not isSameUser:
+            raise HTTPException(
+                status_code=400,
+                detail="Email already exists",
+            )
+
     # Update user
     user_data = user_object.dict(exclude_unset=True)
     for key, value in user_data.items():
@@ -239,7 +269,9 @@ async def update_user_avatar(
 
     # Upload thumbnail
     if avatar_file and avatar_file.filename:
-        name_in_disk = f"{user.user_uuid}_avatar_{uuid4()}.{avatar_file.filename.split('.')[-1]}"
+        name_in_disk = (
+            f"{user.user_uuid}_avatar_{uuid4()}.{avatar_file.filename.split('.')[-1]}"
+        )
         await upload_avatar(avatar_file, name_in_disk, user.user_uuid)
 
         # Update course
