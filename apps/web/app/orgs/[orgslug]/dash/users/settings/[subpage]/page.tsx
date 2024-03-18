@@ -9,6 +9,7 @@ import { useSession } from '@components/Contexts/SessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import OrgUsers from '@components/Dashboard/Users/OrgUsers/OrgUsers'
 import OrgAccess from '@components/Dashboard/Users/OrgAccess/OrgAccess'
+import OrgUsersAdd from '@components/Dashboard/Users/OrgUsersAdd/OrgUsersAdd'
 
 export type SettingsParams = {
   subpage: string
@@ -120,6 +121,7 @@ function UsersSettingsPage({ params }: { params: SettingsParams }) {
       >
         {params.subpage == 'users' ? <OrgUsers /> : ''}
         {params.subpage == 'signups' ? <OrgAccess /> : ''}
+        {params.subpage == 'add' ? <OrgUsersAdd /> : ''}
       </motion.div>
     </div>
   )
