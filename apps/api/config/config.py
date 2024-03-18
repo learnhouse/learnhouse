@@ -51,11 +51,18 @@ class HostingConfig(BaseModel):
     content_delivery: ContentDeliveryConfig
 
 
+class MailingConfig(BaseModel):
+    resend_api_key: str
+    system_email_address: str
+
+
 class DatabaseConfig(BaseModel):
     sql_connection_string: Optional[str]
 
+
 class RedisConfig(BaseModel):
     redis_connection_string: Optional[str]
+
 
 class LearnHouseConfig(BaseModel):
     site_name: str
@@ -67,6 +74,7 @@ class LearnHouseConfig(BaseModel):
     redis_config: RedisConfig
     security_config: SecurityConfig
     ai_config: AIConfig
+    mailing_config: MailingConfig
 
 
 def get_learnhouse_config() -> LearnHouseConfig:
@@ -113,6 +121,7 @@ def get_learnhouse_config() -> LearnHouseConfig:
     env_use_default_org = os.environ.get("LEARNHOUSE_USE_DEFAULT_ORG")
     env_allowed_origins = os.environ.get("LEARNHOUSE_ALLOWED_ORIGINS")
     env_cookie_domain = os.environ.get("LEARNHOUSE_COOKIE_DOMAIN")
+
     # Allowed origins should be a comma separated string
     if env_allowed_origins:
         env_allowed_origins = env_allowed_origins.split(",")
@@ -182,14 +191,6 @@ def get_learnhouse_config() -> LearnHouseConfig:
     ).get("sql_connection_string")
 
     
-
-    # Redis config 
-    env_redis_connection_string = os.environ.get("LEARNHOUSE_REDIS_CONNECTION_STRING")
-    redis_connection_string = env_redis_connection_string or yaml_config.get(
-        "redis_config", {}
-    ).get("redis_connection_string")
-
-
     # AI Config
     env_openai_api_key = os.environ.get("LEARNHOUSE_OPENAI_API_KEY")
     env_is_ai_enabled = os.environ.get("LEARNHOUSE_IS_AI_ENABLED")
@@ -199,6 +200,22 @@ def get_learnhouse_config() -> LearnHouseConfig:
     is_ai_enabled = env_is_ai_enabled or yaml_config.get("ai_config", {}).get(
         "is_ai_enabled"
     )
+
+    # Redis config
+    env_redis_connection_string = os.environ.get("LEARNHOUSE_REDIS_CONNECTION_STRING")
+    redis_connection_string = env_redis_connection_string or yaml_config.get(
+        "redis_config", {}
+    ).get("redis_connection_string")
+
+    # Mailing config
+    env_resend_api_key = os.environ.get("LEARNHOUSE_RESEND_API_KEY")
+    env_system_email_address = os.environ.get("LEARNHOUSE_SYSTEM_EMAIL_ADDRESS")
+    resend_api_key = env_resend_api_key or yaml_config.get("mailing_config", {}).get(
+        "resend_api_key"
+    )
+    system_email_address = env_system_email_address or yaml_config.get(
+        "mailing_config", {}
+    ).get("system_email_adress")
 
     # Sentry config
     # check if the sentry config is provided in the YAML file
@@ -262,6 +279,9 @@ def get_learnhouse_config() -> LearnHouseConfig:
         security_config=SecurityConfig(auth_jwt_secret_key=auth_jwt_secret_key),
         ai_config=ai_config,
         redis_config=RedisConfig(redis_connection_string=redis_connection_string),
+        mailing_config=MailingConfig(
+            resend_api_key=resend_api_key, system_email_address=system_email_address
+        ),
     )
 
     return config
