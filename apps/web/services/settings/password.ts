@@ -8,7 +8,7 @@ import { RequestBody, errorHandling } from '@services/utils/ts/requests'
 
 export async function updatePassword(user_id: string, data: any) {
   const result: any = await fetch(
-    `${getAPIUrl()}users/password/user_id/` + user_id,
+    `${getAPIUrl()}users/change_password/` + user_id,
     RequestBody('PUT', data, null)
   )
   const res = await errorHandling(result)
