@@ -42,3 +42,16 @@ export async function validateInviteCode(org_id: any, invite_code: string) {
   const res = await getResponseMetadata(result)
   return res
 }
+
+export async function inviteBatchUsers(
+  org_id: any,
+  emails: string,
+  invite_code_uuid: string
+) {
+  const result = await fetch(
+    `${getAPIUrl()}orgs/${org_id}/invites/users/batch?emails=${emails}&invite_code_uuid=${invite_code_uuid}`,
+    RequestBody('POST', null, null)
+  )
+  const res = await getResponseMetadata(result)
+  return res
+}

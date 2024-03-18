@@ -216,13 +216,14 @@ function OrgAccess() {
                   </tbody>
                 </>
               </table>
-              <button
+              <div className='flex flex-row-reverse mt-3 mr-2'><button
                 onClick={() => createInvite()}
-                className="mt-3 mr-2 flex space-x-2 hover:cursor-pointer p-1 px-3 bg-green-700 rounded-md font-bold items-center text-sm text-green-100"
+                className=" flex space-x-2 hover:cursor-pointer p-1 px-3 bg-green-700 rounded-md font-bold items-center text-sm text-green-100"
               >
                 <Shield className="w-4 h-4" />
-                <span> Create invite code</span>
-              </button>
+                <span> Generate invite code</span>
+              </button></div>
+
             </div>
           </div>
         </>

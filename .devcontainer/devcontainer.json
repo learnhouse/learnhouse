@@ -14,7 +14,8 @@
         "dbaeumer.vscode-eslint",
         "esbenp.prettier-vscode",
         "ms-python.isort",
-        "redhat.vscode-yaml"
+        "redhat.vscode-yaml",
+        "bradlc.vscode-tailwindcss"
       ],
       "settings": {
         "[python]": {
