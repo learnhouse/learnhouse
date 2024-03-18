@@ -234,6 +234,7 @@ async def invite_batch_users(
     request: Request,
     org_id: int,
     emails: str,
+    invite_code_uuid: str,
     db_session: Session,
     current_user: PublicUser | AnonymousUser,
 ):
@@ -272,8 +273,8 @@ async def invite_batch_users(
 
     invite_list = emails.split(",")
 
-    # invitations expire after 30 days
-    ttl = int(timedelta(days=365).total_seconds())
+    # invitations expire after 60 days
+    ttl = int(timedelta(days=60).total_seconds())
 
     for email in invite_list:
         email = email.strip()
@@ -289,6 +290,7 @@ async def invite_batch_users(
         invited_user_object = {
             "email": email,
             "org_id": org.id,
+            "invite_code_uuid": invite_code_uuid,
             "pending": True,
             "email_sent": False,
             "expires": ttl,
