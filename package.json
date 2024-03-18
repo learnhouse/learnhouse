@@ -5,11 +5,9 @@
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "prepare": "husky"
   },
   "devDependencies": {
     "eslint": "^8.51.0",
-    "husky": "^9.0.10",
     "prettier": "^3.0.3",
     "turbo": "^1.10.15"
   },
