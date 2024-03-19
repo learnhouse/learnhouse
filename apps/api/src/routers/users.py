@@ -1,6 +1,11 @@
 from typing import Literal
 from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile
+from pydantic import EmailStr
 from sqlmodel import Session
+from src.services.users.password_reset import (
+    change_password_with_reset_code,
+    send_reset_password_code,
+)
 from src.services.orgs.orgs import get_org_join_mechanism
 from src.security.auth import get_current_user
 from src.core.events.database import get_db_session
@@ -208,6 +213,42 @@ async def api_update_user_password(
     Update User Password
     """
     return await update_user_password(request, db_session, current_user, user_id, form)
+
+
+@router.post("/reset_password/change_password/{email}", tags=["users"])
+async def api_change_password_with_reset_code(
+    *,
+    request: Request,
+    db_session: Session = Depends(get_db_session),
+    current_user: PublicUser = Depends(get_current_user),
+    new_password: str,
+    email: EmailStr,
+    org_id: int,
+    reset_code: str,
+):
+    """
+    Update User Password with reset code
+    """
+    return await change_password_with_reset_code(
+        request, db_session, current_user, new_password, org_id, email, reset_code
+    )
+
+
+@router.post("/reset_password/send_reset_code/{email}", tags=["users"])
+async def api_send_password_reset_email(
+    *,
+    request: Request,
+    db_session: Session = Depends(get_db_session),
+    current_user: PublicUser = Depends(get_current_user),
+    email: EmailStr,
+    org_id: int,
+):
+    """
+    Update User Password
+    """
+    return await send_reset_password_code(
+        request, db_session, current_user, org_id, email
+    )
 
 
 @router.delete("/user_id/{user_id}", tags=["users"])
