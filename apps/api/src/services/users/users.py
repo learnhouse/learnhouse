@@ -3,6 +3,9 @@ from typing import Literal
 from uuid import uuid4
 from fastapi import HTTPException, Request, UploadFile, status
 from sqlmodel import Session, select
+from src.services.users.emails import (
+    send_account_creation_email,
+)
 from src.services.orgs.invites import get_invite_code
 from src.services.users.avatars import upload_avatar
 from src.db.roles import Role, RoleRead
@@ -102,6 +105,12 @@ async def create_user(
 
     user = UserRead.from_orm(user)
 
+    # Send Account creation email
+    send_account_creation_email(
+        user=user,
+        email=user.email,
+    )
+
     return user
 
 
@@ -181,6 +190,12 @@ async def create_user_without_org(
     db_session.refresh(user)
 
     user = UserRead.from_orm(user)
+
+    # Send Account creation email
+    send_account_creation_email(
+        user=user,
+        email=user.email,
+    )
 
     return user
 
@@ -330,7 +345,6 @@ async def update_user_password(
     user = UserRead.from_orm(user)
 
     return user
-
 
 async def read_user_by_id(
     request: Request,
