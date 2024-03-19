@@ -99,7 +99,7 @@ async def send_reset_password_code(
 
     # Send reset code via email
     isEmailSent = send_password_reset_email(
-        reset_email_invite_uuid=reset_email_invite_uuid,
+        generated_reset_code=generated_reset_code,
         user=user,
         organization=org,
         email=user.email,
@@ -132,7 +132,7 @@ async def change_password_with_reset_code(
             status_code=400,
             detail="User does not exist",
         )
-    
+
     # Get org
     statement = select(Organization).where(Organization.id == org_id)
     org = db_session.exec(statement).first()
@@ -142,7 +142,6 @@ async def change_password_with_reset_code(
             status_code=400,
             detail="Organization not found",
         )
-    
 
     # Redis init
     LH_CONFIG = get_learnhouse_config()
