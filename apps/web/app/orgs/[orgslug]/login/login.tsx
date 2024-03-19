@@ -156,6 +156,15 @@ const LoginClient = (props: LoginClientProps) => {
                 />
               </Form.Control>
             </FormField>
+            <div>
+              <Link
+                href={getUriWithOrg(props.org.slug, '/forgot')}
+                passHref
+                className="text-xs text-gray-500 hover:underline"
+              >
+                Forgot password?
+              </Link>
+            </div>
 
             <div className="flex  py-4">
               <Form.Submit asChild>
