@@ -76,7 +76,7 @@ function DashboardHome() {
 
         <Link
           href={'/dash/user-account/settings/general'}
-          className="flex bg-white shadow-lg p-[15px] items-center rounded-lg  items-center mx-auto hover:scale-105 transition-all ease-linear cursor-pointer"
+          className="flex bg-white shadow-lg p-[15px] items-center rounded-lg  mx-auto hover:scale-105 transition-all ease-linear cursor-pointer"
         >
           <div className="flex flex-row mx-auto space-x-3 items-center">
             <Settings className=" text-gray-500" size={20}></Settings>

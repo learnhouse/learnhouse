@@ -14,6 +14,7 @@ import CollectionThumbnail from '@components/Objects/Thumbnails/CollectionThumbn
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
 import NewCourseButton from '@components/StyledElements/Buttons/NewCourseButton'
 import NewCollectionButton from '@components/StyledElements/Buttons/NewCollectionButton'
+import ContentPlaceHolderIfUserIsNotAdmin from '@components/ContentPlaceHolder'
 
 type MetadataProps = {
   params: { orgslug: string }
@@ -139,7 +140,9 @@ const OrgHomePage = async (params: any) => {
                       No collections yet
                     </h1>
                     <p className="text-md text-gray-400">
-                      Create a collection to group courses together
+                      <ContentPlaceHolderIfUserIsNotAdmin
+                        text="Create collections to group courses together"
+                      />
                     </p>
                   </div>
                 </div>
@@ -206,7 +209,7 @@ const OrgHomePage = async (params: any) => {
                       No courses yet
                     </h1>
                     <p className="text-md text-gray-400">
-                      Create a course to add content
+                      <ContentPlaceHolderIfUserIsNotAdmin text='Create courses to add content' />
                     </p>
                   </div>
                 </div>
