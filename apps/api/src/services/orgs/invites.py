@@ -2,6 +2,7 @@ import json
 import random
 import string
 import uuid
+from pydantic import EmailStr
 import redis
 from datetime import datetime, timedelta
 from sqlmodel import Session, select
@@ -139,7 +140,7 @@ async def get_invite_codes(
 
     for invite_code in invite_codes:
         invite_code = r.get(invite_code)
-        invite_code = json.loads(invite_code)
+        invite_code = json.loads(invite_code) # type: ignore
         invite_codes_list.append(invite_code)
 
     return invite_codes_list
@@ -258,7 +259,7 @@ def send_invite_email(
     org: OrganizationRead,
     invite_code_uuid: str,
     user: UserRead,
-    email: str,
+    email: EmailStr,
 ):
     LH_CONFIG = get_learnhouse_config()
     redis_conn_string = LH_CONFIG.redis_config.redis_connection_string
@@ -284,7 +285,7 @@ def send_invite_email(
     # Send email
     if invite:
         invite = r.get(invite[0])
-        invite = json.loads(invite)
+        invite = json.loads(invite) # type: ignore
 
         # send email
         send_email(
