@@ -25,11 +25,12 @@ def send_account_creation_email(
 
 
 def send_password_reset_email(
-    reset_email_invite_uuid: str,
+    generated_reset_code: str,
     user: UserRead,
     organization: OrganizationRead,
     email: EmailStr,
 ):
+    
     # send email
     return send_email(
         to=email,
@@ -38,7 +39,7 @@ def send_password_reset_email(
 <html>
     <body>
         <p>Hello {user.username}</p>
-        <p>Click <a href="https://{organization.slug}.learnhouse.io/reset-password?resetEmailInviteUuid={reset_email_invite_uuid}">here</a> to reset your password.</p>
+        <p>Click <a href="https://{organization.slug}.learnhouse.io/reset?email={email}&resetCode={generated_reset_code}">here</a> to reset your password.</p>
     </body>
 </html>
 """,
