@@ -1,4 +1,5 @@
 import { getAPIUrl } from '@services/config/config'
+import { RequestBody, getResponseMetadata } from '@services/utils/ts/requests'
 
 interface LoginAndGetTokenResponse {
   access_token: 'string'
@@ -34,6 +35,29 @@ export async function loginAndGetToken(
   // fetch using await and async
   const response = await fetch(`${getAPIUrl()}auth/login`, requestOptions)
   return response
+}
+
+export async function sendResetLink(email: string, org_id: number) {
+  const result = await fetch(
+    `${getAPIUrl()}users/reset_password/send_reset_code/${email}?org_id=${org_id}`,
+    RequestBody('POST', null, null)
+  )
+  const res = await getResponseMetadata(result)
+  return res
+}
+
+export async function resetPassword(
+  email: string,
+  new_password: string,
+  org_id: number,
+  reset_code: string
+) {
+  const result = await fetch(
+    `${getAPIUrl()}users/reset_password/change_password/${email}?reset_code=${reset_code}&new_password=${new_password}&org_id=${org_id}`,
+    RequestBody('POST', null, null)
+  )
+  const res = await getResponseMetadata(result)
+  return res
 }
 
 export async function logout(): Promise<any> {
