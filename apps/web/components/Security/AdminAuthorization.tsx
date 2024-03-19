@@ -1,6 +1,7 @@
 'use client'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useSession } from '@components/Contexts/SessionContext'
+import useAdminStatus from '@components/Hooks/useAdminStatus'
 import { usePathname, useRouter } from 'next/navigation'
 import React from 'react'
 
@@ -40,18 +41,7 @@ function AdminAuthorization(props: AuthorizationProps) {
   }
 
   // Verify if the user is an Admin (1), Maintainer (2) or Member (3) of the organization
-  const isUserAdmin = () => {
-    const isAdmin = session.roles.some((role: any) => {
-      return (
-        role.org.id === org.id &&
-        (role.role.id === 1 ||
-          role.role.id === 2 ||
-          role.role.role_uuid === 'role_global_admin' ||
-          role.role.role_uuid === 'role_global_maintainer')
-      )
-    })
-    return isAdmin
-  }
+  const isUserAdmin = useAdminStatus()
 
   function checkPathname(pattern: string, pathname: string) {
     // Escape special characters in the pattern and replace '*' with a regex pattern
@@ -72,7 +62,7 @@ function AdminAuthorization(props: AuthorizationProps) {
         console.log('Admin path')
         if (isUserAuthenticated()) {
           // Check if the user is an Admin
-          if (isUserAdmin()) {
+          if (isUserAdmin) {
             setIsAuthorized(true)
           } else {
             setIsAuthorized(false)
@@ -93,7 +83,7 @@ function AdminAuthorization(props: AuthorizationProps) {
 
     if (props.authorizationMode === 'component') {
       // Component mode
-      if (isUserAuthenticated() && isUserAdmin()) {
+      if (isUserAuthenticated() && isUserAdmin) {
         setIsAuthorized(true)
       } else {
         setIsAuthorized(false)
