@@ -10,6 +10,7 @@ import Link from 'next/link'
 import { getAccessTokenFromRefreshTokenCookie } from '@services/auth/auth'
 import CollectionThumbnail from '@components/Objects/Thumbnails/CollectionThumbnail'
 import NewCollectionButton from '@components/StyledElements/Buttons/NewCollectionButton'
+import ContentPlaceHolderIfUserIsNotAdmin from '@components/ContentPlaceHolder'
 
 type MetadataProps = {
   params: { orgslug: string; courseid: string }
@@ -127,7 +128,9 @@ const CollectionsPage = async (params: any) => {
                   No collections yet
                 </h1>
                 <p className="text-lg text-gray-400">
-                  Create a collection to group courses together
+                  <ContentPlaceHolderIfUserIsNotAdmin
+                    text="Create a collection to add content"
+                  />
                 </p>
               </div>
               <AuthenticatedClientElement
