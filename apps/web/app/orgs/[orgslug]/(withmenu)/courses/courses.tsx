@@ -8,6 +8,7 @@ import TypeOfContentTitle from '@components/StyledElements/Titles/TypeOfContentT
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
 import CourseThumbnail from '@components/Objects/Thumbnails/CourseThumbnail'
 import NewCourseButton from '@components/StyledElements/Buttons/NewCourseButton'
+import useAdminStatus from '@components/Hooks/useAdminStatus'
 
 interface CourseProps {
   orgslug: string
@@ -21,6 +22,7 @@ function Courses(props: CourseProps) {
   const searchParams = useSearchParams()
   const isCreatingCourse = searchParams.get('new') ? true : false
   const [newCourseModal, setNewCourseModal] = React.useState(isCreatingCourse)
+  const isUserAdmin = useAdminStatus() as any
 
   async function closeNewCourseModal() {
     setNewCourseModal(false)
@@ -97,9 +99,11 @@ function Courses(props: CourseProps) {
                   <h1 className="text-3xl font-bold text-gray-600">
                     No courses yet
                   </h1>
-                  <p className="text-lg text-gray-400">
+                  {isUserAdmin ? (<p className="text-lg text-gray-400">
                     Create a course to add content
-                  </p>
+                  </p>) : (<p className="text-lg text-gray-400">
+                    No courses available yet
+                    </p>)}
                 </div>
                 <AuthenticatedClientElement
                   action="create"
