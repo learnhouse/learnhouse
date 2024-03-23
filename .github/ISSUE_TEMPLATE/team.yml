@@ -4,8 +4,7 @@ labels: ["team"]
 body:
   - type: markdown
     attributes:
-      value: |
-        Issue Content
+      value: 
   - type: checkboxes
     attributes:
       label: Is this issue planned ?
