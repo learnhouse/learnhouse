@@ -2,10 +2,11 @@ name: Team
 description: You are someone from the team
 labels: ["team"]
 body:
-  - type: markdown
+  - type: textarea
+    id: content
     attributes:
-      value: |
-        Issue Content
+      label: Issue Content
+      description: Add the content of the issue here.
   - type: checkboxes
     attributes:
       label: Is this issue planned ?
