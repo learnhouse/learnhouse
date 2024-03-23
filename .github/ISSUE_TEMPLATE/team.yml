@@ -6,3 +6,11 @@ body:
     attributes:
       value: |
         Issue Content
+  - type: checkboxes
+    id: planned
+    label: Planned issue
+    attributes:
+      label: Is this issue planned ?
+      options:
+        - label: Planned
+          
