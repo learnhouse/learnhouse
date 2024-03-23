@@ -2,8 +2,7 @@ name: Team
 description: You are someone from the team
 labels: ["team"]
 body:
-  - type: textarea
-    id: content
+  - type: markdown
     attributes:
-      label: Issue Content
-      description: Add the content of the issue here.
+      value: |
+        Issue Content
