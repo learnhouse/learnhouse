@@ -10,7 +10,7 @@ from src.services.orgs.invites import get_invite_code
 from src.services.users.avatars import upload_avatar
 from src.db.roles import Role, RoleRead
 from src.security.rbac.rbac import (
-    authorization_verify_based_on_roles_and_authorship,
+    authorization_verify_based_on_roles_and_authorship_and_usergroups,
     authorization_verify_if_user_is_anon,
 )
 from src.db.organizations import Organization, OrganizationRead
@@ -124,11 +124,15 @@ async def create_user_with_invite(
 ):
 
     # Check if invite code exists
-    isInviteCodeCorrect = await get_invite_code(
+    inviteCOde = await get_invite_code(
         request, org_id, invite_code, current_user, db_session
     )
 
-    if not isInviteCodeCorrect:
+    # Check if invite code contains UserGroup 
+    #TODO
+
+
+    if not inviteCOde:
         raise HTTPException(
             status_code=400,
             detail="Invite code is incorrect",
@@ -463,7 +467,7 @@ async def authorize_user_action(
         )
 
     # RBAC check
-    authorized = await authorization_verify_based_on_roles_and_authorship(
+    authorized = await authorization_verify_based_on_roles_and_authorship_and_usergroups(
         request, current_user.id, action, ressource_uuid, db_session
     )
 
@@ -535,7 +539,7 @@ async def rbac_check(
         if current_user.id == 0:  # if user is anonymous
             return True
         else:
-            await authorization_verify_based_on_roles_and_authorship(
+            await authorization_verify_based_on_roles_and_authorship_and_usergroups(
                 request, current_user.id, "create", "user_x", db_session
             )
 
@@ -546,7 +550,7 @@ async def rbac_check(
         if current_user.user_uuid == user_uuid:
             return True
 
-        await authorization_verify_based_on_roles_and_authorship(
+        await authorization_verify_based_on_roles_and_authorship_and_usergroups(
             request, current_user.id, action, user_uuid, db_session
         )
 

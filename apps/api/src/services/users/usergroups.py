@@ -1,10 +1,13 @@
 from datetime import datetime
+import logging
 from uuid import uuid4
 from fastapi import HTTPException, Request
 from sqlmodel import Session, select
+from src.db.usergroup_ressources import UserGroupRessource
+from src.db.usergroup_user import UserGroupUser
 from src.db.organizations import Organization
 from src.db.usergroups import UserGroup, UserGroupCreate, UserGroupRead, UserGroupUpdate
-from src.db.users import AnonymousUser, PublicUser
+from src.db.users import AnonymousUser, PublicUser, User
 
 
 async def create_usergroup(
@@ -112,3 +115,151 @@ async def delete_usergroup_by_id(
     db_session.commit()
 
     return "UserGroup deleted successfully"
+
+
+async def add_users_to_usergroup(
+    request: Request,
+    db_session: Session,
+    current_user: PublicUser | AnonymousUser,
+    usergroup_id: int,
+    user_ids: str,
+) -> str:
+
+    statement = select(UserGroup).where(UserGroup.id == usergroup_id)
+    usergroup = db_session.exec(statement).first()
+
+    if not usergroup:
+        raise HTTPException(
+            status_code=404,
+            detail="UserGroup not found",
+        )
+
+    user_ids_array = user_ids.split(",")
+
+    for user_id in user_ids_array:
+        statement = select(User).where(User.id == user_id)
+        user = db_session.exec(statement).first()
+
+        if user:
+            # Add user to UserGroup
+            if user.id is not None:
+                usergroup_obj = UserGroupUser(
+                    usergroup_id=usergroup_id,
+                    user_id=user.id,
+                    org_id=usergroup.org_id,
+                    creation_date=str(datetime.now()),
+                    update_date=str(datetime.now()),
+                )
+
+                db_session.add(usergroup_obj)
+                db_session.commit()
+                db_session.refresh(usergroup_obj)
+        else:
+            logging.error(f"User with id {user_id} not found")
+
+    return "Users added to UserGroup successfully"
+
+
+async def remove_users_from_usergroup(
+    request: Request,
+    db_session: Session,
+    current_user: PublicUser | AnonymousUser,
+    usergroup_id: int,
+    user_ids: str,
+) -> str:
+
+    statement = select(UserGroup).where(UserGroup.id == usergroup_id)
+    usergroup = db_session.exec(statement).first()
+
+    if not usergroup:
+        raise HTTPException(
+            status_code=404,
+            detail="UserGroup not found",
+        )
+
+    user_ids_array = user_ids.split(",")
+
+    for user_id in user_ids_array:
+        statement = select(UserGroupUser).where(UserGroupUser.user_id == user_id)
+        usergroup_user = db_session.exec(statement).first()
+
+        if usergroup_user:
+            db_session.delete(usergroup_user)
+            db_session.commit()
+        else:
+            logging.error(f"User with id {user_id} not found in UserGroup")
+
+    return "Users removed from UserGroup successfully"
+
+
+async def add_ressources_to_usergroup(
+    request: Request,
+    db_session: Session,
+    current_user: PublicUser | AnonymousUser,
+    usergroup_id: int,
+    ressources_uuids: str,
+) -> str:
+
+    statement = select(UserGroup).where(UserGroup.id == usergroup_id)
+    usergroup = db_session.exec(statement).first()
+
+    if not usergroup:
+        raise HTTPException(
+            status_code=404,
+            detail="UserGroup not found",
+        )
+
+    ressources_uuids_array = ressources_uuids.split(",")
+
+    for ressource_uuid in ressources_uuids_array:
+        # TODO : Find a way to check if ressource exists
+
+        usergroup_obj = UserGroupRessource(
+            usergroup_id=usergroup_id,
+            ressource_uuid=ressource_uuid,
+            org_id=usergroup.org_id,
+            creation_date=str(datetime.now()),
+            update_date=str(datetime.now()),
+        )
+
+        db_session.add(usergroup_obj)
+        db_session.commit()
+        db_session.refresh(usergroup_obj)
+
+    return "Ressources added to UserGroup successfully"
+
+
+async def remove_ressources_from_usergroup(
+    request: Request,
+    db_session: Session,
+    current_user: PublicUser | AnonymousUser,
+    usergroup_id: int,
+    ressources_uuids: str,
+) -> str:
+
+    statement = select(UserGroup).where(UserGroup.id == usergroup_id)
+    usergroup = db_session.exec(statement).first()
+
+    if not usergroup:
+        raise HTTPException(
+            status_code=404,
+            detail="UserGroup not found",
+        )
+
+    ressources_uuids_array = ressources_uuids.split(",")
+
+    for ressource_uuid in ressources_uuids_array:
+        statement = select(UserGroupRessource).where(
+            UserGroupRessource.ressource_uuid == ressource_uuid
+        )
+        usergroup_ressource = db_session.exec(statement).first()
+
+        if usergroup_ressource:
+            db_session.delete(usergroup_ressource)
+            db_session.commit()
+        else:
+            logging.error(
+                f"Ressource with uuid {ressource_uuid} not found in UserGroup"
+            )
+
+    return "Ressources removed from UserGroup successfully"

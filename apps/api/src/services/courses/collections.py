@@ -4,7 +4,7 @@ from uuid import uuid4
 from sqlmodel import Session, select
 from src.db.users import AnonymousUser
 from src.security.rbac.rbac import (
-    authorization_verify_based_on_roles_and_authorship,
+    authorization_verify_based_on_roles_and_authorship_and_usergroups,
     authorization_verify_if_element_is_public,
     authorization_verify_if_user_is_anon,
 )
@@ -297,14 +297,14 @@ async def rbac_check(
                     detail="User rights : You are not allowed to read this collection",
                 )
         else:
-            res = await authorization_verify_based_on_roles_and_authorship(
+            res = await authorization_verify_based_on_roles_and_authorship_and_usergroups(
                 request, current_user.id, action, collection_uuid, db_session
             )
             return res
     else:
         await authorization_verify_if_user_is_anon(current_user.id)
 
-        await authorization_verify_based_on_roles_and_authorship(
+        await authorization_verify_based_on_roles_and_authorship_and_usergroups(
             request,
             current_user.id,
             action,
