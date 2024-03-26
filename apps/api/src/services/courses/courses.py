@@ -3,7 +3,6 @@ from uuid import uuid4
 from sqlmodel import Session, select
 from src.db.organizations import Organization
 from src.db.trails import TrailRead
-
 from src.services.trail.trail import get_user_trail_with_orgid
 from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum
 from src.db.users import PublicUser, AnonymousUser, User, UserRead
@@ -15,7 +14,7 @@ from src.db.courses import (
     FullCourseReadWithTrail,
 )
 from src.security.rbac.rbac import (
-    authorization_verify_based_on_roles_and_authorship,
+    authorization_verify_based_on_roles_and_authorship_and_usergroups,
     authorization_verify_if_element_is_public,
     authorization_verify_if_user_is_anon,
 )
@@ -142,7 +141,7 @@ async def create_course(
     if thumbnail_file and thumbnail_file.filename:
         name_in_disk = f"{course.course_uuid}_thumbnail_{uuid4()}.{thumbnail_file.filename.split('.')[-1]}"
         await upload_thumbnail(
-            thumbnail_file, name_in_disk, org.org_uuid, course.course_uuid
+            thumbnail_file, name_in_disk, org.org_uuid, course.course_uuid # type: ignore
         )
         course.thumbnail_image = name_in_disk
 
@@ -213,7 +212,7 @@ async def update_course_thumbnail(
     if thumbnail_file and thumbnail_file.filename:
         name_in_disk = f"{course_uuid}_thumbnail_{uuid4()}.{thumbnail_file.filename.split('.')[-1]}"
         await upload_thumbnail(
-            thumbnail_file, name_in_disk, org.org_uuid, course.course_uuid
+            thumbnail_file, name_in_disk, org.org_uuid, course.course_uuid # type: ignore
         )
 
     # Update course
@@ -381,14 +380,14 @@ async def rbac_check(
             )
             return res
         else:
-            res = await authorization_verify_based_on_roles_and_authorship(
+            res = await authorization_verify_based_on_roles_and_authorship_and_usergroups(
                 request, current_user.id, action, course_uuid, db_session
             )
             return res
     else:
         await authorization_verify_if_user_is_anon(current_user.id)
 
-        await authorization_verify_based_on_roles_and_authorship(
+        await authorization_verify_based_on_roles_and_authorship_and_usergroups(
             request,
             current_user.id,
             action,
