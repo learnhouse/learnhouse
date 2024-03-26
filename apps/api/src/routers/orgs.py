@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, Request, UploadFile
 from sqlmodel import Session
 from src.services.orgs.invites import (
     create_invite_code,
+    create_invite_code_with_usergroup,
     delete_invite_code,
     get_invite_code,
     get_invite_codes,
@@ -160,6 +161,22 @@ async def api_create_invite_code(
     Create invite code
     """
     return await create_invite_code(request, org_id, current_user, db_session)
+
+
+@router.post("/{org_id}/invites_with_usergroups")
+async def api_create_invite_code_with_ug(
+    request: Request,
+    org_id: int,
+    usergroup_id: int,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+):
+    """
+    Create invite code
+    """
+    return await create_invite_code_with_usergroup(
+        request, org_id, usergroup_id, current_user, db_session
+    )
 
 
 @router.get("/{org_id}/invites")
