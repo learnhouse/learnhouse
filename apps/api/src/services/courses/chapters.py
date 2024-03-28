@@ -559,7 +559,6 @@ async def rbac_check(
             res = await authorization_verify_if_element_is_public(
                 request, course_uuid, action, db_session
             )
-            print("res", res)
             return res
         else:
             res = await authorization_verify_based_on_roles_and_authorship_and_usergroups(
