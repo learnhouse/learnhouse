@@ -453,7 +453,7 @@ async def authorize_user_action(
     request: Request,
     db_session: Session,
     current_user: PublicUser | AnonymousUser,
-    ressource_uuid: str,
+    resource_uuid: str,
     action: Literal["create", "read", "update", "delete"],
 ):
     # Get user
@@ -468,7 +468,7 @@ async def authorize_user_action(
 
     # RBAC check
     authorized = await authorization_verify_based_on_roles_and_authorship_and_usergroups(
-        request, current_user.id, action, ressource_uuid, db_session
+        request, current_user.id, action, resource_uuid, db_session
     )
 
     if authorized:
