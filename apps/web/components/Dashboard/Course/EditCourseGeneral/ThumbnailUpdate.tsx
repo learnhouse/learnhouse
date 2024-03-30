@@ -46,18 +46,17 @@ function ThumbnailUpdate() {
             {localThumbnail ? (
               <img
                 src={URL.createObjectURL(localThumbnail)}
-                className={`${
-                  isLoading ? 'animate-pulse' : ''
-                } shadow w-[200px] h-[100px] rounded-md`}
+                className={`${isLoading ? 'animate-pulse' : ''
+                  } shadow w-[200px] h-[100px] rounded-md`}
               />
             ) : (
               <img
-                src={`${getCourseThumbnailMediaDirectory(
+                src={`${course.courseStructure.thumbnail_image ? getCourseThumbnailMediaDirectory(
                   org?.org_uuid,
                   course.courseStructure.course_uuid,
                   course.courseStructure.thumbnail_image
-                )}`}
-                className="shadow w-[200px] h-[100px] rounded-md"
+                ) : '/empty_thumbnail.png'}`}
+                className="shadow w-[200px] h-[100px] rounded-md bg-gray-200"
               />
             )}
           </div>

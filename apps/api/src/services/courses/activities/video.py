@@ -5,7 +5,7 @@ from src.db.organizations import Organization
 from pydantic import BaseModel
 from sqlmodel import Session, select
 from src.security.rbac.rbac import (
-    authorization_verify_based_on_roles_and_authorship,
+    authorization_verify_based_on_roles_and_authorship_and_usergroups,
     authorization_verify_if_user_is_anon,
 )
 from src.db.chapters import Chapter
@@ -232,7 +232,7 @@ async def rbac_check(
 ):
     await authorization_verify_if_user_is_anon(current_user.id)
 
-    await authorization_verify_based_on_roles_and_authorship(
+    await authorization_verify_based_on_roles_and_authorship_and_usergroups(
         request,
         current_user.id,
         action,

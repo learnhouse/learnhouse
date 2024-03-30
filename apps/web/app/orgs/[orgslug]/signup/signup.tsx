@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { getUriWithOrg } from '@services/config/config'
 import { useSession } from '@components/Contexts/SessionContext'
 import React, { useEffect } from 'react'
-import { MailWarning, Shield, UserPlus } from 'lucide-react'
+import { MailWarning, Shield, Ticket, UserPlus } from 'lucide-react'
 import { useOrg } from '@components/Contexts/OrgContext'
 import UserAvatar from '@components/Objects/UserAvatar'
 import OpenSignUpComponent from './OpenSignup'
@@ -201,7 +201,7 @@ const NoTokenScreen = (props: any) => {
             onClick={validateCode}
             className="flex w-fit space-x-2 bg-black px-6 py-2 text-md rounded-lg font-semibold h-fit text-white items-center shadow-md"
           >
-            <Shield size={18} />
+            <Ticket size={18} />
             <p>Submit </p>
           </button>
         </div>
