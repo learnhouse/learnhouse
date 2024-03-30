@@ -29,12 +29,12 @@ function UsersSettingsPage({ params }: { params: SettingsParams }) {
       setH2Label('Manage your organization users, assign roles and permissions')
     }
     if (params.subpage == 'signups') {
-      setH1Label('Signup Access')
+      setH1Label('Signups & Invite Codes')
       setH2Label('Choose from where users can join your organization')
     }
     if (params.subpage == 'add') {
-      setH1Label('Invite users')
-      setH2Label('Invite users to join your organization')
+      setH1Label('Invite Members')
+      setH2Label('Invite members to join your organization')
     }
     if (params.subpage == 'usergroups') {
       setH1Label('UserGroups')
@@ -97,23 +97,6 @@ function UsersSettingsPage({ params }: { params: SettingsParams }) {
           </Link>
           <Link
             href={
-              getUriWithOrg(params.orgslug, '') + `/dash/users/settings/add`
-            }
-          >
-            <div
-              className={`py-2 w-fit text-center border-black transition-all ease-linear ${params.subpage.toString() === 'add'
-                  ? 'border-b-4'
-                  : 'opacity-50'
-                } cursor-pointer`}
-            >
-              <div className="flex items-center space-x-2.5 mx-2">
-                <UserPlus size={16} />
-                <div>Invite users</div>
-              </div>
-            </div>
-          </Link>
-          <Link
-            href={
               getUriWithOrg(params.orgslug, '') + `/dash/users/settings/signups`
             }
           >
@@ -125,10 +108,28 @@ function UsersSettingsPage({ params }: { params: SettingsParams }) {
             >
               <div className="flex items-center space-x-2.5 mx-2">
                 <ScanEye size={16} />
-                <div>Signup Access</div>
+                <div>Signups & Invite Codes</div>
               </div>
             </div>
           </Link>
+          <Link
+            href={
+              getUriWithOrg(params.orgslug, '') + `/dash/users/settings/add`
+            }
+          >
+            <div
+              className={`py-2 w-fit text-center border-black transition-all ease-linear ${params.subpage.toString() === 'add'
+                  ? 'border-b-4'
+                  : 'opacity-50'
+                } cursor-pointer`}
+            >
+              <div className="flex items-center space-x-2.5 mx-2">
+                <UserPlus size={16} />
+                <div>Invite Members</div>
+              </div>
+            </div>
+          </Link>
+          
         </div>
       </div>
       <motion.div

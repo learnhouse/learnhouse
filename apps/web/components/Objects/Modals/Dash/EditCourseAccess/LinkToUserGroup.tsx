@@ -4,6 +4,7 @@ import { useOrg } from '@components/Contexts/OrgContext';
 import { getAPIUrl } from '@services/config/config';
 import { linkResourcesToUserGroup } from '@services/usergroups/usergroups';
 import { swrFetcher } from '@services/utils/ts/requests';
+import { AlertTriangle, Info } from 'lucide-react';
 import React, { useEffect } from 'react'
 import toast from 'react-hot-toast';
 import useSWR, { mutate } from 'swr'
@@ -47,9 +48,14 @@ function LinkToUserGroup(props: LinkToUserGroupProps) {
         , [usergroups])
 
     return (
-        <div className='p-4 flex-row flex justify-between items-center'>
-
-            <div className='py-3'>
+        <div className='flex flex-col space-y-1 '>
+            <div className='flex bg-yellow-100 text-yellow-900 mx-auto w-fit mt-3 px-4 py-2 space-x-2 text-sm rounded-full items-center'>
+                <Info size={19} />
+                <h1 className=' font-medium'>Users that are not part of the UserGroup will no longer have access to this course</h1>
+            </div>
+            <div className='p-4 flex-row flex justify-between items-center'>
+            
+            <div className='py-1'>
                 <span className='px-3 text-gray-400 font-bold rounded-full py-1 bg-gray-100 mx-3'>UserGroup Name </span>
                 <select
                     onChange={(e) => setSelectedUserGroup(e.target.value)}
@@ -65,6 +71,8 @@ function LinkToUserGroup(props: LinkToUserGroupProps) {
                 <button onClick={() => { handleLink() }} className='bg-green-700 text-white font-bold px-4 py-2 rounded-md shadow'>Link</button>
             </div>
         </div>
+        </div>
+        
     )
 }
 

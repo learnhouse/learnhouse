@@ -3,7 +3,7 @@ import PageLoading from '@components/Objects/Loaders/PageLoading'
 import ConfirmationModal from '@components/StyledElements/ConfirmationModal/ConfirmationModal'
 import { getAPIUrl, getUriWithOrg } from '@services/config/config'
 import { swrFetcher } from '@services/utils/ts/requests'
-import { Globe, Shield, X } from 'lucide-react'
+import { Globe, Shield, Ticket, User, UserSquare, Users, X } from 'lucide-react'
 import Link from 'next/link'
 import React, { useEffect } from 'react'
 import useSWR, { mutate } from 'swr'
@@ -16,6 +16,8 @@ import {
 import Toast from '@components/StyledElements/Toast/Toast'
 import toast from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
+import Modal from '@components/StyledElements/Modal/Modal'
+import OrgInviteCodeGenerate from '@components/Objects/Modals/Dash/OrgAccess/OrgInviteCodeGenerate'
 
 function OrgAccess() {
   const org = useOrg() as any
@@ -25,6 +27,7 @@ function OrgAccess() {
   )
   const [isLoading, setIsLoading] = React.useState(false)
   const [joinMethod, setJoinMethod] = React.useState('closed')
+  const [invitesModal, setInvitesModal] = React.useState(false)
   const router = useRouter()
 
   async function getOrgJoinMethod() {
@@ -37,14 +40,7 @@ function OrgAccess() {
     }
   }
 
-  async function createInvite() {
-    let res = await createInviteCode(org.id)
-    if (res.status == 200) {
-      mutate(`${getAPIUrl()}orgs/${org.id}/invites`)
-    } else {
-      toast.error('Error ' + res.status + ': ' + res.data.detail)
-    }
-  }
+  
 
   async function deleteInvite(invite: any) {
     let res = await deleteInviteCode(org.id, invite.invite_code_uuid)
@@ -125,7 +121,7 @@ function OrgAccess() {
                       </div>
                     ) : null}
                     <div className="flex flex-col space-y-1 justify-center items-center h-full">
-                      <Shield className="text-slate-400" size={40}></Shield>
+                      <Ticket className="text-slate-400" size={40}></Ticket>
                       <div className="text-2xl text-slate-700 font-bold">
                         Closed
                       </div>
@@ -161,6 +157,7 @@ function OrgAccess() {
                   <tr className="font-bolder text-sm">
                     <th className="py-3 px-4">Code</th>
                     <th className="py-3 px-4">Signup link</th>
+                    <th className="py-3 px-4">Type</th>
                     <th className="py-3 px-4">Expiration date</th>
                     <th className="py-3 px-4">Actions</th>
                   </tr>
@@ -189,6 +186,19 @@ function OrgAccess() {
                           </Link>
                         </td>
                         <td className="py-3 px-4">
+                          {invite.usergroup_id ? (
+                            <div className="flex space-x-2 items-center">
+                              <UserSquare className="w-4 h-4" />
+                              <span>Linked to a UserGroup</span>
+                            </div>
+                          ) : (
+                            <div className="flex space-x-2 items-center">
+                              <Users className="w-4 h-4" />
+                              <span>Normal</span>
+                            </div>
+                          )}
+                        </td>
+                        <td className="py-3 px-4">
                           {dayjs(invite.expiration_date)
                             .add(1, 'year')
                             .format('DD/MM/YYYY')}{' '}
@@ -215,13 +225,36 @@ function OrgAccess() {
                   </tbody>
                 </>
               </table>
-              <div className='flex flex-row-reverse mt-3 mr-2'><button
-                onClick={() => createInvite()}
-                className=" flex space-x-2 hover:cursor-pointer p-1 px-3 bg-green-700 rounded-md font-bold items-center text-sm text-green-100"
-              >
-                <Shield className="w-4 h-4" />
-                <span> Generate invite code</span>
-              </button></div>
+              <div className='flex flex-row-reverse mt-3 mr-2'>
+                <Modal
+                  isDialogOpen={
+                    invitesModal
+                  }
+                  onOpenChange={() =>
+                    setInvitesModal(!invitesModal)
+                  }
+                  minHeight="no-min"
+                  minWidth='lg'
+                  dialogContent={
+                    <OrgInviteCodeGenerate
+                      setInvitesModal={setInvitesModal}
+                    />
+                  }
+                  dialogTitle="Generate Invite Code"
+                  dialogDescription={
+                    'Generate a new invite code for your organization'
+                  }
+                  dialogTrigger={
+                    <button
+                      className=" flex space-x-2 hover:cursor-pointer p-1 px-3 bg-green-700 rounded-md font-bold items-center text-sm text-green-100"
+                    >
+                      <Ticket className="w-4 h-4" />
+                      <span> Generate invite code</span>
+                    </button>
+                  }
+                />
+
+              </div>
 
             </div>
           </div>
