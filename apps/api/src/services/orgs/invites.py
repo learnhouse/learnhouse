@@ -215,11 +215,7 @@ async def get_invite_codes(
     # Get invite codes
     invite_codes = r.keys(f"org_invite_code_*:org:{org.org_uuid}:code:*")
 
-    if not invite_codes:
-        raise HTTPException(
-            status_code=404,
-            detail="Invite codes not found",
-        )
+
 
     invite_codes_list = []
 

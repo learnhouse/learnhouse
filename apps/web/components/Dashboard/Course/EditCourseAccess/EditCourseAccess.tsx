@@ -5,7 +5,7 @@ import Modal from '@components/StyledElements/Modal/Modal'
 import { getAPIUrl } from '@services/config/config'
 import { unLinkResourcesToUserGroup } from '@services/usergroups/usergroups'
 import { swrFetcher } from '@services/utils/ts/requests'
-import { Globe, Users, UsersRound, X } from 'lucide-react'
+import { Globe, SquareUserRound, Users, UsersRound, X } from 'lucide-react'
 import React from 'react'
 import toast from 'react-hot-toast'
 import useSWR, { mutate } from 'swr'
@@ -198,13 +198,14 @@ function UserGroupsSection({ usergroups }: { usergroups: any[] }) {
                         <button
                             className=" flex space-x-2 hover:cursor-pointer p-1 px-3 bg-green-700 rounded-md font-bold items-center text-sm text-green-100"
                         >
-                            <UsersRound className="w-4 h-4" />
+                            <SquareUserRound className="w-4 h-4" />
                             <span>Link to a UserGroup</span>
                         </button>
                     }
                 />
 
-            </div></>
+            </div>
+        </>
     )
 }
 
