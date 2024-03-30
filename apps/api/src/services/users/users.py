@@ -3,6 +3,7 @@ from typing import Literal
 from uuid import uuid4
 from fastapi import HTTPException, Request, UploadFile, status
 from sqlmodel import Session, select
+from src.services.users.usergroups import add_users_to_usergroup
 from src.services.users.emails import (
     send_account_creation_email,
 )
@@ -124,18 +125,25 @@ async def create_user_with_invite(
 ):
 
     # Check if invite code exists
-    inviteCOde = await get_invite_code(
+    inviteCode = await get_invite_code(
         request, org_id, invite_code, current_user, db_session
     )
 
-    # Check if invite code contains UserGroup 
-    #TODO
-
-
-    if not inviteCOde:
+    if not inviteCode:
         raise HTTPException(
             status_code=400,
             detail="Invite code is incorrect",
+        )
+
+    # Check if invite code contains UserGroup
+    if inviteCode.usergroup_id:
+        # Add user to UserGroup
+        await add_users_to_usergroup(
+            request,
+            db_session,
+            current_user,
+            inviteCode.usergroup_id,
+            user_object.username,
         )
 
     user = await create_user(request, db_session, current_user, user_object, org_id)
@@ -350,6 +358,7 @@ async def update_user_password(
 
     return user
 
+
 async def read_user_by_id(
     request: Request,
     db_session: Session,
@@ -467,8 +476,10 @@ async def authorize_user_action(
         )
 
     # RBAC check
-    authorized = await authorization_verify_based_on_roles_and_authorship_and_usergroups(
-        request, current_user.id, action, resource_uuid, db_session
+    authorized = (
+        await authorization_verify_based_on_roles_and_authorship_and_usergroups(
+            request, current_user.id, action, resource_uuid, db_session
+        )
     )
 
     if authorized:
