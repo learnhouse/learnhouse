@@ -27,7 +27,7 @@ function CourseOverviewPage({ params }: { params: CourseOverviewParams }) {
       <CourseProvider courseuuid={getEntireCourseUUID(params.courseuuid)}>
         <div className="pl-10 pr-10 text-sm tracking-tight bg-[#fcfbfc] z-10 shadow-[0px_4px_16px_rgba(0,0,0,0.06)]">
           <CourseOverviewTop params={params} />
-          <div className="flex space-x-3 font-black text-xs">
+          <div className="flex space-x-3 font-black text-sm">
             <Link
               href={
                 getUriWithOrg(params.orgslug, '') +

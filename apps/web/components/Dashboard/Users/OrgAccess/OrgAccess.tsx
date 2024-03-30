@@ -74,7 +74,6 @@ function OrgAccess() {
 
   return (
     <>
-      <Toast></Toast>
       {!isLoading ? (
         <>
           <div className="h-6"></div>
