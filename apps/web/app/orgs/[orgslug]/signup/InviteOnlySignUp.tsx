@@ -66,6 +66,7 @@ function InviteOnlySignUpComponent(props: InviteOnlySignUpProps) {
       last_name: '',
     },
     validate,
+    enableReinitialize: true,
     onSubmit: async (values) => {
       setError('')
       setMessage('')

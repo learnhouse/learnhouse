@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends
+from src.routers import usergroups
 from src.routers import blocks, dev, trail, users, auth, orgs, roles
 from src.routers.ai import ai
 from src.routers.courses import chapters, collections, courses, activities
@@ -12,6 +13,7 @@ v1_router = APIRouter(prefix="/api/v1")
 
 # API Routes
 v1_router.include_router(users.router, prefix="/users", tags=["users"])
+v1_router.include_router(usergroups.router, prefix="/usergroups", tags=["usergroups"])
 v1_router.include_router(auth.router, prefix="/auth", tags=["auth"])
 v1_router.include_router(orgs.router, prefix="/orgs", tags=["orgs"])
 v1_router.include_router(roles.router, prefix="/roles", tags=["roles"])

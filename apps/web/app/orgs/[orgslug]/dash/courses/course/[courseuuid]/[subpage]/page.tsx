@@ -7,7 +7,8 @@ import Link from 'next/link'
 import { CourseOverviewTop } from '@components/Dashboard/UI/CourseOverviewTop'
 import { motion } from 'framer-motion'
 import EditCourseGeneral from '@components/Dashboard/Course/EditCourseGeneral/EditCourseGeneral'
-import { GalleryVerticalEnd, Info } from 'lucide-react'
+import { GalleryVerticalEnd, Info, Lock, UserRoundCog } from 'lucide-react'
+import EditCourseAccess from '@components/Dashboard/Course/EditCourseAccess/EditCourseAccess'
 
 export type CourseOverviewParams = {
   orgslug: string
@@ -24,9 +25,9 @@ function CourseOverviewPage({ params }: { params: CourseOverviewParams }) {
   return (
     <div className="h-screen w-full bg-[#f8f8f8] grid grid-rows-[auto,1fr]">
       <CourseProvider courseuuid={getEntireCourseUUID(params.courseuuid)}>
-        <div className="pl-10 pr-10  tracking-tight bg-[#fcfbfc] z-10 shadow-[0px_4px_16px_rgba(0,0,0,0.06)]">
+        <div className="pl-10 pr-10 text-sm tracking-tight bg-[#fcfbfc] z-10 shadow-[0px_4px_16px_rgba(0,0,0,0.06)]">
           <CourseOverviewTop params={params} />
-          <div className="flex space-x-5 font-black text-sm">
+          <div className="flex space-x-3 font-black text-sm">
             <Link
               href={
                 getUriWithOrg(params.orgslug, '') +
@@ -34,11 +35,10 @@ function CourseOverviewPage({ params }: { params: CourseOverviewParams }) {
               }
             >
               <div
-                className={`py-2 w-fit text-center border-black transition-all ease-linear ${
-                  params.subpage.toString() === 'general'
-                    ? 'border-b-4'
-                    : 'opacity-50'
-                } cursor-pointer`}
+                className={`flex space-x-4 py-2 w-fit text-center border-black transition-all ease-linear ${params.subpage.toString() === 'general'
+                  ? 'border-b-4'
+                  : 'opacity-50'
+                  } cursor-pointer`}
               >
                 <div className="flex items-center space-x-2.5 mx-2">
                   <Info size={16} />
@@ -49,15 +49,32 @@ function CourseOverviewPage({ params }: { params: CourseOverviewParams }) {
             <Link
               href={
                 getUriWithOrg(params.orgslug, '') +
+                `/dash/courses/course/${params.courseuuid}/access`
+              }
+            >
+              <div
+                className={`flex space-x-4 py-2 w-fit text-center border-black transition-all ease-linear ${params.subpage.toString() === 'access'
+                  ? 'border-b-4'
+                  : 'opacity-50'
+                  } cursor-pointer`}
+              >
+                <div className="flex items-center space-x-2.5 mx-2">
+                  <UserRoundCog size={16} />
+                  <div>Access</div>
+                </div>
+              </div>
+            </Link>
+            <Link
+              href={
+                getUriWithOrg(params.orgslug, '') +
                 `/dash/courses/course/${params.courseuuid}/content`
               }
             >
               <div
-                className={`flex space-x-4 py-2 w-fit text-center border-black transition-all ease-linear ${
-                  params.subpage.toString() === 'content'
-                    ? 'border-b-4'
-                    : 'opacity-50'
-                } cursor-pointer`}
+                className={`flex space-x-4 py-2 w-fit text-center border-black transition-all ease-linear ${params.subpage.toString() === 'content'
+                  ? 'border-b-4'
+                  : 'opacity-50'
+                  } cursor-pointer`}
               >
                 <div className="flex items-center space-x-2.5 mx-2">
                   <GalleryVerticalEnd size={16} />
@@ -65,7 +82,9 @@ function CourseOverviewPage({ params }: { params: CourseOverviewParams }) {
                 </div>
               </div>
             </Link>
+
           </div>
+
         </div>
         <motion.div
           initial={{ opacity: 0 }}
@@ -74,16 +93,9 @@ function CourseOverviewPage({ params }: { params: CourseOverviewParams }) {
           transition={{ duration: 0.1, type: 'spring', stiffness: 80 }}
           className="h-full overflow-y-auto"
         >
-          {params.subpage == 'content' ? (
-            <EditCourseStructure orgslug={params.orgslug} />
-          ) : (
-            ''
-          )}
-          {params.subpage == 'general' ? (
-            <EditCourseGeneral orgslug={params.orgslug} />
-          ) : (
-            ''
-          )}
+          {params.subpage == 'content' ? (<EditCourseStructure orgslug={params.orgslug} />) : ('')}
+          {params.subpage == 'general' ? (<EditCourseGeneral orgslug={params.orgslug} />) : ('')}
+          {params.subpage == 'access' ? (<EditCourseAccess orgslug={params.orgslug} />) : ('')}
         </motion.div>
       </CourseProvider>
     </div>
