@@ -12,7 +12,7 @@ export async function getUserGroups(org_id: any) {
 
 export async function createUserGroup(body: any) {
   const result: any = await fetch(
-    `${getAPIUrl()}usergroups`,
+    `${getAPIUrl()}usergroups/`,
     RequestBody('POST', body, null)
   )
   const res = await getResponseMetadata(result)
