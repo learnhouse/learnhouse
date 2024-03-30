@@ -1,6 +1,7 @@
 'use client'
 import { OrgProvider } from '@components/Contexts/OrgContext'
 import SessionProvider from '@components/Contexts/SessionContext'
+import Toast from '@components/StyledElements/Toast/Toast'
 import '@styles/globals.css'
 
 export default function RootLayout({
@@ -12,6 +13,7 @@ export default function RootLayout({
 }) {
   return (
     <div>
+      <Toast />
       <OrgProvider orgslug={params.orgslug}>
         <SessionProvider>{children}</SessionProvider>
       </OrgProvider>
