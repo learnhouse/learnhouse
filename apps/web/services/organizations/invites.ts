@@ -10,6 +10,15 @@ export async function createInviteCode(org_id: any) {
   return res
 }
 
+export async function createInviteCodeWithUserGroup(org_id: any, usergroup_id: number) {
+  const result = await fetch(
+    `${getAPIUrl()}orgs/${org_id}/invites_with_usergroups?usergroup_id=${usergroup_id}`,
+    RequestBody('POST', null, null)
+  )
+  const res = await getResponseMetadata(result)
+  return res
+}
+
 export async function deleteInviteCode(
   org_id: any,
   org_invite_code_uuid: string

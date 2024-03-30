@@ -109,7 +109,7 @@ function EditCourseAccess(props: EditCourseAccessProps) {
                         status="info"
                     ></ConfirmationModal>
                 </div>
-                <UserGroupsSection usergroups={usergroups} />
+                {!isPublic ? ( <UserGroupsSection usergroups={usergroups} />) : null}
             </div>
         </div>
     )
@@ -137,7 +137,7 @@ function UserGroupsSection({ usergroups }: { usergroups: any[] }) {
                 <h1 className="font-bold text-xl text-gray-800">UserGroups</h1>
                 <h2 className="text-gray-500 text-sm">
                     {' '}
-                    Choose which UserGroups can access this course{' '}
+                    You can choose to give access to this course to specific groups of users only by linking it to a UserGroup{' '}
                 </h2>
             </div>
             <table className="table-auto w-full text-left whitespace-nowrap rounded-md overflow-hidden">
@@ -186,13 +186,14 @@ function UserGroupsSection({ usergroups }: { usergroups: any[] }) {
                         setUserGroupModal(!userGroupModal)
                     }
                     minHeight="no-min"
+                    minWidth='md'
                     dialogContent={
                         <LinkToUserGroup setUserGroupModal={setUserGroupModal} />
 
                     }
                     dialogTitle="Link Course to a UserGroup"
                     dialogDescription={
-                        'Choose which UserGroups can access this course'
+                        'Choose a UserGroup to link this course to, Users from this UserGroup will have access to this course.'
                     }
                     dialogTrigger={
                         <button
