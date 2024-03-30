@@ -62,6 +62,7 @@ function OpenSignUpComponent() {
       last_name: '',
     },
     validate,
+    enableReinitialize: true,
     onSubmit: async (values) => {
       setError('')
       setMessage('')

@@ -74,9 +74,11 @@ function OrgUserGroups() {
                                             onOpenChange={() =>
                                                 handleUserGroupManagementModal(usergroup.id)
                                             }
-                                            minHeight="no-min"
+                                            minHeight="lg"
+                                            minWidth='lg'
                                             dialogContent={
                                                 <ManageUsers
+                                                    usergroup_id={usergroup.id}
                                                 />
                                             }
                                             dialogTitle="Manage UserGroup Users"

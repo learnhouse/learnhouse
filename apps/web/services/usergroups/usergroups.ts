@@ -19,6 +19,24 @@ export async function createUserGroup(body: any) {
   return res
 }
 
+export async function linkUserToUserGroup(usergroup_id: any, user_id: any) {
+  const result: any = await fetch(
+    `${getAPIUrl()}usergroups/${usergroup_id}/add_users?user_ids=${user_id}`,
+    RequestBody('POST', null, null)
+  )
+  const res = await getResponseMetadata(result)
+  return res
+}
+
+export async function unLinkUserToUserGroup(usergroup_id: any, user_id: any) {
+  const result: any = await fetch(
+    `${getAPIUrl()}usergroups/${usergroup_id}/remove_users?user_ids=${user_id}`,
+    RequestBody('DELETE', null, null)
+  )
+  const res = await getResponseMetadata(result)
+  return res
+}
+
 export async function deleteUserGroup(usergroup_id: number) {
   const result: any = await fetch(
     `${getAPIUrl()}usergroups/${usergroup_id}`,
