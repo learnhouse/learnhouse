@@ -3,6 +3,7 @@ from typing import Literal
 from uuid import uuid4
 from fastapi import HTTPException, Request, UploadFile, status
 from sqlmodel import Session, select
+from src.services.users.usergroups import add_users_to_usergroup
 from src.services.users.emails import (
     send_account_creation_email,
 )
@@ -10,7 +11,7 @@ from src.services.orgs.invites import get_invite_code
 from src.services.users.avatars import upload_avatar
 from src.db.roles import Role, RoleRead
 from src.security.rbac.rbac import (
-    authorization_verify_based_on_roles_and_authorship,
+    authorization_verify_based_on_roles_and_authorship_and_usergroups,
     authorization_verify_if_user_is_anon,
 )
 from src.db.organizations import Organization, OrganizationRead
@@ -124,14 +125,25 @@ async def create_user_with_invite(
 ):
 
     # Check if invite code exists
-    isInviteCodeCorrect = await get_invite_code(
+    inviteCode = await get_invite_code(
         request, org_id, invite_code, current_user, db_session
     )
 
-    if not isInviteCodeCorrect:
+    if not inviteCode:
         raise HTTPException(
             status_code=400,
             detail="Invite code is incorrect",
+        )
+
+    # Check if invite code contains UserGroup
+    if inviteCode.usergroup_id:
+        # Add user to UserGroup
+        await add_users_to_usergroup(
+            request,
+            db_session,
+            current_user,
+            inviteCode.usergroup_id,
+            user_object.username,
         )
 
     user = await create_user(request, db_session, current_user, user_object, org_id)
@@ -346,6 +358,7 @@ async def update_user_password(
 
     return user
 
+
 async def read_user_by_id(
     request: Request,
     db_session: Session,
@@ -449,7 +462,7 @@ async def authorize_user_action(
     request: Request,
     db_session: Session,
     current_user: PublicUser | AnonymousUser,
-    ressource_uuid: str,
+    resource_uuid: str,
     action: Literal["create", "read", "update", "delete"],
 ):
     # Get user
@@ -463,8 +476,10 @@ async def authorize_user_action(
         )
 
     # RBAC check
-    authorized = await authorization_verify_based_on_roles_and_authorship(
-        request, current_user.id, action, ressource_uuid, db_session
+    authorized = (
+        await authorization_verify_based_on_roles_and_authorship_and_usergroups(
+            request, current_user.id, action, resource_uuid, db_session
+        )
     )
 
     if authorized:
@@ -535,7 +550,7 @@ async def rbac_check(
         if current_user.id == 0:  # if user is anonymous
             return True
         else:
-            await authorization_verify_based_on_roles_and_authorship(
+            await authorization_verify_based_on_roles_and_authorship_and_usergroups(
                 request, current_user.id, "create", "user_x", db_session
             )
 
@@ -546,7 +561,7 @@ async def rbac_check(
         if current_user.user_uuid == user_uuid:
             return True
 
-        await authorization_verify_based_on_roles_and_authorship(
+        await authorization_verify_based_on_roles_and_authorship_and_usergroups(
             request, current_user.id, action, user_uuid, db_session
         )
 

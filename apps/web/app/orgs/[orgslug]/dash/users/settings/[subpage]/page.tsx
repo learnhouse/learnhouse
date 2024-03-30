@@ -3,13 +3,14 @@ import React, { useEffect } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { getUriWithOrg } from '@services/config/config'
-import { ScanEye, UserPlus, Users } from 'lucide-react'
+import { ScanEye, SquareUserRound, UserPlus, Users } from 'lucide-react'
 import BreadCrumbs from '@components/Dashboard/UI/BreadCrumbs'
 import { useSession } from '@components/Contexts/SessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import OrgUsers from '@components/Dashboard/Users/OrgUsers/OrgUsers'
 import OrgAccess from '@components/Dashboard/Users/OrgAccess/OrgAccess'
 import OrgUsersAdd from '@components/Dashboard/Users/OrgUsersAdd/OrgUsersAdd'
+import OrgUserGroups from '@components/Dashboard/Users/OrgUserGroups/OrgUserGroups'
 
 export type SettingsParams = {
   subpage: string
@@ -28,12 +29,16 @@ function UsersSettingsPage({ params }: { params: SettingsParams }) {
       setH2Label('Manage your organization users, assign roles and permissions')
     }
     if (params.subpage == 'signups') {
-      setH1Label('Signup Access')
+      setH1Label('Signups & Invite Codes')
       setH2Label('Choose from where users can join your organization')
     }
     if (params.subpage == 'add') {
-      setH1Label('Invite users')
-      setH2Label('Invite users to join your organization')
+      setH1Label('Invite Members')
+      setH2Label('Invite members to join your organization')
+    }
+    if (params.subpage == 'usergroups') {
+      setH1Label('UserGroups')
+      setH2Label('Create and manage user groups')
     }
   }
 
@@ -62,11 +67,10 @@ function UsersSettingsPage({ params }: { params: SettingsParams }) {
             }
           >
             <div
-              className={`py-2 w-fit text-center border-black transition-all ease-linear ${
-                params.subpage.toString() === 'users'
+              className={`py-2 w-fit text-center border-black transition-all ease-linear ${params.subpage.toString() === 'users'
                   ? 'border-b-4'
                   : 'opacity-50'
-              } cursor-pointer`}
+                } cursor-pointer`}
             >
               <div className="flex items-center space-x-2.5 mx-2">
                 <Users size={16} />
@@ -76,19 +80,18 @@ function UsersSettingsPage({ params }: { params: SettingsParams }) {
           </Link>
           <Link
             href={
-              getUriWithOrg(params.orgslug, '') + `/dash/users/settings/add`
+              getUriWithOrg(params.orgslug, '') + `/dash/users/settings/usergroups`
             }
           >
             <div
-              className={`py-2 w-fit text-center border-black transition-all ease-linear ${
-                params.subpage.toString() === 'add'
+              className={`py-2 w-fit text-center border-black transition-all ease-linear ${params.subpage.toString() === 'usergroups'
                   ? 'border-b-4'
                   : 'opacity-50'
-              } cursor-pointer`}
+                } cursor-pointer`}
             >
               <div className="flex items-center space-x-2.5 mx-2">
-                <UserPlus size={16} />
-                <div>Invite users</div>
+                <SquareUserRound size={16} />
+                <div>UserGroups</div>
               </div>
             </div>
           </Link>
@@ -98,18 +101,35 @@ function UsersSettingsPage({ params }: { params: SettingsParams }) {
             }
           >
             <div
-              className={`py-2 w-fit text-center border-black transition-all ease-linear ${
-                params.subpage.toString() === 'signups'
+              className={`py-2 w-fit text-center border-black transition-all ease-linear ${params.subpage.toString() === 'signups'
                   ? 'border-b-4'
                   : 'opacity-50'
-              } cursor-pointer`}
+                } cursor-pointer`}
             >
               <div className="flex items-center space-x-2.5 mx-2">
                 <ScanEye size={16} />
-                <div>Signup Access</div>
+                <div>Signups & Invite Codes</div>
               </div>
             </div>
           </Link>
+          <Link
+            href={
+              getUriWithOrg(params.orgslug, '') + `/dash/users/settings/add`
+            }
+          >
+            <div
+              className={`py-2 w-fit text-center border-black transition-all ease-linear ${params.subpage.toString() === 'add'
+                  ? 'border-b-4'
+                  : 'opacity-50'
+                } cursor-pointer`}
+            >
+              <div className="flex items-center space-x-2.5 mx-2">
+                <UserPlus size={16} />
+                <div>Invite Members</div>
+              </div>
+            </div>
+          </Link>
+          
         </div>
       </div>
       <motion.div
@@ -122,6 +142,7 @@ function UsersSettingsPage({ params }: { params: SettingsParams }) {
         {params.subpage == 'users' ? <OrgUsers /> : ''}
         {params.subpage == 'signups' ? <OrgAccess /> : ''}
         {params.subpage == 'add' ? <OrgUsersAdd /> : ''}
+        {params.subpage == 'usergroups' ? <OrgUserGroups /> : ''}
       </motion.div>
     </div>
   )

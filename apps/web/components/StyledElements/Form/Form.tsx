@@ -15,7 +15,7 @@ export const FormLabelAndMessage = (props: {
   message?: string
 }) => (
   <div className="flex items-center space-x-3">
-    <FormLabel className="grow">{props.label}</FormLabel>
+    <FormLabel className="grow text-sm">{props.label}</FormLabel>
     {(props.message && (
       <div className="text-red-700 text-sm items-center  rounded-md flex  space-x-1">
         <Info size={10} />
@@ -35,7 +35,6 @@ export const FormField = styled(Form.Field, {
 })
 
 export const FormLabel = styled(Form.Label, {
-  fontSize: 15,
   fontWeight: 500,
   lineHeight: '35px',
   color: 'black',

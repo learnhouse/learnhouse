@@ -135,6 +135,12 @@ async def install_default_elements(db_session: Session):
                 action_update=True,
                 action_delete=True,
             ),
+            usergroups=Permission(
+                action_create=True,
+                action_read=True,
+                action_update=True,
+                action_delete=True,
+            ),
             collections=Permission(
                 action_create=True,
                 action_read=True,
@@ -178,6 +184,12 @@ async def install_default_elements(db_session: Session):
                 action_delete=True,
             ),
             users=Permission(
+                action_create=True,
+                action_read=True,
+                action_update=True,
+                action_delete=True,
+            ),
+            usergroups=Permission(
                 action_create=True,
                 action_read=True,
                 action_update=True,
@@ -227,6 +239,12 @@ async def install_default_elements(db_session: Session):
             ),
             users=Permission(
                 action_create=True,
+                action_read=True,
+                action_update=False,
+                action_delete=False,
+            ),
+            usergroups=Permission(
+                action_create=False,
                 action_read=True,
                 action_update=False,
                 action_delete=False,

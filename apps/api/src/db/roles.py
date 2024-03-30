@@ -19,6 +19,7 @@ class Permission(BaseModel):
 class Rights(BaseModel):
     courses: Permission
     users: Permission
+    usergroups : Permission
     collections: Permission
     organizations: Permission
     coursechapters: Permission

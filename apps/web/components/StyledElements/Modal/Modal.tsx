@@ -15,6 +15,7 @@ type ModalParams = {
   onOpenChange: any
   isDialogOpen?: boolean
   minHeight?: 'sm' | 'md' | 'lg' | 'xl' | 'no-min'
+  minWidth?: 'sm' | 'md' | 'lg' | 'xl' | 'no-min'
 }
 
 const Modal = (params: ModalParams) => (
@@ -28,6 +29,7 @@ const Modal = (params: ModalParams) => (
       <DialogContent
         className="overflow-auto scrollbar-w-2 scrollbar-h-2 scrollbar scrollbar-thumb-black/20 scrollbar-thumb-rounded-full scrollbar-track-rounded-full"
         minHeight={params.minHeight}
+        minWidth={params.minWidth}
       >
         <DialogTopBar className="-space-y-1">
           <DialogTitle>{params.dialogTitle}</DialogTitle>
@@ -101,6 +103,23 @@ const DialogContent = styled(Dialog.Content, {
       },
       xl: {
         minHeight: '900px',
+      },
+    },
+    minWidth: {
+      'no-min': {
+        minWidth: '0px',
+      },
+      sm: {
+        minWidth: '600px',
+      },
+      md: {
+        minWidth: '800px',
+      },
+      lg: {
+        minWidth: '1000px',
+      },
+      xl: {
+        minWidth: '1200px',
       },
     },
   },
