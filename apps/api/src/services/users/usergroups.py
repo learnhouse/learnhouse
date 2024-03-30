@@ -119,6 +119,41 @@ async def read_usergroups_by_org_id(
     return usergroups
 
 
+async def get_usergroups_by_resource(
+    request: Request,
+    db_session: Session,
+    current_user: PublicUser | AnonymousUser,
+    resource_uuid: str,
+) -> list[UserGroupRead]:
+
+    statement = select(UserGroupResource).where(
+        UserGroupResource.resource_uuid == resource_uuid
+    )
+    usergroup_resources = db_session.exec(statement).all()
+
+    # RBAC check
+    await rbac_check(
+        request,
+        usergroup_uuid="usergroup_X",
+        current_user=current_user,
+        action="read",
+        db_session=db_session,
+    )
+
+    usergroup_ids = [usergroup.usergroup_id for usergroup in usergroup_resources]
+
+    # get usergroups
+    usergroups = []
+    for usergroup_id in usergroup_ids:
+        statement = select(UserGroup).where(UserGroup.id == usergroup_id)
+        usergroup = db_session.exec(statement).first()
+        usergroups.append(usergroup)
+
+    usergroups = [UserGroupRead.from_orm(usergroup) for usergroup in usergroups]
+
+    return usergroups
+
+
 async def update_usergroup_by_id(
     request: Request,
     db_session: Session,
@@ -259,7 +294,6 @@ async def remove_users_from_usergroup(
         )
 
     # RBAC check
-    # RBAC check
     await rbac_check(
         request,
         usergroup_uuid=usergroup.usergroup_uuid,
@@ -312,8 +346,21 @@ async def add_resources_to_usergroup(
     resources_uuids_array = resources_uuids.split(",")
 
     for resource_uuid in resources_uuids_array:
-        # TODO : Find a way to check if resource exists
+        # Check if a link between UserGroup and Resource already exists
+        statement = select(UserGroupResource).where(
+            UserGroupResource.usergroup_id == usergroup_id,
+            UserGroupResource.resource_uuid == resource_uuid,
+        )
+        usergroup_resource = db_session.exec(statement).first()
 
+        if usergroup_resource:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Resource {resource_uuid} already exists in UserGroup",
+            )
+            continue
+
+        # TODO : Find a way to check if resource really exists
         usergroup_obj = UserGroupResource(
             usergroup_id=usergroup_id,
             resource_uuid=resource_uuid,

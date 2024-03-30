@@ -116,10 +116,11 @@ function EditCourseGeneral(props: EditCourseStructureProps) {
                   message={formik.errors.description}
                 />
                 <Form.Control asChild>
-                  <Textarea
+                  <Input
                     style={{ backgroundColor: 'white' }}
                     onChange={formik.handleChange}
                     value={formik.values.description}
+                    type='text'
                     required
                   />
                 </Form.Control>
@@ -177,26 +178,7 @@ function EditCourseGeneral(props: EditCourseStructureProps) {
                 </Form.Control>
               </FormField>
 
-              <FormField className="flex items-center h-10" name="public">
-                <div className="flex my-auto items-center">
-                  <label
-                    className="text-black text-[15px] leading-none pr-[15px]"
-                    htmlFor="public-course"
-                  >
-                    Public Course
-                  </label>
-                  <Switch.Root
-                    className="w-[42px] h-[25px] bg-neutral-200 rounded-full relative  data-[state=checked]:bg-neutral-500 outline-none cursor-default"
-                    id="public-course"
-                    onCheckedChange={(checked) =>
-                      formik.setFieldValue('public', checked)
-                    }
-                    checked={formik.values.public === 'true'}
-                  >
-                    <Switch.Thumb className="block w-[21px] h-[21px] bg-white rounded-full shadow-[0_2px_2px] shadow-neutral-300 transition-transform duration-100 translate-x-0.5 will-change-transform data-[state=checked]:translate-x-[19px]" />
-                  </Switch.Root>
-                </div>
-              </FormField>
+              
             </FormLayout>
           </div>
         )}

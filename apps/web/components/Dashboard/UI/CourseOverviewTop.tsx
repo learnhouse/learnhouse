@@ -27,7 +27,7 @@ export function CourseOverviewTop({
         last_breadcrumb={course.courseStructure.name}
       ></BreadCrumbs>
       <div className="flex">
-        <div className="flex py-5 grow items-center">
+        <div className="flex py-3 grow items-center">
           <Link
             href={getUriWithOrg(org?.slug, '') + `/course/${params.courseuuid}`}
           >

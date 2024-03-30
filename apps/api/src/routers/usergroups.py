@@ -9,6 +9,7 @@ from src.services.users.usergroups import (
     add_users_to_usergroup,
     create_usergroup,
     delete_usergroup_by_id,
+    get_usergroups_by_resource,
     read_usergroup_by_id,
     read_usergroups_by_org_id,
     remove_resources_from_usergroup,
@@ -63,6 +64,19 @@ async def api_get_usergroups(
     Get UserGroups by Org
     """
     return await read_usergroups_by_org_id(request, db_session, current_user, org_id)
+
+@router.get("/resource/{resource_uuid}", response_model=list[UserGroupRead], tags=["usergroups"])
+async def api_get_usergroupsby_resource(
+    *,
+    request: Request,
+    db_session: Session = Depends(get_db_session),
+    current_user: PublicUser = Depends(get_current_user),
+    resource_uuid: str,
+) -> list[UserGroupRead]:
+    """
+    Get UserGroups by Org
+    """
+    return await get_usergroups_by_resource(request, db_session, current_user, resource_uuid)
 
 
 @router.put("/{usergroup_id}", response_model=UserGroupRead, tags=["usergroups"])
