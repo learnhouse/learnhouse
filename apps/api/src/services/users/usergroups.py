@@ -99,11 +99,7 @@ async def read_usergroups_by_org_id(
     statement = select(UserGroup).where(UserGroup.org_id == org_id)
     usergroups = db_session.exec(statement).all()
 
-    if not usergroups:
-        raise HTTPException(
-            status_code=404,
-            detail="UserGroups not found",
-        )
+
 
     # RBAC check
     await rbac_check(
