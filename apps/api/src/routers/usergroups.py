@@ -1,22 +1,20 @@
-from typing import Literal
-from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile
+from fastapi import APIRouter, Depends, Request
 from sqlmodel import Session
-from src.services.users.users import delete_user_by_id
 from src.db.usergroups import UserGroupCreate, UserGroupRead, UserGroupUpdate
-from src.db.users import PublicUser
+from src.db.users import PublicUser, UserRead
 from src.services.users.usergroups import (
     add_resources_to_usergroup,
     add_users_to_usergroup,
     create_usergroup,
     delete_usergroup_by_id,
     get_usergroups_by_resource,
+    get_users_linked_to_usergroup,
     read_usergroup_by_id,
     read_usergroups_by_org_id,
     remove_resources_from_usergroup,
     remove_users_from_usergroup,
     update_usergroup_by_id,
 )
-from src.services.orgs.orgs import get_org_join_mechanism
 from src.security.auth import get_current_user
 from src.core.events.database import get_db_session
 
@@ -52,6 +50,22 @@ async def api_get_usergroup(
     return await read_usergroup_by_id(request, db_session, current_user, usergroup_id)
 
 
+@router.get("/{usergroup_id}/users", response_model=list[UserRead], tags=["usergroups"])
+async def api_get_users_linked_to_usergroup(
+    *,
+    request: Request,
+    db_session: Session = Depends(get_db_session),
+    current_user: PublicUser = Depends(get_current_user),
+    usergroup_id: int,
+) -> list[UserRead]:
+    """
+    Get Users linked to UserGroup
+    """
+    return await get_users_linked_to_usergroup(
+        request, db_session, current_user, usergroup_id
+    )
+
+
 @router.get("/org/{org_id}", response_model=list[UserGroupRead], tags=["usergroups"])
 async def api_get_usergroups(
     *,
@@ -65,7 +79,10 @@ async def api_get_usergroups(
     """
     return await read_usergroups_by_org_id(request, db_session, current_user, org_id)
 
-@router.get("/resource/{resource_uuid}", response_model=list[UserGroupRead], tags=["usergroups"])
+
+@router.get(
+    "/resource/{resource_uuid}", response_model=list[UserGroupRead], tags=["usergroups"]
+)
 async def api_get_usergroupsby_resource(
     *,
     request: Request,
@@ -76,7 +93,9 @@ async def api_get_usergroupsby_resource(
     """
     Get UserGroups by Org
     """
-    return await get_usergroups_by_resource(request, db_session, current_user, resource_uuid)
+    return await get_usergroups_by_resource(
+        request, db_session, current_user, resource_uuid
+    )
 
 
 @router.put("/{usergroup_id}", response_model=UserGroupRead, tags=["usergroups"])
