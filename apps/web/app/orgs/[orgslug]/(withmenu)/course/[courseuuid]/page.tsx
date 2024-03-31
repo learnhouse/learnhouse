@@ -5,6 +5,7 @@ import { getCourseMetadataWithAuthHeader } from '@services/courses/courses'
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { Metadata } from 'next'
 import { getAccessTokenFromRefreshTokenCookie } from '@services/auth/auth'
+import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 
 type MetadataProps = {
   params: { orgslug: string; courseuuid: string }
@@ -46,6 +47,18 @@ export async function generateMetadata({
     openGraph: {
       title: course_meta.name + ` — ${org.name}`,
       description: course_meta.description ? course_meta.description : '',
+      images: [
+        {
+          url: getCourseThumbnailMediaDirectory(
+            org?.org_uuid,
+            course_meta?.course_uuid,
+            course_meta?.thumbnail_image
+          ),
+          width: 800,
+          height: 600,
+          alt: course_meta.name,
+        },
+      ],
       type: 'article',
       publishedTime: course_meta.creation_date ? course_meta.creation_date : '',
       tags: course_meta.learnings ? course_meta.learnings : [],
