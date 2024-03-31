@@ -2,6 +2,8 @@ site_name: LearnHouse
 site_description: LearnHouse is an open-source platform tailored for learning experiences.
 contact_email: hi@learnhouse.app
 
+# This config is optimized for local development. You can change the values according to your needs.
+
 general:
   development_mode: true
   install_mode: true
@@ -12,6 +14,7 @@ security:
 hosting_config:
   domain: learnhouse.app
   ssl: true
+  port: 1338
   allowed_origins:
     - http://localhost:3000
     - http://localhost:3001
@@ -29,7 +32,7 @@ mailing_config:
   system_email_adress: ""
 
 database_config:
-  sql_connection_string: postgresql://learnhouse:learnhouse@db:5432/learnhouse
+  sql_connection_string: postgresql://learnhouse:learnhouse@localhost:5432/learnhouse
 
 redis_config:
-  redis_connection_string: redis://redis:6379/learnhouse
+  redis_connection_string: redis://localhost:6379/learnhouse
