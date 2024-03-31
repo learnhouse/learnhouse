@@ -7,9 +7,9 @@
     "format": "prettier --write \"**/*.{ts,tsx,md}\""
   },
   "devDependencies": {
-    "eslint": "^8.51.0",
-    "prettier": "^3.0.3",
-    "turbo": "^1.10.15"
+    "eslint": "^8.57.0",
+    "prettier": "^3.2.5",
+    "turbo": "^1.13.0"
   },
   "packageManager": "pnpm@8.6.10"
 }
