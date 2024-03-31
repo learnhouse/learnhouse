@@ -1,8 +1,8 @@
+import os
+import yaml
 from typing import Literal, Optional
 from pydantic import BaseModel
-import os
 from dotenv import load_dotenv
-import yaml
 
 
 class SentryConfig(BaseModel):
@@ -42,6 +42,7 @@ class ContentDeliveryConfig(BaseModel):
 class HostingConfig(BaseModel):
     domain: str
     ssl: bool
+    port: int
     use_default_org: bool
     allowed_origins: list
     allowed_regexp: str
@@ -118,6 +119,7 @@ def get_learnhouse_config() -> LearnHouseConfig:
     env_domain = os.environ.get("LEARNHOUSE_DOMAIN")
     os.environ.get("LEARNHOUSE_PORT")
     env_ssl = os.environ.get("LEARNHOUSE_SSL")
+    env_port = os.environ.get("LEARNHOUSE_PORT")
     env_use_default_org = os.environ.get("LEARNHOUSE_USE_DEFAULT_ORG")
     env_allowed_origins = os.environ.get("LEARNHOUSE_ALLOWED_ORIGINS")
     env_cookie_domain = os.environ.get("LEARNHOUSE_COOKIE_DOMAIN")
@@ -141,6 +143,7 @@ def get_learnhouse_config() -> LearnHouseConfig:
 
     domain = env_domain or yaml_config.get("hosting_config", {}).get("domain")
     ssl = env_ssl or yaml_config.get("hosting_config", {}).get("ssl")
+    port = env_port or yaml_config.get("hosting_config", {}).get("port")
     use_default_org = env_use_default_org or yaml_config.get("hosting_config", {}).get(
         "use_default_org"
     )
@@ -190,7 +193,6 @@ def get_learnhouse_config() -> LearnHouseConfig:
         "database_config", {}
     ).get("sql_connection_string")
 
-    
     # AI Config
     env_openai_api_key = os.environ.get("LEARNHOUSE_OPENAI_API_KEY")
     env_is_ai_enabled = os.environ.get("LEARNHOUSE_IS_AI_ENABLED")
@@ -248,6 +250,7 @@ def get_learnhouse_config() -> LearnHouseConfig:
     hosting_config = HostingConfig(
         domain=domain,
         ssl=bool(ssl),
+        port=int(port),
         use_default_org=bool(use_default_org),
         allowed_origins=list(allowed_origins),
         allowed_regexp=allowed_regexp,

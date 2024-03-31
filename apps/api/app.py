@@ -1,3 +1,4 @@
+import uvicorn
 from fastapi import FastAPI, Request
 from config.config import LearnHouseConfig, get_learnhouse_config
 from src.core.events.events import shutdown_app, startup_app
@@ -58,6 +59,15 @@ app.mount("/content", StaticFiles(directory="content"), name="content")
 
 # Global Routes
 app.include_router(v1_router)
+
+
+if __name__ == "__main__":
+    uvicorn.run(
+        "app:app",
+        host="0.0.0.0",
+        port=learnhouse_config.hosting_config.port,
+        reload=learnhouse_config.general_config.development_mode,
+    )
 
 
 # General Routes
