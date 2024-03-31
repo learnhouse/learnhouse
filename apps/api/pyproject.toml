@@ -35,7 +35,7 @@ resend = "^0.7.2"
 sentry-sdk = {extras = ["fastapi"], version = "^1.39.2"}
 sqlmodel = "0.0.16"
 tiktoken = "^0.5.2"
-uvicorn = "0.27.1"
+uvicorn = "0.29.0"
 
 [build-system]
 build-backend = "poetry.core.masonry.api"
