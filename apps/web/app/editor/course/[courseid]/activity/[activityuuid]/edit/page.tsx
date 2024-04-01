@@ -49,7 +49,7 @@ const EditActivity = async (params: any) => {
     access_token ? access_token : null
   )
   const org = await getOrganizationContextInfoWithId(courseInfo.org_id, {
-    revalidate: 1800,
+    revalidate: 180,
     tags: ['organizations'],
   })
 

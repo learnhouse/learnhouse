@@ -1,11 +1,17 @@
 'use client'
-import { default as React } from 'react'
-import * as Y from 'yjs'
+import { default as React, useEffect } from 'react'
 import Editor from './Editor'
 import { updateActivity } from '@services/courses/activities'
 import { toast } from 'react-hot-toast'
 import Toast from '@components/StyledElements/Toast/Toast'
 import { OrgProvider } from '@components/Contexts/OrgContext'
+import { useSession } from '@components/Contexts/SessionContext'
+
+// Collaboration
+import { HocuspocusProvider } from '@hocuspocus/provider'
+import * as Y from 'yjs'
+import { IndexeddbPersistence } from 'y-indexeddb'
+import { LEARNHOUSE_COLLABORATION_WS_URL, getCollaborationServerUrl } from '@services/config/config'
 
 interface EditorWrapperProps {
   content: string
@@ -15,18 +21,23 @@ interface EditorWrapperProps {
 }
 
 function EditorWrapper(props: EditorWrapperProps): JSX.Element {
-  // A new Y document
-  const ydoc = new Y.Doc()
-  const [providerState, setProviderState] = React.useState<any>({})
-  const [ydocState, setYdocState] = React.useState<any>({})
-  const [isLoading, setIsLoading] = React.useState(true)
+  const session = useSession() as any
 
-  function createRTCProvider() {
-    // const provider = new WebrtcProvider(props.activity.activity_id, ydoc);
-    // setYdocState(ydoc);
-    // setProviderState(provider);
-    setIsLoading(false)
-  }
+  /*  Collaboration Features */
+  const collab = getCollaborationServerUrl()
+  const isCollabEnabledOnThisOrg = props.org.config.config.GeneralConfig.collaboration && collab 
+  const doc = new Y.Doc()
+
+  // Store the Y document in the browser
+  new IndexeddbPersistence(props.activity.activity_uuid, doc)
+
+  const provider = isCollabEnabledOnThisOrg ? new HocuspocusProvider({
+    url: collab,
+    name: props.activity.activity_uuid,
+    document: doc,
+    preserveConnection: false,
+  }) : null
+  /*  Collaboration Features */
 
   async function setContent(content: any) {
     let activity = props.activity
@@ -39,24 +50,28 @@ function EditorWrapper(props: EditorWrapperProps): JSX.Element {
     })
   }
 
-  if (isLoading) {
-    createRTCProvider()
-    return <div>Loading...</div>
-  } else {
+  useEffect(() => {
+    
+  }
+    , [session])
+
+
+  {
     return (
       <>
         <Toast></Toast>
         <OrgProvider orgslug={props.org.slug}>
-          <Editor
+          {!session.isLoading && (<Editor
             org={props.org}
             course={props.course}
             activity={props.activity}
             content={props.content}
             setContent={setContent}
-            provider={providerState}
-            ydoc={ydocState}
-          ></Editor>
-          ;
+            session={session}
+            ydoc={doc}
+            hocuspocusProvider={provider}
+            isCollabEnabledOnThisOrg={isCollabEnabledOnThisOrg}
+          ></Editor>)}
         </OrgProvider>
       </>
     )
