@@ -25,7 +25,7 @@ async def isInstallModeEnabled():
 
 
 async def create_install_instance(request: Request, data: dict, db_session: Session):
-    install = Install.from_orm(data)
+    install = Install.model_validate(data)
 
     # complete install instance
     install.install_uuid = str(f"install_{uuid4()}")
@@ -41,7 +41,7 @@ async def create_install_instance(request: Request, data: dict, db_session: Sess
     # refresh install instance
     db_session.refresh(install)
 
-    install = InstallRead.from_orm(install)
+    install = InstallRead.model_validate(install)
 
     return install
 
@@ -56,7 +56,7 @@ async def get_latest_install_instance(request: Request, db_session: Session):
             detail="No install instance found",
         )
     
-    install = InstallRead.from_orm(install)
+    install = InstallRead.model_validate(install)
 
     return install
 
@@ -82,7 +82,7 @@ async def update_install_instance(
     # refresh install instance
     db_session.refresh(install)
 
-    install = InstallRead.from_orm(install)
+    install = InstallRead.model_validate(install)
 
     return install
 
@@ -279,9 +279,9 @@ async def install_default_elements(db_session: Session):
     )
 
     # Serialize rights to JSON
-    role_global_admin.rights = role_global_admin.rights.dict()  # type: ignore
-    role_global_maintainer.rights = role_global_maintainer.rights.dict()  # type: ignore
-    role_global_user.rights = role_global_user.rights.dict()  # type: ignore
+    role_global_admin.rights = role_global_admin.rights.model_dump()  # type: ignore
+    role_global_maintainer.rights = role_global_maintainer.rights.model_dump()  # type: ignore
+    role_global_user.rights = role_global_user.rights.model_dump()  # type: ignore
 
     # Insert roles in DB
     db_session.add(role_global_admin)
@@ -301,7 +301,7 @@ async def install_default_elements(db_session: Session):
 async def install_create_organization(
      org_object: OrganizationCreate, db_session: Session
 ):
-    org = Organization.from_orm(org_object)
+    org = Organization.model_validate(org_object)
 
     # Complete the org object
     org.org_uuid = f"org_{uuid4()}"
@@ -318,7 +318,7 @@ async def install_create_organization(
 async def install_create_organization_user(
      user_object: UserCreate, org_slug: str, db_session: Session
 ):
-    user = User.from_orm(user_object)
+    user = User.model_validate(user_object)
 
     # Complete the user object
     user.user_uuid = f"user_{uuid4()}"
@@ -390,6 +390,6 @@ async def install_create_organization_user(
     db_session.commit()
     db_session.refresh(user_organization)
 
-    user = UserRead.from_orm(user)
+    user = UserRead.model_validate(user)
 
     return user

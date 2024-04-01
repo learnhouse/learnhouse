@@ -28,7 +28,7 @@ async def create_user_trail(
             detail="Trail already exists",
         )
 
-    trail = Trail.from_orm(trail_object)
+    trail = Trail.model_validate(trail_object)
 
     trail.creation_date = str(datetime.now())
     trail.update_date = str(datetime.now())
@@ -91,7 +91,7 @@ async def get_user_trails(
             trail_step.data = dict(course=course)
 
     trail_read = TrailRead(
-        **trail.dict(),
+        **trail.model_dump(),
         runs=trail_runs,
     )
 
@@ -176,7 +176,7 @@ async def get_user_trail_with_orgid(
             trail_step.data = dict(course=course)
 
     trail_read = TrailRead(
-        **trail.dict(),
+        **trail.model_dump(),
         runs=trail_runs,
     )
 
@@ -276,7 +276,7 @@ async def add_activity_to_trail(
             trail_step.data = dict(course=course)
 
     trail_read = TrailRead(
-        **trail.dict(),
+        **trail.model_dump(),
         runs=trail_runs,
     )
 
@@ -357,7 +357,7 @@ async def add_course_to_trail(
             trail_step.data = dict(course=course)
 
     trail_read = TrailRead(
-        **trail.dict(),
+        **trail.model_dump(),
         runs=trail_runs,
     )
 
@@ -426,7 +426,7 @@ async def remove_course_from_trail(
             trail_step.data = dict(course=course)
 
     trail_read = TrailRead(
-        **trail.dict(),
+        **trail.model_dump(),
         runs=trail_runs,
     )
 

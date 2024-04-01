@@ -84,8 +84,8 @@ async def get_organization_users(
             # skip this user
             continue
 
-        user = UserRead.from_orm(user)
-        role = RoleRead.from_orm(role)
+        user = UserRead.model_validate(user)
+        role = RoleRead.model_validate(role)
 
         org_user = OrganizationUser(
             user=user,
@@ -293,8 +293,8 @@ async def invite_batch_users(
             # skip this user
             continue
 
-        org = OrganizationRead.from_orm(org)
-        user = UserRead.from_orm(user)
+        org = OrganizationRead.model_validate(org)
+        user = UserRead.model_validate(user)
 
         isEmailSent = send_invite_email(
             org,

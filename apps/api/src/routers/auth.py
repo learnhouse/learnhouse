@@ -65,7 +65,7 @@ async def login(
         expires=int(timedelta(hours=8).total_seconds()),
     )
 
-    user = UserRead.from_orm(user)
+    user = UserRead.model_validate(user)
 
     result = {
         "user": user,
