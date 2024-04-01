@@ -135,7 +135,7 @@ async def create_documentpdf_activity(
     db_session.commit()
     db_session.refresh(activity_chapter)
 
-    return ActivityRead.from_orm(activity)
+    return ActivityRead.model_validate(activity)
 
 
 ## 🔒 RBAC Utils ##

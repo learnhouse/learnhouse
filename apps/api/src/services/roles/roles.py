@@ -17,7 +17,7 @@ async def create_role(
     role_object: RoleCreate,
     current_user: PublicUser,
 ):
-    role = Role.from_orm(role_object)
+    role = Role.model_validate(role_object)
 
     # RBAC check
     await rbac_check(request, current_user, "create", "role_xxx", db_session)
@@ -31,7 +31,7 @@ async def create_role(
     db_session.commit()
     db_session.refresh(role)
 
-    role = RoleRead(**role.dict())
+    role = RoleRead(**role.model_dump())
 
     return role
 
@@ -53,7 +53,7 @@ async def read_role(
     # RBAC check
     await rbac_check(request, current_user, "read", role.role_uuid, db_session)
 
-    role = RoleRead(**role.dict())
+    role = RoleRead(**role.model_dump())
 
     return role
 
@@ -93,7 +93,7 @@ async def update_role(
     db_session.commit()
     db_session.refresh(role)
 
-    role = RoleRead(**role.dict())
+    role = RoleRead(**role.model_dump())
 
     return role
 
