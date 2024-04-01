@@ -18,11 +18,9 @@ class AIEnabledFeatures(BaseModel):
 
 
 class AIConfig(BaseModel):
-    enabled : bool = True
+    enabled: bool = True
     limits: AILimitsSettings = AILimitsSettings()
-    embeddings: Literal[
-        "text-embedding-ada-002",
-    ] = "text-embedding-ada-002"
+    embeddings: Literal["text-embedding-ada-002",] = "text-embedding-ada-002"
     ai_model: Literal["gpt-3.5-turbo", "gpt-4-1106-preview"] = "gpt-3.5-turbo"
     features: AIEnabledFeatures = AIEnabledFeatures()
 
@@ -44,13 +42,15 @@ class GeneralConfig(BaseModel):
     color: str = ""
     limits: LimitSettings = LimitSettings()
     users: OrgUserConfig = OrgUserConfig()
+    collaboration: bool = False
     active: bool = True
 
 
 class OrganizationConfigBase(SQLModel):
     GeneralConfig: GeneralConfig
     AIConfig: AIConfig
-        
+
+
 class OrganizationConfig(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     org_id: int = Field(
@@ -60,7 +60,3 @@ class OrganizationConfig(SQLModel, table=True):
     config: dict = Field(default={}, sa_column=Column(JSON))
     creation_date: Optional[str]
     update_date: Optional[str]
-
-   
-
-
