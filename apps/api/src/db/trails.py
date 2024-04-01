@@ -20,8 +20,7 @@ class Trail(TrailBase, table=True):
 class TrailCreate(TrailBase):
     pass
 
-
-# trick because Lists are not supported in SQLModel (runs: list[TrailRun] )
+# TODO: This is a hacky way to get around the list[TrailRun] issue, find a better way to do this
 class TrailRead(BaseModel):
     id: Optional[int] = Field(default=None, primary_key=True)
     trail_uuid: Optional[str]

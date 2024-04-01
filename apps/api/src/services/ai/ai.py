@@ -37,7 +37,7 @@ def ai_start_activity_chat_session(
     )
     activity = db_session.exec(statement).first()
 
-    activity = ActivityRead.from_orm(activity)
+    activity = ActivityRead.model_validate(activity)
 
     # Get the Course
     statement = (
@@ -46,7 +46,7 @@ def ai_start_activity_chat_session(
         .where(Activity.activity_uuid == chat_session_object.activity_uuid)
     )
     course = db_session.exec(statement).first()
-    course = CourseRead.from_orm(course)
+    course = CourseRead.model_validate(course)
 
     # Get the Organization
     statement = select(Organization).where(Organization.id == course.org_id)
@@ -85,7 +85,7 @@ def ai_start_activity_chat_session(
     result = db_session.exec(statement)
     org_config = result.first()
 
-    org_config = OrganizationConfig.from_orm(org_config)
+    org_config = OrganizationConfig.model_validate(org_config)
     embeddings = org_config.config["AIConfig"]["embeddings"]
     ai_model = org_config.config["AIConfig"]["ai_model"]
 
@@ -131,7 +131,7 @@ def ai_send_activity_chat_message(
     )
     activity = db_session.exec(statement).first()
 
-    activity = ActivityRead.from_orm(activity)
+    activity = ActivityRead.model_validate(activity)
 
     # Get the Course
     statement = (
@@ -140,7 +140,7 @@ def ai_send_activity_chat_message(
         .where(Activity.activity_uuid == chat_session_object.activity_uuid)
     )
     course = db_session.exec(statement).first()
-    course = CourseRead.from_orm(course)
+    course = CourseRead.model_validate(course)
 
     # Get the Organization
     statement = select(Organization).where(Organization.id == course.org_id)
@@ -176,7 +176,7 @@ def ai_send_activity_chat_message(
     result = db_session.exec(statement)
     org_config = result.first()
 
-    org_config = OrganizationConfig.from_orm(org_config)
+    org_config = OrganizationConfig.model_validate(org_config)
     embeddings = org_config.config["AIConfig"]["embeddings"]
     ai_model = org_config.config["AIConfig"]["ai_model"]
 

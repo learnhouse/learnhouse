@@ -22,7 +22,7 @@ async def create_usergroup(
     usergroup_create: UserGroupCreate,
 ) -> UserGroupRead:
 
-    usergroup = UserGroup.from_orm(usergroup_create)
+    usergroup = UserGroup.model_validate(usergroup_create)
 
     # RBAC check
     await rbac_check(
@@ -53,7 +53,7 @@ async def create_usergroup(
     db_session.commit()
     db_session.refresh(usergroup)
 
-    usergroup = UserGroupRead.from_orm(usergroup)
+    usergroup = UserGroupRead.model_validate(usergroup)
 
     return usergroup
 
@@ -83,7 +83,7 @@ async def read_usergroup_by_id(
         db_session=db_session,
     )
 
-    usergroup = UserGroupRead.from_orm(usergroup)
+    usergroup = UserGroupRead.model_validate(usergroup)
 
     return usergroup
 
@@ -125,7 +125,7 @@ async def get_users_linked_to_usergroup(
         user = db_session.exec(statement).first()
         users.append(user)
 
-    users = [UserRead.from_orm(user) for user in users]
+    users = [UserRead.model_validate(user) for user in users]
 
     return users
 
@@ -149,7 +149,7 @@ async def read_usergroups_by_org_id(
         db_session=db_session,
     )
 
-    usergroups = [UserGroupRead.from_orm(usergroup) for usergroup in usergroups]
+    usergroups = [UserGroupRead.model_validate(usergroup) for usergroup in usergroups]
 
     return usergroups
 
@@ -184,7 +184,7 @@ async def get_usergroups_by_resource(
         usergroup = db_session.exec(statement).first()
         usergroups.append(usergroup)
 
-    usergroups = [UserGroupRead.from_orm(usergroup) for usergroup in usergroups]
+    usergroups = [UserGroupRead.model_validate(usergroup) for usergroup in usergroups]
 
     return usergroups
 
@@ -223,7 +223,7 @@ async def update_usergroup_by_id(
     db_session.commit()
     db_session.refresh(usergroup)
 
-    usergroup = UserGroupRead.from_orm(usergroup)
+    usergroup = UserGroupRead.model_validate(usergroup)
 
     return usergroup
 

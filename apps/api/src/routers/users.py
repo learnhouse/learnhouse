@@ -42,7 +42,7 @@ async def api_get_current_user(current_user: User = Depends(get_current_user)):
     """
     Get current user
     """
-    return current_user.dict()
+    return current_user.model_dump()
 
 
 @router.get("/session")

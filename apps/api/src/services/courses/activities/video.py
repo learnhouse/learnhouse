@@ -105,7 +105,7 @@ async def create_video_activity(
     )
 
     # create activity
-    activity = Activity.from_orm(activity_object)
+    activity = Activity.model_validate(activity_object)
     db_session.add(activity)
     db_session.commit()
     db_session.refresh(activity)
@@ -136,7 +136,7 @@ async def create_video_activity(
     db_session.commit()
     db_session.refresh(chapter_activity_object)
 
-    return ActivityRead.from_orm(activity)
+    return ActivityRead.model_validate(activity)
 
 
 class ExternalVideo(BaseModel):
@@ -200,7 +200,7 @@ async def create_external_video_activity(
     )
 
     # create activity
-    activity = Activity.from_orm(activity_object)
+    activity = Activity.model_validate(activity_object)
     db_session.add(activity)
     db_session.commit()
     db_session.refresh(activity)
@@ -220,7 +220,7 @@ async def create_external_video_activity(
     db_session.add(chapter_activity_object)
     db_session.commit()
 
-    return ActivityRead.from_orm(activity)
+    return ActivityRead.model_validate(activity)
 
 
 async def rbac_check(

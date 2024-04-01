@@ -59,9 +59,9 @@ async def get_organization(
     if org_config is None:
         logging.error(f"Organization {org_id} has no config")
 
-    config = OrganizationConfig.from_orm(org_config) if org_config else {}
+    config = OrganizationConfig.model_validate(org_config) if org_config else {}
 
-    org = OrganizationRead(**org.dict(), config=config)
+    org = OrganizationRead(**org.model_dump(), config=config)
 
     return org
 
@@ -95,9 +95,9 @@ async def get_organization_by_slug(
     if org_config is None:
         logging.error(f"Organization {org_slug} has no config")
 
-    config = OrganizationConfig.from_orm(org_config) if org_config else {}
+    config = OrganizationConfig.model_validate(org_config) if org_config else {}
 
-    org = OrganizationRead(**org.dict(), config=config)
+    org = OrganizationRead(**org.model_dump(), config=config)
 
     return org
 
@@ -119,7 +119,7 @@ async def create_org(
             detail="Organization already exists",
         )
 
-    org = Organization.from_orm(org_object)
+    org = Organization.model_validate(org_object)
 
     if isinstance(current_user, AnonymousUser):
         raise HTTPException(
@@ -203,9 +203,9 @@ async def create_org(
     if org_config is None:
         logging.error(f"Organization {org.id} has no config")
 
-    config = OrganizationConfig.from_orm(org_config)
+    config = OrganizationConfig.model_validate(org_config)
 
-    org = OrganizationRead(**org.dict(), config=config)
+    org = OrganizationRead(**org.model_dump(), config=config)
 
     return org
 
@@ -229,7 +229,7 @@ async def create_org_with_config(
             detail="Organization already exists",
         )
 
-    org = Organization.from_orm(org_object)
+    org = Organization.model_validate(org_object)
 
     if isinstance(current_user, AnonymousUser):
         raise HTTPException(
@@ -284,9 +284,9 @@ async def create_org_with_config(
     if org_config is None:
         logging.error(f"Organization {org.id} has no config")
 
-    config = OrganizationConfig.from_orm(org_config)
+    config = OrganizationConfig.model_validate(org_config)
 
-    org = OrganizationRead(**org.dict(), config=config)
+    org = OrganizationRead(**org.model_dump(), config=config)
 
     return org
 
@@ -336,7 +336,7 @@ async def update_org(
     db_session.commit()
     db_session.refresh(org)
 
-    org = OrganizationRead.from_orm(org)
+    org = OrganizationRead.model_validate(org)
 
     return org
 

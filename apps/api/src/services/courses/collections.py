@@ -64,7 +64,7 @@ async def get_collection(
 
     courses = db_session.exec(statement).all()
 
-    collection = CollectionRead(**collection.dict(), courses=courses)
+    collection = CollectionRead(**collection.model_dump(), courses=courses)
 
     return collection
 
@@ -75,7 +75,7 @@ async def create_collection(
     current_user: PublicUser,
     db_session: Session,
 ) -> CollectionRead:
-    collection = Collection.from_orm(collection_object)
+    collection = Collection.model_validate(collection_object)
 
     # RBAC check
     await rbac_check(request, "collection_x", current_user, "create", db_session)
@@ -115,9 +115,9 @@ async def create_collection(
     )
     courses = db_session.exec(statement).all()
 
-    collection = CollectionRead(**collection.dict(), courses=courses)
+    collection = CollectionRead(**collection.model_dump(), courses=courses)
 
-    return CollectionRead.from_orm(collection)
+    return CollectionRead.model_validate(collection)
 
 
 async def update_collection(
@@ -189,7 +189,7 @@ async def update_collection(
 
     courses = db_session.exec(statement).all()
 
-    collection = CollectionRead(**collection.dict(), courses=courses)
+    collection = CollectionRead(**collection.model_dump(), courses=courses)
 
     return collection
 
@@ -270,7 +270,7 @@ async def get_collections(
 
         courses = db_session.exec(statement).all()
 
-        collection = CollectionRead(**collection.dict(), courses=courses)
+        collection = CollectionRead(**collection.model_dump(), courses=courses)
         collections_with_courses.append(collection)
 
     return collections_with_courses
