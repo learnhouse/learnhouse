@@ -34,7 +34,7 @@ async def create_chapter(
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ) -> ChapterRead:
-    chapter = Chapter.from_orm(chapter_object)
+    chapter = Chapter.model_validate(chapter_object)
 
     # Get COurse
     statement = select(Course).where(Course.id == chapter_object.course_id)
@@ -68,7 +68,7 @@ async def create_chapter(
     db_session.commit()
     db_session.refresh(chapter)
 
-    chapter = ChapterRead(**chapter.dict(), activities=[])
+    chapter = ChapterRead(**chapter.model_dump(), activities=[])
 
     # Check if COurseChapter link exists
 
@@ -135,8 +135,8 @@ async def get_chapter(
     activities = db_session.exec(statement).all()
 
     chapter = ChapterRead(
-        **chapter.dict(),
-        activities=[ActivityRead(**activity.dict()) for activity in activities],
+        **chapter.model_dump(),
+        activities=[ActivityRead(**activity.model_dump()) for activity in activities],
     )
 
     return chapter
@@ -231,7 +231,7 @@ async def get_course_chapters(
     )
     chapters = db_session.exec(statement).all()
 
-    chapters = [ChapterRead(**chapter.dict(), activities=[]) for chapter in chapters]
+    chapters = [ChapterRead(**chapter.model_dump(), activities=[]) for chapter in chapters]
 
     # RBAC check
     await rbac_check(request, course.course_uuid, current_user, "read", db_session)  # type: ignore
@@ -255,7 +255,7 @@ async def get_course_chapters(
             activity = db_session.exec(statement).first()
 
             if activity:
-                chapter.activities.append(ActivityRead(**activity.dict()))
+                chapter.activities.append(ActivityRead(**activity.model_dump()))
 
     return chapters
 

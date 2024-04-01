@@ -5,7 +5,6 @@ from sqlmodel import Session, select
 from src.db.usergroup_resources import UserGroupResource
 from src.db.usergroup_user import UserGroupUser
 from src.db.organizations import Organization
-from src.db.trails import TrailRead
 from src.services.trail.trail import get_user_trail_with_orgid
 from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum
 from src.db.users import PublicUser, AnonymousUser, User, UserRead
@@ -53,9 +52,9 @@ async def get_course(
     authors = db_session.exec(authors_statement).all()
 
     # convert from User to UserRead
-    authors = [UserRead.from_orm(author) for author in authors]
+    authors = [UserRead.model_validate(author) for author in authors]
 
-    course = CourseRead(**course.dict(), authors=authors)
+    course = CourseRead(**course.model_dump(), authors=authors)
 
     return course
 
@@ -90,9 +89,9 @@ async def get_course_meta(
     authors = db_session.exec(authors_statement).all()
 
     # convert from User to UserRead
-    authors = [UserRead.from_orm(author) for author in authors]
+    authors = [UserRead.model_validate(author) for author in authors]
 
-    course = CourseRead(**course.dict(), authors=authors)
+    course = CourseRead(**course.model_dump(), authors=authors)
 
     # Get course chapters
     chapters = await get_course_chapters(request, course.id, db_session, current_user)
@@ -106,10 +105,9 @@ async def get_course_meta(
         trail = await get_user_trail_with_orgid(
             request, current_user, course.org_id, db_session
         )
-        trail = TrailRead.from_orm(trail)
 
     return FullCourseReadWithTrail(
-        **course.dict(),
+        **course.model_dump(),
         chapters=chapters,
         trail=trail if trail else None,
     )
@@ -123,7 +121,7 @@ async def create_course(
     db_session: Session,
     thumbnail_file: UploadFile | None = None,
 ):
-    course = Course.from_orm(course_object)
+    course = Course.model_validate(course_object)
 
     # RBAC check
     await rbac_check(request, "course_x", current_user, "create", db_session)
@@ -178,11 +176,11 @@ async def create_course(
     authors = db_session.exec(authors_statement).all()
 
     # convert from User to UserRead
-    authors = [UserRead.from_orm(author) for author in authors]
+    authors = [UserRead.model_validate(author) for author in authors]
 
-    course = CourseRead(**course.dict(), authors=authors)
+    course = CourseRead(**course.model_dump(), authors=authors)
 
-    return CourseRead.from_orm(course)
+    return CourseRead.model_validate(course)
 
 
 async def update_course_thumbnail(
@@ -242,9 +240,9 @@ async def update_course_thumbnail(
     authors = db_session.exec(authors_statement).all()
 
     # convert from User to UserRead
-    authors = [UserRead.from_orm(author) for author in authors]
+    authors = [UserRead.model_validate(author) for author in authors]
 
-    course = CourseRead(**course.dict(), authors=authors)
+    course = CourseRead(**course.model_dump(), authors=authors)
 
     return course
 
@@ -289,9 +287,9 @@ async def update_course(
     authors = db_session.exec(authors_statement).all()
 
     # convert from User to UserRead
-    authors = [UserRead.from_orm(author) for author in authors]
+    authors = [UserRead.model_validate(author) for author in authors]
 
-    course = CourseRead(**course.dict(), authors=authors)
+    course = CourseRead(**course.model_dump(), authors=authors)
 
     return course
 
@@ -351,9 +349,7 @@ async def get_courses_orgslug(
     statement_usergroup = (
         select(Course)
         .join(Organization)
-        .join(
-            UserGroupResource, UserGroupResource.resource_uuid == Course.course_uuid
-        )
+        .join(UserGroupResource, UserGroupResource.resource_uuid == Course.course_uuid)
         .join(
             UserGroupUser, UserGroupUser.usergroup_id == UserGroupResource.usergroup_id
         )
@@ -365,10 +361,12 @@ async def get_courses_orgslug(
         statement_public, statement_author, statement_usergroup
     ).subquery()
 
-    courses = db_session.execute(select([statement_complete])).all()
+    # TODO: migrate this to exec 
+    courses = db_session.execute(select(statement_complete)).all()
 
     # TODO: I have no idea why this is necessary, but it is
-    courses = [CourseRead(**dict(course._mapping), authors=[]) for course in courses]
+    courses = [CourseRead(**course._asdict(), authors=[]) for course in courses]
+
 
     # for every course, get the authors
     for course in courses:
@@ -380,7 +378,7 @@ async def get_courses_orgslug(
         authors = db_session.exec(authors_statement).all()
 
         # convert from User to UserRead
-        authors = [UserRead.from_orm(author) for author in authors]
+        authors = [UserRead.model_validate(author) for author in authors]
 
         course.authors = authors
 
