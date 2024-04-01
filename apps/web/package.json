@@ -24,6 +24,7 @@
     "@tiptap/extension-collaboration-cursor": "^2.2.4",
     "@tiptap/extension-youtube": "^2.2.4",
     "@tiptap/html": "^2.2.4",
+    "@tiptap/pm": "^2.2.4",
     "@tiptap/react": "^2.2.4",
     "@tiptap/starter-kit": "^2.2.4",
     "avvvatars-react": "^0.4.2",
