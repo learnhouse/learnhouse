@@ -54,7 +54,7 @@ async def create_image_block(
     block = Block(
         activity_id=activity.id if activity.id else 0,
         block_type=BlockTypeEnum.BLOCK_IMAGE,
-        content=block_data.dict(),
+        content=block_data.model_dump(),
         org_id=org.id if org.id else 0,
         course_id=course.id if course.id else 0,
         block_uuid=block_uuid,
@@ -67,7 +67,7 @@ async def create_image_block(
     db_session.commit()
     db_session.refresh(block)
 
-    block = BlockRead.from_orm(block)
+    block = BlockRead.model_validate(block)
 
     return block
 
@@ -80,7 +80,7 @@ async def get_image_block(
 
     if block:
 
-        block = BlockRead.from_orm(block)
+        block = BlockRead.model_validate(block)
         
         return block
     else:

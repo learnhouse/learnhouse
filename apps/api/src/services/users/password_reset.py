@@ -93,9 +93,9 @@ async def send_reset_password_code(
         ex=ttl,
     )
 
-    user = UserRead.from_orm(user)
+    user = UserRead.model_validate(user)
 
-    org = OrganizationRead.from_orm(org)
+    org = OrganizationRead.model_validate(org)
 
     # Send reset code via email
     isEmailSent = send_password_reset_email(

@@ -41,7 +41,7 @@ async def create_activity(
     await rbac_check(request, chapter.chapter_uuid, current_user, "create", db_session)
 
     # Create Activity
-    activity = Activity(**activity_object.dict())
+    activity = Activity(**activity_object.model_dump())
 
     activity.activity_uuid = str(f"activity_{uuid4()}")
     activity.creation_date = str(datetime.now())
@@ -81,7 +81,7 @@ async def create_activity(
     db_session.commit()
     db_session.refresh(activity_chapter)
 
-    return ActivityRead.from_orm(activity)
+    return ActivityRead.model_validate(activity)
 
 
 async def get_activity(
@@ -112,7 +112,7 @@ async def get_activity(
     # RBAC check
     await rbac_check(request, course.course_uuid, current_user, "read", db_session)
 
-    activity = ActivityRead.from_orm(activity)
+    activity = ActivityRead.model_validate(activity)
 
     return activity
 
@@ -147,7 +147,7 @@ async def update_activity(
     db_session.commit()
     db_session.refresh(activity)
 
-    activity = ActivityRead.from_orm(activity)
+    activity = ActivityRead.model_validate(activity)
 
     return activity
 
@@ -216,7 +216,7 @@ async def get_activities(
     # RBAC check
     await rbac_check(request, "activity_x", current_user, "read", db_session)
 
-    activities = [ActivityRead.from_orm(activity) for activity in activities]
+    activities = [ActivityRead.model_validate(activity) for activity in activities]
 
     return activities
 

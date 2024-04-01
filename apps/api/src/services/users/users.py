@@ -37,7 +37,7 @@ async def create_user(
     user_object: UserCreate,
     org_id: int,
 ):
-    user = User.from_orm(user_object)
+    user = User.model_validate(user_object)
 
     # RBAC check
     await rbac_check(request, current_user, "create", "user_x", db_session)
@@ -104,7 +104,7 @@ async def create_user(
     db_session.commit()
     db_session.refresh(user_organization)
 
-    user = UserRead.from_orm(user)
+    user = UserRead.model_validate(user)
 
     # Send Account creation email
     send_account_creation_email(
@@ -157,7 +157,7 @@ async def create_user_without_org(
     current_user: PublicUser | AnonymousUser,
     user_object: UserCreate,
 ):
-    user = User.from_orm(user_object)
+    user = User.model_validate(user_object)
 
     # RBAC check
     await rbac_check(request, current_user, "create", "user_x", db_session)
@@ -201,7 +201,7 @@ async def create_user_without_org(
     db_session.commit()
     db_session.refresh(user)
 
-    user = UserRead.from_orm(user)
+    user = UserRead.model_validate(user)
 
     # Send Account creation email
     send_account_creation_email(
@@ -270,7 +270,7 @@ async def update_user(
     db_session.commit()
     db_session.refresh(user)
 
-    user = UserRead.from_orm(user)
+    user = UserRead.model_validate(user)
 
     return user
 
@@ -315,7 +315,7 @@ async def update_user_avatar(
     db_session.commit()
     db_session.refresh(user)
 
-    user = UserRead.from_orm(user)
+    user = UserRead.model_validate(user)
 
     return user
 
@@ -354,7 +354,7 @@ async def update_user_password(
     db_session.commit()
     db_session.refresh(user)
 
-    user = UserRead.from_orm(user)
+    user = UserRead.model_validate(user)
 
     return user
 
@@ -378,7 +378,7 @@ async def read_user_by_id(
     # RBAC check
     await rbac_check(request, current_user, "read", user.user_uuid, db_session)
 
-    user = UserRead.from_orm(user)
+    user = UserRead.model_validate(user)
 
     return user
 
@@ -402,7 +402,7 @@ async def read_user_by_uuid(
     # RBAC check
     await rbac_check(request, current_user, "read", user.user_uuid, db_session)
 
-    user = UserRead.from_orm(user)
+    user = UserRead.model_validate(user)
 
     return user
 
@@ -422,7 +422,7 @@ async def get_user_session(
             detail="User does not exist",
         )
 
-    user = UserRead.from_orm(user)
+    user = UserRead.model_validate(user)
 
     # Get roles and orgs
     statement = (
@@ -445,8 +445,8 @@ async def get_user_session(
 
         roles.append(
             UserRoleWithOrg(
-                role=RoleRead.from_orm(role),
-                org=OrganizationRead.from_orm(org),
+                role=RoleRead.model_validate(role),
+                org=OrganizationRead.model_validate(org),
             )
         )
 
@@ -531,7 +531,7 @@ async def security_get_user(request: Request, db_session: Session, email: str) -
             detail="User with Email does not exist",
         )
 
-    user = User(**user.dict())
+    user = User(**user.model_dump())
 
     return user
 
