@@ -11,7 +11,10 @@ import { useSession } from '@components/Contexts/SessionContext'
 import { HocuspocusProvider } from '@hocuspocus/provider'
 import * as Y from 'yjs'
 import { IndexeddbPersistence } from 'y-indexeddb'
-import { LEARNHOUSE_COLLABORATION_WS_URL, getCollaborationServerUrl } from '@services/config/config'
+import { getCollaborationServerUrl } from '@services/config/config'
+import randomColor from 'randomcolor'
+import MouseMovements from './MouseMovements'
+import { v4 as uuidv4 } from 'uuid';
 
 interface EditorWrapperProps {
   content: string
@@ -24,15 +27,42 @@ function EditorWrapper(props: EditorWrapperProps): JSX.Element {
   const session = useSession() as any
   // Define provider in the state
   const [provider, setProvider] = React.useState<HocuspocusProvider | null>(null);
+  const [thisPageColor, setThisPageColor] = useState(randomColor({ luminosity: 'light' }) as string)
+  let uuid = uuidv4();
+  const [onlinePageInstanceID, setOnlinePageInstanceID] = useState(uuid as string)
 
 
   /*  Collaboration Features */
   const collab = getCollaborationServerUrl()
   const isCollabEnabledOnThisOrg = props.org.config.config.GeneralConfig.collaboration && collab
   const doc = new Y.Doc()
+  // mouse movement
+  const [mouseMovements, setMouseMovements] = useState({} as any);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const debouncedSetMouseMovements = (newMovements: any) => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+
+    timeoutRef.current = setTimeout(() => {
+      setMouseMovements(newMovements);
+    }, 10);
+  };
 
   // Store the Y document in the browser
   new IndexeddbPersistence(props.activity.activity_uuid, doc)
+
+  document.addEventListener("mousemove", (event) => {
+    // Share any information you like
+    provider?.setAwarenessField("userMouseMovement", {
+      user: session.user,
+      mouseX: event.clientX,
+      mouseY: event.clientY,
+      color: thisPageColor,
+      onlineInstanceID: onlinePageInstanceID
+    });
+  });
 
 
   async function setContent(content: any) {
@@ -57,6 +87,7 @@ function EditorWrapper(props: EditorWrapperProps): JSX.Element {
 
 
 
+
   // Create a ref to store the last save timestamp of each user
   const lastSaveTimestampRef = useRef({}) as any;
 
@@ -71,8 +102,30 @@ function EditorWrapper(props: EditorWrapperProps): JSX.Element {
         // TODO(alpha code): This whole block of code should be improved to something more efficient and less hacky
         onAwarenessUpdate: ({ states }) => {
           const usersStates = states;
+          /* Showing user mouse movement */
+          usersStates.forEach((userState: any) => {
+            if (userState.userMouseMovement) {
+              const userMouseMovement = userState.userMouseMovement;
 
-          // Check if a user has saved the document
+              // Update the mouse movements state
+              debouncedSetMouseMovements((prevMovements: any) => {
+                return {
+                  ...prevMovements,
+                  [userMouseMovement.user.user_uuid]: {
+                    user: userMouseMovement.user,
+                    mouseX: userMouseMovement.mouseX,
+                    mouseY: userMouseMovement.mouseY,
+                    color: userMouseMovement.color,
+                    onlinePageInstanceID: userMouseMovement.onlineInstanceID
+                  },
+                };
+              }
+              );
+            }
+          });
+
+
+          /*  Notifiying if a user has saved course content */
           usersStates.forEach((userState: any) => {
             if (userState.savings_states) {
               const savingsState = userState.savings_states
@@ -109,6 +162,7 @@ function EditorWrapper(props: EditorWrapperProps): JSX.Element {
     return (
       <>
         <Toast></Toast>
+        <MouseMovements movements={mouseMovements} onlinePageInstanceID={onlinePageInstanceID} />
         <OrgProvider orgslug={props.org.slug}>
           {!session.isLoading && (<Editor
             org={props.org}
@@ -120,6 +174,7 @@ function EditorWrapper(props: EditorWrapperProps): JSX.Element {
             ydoc={doc}
             hocuspocusProvider={provider}
             isCollabEnabledOnThisOrg={isCollabEnabledOnThisOrg}
+            userRandomColor={thisPageColor}
           ></Editor>)}
         </OrgProvider>
       </>
@@ -127,4 +182,7 @@ function EditorWrapper(props: EditorWrapperProps): JSX.Element {
   }
 }
 
+
+
 export default EditorWrapper
+

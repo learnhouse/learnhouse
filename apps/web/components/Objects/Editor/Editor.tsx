@@ -58,6 +58,7 @@ interface Editor {
   ydoc: any
   hocuspocusProvider: any,
   isCollabEnabledOnThisOrg: boolean
+  userRandomColor: string
   setContent: (content: string) => void
 }
 
@@ -142,7 +143,7 @@ function Editor(props: Editor) {
           provider: props.hocuspocusProvider,
           user: {
             name: props.session.user.first_name + ' ' + props.session.user.last_name,
-            color: randomColor({ luminosity: 'light' }),
+            color: props.userRandomColor ,
           },
         }),
       ] : []),
