@@ -48,6 +48,7 @@ import UserAvatar from '../UserAvatar'
 import randomColor from 'randomcolor'
 import Collaboration from '@tiptap/extension-collaboration'
 import CollaborationCursor from '@tiptap/extension-collaboration-cursor'
+import ActiveAvatars from './ActiveAvatars'
 
 interface Editor {
   content: string
@@ -59,6 +60,7 @@ interface Editor {
   hocuspocusProvider: any,
   isCollabEnabledOnThisOrg: boolean
   userRandomColor: string
+  mouseMovements: any
   setContent: (content: string) => void
 }
 
@@ -137,13 +139,14 @@ function Editor(props: Editor) {
       ...(props.isCollabEnabledOnThisOrg ? [
         Collaboration.configure({
           document: props.hocuspocusProvider?.document,
+
         }),
 
         CollaborationCursor.configure({
           provider: props.hocuspocusProvider,
           user: {
             name: props.session.user.first_name + ' ' + props.session.user.last_name,
-            color: props.userRandomColor ,
+            color: props.userRandomColor,
           },
         }),
       ] : []),
@@ -267,14 +270,7 @@ function Editor(props: Editor) {
               />
 
               <EditorUserProfileWrapper>
-                {!session.isAuthenticated && <span>Loading</span>}
-                {session.isAuthenticated && (
-                  <UserAvatar
-                    width={40}
-                    border="border-4"
-                    rounded="rounded-full"
-                  />
-                )}
+                <ActiveAvatars userRandomColor={props.userRandomColor} mouseMovements={props.mouseMovements}  />
               </EditorUserProfileWrapper>
             </EditorUsersSection>
           </EditorTop>
