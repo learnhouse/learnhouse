@@ -38,7 +38,6 @@ function UserAvatar(props: UserAvatarProps) {
       return predefinedAvatar
     } else {
       if (props.avatar_url) {
-        console.log('avatar_url', props.avatar_url)
         return props.avatar_url
       } else {
         if (session.user.avatar_image) {

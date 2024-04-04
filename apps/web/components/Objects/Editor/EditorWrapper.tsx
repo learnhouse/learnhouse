@@ -100,6 +100,14 @@ function EditorWrapper(props: EditorWrapperProps): JSX.Element {
         document: doc,
 
         // TODO(alpha code): This whole block of code should be improved to something more efficient and less hacky
+        onConnect: () => {
+          // Set the online page instance ID
+          setOnlinePageInstanceID(uuidv4());
+
+          // Set the user color
+          setThisPageColor(randomColor({ luminosity: 'light' }) as string);
+        },
+
         onAwarenessUpdate: ({ states }) => {
           const usersStates = states;
           /* Showing user mouse movement */
@@ -121,6 +129,7 @@ function EditorWrapper(props: EditorWrapperProps): JSX.Element {
                 };
               }
               );
+
             }
           });
 
@@ -162,7 +171,7 @@ function EditorWrapper(props: EditorWrapperProps): JSX.Element {
     return (
       <>
         <Toast></Toast>
-        <MouseMovements movements={mouseMovements} onlinePageInstanceID={onlinePageInstanceID} />
+        <MouseMovements org={props.org} movements={mouseMovements} onlinePageInstanceID={onlinePageInstanceID} />
         <OrgProvider orgslug={props.org.slug}>
           {!session.isLoading && (<Editor
             org={props.org}
@@ -175,6 +184,7 @@ function EditorWrapper(props: EditorWrapperProps): JSX.Element {
             hocuspocusProvider={provider}
             isCollabEnabledOnThisOrg={isCollabEnabledOnThisOrg}
             userRandomColor={thisPageColor}
+            mouseMovements={mouseMovements}
           ></Editor>)}
         </OrgProvider>
       </>
