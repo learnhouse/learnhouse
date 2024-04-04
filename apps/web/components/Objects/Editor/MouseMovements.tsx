@@ -1,5 +1,6 @@
-import { m, motion } from "framer-motion";
-import React from 'react'
+import { getCollaborationServerUrl } from "@services/config/config";
+import {  motion } from "framer-motion";
+import React, { useEffect } from 'react'
 
 interface User {
     user_uuid: string;
@@ -18,12 +19,24 @@ interface Movement {
 interface MouseMovementsProps {
     movements: Record<string, Movement>;
     onlinePageInstanceID: string;
+    org ?: any;
 }
 
-function MouseMovements({ movements, onlinePageInstanceID }: MouseMovementsProps): JSX.Element {
+function MouseMovements({ movements, onlinePageInstanceID, org }: MouseMovementsProps): JSX.Element {
+
+
+    /*  Collaboration config */
+    const collab = getCollaborationServerUrl()
+    const isCollabEnabledOnThisOrg = org?.config.config.GeneralConfig.collaboration && collab
+
+    useEffect(() => {
+
+    }
+        , [movements, org]);
+
     return (
         <div>
-            {Object.keys(movements).map((key) => (
+            {isCollabEnabledOnThisOrg && Object.keys(movements).map((key) => (
                 movements[key].onlinePageInstanceID !== onlinePageInstanceID && (<motion.div
                     key={key}
                     className="flex -space-x-2"
