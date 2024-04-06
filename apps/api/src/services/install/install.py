@@ -279,9 +279,9 @@ async def install_default_elements(db_session: Session):
     )
 
     # Serialize rights to JSON
-    role_global_admin.rights = role_global_admin.rights.model_dump()  # type: ignore
-    role_global_maintainer.rights = role_global_maintainer.rights.model_dump()  # type: ignore
-    role_global_user.rights = role_global_user.rights.model_dump()  # type: ignore
+    role_global_admin.rights = role_global_admin.rights.dict()  # type: ignore
+    role_global_maintainer.rights = role_global_maintainer.rights.dict()  # type: ignore
+    role_global_user.rights = role_global_user.rights.dict()  # type: ignore
 
     # Insert roles in DB
     db_session.add(role_global_admin)
