@@ -4,6 +4,7 @@
   "description": "",
   "main": "app.ts",
   "scripts": {
+    "dev": "bun app.ts",
     "start": "bun app.ts"
   },
   "keywords": [],
