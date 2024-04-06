@@ -326,6 +326,8 @@ async def get_courses_orgslug(
     page: int = 1,
     limit: int = 10,
 ):
+    
+    # TODO : This entire function is a mess. It needs to be rewritten.
 
     # Query for public courses
     statement_public = (
