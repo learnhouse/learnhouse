@@ -80,7 +80,7 @@ async def get_image_block(
 
     if block:
 
-        block = BlockRead.model_validate(block)
+        block = BlockRead.from_orm(block)
         
         return block
     else:

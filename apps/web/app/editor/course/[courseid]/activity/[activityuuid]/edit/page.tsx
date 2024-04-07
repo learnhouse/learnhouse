@@ -1,5 +1,5 @@
 import { default as React } from 'react'
-import EditorWrapper from '@components/Objects/Editor/EditorWrapper'
+import dynamic from 'next/dynamic'
 import { getCourseMetadataWithAuthHeader } from '@services/courses/courses'
 import { cookies } from 'next/headers'
 import { Metadata } from 'next'
@@ -9,6 +9,8 @@ import { getOrganizationContextInfoWithId } from '@services/organizations/orgs'
 import SessionProvider from '@components/Contexts/SessionContext'
 import EditorOptionsProvider from '@components/Contexts/Editor/EditorContext'
 import AIEditorProvider from '@components/Contexts/AI/AIEditorContext'
+const EditorWrapper = dynamic(() => import('@components/Objects/Editor/EditorWrapper'), { ssr: false })
+
 
 type MetadataProps = {
   params: { orgslug: string; courseid: string; activityid: string }
@@ -49,7 +51,7 @@ const EditActivity = async (params: any) => {
     access_token ? access_token : null
   )
   const org = await getOrganizationContextInfoWithId(courseInfo.org_id, {
-    revalidate: 1800,
+    revalidate: 180,
     tags: ['organizations'],
   })
 

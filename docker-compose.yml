@@ -17,6 +17,10 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+  collaboration:
+    build: apps/collaboration/.
+    ports:
+      - "1998:1998"
   db:
     image: postgres:16-alpine
     restart: always
