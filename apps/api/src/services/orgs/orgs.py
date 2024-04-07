@@ -158,6 +158,7 @@ async def create_org(
                 max_storage=0,
                 max_staff=0,
             ),
+            collaboration=False,
             users=OrgUserConfig(
                 signup_mechanism="open",
             ),

@@ -3,6 +3,8 @@ export const LEARNHOUSE_HTTP_PROTOCOL =
 const LEARNHOUSE_API_URL = `${process.env.NEXT_PUBLIC_LEARNHOUSE_API_URL}`
 export const LEARNHOUSE_BACKEND_URL = `${process.env.NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL}`
 export const LEARNHOUSE_DOMAIN = process.env.NEXT_PUBLIC_LEARNHOUSE_DOMAIN
+export const LEARNHOUSE_COLLABORATION_WS_URL =
+  process.env.NEXT_PUBLIC_LEARNHOUSE_COLLABORATION_WS_URL
 
 export const getAPIUrl = () => LEARNHOUSE_API_URL
 export const getBackendUrl = () => LEARNHOUSE_BACKEND_URL
@@ -34,4 +36,8 @@ export const getOrgFromUri = () => {
 
 export const getDefaultOrg = () => {
   return process.env.NEXT_PUBLIC_LEARNHOUSE_DEFAULT_ORG
+}
+
+export const getCollaborationServerUrl = () => {
+  return `${LEARNHOUSE_COLLABORATION_WS_URL}`
 }
