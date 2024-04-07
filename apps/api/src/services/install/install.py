@@ -1,14 +1,16 @@
 from datetime import datetime
+import json
 from uuid import uuid4
 from fastapi import HTTPException, Request
 from sqlalchemy import desc
 from sqlmodel import Session, select
 from src.db.install import Install, InstallRead
+from src.db.organization_config import AIEnabledFeatures, AILimitsSettings, LimitSettings, OrgUserConfig, OrganizationConfig, OrganizationConfigBase, GeneralConfig, AIConfig
 from src.db.organizations import Organization, OrganizationCreate
 from src.db.roles import Permission, Rights, Role, RoleTypeEnum
 from src.db.user_organizations import UserOrganization
 from src.db.users import User, UserCreate, UserRead
-from config.config import get_learnhouse_config
+from config.config import   get_learnhouse_config
 from src.security.security import security_hash_password
 
 
@@ -311,6 +313,53 @@ async def install_create_organization(
     db_session.add(org)
     db_session.commit()
     db_session.refresh(org)
+
+    # Org Config 
+    org_config = OrganizationConfigBase(
+        GeneralConfig=GeneralConfig(
+            color="#000000",
+            limits=LimitSettings(
+                limits_enabled=False,
+                max_users=0,
+                max_storage=0,
+                max_staff=0,
+            ),
+            collaboration=False,
+            users=OrgUserConfig(
+                signup_mechanism="open",
+            ),
+            active=True,
+        ),
+        AIConfig=AIConfig(
+            enabled=True,
+            limits=AILimitsSettings(
+                limits_enabled=False,
+                max_asks=0,
+            ),
+            embeddings="text-embedding-ada-002",
+            ai_model="gpt-3.5-turbo",
+            features=AIEnabledFeatures(
+                editor=True,
+                activity_ask=True,
+                course_ask=True,
+                global_ai_ask=True,
+            ),
+        ),
+    )
+
+    org_config = json.loads(org_config.json())
+
+    # OrgSettings
+    org_settings = OrganizationConfig(
+        org_id=int(org.id if org.id else 0),
+        config=org_config,
+        creation_date=str(datetime.now()),
+        update_date=str(datetime.now()),
+    )
+
+    db_session.add(org_settings)
+    db_session.commit()
+    db_session.refresh(org_settings)
 
     return org
 
