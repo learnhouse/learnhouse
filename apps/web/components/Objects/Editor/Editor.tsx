@@ -15,7 +15,7 @@ import {
   useAIEditorDispatch,
 } from '@components/Contexts/AI/AIEditorContext'
 
-// extensions
+// Extensions
 import InfoCallout from './Extensions/Callout/Info/InfoCallout'
 import WarningCallout from './Extensions/Callout/Warning/WarningCallout'
 import ImageBlock from './Extensions/Image/ImageBlock'
@@ -28,7 +28,7 @@ import QuizBlock from './Extensions/Quiz/QuizBlock'
 import ToolTip from '@components/StyledElements/Tooltip/Tooltip'
 import Link from 'next/link'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
-import { OrderedList } from '@tiptap/extension-ordered-list'
+
 
 // Lowlight
 import { common, createLowlight } from 'lowlight'
@@ -45,14 +45,22 @@ import { useSession } from '@components/Contexts/SessionContext'
 import AIEditorToolkit from './AI/AIEditorToolkit'
 import useGetAIFeatures from '@components/AI/Hooks/useGetAIFeatures'
 import UserAvatar from '../UserAvatar'
+import randomColor from 'randomcolor'
+import Collaboration from '@tiptap/extension-collaboration'
+import CollaborationCursor from '@tiptap/extension-collaboration-cursor'
+import ActiveAvatars from './ActiveAvatars'
 
 interface Editor {
   content: string
-  ydoc: any
-  provider: any
   activity: any
   course: any
   org: any
+  session: any
+  ydoc: any
+  hocuspocusProvider: any,
+  isCollabEnabledOnThisOrg: boolean
+  userRandomColor: string
+  mouseMovements: any
   setContent: (content: string) => void
 }
 
@@ -63,10 +71,12 @@ function Editor(props: Editor) {
   const is_ai_feature_enabled = useGetAIFeatures({ feature: 'editor' })
   const [isButtonAvailable, setIsButtonAvailable] = React.useState(false)
 
+
   React.useEffect(() => {
     if (is_ai_feature_enabled) {
       setIsButtonAvailable(true)
     }
+
   }, [is_ai_feature_enabled])
 
   // remove course_ from course_uuid
@@ -89,7 +99,7 @@ function Editor(props: Editor) {
     extensions: [
       StarterKit.configure({
         // The Collaboration extension comes with its own history handling
-        // history: false,
+        history: props.isCollabEnabledOnThisOrg ? false : undefined,
       }),
       InfoCallout.configure({
         editable: true,
@@ -121,26 +131,29 @@ function Editor(props: Editor) {
         controls: true,
         modestBranding: true,
       }),
-      OrderedList.configure(),
       CodeBlockLowlight.configure({
         lowlight,
       }),
 
-      // Register the document with Tiptap
-      // Collaboration.configure({
-      //   document: props.ydoc,
-      // }),
-      // Register the collaboration cursor extension
-      // CollaborationCursor.configure({
-      //   provider: props.provider,
-      //   user: {
-      //     name: auth.userInfo.username,
-      //     color: "#f783ac",
-      //   },
-      // }),
+      // Add Collaboration and CollaborationCursor only if isCollabEnabledOnThisOrg is true
+      ...(props.isCollabEnabledOnThisOrg ? [
+        Collaboration.configure({
+          document: props.hocuspocusProvider?.document,
+
+        }),
+
+        CollaborationCursor.configure({
+          provider: props.hocuspocusProvider,
+          user: {
+            name: props.session.user.first_name + ' ' + props.session.user.last_name,
+            color: props.userRandomColor,
+          },
+        }),
+      ] : []),
     ],
 
-    content: props.content,
+    // If collab is enabled the onSynced callback ensures initial content is set only once using editor.setContent(), preventing repetitive content insertion on editor syncs.
+    content: props.isCollabEnabledOnThisOrg ? null : props.content,
   })
 
   return (
@@ -257,14 +270,7 @@ function Editor(props: Editor) {
               />
 
               <EditorUserProfileWrapper>
-                {!session.isAuthenticated && <span>Loading</span>}
-                {session.isAuthenticated && (
-                  <UserAvatar
-                    width={40}
-                    border="border-4"
-                    rounded="rounded-full"
-                  />
-                )}
+                <ActiveAvatars userRandomColor={props.userRandomColor} mouseMovements={props.mouseMovements}  />
               </EditorUserProfileWrapper>
             </EditorUsersSection>
           </EditorTop>
