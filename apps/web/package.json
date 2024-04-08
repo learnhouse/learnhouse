@@ -61,7 +61,7 @@
   },
   "devDependencies": {
     "@types/node": "20.12.2",
-    "@types/react": "18.2.8",
+    "@types/react": "18.2.74",
     "@types/react-beautiful-dnd": "^13.1.8",
     "@types/react-dom": "18.2.23",
     "@types/react-katex": "^3.0.4",
