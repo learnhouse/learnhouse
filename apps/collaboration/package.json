@@ -13,7 +13,7 @@
   "dependencies": {
     "@hocuspocus/server": "^2.11.3",
     "bun": "^1.0.36",
-    "typescript": "5.4.3",
+    "typescript": "5.4.4",
     "y-protocols": "^1.0.6",
     "yjs": "^13.6.14"
   }
