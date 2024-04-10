@@ -14,12 +14,12 @@ updates:
       - "swve"
     schedule:
       interval: "weekly"
-  - package-ecosystem: "npm" # See documentation for possible values
-    directory: "/" # Location of package manifests
-    labels:
-      - "dependencies"
-      - "npm"
-    reviewers:
-      - "swve"
-    schedule:
-      interval: "weekly"
+#  - package-ecosystem: "npm" # See documentation for possible values
+#    directory: "/" # Location of package manifests
+#    labels:
+#      - "dependencies"
+#      - "npm"
+#    reviewers:
+#      - "swve"
+#    schedule:
+#      interval: "weekly"
