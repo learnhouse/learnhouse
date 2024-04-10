@@ -10,7 +10,7 @@ readme = "README.md"
 version = "0.1.0"
 
 [tool.poetry.dependencies]
-boto3 = "^1.34.17"
+boto3 = "^1.34.79"
 botocore = "^1.34.79"
 chromadb = "^0.4.22"
 faker = "^24.8.0"
