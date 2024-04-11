@@ -33,7 +33,7 @@ pyyaml = "^6.0.1"
 redis = "^5.0.1"
 requests = "^2.31.0"
 resend = "^0.8.0"
-sentry-sdk = {extras = ["fastapi"], version = "^1.39.2"}
+sentry-sdk = {extras = ["fastapi"], version = "^1.45.0"}
 sqlmodel = "^0.0.16"
 tiktoken = "^0.6.0"
 uvicorn = "0.29.0"
