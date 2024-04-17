@@ -18,6 +18,10 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import { createCourseUpdate, deleteCourseUpdate } from '@services/courses/updates'
 import toast from 'react-hot-toast'
 import ConfirmationModal from '@components/StyledElements/ConfirmationModal/ConfirmationModal'
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+
+dayjs.extend(relativeTime);
 
 function CourseUpdates() {
   const course = useCourse() as any;
@@ -38,7 +42,7 @@ function CourseUpdates() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
- 
+
 
   return (
     <div style={{ position: 'relative' }} className='bg-white hover:bg-neutral-50 transition-all ease-linear nice-shadow rounded-full z-20 px-5 py-1'>
@@ -194,8 +198,17 @@ const UpdatesListView = () => {
   return (
     <div className='px-5 bg-white overflow-y-auto' style={{ maxHeight: '400px' }}>
       {updates && updates.map((update: any) => (
-        <div key={update.id} className='py-2 border-b border-neutral-200'>
-          <div className='font-bold text-gray-500 flex space-x-2 items-center justify-between '>{update.title} {isAdmin && <DeleteUpdateButton update={update} />}</div>
+        <div key={update.id} className='py-2 border-b border-neutral-200 antialiased'>
+          <div className='font-bold text-gray-500 flex space-x-2 items-center justify-between '>
+            <div className='flex space-x-2 items-center'>
+              <span> {update.title}</span>
+              <span 
+              title={"Created at " + dayjs(update.creation_date).format('MMMM D, YYYY')}
+              className='text-xs font-semibold text-gray-300'>
+              {dayjs(update.creation_date).fromNow()}
+              </span>
+            </div>
+            {isAdmin && <DeleteUpdateButton update={update} />}</div>
           <div className='text-gray-600'>{update.content}</div>
         </div>
       ))}
