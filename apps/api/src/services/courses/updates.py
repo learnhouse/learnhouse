@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import List
 from uuid import uuid4
 from fastapi import HTTPException, Request, status
-from sqlmodel import Session, select
+from sqlmodel import Session, col, select
 from src.db.course_updates import (
     CourseUpdate,
     CourseUpdateCreate,
@@ -88,7 +88,6 @@ async def update_update(
     for key, value in update_object.model_dump().items():
         if value is not None:
             setattr(update, key, value)
-    
 
     db_session.add(update)
 
@@ -142,7 +141,11 @@ async def get_updates_by_course_uuid(
             status_code=status.HTTP_409_CONFLICT, detail="Course does not exist"
         )
 
-    statement = select(CourseUpdate).where(CourseUpdate.course_id == course.id)
+    statement = (
+        select(CourseUpdate)
+        .where(CourseUpdate.course_id == course.id)
+        .order_by(col(CourseUpdate.creation_date).desc())
+    )  # https://sqlmodel.tiangolo.com/tutorial/where/#type-annotations-and-errors
     updates = db_session.exec(statement).all()
 
     return [CourseUpdateRead(**update.model_dump()) for update in updates]

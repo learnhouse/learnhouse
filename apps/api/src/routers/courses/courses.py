@@ -167,7 +167,7 @@ async def api_get_course_updates(
 
     return await get_updates_by_course_uuid(request, course_uuid, current_user, db_session)
 
-@router.post("/{course_uuid}/update")
+@router.post("/{course_uuid}/updates")
 async def api_create_course_update(
     request: Request,
     course_uuid: str,
