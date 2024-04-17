@@ -16,6 +16,7 @@ import { ArrowRight, Check, File, Sparkles, Video } from 'lucide-react'
 import { useOrg } from '@components/Contexts/OrgContext'
 import UserAvatar from '@components/Objects/UserAvatar'
 import CourseUpdates from '@components/Objects/CourseUpdates/CourseUpdates'
+import { CourseProvider } from '@components/Contexts/CourseContext'
 
 const CourseClient = (props: any) => {
   const [user, setUser] = useState<any>({})
@@ -75,7 +76,9 @@ const CourseClient = (props: any) => {
               <h1 className="text-3xl -mt-3 font-bold">{course.name}</h1>
             </div>
             <div>
-              <CourseUpdates />
+              <CourseProvider courseuuid={course.course_uuid}>
+                <CourseUpdates />
+              </CourseProvider>
             </div>
           </div>
 
