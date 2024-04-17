@@ -12,6 +12,7 @@ type ModalParams = {
   functionToExecute: any
   dialogTrigger?: React.ReactNode
   status?: 'warning' | 'info'
+  buttonid?: string
 }
 
 const ConfirmationModal = (params: ModalParams) => {
@@ -58,6 +59,7 @@ const ConfirmationModal = (params: ModalParams) => {
               </div>
               <div className="flex flex-row-reverse pt-2">
                 <div
+                  id={params.buttonid}
                   className={`rounded-md text-sm px-3 py-2 font-bold flex justify-center items-center hover:cursor-pointer ${
                     params.status === 'warning'
                       ? warningButtonColors
