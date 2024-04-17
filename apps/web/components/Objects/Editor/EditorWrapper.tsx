@@ -50,6 +50,7 @@ function EditorWrapper(props: EditorWrapperProps): JSX.Element {
     }, 10);
   };
 
+  
   // Store the Y document in the browser
   new IndexeddbPersistence(props.activity.activity_uuid, doc)
 
