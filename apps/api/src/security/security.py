@@ -17,11 +17,11 @@ ALGORITHM = "HS256"
 ### 🔒 Passwords Hashing ##############################################################
 
 
-async def security_hash_password(password: str):
+def security_hash_password(password: str):
     return pbkdf2_sha256.hash(password)
 
 
-async def security_verify_password(plain_password: str, hashed_password: str):
+def security_verify_password(plain_password: str, hashed_password: str):
     return pbkdf2_sha256.verify(plain_password, hashed_password)
 
 

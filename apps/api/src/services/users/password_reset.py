@@ -190,7 +190,7 @@ async def change_password_with_reset_code(
         )
 
     # Change password
-    user.password = await security_hash_password(new_password)
+    user.password = security_hash_password(new_password)
     db_session.add(user)
 
     db_session.commit()
