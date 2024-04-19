@@ -59,7 +59,7 @@ async def authenticate_user(
     user = await security_get_user(request, db_session, email)
     if not user:
         return False
-    if not await security_verify_password(password, user.password):
+    if not security_verify_password(password, user.password):
         return False
     return user
 
