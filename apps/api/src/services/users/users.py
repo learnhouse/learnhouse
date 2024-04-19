@@ -44,7 +44,7 @@ async def create_user(
 
     # Complete the user object
     user.user_uuid = f"user_{uuid4()}"
-    user.password = await security_hash_password(user_object.password)
+    user.password = security_hash_password(user_object.password)
     user.email_verified = False
     user.creation_date = str(datetime.now())
     user.update_date = str(datetime.now())
@@ -164,7 +164,7 @@ async def create_user_without_org(
 
     # Complete the user object
     user.user_uuid = f"user_{uuid4()}"
-    user.password = await security_hash_password(user_object.password)
+    user.password = security_hash_password(user_object.password)
     user.email_verified = False
     user.creation_date = str(datetime.now())
     user.update_date = str(datetime.now())
@@ -340,13 +340,13 @@ async def update_user_password(
     # RBAC check
     await rbac_check(request, current_user, "update", user.user_uuid, db_session)
 
-    if not await security_verify_password(form.old_password, user.password):
+    if not security_verify_password(form.old_password, user.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Wrong password"
         )
 
     # Update user
-    user.password = await security_hash_password(form.new_password)
+    user.password = security_hash_password(form.new_password)
     user.update_date = str(datetime.now())
 
     # Update user in database
