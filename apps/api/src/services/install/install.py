@@ -95,7 +95,7 @@ async def update_install_instance(
 
 
 # Install Default roles
-async def install_default_elements(db_session: Session):
+def install_default_elements(db_session: Session):
     """
     """
     # remove all default roles
@@ -300,7 +300,7 @@ async def install_default_elements(db_session: Session):
 
 
 # Organization creation
-async def install_create_organization(
+def install_create_organization(
      org_object: OrganizationCreate, db_session: Session
 ):
     org = Organization.model_validate(org_object)
@@ -364,14 +364,14 @@ async def install_create_organization(
     return org
 
 
-async def install_create_organization_user(
+def install_create_organization_user(
      user_object: UserCreate, org_slug: str, db_session: Session
 ):
     user = User.model_validate(user_object)
 
     # Complete the user object
     user.user_uuid = f"user_{uuid4()}"
-    user.password = await security_hash_password(user_object.password)
+    user.password = security_hash_password(user_object.password)
     user.email_verified = False
     user.creation_date = str(datetime.now())
     user.update_date = str(datetime.now())
