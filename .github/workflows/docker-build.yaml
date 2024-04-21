@@ -3,6 +3,9 @@ on:
   push:
     paths:
       - "**"
+  pull_request:
+    paths:
+      - "**"
 jobs:
   docker-build:
     runs-on: ubuntu-latest
