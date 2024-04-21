@@ -55,9 +55,10 @@ def install(
         # Create Organization User
         print("Creating default organization user...")
         # Generate random 6 digit password
+        email = "admin@school.dev"
         password = generate_password(8)
         user = UserCreate(
-            username="admin", email=EmailStr("admin@school.dev"), password=password
+            username="admin", email=EmailStr(email), password=password
         )
         install_create_organization_user(user, "default", db_session)
         print("Default organization user created ✅")
@@ -66,7 +67,7 @@ def install(
         print("Installation completed ✅")
         print("")
         print("Login with the following credentials:")
-        print("email: admin@school.io")
+        print("email: " + email)
         print("password: " + password)
         print("⚠️ Remember to change the password after logging in ⚠️")
 
