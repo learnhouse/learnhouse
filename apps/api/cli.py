@@ -1,9 +1,10 @@
+import random
+import string
 from typing import Annotated
 from pydantic import EmailStr
 from sqlalchemy import create_engine
 from sqlmodel import SQLModel, Session
 import typer
-
 from config.config import get_learnhouse_config
 from src.db.organizations import OrganizationCreate
 from src.db.users import UserCreate
@@ -15,6 +16,10 @@ from src.services.install.install import (
 
 cli = typer.Typer()
 
+def generate_password(length):
+    characters = string.ascii_uppercase + string.ascii_lowercase + string.digits
+    password = ''.join(random.choice(characters) for _ in range(length))
+    return password
 
 @cli.command()
 def install(
@@ -49,8 +54,10 @@ def install(
 
         # Create Organization User
         print("Creating default organization user...")
+        # Generate random 6 digit password
+        password = generate_password(8)
         user = UserCreate(
-            username="admin", email=EmailStr("admin@school.io"), password="adminsecret"
+            username="admin", email=EmailStr("admin@school.dev"), password=password
         )
         install_create_organization_user(user, "default", db_session)
         print("Default organization user created ✅")
@@ -60,7 +67,8 @@ def install(
         print("")
         print("Login with the following credentials:")
         print("email: admin@school.io")
-        print("password: adminsecret")
+        print("password: " + password)
+        print("⚠️ Remember to change the password after logging in ⚠️")
 
     else:
         # Install the default elements
