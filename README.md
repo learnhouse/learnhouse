@@ -8,22 +8,25 @@ LearnHouse is an open source platform that makes it easy for anyone to provide w
 
 ## Progress
 
-🚧 LearnHouse is still on early development (alpha) and should not be used (yet) on production, as we reach stability we will release a stable version and add more features.
+🚧 LearnHouse is still on early development (alpha), as we reach stability we will release a stable version and add more features.
 
-## Features
+## Overview
 
 ![image](https://docs.learnhouse.app/img/pages/features.png)
 
-- 📄✨Dynamic notion-like pages
+- 📄✨Dynamic notion-like Blocks-based Courses & editor
 - 🏎️ Easy to use
 - 👥 Multi-Organization
 - 📹 Supports Uploadable Videos and external videos like YouTube
 - 📄 Supports documents like PDF
-- 🍱 Course Collections
-- 👨‍🎓 Users Management
+- 👨‍🎓 Users & Groups Management
 - 🙋 Quizzes
-- 👟 Course progress
+- 🍱 Course Collections
+- 👟 Course Progress
+- 🛜 Course Updates
+- 💬 Discussions
 - ✨ LearnHouse AI : The Teachers and Students copilot
+- 👪 Multiplayer Course edition
 - More to come
 
 ## Community
@@ -45,6 +48,18 @@ Thank you for you interest 💖, here is how you can help :
 - [Overview](https://docs.learnhouse.app)
 - [Developers](https://docs.learnhouse.app/setup-dev-environment)
 
+## Get started 
+
+### Get a local ready copy of LearnHouse
+
+TLDR: Run `docker-compose up -d` and inspect the logs, should be ready to go in less than 2 mins
+
+- [Self Hosting](https://docs.learnhouse.app/self-hosting/hosting-guide)
+
+### Set-up a Development Environment 
+
+- [Detailed Guide](https://docs.learnhouse.app/setup-dev-environment)
+
 ## Tech
 
 LearnHouse uses a number of open source projects to work properly:
@@ -56,8 +71,18 @@ LearnHouse uses a number of open source projects to work properly:
 - **FastAPI** - A high performance, async API framework for Python
 - **YJS** - Shared data types for building collaborative software
 - **PostgreSQL** - SQL Database
+- **Redis** - In-Memory Database
 - **LangChain** - LangChain is a framework for developing applications powered by language models
 - **React** - duh
+
+## LearnHouse University
+
+<a href="https://university.learnhouse.io">
+<img width="208" alt="lh_univ" src="https://github.com/learnhouse/learnhouse/assets/29493708/72a892cd-7c5a-4437-9130-ff1682a10b24">
+</a>
+
+Learn about LearnHouse and how to use it, using LearnHouse
+
 
 ## A word
 
