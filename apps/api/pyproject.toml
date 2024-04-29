@@ -23,7 +23,7 @@ openai = "^1.17.1"
 passlib = "^1.7.4"
 psycopg2-binary = "^2.9.9"
 pydantic = {version = ">=1.8.0,<2.0.0", extras = ["email"]}
-pytest = "^8.1.1"
+pytest = "^8.2.0"
 python = "^3.12"
 python-dotenv = "^1.0.0"
 python-jose = "^3.3.0"
