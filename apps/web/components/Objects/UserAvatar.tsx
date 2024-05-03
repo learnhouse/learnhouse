@@ -16,17 +16,24 @@ type UserAvatarProps = {
     | 'rounded'
   border?: 'border-2' | 'border-4' | 'border-8'
   borderColor?: string
-  predefined_avatar?: 'ai'
+  predefined_avatar?: 'ai' | 'empty' 
 }
 
 function UserAvatar(props: UserAvatarProps) {
   const session = useSession() as any
   const params = useParams() as any
 
-  const predefinedAvatar =
-    props.predefined_avatar === 'ai'
-      ? getUriWithOrg(params.orgslug, '/ai_avatar.png')
-      : null
+  const predefinedAvatarFunc = () => {
+    if (props.predefined_avatar === 'ai') {
+      return getUriWithOrg(params.orgslug, '/ai_avatar.png')
+    }
+    if (props.predefined_avatar === 'empty') {
+      return getUriWithOrg(params.orgslug, '/empty_avatar.png')
+    }
+    return null
+  }
+
+  const predefinedAvatar = predefinedAvatarFunc()
   const emptyAvatar = getUriWithOrg(params.orgslug, '/empty_avatar.png') as any
   const uploadedAvatar = getUserAvatarMediaDirectory(
     session.user.user_uuid,
