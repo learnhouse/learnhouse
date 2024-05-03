@@ -276,10 +276,7 @@ const CourseClient = (props: any) => {
                 <div className="flex flex-col mx-auto space-y-3 px-2 py-2 items-center">
                   <UserAvatar
                     border="border-8"
-                    avatar_url={getUserAvatarMediaDirectory(
-                      course.authors[0].user_uuid,
-                      course.authors[0].avatar_image
-                    )}
+                    avatar_url={course.authors[0].avatar_image ? getUserAvatarMediaDirectory(course.authors[0].user_uuid, course.authors[0].avatar_image) : ''}
                     width={100}
                   />
                   <div className="-space-y-2 ">

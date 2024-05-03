@@ -24,7 +24,9 @@ function VideoActivity({ activity, course }: { activity: any; course: any }) {
   }
 
   React.useEffect(() => {
-    console.log(activity)
+    if (activity && activity.content && activity.content.uri) {
+      setVideoId(getYouTubeEmbed(activity.content.uri).videoId)
+    }
   }, [activity, org])
 
   return (
