@@ -33,6 +33,7 @@
     "dayjs": "^1.11.10",
     "formik": "^2.4.5",
     "framer-motion": "^10.18.0",
+    "get-youtube-id": "^1.0.1",
     "highlight.js": "^11.9.0",
     "katex": "^0.16.10",
     "lowlight": "^3.1.0",
