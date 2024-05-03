@@ -277,6 +277,7 @@ const CourseClient = (props: any) => {
                   <UserAvatar
                     border="border-8"
                     avatar_url={course.authors[0].avatar_image ? getUserAvatarMediaDirectory(course.authors[0].user_uuid, course.authors[0].avatar_image) : ''}
+                    predefined_avatar={course.authors[0].avatar_image  ? undefined : 'empty'}
                     width={100}
                   />
                   <div className="-space-y-2 ">
