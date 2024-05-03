@@ -50,7 +50,7 @@ function UserAvatar(props: UserAvatarProps) {
   }
 
   useEffect(() => {
-    console.log('params', params)
+    
   }, [session])
 
   return (
