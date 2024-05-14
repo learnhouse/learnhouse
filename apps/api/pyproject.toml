@@ -19,7 +19,7 @@ httpx = "^0.27.0"
 langchain = "0.1.7"
 langchain-community = "^0.0.20"
 langchain-openai = "^0.0.6"
-openai = "^1.25.2"
+openai = "^1.30.0"
 passlib = "^1.7.4"
 psycopg2-binary = "^2.9.9"
 pydantic = {version = ">=1.8.0,<2.0.0", extras = ["email"]}
