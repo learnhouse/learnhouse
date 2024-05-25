@@ -3,21 +3,22 @@ import React, { useEffect } from 'react'
 import styled from 'styled-components'
 import Link from 'next/link'
 import { Settings } from 'lucide-react'
-import { useSession } from '@components/Contexts/SessionContext'
 import UserAvatar from '@components/Objects/UserAvatar'
 import useAdminStatus from '@components/Hooks/useAdminStatus'
+import { useSession } from 'next-auth/react'
 
 export const HeaderProfileBox = () => {
   const session = useSession() as any
   const isUserAdmin = useAdminStatus() as any
 
   useEffect(() => {
+    console.log(session)
   }
   , [session])
 
   return (
     <ProfileArea>
-      {!session.isAuthenticated && (
+      {session.status == 'unauthenticated' && (
         <UnidentifiedArea className="flex text-sm text-gray-700 font-bold p-1.5 px-2 rounded-lg">
           <ul className="flex space-x-3 items-center">
             <li>
@@ -29,11 +30,11 @@ export const HeaderProfileBox = () => {
           </ul>
         </UnidentifiedArea>
       )}
-      {session.isAuthenticated && (
+      {session.status == 'authenticated' && (
         <AccountArea className="space-x-0">
           <div className="flex items-center space-x-2">
             <div className='flex items-center space-x-2' >
-              <p className='text-sm'>{session.user.username}</p>
+              <p className='text-sm'>{session.data.user.username}</p>
               {isUserAdmin && <div className="text-[10px] bg-rose-300 px-2 font-bold rounded-md shadow-inner py-1">ADMIN</div>}
             </div>
             <div className="py-4">

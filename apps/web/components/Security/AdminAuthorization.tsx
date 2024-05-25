@@ -1,6 +1,6 @@
 'use client'
 import { useOrg } from '@components/Contexts/OrgContext'
-import { useSession } from '@components/Contexts/SessionContext'
+import { useSession } from 'next-auth/react'
 import useAdminStatus from '@components/Hooks/useAdminStatus'
 import { usePathname, useRouter } from 'next/navigation'
 import React from 'react'
@@ -33,7 +33,7 @@ function AdminAuthorization(props: AuthorizationProps) {
 
   // Verify if the user is authenticated
   const isUserAuthenticated = () => {
-    if (session.isAuthenticated === true) {
+    if (session.status === 'authenticated') {
       return true
     } else {
       return false
@@ -59,7 +59,6 @@ function AdminAuthorization(props: AuthorizationProps) {
     if (props.authorizationMode === 'page') {
       // Check if user is in an admin path
       if (ADMIN_PATHS.some((path) => checkPathname(path, pathname))) {
-        console.log('Admin path')
         if (isUserAuthenticated()) {
           // Check if the user is an Admin
           if (isUserAdmin) {
@@ -92,7 +91,7 @@ function AdminAuthorization(props: AuthorizationProps) {
   }
 
   React.useEffect(() => {
-    if (session.isLoading) {
+    if (session.status == 'loading') {
       return
     }
 

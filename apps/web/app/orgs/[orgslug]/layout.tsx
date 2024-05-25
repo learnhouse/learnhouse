@@ -1,8 +1,8 @@
 'use client'
 import { OrgProvider } from '@components/Contexts/OrgContext'
-import SessionProvider from '@components/Contexts/SessionContext'
 import Toast from '@components/StyledElements/Toast/Toast'
 import '@styles/globals.css'
+import { SessionProvider } from 'next-auth/react'
 
 export default function RootLayout({
   children,

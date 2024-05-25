@@ -1,6 +1,6 @@
 'use client'
 import { useOrg } from '@components/Contexts/OrgContext'
-import { useSession } from '@components/Contexts/SessionContext'
+import { useSession } from 'next-auth/react'
 import ToolTip from '@components/StyledElements/Tooltip/Tooltip'
 import LearnHouseDashboardLogo from '@public/dashLogo.png'
 import { logout } from '@services/auth/auth'
@@ -123,7 +123,7 @@ function LeftMenu() {
         <div className="flex flex-col mx-auto pb-7 space-y-2">
           <div className="flex items-center flex-col space-y-2">
             <ToolTip
-              content={'@' + session.user.username}
+              content={'@' + session.data.user.username}
               slateBlack
               sideOffset={8}
               side="right"
@@ -134,7 +134,7 @@ function LeftMenu() {
             </ToolTip>
             <div className="flex items-center flex-col space-y-1">
               <ToolTip
-                content={session.user.username + "'s Settings"}
+                content={session.data.user.username + "'s Settings"}
                 slateBlack
                 sideOffset={8}
                 side="right"

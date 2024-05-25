@@ -7,7 +7,7 @@ import Link from 'next/link'
 import { getUriWithOrg } from '@services/config/config'
 import { Info, Lock } from 'lucide-react'
 import BreadCrumbs from '@components/Dashboard/UI/BreadCrumbs'
-import { useSession } from '@components/Contexts/SessionContext'
+import { useSession } from 'next-auth/react'
 
 export type SettingsParams = {
   subpage: string

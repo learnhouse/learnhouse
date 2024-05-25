@@ -1,4 +1,4 @@
-import { useSession } from '@components/Contexts/SessionContext'
+import { useSession } from 'next-auth/react'
 import {
   sendActivityAIChatMessage,
   startActivityAIChatSession,
@@ -409,7 +409,7 @@ const AIMessagePlaceHolder = (props: {
               <span className="items-center">Hello</span>
               <span className="capitalize flex space-x-2 items-center">
                 <UserAvatar rounded="rounded-lg" border="border-2" width={35} />
-                <span>{session.user.username},</span>
+                <span>{session.data.user.username},</span>
               </span>
               <span>how can we help today ?</span>
             </p>

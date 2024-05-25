@@ -7,7 +7,7 @@ import useAdminStatus from './Hooks/useAdminStatus'
 function ContentPlaceHolderIfUserIsNotAdmin({ text }: { text: string }) {
     const isUserAdmin = useAdminStatus() as any
     return (
-        <div>{isUserAdmin ? text : 'No content yet'}</div>
+        <span>{isUserAdmin ? text : 'No content yet'}</span>
     )
 }
 

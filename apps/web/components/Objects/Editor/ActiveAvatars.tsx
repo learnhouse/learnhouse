@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import UserAvatar from '../UserAvatar'
-import { useSession } from '@components/Contexts/SessionContext'
+import { useSession } from 'next-auth/react'
 import { getUserAvatarMediaDirectory } from '@services/media/media';
 import { getCollaborationServerUrl } from '@services/config/config';
 import { useOrg } from '@components/Contexts/OrgContext';
@@ -27,11 +27,11 @@ function ActiveAvatars(props: ActiveAvatarsProps) {
         });
 
         // Remove the current user from the list
-        delete users[session.user.user_uuid];
+        delete users[session.data.user.user_uuid];
 
         setActiveUsers(users);
     }
-        , [props.mouseMovements, session.user, org]);
+        , [props.mouseMovements, session.data.user, org]);
 
 
     return (
@@ -50,7 +50,7 @@ function ActiveAvatars(props: ActiveAvatarsProps) {
                         <div className="h-2 w-2 rounded-full" style={{ position: 'absolute', bottom: -5, right: 16, backgroundColor: props.mouseMovements[key].color }} />
                     </div>
                 ))}
-                {session.isAuthenticated && (
+                {session.status && (
                     <div className='z-50'>
                         <UserAvatar
                             width={40}

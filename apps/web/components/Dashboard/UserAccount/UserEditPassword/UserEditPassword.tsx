@@ -1,4 +1,4 @@
-import { useSession } from '@components/Contexts/SessionContext'
+import { useSession } from 'next-auth/react'
 import { updatePassword } from '@services/settings/password'
 import { Formik, Form, Field } from 'formik'
 import React, { useEffect } from 'react'
@@ -7,7 +7,7 @@ function UserEditPassword() {
   const session = useSession() as any
 
   const updatePasswordUI = async (values: any) => {
-    let user_id = session.user.id
+    let user_id = session.data.user.id
     await updatePassword(user_id, values)
   }
 

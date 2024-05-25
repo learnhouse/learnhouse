@@ -1,6 +1,7 @@
+'use client'
 import '@styles/globals.css'
 import { Menu } from '@components/Objects/Menu/Menu'
-import SessionProvider from '@components/Contexts/SessionContext'
+import { SessionProvider } from 'next-auth/react'
 
 export default function RootLayout({
   children,
