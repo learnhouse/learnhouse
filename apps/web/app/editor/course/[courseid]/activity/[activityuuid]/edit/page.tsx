@@ -6,7 +6,6 @@ import { Metadata } from 'next'
 import { getActivityWithAuthHeader } from '@services/courses/activities'
 import { getAccessTokenFromRefreshTokenCookie } from '@services/auth/auth'
 import { getOrganizationContextInfoWithId } from '@services/organizations/orgs'
-import SessionProvider from '@components/Contexts/SessionContext'
 import EditorOptionsProvider from '@components/Contexts/Editor/EditorContext'
 import AIEditorProvider from '@components/Contexts/AI/AIEditorContext'
 const EditorWrapper = dynamic(() => import('@components/Objects/Editor/EditorWrapper'), { ssr: false })
@@ -58,14 +57,12 @@ const EditActivity = async (params: any) => {
   return (
     <EditorOptionsProvider options={{ isEditable: true }}>
       <AIEditorProvider>
-        <SessionProvider>
           <EditorWrapper
             org={org}
             course={courseInfo}
             activity={activity}
             content={activity.content}
           ></EditorWrapper>
-        </SessionProvider>
       </AIEditorProvider>
     </EditorOptionsProvider>
   )

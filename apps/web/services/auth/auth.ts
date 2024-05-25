@@ -10,8 +10,8 @@ interface LoginAndGetTokenResponse {
 // TODO : everything in this file need to be refactored including security issues fix
 
 export async function loginAndGetToken(
-  username: string,
-  password: string
+  username: any,
+  password: any
 ): Promise<any> {
   // Request Config
 
@@ -34,6 +34,37 @@ export async function loginAndGetToken(
 
   // fetch using await and async
   const response = await fetch(`${getAPIUrl()}auth/login`, requestOptions)
+  return response
+}
+
+export async function loginWithOAuthToken(
+  email: any,
+  provider: any,
+  accessToken: string
+): Promise<any> {
+  // Request Config
+
+  // get origin
+  const HeadersConfig = new Headers({
+    'Content-Type': 'application/json',
+  })
+  const body = {
+    email: email,
+    provider: provider,
+    access_token: accessToken,
+  }
+  const jsonBody = JSON.stringify(body);
+
+  const requestOptions: any = {
+    method: 'POST',
+    headers: HeadersConfig,
+    body: jsonBody,
+    redirect: 'follow',
+    credentials: 'include',
+  }
+
+  // fetch using await and async
+  const response = await fetch(`${getAPIUrl()}auth/oauth`, requestOptions)
   return response
 }
 
@@ -102,10 +133,8 @@ export async function getUserInfo(token: string): Promise<any> {
 }
 
 export async function getUserSession(token: string): Promise<any> {
-  const origin = window.location.origin
   const HeadersConfig = new Headers({
     Authorization: `Bearer ${token}`,
-    Origin: origin,
   })
 
   const requestOptions: any = {

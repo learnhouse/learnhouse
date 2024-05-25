@@ -14,6 +14,7 @@ import { loginAndGetToken } from '@services/auth/auth'
 import { AlertTriangle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { signIn, useSession } from "next-auth/react"
 import { getUriWithOrg } from '@services/config/config'
 
 interface LoginClientProps {
@@ -40,7 +41,9 @@ const validate = (values: any) => {
 
 const LoginClient = (props: LoginClientProps) => {
   const [isSubmitting, setIsSubmitting] = React.useState(false)
-  const router = useRouter()
+  const router = useRouter();
+  const session = useSession();
+
   const [error, setError] = React.useState('')
   const formik = useFormik({
     initialValues: {
@@ -50,25 +53,23 @@ const LoginClient = (props: LoginClientProps) => {
     validate,
     onSubmit: async (values) => {
       setIsSubmitting(true)
-      let res = await loginAndGetToken(values.email, values.password)
-      let message = await res.json()
-      if (res.status == 200) {
+      //let res = await loginAndGetToken(values.email, values.password)
+      const res = await signIn('credentials', {
+        redirect: false,
+        email: values.email,
+        password: values.password,
+      });
+      if (res && res.error) {
+        setError("Wrong Email or password");
+        setIsSubmitting(false);
+      }
+      else {
         router.push(`/`)
-        setIsSubmitting(false)
-      } else if (
-        res.status == 401 ||
-        res.status == 400 ||
-        res.status == 404 ||
-        res.status == 409
-      ) {
-        setError(message.detail)
-        setIsSubmitting(false)
-      } else {
-        setError('Something went wrong')
         setIsSubmitting(false)
       }
     },
   })
+
   return (
     <div className="grid grid-flow-col justify-stretch h-screen">
       <div
@@ -165,7 +166,6 @@ const LoginClient = (props: LoginClientProps) => {
                 Forgot password?
               </Link>
             </div>
-
             <div className="flex  py-4">
               <Form.Submit asChild>
                 <button className="w-full bg-black text-white font-bold text-center p-2 rounded-md shadow-md hover:cursor-pointer">
@@ -174,6 +174,11 @@ const LoginClient = (props: LoginClientProps) => {
               </Form.Submit>
             </div>
           </FormLayout>
+          <div className='flex h-0.5 rounded-2xl bg-slate-100 mt-5 mb-5 mx-10'></div>
+          <button onClick={() => signIn('google')} className="flex justify-center py-3 text-md w-full bg-white text-slate-600 space-x-3 font-semibold text-center p-2 rounded-md shadow hover:cursor-pointer">
+            <img src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg" alt="" />
+            <span>Sign in with Google</span>
+          </button>
         </div>
       </div>
     </div>

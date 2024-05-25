@@ -5,7 +5,7 @@ import { updateActivity } from '@services/courses/activities'
 import { toast } from 'react-hot-toast'
 import Toast from '@components/StyledElements/Toast/Toast'
 import { OrgProvider } from '@components/Contexts/OrgContext'
-import { useSession } from '@components/Contexts/SessionContext'
+import { useSession } from 'next-auth/react'
 
 // Collaboration
 import { HocuspocusProvider } from '@hocuspocus/provider'
@@ -57,7 +57,7 @@ function EditorWrapper(props: EditorWrapperProps): JSX.Element {
   document.addEventListener("mousemove", (event) => {
     // Share any information you like
     provider?.setAwarenessField("userMouseMovement", {
-      user: session.user,
+      user: session.data.user,
       mouseX: event.clientX,
       mouseY: event.clientY,
       color: thisPageColor,
@@ -72,10 +72,10 @@ function EditorWrapper(props: EditorWrapperProps): JSX.Element {
 
 
     provider?.setAwarenessField("savings_states", {
-      [session.user.user_uuid]: {
+      [session.data.user.user_uuid]: {
         status: 'action_save',
         timestamp: new Date().toISOString(),
-        user: session.user
+        user: session.data.user
       }
     });
 

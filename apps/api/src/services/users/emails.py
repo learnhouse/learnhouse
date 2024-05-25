@@ -17,7 +17,7 @@ def send_account_creation_email(
     <body>
         <p>Hello {user.username}</p>
         <p>Welcome to LearnHouse! , get started by creating your own organization or join a one.</p>
-        <p>Need some help to get started ? <a href="https://learn.learnhouse.io">LearnHouse Academy</a></p>
+        <p>Need some help to get started ? <a href="https://university.learnhouse.io">LearnHouse Academy</a></p>
     </body>
 </html>
 """,
