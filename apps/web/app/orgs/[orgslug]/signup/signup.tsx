@@ -4,7 +4,7 @@ import Image from 'next/image'
 import { getOrgLogoMediaDirectory } from '@services/media/media'
 import Link from 'next/link'
 import { getUriWithOrg } from '@services/config/config'
-import { useSession } from '@components/Contexts/SessionContext'
+import { useSession } from 'next-auth/react'
 import React, { useEffect } from 'react'
 import { MailWarning, Shield, Ticket, UserPlus } from 'lucide-react'
 import { useOrg } from '@components/Contexts/OrgContext'
@@ -92,14 +92,14 @@ function SignUpClient(props: SignUpClientProps) {
       </div>
       <div className="left-join-part bg-white flex flex-row">
         {joinMethod == 'open' &&
-          (session.isAuthenticated ? (
+          (session.status == 'authenticated' ? (
             <LoggedInJoinScreen inviteCode={inviteCode} />
           ) : (
             <OpenSignUpComponent />
           ))}
         {joinMethod == 'inviteOnly' &&
           (inviteCode ? (
-            session.isAuthenticated ? (
+            session.status == 'authenticated' ? (
               <LoggedInJoinScreen />
             ) : (
               <InviteOnlySignUpComponent inviteCode={inviteCode} />
@@ -130,7 +130,7 @@ const LoggedInJoinScreen = (props: any) => {
           <span className="items-center">Hi</span>
           <span className="capitalize flex space-x-2 items-center">
             <UserAvatar rounded="rounded-xl" border="border-4" width={35} />
-            <span>{session.user.username},</span>
+            <span>{session.data.username},</span>
           </span>
           <span>join {org?.name} ?</span>
         </p>
@@ -157,7 +157,7 @@ const NoTokenScreen = (props: any) => {
 
   const validateCode = async () => {
     setIsLoading(true)
-    let res = await validateInviteCode(org?.id, inviteCode)
+    let res = await validateInviteCode(org?.id, inviteCode,session?.user?.tokens.access_token)
     //wait for 1s
     if (res.success) {
       toast.success(

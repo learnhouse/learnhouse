@@ -41,7 +41,7 @@ import html from 'highlight.js/lib/languages/xml'
 import python from 'highlight.js/lib/languages/python'
 import java from 'highlight.js/lib/languages/java'
 import { CourseProvider } from '@components/Contexts/CourseContext'
-import { useSession } from '@components/Contexts/SessionContext'
+import { useSession } from 'next-auth/react'
 import AIEditorToolkit from './AI/AIEditorToolkit'
 import useGetAIFeatures from '@components/AI/Hooks/useGetAIFeatures'
 import UserAvatar from '../UserAvatar'
@@ -145,7 +145,7 @@ function Editor(props: Editor) {
         CollaborationCursor.configure({
           provider: props.hocuspocusProvider,
           user: {
-            name: props.session.user.first_name + ' ' + props.session.user.last_name,
+            name: props.session.data.user.first_name + ' ' + props.session.data.user.last_name,
             color: props.userRandomColor,
           },
         }),
