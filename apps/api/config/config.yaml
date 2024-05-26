@@ -40,4 +40,4 @@ redis_config:
 ai_config:
   chromadb_config:
     isSeparateDatabaseEnabled: True
-    db_host: "chromadb"
+    db_host: "localhost"
