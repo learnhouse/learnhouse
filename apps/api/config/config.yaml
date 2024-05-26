@@ -36,3 +36,8 @@ database_config:
 
 redis_config:
   redis_connection_string: redis://localhost:6379/learnhouse
+
+ai_config:
+  chromadb_config:
+    isSeparateDatabaseEnabled: True
+    db_host: "chromadb"
