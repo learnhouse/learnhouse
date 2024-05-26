@@ -24,9 +24,15 @@ class SecurityConfig(BaseModel):
     auth_jwt_secret_key: str
 
 
+class ChromaDBConfig(BaseModel):
+    isSeparateDatabaseEnabled: bool | None 
+    db_host: str | None 
+
+
 class AIConfig(BaseModel):
     openai_api_key: str | None
     is_ai_enabled: bool | None
+    chromadb_config: ChromaDBConfig | None
 
 
 class S3ApiConfig(BaseModel):
@@ -196,12 +202,21 @@ def get_learnhouse_config() -> LearnHouseConfig:
     # AI Config
     env_openai_api_key = os.environ.get("LEARNHOUSE_OPENAI_API_KEY")
     env_is_ai_enabled = os.environ.get("LEARNHOUSE_IS_AI_ENABLED")
+    env_chromadb_separate = os.environ.get("LEARNHOUSE_CHROMADB_SEPARATE")
+    env_chromadb_host = os.environ.get("LEARNHOUSE_CHROMADB_HOST")
+
     openai_api_key = env_openai_api_key or yaml_config.get("ai_config", {}).get(
         "openai_api_key"
     )
     is_ai_enabled = env_is_ai_enabled or yaml_config.get("ai_config", {}).get(
         "is_ai_enabled"
     )
+    chromadb_separate = env_chromadb_separate or yaml_config.get("ai_config", {}).get(
+        "chromadb_config", {}
+    ).get("isSeparateDatabaseEnabled")
+    chromadb_host = env_chromadb_host or yaml_config.get("ai_config", {}).get(
+        "chromadb_config", {}
+    ).get("db_host")
 
     # Redis config
     env_redis_connection_string = os.environ.get("LEARNHOUSE_REDIS_CONNECTION_STRING")
@@ -267,6 +282,9 @@ def get_learnhouse_config() -> LearnHouseConfig:
     ai_config = AIConfig(
         openai_api_key=openai_api_key,
         is_ai_enabled=bool(is_ai_enabled),
+        chromadb_config=ChromaDBConfig(
+            isSeparateDatabaseEnabled=bool(chromadb_separate), db_host=chromadb_host
+        ),
     )
 
     # Create LearnHouseConfig object

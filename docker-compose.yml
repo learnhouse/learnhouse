@@ -41,3 +41,7 @@ services:
       interval: 5s
       timeout: 4s
       retries: 5
+  chromadb:
+    image: chromadb/chroma:latest
+    ports:
+      - "8000:8000"
