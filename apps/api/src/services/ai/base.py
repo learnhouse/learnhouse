@@ -20,7 +20,12 @@ import chromadb
 
 from config.config import get_learnhouse_config
 
-client = chromadb.Client()
+LH_CONFIG = get_learnhouse_config()
+client = (
+    chromadb.HttpClient(host=LH_CONFIG.ai_config.chromadb_config.db_host, port=8000)
+    if LH_CONFIG.ai_config.chromadb_config.isSeparateDatabaseEnabled == True
+    else chromadb.Client()
+)
 
 
 chat_history = []
