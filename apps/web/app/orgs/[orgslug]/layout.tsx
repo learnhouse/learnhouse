@@ -1,8 +1,8 @@
 'use client'
+import LHSessionProvider from '@components/Contexts/LHSessionContext'
 import { OrgProvider } from '@components/Contexts/OrgContext'
 import Toast from '@components/StyledElements/Toast/Toast'
 import '@styles/globals.css'
-import { SessionProvider } from 'next-auth/react'
 
 export default function RootLayout({
   children,
@@ -13,9 +13,9 @@ export default function RootLayout({
 }) {
   return (
     <div>
-      <Toast />
       <OrgProvider orgslug={params.orgslug}>
-        <SessionProvider>{children}</SessionProvider>
+        <Toast />
+        {children}
       </OrgProvider>
     </div>
   )

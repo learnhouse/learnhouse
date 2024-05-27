@@ -15,6 +15,7 @@ import {
 import { Hexagon } from 'lucide-react'
 import Modal from '@components/StyledElements/Modal/Modal'
 import NewChapterModal from '@components/Objects/Modals/Chapters/NewChapter'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 
 type EditCourseStructureProps = {
   orgslug: string
@@ -38,6 +39,8 @@ export type OrderPayload =
 
 const EditCourseStructure = (props: EditCourseStructureProps) => {
   const router = useRouter()
+  const session = useLHSession() as any;
+  const access_token = session?.data?.tokens?.access_token;
   // Check window availability
   const [winReady, setwinReady] = useState(false)
 
@@ -57,7 +60,7 @@ const EditCourseStructure = (props: EditCourseStructureProps) => {
 
   // Submit new chapter
   const submitChapter = async (chapter: any) => {
-    await createChapter(chapter)
+    await createChapter(chapter,access_token)
     mutate(`${getAPIUrl()}courses/${course.courseStructure.course_uuid}/meta`)
     await revalidateTags(['courses'], props.orgslug)
     router.refresh()

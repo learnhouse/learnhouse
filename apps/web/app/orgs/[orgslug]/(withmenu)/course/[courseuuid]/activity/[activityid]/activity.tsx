@@ -15,6 +15,7 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import { CourseProvider } from '@components/Contexts/CourseContext'
 import AIActivityAsk from '@components/Objects/Activities/AI/AIActivityAsk'
 import AIChatBotProvider from '@components/Contexts/AI/AIChatBotContext'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 
 interface ActivityClientProps {
   activityid: string
@@ -106,11 +107,10 @@ function ActivityClient(props: ActivityClientProps) {
 
               {activity ? (
                 <div
-                  className={`p-7 pt-4 drop-shadow-sm rounded-lg ${
-                    activity.activity_type == 'TYPE_DYNAMIC'
+                  className={`p-7 pt-4 drop-shadow-sm rounded-lg ${activity.activity_type == 'TYPE_DYNAMIC'
                       ? 'bg-white'
                       : 'bg-zinc-950'
-                  }`}
+                    }`}
                 >
                   <div>
                     {activity.activity_type == 'TYPE_DYNAMIC' && (
@@ -147,13 +147,15 @@ export function MarkStatus(props: {
   orgslug: string
 }) {
   const router = useRouter()
+  const session = useLHSession()
   console.log(props.course.trail)
 
   async function markActivityAsCompleteFront() {
     const trail = await markActivityAsComplete(
       props.orgslug,
       props.course.course_uuid,
-      'activity_' + props.activityid
+      'activity_' + props.activityid,
+      session.data?.tokens?.access_token
     )
     router.refresh()
   }

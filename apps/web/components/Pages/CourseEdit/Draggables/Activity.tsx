@@ -17,6 +17,7 @@ import { revalidateTags } from '@services/utils/ts/requests'
 import { useRouter } from 'next/navigation'
 import ConfirmationModal from '@components/StyledElements/ConfirmationModal/ConfirmationModal'
 import { deleteActivity, updateActivity } from '@services/courses/activities'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 
 interface ModifiedActivityInterface {
   activityId: string
@@ -25,6 +26,7 @@ interface ModifiedActivityInterface {
 
 function Activity(props: any) {
   const router = useRouter()
+  const session = useLHSession() as any;
   const [modifiedActivity, setModifiedActivity] = React.useState<
     ModifiedActivityInterface | undefined
   >(undefined)
@@ -33,7 +35,7 @@ function Activity(props: any) {
   >(undefined)
 
   async function removeActivity() {
-    await deleteActivity(props.activity.id)
+    await deleteActivity(props.activity.id, session.data?.tokens?.access_token)
     mutate(`${getAPIUrl()}chapters/meta/course_${props.courseid}`)
     await revalidateTags(['courses'], props.orgslug)
     router.refresh()
@@ -52,7 +54,7 @@ function Activity(props: any) {
         content: props.activity.content,
       }
 
-      await updateActivity(modifiedActivityCopy, activityId)
+      await updateActivity(modifiedActivityCopy, activityId, session.data?.tokens?.access_token)
       await mutate(`${getAPIUrl()}chapters/meta/course_${props.courseid}`)
       await revalidateTags(['courses'], props.orgslug)
       router.refresh()

@@ -1,10 +1,12 @@
 import { getActivityWithAuthHeader } from '@services/courses/activities'
-import { getCourseMetadataWithAuthHeader } from '@services/courses/courses'
+import { getCourseMetadata } from '@services/courses/courses'
 import { cookies } from 'next/headers'
 import ActivityClient from './activity'
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { Metadata } from 'next'
 import { getAccessTokenFromRefreshTokenCookie } from '@services/auth/auth'
+import { getServerSession } from 'next-auth'
+import { nextAuthOptions } from 'app/auth/options'
 
 type MetadataProps = {
   params: { orgslug: string; courseuuid: string; activityid: string }
@@ -14,15 +16,15 @@ type MetadataProps = {
 export async function generateMetadata({
   params,
 }: MetadataProps): Promise<Metadata> {
-  const cookieStore = cookies()
-  const access_token = await getAccessTokenFromRefreshTokenCookie(cookieStore)
+  const session = await getServerSession(nextAuthOptions)
+  const access_token = session?.tokens?.access_token
 
   // Get Org context information
   const org = await getOrganizationContextInfo(params.orgslug, {
     revalidate: 1800,
     tags: ['organizations'],
   })
-  const course_meta = await getCourseMetadataWithAuthHeader(
+  const course_meta = await getCourseMetadata(
     params.courseuuid,
     { revalidate: 0, tags: ['courses'] },
     access_token ? access_token : null
@@ -58,13 +60,13 @@ export async function generateMetadata({
 }
 
 const ActivityPage = async (params: any) => {
-  const cookieStore = cookies()
-  const access_token = await getAccessTokenFromRefreshTokenCookie(cookieStore)
+  const session = await getServerSession(nextAuthOptions)
+  const access_token = session?.tokens?.access_token
   const activityid = params.params.activityid
   const courseuuid = params.params.courseuuid
   const orgslug = params.params.orgslug
 
-  const course_meta = await getCourseMetadataWithAuthHeader(
+  const course_meta = await getCourseMetadata(
     courseuuid,
     { revalidate: 0, tags: ['courses'] },
     access_token ? access_token : null

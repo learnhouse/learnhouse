@@ -7,6 +7,7 @@ import { deleteCourseFromBackend } from '@services/courses/courses'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import { revalidateTags } from '@services/utils/ts/requests'
 import { Settings, X } from 'lucide-react'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import React, { useEffect } from 'react'
@@ -24,15 +25,16 @@ function removeCoursePrefix(course_uuid: string) {
 function CourseThumbnail(props: PropsType) {
   const router = useRouter()
   const org = useOrg() as any
+  const session = useLHSession();
 
   async function deleteCourses(course_uuid: any) {
-    await deleteCourseFromBackend(course_uuid)
+    await deleteCourseFromBackend(course_uuid, session.data?.tokens?.access_token)
     await revalidateTags(['courses'], props.orgslug)
 
     router.refresh()
   }
 
-  useEffect(() => {}, [org])
+  useEffect(() => { }, [org])
 
   return (
     <div className="relative">
@@ -92,8 +94,8 @@ const AdminEditsArea = (props: {
           href={getUriWithOrg(
             props.orgSlug,
             '/dash/courses/course/' +
-              removeCoursePrefix(props.courseId) +
-              '/general'
+            removeCoursePrefix(props.courseId) +
+            '/general'
           )}
         >
           <div

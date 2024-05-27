@@ -2,7 +2,6 @@ import AuthenticatedClientElement from '@components/Security/AuthenticatedClient
 import TypeOfContentTitle from '@components/StyledElements/Titles/TypeOfContentTitle'
 import GeneralWrapperStyled from '@components/StyledElements/Wrappers/GeneralWrapper'
 import { getUriWithOrg } from '@services/config/config'
-import { getOrgCollectionsWithAuthHeader } from '@services/courses/collections'
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { Metadata } from 'next'
 import { cookies } from 'next/headers'
@@ -11,6 +10,9 @@ import { getAccessTokenFromRefreshTokenCookie } from '@services/auth/auth'
 import CollectionThumbnail from '@components/Objects/Thumbnails/CollectionThumbnail'
 import NewCollectionButton from '@components/StyledElements/Buttons/NewCollectionButton'
 import ContentPlaceHolderIfUserIsNotAdmin from '@components/ContentPlaceHolder'
+import { nextAuthOptions } from 'app/auth/options'
+import { getServerSession } from 'next-auth'
+import { getOrgCollections } from '@services/courses/collections'
 
 type MetadataProps = {
   params: { orgslug: string; courseid: string }
@@ -49,15 +51,15 @@ export async function generateMetadata({
 }
 
 const CollectionsPage = async (params: any) => {
-  const cookieStore = cookies()
-  const access_token = await getAccessTokenFromRefreshTokenCookie(cookieStore)
+  const session = await getServerSession(nextAuthOptions)
+  const access_token = session?.tokens?.access_token
   const orgslug = params.params.orgslug
   const org = await getOrganizationContextInfo(orgslug, {
     revalidate: 1800,
     tags: ['organizations'],
   })
   const org_id = org.id
-  const collections = await getOrgCollectionsWithAuthHeader(
+  const collections = await getOrgCollections(
     org_id,
     access_token ? access_token : null,
     { revalidate: 0, tags: ['collections'] }

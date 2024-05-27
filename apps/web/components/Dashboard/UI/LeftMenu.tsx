@@ -1,9 +1,8 @@
 'use client'
 import { useOrg } from '@components/Contexts/OrgContext'
-import { useSession } from 'next-auth/react'
+import { signOut } from 'next-auth/react'
 import ToolTip from '@components/StyledElements/Tooltip/Tooltip'
 import LearnHouseDashboardLogo from '@public/dashLogo.png'
-import { logout } from '@services/auth/auth'
 import { BookCopy, Home, LogOut, School, Settings, Users } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -11,10 +10,11 @@ import { useRouter } from 'next/navigation'
 import React, { useEffect } from 'react'
 import UserAvatar from '../../Objects/UserAvatar'
 import AdminAuthorization from '@components/Security/AdminAuthorization'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 
 function LeftMenu() {
   const org = useOrg() as any
-  const session = useSession() as any
+  const session = useLHSession() as any
   const [loading, setLoading] = React.useState(true)
   const route = useRouter()
 
@@ -26,7 +26,7 @@ function LeftMenu() {
   }
 
   async function logOutUI() {
-    const res = await logout()
+    const res = await signOut()
     if (res) {
       route.push('/login')
     }

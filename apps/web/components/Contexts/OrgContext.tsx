@@ -5,6 +5,8 @@ import React, { useContext, useEffect } from 'react'
 import useSWR from 'swr'
 import { createContext } from 'react'
 import { useRouter } from 'next/navigation'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
+import ErrorUI from '@components/StyledElements/Error/Error'
 
 export const OrgContext = createContext({}) as any
 
@@ -15,7 +17,10 @@ export function OrgProvider({
   children: React.ReactNode
   orgslug: string
 }) {
-  const { data: org } = useSWR(`${getAPIUrl()}orgs/slug/${orgslug}`, swrFetcher)
+  const session = useLHSession() as any;
+  const access_token = session?.data?.tokens?.access_token;
+  const { data: org } = useSWR(`${getAPIUrl()}orgs/slug/${orgslug}`, (url) => swrFetcher(url, access_token))
+
   const router = useRouter()
   // Check if Org is Active 
   const verifyIfOrgIsActive = () => {
@@ -28,7 +33,12 @@ export function OrgProvider({
     verifyIfOrgIsActive()
   }, [org])
 
-  return <OrgContext.Provider value={org}>{children}</OrgContext.Provider>
+  if (org) {
+    return <OrgContext.Provider value={org}>{children}</OrgContext.Provider>
+  }
+  else {
+    return <ErrorUI />
+  }
 }
 
 export function useOrg() {

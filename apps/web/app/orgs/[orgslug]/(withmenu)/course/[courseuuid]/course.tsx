@@ -17,10 +17,12 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import UserAvatar from '@components/Objects/UserAvatar'
 import CourseUpdates from '@components/Objects/CourseUpdates/CourseUpdates'
 import { CourseProvider } from '@components/Contexts/CourseContext'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 
 const CourseClient = (props: any) => {
   const [user, setUser] = useState<any>({})
   const [learnings, setLearnings] = useState<any>([])
+  const session = useLHSession()
   const courseuuid = props.courseuuid
   const orgslug = props.orgslug
   const course = props.course
@@ -35,7 +37,7 @@ const CourseClient = (props: any) => {
 
   async function startCourseUI() {
     // Create activity
-    await startCourse('course_' + courseuuid, orgslug)
+    await startCourse('course_' + courseuuid, orgslug, session.data?.tokens?.access_token)
     await revalidateTags(['courses'], orgslug)
     router.refresh()
 
@@ -54,7 +56,7 @@ const CourseClient = (props: any) => {
 
   async function quitCourse() {
     // Close activity
-    let activity = await removeCourse('course_' + courseuuid, orgslug)
+    let activity = await removeCourse('course_' + courseuuid, orgslug, session.data?.tokens?.access_token)
     // Mutate course
     await revalidateTags(['courses'], orgslug)
     router.refresh()
@@ -277,7 +279,7 @@ const CourseClient = (props: any) => {
                   <UserAvatar
                     border="border-8"
                     avatar_url={course.authors[0].avatar_image ? getUserAvatarMediaDirectory(course.authors[0].user_uuid, course.authors[0].avatar_image) : ''}
-                    predefined_avatar={course.authors[0].avatar_image  ? undefined : 'empty'}
+                    predefined_avatar={course.authors[0].avatar_image ? undefined : 'empty'}
                     width={100}
                   />
                   <div className="-space-y-2 ">

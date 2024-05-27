@@ -1,10 +1,10 @@
-import { useSession } from 'next-auth/react'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { updatePassword } from '@services/settings/password'
 import { Formik, Form, Field } from 'formik'
 import React, { useEffect } from 'react'
 
 function UserEditPassword() {
-  const session = useSession() as any
+  const session = useLHSession() as any
 
   const updatePasswordUI = async (values: any) => {
     let user_id = session.data.user.id

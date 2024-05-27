@@ -4,6 +4,7 @@ import ClientComponentSkeleton from '@components/Utils/ClientComp'
 import { Metadata } from 'next'
 import { SessionProvider } from 'next-auth/react'
 import React from 'react'
+import ClientAdminLayout from './ClientAdminLayout'
 
 export const metadata: Metadata = {
   title: 'LearnHouse Dashboard',
@@ -18,12 +19,10 @@ function DashboardLayout({
 }) {
   return (
     <>
-      <AdminAuthorization authorizationMode="page">
-        <div className="flex">
-          <LeftMenu />
-          <div className="flex w-full">{children}</div>
-        </div>
-      </AdminAuthorization>
+      <ClientAdminLayout
+        params={params}>
+        {children}
+      </ClientAdminLayout>
     </>
   )
 }
