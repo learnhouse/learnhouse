@@ -1,4 +1,4 @@
-import { useSession } from 'next-auth/react'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 import {
   sendActivityAIChatMessage,
   startActivityAIChatSession,
@@ -74,7 +74,7 @@ type ActivityChatMessageBoxProps = {
 }
 
 function ActivityChatMessageBox(props: ActivityChatMessageBoxProps) {
-  const session = useSession() as any
+  const session = useLHSession() as any
   const aiChatBotState = useAIChatBot() as AIChatBotStateTypes
   const dispatchAIChatBot = useAIChatBotDispatch() as any
 
@@ -328,7 +328,7 @@ type AIMessageProps = {
 }
 
 function AIMessage(props: AIMessageProps) {
-  const session = useSession() as any
+  const session = useLHSession() as any
 
   const words = props.message.message.split(' ')
 
@@ -378,7 +378,7 @@ const AIMessagePlaceHolder = (props: {
   activity_uuid: string
   sendMessage: any
 }) => {
-  const session = useSession() as any
+  const session = useLHSession() as any
   const [feedbackModal, setFeedbackModal] = React.useState(false)
   const aiChatBotState = useAIChatBot() as AIChatBotStateTypes
 

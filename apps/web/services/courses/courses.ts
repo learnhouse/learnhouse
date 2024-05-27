@@ -2,6 +2,7 @@ import { getAPIUrl } from '@services/config/config'
 import {
   RequestBody,
   RequestBodyForm,
+  RequestBodyFormWithAuthHeader,
   RequestBodyWithAuthHeader,
   errorHandling,
   getResponseMetadata,
@@ -12,19 +13,10 @@ import {
  GET requests are called from the frontend using SWR (https://swr.vercel.app/)
 */
 
-export async function getOrgCourses(org_id: number, next: any) {
-  const result: any = await fetch(
-    `${getAPIUrl()}courses/org_slug/${org_id}/page/1/limit/10`,
-    RequestBody('GET', null, next)
-  )
-  const res = await errorHandling(result)
-  return res
-}
-
-export async function getOrgCoursesWithAuthHeader(
+export async function getOrgCourses(
   org_id: number,
   next: any,
-  access_token: string
+  access_token: any
 ) {
   const result: any = await fetch(
     `${getAPIUrl()}courses/org_slug/${org_id}/page/1/limit/10`,
@@ -34,7 +26,7 @@ export async function getOrgCoursesWithAuthHeader(
   return res
 }
 
-export async function getCourseMetadataWithAuthHeader(
+export async function getCourseMetadata(
   course_uuid: any,
   next: any,
   access_token: string
@@ -47,30 +39,30 @@ export async function getCourseMetadataWithAuthHeader(
   return res
 }
 
-export async function updateCourse(course_uuid: any, data: any) {
+export async function updateCourse(course_uuid: any, data: any, access_token:any) {
   const result: any = await fetch(
     `${getAPIUrl()}courses/${course_uuid}`,
-    RequestBody('PUT', data, null)
+    RequestBodyWithAuthHeader('PUT', data, null,access_token)
   )
   const res = await errorHandling(result)
   return res
 }
 
-export async function getCourse(course_uuid: string, next: any) {
+export async function getCourse(course_uuid: string, next: any, access_token:any) {
   const result: any = await fetch(
     `${getAPIUrl()}courses/${course_uuid}`,
-    RequestBody('GET', null, next)
+    RequestBodyWithAuthHeader('GET', null, next,access_token)
   )
   const res = await errorHandling(result)
   return res
 }
 
-export async function updateCourseThumbnail(course_uuid: any, thumbnail: any) {
+export async function updateCourseThumbnail(course_uuid: any, thumbnail: any, access_token:any) {
   const formData = new FormData()
   formData.append('thumbnail', thumbnail)
   const result: any = await fetch(
     `${getAPIUrl()}courses/${course_uuid}/thumbnail`,
-    RequestBodyForm('PUT', formData, null)
+    RequestBodyFormWithAuthHeader('PUT', formData, null,access_token)
   )
   const res = await getResponseMetadata(result)
   return res
@@ -79,7 +71,8 @@ export async function updateCourseThumbnail(course_uuid: any, thumbnail: any) {
 export async function createNewCourse(
   org_id: string,
   course_body: any,
-  thumbnail: any
+  thumbnail: any,
+  access_token: any
 ) {
   // Send file thumbnail as form data
   const formData = new FormData()
@@ -96,16 +89,16 @@ export async function createNewCourse(
 
   const result = await fetch(
     `${getAPIUrl()}courses/?org_id=${org_id}`,
-    RequestBodyForm('POST', formData, null)
+    RequestBodyFormWithAuthHeader('POST', formData, null, access_token)
   )
   const res = await errorHandling(result)
   return res
 }
 
-export async function deleteCourseFromBackend(course_uuid: any) {
+export async function deleteCourseFromBackend(course_uuid: any, access_token:any) {
   const result: any = await fetch(
     `${getAPIUrl()}courses/${course_uuid}`,
-    RequestBody('DELETE', null, null)
+    RequestBodyWithAuthHeader('DELETE', null, null,access_token)
   )
   const res = await errorHandling(result)
   return res

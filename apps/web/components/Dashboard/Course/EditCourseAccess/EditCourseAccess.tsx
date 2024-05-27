@@ -6,6 +6,7 @@ import { getAPIUrl } from '@services/config/config'
 import { unLinkResourcesToUserGroup } from '@services/usergroups/usergroups'
 import { swrFetcher } from '@services/utils/ts/requests'
 import { Globe, SquareUserRound, Users, UsersRound, X } from 'lucide-react'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 import React from 'react'
 import toast from 'react-hot-toast'
 import useSWR, { mutate } from 'swr'
@@ -17,13 +18,15 @@ type EditCourseAccessProps = {
 
 function EditCourseAccess(props: EditCourseAccessProps) {
     const [error, setError] = React.useState('')
+    const session = useLHSession() as any;
+    const access_token = session?.data?.tokens?.access_token;
 
     const course = useCourse() as any
     const dispatchCourse = useCourseDispatch() as any
     const courseStructure = course.courseStructure
     const { data: usergroups } = useSWR(
         courseStructure ? `${getAPIUrl()}usergroups/resource/${courseStructure.course_uuid}` : null,
-        swrFetcher
+        (url) => swrFetcher(url, access_token)
     )
     const [isPublic, setIsPublic] = React.useState(courseStructure.public)
 
@@ -109,7 +112,7 @@ function EditCourseAccess(props: EditCourseAccessProps) {
                         status="info"
                     ></ConfirmationModal>
                 </div>
-                {!isPublic ? ( <UserGroupsSection usergroups={usergroups} />) : null}
+                {!isPublic ? (<UserGroupsSection usergroups={usergroups} />) : null}
             </div>
         </div>
     )

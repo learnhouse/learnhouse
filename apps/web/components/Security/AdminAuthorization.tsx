@@ -1,15 +1,14 @@
-'use client'
-import { useOrg } from '@components/Contexts/OrgContext'
-import { useSession } from 'next-auth/react'
-import useAdminStatus from '@components/Hooks/useAdminStatus'
-import { usePathname, useRouter } from 'next/navigation'
-import React from 'react'
+'use client';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import { useOrg } from '@components/Contexts/OrgContext';
+import { useLHSession } from '@components/Contexts/LHSessionContext';
+import useAdminStatus from '@components/Hooks/useAdminStatus';
+import { usePathname, useRouter } from 'next/navigation';
 
 type AuthorizationProps = {
-  children: React.ReactNode
-  // Authorize components rendering or page rendering
-  authorizationMode: 'component' | 'page'
-}
+  children: React.ReactNode;
+  authorizationMode: 'component' | 'page';
+};
 
 const ADMIN_PATHS = [
   '/dash/org/*',
@@ -19,106 +18,71 @@ const ADMIN_PATHS = [
   '/dash/courses/*',
   '/dash/courses',
   '/dash/org/settings/general',
-]
+];
 
-function AdminAuthorization(props: AuthorizationProps) {
-  const session = useSession() as any
-  const org = useOrg() as any
-  const pathname = usePathname()
-  const router = useRouter()
+const AdminAuthorization: React.FC<AuthorizationProps> = ({ children, authorizationMode }) => {
+  const session = useLHSession() as any;
+  const pathname = usePathname();
+  const router = useRouter();
+  const { isAdmin, loading } = useAdminStatus() as any
+  const [isAuthorized, setIsAuthorized] = useState(false);
 
-  // States
-  const [isLoading, setIsLoading] = React.useState(true)
-  const [isAuthorized, setIsAuthorized] = React.useState(false)
+  const isUserAuthenticated = useMemo(() => session.status === 'authenticated', [session.status]);
 
-  // Verify if the user is authenticated
-  const isUserAuthenticated = () => {
-    if (session.status === 'authenticated') {
-      return true
-    } else {
-      return false
+  const checkPathname = useCallback((pattern: string, pathname: string) => {
+    const regexPattern = new RegExp(`^${pattern.replace(/\//g, '\\/').replace(/\*/g, '.*')}$`);
+    return regexPattern.test(pathname);
+  }, []);
+
+  const isAdminPath = useMemo(() => ADMIN_PATHS.some(path => checkPathname(path, pathname)), [pathname, checkPathname]);
+
+  const authorizeUser = useCallback(() => {
+    if (loading) {
+      return; // Wait until the admin status is determined
     }
-  }
 
-  // Verify if the user is an Admin (1), Maintainer (2) or Member (3) of the organization
-  const isUserAdmin = useAdminStatus()
+    if (!isUserAuthenticated) {
+      router.push('/login');
+      return;
+    }
 
-  function checkPathname(pattern: string, pathname: string) {
-    // Escape special characters in the pattern and replace '*' with a regex pattern
-    const regexPattern = new RegExp(
-      `^${pattern.replace(/\//g, '\\/').replace(/\*/g, '.*')}$`
-    )
-
-    // Test if the pathname matches the regex pattern
-    const isMatch = regexPattern.test(pathname)
-
-    return isMatch
-  }
-
-  const Authorize = () => {
-    if (props.authorizationMode === 'page') {
-      // Check if user is in an admin path
-      if (ADMIN_PATHS.some((path) => checkPathname(path, pathname))) {
-        if (isUserAuthenticated()) {
-          // Check if the user is an Admin
-          if (isUserAdmin) {
-            setIsAuthorized(true)
-          } else {
-            setIsAuthorized(false)
-            router.push('/dash')
-          }
+    if (authorizationMode === 'page') {
+      if (isAdminPath) {
+        if (isAdmin) {
+          setIsAuthorized(true);
         } else {
-          router.push('/login')
+          setIsAuthorized(false);
+          router.push('/dash');
         }
       } else {
-        if (isUserAuthenticated()) {
-          setIsAuthorized(true)
-        } else {
-          setIsAuthorized(false)
-          router.push('/login')
-        }
+        setIsAuthorized(true);
       }
+    } else if (authorizationMode === 'component') {
+      setIsAuthorized(isAdmin);
     }
+  }, [loading, isUserAuthenticated, isAdmin, isAdminPath, authorizationMode, router]);
 
-    if (props.authorizationMode === 'component') {
-      // Component mode
-      if (isUserAuthenticated() && isUserAdmin) {
-        setIsAuthorized(true)
-      } else {
-        setIsAuthorized(false)
-      }
-    }
+  useEffect(() => {
+    authorizeUser();
+  }, [authorizeUser]);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <h1 className="text-2xl">Loading...</h1>
+      </div>
+    );
   }
 
-  React.useEffect(() => {
-    if (session.status == 'loading') {
-      return
-    }
+  if (authorizationMode === 'page' && !isAuthorized) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <h1 className="text-2xl">You are not authorized to access this page</h1>
+      </div>
+    );
+  }
 
-    Authorize()
-    setIsLoading(false)
-  }, [session, org, pathname])
+  return <>{isAuthorized && children}</>;
+};
 
-  return (
-    <>
-      {props.authorizationMode === 'component' &&
-        isAuthorized === true &&
-        props.children}
-      {props.authorizationMode === 'page' &&
-        isAuthorized === true &&
-        !isLoading &&
-        props.children}
-      {props.authorizationMode === 'page' &&
-        isAuthorized === false &&
-        !isLoading && (
-          <div className="flex justify-center items-center h-screen">
-            <h1 className="text-2xl">
-              You are not authorized to access this page
-            </h1>
-          </div>
-        )}
-    </>
-  )
-}
-
-export default AdminAuthorization
+export default AdminAuthorization;

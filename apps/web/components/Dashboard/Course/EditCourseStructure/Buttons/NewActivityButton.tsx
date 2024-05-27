@@ -10,6 +10,7 @@ import {
 import { getOrganizationContextInfoWithoutCredentials } from '@services/organizations/orgs'
 import { revalidateTags } from '@services/utils/ts/requests'
 import { Layers } from 'lucide-react'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useRouter } from 'next/navigation'
 import React, { useEffect } from 'react'
 import { mutate } from 'swr'
@@ -23,6 +24,8 @@ function NewActivityButton(props: NewActivityButtonProps) {
   const [newActivityModal, setNewActivityModal] = React.useState(false)
   const router = useRouter()
   const course = useCourse() as any
+  const session = useLHSession() as any;
+  const access_token = session?.data?.tokens?.access_token;
 
   const openNewActivityModal = async (chapterId: any) => {
     setNewActivityModal(true)
@@ -38,7 +41,7 @@ function NewActivityButton(props: NewActivityButtonProps) {
       props.orgslug,
       { revalidate: 1800 }
     )
-    await createActivity(activity, props.chapterId, org.org_id)
+    await createActivity(activity, props.chapterId, org.org_id, access_token)
     mutate(`${getAPIUrl()}courses/${course.courseStructure.course_uuid}/meta`)
     setNewActivityModal(false)
     await revalidateTags(['courses'], props.orgslug)
@@ -52,7 +55,7 @@ function NewActivityButton(props: NewActivityButtonProps) {
     activity: any,
     chapterId: string
   ) => {
-    await createFileActivity(file, type, activity, chapterId)
+    await createFileActivity(file, type, activity, chapterId, access_token)
     mutate(`${getAPIUrl()}courses/${course.courseStructure.course_uuid}/meta`)
     setNewActivityModal(false)
     await revalidateTags(['courses'], props.orgslug)
@@ -68,7 +71,7 @@ function NewActivityButton(props: NewActivityButtonProps) {
     await createExternalVideoActivity(
       external_video_data,
       activity,
-      props.chapterId
+      props.chapterId, access_token
     )
     mutate(`${getAPIUrl()}courses/${course.courseStructure.course_uuid}/meta`)
     setNewActivityModal(false)
@@ -76,7 +79,7 @@ function NewActivityButton(props: NewActivityButtonProps) {
     router.refresh()
   }
 
-  useEffect(() => {}, [course])
+  useEffect(() => { }, [course])
 
   return (
     <div className="flex justify-center">

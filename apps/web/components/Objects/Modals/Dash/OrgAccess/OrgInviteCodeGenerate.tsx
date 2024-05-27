@@ -3,6 +3,7 @@ import { getAPIUrl } from '@services/config/config'
 import { createInviteCode, createInviteCodeWithUserGroup } from '@services/organizations/invites'
 import { swrFetcher } from '@services/utils/ts/requests'
 import { Shield, Ticket } from 'lucide-react'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 import React, { useEffect } from 'react'
 import toast from 'react-hot-toast'
 import useSWR, { mutate } from 'swr'
@@ -13,6 +14,7 @@ type OrgInviteCodeGenerateProps = {
 
 function OrgInviteCodeGenerate(props: OrgInviteCodeGenerateProps) {
     const org = useOrg() as any
+    const session = useLHSession()
     const [usergroup_id, setUsergroup_id] = React.useState(0);
     const { data: usergroups } = useSWR(
         org ? `${getAPIUrl()}usergroups/org/${org.id}` : null,
@@ -20,7 +22,7 @@ function OrgInviteCodeGenerate(props: OrgInviteCodeGenerateProps) {
     )
 
     async function createInviteWithUserGroup() {
-        let res = await createInviteCodeWithUserGroup(org.id, usergroup_id)
+        let res = await createInviteCodeWithUserGroup(org.id, usergroup_id, session.data?.tokens?.access_token)
         if (res.status == 200) {
             mutate(`${getAPIUrl()}orgs/${org.id}/invites`)
             props.setInvitesModal(false)
@@ -30,7 +32,7 @@ function OrgInviteCodeGenerate(props: OrgInviteCodeGenerateProps) {
     }
 
     async function createInvite() {
-        let res = await createInviteCode(org.id)
+        let res = await createInviteCode(org.id, session.data?.tokens?.access_token)
         if (res.status == 200) {
             mutate(`${getAPIUrl()}orgs/${org.id}/invites`)
             props.setInvitesModal(false)

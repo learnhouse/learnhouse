@@ -1,20 +1,20 @@
 export const dynamic = 'force-dynamic'
 import { Metadata } from 'next'
 import { getUriWithOrg } from '@services/config/config'
-import { getOrgCoursesWithAuthHeader } from '@services/courses/courses'
+import { getOrgCourses } from '@services/courses/courses'
 import Link from 'next/link'
-import { getOrgCollectionsWithAuthHeader } from '@services/courses/collections'
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
-import { cookies } from 'next/headers'
 import GeneralWrapperStyled from '@components/StyledElements/Wrappers/GeneralWrapper'
 import TypeOfContentTitle from '@components/StyledElements/Titles/TypeOfContentTitle'
-import { getAccessTokenFromRefreshTokenCookie } from '@services/auth/auth'
 import CourseThumbnail from '@components/Objects/Thumbnails/CourseThumbnail'
 import CollectionThumbnail from '@components/Objects/Thumbnails/CollectionThumbnail'
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
 import NewCourseButton from '@components/StyledElements/Buttons/NewCourseButton'
 import NewCollectionButton from '@components/StyledElements/Buttons/NewCollectionButton'
 import ContentPlaceHolderIfUserIsNotAdmin from '@components/ContentPlaceHolder'
+import { getOrgCollections } from '@services/courses/collections'
+import { getServerSession } from 'next-auth'
+import { nextAuthOptions } from 'app/auth/options'
 
 type MetadataProps = {
   params: { orgslug: string }
@@ -54,10 +54,9 @@ export async function generateMetadata({
 
 const OrgHomePage = async (params: any) => {
   const orgslug = params.params.orgslug
-  const cookieStore = cookies()
-
-  const access_token = await getAccessTokenFromRefreshTokenCookie(cookieStore)
-  const courses = await getOrgCoursesWithAuthHeader(
+  const session = await getServerSession(nextAuthOptions)
+  const access_token = session?.tokens?.access_token
+  const courses = await getOrgCourses(
     orgslug,
     { revalidate: 0, tags: ['courses'] },
     access_token ? access_token : null
@@ -67,7 +66,7 @@ const OrgHomePage = async (params: any) => {
     tags: ['organizations'],
   })
   const org_id = org.id
-  const collections = await getOrgCollectionsWithAuthHeader(
+  const collections = await getOrgCollections(
     org.id,
     access_token ? access_token : null,
     { revalidate: 0, tags: ['courses'] }

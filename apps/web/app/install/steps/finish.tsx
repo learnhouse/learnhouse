@@ -2,16 +2,19 @@ import { getAPIUrl } from '@services/config/config'
 import { updateInstall } from '@services/install/install'
 import { swrFetcher } from '@services/utils/ts/requests'
 import { Check } from 'lucide-react'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useRouter } from 'next/navigation'
 import React from 'react'
 import useSWR from 'swr'
 
 const Finish = () => {
+  const session = useLHSession() as any;
+  const access_token = session?.data?.tokens?.access_token;
   const {
     data: install,
     error: error,
     isLoading,
-  } = useSWR(`${getAPIUrl()}install/latest`, swrFetcher)
+  } = useSWR(`${getAPIUrl()}install/latest`, (url) => swrFetcher(url, access_token))
   const router = useRouter()
 
   async function finishInstall() {

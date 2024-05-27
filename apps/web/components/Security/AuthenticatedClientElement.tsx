@@ -1,6 +1,6 @@
 'use client'
 import React from 'react'
-import { useSession } from 'next-auth/react'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 
 interface AuthenticatedClientElementProps {
@@ -20,7 +20,7 @@ export const AuthenticatedClientElement = (
   props: AuthenticatedClientElementProps
 ) => {
   const [isAllowed, setIsAllowed] = React.useState(false)
-  const session = useSession() as any
+  const session = useLHSession() as any
   const org = useOrg() as any
 
   function isUserAllowed(
@@ -49,13 +49,13 @@ export const AuthenticatedClientElement = (
   }
 
   function check() {
-    if (session.status == 'authenticated') {
+    if (session.status == 'unauthenticated') {
       setIsAllowed(false)
       return
     } else {
       if (props.checkMethod === 'authentication') {
         setIsAllowed(session.status == 'authenticated')
-      } else if (props.checkMethod === 'roles' && session.status == 'authenticated') {
+      } else if (props.checkMethod === 'roles' ) {
         return setIsAllowed(
           isUserAllowed(
             session?.data?.roles,
@@ -74,7 +74,7 @@ export const AuthenticatedClientElement = (
     }
 
     check()
-  }, [session, org])
+  }, [session.data, org])
 
   return <>{isAllowed && props.children}</>
 }
