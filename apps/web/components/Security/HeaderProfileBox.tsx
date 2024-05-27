@@ -5,10 +5,10 @@ import Link from 'next/link'
 import { Settings } from 'lucide-react'
 import UserAvatar from '@components/Objects/UserAvatar'
 import useAdminStatus from '@components/Hooks/useAdminStatus'
-import { useSession } from 'next-auth/react'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 
 export const HeaderProfileBox = () => {
-  const session = useSession() as any
+  const session = useLHSession() as any
   const isUserAdmin = useAdminStatus() as any
 
   useEffect(() => {

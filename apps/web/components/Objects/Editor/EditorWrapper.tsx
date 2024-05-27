@@ -5,7 +5,7 @@ import { updateActivity } from '@services/courses/activities'
 import { toast } from 'react-hot-toast'
 import Toast from '@components/StyledElements/Toast/Toast'
 import { OrgProvider } from '@components/Contexts/OrgContext'
-import { useSession } from 'next-auth/react'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 
 // Collaboration
 import { HocuspocusProvider } from '@hocuspocus/provider'
@@ -24,7 +24,7 @@ interface EditorWrapperProps {
 }
 
 function EditorWrapper(props: EditorWrapperProps): JSX.Element {
-  const session = useSession() as any
+  const session = useLHSession() as any
   // Define provider in the state
   const [provider, setProvider] = React.useState<HocuspocusProvider | null>(null);
   const [thisPageColor, setThisPageColor] = useState(randomColor({ luminosity: 'light' }) as string)

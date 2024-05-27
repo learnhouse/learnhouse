@@ -10,12 +10,12 @@ import * as Form from '@radix-ui/react-form'
 import { useFormik } from 'formik'
 import { getOrgLogoMediaDirectory } from '@services/media/media'
 import React from 'react'
-import { loginAndGetToken } from '@services/auth/auth'
 import { AlertTriangle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { signIn, useSession } from "next-auth/react"
 import { getUriWithOrg } from '@services/config/config'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 
 interface LoginClientProps {
   org: any
@@ -42,7 +42,7 @@ const validate = (values: any) => {
 const LoginClient = (props: LoginClientProps) => {
   const [isSubmitting, setIsSubmitting] = React.useState(false)
   const router = useRouter();
-  const session = useSession();
+  const session = useLHSession();
 
   const [error, setError] = React.useState('')
   const formik = useFormik({
@@ -53,19 +53,21 @@ const LoginClient = (props: LoginClientProps) => {
     validate,
     onSubmit: async (values) => {
       setIsSubmitting(true)
-      //let res = await loginAndGetToken(values.email, values.password)
       const res = await signIn('credentials', {
         redirect: false,
         email: values.email,
         password: values.password,
+        callbackUrl: '/'
       });
       if (res && res.error) {
         setError("Wrong Email or password");
         setIsSubmitting(false);
-      }
-      else {
-        router.push(`/`)
-        setIsSubmitting(false)
+      }else {
+        await signIn('credentials', {
+          email: values.email,
+          password: values.password,
+          callbackUrl: '/'
+        });
       }
     },
   })

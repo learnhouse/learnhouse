@@ -1,6 +1,5 @@
 import { getAPIUrl } from '../config/config'
 import {
-  RequestBody,
   RequestBodyWithAuthHeader,
   errorHandling,
 } from '@services/utils/ts/requests'
@@ -10,36 +9,30 @@ import {
  GET requests are called from the frontend using SWR (https://swr.vercel.app/)
 */
 
-export async function deleteCollection(collection_uuid: any) {
+export async function deleteCollection(
+  collection_uuid: any,
+  access_token: any
+) {
   const result: any = await fetch(
     `${getAPIUrl()}collections/${collection_uuid}`,
-    RequestBody('DELETE', null, null)
+    RequestBodyWithAuthHeader('DELETE', null, null, access_token)
   )
   const res = await errorHandling(result)
   return res
 }
 
 // Create a new collection
-export async function createCollection(collection: any) {
+export async function createCollection(collection: any, access_token: any) {
+  console.log(collection)
   const result: any = await fetch(
     `${getAPIUrl()}collections/`,
-    RequestBody('POST', collection, null)
+    RequestBodyWithAuthHeader('POST', collection, null, access_token)
   )
   const res = await errorHandling(result)
   return res
 }
 
-// Get a colletion by id
-export async function getCollectionById(collection_uuid: any) {
-  const result: any = await fetch(
-    `${getAPIUrl()}collections/${collection_uuid}`,
-    { next: { revalidate: 10 } }
-  )
-  const res = await errorHandling(result)
-  return res
-}
-
-export async function getCollectionByIdWithAuthHeader(
+export async function getCollectionById(
   collection_uuid: any,
   access_token: string,
   next: any
@@ -52,17 +45,7 @@ export async function getCollectionByIdWithAuthHeader(
   return res
 }
 
-// Get collections
-// TODO : add per org filter
-export async function getOrgCollections() {
-  const result: any = await fetch(`${getAPIUrl()}collections/page/1/limit/10`, {
-    next: { revalidate: 10 },
-  })
-  const res = await errorHandling(result)
-  return res
-}
-
-export async function getOrgCollectionsWithAuthHeader(
+export async function getOrgCollections(
   org_id: string,
   access_token: string,
   next: any

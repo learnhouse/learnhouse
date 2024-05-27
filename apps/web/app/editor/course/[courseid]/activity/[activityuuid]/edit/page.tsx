@@ -1,13 +1,13 @@
 import { default as React } from 'react'
 import dynamic from 'next/dynamic'
-import { getCourseMetadataWithAuthHeader } from '@services/courses/courses'
-import { cookies } from 'next/headers'
+import { getCourseMetadata } from '@services/courses/courses'
 import { Metadata } from 'next'
 import { getActivityWithAuthHeader } from '@services/courses/activities'
-import { getAccessTokenFromRefreshTokenCookie } from '@services/auth/auth'
 import { getOrganizationContextInfoWithId } from '@services/organizations/orgs'
 import EditorOptionsProvider from '@components/Contexts/Editor/EditorContext'
 import AIEditorProvider from '@components/Contexts/AI/AIEditorContext'
+import { nextAuthOptions } from 'app/auth/options'
+import { getServerSession } from 'next-auth'
 const EditorWrapper = dynamic(() => import('@components/Objects/Editor/EditorWrapper'), { ssr: false })
 
 
@@ -19,10 +19,10 @@ type MetadataProps = {
 export async function generateMetadata({
   params,
 }: MetadataProps): Promise<Metadata> {
-  const cookieStore = cookies()
-  const access_token = await getAccessTokenFromRefreshTokenCookie(cookieStore)
+  const session = await getServerSession(nextAuthOptions)
+  const access_token = session?.tokens?.access_token
   // Get Org context information
-  const course_meta = await getCourseMetadataWithAuthHeader(
+  const course_meta = await getCourseMetadata(
     params.courseid,
     { revalidate: 0, tags: ['courses'] },
     access_token ? access_token : null
@@ -35,11 +35,11 @@ export async function generateMetadata({
 }
 
 const EditActivity = async (params: any) => {
-  const cookieStore = cookies()
-  const access_token = await getAccessTokenFromRefreshTokenCookie(cookieStore)
+  const session = await getServerSession(nextAuthOptions)
+  const access_token = session?.tokens?.access_token
   const activityuuid = params.params.activityuuid
   const courseid = params.params.courseid
-  const courseInfo = await getCourseMetadataWithAuthHeader(
+  const courseInfo = await getCourseMetadata(
     courseid,
     { revalidate: 0, tags: ['courses'] },
     access_token ? access_token : null

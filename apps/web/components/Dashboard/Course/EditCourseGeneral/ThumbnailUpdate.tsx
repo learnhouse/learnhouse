@@ -4,11 +4,13 @@ import { getAPIUrl } from '@services/config/config'
 import { updateCourseThumbnail } from '@services/courses/courses'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import { ArrowBigUpDash, UploadCloud } from 'lucide-react'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 import React from 'react'
 import { mutate } from 'swr'
 
 function ThumbnailUpdate() {
   const course = useCourse() as any
+  const session = useLHSession()
   const org = useOrg() as any
   const [localThumbnail, setLocalThumbnail] = React.useState(null) as any
   const [isLoading, setIsLoading] = React.useState(false) as any
@@ -20,7 +22,8 @@ function ThumbnailUpdate() {
     setIsLoading(true)
     const res = await updateCourseThumbnail(
       course.courseStructure.course_uuid,
-      file
+      file,
+      session.data?.tokens?.access_token
     )
     mutate(`${getAPIUrl()}courses/${course.courseStructure.course_uuid}/meta`)
     // wait for 1 second to show loading animation

@@ -42,7 +42,7 @@ export const nextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, account }: any) {
       // First sign in with Credentials provider
       if (account?.provider == 'credentials' && user) {
         token.user = user
@@ -78,7 +78,7 @@ export const nextAuthOptions = {
       }
       return token
     },
-    async session({ session, token }) {
+    async session({ session, token }: any) {
       // Include user information in the session
       if (token.user) {
         let api_SESSION = await getUserSession(token.user.tokens.access_token)

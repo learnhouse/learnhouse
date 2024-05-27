@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { getUriWithOrg } from '@services/config/config'
 import { ScanEye, SquareUserRound, UserPlus, Users } from 'lucide-react'
 import BreadCrumbs from '@components/Dashboard/UI/BreadCrumbs'
-import { useSession } from 'next-auth/react'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import OrgUsers from '@components/Dashboard/Users/OrgUsers/OrgUsers'
 import OrgAccess from '@components/Dashboard/Users/OrgAccess/OrgAccess'
@@ -18,7 +18,7 @@ export type SettingsParams = {
 }
 
 function UsersSettingsPage({ params }: { params: SettingsParams }) {
-  const session = useSession() as any
+  const session = useLHSession() as any
   const org = useOrg() as any
   const [H1Label, setH1Label] = React.useState('')
   const [H2Label, setH2Label] = React.useState('')

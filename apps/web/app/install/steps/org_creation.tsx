@@ -14,6 +14,7 @@ import useSWR from 'swr'
 import { createNewOrgInstall, updateInstall } from '@services/install/install'
 import { useRouter } from 'next/navigation'
 import { Check } from 'lucide-react'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 
 const validate = (values: any) => {
   const errors: any = {}
@@ -40,11 +41,13 @@ const validate = (values: any) => {
 }
 
 function OrgCreation() {
+  const session = useLHSession() as any;
+  const access_token = session?.data?.tokens?.access_token;
   const {
     data: install,
     error: error,
     isLoading,
-  } = useSWR(`${getAPIUrl()}install/latest`, swrFetcher)
+  } = useSWR(`${getAPIUrl()}install/latest`, (url) => swrFetcher(url, access_token))
   const [isSubmitting, setIsSubmitting] = React.useState(false)
   const [isSubmitted, setIsSubmitted] = React.useState(false)
   const router = useRouter()

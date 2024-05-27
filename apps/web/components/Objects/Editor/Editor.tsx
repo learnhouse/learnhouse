@@ -41,7 +41,7 @@ import html from 'highlight.js/lib/languages/xml'
 import python from 'highlight.js/lib/languages/python'
 import java from 'highlight.js/lib/languages/java'
 import { CourseProvider } from '@components/Contexts/CourseContext'
-import { useSession } from 'next-auth/react'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 import AIEditorToolkit from './AI/AIEditorToolkit'
 import useGetAIFeatures from '@components/AI/Hooks/useGetAIFeatures'
 import UserAvatar from '../UserAvatar'
@@ -65,7 +65,7 @@ interface Editor {
 }
 
 function Editor(props: Editor) {
-  const session = useSession() as any
+  const session = useLHSession() as any
   const dispatchAIEditor = useAIEditorDispatch() as any
   const aiEditorState = useAIEditor() as AIEditorStateTypes
   const is_ai_feature_enabled = useGetAIFeatures({ feature: 'editor' })

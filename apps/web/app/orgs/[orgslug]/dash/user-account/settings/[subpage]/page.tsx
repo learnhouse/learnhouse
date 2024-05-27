@@ -7,7 +7,7 @@ import Link from 'next/link'
 import { getUriWithOrg } from '@services/config/config'
 import { Info, Lock } from 'lucide-react'
 import BreadCrumbs from '@components/Dashboard/UI/BreadCrumbs'
-import { useSession } from 'next-auth/react'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 
 export type SettingsParams = {
   subpage: string
@@ -15,7 +15,7 @@ export type SettingsParams = {
 }
 
 function SettingsPage({ params }: { params: SettingsParams }) {
-  const session = useSession() as any
+  const session = useLHSession() as any
 
   useEffect(() => {}, [session])
 

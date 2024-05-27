@@ -16,6 +16,7 @@ import { revalidateTags } from '@services/utils/ts/requests'
 import { useRouter } from 'next/navigation'
 import { getAPIUrl } from '@services/config/config'
 import { mutate } from 'swr'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 
 type ChapterElementProps = {
   chapter: any
@@ -31,6 +32,8 @@ interface ModifiedChapterInterface {
 
 function ChapterElement(props: ChapterElementProps) {
   const activities = props.chapter.activities || []
+  const session = useLHSession() as any;
+  const access_token = session?.data?.tokens?.access_token;
   const [modifiedChapter, setModifiedChapter] = React.useState<
     ModifiedChapterInterface | undefined
   >(undefined)
@@ -41,7 +44,7 @@ function ChapterElement(props: ChapterElementProps) {
   const router = useRouter()
 
   const deleteChapterUI = async () => {
-    await deleteChapter(props.chapter.id)
+    await deleteChapter(props.chapter.id, access_token)
     mutate(`${getAPIUrl()}courses/${props.course_uuid}/meta`)
     await revalidateTags(['courses'], props.orgslug)
     router.refresh()
@@ -53,7 +56,7 @@ function ChapterElement(props: ChapterElementProps) {
       let modifiedChapterCopy = {
         name: modifiedChapter.chapterName,
       }
-      await updateChapter(chapterId, modifiedChapterCopy)
+      await updateChapter(chapterId, modifiedChapterCopy, access_token)
       mutate(`${getAPIUrl()}courses/${props.course_uuid}/meta`)
       await revalidateTags(['courses'], props.orgslug)
       router.refresh()

@@ -2,7 +2,7 @@ import React, { useEffect } from 'react'
 import { getUriWithOrg } from '@services/config/config'
 import { useParams } from 'next/navigation'
 import { getUserAvatarMediaDirectory } from '@services/media/media'
-import { useSession } from 'next-auth/react'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 
 type UserAvatarProps = {
   width?: number
@@ -20,7 +20,7 @@ type UserAvatarProps = {
 }
 
 function UserAvatar(props: UserAvatarProps) {
-  const session = useSession() as any
+  const session = useLHSession() as any
   const params = useParams() as any
 
   function checkUrlProtocol(url: string): boolean {

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import UserAvatar from '../UserAvatar'
-import { useSession } from 'next-auth/react'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { getUserAvatarMediaDirectory } from '@services/media/media';
 import { getCollaborationServerUrl } from '@services/config/config';
 import { useOrg } from '@components/Contexts/OrgContext';
@@ -11,7 +11,7 @@ type ActiveAvatarsProps = {
 }
 
 function ActiveAvatars(props: ActiveAvatarsProps) {
-    const session = useSession() as any;
+    const session = useLHSession() as any;
     const org = useOrg() as any;
     const [activeUsers, setActiveUsers] = useState({} as any);
 

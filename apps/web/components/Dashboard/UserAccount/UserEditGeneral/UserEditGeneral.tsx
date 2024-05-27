@@ -2,7 +2,7 @@
 import { updateProfile } from '@services/settings/profile'
 import React, { useEffect } from 'react'
 import { Formik, Form, Field } from 'formik'
-import { useSession } from 'next-auth/react'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 import {
   ArrowBigUpDash,
   Check,
@@ -14,7 +14,7 @@ import UserAvatar from '@components/Objects/UserAvatar'
 import { updateUserAvatar } from '@services/users/users'
 
 function UserEditGeneral() {
-  const session = useSession() as any
+  const session = useLHSession() as any
   const [localAvatar, setLocalAvatar] = React.useState(null) as any
   const [isLoading, setIsLoading] = React.useState(false) as any
   const [error, setError] = React.useState() as any
