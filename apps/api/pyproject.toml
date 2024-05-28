@@ -31,7 +31,7 @@ python-multipart = "^0.0.9"
 pyyaml = "^6.0.1"
 redis = "^5.0.1"
 requests = "^2.31.0"
-resend = "^1.1.0"
+resend = "^2.0.0"
 sentry-sdk = {extras = ["fastapi"], version = "^2.2.0"}
 sqlmodel = "^0.0.16"
 tiktoken = "^0.7.0"
