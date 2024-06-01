@@ -1,3 +1,4 @@
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import PageLoading from '@components/Objects/Loaders/PageLoading'
 import Toast from '@components/StyledElements/Toast/Toast'
@@ -5,20 +6,22 @@ import ToolTip from '@components/StyledElements/Tooltip/Tooltip'
 import { getAPIUrl } from '@services/config/config'
 import { inviteBatchUsers } from '@services/organizations/invites'
 import { swrFetcher } from '@services/utils/ts/requests'
-import { Info, Shield, UserPlus } from 'lucide-react'
+import { Info, UserPlus } from 'lucide-react'
 import React, { useEffect } from 'react'
 import toast from 'react-hot-toast'
 import useSWR, { mutate } from 'swr'
 
 function OrgUsersAdd() {
     const org = useOrg() as any
+    const session = useLHSession() as any
+    const access_token = session.data.tokens.access_token;
     const [isLoading, setIsLoading] = React.useState(false)
     const [invitedUsers, setInvitedUsers] = React.useState('');
     const [selectedInviteCode, setSelectedInviteCode] = React.useState('');
 
     async function sendInvites() {
         setIsLoading(true)
-        let res = await inviteBatchUsers(org.id, invitedUsers, selectedInviteCode)
+        let res = await inviteBatchUsers(org.id, invitedUsers, selectedInviteCode,access_token)
         if (res.status == 200) {
             mutate(`${getAPIUrl()}orgs/${org?.id}/invites/users`)
             setIsLoading(false)
@@ -31,18 +34,17 @@ function OrgUsersAdd() {
 
     const { data: invites } = useSWR(
         org ? `${getAPIUrl()}orgs/${org?.id}/invites` : null,
-        swrFetcher
+        (url) => swrFetcher(url, access_token)
     )
     const { data: invited_users } = useSWR(
         org ? `${getAPIUrl()}orgs/${org?.id}/invites/users` : null,
-        swrFetcher
+        (url) => swrFetcher(url, access_token)
     )
 
     useEffect(() => {
         if (invites) {
             setSelectedInviteCode(invites?.[0]?.invite_code_uuid)
         }
-        console.log('dev,',selectedInviteCode)
     }
         , [invites, invited_users])
 

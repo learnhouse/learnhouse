@@ -23,7 +23,6 @@ export async function deleteCollection(
 
 // Create a new collection
 export async function createCollection(collection: any, access_token: any) {
-  console.log(collection)
   const result: any = await fetch(
     `${getAPIUrl()}collections/`,
     RequestBodyWithAuthHeader('POST', collection, null, access_token)

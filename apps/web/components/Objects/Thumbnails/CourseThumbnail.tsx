@@ -25,7 +25,7 @@ function removeCoursePrefix(course_uuid: string) {
 function CourseThumbnail(props: PropsType) {
   const router = useRouter()
   const org = useOrg() as any
-  const session = useLHSession();
+  const session = useLHSession() as any;
 
   async function deleteCourses(course_uuid: any) {
     await deleteCourseFromBackend(course_uuid, session.data?.tokens?.access_token)

@@ -75,6 +75,7 @@ type ActivityChatMessageBoxProps = {
 
 function ActivityChatMessageBox(props: ActivityChatMessageBoxProps) {
   const session = useLHSession() as any
+  const access_token = session.data.tokens.access_token;
   const aiChatBotState = useAIChatBot() as AIChatBotStateTypes
   const dispatchAIChatBot = useAIChatBotDispatch() as any
 
@@ -115,7 +116,8 @@ function ActivityChatMessageBox(props: ActivityChatMessageBoxProps) {
       const response = await sendActivityAIChatMessage(
         message,
         aiChatBotState.aichat_uuid,
-        props.activity.activity_uuid
+        props.activity.activity_uuid,
+        access_token
       )
       if (response.success == false) {
         await dispatchAIChatBot({ type: 'setIsNoLongerWaitingForResponse' })
@@ -143,8 +145,9 @@ function ActivityChatMessageBox(props: ActivityChatMessageBoxProps) {
       })
       await dispatchAIChatBot({ type: 'setIsWaitingForResponse' })
       const response = await startActivityAIChatSession(
-        message,
+        message,access_token,
         props.activity.activity_uuid
+
       )
       if (response.success == false) {
         await dispatchAIChatBot({ type: 'setIsNoLongerWaitingForResponse' })
@@ -219,14 +222,12 @@ function ActivityChatMessageBox(props: ActivityChatMessageBoxProps) {
                   />
                 </div>
                 <div
-                  className={`flex space-x-2 items-center -ml-[100px] ${
-                    aiChatBotState.isWaitingForResponse ? 'animate-pulse' : ''
-                  }`}
+                  className={`flex space-x-2 items-center -ml-[100px] ${aiChatBotState.isWaitingForResponse ? 'animate-pulse' : ''
+                    }`}
                 >
                   <Image
-                    className={`outline outline-1 outline-neutral-200/20 rounded-lg ${
-                      aiChatBotState.isWaitingForResponse ? 'animate-pulse' : ''
-                    }`}
+                    className={`outline outline-1 outline-neutral-200/20 rounded-lg ${aiChatBotState.isWaitingForResponse ? 'animate-pulse' : ''
+                      }`}
                     width={24}
                     src={learnhouseAI_icon}
                     alt=""
@@ -244,12 +245,11 @@ function ActivityChatMessageBox(props: ActivityChatMessageBoxProps) {
                 </div>
               </div>
               <div
-                className={`w-100 h-0.5 bg-white/5 rounded-full mx-auto mb-3 ${
-                  aiChatBotState.isWaitingForResponse ? 'animate-pulse' : ''
-                }`}
+                className={`w-100 h-0.5 bg-white/5 rounded-full mx-auto mb-3 ${aiChatBotState.isWaitingForResponse ? 'animate-pulse' : ''
+                  }`}
               ></div>
               {aiChatBotState.messages.length > 0 &&
-              !aiChatBotState.error.isError ? (
+                !aiChatBotState.error.isError ? (
                 <div className="flex-col h-[237px] w-full  space-y-4 overflow-scroll scrollbar-w-2 scrollbar scrollbar-thumb-white/20 scrollbar-thumb-rounded-full scrollbar-track-rounded-full">
                   {aiChatBotState.messages.map(
                     (message: AIMessage, index: number) => {

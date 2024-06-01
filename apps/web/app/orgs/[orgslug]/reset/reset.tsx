@@ -15,7 +15,7 @@ import { getUriWithOrg } from '@services/config/config'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useFormik } from 'formik'
-import { resetPassword, sendResetLink } from '@services/auth/auth'
+import { resetPassword } from '@services/auth/auth'
 
 const validate = (values: any) => {
     const errors: any = {}

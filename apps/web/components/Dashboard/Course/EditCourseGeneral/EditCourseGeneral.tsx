@@ -6,7 +6,6 @@ import FormLayout, {
 } from '@components/StyledElements/Form/Form'
 import { useFormik } from 'formik'
 import { AlertTriangle } from 'lucide-react'
-import * as Switch from '@radix-ui/react-switch'
 import * as Form from '@radix-ui/react-form'
 import React from 'react'
 import { useCourse, useCourseDispatch } from '../../../Contexts/CourseContext'

@@ -38,7 +38,6 @@ function CourseUpdates() {
   // if user clicks outside the model, close the model
   React.useLayoutEffect(() => {
     function handleClickOutside(event: any) {
-      console.log(event.target.id)
       if (event.target.closest('.bg-white') || event.target.id === 'delete-update-button') return;
       setIsModelOpen(false);
     }

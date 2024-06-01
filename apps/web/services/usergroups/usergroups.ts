@@ -1,46 +1,60 @@
 import { getAPIUrl } from '@services/config/config'
-import { RequestBody, getResponseMetadata } from '@services/utils/ts/requests'
+import {
+  RequestBodyWithAuthHeader,
+  getResponseMetadata,
+} from '@services/utils/ts/requests'
 
-export async function getUserGroups(org_id: any) {
+export async function getUserGroups(org_id: any, access_token: string) {
   const result: any = await fetch(
     `${getAPIUrl()}usergroups/org/${org_id}`,
-    RequestBody('GET', null, null)
+    RequestBodyWithAuthHeader('GET', null, null, access_token)
   )
   const res = await getResponseMetadata(result)
   return res
 }
 
-export async function createUserGroup(body: any) {
+export async function createUserGroup(body: any, access_token: string) {
   const result: any = await fetch(
     `${getAPIUrl()}usergroups/`,
-    RequestBody('POST', body, null)
+    RequestBodyWithAuthHeader('POST', body, null, access_token)
   )
   const res = await getResponseMetadata(result)
   return res
 }
 
-export async function linkUserToUserGroup(usergroup_id: any, user_id: any) {
+export async function linkUserToUserGroup(
+  usergroup_id: any,
+  user_id: any,
+  access_token: string
+) {
   const result: any = await fetch(
     `${getAPIUrl()}usergroups/${usergroup_id}/add_users?user_ids=${user_id}`,
-    RequestBody('POST', null, null)
+    RequestBodyWithAuthHeader('POST', null, null, access_token)
   )
   const res = await getResponseMetadata(result)
   return res
 }
 
-export async function unLinkUserToUserGroup(usergroup_id: any, user_id: any) {
+export async function unLinkUserToUserGroup(
+  usergroup_id: any,
+  user_id: any,
+  access_token: string
+) {
   const result: any = await fetch(
     `${getAPIUrl()}usergroups/${usergroup_id}/remove_users?user_ids=${user_id}`,
-    RequestBody('DELETE', null, null)
+    RequestBodyWithAuthHeader('DELETE', null, null, access_token)
   )
   const res = await getResponseMetadata(result)
   return res
 }
 
-export async function deleteUserGroup(usergroup_id: number) {
+export async function deleteUserGroup(
+  usergroup_id: number,
+  access_token: string
+) {
   const result: any = await fetch(
     `${getAPIUrl()}usergroups/${usergroup_id}`,
-    RequestBody('DELETE', null, null)
+    RequestBodyWithAuthHeader('DELETE', null, null, access_token)
   )
   const res = await getResponseMetadata(result)
   return res
@@ -48,11 +62,12 @@ export async function deleteUserGroup(usergroup_id: number) {
 
 export async function linkResourcesToUserGroup(
   usergroup_id: any,
-  resource_uuids: any
+  resource_uuids: any,
+  access_token: string
 ) {
   const result: any = await fetch(
     `${getAPIUrl()}usergroups/${usergroup_id}/add_resources?resource_uuids=${resource_uuids}`,
-    RequestBody('POST', null, null)
+    RequestBodyWithAuthHeader('POST', null, null, access_token)
   )
   const res = await getResponseMetadata(result)
   return res
@@ -60,11 +75,12 @@ export async function linkResourcesToUserGroup(
 
 export async function unLinkResourcesToUserGroup(
   usergroup_id: any,
-  resource_uuids: any
+  resource_uuids: any,
+  access_token: string
 ) {
   const result: any = await fetch(
     `${getAPIUrl()}usergroups/${usergroup_id}/remove_resources?resource_uuids=${resource_uuids}`,
-    RequestBody('DELETE', null, null)
+    RequestBodyWithAuthHeader('DELETE', null, null, access_token)
   )
   const res = await getResponseMetadata(result)
   return res

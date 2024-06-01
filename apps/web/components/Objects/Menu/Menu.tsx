@@ -1,12 +1,10 @@
 'use client'
 import React from 'react'
 import Link from 'next/link'
-import { getAPIUrl, getUriWithOrg } from '@services/config/config'
+import { getUriWithOrg } from '@services/config/config'
 import { HeaderProfileBox } from '@components/Security/HeaderProfileBox'
 import MenuLinks from './MenuLinks'
 import { getOrgLogoMediaDirectory } from '@services/media/media'
-import useSWR from 'swr'
-import { swrFetcher } from '@services/utils/ts/requests'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 

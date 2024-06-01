@@ -15,6 +15,7 @@ import {
   startActivityAIChatSession,
 } from '@services/ai/ai'
 import useGetAIFeatures from '../../../../AI/Hooks/useGetAIFeatures'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 
 type AICanvaToolkitProps = {
   editor: Editor
@@ -92,6 +93,8 @@ function AIActionButton(props: {
   label: string
   activity: any
 }) {
+  const session = useLHSession() as any
+  const access_token = session.data.tokens.access_token;
   const dispatchAIChatBot = useAIChatBotDispatch() as any
   const aiChatBotState = useAIChatBot() as AIChatBotStateTypes
 
@@ -132,7 +135,7 @@ function AIActionButton(props: {
       const response = await sendActivityAIChatMessage(
         message,
         aiChatBotState.aichat_uuid,
-        props.activity.activity_uuid
+        props.activity.activity_uuid, access_token
       )
       if (response.success == false) {
         await dispatchAIChatBot({ type: 'setIsNoLongerWaitingForResponse' })
@@ -160,8 +163,7 @@ function AIActionButton(props: {
       })
       await dispatchAIChatBot({ type: 'setIsWaitingForResponse' })
       const response = await startActivityAIChatSession(
-        message,
-        props.activity.activity_uuid
+        message, access_token
       )
       if (response.success == false) {
         await dispatchAIChatBot({ type: 'setIsNoLongerWaitingForResponse' })
@@ -193,10 +195,10 @@ function AIActionButton(props: {
     props.label === 'Explain'
       ? 'Explain a word or a sentence with AI'
       : props.label === 'Summarize'
-      ? 'Summarize a long paragraph or text with AI'
-      : props.label === 'Translate'
-      ? 'Translate to different languages with AI'
-      : 'Give examples to understand better with AI'
+        ? 'Summarize a long paragraph or text with AI'
+        : props.label === 'Translate'
+          ? 'Translate to different languages with AI'
+          : 'Give examples to understand better with AI'
   return (
     <div className="flex space-x-2">
       <ToolTip sideOffset={10} slateBlack content={tooltipLabel}>
