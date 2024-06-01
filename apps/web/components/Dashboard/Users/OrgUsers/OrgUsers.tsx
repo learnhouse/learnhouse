@@ -1,3 +1,4 @@
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import PageLoading from '@components/Objects/Loaders/PageLoading'
 import RolesUpdate from '@components/Objects/Modals/Dash/OrgUsers/RolesUpdate'
@@ -14,9 +15,11 @@ import useSWR, { mutate } from 'swr'
 
 function OrgUsers() {
   const org = useOrg() as any
+  const session = useLHSession() as any
+  const access_token = session.data.tokens.access_token;
   const { data: orgUsers } = useSWR(
     org ? `${getAPIUrl()}orgs/${org?.id}/users` : null,
-    swrFetcher
+    (url) => swrFetcher(url, access_token)
   )
   const [rolesModal, setRolesModal] = React.useState(false)
   const [selectedUser, setSelectedUser] = React.useState(null) as any
@@ -28,7 +31,7 @@ function OrgUsers() {
   }
 
   const handleRemoveUser = async (user_id: any) => {
-    const res = await removeUserFromOrg(org.id, user_id)
+    const res = await removeUserFromOrg(org.id, user_id,access_token)
     if (res.status === 200) {
       await mutate(`${getAPIUrl()}orgs/${org.id}/users`)
     } else {
@@ -39,7 +42,6 @@ function OrgUsers() {
   useEffect(() => {
     if (orgUsers) {
       setIsLoading(false)
-      console.log(orgUsers)
     }
   }, [org, orgUsers])
 

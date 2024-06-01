@@ -147,8 +147,7 @@ export function MarkStatus(props: {
   orgslug: string
 }) {
   const router = useRouter()
-  const session = useLHSession()
-  console.log(props.course.trail)
+  const session = useLHSession() as any;
 
   async function markActivityAsCompleteFront() {
     const trail = await markActivityAsComplete(
@@ -170,8 +169,6 @@ export function MarkStatus(props: {
       )
     }
   }
-
-  console.log('isActivityCompleted', isActivityCompleted())
 
   return (
     <>

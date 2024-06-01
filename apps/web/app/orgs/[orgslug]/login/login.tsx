@@ -13,7 +13,7 @@ import React from 'react'
 import { AlertTriangle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { signIn, useSession } from "next-auth/react"
+import { signIn } from "next-auth/react"
 import { getUriWithOrg } from '@services/config/config'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 
@@ -42,7 +42,7 @@ const validate = (values: any) => {
 const LoginClient = (props: LoginClientProps) => {
   const [isSubmitting, setIsSubmitting] = React.useState(false)
   const router = useRouter();
-  const session = useLHSession();
+  const session = useLHSession() as any;
 
   const [error, setError] = React.useState('')
   const formik = useFormik({

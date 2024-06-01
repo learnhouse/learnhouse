@@ -52,17 +52,17 @@ const EditActivity = async (params: any) => {
   const org = await getOrganizationContextInfoWithId(courseInfo.org_id, {
     revalidate: 180,
     tags: ['organizations'],
-  })
+  }, access_token)
 
   return (
     <EditorOptionsProvider options={{ isEditable: true }}>
       <AIEditorProvider>
-          <EditorWrapper
-            org={org}
-            course={courseInfo}
-            activity={activity}
-            content={activity.content}
-          ></EditorWrapper>
+        <EditorWrapper
+          org={org}
+          course={courseInfo}
+          activity={activity}
+          content={activity.content}
+        ></EditorWrapper>
       </AIEditorProvider>
     </EditorOptionsProvider>
   )

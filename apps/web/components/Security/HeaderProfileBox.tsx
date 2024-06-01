@@ -11,9 +11,7 @@ export const HeaderProfileBox = () => {
   const session = useLHSession() as any
   const isUserAdmin = useAdminStatus() as any
 
-  useEffect(() => {
-    console.log(session)
-  }
+  useEffect(() => {}
   , [session])
 
   return (

@@ -14,13 +14,16 @@ import { BarLoader } from 'react-spinners'
 import { createUserGroup } from '@services/usergroups/usergroups'
 import { mutate } from 'swr'
 import { getAPIUrl } from '@services/config/config'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 
 type AddUserGroupProps = {
     setCreateUserGroupModal: any
 }
 
 function AddUserGroup(props: AddUserGroupProps) {
-    const org = useOrg() as any
+    const org = useOrg() as any;
+    const session = useLHSession() as any
+    const access_token = session.data.tokens.access_token;
     const [userGroupName, setUserGroupName] = React.useState('')
     const [userGroupDescription, setUserGroupDescription] = React.useState('')
     const [isSubmitting, setIsSubmitting] = React.useState(false)
@@ -42,7 +45,7 @@ function AddUserGroup(props: AddUserGroupProps) {
             description: userGroupDescription,
             org_id: org.id
         }
-        const res = await createUserGroup(obj)
+        const res = await createUserGroup(obj, access_token)
         if (res.status == 200) {
             setIsSubmitting(false)
             mutate(`${getAPIUrl()}usergroups/org/${org.id}`)

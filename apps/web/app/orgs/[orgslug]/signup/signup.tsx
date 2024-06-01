@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { getUriWithOrg } from '@services/config/config'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import React, { useEffect } from 'react'
-import { MailWarning, Shield, Ticket, UserPlus } from 'lucide-react'
+import { MailWarning, Ticket, UserPlus } from 'lucide-react'
 import { useOrg } from '@components/Contexts/OrgContext'
 import UserAvatar from '@components/Objects/UserAvatar'
 import OpenSignUpComponent from './OpenSignup'
@@ -31,9 +31,6 @@ function SignUpClient(props: SignUpClientProps) {
   useEffect(() => {
     if (props.org.config) {
       setJoinMethod(
-        props.org?.config?.config?.GeneralConfig.users.signup_mechanism
-      )
-      console.log(
         props.org?.config?.config?.GeneralConfig.users.signup_mechanism
       )
     }

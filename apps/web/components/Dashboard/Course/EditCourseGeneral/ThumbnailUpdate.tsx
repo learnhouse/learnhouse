@@ -10,7 +10,7 @@ import { mutate } from 'swr'
 
 function ThumbnailUpdate() {
   const course = useCourse() as any
-  const session = useLHSession()
+  const session = useLHSession() as any;
   const org = useOrg() as any
   const [localThumbnail, setLocalThumbnail] = React.useState(null) as any
   const [isLoading, setIsLoading] = React.useState(false) as any

@@ -12,7 +12,6 @@ function DocumentPdfActivity({
   const org = useOrg() as any
 
   React.useEffect(() => {
-    console.log(activity)
   }, [activity, org])
 
   return (

@@ -8,10 +8,13 @@ import { getActivityBlockMediaDirectory } from '@services/media/media'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useCourse } from '@components/Contexts/CourseContext'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 
 function PDFBlockComponent(props: any) {
   const org = useOrg() as any
   const course = useCourse() as any
+  const session = useLHSession() as any
+  const access_token = session.data.tokens.access_token;
   const [pdf, setPDF] = React.useState(null)
   const [isLoading, setIsLoading] = React.useState(false)
   const [blockObject, setblockObject] = React.useState(
@@ -32,7 +35,7 @@ function PDFBlockComponent(props: any) {
     setIsLoading(true)
     let object = await uploadNewPDFFile(
       pdf,
-      props.extension.options.activity.activity_uuid
+      props.extension.options.activity.activity_uuid, access_token
     )
     setIsLoading(false)
     setblockObject(object)
@@ -41,7 +44,7 @@ function PDFBlockComponent(props: any) {
     })
   }
 
-  useEffect(() => {}, [course, org])
+  useEffect(() => { }, [course, org])
 
   return (
     <NodeViewWrapper className="block-pdf">

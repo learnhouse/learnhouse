@@ -1,5 +1,4 @@
 'use client'
-import LHSessionProvider from '@components/Contexts/LHSessionContext'
 import { OrgProvider } from '@components/Contexts/OrgContext'
 import Toast from '@components/StyledElements/Toast/Toast'
 import '@styles/globals.css'

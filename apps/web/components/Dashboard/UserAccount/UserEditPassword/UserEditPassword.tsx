@@ -5,13 +5,14 @@ import React, { useEffect } from 'react'
 
 function UserEditPassword() {
   const session = useLHSession() as any
+  const access_token = session.data.tokens.access_token;
 
   const updatePasswordUI = async (values: any) => {
     let user_id = session.data.user.id
-    await updatePassword(user_id, values)
+    await updatePassword(user_id, values, access_token)
   }
 
-  useEffect(() => {}, [session])
+  useEffect(() => { }, [session])
 
   return (
     <div className="ml-10 mr-10 mx-auto bg-white rounded-xl shadow-sm px-6 py-5">
