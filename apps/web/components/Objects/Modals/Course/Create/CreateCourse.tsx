@@ -19,7 +19,7 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 
 function CreateCourseModal({ closeModal, orgslug }: any) {
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const session = useLHSession()
+  const session = useLHSession() as any;
   const [name, setName] = React.useState('')
   const [description, setDescription] = React.useState('')
   const [learnings, setLearnings] = React.useState('')
@@ -55,7 +55,6 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
 
   const handleVisibilityChange = (event: React.ChangeEvent<any>) => {
     setVisibility(event.target.value)
-    console.log(visibility)
   }
 
   const handleTagsChange = (event: React.ChangeEvent<any>) => {

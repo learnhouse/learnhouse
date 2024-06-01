@@ -1,9 +1,9 @@
 'use client';
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { useOrg } from '@components/Contexts/OrgContext';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import useAdminStatus from '@components/Hooks/useAdminStatus';
 import { usePathname, useRouter } from 'next/navigation';
+import PageLoading from '@components/Objects/Loaders/PageLoading';
 
 type AuthorizationProps = {
   children: React.ReactNode;
@@ -30,9 +30,18 @@ const AdminAuthorization: React.FC<AuthorizationProps> = ({ children, authorizat
   const isUserAuthenticated = useMemo(() => session.status === 'authenticated', [session.status]);
 
   const checkPathname = useCallback((pattern: string, pathname: string) => {
-    const regexPattern = new RegExp(`^${pattern.replace(/\//g, '\\/').replace(/\*/g, '.*')}$`);
+    // Ensure the inputs are strings
+    if (typeof pattern !== 'string' || typeof pathname !== 'string') {
+      return false;
+    }
+
+    // Convert pattern to a regex pattern
+    const regexPattern = new RegExp(`^${pattern.replace(/[\/.*+?^${}()|[\]\\]/g, '\\$&').replace(/\\\*/g, '.*')}$`);
+
+    // Test the pathname against the regex pattern
     return regexPattern.test(pathname);
   }, []);
+
 
   const isAdminPath = useMemo(() => ADMIN_PATHS.some(path => checkPathname(path, pathname)), [pathname, checkPathname]);
 
@@ -69,7 +78,7 @@ const AdminAuthorization: React.FC<AuthorizationProps> = ({ children, authorizat
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
-        <h1 className="text-2xl">Loading...</h1>
+        <PageLoading />
       </div>
     );
   }

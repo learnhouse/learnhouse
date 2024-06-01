@@ -6,7 +6,6 @@ import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { nextAuthOptions } from 'app/auth/options'
 import { Metadata } from 'next'
 import { getServerSession } from 'next-auth'
-import { cookies } from 'next/headers'
 import Link from 'next/link'
 
 type MetadataProps = {

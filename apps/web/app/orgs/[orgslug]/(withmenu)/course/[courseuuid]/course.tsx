@@ -22,7 +22,7 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 const CourseClient = (props: any) => {
   const [user, setUser] = useState<any>({})
   const [learnings, setLearnings] = useState<any>([])
-  const session = useLHSession()
+  const session = useLHSession() as any;
   const courseuuid = props.courseuuid
   const orgslug = props.orgslug
   const course = props.course

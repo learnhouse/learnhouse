@@ -1,4 +1,5 @@
 'use client'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import FormLayout, {
   ButtonBlack,
@@ -22,6 +23,8 @@ interface Props {
 
 function RolesUpdate(props: Props) {
   const org = useOrg() as any
+  const session = useLHSession() as any
+    const access_token = session.data.tokens.access_token;
   const [isSubmitting, setIsSubmitting] = React.useState(false)
   const [assignedRole, setAssignedRole] = React.useState(
     props.alreadyAssignedRole
@@ -36,7 +39,7 @@ function RolesUpdate(props: Props) {
   const handleSubmit = async (e: any) => {
     e.preventDefault()
     setIsSubmitting(true)
-    const res = await updateUserRole(org.id, props.user.user.id, assignedRole)
+    const res = await updateUserRole(org.id, props.user.user.id, assignedRole,access_token)
 
     if (res.status === 200) {
       await mutate(`${getAPIUrl()}orgs/${org.id}/users`)

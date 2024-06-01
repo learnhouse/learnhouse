@@ -20,7 +20,7 @@ export const RequestBodyWithAuthHeader = (
   method: string,
   data: any,
   next: any,
-  token: string
+  token?: string
 ) => {
   let HeadersConfig = new Headers(
     token

@@ -2,6 +2,8 @@ import React from 'react'
 import { Metadata } from 'next'
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import Trail from './trail'
+import { getServerSession } from 'next-auth'
+import { nextAuthOptions } from 'app/auth/options'
 
 type MetadataProps = {
   params: { orgslug: string }
@@ -11,11 +13,13 @@ type MetadataProps = {
 export async function generateMetadata({
   params,
 }: MetadataProps): Promise<Metadata> {
+  const session = await getServerSession(nextAuthOptions)
+  const access_token = session?.tokens?.access_token
   // Get Org context information
   const org = await getOrganizationContextInfo(params.orgslug, {
     revalidate: 1800,
     tags: ['organizations'],
-  })
+  }, access_token)
   return {
     title: 'Trail — ' + org.name,
     description:

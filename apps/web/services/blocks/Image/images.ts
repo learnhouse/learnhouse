@@ -1,7 +1,16 @@
 import { getAPIUrl } from '@services/config/config'
-import { RequestBody, RequestBodyForm } from '@services/utils/ts/requests'
+import {
+  RequestBody,
+  RequestBodyForm,
+  RequestBodyFormWithAuthHeader,
+  RequestBodyWithAuthHeader,
+} from '@services/utils/ts/requests'
 
-export async function uploadNewImageFile(file: any, activity_uuid: string) {
+export async function uploadNewImageFile(
+  file: any,
+  activity_uuid: string,
+  access_token: string
+) {
   // Send file thumbnail as form data
   const formData = new FormData()
   formData.append('file_object', file)
@@ -9,17 +18,17 @@ export async function uploadNewImageFile(file: any, activity_uuid: string) {
 
   return fetch(
     `${getAPIUrl()}blocks/image`,
-    RequestBodyForm('POST', formData, null)
+    RequestBodyFormWithAuthHeader('POST', formData, null, access_token)
   )
     .then((result) => result.json())
     .catch((error) => console.log('error', error))
 }
 
-export async function getImageFile(file_id: string) {
+export async function getImageFile(file_id: string, access_token: string) {
   // todo : add course id to url
   return fetch(
     `${getAPIUrl()}blocks/image?file_id=${file_id}`,
-    RequestBody('GET', null, null)
+    RequestBodyWithAuthHeader('GET', null, null, access_token)
   )
     .then((result) => result.json())
     .catch((error) => console.log('error', error))

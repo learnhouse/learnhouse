@@ -1,10 +1,8 @@
 import { getActivityWithAuthHeader } from '@services/courses/activities'
 import { getCourseMetadata } from '@services/courses/courses'
-import { cookies } from 'next/headers'
 import ActivityClient from './activity'
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { Metadata } from 'next'
-import { getAccessTokenFromRefreshTokenCookie } from '@services/auth/auth'
 import { getServerSession } from 'next-auth'
 import { nextAuthOptions } from 'app/auth/options'
 
