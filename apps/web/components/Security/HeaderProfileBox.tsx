@@ -6,13 +6,16 @@ import { Settings } from 'lucide-react'
 import UserAvatar from '@components/Objects/UserAvatar'
 import useAdminStatus from '@components/Hooks/useAdminStatus'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { useOrg } from '@components/Contexts/OrgContext'
+import { getUriWithOrg, getUriWithoutOrg } from '@services/config/config'
 
 export const HeaderProfileBox = () => {
   const session = useLHSession() as any
   const isUserAdmin = useAdminStatus() as any
+  const org = useOrg() as any
 
-  useEffect(() => {}
-  , [session])
+  useEffect(() => { }
+    , [session])
 
   return (
     <ProfileArea>
@@ -20,10 +23,11 @@ export const HeaderProfileBox = () => {
         <UnidentifiedArea className="flex text-sm text-gray-700 font-bold p-1.5 px-2 rounded-lg">
           <ul className="flex space-x-3 items-center">
             <li>
-              <Link href="/login">Login</Link>
+              <Link
+                href={{ pathname: getUriWithoutOrg('/login'), query: org ? { orgslug: org.slug } : null }} >Login</Link>
             </li>
             <li className="bg-black rounded-lg shadow-md p-2 px-3 text-white">
-              <Link href="/signup">Sign up</Link>
+              <Link href={{ pathname: getUriWithoutOrg('/signup'), query: org ? { orgslug: org.slug } : null }}>Sign up</Link>
             </li>
           </ul>
         </UnidentifiedArea>

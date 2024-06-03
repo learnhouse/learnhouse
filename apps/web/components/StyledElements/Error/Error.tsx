@@ -3,7 +3,7 @@ import { AlertTriangle, RefreshCcw } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import React from 'react'
 
-function ErrorUI() {
+function ErrorUI(params: { message?: string }) {
   const router = useRouter()
 
   function reloadPage() {
@@ -15,7 +15,7 @@ function ErrorUI() {
     <div className="flex flex-col py-10 mx-auto antialiased items-center space-y-6 bg-gradient-to-b from-rose-100 to-rose-100/5 ">
       <div className="flex flex-row  items-center space-x-5  rounded-xl ">
         <AlertTriangle className="text-rose-700" size={45} />
-        <p className="text-3xl font-bold text-rose-700">Something went wrong</p>
+        <p className="text-3xl font-bold text-rose-700">{params.message ? params.message : 'Something went wrong'}</p>
       </div>
       <div>
         <button

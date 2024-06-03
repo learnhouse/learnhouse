@@ -11,12 +11,12 @@ import React, { useEffect } from 'react'
 import UserAvatar from '../../Objects/UserAvatar'
 import AdminAuthorization from '@components/Security/AdminAuthorization'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { getUriWithOrg, getUriWithoutOrg } from '@services/config/config'
 
 function LeftMenu() {
   const org = useOrg() as any
   const session = useLHSession() as any
   const [loading, setLoading] = React.useState(true)
-  const route = useRouter()
 
   function waitForEverythingToLoad() {
     if (org && session) {
@@ -26,9 +26,9 @@ function LeftMenu() {
   }
 
   async function logOutUI() {
-    const res = await signOut()
+    const res = await signOut({ redirect: true, callbackUrl: getUriWithoutOrg('/login?orgslug=' + org.slug) })
     if (res) {
-      route.push('/login')
+      getUriWithOrg(org.slug, '/')
     }
   }
 
