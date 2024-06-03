@@ -10,16 +10,17 @@ function LHSessionProvider({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         console.log('useLHSession', session);
-    }, [session])
+    }, [])
 
 
-    if (session.status == 'loading') {
+    if (session && session.status == 'loading') {
         return <PageLoading />
     }
 
-    else {
+    else if (session) {
         return (
             <SessionContext.Provider value={session}>
+                {console.log('rendered')}
                 {children}
             </SessionContext.Provider>
         )

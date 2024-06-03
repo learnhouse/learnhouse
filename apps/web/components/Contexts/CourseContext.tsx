@@ -38,7 +38,7 @@ export function CourseProvider({
     }
   }, [courseStructureData,session])
 
-  if (!courseStructureData) return <PageLoading></PageLoading>
+  if (!courseStructureData) return 
 
   return (
     <CourseContext.Provider value={courseStructure}>

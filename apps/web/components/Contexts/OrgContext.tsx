@@ -1,7 +1,7 @@
 'use client'
 import { getAPIUrl } from '@services/config/config'
 import { swrFetcher } from '@services/utils/ts/requests'
-import React, { useContext, useEffect } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import useSWR from 'swr'
 import { createContext } from 'react'
 import { useRouter } from 'next/navigation'
@@ -20,24 +20,31 @@ export function OrgProvider({
   const session = useLHSession() as any;
   const access_token = session?.data?.tokens?.access_token;
   const { data: org } = useSWR(`${getAPIUrl()}orgs/slug/${orgslug}`, (url) => swrFetcher(url, access_token))
+  const [isLoading, setIsLoading] = useState(true);
+  const [isOrgActive, setIsOrgActive] = useState(true);
 
-  const router = useRouter()
   // Check if Org is Active 
   const verifyIfOrgIsActive = () => {
     if (org && org?.config.config.GeneralConfig.active === false) {
-      router.push('/404')
+      setIsOrgActive(false)
     }
-
+    else {
+      setIsOrgActive(true)
+    }
   }
-  useEffect(() => {
-    verifyIfOrgIsActive()
-  }, [org])
 
-  if (org) {
+  useEffect(() => {
+    if (org && session) {
+      verifyIfOrgIsActive()
+      setIsLoading(false)
+    }
+  }, [org, session])
+
+  if (!isLoading) {
     return <OrgContext.Provider value={org}>{children}</OrgContext.Provider>
   }
-  else {
-    return <ErrorUI />
+  if (!isOrgActive) {
+    return <ErrorUI message='This organization is no longer active' />
   }
 }
 
