@@ -57,16 +57,16 @@ const LoginClient = (props: LoginClientProps) => {
         redirect: false,
         email: values.email,
         password: values.password,
-        callbackUrl: '/'
+        callbackUrl: '/redirect_from_auth'
       });
       if (res && res.error) {
         setError("Wrong Email or password");
         setIsSubmitting(false);
-      }else {
+      } else {
         await signIn('credentials', {
           email: values.email,
           password: values.password,
-          callbackUrl: '/'
+          callbackUrl: '/redirect_from_auth'
         });
       }
     },
@@ -177,7 +177,7 @@ const LoginClient = (props: LoginClientProps) => {
             </div>
           </FormLayout>
           <div className='flex h-0.5 rounded-2xl bg-slate-100 mt-5 mb-5 mx-10'></div>
-          <button onClick={() => signIn('google')} className="flex justify-center py-3 text-md w-full bg-white text-slate-600 space-x-3 font-semibold text-center p-2 rounded-md shadow hover:cursor-pointer">
+          <button onClick={() => signIn('google', { callbackUrl: '/redirect_from_auth' })} className="flex justify-center py-3 text-md w-full bg-white text-slate-600 space-x-3 font-semibold text-center p-2 rounded-md shadow hover:cursor-pointer">
             <img src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg" alt="" />
             <span>Sign in with Google</span>
           </button>

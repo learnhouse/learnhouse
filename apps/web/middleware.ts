@@ -1,11 +1,14 @@
 import { isInstallModeEnabled } from '@services/install/install'
 import {
   LEARNHOUSE_DOMAIN,
+  LEARNHOUSE_TOP_DOMAIN,
   getDefaultOrg,
+  getUriWithOrg,
   isMultiOrgModeEnabled,
 } from './services/config/config'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import path from 'path'
 
 export const config = {
   matcher: [
@@ -25,12 +28,16 @@ export default async function middleware(req: NextRequest) {
   // Get initial data
   const hosting_mode = isMultiOrgModeEnabled() ? 'multi' : 'single'
   const default_org = getDefaultOrg()
-  const pathname = req.nextUrl.pathname
+  const { pathname, search } = req.nextUrl
   const fullhost = req.headers ? req.headers.get('host') : ''
+  const cookie_orgslug = req.cookies.get('learnhouse_current_orgslug')?.value
+  const orgslug = fullhost
+    ? fullhost.replace(`.${LEARNHOUSE_DOMAIN}`, '')
+    : (default_org as string)
 
-  // Organizations & Global settings
-  if (pathname.startsWith('/organizations')) {
-    return NextResponse.rewrite(new URL(pathname, req.url))
+  // Login
+  if (orgslug == 'auth' || pathname.startsWith('/login')) {
+    return NextResponse.rewrite(new URL(`/login${search}`, req.url))
   }
 
   // Install Page
@@ -49,19 +56,63 @@ export default async function middleware(req: NextRequest) {
     return NextResponse.rewrite(new URL(`/editor${pathname}`, req.url))
   }
 
+  // Auth Redirects
+  if (pathname == '/redirect_from_auth') {
+    if (cookie_orgslug) {
+      const searchParams = req.nextUrl.searchParams
+      const queryString = searchParams.toString()
+      const redirectPathname = '/'
+      const redirectUrl = new URL(
+        getUriWithOrg(cookie_orgslug, redirectPathname),
+        req.url
+      )
+
+      if (queryString) {
+        redirectUrl.search = queryString
+      }
+      return NextResponse.redirect(redirectUrl)
+    } else{
+      
+    }
+  }
+
   // Multi Organization Mode
   if (hosting_mode === 'multi') {
     // Get the organization slug from the URL
     const orgslug = fullhost
       ? fullhost.replace(`.${LEARNHOUSE_DOMAIN}`, '')
-      : default_org
-    return NextResponse.rewrite(new URL(`/orgs/${orgslug}${pathname}`, req.url))
+      : (default_org as string)
+    const response = NextResponse.rewrite(
+      new URL(`/orgs/${orgslug}${pathname}`, req.url)
+    )
+
+    // Set the cookie with the orgslug value
+    response.cookies.set({
+      name: 'learnhouse_current_orgslug',
+      value: orgslug,
+      domain: LEARNHOUSE_TOP_DOMAIN == 'localhost' ? '' : LEARNHOUSE_TOP_DOMAIN,
+      path: '/',
+    })
+
+    return response
   }
 
   // Single Organization Mode
   if (hosting_mode === 'single') {
     // Get the default organization slug
-    const orgslug = default_org
-    return NextResponse.rewrite(new URL(`/orgs/${orgslug}${pathname}`, req.url))
+    const orgslug = default_org as string
+    const response = NextResponse.rewrite(
+      new URL(`/orgs/${orgslug}${pathname}`, req.url)
+    )
+
+    // Set the cookie with the orgslug value
+    response.cookies.set({
+      name: 'learnhouse_current_orgslug',
+      value: orgslug,
+      domain: LEARNHOUSE_TOP_DOMAIN == 'localhost' ? '' : LEARNHOUSE_TOP_DOMAIN,
+      path: '/',
+    })
+
+    return response
   }
 }

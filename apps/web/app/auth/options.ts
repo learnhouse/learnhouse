@@ -4,11 +4,16 @@ import {
   loginAndGetToken,
   loginWithOAuthToken,
 } from '@services/auth/auth'
+import { LEARNHOUSE_TOP_DOMAIN, getUriWithOrg } from '@services/config/config'
 import { getResponseMetadata } from '@services/utils/ts/requests'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import GoogleProvider from 'next-auth/providers/google'
+import { cookiesOptions } from './cookies'
+
+const isDevEnv = LEARNHOUSE_TOP_DOMAIN == 'localhost' ? true : false
 
 export const nextAuthOptions = {
+  debug: true,
   providers: [
     CredentialsProvider({
       // The name to display on the sign in form (e.g. 'Sign in with...')
@@ -41,6 +46,24 @@ export const nextAuthOptions = {
       clientSecret: process.env.LEARNHOUSE_GOOGLE_CLIENT_SECRET || '',
     }),
   ],
+  pages: {
+    signIn: getUriWithOrg('auth', '/'),
+    verifyRequest: getUriWithOrg('auth', '/'),
+    error: getUriWithOrg('auth', '/'), // Error code passed in query string as ?error=
+  },
+  cookies: {
+    sessionToken: {
+      name: `${!isDevEnv ? '__Secure-' : ''}next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        // When working on localhost, the cookie domain must be omitted entirely (https://stackoverflow.com/a/1188145)
+        domain: `.${LEARNHOUSE_TOP_DOMAIN}`,
+        secure: !isDevEnv,
+      },
+    },
+  },
   callbacks: {
     async jwt({ token, user, account }: any) {
       // First sign in with Credentials provider

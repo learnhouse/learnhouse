@@ -3,6 +3,8 @@ export const LEARNHOUSE_HTTP_PROTOCOL =
 const LEARNHOUSE_API_URL = `${process.env.NEXT_PUBLIC_LEARNHOUSE_API_URL}`
 export const LEARNHOUSE_BACKEND_URL = `${process.env.NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL}`
 export const LEARNHOUSE_DOMAIN = process.env.NEXT_PUBLIC_LEARNHOUSE_DOMAIN
+export const LEARNHOUSE_TOP_DOMAIN =
+  process.env.NEXT_PUBLIC_LEARNHOUSE_TOP_DOMAIN
 export const LEARNHOUSE_COLLABORATION_WS_URL =
   process.env.NEXT_PUBLIC_LEARNHOUSE_COLLABORATION_WS_URL
 
@@ -17,6 +19,14 @@ export const getUriWithOrg = (orgslug: string, path: string) => {
   const multi_org = isMultiOrgModeEnabled()
   if (multi_org) {
     return `${LEARNHOUSE_HTTP_PROTOCOL}${orgslug}.${LEARNHOUSE_DOMAIN}${path}`
+  }
+  return `${LEARNHOUSE_HTTP_PROTOCOL}${LEARNHOUSE_DOMAIN}${path}`
+}
+
+export const getUriWithoutOrg = (path: string) => {
+  const multi_org = isMultiOrgModeEnabled()
+  if (multi_org) {
+    return `${LEARNHOUSE_HTTP_PROTOCOL}${LEARNHOUSE_DOMAIN}${path}`
   }
   return `${LEARNHOUSE_HTTP_PROTOCOL}${LEARNHOUSE_DOMAIN}${path}`
 }
