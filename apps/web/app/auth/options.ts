@@ -8,7 +8,6 @@ import { LEARNHOUSE_TOP_DOMAIN, getUriWithOrg } from '@services/config/config'
 import { getResponseMetadata } from '@services/utils/ts/requests'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import GoogleProvider from 'next-auth/providers/google'
-import { cookiesOptions } from './cookies'
 
 const isDevEnv = LEARNHOUSE_TOP_DOMAIN == 'localhost' ? true : false
 
@@ -82,24 +81,24 @@ export const nextAuthOptions = {
         token.user = userFromOAuth.data
       }
 
-      // Refresh token
-      // TODO : Improve this implementation
-      if (token?.user?.tokens) {
-        const RefreshedToken = await getNewAccessTokenUsingRefreshTokenServer(
-          token?.user?.tokens?.refresh_token
-        )
-        token = {
-          ...token,
-          user: {
-            ...token.user,
-            tokens: {
-              ...token.user.tokens,
-              access_token: RefreshedToken.access_token,
+        // Refresh token
+        // TODO : Improve this implementation
+        if (token?.user?.tokens) {
+          const RefreshedToken = await getNewAccessTokenUsingRefreshTokenServer(
+            token?.user?.tokens?.refresh_token
+          )
+          token = {
+            ...token,
+            user: {
+              ...token.user,
+              tokens: {
+                ...token.user.tokens,
+                access_token: RefreshedToken.access_token,
+              },
             },
-          },
+          }
         }
-      }
-      return token
+        return token
     },
     async session({ session, token }: any) {
       // Include user information in the session

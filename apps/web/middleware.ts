@@ -35,12 +35,24 @@ export default async function middleware(req: NextRequest) {
     ? fullhost.replace(`.${LEARNHOUSE_DOMAIN}`, '')
     : (default_org as string)
 
+  // Out of orgslug paths & rewrite
+  const standard_paths = ['/home']
+  const auth_paths = ['/login', '/signup', '/reset']
+  if (standard_paths.includes(pathname)) {
+    // Redirect to the same pathname with the original search params
+    return NextResponse.rewrite(new URL(`${pathname}${search}`, req.url))
+  }
+  if (auth_paths.includes(pathname)) {
+    // Redirect to the same pathname with the original search params
+    return NextResponse.rewrite(new URL(`/auth${pathname}${search}`, req.url))
+  }
+
   // Login
   if (orgslug == 'auth' || pathname.startsWith('/login')) {
     return NextResponse.rewrite(new URL(`/login${search}`, req.url))
   }
 
-  // Install Page
+  // Install Page (depreceated)
   if (pathname.startsWith('/install')) {
     // Check if install mode is enabled
     const install_mode = await isInstallModeEnabled()
@@ -71,8 +83,7 @@ export default async function middleware(req: NextRequest) {
         redirectUrl.search = queryString
       }
       return NextResponse.redirect(redirectUrl)
-    } else{
-      
+    } else {
     }
   }
 
