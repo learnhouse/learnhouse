@@ -69,7 +69,7 @@ function SignUpClient(props: SignUpClientProps) {
                     props.org.org_uuid,
                     props.org?.logo_image
                   )}`}
-                  alt="Learnhouse"
+                  alt="LearnHouse"
                   style={{ width: 'auto', height: 70 }}
                   className="rounded-xl shadow-xl inset-0 ring-1 ring-inset ring-black/10 bg-white"
                 />
@@ -161,7 +161,7 @@ const NoTokenScreen = (props: any) => {
         "Invite code is valid, you'll be redirected to the signup page in a few seconds"
       )
       setTimeout(() => {
-        router.push(`/signup?inviteCode=${inviteCode}`)
+        router.push(`/signup?inviteCode=${inviteCode}&orgslug=${org.slug}`)
       }, 2000)
     } else {
       toast.error('Invite code is invalid')

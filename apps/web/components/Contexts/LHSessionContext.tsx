@@ -9,7 +9,6 @@ function LHSessionProvider({ children }: { children: React.ReactNode }) {
     const session = useSession();
 
     useEffect(() => {
-        console.log('useLHSession', session);
     }, [])
 
 
@@ -20,7 +19,6 @@ function LHSessionProvider({ children }: { children: React.ReactNode }) {
     else if (session) {
         return (
             <SessionContext.Provider value={session}>
-                {console.log('rendered')}
                 {children}
             </SessionContext.Provider>
         )
