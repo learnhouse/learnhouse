@@ -128,7 +128,7 @@ const LoggedInJoinScreen = (props: any) => {
         res.data
       )
       setTimeout(() => {
-        router.push(`/`)
+        router.push(getUriWithOrg(org.slug,'/'))
       }, 2000)
       setIsSubmitting(false)
     } else {
