@@ -85,7 +85,6 @@ async def api_create_user_with_orgid(
     """
     Create User with Org ID
     """
-    print(await get_org_join_mechanism(request, org_id, current_user, db_session))
 
     # TODO(fix) : This is temporary, logic should be moved to service
     if (

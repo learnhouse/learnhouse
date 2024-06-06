@@ -1,5 +1,5 @@
 import { getAPIUrl } from '@services/config/config'
-import { RequestBody, RequestBodyWithAuthHeader } from '@services/utils/ts/requests'
+import { RequestBodyWithAuthHeader } from '@services/utils/ts/requests'
 
 export async function submitQuizBlock(activity_id: string, data: any,access_token:string) {
   const result: any = await fetch(
