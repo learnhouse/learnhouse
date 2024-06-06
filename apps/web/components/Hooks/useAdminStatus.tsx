@@ -20,10 +20,12 @@ function useAdminStatus() {
             const isAdminVar = userRoles.some((role: Role) => {
                 return (
                     role.org.id === org.id &&
-                    (role.role.id === 1 ||
+                    (
+                        role.role.id === 1 ||
                         role.role.id === 2 ||
                         role.role.role_uuid === 'role_global_admin' ||
-                        role.role.role_uuid === 'role_global_maintainer')
+                        role.role.role_uuid === 'role_global_maintainer'
+                    )
                 );
             });
             setIsAdmin(isAdminVar);
@@ -38,3 +40,4 @@ function useAdminStatus() {
 }
 
 export default useAdminStatus;
+

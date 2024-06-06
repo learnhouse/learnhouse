@@ -13,7 +13,7 @@ import {
 export async function createNewOrganization(body: any, access_token: string) {
   const result = await fetch(
     `${getAPIUrl()}orgs/`,
-    RequestBodyWithAuthHeader('POST', body, null,access_token)
+    RequestBodyWithAuthHeader('POST', body, null, access_token)
   )
   const res = await errorHandling(result)
   return res
@@ -109,6 +109,23 @@ export async function removeUserFromOrg(
   const result = await fetch(
     `${getAPIUrl()}orgs/${org_id}/users/${user_id}`,
     RequestBodyWithAuthHeader('DELETE', null, null, access_token)
+  )
+  const res = await getResponseMetadata(result)
+  return res
+}
+
+export async function joinOrg(
+  args: {
+    org_id: number
+    user_id: string
+    invite_code?: string
+  },
+  next: any,
+  access_token?: string
+) {
+  const result = await fetch(
+    `${getAPIUrl()}orgs/join`,
+    RequestBodyWithAuthHeader('POST', args, next, access_token)
   )
   const res = await getResponseMetadata(result)
   return res

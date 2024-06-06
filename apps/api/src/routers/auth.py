@@ -4,11 +4,11 @@ from fastapi import Depends, APIRouter, HTTPException, Response, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel, EmailStr
 from sqlmodel import Session
-from src.db.users import AnonymousUser, PublicUser, UserRead
+from src.db.users import AnonymousUser, UserRead
 from src.core.events.database import get_db_session
 from config.config import get_learnhouse_config
 from src.security.auth import AuthJWT, authenticate_user, get_current_user
-from src.services.auth.utils import get_google_user_info, signWithGoogle
+from src.services.auth.utils import signWithGoogle
 
 
 router = APIRouter()

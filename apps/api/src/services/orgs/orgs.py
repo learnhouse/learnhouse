@@ -436,8 +436,7 @@ async def get_orgs_by_user(
 
     orgs = result.all()
 
-    return orgs
-
+    return orgs #type:ignore
 
 # Config related
 async def update_org_signup_mechanism(

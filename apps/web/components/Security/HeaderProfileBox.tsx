@@ -7,11 +7,11 @@ import UserAvatar from '@components/Objects/UserAvatar'
 import useAdminStatus from '@components/Hooks/useAdminStatus'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
-import { getUriWithOrg, getUriWithoutOrg } from '@services/config/config'
+import { getUriWithoutOrg } from '@services/config/config'
 
 export const HeaderProfileBox = () => {
   const session = useLHSession() as any
-  const isUserAdmin = useAdminStatus() as any
+  const isUserAdmin = useAdminStatus() 
   const org = useOrg() as any
 
   useEffect(() => { }
@@ -37,7 +37,7 @@ export const HeaderProfileBox = () => {
           <div className="flex items-center space-x-2">
             <div className='flex items-center space-x-2' >
               <p className='text-sm'>{session.data.user.username}</p>
-              {isUserAdmin && <div className="text-[10px] bg-rose-300 px-2 font-bold rounded-md shadow-inner py-1">ADMIN</div>}
+              {isUserAdmin.isAdmin && <div className="text-[10px] bg-rose-300 px-2 font-bold rounded-md shadow-inner py-1">ADMIN</div>}
             </div>
             <div className="py-4">
               <UserAvatar border="border-4" rounded="rounded-lg" width={30} />
