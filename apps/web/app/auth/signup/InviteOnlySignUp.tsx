@@ -13,6 +13,7 @@ import { AlertTriangle, Check, User } from 'lucide-react'
 import Link from 'next/link'
 import { signUpWithInviteCode } from '@services/auth/auth'
 import { useOrg } from '@components/Contexts/OrgContext'
+import { signIn } from 'next-auth/react'
 
 const validate = (values: any) => {
   const errors: any = {}
@@ -92,7 +93,7 @@ function InviteOnlySignUpComponent(props: InviteOnlySignUpProps) {
     },
   })
 
-  useEffect(() => {}, [org])
+  useEffect(() => { }, [org])
 
   return (
     <div className="login-form m-auto w-72">
@@ -180,6 +181,13 @@ function InviteOnlySignUpComponent(props: InviteOnlySignUpProps) {
           </Form.Submit>
         </div>
       </FormLayout>
+      <div>
+        <div className='flex h-0.5 rounded-2xl bg-slate-100 mt-5 mb-5 mx-10'></div>
+        <button onClick={() => signIn('google')} className="flex justify-center py-3 text-md w-full bg-white text-slate-600 space-x-3 font-semibold text-center p-2 rounded-md shadow hover:cursor-pointer">
+          <img src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg" alt="" />
+          <span>Sign in with Google</span>
+        </button>
+      </div>
     </div>
   )
 }
