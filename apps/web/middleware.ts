@@ -8,7 +8,6 @@ import {
 } from './services/config/config'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import path from 'path'
 
 export const config = {
   matcher: [

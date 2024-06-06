@@ -1,7 +1,7 @@
 'use client'
 import { getAPIUrl, getUriWithoutOrg } from '@services/config/config'
 import { swrFetcher } from '@services/utils/ts/requests'
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import React, { createContext, useContext, useMemo } from 'react'
 import useSWR from 'swr'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import ErrorUI from '@components/StyledElements/Error/Error'

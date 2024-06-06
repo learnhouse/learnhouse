@@ -1,6 +1,6 @@
 'use client'
 import { getUriWithoutOrg } from '@services/config/config'
-import { AlertTriangle, Diamond, Home, PersonStanding, RefreshCcw } from 'lucide-react'
+import { Diamond, Home, PersonStanding } from 'lucide-react'
 import Link from 'next/link'
 import React from 'react'
 

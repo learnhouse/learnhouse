@@ -1,7 +1,5 @@
 import { getAPIUrl } from '@services/config/config'
 import {
-  RequestBody,
-  RequestBodyForm,
   RequestBodyFormWithAuthHeader,
   RequestBodyWithAuthHeader,
 } from '@services/utils/ts/requests'

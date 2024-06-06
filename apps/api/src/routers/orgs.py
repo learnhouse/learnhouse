@@ -8,6 +8,7 @@ from src.services.orgs.invites import (
     get_invite_code,
     get_invite_codes,
 )
+from src.services.orgs.join import JoinOrg, join_org
 from src.services.orgs.users import (
     get_list_of_invited_users,
     get_organization_users,
@@ -97,6 +98,19 @@ async def api_get_org_users(
     Get single Org by ID
     """
     return await get_organization_users(request, org_id, db_session, current_user)
+
+
+@router.post("/join")
+async def api_join_an_org(
+    request: Request,
+    args: JoinOrg,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+):
+    """
+    Get single Org by ID
+    """
+    return await join_org(request, args, current_user, db_session)
 
 
 @router.put("/{org_id}/users/{user_id}/role/{role_uuid}")
