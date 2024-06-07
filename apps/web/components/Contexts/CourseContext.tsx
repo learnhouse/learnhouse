@@ -1,9 +1,9 @@
 'use client'
-import PageLoading from '@components/Objects/Loaders/PageLoading'
 import { getAPIUrl } from '@services/config/config'
 import { swrFetcher } from '@services/utils/ts/requests'
 import React, { createContext, useContext, useEffect, useReducer } from 'react'
 import useSWR from 'swr'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 
 export const CourseContext = createContext(null) as any
 export const CourseDispatchContext = createContext(null) as any
@@ -15,9 +15,11 @@ export function CourseProvider({
   children: React.ReactNode
   courseuuid: string
 }) {
+  const session = useLHSession() as any;
+  const access_token = session?.data?.tokens?.access_token;
   const { data: courseStructureData } = useSWR(
     `${getAPIUrl()}courses/${courseuuid}/meta`,
-    swrFetcher
+    (url) => swrFetcher(url, access_token)
   )
   const [courseStructure, dispatchCourseStructure] = useReducer(courseReducer, {
     courseStructure: courseStructureData ? courseStructureData : {},
@@ -33,9 +35,9 @@ export function CourseProvider({
         payload: courseStructureData,
       })
     }
-  }, [courseStructureData])
+  }, [courseStructureData,session])
 
-  if (!courseStructureData) return <PageLoading></PageLoading>
+  if (!courseStructureData) return 
 
   return (
     <CourseContext.Provider value={courseStructure}>

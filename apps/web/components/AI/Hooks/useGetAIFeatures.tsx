@@ -13,17 +13,14 @@ function useGetAIFeatures(props: UseGetAIFeatures) {
     const config = org?.config?.config?.AIConfig
 
     if (!config) {
-      console.log('AI or Organization config is not defined.')
       return false
     }
 
     if (!config.enabled) {
-      console.log('AI is not enabled for this Organization.')
       return false
     }
 
     if (!config.features[feature]) {
-      console.log(`Feature ${feature} is not enabled for this Organization.`)
       return false
     }
 

@@ -7,6 +7,7 @@ import { deleteCollection } from '@services/courses/collections'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import { revalidateTags } from '@services/utils/ts/requests'
 import { X } from 'lucide-react'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import React from 'react'
@@ -33,7 +34,7 @@ function CollectionThumbnail(props: PropsType) {
                 href={getUriWithOrg(
                   props.orgslug,
                   '/collection/' +
-                    removeCollectionPrefix(props.collection.collection_uuid)
+                  removeCollectionPrefix(props.collection.collection_uuid)
                 )}
               >
                 <div
@@ -54,7 +55,7 @@ function CollectionThumbnail(props: PropsType) {
           href={getUriWithOrg(
             props.orgslug,
             '/collection/' +
-              removeCollectionPrefix(props.collection.collection_uuid)
+            removeCollectionPrefix(props.collection.collection_uuid)
           )}
         >
           <h1 className="font-bold text-md justify-center">
@@ -74,9 +75,10 @@ function CollectionThumbnail(props: PropsType) {
 
 const CollectionAdminEditsArea = (props: any) => {
   const router = useRouter()
+  const session = useLHSession() as any;
 
   const deleteCollectionUI = async (collectionId: number) => {
-    await deleteCollection(collectionId)
+    await deleteCollection(collectionId, session.data?.tokens?.access_token)
     await revalidateTags(['collections'], props.orgslug)
     // reload the page
     router.refresh()

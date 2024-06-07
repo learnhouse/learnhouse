@@ -30,7 +30,6 @@ function CoursesHome(params: CourseProps) {
       <div>
         <div className="pl-10 mr-10 tracking-tighter">
           <BreadCrumbs type="courses" />
-
           <div className="w-100 flex justify-between">
             <div className="pt-3 flex font-bold text-4xl">Courses</div>
             <AuthenticatedClientElement

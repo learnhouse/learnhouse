@@ -10,7 +10,7 @@ importers:
     dependencies:
       '@hocuspocus/server':
         specifier: ^2.11.3
-        version: 2.11.3(y-protocols@1.0.6)(yjs@13.6.14)
+        version: 2.11.3(y-protocols@1.0.6(yjs@13.6.14))(yjs@13.6.14)
       bun:
         specifier: ^1.0.36
         version: 1.1.1
@@ -80,7 +80,6 @@ packages:
 
   bun@1.1.1:
     resolution: {integrity: sha512-gV90TkJgHvI50X9BoKQ3zVpPEY6YP0vqOww2uZmsOyckZSRlcFYWhXZwFj6PV8KCFINYs8VZ65m59U2RuFYfWw==}
-    cpu: [arm64, x64]
     os: [darwin, linux, win32]
     hasBin: true
 
@@ -133,7 +132,7 @@ snapshots:
     dependencies:
       lib0: 0.2.93
 
-  '@hocuspocus/server@2.11.3(y-protocols@1.0.6)(yjs@13.6.14)':
+  '@hocuspocus/server@2.11.3(y-protocols@1.0.6(yjs@13.6.14))(yjs@13.6.14)':
     dependencies:
       '@hocuspocus/common': 2.11.3
       async-lock: 1.4.1

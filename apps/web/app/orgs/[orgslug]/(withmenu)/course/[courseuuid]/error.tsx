@@ -1,6 +1,5 @@
 'use client' // Error components must be Client Components
 
-import ErrorUI from '@components/StyledElements/Error/Error'
 import { useEffect } from 'react'
 
 export default function Error({
@@ -17,7 +16,7 @@ export default function Error({
 
   return (
     <div>
-      <ErrorUI></ErrorUI>
+      
     </div>
   )
 }

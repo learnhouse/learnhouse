@@ -1,11 +1,14 @@
 from datetime import timedelta
+from typing import Literal, Optional
 from fastapi import Depends, APIRouter, HTTPException, Response, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
+from pydantic import BaseModel, EmailStr
 from sqlmodel import Session
-from src.db.users import UserRead
+from src.db.users import AnonymousUser, UserRead
 from src.core.events.database import get_db_session
 from config.config import get_learnhouse_config
-from src.security.auth import AuthJWT, authenticate_user
+from src.security.auth import AuthJWT, authenticate_user, get_current_user
+from src.services.auth.utils import signWithGoogle
 
 
 router = APIRouter()
@@ -54,6 +57,58 @@ async def login(
 
     access_token = Authorize.create_access_token(subject=form_data.username)
     refresh_token = Authorize.create_refresh_token(subject=form_data.username)
+    Authorize.set_refresh_cookies(refresh_token)
+
+    # set cookies using fastapi
+    response.set_cookie(
+        key="access_token_cookie",
+        value=access_token,
+        httponly=False,
+        domain=get_learnhouse_config().hosting_config.cookie_config.domain,
+        expires=int(timedelta(hours=8).total_seconds()),
+    )
+
+    user = UserRead.model_validate(user)
+
+    result = {
+        "user": user,
+        "tokens": {"access_token": access_token, "refresh_token": refresh_token},
+    }
+    return result
+
+
+class ThirdPartyLogin(BaseModel):
+    email: EmailStr
+    provider: Literal["google"]
+    access_token: str
+
+
+@router.post("/oauth")
+async def third_party_login(
+    request: Request,
+    response: Response,
+    body: ThirdPartyLogin,
+    org_id: Optional[int] = None,
+    current_user: AnonymousUser = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+    Authorize: AuthJWT = Depends(),
+):
+    # Google
+    if body.provider == "google":
+
+        user = await signWithGoogle(
+            request, body.access_token, body.email, org_id, current_user, db_session
+        )
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect Email or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    access_token = Authorize.create_access_token(subject=user.email)
+    refresh_token = Authorize.create_refresh_token(subject=user.email)
     Authorize.set_refresh_cookies(refresh_token)
 
     # set cookies using fastapi

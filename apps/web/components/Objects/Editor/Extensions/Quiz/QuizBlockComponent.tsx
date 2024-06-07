@@ -86,10 +86,8 @@ function QuizBlockComponent(props: any) {
 
     if (allCorrect) {
       setSubmissionMessage('All answers are correct!')
-      console.log('All answers are correct!')
     } else {
       setSubmissionMessage('Some answers are incorrect!')
-      console.log('Some answers are incorrect!')
     }
   }
 
