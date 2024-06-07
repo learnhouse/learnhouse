@@ -1,8 +1,6 @@
-import SessionProvider from '@components/Contexts/SessionContext'
-import LeftMenu from '@components/Dashboard/UI/LeftMenu'
-import AdminAuthorization from '@components/Security/AdminAuthorization'
 import { Metadata } from 'next'
 import React from 'react'
+import ClientAdminLayout from './ClientAdminLayout'
 
 export const metadata: Metadata = {
   title: 'LearnHouse Dashboard',
@@ -17,14 +15,10 @@ function DashboardLayout({
 }) {
   return (
     <>
-      <SessionProvider>
-        <AdminAuthorization authorizationMode="page">
-          <div className="flex">
-            <LeftMenu />
-            <div className="flex w-full">{children}</div>
-          </div>
-        </AdminAuthorization>
-      </SessionProvider>
+      <ClientAdminLayout
+        params={params}>
+        {children}
+      </ClientAdminLayout>
     </>
   )
 }

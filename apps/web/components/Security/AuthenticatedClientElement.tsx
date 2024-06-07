@@ -1,6 +1,6 @@
 'use client'
 import React from 'react'
-import { useSession } from '@components/Contexts/SessionContext'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 
 interface AuthenticatedClientElementProps {
@@ -8,11 +8,11 @@ interface AuthenticatedClientElementProps {
   checkMethod: 'authentication' | 'roles'
   orgId?: string
   ressourceType?:
-    | 'collections'
-    | 'courses'
-    | 'activities'
-    | 'users'
-    | 'organizations'
+  | 'collections'
+  | 'courses'
+  | 'activities'
+  | 'users'
+  | 'organizations'
   action?: 'create' | 'update' | 'delete' | 'read'
 }
 
@@ -20,7 +20,7 @@ export const AuthenticatedClientElement = (
   props: AuthenticatedClientElementProps
 ) => {
   const [isAllowed, setIsAllowed] = React.useState(false)
-  const session = useSession() as any
+  const session = useLHSession() as any
   const org = useOrg() as any
 
   function isUserAllowed(
@@ -49,19 +49,19 @@ export const AuthenticatedClientElement = (
   }
 
   function check() {
-    if (session.isAuthenticated === false) {
+    if (session.status == 'unauthenticated') {
       setIsAllowed(false)
       return
     } else {
       if (props.checkMethod === 'authentication') {
-        setIsAllowed(session.isAuthenticated)
-      } else if (props.checkMethod === 'roles') {
+        setIsAllowed(session.status == 'authenticated')
+      } else if (props.checkMethod === 'roles' ) {
         return setIsAllowed(
           isUserAllowed(
-            session.roles,
+            session?.data?.roles,
             props.action!,
             props.ressourceType!,
-            org.org_uuid
+            org?.org_uuid
           )
         )
       }
@@ -69,12 +69,12 @@ export const AuthenticatedClientElement = (
   }
 
   React.useEffect(() => {
-    if (session.isLoading) {
+    if (session.status == 'loading') {
       return
     }
 
     check()
-  }, [session, org])
+  }, [session.data, org])
 
   return <>{isAllowed && props.children}</>
 }

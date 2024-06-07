@@ -5,7 +5,7 @@ import { updateActivity } from '@services/courses/activities'
 import { toast } from 'react-hot-toast'
 import Toast from '@components/StyledElements/Toast/Toast'
 import { OrgProvider } from '@components/Contexts/OrgContext'
-import { useSession } from '@components/Contexts/SessionContext'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 
 // Collaboration
 import { HocuspocusProvider } from '@hocuspocus/provider'
@@ -24,7 +24,8 @@ interface EditorWrapperProps {
 }
 
 function EditorWrapper(props: EditorWrapperProps): JSX.Element {
-  const session = useSession() as any
+  const session = useLHSession() as any
+    const access_token = session.data.tokens.access_token;
   // Define provider in the state
   const [provider, setProvider] = React.useState<HocuspocusProvider | null>(null);
   const [thisPageColor, setThisPageColor] = useState(randomColor({ luminosity: 'light' }) as string)
@@ -57,7 +58,7 @@ function EditorWrapper(props: EditorWrapperProps): JSX.Element {
   document.addEventListener("mousemove", (event) => {
     // Share any information you like
     provider?.setAwarenessField("userMouseMovement", {
-      user: session.user,
+      user: session.data.user,
       mouseX: event.clientX,
       mouseY: event.clientY,
       color: thisPageColor,
@@ -72,14 +73,14 @@ function EditorWrapper(props: EditorWrapperProps): JSX.Element {
 
 
     provider?.setAwarenessField("savings_states", {
-      [session.user.user_uuid]: {
+      [session.data.user.user_uuid]: {
         status: 'action_save',
         timestamp: new Date().toISOString(),
-        user: session.user
+        user: session.data.user
       }
     });
 
-    toast.promise(updateActivity(activity, activity.activity_uuid), {
+    toast.promise(updateActivity(activity, activity.activity_uuid,access_token), {
       loading: 'Saving...',
       success: <b>Activity saved!</b>,
       error: <b>Could not save.</b>,

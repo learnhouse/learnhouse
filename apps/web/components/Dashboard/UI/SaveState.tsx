@@ -11,9 +11,11 @@ import { useRouter } from 'next/navigation'
 import React, { useEffect } from 'react'
 import { mutate } from 'swr'
 import { updateCourse } from '@services/courses/courses'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 
 function SaveState(props: { orgslug: string }) {
   const course = useCourse() as any
+  const session = useLHSession() as any;
   const router = useRouter()
   const saved = course ? course.isSaved : true
   const dispatchCourse = useCourseDispatch() as any
@@ -37,7 +39,8 @@ function SaveState(props: { orgslug: string }) {
     mutate(`${getAPIUrl()}courses/${course.courseStructure.course_uuid}/meta`)
     await updateCourseOrderStructure(
       course.courseStructure.course_uuid,
-      course.courseOrder
+      course.courseOrder,
+      session.data?.tokens?.access_token
     )
     await revalidateTags(['courses'], props.orgslug)
     router.refresh()
@@ -49,7 +52,8 @@ function SaveState(props: { orgslug: string }) {
     mutate(`${getAPIUrl()}courses/${course.courseStructure.course_uuid}/meta`)
     await updateCourse(
       course.courseStructure.course_uuid,
-      course.courseStructure
+      course.courseStructure,
+      session.data?.tokens?.access_token
     )
     await revalidateTags(['courses'], props.orgslug)
     router.refresh()

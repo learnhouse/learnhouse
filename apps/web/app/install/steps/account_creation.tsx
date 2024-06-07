@@ -10,6 +10,7 @@ import { getAPIUrl } from '@services/config/config'
 import { createNewUserInstall, updateInstall } from '@services/install/install'
 import { swrFetcher } from '@services/utils/ts/requests'
 import { useFormik } from 'formik'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useRouter } from 'next/navigation'
 import React from 'react'
 import { BarLoader } from 'react-spinners'
@@ -47,11 +48,13 @@ const validate = (values: any) => {
 
 function AccountCreation() {
   const [isSubmitting, setIsSubmitting] = React.useState(false)
+  const session = useLHSession() as any;
+  const access_token = session?.data?.tokens?.access_token;
   const {
     data: install,
     error: error,
     isLoading,
-  } = useSWR(`${getAPIUrl()}install/latest`, swrFetcher)
+  } = useSWR(`${getAPIUrl()}install/latest`, (url) => swrFetcher(url, access_token))
   const router = useRouter()
   const formik = useFormik({
     initialValues: {

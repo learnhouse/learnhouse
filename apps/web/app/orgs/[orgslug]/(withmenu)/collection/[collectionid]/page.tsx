@@ -1,11 +1,11 @@
 import GeneralWrapperStyled from '@components/StyledElements/Wrappers/GeneralWrapper'
-import { getAccessTokenFromRefreshTokenCookie } from '@services/auth/auth'
 import { getUriWithOrg } from '@services/config/config'
-import { getCollectionByIdWithAuthHeader } from '@services/courses/collections'
+import { getCollectionById } from '@services/courses/collections'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
+import { nextAuthOptions } from 'app/auth/options'
 import { Metadata } from 'next'
-import { cookies } from 'next/headers'
+import { getServerSession } from 'next-auth'
 import Link from 'next/link'
 
 type MetadataProps = {
@@ -16,15 +16,15 @@ type MetadataProps = {
 export async function generateMetadata({
   params,
 }: MetadataProps): Promise<Metadata> {
-  const cookieStore = cookies()
-  const access_token = await getAccessTokenFromRefreshTokenCookie(cookieStore)
+  const session = await getServerSession(nextAuthOptions)
+  const access_token = session?.tokens?.access_token
 
   // Get Org context information
   const org = await getOrganizationContextInfo(params.orgslug, {
     revalidate: 1800,
     tags: ['organizations'],
   })
-  const col = await getCollectionByIdWithAuthHeader(
+  const col = await getCollectionById(
     params.collectionid,
     access_token ? access_token : null,
     { revalidate: 0, tags: ['collections'] }
@@ -53,14 +53,14 @@ export async function generateMetadata({
 }
 
 const CollectionPage = async (params: any) => {
-  const cookieStore = cookies()
-  const access_token = await getAccessTokenFromRefreshTokenCookie(cookieStore)
+  const session = await getServerSession(nextAuthOptions)
+  const access_token = session?.tokens?.access_token
   const org = await getOrganizationContextInfo(params.params.orgslug, {
     revalidate: 1800,
     tags: ['organizations'],
   })
   const orgslug = params.params.orgslug
-  const col = await getCollectionByIdWithAuthHeader(
+  const col = await getCollectionById(
     params.params.collectionid,
     access_token ? access_token : null,
     { revalidate: 0, tags: ['collections'] }

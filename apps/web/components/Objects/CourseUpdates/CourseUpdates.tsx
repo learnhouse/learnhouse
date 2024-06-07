@@ -20,12 +20,15 @@ import toast from 'react-hot-toast'
 import ConfirmationModal from '@components/StyledElements/ConfirmationModal/ConfirmationModal'
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 
 dayjs.extend(relativeTime);
 
 function CourseUpdates() {
   const course = useCourse() as any;
-  const { data: updates } = useSWR(`${getAPIUrl()}courses/${course?.courseStructure.course_uuid}/updates`, swrFetcher)
+  const session = useLHSession() as any;
+  const access_token = session?.data?.tokens?.access_token;
+  const { data: updates } = useSWR(`${getAPIUrl()}courses/${course?.courseStructure.course_uuid}/updates`, (url) => swrFetcher(url, access_token))
   const [isModelOpen, setIsModelOpen] = React.useState(false)
 
   function handleModelOpen() {
@@ -35,7 +38,6 @@ function CourseUpdates() {
   // if user clicks outside the model, close the model
   React.useLayoutEffect(() => {
     function handleClickOutside(event: any) {
-      console.log(event.target.id)
       if (event.target.closest('.bg-white') || event.target.id === 'delete-update-button') return;
       setIsModelOpen(false);
     }
@@ -71,7 +73,7 @@ function CourseUpdates() {
 
 const UpdatesSection = () => {
   const [selectedView, setSelectedView] = React.useState('list')
-  const isAdmin = useAdminStatus() as boolean;
+  const adminStatus = useAdminStatus() ;
   return (
     <div className='bg-white/95 backdrop-blur-md nice-shadow rounded-lg w-[700px] overflow-hidden'>
       <div className='bg-gray-50/70 flex justify-between outline outline-1 rounded-lg outline-neutral-200/40'>
@@ -80,7 +82,7 @@ const UpdatesSection = () => {
           <span>Updates</span>
 
         </div>
-        {isAdmin && <div
+        {adminStatus.isAdmin && <div
           onClick={() => setSelectedView('new')}
           className='py-2 px-4 space-x-2 items-center flex cursor-pointer text-xs font-medium hover:bg-gray-200 bg-gray-100 outline outline-1  outline-neutral-200/40'>
           <PencilLine size={14} />
@@ -98,6 +100,7 @@ const UpdatesSection = () => {
 const NewUpdateForm = ({ setSelectedView }: any) => {
   const org = useOrg() as any;
   const course = useCourse() as any;
+  const session = useLHSession() as any;
 
   const validate = (values: any) => {
     const errors: any = {}
@@ -124,7 +127,7 @@ const NewUpdateForm = ({ setSelectedView }: any) => {
         course_uuid: course.courseStructure.course_uuid,
         org_id: org.id
       }
-      const res = await createCourseUpdate(body)
+      const res = await createCourseUpdate(body, session.data?.tokens?.access_token)
       if (res.status === 200) {
         toast.success('Update added successfully')
         setSelectedView('list')
@@ -192,23 +195,25 @@ const NewUpdateForm = ({ setSelectedView }: any) => {
 
 const UpdatesListView = () => {
   const course = useCourse() as any;
-  const isAdmin = useAdminStatus() as boolean;
-  const { data: updates } = useSWR(`${getAPIUrl()}courses/${course?.courseStructure.course_uuid}/updates`, swrFetcher)
+  const adminStatus = useAdminStatus() ;
+  const session = useLHSession() as any;
+  const access_token = session?.data?.tokens?.access_token;
+  const { data: updates } = useSWR(`${getAPIUrl()}courses/${course?.courseStructure?.course_uuid}/updates`, (url) => swrFetcher(url, access_token))
 
   return (
     <div className='px-5 bg-white overflow-y-auto' style={{ maxHeight: '400px' }}>
-      {updates && updates.map((update: any) => (
+      {updates && !adminStatus.loading && updates.map((update: any) => (
         <div key={update.id} className='py-2 border-b border-neutral-200 antialiased'>
           <div className='font-bold text-gray-500 flex space-x-2 items-center justify-between '>
             <div className='flex space-x-2 items-center'>
               <span> {update.title}</span>
-              <span 
-              title={"Created at " + dayjs(update.creation_date).format('MMMM D, YYYY')}
-              className='text-xs font-semibold text-gray-300'>
-              {dayjs(update.creation_date).fromNow()}
+              <span
+                title={"Created at " + dayjs(update.creation_date).format('MMMM D, YYYY')}
+                className='text-xs font-semibold text-gray-300'>
+                {dayjs(update.creation_date).fromNow()}
               </span>
             </div>
-            {isAdmin && <DeleteUpdateButton update={update} />}</div>
+            {adminStatus.isAdmin &&  !adminStatus.loading && <DeleteUpdateButton update={update} />}</div>
           <div className='text-gray-600'>{update.content}</div>
         </div>
       ))}
@@ -223,11 +228,12 @@ const UpdatesListView = () => {
 }
 
 const DeleteUpdateButton = ({ update }: any) => {
+  const session = useLHSession() as any;
   const course = useCourse() as any;
   const org = useOrg() as any;
 
   const handleDelete = async () => {
-    const res = await deleteCourseUpdate(course.courseStructure.course_uuid, update.courseupdate_uuid)
+    const res = await deleteCourseUpdate(course.courseStructure.course_uuid, update.courseupdate_uuid, session.data?.tokens?.access_token)
     if (res.status === 200) {
       toast.success('Update deleted successfully')
       mutate(`${getAPIUrl()}courses/${course?.courseStructure.course_uuid}/updates`)

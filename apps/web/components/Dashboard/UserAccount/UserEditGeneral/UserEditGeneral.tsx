@@ -1,7 +1,8 @@
+'use client';
 import { updateProfile } from '@services/settings/profile'
 import React, { useEffect } from 'react'
 import { Formik, Form, Field } from 'formik'
-import { useSession } from '@components/Contexts/SessionContext'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 import {
   ArrowBigUpDash,
   Check,
@@ -13,7 +14,8 @@ import UserAvatar from '@components/Objects/UserAvatar'
 import { updateUserAvatar } from '@services/users/users'
 
 function UserEditGeneral() {
-  const session = useSession() as any
+  const session = useLHSession() as any;
+  const access_token = session.data.tokens.access_token;
   const [localAvatar, setLocalAvatar] = React.useState(null) as any
   const [isLoading, setIsLoading] = React.useState(false) as any
   const [error, setError] = React.useState() as any
@@ -23,7 +25,7 @@ function UserEditGeneral() {
     const file = event.target.files[0]
     setLocalAvatar(file)
     setIsLoading(true)
-    const res = await updateUserAvatar(session.user.user_uuid, file)
+    const res = await updateUserAvatar(session.data.user_uuid, file, access_token)
     // wait for 1 second to show loading animation
     await new Promise((r) => setTimeout(r, 1500))
     if (res.success === false) {
@@ -35,24 +37,24 @@ function UserEditGeneral() {
     }
   }
 
-  useEffect(() => {}, [session, session.user])
+  useEffect(() => { }, [session, session.data])
 
   return (
     <div className="ml-10 mr-10 mx-auto bg-white rounded-xl shadow-sm px-6 py-5">
-      {session.user && (
+      {session.data.user && (
         <Formik
           enableReinitialize
           initialValues={{
-            username: session.user.username,
-            first_name: session.user.first_name,
-            last_name: session.user.last_name,
-            email: session.user.email,
-            bio: session.user.bio,
+            username: session.data.user.username,
+            first_name: session.data.user.first_name,
+            last_name: session.data.user.last_name,
+            email: session.data.user.email,
+            bio: session.data.user.bio,
           }}
           onSubmit={(values, { setSubmitting }) => {
             setTimeout(() => {
               setSubmitting(false)
-              updateProfile(values, session.user.id)
+              updateProfile(values, session.data.user.id, access_token)
             }, 400)
           }}
         >

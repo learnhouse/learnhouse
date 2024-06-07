@@ -1,7 +1,7 @@
 import { getAPIUrl } from '@services/config/config'
 import {
   RequestBody,
-  RequestBodyForm,
+  RequestBodyFormWithAuthHeader,
   errorHandling,
   getResponseMetadata,
 } from '@services/utils/ts/requests'
@@ -15,12 +15,16 @@ export async function getUser(user_id: string) {
   return res
 }
 
-export async function updateUserAvatar(user_uuid: any, avatar_file: any) {
+export async function updateUserAvatar(
+  user_uuid: any,
+  avatar_file: any,
+  access_token: any
+) {
   const formData = new FormData()
   formData.append('avatar_file', avatar_file)
   const result: any = await fetch(
     `${getAPIUrl()}users/update_avatar/${user_uuid}`,
-    RequestBodyForm('PUT', formData, null)
+    RequestBodyFormWithAuthHeader('PUT', formData, null, access_token)
   )
   const res = await getResponseMetadata(result)
   return res

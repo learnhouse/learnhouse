@@ -7,22 +7,6 @@ function VideoActivity({ activity, course }: { activity: any; course: any }) {
   const org = useOrg() as any
   const [videoId, setVideoId] = React.useState('')
 
-  function getYouTubeEmbed(url: any) {
-    // Extract video ID from the YouTube URL
-    var videoId = url.match(
-      /(?:\?v=|\/embed\/|\/\d\/|\/vi\/|\/v\/|https?:\/\/(?:www\.)?youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^#\&\?\/]+)/
-    )[1]
-
-    // Create the embed object
-    var embedObject = {
-      videoId: videoId,
-      width: 560,
-      height: 315,
-    }
-
-    return embedObject
-  }
-
   React.useEffect(() => {
     if (activity && activity.content && activity.content.uri) {
       var getYouTubeID = require('get-youtube-id');

@@ -15,9 +15,11 @@ import React, { useState } from 'react'
 import { BarLoader } from 'react-spinners'
 import { revalidateTags } from '@services/utils/ts/requests'
 import { useRouter } from 'next/navigation'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 
 function CreateCourseModal({ closeModal, orgslug }: any) {
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const session = useLHSession() as any;
   const [name, setName] = React.useState('')
   const [description, setDescription] = React.useState('')
   const [learnings, setLearnings] = React.useState('')
@@ -53,7 +55,6 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
 
   const handleVisibilityChange = (event: React.ChangeEvent<any>) => {
     setVisibility(event.target.value)
-    console.log(visibility)
   }
 
   const handleTagsChange = (event: React.ChangeEvent<any>) => {
@@ -71,7 +72,8 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
     let status = await createNewCourse(
       orgId,
       { name, description, tags, visibility },
-      thumbnail
+      thumbnail,
+      session.data?.tokens?.access_token
     )
     await revalidateTags(['courses'], orgslug)
     setIsSubmitting(false)
@@ -80,9 +82,6 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
       closeModal()
       router.refresh()
       await revalidateTags(['courses'], orgslug)
-
-      // refresh page (FIX for Next.js BUG)
-      // window.location.reload();
     } else {
       alert('Error creating course, please see console logs')
     }

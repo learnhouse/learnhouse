@@ -7,7 +7,7 @@ import Link from 'next/link'
 import { CourseOverviewTop } from '@components/Dashboard/UI/CourseOverviewTop'
 import { motion } from 'framer-motion'
 import EditCourseGeneral from '@components/Dashboard/Course/EditCourseGeneral/EditCourseGeneral'
-import { GalleryVerticalEnd, Info, Lock, UserRoundCog } from 'lucide-react'
+import { GalleryVerticalEnd, Info, UserRoundCog } from 'lucide-react'
 import EditCourseAccess from '@components/Dashboard/Course/EditCourseAccess/EditCourseAccess'
 
 export type CourseOverviewParams = {
