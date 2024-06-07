@@ -41,11 +41,9 @@ import html from 'highlight.js/lib/languages/xml'
 import python from 'highlight.js/lib/languages/python'
 import java from 'highlight.js/lib/languages/java'
 import { CourseProvider } from '@components/Contexts/CourseContext'
-import { useSession } from '@components/Contexts/SessionContext'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 import AIEditorToolkit from './AI/AIEditorToolkit'
 import useGetAIFeatures from '@components/AI/Hooks/useGetAIFeatures'
-import UserAvatar from '../UserAvatar'
-import randomColor from 'randomcolor'
 import Collaboration from '@tiptap/extension-collaboration'
 import CollaborationCursor from '@tiptap/extension-collaboration-cursor'
 import ActiveAvatars from './ActiveAvatars'
@@ -65,7 +63,7 @@ interface Editor {
 }
 
 function Editor(props: Editor) {
-  const session = useSession() as any
+  const session = useLHSession() as any
   const dispatchAIEditor = useAIEditorDispatch() as any
   const aiEditorState = useAIEditor() as AIEditorStateTypes
   const is_ai_feature_enabled = useGetAIFeatures({ feature: 'editor' })
@@ -145,7 +143,7 @@ function Editor(props: Editor) {
         CollaborationCursor.configure({
           provider: props.hocuspocusProvider,
           user: {
-            name: props.session.user.first_name + ' ' + props.session.user.last_name,
+            name: props.session.data.user.first_name + ' ' + props.session.data.user.last_name,
             color: props.userRandomColor,
           },
         }),

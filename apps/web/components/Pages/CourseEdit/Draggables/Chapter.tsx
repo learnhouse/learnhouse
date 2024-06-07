@@ -9,6 +9,7 @@ import { updateChapter } from '@services/courses/chapters'
 import { mutate } from 'swr'
 import { getAPIUrl } from '@services/config/config'
 import { revalidateTags } from '@services/utils/ts/requests'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 
 interface ModifiedChapterInterface {
   chapterId: string
@@ -17,6 +18,7 @@ interface ModifiedChapterInterface {
 
 function Chapter(props: any) {
   const router = useRouter()
+  const session = useLHSession() as any;
   const [modifiedChapter, setModifiedChapter] = React.useState<
     ModifiedChapterInterface | undefined
   >(undefined)
@@ -30,7 +32,7 @@ function Chapter(props: any) {
       let modifiedChapterCopy = {
         name: modifiedChapter.chapterName,
       }
-      await updateChapter(chapterId, modifiedChapterCopy)
+      await updateChapter(chapterId, modifiedChapterCopy, session.data?.tokens?.access_token)
       await mutate(`${getAPIUrl()}chapters/course/${props.course_uuid}/meta`)
       await revalidateTags(['courses'], props.orgslug)
       router.refresh()

@@ -1,22 +1,21 @@
 'use client'
 import { useOrg } from '@components/Contexts/OrgContext'
-import { useSession } from '@components/Contexts/SessionContext'
+import { signOut } from 'next-auth/react'
 import ToolTip from '@components/StyledElements/Tooltip/Tooltip'
 import LearnHouseDashboardLogo from '@public/dashLogo.png'
-import { logout } from '@services/auth/auth'
 import { BookCopy, Home, LogOut, School, Settings, Users } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import React, { useEffect } from 'react'
 import UserAvatar from '../../Objects/UserAvatar'
 import AdminAuthorization from '@components/Security/AdminAuthorization'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { getUriWithOrg, getUriWithoutOrg } from '@services/config/config'
 
 function LeftMenu() {
   const org = useOrg() as any
-  const session = useSession() as any
+  const session = useLHSession() as any
   const [loading, setLoading] = React.useState(true)
-  const route = useRouter()
 
   function waitForEverythingToLoad() {
     if (org && session) {
@@ -26,9 +25,9 @@ function LeftMenu() {
   }
 
   async function logOutUI() {
-    const res = await logout()
+    const res = await signOut({ redirect: true, callbackUrl: getUriWithoutOrg('/login?orgslug=' + org.slug) })
     if (res) {
-      route.push('/login')
+      getUriWithOrg(org.slug, '/')
     }
   }
 
@@ -123,7 +122,7 @@ function LeftMenu() {
         <div className="flex flex-col mx-auto pb-7 space-y-2">
           <div className="flex items-center flex-col space-y-2">
             <ToolTip
-              content={'@' + session.user.username}
+              content={'@' + session.data.user.username}
               slateBlack
               sideOffset={8}
               side="right"
@@ -134,7 +133,7 @@ function LeftMenu() {
             </ToolTip>
             <div className="flex items-center flex-col space-y-1">
               <ToolTip
-                content={session.user.username + "'s Settings"}
+                content={session.data.user.username + "'s Settings"}
                 slateBlack
                 sideOffset={8}
                 side="right"

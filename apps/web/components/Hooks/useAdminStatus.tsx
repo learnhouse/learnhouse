@@ -1,40 +1,43 @@
-import { useOrg } from '@components/Contexts/OrgContext'
-import { useSession } from '@components/Contexts/SessionContext'
-import { useEffect } from 'react'
+import { useOrg } from '@components/Contexts/OrgContext';
+import { useLHSession } from '@components/Contexts/LHSessionContext';
+import { useEffect, useState, useMemo } from 'react';
 
-function useAdminStatus() {
-    const session = useSession() as any
-    const org = useOrg() as any
-
-    // If session is not loaded, redirect to login
- 
-    useEffect(() => {
-        if (session.isLoading) {
-            return
-        }
-        
-    }
-    , [session])
-
-    const isUserAdmin = () => {
-        if (session.isAuthenticated) {
-            const isAdmin = session.roles.some((role: any) => {
-                return (
-                    role.org.id === org.id &&
-                    (role.role.id === 1 ||
-                        role.role.id === 2 ||
-                        role.role.role_uuid === 'role_global_admin' ||
-                        role.role.role_uuid === 'role_global_maintainer')
-                )
-            })
-            return isAdmin
-        }
-        return false
-    }
-  
-    // Return the user admin status
-    return isUserAdmin()
-
+interface Role {
+    org: { id: number };
+    role: { id: number; role_uuid: string };
 }
 
-export default useAdminStatus
+function useAdminStatus() {
+    const session = useLHSession() as any;
+    const org = useOrg() as any;
+    const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+    const [loading, setLoading] = useState<boolean>(true);
+
+    const userRoles = useMemo(() => session?.data?.roles || [], [session?.data?.roles]);
+
+    useEffect(() => {
+        if (session.status === 'authenticated' && org?.id) {
+            const isAdminVar = userRoles.some((role: Role) => {
+                return (
+                    role.org.id === org.id &&
+                    (
+                        role.role.id === 1 ||
+                        role.role.id === 2 ||
+                        role.role.role_uuid === 'role_global_admin' ||
+                        role.role.role_uuid === 'role_global_maintainer'
+                    )
+                );
+            });
+            setIsAdmin(isAdminVar);
+            setLoading(false); // Set loading to false once the status is determined
+        } else {
+            setIsAdmin(false);
+            setLoading(false); // Set loading to false if not authenticated or org not found
+        }
+    }, [session.status, userRoles, org.id]);
+
+    return { isAdmin, loading };
+}
+
+export default useAdminStatus;
+

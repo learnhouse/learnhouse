@@ -1,4 +1,4 @@
-import { RequestBody, errorHandling } from '@services/utils/ts/requests'
+import { RequestBodyWithAuthHeader, errorHandling } from '@services/utils/ts/requests'
 import { getAPIUrl } from '@services/config/config'
 
 /*
@@ -6,19 +6,19 @@ import { getAPIUrl } from '@services/config/config'
  GET requests are called from the frontend using SWR (https://swr.vercel.app/)
 */
 
-export async function startCourse(course_uuid: string, org_slug: string) {
+export async function startCourse(course_uuid: string, org_slug: string,access_token:any) {
   const result: any = await fetch(
     `${getAPIUrl()}trail/add_course/${course_uuid}`,
-    RequestBody('POST', null, null)
+    RequestBodyWithAuthHeader('POST', null, null,access_token)
   )
   const res = await errorHandling(result)
   return res
 }
 
-export async function removeCourse(course_uuid: string, org_slug: string) {
+export async function removeCourse(course_uuid: string, org_slug: string,access_token:any) {
   const result: any = await fetch(
     `${getAPIUrl()}trail/remove_course/${course_uuid}`,
-    RequestBody('DELETE', null, null)
+    RequestBodyWithAuthHeader('DELETE', null, null,access_token)
   )
   const res = await errorHandling(result)
   return res
@@ -27,11 +27,11 @@ export async function removeCourse(course_uuid: string, org_slug: string) {
 export async function markActivityAsComplete(
   org_slug: string,
   course_uuid: string,
-  activity_uuid: string
+  activity_uuid: string,access_token:any
 ) {
   const result: any = await fetch(
     `${getAPIUrl()}trail/add_activity/${activity_uuid}`,
-    RequestBody('POST', null, null)
+    RequestBodyWithAuthHeader('POST', null, null,access_token)
   )
   const res = await errorHandling(result)
   return res

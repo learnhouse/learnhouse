@@ -1,6 +1,9 @@
 import { OrderPayload } from '@components/Dashboard/Course/EditCourseStructure/EditCourseStructure'
 import { getAPIUrl } from '@services/config/config'
-import { RequestBody, errorHandling } from '@services/utils/ts/requests'
+import {
+  RequestBodyWithAuthHeader,
+  errorHandling,
+} from '@services/utils/ts/requests'
 
 /*
  This file includes only POST, PUT, DELETE requests
@@ -8,28 +11,40 @@ import { RequestBody, errorHandling } from '@services/utils/ts/requests'
 */
 
 //TODO : depreciate this function
-export async function getCourseChaptersMetadata(course_uuid: any, next: any) {
+export async function getCourseChaptersMetadata(
+  course_uuid: any,
+  next: any,
+  access_token: any
+) {
   const result = await fetch(
     `${getAPIUrl()}chapters/meta/course_${course_uuid}`,
-    RequestBody('GET', null, next)
+    RequestBodyWithAuthHeader('GET', null, next, access_token)
   )
   const res = await errorHandling(result)
   return res
 }
 
-export async function updateChaptersMetadata(course_uuid: any, data: any) {
+export async function updateChaptersMetadata(
+  course_uuid: any,
+  data: any,
+  access_token: any
+) {
   const result: any = await fetch(
     `${getAPIUrl()}chapters/course/course_${course_uuid}/order`,
-    RequestBody('PUT', data, null)
+    RequestBodyWithAuthHeader('PUT', data, null, access_token)
   )
   const res = await errorHandling(result)
   return res
 }
 
-export async function updateChapter(coursechapter_id: any, data: any) {
+export async function updateChapter(
+  coursechapter_id: any,
+  data: any,
+  access_token: any
+) {
   const result: any = await fetch(
     `${getAPIUrl()}chapters/${coursechapter_id}`,
-    RequestBody('PUT', data, null)
+    RequestBodyWithAuthHeader('PUT', data, null, access_token)
   )
   const res = await errorHandling(result)
   return res
@@ -37,30 +52,31 @@ export async function updateChapter(coursechapter_id: any, data: any) {
 
 export async function updateCourseOrderStructure(
   course_uuid: any,
-  data: OrderPayload
+  data: OrderPayload,
+  access_token: any
 ) {
   const result: any = await fetch(
     `${getAPIUrl()}chapters/course/${course_uuid}/order`,
-    RequestBody('PUT', data, null)
+    RequestBodyWithAuthHeader('PUT', data, null, access_token)
   )
   const res = await errorHandling(result)
   return res
 }
 
-export async function createChapter(data: any) {
+export async function createChapter(data: any, access_token: any) {
   const result: any = await fetch(
     `${getAPIUrl()}chapters/`,
-    RequestBody('POST', data, null)
+    RequestBodyWithAuthHeader('POST', data, null, access_token)
   )
   const res = await errorHandling(result)
 
   return res
 }
 
-export async function deleteChapter(coursechapter_id: any) {
+export async function deleteChapter(coursechapter_id: any, access_token: any) {
   const result: any = await fetch(
     `${getAPIUrl()}chapters/${coursechapter_id}`,
-    RequestBody('DELETE', null, null)
+    RequestBodyWithAuthHeader('DELETE', null, null, access_token)
   )
   const res = await errorHandling(result)
   return res

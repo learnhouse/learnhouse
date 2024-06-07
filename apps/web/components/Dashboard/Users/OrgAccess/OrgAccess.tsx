@@ -3,27 +3,28 @@ import PageLoading from '@components/Objects/Loaders/PageLoading'
 import ConfirmationModal from '@components/StyledElements/ConfirmationModal/ConfirmationModal'
 import { getAPIUrl, getUriWithOrg } from '@services/config/config'
 import { swrFetcher } from '@services/utils/ts/requests'
-import { Globe, Shield, Ticket, User, UserSquare, Users, X } from 'lucide-react'
+import { Globe, Ticket, UserSquare, Users, X } from 'lucide-react'
 import Link from 'next/link'
 import React, { useEffect } from 'react'
 import useSWR, { mutate } from 'swr'
 import dayjs from 'dayjs'
 import {
   changeSignupMechanism,
-  createInviteCode,
   deleteInviteCode,
 } from '@services/organizations/invites'
-import Toast from '@components/StyledElements/Toast/Toast'
 import toast from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
 import Modal from '@components/StyledElements/Modal/Modal'
 import OrgInviteCodeGenerate from '@components/Objects/Modals/Dash/OrgAccess/OrgInviteCodeGenerate'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 
 function OrgAccess() {
   const org = useOrg() as any
+  const session = useLHSession() as any
+  const access_token = session.data.tokens.access_token;
   const { data: invites } = useSWR(
     org ? `${getAPIUrl()}orgs/${org?.id}/invites` : null,
-    swrFetcher
+    (url) => swrFetcher(url, access_token)
   )
   const [isLoading, setIsLoading] = React.useState(false)
   const [joinMethod, setJoinMethod] = React.useState('closed')
@@ -40,10 +41,8 @@ function OrgAccess() {
     }
   }
 
-  
-
   async function deleteInvite(invite: any) {
-    let res = await deleteInviteCode(org.id, invite.invite_code_uuid)
+    let res = await deleteInviteCode(org.id, invite.invite_code_uuid, access_token)
     if (res.status == 200) {
       mutate(`${getAPIUrl()}orgs/${org.id}/invites`)
     } else {
@@ -52,7 +51,7 @@ function OrgAccess() {
   }
 
   async function changeJoinMethod(method: 'open' | 'inviteOnly') {
-    let res = await changeSignupMechanism(org.id, method)
+    let res = await changeSignupMechanism(org.id, method, access_token)
     if (res.status == 200) {
       router.refresh()
       mutate(`${getAPIUrl()}orgs/slug/${org?.slug}`)

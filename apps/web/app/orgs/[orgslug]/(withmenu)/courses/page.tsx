@@ -1,10 +1,10 @@
 import React from 'react'
 import Courses from './courses'
-import { getOrgCoursesWithAuthHeader } from '@services/courses/courses'
 import { Metadata } from 'next'
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
-import { cookies } from 'next/headers'
-import { getAccessTokenFromRefreshTokenCookie } from '@services/auth/auth'
+import { nextAuthOptions } from 'app/auth/options'
+import { getServerSession } from 'next-auth'
+import { getOrgCourses } from '@services/courses/courses'
 
 type MetadataProps = {
   params: { orgslug: string }
@@ -49,9 +49,10 @@ const CoursesPage = async (params: any) => {
     revalidate: 1800,
     tags: ['organizations'],
   })
-  const cookieStore = cookies()
-  const access_token = await getAccessTokenFromRefreshTokenCookie(cookieStore)
-  const courses = await getOrgCoursesWithAuthHeader(
+  const session = await getServerSession(nextAuthOptions)
+  const access_token = session?.tokens?.access_token
+
+  const courses = await getOrgCourses(
     orgslug,
     { revalidate: 0, tags: ['courses'] },
     access_token ? access_token : null

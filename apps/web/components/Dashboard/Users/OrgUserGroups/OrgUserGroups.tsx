@@ -1,4 +1,5 @@
 'use client'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import AddUserGroup from '@components/Objects/Modals/Dash/OrgUserGroups/AddUserGroup'
 import ManageUsers from '@components/Objects/Modals/Dash/OrgUserGroups/ManageUsers'
@@ -14,17 +15,19 @@ import useSWR, { mutate } from 'swr'
 
 function OrgUserGroups() {
     const org = useOrg() as any
+    const session = useLHSession() as any
+    const access_token = session.data.tokens.access_token;
     const [userGroupManagementModal, setUserGroupManagementModal] = React.useState(false)
     const [createUserGroupModal, setCreateUserGroupModal] = React.useState(false)
     const [selectedUserGroup, setSelectedUserGroup] = React.useState(null) as any
 
     const { data: usergroups } = useSWR(
         org ? `${getAPIUrl()}usergroups/org/${org.id}` : null,
-        swrFetcher
+        (url) => swrFetcher(url, access_token)
     )
 
     const deleteUserGroupUI = async (usergroup_id: any) => {
-        const res = await deleteUserGroup(usergroup_id)
+        const res = await deleteUserGroup(usergroup_id, access_token)
         if (res.status == 200) {
             mutate(`${getAPIUrl()}usergroups/org/${org.id}`)
         }

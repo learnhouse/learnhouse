@@ -6,9 +6,12 @@ import useSWR from 'swr'
 import { getAPIUrl, getUriWithOrg } from '@services/config/config'
 import { revalidateTags, swrFetcher } from '@services/utils/ts/requests'
 import { useOrg } from '@components/Contexts/OrgContext'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 
 function NewCollection(params: any) {
   const org = useOrg() as any
+  const session = useLHSession() as any;
+  const access_token = session?.data?.tokens?.access_token;
   const orgslug = params.params.orgslug
   const [name, setName] = React.useState('')
   const [description, setDescription] = React.useState('')
@@ -16,7 +19,7 @@ function NewCollection(params: any) {
   const router = useRouter()
   const { data: courses, error: error } = useSWR(
     `${getAPIUrl()}courses/org_slug/${orgslug}/page/1/limit/10`,
-    swrFetcher
+    (url) => swrFetcher(url, access_token)
   )
   const [isPublic, setIsPublic] = useState('true')
 
@@ -44,7 +47,7 @@ function NewCollection(params: any) {
       public: isPublic,
       org_id: org.id,
     }
-    await createCollection(collection)
+    await createCollection(collection, session.data?.tokens?.access_token)
     await revalidateTags(['collections'], org.slug)
     // reload the page
     router.refresh()

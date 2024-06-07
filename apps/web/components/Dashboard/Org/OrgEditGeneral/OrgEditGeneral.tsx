@@ -9,6 +9,7 @@ import { UploadCloud } from 'lucide-react'
 import { revalidateTags } from '@services/utils/ts/requests'
 import { useRouter } from 'next/navigation'
 import { useOrg } from '@components/Contexts/OrgContext'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 
 interface OrganizationValues {
   name: string
@@ -20,7 +21,9 @@ interface OrganizationValues {
 
 function OrgEditGeneral(props: any) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const router = useRouter()
+  const router = useRouter();
+  const session = useLHSession() as any;
+  const access_token = session?.data?.tokens?.access_token;
   const org = useOrg() as any
   // ...
 
@@ -34,7 +37,7 @@ function OrgEditGeneral(props: any) {
   const uploadLogo = async () => {
     if (selectedFile) {
       let org_id = org.id
-      await uploadOrganizationLogo(org_id, selectedFile)
+      await uploadOrganizationLogo(org_id, selectedFile, access_token)
       setSelectedFile(null) // Reset the selected file
       await revalidateTags(['organizations'], org.slug)
       router.refresh()
@@ -51,14 +54,14 @@ function OrgEditGeneral(props: any) {
 
   const updateOrg = async (values: OrganizationValues) => {
     let org_id = org.id
-    await updateOrganization(org_id, values)
+    await updateOrganization(org_id, values, access_token)
 
     // Mutate the org
     await revalidateTags(['organizations'], org.slug)
     router.refresh()
   }
 
-  useEffect(() => {}, [org])
+  useEffect(() => { }, [org])
 
   return (
     <div className="ml-10 mr-10 mx-auto bg-white rounded-xl shadow-sm px-6 py-5">

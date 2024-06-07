@@ -20,7 +20,7 @@ export const RequestBodyWithAuthHeader = (
   method: string,
   data: any,
   next: any,
-  token: string
+  token?: string
 ) => {
   let HeadersConfig = new Headers(
     token
@@ -32,7 +32,7 @@ export const RequestBodyWithAuthHeader = (
     headers: HeadersConfig,
     redirect: 'follow',
     credentials: 'include',
-    body: data,
+    body: (method === 'POST' || method === 'PUT') ? JSON.stringify(data) : null,
     // Next.js
     next: next,
   }
@@ -46,6 +46,27 @@ export const RequestBodyForm = (method: string, data: any, next: any) => {
     headers: HeadersConfig,
     redirect: 'follow',
     credentials: 'include',
+    body: (method === 'POST' || method === 'PUT') ? JSON.stringify(data) : null,
+    // Next.js
+    next: next,
+  }
+  return options
+}
+
+export const RequestBodyFormWithAuthHeader = (
+  method: string,
+  data: any,
+  next: any,
+  access_token: string
+) => {
+  let HeadersConfig = new Headers({
+    Authorization: `Bearer ${access_token}`,
+  })
+  let options: any = {
+    method: method,
+    headers: HeadersConfig,
+    redirect: 'follow',
+    credentials: 'include',
     body: data,
     // Next.js
     next: next,
@@ -53,9 +74,13 @@ export const RequestBodyForm = (method: string, data: any, next: any) => {
   return options
 }
 
-export const swrFetcher = async (url: string) => {
+export const swrFetcher = async (url: string, token?: string) => {
   // Create the request options
-  let HeadersConfig = new Headers({ 'Content-Type': 'application/json' })
+  let HeadersConfig = new Headers(
+    token
+      ? { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
+      : { 'Content-Type': 'application/json' }
+  )
   let options: any = {
     method: 'GET',
     headers: HeadersConfig,

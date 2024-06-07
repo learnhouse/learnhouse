@@ -8,6 +8,7 @@ import { UploadIcon } from '@radix-ui/react-icons'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useCourse } from '@components/Contexts/CourseContext'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 
 function VideoBlockComponents(props: any) {
   const org = useOrg() as any
@@ -15,6 +16,8 @@ function VideoBlockComponents(props: any) {
   const editorState = useEditorProvider() as any
   const isEditable = editorState.isEditable
   const [video, setVideo] = React.useState(null)
+  const session = useLHSession() as any
+  const access_token = session.data.tokens.access_token;
   const [isLoading, setIsLoading] = React.useState(false)
   const [blockObject, setblockObject] = React.useState(
     props.node.attrs.blockObject
@@ -32,7 +35,7 @@ function VideoBlockComponents(props: any) {
     setIsLoading(true)
     let object = await uploadNewVideoFile(
       video,
-      props.extension.options.activity.activity_uuid
+      props.extension.options.activity.activity_uuid, access_token
     )
     setIsLoading(false)
     setblockObject(object)
@@ -41,7 +44,7 @@ function VideoBlockComponents(props: any) {
     })
   }
 
-  useEffect(() => {}, [course, org])
+  useEffect(() => { }, [course, org])
 
   return (
     <NodeViewWrapper className="block-video">
@@ -98,7 +101,7 @@ function VideoBlockComponents(props: any) {
   )
 }
 const BlockVideoWrapper = styled.div`
-  //border: ${(props) =>
+  border: ${(props) =>
     props.contentEditable ? '2px dashed #713f1117' : 'none'};
 
   // center

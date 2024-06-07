@@ -1,32 +1,46 @@
 'use client'
-import { getAPIUrl } from '@services/config/config'
+import { getAPIUrl, getUriWithoutOrg } from '@services/config/config'
 import { swrFetcher } from '@services/utils/ts/requests'
-import React, { useContext, useEffect } from 'react'
+import React, { createContext, useContext, useMemo } from 'react'
 import useSWR from 'swr'
-import { createContext } from 'react'
-import { useRouter } from 'next/navigation'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
+import ErrorUI from '@components/StyledElements/Error/Error'
+import InfoUI from '@components/StyledElements/Info/Info'
+import { usePathname } from 'next/navigation'
 
-export const OrgContext = createContext({}) as any
+export const OrgContext = createContext(null)
 
-export function OrgProvider({
-  children,
-  orgslug,
-}: {
-  children: React.ReactNode
-  orgslug: string
-}) {
-  const { data: org } = useSWR(`${getAPIUrl()}orgs/slug/${orgslug}`, swrFetcher)
-  const router = useRouter()
-  // Check if Org is Active 
-  const verifyIfOrgIsActive = () => {
-    if (org && org?.config.config.GeneralConfig.active === false) {
-      router.push('/404')
-    }
+export function OrgProvider({ children, orgslug }: { children: React.ReactNode, orgslug: string }) {
+  const session = useLHSession() as any
+  const pathname = usePathname()
+  const accessToken = session?.data?.tokens?.access_token
+  const isAllowedPathname = ['/login', '/signup'].includes(pathname);
 
+  const { data: org, error: orgError } = useSWR(
+    `${getAPIUrl()}orgs/slug/${orgslug}`,
+    (url) => swrFetcher(url, accessToken)
+  )
+  const { data: orgs, error: orgsError } = useSWR(
+    `${getAPIUrl()}orgs/user/page/1/limit/10`,
+    (url) => swrFetcher(url, accessToken)
+  )
+
+
+  const isOrgActive = useMemo(() => org?.config?.config?.GeneralConfig?.active !== false, [org])
+  const isUserPartOfTheOrg = useMemo(() => orgs?.some((userOrg: any) => userOrg.id === org?.id), [orgs, org?.id])
+
+  if (orgError || orgsError) return <ErrorUI message='An error occurred while fetching data' />
+  if (!org || !orgs || !session) return <div>Loading...</div>
+  if (!isOrgActive) return <ErrorUI message='This organization is no longer active' />
+  if (!isUserPartOfTheOrg && session.status == 'authenticated' && !isAllowedPathname) {
+    return (
+      <InfoUI
+        href={getUriWithoutOrg(`/signup?orgslug=${orgslug}`)}
+        message='You are not part of this Organization yet'
+        cta={`Join ${org?.name}`}
+      />
+    )
   }
-  useEffect(() => {
-    verifyIfOrgIsActive()
-  }, [org])
 
   return <OrgContext.Provider value={org}>{children}</OrgContext.Provider>
 }

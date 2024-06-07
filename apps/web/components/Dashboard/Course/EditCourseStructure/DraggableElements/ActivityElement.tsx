@@ -12,6 +12,7 @@ import {
   Video,
   X,
 } from 'lucide-react'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import React from 'react'
@@ -32,6 +33,8 @@ interface ModifiedActivityInterface {
 
 function ActivityElement(props: ActivitiyElementProps) {
   const router = useRouter()
+  const session = useLHSession() as any;
+  const access_token = session?.data?.tokens?.access_token;
   const [modifiedActivity, setModifiedActivity] = React.useState<
     ModifiedActivityInterface | undefined
   >(undefined)
@@ -41,7 +44,7 @@ function ActivityElement(props: ActivitiyElementProps) {
   const activityUUID = props.activity.activity_uuid
 
   async function deleteActivityUI() {
-    await deleteActivity(props.activity.activity_uuid)
+    await deleteActivity(props.activity.activity_uuid,access_token)
     mutate(`${getAPIUrl()}courses/${props.course_uuid}/meta`)
     await revalidateTags(['courses'], props.orgslug)
     router.refresh()
@@ -60,7 +63,7 @@ function ActivityElement(props: ActivitiyElementProps) {
         content: props.activity.content,
       }
 
-      await updateActivity(modifiedActivityCopy, activityUUID)
+      await updateActivity(modifiedActivityCopy, activityUUID,access_token)
       mutate(`${getAPIUrl()}courses/${props.course_uuid}/meta`)
       await revalidateTags(['courses'], props.orgslug)
       router.refresh()
