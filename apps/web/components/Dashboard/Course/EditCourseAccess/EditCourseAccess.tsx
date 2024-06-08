@@ -21,9 +21,9 @@ function EditCourseAccess(props: EditCourseAccessProps) {
     const session = useLHSession() as any;
     const access_token = session?.data?.tokens?.access_token;
 
-    const course = useCourse() as any
+    const course = useCourse() as any;
+    const { isLoading, courseStructure } = course as any;
     const dispatchCourse = useCourseDispatch() as any
-    const courseStructure = course.courseStructure
     const { data: usergroups } = useSWR(
         courseStructure ? `${getAPIUrl()}usergroups/resource/${courseStructure.course_uuid}` : null,
         (url) => swrFetcher(url, access_token)
@@ -33,7 +33,7 @@ function EditCourseAccess(props: EditCourseAccessProps) {
 
     React.useEffect(() => {
         // This code will run whenever form values are updated
-        if (isPublic !== courseStructure.public) {
+        if ((isPublic !== courseStructure.public) && isLoading) {
             dispatchCourse({ type: 'setIsNotSaved' })
             const updatedCourse = {
                 ...courseStructure,
@@ -126,7 +126,7 @@ function UserGroupsSection({ usergroups }: { usergroups: any[] }) {
     const access_token = session?.data?.tokens?.access_token;
 
     const removeUserGroupLink = async (usergroup_id: number) => {
-        const res = await unLinkResourcesToUserGroup(usergroup_id, course.courseStructure.course_uuid,access_token)
+        const res = await unLinkResourcesToUserGroup(usergroup_id, course.courseStructure.course_uuid, access_token)
         if (res.status === 200) {
             toast.success('Successfully unliked from usergroup')
             mutate(`${getAPIUrl()}usergroups/resource/${course.courseStructure.course_uuid}`)
