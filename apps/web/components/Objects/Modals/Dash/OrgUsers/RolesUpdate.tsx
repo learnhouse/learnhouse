@@ -24,7 +24,7 @@ interface Props {
 function RolesUpdate(props: Props) {
   const org = useOrg() as any
   const session = useLHSession() as any
-    const access_token = session.data.tokens.access_token;
+    const access_token = session?.data?.tokens?.access_token;
   const [isSubmitting, setIsSubmitting] = React.useState(false)
   const [assignedRole, setAssignedRole] = React.useState(
     props.alreadyAssignedRole

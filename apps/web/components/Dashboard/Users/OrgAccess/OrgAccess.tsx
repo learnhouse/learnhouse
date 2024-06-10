@@ -21,7 +21,7 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 function OrgAccess() {
   const org = useOrg() as any
   const session = useLHSession() as any
-  const access_token = session.data.tokens.access_token;
+  const access_token = session?.data?.tokens?.access_token;
   const { data: invites } = useSWR(
     org ? `${getAPIUrl()}orgs/${org?.id}/invites` : null,
     (url) => swrFetcher(url, access_token)

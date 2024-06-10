@@ -16,7 +16,7 @@ import useSWR, { mutate } from 'swr'
 function OrgUserGroups() {
     const org = useOrg() as any
     const session = useLHSession() as any
-    const access_token = session.data.tokens.access_token;
+    const access_token = session?.data?.tokens?.access_token;
     const [userGroupManagementModal, setUserGroupManagementModal] = React.useState(false)
     const [createUserGroupModal, setCreateUserGroupModal] = React.useState(false)
     const [selectedUserGroup, setSelectedUserGroup] = React.useState(null) as any

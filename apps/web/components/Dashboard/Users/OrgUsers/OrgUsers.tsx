@@ -16,7 +16,7 @@ import useSWR, { mutate } from 'swr'
 function OrgUsers() {
   const org = useOrg() as any
   const session = useLHSession() as any
-  const access_token = session.data.tokens.access_token;
+  const access_token = session?.data?.tokens?.access_token;
   const { data: orgUsers } = useSWR(
     org ? `${getAPIUrl()}orgs/${org?.id}/users` : null,
     (url) => swrFetcher(url, access_token)
