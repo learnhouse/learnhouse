@@ -13,7 +13,7 @@ import useSWR from 'swr'
 function Trail(params: any) {
   let orgslug = params.orgslug
   const session = useLHSession() as any
-  const access_token = session.data.tokens.access_token;
+  const access_token = session?.data?.tokens?.access_token;
   const org = useOrg() as any
   const orgID = org?.id
   const { data: trail, error: error } = useSWR(

@@ -17,7 +17,7 @@ function VideoBlockComponents(props: any) {
   const isEditable = editorState.isEditable
   const [video, setVideo] = React.useState(null)
   const session = useLHSession() as any
-  const access_token = session.data.tokens.access_token;
+  const access_token = session?.data?.tokens?.access_token;
   const [isLoading, setIsLoading] = React.useState(false)
   const [blockObject, setblockObject] = React.useState(
     props.node.attrs.blockObject

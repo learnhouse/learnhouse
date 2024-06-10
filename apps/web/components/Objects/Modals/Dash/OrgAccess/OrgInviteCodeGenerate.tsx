@@ -15,7 +15,7 @@ type OrgInviteCodeGenerateProps = {
 function OrgInviteCodeGenerate(props: OrgInviteCodeGenerateProps) {
     const org = useOrg() as any
     const session = useLHSession() as any
-    const access_token = session.data.tokens.access_token;
+    const access_token = session?.data?.tokens?.access_token;
     const [usergroup_id, setUsergroup_id] = React.useState(0);
     const { data: usergroups } = useSWR(
         org ? `${getAPIUrl()}usergroups/org/${org.id}` : null,
