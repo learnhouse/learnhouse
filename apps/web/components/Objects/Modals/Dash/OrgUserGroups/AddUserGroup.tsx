@@ -23,7 +23,7 @@ type AddUserGroupProps = {
 function AddUserGroup(props: AddUserGroupProps) {
     const org = useOrg() as any;
     const session = useLHSession() as any
-    const access_token = session.data.tokens.access_token;
+    const access_token = session?.data?.tokens?.access_token;
     const [userGroupName, setUserGroupName] = React.useState('')
     const [userGroupDescription, setUserGroupDescription] = React.useState('')
     const [isSubmitting, setIsSubmitting] = React.useState(false)

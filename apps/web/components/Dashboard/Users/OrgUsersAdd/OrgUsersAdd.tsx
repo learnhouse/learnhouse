@@ -14,7 +14,7 @@ import useSWR, { mutate } from 'swr'
 function OrgUsersAdd() {
     const org = useOrg() as any
     const session = useLHSession() as any
-    const access_token = session.data.tokens.access_token;
+    const access_token = session?.data?.tokens?.access_token;
     const [isLoading, setIsLoading] = React.useState(false)
     const [invitedUsers, setInvitedUsers] = React.useState('');
     const [selectedInviteCode, setSelectedInviteCode] = React.useState('');

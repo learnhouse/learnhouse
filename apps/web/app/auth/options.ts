@@ -9,7 +9,7 @@ import { getResponseMetadata } from '@services/utils/ts/requests'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import GoogleProvider from 'next-auth/providers/google'
 
-const isDevEnv = LEARNHOUSE_TOP_DOMAIN == 'localhost' ? true : false
+export const isDevEnv = LEARNHOUSE_TOP_DOMAIN == 'localhost' ? true : false
 
 export const nextAuthOptions = {
   debug: true,

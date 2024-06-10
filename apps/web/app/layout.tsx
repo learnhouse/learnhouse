@@ -4,6 +4,8 @@ import StyledComponentsRegistry from '../components/Utils/libs/styled-registry'
 import { motion } from 'framer-motion'
 import { SessionProvider } from 'next-auth/react'
 import LHSessionProvider from '@components/Contexts/LHSessionContext'
+import { isDevEnv } from './auth/options'
+import Script from 'next/script'
 
 export default function RootLayout({
   children,
@@ -19,6 +21,7 @@ export default function RootLayout({
     <html className="" lang="en">
       <head />
       <body>
+        {isDevEnv ? '' : <Script data-website-id="a1af6d7a-9286-4a1f-8385-ddad2a29fcbb" src="/umami/script.js" />}
         <SessionProvider>
           <LHSessionProvider>
             <StyledComponentsRegistry>
