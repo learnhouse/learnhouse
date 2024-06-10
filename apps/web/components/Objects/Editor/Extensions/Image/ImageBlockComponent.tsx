@@ -16,7 +16,7 @@ function ImageBlockComponent(props: any) {
   const course = useCourse() as any
   const editorState = useEditorProvider() as any
   const session = useLHSession() as any
-    const access_token = session.data.tokens.access_token;
+    const access_token = session?.data?.tokens?.access_token;
 
   const isEditable = editorState.isEditable
   const [image, setImage] = React.useState(null)

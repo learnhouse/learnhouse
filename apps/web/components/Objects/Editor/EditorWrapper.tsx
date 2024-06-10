@@ -25,7 +25,7 @@ interface EditorWrapperProps {
 
 function EditorWrapper(props: EditorWrapperProps): JSX.Element {
   const session = useLHSession() as any
-    const access_token = session.data.tokens.access_token;
+    const access_token = session?.data?.tokens?.access_token;
   // Define provider in the state
   const [provider, setProvider] = React.useState<HocuspocusProvider | null>(null);
   const [thisPageColor, setThisPageColor] = useState(randomColor({ luminosity: 'light' }) as string)

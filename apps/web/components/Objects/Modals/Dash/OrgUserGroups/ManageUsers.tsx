@@ -16,7 +16,7 @@ type ManageUsersProps = {
 function ManageUsers(props: ManageUsersProps) {
   const org = useOrg() as any
   const session = useLHSession() as any
-    const access_token = session.data.tokens.access_token;
+    const access_token = session?.data?.tokens?.access_token;
   const { data: OrgUsers } = useSWR(
     org ? `${getAPIUrl()}orgs/${org.id}/users` : null,
     swrFetcher

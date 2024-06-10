@@ -19,7 +19,7 @@ function LinkToUserGroup(props: LinkToUserGroupProps) {
     const course = useCourse() as any
     const org = useOrg() as any
     const session = useLHSession() as any
-    const access_token = session.data.tokens.access_token;
+    const access_token = session?.data?.tokens?.access_token;
     const courseStructure = course.courseStructure
 
     const { data: usergroups } = useSWR(
