@@ -16,10 +16,11 @@ export const config = {
      * 1. /api routes
      * 2. /_next (Next.js internals)
      * 3. /fonts (inside /public)
+     * 4. Umami Analytics
      * 4. /examples (inside /public)
      * 5. all root files inside /public (e.g. /favicon.ico)
      */
-    '/((?!api|_next|fonts|examples|[\\w-]+\\.\\w+).*)',
+    '/((?!api|_next|fonts|umami|examples|[\\w-]+\\.\\w+).*)',
   ],
 }
 
