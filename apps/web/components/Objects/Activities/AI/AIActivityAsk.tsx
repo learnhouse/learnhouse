@@ -75,7 +75,7 @@ type ActivityChatMessageBoxProps = {
 
 function ActivityChatMessageBox(props: ActivityChatMessageBoxProps) {
   const session = useLHSession() as any
-  const access_token = session.data.tokens.access_token;
+  const access_token = session?.data?.tokens?.access_token;
   const aiChatBotState = useAIChatBot() as AIChatBotStateTypes
   const dispatchAIChatBot = useAIChatBotDispatch() as any
 

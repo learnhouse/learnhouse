@@ -143,7 +143,7 @@ const UserFeedbackModal = (props: AIEditorToolkitProps) => {
   const dispatchAIEditor = useAIEditorDispatch() as any
   const aiEditorState = useAIEditor() as AIEditorStateTypes
   const session = useLHSession() as any
-  const access_token = session.data.tokens.access_token;
+  const access_token = session?.data?.tokens?.access_token;
 
   const handleChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     await dispatchAIEditor({

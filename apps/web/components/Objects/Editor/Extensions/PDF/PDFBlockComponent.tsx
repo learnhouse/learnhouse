@@ -14,7 +14,7 @@ function PDFBlockComponent(props: any) {
   const org = useOrg() as any
   const course = useCourse() as any
   const session = useLHSession() as any
-  const access_token = session.data.tokens.access_token;
+  const access_token = session?.data?.tokens?.access_token;
   const [pdf, setPDF] = React.useState(null)
   const [isLoading, setIsLoading] = React.useState(false)
   const [blockObject, setblockObject] = React.useState(

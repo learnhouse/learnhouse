@@ -15,7 +15,7 @@ import { updateUserAvatar } from '@services/users/users'
 
 function UserEditGeneral() {
   const session = useLHSession() as any;
-  const access_token = session.data.tokens.access_token;
+  const access_token = session?.data?.tokens?.access_token;
   const [localAvatar, setLocalAvatar] = React.useState(null) as any
   const [isLoading, setIsLoading] = React.useState(false) as any
   const [error, setError] = React.useState() as any

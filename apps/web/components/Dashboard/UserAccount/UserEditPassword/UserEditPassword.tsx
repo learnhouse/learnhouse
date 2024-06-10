@@ -5,7 +5,7 @@ import React, { useEffect } from 'react'
 
 function UserEditPassword() {
   const session = useLHSession() as any
-  const access_token = session.data.tokens.access_token;
+  const access_token = session?.data?.tokens?.access_token;
 
   const updatePasswordUI = async (values: any) => {
     let user_id = session.data.user.id

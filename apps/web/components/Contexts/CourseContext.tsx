@@ -12,8 +12,7 @@ export function CourseProvider({ children, courseuuid }: any) {
   const session = useLHSession() as any;
   const access_token = session?.data?.tokens?.access_token;
 
-  const { data: courseStructureData, error } = useSWR(
-    access_token ? `${getAPIUrl()}courses/${courseuuid}/meta` : null,
+  const { data: courseStructureData, error } = useSWR(`${getAPIUrl()}courses/${courseuuid}/meta`,
     url => swrFetcher(url, access_token)
   );
 
