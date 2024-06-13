@@ -60,7 +60,7 @@
     "tailwind-scrollbar": "^3.1.0",
     "uuid": "^9.0.1",
     "y-indexeddb": "^9.0.12",
-    "y-prosemirror": "^1.2.6",
+    "y-prosemirror": "^1.2.8",
     "y-webrtc": "^10.3.0",
     "yjs": "^13.6.16"
   },
