@@ -4,6 +4,7 @@ import FormLayout, {
     Flex,
     FormField,
     FormLabel,
+    FormLabelAndMessage,
     FormMessage,
     Input,
 } from '@components/StyledElements/Form/Form'
@@ -15,86 +16,84 @@ import { createUserGroup } from '@services/usergroups/usergroups'
 import { mutate } from 'swr'
 import { getAPIUrl } from '@services/config/config'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { useFormik } from 'formik'
 
 type AddUserGroupProps = {
     setCreateUserGroupModal: any
+}
+const validate = (values: any) => {
+    const errors: any = {}
+
+    if (!values.name) {
+        errors.name = 'Name is Required'
+    }
+
+    return errors
 }
 
 function AddUserGroup(props: AddUserGroupProps) {
     const org = useOrg() as any;
     const session = useLHSession() as any
     const access_token = session?.data?.tokens?.access_token;
-    const [userGroupName, setUserGroupName] = React.useState('')
-    const [userGroupDescription, setUserGroupDescription] = React.useState('')
     const [isSubmitting, setIsSubmitting] = React.useState(false)
 
-    const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setUserGroupName(event.target.value)
-    }
-
-    const handleDescriptionChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setUserGroupDescription(event.target.value)
-    }
-
-    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault()
-        setIsSubmitting(true)
-
-        const obj = {
-            name: userGroupName,
-            description: userGroupDescription,
+    const formik = useFormik({
+        initialValues: {
+            name: '',
+            description: '',
             org_id: org.id
-        }
-        const res = await createUserGroup(obj, access_token)
-        if (res.status == 200) {
-            setIsSubmitting(false)
-            mutate(`${getAPIUrl()}usergroups/org/${org.id}`)
-            props.setCreateUserGroupModal(false)
+        },
+        validate,
+        onSubmit: async (values) => {
+            setIsSubmitting(true)
+            const res = await createUserGroup(values, access_token)
+            if (res.status == 200) {
+                setIsSubmitting(false)
+                mutate(`${getAPIUrl()}usergroups/org/${org.id}`)
+                props.setCreateUserGroupModal(false)
 
-        } else {
-            setIsSubmitting(false)
-        }
-    }
+            } else {
+                setIsSubmitting(false)
+            }
+        },
+    })
 
     return (
-        <FormLayout onSubmit={handleSubmit}>
+        <FormLayout onSubmit={formik.handleSubmit}>
             <FormField name="name">
-                <Flex css={{ alignItems: 'baseline', justifyContent: 'space-between' }}>
-                    <FormLabel>Name</FormLabel>
-                    <FormMessage match="valueMissing">
-                        Please provide a ug name
-                    </FormMessage>
-                </Flex>
+                <FormLabelAndMessage
+                    label="Name"
+                    message={formik.errors.name}
+                />
                 <Form.Control asChild>
-                    <Input onChange={handleNameChange} type="text" required />
+                    <Input
+                        onChange={formik.handleChange}
+                        value={formik.values.name}
+                        type="name"
+                        required
+                    />
                 </Form.Control>
             </FormField>
             <FormField name="description">
-                <Flex css={{ alignItems: 'baseline', justifyContent: 'space-between' }}>
-                    <FormLabel>Description</FormLabel>
-                    <FormMessage match="valueMissing">
-                        Please provide a ug description
-                    </FormMessage>
-                </Flex>
+                <FormLabelAndMessage
+                    label="Description"
+                    message={formik.errors.description}
+                />
                 <Form.Control asChild>
-                    <Input onChange={handleDescriptionChange} type="text" required />
+                    <Input
+                        onChange={formik.handleChange}
+                        value={formik.values.description}
+                        type="description"
+                    />
                 </Form.Control>
             </FormField>
-            <Flex css={{ marginTop: 25, justifyContent: 'flex-end' }}>
+            <div className="flex py-4">
                 <Form.Submit asChild>
-                    <ButtonBlack type="submit" css={{ marginTop: 10 }}>
-                        {isSubmitting ? (
-                            <BarLoader
-                                cssOverride={{ borderRadius: 60 }}
-                                width={60}
-                                color="#ffffff"
-                            />
-                        ) : (
-                            'Create UserGroup'
-                        )}
-                    </ButtonBlack>
+                    <button className="w-full bg-black text-white font-bold text-center p-2 rounded-md shadow-md hover:cursor-pointer">
+                        {isSubmitting ? 'Loading...' : 'Create a UserGroup'}
+                    </button>
                 </Form.Submit>
-            </Flex>
+            </div>
         </FormLayout>
     )
 }
