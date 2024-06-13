@@ -16,14 +16,14 @@ type ManageUsersProps = {
 function ManageUsers(props: ManageUsersProps) {
   const org = useOrg() as any
   const session = useLHSession() as any
-    const access_token = session?.data?.tokens?.access_token;
+  const access_token = session?.data?.tokens?.access_token;
   const { data: OrgUsers } = useSWR(
     org ? `${getAPIUrl()}orgs/${org.id}/users` : null,
-    swrFetcher
+    (url) => swrFetcher(url, access_token)
   )
   const { data: UGusers } = useSWR(
     org ? `${getAPIUrl()}usergroups/${props.usergroup_id}/users` : null,
-    swrFetcher
+    (url) => swrFetcher(url, access_token)
   )
 
   const isUserPartOfGroup = (user_id: any) => {
@@ -34,7 +34,7 @@ function ManageUsers(props: ManageUsersProps) {
   }
 
   const handleLinkUser = async (user_id: any) => {
-    const res = await linkUserToUserGroup(props.usergroup_id, user_id,access_token)
+    const res = await linkUserToUserGroup(props.usergroup_id, user_id, access_token)
     if (res.status === 200) {
       toast.success('User linked successfully')
       mutate(`${getAPIUrl()}usergroups/${props.usergroup_id}/users`)
@@ -44,7 +44,7 @@ function ManageUsers(props: ManageUsersProps) {
   }
 
   const handleUnlinkUser = async (user_id: any) => {
-    const res = await unLinkUserToUserGroup(props.usergroup_id, user_id,access_token)
+    const res = await unLinkUserToUserGroup(props.usergroup_id, user_id, access_token)
     if (res.status === 200) {
       toast.success('User unlinked successfully')
       mutate(`${getAPIUrl()}usergroups/${props.usergroup_id}/users`)
