@@ -142,8 +142,9 @@ function ActivityElement(props: ActivitiyElementProps) {
                       ''
                     )}/edit`
                   }
+                  prefetch
                   className=" hover:cursor-pointer p-1 px-3 bg-sky-700 rounded-md items-center"
-                  rel="noopener noreferrer"
+                  target='_blank' // hotfix for an editor prosemirror bug 
                 >
                   <div className="text-sky-100 font-bold text-xs flex items-center space-x-1">
                     <FilePenLine size={12} /> <span>Edit Page</span>
@@ -162,6 +163,7 @@ function ActivityElement(props: ActivitiyElementProps) {
                   ''
                 )}`
               }
+              prefetch
               className=" hover:cursor-pointer p-1 px-3 bg-gray-200 rounded-md font-bold text-xs flex items-center space-x-1"
               rel="noopener noreferrer"
             >
