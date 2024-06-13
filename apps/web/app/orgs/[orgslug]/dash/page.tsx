@@ -1,7 +1,7 @@
 import Image from 'next/image'
 import React from 'react'
 import learnhousetextlogo from '../../../../public/learnhouse_logo.png'
-import { BookCopy, School, Settings, Users } from 'lucide-react'
+import { BookCopy, School, Settings, University, Users } from 'lucide-react'
 import Link from 'next/link'
 import AdminAuthorization from '@components/Security/AdminAuthorization'
 
@@ -62,12 +62,13 @@ function DashboardHome() {
           <div className="h-1 w-[100px] bg-neutral-200 rounded-full mx-auto"></div>
           <div className="flex justify-center items-center">
             <Link
-              href={'https://learn.learnhouse.io/'}
+              href={'https://university.learnhouse.io/'}
+              target='_blank'
               className="flex mt-[40px]  bg-black space-x-2 items-center py-3 px-7 rounded-lg shadow-lg hover:scale-105 transition-all ease-linear cursor-pointer"
             >
-              <BookCopy className=" text-gray-100" size={20}></BookCopy>
+              <University className=" text-gray-100" size={20}></University>
               <div className=" text-sm font-bold text-gray-100">
-                Learn LearnHouse
+                LearnHouse University
               </div>
             </Link>
           </div>

@@ -5,6 +5,7 @@ import { revalidateTags } from '@services/utils/ts/requests'
 import {
   Eye,
   File,
+  FilePenLine,
   MoreVertical,
   Pencil,
   Save,
@@ -44,7 +45,7 @@ function ActivityElement(props: ActivitiyElementProps) {
   const activityUUID = props.activity.activity_uuid
 
   async function deleteActivityUI() {
-    await deleteActivity(props.activity.activity_uuid,access_token)
+    await deleteActivity(props.activity.activity_uuid, access_token)
     mutate(`${getAPIUrl()}courses/${props.course_uuid}/meta`)
     await revalidateTags(['courses'], props.orgslug)
     router.refresh()
@@ -63,7 +64,7 @@ function ActivityElement(props: ActivitiyElementProps) {
         content: props.activity.content,
       }
 
-      await updateActivity(modifiedActivityCopy, activityUUID,access_token)
+      await updateActivity(modifiedActivityCopy, activityUUID, access_token)
       mutate(`${getAPIUrl()}courses/${props.course_uuid}/meta`)
       await revalidateTags(['courses'], props.orgslug)
       router.refresh()
@@ -144,7 +145,9 @@ function ActivityElement(props: ActivitiyElementProps) {
                   className=" hover:cursor-pointer p-1 px-3 bg-sky-700 rounded-md items-center"
                   rel="noopener noreferrer"
                 >
-                  <div className="text-sky-100 font-bold text-xs">Edit </div>
+                  <div className="text-sky-100 font-bold text-xs flex items-center space-x-1">
+                    <FilePenLine size={12} /> <span>Edit Page</span>
+                  </div>
                 </Link>
               </>
             )}
@@ -159,10 +162,11 @@ function ActivityElement(props: ActivitiyElementProps) {
                   ''
                 )}`
               }
-              className=" hover:cursor-pointer p-1 px-3 bg-gray-200 rounded-md"
+              className=" hover:cursor-pointer p-1 px-3 bg-gray-200 rounded-md font-bold text-xs flex items-center space-x-1"
               rel="noopener noreferrer"
             >
-              <Eye strokeWidth={2} size={15} className="text-gray-600" />
+              <Eye strokeWidth={2} size={12} className="text-gray-600" />
+              <span>Preview</span>
             </Link>
           </div>
           {/*   Delete Button  */}
