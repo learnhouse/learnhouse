@@ -4,6 +4,7 @@ import { swrFetcher } from '@services/utils/ts/requests'
 import React, { createContext, useContext, useEffect, useReducer } from 'react'
 import useSWR from 'swr'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import PageLoading from '@components/Objects/Loaders/PageLoading'
 
 export const CourseContext = createContext(null)
 export const CourseDispatchContext = createContext(null)
@@ -33,7 +34,7 @@ export function CourseProvider({ children, courseuuid }: any) {
   }, [courseStructureData]);
 
   if (error) return <div>Failed to load course structure</div>;
-  if (!courseStructureData) return <div>Loading...</div>;
+  if (!courseStructureData) return <PageLoading/>;
 
   return (
     <CourseContext.Provider value={state}>
