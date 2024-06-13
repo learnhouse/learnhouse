@@ -34,7 +34,7 @@ export function CourseProvider({ children, courseuuid }: any) {
   }, [courseStructureData]);
 
   if (error) return <div>Failed to load course structure</div>;
-  if (!courseStructureData) return <PageLoading />;
+  if (!courseStructureData) return '';
 
   if (courseStructureData) {
     return (

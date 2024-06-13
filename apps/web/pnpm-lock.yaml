@@ -43,10 +43,10 @@ importers:
         version: 2.4.0(@tiptap/core@2.4.0(@tiptap/pm@2.4.0))(@tiptap/extension-code-block@2.4.0(@tiptap/core@2.4.0(@tiptap/pm@2.4.0))(@tiptap/pm@2.4.0))(@tiptap/pm@2.4.0)
       '@tiptap/extension-collaboration':
         specifier: ^2.4.0
-        version: 2.4.0(@tiptap/core@2.4.0(@tiptap/pm@2.4.0))(@tiptap/pm@2.4.0)(y-prosemirror@1.2.6(prosemirror-model@1.21.1)(prosemirror-state@1.4.3)(prosemirror-view@1.33.7)(y-protocols@1.0.6(yjs@13.6.16))(yjs@13.6.16))
+        version: 2.4.0(@tiptap/core@2.4.0(@tiptap/pm@2.4.0))(@tiptap/pm@2.4.0)(y-prosemirror@1.2.8(prosemirror-model@1.21.1)(prosemirror-state@1.4.3)(prosemirror-view@1.33.7)(y-protocols@1.0.6(yjs@13.6.16))(yjs@13.6.16))
       '@tiptap/extension-collaboration-cursor':
         specifier: ^2.4.0
-        version: 2.4.0(@tiptap/core@2.4.0(@tiptap/pm@2.4.0))(y-prosemirror@1.2.6(prosemirror-model@1.21.1)(prosemirror-state@1.4.3)(prosemirror-view@1.33.7)(y-protocols@1.0.6(yjs@13.6.16))(yjs@13.6.16))
+        version: 2.4.0(@tiptap/core@2.4.0(@tiptap/pm@2.4.0))(y-prosemirror@1.2.8(prosemirror-model@1.21.1)(prosemirror-state@1.4.3)(prosemirror-view@1.33.7)(y-protocols@1.0.6(yjs@13.6.16))(yjs@13.6.16))
       '@tiptap/extension-youtube':
         specifier: ^2.4.0
         version: 2.4.0(@tiptap/core@2.4.0(@tiptap/pm@2.4.0))
@@ -156,8 +156,8 @@ importers:
         specifier: ^9.0.12
         version: 9.0.12(yjs@13.6.16)
       y-prosemirror:
-        specifier: ^1.2.6
-        version: 1.2.6(prosemirror-model@1.21.1)(prosemirror-state@1.4.3)(prosemirror-view@1.33.7)(y-protocols@1.0.6(yjs@13.6.16))(yjs@13.6.16)
+        specifier: ^1.2.8
+        version: 1.2.8(prosemirror-model@1.21.1)(prosemirror-state@1.4.3)(prosemirror-view@1.33.7)(y-protocols@1.0.6(yjs@13.6.16))(yjs@13.6.16)
       y-webrtc:
         specifier: ^10.3.0
         version: 10.3.0(yjs@13.6.16)
@@ -2904,8 +2904,8 @@ packages:
     peerDependencies:
       yjs: ^13.0.0
 
-  y-prosemirror@1.2.6:
-    resolution: {integrity: sha512-rGz8kX4v/uFJrLaqZvsezY1JGN/zTDSPMO76zRbNcpE63OEiw2PBCEQi9ZlfbEwgCMoeJLUT+otNyO/Oj73TGQ==}
+  y-prosemirror@1.2.8:
+    resolution: {integrity: sha512-xNDOEe9ViBXck0qwcTvzGgj832ecoz8GQSppoh6PwUokbXoEBDbAH76Qs15HOiatjZkSODHRGdpYlLBBkJPiGA==}
     engines: {node: '>=16.0.0', npm: '>=8.0.0'}
     peerDependencies:
       prosemirror-model: ^1.7.1
@@ -3549,16 +3549,16 @@ snapshots:
     dependencies:
       '@tiptap/core': 2.4.0(@tiptap/pm@2.4.0)
 
-  '@tiptap/extension-collaboration-cursor@2.4.0(@tiptap/core@2.4.0(@tiptap/pm@2.4.0))(y-prosemirror@1.2.6(prosemirror-model@1.21.1)(prosemirror-state@1.4.3)(prosemirror-view@1.33.7)(y-protocols@1.0.6(yjs@13.6.16))(yjs@13.6.16))':
+  '@tiptap/extension-collaboration-cursor@2.4.0(@tiptap/core@2.4.0(@tiptap/pm@2.4.0))(y-prosemirror@1.2.8(prosemirror-model@1.21.1)(prosemirror-state@1.4.3)(prosemirror-view@1.33.7)(y-protocols@1.0.6(yjs@13.6.16))(yjs@13.6.16))':
     dependencies:
       '@tiptap/core': 2.4.0(@tiptap/pm@2.4.0)
-      y-prosemirror: 1.2.6(prosemirror-model@1.21.1)(prosemirror-state@1.4.3)(prosemirror-view@1.33.7)(y-protocols@1.0.6(yjs@13.6.16))(yjs@13.6.16)
+      y-prosemirror: 1.2.8(prosemirror-model@1.21.1)(prosemirror-state@1.4.3)(prosemirror-view@1.33.7)(y-protocols@1.0.6(yjs@13.6.16))(yjs@13.6.16)
 
-  '@tiptap/extension-collaboration@2.4.0(@tiptap/core@2.4.0(@tiptap/pm@2.4.0))(@tiptap/pm@2.4.0)(y-prosemirror@1.2.6(prosemirror-model@1.21.1)(prosemirror-state@1.4.3)(prosemirror-view@1.33.7)(y-protocols@1.0.6(yjs@13.6.16))(yjs@13.6.16))':
+  '@tiptap/extension-collaboration@2.4.0(@tiptap/core@2.4.0(@tiptap/pm@2.4.0))(@tiptap/pm@2.4.0)(y-prosemirror@1.2.8(prosemirror-model@1.21.1)(prosemirror-state@1.4.3)(prosemirror-view@1.33.7)(y-protocols@1.0.6(yjs@13.6.16))(yjs@13.6.16))':
     dependencies:
       '@tiptap/core': 2.4.0(@tiptap/pm@2.4.0)
       '@tiptap/pm': 2.4.0
-      y-prosemirror: 1.2.6(prosemirror-model@1.21.1)(prosemirror-state@1.4.3)(prosemirror-view@1.33.7)(y-protocols@1.0.6(yjs@13.6.16))(yjs@13.6.16)
+      y-prosemirror: 1.2.8(prosemirror-model@1.21.1)(prosemirror-state@1.4.3)(prosemirror-view@1.33.7)(y-protocols@1.0.6(yjs@13.6.16))(yjs@13.6.16)
 
   '@tiptap/extension-document@2.4.0(@tiptap/core@2.4.0(@tiptap/pm@2.4.0))':
     dependencies:
@@ -5903,7 +5903,7 @@ snapshots:
       lib0: 0.2.94
       yjs: 13.6.16
 
-  y-prosemirror@1.2.6(prosemirror-model@1.21.1)(prosemirror-state@1.4.3)(prosemirror-view@1.33.7)(y-protocols@1.0.6(yjs@13.6.16))(yjs@13.6.16):
+  y-prosemirror@1.2.8(prosemirror-model@1.21.1)(prosemirror-state@1.4.3)(prosemirror-view@1.33.7)(y-protocols@1.0.6(yjs@13.6.16))(yjs@13.6.16):
     dependencies:
       lib0: 0.2.94
       prosemirror-model: 1.21.1
