@@ -34,15 +34,17 @@ export function CourseProvider({ children, courseuuid }: any) {
   }, [courseStructureData]);
 
   if (error) return <div>Failed to load course structure</div>;
-  if (!courseStructureData) return <PageLoading/>;
+  if (!courseStructureData) return <PageLoading />;
 
-  return (
-    <CourseContext.Provider value={state}>
-      <CourseDispatchContext.Provider value={dispatch}>
-        {children}
-      </CourseDispatchContext.Provider>
-    </CourseContext.Provider>
-  )
+  if (courseStructureData) {
+    return (
+      <CourseContext.Provider value={state}>
+        <CourseDispatchContext.Provider value={dispatch}>
+          {children}
+        </CourseDispatchContext.Provider>
+      </CourseContext.Provider>
+    )
+  }
 }
 
 export function useCourse() {
