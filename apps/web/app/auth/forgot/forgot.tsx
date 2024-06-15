@@ -42,6 +42,7 @@ function ForgotPasswordClient() {
             email: ''
         },
         validate,
+        validateOnBlur: true,
         onSubmit: async (values) => {
             setIsSubmitting(true)
             let res = await sendResetLink(values.email, org?.id)
