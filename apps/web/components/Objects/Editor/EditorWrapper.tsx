@@ -25,7 +25,7 @@ interface EditorWrapperProps {
 
 function EditorWrapper(props: EditorWrapperProps): JSX.Element {
   const session = useLHSession() as any
-    const access_token = session?.data?.tokens?.access_token;
+  const access_token = session?.data?.tokens?.access_token;
   // Define provider in the state
   const [provider, setProvider] = React.useState<HocuspocusProvider | null>(null);
   const [thisPageColor, setThisPageColor] = useState(randomColor({ luminosity: 'light' }) as string)
@@ -51,7 +51,7 @@ function EditorWrapper(props: EditorWrapperProps): JSX.Element {
     }, 10);
   };
 
-  
+
   // Store the Y document in the browser
   new IndexeddbPersistence(props.activity.activity_uuid, doc)
 
@@ -80,7 +80,7 @@ function EditorWrapper(props: EditorWrapperProps): JSX.Element {
       }
     });
 
-    toast.promise(updateActivity(activity, activity.activity_uuid,access_token), {
+    toast.promise(updateActivity(activity, activity.activity_uuid, access_token), {
       loading: 'Saving...',
       success: <b>Activity saved!</b>,
       error: <b>Could not save.</b>,

@@ -36,7 +36,7 @@ export const HeaderProfileBox = () => {
         <AccountArea className="space-x-0">
           <div className="flex items-center space-x-2">
             <div className='flex items-center space-x-2' >
-              <p className='text-sm'>{session.data.user.username}</p>
+              <p className='text-sm capitalize'>{session.data.user.username}</p>
               {isUserAdmin.isAdmin && <div className="text-[10px] bg-rose-300 px-2 font-bold rounded-md shadow-inner py-1">ADMIN</div>}
             </div>
             <div className="py-4">

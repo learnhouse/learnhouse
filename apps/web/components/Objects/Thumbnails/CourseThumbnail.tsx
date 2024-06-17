@@ -6,7 +6,7 @@ import { getUriWithOrg } from '@services/config/config'
 import { deleteCourseFromBackend } from '@services/courses/courses'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import { revalidateTags } from '@services/utils/ts/requests'
-import { Settings, X } from 'lucide-react'
+import { BookMinus, FilePenLine, Settings, Settings2, X, EllipsisVertical } from 'lucide-react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -71,7 +71,10 @@ function CourseThumbnail(props: PropsType) {
           />
         )}
       </Link>
-      <h2 className="font-bold text-lg w-[250px] py-2">{props.course.name}</h2>
+      <div className='flex flex-col w-[250px] pt-3 space-y-2'>
+        <h2 className="font-bold text-gray-800 max-h-[80px] h-fit line-clamp-2 leading-tight text-lg capitalize">{props.course.name}</h2>
+        <h3 className='text-sm text-gray-700 leading-normal line-clamp-3'>{props.course.description}</h3>
+      </div>
     </div>
   )
 }
@@ -89,7 +92,24 @@ const AdminEditsArea = (props: {
       checkMethod="roles"
       orgId={props.course.org_id}
     >
-      <div className="flex space-x-2 absolute z-20 bottom-14 right-[15px] transform">
+      <div
+        className="flex items-center space-x-2 absolute z-20 overflow-hidden rounded-xl pt-0 mx-auto justify-center transform w-full h-[60px] bg-gradient-to-t from-transparent from-10% to-gray-900/60">
+        <Link
+          href={getUriWithOrg(
+            props.orgSlug,
+            '/dash/courses/course/' +
+            removeCoursePrefix(props.courseId) +
+            '/content'
+          )}
+          prefetch
+        >
+          <div
+            className="hover:cursor-pointer p-1 px-4 bg-blue-600 rounded-xl items-center flex shadow-2xl"
+            rel="noopener noreferrer"
+          >
+            <FilePenLine size={14} className="text-blue-200 font-bold" />
+          </div>
+        </Link>
         <Link
           href={getUriWithOrg(
             props.orgSlug,
@@ -97,24 +117,26 @@ const AdminEditsArea = (props: {
             removeCoursePrefix(props.courseId) +
             '/general'
           )}
+          prefetch
         >
           <div
-            className=" hover:cursor-pointer p-1 px-4 bg-slate-700 rounded-xl items-center  flex shadow-xl"
+            className=" hover:cursor-pointer p-1 px-4 bg-gray-800 rounded-xl items-center  flex shadow-2xl"
             rel="noopener noreferrer"
           >
-            <Settings size={14} className="text-slate-200 font-bold" />
+            <Settings2 size={14} className="text-gray-200 font-bold" />
           </div>
         </Link>
+        <EllipsisVertical size={14} className='text-gray-200 font-bold' />
         <ConfirmationModal
           confirmationButtonText="Delete Course"
           confirmationMessage="Are you sure you want to delete this course?"
           dialogTitle={'Delete ' + props.course.name + ' ?'}
           dialogTrigger={
             <div
-              className=" hover:cursor-pointer p-1 px-4 bg-red-600 rounded-xl items-center justify-center flex shadow-xl"
+              className="hover:cursor-pointer p-1 px-4 bg-rose-600 h-fit rounded-xl items-center flex shadow-2xl"
               rel="noopener noreferrer"
             >
-              <X size={14} className="text-rose-200 font-bold" />
+              <BookMinus size={14} className="text-rose-200 font-bold" />
             </div>
           }
           functionToExecute={() => props.deleteCourses(props.courseId)}
