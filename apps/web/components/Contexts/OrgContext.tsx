@@ -30,7 +30,7 @@ export function OrgProvider({ children, orgslug }: { children: React.ReactNode, 
   const isUserPartOfTheOrg = useMemo(() => orgs?.some((userOrg: any) => userOrg.id === org?.id), [orgs, org?.id])
 
   if (orgError || orgsError) return <ErrorUI message='An error occurred while fetching data' />
-  if (!org || !orgs || !session) return <div>Loading...</div>
+  if (!org || !orgs || !session) return <div></div>
   if (!isOrgActive) return <ErrorUI message='This organization is no longer active' />
   if (!isUserPartOfTheOrg && session.status == 'authenticated' && !isAllowedPathname) {
     return (

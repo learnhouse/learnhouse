@@ -49,6 +49,7 @@ const EditActivity = async (params: any) => {
     { revalidate: 0, tags: ['activities'] },
     access_token ? access_token : null
   )
+  
   const org = await getOrganizationContextInfoWithId(courseInfo.org_id, {
     revalidate: 180,
     tags: ['organizations'],

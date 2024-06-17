@@ -33,19 +33,18 @@ async def authorization_verify_if_element_is_public(
                     detail="User rights : You don't have the right to perform this action",
                 )
 
-        if element_nature == "collections" and action == "read":
-
-            statement = select(Collection).where(
-                Collection.public == True, Collection.collection_uuid == element_uuid
+    if element_nature == "collections" and action == "read":
+        statement = select(Collection).where(
+            Collection.public == True, Collection.collection_uuid == element_uuid
+        )
+        collection = db_session.exec(statement).first()
+        if collection:
+            return True
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="User rights : You don't have the right to perform this action",
             )
-            collection = db_session.exec(statement).first()
-            if collection:
-                return True
-            else:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="User rights : You don't have the right to perform this action",
-                )
     else:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

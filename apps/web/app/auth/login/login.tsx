@@ -51,8 +51,17 @@ const LoginClient = (props: LoginClientProps) => {
       password: '',
     },
     validate,
-    onSubmit: async (values) => {
+    validateOnBlur: true,
+    validateOnChange: true,
+    onSubmit: async (values, {validateForm, setErrors, setSubmitting}) => {
       setIsSubmitting(true)
+      const errors = await validateForm(values);
+      if (Object.keys(errors).length > 0) {
+        setErrors(errors);
+        setSubmitting(false);
+        return;
+      }
+      
       const res = await signIn('credentials', {
         redirect: false,
         email: values.email,
@@ -139,7 +148,7 @@ const LoginClient = (props: LoginClientProps) => {
                   onChange={formik.handleChange}
                   value={formik.values.email}
                   type="email"
-                  required
+                  
                 />
               </Form.Control>
             </FormField>
@@ -155,7 +164,7 @@ const LoginClient = (props: LoginClientProps) => {
                   onChange={formik.handleChange}
                   value={formik.values.password}
                   type="password"
-                  required
+                  
                 />
               </Form.Control>
             </FormField>
@@ -170,7 +179,7 @@ const LoginClient = (props: LoginClientProps) => {
             </div>
             <div className="flex  py-4">
               <Form.Submit asChild>
-                <button className="w-full bg-black text-white font-bold text-center p-2 rounded-md shadow-md hover:cursor-pointer">
+                <button  className="w-full bg-black text-white font-bold text-center p-2 rounded-md shadow-md hover:cursor-pointer">
                   {isSubmitting ? 'Loading...' : 'Login'}
                 </button>
               </Form.Submit>

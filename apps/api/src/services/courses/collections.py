@@ -28,7 +28,7 @@ from fastapi import HTTPException, status, Request
 async def get_collection(
     request: Request,
     collection_uuid: str,
-    current_user: PublicUser,
+    current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ) -> CollectionRead:
     statement = select(Collection).where(Collection.collection_uuid == collection_uuid)
@@ -48,6 +48,7 @@ async def get_collection(
     statement_all = (
         select(Course)
         .join(CollectionCourse, Course.id == CollectionCourse.course_id)
+        .where(CollectionCourse.org_id == collection.org_id)
         .distinct(Course.id)
     )
 
@@ -57,7 +58,7 @@ async def get_collection(
         .where(CollectionCourse.org_id == collection.org_id, Course.public == True)
     )
 
-    if current_user.id == 0:
+    if current_user.user_uuid == "user_anonymous":
         statement = statement_public
     else:
         statement = statement_all
@@ -88,7 +89,6 @@ async def create_collection(
     # Add collection to database
     db_session.add(collection)
     db_session.commit()
-
     db_session.refresh(collection)
 
     # Link courses to collection
@@ -184,6 +184,7 @@ async def update_collection(
     statement = (
         select(Course)
         .join(CollectionCourse, Course.id == CollectionCourse.course_id)
+        .where(Course.org_id == collection.org_id)
         .distinct(Course.id)
     )
 
@@ -255,6 +256,7 @@ async def get_collections(
         statement_all = (
             select(Course)
             .join(CollectionCourse, Course.id == CollectionCourse.course_id)
+            .where(CollectionCourse.org_id == collection.org_id)
             .distinct(Course.id)
         )
         statement_public = (
@@ -297,8 +299,10 @@ async def rbac_check(
                     detail="User rights : You are not allowed to read this collection",
                 )
         else:
-            res = await authorization_verify_based_on_roles_and_authorship_and_usergroups(
-                request, current_user.id, action, collection_uuid, db_session
+            res = (
+                await authorization_verify_based_on_roles_and_authorship_and_usergroups(
+                    request, current_user.id, action, collection_uuid, db_session
+                )
             )
             return res
     else:
