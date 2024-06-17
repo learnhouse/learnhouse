@@ -47,6 +47,7 @@ import useGetAIFeatures from '@components/AI/Hooks/useGetAIFeatures'
 import Collaboration from '@tiptap/extension-collaboration'
 import CollaborationCursor from '@tiptap/extension-collaboration-cursor'
 import ActiveAvatars from './ActiveAvatars'
+import { getUriWithOrg } from '@services/config/config'
 
 interface Editor {
   content: string
@@ -182,11 +183,11 @@ function Editor(props: Editor) {
                 </Link>
                 <Link target="_blank" href={`/course/${course_uuid}`}>
                   <EditorInfoThumbnail
-                    src={`${getCourseThumbnailMediaDirectory(
+                    src={`${props.course.thumbnail_image ? getCourseThumbnailMediaDirectory(
                       props.org?.org_uuid,
                       props.course.course_uuid,
                       props.course.thumbnail_image
-                    )}`}
+                    ) : getUriWithOrg(props.org?.slug,'/empty_thumbnail.png')}`}
                     alt=""
                   ></EditorInfoThumbnail>
                 </Link>
