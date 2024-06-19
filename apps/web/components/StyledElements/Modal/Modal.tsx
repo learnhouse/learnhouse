@@ -6,8 +6,8 @@ import { blackA, mauve } from '@radix-ui/colors'
 import { ButtonBlack } from '../Form/Form'
 
 type ModalParams = {
-  dialogTitle: string
-  dialogDescription: string
+  dialogTitle?: string
+  dialogDescription?: string
   dialogContent: React.ReactNode
   dialogClose?: React.ReactNode | null
   dialogTrigger?: React.ReactNode
@@ -16,6 +16,8 @@ type ModalParams = {
   isDialogOpen?: boolean
   minHeight?: 'sm' | 'md' | 'lg' | 'xl' | 'no-min'
   minWidth?: 'sm' | 'md' | 'lg' | 'xl' | 'no-min'
+  customHeight?: string
+  customWidth?: string
 }
 
 const Modal = (params: ModalParams) => (
@@ -30,11 +32,14 @@ const Modal = (params: ModalParams) => (
         className="overflow-auto scrollbar-w-2 scrollbar-h-2 scrollbar scrollbar-thumb-black/20 scrollbar-thumb-rounded-full scrollbar-track-rounded-full"
         minHeight={params.minHeight}
         minWidth={params.minWidth}
+        
       >
-        <DialogTopBar className="-space-y-1">
-          <DialogTitle>{params.dialogTitle}</DialogTitle>
-          <DialogDescription>{params.dialogDescription}</DialogDescription>
-        </DialogTopBar>
+        {params.dialogTitle && params.dialogDescription &&
+          <DialogTopBar className="-space-y-1">
+            <DialogTitle>{params.dialogTitle}</DialogTitle>
+            <DialogDescription>{params.dialogDescription}</DialogDescription>
+          </DialogTopBar>
+        }
         {params.dialogContent}
         {params.dialogClose ? (
           <Flex css={{ marginTop: 25, justifyContent: 'flex-end' }}>
