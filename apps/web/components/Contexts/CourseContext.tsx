@@ -4,7 +4,6 @@ import { swrFetcher } from '@services/utils/ts/requests'
 import React, { createContext, useContext, useEffect, useReducer } from 'react'
 import useSWR from 'swr'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import PageLoading from '@components/Objects/Loaders/PageLoading'
 
 export const CourseContext = createContext(null)
 export const CourseDispatchContext = createContext(null)
