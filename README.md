@@ -10,6 +10,14 @@ LearnHouse is an open source platform that makes it easy for anyone to provide w
 
 🚧 LearnHouse is still on early development (alpha), as we reach stability we will release a stable version and add more features.
 
+## Roadmap
+
+We prioritize issues depending on the most requested features from our users, please help us prioritize issues by commenting on them and sharing your thoughts 
+
+[🚢 LearnHouse General Roadmap](https://www.learnhouse.app/roadmap)
+
+[👨‍💻 Detailed Roadmap](https://github.com/orgs/learnhouse/projects/4/views/1)
+
 ## Overview
 
 ![image](https://docs.learnhouse.app/img/pages/features.png)
