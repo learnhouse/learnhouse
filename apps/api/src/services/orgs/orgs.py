@@ -165,7 +165,7 @@ async def create_org(
             active=True,
         ),
         AIConfig=AIConfig(
-            enabled=False,
+            enabled=True,
             limits=AILimitsSettings(
                 limits_enabled=False,
                 max_asks=0,
