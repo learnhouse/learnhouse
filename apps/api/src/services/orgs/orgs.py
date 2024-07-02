@@ -173,10 +173,10 @@ async def create_org(
             embeddings="text-embedding-ada-002",
             ai_model="gpt-3.5-turbo",
             features=AIEnabledFeatures(
-                editor=False,
-                activity_ask=False,
-                course_ask=False,
-                global_ai_ask=False,
+                editor=True,
+                activity_ask=True,
+                course_ask=True,
+                global_ai_ask=True,
             ),
         ),
     )
