@@ -3,9 +3,9 @@ from uuid import uuid4
 from src.db.organizations import Organization
 from fastapi import HTTPException, status, UploadFile, Request
 from sqlmodel import Session, select
-from src.db.activities import Activity
-from src.db.blocks import Block, BlockRead, BlockTypeEnum
-from src.db.courses import Course
+from src.db.courses.activities import Activity
+from src.db.courses.blocks import Block, BlockRead, BlockTypeEnum
+from src.db.courses.courses import Course
 from src.services.blocks.utils.upload_files import upload_file_and_return_file_object
 
 from src.services.users.users import PublicUser

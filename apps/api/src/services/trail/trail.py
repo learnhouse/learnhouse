@@ -1,10 +1,10 @@
 from datetime import datetime
 from uuid import uuid4
-from src.db.chapter_activities import ChapterActivity
+from src.db.courses.chapter_activities import ChapterActivity
 from fastapi import HTTPException, Request, status
 from sqlmodel import Session, select
-from src.db.activities import Activity
-from src.db.courses import Course
+from src.db.courses.activities import Activity
+from src.db.courses.courses import Course
 from src.db.trail_runs import TrailRun, TrailRunRead
 from src.db.trail_steps import TrailStep
 from src.db.trails import Trail, TrailCreate, TrailRead

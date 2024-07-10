@@ -1,14 +1,14 @@
 from typing import Literal
 from sqlmodel import Session, select
-from src.db.courses import Course
-from src.db.chapters import Chapter
+from src.db.courses.courses import Course
+from src.db.courses.chapters import Chapter
 from src.security.rbac.rbac import (
     authorization_verify_based_on_roles_and_authorship_and_usergroups,
     authorization_verify_if_element_is_public,
     authorization_verify_if_user_is_anon,
 )
-from src.db.activities import ActivityCreate, Activity, ActivityRead, ActivityUpdate
-from src.db.chapter_activities import ChapterActivity
+from src.db.courses.activities import ActivityCreate, Activity, ActivityRead, ActivityUpdate
+from src.db.courses.chapter_activities import ChapterActivity
 from src.db.users import AnonymousUser, PublicUser
 from fastapi import HTTPException, Request
 from uuid import uuid4
@@ -58,7 +58,7 @@ async def create_activity(
     statement = (
         select(ChapterActivity)
         .where(ChapterActivity.chapter_id == activity_object.chapter_id)
-        .order_by(ChapterActivity.order)
+        .order_by(ChapterActivity.order) # type: ignore
     )
     chapter_activities = db_session.exec(statement).all()
 

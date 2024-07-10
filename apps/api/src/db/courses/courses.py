@@ -3,7 +3,7 @@ from sqlalchemy import Column, ForeignKey, Integer
 from sqlmodel import Field, SQLModel
 from src.db.users import UserRead
 from src.db.trails import TrailRead
-from src.db.chapters import ChapterRead
+from src.db.courses.chapters import ChapterRead
 
 
 class CourseBase(SQLModel):
@@ -21,7 +21,7 @@ class Course(CourseBase, table=True):
     org_id: int = Field(
         sa_column=Column(Integer, ForeignKey("organization.id", ondelete="CASCADE"))
     )
-    course_uuid: str = ""
+    course_uuid: str = ""   
     creation_date: str = ""
     update_date: str = ""
 

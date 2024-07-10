@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, UploadFile, Form, Request
-from src.db.blocks import BlockRead
+from src.db.courses.blocks import BlockRead
 from src.core.events.database import get_db_session
 from src.security.auth import get_current_user
 from src.services.blocks.block_types.imageBlock.imageBlock import (

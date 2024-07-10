@@ -8,7 +8,7 @@ from src.db.organizations import Organization
 from src.services.trail.trail import get_user_trail_with_orgid
 from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum
 from src.db.users import PublicUser, AnonymousUser, User, UserRead
-from src.db.courses import (
+from src.db.courses.courses import (
     Course,
     CourseCreate,
     CourseRead,
