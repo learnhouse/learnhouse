@@ -35,7 +35,7 @@ class BlockCreate(BlockBase):
 
 
 class BlockRead(BlockBase):
-    id: int
+    id: int = Field(default=None, primary_key=True)
     org_id: int = Field(default=None, foreign_key="organization.id")
     course_id: int = Field(default=None, foreign_key="course.id")
     chapter_id: int = Field(default=None, foreign_key="chapter.id")

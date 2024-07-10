@@ -2,13 +2,13 @@ from typing import List
 from fastapi import APIRouter, Depends, UploadFile, Form, Request
 from sqlmodel import Session
 from src.core.events.database import get_db_session
-from src.db.course_updates import (
+from src.db.courses.course_updates import (
     CourseUpdateCreate,
     CourseUpdateRead,
     CourseUpdateUpdate,
 )
 from src.db.users import PublicUser
-from src.db.courses import (
+from src.db.courses.courses import (
     CourseCreate,
     CourseRead,
     CourseUpdate,

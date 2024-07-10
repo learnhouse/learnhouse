@@ -1,7 +1,7 @@
 from typing import List
 from fastapi import APIRouter, Depends, Request
 from src.core.events.database import get_db_session
-from src.db.chapters import (
+from src.db.courses.chapters import (
     ChapterCreate,
     ChapterRead,
     ChapterUpdate,
