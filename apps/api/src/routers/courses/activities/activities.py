@@ -1,6 +1,6 @@
 from typing import List
 from fastapi import APIRouter, Depends, UploadFile, Form, Request
-from src.db.activities import ActivityCreate, ActivityRead, ActivityUpdate
+from src.db.courses.activities import ActivityCreate, ActivityRead, ActivityUpdate
 from src.db.users import PublicUser
 from src.core.events.database import get_db_session
 from src.services.courses.activities.activities import (
