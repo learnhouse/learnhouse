@@ -8,7 +8,7 @@ class ActivityTypeEnum(str, Enum):
     TYPE_VIDEO = "TYPE_VIDEO"
     TYPE_DOCUMENT = "TYPE_DOCUMENT"
     TYPE_DYNAMIC = "TYPE_DYNAMIC"
-    TYPE_ASSESSMENT = "TYPE_ASSESSMENT"
+    TYPE_ASSIGNMENT = "TYPE_ASSIGNMENT"
     TYPE_CUSTOM = "TYPE_CUSTOM"
 
 
@@ -21,8 +21,8 @@ class ActivitySubTypeEnum(str, Enum):
     # Document
     SUBTYPE_DOCUMENT_PDF = "SUBTYPE_DOCUMENT_PDF"
     SUBTYPE_DOCUMENT_DOC = "SUBTYPE_DOCUMENT_DOC"
-    # Assessment
-    SUBTYPE_ASSESSMENT_QUIZ = "SUBTYPE_ASSESSMENT_QUIZ"
+    # Assignment
+    SUBTYPE_ASSIGNMENT_ANY = "SUBTYPE_ASSIGNMENT_ANY"
     # Custom
     SUBTYPE_CUSTOM = "SUBTYPE_CUSTOM"
 
@@ -32,8 +32,7 @@ class ActivityBase(SQLModel):
     activity_type: ActivityTypeEnum = ActivityTypeEnum.TYPE_CUSTOM
     activity_sub_type: ActivitySubTypeEnum = ActivitySubTypeEnum.SUBTYPE_CUSTOM
     content: dict = Field(default={}, sa_column=Column(JSON))
-    published_version: int
-    version: int
+    published: bool = False
 
 
 class Activity(ActivityBase, table=True):
@@ -57,8 +56,6 @@ class ActivityCreate(ActivityBase):
 
 class ActivityUpdate(ActivityBase):
     name: Optional[str]
-    activity_type: Optional[ActivityTypeEnum]
-    activity_sub_type: Optional[ActivitySubTypeEnum]
     content: dict = Field(default={}, sa_column=Column(JSON))
     published_version: Optional[int]
     version: Optional[int]
