@@ -1,15 +1,16 @@
-import { useCourse } from '@components/Contexts/CourseContext'
-import { Book, ChevronRight, School, User, Users } from 'lucide-react'
+'use client';
+import { useOrg } from '@components/Contexts/OrgContext';
+import { Backpack, Book, ChevronRight, School, User, Users } from 'lucide-react'
 import Link from 'next/link'
 import React from 'react'
 
 type BreadCrumbsProps = {
-  type: 'courses' | 'user' | 'users' | 'org' | 'orgusers'
+  type: 'courses' | 'user' | 'users' | 'org' | 'orgusers' | 'assignments'
   last_breadcrumb?: string
 }
 
 function BreadCrumbs(props: BreadCrumbsProps) {
-  const course = useCourse() as any
+  const org = useOrg() as any
 
   return (
     <div>
@@ -21,6 +22,15 @@ function BreadCrumbs(props: BreadCrumbsProps) {
               {' '}
               <Book className="text-gray" size={14}></Book>
               <Link href="/dash/courses">Courses</Link>
+            </div>
+          ) : (
+            ''
+          )}
+          {props.type == 'assignments' ? (
+            <div className="flex space-x-2 items-center">
+              {' '}
+              <Backpack className="text-gray" size={14}></Backpack>
+              <Link href="/dash/assignments">Assignments</Link>
             </div>
           ) : (
             ''
@@ -64,7 +74,6 @@ function BreadCrumbs(props: BreadCrumbsProps) {
           </div>
         </div>
       </div>
-      <div className="h-2"></div>
     </div>
   )
 }

@@ -22,6 +22,7 @@ from src.services.courses.activities.assignments import (
     delete_assignment_task,
     delete_assignment_task_submission,
     read_assignment,
+    read_assignment_from_activity_uuid,
     read_assignment_submissions,
     read_assignment_task_submissions,
     read_assignment_tasks,
@@ -61,6 +62,18 @@ async def api_read_assignment(
     Read an assignment
     """
     return await read_assignment(request, assignment_uuid, current_user, db_session)
+
+@router.get("/activity/{activity_uuid}")
+async def api_read_assignment_from_activity(
+    request: Request,
+    activity_uuid: str,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+) -> AssignmentRead:
+    """
+    Read an assignment
+    """
+    return await read_assignment_from_activity_uuid(request, activity_uuid, current_user, db_session)
 
 
 @router.put("/{assignment_uuid}")
