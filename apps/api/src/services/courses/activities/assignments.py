@@ -8,6 +8,7 @@ from uuid import uuid4
 from fastapi import HTTPException, Request
 from sqlmodel import Session, select
 
+from src.db.courses.activities import Activity
 from src.db.courses.assignments import (
     Assignment,
     AssignmentCreate,
@@ -180,6 +181,53 @@ async def delete_assignment(
 
     # Delete Assignment
     db_session.delete(assignment)
+    db_session.commit()
+
+    return {"message": "Assignment deleted"}
+
+async def delete_assignment_from_activity_uuid(
+    request: Request,
+    activity_uuid: str,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+):
+    # Check if activity exists
+    statement = select(Activity).where(Activity.activity_uuid == activity_uuid)
+
+    activity = db_session.exec(statement).first()
+
+    if not activity:
+        raise HTTPException(
+            status_code=404,
+            detail="Activity not found",
+        )
+    
+    # Check if course exists
+    statement = select(Course).where(Course.id == activity.course_id)
+    course = db_session.exec(statement).first()
+
+    if not course:
+        raise HTTPException(
+            status_code=404,
+            detail="Course not found",
+        )
+    
+    # Check if assignment exists
+    statement = select(Assignment).where(Assignment.activity_id == activity.id)
+    assignment = db_session.exec(statement).first()
+
+    if not assignment:
+        raise HTTPException(
+            status_code=404,
+            detail="Assignment not found",
+        )
+    
+    # RBAC check
+    await rbac_check(request, course.course_uuid, current_user, "delete", db_session)
+
+    # Delete Assignment
+    db_session.delete(assignment)
+
     db_session.commit()
 
     return {"message": "Assignment deleted"}
