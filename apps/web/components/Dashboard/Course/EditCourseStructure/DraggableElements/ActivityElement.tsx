@@ -19,6 +19,7 @@ import { useRouter } from 'next/navigation'
 import React from 'react'
 import { Draggable } from 'react-beautiful-dnd'
 import { mutate } from 'swr'
+import { deleteAssignment, deleteAssignmentUsingActivityUUID } from '@services/courses/assignments'
 
 type ActivitiyElementProps = {
   orgslug: string
@@ -45,6 +46,11 @@ function ActivityElement(props: ActivitiyElementProps) {
   const activityUUID = props.activity.activity_uuid
 
   async function deleteActivityUI() {
+    // Assignments 
+    if(props.activity.activity_type === 'TYPE_ASSIGNMENT') {
+      await deleteAssignmentUsingActivityUUID(props.activity.activity_uuid, access_token)
+    }
+
     await deleteActivity(props.activity.activity_uuid, access_token)
     mutate(`${getAPIUrl()}courses/${props.course_uuid}/meta`)
     await revalidateTags(['courses'], props.orgslug)

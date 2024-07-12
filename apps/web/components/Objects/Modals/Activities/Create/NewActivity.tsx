@@ -102,9 +102,10 @@ function NewActivityModal({
 
       {selectedView === 'assignments' && (
         <Assignment
-          submitFileActivity={submitFileActivity}
+          submitActivity={submitActivity}
           chapterId={chapterId}
           course={course}
+          closeModal={closeModal}
         />)
       }
     </>

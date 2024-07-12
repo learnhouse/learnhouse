@@ -17,6 +17,7 @@ from src.services.courses.activities.assignments import (
     create_assignment_task,
     create_assignment_task_submission,
     delete_assignment,
+    delete_assignment_from_activity_uuid,
     delete_assignment_submission,
     delete_assignment_task,
     delete_assignment_task_submission,
@@ -89,6 +90,18 @@ async def api_delete_assignment(
     Delete an assignment
     """
     return await delete_assignment(request, assignment_uuid, current_user, db_session)
+
+@router.delete("/activity/{activity_uuid}")
+async def api_delete_assignment_from_activity(
+    request: Request,
+    activity_uuid: str,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+):
+    """
+    Delete an assignment
+    """
+    return await delete_assignment_from_activity_uuid(request, activity_uuid, current_user, db_session)
 
 
 ## ASSIGNMENTS Tasks ##
