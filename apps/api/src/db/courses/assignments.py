@@ -97,6 +97,7 @@ class AssignmentTaskBase(SQLModel):
     title: str
     description: str
     hint: str
+    reference_file: Optional[str]
     assignment_type: AssignmentTaskTypeEnum
     contents: Dict = Field(default={}, sa_column=Column(JSON))
     max_grade_value: int = 0  # Value is always between 0-100
@@ -108,7 +109,7 @@ class AssignmentTaskBase(SQLModel):
     activity_id: int
 
 
-class AssignmentTaskCreate(AssignmentTaskBase   ):
+class AssignmentTaskCreate(AssignmentTaskBase):
     """Model for creating a new assignment task."""
 
     pass  # Inherits all fields from AssignmentTaskBase

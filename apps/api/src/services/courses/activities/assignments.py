@@ -104,6 +104,48 @@ async def read_assignment(
     # return assignment read
     return AssignmentRead.model_validate(assignment)
 
+async def read_assignment_from_activity_uuid(
+    request: Request,
+    activity_uuid: str,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+):
+    # Check if activity exists
+    statement = select(Activity).where(Activity.activity_uuid == activity_uuid)
+    activity = db_session.exec(statement).first()
+
+    if not activity:
+        raise HTTPException(
+            status_code=404,
+            detail="Activity not found",
+        )
+    
+    # Check if course exists
+    statement = select(Course).where(Course.id == activity.course_id)
+    course = db_session.exec(statement).first()
+
+    if not course:
+        raise HTTPException(
+            status_code=404,
+            detail="Course not found",
+        )
+    
+    # Check if assignment exists
+    statement = select(Assignment).where(Assignment.activity_id == activity.id)
+    assignment = db_session.exec(statement).first()
+
+    if not assignment:
+        raise HTTPException(
+            status_code=404,
+            detail="Assignment not found",
+        )
+
+    # RBAC check
+    await rbac_check(request, course.course_uuid, current_user, "read", db_session)
+
+    # return assignment read
+    return AssignmentRead.model_validate(assignment)
+
 
 async def update_assignment(
     request: Request,

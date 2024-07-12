@@ -3,6 +3,7 @@ import { getAPIUrl, getUriWithOrg } from '@services/config/config'
 import { deleteActivity, updateActivity } from '@services/courses/activities'
 import { revalidateTags } from '@services/utils/ts/requests'
 import {
+  Backpack,
   Eye,
   File,
   FilePenLine,
@@ -16,10 +17,12 @@ import {
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Draggable } from 'react-beautiful-dnd'
 import { mutate } from 'swr'
-import { deleteAssignment, deleteAssignmentUsingActivityUUID } from '@services/courses/assignments'
+import { deleteAssignment, deleteAssignmentUsingActivityUUID, getAssignmentFromActivityUUID } from '@services/courses/assignments'
+import { useOrg } from '@components/Contexts/OrgContext'
+import { useCourse } from '@components/Contexts/CourseContext'
 
 type ActivitiyElementProps = {
   orgslug: string
@@ -47,7 +50,7 @@ function ActivityElement(props: ActivitiyElementProps) {
 
   async function deleteActivityUI() {
     // Assignments 
-    if(props.activity.activity_type === 'TYPE_ASSIGNMENT') {
+    if (props.activity.activity_type === 'TYPE_ASSIGNMENT') {
       await deleteAssignmentUsingActivityUUID(props.activity.activity_uuid, access_token)
     }
 
@@ -66,8 +69,6 @@ function ActivityElement(props: ActivitiyElementProps) {
       let modifiedActivityCopy = {
         name: modifiedActivity.activityName,
         description: '',
-        type: props.activity.type,
-        content: props.activity.content,
       }
 
       await updateActivity(modifiedActivityCopy, activityUUID, access_token)
@@ -135,29 +136,7 @@ function ActivityElement(props: ActivitiyElementProps) {
           </div>
           {/*   Edit and View Button  */}
           <div className="flex flex-row space-x-2">
-            {props.activity.activity_type === 'TYPE_DYNAMIC' && (
-              <>
-                <Link
-                  href={
-                    getUriWithOrg(props.orgslug, '') +
-                    `/course/${props.course_uuid.replace(
-                      'course_',
-                      ''
-                    )}/activity/${props.activity.activity_uuid.replace(
-                      'activity_',
-                      ''
-                    )}/edit`
-                  }
-                  prefetch
-                  className=" hover:cursor-pointer p-1 px-3 bg-sky-700 rounded-md items-center"
-                  target='_blank' // hotfix for an editor prosemirror bug 
-                >
-                  <div className="text-sky-100 font-bold text-xs flex items-center space-x-1">
-                    <FilePenLine size={12} /> <span>Edit Page</span>
-                  </div>
-                </Link>
-              </>
-            )}
+            <ActivityElementOptions activity={props.activity} />
             <Link
               href={
                 getUriWithOrg(props.orgslug, '') +
@@ -227,6 +206,18 @@ const ActivityTypeIndicator = (props: { activityType: string }) => {
           </div>
         </>
       )}
+      {props.activityType === 'TYPE_ASSIGNMENT' && (
+        <>
+          <div className="flex space-x-2 items-center">
+            <div className="w-[30px]">
+              <Backpack size={16} />{' '}
+            </div>
+            <div className="text-xs bg-gray-200 text-gray-400 font-bold px-2 py-1 rounded-full">
+              Assignment
+            </div>{' '}
+          </div>
+        </>
+      )}
       {props.activityType === 'TYPE_DYNAMIC' && (
         <>
           <div className="flex space-x-2 items-center">
@@ -240,4 +231,78 @@ const ActivityTypeIndicator = (props: { activityType: string }) => {
     </div>
   )
 }
+
+const ActivityElementOptions = ({ activity }: any) => {
+  const [assignmentUUID, setAssignmentUUID] = useState('');
+  const org = useOrg() as any;
+  const course = useCourse() as any;
+  const session = useLHSession() as any;
+  const access_token = session?.data?.tokens?.access_token;
+
+  async function getAssignmentUUIDFromActivityUUID(activityUUID: string) {
+    const activity = await getAssignmentFromActivityUUID(activityUUID, access_token);
+    if (activity) {
+      return activity.data.assignment_uuid;
+    }
+  }
+
+  const fetchAssignmentUUID = async () => {
+    if (activity.activity_type === 'TYPE_ASSIGNMENT') {
+      const assignment_uuid = await getAssignmentUUIDFromActivityUUID(activity.activity_uuid);
+      setAssignmentUUID(assignment_uuid.replace('assignment_', ''));
+    }
+  };
+
+  useEffect(() => {
+
+    console.log(activity)
+
+    fetchAssignmentUUID();
+  }, [activity, course]);
+
+  return (
+    <>
+      {activity.activity_type === 'TYPE_DYNAMIC' && (
+        <>
+          <Link
+            href={
+              getUriWithOrg(org.slug, '') +
+              `/course/${course?.courseStructure.course_uuid.replace(
+                'course_',
+                ''
+              )}/activity/${activity.activity_uuid.replace(
+                'activity_',
+                ''
+              )}/edit`
+            }
+            prefetch
+            className=" hover:cursor-pointer p-1 px-3 bg-sky-700 rounded-md items-center"
+            target='_blank' // hotfix for an editor prosemirror bug 
+          >
+            <div className="text-sky-100 font-bold text-xs flex items-center space-x-1">
+              <FilePenLine size={12} /> <span>Edit Page</span>
+            </div>
+          </Link>
+        </>
+      )}
+      {activity.activity_type === 'TYPE_ASSIGNMENT' && assignmentUUID && (
+        <>
+          <Link
+            href={
+              getUriWithOrg(org.slug, '') +
+              `/dash/assignments/${assignmentUUID}`
+            }
+            prefetch
+            className=" hover:cursor-pointer p-1 px-3 bg-teal-700 rounded-md items-center"
+          >
+            <div className="text-sky-100 font-bold text-xs flex items-center space-x-1">
+              <FilePenLine size={12} /> <span>Edit Assignment</span>
+            </div>
+          </Link>
+        </>
+      )}
+    </>
+  );
+};
+
 export default ActivityElement
