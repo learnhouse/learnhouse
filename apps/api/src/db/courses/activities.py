@@ -29,8 +29,8 @@ class ActivitySubTypeEnum(str, Enum):
 
 class ActivityBase(SQLModel):
     name: str
-    activity_type: ActivityTypeEnum = ActivityTypeEnum.TYPE_CUSTOM
-    activity_sub_type: ActivitySubTypeEnum = ActivitySubTypeEnum.SUBTYPE_CUSTOM
+    activity_type: ActivityTypeEnum 
+    activity_sub_type: ActivitySubTypeEnum 
     content: dict = Field(default={}, sa_column=Column(JSON))
     published: bool = False
 
@@ -51,12 +51,16 @@ class Activity(ActivityBase, table=True):
 
 class ActivityCreate(ActivityBase):
     chapter_id: int
+    activity_type: ActivityTypeEnum = ActivityTypeEnum.TYPE_CUSTOM
+    activity_sub_type: ActivitySubTypeEnum = ActivitySubTypeEnum.SUBTYPE_CUSTOM
     pass
 
 
 class ActivityUpdate(ActivityBase):
     name: Optional[str]
     content: dict = Field(default={}, sa_column=Column(JSON))
+    activity_type: Optional[ActivityTypeEnum] 
+    activity_sub_type: Optional[ActivitySubTypeEnum] 
     published_version: Optional[int]
     version: Optional[int]
 

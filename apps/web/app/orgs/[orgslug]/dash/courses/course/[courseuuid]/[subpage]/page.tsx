@@ -82,7 +82,6 @@ function CourseOverviewPage({ params }: { params: CourseOverviewParams }) {
                 </div>
               </div>
             </Link>
-
           </div>
 
         </div>
