@@ -64,3 +64,15 @@ export async function createAssignmentTask(
   const res = await getResponseMetadata(result)
   return res
 }
+
+export async function getAssignmentTask(
+  assignmentTaskUUID: string,
+  access_token: string
+) {
+  const result: any = await fetch(
+    `${getAPIUrl()}assignments/task/${assignmentTaskUUID}`,
+    RequestBodyWithAuthHeader('GET', null, null, access_token)
+  )
+  const res = await getResponseMetadata(result)
+  return res
+}

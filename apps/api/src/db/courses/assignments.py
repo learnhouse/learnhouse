@@ -102,11 +102,7 @@ class AssignmentTaskBase(SQLModel):
     contents: Dict = Field(default={}, sa_column=Column(JSON))
     max_grade_value: int = 0  # Value is always between 0-100
 
-    assignment_id: int
-    org_id: int
-    course_id: int
-    chapter_id: int
-    activity_id: int
+    
 
 
 class AssignmentTaskCreate(AssignmentTaskBase):
