@@ -315,6 +315,10 @@ async def create_assignment_task(
     assignment_task.creation_date = str(datetime.now())
     assignment_task.update_date = str(datetime.now())
     assignment_task.org_id = course.org_id
+    assignment_task.chapter_id = assignment.chapter_id
+    assignment_task.activity_id = assignment.activity_id
+    assignment_task.assignment_id = assignment.id # type: ignore
+    assignment_task.course_id = assignment.course_id
 
     # Insert Assignment Task in DB
     db_session.add(assignment_task)
@@ -364,6 +368,48 @@ async def read_assignment_tasks(
         AssignmentTaskRead.model_validate(assignment_task)
         for assignment_task in db_session.exec(statement).all()
     ]
+
+async def read_assignment_task(
+    request: Request,
+    assignment_task_uuid: str,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+):
+    # Find assignment
+    statement = select(AssignmentTask).where(AssignmentTask.assignment_task_uuid == assignment_task_uuid)
+    assignmenttask = db_session.exec(statement).first()
+
+    if not assignmenttask:
+        raise HTTPException(
+            status_code=404,
+            detail="Assignment Task not found",
+        )
+    
+    # Check if assignment exists
+    statement = select(Assignment).where(Assignment.id == assignmenttask.assignment_id)
+    assignment = db_session.exec(statement).first()
+
+    if not assignment:
+        raise HTTPException(
+            status_code=404,
+            detail="Assignment not found",
+        )
+    
+    # Check if course exists
+    statement = select(Course).where(Course.id == assignment.course_id)
+    course = db_session.exec(statement).first()
+
+    if not course:
+        raise HTTPException(
+            status_code=404,
+            detail="Course not found",
+        )
+    
+    # RBAC check
+    await rbac_check(request, course.course_uuid, current_user, "read", db_session)
+
+    # return assignment task read
+    return AssignmentTaskRead.model_validate(assignmenttask)
 
 
 async def update_assignment_task(
