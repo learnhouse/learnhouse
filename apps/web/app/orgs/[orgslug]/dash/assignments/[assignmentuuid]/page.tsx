@@ -40,32 +40,32 @@ function AssignmentEdit() {
                                 slateBlack
                                 sideOffset={10}
                                 content="Make your Assignment unavailable for students" >
-                            <div className='flex px-3 py-2 cursor-pointer rounded-md space-x-2 items-center bg-gradient-to-bl text-gray-800 font-medium from-gray-400/50 to-gray-200/80 border border-gray-600/10 shadow-gray-900/10 shadow-lg'>
-                                <BookX size={18} />
-                                <p className='text-sm font-bold'>Unpublish</p>
-                            </div>
+                                <div className='flex px-3 py-2 cursor-pointer rounded-md space-x-2 items-center bg-gradient-to-bl text-gray-800 font-medium from-gray-400/50 to-gray-200/80 border border-gray-600/10 shadow-gray-900/10 shadow-lg'>
+                                    <BookX size={18} />
+                                    <p className='text-sm font-bold'>Unpublish</p>
+                                </div>
                             </ToolTip>
                         </div>
                     </div>
                 </div>
             </div>
             <div className="flex h-full w-full">
-                <AssignmentsTaskProvider>
-                    <div className='flex w-[400px] flex-col h-full custom-dots-bg'>
-                        <div className='flex mx-auto px-3.5 py-1 bg-neutral-600/80 space-x-2 my-5 items-center text-sm font-bold text-white rounded-full'>
-                            <LayoutList size={18} />
-                            <p>Tasks</p>
-                        </div>
-                        <AssignmentProvider assignment_uuid={'assignment_' + params.assignmentuuid}>
+                <AssignmentProvider assignment_uuid={'assignment_' + params.assignmentuuid}>
+                    <AssignmentsTaskProvider>
+                        <div className='flex w-[400px] flex-col h-full custom-dots-bg'>
+                            <div className='flex mx-auto px-3.5 py-1 bg-neutral-600/80 space-x-2 my-5 items-center text-sm font-bold text-white rounded-full'>
+                                <LayoutList size={18} />
+                                <p>Tasks</p>
+                            </div>
                             <AssignmentTasks assignment_uuid={'assignment_' + params.assignmentuuid} />
-                        </AssignmentProvider>
-                    </div>
-                    <div className='flex flex-grow bg-[#fefcfe] nice-shadow h-full w-full'>
-                        <AssignmentProvider assignment_uuid={'assignment_' + params.assignmentuuid}>
-                            <AssignmentTaskEditor task_uuid='UUID' page='overview' />
-                        </AssignmentProvider>
-                    </div>
-                </AssignmentsTaskProvider>
+                        </div>
+                        <div className='flex flex-grow bg-[#fefcfe] nice-shadow h-full w-full'>
+                            <AssignmentProvider assignment_uuid={'assignment_' + params.assignmentuuid}>
+                                <AssignmentTaskEditor page='general' />
+                            </AssignmentProvider>
+                        </div>
+                    </AssignmentsTaskProvider>
+                </AssignmentProvider>
             </div>
         </div>
     )

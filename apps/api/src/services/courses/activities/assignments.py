@@ -5,7 +5,7 @@
 from datetime import datetime
 from typing import Literal
 from uuid import uuid4
-from fastapi import HTTPException, Request
+from fastapi import HTTPException, Request, UploadFile
 from sqlmodel import Session, select
 
 from src.db.courses.activities import Activity
@@ -26,11 +26,15 @@ from src.db.courses.assignments import (
     AssignmentUserSubmissionRead,
 )
 from src.db.courses.courses import Course
+from src.db.organizations import Organization
 from src.db.users import AnonymousUser, PublicUser
 from src.security.rbac.rbac import (
     authorization_verify_based_on_roles_and_authorship_and_usergroups,
     authorization_verify_if_element_is_public,
     authorization_verify_if_user_is_anon,
+)
+from src.services.courses.activities.uploads.tasks_ref_files import (
+    upload_reference_file,
 )
 
 ## > Assignments CRUD
@@ -104,6 +108,7 @@ async def read_assignment(
     # return assignment read
     return AssignmentRead.model_validate(assignment)
 
+
 async def read_assignment_from_activity_uuid(
     request: Request,
     activity_uuid: str,
@@ -119,7 +124,7 @@ async def read_assignment_from_activity_uuid(
             status_code=404,
             detail="Activity not found",
         )
-    
+
     # Check if course exists
     statement = select(Course).where(Course.id == activity.course_id)
     course = db_session.exec(statement).first()
@@ -129,7 +134,7 @@ async def read_assignment_from_activity_uuid(
             status_code=404,
             detail="Course not found",
         )
-    
+
     # Check if assignment exists
     statement = select(Assignment).where(Assignment.activity_id == activity.id)
     assignment = db_session.exec(statement).first()
@@ -227,6 +232,7 @@ async def delete_assignment(
 
     return {"message": "Assignment deleted"}
 
+
 async def delete_assignment_from_activity_uuid(
     request: Request,
     activity_uuid: str,
@@ -243,7 +249,7 @@ async def delete_assignment_from_activity_uuid(
             status_code=404,
             detail="Activity not found",
         )
-    
+
     # Check if course exists
     statement = select(Course).where(Course.id == activity.course_id)
     course = db_session.exec(statement).first()
@@ -253,7 +259,7 @@ async def delete_assignment_from_activity_uuid(
             status_code=404,
             detail="Course not found",
         )
-    
+
     # Check if assignment exists
     statement = select(Assignment).where(Assignment.activity_id == activity.id)
     assignment = db_session.exec(statement).first()
@@ -263,7 +269,7 @@ async def delete_assignment_from_activity_uuid(
             status_code=404,
             detail="Assignment not found",
         )
-    
+
     # RBAC check
     await rbac_check(request, course.course_uuid, current_user, "delete", db_session)
 
@@ -317,7 +323,7 @@ async def create_assignment_task(
     assignment_task.org_id = course.org_id
     assignment_task.chapter_id = assignment.chapter_id
     assignment_task.activity_id = assignment.activity_id
-    assignment_task.assignment_id = assignment.id # type: ignore
+    assignment_task.assignment_id = assignment.id  # type: ignore
     assignment_task.course_id = assignment.course_id
 
     # Insert Assignment Task in DB
@@ -369,6 +375,7 @@ async def read_assignment_tasks(
         for assignment_task in db_session.exec(statement).all()
     ]
 
+
 async def read_assignment_task(
     request: Request,
     assignment_task_uuid: str,
@@ -376,7 +383,9 @@ async def read_assignment_task(
     db_session: Session,
 ):
     # Find assignment
-    statement = select(AssignmentTask).where(AssignmentTask.assignment_task_uuid == assignment_task_uuid)
+    statement = select(AssignmentTask).where(
+        AssignmentTask.assignment_task_uuid == assignment_task_uuid
+    )
     assignmenttask = db_session.exec(statement).first()
 
     if not assignmenttask:
@@ -384,7 +393,7 @@ async def read_assignment_task(
             status_code=404,
             detail="Assignment Task not found",
         )
-    
+
     # Check if assignment exists
     statement = select(Assignment).where(Assignment.id == assignmenttask.assignment_id)
     assignment = db_session.exec(statement).first()
@@ -394,7 +403,57 @@ async def read_assignment_task(
             status_code=404,
             detail="Assignment not found",
         )
-    
+
+    # Check if course exists
+    statement = select(Course).where(Course.id == assignment.course_id)
+    course = db_session.exec(statement).first()
+
+    if not course:
+        raise HTTPException(
+            status_code=404,
+            detail="Course not found",
+        )
+
+    # RBAC check
+    await rbac_check(request, course.course_uuid, current_user, "read", db_session)
+
+    # return assignment task read
+    return AssignmentTaskRead.model_validate(assignmenttask)
+
+
+async def put_assignment_task_reference_file(
+    request: Request,
+    db_session: Session,
+    assignment_task_uuid: str,
+    current_user: PublicUser | AnonymousUser,
+    reference_file: UploadFile | None = None,
+):
+    # Check if assignment task exists
+    statement = select(AssignmentTask).where(
+        AssignmentTask.assignment_task_uuid == assignment_task_uuid
+    )
+    assignment_task = db_session.exec(statement).first()
+
+    if not assignment_task:
+        raise HTTPException(
+            status_code=404,
+            detail="Assignment Task not found",
+        )
+
+    # Check if assignment exists
+    statement = select(Assignment).where(Assignment.id == assignment_task.assignment_id)
+    assignment = db_session.exec(statement).first()
+
+    if not assignment:
+        raise HTTPException(
+            status_code=404,
+            detail="Assignment not found",
+        )
+
+    # Check for activity
+    statement = select(Activity).where(Activity.id == assignment.activity_id)
+    activity = db_session.exec(statement).first()
+
     # Check if course exists
     statement = select(Course).where(Course.id == assignment.course_id)
     course = db_session.exec(statement).first()
@@ -405,11 +464,34 @@ async def read_assignment_task(
             detail="Course not found",
         )
     
+    # Get org uuid
+    org_statement = select(Organization).where(Organization.id == course.org_id)
+    org = db_session.exec(org_statement).first()
+
     # RBAC check
-    await rbac_check(request, course.course_uuid, current_user, "read", db_session)
+    await rbac_check(request, course.course_uuid, current_user, "update", db_session)
+
+    # Upload reference file
+    if reference_file and reference_file.filename and activity and org:
+        name_in_disk = (
+            f"{assignment_task_uuid}{uuid4()}.{reference_file.filename.split('.')[-1]}"
+        )
+        await upload_reference_file(
+            reference_file, name_in_disk, activity.activity_uuid, org.org_uuid, course.course_uuid, assignment.assignment_uuid, assignment_task_uuid
+        )
+        course.thumbnail_image = name_in_disk
+        # Update reference file
+        assignment_task.reference_file = name_in_disk
+
+    assignment_task.update_date = str(datetime.now())
+
+    # Insert Assignment Task in DB
+    db_session.add(assignment_task)
+    db_session.commit()
+    db_session.refresh(assignment_task)
 
     # return assignment task read
-    return AssignmentTaskRead.model_validate(assignmenttask)
+    return AssignmentTaskRead.model_validate(assignment_task)
 
 
 async def update_assignment_task(

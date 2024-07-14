@@ -2,10 +2,14 @@
 import React, { createContext, useContext, useEffect, useReducer } from 'react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { getAssignmentTask } from '@services/courses/assignments'
+import { useAssignments } from './AssignmentContext';
+import { mutate } from 'swr';
+import { getAPIUrl } from '@services/config/config';
 
 interface State {
     selectedAssignmentTaskUUID: string | null;
     assignmentTask: Record<string, any>;
+    reloadTrigger: number;
 }
 
 interface Action {
@@ -15,7 +19,8 @@ interface Action {
 
 const initialState: State = {
     selectedAssignmentTaskUUID: null,
-    assignmentTask: {}
+    assignmentTask: {},
+    reloadTrigger: 0,
 };
 
 export const AssignmentsTaskContext = createContext<State | undefined>(undefined);
@@ -24,21 +29,26 @@ export const AssignmentsTaskDispatchContext = createContext<React.Dispatch<Actio
 export function AssignmentsTaskProvider({ children }: { children: React.ReactNode }) {
     const session = useLHSession() as any;
     const access_token = session?.data?.tokens?.access_token;
+    const assignment = useAssignments() as any
 
     const [state, dispatch] = useReducer(assignmentstaskReducer, initialState);
 
     async function fetchAssignmentTask(assignmentTaskUUID: string) {
         const res = await getAssignmentTask(assignmentTaskUUID, access_token);
+
+        
         if (res.success) {
-            dispatch({ type: 'setAssignmentTask', payload: res });
+            dispatch({ type: 'setAssignmentTask', payload: res.data });
         }
     }
 
     useEffect(() => {
+        
         if (state.selectedAssignmentTaskUUID) {
             fetchAssignmentTask(state.selectedAssignmentTaskUUID);
+            mutate(`${getAPIUrl()}assignments/${assignment.assignment_object?.assignment_uuid}/tasks`);
         }
-    }, [state.selectedAssignmentTaskUUID]);
+    }, [state.selectedAssignmentTaskUUID, state.reloadTrigger,assignment]);
 
     return (
         <AssignmentsTaskContext.Provider value={state}>
@@ -72,9 +82,8 @@ function assignmentstaskReducer(state: State, action: Action): State {
         case 'setAssignmentTask':
             return { ...state, assignmentTask: action.payload };
         case 'reload':
-            return { ...state };
+            return { ...state, reloadTrigger: state.reloadTrigger + 1 };
         default:
             return state;
     }
 }
-
