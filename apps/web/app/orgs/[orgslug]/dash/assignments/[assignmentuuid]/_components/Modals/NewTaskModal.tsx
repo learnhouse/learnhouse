@@ -58,7 +58,7 @@ function NewTaskModal({ closeModal, assignment_uuid }: any) {
         <div className='px-5 py-5 rounded-full nice-shadow w-fit mx-auto bg-gray-100/50 text-gray-500 cursor-pointer hover:bg-gray-100 transition-all ease-linear'>
           <FileUp size={30} />
         </div>
-        <p className='text-xl text-gray-700 font-semibold'>File submissions</p>
+        <p className='text-xl text-gray-700 font-semibold'>File submission</p>
         <p className='text-sm text-gray-500 w-40'>Students can submit files for this task</p>
       </div>
       <div
@@ -67,7 +67,7 @@ function NewTaskModal({ closeModal, assignment_uuid }: any) {
         <div className='px-5 py-5 rounded-full nice-shadow w-fit mx-auto bg-gray-100/50 text-gray-500 cursor-pointer hover:bg-gray-100 transition-all ease-linear'>
           <AArrowUp size={30} />
         </div>
-        <p className='text-xl text-gray-700 font-semibold'>Forms</p>
+        <p className='text-xl text-gray-700 font-semibold'>Form</p>
         <p className='text-sm text-gray-500 w-40'>Forms for students to fill out</p>
       </div>
     </div>

@@ -45,6 +45,19 @@ export function getActivityBlockMediaDirectory(
   }
 }
 
+export function getTaskRefFileDir(
+  orgUUID: string,
+  courseId: string,
+  activityId: string,
+  assignmentUUID: string,
+  assignmentTaskUUID: string,
+  fileID : string
+
+) {
+  let uri = `${getMediaUrl()}content/orgs/${orgUUID}/courses/${courseId}/activities/${activityId}/assignments/${assignmentUUID}/tasks/${assignmentTaskUUID}/${fileID}`
+  return uri
+}
+
 export function getActivityMediaDirectory(
   orgUUID: string,
   courseId: string,
