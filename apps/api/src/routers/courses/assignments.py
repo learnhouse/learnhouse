@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, UploadFile
 from src.db.courses.assignments import (
     AssignmentCreate,
     AssignmentRead,
@@ -21,6 +21,7 @@ from src.services.courses.activities.assignments import (
     delete_assignment_submission,
     delete_assignment_task,
     delete_assignment_task_submission,
+    put_assignment_task_reference_file,
     read_assignment,
     read_assignment_from_activity_uuid,
     read_assignment_submissions,
@@ -64,6 +65,7 @@ async def api_read_assignment(
     """
     return await read_assignment(request, assignment_uuid, current_user, db_session)
 
+
 @router.get("/activity/{activity_uuid}")
 async def api_read_assignment_from_activity(
     request: Request,
@@ -74,7 +76,9 @@ async def api_read_assignment_from_activity(
     """
     Read an assignment
     """
-    return await read_assignment_from_activity_uuid(request, activity_uuid, current_user, db_session)
+    return await read_assignment_from_activity_uuid(
+        request, activity_uuid, current_user, db_session
+    )
 
 
 @router.put("/{assignment_uuid}")
@@ -105,6 +109,7 @@ async def api_delete_assignment(
     """
     return await delete_assignment(request, assignment_uuid, current_user, db_session)
 
+
 @router.delete("/activity/{activity_uuid}")
 async def api_delete_assignment_from_activity(
     request: Request,
@@ -115,7 +120,9 @@ async def api_delete_assignment_from_activity(
     """
     Delete an assignment
     """
-    return await delete_assignment_from_activity_uuid(request, activity_uuid, current_user, db_session)
+    return await delete_assignment_from_activity_uuid(
+        request, activity_uuid, current_user, db_session
+    )
 
 
 ## ASSIGNMENTS Tasks ##
@@ -166,7 +173,8 @@ async def api_read_assignment_task(
         request, assignment_task_uuid, current_user, db_session
     )
 
-@router.put("/{assignment_uuid}/tasks/{task_uuid}")
+
+@router.put("/{assignment_uuid}/tasks/{assignment_task_uuid}")
 async def api_update_assignment_tasks(
     request: Request,
     assignment_task_uuid: str,
@@ -179,6 +187,22 @@ async def api_update_assignment_tasks(
     """
     return await update_assignment_task(
         request, assignment_task_uuid, assignment_task_object, current_user, db_session
+    )
+
+
+@router.post("/{assignment_uuid}/tasks/{assignment_task_uuid}/ref_file")
+async def api_put_assignment_task_ref_file(
+    request: Request,
+    assignment_task_uuid: str,
+    reference_file: UploadFile | None = None,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+):
+    """
+    Update tasks for an assignment
+    """
+    return await put_assignment_task_reference_file(
+        request, db_session, assignment_task_uuid, current_user, reference_file
     )
 
 

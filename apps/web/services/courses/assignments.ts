@@ -1,5 +1,6 @@
 import { getAPIUrl } from '@services/config/config'
 import {
+  RequestBodyFormWithAuthHeader,
   RequestBodyWithAuthHeader,
   getResponseMetadata,
 } from '@services/utils/ts/requests'
@@ -72,6 +73,41 @@ export async function getAssignmentTask(
   const result: any = await fetch(
     `${getAPIUrl()}assignments/task/${assignmentTaskUUID}`,
     RequestBodyWithAuthHeader('GET', null, null, access_token)
+  )
+  const res = await getResponseMetadata(result)
+  return res
+}
+
+export async function updateAssignmentTask(
+  body: any,
+  assignmentTaskUUID: string,
+  assignmentUUID: string,
+  access_token: string
+) {
+  const result: any = await fetch(
+    `${getAPIUrl()}assignments/${assignmentUUID}/tasks/${assignmentTaskUUID}`,
+    RequestBodyWithAuthHeader('PUT', body, null, access_token)
+  )
+  const res = await getResponseMetadata(result)
+  return res
+}
+
+export async function updateReferenceFile(
+  file: any,
+  assignmentTaskUUID: string,
+  assignmentUUID: string,
+  access_token: string
+) {
+
+   // Send file thumbnail as form data
+   const formData = new FormData()
+ 
+   if (file) {
+     formData.append('reference_file', file)
+   }
+  const result: any = await fetch(
+    `${getAPIUrl()}assignments/${assignmentUUID}/tasks/${assignmentTaskUUID}/ref_file`,
+    RequestBodyFormWithAuthHeader('POST', formData, null, access_token)
   )
   const res = await getResponseMetadata(result)
   return res

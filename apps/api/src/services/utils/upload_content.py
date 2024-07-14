@@ -1,7 +1,9 @@
-from typing import Literal
+from typing import Literal, Optional
 import boto3
 from botocore.exceptions import ClientError
 import os
+
+from fastapi import HTTPException
 
 from config.config import get_learnhouse_config
 
@@ -9,15 +11,26 @@ from config.config import get_learnhouse_config
 async def upload_content(
     directory: str,
     type_of_dir: Literal["orgs", "users"],
-    uuid: str, # org_uuid or user_uuid
+    uuid: str,  # org_uuid or user_uuid
     file_binary: bytes,
     file_and_format: str,
+    allowed_formats: Optional[list[str]] = None,
 ):
     # Get Learnhouse Config
     learnhouse_config = get_learnhouse_config()
 
+    file_format = file_and_format.split(".")[-1].strip().lower()
+
     # Get content delivery method
     content_delivery = learnhouse_config.hosting_config.content_delivery.type
+
+    # Check if format file is allowed
+    if allowed_formats:
+        if file_format not in allowed_formats:
+            raise HTTPException(
+                status_code=400,
+                detail=f"File format {file_format} not allowed",
+            )
 
     if content_delivery == "filesystem":
         # create folder for activity

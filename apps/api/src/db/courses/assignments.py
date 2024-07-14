@@ -127,11 +127,6 @@ class AssignmentTaskUpdate(SQLModel):
     assignment_type: Optional[AssignmentTaskTypeEnum]
     contents: Optional[Dict] = Field(default={}, sa_column=Column(JSON))
     max_grade_value: Optional[int]
-    assignment_id: Optional[int]
-    org_id: Optional[int]
-    course_id: Optional[int]
-    chapter_id: Optional[int]
-    activity_id: Optional[int]
 
 
 class AssignmentTask(AssignmentTaskBase, table=True):
