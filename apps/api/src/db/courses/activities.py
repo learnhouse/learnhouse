@@ -67,6 +67,8 @@ class ActivityUpdate(ActivityBase):
 
 class ActivityRead(ActivityBase):
     id: int
+    org_id: int
+    course_id: int
     activity_uuid: str
     creation_date: str
     update_date: str

@@ -58,6 +58,38 @@ async def get_course(
 
     return course
 
+async def get_course_by_id(
+    request: Request,
+    course_id: str,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+):
+    statement = select(Course).where(Course.id == course_id)
+    course = db_session.exec(statement).first()
+
+    if not course:
+        raise HTTPException(
+            status_code=404,
+            detail="Course not found",
+        )
+
+    # RBAC check
+    await rbac_check(request, course.course_uuid, current_user, "read", db_session)
+
+    # Get course authors
+    authors_statement = (
+        select(User)
+        .join(ResourceAuthor)
+        .where(ResourceAuthor.resource_uuid == course.course_uuid)
+    )
+    authors = db_session.exec(authors_statement).all()
+
+    # convert from User to UserRead
+    authors = [UserRead.model_validate(author) for author in authors]
+
+    course = CourseRead(**course.model_dump(), authors=authors)
+
+    return course
 
 async def get_course_meta(
     request: Request,

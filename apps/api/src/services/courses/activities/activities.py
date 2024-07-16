@@ -116,6 +116,38 @@ async def get_activity(
 
     return activity
 
+async def get_activityby_id(
+    request: Request,
+    activity_id: str,
+    current_user: PublicUser,
+    db_session: Session,
+):
+    statement = select(Activity).where(Activity.id == activity_id)
+    activity = db_session.exec(statement).first()
+
+    if not activity:
+        raise HTTPException(
+            status_code=404,
+            detail="Activity not found",
+        )
+
+    # Get course from that activity
+    statement = select(Course).where(Course.id == activity.course_id)
+    course = db_session.exec(statement).first()
+
+    if not course:
+        raise HTTPException(
+            status_code=404,
+            detail="Course not found",
+        )
+
+    # RBAC check
+    await rbac_check(request, course.course_uuid, current_user, "read", db_session)
+
+    activity = ActivityRead.model_validate(activity)
+
+    return activity
+
 
 async def update_activity(
     request: Request,

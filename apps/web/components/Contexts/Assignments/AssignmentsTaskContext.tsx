@@ -36,19 +36,19 @@ export function AssignmentsTaskProvider({ children }: { children: React.ReactNod
     async function fetchAssignmentTask(assignmentTaskUUID: string) {
         const res = await getAssignmentTask(assignmentTaskUUID, access_token);
 
-        
+
         if (res.success) {
             dispatch({ type: 'setAssignmentTask', payload: res.data });
         }
     }
 
     useEffect(() => {
-        
+
         if (state.selectedAssignmentTaskUUID) {
             fetchAssignmentTask(state.selectedAssignmentTaskUUID);
             mutate(`${getAPIUrl()}assignments/${assignment.assignment_object?.assignment_uuid}/tasks`);
         }
-    }, [state.selectedAssignmentTaskUUID, state.reloadTrigger,assignment]);
+    }, [state.selectedAssignmentTaskUUID, state.reloadTrigger, assignment]);
 
     return (
         <AssignmentsTaskContext.Provider value={state}>
@@ -78,11 +78,17 @@ export function useAssignmentsTaskDispatch() {
 function assignmentstaskReducer(state: State, action: Action): State {
     switch (action.type) {
         case 'setSelectedAssignmentTaskUUID':
+            console.log('st', action.payload)
             return { ...state, selectedAssignmentTaskUUID: action.payload };
         case 'setAssignmentTask':
             return { ...state, assignmentTask: action.payload };
         case 'reload':
             return { ...state, reloadTrigger: state.reloadTrigger + 1 };
+        case 'SET_MULTIPLE_STATES':
+            return {
+                ...state,
+                ...action.payload,
+            };
         default:
             return state;
     }

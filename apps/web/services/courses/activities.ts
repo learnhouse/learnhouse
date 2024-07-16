@@ -74,12 +74,25 @@ export async function createExternalVideoActivity(
 }
 
 export async function getActivity(
+  activity_uuid: any,
+  next: any,
+  access_token: string
+) {
+  const result = await fetch(
+    `${getAPIUrl()}activities/${activity_uuid}`,
+    RequestBodyWithAuthHeader('GET', null, next, access_token)
+  )
+  const res = await result.json()
+  return res
+}
+
+export async function getActivityByID(
   activity_id: any,
   next: any,
   access_token: string
 ) {
   const result = await fetch(
-    `${getAPIUrl()}activities/${activity_id}`,
+    `${getAPIUrl()}activities/id/${activity_id}`,
     RequestBodyWithAuthHeader('GET', null, next, access_token)
   )
   const res = await result.json()

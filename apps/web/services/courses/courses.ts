@@ -55,6 +55,15 @@ export async function getCourse(course_uuid: string, next: any, access_token:any
   return res
 }
 
+export async function getCourseById(course_id: string, next: any, access_token:any) {
+  const result: any = await fetch(
+    `${getAPIUrl()}courses/id/${course_id}`,
+    RequestBodyWithAuthHeader('GET', null, next,access_token)
+  )
+  const res = await errorHandling(result)
+  return res
+}
+
 export async function updateCourseThumbnail(course_uuid: any, thumbnail: any, access_token:any) {
   const formData = new FormData()
   formData.append('thumbnail', thumbnail)
