@@ -92,6 +92,19 @@ export async function updateAssignmentTask(
   return res
 }
 
+export async function deleteAssignmentTask(
+  assignmentTaskUUID: string,
+  assignmentUUID: string,
+  access_token: string
+) {
+  const result: any = await fetch(
+    `${getAPIUrl()}assignments/${assignmentUUID}/tasks/${assignmentTaskUUID}`,
+    RequestBodyWithAuthHeader('DELETE', null, null, access_token)
+  )
+  const res = await getResponseMetadata(result)
+  return res
+}
+
 export async function updateReferenceFile(
   file: any,
   assignmentTaskUUID: string,

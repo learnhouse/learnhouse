@@ -10,7 +10,7 @@ export const AssignmentContext = createContext({})
 export function AssignmentProvider({ children, assignment_uuid }: { children: React.ReactNode, assignment_uuid: string }) {
     const session = useLHSession() as any
     const accessToken = session?.data?.tokens?.access_token
-    const [assignmentsFull, setAssignmentsFull] = React.useState({ assignment_object: null, assignment_tasks: null })
+    const [assignmentsFull, setAssignmentsFull] = React.useState({ assignment_object: null, assignment_tasks: null, course_object: null , activity_object: null})
 
     const { data: assignment, error: assignmentError } = useSWR(
         `${getAPIUrl()}assignments/${assignment_uuid}`,
@@ -22,15 +22,28 @@ export function AssignmentProvider({ children, assignment_uuid }: { children: Re
         (url) => swrFetcher(url, accessToken)
     )
 
+    // Define a key for the course object based on assignment data
+    const course_id = assignment?.course_id
+
+    const { data: course_object, error: courseObjectError } = useSWR(
+        course_id ? `${getAPIUrl()}courses/id/${course_id}` : null,
+        (url) => swrFetcher(url, accessToken)
+    )
+
+    const activity_id = assignment?.activity_id
+
+    const { data: activity_object, error: activityObjectError } = useSWR(
+        activity_id ? `${getAPIUrl()}activities/id/${activity_id}` : null,
+        (url) => swrFetcher(url, accessToken)
+    )
+
     useEffect(() => {
-        setAssignmentsFull({ assignment_object: assignment, assignment_tasks: assignment_tasks })
-    }
-        , [assignment, assignment_tasks])
+        setAssignmentsFull({ assignment_object: assignment, assignment_tasks: assignment_tasks, course_object: course_object, activity_object: activity_object })
+    }, [assignment, assignment_tasks, course_object, activity_object])
 
-    if (assignmentError || assignmentTasksError) return <div></div>
+    if (assignmentError || assignmentTasksError || courseObjectError) return <div></div>
 
-    if (!assignment || !assignment_tasks) return <div></div>
-
+    if (!assignment || !assignment_tasks || (course_id && !course_object)) return <div></div>
 
     return <AssignmentContext.Provider value={assignmentsFull}>{children}</AssignmentContext.Provider>
 }

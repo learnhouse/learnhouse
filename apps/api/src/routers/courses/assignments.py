@@ -206,7 +206,7 @@ async def api_put_assignment_task_ref_file(
     )
 
 
-@router.delete("/{assignment_uuid}/tasks/{task_uuid}")
+@router.delete("/{assignment_uuid}/tasks/{assignment_task_uuid}")
 async def api_delete_assignment_tasks(
     request: Request,
     assignment_task_uuid: str,

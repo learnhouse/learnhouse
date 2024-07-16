@@ -7,6 +7,7 @@ from src.services.courses.activities.activities import (
     create_activity,
     get_activity,
     get_activities,
+    get_activityby_id,
     update_activity,
     delete_activity,
 )
@@ -34,8 +35,22 @@ async def api_create_activity(
     return await create_activity(request, activity_object, current_user, db_session)
 
 
-@router.get("/{activity_id}")
+@router.get("/{activity_uuid}")
 async def api_get_activity(
+    request: Request,
+    activity_uuid: str,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+) -> ActivityRead:
+    """
+    Get single activity by activity_id
+    """
+    return await get_activity(
+        request, activity_uuid, current_user=current_user, db_session=db_session
+    )
+
+@router.get("/id/{activity_id}")
+async def api_get_activityby_id(
     request: Request,
     activity_id: str,
     current_user: PublicUser = Depends(get_current_user),
@@ -44,11 +59,10 @@ async def api_get_activity(
     """
     Get single activity by activity_id
     """
-    return await get_activity(
+    return await get_activityby_id(
         request, activity_id, current_user=current_user, db_session=db_session
     )
-
-
+            
 @router.get("/chapter/{chapter_id}")
 async def api_get_chapter_activities(
     request: Request,

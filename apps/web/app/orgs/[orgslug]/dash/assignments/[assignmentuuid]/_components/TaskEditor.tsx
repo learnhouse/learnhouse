@@ -2,33 +2,66 @@
 import { useAssignments } from '@components/Contexts/Assignments/AssignmentContext';
 import { useAssignmentsTask, useAssignmentsTaskDispatch } from '@components/Contexts/Assignments/AssignmentsTaskContext';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
+import { useOrg } from '@components/Contexts/OrgContext';
 import FormLayout, { FormField, FormLabelAndMessage, Input, Textarea } from '@components/StyledElements/Form/Form';
 import * as Form from '@radix-ui/react-form';
-import { getActivity } from '@services/courses/activities';
-import { updateAssignmentTask, updateReferenceFile } from '@services/courses/assignments';
+import { getAPIUrl } from '@services/config/config';
+import { getActivity, getActivityByID } from '@services/courses/activities';
+import { deleteAssignmentTask, updateAssignmentTask, updateReferenceFile } from '@services/courses/assignments';
 import { getTaskRefFileDir } from '@services/media/media';
 import { useFormik } from 'formik';
-import { ArrowBigUpDash, Cloud, File, GalleryVerticalEnd, Info, Loader, TentTree, Upload, UploadCloud } from 'lucide-react'
+import { ArrowBigUpDash, Cloud, File, GalleryVerticalEnd, Info, Loader, TentTree, Trash, Upload, UploadCloud } from 'lucide-react'
 import Link from 'next/link';
 import React, { use, useEffect } from 'react'
 import toast from 'react-hot-toast';
+import { mutate } from 'swr';
 
 function AssignmentTaskEditor({ page }: any) {
     const [selectedSubPage, setSelectedSubPage] = React.useState(page)
+    const assignment = useAssignments() as any
     const assignmentTaskState = useAssignmentsTask() as any
+    const assignmentTaskStateHook = useAssignmentsTaskDispatch() as any
+    const session = useLHSession() as any;
+    const access_token = session?.data?.tokens?.access_token;
+
+    async function deleteTaskUI() {
+        const res = await deleteAssignmentTask(assignmentTaskState.assignmentTask.assignment_task_uuid, assignment.assignment_object.assignment_uuid, access_token)
+        if (res) {
+            assignmentTaskStateHook({
+                type: 'SET_MULTIPLE_STATES',
+                payload: {
+                  selectedAssignmentTaskUUID: null,
+                  assignmentTask: {},
+                },
+              });
+              mutate(`${getAPIUrl()}assignments/${assignment.assignment_object.assignment_uuid}/tasks`)
+            toast.success('Task deleted successfully')
+        } else {
+            toast.error('Error deleting task, please retry later.')
+        }
+    }
 
     useEffect(() => {
-        console.log(assignmentTaskState)
     }
-        , [assignmentTaskState])
+        , [assignmentTaskState,assignmentTaskStateHook])
 
     return (
         <div className="flex flex-col font-black text-sm w-full z-20">
             {assignmentTaskState.assignmentTask && Object.keys(assignmentTaskState.assignmentTask).length > 0 && (
                 <div className='flex flex-col space-y-3'>
                     <div className='flex flex-col bg-white pl-10 pr-10 text-sm tracking-tight  z-10 shadow-[0px_4px_16px_rgba(0,0,0,0.06)] pt-5 mb-3 nice-shadow'>
-                        <div className='font-semibold text-lg py-1'>
-                            {assignmentTaskState?.assignmentTask.title}
+                        <div className='flex py-1 justify-between items-center'>
+                            <div className='font-semibold text-lg '>
+                                {assignmentTaskState?.assignmentTask.title}
+                            </div>
+                            <div>
+                                <div
+                                    onClick={() => deleteTaskUI()}
+                                    className='flex px-2 py-1.5 cursor-pointer rounded-md space-x-2 items-center bg-gradient-to-bl text-red-800  bg-rose-100  border border-rose-600/10 shadow-rose-900/10 shadow-lg'>
+                                    <Trash size={18} />
+                                    <p className='text-xs font-semibold'>Delete Task</p>
+                                </div>
+                            </div>
                         </div>
                         <div className='flex space-x-2 '>
                             <div
@@ -108,7 +141,9 @@ function AssignmentTaskGeneralEdit() {
             const res = await updateAssignmentTask(values, assignmentTaskState.assignmentTask.assignment_task_uuid, assignment.assignment_object.assignment_uuid, access_token)
             if (res) {
                 assignmentTaskStateHook({ type: 'reload' })
+                toast.success('Task updated successfully')
             }
+
             else {
                 toast.error('Error updating task, please retry later.')
             }
@@ -192,6 +227,7 @@ function AssignmentTaskGeneralEdit() {
 
 function UpdateTaskRef() {
     const session = useLHSession() as any;
+    const org = useOrg() as any;
     const access_token = session?.data?.tokens?.access_token;
     const assignmentTaskState = useAssignmentsTask() as any
     const assignmentTaskStateHook = useAssignmentsTaskDispatch() as any
@@ -209,7 +245,6 @@ function UpdateTaskRef() {
             file,
             assignmentTaskState.assignmentTask.assignment_task_uuid,
             assignment.assignment_object.assignment_uuid,
-
             access_token
         )
         assignmentTaskStateHook({ type: 'reload' })
@@ -219,9 +254,21 @@ function UpdateTaskRef() {
             setError(res.data.detail)
             setIsLoading(false)
         } else {
+            toast.success('Reference file updated successfully')
             setIsLoading(false)
             setError('')
         }
+    }
+
+    const getTaskRefDirUI = () => {
+        return getTaskRefFileDir(
+            org?.org_uuid,
+            assignment.course_object.course_uuid,
+            assignment.activity_object.activity_uuid,
+            assignment.assignment_object.assignment_uuid,
+            assignmentTaskState.assignmentTask.assignment_task_uuid,
+            assignmentTaskState.assignmentTask.reference_file
+        )
     }
 
     const deleteReferenceFile = async () => {
@@ -245,19 +292,16 @@ function UpdateTaskRef() {
     }
 
     async function getActivityUI() {
-        const res = await getActivity(assignment.assignment_object.activity_id, null, access_token)
-        console.log(res)
+        const res = await getActivityByID(assignment.assignment_object.activity_id, null, access_token)
         setActivity(res.data)
     }
 
-    
+
 
     useEffect(() => {
         getActivityUI()
-        console.log(assignment.assignment_object.assignment_uuid)
-        console.log(assignmentTaskState.assignmentTask.assignment_task_uuid)
     }
-        , [assignmentTaskState])
+        , [assignmentTaskState, org])
 
 
 
@@ -273,7 +317,7 @@ function UpdateTaskRef() {
                         )}
 
                     </div>
-                    {assignmentTaskState.assignmentTask.reference_file && (
+                    {assignmentTaskState.assignmentTask.reference_file && !isLoading && (
                         <div className='flex flex-col rounded-lg bg-white text-gray-400 shadow-lg nice-shadow px-5 py-3 space-y-1 items-center relative'>
                             <div className='absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 bg-green-500 rounded-full px-1.5 py-1.5 text-white flex justify-center items-center'>
                                 <Cloud size={15} />
@@ -283,10 +327,11 @@ function UpdateTaskRef() {
                                 {assignmentTaskState.assignmentTask.reference_file.split('.').pop()}
                             </div>
                             <div className='flex space-x-2 mt-2'>
-                                <Link 
-                                href={''}
-                                //href={getTaskRefFileDir(assignment.assignment_object.assignment_uuid, assignmentTaskState.assignmentTask.reference_file)}
-                                className='bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-semibold'>Download</Link>
+                                <Link
+                                    href={getTaskRefDirUI()}
+                                    download
+                                    target='_blank'
+                                    className='bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-semibold'>Download</Link>
                                 {/** <button onClick={() => deleteReferenceFile()}
                                     className='bg-red-500 text-white px-3 py-1 rounded-full text-xs font-semibold'>Delete</button> */}
                             </div>
