@@ -363,7 +363,7 @@ async def read_assignment_tasks(
 
     # Find assignments tasks for an assignment
     statement = select(AssignmentTask).where(
-        assignment.assignment_uuid == assignment_uuid
+        AssignmentTask.assignment_id == assignment.id
     )
 
     # RBAC check
