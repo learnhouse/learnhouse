@@ -1,8 +1,8 @@
-import { BookUser, EllipsisVertical, ListTodo, Save } from 'lucide-react'
+import { BookUser, EllipsisVertical, File, FileUp, ListTodo, Save } from 'lucide-react'
 import React from 'react'
 
 type AssignmentBoxProps = {
-    type: 'quiz' | 'task'
+    type: 'quiz' | 'file'
     view?: 'teacher' | 'student'
     saveFC?: () => void
     children: React.ReactNode
@@ -19,6 +19,11 @@ function AssignmentBoxUI({ type, view, saveFC, children }: AssignmentBoxProps) {
                             <div className='flex space-x-1.5 items-center'>
                                 <ListTodo size={17} />
                                 <p>Quiz</p>
+                            </div>}
+                            {type === 'file' &&
+                            <div className='flex space-x-1.5 items-center'>
+                                <FileUp size={17} />
+                                <p>File Submission</p>
                             </div>}
                     </div>
                     
