@@ -1,3 +1,4 @@
+import { useAssignmentsTaskDispatch } from '@components/Contexts/Assignments/AssignmentsTaskContext';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import { getAPIUrl } from '@services/config/config';
 import { createAssignmentTask } from '@services/courses/assignments'
@@ -10,6 +11,7 @@ function NewTaskModal({ closeModal, assignment_uuid }: any) {
   const session = useLHSession() as any;
   const access_token = session?.data?.tokens?.access_token;
   const reminderShownRef = React.useRef(false);
+  const assignmentTaskStateHook = useAssignmentsTaskDispatch() as any
 
   function showReminderToast() {
     // Check if the reminder has already been shown using sessionStorage
@@ -33,10 +35,11 @@ function NewTaskModal({ closeModal, assignment_uuid }: any) {
       contents: {},
       max_grade_value: 100,
     }
-    await createAssignmentTask(task_object, assignment_uuid, access_token)
+    const res = await createAssignmentTask(task_object, assignment_uuid, access_token)
     toast.success('Task created successfully')
     showReminderToast()
     mutate(`${getAPIUrl()}assignments/${assignment_uuid}/tasks`)
+    assignmentTaskStateHook({ type: 'setSelectedAssignmentTaskUUID', payload: res.data.assignment_task_uuid })
     closeModal(false)
   }
 
