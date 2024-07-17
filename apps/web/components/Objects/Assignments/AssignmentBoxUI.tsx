@@ -1,4 +1,4 @@
-import { BookUser, EllipsisVertical, File, FileUp, ListTodo, Save } from 'lucide-react'
+import { BookUser, EllipsisVertical, FileUp, ListTodo, Save } from 'lucide-react'
 import React from 'react'
 
 type AssignmentBoxProps = {
