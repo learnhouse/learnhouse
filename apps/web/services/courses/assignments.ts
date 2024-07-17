@@ -14,6 +14,19 @@ export async function createAssignment(body: any, access_token: string) {
   return res
 }
 
+export async function updateAssignment(
+  body: any,
+  assignmentUUID: string,
+  access_token: string
+) {
+  const result: any = await fetch(
+    `${getAPIUrl()}assignments/${assignmentUUID}`,
+    RequestBodyWithAuthHeader('PUT', body, null, access_token)
+  )
+  const res = await getResponseMetadata(result)
+  return res
+}
+
 export async function getAssignmentFromActivityUUID(
   activityUUID: string,
   access_token: string
