@@ -5,16 +5,14 @@ import { useLHSession } from '@components/Contexts/LHSessionContext';
 import { useOrg } from '@components/Contexts/OrgContext';
 import FormLayout, { FormField, FormLabelAndMessage, Input, Textarea } from '@components/StyledElements/Form/Form';
 import * as Form from '@radix-ui/react-form';
-import { getAPIUrl } from '@services/config/config';
-import { getActivity, getActivityByID } from '@services/courses/activities';
-import { deleteAssignmentTask, updateAssignmentTask, updateReferenceFile } from '@services/courses/assignments';
+import { getActivityByID } from '@services/courses/activities';
+import { updateAssignmentTask, updateReferenceFile } from '@services/courses/assignments';
 import { getTaskRefFileDir } from '@services/media/media';
 import { useFormik } from 'formik';
-import { ArrowBigUpDash, Cloud, File, GalleryVerticalEnd, Info, Loader, TentTree, Trash, Upload, UploadCloud } from 'lucide-react'
+import { Cloud, File, Info, Loader, UploadCloud } from 'lucide-react'
 import Link from 'next/link';
-import React, { use, useEffect } from 'react'
+import React, { useEffect } from 'react'
 import toast from 'react-hot-toast';
-import { mutate } from 'swr';
 
 export function AssignmentTaskGeneralEdit() {
     const session = useLHSession() as any;
