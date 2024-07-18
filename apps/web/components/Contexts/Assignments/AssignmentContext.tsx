@@ -22,7 +22,6 @@ export function AssignmentProvider({ children, assignment_uuid }: { children: Re
         (url) => swrFetcher(url, accessToken)
     )
 
-    // Define a key for the course object based on assignment data
     const course_id = assignment?.course_id
 
     const { data: course_object, error: courseObjectError } = useSWR(
@@ -38,12 +37,14 @@ export function AssignmentProvider({ children, assignment_uuid }: { children: Re
     )
 
     useEffect(() => {
-        setAssignmentsFull({ assignment_object: assignment, assignment_tasks: assignment_tasks, course_object: course_object, activity_object: activity_object })
-    }, [assignment, assignment_tasks, course_object, activity_object])
+        if (assignment && assignment_tasks && (!course_id || course_object) && (!activity_id || activity_object)) {
+            setAssignmentsFull({ assignment_object: assignment, assignment_tasks: assignment_tasks, course_object: course_object, activity_object: activity_object })
+        }
+    }, [assignment, assignment_tasks, course_object, activity_object, course_id, activity_id])
 
-    if (assignmentError || assignmentTasksError || courseObjectError) return <div></div>
+    if (assignmentError || assignmentTasksError || courseObjectError || activityObjectError) return <div></div>
 
-    if (!assignment || !assignment_tasks || (course_id && !course_object)) return <div></div>
+    if (!assignment || !assignment_tasks || (course_id && !course_object) || (activity_id && !activity_object)) return <div></div>
 
     return <AssignmentContext.Provider value={assignmentsFull}>{children}</AssignmentContext.Provider>
 }

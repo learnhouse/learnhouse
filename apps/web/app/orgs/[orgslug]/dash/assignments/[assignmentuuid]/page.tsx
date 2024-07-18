@@ -1,10 +1,9 @@
 'use client';
 import BreadCrumbs from '@components/Dashboard/UI/BreadCrumbs'
-import { BookOpen, BookX, EllipsisVertical, LayoutList } from 'lucide-react'
+import { BookOpen, BookX, EllipsisVertical, Eye, LayoutList } from 'lucide-react'
 import React, { useEffect } from 'react'
 import { AssignmentProvider, useAssignments } from '@components/Contexts/Assignments/AssignmentContext';
 import AssignmentTasks from './_components/Tasks';
-import { useParams } from 'next/navigation';
 import { AssignmentsTaskProvider } from '@components/Contexts/Assignments/AssignmentsTaskContext';
 import ToolTip from '@components/StyledElements/Tooltip/Tooltip';
 import AssignmentTaskEditor from './_components/TaskEditor/TaskEditor';
@@ -13,6 +12,8 @@ import { useLHSession } from '@components/Contexts/LHSessionContext';
 import { mutate } from 'swr';
 import { getAPIUrl } from '@services/config/config';
 import toast from 'react-hot-toast';
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
 
 function AssignmentEdit() {
     const params = useParams<{ assignmentuuid: string; }>()
@@ -83,7 +84,7 @@ function PublishingState() {
     }
 
     useEffect(() => {
-        console.log('assignment', assignment?.assignment_object?.assignment_uuid)
+        console.log('assignment', assignment)
     }, [assignment])
 
     return (
@@ -104,6 +105,19 @@ function PublishingState() {
                     <p className='text-sm font-bold'>Unpublish</p>
                 </div>
             </ToolTip>}
+            <ToolTip
+                side='left'
+                slateBlack
+                sideOffset={10}
+                content="Preview the Assignment as a student" >
+                <Link
+                    target='_blank'
+                    href={`/course/${assignment?.course_object?.course_uuid.replace('course_', '')}/activity/${assignment?.activity_object?.activity_uuid.replace('activity_', '')}`}
+                    className='flex px-3 py-2 cursor-pointer rounded-md space-x-2 items-center bg-gradient-to-bl text-cyan-800 font-medium from-sky-400/50 to-cyan-200/80  border border-cyan-600/10 shadow-cyan-900/10 shadow-lg'>
+                    <Eye size={18} />
+                    <p className=' text-sm font-bold'>Preview</p>
+                </Link>
+            </ToolTip>
             {!assignment?.assignment_object?.published &&
                 <ToolTip
                     side='left'

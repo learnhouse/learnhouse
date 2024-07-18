@@ -33,6 +33,7 @@ from src.security.rbac.rbac import (
     authorization_verify_if_element_is_public,
     authorization_verify_if_user_is_anon,
 )
+from src.services.courses.activities.uploads.sub_file import upload_submission_file
 from src.services.courses.activities.uploads.tasks_ref_files import (
     upload_reference_file,
 )
@@ -492,6 +493,68 @@ async def put_assignment_task_reference_file(
 
     # return assignment task read
     return AssignmentTaskRead.model_validate(assignment_task)
+
+async def put_assignment_task_submission_file(
+    request: Request,
+    db_session: Session,
+    assignment_task_uuid: str,
+    current_user: PublicUser | AnonymousUser,
+    sub_file: UploadFile | None = None,
+):
+    # Check if assignment task exists
+    statement = select(AssignmentTask).where(
+        AssignmentTask.assignment_task_uuid == assignment_task_uuid
+    )
+    assignment_task = db_session.exec(statement).first()
+
+    if not assignment_task:
+        raise HTTPException(
+            status_code=404,
+            detail="Assignment Task not found",
+        )
+
+    # Check if assignment exists
+    statement = select(Assignment).where(Assignment.id == assignment_task.assignment_id)
+    assignment = db_session.exec(statement).first()
+
+    if not assignment:
+        raise HTTPException(
+            status_code=404,
+            detail="Assignment not found",
+        )
+
+    # Check for activity
+    statement = select(Activity).where(Activity.id == assignment.activity_id)
+    activity = db_session.exec(statement).first()
+
+    # Check if course exists
+    statement = select(Course).where(Course.id == assignment.course_id)
+    course = db_session.exec(statement).first()
+
+    if not course:
+        raise HTTPException(
+            status_code=404,
+            detail="Course not found",
+        )
+    
+    # Get org uuid
+    org_statement = select(Organization).where(Organization.id == course.org_id)
+    org = db_session.exec(org_statement).first()
+
+    # RBAC check
+    await rbac_check(request, course.course_uuid, current_user, "read", db_session)
+
+    # Upload reference file
+    if sub_file and sub_file.filename and activity and org:
+        name_in_disk = (
+            f"{assignment_task_uuid}_sub_{current_user.email}_{uuid4()}.{sub_file.filename.split('.')[-1]}"
+        )
+        await upload_submission_file(
+            sub_file, name_in_disk, activity.activity_uuid, org.org_uuid, course.course_uuid, assignment.assignment_uuid, assignment_task_uuid
+        )
+
+        return {"message": "Assignment Task Submission File uploaded"}
+        
 
 
 async def update_assignment_task(

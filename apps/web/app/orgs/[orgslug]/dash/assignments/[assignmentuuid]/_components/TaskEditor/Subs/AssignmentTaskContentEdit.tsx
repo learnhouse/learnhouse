@@ -16,7 +16,7 @@ function AssignmentTaskContentEdit() {
 
     return (
         <div>
-            {assignment_task?.assignmentTask.assignment_type === 'QUIZ' && <TaskQuizObject />}
+            {assignment_task?.assignmentTask.assignment_type === 'QUIZ' && <TaskQuizObject view='teacher' />}
             {assignment_task?.assignmentTask.assignment_type === 'FILE_SUBMISSION' && <TaskFileObject view='teacher' />}
         </div>
     )
