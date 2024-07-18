@@ -1,17 +1,18 @@
-import { BookUser, EllipsisVertical, FileUp, ListTodo, Save } from 'lucide-react'
+import { BookUser, EllipsisVertical, FileUp, Forward, ListTodo, Save } from 'lucide-react'
 import React from 'react'
 
 type AssignmentBoxProps = {
     type: 'quiz' | 'file'
     view?: 'teacher' | 'student'
     saveFC?: () => void
+    submitFC?: () => void
     children: React.ReactNode
 
 }
 
-function AssignmentBoxUI({ type, view, saveFC, children }: AssignmentBoxProps) {
+function AssignmentBoxUI({ type, view, saveFC, submitFC, children }: AssignmentBoxProps) {
     return (
-        <div className='flex flex-col px-4 py-2 nice-shadow rounded-md bg-slate-100/30'>
+        <div className='flex flex-col px-6 py-4 nice-shadow rounded-md bg-slate-100/30'>
             <div className='flex justify-between space-x-2 pb-2 text-slate-400 items-center'>
                 <div className='flex space-x-1 items-center'>
                     <div className='text-lg font-semibold'>
@@ -20,13 +21,13 @@ function AssignmentBoxUI({ type, view, saveFC, children }: AssignmentBoxProps) {
                                 <ListTodo size={17} />
                                 <p>Quiz</p>
                             </div>}
-                            {type === 'file' &&
+                        {type === 'file' &&
                             <div className='flex space-x-1.5 items-center'>
                                 <FileUp size={17} />
                                 <p>File Submission</p>
                             </div>}
                     </div>
-                    
+
 
                     <div className='flex items-center space-x-1'>
                         <EllipsisVertical size={15} />
@@ -41,12 +42,22 @@ function AssignmentBoxUI({ type, view, saveFC, children }: AssignmentBoxProps) {
                 <div className='flex px-1 py-1 rounded-md items-center'>
 
                     {/* Save button */}
-                    <div
-                        onClick={() => saveFC && saveFC()}
-                        className='flex px-2 py-1 cursor-pointer rounded-md space-x-2 items-center bg-gradient-to-bl text-slate-500  bg-white/60 hover:bg-white/80 linear transition-all nice-shadow  '>
-                        <Save size={14} />
-                        <p className='text-xs font-semibold'>Save</p>
-                    </div>
+                    {view === 'teacher' &&
+                        <div
+                            onClick={() => saveFC && saveFC()}
+                            className='flex px-2 py-1 cursor-pointer rounded-md space-x-2 items-center bg-gradient-to-bl text-slate-500  bg-white/60 hover:bg-white/80 linear transition-all nice-shadow  '>
+                            <Save size={14} />
+                            <p className='text-xs font-semibold'>Save</p>
+                        </div>
+                    }
+                    {view === 'student' &&
+                        <div
+                            onClick={() => submitFC && submitFC()}
+                            className='flex px-2 py-1 cursor-pointer rounded-md space-x-2 items-center bg-gradient-to-bl text-slate-500  bg-white/60 hover:bg-white/80 linear transition-all nice-shadow  '>
+                            <Forward size={14} />
+                            <p className='text-xs font-semibold'>Save</p>
+                        </div>
+                    }
 
                 </div>
             </div>

@@ -138,3 +138,25 @@ export async function updateReferenceFile(
   const res = await getResponseMetadata(result)
   return res
 }
+
+
+export async function updateSubFile(
+  file: any,
+  assignmentTaskUUID: string,
+  assignmentUUID: string,
+  access_token: string
+) {
+
+   // Send file thumbnail as form data
+   const formData = new FormData()
+ 
+   if (file) {
+     formData.append('sub_file', file)
+   }
+  const result: any = await fetch(
+    `${getAPIUrl()}assignments/${assignmentUUID}/tasks/${assignmentTaskUUID}/sub_file`,
+    RequestBodyFormWithAuthHeader('POST', formData, null, access_token)
+  )
+  const res = await getResponseMetadata(result)
+  return res
+}
