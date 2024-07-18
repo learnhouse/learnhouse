@@ -22,6 +22,7 @@ from src.services.courses.activities.assignments import (
     delete_assignment_task,
     delete_assignment_task_submission,
     put_assignment_task_reference_file,
+    put_assignment_task_submission_file,
     read_assignment,
     read_assignment_from_activity_uuid,
     read_assignment_submissions,
@@ -203,6 +204,21 @@ async def api_put_assignment_task_ref_file(
     """
     return await put_assignment_task_reference_file(
         request, db_session, assignment_task_uuid, current_user, reference_file
+    )
+
+@router.post("/{assignment_uuid}/tasks/{assignment_task_uuid}/sub_file")
+async def api_put_assignment_task_sub_file(
+    request: Request,
+    assignment_task_uuid: str,
+    sub_file: UploadFile | None = None,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+):
+    """
+    Update tasks for an assignment
+    """
+    return await put_assignment_task_submission_file(
+        request, db_session, assignment_task_uuid, current_user, sub_file
     )
 
 

@@ -16,6 +16,11 @@ import { CourseProvider } from '@components/Contexts/CourseContext'
 import AIActivityAsk from '@components/Objects/Activities/AI/AIActivityAsk'
 import AIChatBotProvider from '@components/Contexts/AI/AIChatBotContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import React, { useEffect } from 'react'
+import { getAssignmentFromActivityUUID } from '@services/courses/assignments'
+import AssignmentStudentActivity from '@components/Objects/Activities/Assignment/AssignmentStudentActivity'
+import { AssignmentProvider } from '@components/Contexts/Assignments/AssignmentContext'
+import { AssignmentsTaskProvider } from '@components/Contexts/Assignments/AssignmentsTaskContext'
 
 interface ActivityClientProps {
   activityid: string
@@ -32,6 +37,11 @@ function ActivityClient(props: ActivityClientProps) {
   const activity = props.activity
   const course = props.course
   const org = useOrg() as any
+  const session = useLHSession() as any;
+  const access_token = session?.data?.tokens?.access_token;
+  const [bgColor, setBgColor] = React.useState('bg-white')
+  const [assignment, setAssignment] = React.useState(null) as any;
+  const [markStatusButtonActive, setMarkStatusButtonActive] = React.useState(false);
 
   function getChapterNameByActivityId(course: any, activity_id: any) {
     for (let i = 0; i < course.chapters.length; i++) {
@@ -45,6 +55,26 @@ function ActivityClient(props: ActivityClientProps) {
     }
     return null // return null if no matching activity is found
   }
+
+  async function getAssignmentUI() {
+    const assignment = await getAssignmentFromActivityUUID(activity.activity_uuid, access_token)
+    setAssignment(assignment.data)
+  }
+
+  useEffect(() => {
+    if (activity.activity_type == 'TYPE_DYNAMIC') {
+      setBgColor('bg-white nice-shadow');
+    }
+    else if (activity.activity_type == 'TYPE_ASSIGNMENT') {
+      setMarkStatusButtonActive(false);
+      setBgColor('bg-white nice-shadow');
+      getAssignmentUI();
+    }
+    else {
+      setBgColor('bg-zinc-950');
+    }
+  }
+    , [activity])
 
   return (
     <>
@@ -93,24 +123,26 @@ function ActivityClient(props: ActivityClientProps) {
                 </div>
                 <div className="flex space-x-1 items-center">
                   <AuthenticatedClientElement checkMethod="authentication">
-                    <AIActivityAsk activity={activity} />
-                    <MoreVertical size={17} className="text-gray-300 " />
-                    <MarkStatus
-                      activity={activity}
-                      activityid={activityid}
-                      course={course}
-                      orgslug={orgslug}
-                    />
+                    {activity.activity_type != 'TYPE_ASSIGNMENT' &&
+                      <>
+                        <AIActivityAsk activity={activity} />
+                        <MoreVertical size={17} className="text-gray-300 " />
+                        <MarkStatus
+                          activity={activity}
+                          activityid={activityid}
+                          course={course}
+                          orgslug={orgslug}
+                        />
+                      </>
+                    }
+
                   </AuthenticatedClientElement>
                 </div>
               </div>
 
               {activity ? (
                 <div
-                  className={`p-7 pt-4 drop-shadow-sm rounded-lg ${activity.activity_type == 'TYPE_DYNAMIC'
-                      ? 'bg-white'
-                      : 'bg-zinc-950'
-                    }`}
+                  className={`p-7 drop-shadow-sm rounded-lg ${bgColor}`}
                 >
                   <div>
                     {activity.activity_type == 'TYPE_DYNAMIC' && (
@@ -125,6 +157,19 @@ function ActivityClient(props: ActivityClientProps) {
                         course={course}
                         activity={activity}
                       />
+                    )}
+                    {activity.activity_type == 'TYPE_ASSIGNMENT' && (
+                      <div>
+                        {assignment ? (
+                          <AssignmentProvider assignment_uuid={assignment?.assignment_uuid}>
+                            <AssignmentsTaskProvider>
+                              <AssignmentStudentActivity />
+                            </AssignmentsTaskProvider>
+                          </AssignmentProvider>
+                        ) : (
+                          <div></div>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>
