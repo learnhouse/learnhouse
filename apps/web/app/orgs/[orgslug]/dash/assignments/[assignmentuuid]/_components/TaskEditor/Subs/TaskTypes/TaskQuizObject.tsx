@@ -20,6 +20,14 @@ type QuizSchema = {
     }[];
 };
 
+type QuizSubmitSchema = {
+    questions: QuizSchema[];
+    submissions: {
+        questionUUID: string;
+        optionUUID: string;
+    }[];
+};
+
 type TaskQuizObjectProps = {
     view: 'teacher' | 'student';
     assignmentTaskUUID?: string;
@@ -31,6 +39,7 @@ function TaskQuizObject({ view, assignmentTaskUUID }: TaskQuizObjectProps) {
     const assignmentTaskState = useAssignmentsTask() as any;
     const assignmentTaskStateHook = useAssignmentsTaskDispatch() as any;
     const assignment = useAssignments() as any;
+
 
     /* TEACHER VIEW CODE */
     const [questions, setQuestions] = useState<QuizSchema[]>([
@@ -100,6 +109,38 @@ function TaskQuizObject({ view, assignmentTaskUUID }: TaskQuizObjectProps) {
     /* TEACHER VIEW CODE */
 
     /* STUDENT VIEW CODE */
+    const [userSubmissions, setUserSubmissions] = useState<QuizSubmitSchema>({
+        questions: [],
+        submissions: [],
+    });
+
+    async function chooseOption(qIndex: number, oIndex: number) {
+        const updatedSubmissions = [...userSubmissions.submissions];
+        const questionUUID = questions[qIndex].questionUUID;
+        const optionUUID = questions[qIndex].options[oIndex].optionUUID;
+
+        // Check if this question already has a submission with the selected option
+        const existingSubmissionIndex = updatedSubmissions.findIndex(
+            (submission) => submission.questionUUID === questionUUID && submission.optionUUID === optionUUID
+        );
+
+        if (existingSubmissionIndex === -1 && optionUUID && questionUUID) {
+            // If the selected option is not already chosen, add it to the submissions
+            updatedSubmissions.push({ questionUUID, optionUUID });
+        } else {
+            // If the selected option is already chosen, remove it from the submissions
+            updatedSubmissions.splice(existingSubmissionIndex, 1);
+        }
+
+        setUserSubmissions({
+            ...userSubmissions,
+            submissions: updatedSubmissions,
+        });
+        console.log(userSubmissions);
+    }
+
+
+
     async function getAssignmentTaskUI() {
         if (assignmentTaskUUID) {
             const res = await getAssignmentTask(assignmentTaskUUID, access_token);
@@ -158,7 +199,8 @@ function TaskQuizObject({ view, assignmentTaskUUID }: TaskQuizObjectProps) {
                             {question.options.map((option, oIndex) => (
                                 <div className="flex" key={oIndex}>
                                     <div
-                                        className="answer outline outline-3 outline-white pr-2 shadow w-full flex items-center space-x-2 h-[30px] hover:bg-opacity-100 hover:shadow-md rounded-lg bg-white text-sm duration-150 cursor-pointer ease-linear nice-shadow"
+                                        onClick={() => view === 'student' && chooseOption(qIndex, oIndex)}
+                                        className={"answer outline outline-3 outline-white pr-2 shadow w-full flex items-center space-x-2 h-[30px] hover:bg-opacity-100 hover:shadow-md rounded-lg bg-white text-sm duration-150 cursor-pointer ease-linear nice-shadow " + (view == 'student' ? 'active:scale-110' : '')}
                                     >
                                         <div className="font-bold text-base flex items-center h-full w-[40px] rounded-l-md text-slate-800 bg-slate-100/80">
                                             <p className="mx-auto font-bold text-sm">{String.fromCharCode(65 + oIndex)}</p>
@@ -198,6 +240,25 @@ function TaskQuizObject({ view, assignmentTaskUUID }: TaskQuizObjectProps) {
                                                 </div>
                                             </>
                                         )}
+                                        {view === 'student' && (
+                                            <div className={`w-[20px] flex-none flex items-center h-[20px] rounded-lg ${userSubmissions.submissions.find(
+                                                (submission) =>
+                                                    submission.questionUUID === question.questionUUID && submission.optionUUID === option.optionUUID
+                                            )
+                                                    ? "bg-green-200/60 text-green-500 hover:bg-green-300" // Selected state colors
+                                                    : "bg-slate-200/60 text-slate-500 hover:bg-slate-300" // Default state colors
+                                                } text-sm transition-all ease-linear cursor-pointer`}>
+                                                {userSubmissions.submissions.find(
+                                                    (submission) =>
+                                                        submission.questionUUID === question.questionUUID && submission.optionUUID === option.optionUUID
+                                                ) ? (
+                                                    <Check size={12} className="mx-auto" />
+                                                ) : (
+                                                    <X size={12} className="mx-auto" />
+                                                )}
+                                            </div>
+                                        )}
+
                                     </div>
                                     {view === 'teacher' && oIndex === question.options.length - 1 && (
                                         <div className="flex justify-center mx-auto px-2">
