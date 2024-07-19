@@ -15,7 +15,6 @@ function AssignmentStudentActivity() {
   const org = useOrg() as any;
 
   useEffect(() => {
-    console.log(assignments)
   }, [assignments, org])
 
 
@@ -71,7 +70,14 @@ function AssignmentStudentActivity() {
                   download={true}
                   className='px-3 py-1 flex items-center nice-shadow bg-cyan-50/40 text-cyan-900 rounded-full space-x-2 cursor-pointer'>
                   <Download size={13} />
-                  <p className='text-xs font-semibold'>Reference file</p>
+                  <div className='flex items-center space-x-2'>
+                    {task.reference_file && (
+                      <span className='relative'>
+                        <span className='absolute right-0 top-0 block h-2 w-2 rounded-full ring-2 ring-white bg-green-400'></span>
+                      </span>
+                    )}
+                    <p className='text-xs font-semibold'>Reference Document</p>
+                  </div>
                 </Link>
               </div>
             </div>

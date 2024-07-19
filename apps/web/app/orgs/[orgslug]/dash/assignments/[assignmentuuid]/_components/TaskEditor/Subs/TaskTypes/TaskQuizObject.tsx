@@ -2,7 +2,7 @@ import { useAssignments } from '@components/Contexts/Assignments/AssignmentConte
 import { useAssignmentsTask, useAssignmentsTaskDispatch } from '@components/Contexts/Assignments/AssignmentsTaskContext';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import AssignmentBoxUI from '@components/Objects/Activities/Assignment/AssignmentBoxUI';
-import { getAssignmentTask, updateAssignmentTask } from '@services/courses/assignments';
+import { getAssignmentTask, getAssignmentTaskSubmissionsMe, handleAssignmentTaskSubmission, updateAssignmentTask } from '@services/courses/assignments';
 import { Check, Minus, Plus, PlusCircle, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
@@ -113,6 +113,11 @@ function TaskQuizObject({ view, assignmentTaskUUID }: TaskQuizObjectProps) {
         questions: [],
         submissions: [],
     });
+    const [initialUserSubmissions, setInitialUserSubmissions] = useState<QuizSubmitSchema>({
+        questions: [],
+        submissions: [],
+    });
+    const [showSavingDisclaimer, setShowSavingDisclaimer] = useState<boolean>(false);
 
     async function chooseOption(qIndex: number, oIndex: number) {
         const updatedSubmissions = [...userSubmissions.submissions];
@@ -136,10 +141,7 @@ function TaskQuizObject({ view, assignmentTaskUUID }: TaskQuizObjectProps) {
             ...userSubmissions,
             submissions: updatedSubmissions,
         });
-        console.log(userSubmissions);
     }
-
-
 
     async function getAssignmentTaskUI() {
         if (assignmentTaskUUID) {
@@ -150,6 +152,48 @@ function TaskQuizObject({ view, assignmentTaskUUID }: TaskQuizObjectProps) {
 
         }
     }
+
+    async function getAssignmentTaskSubmissionFromUserUI() {
+        if (assignmentTaskUUID) {
+            const res = await getAssignmentTaskSubmissionsMe(assignmentTaskUUID, assignment.assignment_object.assignment_uuid, access_token);
+            if (res.success) {
+                setUserSubmissions(res.data.task_submission);
+                setInitialUserSubmissions(res.data.task_submission);
+            }
+
+        }
+    }
+
+        // Detect changes between initial and current submissions
+        useEffect(() => {
+            const hasChanges = JSON.stringify(initialUserSubmissions.submissions) !== JSON.stringify(userSubmissions.submissions);
+            setShowSavingDisclaimer(hasChanges);
+        }, [userSubmissions, initialUserSubmissions.submissions]);
+
+
+
+    const submitFC = async () => {
+        // Save the quiz to the server
+        const values = {
+            task_submission: userSubmissions,
+            grade: 0,
+            task_submission_grade_feedback: '',
+        };
+        if (assignmentTaskUUID) {
+            const res = await handleAssignmentTaskSubmission(values, assignmentTaskUUID, assignment.assignment_object.assignment_uuid, access_token);
+            if (res) {
+                assignmentTaskStateHook({
+                    type: 'reload',
+                });
+                toast.success('Task saved successfully');
+                setShowSavingDisclaimer(false);
+            } else {
+                toast.error('Error saving task, please retry later.');
+            }
+        }
+    };
+
+
 
     /* STUDENT VIEW CODE */
 
@@ -164,12 +208,13 @@ function TaskQuizObject({ view, assignmentTaskUUID }: TaskQuizObjectProps) {
         // Student area
         else if (view == 'student') {
             getAssignmentTaskUI();
+            getAssignmentTaskSubmissionFromUserUI();
         }
     }, [assignmentTaskState, assignment, assignmentTaskStateHook, access_token]);
 
 
     return (
-        <AssignmentBoxUI saveFC={saveFC} view={view} type="quiz">
+        <AssignmentBoxUI submitFC={submitFC} saveFC={saveFC} view={view} showSavingDisclaimer={showSavingDisclaimer} type="quiz">
             <div className="flex flex-col space-y-6">
                 {questions && questions.map((question, qIndex) => (
                     <div key={qIndex} className="flex flex-col space-y-1.5">
@@ -245,8 +290,8 @@ function TaskQuizObject({ view, assignmentTaskUUID }: TaskQuizObjectProps) {
                                                 (submission) =>
                                                     submission.questionUUID === question.questionUUID && submission.optionUUID === option.optionUUID
                                             )
-                                                    ? "bg-green-200/60 text-green-500 hover:bg-green-300" // Selected state colors
-                                                    : "bg-slate-200/60 text-slate-500 hover:bg-slate-300" // Default state colors
+                                                ? "bg-green-200/60 text-green-500 hover:bg-green-300" // Selected state colors
+                                                : "bg-slate-200/60 text-slate-500 hover:bg-slate-300" // Default state colors
                                                 } text-sm transition-all ease-linear cursor-pointer`}>
                                                 {userSubmissions.submissions.find(
                                                     (submission) =>

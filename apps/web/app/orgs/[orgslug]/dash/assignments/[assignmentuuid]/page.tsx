@@ -93,18 +93,7 @@ function PublishingState() {
                 {assignment?.assignment_object?.published ? 'Published' : 'Unpublished'}
             </div>
             <div><EllipsisVertical className='text-gray-500' size={13} /></div>
-            {assignment?.assignment_object?.published && <ToolTip
-                side='left'
-                slateBlack
-                sideOffset={10}
-                content="Make your Assignment unavailable for students" >
-                <div
-                    onClick={() => updateAssignmentPublishState(assignment?.assignment_object?.assignment_uuid)}
-                    className='flex px-3 py-2 cursor-pointer rounded-md space-x-2 items-center bg-gradient-to-bl text-gray-800 font-medium from-gray-400/50 to-gray-200/80 border border-gray-600/10 shadow-gray-900/10 shadow-lg'>
-                    <BookX size={18} />
-                    <p className='text-sm font-bold'>Unpublish</p>
-                </div>
-            </ToolTip>}
+
             <ToolTip
                 side='left'
                 slateBlack
@@ -118,6 +107,18 @@ function PublishingState() {
                     <p className=' text-sm font-bold'>Preview</p>
                 </Link>
             </ToolTip>
+            {assignment?.assignment_object?.published && <ToolTip
+                side='left'
+                slateBlack
+                sideOffset={10}
+                content="Make your Assignment unavailable for students" >
+                <div
+                    onClick={() => updateAssignmentPublishState(assignment?.assignment_object?.assignment_uuid)}
+                    className='flex px-3 py-2 cursor-pointer rounded-md space-x-2 items-center bg-gradient-to-bl text-gray-800 font-medium from-gray-400/50 to-gray-200/80 border border-gray-600/10 shadow-gray-900/10 shadow-lg'>
+                    <BookX size={18} />
+                    <p className='text-sm font-bold'>Unpublish</p>
+                </div>
+            </ToolTip>}
             {!assignment?.assignment_object?.published &&
                 <ToolTip
                     side='left'
