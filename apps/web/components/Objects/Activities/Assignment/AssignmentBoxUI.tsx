@@ -1,4 +1,4 @@
-import { BookUser, EllipsisVertical, FileUp, Forward, ListTodo, Save } from 'lucide-react'
+import { BookUser, EllipsisVertical, FileUp, Forward, Info, InfoIcon, ListTodo, Save } from 'lucide-react'
 import React from 'react'
 
 type AssignmentBoxProps = {
@@ -6,11 +6,12 @@ type AssignmentBoxProps = {
     view?: 'teacher' | 'student'
     saveFC?: () => void
     submitFC?: () => void
+    showSavingDisclaimer?: boolean
     children: React.ReactNode
 
 }
 
-function AssignmentBoxUI({ type, view, saveFC, submitFC, children }: AssignmentBoxProps) {
+function AssignmentBoxUI({ type, view, saveFC, submitFC, showSavingDisclaimer, children }: AssignmentBoxProps) {
     return (
         <div className='flex flex-col px-6 py-4 nice-shadow rounded-md bg-slate-100/30'>
             <div className='flex justify-between space-x-2 pb-2 text-slate-400 items-center'>
@@ -40,12 +41,17 @@ function AssignmentBoxUI({ type, view, saveFC, submitFC, children }: AssignmentB
                     }
                 </div>
                 <div className='flex px-1 py-1 rounded-md items-center'>
-
+                    {showSavingDisclaimer && 
+                    <div className='flex space-x-2 items-center font-semibold px-3 py-1 outline-dashed outline-red-200 text-red-400 mr-5 rounded-full'>
+                        <InfoIcon size={14} />
+                        <p className='text-xs'>Don't forget to save your progress</p>
+                    </div>
+                    }
                     {/* Save button */}
                     {view === 'teacher' &&
                         <div
                             onClick={() => saveFC && saveFC()}
-                            className='flex px-2 py-1 cursor-pointer rounded-md space-x-2 items-center bg-gradient-to-bl text-slate-500  bg-white/60 hover:bg-white/80 linear transition-all nice-shadow  '>
+                            className='flex px-2 py-1 cursor-pointer rounded-md space-x-2 items-center bg-gradient-to-bl text-emerald-700  bg-emerald-300/20 hover:bg-emerald-300/10 hover:outline-offset-4 active:outline-offset-1 linear transition-all outline-offset-2 outline-dashed outline-emerald-500/60'>
                             <Save size={14} />
                             <p className='text-xs font-semibold'>Save</p>
                         </div>
@@ -53,9 +59,9 @@ function AssignmentBoxUI({ type, view, saveFC, submitFC, children }: AssignmentB
                     {view === 'student' &&
                         <div
                             onClick={() => submitFC && submitFC()}
-                            className='flex px-2 py-1 cursor-pointer rounded-md space-x-2 items-center bg-gradient-to-bl text-slate-500  bg-white/60 hover:bg-white/80 linear transition-all nice-shadow  '>
+                            className='flex px-2 py-1 cursor-pointer rounded-md space-x-2 items-center bg-gradient-to-bl text-emerald-700  bg-emerald-300/20 hover:bg-emerald-300/10 hover:outline-offset-4 active:outline-offset-1 linear transition-all outline-offset-2 outline-dashed outline-emerald-500/60'>
                             <Forward size={14} />
-                            <p className='text-xs font-semibold'>Save</p>
+                            <p className='text-xs font-semibold'>Save your progress</p>
                         </div>
                     }
 

@@ -4,6 +4,7 @@ from src.db.courses.assignments import (
     AssignmentRead,
     AssignmentTaskCreate,
     AssignmentTaskSubmissionCreate,
+    AssignmentTaskSubmissionUpdate,
     AssignmentTaskUpdate,
     AssignmentUpdate,
     AssignmentUserSubmissionCreate,
@@ -15,12 +16,12 @@ from src.services.courses.activities.assignments import (
     create_assignment,
     create_assignment_submission,
     create_assignment_task,
-    create_assignment_task_submission,
     delete_assignment,
     delete_assignment_from_activity_uuid,
     delete_assignment_submission,
     delete_assignment_task,
     delete_assignment_task_submission,
+    handle_assignment_task_submission,
     put_assignment_task_reference_file,
     put_assignment_task_submission_file,
     read_assignment,
@@ -31,6 +32,7 @@ from src.services.courses.activities.assignments import (
     read_assignment_tasks,
     read_user_assignment_submissions,
     read_user_assignment_task_submissions,
+    read_user_assignment_task_submissions_me,
     update_assignment,
     update_assignment_submission,
     update_assignment_task,
@@ -240,10 +242,10 @@ async def api_delete_assignment_tasks(
 ## ASSIGNMENTS Tasks Submissions ##
 
 
-@router.post("/{assignment_uuid}/tasks/{assignment_task_uuid}/submissions")
-async def api_create_assignment_task_submissions(
+@router.put("/{assignment_uuid}/tasks/{assignment_task_uuid}/submissions")
+async def api_handle_assignment_task_submissions(
     request: Request,
-    assignment_task_submission_object: AssignmentTaskSubmissionCreate,
+    assignment_task_submission_object: AssignmentTaskSubmissionUpdate,
     assignment_task_uuid: str,
     current_user: PublicUser = Depends(get_current_user),
     db_session=Depends(get_db_session),
@@ -251,7 +253,7 @@ async def api_create_assignment_task_submissions(
     """
     Create new task submissions for an assignment
     """
-    return await create_assignment_task_submission(
+    return await handle_assignment_task_submission(
         request,
         assignment_task_uuid,
         assignment_task_submission_object,
@@ -273,6 +275,20 @@ async def api_read_user_assignment_task_submissions(
     """
     return await read_user_assignment_task_submissions(
         request, assignment_task_uuid, user_id, current_user, db_session
+    )
+
+@router.get("/{assignment_uuid}/tasks/{assignment_task_uuid}/submissions/user/me")
+async def api_read_user_assignment_task_submissions_me(
+    request: Request,
+    assignment_task_uuid: str,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+):
+    """
+    Read task submissions for an assignment from a user
+    """
+    return await read_user_assignment_task_submissions_me(
+        request, assignment_task_uuid, current_user, db_session
     )
 
 
