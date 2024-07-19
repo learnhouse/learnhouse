@@ -1,5 +1,5 @@
 from typing import Optional, Dict
-from sqlalchemy import JSON, Column, ForeignKey
+from sqlalchemy import JSON, Column, ForeignKey, null
 from sqlmodel import Field, SQLModel
 from enum import Enum
 
@@ -125,7 +125,7 @@ class AssignmentTaskUpdate(SQLModel):
     description: Optional[str]
     hint: Optional[str]
     assignment_type: Optional[AssignmentTaskTypeEnum]
-    contents: Optional[Dict] = Field(default={}, sa_column=Column(JSON))
+    contents: Optional[Dict] = Field(default=None, sa_column=Column(JSON))
     max_grade_value: Optional[int]
 
 
@@ -194,17 +194,12 @@ class AssignmentTaskSubmissionRead(AssignmentTaskSubmissionBase):
 
 class AssignmentTaskSubmissionUpdate(SQLModel):
     """Model for updating an assignment task submission."""
-
+    assignment_task_id: Optional[int]
     assignment_task_submission_uuid: Optional[str]
-    task_submission: Optional[Dict] = Field(default={}, sa_column=Column(JSON))
+    task_submission: Optional[Dict] = Field(default=None, sa_column=Column(JSON))
     grade: Optional[int]
     task_submission_grade_feedback: Optional[str]
     assignment_type: Optional[AssignmentTaskTypeEnum]
-    user_id: Optional[int]
-    activity_id: Optional[int]
-    course_id: Optional[int]
-    chapter_id: Optional[int]
-    assignment_task_id: Optional[int]
 
 
 class AssignmentTaskSubmission(AssignmentTaskSubmissionBase, table=True):

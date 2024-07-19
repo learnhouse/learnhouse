@@ -91,6 +91,33 @@ export async function getAssignmentTask(
   return res
 }
 
+export async function getAssignmentTaskSubmissionsMe(
+  assignmentTaskUUID: string,
+  assignmentUUID: string,
+  access_token: string
+) {
+  const result: any = await fetch(
+    `${getAPIUrl()}assignments/${assignmentUUID}/tasks/${assignmentTaskUUID}/submissions/user/me`,
+    RequestBodyWithAuthHeader('GET', null, null, access_token)
+  )
+  const res = await getResponseMetadata(result)
+  return res
+}
+
+export async function handleAssignmentTaskSubmission(
+  body: any,
+  assignmentTaskUUID: string,
+  assignmentUUID: string,
+  access_token: string
+) {
+  const result: any = await fetch(
+    `${getAPIUrl()}assignments/${assignmentUUID}/tasks/${assignmentTaskUUID}/submissions`,
+    RequestBodyWithAuthHeader('PUT', body, null, access_token)
+  )
+  const res = await getResponseMetadata(result)
+  return res
+}
+
 export async function updateAssignmentTask(
   body: any,
   assignmentTaskUUID: string,

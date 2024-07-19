@@ -19,6 +19,7 @@ from src.db.courses.assignments import (
     AssignmentTaskSubmission,
     AssignmentTaskSubmissionCreate,
     AssignmentTaskSubmissionRead,
+    AssignmentTaskSubmissionUpdate,
     AssignmentTaskUpdate,
     AssignmentUpdate,
     AssignmentUserSubmission,
@@ -464,7 +465,7 @@ async def put_assignment_task_reference_file(
             status_code=404,
             detail="Course not found",
         )
-    
+
     # Get org uuid
     org_statement = select(Organization).where(Organization.id == course.org_id)
     org = db_session.exec(org_statement).first()
@@ -478,7 +479,13 @@ async def put_assignment_task_reference_file(
             f"{assignment_task_uuid}{uuid4()}.{reference_file.filename.split('.')[-1]}"
         )
         await upload_reference_file(
-            reference_file, name_in_disk, activity.activity_uuid, org.org_uuid, course.course_uuid, assignment.assignment_uuid, assignment_task_uuid
+            reference_file,
+            name_in_disk,
+            activity.activity_uuid,
+            org.org_uuid,
+            course.course_uuid,
+            assignment.assignment_uuid,
+            assignment_task_uuid,
         )
         course.thumbnail_image = name_in_disk
         # Update reference file
@@ -493,6 +500,7 @@ async def put_assignment_task_reference_file(
 
     # return assignment task read
     return AssignmentTaskRead.model_validate(assignment_task)
+
 
 async def put_assignment_task_submission_file(
     request: Request,
@@ -536,7 +544,7 @@ async def put_assignment_task_submission_file(
             status_code=404,
             detail="Course not found",
         )
-    
+
     # Get org uuid
     org_statement = select(Organization).where(Organization.id == course.org_id)
     org = db_session.exec(org_statement).first()
@@ -546,15 +554,18 @@ async def put_assignment_task_submission_file(
 
     # Upload reference file
     if sub_file and sub_file.filename and activity and org:
-        name_in_disk = (
-            f"{assignment_task_uuid}_sub_{current_user.email}_{uuid4()}.{sub_file.filename.split('.')[-1]}"
-        )
+        name_in_disk = f"{assignment_task_uuid}_sub_{current_user.email}_{uuid4()}.{sub_file.filename.split('.')[-1]}"
         await upload_submission_file(
-            sub_file, name_in_disk, activity.activity_uuid, org.org_uuid, course.course_uuid, assignment.assignment_uuid, assignment_task_uuid
+            sub_file,
+            name_in_disk,
+            activity.activity_uuid,
+            org.org_uuid,
+            course.course_uuid,
+            assignment.assignment_uuid,
+            assignment_task_uuid,
         )
 
-        return {"message": "Assignment Task Submission File uploaded"}
-        
+        return {"file_uuid": name_in_disk}
 
 
 async def update_assignment_task(
@@ -665,13 +676,14 @@ async def delete_assignment_task(
 ## > Assignments Tasks Submissions CRUD
 
 
-async def create_assignment_task_submission(
+async def handle_assignment_task_submission(
     request: Request,
     assignment_task_uuid: str,
-    assignment_task_submission_object: AssignmentTaskSubmissionCreate,
+    assignment_task_submission_object: AssignmentTaskSubmissionUpdate,
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
+    # TODO: Improve terrible implementation of this function
     # Check if assignment task exists
     statement = select(AssignmentTask).where(
         AssignmentTask.assignment_task_uuid == assignment_task_uuid
@@ -694,51 +706,82 @@ async def create_assignment_task_submission(
             detail="Assignment not found",
         )
 
-    # Check if course exists
-    statement = select(Course).where(Course.id == assignment.course_id)
-    course = db_session.exec(statement).first()
+    # Check if user already submitted the assignment
+    statement = select(AssignmentTaskSubmission).where(
+        AssignmentTaskSubmission.assignment_task_id == assignment_task.id,
+        AssignmentTaskSubmission.user_id == current_user.id,
+    )
+    assignment_task_submission = db_session.exec(statement).first()
 
-    if not course:
-        raise HTTPException(
-            status_code=404,
-            detail="Course not found",
+    # Update Task submission if it exists
+    if assignment_task_submission:
+        # Update only the fields that were passed in
+        for var, value in vars(assignment_task_submission_object).items():
+            if value is not None:
+                setattr(assignment_task_submission, var, value)
+        assignment_task_submission.update_date = str(datetime.now())
+
+        # Insert Assignment Task Submission in DB
+        db_session.add(assignment_task_submission)
+        db_session.commit()
+        db_session.refresh(assignment_task_submission)
+
+        # return assignment task submission read
+        return AssignmentTaskSubmissionRead.model_validate(assignment_task_submission)
+
+    else:
+        # Create new Task submission
+        current_time = str(datetime.now())
+
+        # Assuming model_dump() returns a dictionary
+        model_data = assignment_task_submission_object.model_dump()
+
+        assignment_task_submission = AssignmentTaskSubmission(
+            assignment_task_submission_uuid=f"assignmenttasksubmission_{uuid4()}",
+            task_submission=model_data["task_submission"],
+            grade=model_data["grade"],
+            task_submission_grade_feedback=model_data["task_submission_grade_feedback"],
+            assignment_task_id=int(assignment_task.id),  # type: ignore
+            assignment_type=assignment_task.assignment_type,
+            activity_id=assignment.activity_id,
+            course_id=assignment.course_id,
+            chapter_id=assignment.chapter_id,
+            user_id=current_user.id,
+            creation_date=current_time,
+            update_date=current_time,
         )
 
-    # RBAC check
-    await rbac_check(request, course.course_uuid, current_user, "create", db_session)
+        # Insert Assignment Task Submission in DB
+        db_session.add(assignment_task_submission)
+        db_session.commit()
 
-    # Create Assignment Task Submission
-    assignment_task_submission = AssignmentTaskSubmission(
-        **assignment_task_submission_object.model_dump()
-    )
-
-    assignment_task_submission.assignment_task_submission_uuid = str(
-        f"assignmenttasksubmission_{uuid4()}"
-    )
-    assignment_task_submission.creation_date = str(datetime.now())
-    assignment_task_submission.update_date = str(datetime.now())
-    assignment_task_submission.org_id = course.org_id
-
-    # Insert Assignment Task Submission in DB
-    db_session.add(assignment_task_submission)
-    db_session.commit()
-    db_session.refresh(assignment_task_submission)
-
-    # return assignment task submission read
-    return AssignmentTaskSubmissionRead.model_validate(assignment_task_submission)
+        # return assignment task submission read
+        return AssignmentTaskSubmissionRead.model_validate(assignment_task_submission)
 
 
 async def read_user_assignment_task_submissions(
     request: Request,
-    assignment_task_submission_uuid: str,
+    assignment_task_uuid: str,
     user_id: int,
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
+
+    # Check if assignment task exists
+    statement = select(AssignmentTask).where(
+        AssignmentTask.assignment_task_uuid == assignment_task_uuid
+    )
+    assignment_task = db_session.exec(statement).first()
+
+    if not assignment_task:
+        raise HTTPException(
+            status_code=404,
+            detail="Assignment Task not found",
+        )
+
     # Check if assignment task submission exists
     statement = select(AssignmentTaskSubmission).where(
-        AssignmentTaskSubmission.assignment_task_submission_uuid
-        == assignment_task_submission_uuid,
+        AssignmentTaskSubmission.assignment_task_id == assignment_task.id,
         AssignmentTaskSubmission.user_id == user_id,
     )
     assignment_task_submission = db_session.exec(statement).first()
@@ -747,18 +790,6 @@ async def read_user_assignment_task_submissions(
         raise HTTPException(
             status_code=404,
             detail="Assignment Task Submission not found",
-        )
-
-    # Check if assignment task exists
-    statement = select(AssignmentTask).where(
-        AssignmentTask.id == assignment_task_submission.assignment_task_id
-    )
-    assignment_task = db_session.exec(statement).first()
-
-    if not assignment_task:
-        raise HTTPException(
-            status_code=404,
-            detail="Assignment Task not found",
         )
 
     # Check if assignment exists
@@ -786,6 +817,21 @@ async def read_user_assignment_task_submissions(
 
     # return assignment task submission read
     return AssignmentTaskSubmissionRead.model_validate(assignment_task_submission)
+
+
+async def read_user_assignment_task_submissions_me(
+    request: Request,
+    assignment_task_uuid: str,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+):
+    return await read_user_assignment_task_submissions(
+        request,
+        assignment_task_uuid,
+        current_user.id,
+        current_user,
+        db_session,
+    )
 
 
 async def read_assignment_task_submissions(
