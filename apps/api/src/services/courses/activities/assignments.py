@@ -487,7 +487,6 @@ async def put_assignment_task_reference_file(
             assignment.assignment_uuid,
             assignment_task_uuid,
         )
-        course.thumbnail_image = name_in_disk
         # Update reference file
         assignment_task.reference_file = name_in_disk
 
