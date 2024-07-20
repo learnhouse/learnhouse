@@ -12,7 +12,7 @@ import {
   getCourseThumbnailMediaDirectory,
   getUserAvatarMediaDirectory,
 } from '@services/media/media'
-import { ArrowRight, Check, File, Sparkles, Video } from 'lucide-react'
+import { ArrowRight, Backpack, Check, File, Sparkles, Video } from 'lucide-react'
 import { useOrg } from '@components/Contexts/OrgContext'
 import UserAvatar from '@components/Objects/UserAvatar'
 import CourseUpdates from '@components/Objects/CourseUpdates/CourseUpdates'
@@ -185,6 +185,15 @@ const CourseClient = (props: any) => {
                                         />
                                       </div>
                                     )}
+                                    {activity.activity_type ===
+                                    'TYPE_ASSIGNMENT' && (
+                                      <div className="bg-gray-100 px-2 py-2 rounded-full">
+                                        <Backpack
+                                          className="text-gray-400"
+                                          size={13}
+                                        />
+                                      </div>
+                                    )}
                                 </div>
                                 <Link
                                   className="flex font-semibold grow pl-2 text-neutral-500"
@@ -257,6 +266,27 @@ const CourseClient = (props: any) => {
                                         >
                                           <div className="text-xs bg-gray-100 text-gray-400 font-bold px-2 py-1 rounded-full flex space-x-1 items-center">
                                             <p>Document</p>
+                                            <ArrowRight size={13} />
+                                          </div>
+                                        </Link>
+                                      </>
+                                    )}
+                                    {activity.activity_type ===
+                                    'TYPE_ASSIGNMENT' && (
+                                      <>
+                                        <Link
+                                          className="flex grow pl-2 text-gray-500"
+                                          href={
+                                            getUriWithOrg(orgslug, '') +
+                                            `/course/${courseuuid}/activity/${activity.activity_uuid.replace(
+                                              'activity_',
+                                              ''
+                                            )}`
+                                          }
+                                          rel="noopener noreferrer"
+                                        >
+                                          <div className="text-xs bg-gray-100 text-gray-400 font-bold px-2 py-1 rounded-full flex space-x-1 items-center">
+                                            <p>Assignment</p>
                                             <ArrowRight size={13} />
                                           </div>
                                         </Link>

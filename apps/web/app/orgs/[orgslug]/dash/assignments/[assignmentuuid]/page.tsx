@@ -14,6 +14,7 @@ import { getAPIUrl } from '@services/config/config';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { updateActivity } from '@services/courses/activities';
 
 function AssignmentEdit() {
     const params = useParams<{ assignmentuuid: string; }>()
@@ -74,7 +75,8 @@ function PublishingState() {
 
     async function updateAssignmentPublishState(assignmentUUID: string) {
         const res = await updateAssignment({ published: !assignment?.assignment_object?.published }, assignmentUUID, access_token)
-        if (res.success) {
+        const res2 = await updateActivity({ published: !assignment?.assignment_object?.published }, assignment?.activity_object?.activity_uuid, access_token)
+        if (res.success && res2) {
             mutate(`${getAPIUrl()}assignments/${assignmentUUID}`)
             toast.success('The assignment has been updated successfully')
         }
@@ -84,7 +86,6 @@ function PublishingState() {
     }
 
     useEffect(() => {
-        console.log('assignment', assignment)
     }, [assignment])
 
     return (
