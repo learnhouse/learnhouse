@@ -31,6 +31,7 @@ from src.services.courses.activities.assignments import (
     read_assignment_task_submissions,
     read_assignment_tasks,
     read_user_assignment_submissions,
+    read_user_assignment_submissions_me,
     read_user_assignment_task_submissions,
     read_user_assignment_task_submissions_me,
     update_assignment,
@@ -208,6 +209,7 @@ async def api_put_assignment_task_ref_file(
         request, db_session, assignment_task_uuid, current_user, reference_file
     )
 
+
 @router.post("/{assignment_uuid}/tasks/{assignment_task_uuid}/sub_file")
 async def api_put_assignment_task_sub_file(
     request: Request,
@@ -277,6 +279,7 @@ async def api_read_user_assignment_task_submissions(
         request, assignment_task_uuid, user_id, current_user, db_session
     )
 
+
 @router.get("/{assignment_uuid}/tasks/{assignment_task_uuid}/submissions/user/me")
 async def api_read_user_assignment_task_submissions_me(
     request: Request,
@@ -331,7 +334,6 @@ async def api_delete_assignment_task_submissions(
 async def api_create_assignment_submissions(
     request: Request,
     assignment_uuid: str,
-    assignment_submission: AssignmentUserSubmissionCreate,
     current_user: PublicUser = Depends(get_current_user),
     db_session=Depends(get_db_session),
 ):
@@ -339,7 +341,7 @@ async def api_create_assignment_submissions(
     Create new submissions for an assignment
     """
     return await create_assignment_submission(
-        request, assignment_uuid, assignment_submission, current_user, db_session
+        request, assignment_uuid, current_user, db_session
     )
 
 
@@ -354,6 +356,21 @@ async def api_read_assignment_submissions(
     Read submissions for an assignment
     """
     return await read_assignment_submissions(
+        request, assignment_uuid, current_user, db_session
+    )
+
+
+@router.get("/{assignment_uuid}/submissions/me")
+async def api_read_user_assignment_submission_me(
+    request: Request,
+    assignment_uuid: str,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+):
+    """
+    Read submissions for an assignment from the current user
+    """
+    return await read_user_assignment_submissions_me(
         request, assignment_uuid, current_user, db_session
     )
 

@@ -1,5 +1,6 @@
+import { useAssignmentSubmission } from '@components/Contexts/Assignments/AssignmentSubmissionContext'
 import { BookUser, EllipsisVertical, FileUp, Forward, Info, InfoIcon, ListTodo, Save } from 'lucide-react'
-import React from 'react'
+import React, { use, useEffect } from 'react'
 
 type AssignmentBoxProps = {
     type: 'quiz' | 'file'
@@ -12,6 +13,10 @@ type AssignmentBoxProps = {
 }
 
 function AssignmentBoxUI({ type, view, saveFC, submitFC, showSavingDisclaimer, children }: AssignmentBoxProps) {
+    const submission = useAssignmentSubmission() as any
+    useEffect(() => {
+    }
+    , [submission])
     return (
         <div className='flex flex-col px-6 py-4 nice-shadow rounded-md bg-slate-100/30'>
             <div className='flex justify-between space-x-2 pb-2 text-slate-400 items-center'>
@@ -47,6 +52,7 @@ function AssignmentBoxUI({ type, view, saveFC, submitFC, showSavingDisclaimer, c
                         <p className='text-xs'>Don't forget to save your progress</p>
                     </div>
                     }
+
                     {/* Save button */}
                     {view === 'teacher' &&
                         <div
@@ -56,7 +62,7 @@ function AssignmentBoxUI({ type, view, saveFC, submitFC, showSavingDisclaimer, c
                             <p className='text-xs font-semibold'>Save</p>
                         </div>
                     }
-                    {view === 'student' &&
+                    {view === 'student' && submission.length <= 0 &&
                         <div
                             onClick={() => submitFC && submitFC()}
                             className='flex px-2 py-1 cursor-pointer rounded-md space-x-2 items-center bg-gradient-to-bl text-emerald-700  bg-emerald-300/20 hover:bg-emerald-300/10 hover:outline-offset-4 active:outline-offset-1 linear transition-all outline-offset-2 outline-dashed outline-emerald-500/60'>

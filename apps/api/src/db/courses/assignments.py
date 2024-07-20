@@ -4,7 +4,6 @@ from sqlmodel import Field, SQLModel
 from enum import Enum
 
 
-
 ## Assignment ##
 class GradingTypeEnum(str, Enum):
     ALPHABET = "ALPHABET"
@@ -87,7 +86,7 @@ class Assignment(AssignmentBase, table=True):
 class AssignmentTaskTypeEnum(str, Enum):
     FILE_SUBMISSION = "FILE_SUBMISSION"
     QUIZ = "QUIZ"
-    FORM = "FORM"  # soon to be implemented 
+    FORM = "FORM"  # soon to be implemented
     OTHER = "OTHER"
 
 
@@ -101,8 +100,6 @@ class AssignmentTaskBase(SQLModel):
     assignment_type: AssignmentTaskTypeEnum
     contents: Dict = Field(default={}, sa_column=Column(JSON))
     max_grade_value: int = 0  # Value is always between 0-100
-
-    
 
 
 class AssignmentTaskCreate(AssignmentTaskBase):
@@ -194,6 +191,7 @@ class AssignmentTaskSubmissionRead(AssignmentTaskSubmissionBase):
 
 class AssignmentTaskSubmissionUpdate(SQLModel):
     """Model for updating an assignment task submission."""
+
     assignment_task_id: Optional[int]
     assignment_task_submission_uuid: Optional[str]
     task_submission: Optional[Dict] = Field(default=None, sa_column=Column(JSON))
@@ -233,9 +231,11 @@ class AssignmentTaskSubmission(AssignmentTaskSubmissionBase, table=True):
     creation_date: str
     update_date: str
 
+
 ## AssignmentTaskSubmission ##
 
 ## AssignmentUserSubmission ##
+
 
 class AssignmentUserSubmissionStatus(str, Enum):
     PENDING = "PENDING"
@@ -248,11 +248,10 @@ class AssignmentUserSubmissionStatus(str, Enum):
 class AssignmentUserSubmissionBase(SQLModel):
     """Represents the submission status of an assignment for a user."""
 
-    
     submission_status: AssignmentUserSubmissionStatus = (
         AssignmentUserSubmissionStatus.PENDING
     )
-    grade: str
+    grade: int
     user_id: int = Field(
         sa_column=Column("user_id", ForeignKey("user.id", ondelete="CASCADE"))
     )
@@ -262,10 +261,13 @@ class AssignmentUserSubmissionBase(SQLModel):
         )
     )
 
-class AssignmentUserSubmissionCreate(AssignmentUserSubmissionBase):
+
+class AssignmentUserSubmissionCreate(SQLModel):
     """Model for creating a new assignment user submission."""
 
+    assignment_id: int
     pass  # Inherits all fields from AssignmentUserSubmissionBase
+
 
 class AssignmentUserSubmissionRead(AssignmentUserSubmissionBase):
     """Model for reading an assignment user submission."""
@@ -273,6 +275,7 @@ class AssignmentUserSubmissionRead(AssignmentUserSubmissionBase):
     id: int
     creation_date: str
     update_date: str
+
 
 class AssignmentUserSubmissionUpdate(SQLModel):
     """Model for updating an assignment user submission."""
@@ -282,17 +285,19 @@ class AssignmentUserSubmissionUpdate(SQLModel):
     user_id: Optional[int]
     assignment_id: Optional[int]
 
+
 class AssignmentUserSubmission(AssignmentUserSubmissionBase, table=True):
     """Represents the submission status of an assignment for a user."""
 
     id: Optional[int] = Field(default=None, primary_key=True)
     creation_date: str
     update_date: str
+    assignmentusersubmission_uuid: str
 
     submission_status: AssignmentUserSubmissionStatus = (
         AssignmentUserSubmissionStatus.PENDING
     )
-    grade: str
+    grade: int
     user_id: int = Field(
         sa_column=Column("user_id", ForeignKey("user.id", ondelete="CASCADE"))
     )
@@ -301,4 +306,3 @@ class AssignmentUserSubmission(AssignmentUserSubmissionBase, table=True):
             "assignment_id", ForeignKey("assignment.id", ondelete="CASCADE")
         )
     )
-

@@ -187,3 +187,17 @@ export async function updateSubFile(
   const res = await getResponseMetadata(result)
   return res
 }
+
+// submissions
+
+export async function submitAssignmentForGrading(
+  assignmentUUID: string,
+  access_token: string
+) {
+  const result: any = await fetch(
+    `${getAPIUrl()}assignments/${assignmentUUID}/submissions`,
+    RequestBodyWithAuthHeader('POST', null, null, access_token)
+  )
+  const res = await getResponseMetadata(result)
+  return res
+}
