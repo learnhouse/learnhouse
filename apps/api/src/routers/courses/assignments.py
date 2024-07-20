@@ -3,7 +3,6 @@ from src.db.courses.assignments import (
     AssignmentCreate,
     AssignmentRead,
     AssignmentTaskCreate,
-    AssignmentTaskSubmissionCreate,
     AssignmentTaskSubmissionUpdate,
     AssignmentTaskUpdate,
     AssignmentUpdate,

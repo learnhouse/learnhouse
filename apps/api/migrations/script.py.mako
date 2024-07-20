@@ -8,8 +8,8 @@ Create Date: ${create_date}
 from typing import Sequence, Union
 
 from alembic import op
-import sqlalchemy as sa
-import sqlmodel
+import sqlalchemy as sa # noqa: F401
+import sqlmodel # noqa: F401
 ${imports if imports else ""}
 
 # revision identifiers, used by Alembic.

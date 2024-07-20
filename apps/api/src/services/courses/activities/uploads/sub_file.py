@@ -1,4 +1,3 @@
-from uuid import uuid4
 from src.services.utils.upload_content import upload_content
 
 
@@ -12,7 +11,7 @@ async def upload_submission_file(
     assignment_task_uuid,
 ):
     contents = file.file.read()
-    file_format = file.filename.split(".")[-1]
+    file.filename.split(".")[-1]
 
     await upload_content(
         f"courses/{course_uuid}/activities/{activity_uuid}/assignments/{assignment_uuid}/tasks/{assignment_task_uuid}/subs",

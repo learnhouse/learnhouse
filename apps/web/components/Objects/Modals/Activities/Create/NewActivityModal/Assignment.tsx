@@ -55,8 +55,6 @@ function NewAssignment({ submitActivity, chapterId, course, closeModal }: any) {
         }
 
         const activity_res = await createActivity(activity, chapterId, org?.id, session.data?.tokens?.access_token)
-        console.log(course)
-        console.log(activity_res)
         await createAssignment({
             title: activityName,
             description: activityDescription,
