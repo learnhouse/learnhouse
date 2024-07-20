@@ -7,6 +7,7 @@ from typing import Literal
 from uuid import uuid4
 from fastapi import HTTPException, Request, UploadFile
 from sqlmodel import Session, select
+from sympy import Sum
 
 from src.db.courses.activities import Activity
 from src.db.courses.assignments import (
@@ -25,6 +26,7 @@ from src.db.courses.assignments import (
     AssignmentUserSubmission,
     AssignmentUserSubmissionCreate,
     AssignmentUserSubmissionRead,
+    AssignmentUserSubmissionStatus,
 )
 from src.db.courses.courses import Course
 from src.db.organizations import Organization
@@ -1028,7 +1030,6 @@ async def delete_assignment_task_submission(
 async def create_assignment_submission(
     request: Request,
     assignment_uuid: str,
-    assignment_user_submission_object: AssignmentUserSubmissionCreate,
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
@@ -1045,7 +1046,7 @@ async def create_assignment_submission(
     # Check if the submission has already been made
     statement = select(AssignmentUserSubmission).where(
         AssignmentUserSubmission.assignment_id == assignment.id,
-        AssignmentUserSubmission.user_id == assignment_user_submission_object.user_id,
+        AssignmentUserSubmission.user_id == current_user.id,
     )
 
     assignment_user_submission = db_session.exec(statement).first()
@@ -1066,20 +1067,32 @@ async def create_assignment_submission(
             detail="Course not found",
         )
 
+    # Check if User already submitted the assignment
+    statement = select(AssignmentUserSubmission).where(
+        AssignmentUserSubmission.assignment_id == assignment.id,
+        AssignmentUserSubmission.user_id == current_user.id,
+    )
+    assignment_user_submission = db_session.exec(statement).first()
+
+    if assignment_user_submission:
+        raise HTTPException(
+            status_code=400,
+            detail="Assignment User Submission already exists",
+        )
+
     # RBAC check
     await rbac_check(request, course.course_uuid, current_user, "create", db_session)
 
     # Create Assignment User Submission
     assignment_user_submission = AssignmentUserSubmission(
-        **assignment_user_submission_object.model_dump()
+        user_id=current_user.id,
+        assignment_id=assignment.id,  # type: ignore
+        grade=0,
+        assignmentusersubmission_uuid=str(f"assignmentusersubmission_{uuid4()}"),
+        submission_status=AssignmentUserSubmissionStatus.PENDING,
+        creation_date=str(datetime.now()),
+        update_date=str(datetime.now()),
     )
-
-    assignment_user_submission.assignment_user_submission_uuid = str(
-        f"assignmentusersubmission_{uuid4()}"
-    )
-    assignment_user_submission.creation_date = str(datetime.now())
-    assignment_user_submission.update_date = str(datetime.now())
-    assignment_user_submission.org_id = course.org_id
 
     # Insert Assignment User Submission in DB
     db_session.add(assignment_user_submission)
@@ -1171,6 +1184,21 @@ async def read_user_assignment_submissions(
         AssignmentUserSubmissionRead.model_validate(assignment_user_submission)
         for assignment_user_submission in db_session.exec(statement).all()
     ]
+
+
+async def read_user_assignment_submissions_me(
+    request: Request,
+    assignment_uuid: str,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+):
+    return await read_user_assignment_submissions(
+        request,
+        assignment_uuid,
+        current_user.id,
+        current_user,
+        db_session,
+    )
 
 
 async def update_assignment_submission(
