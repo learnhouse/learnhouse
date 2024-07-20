@@ -8,8 +8,9 @@ import { GalleryVerticalEnd, Info, TentTree, Trash } from 'lucide-react'
 import React, { useEffect } from 'react'
 import toast from 'react-hot-toast';
 import { mutate } from 'swr';
+import dynamic from 'next/dynamic';
 import { AssignmentTaskGeneralEdit } from './Subs/AssignmentTaskGeneralEdit';
-import AssignmentTaskContentEdit from './Subs/AssignmentTaskContentEdit';
+const AssignmentTaskContentEdit = dynamic(() => import('./Subs/AssignmentTaskContentEdit'))
 
 function AssignmentTaskEditor({ page }: any) {
     const [selectedSubPage, setSelectedSubPage] = React.useState(page)

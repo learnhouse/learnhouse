@@ -254,9 +254,6 @@ const ActivityElementOptions = ({ activity }: any) => {
   };
 
   useEffect(() => {
-
-    console.log(activity)
-
     fetchAssignmentUUID();
   }, [activity, course]);
 

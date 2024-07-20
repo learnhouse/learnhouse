@@ -7,7 +7,6 @@ from typing import Literal
 from uuid import uuid4
 from fastapi import HTTPException, Request, UploadFile
 from sqlmodel import Session, select
-from sympy import Sum
 
 from src.db.courses.activities import Activity
 from src.db.courses.assignments import (
@@ -1172,7 +1171,7 @@ async def read_user_assignment_submissions(
 
     # Find assignments tasks for an assignment
     statement = select(AssignmentUserSubmission).where(
-        assignment.assignment_uuid == assignment_uuid,
+        AssignmentUserSubmission.assignment_id == assignment.id,
         AssignmentUserSubmission.user_id == user_id,
     )
 
