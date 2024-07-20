@@ -139,8 +139,17 @@ function ActivityClient(props: ActivityClientProps) {
                   </AuthenticatedClientElement>
                 </div>
               </div>
+              {activity && activity.published == false && (
+                <div className="p-7 drop-shadow-sm rounded-lg bg-gray-800">
+                  <div className="text-white">
+                    <h1 className="font-bold text-2xl">
+                      This activity is not published yet
+                    </h1>
+                  </div>
+                </div>
+              )}
 
-              {activity ? (
+              {activity && activity.published == true && (
                 <div
                   className={`p-7 drop-shadow-sm rounded-lg ${bgColor}`}
                 >
@@ -173,8 +182,6 @@ function ActivityClient(props: ActivityClientProps) {
                     )}
                   </div>
                 </div>
-              ) : (
-                <div></div>
               )}
               {<div style={{ height: '100px' }}></div>}
             </div>
