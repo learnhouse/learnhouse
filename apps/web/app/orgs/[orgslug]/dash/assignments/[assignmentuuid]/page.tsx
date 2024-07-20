@@ -1,12 +1,9 @@
 'use client';
 import BreadCrumbs from '@components/Dashboard/UI/BreadCrumbs'
-import { BookOpen, BookX, EllipsisVertical, Eye, LayoutList } from 'lucide-react'
+import { BookOpen, BookX, EllipsisVertical, Eye, Layers2, UserRoundPen } from 'lucide-react'
 import React, { useEffect } from 'react'
 import { AssignmentProvider, useAssignments } from '@components/Contexts/Assignments/AssignmentContext';
-import AssignmentTasks from './_components/Tasks';
-import { AssignmentsTaskProvider } from '@components/Contexts/Assignments/AssignmentsTaskContext';
 import ToolTip from '@components/StyledElements/Tooltip/Tooltip';
-import AssignmentTaskEditor from './_components/TaskEditor/TaskEditor';
 import { updateAssignment } from '@services/courses/assignments';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import { mutate } from 'swr';
@@ -15,40 +12,59 @@ import toast from 'react-hot-toast';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { updateActivity } from '@services/courses/activities';
+// Lazy Loading
+import dynamic from 'next/dynamic';
+import AssignmentEditorSubPage from './subpages/AssignmentEditorSubPage';
+const AssignmentSubmissionsSubPage = dynamic(() => import('./subpages/AssignmentSubmissionsSubPage'))
 
 function AssignmentEdit() {
     const params = useParams<{ assignmentuuid: string; }>()
+    const [selectedSubPage, setSelectedSubPage] = React.useState('editor')
     return (
         <div className='flex w-full flex-col'>
             <AssignmentProvider assignment_uuid={'assignment_' + params.assignmentuuid}>
-                <div className='pb-5  bg-white z-50 shadow-[0px_4px_16px_rgba(0,0,0,0.06)] nice-shadow'>
+                <div className='flex flex-col  bg-white z-50 shadow-[0px_4px_16px_rgba(0,0,0,0.06)] nice-shadow'>
                     <div className='flex justify-between mr-10 h-full'>
                         <div className="pl-10 mr-10 tracking-tighter">
                             <BrdCmpx />
                             <div className="w-100 flex justify-between">
-                                <div className="flex font-bold text-2xl">Assignment Editor</div>
+                                <div className="flex font-bold text-2xl">Assignment Tools </div>
                             </div>
                         </div>
                         <div className='flex flex-col justify-center antialiased'>
                             <PublishingState />
                         </div>
                     </div>
+                    <div className='flex space-x-2 pt-2 text-sm tracking-tight font-semibold pl-10 mr-10'>
+                        <div
+                            onClick={() => setSelectedSubPage('editor')}
+                            className={`flex space-x-4 py-2 w-fit text-center border-black transition-all ease-linear ${selectedSubPage === 'editor'
+                                ? 'border-b-4'
+                                : 'opacity-50'
+                                } cursor-pointer`}
+                        >
+                            <div className="flex items-center space-x-2.5 mx-2">
+                                <Layers2 size={16} />
+                                <div>Editor</div>
+                            </div>
+                        </div>
+                        <div
+                            onClick={() => setSelectedSubPage('submissions')}
+                            className={`flex space-x-4 py-2 w-fit text-center border-black transition-all ease-linear ${selectedSubPage === 'submissions'
+                                ? 'border-b-4'
+                                : 'opacity-50'
+                                } cursor-pointer`}
+                        >
+                            <div className="flex items-center space-x-2.5 mx-2">
+                                <UserRoundPen size={16} />
+                                <div>Submissions</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div className="flex h-full w-full">
-                    <AssignmentsTaskProvider>
-                        <div className='flex w-[400px] flex-col h-full custom-dots-bg'>
-                            <div className='flex mx-auto px-3.5 py-1 bg-neutral-600/80 space-x-2 my-5 items-center text-sm font-bold text-white rounded-full'>
-                                <LayoutList size={18} />
-                                <p>Tasks</p>
-                            </div>
-                            <AssignmentTasks assignment_uuid={'assignment_' + params.assignmentuuid} />
-                        </div>
-                        <div className='flex flex-grow bg-[#fefcfe] nice-shadow h-full w-full'>
-                            <AssignmentProvider assignment_uuid={'assignment_' + params.assignmentuuid}>
-                                <AssignmentTaskEditor page='general' />
-                            </AssignmentProvider>
-                        </div>
-                    </AssignmentsTaskProvider>
+                    {selectedSubPage === 'editor' && <AssignmentEditorSubPage assignmentuuid={params.assignmentuuid} />}
+                    {selectedSubPage === 'submissions' && <AssignmentSubmissionsSubPage assignment_uuid={params.assignmentuuid} />}
                 </div>
             </AssignmentProvider>
         </div>

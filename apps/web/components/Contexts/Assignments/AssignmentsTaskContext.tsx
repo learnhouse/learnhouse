@@ -78,7 +78,6 @@ export function useAssignmentsTaskDispatch() {
 function assignmentstaskReducer(state: State, action: Action): State {
     switch (action.type) {
         case 'setSelectedAssignmentTaskUUID':
-            console.log('st', action.payload)
             return { ...state, selectedAssignmentTaskUUID: action.payload };
         case 'setAssignmentTask':
             return { ...state, assignmentTask: action.payload };

@@ -8,7 +8,7 @@ import { markActivityAsComplete } from '@services/courses/activity'
 import DocumentPdfActivity from '@components/Objects/Activities/DocumentPdf/DocumentPdf'
 import ActivityIndicators from '@components/Pages/Courses/ActivityIndicators'
 import GeneralWrapperStyled from '@components/StyledElements/Wrappers/GeneralWrapper'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import { useOrg } from '@components/Contexts/OrgContext'
@@ -42,6 +42,7 @@ function ActivityClient(props: ActivityClientProps) {
   const course = props.course
   const org = useOrg() as any
   const session = useLHSession() as any;
+  const pathname = usePathname()
   const access_token = session?.data?.tokens?.access_token;
   const [bgColor, setBgColor] = React.useState('bg-white')
   const [assignment, setAssignment] = React.useState(null) as any;
@@ -78,7 +79,7 @@ function ActivityClient(props: ActivityClientProps) {
       setBgColor('bg-zinc-950');
     }
   }
-    , [activity])
+    , [activity,pathname ])
 
   return (
     <>
@@ -126,6 +127,7 @@ function ActivityClient(props: ActivityClientProps) {
                   </h1>
                 </div>
                 <div className="flex space-x-1 items-center">
+                {activity && activity.published == true && (
                   <AuthenticatedClientElement checkMethod="authentication">
                     {activity.activity_type != 'TYPE_ASSIGNMENT' &&
                       <>
@@ -141,7 +143,6 @@ function ActivityClient(props: ActivityClientProps) {
                     }
                     {activity.activity_type == 'TYPE_ASSIGNMENT' &&
                       <>
-
                         <MoreVertical size={17} className="text-gray-300 " />
                         <AssignmentSubmissionProvider assignment_uuid={assignment?.assignment_uuid}>
                           <AssignmentTools
@@ -156,6 +157,7 @@ function ActivityClient(props: ActivityClientProps) {
                     }
 
                   </AuthenticatedClientElement>
+                )}
                 </div>
               </div>
               {activity && activity.published == false && (

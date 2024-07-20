@@ -1,5 +1,5 @@
 from typing import Optional, Dict
-from sqlalchemy import JSON, Column, ForeignKey, null
+from sqlalchemy import JSON, Column, ForeignKey
 from sqlmodel import Field, SQLModel
 from enum import Enum
 
