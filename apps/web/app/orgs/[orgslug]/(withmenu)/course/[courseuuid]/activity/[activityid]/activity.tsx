@@ -1,9 +1,9 @@
 'use client'
 import Link from 'next/link'
-import { getUriWithOrg } from '@services/config/config'
+import { getAPIUrl, getUriWithOrg } from '@services/config/config'
 import Canva from '@components/Objects/Activities/DynamicCanva/DynamicCanva'
 import VideoActivity from '@components/Objects/Activities/Video/Video'
-import { Check, MoreVertical } from 'lucide-react'
+import { BookOpenCheck, Check, MoreVertical, UserRoundPen } from 'lucide-react'
 import { markActivityAsComplete } from '@services/courses/activity'
 import DocumentPdfActivity from '@components/Objects/Activities/DocumentPdf/DocumentPdf'
 import ActivityIndicators from '@components/Pages/Courses/ActivityIndicators'
@@ -17,10 +17,14 @@ import AIActivityAsk from '@components/Objects/Activities/AI/AIActivityAsk'
 import AIChatBotProvider from '@components/Contexts/AI/AIChatBotContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import React, { useEffect } from 'react'
-import { getAssignmentFromActivityUUID } from '@services/courses/assignments'
+import { getAssignmentFromActivityUUID, submitAssignmentForGrading } from '@services/courses/assignments'
 import AssignmentStudentActivity from '@components/Objects/Activities/Assignment/AssignmentStudentActivity'
 import { AssignmentProvider } from '@components/Contexts/Assignments/AssignmentContext'
 import { AssignmentsTaskProvider } from '@components/Contexts/Assignments/AssignmentsTaskContext'
+import AssignmentSubmissionProvider, { AssignmentSubmissionContext, useAssignmentSubmission } from '@components/Contexts/Assignments/AssignmentSubmissionContext'
+import toast from 'react-hot-toast'
+import { mutate } from 'swr'
+import ConfirmationModal from '@components/StyledElements/ConfirmationModal/ConfirmationModal'
 
 interface ActivityClientProps {
   activityid: string
@@ -135,6 +139,21 @@ function ActivityClient(props: ActivityClientProps) {
                         />
                       </>
                     }
+                    {activity.activity_type == 'TYPE_ASSIGNMENT' &&
+                      <>
+
+                        <MoreVertical size={17} className="text-gray-300 " />
+                        <AssignmentSubmissionProvider assignment_uuid={assignment?.assignment_uuid}>
+                          <AssignmentTools
+                            assignment={assignment}
+                            activity={activity}
+                            activityid={activityid}
+                            course={course}
+                            orgslug={orgslug}
+                          />
+                        </AssignmentSubmissionProvider>
+                      </>
+                    }
 
                   </AuthenticatedClientElement>
                 </div>
@@ -172,7 +191,9 @@ function ActivityClient(props: ActivityClientProps) {
                         {assignment ? (
                           <AssignmentProvider assignment_uuid={assignment?.assignment_uuid}>
                             <AssignmentsTaskProvider>
-                              <AssignmentStudentActivity />
+                              <AssignmentSubmissionProvider assignment_uuid={assignment?.assignment_uuid}>
+                                <AssignmentStudentActivity />
+                              </AssignmentSubmissionProvider>
                             </AssignmentsTaskProvider>
                           </AssignmentProvider>
                         ) : (
@@ -225,7 +246,7 @@ export function MarkStatus(props: {
   return (
     <>
       {isActivityCompleted() ? (
-        <div className="bg-teal-600 rounded-full px-5 drop-shadow-md flex items-center space-x-1  p-2.5  text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out">
+        <div className="bg-teal-600 rounded-full px-5 drop-shadow-md flex items-center space-x-2  p-2.5  text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out">
           <i>
             <Check size={17}></Check>
           </i>{' '}
@@ -233,7 +254,7 @@ export function MarkStatus(props: {
         </div>
       ) : (
         <div
-          className="bg-gray-800 rounded-full px-5 drop-shadow-md flex  items-center space-x-1 p-2.5  text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out"
+          className="bg-gray-800 rounded-full px-5 drop-shadow-md flex  items-center space-x-2 p-2.5  text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out"
           onClick={markActivityAsCompleteFront}
         >
           {' '}
@@ -245,6 +266,66 @@ export function MarkStatus(props: {
       )}
     </>
   )
+}
+
+function AssignmentTools(props: {
+  activity: any
+  activityid: string
+  course: any
+  orgslug: string
+  assignment: any
+}) {
+  const submission = useAssignmentSubmission() as any
+  const session = useLHSession() as any;
+
+  const submitForGradingUI = async () => {
+    if (props.assignment) {
+      const res = await submitAssignmentForGrading(
+        props.assignment?.assignment_uuid,
+        session.data?.tokens?.access_token
+      )
+      if (res.success) {
+        toast.success('Assignment submitted for grading')
+        mutate(`${getAPIUrl()}assignments/${props.assignment?.assignment_uuid}/submissions/me`,)
+      }
+      else {
+        toast.error('Failed to submit assignment for grading')
+      }
+    }
+  }
+
+  useEffect(() => {
+  }
+    , [submission, props.assignment])
+
+  return <>
+    {submission && submission.length == 0 && (
+      <ConfirmationModal
+        confirmationButtonText="Submit Assignment"
+        confirmationMessage="Are you sure you want to submit your assignment for grading?, once submitted you will not be able to make any changes"
+        dialogTitle="Submit your assignment for grading"
+        dialogTrigger={
+          <div
+            className="bg-cyan-800 rounded-full px-5 drop-shadow-md flex items-center space-x-2  p-2.5  text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out">
+            <i>
+              <BookOpenCheck size={17}></BookOpenCheck>
+            </i>{' '}
+            <i className="not-italic text-xs font-bold">Submit for grading</i>
+          </div>}
+        functionToExecute={() => submitForGradingUI()}
+        status="info"
+      />
+    )}
+    {submission && submission.length > 0 && (
+      <div
+        className="bg-amber-800 rounded-full px-5 drop-shadow-md flex items-center space-x-2  p-2.5  text-white  transition delay-150 duration-300 ease-in-out">
+        <i>
+          <UserRoundPen size={17}></UserRoundPen>
+        </i>{' '}
+        <i className="not-italic text-xs font-bold">Grading in progress</i>
+      </div>)
+    }
+  </>
 }
 
 export default ActivityClient
