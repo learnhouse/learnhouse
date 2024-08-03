@@ -2785,13 +2785,13 @@ rsa = ["oauthlib[signedtoken] (>=3.0.0)"]
 
 [[package]]
 name = "resend"
-version = "2.2.0"
+version = "2.3.0"
 description = "Resend Python SDK"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "resend-2.2.0-py2.py3-none-any.whl", hash = "sha256:be420762885de25c816497f09207da1cd54d253c44d9f81f441367893a42d099"},
-    {file = "resend-2.2.0.tar.gz", hash = "sha256:f44976e4a37bb66445280bd8ef201eaac536b07bbe7c4da8f1717f4fcc63da7e"},
+    {file = "resend-2.3.0-py2.py3-none-any.whl", hash = "sha256:438f01c6796a004c2a733350653714e298450ed59b1e07892dbb91f182f370c3"},
+    {file = "resend-2.3.0.tar.gz", hash = "sha256:4cf68c1091f796bc06a33919f7441fe13f81f4cb6b4fa5f6bdd193f6d0a8a743"},
 ]
 
 [package.dependencies]
@@ -3914,4 +3914,5 @@ test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", 
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "49d72c6871e3ecffae3b55ccad3a6b140f9a1ebbca84d7632dafd54e1d2b7f9d"
+content-hash = "49b6ed93cf151eaeb5d1c05770ca3c3ed9b3c2a9a471b12df46f009b0f7737d9"
+
