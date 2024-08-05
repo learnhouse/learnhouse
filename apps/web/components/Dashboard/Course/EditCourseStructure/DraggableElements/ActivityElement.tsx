@@ -7,6 +7,8 @@ import {
   Eye,
   File,
   FilePenLine,
+  Globe,
+  Lock,
   MoreVertical,
   Pencil,
   Save,
@@ -55,6 +57,19 @@ function ActivityElement(props: ActivitiyElementProps) {
     }
 
     await deleteActivity(props.activity.activity_uuid, access_token)
+    mutate(`${getAPIUrl()}courses/${props.course_uuid}/meta`)
+    await revalidateTags(['courses'], props.orgslug)
+    router.refresh()
+  }
+
+  async function changePublicStatus() {
+    await updateActivity(
+      {
+        published: !props.activity.published,
+      },
+      props.activity.activity_uuid,
+      access_token
+    )
     mutate(`${getAPIUrl()}courses/${props.course_uuid}/meta`)
     await revalidateTags(['courses'], props.orgslug)
     router.refresh()
@@ -134,9 +149,27 @@ function ActivityElement(props: ActivitiyElementProps) {
               className="text-neutral-400 hover:cursor-pointer"
             />
           </div>
+
+
           {/*   Edit and View Button  */}
           <div className="flex flex-row space-x-2">
             <ActivityElementOptions activity={props.activity} />
+            {/*   Publishing  */}
+            <div
+              className={`hover:cursor-pointer p-1 px-3 border shadow-lg rounded-md font-bold text-xs flex items-center space-x-1 ${!props.activity.published
+                  ? 'bg-gradient-to-bl text-green-800 from-green-400/50 to-lime-200/80 border-green-600/10 shadow-green-900/10'
+                  : 'bg-gradient-to-bl text-gray-800 from-gray-400/50 to-gray-200/80 border-gray-600/10 shadow-gray-900/10'
+                }`}
+              rel="noopener noreferrer"
+              onClick={() => changePublicStatus()}
+            >
+              {!props.activity.published ? (
+                <Globe strokeWidth={2} size={12} className="text-green-600" />
+              ) : (
+                <Lock strokeWidth={2} size={12} className="text-gray-600" />
+              )}
+              <span>{!props.activity.published ? 'Publish' : 'UnPublish'}</span>
+            </div>
             <Link
               href={
                 getUriWithOrg(props.orgslug, '') +
@@ -149,10 +182,10 @@ function ActivityElement(props: ActivitiyElementProps) {
                 )}`
               }
               prefetch
-              className=" hover:cursor-pointer p-1 px-3 bg-gray-200 rounded-md font-bold text-xs flex items-center space-x-1"
+              className=" hover:cursor-pointer p-1 px-3 bg-gradient-to-bl text-cyan-800  from-sky-400/50 to-cyan-200/80  border border-cyan-600/10 shadow-cyan-900/10 shadow-lg rounded-md font-bold text-xs flex items-center space-x-1"
               rel="noopener noreferrer"
             >
-              <Eye strokeWidth={2} size={12} className="text-gray-600" />
+              <Eye strokeWidth={2} size={12} className="text-sky-600" />
               <span>Preview</span>
             </Link>
           </div>

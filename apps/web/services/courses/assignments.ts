@@ -97,7 +97,21 @@ export async function getAssignmentTaskSubmissionsMe(
   access_token: string
 ) {
   const result: any = await fetch(
-    `${getAPIUrl()}assignments/${assignmentUUID}/tasks/${assignmentTaskUUID}/submissions/user/me`,
+    `${getAPIUrl()}assignments/${assignmentUUID}/tasks/${assignmentTaskUUID}/submissions/me`,
+    RequestBodyWithAuthHeader('GET', null, null, access_token)
+  )
+  const res = await getResponseMetadata(result)
+  return res
+}
+
+export async function getAssignmentTaskSubmissionsUser(
+  assignmentTaskUUID: string,
+  user_id: string,
+  assignmentUUID: string,
+  access_token: string
+) {
+  const result: any = await fetch(
+    `${getAPIUrl()}assignments/${assignmentUUID}/tasks/${assignmentTaskUUID}/submissions/user/${user_id}`,
     RequestBodyWithAuthHeader('GET', null, null, access_token)
   )
   const res = await getResponseMetadata(result)
