@@ -263,7 +263,7 @@ async def api_handle_assignment_task_submissions(
     )
 
 
-@router.get("/{assignment_uuid}/tasks/{assignment_task_uuid}/submissions/{user_id}")
+@router.get("/{assignment_uuid}/tasks/{assignment_task_uuid}/submissions/user/{user_id}")
 async def api_read_user_assignment_task_submissions(
     request: Request,
     assignment_task_uuid: str,
@@ -279,7 +279,7 @@ async def api_read_user_assignment_task_submissions(
     )
 
 
-@router.get("/{assignment_uuid}/tasks/{assignment_task_uuid}/submissions/user/me")
+@router.get("/{assignment_uuid}/tasks/{assignment_task_uuid}/submissions/me")
 async def api_read_user_assignment_task_submissions_me(
     request: Request,
     assignment_task_uuid: str,

@@ -1088,7 +1088,7 @@ async def create_assignment_submission(
         assignment_id=assignment.id,  # type: ignore
         grade=0,
         assignmentusersubmission_uuid=str(f"assignmentusersubmission_{uuid4()}"),
-        submission_status=AssignmentUserSubmissionStatus.PENDING,
+        submission_status=AssignmentUserSubmissionStatus.SUBMITTED,
         creation_date=str(datetime.now()),
         update_date=str(datetime.now()),
     )
@@ -1129,7 +1129,7 @@ async def read_assignment_submissions(
 
     # Find assignments tasks for an assignment
     statement = select(AssignmentUserSubmission).where(
-        assignment.assignment_uuid == assignment_uuid
+        AssignmentUserSubmission.assignment_id == assignment.id
     )
 
     # RBAC check

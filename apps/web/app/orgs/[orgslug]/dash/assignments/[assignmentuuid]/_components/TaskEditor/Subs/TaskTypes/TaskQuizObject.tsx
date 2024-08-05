@@ -2,8 +2,8 @@ import { useAssignments } from '@components/Contexts/Assignments/AssignmentConte
 import { useAssignmentsTask, useAssignmentsTaskDispatch } from '@components/Contexts/Assignments/AssignmentsTaskContext';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import AssignmentBoxUI from '@components/Objects/Activities/Assignment/AssignmentBoxUI';
-import { getAssignmentTask, getAssignmentTaskSubmissionsMe, handleAssignmentTaskSubmission, updateAssignmentTask } from '@services/courses/assignments';
-import { Check, Minus, Plus, PlusCircle, X } from 'lucide-react';
+import { getAssignmentTask, getAssignmentTaskSubmissionsMe, getAssignmentTaskSubmissionsUser, handleAssignmentTaskSubmission, updateAssignmentTask } from '@services/courses/assignments';
+import { Check, Info, Minus, Plus, PlusCircle, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { v4 as uuidv4 } from 'uuid';
@@ -29,11 +29,12 @@ type QuizSubmitSchema = {
 };
 
 type TaskQuizObjectProps = {
-    view: 'teacher' | 'student';
+    view: 'teacher' | 'student' | 'grading';
+    user_id?: string; // Only for read-only view
     assignmentTaskUUID?: string;
 };
 
-function TaskQuizObject({ view, assignmentTaskUUID }: TaskQuizObjectProps) {
+function TaskQuizObject({ view, assignmentTaskUUID, user_id }: TaskQuizObjectProps) {
     const session = useLHSession() as any;
     const access_token = session?.data?.tokens?.access_token;
     const assignmentTaskState = useAssignmentsTask() as any;
@@ -118,6 +119,7 @@ function TaskQuizObject({ view, assignmentTaskUUID }: TaskQuizObjectProps) {
         submissions: [],
     });
     const [showSavingDisclaimer, setShowSavingDisclaimer] = useState<boolean>(false);
+    const [assignmentTaskOutsideProvider, setAssignmentTaskOutsideProvider] = useState<any>(null);
 
     async function chooseOption(qIndex: number, oIndex: number) {
         const updatedSubmissions = [...userSubmissions.submissions];
@@ -147,6 +149,7 @@ function TaskQuizObject({ view, assignmentTaskUUID }: TaskQuizObjectProps) {
         if (assignmentTaskUUID) {
             const res = await getAssignmentTask(assignmentTaskUUID, access_token);
             if (res.success) {
+                setAssignmentTaskOutsideProvider(res.data);
                 setQuestions(res.data.contents.questions);
             }
 
@@ -164,11 +167,11 @@ function TaskQuizObject({ view, assignmentTaskUUID }: TaskQuizObjectProps) {
         }
     }
 
-        // Detect changes between initial and current submissions
-        useEffect(() => {
-            const hasChanges = JSON.stringify(initialUserSubmissions.submissions) !== JSON.stringify(userSubmissions.submissions);
-            setShowSavingDisclaimer(hasChanges);
-        }, [userSubmissions, initialUserSubmissions.submissions]);
+    // Detect changes between initial and current submissions
+    useEffect(() => {
+        const hasChanges = JSON.stringify(initialUserSubmissions.submissions) !== JSON.stringify(userSubmissions.submissions);
+        setShowSavingDisclaimer(hasChanges);
+    }, [userSubmissions, initialUserSubmissions.submissions]);
 
 
 
@@ -193,9 +196,56 @@ function TaskQuizObject({ view, assignmentTaskUUID }: TaskQuizObjectProps) {
         }
     };
 
-
-
     /* STUDENT VIEW CODE */
+
+    /* GRADING VIEW CODE */
+    const [userSubmissionObject, setUserSubmissionObject] = useState<any>(null);
+    async function getAssignmentTaskSubmissionFromIdentifiedUserUI() {
+        if (assignmentTaskUUID && user_id) {
+            const res = await getAssignmentTaskSubmissionsUser(assignmentTaskUUID, user_id, assignment.assignment_object.assignment_uuid, access_token);
+            if (res.success) {
+                setUserSubmissions(res.data.task_submission);
+                setUserSubmissionObject(res.data);
+                setInitialUserSubmissions(res.data.task_submission);
+            }
+
+        }
+    }
+
+    async function gradeFC() {
+        if (assignmentTaskUUID) {
+            // Ensure maxPoints is defined
+            const maxPoints = assignmentTaskOutsideProvider?.max_grade_value || 100; // Default to 100 if not defined
+
+            // Ensure userSubmissions.questions are set
+            const totalQuestions = questions.length;
+            const correctQuestions = userSubmissions.submissions.filter((submission) => {
+                const question = questions.find((q) => q.questionUUID === submission.questionUUID);
+                const option = question?.options.find((o) => o.optionUUID === submission.optionUUID);
+                return option?.correct;
+            }).length;
+
+            // Calculate grade based on correct questions
+            const grade = Math.floor((correctQuestions / totalQuestions) * maxPoints);
+
+            // Save the grade to the server
+            const values = {
+                task_submission: userSubmissions,
+                grade,
+                task_submission_grade_feedback: 'Auto graded by system',
+            };
+
+            const res = await handleAssignmentTaskSubmission(values, assignmentTaskUUID, assignment.assignment_object.assignment_uuid, access_token);
+            if (res) {
+                getAssignmentTaskSubmissionFromIdentifiedUserUI();
+                toast.success(`Task graded successfully with ${grade} points`);
+            } else {
+                toast.error('Error grading task, please retry later.');
+            }
+        }
+    }
+
+    /* GRADING VIEW CODE */
 
     useEffect(() => {
         assignmentTaskStateHook({
@@ -210,131 +260,180 @@ function TaskQuizObject({ view, assignmentTaskUUID }: TaskQuizObjectProps) {
             getAssignmentTaskUI();
             getAssignmentTaskSubmissionFromUserUI();
         }
+
+        // Grading area
+        else if (view == 'grading') {
+            getAssignmentTaskUI();
+            //setQuestions(assignmentTaskState.assignmentTask.contents.questions);
+            getAssignmentTaskSubmissionFromIdentifiedUserUI();
+
+        }
     }, [assignmentTaskState, assignment, assignmentTaskStateHook, access_token]);
 
-
-    return (
-        <AssignmentBoxUI submitFC={submitFC} saveFC={saveFC} view={view} showSavingDisclaimer={showSavingDisclaimer} type="quiz">
-            <div className="flex flex-col space-y-6">
-                {questions && questions.map((question, qIndex) => (
-                    <div key={qIndex} className="flex flex-col space-y-1.5">
-                        <div className="flex space-x-2 items-center">
-                            {view === 'teacher' ? (
-                                <input
-                                    value={question.questionText}
-                                    onChange={(e) => handleQuestionChange(qIndex, e.target.value)}
-                                    placeholder="Question"
-                                    className="w-full px-3 text-neutral-600 bg-[#00008b00] border-2 border-gray-200 rounded-md border-dotted text-sm font-bold"
-                                />
-                            ) : (
-                                <p className="w-full px-3 text-neutral-600 bg-[#00008b00] border-2 border-gray-200 rounded-md border-dotted text-sm font-bold">
-                                    {question.questionText}
-                                </p>
-                            )}
-                            {view === 'teacher' && (
-                                <div
-                                    className="w-[20px] flex-none flex items-center h-[20px] rounded-lg bg-slate-200/60 text-slate-500 hover:bg-slate-300 text-sm transition-all ease-linear cursor-pointer"
-                                    onClick={() => removeQuestion(qIndex)}
-                                >
-                                    <Minus size={12} className="mx-auto" />
-                                </div>
-                            )}
-                        </div>
-                        <div className="flex flex-col space-y-2">
-                            {question.options.map((option, oIndex) => (
-                                <div className="flex" key={oIndex}>
+    if (questions && questions.length >= 0) {
+        return (
+            <AssignmentBoxUI submitFC={submitFC} saveFC={saveFC} gradeFC={gradeFC} view={view} currentPoints={userSubmissionObject?.grade} maxPoints={assignmentTaskOutsideProvider?.max_grade_value} showSavingDisclaimer={showSavingDisclaimer} type="quiz">
+                <div className="flex flex-col space-y-6">
+                    {questions && questions.map((question, qIndex) => (
+                        <div key={qIndex} className="flex flex-col space-y-1.5">
+                            <div className="flex space-x-2 items-center">
+                                {view === 'teacher' ? (
+                                    <input
+                                        value={question.questionText}
+                                        onChange={(e) => handleQuestionChange(qIndex, e.target.value)}
+                                        placeholder="Question"
+                                        className="w-full px-3 text-neutral-600 bg-[#00008b00] border-2 border-gray-200 rounded-md border-dotted text-sm font-bold"
+                                    />
+                                ) : (
+                                    <p className="w-full px-3 text-neutral-600 bg-[#00008b00] border-2 border-gray-200 rounded-md border-dotted text-sm font-bold">
+                                        {question.questionText}
+                                    </p>
+                                )}
+                                {view === 'teacher' && (
                                     <div
-                                        onClick={() => view === 'student' && chooseOption(qIndex, oIndex)}
-                                        className={"answer outline outline-3 outline-white pr-2 shadow w-full flex items-center space-x-2 h-[30px] hover:bg-opacity-100 hover:shadow-md rounded-lg bg-white text-sm duration-150 cursor-pointer ease-linear nice-shadow " + (view == 'student' ? 'active:scale-110' : '')}
+                                        className="w-[20px] flex-none flex items-center h-[20px] rounded-lg bg-slate-200/60 text-slate-500 hover:bg-slate-300 text-sm transition-all ease-linear cursor-pointer"
+                                        onClick={() => removeQuestion(qIndex)}
                                     >
-                                        <div className="font-bold text-base flex items-center h-full w-[40px] rounded-l-md text-slate-800 bg-slate-100/80">
-                                            <p className="mx-auto font-bold text-sm">{String.fromCharCode(65 + oIndex)}</p>
-                                        </div>
-                                        {view === 'teacher' ? (
-                                            <input
-                                                type="text"
-                                                value={option.text}
-                                                onChange={(e) => handleOptionChange(qIndex, oIndex, e.target.value)}
-                                                placeholder="Option"
-                                                className="w-full mx-2 px-3 pr-6 text-neutral-600 bg-[#00008b00] border-2 border-gray-200 rounded-md border-dotted text-sm font-bold"
-                                            />
-                                        ) : (
-                                            <p className="w-full mx-2 px-3 pr-6 text-neutral-600 bg-[#00008b00] text-sm font-bold">
-                                                {option.text}
-                                            </p>
-                                        )}
-                                        {view === 'teacher' && (
-                                            <>
-                                                <div
-                                                    className={`w-fit flex-none flex text-xs px-2 py-0.5 space-x-1 items-center h-fit rounded-lg ${option.correct ? 'bg-lime-200 text-lime-600' : 'bg-rose-200/60 text-rose-500'
-                                                        } hover:bg-lime-300 text-sm transition-all ease-linear cursor-pointer`}
-                                                    onClick={() => toggleCorrectOption(qIndex, oIndex)}
-                                                >
-                                                    {option.correct ? <Check size={12} className="mx-auto" /> : <X size={12} className="mx-auto" />}
-                                                    {option.correct ? (
-                                                        <p className="mx-auto font-bold text-xs">Correct</p>
-                                                    ) : (
-                                                        <p className="mx-auto font-bold text-xs">Incorrect</p>
-                                                    )}
-                                                </div>
-                                                <div
-                                                    className="w-[20px] flex-none flex items-center h-[20px] rounded-lg bg-slate-200/60 text-slate-500 hover:bg-slate-300 text-sm transition-all ease-linear cursor-pointer"
-                                                    onClick={() => removeOption(qIndex, oIndex)}
-                                                >
-                                                    <Minus size={12} className="mx-auto" />
-                                                </div>
-                                            </>
-                                        )}
-                                        {view === 'student' && (
-                                            <div className={`w-[20px] flex-none flex items-center h-[20px] rounded-lg ${userSubmissions.submissions.find(
-                                                (submission) =>
-                                                    submission.questionUUID === question.questionUUID && submission.optionUUID === option.optionUUID
-                                            )
-                                                ? "bg-green-200/60 text-green-500 hover:bg-green-300" // Selected state colors
-                                                : "bg-slate-200/60 text-slate-500 hover:bg-slate-300" // Default state colors
-                                                } text-sm transition-all ease-linear cursor-pointer`}>
-                                                {userSubmissions.submissions.find(
+                                        <Minus size={12} className="mx-auto" />
+                                    </div>
+                                )}
+                            </div>
+                            <div className="flex flex-col space-y-2">
+                                {question.options.map((option, oIndex) => (
+                                    <div className="flex" key={oIndex}>
+                                        <div
+                                            onClick={() => view === 'student' && chooseOption(qIndex, oIndex)}
+                                            className={"answer outline outline-3 outline-white pr-2 shadow w-full flex items-center space-x-2 h-[30px] hover:bg-opacity-100 hover:shadow-md rounded-lg bg-white text-sm duration-150 cursor-pointer ease-linear nice-shadow " + (view == 'student' ? 'active:scale-110' : '')}
+                                        >
+                                            <div className="font-bold text-base flex items-center h-full w-[40px] rounded-l-md text-slate-800 bg-slate-100/80">
+                                                <p className="mx-auto font-bold text-sm">{String.fromCharCode(65 + oIndex)}</p>
+                                            </div>
+                                            {view === 'teacher' ? (
+                                                <input
+                                                    type="text"
+                                                    value={option.text}
+                                                    onChange={(e) => handleOptionChange(qIndex, oIndex, e.target.value)}
+                                                    placeholder="Option"
+                                                    className="w-full mx-2 px-3 pr-6 text-neutral-600 bg-[#00008b00] border-2 border-gray-200 rounded-md border-dotted text-sm font-bold"
+                                                />
+                                            ) : (
+                                                <p className="w-full mx-2 px-3 pr-6 text-neutral-600 bg-[#00008b00] text-sm font-bold">
+                                                    {option.text}
+                                                </p>
+                                            )}
+                                            {view === 'teacher' && (
+                                                <>
+                                                    <div
+                                                        className={`w-fit flex-none flex text-xs px-2 py-0.5 space-x-1 items-center h-fit rounded-lg ${option.correct ? 'bg-lime-200 text-lime-600' : 'bg-rose-200/60 text-rose-500'
+                                                            } hover:bg-lime-300 text-sm transition-all ease-linear cursor-pointer`}
+                                                        onClick={() => toggleCorrectOption(qIndex, oIndex)}
+                                                    >
+                                                        {option.correct ? <Check size={12} className="mx-auto" /> : <X size={12} className="mx-auto" />}
+                                                        {option.correct ? (
+                                                            <p className="mx-auto font-bold text-xs">Correct</p>
+                                                        ) : (
+                                                            <p className="mx-auto font-bold text-xs">Incorrect</p>
+                                                        )}
+                                                    </div>
+                                                    <div
+                                                        className="w-[20px] flex-none flex items-center h-[20px] rounded-lg bg-slate-200/60 text-slate-500 hover:bg-slate-300 text-sm transition-all ease-linear cursor-pointer"
+                                                        onClick={() => removeOption(qIndex, oIndex)}
+                                                    >
+                                                        <Minus size={12} className="mx-auto" />
+                                                    </div>
+                                                </>
+                                            )}
+                                            {view === 'grading' && (
+                                                <>
+                                                    <div
+                                                        className={`w-fit flex-none flex text-xs px-2 py-0.5 space-x-1 items-center h-fit rounded-lg ${option.correct ? 'bg-lime-200 text-lime-600' : 'bg-rose-200/60 text-rose-500'
+                                                            } hover:bg-lime-300 text-sm transition-all ease-linear cursor-pointer`}
+                                                    >
+                                                        {option.correct ? <Check size={12} className="mx-auto" /> : <X size={12} className="mx-auto" />}
+                                                        {option.correct ? (
+                                                            <p className="mx-auto font-bold text-xs">Marked as Correct</p>
+                                                        ) : (
+                                                            <p className="mx-auto font-bold text-xs">Marked as Incorrect</p>
+                                                        )}
+                                                    </div>
+
+                                                </>
+                                            )}
+                                            {view === 'student' && (
+                                                <div className={`w-[20px] flex-none flex items-center h-[20px] rounded-lg ${userSubmissions.submissions.find(
                                                     (submission) =>
                                                         submission.questionUUID === question.questionUUID && submission.optionUUID === option.optionUUID
-                                                ) ? (
-                                                    <Check size={12} className="mx-auto" />
-                                                ) : (
-                                                    <X size={12} className="mx-auto" />
-                                                )}
+                                                )
+                                                    ? "bg-green-200/60 text-green-500 hover:bg-green-300" // Selected state colors
+                                                    : "bg-slate-200/60 text-slate-500 hover:bg-slate-300" // Default state colors
+                                                    } text-sm transition-all ease-linear cursor-pointer`}>
+                                                    {userSubmissions.submissions.find(
+                                                        (submission) =>
+                                                            submission.questionUUID === question.questionUUID && submission.optionUUID === option.optionUUID
+                                                    ) ? (
+                                                        <Check size={12} className="mx-auto" />
+                                                    ) : (
+                                                        <X size={12} className="mx-auto" />
+                                                    )}
+                                                </div>
+                                            )}
+                                            {view === 'grading' && (
+                                                <div className={`w-[20px] flex-none flex items-center h-[20px] rounded-lg ${userSubmissions.submissions.find(
+                                                    (submission) =>
+                                                        submission.questionUUID === question.questionUUID && submission.optionUUID === option.optionUUID
+                                                )
+                                                    ? "bg-green-200/60 text-green-500 hover:bg-green-300" // Selected state colors
+                                                    : "bg-slate-200/60 text-slate-500 hover:bg-slate-300" // Default state colors
+                                                    } text-sm transition-all ease-linear cursor-pointer`}>
+                                                    {userSubmissions.submissions.find(
+                                                        (submission) =>
+                                                            submission.questionUUID === question.questionUUID && submission.optionUUID === option.optionUUID
+                                                    ) ? (
+                                                        <Check size={12} className="mx-auto" />
+                                                    ) : (
+                                                        <X size={12} className="mx-auto" />
+                                                    )}
+                                                </div>
+                                            )}
+
+                                        </div>
+                                        {view === 'teacher' && oIndex === question.options.length - 1 && questions[qIndex].options.length <= 4 && (
+                                            <div className="flex justify-center mx-auto px-2">
+                                                <div
+                                                    className="outline text-xs outline-3 outline-white px-2 shadow w-full flex items-center h-[30px] hover:bg-opacity-100 hover:shadow-md rounded-lg bg-white duration-150 cursor-pointer ease-linear nice-shadow"
+                                                    onClick={() => addOption(qIndex)}
+                                                >
+                                                    <Plus size={14} className="inline-block" />
+                                                    <span></span>
+                                                </div>
                                             </div>
                                         )}
-
                                     </div>
-                                    {view === 'teacher' && oIndex === question.options.length - 1 && questions[qIndex].options.length <= 4 && (
-                                        <div className="flex justify-center mx-auto px-2">
-                                            <div
-                                                className="outline text-xs outline-3 outline-white px-2 shadow w-full flex items-center h-[30px] hover:bg-opacity-100 hover:shadow-md rounded-lg bg-white duration-150 cursor-pointer ease-linear nice-shadow"
-                                                onClick={() => addOption(qIndex)}
-                                            >
-                                                <Plus size={14} className="inline-block" />
-                                                <span></span>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+                {view === 'teacher' && questions.length <= 5 && (
+                    <div className="flex justify-center mx-auto px-2">
+                        <div
+                            className="flex w-full my-2 py-2 px-4 bg-white text-slate text-xs rounded-md nice-shadow hover:shadow-sm cursor-pointer space-x-3 items-center transition duration-150 ease-linear"
+                            onClick={addQuestion}
+                        >
+                            <PlusCircle size={14} className="inline-block" />
+                            <span>Add Question</span>
                         </div>
                     </div>
-                ))}
-            </div>
-            {view === 'teacher' &&questions.length <= 5 && (
-                <div className="flex justify-center mx-auto px-2">
-                    <div
-                        className="flex w-full my-2 py-2 px-4 bg-white text-slate text-xs rounded-md nice-shadow hover:shadow-sm cursor-pointer space-x-3 items-center transition duration-150 ease-linear"
-                        onClick={addQuestion}
-                    >
-                        <PlusCircle size={14} className="inline-block" />
-                        <span>Add Question</span>
-                    </div>
-                </div>
-            )}
-        </AssignmentBoxUI>
-    );
+                )}
+            </AssignmentBoxUI>
+        );
+    }
+    else {
+        return <div className='flex flex-row space-x-2 text-sm items-center'>
+            <Info size={12} />
+            <p>No questions found</p>
+        </div>;
+    }
 }
 
 export default TaskQuizObject;
