@@ -249,7 +249,7 @@ class AssignmentUserSubmissionBase(SQLModel):
     """Represents the submission status of an assignment for a user."""
 
     submission_status: AssignmentUserSubmissionStatus = (
-        AssignmentUserSubmissionStatus.PENDING
+        AssignmentUserSubmissionStatus.SUBMITTED
     )
     grade: int
     user_id: int = Field(
@@ -295,7 +295,7 @@ class AssignmentUserSubmission(AssignmentUserSubmissionBase, table=True):
     assignmentusersubmission_uuid: str
 
     submission_status: AssignmentUserSubmissionStatus = (
-        AssignmentUserSubmissionStatus.PENDING
+        AssignmentUserSubmissionStatus.SUBMITTED
     )
     grade: int
     user_id: int = Field(
