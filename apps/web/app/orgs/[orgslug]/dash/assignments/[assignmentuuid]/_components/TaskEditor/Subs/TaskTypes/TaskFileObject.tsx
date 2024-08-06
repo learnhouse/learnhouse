@@ -1,9 +1,12 @@
 import { useAssignments } from '@components/Contexts/Assignments/AssignmentContext';
 import { useAssignmentsTask, useAssignmentsTaskDispatch } from '@components/Contexts/Assignments/AssignmentsTaskContext';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
+import { useOrg } from '@components/Contexts/OrgContext';
 import AssignmentBoxUI from '@components/Objects/Activities/Assignment/AssignmentBoxUI'
-import { getAssignmentTask, getAssignmentTaskSubmissionsMe, handleAssignmentTaskSubmission, updateSubFile } from '@services/courses/assignments';
-import { Cloud, File, Info, Loader, UploadCloud } from 'lucide-react'
+import { getAssignmentTask, getAssignmentTaskSubmissionsMe, getAssignmentTaskSubmissionsUser, handleAssignmentTaskSubmission, updateSubFile } from '@services/courses/assignments';
+import { getTaskFileSubmissionDir } from '@services/media/media';
+import { Cloud, Download, File, Info, Loader, UploadCloud } from 'lucide-react'
+import Link from 'next/link';
 import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast';
 
@@ -12,12 +15,14 @@ type FileSchema = {
 };
 
 type TaskFileObjectProps = {
-    view: 'teacher' | 'student';
+    view: 'teacher' | 'student' | 'grading' | 'custom-grading';
     assignmentTaskUUID?: string;
+    user_id?: string;
 };
 
-export default function TaskFileObject({ view, assignmentTaskUUID }: TaskFileObjectProps) {
+export default function TaskFileObject({ view, user_id, assignmentTaskUUID }: TaskFileObjectProps) {
     const session = useLHSession() as any;
+    const org = useOrg() as any;
     const access_token = session?.data?.tokens?.access_token;
     const [isLoading, setIsLoading] = React.useState(false);
     const [localUploadFile, setLocalUploadFile] = React.useState<File | null>(null);
@@ -104,6 +109,7 @@ export default function TaskFileObject({ view, assignmentTaskUUID }: TaskFileObj
             const res = await getAssignmentTask(assignmentTaskUUID, access_token);
             if (res.success) {
                 setAssignmentTask(res.data);
+                setAssignmentTaskOutsideProvider(res.data);
             }
 
         }
@@ -120,20 +126,96 @@ export default function TaskFileObject({ view, assignmentTaskUUID }: TaskFileObj
 
     /* STUDENT VIEW CODE */
 
+    /* GRADING VIEW CODE */
+    const [userSubmissionObject, setUserSubmissionObject] = useState<any>(null);
+    async function getAssignmentTaskSubmissionFromIdentifiedUserUI() {
+        if (assignmentTaskUUID && user_id) {
+            const res = await getAssignmentTaskSubmissionsUser(assignmentTaskUUID, user_id, assignment.assignment_object.assignment_uuid, access_token);
+            if (res.success) {
+                setUserSubmissions(res.data.task_submission);
+                setUserSubmissionObject(res.data);
+                setInitialUserSubmissions(res.data.task_submission);
+            }
+
+        }
+    }
+
+    async function gradeCustomFC(grade: number) {
+        if (assignmentTaskUUID) {
+            if (grade > assignmentTaskOutsideProvider.max_grade_value) {
+                toast.error(`Grade cannot be more than ${assignmentTaskOutsideProvider.max_grade_value} points`);
+                return;
+            }
+            
+    
+            // Save the grade to the server
+            const values = {
+                task_submission: userSubmissions,
+                grade: grade,
+                task_submission_grade_feedback: 'Graded by teacher : @' + session.data.user.username,
+            };
+    
+            const res = await handleAssignmentTaskSubmission(values, assignmentTaskUUID, assignment.assignment_object.assignment_uuid, access_token);
+            if (res) {
+                getAssignmentTaskSubmissionFromIdentifiedUserUI();
+                toast.success(`Task graded successfully with ${grade} points`);
+            } else {
+                toast.error('Error grading task, please retry later.');
+            }
+        }
+    }
+
+    /* GRADING VIEW CODE */
+    const [assignmentTaskOutsideProvider, setAssignmentTaskOutsideProvider] = useState<any>(null);
     useEffect(() => {
+        // Student area
         if (view === 'student') {
             getAssignmentTaskUI()
             getAssignmentTaskSubmissionFromUserUI()
+        }
+
+        // Grading area
+        else if (view == 'custom-grading') {
+            getAssignmentTaskUI();
+            //setQuestions(assignmentTaskState.assignmentTask.contents.questions);
+            getAssignmentTaskSubmissionFromIdentifiedUserUI();
         }
     }
         , [assignmentTaskUUID])
 
     return (
-        <AssignmentBoxUI submitFC={submitFC} showSavingDisclaimer={showSavingDisclaimer} view={view} type="file">
+        <AssignmentBoxUI submitFC={submitFC} showSavingDisclaimer={showSavingDisclaimer} view={view} gradeCustomFC={gradeCustomFC} currentPoints={userSubmissionObject?.grade} maxPoints={assignmentTaskOutsideProvider?.max_grade_value} type="file">
             {view === 'teacher' && (
                 <div className='flex py-5 text-sm justify-center mx-auto space-x-2 text-slate-500'>
                     <Info size={20} />
                     <p>User will be able to submit a file for this task, you'll be able to review it in the Submissions Tab</p>
+                </div>
+            )}
+            {view === 'custom-grading' && (
+                <div className='flex flex-col space-y-1'>
+                    <div className='flex py-5 text-sm justify-center mx-auto space-x-2 text-slate-500'>
+                        <Download size={20} />
+                        <p>Please download the file and grade it manually, then input the grade below</p>
+                    </div>
+                    {userSubmissions.fileUUID && !isLoading && assignmentTaskUUID && (
+                        <Link
+                            href={getTaskFileSubmissionDir(org?.org_uuid, assignment.course_object.course_uuid, assignment.activity_object.activity_uuid, assignment.assignment_object.assignment_uuid, assignmentTaskUUID, userSubmissions.fileUUID)}
+                            target='_blank'
+                            className='flex flex-col rounded-lg bg-white text-gray-400 shadow-lg nice-shadow px-5 py-3 space-y-1 items-center relative'>
+                            <div className='absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 bg-green-500 rounded-full px-1.5 py-1.5 text-white flex justify-center items-center'>
+                                <Cloud size={15} />
+                            </div>
+
+                            <div
+
+                                className='flex space-x-2 mt-2'>
+                                <File size={20} className='' />
+                                <div className='font-semibold text-sm uppercase'>
+                                    {`${userSubmissions.fileUUID.slice(0, 8)}...${userSubmissions.fileUUID.slice(-4)}`}
+                                </div>
+                            </div>
+                        </Link>
+                    )}
                 </div>
             )}
             {view === 'student' && (
@@ -213,7 +295,6 @@ export default function TaskFileObject({ view, assignmentTaskUUID }: TaskFileObj
                                         </button>
                                     </div>
                                 )}
-
                             </div>
                         </div>
                     </div>
