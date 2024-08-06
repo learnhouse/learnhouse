@@ -216,34 +216,47 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id }: TaskQuizObjectPro
         if (assignmentTaskUUID) {
             // Ensure maxPoints is defined
             const maxPoints = assignmentTaskOutsideProvider?.max_grade_value || 100; // Default to 100 if not defined
-
+    
             // Ensure userSubmissions.questions are set
             const totalQuestions = questions.length;
-            const correctQuestions = userSubmissions.submissions.filter((submission) => {
+            let correctQuestions = 0;
+            let incorrectQuestions = 0;
+    
+            userSubmissions.submissions.forEach((submission) => {
                 const question = questions.find((q) => q.questionUUID === submission.questionUUID);
                 const option = question?.options.find((o) => o.optionUUID === submission.optionUUID);
-                return option?.correct;
-            }).length;
-
-            // Calculate grade based on correct questions
-            const grade = Math.floor((correctQuestions / totalQuestions) * maxPoints);
-
+                if (option?.correct) {
+                    correctQuestions++;
+                } else {
+                    incorrectQuestions++;
+                }
+            });
+    
+            // Calculate grade with penalties for incorrect answers
+            const pointsPerQuestion = maxPoints / totalQuestions;
+            const rawGrade = (correctQuestions - incorrectQuestions) * pointsPerQuestion;
+    
+            // Ensure the grade is within the valid range
+            const finalGrade = Math.max(0, Math.min(rawGrade, maxPoints));
+    
             // Save the grade to the server
             const values = {
                 task_submission: userSubmissions,
-                grade,
+                grade: finalGrade,
                 task_submission_grade_feedback: 'Auto graded by system',
             };
-
+    
             const res = await handleAssignmentTaskSubmission(values, assignmentTaskUUID, assignment.assignment_object.assignment_uuid, access_token);
             if (res) {
                 getAssignmentTaskSubmissionFromIdentifiedUserUI();
-                toast.success(`Task graded successfully with ${grade} points`);
+                toast.success(`Task graded successfully with ${finalGrade} points`);
             } else {
                 toast.error('Error grading task, please retry later.');
             }
         }
     }
+    
+    
 
     /* GRADING VIEW CODE */
 

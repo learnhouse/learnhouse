@@ -4,22 +4,25 @@ import React, { useEffect } from 'react'
 
 type AssignmentBoxProps = {
     type: 'quiz' | 'file'
-    view?: 'teacher' | 'student' | 'grading'
+    view?: 'teacher' | 'student' | 'grading' | 'custom-grading'
     maxPoints?: number
     currentPoints?: number
     saveFC?: () => void
     submitFC?: () => void
     gradeFC?: () => void
+    gradeCustomFC?: (grade: number) => void
     showSavingDisclaimer?: boolean
     children: React.ReactNode
 
 }
 
-function AssignmentBoxUI({ type, view, currentPoints, maxPoints, saveFC, submitFC, gradeFC, showSavingDisclaimer, children }: AssignmentBoxProps) {
+function AssignmentBoxUI({ type, view, currentPoints, maxPoints, saveFC, submitFC, gradeFC, gradeCustomFC, showSavingDisclaimer, children }: AssignmentBoxProps) {
+    const [customGrade, setCustomGrade] = React.useState<number>(0)
     const submission = useAssignmentSubmission() as any
     useEffect(() => {
     }
         , [submission])
+        
     return (
         <div className='flex flex-col px-6 py-4 nice-shadow rounded-md bg-slate-100/30'>
             <div className='flex justify-between space-x-2 pb-2 text-slate-400 items-center'>
@@ -89,7 +92,23 @@ function AssignmentBoxUI({ type, view, currentPoints, maxPoints, saveFC, submitF
                             className='flex px-0.5 py-0.5 cursor-pointer rounded-md space-x-2 items-center bg-gradient-to-bl hover:outline-offset-4 active:outline-offset-1 linear transition-all outline-offset-2 outline-dashed outline-orange-500/60'>
                             <p className='font-semibold px-2 text-xs text-orange-700'>Current points : {currentPoints}</p>
                             <div className='bg-gradient-to-bl text-orange-700  bg-orange-300/20 hover:bg-orange-300/10 items-center flex rounded-md px-2 py-1 space-x-2'>
-                             <BookPlus size={14} />
+                                <BookPlus size={14} />
+                                <p className='text-xs font-semibold'>Grade</p>
+                            </div>
+                        </div>
+                    }
+
+                    {/* CustomGrading button */}
+                    {view === 'custom-grading' && maxPoints &&
+                        <div
+                            onClick={() => gradeCustomFC && gradeCustomFC(customGrade)}
+                            className='flex px-0.5 py-0.5 cursor-pointer rounded-md space-x-2 items-center bg-gradient-to-bl hover:outline-offset-4 active:outline-offset-1 linear transition-all outline-offset-2 outline-dashed outline-orange-500/60'>
+                            <p className='font-semibold px-2 text-xs text-orange-700'>Current points : {currentPoints}</p>
+                            <input
+                                onChange={(e) => setCustomGrade(parseInt(e.target.value))}
+                                placeholder={maxPoints.toString()} className='w-[100px] light-shadow text-sm py-0.5 outline outline-gray-200 rounded-lg px-2' type="number" />
+                            <div className='bg-gradient-to-bl text-orange-700  bg-orange-300/20 hover:bg-orange-300/10 items-center flex rounded-md px-2 py-1 space-x-2'>
+                                <BookPlus size={14} />
                                 <p className='text-xs font-semibold'>Grade</p>
                             </div>
                         </div>

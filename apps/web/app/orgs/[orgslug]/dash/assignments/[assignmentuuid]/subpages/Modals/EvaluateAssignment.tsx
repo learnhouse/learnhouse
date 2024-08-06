@@ -27,7 +27,7 @@ function EvaluateAssignment({ user_id }: any) {
                                     onClick={() => alert(task.hint)}
                                     className='px-3 py-1 flex items-center nice-shadow bg-amber-50/40 text-amber-900 rounded-full space-x-2 cursor-pointer'>
                                     <Info size={13} />
-                                    <p className='text-xs font-semibold'>View Hint</p>
+                                    <p className='text-xs font-semibold'>Hint</p>
                                 </div>
                                 <Link
                                     href={getTaskRefFileDir(
@@ -55,7 +55,7 @@ function EvaluateAssignment({ user_id }: any) {
                         </div>
                         <div>
                             {task.assignment_type === 'QUIZ' && <TaskQuizObject key={task.assignment_task_uuid} view='grading' user_id={user_id} assignmentTaskUUID={task.assignment_task_uuid} />}
-                            {task.assignment_type === 'FILE_SUBMISSION' && <TaskFileObject key={task.assignment_task_uuid} view='student' assignmentTaskUUID={task.assignment_task_uuid} />}
+                            {task.assignment_type === 'FILE_SUBMISSION' && <TaskFileObject key={task.assignment_task_uuid} view='custom-grading' user_id={user_id}  assignmentTaskUUID={task.assignment_task_uuid} />}
                         </div>
                     </div>
                 )
