@@ -55,7 +55,7 @@ function AssignmentStudentActivity() {
                   onClick={() => alert(task.hint)}
                   className='px-3 py-1 flex items-center nice-shadow bg-amber-50/40 text-amber-900 rounded-full space-x-2 cursor-pointer'>
                   <Info size={13} />
-                  <p className='text-xs font-semibold'>View Hint</p>
+                  <p className='text-xs font-semibold'>Hint</p>
                 </div>
                 <Link
                   href={getTaskRefFileDir(

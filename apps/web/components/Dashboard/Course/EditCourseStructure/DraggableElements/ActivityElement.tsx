@@ -168,7 +168,7 @@ function ActivityElement(props: ActivitiyElementProps) {
               ) : (
                 <Lock strokeWidth={2} size={12} className="text-gray-600" />
               )}
-              <span>{!props.activity.published ? 'Publish' : 'UnPublish'}</span>
+              <span>{!props.activity.published ? 'Publish' : 'Unpublish'}</span>
             </div>
             <Link
               href={
