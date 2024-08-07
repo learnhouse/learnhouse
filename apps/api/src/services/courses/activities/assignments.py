@@ -1,7 +1,3 @@
-####################################################
-# CRUD
-####################################################
-
 from datetime import datetime
 from typing import Literal
 from uuid import uuid4
@@ -553,7 +549,7 @@ async def put_assignment_task_submission_file(
     org = db_session.exec(org_statement).first()
 
     # RBAC check
-    await rbac_check(request, course.course_uuid, current_user, "read", db_session)
+    await rbac_check(request, course.course_uuid, current_user, "update", db_session)
 
     # Upload reference file
     if sub_file and sub_file.filename and activity and org:
@@ -948,7 +944,7 @@ async def update_assignment_task_submission(
         )
 
     # RBAC check
-    await rbac_check(request, course.course_uuid, current_user, "update", db_session)
+    await rbac_check(request, course.course_uuid, current_user, "read", db_session)
 
     # Update only the fields that were passed in
     for var, value in vars(assignment_task_submission_object).items():
@@ -1083,7 +1079,7 @@ async def create_assignment_submission(
         )
 
     # RBAC check
-    await rbac_check(request, course.course_uuid, current_user, "create", db_session)
+    await rbac_check(request, course.course_uuid, current_user, "update", db_session)
 
     # Create Assignment User Submission
     assignment_user_submission = AssignmentUserSubmission(
@@ -1319,7 +1315,7 @@ async def update_assignment_submission(
         )
 
     # RBAC check
-    await rbac_check(request, course.course_uuid, current_user, "update", db_session)
+    await rbac_check(request, course.course_uuid, current_user, "read", db_session)
 
     # Update only the fields that were passed in
     for var, value in vars(assignment_user_submission_object).items():
@@ -1404,6 +1400,18 @@ async def grade_assignment_submission(
             status_code=404,
             detail="Assignment not found",
         )
+    
+    statement = select(Course).where(Course.id == assignment.course_id)
+    course = db_session.exec(statement).first()
+
+    if not course:
+        raise HTTPException(
+            status_code=404,
+            detail="Course not found",
+        )
+    
+
+    await rbac_check(request, course.course_uuid, current_user, "update", db_session)
 
     # Check if assignment user submission exists
     statement = select(AssignmentUserSubmission).where(
@@ -1534,6 +1542,18 @@ async def mark_activity_as_done_for_user(
     # Check if activity exists
     statement = select(Activity).where(Activity.id == assignment.activity_id)
     activity = db_session.exec(statement).first()
+
+    statement = select(Course).where(Course.id == assignment.course_id)
+    course = db_session.exec(statement).first()
+
+    if not course:
+        raise HTTPException(
+            status_code=404,
+            detail="Course not found",
+        )
+    
+
+    await rbac_check(request, course.course_uuid, current_user, "update", db_session)
 
     if not activity:
         raise HTTPException(

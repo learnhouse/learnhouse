@@ -6,7 +6,7 @@ import { getAPIUrl, getUriWithOrg } from '@services/config/config';
 import { getAssignmentsFromACourse } from '@services/courses/assignments';
 import { getCourseThumbnailMediaDirectory } from '@services/media/media';
 import { swrFetcher } from '@services/utils/ts/requests';
-import { Book, EllipsisVertical, GalleryVertical, GalleryVerticalEnd, Layers2, PenBox, UserRoundPen } from 'lucide-react';
+import { Book, EllipsisVertical, GalleryVertical, GalleryVerticalEnd, Info, Layers2, PenBox, UserRoundPen } from 'lucide-react';
 import Link from 'next/link';
 import React from 'react'
 import useSWR from 'swr';
@@ -113,6 +113,15 @@ function AssignmentsHome() {
                     </div>
                   </div>
                 ))}
+
+                {assignments.length === 0 && (
+                  <>
+                    <div className='flex mx-auto space-x-2 font-semibold mt-3 text-gray-600 items-center'>
+                      <Info size={20} />
+                      <p>No assignments available for this course, create course assignments from the course editor</p>
+                    </div>
+                  </>
+                  )}
               </div>
             </div>
           ))}
