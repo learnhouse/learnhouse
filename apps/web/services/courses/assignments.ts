@@ -278,3 +278,15 @@ export async function markActivityAsDoneForUser(
   const res = await getResponseMetadata(result)
   return res
 }
+
+export async function getAssignmentsFromACourse(
+  courseUUID: string,
+  access_token: string
+) {
+  const result: any = await fetch(
+    `${getAPIUrl()}assignments/course/${courseUUID}`,
+    RequestBodyWithAuthHeader('GET', null, null, access_token)
+  )
+  const res = await getResponseMetadata(result)
+  return res
+}
