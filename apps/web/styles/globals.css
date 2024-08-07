@@ -9,6 +9,11 @@
   @apply shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40
 }
 
+.light-shadow {
+  @apply shadow-lg shadow-gray-300/15 outline outline-1 outline-neutral-200/30
+}
+
+
 .custom-dots-bg {
   @apply bg-fixed;
   background-image: radial-gradient(#4744446b 1px, transparent 1px),

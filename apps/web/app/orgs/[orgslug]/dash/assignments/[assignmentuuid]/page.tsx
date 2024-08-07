@@ -10,7 +10,7 @@ import { mutate } from 'swr';
 import { getAPIUrl } from '@services/config/config';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import { updateActivity } from '@services/courses/activities';
 // Lazy Loading
 import dynamic from 'next/dynamic';
@@ -19,7 +19,8 @@ const AssignmentSubmissionsSubPage = dynamic(() => import('./subpages/Assignment
 
 function AssignmentEdit() {
     const params = useParams<{ assignmentuuid: string; }>()
-    const [selectedSubPage, setSelectedSubPage] = React.useState('editor')
+    const searchParams = useSearchParams()
+    const [selectedSubPage, setSelectedSubPage] = React.useState( searchParams.get('subpage') || 'editor')
     return (
         <div className='flex w-full flex-col'>
             <AssignmentProvider assignment_uuid={'assignment_' + params.assignmentuuid}>
