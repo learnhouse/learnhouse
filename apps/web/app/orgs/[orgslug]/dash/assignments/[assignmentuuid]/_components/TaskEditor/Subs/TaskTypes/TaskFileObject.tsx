@@ -195,7 +195,7 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID }: Ta
                 <div className='flex flex-col space-y-1'>
                     <div className='flex py-5 text-sm justify-center mx-auto space-x-2 text-slate-500'>
                         <Download size={20} />
-                        <p>Please download the file and grade it manually, then input the grade below</p>
+                        <p>Please download the file and grade it manually, then input the grade above</p>
                     </div>
                     {userSubmissions.fileUUID && !isLoading && assignmentTaskUUID && (
                         <Link
