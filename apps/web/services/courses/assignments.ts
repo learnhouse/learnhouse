@@ -165,13 +165,12 @@ export async function updateReferenceFile(
   assignmentUUID: string,
   access_token: string
 ) {
+  // Send file thumbnail as form data
+  const formData = new FormData()
 
-   // Send file thumbnail as form data
-   const formData = new FormData()
- 
-   if (file) {
-     formData.append('reference_file', file)
-   }
+  if (file) {
+    formData.append('reference_file', file)
+  }
   const result: any = await fetch(
     `${getAPIUrl()}assignments/${assignmentUUID}/tasks/${assignmentTaskUUID}/ref_file`,
     RequestBodyFormWithAuthHeader('POST', formData, null, access_token)
@@ -180,20 +179,18 @@ export async function updateReferenceFile(
   return res
 }
 
-
 export async function updateSubFile(
   file: any,
   assignmentTaskUUID: string,
   assignmentUUID: string,
   access_token: string
 ) {
+  // Send file thumbnail as form data
+  const formData = new FormData()
 
-   // Send file thumbnail as form data
-   const formData = new FormData()
- 
-   if (file) {
-     formData.append('sub_file', file)
-   }
+  if (file) {
+    formData.append('sub_file', file)
+  }
   const result: any = await fetch(
     `${getAPIUrl()}assignments/${assignmentUUID}/tasks/${assignmentTaskUUID}/sub_file`,
     RequestBodyFormWithAuthHeader('POST', formData, null, access_token)
@@ -210,6 +207,72 @@ export async function submitAssignmentForGrading(
 ) {
   const result: any = await fetch(
     `${getAPIUrl()}assignments/${assignmentUUID}/submissions`,
+    RequestBodyWithAuthHeader('POST', null, null, access_token)
+  )
+  const res = await getResponseMetadata(result)
+  return res
+}
+
+export async function deleteUserSubmission(
+  user_id: string,
+  assignmentUUID: string,
+  access_token: string
+) {
+  const result: any = await fetch(
+    `${getAPIUrl()}assignments/${assignmentUUID}/submissions/${user_id}`,
+    RequestBodyWithAuthHeader('DELETE', null, null, access_token)
+  )
+  const res = await getResponseMetadata(result)
+  return res
+}
+
+export async function putUserSubmission(
+  body: any,
+  user_id: string,
+  assignmentUUID: string,
+  access_token: string
+) {
+  const result: any = await fetch(
+    `${getAPIUrl()}assignments/${assignmentUUID}/submissions/${user_id}`,
+    RequestBodyWithAuthHeader('PUT', body, null, access_token)
+  )
+  const res = await getResponseMetadata(result)
+  return res
+}
+
+export async function putFinalGrade(
+  user_id: string,
+  assignmentUUID: string,
+  access_token: string
+) {
+  const result: any = await fetch(
+    `${getAPIUrl()}assignments/${assignmentUUID}/submissions/${user_id}/grade`,
+    RequestBodyWithAuthHeader('POST', null, null, access_token)
+  )
+  const res = await getResponseMetadata(result)
+  return res
+}
+
+export async function getFinalGrade(
+  user_id: string,
+  assignmentUUID: string,
+  access_token: string
+) {
+  const result: any = await fetch(
+    `${getAPIUrl()}assignments/${assignmentUUID}/submissions/${user_id}/grade`,
+    RequestBodyWithAuthHeader('GET', null, null, access_token)
+  )
+  const res = await getResponseMetadata(result)
+  return res
+}
+
+export async function markActivityAsDoneForUser(
+  user_id: string,
+  assignmentUUID: string,
+  access_token: string
+) {
+  const result: any = await fetch(
+    `${getAPIUrl()}assignments/${assignmentUUID}/submissions/${user_id}/done`,
     RequestBodyWithAuthHeader('POST', null, null, access_token)
   )
   const res = await getResponseMetadata(result)

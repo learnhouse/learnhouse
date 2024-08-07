@@ -29,7 +29,9 @@ from src.db.courses.assignments import (
 )
 from src.db.courses.courses import Course
 from src.db.organizations import Organization
-from src.db.users import AnonymousUser, PublicUser
+from src.db.trail_runs import TrailRun
+from src.db.trail_steps import TrailStep
+from src.db.users import AnonymousUser, PublicUser, User
 from src.security.rbac.rbac import (
     authorization_verify_based_on_roles_and_authorship_and_usergroups,
     authorization_verify_if_element_is_public,
@@ -39,6 +41,7 @@ from src.services.courses.activities.uploads.sub_file import upload_submission_f
 from src.services.courses.activities.uploads.tasks_ref_files import (
     upload_reference_file,
 )
+from src.services.trail.trail import check_trail_presence
 
 ## > Assignments CRUD
 
@@ -1097,6 +1100,80 @@ async def create_assignment_submission(
     db_session.add(assignment_user_submission)
     db_session.commit()
 
+    # User
+    statement = select(User).where(User.id == current_user.id)
+    user = db_session.exec(statement).first()
+
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found",
+        )
+
+    # Activity
+    statement = select(Activity).where(Activity.id == assignment.activity_id)
+    activity = db_session.exec(statement).first()
+
+    if not activity:
+        raise HTTPException(
+            status_code=404,
+            detail="Activity not found",
+        )
+
+    # Add TrailStep
+    trail = await check_trail_presence(
+        org_id=course.org_id,
+        user_id=user.id,
+        request=request,
+        user=user,
+        db_session=db_session,
+    )
+
+    statement = select(TrailRun).where(
+        TrailRun.trail_id == trail.id,
+        TrailRun.course_id == course.id,
+        TrailRun.user_id == user.id,
+    )
+    trailrun = db_session.exec(statement).first()
+
+    if not trailrun:
+        trailrun = TrailRun(
+            trail_id=trail.id if trail.id is not None else 0,
+            course_id=course.id if course.id is not None else 0,
+            org_id=course.org_id,
+            user_id=user.id,
+            creation_date=str(datetime.now()),
+            update_date=str(datetime.now()),
+        )
+        db_session.add(trailrun)
+        db_session.commit()
+        db_session.refresh(trailrun)
+
+    statement = select(TrailStep).where(
+        TrailStep.trailrun_id == trailrun.id,
+        TrailStep.activity_id == activity.id,
+        TrailStep.user_id == user.id,
+    )
+    trailstep = db_session.exec(statement).first()
+
+    if not trailstep:
+        trailstep = TrailStep(
+            trailrun_id=trailrun.id if trailrun.id is not None else 0,
+            activity_id=activity.id if activity.id is not None else 0,
+            course_id=course.id if course.id is not None else 0,
+            trail_id=trail.id if trail.id is not None else 0,
+            org_id=course.org_id,
+            complete=True,
+            teacher_verified=False,
+            grade="",
+            user_id=user.id,
+            creation_date=str(datetime.now()),
+            update_date=str(datetime.now()),
+        )
+        db_session.add(trailstep)
+        db_session.commit()
+        db_session.refresh(trailstep)
+
     # return assignment user submission read
     return AssignmentUserSubmissionRead.model_validate(assignment_user_submission)
 
@@ -1262,14 +1339,24 @@ async def update_assignment_submission(
 async def delete_assignment_submission(
     request: Request,
     user_id: str,
-    assignment_id: str,
+    assignment_uuid: str,
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
+    # Check if assignment exists
+    statement = select(Assignment).where(Assignment.assignment_uuid == assignment_uuid)
+    assignment = db_session.exec(statement).first()
+
+    if not assignment:
+        raise HTTPException(
+            status_code=404,
+            detail="Assignment not found",
+        )
+
     # Check if assignment user submission exists
     statement = select(AssignmentUserSubmission).where(
         AssignmentUserSubmission.user_id == user_id,
-        AssignmentUserSubmission.assignment_id == assignment_id,
+        AssignmentUserSubmission.assignment_id == assignment.id,
     )
     assignment_user_submission = db_session.exec(statement).first()
 
@@ -1277,18 +1364,6 @@ async def delete_assignment_submission(
         raise HTTPException(
             status_code=404,
             detail="Assignment User Submission not found",
-        )
-
-    # Check if assignment exists
-    statement = select(Assignment).where(
-        Assignment.id == assignment_user_submission.assignment_id
-    )
-    assignment = db_session.exec(statement).first()
-
-    if not assignment:
-        raise HTTPException(
-            status_code=404,
-            detail="Assignment not found",
         )
 
     # Check if course exists
@@ -1309,6 +1384,197 @@ async def delete_assignment_submission(
     db_session.commit()
 
     return {"message": "Assignment User Submission deleted"}
+
+
+## > Assignments Submissions Grading
+async def grade_assignment_submission(
+    request: Request,
+    user_id: str,
+    assignment_uuid: str,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+):
+
+    # Check if assignment exists
+    statement = select(Assignment).where(Assignment.assignment_uuid == assignment_uuid)
+    assignment = db_session.exec(statement).first()
+
+    if not assignment:
+        raise HTTPException(
+            status_code=404,
+            detail="Assignment not found",
+        )
+
+    # Check if assignment user submission exists
+    statement = select(AssignmentUserSubmission).where(
+        AssignmentUserSubmission.user_id == user_id,
+        AssignmentUserSubmission.assignment_id == assignment.id,
+    )
+    assignment_user_submission = db_session.exec(statement).first()
+
+    if not assignment_user_submission:
+        raise HTTPException(
+            status_code=404,
+            detail="Assignment User Submission not found",
+        )
+
+    # Get all the task submissions for the user
+    task_subs = select(AssignmentTaskSubmission).where(
+        AssignmentTaskSubmission.user_id == user_id,
+        AssignmentTaskSubmission.activity_id == assignment.activity_id,
+    )
+    task_submissions = db_session.exec(task_subs).all()
+
+    # Calculate the grade
+    grade = 0
+    for task_submission in task_submissions:
+        grade += task_submission.grade
+
+    # Update the assignment user submission
+    assignment_user_submission.grade = grade
+
+    # Insert Assignment User Submission in DB
+    db_session.add(assignment_user_submission)
+    db_session.commit()
+    db_session.refresh(assignment_user_submission)
+
+    # Change the status of the submission
+    assignment_user_submission.submission_status = AssignmentUserSubmissionStatus.GRADED
+
+    # Insert Assignment User Submission in DB
+    db_session.add(assignment_user_submission)
+    db_session.commit()
+    db_session.refresh(assignment_user_submission)
+
+    # return OK
+    return {
+        "message": "Assignment User Submission graded with the grade of " + str(grade)
+    }
+
+
+async def get_grade_assignment_submission(
+    request: Request,
+    user_id: str,
+    assignment_uuid: str,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+):
+
+    # Check if assignment exists
+    statement = select(Assignment).where(Assignment.assignment_uuid == assignment_uuid)
+    assignment = db_session.exec(statement).first()
+
+    if not assignment:
+        raise HTTPException(
+            status_code=404,
+            detail="Assignment not found",
+        )
+
+    # Check if assignment user submission exists
+    statement = select(AssignmentUserSubmission).where(
+        AssignmentUserSubmission.user_id == user_id,
+        AssignmentUserSubmission.assignment_id == assignment.id,
+    )
+    assignment_user_submission = db_session.exec(statement).first()
+
+    if not assignment_user_submission:
+        raise HTTPException(
+            status_code=404,
+            detail="Assignment User Submission not found",
+        )
+
+    # Get the max grade value from the sum of every assignmenttask
+    statement = select(AssignmentTask).where(
+        AssignmentTask.assignment_id == assignment.id
+    )
+    assignment_tasks = db_session.exec(statement).all()
+    max_grade = 0
+
+    for task in assignment_tasks:
+        max_grade += task.max_grade_value
+
+    # Now get the grade from the user submission
+    statement = select(AssignmentUserSubmission).where(
+        AssignmentUserSubmission.user_id == user_id,
+        AssignmentUserSubmission.assignment_id == assignment.id,
+    )
+    assignment_user_submission = db_session.exec(statement).first()
+
+    if not assignment_user_submission:
+        raise HTTPException(
+            status_code=404,
+            detail="Assignment User Submission not found",
+        )
+
+    # return the grade
+    return {
+        "grade": int(assignment_user_submission.grade),
+        "max_grade": max_grade,
+        "grading_type": assignment.grading_type,
+    }
+
+
+async def mark_activity_as_done_for_user(
+    request: Request,
+    user_id: str,
+    assignment_uuid: str,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+):
+    # Get Assignment
+    statement = select(Assignment).where(Assignment.assignment_uuid == assignment_uuid)
+    assignment = db_session.exec(statement).first()
+
+    if not assignment:
+        raise HTTPException(
+            status_code=404,
+            detail="Assignment not found",
+        )
+
+    # Check if activity exists
+    statement = select(Activity).where(Activity.id == assignment.activity_id)
+    activity = db_session.exec(statement).first()
+
+    if not activity:
+        raise HTTPException(
+            status_code=404,
+            detail="Activity not found",
+        )
+
+    # Check if user exists
+    statement = select(User).where(User.id == user_id)
+    user = db_session.exec(statement).first()
+
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found",
+        )
+
+    # Check if user is enrolled in the course
+    trailsteps = select(TrailStep).where(
+        TrailStep.activity_id == activity.id,
+        TrailStep.user_id == user_id,
+    )
+    trailstep = db_session.exec(trailsteps).first()
+
+    if not trailstep:
+        raise HTTPException(
+            status_code=404,
+            detail="User not enrolled in the course",
+        )
+
+    # Mark activity as done
+    trailstep.complete = True
+    trailstep.update_date = str(datetime.now())
+
+    # Insert TrailStep in DB
+    db_session.add(trailstep)
+    db_session.commit()
+    db_session.refresh(trailstep)
+
+    # return OK
+    return {"message": "Activity marked as done for user"}
 
 
 ## 🔒 RBAC Utils ##

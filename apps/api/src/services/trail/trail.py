@@ -244,7 +244,7 @@ async def add_activity_to_trail(
             course_id=course.id if course.id is not None else 0,
             trail_id=trail.id if trail.id is not None else 0,
             org_id=course.org_id,
-            complete=False,
+            complete=True,
             teacher_verified=False,
             grade="",
             user_id=user.id,

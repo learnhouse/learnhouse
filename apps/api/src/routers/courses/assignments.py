@@ -20,7 +20,10 @@ from src.services.courses.activities.assignments import (
     delete_assignment_submission,
     delete_assignment_task,
     delete_assignment_task_submission,
+    get_grade_assignment_submission,
+    grade_assignment_submission,
     handle_assignment_task_submission,
+    mark_activity_as_done_for_user,
     put_assignment_task_reference_file,
     put_assignment_task_submission_file,
     read_assignment,
@@ -263,7 +266,9 @@ async def api_handle_assignment_task_submissions(
     )
 
 
-@router.get("/{assignment_uuid}/tasks/{assignment_task_uuid}/submissions/user/{user_id}")
+@router.get(
+    "/{assignment_uuid}/tasks/{assignment_task_uuid}/submissions/user/{user_id}"
+)
 async def api_read_user_assignment_task_submissions(
     request: Request,
     assignment_task_uuid: str,
@@ -410,7 +415,7 @@ async def api_update_user_assignment_submissions(
 @router.delete("/{assignment_uuid}/submissions/{user_id}")
 async def api_delete_user_assignment_submissions(
     request: Request,
-    assignment_id: str,
+    assignment_uuid: str,
     user_id: str,
     current_user: PublicUser = Depends(get_current_user),
     db_session=Depends(get_db_session),
@@ -419,5 +424,53 @@ async def api_delete_user_assignment_submissions(
     Delete submissions for an assignment from a user
     """
     return await delete_assignment_submission(
-        request, assignment_id, user_id, current_user, db_session
+        request, user_id, assignment_uuid, current_user, db_session
+    )
+@router.get("/{assignment_uuid}/submissions/{user_id}/grade")
+async def api_get_submission_grade(
+    request: Request,
+    assignment_uuid: str,
+    user_id: str,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+):
+    """
+    Grade submissions for an assignment from a user
+    """
+
+    return await get_grade_assignment_submission(
+        request, user_id, assignment_uuid, current_user, db_session
+    )
+
+@router.post("/{assignment_uuid}/submissions/{user_id}/grade")
+async def api_final_grade_submission(
+    request: Request,
+    assignment_uuid: str,
+    user_id: str,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+):
+    """
+    Grade submissions for an assignment from a user
+    """
+
+    return await grade_assignment_submission(
+        request, user_id, assignment_uuid, current_user, db_session
+    )
+
+
+@router.post("/{assignment_uuid}/submissions/{user_id}/done")
+async def api_submission_mark_as_done(
+    request: Request,
+    assignment_uuid: str,
+    user_id: str,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+):
+    """
+    Grade submissions for an assignment from a user
+    """
+
+    return await mark_activity_as_done_for_user(
+        request, user_id, assignment_uuid, current_user, db_session
     )
