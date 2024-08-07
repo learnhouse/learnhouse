@@ -20,6 +20,7 @@ from src.services.courses.activities.assignments import (
     delete_assignment_submission,
     delete_assignment_task,
     delete_assignment_task_submission,
+    get_assignments_from_course,
     get_grade_assignment_submission,
     grade_assignment_submission,
     handle_assignment_task_submission,
@@ -426,6 +427,8 @@ async def api_delete_user_assignment_submissions(
     return await delete_assignment_submission(
         request, user_id, assignment_uuid, current_user, db_session
     )
+
+
 @router.get("/{assignment_uuid}/submissions/{user_id}/grade")
 async def api_get_submission_grade(
     request: Request,
@@ -441,6 +444,7 @@ async def api_get_submission_grade(
     return await get_grade_assignment_submission(
         request, user_id, assignment_uuid, current_user, db_session
     )
+
 
 @router.post("/{assignment_uuid}/submissions/{user_id}/grade")
 async def api_final_grade_submission(
@@ -473,4 +477,19 @@ async def api_submission_mark_as_done(
 
     return await mark_activity_as_done_for_user(
         request, user_id, assignment_uuid, current_user, db_session
+    )
+
+
+@router.get("/course/{course_uuid}")
+async def api_get_assignments(
+    request: Request,
+    course_uuid: str,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+):
+    """
+    Get assignments for a course
+    """
+    return await get_assignments_from_course(
+        request, course_uuid, current_user, db_session
     )

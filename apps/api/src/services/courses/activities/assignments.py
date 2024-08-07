@@ -1576,6 +1576,40 @@ async def mark_activity_as_done_for_user(
     # return OK
     return {"message": "Activity marked as done for user"}
 
+async def get_assignments_from_course(
+    request: Request,
+    course_uuid: str,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+):
+    # Find course
+    statement = select(Course).where(Course.course_uuid == course_uuid)
+    course = db_session.exec(statement).first()
+
+    if not course:
+        raise HTTPException(
+            status_code=404,
+            detail="Course not found",
+        )
+
+    # Get Activities
+    statement = select(Activity).where(Activity.course_id == course.id)
+    activities = db_session.exec(statement).all()
+
+    # Get Assignments
+    assignments = []
+    for activity in activities:
+        statement = select(Assignment).where(Assignment.activity_id == activity.id)
+        assignment = db_session.exec(statement).first()
+        if assignment:
+            assignments.append(assignment)
+
+    # RBAC check
+    await rbac_check(request, course.course_uuid, current_user, "read", db_session)
+
+    # return assignments read
+    return [AssignmentRead.model_validate(assignment) for assignment in assignments]
+
 
 ## 🔒 RBAC Utils ##
 
