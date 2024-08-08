@@ -59,10 +59,9 @@ function AssignmentsHome() {
                   <div className='flex space-x-2 items-center'>
                     <MiniThumbnail course={courses[index]} />
                     <div className='flex flex-col font-bold text-lg  '>
-                      <p className='bg-gray-200 text-gray-700 px-2 text-xs py-0.5 rounded-full'>Course</p>
+                      <p className='bg-gray-200 text-gray-700 px-2 text-xs py-0.5 rounded-full w-fit'>Course</p>
                       <p>{courses[index].name}</p>
                     </div>
-
                   </div>
                   <Link
                     href={{
@@ -84,7 +83,7 @@ function AssignmentsHome() {
                         <p>Assignment</p>
                       </div>
                       <div className='flex font-semibold text-lg'>{assignment.title}</div>
-                      <div className='flex font-semibold text'>{assignment.description}</div>
+                      <div className='flex font-semibold text-gray-600 px-2 py-0.5 rounded outline outline-gray-200/70'>{assignment.description}</div>
                     </div>
                     <div className='flex space-x-2 font-bold text-sm items-center'>
 
@@ -121,7 +120,7 @@ function AssignmentsHome() {
                       <p>No assignments available for this course, create course assignments from the course editor</p>
                     </div>
                   </>
-                  )}
+                )}
               </div>
             </div>
           ))}

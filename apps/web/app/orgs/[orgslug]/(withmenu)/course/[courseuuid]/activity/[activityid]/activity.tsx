@@ -21,7 +21,7 @@ import { getAssignmentFromActivityUUID, getFinalGrade, submitAssignmentForGradin
 import AssignmentStudentActivity from '@components/Objects/Activities/Assignment/AssignmentStudentActivity'
 import { AssignmentProvider } from '@components/Contexts/Assignments/AssignmentContext'
 import { AssignmentsTaskProvider } from '@components/Contexts/Assignments/AssignmentsTaskContext'
-import AssignmentSubmissionProvider, { AssignmentSubmissionContext, useAssignmentSubmission } from '@components/Contexts/Assignments/AssignmentSubmissionContext'
+import AssignmentSubmissionProvider, {  useAssignmentSubmission } from '@components/Contexts/Assignments/AssignmentSubmissionContext'
 import toast from 'react-hot-toast'
 import { mutate } from 'swr'
 import ConfirmationModal from '@components/StyledElements/ConfirmationModal/ConfirmationModal'
@@ -303,11 +303,11 @@ function AssignmentTools(props: {
       props.assignment?.assignment_uuid,
       session.data?.tokens?.access_token
     );
-  
+
     if (res.success) {
       const { grade, max_grade, grading_type } = res.data;
       let displayGrade;
-  
+
       switch (grading_type) {
         case 'ALPHABET':
           displayGrade = convertNumericToAlphabet(grade, max_grade);
@@ -322,15 +322,15 @@ function AssignmentTools(props: {
         default:
           displayGrade = 'Unknown grading type';
       }
-  
+
       // Use displayGrade here, e.g., update state or display it
       setFinalGrade(displayGrade);
     } else {
     }
   };
-  
+
   // Helper function to convert numeric grade to alphabet grade
-  function convertNumericToAlphabet(grade : any, maxGrade : any) {
+  function convertNumericToAlphabet(grade: any, maxGrade: any) {
     const percentage = (grade / maxGrade) * 100;
     if (percentage >= 90) return 'A';
     if (percentage >= 80) return 'B';
@@ -340,7 +340,9 @@ function AssignmentTools(props: {
   }
 
   useEffect(() => {
-    getGradingBasedOnMethod();
+    if ( submission && submission.length > 0 && submission[0].submission_status === 'GRADED') {
+      getGradingBasedOnMethod();
+    }
   }
     , [submission, props.assignment])
 
