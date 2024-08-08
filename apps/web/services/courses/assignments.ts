@@ -7,7 +7,7 @@ import {
 
 export async function createAssignment(body: any, access_token: string) {
   const result: any = await fetch(
-    `${getAPIUrl()}assignments`,
+    `${getAPIUrl()}assignments/`,
     RequestBodyWithAuthHeader('POST', body, null, access_token)
   )
   const res = await getResponseMetadata(result)
