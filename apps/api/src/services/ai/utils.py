@@ -78,7 +78,7 @@ def check_limits_and_config(db_session: Session, organization: Organization):
         )
 
     # Check if the Organization has Limits enabled and if the max_asks limit has been reached
-    if org_config.config["AIConfig"]["limits"]["limits_enabled"] == True:
+    if org_config.config["features"]["ai"]["limit"] > 0:
         LH_CONFIG = get_learnhouse_config()
         redis_conn_string = LH_CONFIG.redis_config.redis_connection_string
 
@@ -107,7 +107,7 @@ def check_limits_and_config(db_session: Session, organization: Organization):
             ai_asks = int(ai_asks)
 
         # Check if the Number of asks is less than the max_asks limit
-        if org_config.config["AIConfig"]["limits"]["max_asks"] <= ai_asks:
+        if org_config.config["features"]["ai"]["limit"] <= ai_asks:
             raise HTTPException(
                 status_code=403,
                 detail="Organization has reached the max number of AI asks",

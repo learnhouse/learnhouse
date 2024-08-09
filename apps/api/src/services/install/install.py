@@ -5,12 +5,28 @@ from fastapi import HTTPException, Request
 from sqlalchemy import desc
 from sqlmodel import Session, select
 from src.db.install import Install, InstallRead
-from src.db.organization_config import AIEnabledFeatures, AILimitsSettings, LimitSettings, OrgUserConfig, OrganizationConfig, OrganizationConfigBase, GeneralConfig, AIConfig
+from src.db.organization_config import (
+    AIOrgConfig,
+    APIOrgConfig,
+    AnalyticsOrgConfig,
+    AssignmentOrgConfig,
+    CollaborationOrgConfig,
+    CourseOrgConfig,
+    DiscussionOrgConfig,
+    MemberOrgConfig,
+    OrgFeatureConfig,
+    OrgGeneralConfig,
+    OrganizationConfig,
+    OrganizationConfigBase,
+    PaymentOrgConfig,
+    StorageOrgConfig,
+    UserGroupOrgConfig,
+)
 from src.db.organizations import Organization, OrganizationCreate
 from src.db.roles import Permission, Rights, Role, RoleTypeEnum
 from src.db.user_organizations import UserOrganization
 from src.db.users import User, UserCreate, UserRead
-from config.config import   get_learnhouse_config
+from config.config import GeneralConfig, get_learnhouse_config
 from src.security.security import security_hash_password
 
 
@@ -57,7 +73,7 @@ async def get_latest_install_instance(request: Request, db_session: Session):
             status_code=404,
             detail="No install instance found",
         )
-    
+
     install = InstallRead.model_validate(install)
 
     return install
@@ -96,8 +112,7 @@ async def update_install_instance(
 
 # Install Default roles
 def install_default_elements(db_session: Session):
-    """
-    """
+    """ """
     # remove all default roles
     statement = select(Role).where(Role.role_type == RoleTypeEnum.TYPE_GLOBAL)
     roles = db_session.exec(statement).all()
@@ -300,9 +315,7 @@ def install_default_elements(db_session: Session):
 
 
 # Organization creation
-def install_create_organization(
-     org_object: OrganizationCreate, db_session: Session
-):
+def install_create_organization(org_object: OrganizationCreate, db_session: Session):
     org = Organization.model_validate(org_object)
 
     # Complete the org object
@@ -314,36 +327,28 @@ def install_create_organization(
     db_session.commit()
     db_session.refresh(org)
 
-    # Org Config 
+    # Org Config
     org_config = OrganizationConfigBase(
-        GeneralConfig=GeneralConfig(
-            color="#000000",
-            limits=LimitSettings(
-                limits_enabled=False,
-                max_users=0,
-                max_storage=0,
-                max_staff=0,
-            ),
-            collaboration=False,
-            users=OrgUserConfig(
-                signup_mechanism="open",
-            ),
-            active=True,
-        ),
-        AIConfig=AIConfig(
+        config_version="1.0",
+        general=OrgGeneralConfig(
             enabled=True,
-            limits=AILimitsSettings(
-                limits_enabled=False,
-                max_asks=0,
+            color="normal",
+            watermark=True,
+        ),
+        features=OrgFeatureConfig(
+            courses=CourseOrgConfig(enabled=True, limit=0),
+            members=MemberOrgConfig(
+                enabled=True, signup_mode="open", admin_limit=0, limit=0
             ),
-            embeddings="text-embedding-ada-002",
-            ai_model="gpt-3.5-turbo",
-            features=AIEnabledFeatures(
-                editor=True,
-                activity_ask=True,
-                course_ask=True,
-                global_ai_ask=True,
-            ),
+            usergroups=UserGroupOrgConfig(enabled=True, limit=0),
+            storage=StorageOrgConfig(enabled=True, limit=0),
+            ai=AIOrgConfig(enabled=True, limit=0, model="text-embedding-ada-002"),
+            assignments=AssignmentOrgConfig(enabled=True, limit=0),
+            payments=PaymentOrgConfig(enabled=True, stripe_key=""),
+            discussions=DiscussionOrgConfig(enabled=True, limit=0),
+            analytics=AnalyticsOrgConfig(enabled=True, limit=0),
+            collaboration=CollaborationOrgConfig(enabled=True, limit=0),
+            api=APIOrgConfig(enabled=True, limit=0),
         ),
     )
 
@@ -365,7 +370,7 @@ def install_create_organization(
 
 
 def install_create_organization_user(
-     user_object: UserCreate, org_slug: str, db_session: Session
+    user_object: UserCreate, org_slug: str, db_session: Session
 ):
     user = User.model_validate(user_object)
 
@@ -417,8 +422,6 @@ def install_create_organization_user(
     db_session.add(user)
     db_session.commit()
     db_session.refresh(user)
-
-    
 
     # get org id
     statement = select(Organization).where(Organization.slug == org_slug)
