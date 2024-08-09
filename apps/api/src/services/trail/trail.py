@@ -1,10 +1,10 @@
 from datetime import datetime
 from uuid import uuid4
-from src.db.chapter_activities import ChapterActivity
+from src.db.courses.chapter_activities import ChapterActivity
 from fastapi import HTTPException, Request, status
 from sqlmodel import Session, select
-from src.db.activities import Activity
-from src.db.courses import Course
+from src.db.courses.activities import Activity
+from src.db.courses.courses import Course
 from src.db.trail_runs import TrailRun, TrailRunRead
 from src.db.trail_steps import TrailStep
 from src.db.trails import Trail, TrailCreate, TrailRead
@@ -244,7 +244,7 @@ async def add_activity_to_trail(
             course_id=course.id if course.id is not None else 0,
             trail_id=trail.id if trail.id is not None else 0,
             org_id=course.org_id,
-            complete=False,
+            complete=True,
             teacher_verified=False,
             grade="",
             user_id=user.id,

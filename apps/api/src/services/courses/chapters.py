@@ -8,10 +8,10 @@ from src.security.rbac.rbac import (
     authorization_verify_if_element_is_public,
     authorization_verify_if_user_is_anon,
 )
-from src.db.course_chapters import CourseChapter
-from src.db.activities import Activity, ActivityRead
-from src.db.chapter_activities import ChapterActivity
-from src.db.chapters import (
+from src.db.courses.course_chapters import CourseChapter
+from src.db.courses.activities import Activity, ActivityRead
+from src.db.courses.chapter_activities import ChapterActivity
+from src.db.courses.chapters import (
     Chapter,
     ChapterCreate,
     ChapterRead,

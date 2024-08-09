@@ -2,11 +2,13 @@ import React, { useState } from 'react'
 import DynamicPageActivityImage from 'public/activities_types/dynamic-page-activity.png'
 import VideoPageActivityImage from 'public//activities_types/video-page-activity.png'
 import DocumentPdfPageActivityImage from 'public//activities_types/documentpdf-page-activity.png'
-import { styled } from '@stitches/react'
+import AssignmentActivityImage from 'public//activities_types/assignment-page-activity.png'
+
 import DynamicCanvaModal from './NewActivityModal/DynamicCanva'
 import VideoModal from './NewActivityModal/Video'
 import Image from 'next/image'
 import DocumentPdfModal from './NewActivityModal/DocumentPdf'
+import Assignment from './NewActivityModal/Assignment'
 
 function NewActivityModal({
   closeModal,
@@ -19,43 +21,58 @@ function NewActivityModal({
   const [selectedView, setSelectedView] = useState('home')
 
   return (
-    <div>
+    <>
       {selectedView === 'home' && (
-        <ActivityChooserWrapper>
+        <div className="flex flex-row space-x-2 justify-start mt-2.5 w-full">
           <ActivityOption
             onClick={() => {
               setSelectedView('dynamic')
             }}
           >
-            <ActivityTypeImage>
-              <Image alt="Dynamic Page" src={DynamicPageActivityImage}></Image>
-            </ActivityTypeImage>
-            <ActivityTypeTitle>Dynamic Page</ActivityTypeTitle>
+            <div className="h-20 rounded-lg m-0.5 flex flex-col items-center justify-end text-center bg-white hover:cursor-pointer">
+              <Image quality={100} alt="Dynamic Page" src={DynamicPageActivityImage}></Image>
+            </div>
+            <div className="flex text-sm h-5 font-medium text-gray-500 items-center justify-center text-center">
+              Dynamic Page
+            </div>
           </ActivityOption>
           <ActivityOption
             onClick={() => {
               setSelectedView('video')
             }}
           >
-            <ActivityTypeImage>
-              <Image alt="Video Page" src={VideoPageActivityImage}></Image>
-            </ActivityTypeImage>
-            <ActivityTypeTitle>Video Page</ActivityTypeTitle>
+            <div className="h-20 rounded-lg m-0.5 flex flex-col items-center justify-end text-center bg-white hover:cursor-pointer">
+              <Image quality={100} alt="Video Page" src={VideoPageActivityImage}></Image>
+            </div>
+            <div className="flex text-sm h-5 font-medium text-gray-500 items-center justify-center text-center">
+              Video
+            </div>
           </ActivityOption>
           <ActivityOption
             onClick={() => {
               setSelectedView('documentpdf')
             }}
           >
-            <ActivityTypeImage>
-              <Image
-                alt="Document PDF Page"
-                src={DocumentPdfPageActivityImage}
-              ></Image>
-            </ActivityTypeImage>
-            <ActivityTypeTitle>PDF Document Page</ActivityTypeTitle>
+            <div className="h-20 rounded-lg m-0.5 flex flex-col items-center justify-end text-center bg-white hover:cursor-pointer">
+              <Image quality={100} alt="Document PDF Page" src={DocumentPdfPageActivityImage}></Image>
+            </div>
+            <div className="flex text-sm h-5 font-medium text-gray-500 items-center justify-center text-center">
+              Document
+            </div>
           </ActivityOption>
-        </ActivityChooserWrapper>
+          <ActivityOption
+            onClick={() => {
+              setSelectedView('assignments')
+            }}
+          >
+            <div className="h-20 rounded-lg m-0.5 flex flex-col items-center justify-end text-center bg-white hover:cursor-pointer">
+              <Image quality={100} alt="Assignment Page" src={AssignmentActivityImage}></Image>
+            </div>
+            <div className="flex text-sm h-5 font-medium text-gray-500 items-center justify-center text-center">
+              Assignments
+            </div>
+          </ActivityOption>
+        </div>
       )}
 
       {selectedView === 'dynamic' && (
@@ -82,63 +99,26 @@ function NewActivityModal({
           course={course}
         />
       )}
-    </div>
+
+      {selectedView === 'assignments' && (
+        <Assignment
+          submitActivity={submitActivity}
+          chapterId={chapterId}
+          course={course}
+          closeModal={closeModal}
+        />)
+      }
+    </>
   )
 }
 
-const ActivityChooserWrapper = styled('div', {
-  display: 'flex',
-  flexDirection: 'row',
-  justifyContent: 'start',
-  marginTop: 10,
-})
-
-const ActivityOption = styled('div', {
-  width: '180px',
-  textAlign: 'center',
-  borderRadius: 10,
-  background: '#F6F6F6',
-  border: '4px solid #F5F5F5',
-  margin: 'auto',
-
-  // hover
-  '&:hover': {
-    cursor: 'pointer',
-    background: '#ededed',
-    border: '4px solid #ededed',
-
-    transition: 'background 0.2s ease-in-out, border 0.2s ease-in-out',
-  },
-})
-
-const ActivityTypeImage = styled('div', {
-  height: 80,
-  borderRadius: 8,
-  margin: 2,
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  justifyContent: 'end',
-  textAlign: 'center',
-  background: '#ffffff',
-
-  // hover
-  '&:hover': {
-    cursor: 'pointer',
-  },
-})
-
-const ActivityTypeTitle = styled('div', {
-  display: 'flex',
-  fontSize: 12,
-  height: '20px',
-  fontWeight: 500,
-  color: 'rgba(0, 0, 0, 0.38);',
-
-  // center text vertically
-  alignItems: 'center',
-  justifyContent: 'center',
-  textAlign: 'center',
-})
+const ActivityOption = ({ onClick, children }: any) => (
+  <div
+    onClick={onClick}
+    className="w-full text-center rounded-xl bg-gray-100 border-4 border-gray-100 mx-auto hover:bg-gray-200 hover:border-gray-200 transition duration-200 ease-in-out cursor-pointer"
+  >
+    {children}
+  </div>
+)
 
 export default NewActivityModal

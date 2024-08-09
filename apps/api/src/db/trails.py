@@ -6,12 +6,22 @@ from src.db.trail_runs import TrailRunRead
 
 
 class TrailBase(SQLModel):
-    org_id: int = Field(default=None, foreign_key="organization.id")
-    user_id: int = Field(default=None, foreign_key="user.id")
+    org_id: int = Field(
+        sa_column=Column(Integer, ForeignKey("organization.id", ondelete="CASCADE"))
+    )
+    user_id: int = Field(
+        sa_column=Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))
+    )
 
 
 class Trail(TrailBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
+    org_id: int = Field(
+        sa_column=Column(Integer, ForeignKey("organization.id", ondelete="CASCADE"))
+    )
+    user_id: int = Field(
+        sa_column=Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))
+    )
     trail_uuid: str = ""
     creation_date: str = ""
     update_date: str = ""
@@ -19,6 +29,7 @@ class Trail(TrailBase, table=True):
 
 class TrailCreate(TrailBase):
     pass
+
 
 # TODO: This is a hacky way to get around the list[TrailRun] issue, find a better way to do this
 class TrailRead(BaseModel):

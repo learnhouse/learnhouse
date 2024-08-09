@@ -45,19 +45,44 @@ export function getActivityBlockMediaDirectory(
   }
 }
 
+export function getTaskRefFileDir(
+  orgUUID: string,
+  courseUUID: string,
+  activityUUID: string,
+  assignmentUUID: string,
+  assignmentTaskUUID: string,
+  fileID : string
+
+) {
+  let uri = `${getMediaUrl()}content/orgs/${orgUUID}/courses/${courseUUID}/activities/${activityUUID}/assignments/${assignmentUUID}/tasks/${assignmentTaskUUID}/${fileID}`
+  return uri
+}
+
+export function getTaskFileSubmissionDir(
+  orgUUID: string,
+  courseUUID: string,
+  activityUUID: string,
+  assignmentUUID: string,
+  assignmentTaskUUID: string,
+  fileSubID : string
+) {
+  let uri = `${getMediaUrl()}content/orgs/${orgUUID}/courses/${courseUUID}/activities/${activityUUID}/assignments/${assignmentUUID}/tasks/${assignmentTaskUUID}/subs/${fileSubID}`
+  return uri
+}
+
 export function getActivityMediaDirectory(
   orgUUID: string,
-  courseId: string,
-  activityId: string,
+  courseUUID: string,
+  activityUUID: string,
   fileId: string,
   activityType: string
 ) {
   if (activityType == 'video') {
-    let uri = `${getMediaUrl()}content/orgs/${orgUUID}/courses/${courseId}/activities/${activityId}/video/${fileId}`
+    let uri = `${getMediaUrl()}content/orgs/${orgUUID}/courses/${courseUUID}/activities/${activityUUID}/video/${fileId}`
     return uri
   }
   if (activityType == 'documentpdf') {
-    let uri = `${getMediaUrl()}content/orgs/${orgUUID}/courses/${courseId}/activities/${activityId}/documentpdf/${fileId}`
+    let uri = `${getMediaUrl()}content/orgs/${orgUUID}/courses/${courseUUID}/activities/${activityUUID}/documentpdf/${fileId}`
     return uri
   }
 }

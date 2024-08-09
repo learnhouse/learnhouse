@@ -3,7 +3,7 @@ from fastapi import HTTPException, status, Request
 from sqlalchemy import null
 from sqlmodel import Session, select
 from src.db.collections import Collection
-from src.db.courses import Course
+from src.db.courses.courses import Course
 from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum
 from src.db.roles import Role
 from src.db.user_organizations import UserOrganization
