@@ -5,14 +5,21 @@ from typing import Literal
 from uuid import uuid4
 from sqlmodel import Session, select
 from src.db.organization_config import (
-    AIConfig,
-    AIEnabledFeatures,
-    AILimitsSettings,
-    GeneralConfig,
-    LimitSettings,
-    OrgUserConfig,
+    AIOrgConfig,
+    APIOrgConfig,
+    AnalyticsOrgConfig,
+    AssignmentOrgConfig,
+    CollaborationOrgConfig,
+    CourseOrgConfig,
+    DiscussionOrgConfig,
+    MemberOrgConfig,
+    OrgFeatureConfig,
+    OrgGeneralConfig,
     OrganizationConfig,
     OrganizationConfigBase,
+    PaymentOrgConfig,
+    StorageOrgConfig,
+    UserGroupOrgConfig,
 )
 from src.security.rbac.rbac import (
     authorization_verify_based_on_org_admin_status,
@@ -149,35 +156,27 @@ async def create_org(
     db_session.commit()
     db_session.refresh(user_org)
 
-    org_config = OrganizationConfigBase(
-        GeneralConfig=GeneralConfig(
-            color="#000000",
-            limits=LimitSettings(
-                limits_enabled=False,
-                max_users=0,
-                max_storage=0,
-                max_staff=0,
-            ),
-            collaboration=False,
-            users=OrgUserConfig(
-                signup_mechanism="open",
-            ),
-            active=True,
-        ),
-        AIConfig=AIConfig(
+    org_config = org_config = OrganizationConfigBase(
+        config_version="1.0",
+        general=OrgGeneralConfig(
             enabled=True,
-            limits=AILimitsSettings(
-                limits_enabled=False,
-                max_asks=0,
+            color="normal",
+            watermark=True,
+        ),
+        features=OrgFeatureConfig(
+            courses=CourseOrgConfig(enabled=True, limit=0),
+            members=MemberOrgConfig(
+                enabled=True, signup_mode="open", admin_limit=0, limit=0
             ),
-            embeddings="text-embedding-ada-002",
-            ai_model="gpt-3.5-turbo",
-            features=AIEnabledFeatures(
-                editor=True,
-                activity_ask=True,
-                course_ask=True,
-                global_ai_ask=True,
-            ),
+            usergroups=UserGroupOrgConfig(enabled=True, limit=0),
+            storage=StorageOrgConfig(enabled=True, limit=0),
+            ai=AIOrgConfig(enabled=True, limit=0, model="text-embedding-ada-002"),
+            assignments=AssignmentOrgConfig(enabled=True, limit=0),
+            payments=PaymentOrgConfig(enabled=True, stripe_key=""),
+            discussions=DiscussionOrgConfig(enabled=True, limit=0),
+            analytics=AnalyticsOrgConfig(enabled=True, limit=0),
+            collaboration=CollaborationOrgConfig(enabled=True, limit=0),
+            api=APIOrgConfig(enabled=True, limit=0),
         ),
     )
 
@@ -210,8 +209,6 @@ async def create_org(
 
     return org
 
-
-# Temporary pre-alpha code
 async def create_org_with_config(
     request: Request,
     org_object: OrganizationCreate,
@@ -477,7 +474,7 @@ async def update_org_signup_mechanism(
 
     # Update config
     updated_config = OrganizationConfigBase(**updated_config)
-    updated_config.GeneralConfig.users.signup_mechanism = signup_mechanism
+    updated_config.features.members.signup_mode = signup_mechanism
 
     # Update the database
     org_config.config = json.loads(updated_config.json())
@@ -527,7 +524,7 @@ async def get_org_join_mechanism(
 
     # Get the signup mechanism
     config = OrganizationConfigBase(**config)
-    signup_mechanism = config.GeneralConfig.users.signup_mechanism
+    signup_mechanism = config.features.members.signup_mode
 
     return signup_mechanism
 
