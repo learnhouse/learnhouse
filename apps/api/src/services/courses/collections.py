@@ -15,7 +15,7 @@ from src.db.collections import (
     CollectionUpdate,
 )
 from src.db.collections_courses import CollectionCourse
-from src.db.courses import Course
+from src.db.courses.courses import Course
 from src.services.users.users import PublicUser
 from fastapi import HTTPException, status, Request
 

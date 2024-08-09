@@ -2,7 +2,7 @@ from typing import Any, List, Optional
 from pydantic import BaseModel
 from sqlalchemy import Column, ForeignKey
 from sqlmodel import Field, SQLModel
-from src.db.activities import ActivityRead
+from src.db.courses.activities import ActivityRead
 
 
 class ChapterBase(SQLModel):
@@ -33,10 +33,10 @@ class ChapterCreate(ChapterBase):
 
 class ChapterUpdate(ChapterBase):
     name: Optional[str]
-    description: Optional[str]
-    thumbnail_image: Optional[str]
+    description: Optional[str] = ""
+    thumbnail_image: Optional[str] = ""
     course_id: Optional[int]
-    org_id: Optional[int]
+    org_id: Optional[int] # type: ignore
 
 
 class ChapterRead(ChapterBase):

@@ -1,14 +1,14 @@
 from typing import Literal
 from sqlmodel import Session, select
-from src.db.courses import Course
-from src.db.chapters import Chapter
+from src.db.courses.courses import Course
+from src.db.courses.chapters import Chapter
 from src.security.rbac.rbac import (
     authorization_verify_based_on_roles_and_authorship_and_usergroups,
     authorization_verify_if_element_is_public,
     authorization_verify_if_user_is_anon,
 )
-from src.db.activities import ActivityCreate, Activity, ActivityRead, ActivityUpdate
-from src.db.chapter_activities import ChapterActivity
+from src.db.courses.activities import ActivityCreate, Activity, ActivityRead, ActivityUpdate
+from src.db.courses.chapter_activities import ChapterActivity
 from src.db.users import AnonymousUser, PublicUser
 from fastapi import HTTPException, Request
 from uuid import uuid4
@@ -58,7 +58,7 @@ async def create_activity(
     statement = (
         select(ChapterActivity)
         .where(ChapterActivity.chapter_id == activity_object.chapter_id)
-        .order_by(ChapterActivity.order)
+        .order_by(ChapterActivity.order) # type: ignore
     )
     chapter_activities = db_session.exec(statement).all()
 
@@ -91,6 +91,38 @@ async def get_activity(
     db_session: Session,
 ):
     statement = select(Activity).where(Activity.activity_uuid == activity_uuid)
+    activity = db_session.exec(statement).first()
+
+    if not activity:
+        raise HTTPException(
+            status_code=404,
+            detail="Activity not found",
+        )
+
+    # Get course from that activity
+    statement = select(Course).where(Course.id == activity.course_id)
+    course = db_session.exec(statement).first()
+
+    if not course:
+        raise HTTPException(
+            status_code=404,
+            detail="Course not found",
+        )
+
+    # RBAC check
+    await rbac_check(request, course.course_uuid, current_user, "read", db_session)
+
+    activity = ActivityRead.model_validate(activity)
+
+    return activity
+
+async def get_activityby_id(
+    request: Request,
+    activity_id: str,
+    current_user: PublicUser,
+    db_session: Session,
+):
+    statement = select(Activity).where(Activity.id == activity_id)
     activity = db_session.exec(statement).first()
 
     if not activity:

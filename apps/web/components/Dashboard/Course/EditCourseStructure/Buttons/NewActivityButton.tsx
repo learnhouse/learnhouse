@@ -87,6 +87,7 @@ function NewActivityButton(props: NewActivityButtonProps) {
         isDialogOpen={newActivityModal}
         onOpenChange={setNewActivityModal}
         minHeight="no-min"
+        minWidth='md'
         addDefCloseButton={false}
         dialogContent={
           <NewActivityModal

@@ -1,5 +1,5 @@
-from src.db.activities import ActivityRead
-from src.db.courses import CourseRead
+from src.db.courses.activities import ActivityRead
+from src.db.courses.courses import CourseRead
 
 
 def structure_activity_content_by_type(activity):
