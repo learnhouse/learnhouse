@@ -2,13 +2,13 @@ from typing import List
 from fastapi import APIRouter, Depends, UploadFile, Form, Request
 from sqlmodel import Session
 from src.core.events.database import get_db_session
-from src.db.course_updates import (
+from src.db.courses.course_updates import (
     CourseUpdateCreate,
     CourseUpdateRead,
     CourseUpdateUpdate,
 )
 from src.db.users import PublicUser
-from src.db.courses import (
+from src.db.courses.courses import (
     CourseCreate,
     CourseRead,
     CourseUpdate,
@@ -18,13 +18,19 @@ from src.security.auth import get_current_user
 from src.services.courses.courses import (
     create_course,
     get_course,
+    get_course_by_id,
     get_course_meta,
     get_courses_orgslug,
     update_course,
     delete_course,
     update_course_thumbnail,
 )
-from src.services.courses.updates import create_update, delete_update, get_updates_by_course_uuid, update_update
+from src.services.courses.updates import (
+    create_update,
+    delete_update,
+    get_updates_by_course_uuid,
+    update_update,
+)
 
 
 router = APIRouter()
@@ -93,6 +99,21 @@ async def api_get_course(
     )
 
 
+@router.get("/id/{course_id}")
+async def api_get_course_by_id(
+    request: Request,
+    course_id: str,
+    db_session: Session = Depends(get_db_session),
+    current_user: PublicUser = Depends(get_current_user),
+) -> CourseRead:
+    """
+    Get single Course by id
+    """
+    return await get_course_by_id(
+        request, course_id, current_user=current_user, db_session=db_session
+    )
+
+
 @router.get("/{course_uuid}/meta")
 async def api_get_course_meta(
     request: Request,
@@ -154,7 +175,8 @@ async def api_delete_course(
 
     return await delete_course(request, course_uuid, current_user, db_session)
 
-@ router.get("/{course_uuid}/updates")
+
+@router.get("/{course_uuid}/updates")
 async def api_get_course_updates(
     request: Request,
     course_uuid: str,
@@ -165,7 +187,10 @@ async def api_get_course_updates(
     Get Course Updates by course_uuid
     """
 
-    return await get_updates_by_course_uuid(request, course_uuid, current_user, db_session)
+    return await get_updates_by_course_uuid(
+        request, course_uuid, current_user, db_session
+    )
+
 
 @router.post("/{course_uuid}/updates")
 async def api_create_course_update(
@@ -182,6 +207,7 @@ async def api_create_course_update(
     return await create_update(
         request, course_uuid, update_object, current_user, db_session
     )
+
 
 @router.put("/{course_uuid}/update/{courseupdate_uuid}")
 async def api_update_course_update(
@@ -200,6 +226,7 @@ async def api_update_course_update(
         request, courseupdate_uuid, update_object, current_user, db_session
     )
 
+
 @router.delete("/{course_uuid}/update/{courseupdate_uuid}")
 async def api_delete_course_update(
     request: Request,
@@ -213,4 +240,3 @@ async def api_delete_course_update(
     """
 
     return await delete_update(request, courseupdate_uuid, current_user, db_session)
-

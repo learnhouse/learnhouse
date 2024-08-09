@@ -9,7 +9,7 @@ import OnBoardAI from '@public/onboarding/OnBoardAI.png';
 import OnBoardUGs from '@public/onboarding/OnBoardUGs.png';
 import OnBoardAccess from '@public/onboarding/OnBoardAccess.png';
 import OnBoardMore from '@public/onboarding/OnBoardMore.png';
-import { ArrowRight, Book, Check, Globe, Info, PictureInPicture, Sparkle, Sprout, SquareUser, Users } from 'lucide-react';
+import { ArrowRight, Book, Check, Globe, Info, PictureInPicture, Sparkle, Sprout, SquareUser } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { getUriWithOrg } from '@services/config/config';
 import { useOrg } from '@components/Contexts/OrgContext';

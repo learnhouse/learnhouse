@@ -82,6 +82,7 @@ const contentClose = keyframes({
 
 const DialogOverlay = styled(Dialog.Overlay, {
   backgroundColor: blackA.blackA9,
+  backdropFilter: 'blur(0.6px)',
   position: 'fixed',
   zIndex: 500,
   inset: 0,
