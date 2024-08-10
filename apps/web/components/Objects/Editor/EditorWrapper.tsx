@@ -35,7 +35,7 @@ function EditorWrapper(props: EditorWrapperProps): JSX.Element {
 
   /*  Collaboration Features */
   const collab = getCollaborationServerUrl()
-  const isCollabEnabledOnThisOrg = props.org.config.config.GeneralConfig.collaboration && collab
+  const isCollabEnabledOnThisOrg = props.org.config.config.features.collaboration.enabled && collab
   const doc = new Y.Doc()
   // mouse movement
   const [mouseMovements, setMouseMovements] = useState({} as any);
