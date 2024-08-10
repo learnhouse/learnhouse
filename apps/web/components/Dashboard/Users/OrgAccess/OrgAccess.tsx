@@ -33,7 +33,7 @@ function OrgAccess() {
 
   async function getOrgJoinMethod() {
     if (org) {
-      if (org.config.config.GeneralConfig.users.signup_mechanism == 'open') {
+      if (org.config.config.features.members.signup_mode == 'open') {
         setJoinMethod('open')
       } else {
         setJoinMethod('inviteOnly')
