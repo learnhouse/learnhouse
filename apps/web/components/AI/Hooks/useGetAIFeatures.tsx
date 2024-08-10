@@ -10,21 +10,9 @@ function useGetAIFeatures(props: UseGetAIFeatures) {
   const [isEnabled, setisEnabled] = React.useState(false)
 
   function checkAvailableAIFeaturesOnOrg(feature: string) {
-    const config = org?.config?.config?.AIConfig
+    const config = org?.config?.config?.features.ai.enabled
 
-    if (!config) {
-      return false
-    }
-
-    if (!config.enabled) {
-      return false
-    }
-
-    if (!config.features[feature]) {
-      return false
-    }
-
-    return true
+    return config
   }
 
   React.useEffect(() => {

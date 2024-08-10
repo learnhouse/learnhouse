@@ -71,7 +71,7 @@ def check_limits_and_config(db_session: Session, organization: Organization):
         )
 
     # Check if the Organizations has AI enabled
-    if org_config.config["AIConfig"]["enabled"] == False:
+    if org_config.config["features"]["ai"]["enabled"] == False:
         raise HTTPException(
             status_code=403,
             detail="Organization has AI disabled",

@@ -33,7 +33,7 @@ function SignUpClient(props: SignUpClientProps) {
   useEffect(() => {
     if (props.org.config) {
       setJoinMethod(
-        props.org?.config?.config?.GeneralConfig.users.signup_mechanism
+        props.org?.config?.config?.features.members.signup_mode
       )
     }
     if (inviteCodeParam) {
