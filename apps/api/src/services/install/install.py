@@ -26,7 +26,7 @@ from src.db.organizations import Organization, OrganizationCreate
 from src.db.roles import Permission, Rights, Role, RoleTypeEnum
 from src.db.user_organizations import UserOrganization
 from src.db.users import User, UserCreate, UserRead
-from config.config import GeneralConfig, get_learnhouse_config
+from config.config import get_learnhouse_config
 from src.security.security import security_hash_password
 
 
