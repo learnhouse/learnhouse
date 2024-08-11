@@ -4,6 +4,10 @@ from typing import Literal
 from uuid import uuid4
 from fastapi import HTTPException, Request
 from sqlmodel import Session, select
+from src.security.features_utils.usage import (
+    check_limits_with_usage,
+    increase_feature_usage,
+)
 from src.security.rbac.rbac import (
     authorization_verify_based_on_roles_and_authorship_and_usergroups,
     authorization_verify_if_user_is_anon,
@@ -35,13 +39,16 @@ async def create_usergroup(
 
     # Check if Organization exists
     statement = select(Organization).where(Organization.id == usergroup_create.org_id)
-    result = db_session.exec(statement)
+    org = db_session.exec(statement).first()
 
-    if not result.first():
+    if not org or org.id is None:
         raise HTTPException(
             status_code=400,
             detail="Organization does not exist",
         )
+
+    # Usage check
+    check_limits_with_usage("courses", org.id, db_session)
 
     # Complete the object
     usergroup.usergroup_uuid = f"usergroup_{uuid4()}"
@@ -52,6 +59,9 @@ async def create_usergroup(
     db_session.add(usergroup)
     db_session.commit()
     db_session.refresh(usergroup)
+
+    # Feature usage
+    increase_feature_usage("usergroups", org.id, db_session)
 
     usergroup = UserGroupRead.model_validate(usergroup)
 
@@ -253,6 +263,9 @@ async def delete_usergroup_by_id(
         db_session=db_session,
     )
 
+    # Feature usage
+    increase_feature_usage("usergroups", usergroup.org_id, db_session)
+
     db_session.delete(usergroup)
     db_session.commit()
 
@@ -275,8 +288,6 @@ async def add_users_to_usergroup(
             status_code=404,
             detail="UserGroup not found",
         )
-    
-   
 
     # RBAC check
     await rbac_check(
@@ -353,7 +364,9 @@ async def remove_users_from_usergroup(
     user_ids_array = user_ids.split(",")
 
     for user_id in user_ids_array:
-        statement = select(UserGroupUser).where(UserGroupUser.user_id == user_id, UserGroupUser.usergroup_id == usergroup_id)
+        statement = select(UserGroupUser).where(
+            UserGroupUser.user_id == user_id, UserGroupUser.usergroup_id == usergroup_id
+        )
         usergroup_user = db_session.exec(statement).first()
 
         if usergroup_user:

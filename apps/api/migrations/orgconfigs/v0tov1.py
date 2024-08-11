@@ -30,7 +30,7 @@ def migrate_v0_to_v1(v0_config):
                 ),
             },
             "usergroups": {
-                "enabled": True,
+                "enabled": False,
                 "limit": (
                     v0_config["GeneralConfig"]["limits"]["max_staff"]
                     if v0_config["GeneralConfig"]["limits"]["limits_enabled"]
@@ -46,7 +46,7 @@ def migrate_v0_to_v1(v0_config):
                 ),
             },
             "ai": {
-                "enabled": v0_config["AIConfig"]["enabled"],
+                "enabled": False,
                 "limit": (
                     v0_config["AIConfig"]["limits"]["max_asks"]
                     if v0_config["AIConfig"]["limits"]["limits_enabled"]
@@ -54,12 +54,12 @@ def migrate_v0_to_v1(v0_config):
                 ),
                 "model": 'gpt-4o-mini',
             },
-            "assignments": {"enabled": True, "limit": 10},
+            "assignments": {"enabled": True, "limit": 5},
             "payments": {"enabled": False, "stripe_key": ""},
             "discussions": {"enabled": False, "limit": 10},
             "analytics": {"enabled": False, "limit": 10},
             "collaboration": {
-                "enabled": v0_config["GeneralConfig"]["collaboration"],
+                "enabled": False,
                 "limit": 10,
             },
             "api": {"enabled": False, "limit": 10},
