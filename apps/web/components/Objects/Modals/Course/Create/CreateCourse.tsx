@@ -16,6 +16,7 @@ import { BarLoader } from 'react-spinners'
 import { revalidateTags } from '@services/utils/ts/requests'
 import { useRouter } from 'next/navigation'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import toast from 'react-hot-toast'
 
 function CreateCourseModal({ closeModal, orgslug }: any) {
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -69,21 +70,27 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
     e.preventDefault()
     setIsSubmitting(true)
 
-    let status = await createNewCourse(
+    let res = await createNewCourse(
       orgId,
       { name, description, tags, visibility },
       thumbnail,
       session.data?.tokens?.access_token
     )
-    await revalidateTags(['courses'], orgslug)
-    setIsSubmitting(false)
-
-    if (status.org_id == orgId) {
-      closeModal()
-      router.refresh()
+    if (res.success) {
       await revalidateTags(['courses'], orgslug)
-    } else {
-      alert('Error creating course, please see console logs')
+      setIsSubmitting(false)
+      toast.success('Course created successfully')
+
+      if (res.data.org_id == orgId) {
+        closeModal()
+        router.refresh()
+        await revalidateTags(['courses'], orgslug)
+      }
+
+    }
+    else {
+      setIsSubmitting(false)
+      toast.error(res.data.detail)
     }
   }
 

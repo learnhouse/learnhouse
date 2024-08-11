@@ -3,6 +3,10 @@ from typing import Literal
 from uuid import uuid4
 from fastapi import HTTPException, Request, UploadFile, status
 from sqlmodel import Session, select
+from src.security.features_utils.usage import (
+    check_limits_with_usage,
+    increase_feature_usage,
+)
 from src.services.users.usergroups import add_users_to_usergroup
 from src.services.users.emails import (
     send_account_creation_email,
@@ -61,6 +65,9 @@ async def create_user(
             detail="Organization does not exist",
         )
 
+    # Usage check
+    check_limits_with_usage("members", org_id, db_session)
+
     # Username
     statement = select(User).where(User.username == user.username)
     result = db_session.exec(statement)
@@ -106,6 +113,8 @@ async def create_user(
 
     user = UserRead.model_validate(user)
 
+    increase_feature_usage("members", org_id, db_session)
+
     # Send Account creation email
     send_account_creation_email(
         user=user,
@@ -135,6 +144,9 @@ async def create_user_with_invite(
             detail="Invite code is incorrect",
         )
 
+    # Usage check
+    check_limits_with_usage("members", org_id, db_session)
+
     # Check if invite code contains UserGroup
     if inviteCode.usergroup_id:
         # Add user to UserGroup
@@ -147,6 +159,8 @@ async def create_user_with_invite(
         )
 
     user = await create_user(request, db_session, current_user, user_object, org_id)
+
+    increase_feature_usage("members", org_id, db_session)
 
     return user
 

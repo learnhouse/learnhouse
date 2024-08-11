@@ -99,9 +99,9 @@ export async function getActivityByID(
   return res
 }
 
-export async function deleteActivity(activity_id: any, access_token: string) {
+export async function deleteActivity(activity_uuid: any, access_token: string) {
   const result = await fetch(
-    `${getAPIUrl()}activities/${activity_id}`,
+    `${getAPIUrl()}activities/${activity_uuid}`,
     RequestBodyWithAuthHeader('DELETE', null, null, access_token)
   )
   const res = await result.json()
