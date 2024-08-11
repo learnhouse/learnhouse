@@ -1,13 +1,9 @@
 from fastapi import APIRouter, Depends
-from h11 import Request
 from sqlmodel import Session, select
 from config.config import get_learnhouse_config
 from migrations.orgconfigs.v0tov1 import migrate_v0_to_v1
 from src.core.events.database import get_db_session
 from src.db.organization_config import OrganizationConfig
-from src.db.organizations import Organization
-from src.db.users import PublicUser
-from src.security.auth import get_current_user
 
 
 router = APIRouter()
