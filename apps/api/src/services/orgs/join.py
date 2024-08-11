@@ -6,6 +6,10 @@ from sqlmodel import Session, select
 from src.db.organizations import Organization
 from src.db.user_organizations import UserOrganization
 from src.db.users import AnonymousUser, PublicUser, User
+from src.security.features_utils.usage import (
+    check_limits_with_usage,
+    increase_feature_usage,
+)
 from src.services.orgs.invites import get_invite_code
 from src.services.orgs.orgs import get_org_join_mechanism
 
@@ -27,11 +31,13 @@ async def join_org(
 
     org = result.first()
 
-    if not org:
+    if not org or org.id is None:
         raise HTTPException(
             status_code=404,
             detail="Organization not found",
         )
+
+    check_limits_with_usage("members", org.id, db_session)
 
     join_method = await get_org_join_mechanism(
         request, args.org_id, current_user, db_session
@@ -103,6 +109,8 @@ async def join_org(
 
             db_session.add(user_organization)
             db_session.commit()
+
+            increase_feature_usage("members", org.id, db_session)
 
             return "Great, You're part of the Organization"
 

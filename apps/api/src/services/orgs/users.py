@@ -5,6 +5,7 @@ import logging
 import redis
 from fastapi import HTTPException, Request
 from sqlmodel import Session, select
+from src.security.features_utils.usage import decrease_feature_usage
 from src.services.orgs.invites import send_invite_email
 from config.config import get_learnhouse_config
 from src.services.orgs.orgs import rbac_check
@@ -146,6 +147,8 @@ async def remove_user_from_org(
 
     db_session.delete(user_org)
     db_session.commit()
+
+    decrease_feature_usage("members", org_id, db_session)
 
     return {"detail": "User removed from org"}
 
