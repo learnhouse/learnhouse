@@ -65,6 +65,7 @@ function ActivityElement(props: ActivitiyElementProps) {
   async function changePublicStatus() {
     await updateActivity(
       {
+        ...props.activity,
         published: !props.activity.published,
       },
       props.activity.activity_uuid,
@@ -82,8 +83,8 @@ function ActivityElement(props: ActivitiyElementProps) {
     ) {
       setSelectedActivity(undefined)
       let modifiedActivityCopy = {
+        ...props.activity,
         name: modifiedActivity.activityName,
-        description: '',
       }
 
       await updateActivity(modifiedActivityCopy, activityUUID, access_token)
