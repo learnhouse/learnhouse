@@ -92,7 +92,7 @@ function PublishingState() {
 
     async function updateAssignmentPublishState(assignmentUUID: string) {
         const res = await updateAssignment({ published: !assignment?.assignment_object?.published }, assignmentUUID, access_token)
-        const res2 = await updateActivity({ published: !assignment?.assignment_object?.published }, assignment?.activity_object?.activity_uuid, access_token)
+        const res2 = await updateActivity({ published: !assignment?.assignment_object?.published  }, assignment?.activity_object?.activity_uuid, access_token)
         if (res.success && res2) {
             mutate(`${getAPIUrl()}assignments/${assignmentUUID}`)
             toast.success('The assignment has been updated successfully')
