@@ -5,6 +5,11 @@ from sqlmodel import Session, select
 from src.db.usergroup_resources import UserGroupResource
 from src.db.usergroup_user import UserGroupUser
 from src.db.organizations import Organization
+from src.security.features_utils.usage import (
+    check_limits_with_usage,
+    decrease_feature_usage,
+    increase_feature_usage,
+)
 from src.services.trail.trail import get_user_trail_with_orgid
 from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum
 from src.db.users import PublicUser, AnonymousUser, User, UserRead
@@ -58,6 +63,7 @@ async def get_course(
 
     return course
 
+
 async def get_course_by_id(
     request: Request,
     course_id: str,
@@ -90,6 +96,7 @@ async def get_course_by_id(
     course = CourseRead(**course.model_dump(), authors=authors)
 
     return course
+
 
 async def get_course_meta(
     request: Request,
@@ -158,6 +165,9 @@ async def create_course(
     # RBAC check
     await rbac_check(request, "course_x", current_user, "create", db_session)
 
+    # Usage check
+    check_limits_with_usage("courses", org_id, db_session)
+
     # Complete course object
     course.org_id = course.org_id
 
@@ -206,6 +216,9 @@ async def create_course(
         .where(ResourceAuthor.resource_uuid == course.course_uuid)
     )
     authors = db_session.exec(authors_statement).all()
+
+    # Feature usage
+    increase_feature_usage("courses", course.org_id, db_session)
 
     # convert from User to UserRead
     authors = [UserRead.model_validate(author) for author in authors]
@@ -344,6 +357,9 @@ async def delete_course(
     # RBAC check
     await rbac_check(request, course.course_uuid, current_user, "delete", db_session)
 
+    # Feature usage
+    decrease_feature_usage("courses", course.org_id, db_session)
+
     db_session.delete(course)
     db_session.commit()
 
@@ -358,7 +374,7 @@ async def get_courses_orgslug(
     page: int = 1,
     limit: int = 10,
 ):
-    
+
     # TODO : This entire function is a mess. It needs to be rewritten.
 
     # Query for public courses
@@ -372,7 +388,7 @@ async def get_courses_orgslug(
     statement_author = (
         select(Course)
         .join(Organization)
-        .join(ResourceAuthor, ResourceAuthor.user_id == current_user.id)
+        .join(ResourceAuthor, ResourceAuthor.user_id == current_user.id)  # type: ignore
         .where(
             Organization.slug == org_slug,
             ResourceAuthor.resource_uuid == Course.course_uuid,
@@ -383,9 +399,9 @@ async def get_courses_orgslug(
     statement_usergroup = (
         select(Course)
         .join(Organization)
-        .join(UserGroupResource, UserGroupResource.resource_uuid == Course.course_uuid)
+        .join(UserGroupResource, UserGroupResource.resource_uuid == Course.course_uuid)  # type: ignore
         .join(
-            UserGroupUser, UserGroupUser.usergroup_id == UserGroupResource.usergroup_id
+            UserGroupUser, UserGroupUser.usergroup_id == UserGroupResource.usergroup_id  # type: ignore
         )
         .where(Organization.slug == org_slug, UserGroupUser.user_id == current_user.id)
     )
@@ -395,12 +411,11 @@ async def get_courses_orgslug(
         statement_public, statement_author, statement_usergroup
     ).subquery()
 
-    # TODO: migrate this to exec 
-    courses = db_session.execute(select(statement_complete)).all()
+    # TODO: migrate this to exec
+    courses = db_session.execute(select(statement_complete)).all()  # type: ignore
 
     # TODO: I have no idea why this is necessary, but it is
     courses = [CourseRead(**course._asdict(), authors=[]) for course in courses]
-
 
     # for every course, get the authors
     for course in courses:

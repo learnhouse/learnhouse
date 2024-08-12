@@ -17,7 +17,7 @@ function ActiveAvatars(props: ActiveAvatarsProps) {
 
     /*  Collaboration Features */
     const collab = getCollaborationServerUrl()
-    const isCollabEnabledOnThisOrg = org?.config.config.GeneralConfig.collaboration && collab
+    const isCollabEnabledOnThisOrg = org?.config.config.features.collaboration.enabled && collab
 
     // Get users from the mouseMovements object
     useEffect(() => {

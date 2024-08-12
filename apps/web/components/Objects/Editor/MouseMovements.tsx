@@ -27,7 +27,7 @@ function MouseMovements({ movements, onlinePageInstanceID, org }: MouseMovements
 
     /*  Collaboration config */
     const collab = getCollaborationServerUrl()
-    const isCollabEnabledOnThisOrg = org?.config.config.GeneralConfig.collaboration && collab
+    const isCollabEnabledOnThisOrg = org?.config.config.features.collaboration.enabled && collab
 
     useEffect(() => {
 
