@@ -213,7 +213,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
     <div className='flex flex-col'>
       <div className='onboarding_screens flex-col px-4 py-4'>
         <div className='flex-grow rounded-xl'>
-          <Image className='mx-auto shadow-md shadow-gray-200 rounded-lg aspect-auto' alt='' priority quality={100} src={step.imageSrc} />
+          <Image unoptimized className='mx-auto shadow-md shadow-gray-200 rounded-lg aspect-auto' alt='' priority quality={100} src={step.imageSrc} />
         </div>
         <div className='grid grid-flow-col justify-stretch space-x-3 mt-4'>
           {onboardingData.map((_, index) => (
