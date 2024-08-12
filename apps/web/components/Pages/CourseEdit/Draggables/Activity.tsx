@@ -48,10 +48,8 @@ function Activity(props: any) {
     ) {
       setSelectedActivity(undefined)
       let modifiedActivityCopy = {
+        ...props.activity,
         name: modifiedActivity.activityName,
-        description: '',
-        type: props.activity.type,
-        content: props.activity.content,
       }
 
       await updateActivity(modifiedActivityCopy, activityId, session.data?.tokens?.access_token)
@@ -155,8 +153,7 @@ function Activity(props: any) {
                 <Link
                   href={
                     getUriWithOrg(props.orgslug, '') +
-                    `/course/${
-                      props.courseid
+                    `/course/${props.courseid
                     }/activity/${props.activity.uuid.replace(
                       'activity_',
                       ''
@@ -172,8 +169,7 @@ function Activity(props: any) {
             <Link
               href={
                 getUriWithOrg(props.orgslug, '') +
-                `/course/${
-                  props.courseid
+                `/course/${props.courseid
                 }/activity/${props.activity.uuid.replace('activity_', '')}`
               }
               className=" hover:cursor-pointer p-1 px-3 bg-gray-200 rounded-md"
