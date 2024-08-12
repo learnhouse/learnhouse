@@ -28,6 +28,11 @@ from src.db.organizations import Organization
 from src.db.trail_runs import TrailRun
 from src.db.trail_steps import TrailStep
 from src.db.users import AnonymousUser, PublicUser, User
+from src.security.features_utils.usage import (
+    check_limits_with_usage,
+    decrease_feature_usage,
+    increase_feature_usage,
+)
 from src.security.rbac.rbac import (
     authorization_verify_based_on_roles_and_authorship_and_usergroups,
     authorization_verify_if_element_is_public,
@@ -61,6 +66,9 @@ async def create_assignment(
     # RBAC check
     await rbac_check(request, course.course_uuid, current_user, "create", db_session)
 
+    # Usage check
+    check_limits_with_usage("assignments", course.org_id, db_session)
+
     # Create Assignment
     assignment = Assignment(**assignment_object.model_dump())
 
@@ -73,6 +81,9 @@ async def create_assignment(
     db_session.add(assignment)
     db_session.commit()
     db_session.refresh(assignment)
+
+    # Feature usage
+    increase_feature_usage("assignments", course.org_id, db_session)
 
     # return assignment read
     return AssignmentRead.model_validate(assignment)
@@ -228,6 +239,9 @@ async def delete_assignment(
     # RBAC check
     await rbac_check(request, course.course_uuid, current_user, "delete", db_session)
 
+    # Feature usage
+    decrease_feature_usage("assignments", course.org_id, db_session)
+
     # Delete Assignment
     db_session.delete(assignment)
     db_session.commit()
@@ -274,6 +288,9 @@ async def delete_assignment_from_activity_uuid(
 
     # RBAC check
     await rbac_check(request, course.course_uuid, current_user, "delete", db_session)
+
+     # Feature usage
+    decrease_feature_usage("assignments", course.org_id, db_session)
 
     # Delete Assignment
     db_session.delete(assignment)
@@ -1119,9 +1136,9 @@ async def create_assignment_submission(
     # Add TrailStep
     trail = await check_trail_presence(
         org_id=course.org_id,
-        user_id=user.id,
+        user_id=user.id,  # type: ignore
         request=request,
-        user=user,
+        user=user,  # type: ignore
         db_session=db_session,
     )
 
@@ -1137,7 +1154,7 @@ async def create_assignment_submission(
             trail_id=trail.id if trail.id is not None else 0,
             course_id=course.id if course.id is not None else 0,
             org_id=course.org_id,
-            user_id=user.id,
+            user_id=user.id,  # type: ignore
             creation_date=str(datetime.now()),
             update_date=str(datetime.now()),
         )
@@ -1162,7 +1179,7 @@ async def create_assignment_submission(
             complete=True,
             teacher_verified=False,
             grade="",
-            user_id=user.id,
+            user_id=user.id, # type: ignore
             creation_date=str(datetime.now()),
             update_date=str(datetime.now()),
         )
@@ -1400,7 +1417,7 @@ async def grade_assignment_submission(
             status_code=404,
             detail="Assignment not found",
         )
-    
+
     statement = select(Course).where(Course.id == assignment.course_id)
     course = db_session.exec(statement).first()
 
@@ -1409,7 +1426,6 @@ async def grade_assignment_submission(
             status_code=404,
             detail="Course not found",
         )
-    
 
     await rbac_check(request, course.course_uuid, current_user, "update", db_session)
 
@@ -1551,7 +1567,6 @@ async def mark_activity_as_done_for_user(
             status_code=404,
             detail="Course not found",
         )
-    
 
     await rbac_check(request, course.course_uuid, current_user, "update", db_session)
 
@@ -1595,6 +1610,7 @@ async def mark_activity_as_done_for_user(
 
     # return OK
     return {"message": "Activity marked as done for user"}
+
 
 async def get_assignments_from_course(
     request: Request,

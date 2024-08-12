@@ -26,7 +26,7 @@ export function OrgProvider({ children, orgslug }: { children: React.ReactNode, 
   )
 
 
-  const isOrgActive = useMemo(() => org?.config?.config?.GeneralConfig?.active !== false, [org])
+  const isOrgActive = useMemo(() => org?.config?.config?.general?.enabled !== false, [org])
   const isUserPartOfTheOrg = useMemo(() => orgs?.some((userOrg: any) => userOrg.id === org?.id), [orgs, org?.id])
 
   if (orgError || orgsError) return <ErrorUI message='An error occurred while fetching data' />

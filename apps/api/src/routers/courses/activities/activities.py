@@ -92,17 +92,17 @@ async def api_update_activity(
     )
 
 
-@router.delete("/{activity_id}")
+@router.delete("/{activity_uuid}")
 async def api_delete_activity(
     request: Request,
-    activity_id: str,
+    activity_uuid: str,
     current_user: PublicUser = Depends(get_current_user),
     db_session=Depends(get_db_session),
 ):
     """
     Delete activity by activity_id
     """
-    return await delete_activity(request, activity_id, current_user, db_session)
+    return await delete_activity(request, activity_uuid, current_user, db_session)
 
 
 # Video activity
