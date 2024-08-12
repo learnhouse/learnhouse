@@ -2,7 +2,10 @@ from fastapi import Depends, HTTPException, Request
 from sqlmodel import Session, select
 from src.db.organization_config import OrganizationConfig
 from src.db.organizations import Organization
-from src.services.ai.utils import check_limits_and_config, count_ai_ask
+from src.security.features_utils.usage import (
+    check_limits_with_usage,
+    increase_feature_usage,
+)
 from src.db.courses.courses import Course, CourseRead
 from src.core.events.database import get_db_session
 from src.db.users import PublicUser
@@ -52,9 +55,15 @@ def ai_start_activity_chat_session(
     statement = select(Organization).where(Organization.id == course.org_id)
     org = db_session.exec(statement).first()
 
+    if not org or org.id is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Organization not found",
+        )
+
     # Check limits and usage
-    check_limits_and_config(db_session, org)  # type: ignore
-    count_ai_ask(org, "increment")  # type: ignore
+    check_limits_with_usage("ai", org.id, db_session)
+    increase_feature_usage("ai", org.id, db_session)
 
     if not activity:
         raise HTTPException(
@@ -86,8 +95,8 @@ def ai_start_activity_chat_session(
     org_config = result.first()
 
     org_config = OrganizationConfig.model_validate(org_config)
-    embeddings = org_config.config["AIConfig"]["embeddings"]
-    ai_model = org_config.config["AIConfig"]["ai_model"]
+    embeddings = "text-embedding-ada-002"
+    ai_model = org_config.config["features"]["ai"]["model"]
 
     chat_session = get_chat_session_history()
 
@@ -147,8 +156,8 @@ def ai_send_activity_chat_message(
     org = db_session.exec(statement).first()
 
     # Check limits and usage
-    check_limits_and_config(db_session, org)  # type: ignore
-    count_ai_ask(org, "increment")  # type: ignore
+    check_limits_with_usage("ai", course.org_id, db_session)
+    increase_feature_usage("ai", course.org_id, db_session)
 
     if not activity:
         raise HTTPException(
@@ -177,8 +186,8 @@ def ai_send_activity_chat_message(
     org_config = result.first()
 
     org_config = OrganizationConfig.model_validate(org_config)
-    embeddings = org_config.config["AIConfig"]["embeddings"]
-    ai_model = org_config.config["AIConfig"]["ai_model"]
+    embeddings = "text-embedding-ada-002"
+    ai_model = org_config.config["features"]["ai"]["model"]
 
     chat_session = get_chat_session_history(chat_session_object.aichat_uuid)
 

@@ -15,7 +15,8 @@ import { getAPIUrl } from '@services/config/config'
 import { mutate } from 'swr'
 import { createAssignment } from '@services/courses/assignments'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { createActivity } from '@services/courses/activities'
+import { createActivity, deleteActivity } from '@services/courses/activities'
+import toast from 'react-hot-toast'
 
 function NewAssignment({ submitActivity, chapterId, course, closeModal }: any) {
     const org = useOrg() as any;
@@ -55,7 +56,7 @@ function NewAssignment({ submitActivity, chapterId, course, closeModal }: any) {
         }
 
         const activity_res = await createActivity(activity, chapterId, org?.id, session.data?.tokens?.access_token)
-        await createAssignment({
+        const res = await createAssignment({
             title: activityName,
             description: activityDescription,
             due_date: dueDate,
@@ -65,6 +66,14 @@ function NewAssignment({ submitActivity, chapterId, course, closeModal }: any) {
             chapter_id: chapterId,
             activity_id: activity_res?.id,
         }, session.data?.tokens?.access_token)
+
+        if (res.success) {
+            toast.success('Assignment created successfully')
+        } else {
+            toast.error(res.data.detail)
+            await deleteActivity(activity_res.activity_uuid, session.data?.tokens?.access_token)
+
+        }
 
         mutate(`${getAPIUrl()}courses/${course.courseStructure.course_uuid}/meta`)
         setIsSubmitting(false)

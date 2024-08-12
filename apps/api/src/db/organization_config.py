@@ -4,51 +4,91 @@ from sqlalchemy import JSON, BigInteger, Column, ForeignKey
 from sqlmodel import Field, SQLModel
 
 
-# AI
-class AILimitsSettings(BaseModel):
-    limits_enabled: bool = False
-    max_asks: int = 0
-
-
-class AIEnabledFeatures(BaseModel):
-    editor: bool = False
-    activity_ask: bool = False
-    course_ask: bool = False
-    global_ai_ask: bool = False
-
-
-class AIConfig(BaseModel):
+# Features
+class CourseOrgConfig(BaseModel):
     enabled: bool = True
-    limits: AILimitsSettings = AILimitsSettings()
-    embeddings: Literal["text-embedding-ada-002"] = "text-embedding-ada-002"
-    ai_model: Literal["gpt-3.5-turbo", "gpt-4-1106-preview"] = "gpt-3.5-turbo"
-    features: AIEnabledFeatures = AIEnabledFeatures()
+    limit: int = 10
 
 
-class OrgUserConfig(BaseModel):
-    signup_mechanism: Literal["open", "inviteOnly"] = "open"
+class MemberOrgConfig(BaseModel):
+    enabled: bool = True
+    signup_mode: Literal["open", "inviteOnly"] = "open"
+    admin_limit: int = 1
+    limit: int = 10
 
 
-# Limits
-class LimitSettings(BaseModel):
-    limits_enabled: bool = False
-    max_users: int = 0
-    max_storage: int = 0
-    max_staff: int = 0
+class UserGroupOrgConfig(BaseModel):
+    enabled: bool = True
+    limit: int = 10
+
+
+class StorageOrgConfig(BaseModel):
+    enabled: bool = True
+    limit: int = 10
+
+
+class AIOrgConfig(BaseModel):
+    enabled: bool = True
+    limit: int = 10
+    model: str = "gpt-4o-mini"
+
+
+class AssignmentOrgConfig(BaseModel):
+    enabled: bool = False
+    limit: int = 10
+
+
+class PaymentOrgConfig(BaseModel):
+    enabled: bool = True
+    stripe_key: str = ""
+
+
+class DiscussionOrgConfig(BaseModel):
+    enabled: bool = True
+    limit: int = 10
+
+
+class AnalyticsOrgConfig(BaseModel):
+    enabled: bool = True
+    limit: int = 10
+
+
+class CollaborationOrgConfig(BaseModel):
+    enabled: bool = True
+    limit: int = 10
+
+
+class APIOrgConfig(BaseModel):
+    enabled: bool = True
+    limit: int = 10
+
+
+class OrgFeatureConfig(BaseModel):
+    courses: CourseOrgConfig = CourseOrgConfig()
+    members: MemberOrgConfig = MemberOrgConfig()
+    usergroups: UserGroupOrgConfig = UserGroupOrgConfig()
+    storage: StorageOrgConfig = StorageOrgConfig()
+    ai: AIOrgConfig = AIOrgConfig()
+    assignments: AssignmentOrgConfig = AssignmentOrgConfig()
+    payments: PaymentOrgConfig = PaymentOrgConfig()
+    discussions: DiscussionOrgConfig = DiscussionOrgConfig()
+    analytics: AnalyticsOrgConfig = AnalyticsOrgConfig()
+    collaboration: CollaborationOrgConfig = CollaborationOrgConfig()
+    api: APIOrgConfig = APIOrgConfig()
 
 
 # General
-class GeneralConfig(BaseModel):
-    color: str = ""
-    limits: LimitSettings = LimitSettings()
-    users: OrgUserConfig = OrgUserConfig()
-    collaboration: bool = False
-    active: bool = True
+class OrgGeneralConfig(BaseModel):
+    enabled: bool = True
+    color: str = "normal"
+    watermark: bool = True
 
 
-class OrganizationConfigBase(SQLModel):
-    GeneralConfig: GeneralConfig
-    AIConfig: AIConfig
+# Main Config
+class OrganizationConfigBase(BaseModel):
+    config_version: str = "1.0"
+    general: OrgGeneralConfig
+    features: OrgFeatureConfig
 
 
 class OrganizationConfig(SQLModel, table=True):
@@ -56,7 +96,6 @@ class OrganizationConfig(SQLModel, table=True):
     org_id: int = Field(
         sa_column=Column(BigInteger, ForeignKey("organization.id", ondelete="CASCADE"))
     )
-    # TODO: fix this to use the correct type GeneralConfig
     config: dict = Field(default={}, sa_column=Column(JSON))
     creation_date: Optional[str]
     update_date: Optional[str]
