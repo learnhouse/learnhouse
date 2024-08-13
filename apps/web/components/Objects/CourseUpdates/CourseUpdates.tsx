@@ -234,7 +234,9 @@ const DeleteUpdateButton = ({ update }: any) => {
 
   const handleDelete = async () => {
     const res = await deleteCourseUpdate(course.courseStructure.course_uuid, update.courseupdate_uuid, session.data?.tokens?.access_token)
+    const toast_loading = toast.loading('Deleting update...')
     if (res.status === 200) {
+      toast.dismiss(toast_loading)
       toast.success('Update deleted successfully')
       mutate(`${getAPIUrl()}courses/${course?.courseStructure.course_uuid}/updates`)
     }

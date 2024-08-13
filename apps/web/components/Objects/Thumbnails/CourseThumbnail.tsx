@@ -11,6 +11,7 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import React, { useEffect } from 'react'
+import toast from 'react-hot-toast'
 
 type PropsType = {
   course: any
@@ -28,7 +29,10 @@ function CourseThumbnail(props: PropsType) {
   const session = useLHSession() as any;
 
   async function deleteCourses(course_uuid: any) {
+    const toast_loading = toast.loading('Deleting course...')
     await deleteCourseFromBackend(course_uuid, session.data?.tokens?.access_token)
+    toast.dismiss(toast_loading)
+    toast.success('Course deleted successfully')
     await revalidateTags(['courses'], props.orgslug)
 
     router.refresh()
