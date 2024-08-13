@@ -42,14 +42,25 @@ export default async function middleware(req: NextRequest) {
     // Redirect to the same pathname with the original search params
     return NextResponse.rewrite(new URL(`${pathname}${search}`, req.url))
   }
-  if (auth_paths.includes(pathname)) {
-    // Redirect to the same pathname with the original search params
-    return NextResponse.rewrite(new URL(`/auth${pathname}${search}`, req.url))
-  }
 
-  // Login
-  if (orgslug == 'auth' || pathname.startsWith('/login')) {
-    return NextResponse.rewrite(new URL(`/login${search}`, req.url))
+  if (auth_paths.includes(pathname)) {
+    const response = NextResponse.rewrite(
+      new URL(`/auth${pathname}${search}`, req.url)
+    )
+
+    // Parse the search params
+    const searchParams = new URLSearchParams(search)
+    const orgslug = searchParams.get('orgslug')
+
+    if (orgslug) {
+      response.cookies.set({
+        name: 'learnhouse_current_orgslug',
+        value: orgslug,
+        domain:
+          LEARNHOUSE_TOP_DOMAIN == 'localhost' ? '' : LEARNHOUSE_TOP_DOMAIN,
+      })
+    }
+    return response
   }
 
   // Install Page (depreceated)
@@ -84,6 +95,7 @@ export default async function middleware(req: NextRequest) {
       }
       return NextResponse.redirect(redirectUrl)
     } else {
+      return 'Did not find the orgslug in the cookie'
     }
   }
 
