@@ -25,6 +25,7 @@ import { mutate } from 'swr'
 import { deleteAssignmentUsingActivityUUID, getAssignmentFromActivityUUID } from '@services/courses/assignments'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useCourse } from '@components/Contexts/CourseContext'
+import toast from 'react-hot-toast'
 
 type ActivitiyElementProps = {
   orgslug: string
@@ -51,6 +52,7 @@ function ActivityElement(props: ActivitiyElementProps) {
   const activityUUID = props.activity.activity_uuid
 
   async function deleteActivityUI() {
+    const toast_loading = toast.loading('Deleting activity...')
     // Assignments 
     if (props.activity.activity_type === 'TYPE_ASSIGNMENT') {
       await deleteAssignmentUsingActivityUUID(props.activity.activity_uuid, access_token)
@@ -59,10 +61,13 @@ function ActivityElement(props: ActivitiyElementProps) {
     await deleteActivity(props.activity.activity_uuid, access_token)
     mutate(`${getAPIUrl()}courses/${props.course_uuid}/meta`)
     await revalidateTags(['courses'], props.orgslug)
+    toast.dismiss(toast_loading)
+    toast.success('Activity deleted successfully')
     router.refresh()
   }
 
   async function changePublicStatus() {
+    const toast_loading = toast.loading('Updating assignment...')
     await updateActivity(
       {
         ...props.activity,
@@ -72,6 +77,8 @@ function ActivityElement(props: ActivitiyElementProps) {
       access_token
     )
     mutate(`${getAPIUrl()}courses/${props.course_uuid}/meta`)
+    toast.dismiss(toast_loading)
+    toast.success('The activity has been updated successfully')
     await revalidateTags(['courses'], props.orgslug)
     router.refresh()
   }
@@ -158,8 +165,8 @@ function ActivityElement(props: ActivitiyElementProps) {
             {/*   Publishing  */}
             <div
               className={`hover:cursor-pointer p-1 px-3 border shadow-lg rounded-md font-bold text-xs flex items-center space-x-1 ${!props.activity.published
-                  ? 'bg-gradient-to-bl text-green-800 from-green-400/50 to-lime-200/80 border-green-600/10 shadow-green-900/10'
-                  : 'bg-gradient-to-bl text-gray-800 from-gray-400/50 to-gray-200/80 border-gray-600/10 shadow-gray-900/10'
+                ? 'bg-gradient-to-bl text-green-800 from-green-400/50 to-lime-200/80 border-green-600/10 shadow-green-900/10'
+                : 'bg-gradient-to-bl text-gray-800 from-gray-400/50 to-gray-200/80 border-gray-600/10 shadow-gray-900/10'
                 }`}
               rel="noopener noreferrer"
               onClick={() => changePublicStatus()}
