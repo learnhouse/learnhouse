@@ -14,6 +14,7 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useRouter } from 'next/navigation'
 import React, { useEffect } from 'react'
 import { mutate } from 'swr'
+import toast from 'react-hot-toast'
 
 type NewActivityButtonProps = {
   chapterId: string
@@ -41,8 +42,11 @@ function NewActivityButton(props: NewActivityButtonProps) {
       props.orgslug,
       { revalidate: 1800 }
     )
+    const toast_loading = toast.loading('Creating activity...')
     await createActivity(activity, props.chapterId, org.org_id, access_token)
     mutate(`${getAPIUrl()}courses/${course.courseStructure.course_uuid}/meta`)
+    toast.dismiss(toast_loading)
+    toast.success('Activity created successfully')
     setNewActivityModal(false)
     await revalidateTags(['courses'], props.orgslug)
     router.refresh()
@@ -55,9 +59,13 @@ function NewActivityButton(props: NewActivityButtonProps) {
     activity: any,
     chapterId: string
   ) => {
+    toast.loading('Uploading file and creating activity...')
     await createFileActivity(file, type, activity, chapterId, access_token)
     mutate(`${getAPIUrl()}courses/${course.courseStructure.course_uuid}/meta`)
     setNewActivityModal(false)
+    toast.dismiss()
+    toast.success('File uploaded successfully')
+    toast.success('Activity created successfully')
     await revalidateTags(['courses'], props.orgslug)
     router.refresh()
   }
@@ -68,6 +76,7 @@ function NewActivityButton(props: NewActivityButtonProps) {
     activity: any,
     chapterId: string
   ) => {
+    const toast_loading = toast.loading('Creating activity and uploading file...')
     await createExternalVideoActivity(
       external_video_data,
       activity,
@@ -75,6 +84,8 @@ function NewActivityButton(props: NewActivityButtonProps) {
     )
     mutate(`${getAPIUrl()}courses/${course.courseStructure.course_uuid}/meta`)
     setNewActivityModal(false)
+    toast.dismiss(toast_loading)
+    toast.success('Activity created successfully')
     await revalidateTags(['courses'], props.orgslug)
     router.refresh()
   }

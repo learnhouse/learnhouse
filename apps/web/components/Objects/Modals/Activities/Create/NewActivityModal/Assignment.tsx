@@ -66,8 +66,10 @@ function NewAssignment({ submitActivity, chapterId, course, closeModal }: any) {
             chapter_id: chapterId,
             activity_id: activity_res?.id,
         }, session.data?.tokens?.access_token)
+        const toast_loading = toast.loading('Creating assignment...')
 
         if (res.success) {
+            toast.dismiss(toast_loading)
             toast.success('Assignment created successfully')
         } else {
             toast.error(res.data.detail)
