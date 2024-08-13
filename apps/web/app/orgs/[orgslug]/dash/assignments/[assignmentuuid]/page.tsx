@@ -20,7 +20,7 @@ const AssignmentSubmissionsSubPage = dynamic(() => import('./subpages/Assignment
 function AssignmentEdit() {
     const params = useParams<{ assignmentuuid: string; }>()
     const searchParams = useSearchParams()
-    const [selectedSubPage, setSelectedSubPage] = React.useState( searchParams.get('subpage') || 'editor')
+    const [selectedSubPage, setSelectedSubPage] = React.useState(searchParams.get('subpage') || 'editor')
     return (
         <div className='flex w-full flex-col'>
             <AssignmentProvider assignment_uuid={'assignment_' + params.assignmentuuid}>
@@ -92,10 +92,12 @@ function PublishingState() {
 
     async function updateAssignmentPublishState(assignmentUUID: string) {
         const res = await updateAssignment({ published: !assignment?.assignment_object?.published }, assignmentUUID, access_token)
-        const res2 = await updateActivity({ published: !assignment?.assignment_object?.published  }, assignment?.activity_object?.activity_uuid, access_token)
+        const res2 = await updateActivity({ published: !assignment?.assignment_object?.published }, assignment?.activity_object?.activity_uuid, access_token)
+        const toast_loading = toast.loading('Updating assignment...')
         if (res.success && res2) {
             mutate(`${getAPIUrl()}assignments/${assignmentUUID}`)
             toast.success('The assignment has been updated successfully')
+            toast.dismiss(toast_loading)
         }
         else {
             toast.error('Error updating assignment, please retry later.')
