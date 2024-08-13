@@ -76,9 +76,11 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
       thumbnail,
       session.data?.tokens?.access_token
     )
+    const toast_loading = toast.loading('Creating course...')
     if (res.success) {
       await revalidateTags(['courses'], orgslug)
       setIsSubmitting(false)
+      toast.dismiss(toast_loading)
       toast.success('Course created successfully')
 
       if (res.data.org_id == orgId) {
