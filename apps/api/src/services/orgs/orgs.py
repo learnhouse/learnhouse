@@ -338,6 +338,48 @@ async def update_org(
 
     return org
 
+async def update_org_with_config_no_auth(
+    request: Request,
+    orgconfig: OrganizationConfigBase,
+    org_id: int,
+    db_session: Session,
+):
+    statement = select(Organization).where(Organization.id == org_id)
+    result = db_session.exec(statement)
+
+    org = result.first()
+
+    if not org:
+        raise HTTPException(
+            status_code=404,
+            detail="Organization slug not found",
+        )
+
+    # Get org config
+    statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
+    result = db_session.exec(statement)
+
+    org_config = result.first()
+
+    if org_config is None:
+        logging.error(f"Organization {org_id} has no config")
+        raise HTTPException(
+            status_code=404,
+            detail="Organization config not found",
+        )
+
+    updated_config = orgconfig
+
+    # Update the database
+    org_config.config = json.loads(updated_config.json())
+    org_config.update_date = str(datetime.now())
+
+    db_session.add(org_config)
+    db_session.commit()
+    db_session.refresh(org_config)
+
+    return {"detail": "Organization updated"}
+
 
 async def update_org_logo(
     request: Request,
