@@ -25,6 +25,8 @@ learnhouse_config: LearnHouseConfig = get_learnhouse_config()
 app = FastAPI(
     title=learnhouse_config.site_name,
     description=learnhouse_config.site_description,
+    docs_url="/docs" if learnhouse_config.general_config.development_mode else None,
+    redoc_url="/redoc" if learnhouse_config.general_config.development_mode else None,
     version="0.1.0",
 )
 
