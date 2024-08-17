@@ -7,6 +7,8 @@ export const LEARNHOUSE_TOP_DOMAIN =
   process.env.NEXT_PUBLIC_LEARNHOUSE_TOP_DOMAIN
 export const LEARNHOUSE_COLLABORATION_WS_URL =
   process.env.NEXT_PUBLIC_LEARNHOUSE_COLLABORATION_WS_URL
+export const UPSTASH_REDIS_REST_URL = process.env.UPSTASH_REDIS_REST_URL
+export const UPSTASH_REDIS_REST_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN
 
 export const getAPIUrl = () => LEARNHOUSE_API_URL
 export const getBackendUrl = () => LEARNHOUSE_BACKEND_URL
@@ -51,5 +53,3 @@ export const getDefaultOrg = () => {
 export const getCollaborationServerUrl = () => {
   return `${LEARNHOUSE_COLLABORATION_WS_URL}`
 }
-
-

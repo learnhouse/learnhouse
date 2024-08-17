@@ -8,6 +8,7 @@ import {
 } from './services/config/config'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { getOrgSlugFromCustomDomainRegistry } from '@services/config/utils'
 
 export const config = {
   matcher: [
@@ -30,8 +31,9 @@ export default async function middleware(req: NextRequest) {
   const default_org = getDefaultOrg()
   const { pathname, search } = req.nextUrl
   const fullhost = req.headers ? req.headers.get('host') : ''
+  const cleanDomain = fullhost ? fullhost.split(':')[0] : null
   const cookie_orgslug = req.cookies.get('learnhouse_current_orgslug')?.value
-  const orgslug = fullhost
+  let orgslug = fullhost
     ? fullhost.replace(`.${LEARNHOUSE_DOMAIN}`, '')
     : (default_org as string)
 
@@ -102,9 +104,21 @@ export default async function middleware(req: NextRequest) {
   // Multi Organization Mode
   if (hosting_mode === 'multi') {
     // Get the organization slug from the URL
-    const orgslug = fullhost
+    const orgslugFromSubdomain = fullhost
       ? fullhost.replace(`.${LEARNHOUSE_DOMAIN}`, '')
       : (default_org as string)
+
+    // Check custom domain first
+    let orgslug = orgslugFromSubdomain // Set a default value
+
+    const orgSlugFromCustomDomain =
+      await getOrgSlugFromCustomDomainRegistry(cleanDomain)
+
+    // If custom domain exists, override the orgslug from subdomain
+    if (orgSlugFromCustomDomain) {
+      orgslug = orgSlugFromCustomDomain
+    }
+
     const response = NextResponse.rewrite(
       new URL(`/orgs/${orgslug}${pathname}`, req.url)
     )
