@@ -9,6 +9,7 @@ import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import Link from 'next/link'
 import Image from 'next/image'
 import EmptyThumbnailImage from '../../../public/empty_thumbnail.png'
+import { useCookies } from '@components/Contexts/CookiesContext'
 
 export function CourseOverviewTop({
   params,
@@ -17,6 +18,7 @@ export function CourseOverviewTop({
 }) {
   const course = useCourse() as any
   const org = useOrg() as any
+  const cookies = useCookies() as any;
 
   useEffect(() => {}, [course, org])
 
@@ -29,7 +31,7 @@ export function CourseOverviewTop({
       <div className="flex">
         <div className="flex py-3 grow items-center">
           <Link
-            href={getUriWithOrg(org?.slug, '') + `/course/${params.courseuuid}`}
+            href={getUriWithOrg(org?.slug, '',cookies) + `/course/${params.courseuuid}`}
           >
             {course?.courseStructure?.thumbnail_image ? (
               <img

@@ -16,6 +16,7 @@ import Link from 'next/link'
 import { signIn } from "next-auth/react"
 import { getUriWithOrg, getUriWithoutOrg } from '@services/config/config'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { useCookies } from '@components/Contexts/CookiesContext'
 
 interface LoginClientProps {
   org: any
@@ -41,6 +42,7 @@ const validate = (values: any) => {
 
 const LoginClient = (props: LoginClientProps) => {
   const [isSubmitting, setIsSubmitting] = React.useState(false)
+  const cookies = useCookies() as any;
   const router = useRouter();
   const session = useLHSession() as any;
 
@@ -53,7 +55,7 @@ const LoginClient = (props: LoginClientProps) => {
     validate,
     validateOnBlur: true,
     validateOnChange: true,
-    onSubmit: async (values, {validateForm, setErrors, setSubmitting}) => {
+    onSubmit: async (values, { validateForm, setErrors, setSubmitting }) => {
       setIsSubmitting(true)
       const errors = await validateForm(values);
       if (Object.keys(errors).length > 0) {
@@ -61,7 +63,7 @@ const LoginClient = (props: LoginClientProps) => {
         setSubmitting(false);
         return;
       }
-      
+
       const res = await signIn('credentials', {
         redirect: false,
         email: values.email,
@@ -91,7 +93,7 @@ const LoginClient = (props: LoginClientProps) => {
         }}
       >
         <div className="login-topbar m-10">
-          <Link prefetch href={getUriWithOrg(props.org.slug, '/')}>
+          <Link prefetch href={getUriWithOrg(props.org.slug, '/', cookies)}>
             <Image
               quality={100}
               width={30}
@@ -148,7 +150,7 @@ const LoginClient = (props: LoginClientProps) => {
                   onChange={formik.handleChange}
                   value={formik.values.email}
                   type="email"
-                  
+
                 />
               </Form.Control>
             </FormField>
@@ -164,13 +166,13 @@ const LoginClient = (props: LoginClientProps) => {
                   onChange={formik.handleChange}
                   value={formik.values.password}
                   type="password"
-                  
+
                 />
               </Form.Control>
             </FormField>
             <div>
               <Link
-                href={getUriWithOrg(props.org.slug, '/forgot')}
+                href={getUriWithOrg(props.org.slug, '/forgot', cookies)}
                 passHref
                 className="text-xs text-gray-500 hover:underline"
               >
@@ -179,7 +181,7 @@ const LoginClient = (props: LoginClientProps) => {
             </div>
             <div className="flex  py-4">
               <Form.Submit asChild>
-                <button  className="w-full bg-black text-white font-bold text-center p-2 rounded-md shadow-md hover:cursor-pointer">
+                <button className="w-full bg-black text-white font-bold text-center p-2 rounded-md shadow-md hover:cursor-pointer">
                   {isSubmitting ? 'Loading...' : 'Login'}
                 </button>
               </Form.Submit>
@@ -188,7 +190,7 @@ const LoginClient = (props: LoginClientProps) => {
           <div className='flex h-0.5 rounded-2xl bg-slate-100 mt-5  mx-10'></div>
           <div className='flex justify-center py-5 mx-auto'>OR </div>
           <div className='flex flex-col space-y-4'>
-            <Link href={{ pathname: getUriWithoutOrg('/signup'), query: props.org.slug ? { orgslug: props.org.slug } : null }}  className="flex justify-center items-center py-3 text-md w-full bg-gray-800 text-gray-300 space-x-3 font-semibold text-center p-2 rounded-md shadow hover:cursor-pointer">
+            <Link href={{ pathname: getUriWithoutOrg('/signup', cookies), query: props.org.slug ? { orgslug: props.org.slug } : null }} className="flex justify-center items-center py-3 text-md w-full bg-gray-800 text-gray-300 space-x-3 font-semibold text-center p-2 rounded-md shadow hover:cursor-pointer">
               <UserRoundPlus size={17} />
               <span>Sign up</span>
             </Link>

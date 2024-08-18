@@ -18,6 +18,7 @@ import { useRouter } from 'next/navigation'
 import ConfirmationModal from '@components/StyledElements/ConfirmationModal/ConfirmationModal'
 import { deleteActivity, updateActivity } from '@services/courses/activities'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { useCookies } from '@components/Contexts/CookiesContext'
 
 interface ModifiedActivityInterface {
   activityId: string
@@ -26,6 +27,7 @@ interface ModifiedActivityInterface {
 
 function Activity(props: any) {
   const router = useRouter()
+  const cookies = useCookies() as any;
   const session = useLHSession() as any;
   const [modifiedActivity, setModifiedActivity] = React.useState<
     ModifiedActivityInterface | undefined
@@ -152,7 +154,7 @@ function Activity(props: any) {
               <>
                 <Link
                   href={
-                    getUriWithOrg(props.orgslug, '') +
+                    getUriWithOrg(props.orgslug, '',cookies) +
                     `/course/${props.courseid
                     }/activity/${props.activity.uuid.replace(
                       'activity_',
@@ -168,7 +170,7 @@ function Activity(props: any) {
             )}
             <Link
               href={
-                getUriWithOrg(props.orgslug, '') +
+                getUriWithOrg(props.orgslug, '',cookies) +
                 `/course/${props.courseid
                 }/activity/${props.activity.uuid.replace('activity_', '')}`
               }

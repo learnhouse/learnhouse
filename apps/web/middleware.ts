@@ -1,14 +1,16 @@
 import { isInstallModeEnabled } from '@services/install/install'
 import {
   LEARNHOUSE_DOMAIN,
+  LEARNHOUSE_HTTP_PROTOCOL,
   LEARNHOUSE_TOP_DOMAIN,
+  getAPIUrl,
   getDefaultOrg,
   getUriWithOrg,
+  getUriWithoutOrg,
   isMultiOrgModeEnabled,
 } from './services/config/config'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { getDataFromCustomDomainRegistry } from '@services/config/utils'
 
 export const config = {
   matcher: [
@@ -110,11 +112,22 @@ export default async function middleware(req: NextRequest) {
 
     // Check custom domain first
     let orgslug = orgslugFromSubdomain // Set a default value
+    let InfoFromCustomDomain = null // Initialize to null
+    try {
+      console.log(getUriWithOrg('internal', `/api/domains?cleanDomain=${cleanDomain}`))
+      const domain_check = await fetch(
+        getUriWithOrg('internal', `/api/domains?cleanDomain=${cleanDomain}`)
+      )
+      if (!domain_check.ok) {
+        console.log(`Error Response status: ${domain_check.status}`)
+      } else {
+        InfoFromCustomDomain = await domain_check.json()
+        console.log('InfoFromCustomDomain', InfoFromCustomDomain)
+      }
+    } catch (error) {
+      console.error('Failed to fetch domain information:', error)
+    }
 
-    const InfoFromCustomDomain =
-      await getDataFromCustomDomainRegistry(cleanDomain)
-
-    // If custom domain exists, override the orgslug from subdomain
     if (InfoFromCustomDomain) {
       orgslug = InfoFromCustomDomain.orgslug
     }
@@ -127,11 +140,12 @@ export default async function middleware(req: NextRequest) {
     response.cookies.set({
       name: 'learnhouseOrgSlug',
       value: orgslug,
-      domain: LEARNHOUSE_TOP_DOMAIN == 'localhost' ? '' : LEARNHOUSE_TOP_DOMAIN,
+      domain:
+        LEARNHOUSE_TOP_DOMAIN === 'localhost' ? '' : LEARNHOUSE_TOP_DOMAIN,
       path: '/',
     })
 
-    // Set the cookie with he customDomain
+    // Set the cookie with the custom domain value if available
     if (InfoFromCustomDomain) {
       response.cookies.set({
         name: 'learnhouseCustomDomain',

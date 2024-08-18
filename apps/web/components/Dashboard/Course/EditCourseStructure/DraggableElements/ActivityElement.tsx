@@ -26,6 +26,7 @@ import { deleteAssignmentUsingActivityUUID, getAssignmentFromActivityUUID } from
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useCourse } from '@components/Contexts/CourseContext'
 import toast from 'react-hot-toast'
+import { useCookies } from '@components/Contexts/CookiesContext'
 
 type ActivitiyElementProps = {
   orgslug: string
@@ -41,6 +42,7 @@ interface ModifiedActivityInterface {
 
 function ActivityElement(props: ActivitiyElementProps) {
   const router = useRouter()
+  const cookies = useCookies() as any;
   const session = useLHSession() as any;
   const access_token = session?.data?.tokens?.access_token;
   const [modifiedActivity, setModifiedActivity] = React.useState<
@@ -180,7 +182,7 @@ function ActivityElement(props: ActivitiyElementProps) {
             </div>
             <Link
               href={
-                getUriWithOrg(props.orgslug, '') +
+                getUriWithOrg(props.orgslug, '', cookies) +
                 `/course/${props.course_uuid.replace(
                   'course_',
                   ''
@@ -277,6 +279,7 @@ const ActivityElementOptions = ({ activity }: any) => {
   const [assignmentUUID, setAssignmentUUID] = useState('');
   const org = useOrg() as any;
   const course = useCourse() as any;
+  const cookies = useCookies() as any;
   const session = useLHSession() as any;
   const access_token = session?.data?.tokens?.access_token;
 
@@ -304,7 +307,7 @@ const ActivityElementOptions = ({ activity }: any) => {
         <>
           <Link
             href={
-              getUriWithOrg(org.slug, '') +
+              getUriWithOrg(org.slug, '', cookies) +
               `/course/${course?.courseStructure.course_uuid.replace(
                 'course_',
                 ''
@@ -327,7 +330,7 @@ const ActivityElementOptions = ({ activity }: any) => {
         <>
           <Link
             href={
-              getUriWithOrg(org.slug, '') +
+              getUriWithOrg(org.slug, '', cookies) +
               `/dash/assignments/${assignmentUUID}`
             }
             prefetch

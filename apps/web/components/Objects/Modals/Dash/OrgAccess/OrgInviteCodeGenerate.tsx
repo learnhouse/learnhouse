@@ -8,6 +8,7 @@ import React, { useEffect } from 'react'
 import toast from 'react-hot-toast'
 import useSWR, { mutate } from 'swr'
 import Link from 'next/link'
+import { useCookies } from '@components/Contexts/CookiesContext'
 
 type OrgInviteCodeGenerateProps = {
     setInvitesModal: any
@@ -15,6 +16,7 @@ type OrgInviteCodeGenerateProps = {
 
 function OrgInviteCodeGenerate(props: OrgInviteCodeGenerateProps) {
     const org = useOrg() as any
+    const cookies = useCookies() as any;
     const session = useLHSession() as any
     const access_token = session?.data?.tokens?.access_token;
     const [usergroup_id, setUsergroup_id] = React.useState(0);
@@ -83,7 +85,7 @@ function OrgInviteCodeGenerate(props: OrgInviteCodeGenerateProps) {
                         {usergroups?.length == 0 &&
                             <div className='flex space-x-3 items-center text-xs pt-3'>
                                 <span className='px-3 text-yellow-700 font-bold rounded-full py-1 mx-3'>No UserGroups available </span>
-                                <Link className='px-3 text-blue-700 font-bold rounded-full py-1 bg-blue-100 mx-1' target='_blank' href={getUriWithOrg(org.slug, '/dash/users/settings/usergroups')}>Create a UserGroup </Link>
+                                <Link className='px-3 text-blue-700 font-bold rounded-full py-1 bg-blue-100 mx-1' target='_blank' href={getUriWithOrg(org.slug, '/dash/users/settings/usergroups',cookies)}>Create a UserGroup </Link>
                             </div>}
                     </div>
                 </div>

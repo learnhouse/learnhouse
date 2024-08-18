@@ -25,6 +25,7 @@ import AssignmentSubmissionProvider, {  useAssignmentSubmission } from '@compone
 import toast from 'react-hot-toast'
 import { mutate } from 'swr'
 import ConfirmationModal from '@components/StyledElements/ConfirmationModal/ConfirmationModal'
+import { useCookies } from '@components/Contexts/CookiesContext'
 
 interface ActivityClientProps {
   activityid: string
@@ -47,6 +48,7 @@ function ActivityClient(props: ActivityClientProps) {
   const [bgColor, setBgColor] = React.useState('bg-white')
   const [assignment, setAssignment] = React.useState(null) as any;
   const [markStatusButtonActive, setMarkStatusButtonActive] = React.useState(false);
+  const cookies = useCookies() as any;
 
   function getChapterNameByActivityId(course: any, activity_id: any) {
     for (let i = 0; i < course.chapters.length; i++) {
@@ -90,7 +92,7 @@ function ActivityClient(props: ActivityClientProps) {
               <div className="flex space-x-6">
                 <div className="flex">
                   <Link
-                    href={getUriWithOrg(orgslug, '') + `/course/${courseuuid}`}
+                    href={getUriWithOrg(orgslug, '',cookies) + `/course/${courseuuid}`}
                   >
                     <img
                       className="w-[100px] h-[57px] rounded-md drop-shadow-md"

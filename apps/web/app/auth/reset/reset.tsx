@@ -16,6 +16,7 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useFormik } from 'formik'
 import { resetPassword } from '@services/auth/auth'
+import { useCookies } from '@components/Contexts/CookiesContext'
 
 const validate = (values: any) => {
     const errors: any = {}
@@ -45,6 +46,7 @@ const validate = (values: any) => {
 }
 
 function ResetPasswordClient() {
+    const cookies = useCookies() as any;
     const org = useOrg() as any;
     const [isSubmitting, setIsSubmitting] = React.useState(false)
     const searchParams = useSearchParams()
@@ -87,7 +89,7 @@ function ResetPasswordClient() {
                 }}
             >
                 <div className="login-topbar m-10">
-                    <Link prefetch href={getUriWithOrg(org?.slug, '/')}>
+                    <Link prefetch href={getUriWithOrg(org?.slug, '/',cookies)}>
                         <Image
                             quality={100}
                             width={30}

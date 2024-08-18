@@ -11,6 +11,7 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import React from 'react'
+import { useCookies } from '@components/Contexts/CookiesContext'
 
 type PropsType = {
   collection: any
@@ -23,6 +24,7 @@ const removeCollectionPrefix = (collectionid: string) => {
 }
 
 function CollectionThumbnail(props: PropsType) {
+  const cookies = useCookies() as any;
   const org = useOrg() as any
   return (
     <div className="">
@@ -34,7 +36,7 @@ function CollectionThumbnail(props: PropsType) {
                 href={getUriWithOrg(
                   props.orgslug,
                   '/collection/' +
-                  removeCollectionPrefix(props.collection.collection_uuid)
+                  removeCollectionPrefix(props.collection.collection_uuid),cookies
                 )}
               >
                 <div
@@ -55,7 +57,7 @@ function CollectionThumbnail(props: PropsType) {
           href={getUriWithOrg(
             props.orgslug,
             '/collection/' +
-            removeCollectionPrefix(props.collection.collection_uuid)
+            removeCollectionPrefix(props.collection.collection_uuid),cookies
           )}
         >
           <h1 className="font-bold text-md justify-center">

@@ -14,6 +14,7 @@ import { useRouter } from 'next/navigation';
 import { getUriWithOrg } from '@services/config/config';
 import { useOrg } from '@components/Contexts/OrgContext';
 import useAdminStatus from '@components/Hooks/useAdminStatus';
+import { useCookies } from '@components/Contexts/CookiesContext';
 
 interface OnboardingStep {
   imageSrc: StaticImageData;
@@ -31,6 +32,7 @@ const Onboarding: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isOnboardingComplete, setIsOnboardingComplete] = useState(true);
   const router = useRouter();
+  const cookies = useCookies() as any;
   const org = useOrg() as any;
   const isUserAdmin = useAdminStatus() as any;
 
@@ -47,7 +49,7 @@ const Onboarding: React.FC = () => {
       buttons: [
         {
           label: 'Create New Course',
-          action: () => router.push(getUriWithOrg(org?.slug, '/courses?new=true')),
+          action: () => router.push(getUriWithOrg(org?.slug, '/courses?new=true',cookies)),
           icon: <Book size={16} />,
         },
       ],
@@ -95,7 +97,7 @@ const Onboarding: React.FC = () => {
       buttons: [
         {
           label: 'Create UserGroups',
-          action: () => router.push(getUriWithOrg(org?.slug, '/dash/users/settings/usergroups')),
+          action: () => router.push(getUriWithOrg(org?.slug, '/dash/users/settings/usergroups',cookies)),
           icon: <SquareUser size={16} />,
         },
       ],

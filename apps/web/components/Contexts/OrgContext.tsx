@@ -7,11 +7,13 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import ErrorUI from '@components/StyledElements/Error/Error'
 import InfoUI from '@components/StyledElements/Info/Info'
 import { usePathname } from 'next/navigation'
+import { useCookies } from './CookiesContext'
 
 export const OrgContext = createContext(null)
 
 export function OrgProvider({ children, orgslug }: { children: React.ReactNode, orgslug: string }) {
   const session = useLHSession() as any
+  const cookies = useCookies() as any;
   const pathname = usePathname()
   const accessToken = session?.data?.tokens?.access_token
   const isAllowedPathname = ['/login', '/signup'].includes(pathname);
@@ -35,7 +37,7 @@ export function OrgProvider({ children, orgslug }: { children: React.ReactNode, 
   if (!isUserPartOfTheOrg && session.status == 'authenticated' && !isAllowedPathname) {
     return (
       <InfoUI
-        href={getUriWithoutOrg(`/signup?orgslug=${orgslug}`)}
+        href={getUriWithoutOrg(`/signup?orgslug=${orgslug}`, cookies)}
         message='You are not part of this Organization yet'
         cta={`Join ${org?.name}`}
       />

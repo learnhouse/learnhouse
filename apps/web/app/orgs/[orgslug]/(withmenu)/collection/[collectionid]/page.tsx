@@ -1,3 +1,4 @@
+import { useCookies } from '@components/Contexts/CookiesContext'
 import GeneralWrapperStyled from '@components/StyledElements/Wrappers/GeneralWrapper'
 import { getUriWithOrg } from '@services/config/config'
 import { getCollectionById } from '@services/courses/collections'
@@ -54,6 +55,7 @@ export async function generateMetadata({
 
 const CollectionPage = async (params: any) => {
   const session = await getServerSession(nextAuthOptions)
+  const cookies = useCookies() as any;
   const access_token = session?.tokens?.access_token
   const org = await getOrganizationContextInfo(params.params.orgslug, {
     revalidate: 1800,
@@ -81,7 +83,7 @@ const CollectionPage = async (params: any) => {
             <Link
               href={getUriWithOrg(
                 orgslug,
-                '/course/' + removeCoursePrefix(course.course_uuid)
+                '/course/' + removeCoursePrefix(course.course_uuid), cookies
               )}
             >
               <div

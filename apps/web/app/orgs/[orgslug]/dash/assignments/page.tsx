@@ -1,4 +1,5 @@
 'use client';
+import { useCookies } from '@components/Contexts/CookiesContext';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import { useOrg } from '@components/Contexts/OrgContext';
 import BreadCrumbs from '@components/Dashboard/UI/BreadCrumbs'
@@ -13,6 +14,7 @@ import useSWR from 'swr';
 
 function AssignmentsHome() {
   const session = useLHSession() as any;
+  const cookies = useCookies() as any;
   const access_token = session?.data?.tokens?.access_token;
   const org = useOrg() as any;
   const [courseAssignments, setCourseAssignments] = React.useState<any[]>([])
@@ -65,7 +67,7 @@ function AssignmentsHome() {
                   </div>
                   <Link
                     href={{
-                      pathname: getUriWithOrg(org.slug, `/dash/courses/course/${removeCoursePrefix(courses[index].course_uuid)}/content`),
+                      pathname: getUriWithOrg(org.slug, `/dash/courses/course/${removeCoursePrefix(courses[index].course_uuid)}/content`, cookies),
                       query: { subpage: 'editor' }
                     }}
                     prefetch
@@ -90,7 +92,7 @@ function AssignmentsHome() {
                       <EllipsisVertical className='text-gray-500' size={17} />
                       <Link
                         href={{
-                          pathname: getUriWithOrg(org.slug, `/dash/assignments/${removeAssignmentPrefix(assignment.assignment_uuid)}`),
+                          pathname: getUriWithOrg(org.slug, `/dash/assignments/${removeAssignmentPrefix(assignment.assignment_uuid)}`, cookies),
                           query: { subpage: 'editor' }
                         }}
                         prefetch
@@ -100,7 +102,7 @@ function AssignmentsHome() {
                       </Link>
                       <Link
                         href={{
-                          pathname: getUriWithOrg(org.slug, `/dash/assignments/${removeAssignmentPrefix(assignment.assignment_uuid)}`),
+                          pathname: getUriWithOrg(org.slug, `/dash/assignments/${removeAssignmentPrefix(assignment.assignment_uuid)}`, cookies),
                           query: { subpage: 'submissions' }
                         }}
 
@@ -134,6 +136,7 @@ function AssignmentsHome() {
 
 const MiniThumbnail = (props: { course: any }) => {
   const org = useOrg() as any
+  const cookies = useCookies() as any
 
   // function to remove "course_" from the course_uuid
   function removeCoursePrefix(course_uuid: string) {
@@ -144,7 +147,7 @@ const MiniThumbnail = (props: { course: any }) => {
     <Link
       href={getUriWithOrg(
         org.orgslug,
-        '/course/' + removeCoursePrefix(props.course.course_uuid)
+        '/course/' + removeCoursePrefix(props.course.course_uuid), cookies
       )}
     >
       {props.course.thumbnail_image ? (

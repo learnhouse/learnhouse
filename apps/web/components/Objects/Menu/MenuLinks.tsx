@@ -1,3 +1,4 @@
+import { useCookies } from '@components/Contexts/CookiesContext'
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
 import { getUriWithOrg } from '@services/config/config'
 import { BookCopy, Signpost, SquareLibrary } from 'lucide-react'
@@ -5,6 +6,7 @@ import Link from 'next/link'
 import React from 'react'
 
 function MenuLinks(props: { orgslug: string }) {
+  const cookies = useCookies() as any;
   return (
     <div className='pl-1'>
       <ul className="flex space-x-5">
@@ -32,8 +34,9 @@ function MenuLinks(props: { orgslug: string }) {
 const LinkItem = (props: any) => {
   const link = props.link
   const orgslug = props.orgslug
+  const cookies = useCookies() as any;
   return (
-    <Link href={getUriWithOrg(orgslug, link)}>
+    <Link href={getUriWithOrg(orgslug, link,cookies)}>
       <li className="flex space-x-2 items-center text-[#909192] font-medium">
         {props.type == 'courses' && (
           <>

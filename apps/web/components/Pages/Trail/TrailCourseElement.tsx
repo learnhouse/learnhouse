@@ -9,6 +9,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import { mutate } from 'swr'
+import { useCookies } from '@components/Contexts/CookiesContext'
 
 interface TrailCourseElementProps {
   course: any
@@ -19,6 +20,7 @@ interface TrailCourseElementProps {
 function TrailCourseElement(props: TrailCourseElementProps) {
   const org = useOrg() as any
   const session = useLHSession() as any;
+  const cookies = useCookies() as any;
   const access_token = session?.data?.tokens?.access_token;
   const courseid = props.course.course_uuid.replace('course_', '')
   const course = props.course
@@ -48,7 +50,7 @@ function TrailCourseElement(props: TrailCourseElementProps) {
       className="trailcoursebox flex p-3 bg-white rounded-xl"
       style={{ boxShadow: '0px 4px 7px 0px rgba(0, 0, 0, 0.03)' }}
     >
-      <Link href={getUriWithOrg(props.orgslug, '/course/' + courseid)}>
+      <Link href={getUriWithOrg(props.orgslug, '/course/' + courseid,cookies)}>
         <div
           className="course_tumbnail inset-0 ring-1 ring-inset ring-black/10 rounded-lg relative h-[50px] w-[72px] bg-cover bg-center"
           style={{

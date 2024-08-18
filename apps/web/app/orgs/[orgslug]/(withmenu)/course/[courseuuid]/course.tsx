@@ -18,9 +18,11 @@ import UserAvatar from '@components/Objects/UserAvatar'
 import CourseUpdates from '@components/Objects/CourseUpdates/CourseUpdates'
 import { CourseProvider } from '@components/Contexts/CourseContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { useCookies } from '@components/Contexts/CookiesContext'
 
 const CourseClient = (props: any) => {
   const [user, setUser] = useState<any>({})
+  const cookies = useCookies() as any;
   const [learnings, setLearnings] = useState<any>([])
   const session = useLHSession() as any;
   const courseuuid = props.courseuuid
@@ -198,7 +200,7 @@ const CourseClient = (props: any) => {
                                 <Link
                                   className="flex font-semibold grow pl-2 text-neutral-500"
                                   href={
-                                    getUriWithOrg(orgslug, '') +
+                                    getUriWithOrg(orgslug, '',cookies) +
                                     `/course/${courseuuid}/activity/${activity.activity_uuid.replace(
                                       'activity_',
                                       ''
@@ -215,7 +217,7 @@ const CourseClient = (props: any) => {
                                         <Link
                                           className="flex grow pl-2 text-gray-500"
                                           href={
-                                            getUriWithOrg(orgslug, '') +
+                                            getUriWithOrg(orgslug, '',cookies) +
                                             `/course/${courseuuid}/activity/${activity.activity_uuid.replace(
                                               'activity_',
                                               ''
@@ -235,7 +237,7 @@ const CourseClient = (props: any) => {
                                       <Link
                                         className="flex grow pl-2 text-gray-500"
                                         href={
-                                          getUriWithOrg(orgslug, '') +
+                                          getUriWithOrg(orgslug, '',cookies) +
                                           `/course/${courseuuid}/activity/${activity.activity_uuid.replace(
                                             'activity_',
                                             ''
@@ -256,7 +258,7 @@ const CourseClient = (props: any) => {
                                         <Link
                                           className="flex grow pl-2 text-gray-500"
                                           href={
-                                            getUriWithOrg(orgslug, '') +
+                                            getUriWithOrg(orgslug, '',cookies) +
                                             `/course/${courseuuid}/activity/${activity.activity_uuid.replace(
                                               'activity_',
                                               ''
@@ -277,7 +279,7 @@ const CourseClient = (props: any) => {
                                         <Link
                                           className="flex grow pl-2 text-gray-500"
                                           href={
-                                            getUriWithOrg(orgslug, '') +
+                                            getUriWithOrg(orgslug, '',cookies) +
                                             `/course/${courseuuid}/activity/${activity.activity_uuid.replace(
                                               'activity_',
                                               ''

@@ -7,10 +7,12 @@ import { getAPIUrl, getUriWithOrg } from '@services/config/config'
 import { revalidateTags, swrFetcher } from '@services/utils/ts/requests'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { useCookies } from '@components/Contexts/CookiesContext'
 
 function NewCollection(params: any) {
   const org = useOrg() as any
   const session = useLHSession() as any;
+  const cookies = useCookies() as any;
   const access_token = session?.data?.tokens?.access_token;
   const orgslug = params.params.orgslug
   const [name, setName] = React.useState('')
@@ -54,7 +56,7 @@ function NewCollection(params: any) {
 
     // wait for 2s before reloading the page
     setTimeout(() => {
-      router.push(getUriWithOrg(orgslug, '/collections'))
+      router.push(getUriWithOrg(orgslug, '/collections',cookies))
     }, 1000)
   }
 

@@ -12,6 +12,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import React, { useEffect } from 'react'
 import toast from 'react-hot-toast'
+import { useCookies } from '@components/Contexts/CookiesContext'
 
 type PropsType = {
   course: any
@@ -25,6 +26,7 @@ function removeCoursePrefix(course_uuid: string) {
 
 function CourseThumbnail(props: PropsType) {
   const router = useRouter()
+  const cookies = useCookies() as any;
   const org = useOrg() as any
   const session = useLHSession() as any;
 
@@ -51,7 +53,7 @@ function CourseThumbnail(props: PropsType) {
       <Link
         href={getUriWithOrg(
           props.orgslug,
-          '/course/' + removeCoursePrefix(props.course.course_uuid)
+          '/course/' + removeCoursePrefix(props.course.course_uuid), cookies
         )}
       >
         {props.course.thumbnail_image ? (
@@ -89,6 +91,7 @@ const AdminEditsArea = (props: {
   course: any
   deleteCourses: any
 }) => {
+  const cookies = useCookies() as any;
   return (
     <AuthenticatedClientElement
       action="update"
@@ -103,7 +106,7 @@ const AdminEditsArea = (props: {
             props.orgSlug,
             '/dash/courses/course/' +
             removeCoursePrefix(props.courseId) +
-            '/content'
+            '/content', cookies
           )}
           prefetch
         >
@@ -119,7 +122,7 @@ const AdminEditsArea = (props: {
             props.orgSlug,
             '/dash/courses/course/' +
             removeCoursePrefix(props.courseId) +
-            '/general'
+            '/general',cookies
           )}
           prefetch
         >

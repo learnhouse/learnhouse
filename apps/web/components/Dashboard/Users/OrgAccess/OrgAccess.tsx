@@ -17,9 +17,11 @@ import { useRouter } from 'next/navigation'
 import Modal from '@components/StyledElements/Modal/Modal'
 import OrgInviteCodeGenerate from '@components/Objects/Modals/Dash/OrgAccess/OrgInviteCodeGenerate'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { useCookies } from '@components/Contexts/CookiesContext'
 
 function OrgAccess() {
   const org = useOrg() as any
+  const cookies = useCookies() as any;
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token;
   const { data: invites } = useSWR(
@@ -175,12 +177,12 @@ function OrgAccess() {
                             target="_blank"
                             href={getUriWithOrg(
                               org?.slug,
-                              `/signup?inviteCode=${invite.invite_code}`
+                              `/signup?inviteCode=${invite.invite_code}`,cookies
                             )}
                           >
                             {getUriWithOrg(
                               org?.slug,
-                              `/signup?inviteCode=${invite.invite_code}`
+                              `/signup?inviteCode=${invite.invite_code}`,cookies
                             )}
                           </Link>
                         </td>

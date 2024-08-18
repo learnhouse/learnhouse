@@ -11,9 +11,11 @@ import UserAvatar from '../../Objects/UserAvatar'
 import AdminAuthorization from '@components/Security/AdminAuthorization'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { getUriWithOrg, getUriWithoutOrg } from '@services/config/config'
+import { useCookies } from '@components/Contexts/CookiesContext'
 
 function LeftMenu() {
   const org = useOrg() as any
+  const cookies = useCookies() as any;
   const session = useLHSession() as any
   const [loading, setLoading] = React.useState(true)
 
@@ -25,9 +27,9 @@ function LeftMenu() {
   }
 
   async function logOutUI() {
-    const res = await signOut({ redirect: true, callbackUrl: getUriWithoutOrg('/login?orgslug=' + org.slug) })
+    const res = await signOut({ redirect: true, callbackUrl: getUriWithoutOrg('/login?orgslug=' + org.slug,cookies) })
     if (res) {
-      getUriWithOrg(org.slug, '/')
+      getUriWithOrg(org.slug, '/',cookies)
     }
   }
 

@@ -18,6 +18,7 @@ import Toast from '@components/StyledElements/Toast/Toast'
 import toast from 'react-hot-toast'
 import { BarLoader } from 'react-spinners'
 import { joinOrg } from '@services/organizations/orgs'
+import { useCookies } from '@components/Contexts/CookiesContext'
 
 interface SignUpClientProps {
   org: any
@@ -25,6 +26,7 @@ interface SignUpClientProps {
 
 function SignUpClient(props: SignUpClientProps) {
   const session = useLHSession() as any
+  const cookies = useCookies() as any;
   const [joinMethod, setJoinMethod] = React.useState('open')
   const [inviteCode, setInviteCode] = React.useState('')
   const searchParams = useSearchParams()
@@ -51,7 +53,7 @@ function SignUpClient(props: SignUpClientProps) {
         }}
       >
         <div className="login-topbar m-10">
-          <Link prefetch href={getUriWithOrg(props.org.slug, '/')}>
+          <Link prefetch href={getUriWithOrg(props.org.slug, '/',cookies)}>
             <Image
               quality={100}
               width={30}
@@ -113,6 +115,7 @@ function SignUpClient(props: SignUpClientProps) {
 
 const LoggedInJoinScreen = (props: any) => {
   const session = useLHSession() as any
+  const cookies = useCookies() as any;
   const org = useOrg() as any
   const invite_code = props.inviteCode
   const [isLoading, setIsLoading] = React.useState(true)
@@ -128,7 +131,7 @@ const LoggedInJoinScreen = (props: any) => {
         res.data
       )
       setTimeout(() => {
-        router.push(getUriWithOrg(org.slug,'/'))
+        router.push(getUriWithOrg(org.slug,'/',cookies))
       }, 2000)
       setIsSubmitting(false)
     } else {

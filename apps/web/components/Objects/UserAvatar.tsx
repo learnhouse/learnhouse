@@ -3,6 +3,7 @@ import { getUriWithOrg } from '@services/config/config'
 import { useParams } from 'next/navigation'
 import { getUserAvatarMediaDirectory } from '@services/media/media'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { useCookies } from '@components/Contexts/CookiesContext'
 
 type UserAvatarProps = {
   width?: number
@@ -22,6 +23,7 @@ type UserAvatarProps = {
 function UserAvatar(props: UserAvatarProps) {
   const session = useLHSession() as any
   const params = useParams() as any
+  const cookies = useCookies() as any;
 
   function checkUrlProtocol(url: string): boolean {
     return url.startsWith('https://') || url.startsWith('http://');
@@ -29,16 +31,16 @@ function UserAvatar(props: UserAvatarProps) {
 
   const predefinedAvatarFunc = () => {
     if (props.predefined_avatar === 'ai') {
-      return getUriWithOrg(params.orgslug, '/ai_avatar.png')
+      return getUriWithOrg(params.orgslug, '/ai_avatar.png',cookies)
     }
     if (props.predefined_avatar === 'empty') {
-      return getUriWithOrg(params.orgslug, '/empty_avatar.png')
+      return getUriWithOrg(params.orgslug, '/empty_avatar.png',cookies)
     }
     return null
   }
 
   const predefinedAvatar = predefinedAvatarFunc()
-  const emptyAvatar = getUriWithOrg(params.orgslug, '/empty_avatar.png') as any
+  const emptyAvatar = getUriWithOrg(params.orgslug, '/empty_avatar.png',cookies) as any
   const uploadedAvatar =  (session.status == 'authenticated') && (checkUrlProtocol(session?.data?.user?.avatar_image)) ? session?.data?.user?.avatar_image : getUserAvatarMediaDirectory(
     session?.data?.user?.user_uuid,
     session?.data?.user?.avatar_image

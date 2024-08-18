@@ -6,6 +6,7 @@ import { SessionProvider } from 'next-auth/react'
 import LHSessionProvider from '@components/Contexts/LHSessionContext'
 import { isDevEnv } from './auth/options'
 import Script from 'next/script'
+import CookiesProvider from '@components/Contexts/CookiesContext'
 
 export default function RootLayout({
   children,
@@ -22,22 +23,26 @@ export default function RootLayout({
       <head />
       <body>
         {isDevEnv ? '' : <Script data-website-id="a1af6d7a-9286-4a1f-8385-ddad2a29fcbb" src="/umami/script.js" />}
+
         <SessionProvider>
           <LHSessionProvider>
-            <StyledComponentsRegistry>
-              <motion.main
-                variants={variants} // Pass the variant object into Framer Motion
-                initial="hidden" // Set the initial state to variants.hidden
-                animate="enter" // Animated state to variants.enter
-                exit="exit" // Exit state (used later) to variants.exit
-                transition={{ type: 'linear' }} // Set the transition to linear
-                className=""
-              >
-                {children}
-              </motion.main>
-            </StyledComponentsRegistry>
+            <CookiesProvider>
+              <StyledComponentsRegistry>
+                <motion.main
+                  variants={variants} // Pass the variant object into Framer Motion
+                  initial="hidden" // Set the initial state to variants.hidden
+                  animate="enter" // Animated state to variants.enter
+                  exit="exit" // Exit state (used later) to variants.exit
+                  transition={{ type: 'linear' }} // Set the transition to linear
+                  className=""
+                >
+                  {children}
+                </motion.main>
+              </StyledComponentsRegistry>
+            </CookiesProvider>
           </LHSessionProvider>
         </SessionProvider>
+
       </body>
     </html>
   )

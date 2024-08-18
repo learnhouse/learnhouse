@@ -11,6 +11,7 @@ import OrgUsers from '@components/Dashboard/Users/OrgUsers/OrgUsers'
 import OrgAccess from '@components/Dashboard/Users/OrgAccess/OrgAccess'
 import OrgUsersAdd from '@components/Dashboard/Users/OrgUsersAdd/OrgUsersAdd'
 import OrgUserGroups from '@components/Dashboard/Users/OrgUserGroups/OrgUserGroups'
+import { useCookies } from '@components/Contexts/CookiesContext'
 
 export type SettingsParams = {
   subpage: string
@@ -19,6 +20,7 @@ export type SettingsParams = {
 
 function UsersSettingsPage({ params }: { params: SettingsParams }) {
   const session = useLHSession() as any
+  const cookies = useCookies() as any;
   const org = useOrg() as any
   const [H1Label, setH1Label] = React.useState('')
   const [H2Label, setH2Label] = React.useState('')
@@ -63,7 +65,7 @@ function UsersSettingsPage({ params }: { params: SettingsParams }) {
         <div className="flex space-x-5 font-black text-sm">
           <Link
             href={
-              getUriWithOrg(params.orgslug, '') + `/dash/users/settings/users`
+              getUriWithOrg(params.orgslug, '',cookies) + `/dash/users/settings/users`
             }
           >
             <div
@@ -80,7 +82,7 @@ function UsersSettingsPage({ params }: { params: SettingsParams }) {
           </Link>
           <Link
             href={
-              getUriWithOrg(params.orgslug, '') + `/dash/users/settings/usergroups`
+              getUriWithOrg(params.orgslug, '',cookies) + `/dash/users/settings/usergroups`
             }
           >
             <div
@@ -97,7 +99,7 @@ function UsersSettingsPage({ params }: { params: SettingsParams }) {
           </Link>
           <Link
             href={
-              getUriWithOrg(params.orgslug, '') + `/dash/users/settings/signups`
+              getUriWithOrg(params.orgslug, '',cookies) + `/dash/users/settings/signups`
             }
           >
             <div
@@ -114,7 +116,7 @@ function UsersSettingsPage({ params }: { params: SettingsParams }) {
           </Link>
           <Link
             href={
-              getUriWithOrg(params.orgslug, '') + `/dash/users/settings/add`
+              getUriWithOrg(params.orgslug, '',cookies) + `/dash/users/settings/add`
             }
           >
             <div

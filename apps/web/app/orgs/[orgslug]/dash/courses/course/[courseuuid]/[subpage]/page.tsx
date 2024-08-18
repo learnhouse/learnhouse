@@ -9,6 +9,7 @@ import { motion } from 'framer-motion'
 import EditCourseGeneral from '@components/Dashboard/Course/EditCourseGeneral/EditCourseGeneral'
 import { GalleryVerticalEnd, Info, UserRoundCog } from 'lucide-react'
 import EditCourseAccess from '@components/Dashboard/Course/EditCourseAccess/EditCourseAccess'
+import { useCookies } from '@components/Contexts/CookiesContext'
 
 export type CourseOverviewParams = {
   orgslug: string
@@ -17,6 +18,7 @@ export type CourseOverviewParams = {
 }
 
 function CourseOverviewPage({ params }: { params: CourseOverviewParams }) {
+  const cookies = useCookies() as any;
   function getEntireCourseUUID(courseuuid: string) {
     // add course_ to uuid
     return `course_${courseuuid}`
@@ -30,7 +32,7 @@ function CourseOverviewPage({ params }: { params: CourseOverviewParams }) {
           <div className="flex space-x-3 font-black text-sm">
             <Link
               href={
-                getUriWithOrg(params.orgslug, '') +
+                getUriWithOrg(params.orgslug, '',cookies) +
                 `/dash/courses/course/${params.courseuuid}/general`
               }
             >
@@ -48,7 +50,7 @@ function CourseOverviewPage({ params }: { params: CourseOverviewParams }) {
             </Link>
             <Link
               href={
-                getUriWithOrg(params.orgslug, '') +
+                getUriWithOrg(params.orgslug, '',cookies) +
                 `/dash/courses/course/${params.courseuuid}/access`
               }
             >
@@ -66,7 +68,7 @@ function CourseOverviewPage({ params }: { params: CourseOverviewParams }) {
             </Link>
             <Link
               href={
-                getUriWithOrg(params.orgslug, '') +
+                getUriWithOrg(params.orgslug, '',cookies) +
                 `/dash/courses/course/${params.courseuuid}/content`
               }
             >

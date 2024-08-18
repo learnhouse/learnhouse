@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic'
 import { Metadata } from 'next'
+import { cookies } from 'next/headers'
 import { getUriWithOrg } from '@services/config/config'
 import { getOrgCourses } from '@services/courses/courses'
 import Link from 'next/link'
@@ -54,6 +55,7 @@ export async function generateMetadata({
 
 const OrgHomePage = async (params: any) => {
   const orgslug = params.params.orgslug
+  const cookieStore = cookies()
   const session = await getServerSession(nextAuthOptions)
   const access_token = session?.tokens?.access_token
   const courses = await getOrgCourses(
@@ -86,7 +88,7 @@ const OrgHomePage = async (params: any) => {
             action="create"
             orgId={org_id}
           >
-            <Link href={getUriWithOrg(orgslug, '/collections/new')}>
+            <Link href={getUriWithOrg(orgslug, '/collections/new',cookies)}>
               <NewCollectionButton />
             </Link>
           </AuthenticatedClientElement>
@@ -162,7 +164,7 @@ const OrgHomePage = async (params: any) => {
             checkMethod="roles"
             orgId={org_id}
           >
-            <Link href={getUriWithOrg(orgslug, '/courses?new=true')}>
+            <Link href={getUriWithOrg(orgslug, '/courses?new=true',cookieStore)}>
               <NewCourseButton />
             </Link>
           </AuthenticatedClientElement>

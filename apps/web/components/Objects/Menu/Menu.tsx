@@ -7,9 +7,11 @@ import MenuLinks from './MenuLinks'
 import { getOrgLogoMediaDirectory } from '@services/media/media'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
+import { useCookies } from '@components/Contexts/CookiesContext'
 
 export const Menu = (props: any) => {
   const orgslug = props.orgslug
+  const cookies = useCookies() as any;
   const session = useLHSession() as any;
   const access_token = session?.data?.tokens?.access_token;
   const [feedbackModal, setFeedbackModal] = React.useState(false)
@@ -27,7 +29,7 @@ export const Menu = (props: any) => {
       <div className="backdrop-blur-lg bg-white/90 fixed flex top-0 left-0 right-0 h-[60px] ring-1 ring-inset ring-gray-500/10 items-center space-x-5 shadow-[0px_4px_16px_rgba(0,0,0,0.03)] z-50">
         <div className="flex items-center space-x-5 w-full max-w-screen-2xl mx-auto px-16">
           <div className="logo flex ">
-            <Link href={getUriWithOrg(orgslug, '/')}>
+            <Link href={getUriWithOrg(orgslug, '/',cookies)}>
               <div className="flex w-auto h-9 rounded-md items-center m-auto py-1 justify-center">
                 {org?.logo_image ? (
                   <img

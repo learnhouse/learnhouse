@@ -11,6 +11,7 @@ import ContentPlaceHolderIfUserIsNotAdmin from '@components/ContentPlaceHolder'
 import { nextAuthOptions } from 'app/auth/options'
 import { getServerSession } from 'next-auth'
 import { getOrgCollections } from '@services/courses/collections'
+import { useCookies } from '@components/Contexts/CookiesContext'
 
 type MetadataProps = {
   params: { orgslug: string; courseid: string }
@@ -50,6 +51,7 @@ export async function generateMetadata({
 
 const CollectionsPage = async (params: any) => {
   const session = await getServerSession(nextAuthOptions)
+  const cookies = useCookies() as any;
   const access_token = session?.tokens?.access_token
   const orgslug = params.params.orgslug
   const org = await getOrganizationContextInfo(orgslug, {
@@ -75,7 +77,7 @@ const CollectionsPage = async (params: any) => {
         >
           <Link
             className="flex justify-center"
-            href={getUriWithOrg(orgslug, '/collections/new')}
+            href={getUriWithOrg(orgslug, '/collections/new',cookies)}
           >
             <NewCollectionButton />
           </Link>
@@ -139,7 +141,7 @@ const CollectionsPage = async (params: any) => {
                 action="create"
                 orgId={org_id}
               >
-                <Link href={getUriWithOrg(orgslug, '/collections/new')}>
+                <Link href={getUriWithOrg(orgslug, '/collections/new',cookies)}>
                   <NewCollectionButton />
                 </Link>
               </AuthenticatedClientElement>

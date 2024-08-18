@@ -1,4 +1,5 @@
 'use client'
+import { useCookies } from '@components/Contexts/CookiesContext'
 import { getUriWithoutOrg } from '@services/config/config'
 import { AlertTriangle, HomeIcon, RefreshCcw } from 'lucide-react'
 import Link from 'next/link'
@@ -7,6 +8,7 @@ import React from 'react'
 
 function ErrorUI(params: { message?: string, submessage?: string }) {
   const router = useRouter()
+  const cookies = useCookies() as any;
 
   function reloadPage() {
     router.refresh()
@@ -31,7 +33,7 @@ function ErrorUI(params: { message?: string, submessage?: string }) {
           <span className="text-md font-bold">Retry</span>
         </button>
         <Link
-          href={getUriWithoutOrg('/home')}
+          href={getUriWithoutOrg('/home', cookies)}
           className="flex space-x-2 items-center rounded-full px-4 py-1 text-gray-200 bg-gray-700 hover:bg-gray-800 transition-all ease-linear shadow-lg "
         >
           <HomeIcon className="text-gray-200" size={17} />

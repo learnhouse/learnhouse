@@ -1,4 +1,5 @@
 'use client';
+import { useCookies } from '@components/Contexts/CookiesContext';
 import { useCourse } from '@components/Contexts/CourseContext';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import { useOrg } from '@components/Contexts/OrgContext';
@@ -17,6 +18,7 @@ type LinkToUserGroupProps = {
 }
 
 function LinkToUserGroup(props: LinkToUserGroupProps) {
+    const cookies = useCookies() as any;
     const course = useCourse() as any
     const org = useOrg() as any
     const session = useLHSession() as any
@@ -74,7 +76,7 @@ function LinkToUserGroup(props: LinkToUserGroupProps) {
                 {usergroups?.length == 0 &&
                     <div className='flex space-x-3 items-center'>
                         <span className='px-3 text-yellow-700 font-bold rounded-full py-1 mx-3'>No UserGroups available </span>
-                        <Link className='px-3 text-blue-700 font-bold rounded-full py-1 bg-blue-100 mx-1' target='_blank' href={getUriWithOrg(org.slug, '/dash/users/settings/usergroups')}>Create a UserGroup</Link>
+                        <Link className='px-3 text-blue-700 font-bold rounded-full py-1 bg-blue-100 mx-1' target='_blank' href={getUriWithOrg(org.slug, '/dash/users/settings/usergroups',cookies)}>Create a UserGroup</Link>
                     </div>}
                 <div className='py-3'>
                     <button onClick={() => { handleLink() }} className='bg-green-700 text-white font-bold px-4 py-2 rounded-md shadow'>Link</button>

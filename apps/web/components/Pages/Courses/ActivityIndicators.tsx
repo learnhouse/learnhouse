@@ -1,3 +1,4 @@
+import { useCookies } from '@components/Contexts/CookiesContext'
 import ToolTip from '@components/StyledElements/Tooltip/Tooltip'
 import { getUriWithOrg } from '@services/config/config'
 import Link from 'next/link'
@@ -14,6 +15,7 @@ function ActivityIndicators(props: Props) {
   const course = props.course
   const orgslug = props.orgslug
   const courseid = props.course_uuid.replace('course_', '')
+  const cookies = useCookies() as any;
 
   const done_activity_style = 'bg-teal-600 hover:bg-teal-700'
   const black_activity_style = 'bg-black hover:bg-gray-700'
@@ -66,7 +68,7 @@ function ActivityIndicators(props: Props) {
                   >
                     <Link
                       href={
-                        getUriWithOrg(orgslug, '') +
+                        getUriWithOrg(orgslug, '',cookies) +
                         `/course/${courseid}/activity/${activity.activity_uuid.replace(
                           'activity_',
                           ''

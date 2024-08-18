@@ -1,4 +1,5 @@
 'use client'
+import { useCookies } from '@components/Contexts/CookiesContext';
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import UserAvatar from '@components/Objects/UserAvatar';
 import { getAPIUrl, getUriWithOrg, getUriWithoutOrg } from '@services/config/config';
@@ -13,6 +14,7 @@ import useSWR from 'swr';
 
 function HomeClient() {
   const session = useLHSession() as any;
+  const cookies = useCookies() as any;
   const access_token = session?.data?.tokens?.access_token;
   const { data: orgs } = useSWR(`${getAPIUrl()}orgs/user/page/1/limit/10`, (url) => swrFetcher(url, access_token))
 
@@ -39,13 +41,13 @@ function HomeClient() {
       </div>}
       <div className='flex mx-auto pt-10 rounded-lg'>
         {orgs && orgs.map((org: any) => (
-          <Link href={getUriWithOrg(org.slug, '/')} key={org.id} className='flex space-x-2 mx-auto w-fit justify-between items-center outline outline-1 outline-slate-200 px-3 py-2 rounded-lg'>
+          <Link href={getUriWithOrg(org.slug, '/', cookies)} key={org.id} className='flex space-x-2 mx-auto w-fit justify-between items-center outline outline-1 outline-slate-200 px-3 py-2 rounded-lg'>
             <div>{org.name}</div>
             <ArrowRightCircle />
           </Link>
         ))}
       </div>
-      <div className='flex cursor-pointer space-x-4 mx-auto font-semibold text-2xl pt-16 items-center'><span onClick={() =>  signOut({ redirect: true, callbackUrl: getUriWithoutOrg('/') })}>Sign out</span></div>
+      <div className='flex cursor-pointer space-x-4 mx-auto font-semibold text-2xl pt-16 items-center'><span onClick={() => signOut({ redirect: true, callbackUrl: getUriWithoutOrg('/', cookies) })}>Sign out</span></div>
 
     </div>
   )

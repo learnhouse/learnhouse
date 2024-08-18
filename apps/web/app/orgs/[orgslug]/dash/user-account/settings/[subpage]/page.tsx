@@ -8,6 +8,7 @@ import { getUriWithOrg } from '@services/config/config'
 import { Info, Lock } from 'lucide-react'
 import BreadCrumbs from '@components/Dashboard/UI/BreadCrumbs'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { useCookies } from '@components/Contexts/CookiesContext'
 
 export type SettingsParams = {
   subpage: string
@@ -16,6 +17,7 @@ export type SettingsParams = {
 
 function SettingsPage({ params }: { params: SettingsParams }) {
   const session = useLHSession() as any
+  const cookies = useCookies() as any;
 
   useEffect(() => {}, [session])
 
@@ -34,7 +36,7 @@ function SettingsPage({ params }: { params: SettingsParams }) {
         <div className="flex space-x-5 font-black text-sm">
           <Link
             href={
-              getUriWithOrg(params.orgslug, '') +
+              getUriWithOrg(params.orgslug, '',cookies) +
               `/dash/user-account/settings/general`
             }
           >
@@ -53,7 +55,7 @@ function SettingsPage({ params }: { params: SettingsParams }) {
           </Link>
           <Link
             href={
-              getUriWithOrg(params.orgslug, '') +
+              getUriWithOrg(params.orgslug, '',cookies) +
               `/dash/user-account/settings/security`
             }
           >

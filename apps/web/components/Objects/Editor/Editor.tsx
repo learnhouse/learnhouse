@@ -48,6 +48,7 @@ import Collaboration from '@tiptap/extension-collaboration'
 import CollaborationCursor from '@tiptap/extension-collaboration-cursor'
 import ActiveAvatars from './ActiveAvatars'
 import { getUriWithOrg } from '@services/config/config'
+import { useCookies } from '@components/Contexts/CookiesContext'
 
 interface Editor {
   content: string
@@ -65,6 +66,7 @@ interface Editor {
 
 function Editor(props: Editor) {
   const session = useLHSession() as any
+  const cookies = useCookies() as any;
   const dispatchAIEditor = useAIEditorDispatch() as any
   const aiEditorState = useAIEditor() as AIEditorStateTypes
   const is_ai_feature_enabled = useGetAIFeatures({ feature: 'editor' })
@@ -187,7 +189,7 @@ function Editor(props: Editor) {
                       props.org?.org_uuid,
                       props.course.course_uuid,
                       props.course.thumbnail_image
-                    ) : getUriWithOrg(props.org?.slug,'/empty_thumbnail.png')}`}
+                    ) : getUriWithOrg(props.org?.slug,'/empty_thumbnail.png',cookies)}`}
                     alt=""
                   ></EditorInfoThumbnail>
                 </Link>
