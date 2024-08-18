@@ -11,18 +11,29 @@ const exampleObject = {
   orgslug: 'default',
 }
 
-export async function getOrgSlugFromCustomDomainRegistry(domain: any) {
+export async function getDataFromCustomDomainRegistry(domain: any) {
   if (!domain) return null
 
   try {
     console.log('looking for the custom domain...')
     let value = (await redis.json.get(`customdomain:${domain}`)) as any
-    console.log('val', value.orgslug)
+    console.log('val', value)
     if (!value) return null
 
-    return value.orgslug || null
+    return value || null
   } catch (error) {
     console.error('Redis error:', error)
     return null
   }
 }
+
+export function getCookieValue(name: string): string | null {
+  const cookieString = document.cookie;
+  
+  // Create a regular expression to match the specific cookie name
+  const match = cookieString.match(new RegExp('(^| )' + name + '=([^;]+)'));
+  
+  // Return the value if found, or null if not
+  return match ? decodeURIComponent(match[2]) : null;
+}
+

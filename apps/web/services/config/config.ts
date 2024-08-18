@@ -1,55 +1,40 @@
-export const LEARNHOUSE_HTTP_PROTOCOL =
-  process.env.NEXT_PUBLIC_LEARNHOUSE_HTTPS === 'true' ? 'https://' : 'http://'
-const LEARNHOUSE_API_URL = `${process.env.NEXT_PUBLIC_LEARNHOUSE_API_URL}`
+import { getCookieValue } from './utils'
+
+export const LEARNHOUSE_HTTP_PROTOCOL = process.env.NEXT_PUBLIC_LEARNHOUSE_HTTPS === 'true' ? 'https://' : 'http://'
+export const LEARNHOUSE_API_URL = `${process.env.NEXT_PUBLIC_LEARNHOUSE_API_URL}`
 export const LEARNHOUSE_BACKEND_URL = `${process.env.NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL}`
 export const LEARNHOUSE_DOMAIN = process.env.NEXT_PUBLIC_LEARNHOUSE_DOMAIN
-export const LEARNHOUSE_TOP_DOMAIN =
-  process.env.NEXT_PUBLIC_LEARNHOUSE_TOP_DOMAIN
-export const LEARNHOUSE_COLLABORATION_WS_URL =
-  process.env.NEXT_PUBLIC_LEARNHOUSE_COLLABORATION_WS_URL
+export const LEARNHOUSE_TOP_DOMAIN = process.env.NEXT_PUBLIC_LEARNHOUSE_TOP_DOMAIN
+export const LEARNHOUSE_COLLABORATION_WS_URL = process.env.NEXT_PUBLIC_LEARNHOUSE_COLLABORATION_WS_URL
 export const UPSTASH_REDIS_REST_URL = process.env.UPSTASH_REDIS_REST_URL
 export const UPSTASH_REDIS_REST_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN
 
 export const getAPIUrl = () => LEARNHOUSE_API_URL
 export const getBackendUrl = () => LEARNHOUSE_BACKEND_URL
 
-// Multi Organization Mode
-export const isMultiOrgModeEnabled = () =>
-  process.env.NEXT_PUBLIC_LEARNHOUSE_MULTI_ORG === 'true' ? true : false
+export const isMultiOrgModeEnabled = () => process.env.NEXT_PUBLIC_LEARNHOUSE_MULTI_ORG === 'true'
+export const isCustomDomainsEnabled = () => Boolean(getCookieValue('learnhouseCustomDomain'))
+
+const getCustomDomain = () => getCookieValue('learnhouseCustomDomain')
+
+const getDomain = () => {
+  if (isCustomDomainsEnabled()) {
+    return getCustomDomain()
+  }
+  return isMultiOrgModeEnabled() ? `${LEARNHOUSE_DOMAIN}` : LEARNHOUSE_DOMAIN
+}
 
 export const getUriWithOrg = (orgslug: string, path: string) => {
-  const multi_org = isMultiOrgModeEnabled()
-  if (multi_org) {
-    return `${LEARNHOUSE_HTTP_PROTOCOL}${orgslug}.${LEARNHOUSE_DOMAIN}${path}`
-  }
-  return `${LEARNHOUSE_HTTP_PROTOCOL}${LEARNHOUSE_DOMAIN}${path}`
+  const domain = getDomain()
+  const subdomain = isMultiOrgModeEnabled() && !isCustomDomainsEnabled() ? `${orgslug}.` : ''
+  return `${LEARNHOUSE_HTTP_PROTOCOL}${subdomain}${domain}${path}`
 }
 
 export const getUriWithoutOrg = (path: string) => {
-  const multi_org = isMultiOrgModeEnabled()
-  if (multi_org) {
-    return `${LEARNHOUSE_HTTP_PROTOCOL}${LEARNHOUSE_DOMAIN}${path}`
-  }
-  return `${LEARNHOUSE_HTTP_PROTOCOL}${LEARNHOUSE_DOMAIN}${path}`
+  const domain = getDomain()
+  return `${LEARNHOUSE_HTTP_PROTOCOL}${domain}${path}`
 }
 
-export const getOrgFromUri = () => {
-  const multi_org = isMultiOrgModeEnabled()
-  if (multi_org) {
-    getDefaultOrg()
-  } else {
-    if (typeof window !== 'undefined') {
-      const hostname = window.location.hostname
+export const getDefaultOrg = () => process.env.NEXT_PUBLIC_LEARNHOUSE_DEFAULT_ORG
 
-      return hostname.replace(`.${LEARNHOUSE_DOMAIN}`, '')
-    }
-  }
-}
-
-export const getDefaultOrg = () => {
-  return process.env.NEXT_PUBLIC_LEARNHOUSE_DEFAULT_ORG
-}
-
-export const getCollaborationServerUrl = () => {
-  return `${LEARNHOUSE_COLLABORATION_WS_URL}`
-}
+export const getCollaborationServerUrl = () => `${LEARNHOUSE_COLLABORATION_WS_URL}`

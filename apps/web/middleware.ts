@@ -8,7 +8,7 @@ import {
 } from './services/config/config'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { getOrgSlugFromCustomDomainRegistry } from '@services/config/utils'
+import { getDataFromCustomDomainRegistry } from '@services/config/utils'
 
 export const config = {
   matcher: [
@@ -32,7 +32,7 @@ export default async function middleware(req: NextRequest) {
   const { pathname, search } = req.nextUrl
   const fullhost = req.headers ? req.headers.get('host') : ''
   const cleanDomain = fullhost ? fullhost.split(':')[0] : null
-  const cookie_orgslug = req.cookies.get('learnhouse_current_orgslug')?.value
+  const cookie_orgslug = req.cookies.get('learnhouseOrgSlug')?.value
   let orgslug = fullhost
     ? fullhost.replace(`.${LEARNHOUSE_DOMAIN}`, '')
     : (default_org as string)
@@ -56,7 +56,7 @@ export default async function middleware(req: NextRequest) {
 
     if (orgslug) {
       response.cookies.set({
-        name: 'learnhouse_current_orgslug',
+        name: 'learnhouseOrgSlug',
         value: orgslug,
         domain:
           LEARNHOUSE_TOP_DOMAIN == 'localhost' ? '' : LEARNHOUSE_TOP_DOMAIN,
@@ -111,12 +111,12 @@ export default async function middleware(req: NextRequest) {
     // Check custom domain first
     let orgslug = orgslugFromSubdomain // Set a default value
 
-    const orgSlugFromCustomDomain =
-      await getOrgSlugFromCustomDomainRegistry(cleanDomain)
+    const InfoFromCustomDomain =
+      await getDataFromCustomDomainRegistry(cleanDomain)
 
     // If custom domain exists, override the orgslug from subdomain
-    if (orgSlugFromCustomDomain) {
-      orgslug = orgSlugFromCustomDomain
+    if (InfoFromCustomDomain) {
+      orgslug = InfoFromCustomDomain.orgslug
     }
 
     const response = NextResponse.rewrite(
@@ -125,11 +125,21 @@ export default async function middleware(req: NextRequest) {
 
     // Set the cookie with the orgslug value
     response.cookies.set({
-      name: 'learnhouse_current_orgslug',
+      name: 'learnhouseOrgSlug',
       value: orgslug,
       domain: LEARNHOUSE_TOP_DOMAIN == 'localhost' ? '' : LEARNHOUSE_TOP_DOMAIN,
       path: '/',
     })
+
+    // Set the cookie with he customDomain
+    if (InfoFromCustomDomain) {
+      response.cookies.set({
+        name: 'learnhouseCustomDomain',
+        value: InfoFromCustomDomain.domain,
+        domain: InfoFromCustomDomain.domain,
+        path: '/',
+      })
+    }
 
     return response
   }
@@ -144,7 +154,7 @@ export default async function middleware(req: NextRequest) {
 
     // Set the cookie with the orgslug value
     response.cookies.set({
-      name: 'learnhouse_current_orgslug',
+      name: 'learnhouseOrgSlug',
       value: orgslug,
       domain: LEARNHOUSE_TOP_DOMAIN == 'localhost' ? '' : LEARNHOUSE_TOP_DOMAIN,
       path: '/',
