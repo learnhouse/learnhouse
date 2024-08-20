@@ -20,7 +20,6 @@ from src.services.orgs.users import (
 from src.db.organization_config import OrganizationConfigBase
 from src.db.users import PublicUser
 from src.db.organizations import (
-    Organization,
     OrganizationCreate,
     OrganizationRead,
     OrganizationUpdate,
@@ -321,7 +320,7 @@ async def api_user_orgs(
     limit: int,
     current_user: PublicUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
-) -> List[Organization]:
+) -> List[OrganizationRead]:
     """
     Get orgs by page and limit by current user
     """
