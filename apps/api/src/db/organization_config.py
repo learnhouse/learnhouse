@@ -83,12 +83,18 @@ class OrgGeneralConfig(BaseModel):
     color: str = "normal"
     watermark: bool = True
 
+# Cloud
+class OrgCloudConfig(BaseModel):
+    plan: Literal["free", "standard", "pro"] = "free"
+    custom_domain: bool = False
+
 
 # Main Config
 class OrganizationConfigBase(BaseModel):
-    config_version: str = "1.0"
+    config_version: str = "1.1"
     general: OrgGeneralConfig
     features: OrgFeatureConfig
+    cloud: OrgCloudConfig
 
 
 class OrganizationConfig(SQLModel, table=True):
