@@ -13,6 +13,7 @@ from src.db.organization_config import (
     CourseOrgConfig,
     DiscussionOrgConfig,
     MemberOrgConfig,
+    OrgCloudConfig,
     OrgFeatureConfig,
     OrgGeneralConfig,
     OrganizationConfig,
@@ -178,6 +179,10 @@ async def create_org(
             collaboration=CollaborationOrgConfig(enabled=True, limit=0),
             api=APIOrgConfig(enabled=True, limit=0),
         ),
+        cloud=OrgCloudConfig(
+            plan='free',
+            custom_domain=False
+        )
     )
 
     org_config = json.loads(org_config.json())
