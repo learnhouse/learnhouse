@@ -209,6 +209,7 @@ async def create_org(
 
     return org
 
+
 async def create_org_with_config(
     request: Request,
     org_object: OrganizationCreate,
@@ -338,6 +339,7 @@ async def update_org(
 
     return org
 
+
 async def update_org_with_config_no_auth(
     request: Request,
     orgconfig: OrganizationConfigBase,
@@ -462,20 +464,43 @@ async def get_orgs_by_user(
     user_id: str,
     page: int = 1,
     limit: int = 10,
-) -> list[Organization]:
+) -> list[OrganizationRead]:
+
     statement = (
         select(Organization)
         .join(UserOrganization)
         .where(
-            Organization.id == UserOrganization.org_id,
             UserOrganization.user_id == user_id,
+            UserOrganization.role_id == 1,  # Only where the user is admin
         )
+        .offset((page - 1) * limit)
+        .limit(limit)
     )
-    result = db_session.exec(statement)
 
+    # Get organizations where the user is an admin
+    result = db_session.exec(statement)
     orgs = result.all()
 
-    return orgs #type:ignore
+    orgsWithConfig = []
+
+    for org in orgs:
+
+        # Get org config
+        statement = select(OrganizationConfig).where(
+            OrganizationConfig.org_id == org.id
+        )
+        result = db_session.exec(statement)
+
+        org_config = result.first()
+
+        config = OrganizationConfig.model_validate(org_config) if org_config else {}
+
+        org = OrganizationRead(**org.model_dump(), config=config)
+
+        orgsWithConfig.append(org)
+
+    return orgsWithConfig
+
 
 # Config related
 async def update_org_signup_mechanism(
