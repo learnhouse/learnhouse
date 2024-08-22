@@ -13,7 +13,7 @@ type MetadataProps = {
 export async function generateMetadata({
   params,
 }: MetadataProps): Promise<Metadata> {
-  const session = await getServerSession(nextAuthOptions)
+  const session = await getServerSession(nextAuthOptions())
   const access_token = session?.tokens?.access_token
   // Get Org context information
   const org = await getOrganizationContextInfo(params.orgslug, {

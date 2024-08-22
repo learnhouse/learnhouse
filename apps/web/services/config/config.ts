@@ -16,7 +16,7 @@ export const getBackendUrl = () => LEARNHOUSE_BACKEND_URL
 export const isMultiOrgModeEnabled = () =>
   process.env.NEXT_PUBLIC_LEARNHOUSE_MULTI_ORG === 'true'
 
-const getDomain = (cookies?: any) => {
+export const getDomain = (cookies?: any) => {
   if (cookies && cookies.learnhouseCustomDomain) {
     return cookies.learnhouseCustomDomain
   } else {
@@ -48,6 +48,15 @@ export const getUriWithoutOrg = (path: string, cookies?: any) => {
     }
   }
   return `${LEARNHOUSE_HTTP_PROTOCOL}${LEARNHOUSE_DOMAIN}${path}`
+}
+
+export const getUriForAuth = (path: string, cookies?: any) => {
+  const multi_org = isMultiOrgModeEnabled()
+  if (multi_org) {
+    return `${LEARNHOUSE_HTTP_PROTOCOL}${LEARNHOUSE_DOMAIN}${path}`
+  } else {
+    return `${LEARNHOUSE_HTTP_PROTOCOL}${LEARNHOUSE_DOMAIN}${path}`
+  }
 }
 
 export const getDefaultOrg = () =>

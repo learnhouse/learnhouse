@@ -49,7 +49,7 @@ async function CoursesPage(params: any) {
     revalidate: 1800,
     tags: ['organizations'],
   })
-  const session = await getServerSession(nextAuthOptions)
+  const session = await getServerSession(nextAuthOptions())
   const access_token = session?.tokens?.access_token
   const courses = await getOrgCourses(
     orgslug,

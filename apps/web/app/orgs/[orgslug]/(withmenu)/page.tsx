@@ -56,7 +56,7 @@ export async function generateMetadata({
 const OrgHomePage = async (params: any) => {
   const orgslug = params.params.orgslug
   const cookieStore = cookies()
-  const session = await getServerSession(nextAuthOptions)
+  const session = await getServerSession(nextAuthOptions())
   const access_token = session?.tokens?.access_token
   const courses = await getOrgCourses(
     orgslug,

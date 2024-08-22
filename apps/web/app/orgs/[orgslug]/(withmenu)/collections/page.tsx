@@ -11,7 +11,8 @@ import ContentPlaceHolderIfUserIsNotAdmin from '@components/ContentPlaceHolder'
 import { nextAuthOptions } from 'app/auth/options'
 import { getServerSession } from 'next-auth'
 import { getOrgCollections } from '@services/courses/collections'
-import { useCookies } from '@components/Contexts/CookiesContext'
+import { cookies } from 'next/headers'
+
 
 type MetadataProps = {
   params: { orgslug: string; courseid: string }
@@ -50,8 +51,8 @@ export async function generateMetadata({
 }
 
 const CollectionsPage = async (params: any) => {
-  const session = await getServerSession(nextAuthOptions)
-  const cookies = useCookies() as any;
+  const cookieStore = cookies()
+  const session = await getServerSession(nextAuthOptions())
   const access_token = session?.tokens?.access_token
   const orgslug = params.params.orgslug
   const org = await getOrganizationContextInfo(orgslug, {

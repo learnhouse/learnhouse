@@ -7,6 +7,7 @@ import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { nextAuthOptions } from 'app/auth/options'
 import { Metadata } from 'next'
 import { getServerSession } from 'next-auth'
+import { cookies } from 'next/headers'
 import Link from 'next/link'
 
 type MetadataProps = {
@@ -17,7 +18,8 @@ type MetadataProps = {
 export async function generateMetadata({
   params,
 }: MetadataProps): Promise<Metadata> {
-  const session = await getServerSession(nextAuthOptions)
+  const cookiesStore = cookies()
+  const session = await getServerSession(nextAuthOptions())
   const access_token = session?.tokens?.access_token
 
   // Get Org context information
@@ -54,8 +56,9 @@ export async function generateMetadata({
 }
 
 const CollectionPage = async (params: any) => {
-  const session = await getServerSession(nextAuthOptions)
   const cookies = useCookies() as any;
+
+  const session = await getServerSession(nextAuthOptions())
   const access_token = session?.tokens?.access_token
   const org = await getOrganizationContextInfo(params.params.orgslug, {
     revalidate: 1800,

@@ -7,7 +7,7 @@ import UserAvatar from '@components/Objects/UserAvatar'
 import useAdminStatus from '@components/Hooks/useAdminStatus'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
-import { getUriWithoutOrg } from '@services/config/config'
+import { getUriForAuth, getUriWithoutOrg } from '@services/config/config'
 import { useCookies } from '@components/Contexts/CookiesContext'
 
 export const HeaderProfileBox = () => {
@@ -26,10 +26,10 @@ export const HeaderProfileBox = () => {
           <ul className="flex space-x-3 items-center">
             <li>
               <Link
-                href={{ pathname: getUriWithoutOrg('/login', cookies), query: org ? { orgslug: org.slug } : null }} >Login</Link>
+                href={{ pathname: getUriForAuth('/login', cookies), query: org ? { orgslug: org.slug } : null }} >Login</Link>
             </li>
             <li className="bg-black rounded-lg shadow-md p-2 px-3 text-white">
-              <Link href={{ pathname: getUriWithoutOrg('/signup', cookies), query: org ? { orgslug: org.slug } : null }}>Sign up</Link>
+              <Link href={{ pathname: getUriForAuth('/signup', cookies), query: org ? { orgslug: org.slug } : null }}>Sign up</Link>
             </li>
           </ul>
         </UnidentifiedArea>

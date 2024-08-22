@@ -8,6 +8,7 @@ import EditorOptionsProvider from '@components/Contexts/Editor/EditorContext'
 import AIEditorProvider from '@components/Contexts/AI/AIEditorContext'
 import { nextAuthOptions } from 'app/auth/options'
 import { getServerSession } from 'next-auth'
+import { cookies } from 'next/headers'
 const EditorWrapper = dynamic(() => import('@components/Objects/Editor/EditorWrapper'), { ssr: false })
 
 
@@ -19,7 +20,8 @@ type MetadataProps = {
 export async function generateMetadata({
   params,
 }: MetadataProps): Promise<Metadata> {
-  const session = await getServerSession(nextAuthOptions)
+  const cookieStore = cookies()
+  const session = await getServerSession(nextAuthOptions())
   const access_token = session?.tokens?.access_token
   // Get Org context information
   const course_meta = await getCourseMetadata(
@@ -35,7 +37,8 @@ export async function generateMetadata({
 }
 
 const EditActivity = async (params: any) => {
-  const session = await getServerSession(nextAuthOptions)
+  const cookieStore = cookies()
+  const session = await getServerSession(nextAuthOptions())
   const access_token = session?.tokens?.access_token
   const activityuuid = params.params.activityuuid
   const courseid = params.params.courseid
