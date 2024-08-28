@@ -158,7 +158,7 @@ async def create_org(
     db_session.refresh(user_org)
 
     org_config = org_config = OrganizationConfigBase(
-        config_version="1.0",
+        config_version="1.1å",
         general=OrgGeneralConfig(
             enabled=True,
             color="normal",
