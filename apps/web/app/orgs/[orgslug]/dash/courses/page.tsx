@@ -2,9 +2,8 @@ import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { Metadata } from 'next'
 import React from 'react'
 import CoursesHome from './client'
-import { nextAuthOptions } from 'app/auth/options'
-import { getServerSession } from 'next-auth'
 import { getOrgCourses } from '@services/courses/courses'
+import { auth } from 'app/auth/auth'
 
 type MetadataProps = {
   params: { orgslug: string }
@@ -49,8 +48,7 @@ async function CoursesPage(params: any) {
     revalidate: 1800,
     tags: ['organizations'],
   })
-  const session = await getServerSession(nextAuthOptions())
-  const access_token = session?.tokens?.access_token
+const session = await auth() as any;  const access_token = session?.tokens?.access_token
   const courses = await getOrgCourses(
     orgslug,
     { revalidate: 0, tags: ['courses'] },

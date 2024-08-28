@@ -14,8 +14,7 @@ import NewCourseButton from '@components/StyledElements/Buttons/NewCourseButton'
 import NewCollectionButton from '@components/StyledElements/Buttons/NewCollectionButton'
 import ContentPlaceHolderIfUserIsNotAdmin from '@components/ContentPlaceHolder'
 import { getOrgCollections } from '@services/courses/collections'
-import { getServerSession } from 'next-auth'
-import { nextAuthOptions } from 'app/auth/options'
+import { auth } from 'app/auth/auth'
 
 type MetadataProps = {
   params: { orgslug: string }
@@ -56,8 +55,7 @@ export async function generateMetadata({
 const OrgHomePage = async (params: any) => {
   const orgslug = params.params.orgslug
   const cookieStore = cookies()
-  const session = await getServerSession(nextAuthOptions())
-  const access_token = session?.tokens?.access_token
+const session = await auth() as any;  const access_token = session?.tokens?.access_token
   const courses = await getOrgCourses(
     orgslug,
     { revalidate: 0, tags: ['courses'] },

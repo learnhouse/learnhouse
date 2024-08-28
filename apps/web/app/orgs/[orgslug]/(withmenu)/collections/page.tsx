@@ -8,10 +8,9 @@ import Link from 'next/link'
 import CollectionThumbnail from '@components/Objects/Thumbnails/CollectionThumbnail'
 import NewCollectionButton from '@components/StyledElements/Buttons/NewCollectionButton'
 import ContentPlaceHolderIfUserIsNotAdmin from '@components/ContentPlaceHolder'
-import { nextAuthOptions } from 'app/auth/options'
-import { getServerSession } from 'next-auth'
 import { getOrgCollections } from '@services/courses/collections'
 import { cookies } from 'next/headers'
+import { auth } from 'app/auth/auth'
 
 
 type MetadataProps = {
@@ -52,8 +51,7 @@ export async function generateMetadata({
 
 const CollectionsPage = async (params: any) => {
   const cookieStore = cookies()
-  const session = await getServerSession(nextAuthOptions())
-  const access_token = session?.tokens?.access_token
+const session = await auth() as any;  const access_token = session?.tokens?.access_token
   const orgslug = params.params.orgslug
   const org = await getOrganizationContextInfo(orgslug, {
     revalidate: 1800,

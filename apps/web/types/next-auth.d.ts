@@ -1,5 +1,5 @@
 // eslint-disable-next-line unused-imports/no-unused-imports
-import type { NextAuthOptions } from 'next-auth/index';
+import type { nextAuthConfig } from 'next-auth/index';
 
 // next-auth.d.ts
 declare module 'next-auth' {

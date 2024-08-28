@@ -1,7 +1,7 @@
 'use client'
 import { OrgProvider } from '@components/Contexts/OrgContext'
 import ErrorUI from '@components/StyledElements/Error/Error'
-import { useSearchParams } from 'next/navigation'
+import { useParams } from 'next/navigation'
 
 
 export default function AuthLayout({
@@ -9,8 +9,8 @@ export default function AuthLayout({
 }: {
     children: React.ReactNode
 }) {
-    const searchParams = useSearchParams()
-    const orgslug = searchParams.get('orgslug')
+    const params = useParams<{ orgslug: string; }>()
+    const orgslug = params.orgslug
     if (orgslug) {
         return <OrgProvider orgslug={orgslug}>{children}</OrgProvider>
     } else {

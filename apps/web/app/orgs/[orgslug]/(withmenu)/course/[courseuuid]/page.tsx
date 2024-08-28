@@ -4,9 +4,8 @@ import { getCourseMetadata } from '@services/courses/courses'
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { Metadata } from 'next'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
-import { nextAuthOptions } from 'app/auth/options'
-import { getServerSession } from 'next-auth'
 import { cookies } from 'next/headers'
+import { auth } from 'app/auth/auth'
 
 type MetadataProps = {
   params: { orgslug: string; courseuuid: string }
@@ -17,8 +16,7 @@ export async function generateMetadata({
   params,
 }: MetadataProps): Promise<Metadata> {
   const cookiesStore = cookies()
-  const session = await getServerSession(nextAuthOptions())
-  const access_token = session?.tokens?.access_token
+  const session = await auth() as any; const access_token = session?.tokens?.access_token
 
   // Get Org context information
   const org = await getOrganizationContextInfo(params.orgslug, {
@@ -72,7 +70,7 @@ const CoursePage = async (params: any) => {
   const cookiestore = cookies()
   const courseuuid = params.params.courseuuid
   const orgslug = params.params.orgslug
-  const session = await getServerSession(nextAuthOptions(cookiestore))
+  const session = await auth() as any;
   const access_token = session?.tokens?.access_token
   const course_meta = await getCourseMetadata(
     courseuuid,

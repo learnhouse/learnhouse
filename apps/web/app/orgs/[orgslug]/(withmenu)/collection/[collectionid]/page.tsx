@@ -4,9 +4,8 @@ import { getUriWithOrg } from '@services/config/config'
 import { getCollectionById } from '@services/courses/collections'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
-import { nextAuthOptions } from 'app/auth/options'
+import { auth } from 'app/auth/auth'
 import { Metadata } from 'next'
-import { getServerSession } from 'next-auth'
 import { cookies } from 'next/headers'
 import Link from 'next/link'
 
@@ -19,8 +18,7 @@ export async function generateMetadata({
   params,
 }: MetadataProps): Promise<Metadata> {
   const cookiesStore = cookies()
-  const session = await getServerSession(nextAuthOptions())
-  const access_token = session?.tokens?.access_token
+const session = await auth() as any;  const access_token = session?.tokens?.access_token
 
   // Get Org context information
   const org = await getOrganizationContextInfo(params.orgslug, {
@@ -58,8 +56,7 @@ export async function generateMetadata({
 const CollectionPage = async (params: any) => {
   const cookies = useCookies() as any;
 
-  const session = await getServerSession(nextAuthOptions())
-  const access_token = session?.tokens?.access_token
+const session = await auth() as any;  const access_token = session?.tokens?.access_token
   const org = await getOrganizationContextInfo(params.params.orgslug, {
     revalidate: 1800,
     tags: ['organizations'],
