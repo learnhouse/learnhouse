@@ -330,7 +330,7 @@ def install_create_organization(org_object: OrganizationCreate, db_session: Sess
 
     # Org Config
     org_config = OrganizationConfigBase(
-        config_version="1.0",
+        config_version="1.1",
         general=OrgGeneralConfig(
             enabled=True,
             color="normal",
