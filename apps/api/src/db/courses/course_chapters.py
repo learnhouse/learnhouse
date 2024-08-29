@@ -12,6 +12,8 @@ class CourseChapter(SQLModel, table=True):
     chapter_id: int = Field(
         sa_column=Column(Integer, ForeignKey("chapter.id", ondelete="CASCADE"))
     )
-    org_id: int = Field(default=None, foreign_key="organization.id")
+    org_id: int = Field(
+        sa_column=Column(Integer, ForeignKey("organization.id", ondelete="CASCADE"))
+    )
     creation_date: str
     update_date: str

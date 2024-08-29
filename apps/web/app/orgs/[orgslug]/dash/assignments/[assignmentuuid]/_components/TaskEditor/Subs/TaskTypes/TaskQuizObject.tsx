@@ -16,7 +16,7 @@ type QuizSchema = {
         text: string;
         fileID: string;
         type: 'text' | 'image' | 'audio' | 'video';
-        correct: boolean;
+        assigned_right_answer: boolean;
     }[];
 };
 
@@ -25,6 +25,7 @@ type QuizSubmitSchema = {
     submissions: {
         questionUUID: string;
         optionUUID: string;
+        answer: boolean
     }[];
 };
 
@@ -32,6 +33,12 @@ type TaskQuizObjectProps = {
     view: 'teacher' | 'student' | 'grading';
     user_id?: string; // Only for read-only view
     assignmentTaskUUID?: string;
+};
+
+type Submission = {
+    questionUUID: string;
+    optionUUID: string;
+    answer: boolean;
 };
 
 function TaskQuizObject({ view, assignmentTaskUUID, user_id }: TaskQuizObjectProps) {
@@ -44,7 +51,7 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id }: TaskQuizObjectPro
 
     /* TEACHER VIEW CODE */
     const [questions, setQuestions] = useState<QuizSchema[]>([
-        { questionText: '', questionUUID: 'question_' + uuidv4(), options: [{ text: '', fileID: '', type: 'text', correct: false, optionUUID: 'option_' + uuidv4() }] },
+        { questionText: '', questionUUID: 'question_' + uuidv4(), options: [{ text: '', fileID: '', type: 'text', assigned_right_answer: false, optionUUID: 'option_' + uuidv4() }] },
     ]);
 
     const handleQuestionChange = (index: number, value: string) => {
@@ -61,7 +68,7 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id }: TaskQuizObjectPro
 
     const addOption = (qIndex: number) => {
         const updatedQuestions = [...questions];
-        updatedQuestions[qIndex].options.push({ text: '', fileID: '', type: 'text', correct: false, optionUUID: 'option_' + uuidv4() });
+        updatedQuestions[qIndex].options.push({ text: '', fileID: '', type: 'text', assigned_right_answer: false, optionUUID: 'option_' + uuidv4() });
         setQuestions(updatedQuestions);
     };
 
@@ -72,7 +79,7 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id }: TaskQuizObjectPro
     };
 
     const addQuestion = () => {
-        setQuestions([...questions, { questionText: '', questionUUID: 'question_' + uuidv4(), options: [{ text: '', fileID: '', type: 'text', correct: false, optionUUID: 'option_' + uuidv4() }] }]);
+        setQuestions([...questions, { questionText: '', questionUUID: 'question_' + uuidv4(), options: [{ text: '', fileID: '', type: 'text', assigned_right_answer: false, optionUUID: 'option_' + uuidv4() }] }]);
     };
 
     const removeQuestion = (qIndex: number) => {
@@ -81,12 +88,12 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id }: TaskQuizObjectPro
         setQuestions(updatedQuestions);
     };
 
-    const toggleCorrectOption = (qIndex: number, oIndex: number) => {
+    const toggleOption = (qIndex: number, oIndex: number) => {
         const updatedQuestions = [...questions];
         // Find the option to toggle
         const optionToToggle = updatedQuestions[qIndex].options[oIndex];
         // Toggle the 'correct' property of the option
-        optionToToggle.correct = !optionToToggle.correct;
+        optionToToggle.assigned_right_answer = !optionToToggle.assigned_right_answer;
         setQuestions(updatedQuestions);
     };
 
@@ -123,20 +130,24 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id }: TaskQuizObjectPro
 
     async function chooseOption(qIndex: number, oIndex: number) {
         const updatedSubmissions = [...userSubmissions.submissions];
-        const questionUUID = questions[qIndex].questionUUID;
-        const optionUUID = questions[qIndex].options[oIndex].optionUUID;
+        const question = questions[qIndex];
+        const option = question?.options[oIndex];
 
-        // Check if this question already has a submission with the selected option
-        const existingSubmissionIndex = updatedSubmissions.findIndex(
+        if (!question || !option) return;
+
+        const questionUUID = question.questionUUID;
+        const optionUUID = option.optionUUID;
+
+        if (!questionUUID || !optionUUID) return;
+
+        const submissionIndex = updatedSubmissions.findIndex(
             (submission) => submission.questionUUID === questionUUID && submission.optionUUID === optionUUID
         );
 
-        if (existingSubmissionIndex === -1 && optionUUID && questionUUID) {
-            // If the selected option is not already chosen, add it to the submissions
-            updatedSubmissions.push({ questionUUID, optionUUID });
+        if (submissionIndex === -1) {
+            updatedSubmissions.push({ questionUUID, optionUUID, answer: true });
         } else {
-            // If the selected option is already chosen, remove it from the submissions
-            updatedSubmissions.splice(existingSubmissionIndex, 1);
+            updatedSubmissions[submissionIndex].answer = !updatedSubmissions[submissionIndex].answer;
         }
 
         setUserSubmissions({
@@ -176,12 +187,34 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id }: TaskQuizObjectPro
 
 
     const submitFC = async () => {
+        // Ensure all questions and options have submissions
+        const updatedSubmissions: Submission[] = questions.flatMap(question => {
+            return question.options.map(option => {
+                const existingSubmission = userSubmissions.submissions.find(
+                    submission => submission.questionUUID === question.questionUUID && submission.optionUUID === option.optionUUID
+                );
+                
+                return existingSubmission || {
+                    questionUUID: question.questionUUID || '',
+                    optionUUID: option.optionUUID || '',
+                    answer: false // Mark unsubmitted options as false
+                };
+            });
+        });
+
+        // Update userSubmissions with the complete set of submissions
+        const updatedUserSubmissions: QuizSubmitSchema = {
+            ...userSubmissions,
+            submissions: updatedSubmissions
+        };
+
         // Save the quiz to the server
         const values = {
-            task_submission: userSubmissions,
+            task_submission: updatedUserSubmissions,
             grade: 0,
             task_submission_grade_feedback: '',
         };
+
         if (assignmentTaskUUID) {
             const res = await handleAssignmentTaskSubmission(values, assignmentTaskUUID, assignment.assignment_object.assignment_uuid, access_token);
             if (res) {
@@ -190,6 +223,7 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id }: TaskQuizObjectPro
                 });
                 toast.success('Task saved successfully');
                 setShowSavingDisclaimer(false);
+                setUserSubmissions(updatedUserSubmissions);
             } else {
                 toast.error('Error saving task, please retry later.');
             }
@@ -214,38 +248,30 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id }: TaskQuizObjectPro
 
     async function gradeFC() {
         if (assignmentTaskUUID) {
-            // Ensure maxPoints is defined
-            const maxPoints = assignmentTaskOutsideProvider?.max_grade_value || 100; // Default to 100 if not defined
-    
-            // Ensure userSubmissions.questions are set
-            const totalQuestions = questions.length;
-            let correctQuestions = 0;
-            let incorrectQuestions = 0;
-    
-            userSubmissions.submissions.forEach((submission) => {
-                const question = questions.find((q) => q.questionUUID === submission.questionUUID);
-                const option = question?.options.find((o) => o.optionUUID === submission.optionUUID);
-                if (option?.correct) {
-                    correctQuestions++;
-                } else {
-                    incorrectQuestions++;
-                }
+            const maxPoints = assignmentTaskOutsideProvider?.max_grade_value || 100;
+            const totalOptions = questions.reduce((total, question) => total + question.options.length, 0);
+            let correctAnswers = 0;
+
+            questions.forEach((question) => {
+                question.options.forEach((option) => {
+                    const submission = userSubmissions.submissions.find(
+                        (sub) => sub.questionUUID === question.questionUUID && sub.optionUUID === option.optionUUID
+                    );
+                    if (submission?.answer === option.assigned_right_answer) {
+                        correctAnswers++;
+                    }
+                });
             });
-    
-            // Calculate grade with penalties for incorrect answers
-            const pointsPerQuestion = maxPoints / totalQuestions;
-            const rawGrade = (correctQuestions - incorrectQuestions) * pointsPerQuestion;
-    
-            // Ensure the grade is within the valid range
-            const finalGrade = Math.max(0, Math.min(rawGrade, maxPoints));
-    
+
+            const finalGrade = Math.round((correctAnswers / totalOptions) * maxPoints);
+
             // Save the grade to the server
             const values = {
                 task_submission: userSubmissions,
                 grade: finalGrade,
                 task_submission_grade_feedback: 'Auto graded by system',
             };
-    
+
             const res = await handleAssignmentTaskSubmission(values, assignmentTaskUUID, assignment.assignment_object.assignment_uuid, access_token);
             if (res) {
                 getAssignmentTaskSubmissionFromIdentifiedUserUI();
@@ -255,8 +281,8 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id }: TaskQuizObjectPro
             }
         }
     }
-    
-    
+
+
 
     /* GRADING VIEW CODE */
 
@@ -337,15 +363,15 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id }: TaskQuizObjectPro
                                             {view === 'teacher' && (
                                                 <>
                                                     <div
-                                                        className={`w-fit flex-none flex text-xs px-2 py-0.5 space-x-1 items-center h-fit rounded-lg ${option.correct ? 'bg-lime-200 text-lime-600' : 'bg-rose-200/60 text-rose-500'
+                                                        className={`w-fit flex-none flex text-xs px-2 py-0.5 space-x-1 items-center h-fit rounded-lg ${option.assigned_right_answer ? 'bg-lime-200 text-lime-600' : 'bg-rose-200/60 text-rose-500'
                                                             } hover:bg-lime-300 text-sm transition-all ease-linear cursor-pointer`}
-                                                        onClick={() => toggleCorrectOption(qIndex, oIndex)}
+                                                        onClick={() => toggleOption(qIndex, oIndex)}
                                                     >
-                                                        {option.correct ? <Check size={12} className="mx-auto" /> : <X size={12} className="mx-auto" />}
-                                                        {option.correct ? (
-                                                            <p className="mx-auto font-bold text-xs">Correct</p>
+                                                        {option.assigned_right_answer ? <Check size={12} className="mx-auto" /> : <X size={12} className="mx-auto" />}
+                                                        {option.assigned_right_answer ? (
+                                                            <p className="mx-auto font-bold text-xs">True</p>
                                                         ) : (
-                                                            <p className="mx-auto font-bold text-xs">Incorrect</p>
+                                                            <p className="mx-auto font-bold text-xs">False</p>
                                                         )}
                                                     </div>
                                                     <div
@@ -359,30 +385,38 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id }: TaskQuizObjectPro
                                             {view === 'grading' && (
                                                 <>
                                                     <div
-                                                        className={`w-fit flex-none flex text-xs px-2 py-0.5 space-x-1 items-center h-fit rounded-lg ${option.correct ? 'bg-lime-200 text-lime-600' : 'bg-rose-200/60 text-rose-500'
+                                                        className={`w-fit flex-none flex text-xs px-2 py-0.5 space-x-1 items-center h-fit rounded-lg ${option.assigned_right_answer ? 'bg-lime-200 text-lime-600' : 'bg-rose-200/60 text-rose-500'
                                                             } hover:bg-lime-300 text-sm transition-all ease-linear cursor-pointer`}
                                                     >
-                                                        {option.correct ? <Check size={12} className="mx-auto" /> : <X size={12} className="mx-auto" />}
-                                                        {option.correct ? (
-                                                            <p className="mx-auto font-bold text-xs">Marked as Correct</p>
+                                                        {option.assigned_right_answer ? <Check size={12} className="mx-auto" /> : <X size={12} className="mx-auto" />}
+                                                        {option.assigned_right_answer ? (
+                                                            <p className="mx-auto font-bold text-xs">Marked as True</p>
                                                         ) : (
-                                                            <p className="mx-auto font-bold text-xs">Marked as Incorrect</p>
+                                                            <p className="mx-auto font-bold text-xs">Marked as False</p>
                                                         )}
                                                     </div>
 
                                                 </>
                                             )}
                                             {view === 'student' && (
-                                                <div className={`w-[20px] flex-none flex items-center h-[20px] rounded-lg ${userSubmissions.submissions.find(
-                                                    (submission) =>
-                                                        submission.questionUUID === question.questionUUID && submission.optionUUID === option.optionUUID
-                                                )
-                                                    ? "bg-green-200/60 text-green-500 hover:bg-green-300" // Selected state colors
-                                                    : "bg-slate-200/60 text-slate-500 hover:bg-slate-300" // Default state colors
-                                                    } text-sm transition-all ease-linear cursor-pointer`}>
+                                                <div 
+                                                    className={`w-[20px] flex-none flex items-center h-[20px] rounded-lg ${
+                                                        userSubmissions.submissions.find(
+                                                            (submission) =>
+                                                                submission.questionUUID === question.questionUUID &&
+                                                                submission.optionUUID === option.optionUUID &&
+                                                                submission.answer
+                                                        )
+                                                            ? "bg-green-200/60 text-green-500 hover:bg-green-300"
+                                                            : "bg-slate-200/60 text-slate-500 hover:bg-slate-300"
+                                                    } text-sm transition-all ease-linear cursor-pointer`}
+                                                    onClick={() => chooseOption(qIndex, oIndex)}
+                                                >
                                                     {userSubmissions.submissions.find(
                                                         (submission) =>
-                                                            submission.questionUUID === question.questionUUID && submission.optionUUID === option.optionUUID
+                                                            submission.questionUUID === question.questionUUID &&
+                                                            submission.optionUUID === option.optionUUID &&
+                                                            submission.answer
                                                     ) ? (
                                                         <Check size={12} className="mx-auto" />
                                                     ) : (
@@ -391,22 +425,30 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id }: TaskQuizObjectPro
                                                 </div>
                                             )}
                                             {view === 'grading' && (
-                                                <div className={`w-[20px] flex-none flex items-center h-[20px] rounded-lg ${userSubmissions.submissions.find(
-                                                    (submission) =>
-                                                        submission.questionUUID === question.questionUUID && submission.optionUUID === option.optionUUID
-                                                )
-                                                    ? "bg-green-200/60 text-green-500 hover:bg-green-300" // Selected state colors
-                                                    : "bg-slate-200/60 text-slate-500 hover:bg-slate-300" // Default state colors
-                                                    } text-sm transition-all ease-linear cursor-pointer`}>
-                                                    {userSubmissions.submissions.find(
-                                                        (submission) =>
-                                                            submission.questionUUID === question.questionUUID && submission.optionUUID === option.optionUUID
-                                                    ) ? (
-                                                        <Check size={12} className="mx-auto" />
-                                                    ) : (
-                                                        <X size={12} className="mx-auto" />
-                                                    )}
-                                                </div>
+                                                <>
+                                                   
+                                                    <div className={`w-[20px] flex-none flex items-center h-[20px] rounded-lg ${
+                                                        userSubmissions.submissions.find(
+                                                            (submission) =>
+                                                                submission.questionUUID === question.questionUUID &&
+                                                                submission.optionUUID === option.optionUUID &&
+                                                                submission.answer
+                                                        )
+                                                            ? "bg-green-200/60 text-green-500"
+                                                            : "bg-slate-200/60 text-slate-500"
+                                                    } text-sm`}>
+                                                        {userSubmissions.submissions.find(
+                                                            (submission) =>
+                                                                submission.questionUUID === question.questionUUID &&
+                                                                submission.optionUUID === option.optionUUID &&
+                                                                submission.answer
+                                                        ) ? (
+                                                            <Check size={12} className="mx-auto" />
+                                                        ) : (
+                                                            <X size={12} className="mx-auto" />
+                                                        )}
+                                                    </div>
+                                                </>
                                             )}
 
                                         </div>

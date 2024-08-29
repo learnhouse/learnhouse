@@ -34,6 +34,7 @@ from src.services.orgs.orgs import (
     get_organization,
     get_organization_by_slug,
     get_orgs_by_user,
+    get_orgs_by_user_admin,
     update_org,
     update_org_logo,
     update_org_signup_mechanism,
@@ -325,6 +326,22 @@ async def api_user_orgs(
     Get orgs by page and limit by current user
     """
     return await get_orgs_by_user(
+        request, db_session, str(current_user.id), page, limit
+    )
+
+
+@router.get("/user_admin/page/{page}/limit/{limit}")
+async def api_user_orgs_admin(
+    request: Request,
+    page: int,
+    limit: int,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+) -> List[OrganizationRead]:
+    """
+    Get orgs by page and limit by current user
+    """
+    return await get_orgs_by_user_admin(
         request, db_session, str(current_user.id), page, limit
     )
 

@@ -1,5 +1,4 @@
 import { useAssignments } from '@components/Contexts/Assignments/AssignmentContext';
-import { useAssignmentsTask } from '@components/Contexts/Assignments/AssignmentsTaskContext';
 import { useCourse } from '@components/Contexts/CourseContext';
 import { useOrg } from '@components/Contexts/OrgContext';
 import { getTaskRefFileDir } from '@services/media/media';
