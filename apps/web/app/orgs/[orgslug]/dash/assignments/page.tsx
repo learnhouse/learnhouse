@@ -6,7 +6,7 @@ import { getAPIUrl, getUriWithOrg } from '@services/config/config';
 import { getAssignmentsFromACourse } from '@services/courses/assignments';
 import { getCourseThumbnailMediaDirectory } from '@services/media/media';
 import { swrFetcher } from '@services/utils/ts/requests';
-import { Book, EllipsisVertical, GalleryVertical, GalleryVerticalEnd, Info, Layers2, PenBox, UserRoundPen } from 'lucide-react';
+import { EllipsisVertical, GalleryVerticalEnd, Info, Layers2, UserRoundPen } from 'lucide-react';
 import Link from 'next/link';
 import React from 'react'
 import useSWR from 'swr';

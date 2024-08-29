@@ -158,7 +158,7 @@ async def create_org(
     db_session.refresh(user_org)
 
     org_config = org_config = OrganizationConfigBase(
-        config_version="1.0",
+        config_version="1.1å",
         general=OrgGeneralConfig(
             enabled=True,
             color="normal",
@@ -179,10 +179,7 @@ async def create_org(
             collaboration=CollaborationOrgConfig(enabled=True, limit=0),
             api=APIOrgConfig(enabled=True, limit=0),
         ),
-        cloud=OrgCloudConfig(
-            plan='free',
-            custom_domain=False
-        )
+        cloud=OrgCloudConfig(plan="free", custom_domain=False),
     )
 
     org_config = json.loads(org_config.json())
@@ -463,7 +460,7 @@ async def delete_org(
     return {"detail": "Organization deleted"}
 
 
-async def get_orgs_by_user(
+async def get_orgs_by_user_admin(
     request: Request,
     db_session: Session,
     user_id: str,
@@ -478,6 +475,47 @@ async def get_orgs_by_user(
             UserOrganization.user_id == user_id,
             UserOrganization.role_id == 1,  # Only where the user is admin
         )
+        .offset((page - 1) * limit)
+        .limit(limit)
+    )
+
+    # Get organizations where the user is an admin
+    result = db_session.exec(statement)
+    orgs = result.all()
+
+    orgsWithConfig = []
+
+    for org in orgs:
+
+        # Get org config
+        statement = select(OrganizationConfig).where(
+            OrganizationConfig.org_id == org.id
+        )
+        result = db_session.exec(statement)
+
+        org_config = result.first()
+
+        config = OrganizationConfig.model_validate(org_config) if org_config else {}
+
+        org = OrganizationRead(**org.model_dump(), config=config)
+
+        orgsWithConfig.append(org)
+
+    return orgsWithConfig
+
+
+async def get_orgs_by_user(
+    request: Request,
+    db_session: Session,
+    user_id: str,
+    page: int = 1,
+    limit: int = 10,
+) -> list[OrganizationRead]:
+
+    statement = (
+        select(Organization)
+        .join(UserOrganization)
+        .where(UserOrganization.user_id == user_id)
         .offset((page - 1) * limit)
         .limit(limit)
     )
