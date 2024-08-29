@@ -32,23 +32,19 @@ function QuizBlockComponent(props: any) {
   const isEditable = editorState.isEditable
 
   const handleAnswerClick = (question_id: string, answer_id: string) => {
-    // if the quiz is submitted, do nothing
-    if (submitted) {
-      return
+    if (submitted) return;
+
+    const existingAnswerIndex = userAnswers.findIndex(
+      (answer: any) => answer.question_id === question_id && answer.answer_id === answer_id
+    );
+
+    if (existingAnswerIndex !== -1) {
+      // Remove the answer if it's already selected
+      setUserAnswers(userAnswers.filter((_, index) => index !== existingAnswerIndex));
+    } else {
+      // Add the answer
+      setUserAnswers([...userAnswers, { question_id, answer_id }]);
     }
-
-    const userAnswer = {
-      question_id: question_id,
-      answer_id: answer_id,
-    }
-    const newAnswers = [...userAnswers, userAnswer]
-
-    // only accept one answer per question
-    const filteredAnswers = newAnswers.filter(
-      (answer: any) => answer.question_id !== question_id
-    )
-
-    setUserAnswers([...filteredAnswers, userAnswer])
   }
 
   const refreshUserSubmission = () => {
@@ -57,38 +53,31 @@ function QuizBlockComponent(props: any) {
   }
 
   const handleUserSubmission = () => {
-    if (userAnswers.length === 0) {
-      setSubmissionMessage('Please answer at least one question!')
-      return
-    }
+    setSubmitted(true);
 
-    setSubmitted(true)
-
-    // check if all submitted answers are correct
-    const correctAnswers = questions.map((question: Question) => {
-      const correctAnswer: any = question.answers.find(
-        (answer: Answer) => answer.correct
-      )
-      const userAnswer = userAnswers.find(
+    const correctAnswers = questions.every((question: Question) => {
+      const correctAnswers = question.answers.filter((answer: Answer) => answer.correct);
+      const userAnswersForQuestion = userAnswers.filter(
         (userAnswer: any) => userAnswer.question_id === question.question_id
-      )
-      if (correctAnswer.answer_id === userAnswer.answer_id) {
-        return true
-      } else {
-        return false
+      );
+
+      // If no correct answers are set and user didn't select any, it's correct
+      if (correctAnswers.length === 0 && userAnswersForQuestion.length === 0) {
+        return true;
       }
-    })
 
-    // check if all answers are correct
-    const allCorrect = correctAnswers.every(
-      (answer: boolean) => answer === true
-    )
+      // Check if user selected all correct answers and no incorrect ones
+      return (
+        correctAnswers.length === userAnswersForQuestion.length &&
+        correctAnswers.every((correctAnswer: Answer) =>
+          userAnswersForQuestion.some(
+            (userAnswer: any) => userAnswer.answer_id === correctAnswer.answer_id
+          )
+        )
+      );
+    });
 
-    if (allCorrect) {
-      setSubmissionMessage('All answers are correct!')
-    } else {
-      setSubmissionMessage('Some answers are incorrect!')
-    }
+    setSubmissionMessage(correctAnswers ? 'All answers are correct!' : 'Some answers are incorrect!');
   }
 
   const getAnswerID = (answerIndex: number, questionId: string) => {
@@ -204,19 +193,14 @@ function QuizBlockComponent(props: any) {
   const markAnswerCorrect = (question_id: string, answer_id: string) => {
     const newQuestions = questions.map((question: Question) => {
       if (question.question_id === question_id) {
-        question.answers.map((answer: Answer) => {
-          if (answer.answer_id === answer_id) {
-            answer.correct = true
-          } else {
-            answer.correct = false
-          }
-
-          return answer
-        })
+        question.answers = question.answers.map((answer: Answer) => ({
+          ...answer,
+          correct: answer.answer_id === answer_id ? !answer.correct : answer.correct,
+        }));
       }
-      return question
-    })
-    saveQuestions(newQuestions)
+      return question;
+    });
+    saveQuestions(newQuestions);
   }
 
   return (
@@ -308,29 +292,21 @@ function QuizBlockComponent(props: any) {
                     key={answer.answer_id}
                     className={twMerge(
                       'outline outline-3 pr-2 shadow w-full flex items-center space-x-2 h-[30px] bg-opacity-50 hover:bg-opacity-100 hover:shadow-md rounded-s rounded-lg bg-white text-sm hover:scale-105 active:scale-110 duration-150 cursor-pointer ease-linear',
-                      answer.correct && isEditable
-                        ? 'outline-lime-300'
-                        : 'outline-white',
-                      userAnswers.find(
+                      answer.correct && isEditable ? 'outline-lime-300' : 'outline-white',
+                      userAnswers.some(
                         (userAnswer: any) =>
                           userAnswer.question_id === question.question_id &&
                           userAnswer.answer_id === answer.answer_id &&
                           !isEditable
-                      )
-                        ? 'outline-slate-300'
-                        : '',
-                      submitted && answer.correct
-                        ? 'outline-lime-300 text-lime'
-                        : '',
+                      ) ? 'outline-slate-300' : '',
+                      submitted && answer.correct ? 'outline-lime-300 text-lime' : '',
                       submitted &&
                         !answer.correct &&
-                        userAnswers.find(
+                        userAnswers.some(
                           (userAnswer: any) =>
                             userAnswer.question_id === question.question_id &&
                             userAnswer.answer_id === answer.answer_id
-                        )
-                        ? 'outline-red-400'
-                        : ''
+                        ) ? 'outline-red-400' : ''
                     )}
                     onClick={() =>
                       handleAnswerClick(question.question_id, answer.answer_id)
@@ -347,7 +323,7 @@ function QuizBlockComponent(props: any) {
                           : '',
                         submitted &&
                           !answer.correct &&
-                          userAnswers.find(
+                          userAnswers.some(
                             (userAnswer: any) =>
                               userAnswer.question_id === question.question_id &&
                               userAnswer.answer_id === answer.answer_id
