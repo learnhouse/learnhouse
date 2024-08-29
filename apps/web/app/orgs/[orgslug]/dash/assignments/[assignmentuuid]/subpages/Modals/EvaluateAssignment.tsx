@@ -1,5 +1,5 @@
 import { useAssignments } from '@components/Contexts/Assignments/AssignmentContext';
-import { Apple, ArrowRightFromLine, BookOpenCheck, Check, Download, Info, Medal, MoveRight, X } from 'lucide-react';
+import { BookOpenCheck, Check, Download, Info, MoveRight, X } from 'lucide-react';
 import Link from 'next/link';
 import React from 'react'
 import TaskQuizObject from '../../_components/TaskEditor/Subs/TaskTypes/TaskQuizObject';
