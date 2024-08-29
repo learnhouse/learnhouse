@@ -4,7 +4,7 @@ import Modal from '@components/StyledElements/Modal/Modal';
 import { getAPIUrl } from '@services/config/config';
 import { getUserAvatarMediaDirectory } from '@services/media/media';
 import { swrFetcher } from '@services/utils/ts/requests';
-import { Loader, SendHorizonal, UserCheck, X } from 'lucide-react';
+import { SendHorizonal, UserCheck, X } from 'lucide-react';
 import React, { useEffect } from 'react';
 import useSWR from 'swr';
 import EvaluateAssignment from './Modals/EvaluateAssignment';
