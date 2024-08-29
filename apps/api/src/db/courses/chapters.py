@@ -9,7 +9,9 @@ class ChapterBase(SQLModel):
     name: str
     description: Optional[str] = ""
     thumbnail_image: Optional[str] = ""
-    org_id: int = Field(default=None, foreign_key="organization.id")
+    org_id: int = Field(
+        sa_column=Column("org_id", ForeignKey("organization.id", ondelete="CASCADE"))
+    )
     course_id: int = Field(
         sa_column=Column("course_id", ForeignKey("course.id", ondelete="CASCADE"))
     )
