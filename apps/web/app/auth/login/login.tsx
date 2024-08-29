@@ -170,7 +170,7 @@ const LoginClient = (props: LoginClientProps) => {
             </FormField>
             <div>
               <Link
-                href={getUriWithOrg(props.org.slug, '/forgot')}
+                href={{ pathname: getUriWithoutOrg('/forgot'), query: props.org.slug ? { orgslug: props.org.slug } : null }}
                 passHref
                 className="text-xs text-gray-500 hover:underline"
               >
