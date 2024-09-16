@@ -36,8 +36,10 @@ export async function getOrganizationContextInfo(
   next: any,
   access_token?: string
 ) {
+  console.log("org_slug" +org_slug);
   const result = await fetch(
-    `${getAPIUrl()}orgs/slug/${org_slug}`,
+    // `${getAPIUrl()}orgs/slug/${org_slug}`,
+    `${getAPIUrl()}orgs/slug/default`,
     RequestBodyWithAuthHeader('GET', null, next, access_token)
   )
   const res = await errorHandling(result)
@@ -70,7 +72,7 @@ export async function getOrganizationContextInfoWithoutCredentials(
     next: next,
   }
 
-  const result = await fetch(`${getAPIUrl()}orgs/slug/${org_slug}`, options)
+  const result = await fetch(`${getAPIUrl()}orgs/slug/default`, options)
   const res = await errorHandling(result)
   return res
 }

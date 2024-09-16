@@ -27,8 +27,10 @@ export default async function middleware(req: NextRequest) {
   // Get initial data
   const hosting_mode = isMultiOrgModeEnabled() ? 'multi' : 'single'
   const default_org = getDefaultOrg()
+  console.log("Default org " +default_org);
   const { pathname, search } = req.nextUrl
   const fullhost = req.headers ? req.headers.get('host') : ''
+  console.log("full host "+fullhost);
 
   const cleanDomain = fullhost ? fullhost.split(':')[0] : null
   let orgslug = fullhost

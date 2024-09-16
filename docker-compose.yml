@@ -1,22 +1,53 @@
+# version: "3.9"
+# services:
+#   app:
+#     build: .
+#     ports:
+#       - "80:80"
+#     volumes:
+#       - .:/usr/learnhouse
+#     env_file:
+#       - ./extra/example-learnhouse-conf.env
+#     depends_on:
+#       db:
+#         condition: service_healthy
+#       redis:
+#         condition: service_healthy
+#   collaboration:
+#     build: apps/collaboration/.
+#     ports:
+#       - "1998:1998"
+#   db:
+#     image: postgres:16-alpine
+#     restart: always
+#     ports:
+#       - "5432:5432"
+#     environment:
+#       - POSTGRES_USER=learnhouse
+#       - POSTGRES_PASSWORD=learnhouse
+#       - POSTGRES_DB=learnhouse
+#     healthcheck:
+#       test: ["CMD-SHELL", "pg_isready -U learnhouse"]
+#       interval: 5s
+#       timeout: 4s
+#       retries: 5
+#   redis:
+#     image: redis:7.2.3
+#     restart: always
+#     ports:
+#       - "6379:6379"
+#     healthcheck:
+#       test: ["CMD", "redis-cli", "ping"]
+#       interval: 5s
+#       timeout: 4s
+#       retries: 5
+#   chromadb:
+#     image: chromadb/chroma:latest
+#     ports:
+#       - "8000:8000"
+
 version: "3.9"
 services:
-  app:
-    build: .
-    ports:
-      - "80:80"
-    volumes:
-      - .:/usr/learnhouse
-    env_file:
-      - ./extra/example-learnhouse-conf.env
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-  collaboration:
-    build: apps/collaboration/.
-    ports:
-      - "1998:1998"
   db:
     image: postgres:16-alpine
     restart: always
@@ -31,6 +62,10 @@ services:
       interval: 5s
       timeout: 4s
       retries: 5
+  chromadb:
+    image: chromadb/chroma:latest
+    ports:
+      - "8000:8000"
   redis:
     image: redis:7.2.3
     restart: always
@@ -41,7 +76,3 @@ services:
       interval: 5s
       timeout: 4s
       retries: 5
-  chromadb:
-    image: chromadb/chroma:latest
-    ports:
-      - "8000:8000"

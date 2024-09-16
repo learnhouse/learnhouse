@@ -90,8 +90,12 @@ export const swrFetcher = async (url: string, token?: string) => {
 
   try {
     // Fetch the data
+    console.log("URL used in swrFetcher "+url)
+    
     const request = await fetch(url, options)
-    let res = errorHandling(request)
+    // let res = errorHandling(request)
+    const res = await errorHandling(request);
+
 
     // Return the data
     return res
@@ -100,14 +104,30 @@ export const swrFetcher = async (url: string, token?: string) => {
   }
 }
 
-export const errorHandling = (res: any) => {
+// export const errorHandling = (res: any) => {
+  
+//   // return res;
+//   if (!res.ok) {
+//     console.log(JSON.stringify(res))
+//     const error: any = new Error(`${res.statusText}`)
+//     error.status = res.status
+//     throw error
+//   }
+//   return res.json()
+// }
+export const errorHandling = async (res: any) => {
+  console.log("Error handling req "+res)  
   if (!res.ok) {
-    const error: any = new Error(`${res.statusText}`)
-    error.status = res.status
-    throw error
+    // Create an error object with status and message
+    const error: any = new Error(`Error: ${res.status} ${res.statusText}`);
+    error.status = res.status;
+    throw error;
   }
-  return res.json()
-}
+  
+  // Await the JSON response before returning
+  return await res.json();
+};
+
 
 type CustomResponseTyping = {
   success: boolean

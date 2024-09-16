@@ -9,7 +9,7 @@ general:
   install_mode: true
 
 security:
-  auth_jwt_secret_key: secret
+  auth_jwt_secret_key: m5Aglh02thazIeMlH/GQB1UVCWa1QWDsIImWAy2ZMt2u
 
 hosting_config:
   domain: learnhouse.app
@@ -28,8 +28,8 @@ hosting_config:
       endpoint_url: ""
 
 mailing_config:
-  resend_api_key: ""
-  system_email_adress: ""
+  resend_api_key: "re_VtHbgFbV_AdEJTchUp8agFpBSwdtmci5n"
+  system_email_adress: "delivered@resend.dev"
 
 database_config:
   sql_connection_string: postgresql://learnhouse:learnhouse@localhost:5432/learnhouse
