@@ -15,7 +15,7 @@ class OrganizationBase(SQLModel):
 
 
 class Organization(OrganizationBase, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int = Field(default=1, primary_key=True)
     org_uuid: str = ""
     creation_date: str = ""
     update_date: str = ""

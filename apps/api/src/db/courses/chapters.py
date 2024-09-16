@@ -1,6 +1,6 @@
 from typing import Any, List, Optional
 from pydantic import BaseModel
-from sqlalchemy import Column, ForeignKey
+from sqlalchemy import Column, ForeignKey, BigInteger
 from sqlmodel import Field, SQLModel
 from src.db.courses.activities import ActivityRead
 
@@ -10,7 +10,7 @@ class ChapterBase(SQLModel):
     description: Optional[str] = ""
     thumbnail_image: Optional[str] = ""
     org_id: int = Field(
-        sa_column=Column("org_id", ForeignKey("organization.id", ondelete="CASCADE"))
+        sa_column=Column(BigInteger, ForeignKey("organization.id", ondelete="CASCADE"))
     )
     course_id: int = Field(
         sa_column=Column("course_id", ForeignKey("course.id", ondelete="CASCADE"))
