@@ -44,7 +44,7 @@ function DynamicCanvaModal({ submitActivity, chapterId, course }: any) {
         <Flex css={{ alignItems: 'baseline', justifyContent: 'space-between' }}>
           <FormLabel>Activity name</FormLabel>
           <FormMessage match="valueMissing">
-            Please provide a name for your activity
+            Please provide a name for your activity 
           </FormMessage>
         </Flex>
         <Form.Control asChild>

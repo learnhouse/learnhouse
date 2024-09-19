@@ -63,13 +63,14 @@ const LoginClient = (props: LoginClientProps) => {
         setSubmitting(false);
         return;
       }
-
-      const res = await signIn('credentials', {
+      console.log("ARUN GETURI WITH ORGS "+getUriWithOrg(props.org?.slug, '/'));
+      const res = await signIn('credentials', { 
         redirect: false,
         email: values.email,
         password: values.password,
         callbackUrl: getUriWithOrg(props.org?.slug, '/')
       });
+      console.log("ARUN "+res)
       if (res && res.error) {
         setError("Wrong Email or password");
         setIsSubmitting(false);
@@ -80,7 +81,7 @@ const LoginClient = (props: LoginClientProps) => {
           callbackUrl: getUriWithOrg(props.org?.slug, '/')
         });
       }
-    },
+      },
   })
 
   return (

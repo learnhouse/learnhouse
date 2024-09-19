@@ -18,6 +18,7 @@ export async function updatePassword(
     `${getAPIUrl()}users/change_password/` + user_id,
     RequestBodyWithAuthHeader('PUT', data, null, access_token)
   )
+  console.log("ARUNMOZHI "+JSON.stringify(result))
   const res = await errorHandling(result)
   return res
 }

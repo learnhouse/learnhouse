@@ -48,6 +48,7 @@ async def login(
     user = await authenticate_user(
         request, form_data.username, form_data.password, db_session
     )
+    
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

@@ -168,7 +168,7 @@ async def create_external_video_activity(
             status_code=404,
             detail="Chapter not found",
         )
-
+    print("ARUN VIDEO DB CREATED 1")
     statement = select(CourseChapter).where(CourseChapter.chapter_id == data.chapter_id)
     coursechapter = db_session.exec(statement).first()
 
@@ -181,6 +181,7 @@ async def create_external_video_activity(
     # generate activity_uuid
     activity_uuid = str(f"activity_{uuid4()}")
 
+    print("ARUN VIDEO DB CREATED ")
     activity_object = Activity(
         name=data.name,
         activity_type=ActivityTypeEnum.TYPE_VIDEO,

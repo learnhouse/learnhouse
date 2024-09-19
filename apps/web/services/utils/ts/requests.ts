@@ -36,6 +36,7 @@ export const RequestBodyWithAuthHeader = (
     // Next.js
     next: next,
   }
+  console.log("ARUN OPTIONS "+JSON.stringify(options))
   return options
 }
 
@@ -116,7 +117,7 @@ export const swrFetcher = async (url: string, token?: string) => {
 //   return res.json()
 // }
 export const errorHandling = async (res: any) => {
-  console.log("Error handling req "+res)  
+  console.log("Error handling req "+JSON.stringify(res))  
   if (!res.ok) {
     // Create an error object with status and message
     const error: any = new Error(`Error: ${res.status} ${res.statusText}`);

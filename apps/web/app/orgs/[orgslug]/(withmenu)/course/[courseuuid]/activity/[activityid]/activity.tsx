@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { getAPIUrl, getUriWithOrg } from '@services/config/config'
 import Canva from '@components/Objects/Activities/DynamicCanva/DynamicCanva'
 import VideoActivity from '@components/Objects/Activities/Video/Video'
+import IframeActivity from '@components/Objects/Activities/IframeWebsite/IframeWebsite'
 import { BookOpenCheck, Check, CheckCircle, MoreVertical, UserRoundPen } from 'lucide-react'
 import { markActivityAsComplete } from '@services/courses/activity'
 import DocumentPdfActivity from '@components/Objects/Activities/DocumentPdf/DocumentPdf'
@@ -26,6 +27,7 @@ import toast from 'react-hot-toast'
 import { mutate } from 'swr'
 import ConfirmationModal from '@components/StyledElements/ConfirmationModal/ConfirmationModal'
 import { useCookies } from '@components/Contexts/CookiesContext'
+
 
 interface ActivityClientProps {
   activityid: string
@@ -184,6 +186,10 @@ function ActivityClient(props: ActivityClientProps) {
                     {activity.activity_type == 'TYPE_VIDEO' && (
                       <VideoActivity course={course} activity={activity} />
                     )}
+                    {/* This one is for iframe types*/ }
+                    {activity.activity_type == 'TYPE_IFRAME' && (
+                      <IframeActivity course={course} activity={activity} />
+                    )}
                     {activity.activity_type == 'TYPE_DOCUMENT' && (
                       <DocumentPdfActivity
                         course={course}
@@ -205,6 +211,7 @@ function ActivityClient(props: ActivityClientProps) {
                         )}
                       </div>
                     )}
+
                   </div>
                 </div>
               )}

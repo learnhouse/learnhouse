@@ -2,7 +2,7 @@
 import { removeCourse, startCourse } from '@services/courses/activity'
 import Link from 'next/link'
 import React, { useEffect, useState } from 'react'
-import { getUriWithOrg } from '@services/config/config'
+import { getAPIUrl, getUriWithOrg } from '@services/config/config'
 import PageLoading from '@components/Objects/Loaders/PageLoading'
 import { revalidateTags } from '@services/utils/ts/requests'
 import ActivityIndicators from '@components/Pages/Courses/ActivityIndicators'
@@ -12,7 +12,7 @@ import {
   getCourseThumbnailMediaDirectory,
   getUserAvatarMediaDirectory,
 } from '@services/media/media'
-import { ArrowRight, Backpack, Check, File, Sparkles, Video } from 'lucide-react'
+import { ArrowRight, Backpack, Check, Code, File, Sparkles, Video } from 'lucide-react'
 import { useOrg } from '@components/Contexts/OrgContext'
 import UserAvatar from '@components/Objects/UserAvatar'
 import CourseUpdates from '@components/Objects/CourseUpdates/CourseUpdates'
@@ -178,6 +178,14 @@ const CourseClient = (props: any) => {
                                       />
                                     </div>
                                   )}
+                                  {activity.activity_type === 'TYPE_IFRAME' && (
+                                    <div className="bg-gray-100 px-2 py-2 rounded-full">
+                                      <Code
+                                        className="text-gray-400"
+                                        size={13}
+                                      />
+                                    </div>
+                                  )}
                                   {activity.activity_type ===
                                     'TYPE_DOCUMENT' && (
                                       <div className="bg-gray-100 px-2 py-2 rounded-full">
@@ -247,6 +255,26 @@ const CourseClient = (props: any) => {
                                       >
                                         <div className="text-xs bg-gray-100 text-gray-400 font-bold px-2 py-1 rounded-full flex space-x-1 items-center">
                                           <p>Video</p>
+                                          <ArrowRight size={13} />
+                                        </div>
+                                      </Link>
+                                    </>
+                                  )}
+                                  {activity.activity_type === 'TYPE_IFRAME' && (
+                                    <>
+                                      <Link
+                                        className="flex grow pl-2 text-gray-500"
+                                        href={
+                                          getUriWithOrg(orgslug, '',cookies) +
+                                          `/course/${courseuuid}/activity/${activity.activity_uuid.replace(
+                                            'activity_',
+                                            ''
+                                          )}`
+                                        }
+                                        rel="noopener noreferrer"
+                                      >
+                                        <div className="text-xs bg-gray-100 text-gray-400 font-bold px-2 py-1 rounded-full flex space-x-1 items-center">
+                                          <p>Iframe</p>
                                           <ArrowRight size={13} />
                                         </div>
                                       </Link>

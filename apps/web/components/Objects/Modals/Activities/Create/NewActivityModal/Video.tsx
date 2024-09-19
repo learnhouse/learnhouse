@@ -86,7 +86,7 @@ function VideoModal({
   /* TODO : implement some sort of progress bar for file uploads, it is not possible yet because i'm not using axios.
    and the actual upload isn't happening here anyway, it's in the submitFileActivity function */
 
-  return (
+  return (  
     <FormLayout onSubmit={handleSubmit}>
       <FormField name="video-activity-name">
         <Flex css={{ alignItems: 'baseline', justifyContent: 'space-between' }}>

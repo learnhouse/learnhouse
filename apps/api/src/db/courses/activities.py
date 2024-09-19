@@ -10,6 +10,7 @@ class ActivityTypeEnum(str, Enum):
     TYPE_DYNAMIC = "TYPE_DYNAMIC"
     TYPE_ASSIGNMENT = "TYPE_ASSIGNMENT"
     TYPE_CUSTOM = "TYPE_CUSTOM"
+    TYPE_IFRAME = "TYPE_IFRAME"
 
 
 class ActivitySubTypeEnum(str, Enum):
@@ -25,6 +26,7 @@ class ActivitySubTypeEnum(str, Enum):
     SUBTYPE_ASSIGNMENT_ANY = "SUBTYPE_ASSIGNMENT_ANY"
     # Custom
     SUBTYPE_CUSTOM = "SUBTYPE_CUSTOM"
+    SUBTYPE_IFRAME = "SUBTYPE_IFRAME"
 
 
 class ActivityBase(SQLModel):

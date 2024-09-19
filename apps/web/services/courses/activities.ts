@@ -55,6 +55,35 @@ export async function createFileActivity(
   return res
 }
 
+//The below function is for creating a IframeActivity
+export async function createIframeActivity(
+  data: { name: string; chapter_id: string; iframe_url: string; },
+  chapter_id: string,
+  access_token: string
+) {
+  const formData = new FormData()
+  
+  
+  // Send the POST request to the iframe activities endpoint
+  const result = await fetch(
+    `${getAPIUrl()}activities/iframe`,
+    RequestBodyWithAuthHeader('POST', data, null, access_token)
+  );
+
+  if (!result.ok) {
+    const error = await result.json();
+    throw new Error(error.detail || 'Failed to create iframe activity');
+  }
+
+  // Parse the JSON response
+  const res = await result.json();
+
+  // Return the result
+  return res;
+}
+
+
+
 export async function createExternalVideoActivity(
   data: any,
   activity: any,
@@ -64,7 +93,7 @@ export async function createExternalVideoActivity(
   // add coursechapter_id to data
   data.chapter_id = chapter_id
   data.activity_id = activity.id
-
+  console.log("ARUN VIDEO Function")
   const result = await fetch(
     `${getAPIUrl()}activities/external_video`,
     RequestBodyWithAuthHeader('POST', data, null, access_token)

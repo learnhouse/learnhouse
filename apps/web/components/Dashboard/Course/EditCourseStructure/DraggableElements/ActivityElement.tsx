@@ -218,6 +218,7 @@ function ActivityElement(props: ActivitiyElementProps) {
               status="warning"
             ></ConfirmationModal>
           </div>
+          
         </div>
       )}
     </Draggable>
@@ -249,6 +250,7 @@ const ActivityTypeIndicator = (props: { activityType: string }) => {
           </div>
         </>
       )}
+      
       {props.activityType === 'TYPE_ASSIGNMENT' && (
         <>
           <div className="flex space-x-2 items-center">
@@ -270,6 +272,16 @@ const ActivityTypeIndicator = (props: { activityType: string }) => {
             </div>{' '}
           </div>
         </>
+      )}
+      {props.activityType === 'TYPE_IFRAME' && (
+        <div className="flex space-x-2 items-center">
+          <div className="w-[30px]">
+            <File size={16} />
+          </div>
+          <div className="text-xs bg-gray-200 text-gray-400 font-bold px-2 py-1 rounded-full">
+            Iframe
+          </div>
+        </div>
       )}
     </div>
   )
@@ -342,6 +354,9 @@ const ActivityElementOptions = ({ activity }: any) => {
           </Link>
         </>
       )}
+      
+       
+      
     </>
   );
 };

@@ -6,6 +6,7 @@ import {
   createActivity,
   createExternalVideoActivity,
   createFileActivity,
+  createIframeActivity
 } from '@services/courses/activities'
 import { getOrganizationContextInfoWithoutCredentials } from '@services/organizations/orgs'
 import { revalidateTags } from '@services/utils/ts/requests'
@@ -70,6 +71,39 @@ function NewActivityButton(props: NewActivityButtonProps) {
     router.refresh()
   }
 
+  const submitIframeActivity = async (
+    iframeObject: any, // Updated type for clarity
+    activity: any,
+    chapterId: string,
+  ) => {
+    const toastId = toast.loading('Creating iframe activity...'); // Get the toast ID
+    try {
+      // Ensure iframeObject contains the necessary fields for IframeActivityCreate
+      const data = {
+        name: iframeObject.name,
+        chapter_id: chapterId,
+        iframe_url: iframeObject.uri, // Adjusted to match the backend model
+      };
+  
+      await createIframeActivity(data, chapterId, access_token);
+  
+      // Refresh data and show success message
+      mutate(`${getAPIUrl()}courses/${course.courseStructure.course_uuid}/meta`);
+      toast.success('Iframe activity created successfully', { id: toastId }); // Use the same toast ID
+      setNewActivityModal(false);
+      await revalidateTags(['courses'], props.orgslug);
+      router.refresh();
+    } catch (error) {
+      toast.dismiss(toastId); // Dismiss the loading toast with the same ID
+      toast.error('Failed to create iframe activity');
+      console.error('Error creating iframe activity:', error);
+    }
+  };
+  
+  
+
+
+
   // Submit YouTube Video Upload
   const submitExternalVideo = async (
     external_video_data: any,
@@ -106,6 +140,7 @@ function NewActivityButton(props: NewActivityButtonProps) {
             submitFileActivity={submitFileActivity}
             submitExternalVideo={submitExternalVideo}
             submitActivity={submitActivity}
+            submitIframeActivity={submitIframeActivity}
             chapterId={props.chapterId}
             course={course}
           ></NewActivityModal>

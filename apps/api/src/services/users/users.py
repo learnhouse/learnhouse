@@ -38,7 +38,7 @@ async def create_user(
     request: Request,
     db_session: Session,
     current_user: PublicUser | AnonymousUser,
-    user_object: UserCreate,
+    user_object: UserCreate,    
     org_id: int,
 ):
     user = User.model_validate(user_object)
@@ -344,20 +344,27 @@ async def update_user_password(
     # Get user
     statement = select(User).where(User.id == user_id)
     user = db_session.exec(statement).first()
-
+    
     if not user:
-        raise HTTPException(
-            status_code=400,
-            detail="User does not exist",
+        # raise HTTPException(
+        #     status_code=400,
+        #     detail="User does not exist",
+        # )
+        #modified by ARUN
+        
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={"message": "Wrong password"},
         )
 
     # RBAC check
-    await rbac_check(request, current_user, "update", user.user_uuid, db_session)
-
+    responseRBAC = await rbac_check(request, current_user, "update", user.user_uuid, db_session)
+    print("RBAC Check ", responseRBAC)
+    print("ARUN SQL statement " + str(user))
     if not security_verify_password(form.old_password, user.password):
-        raise HTTPException(
+        return  HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Wrong password"
-        )
+        )   
 
     # Update user
     user.password = security_hash_password(form.new_password)
@@ -369,7 +376,7 @@ async def update_user_password(
     db_session.refresh(user)
 
     user = UserRead.model_validate(user)
-
+    
     return user
 
 

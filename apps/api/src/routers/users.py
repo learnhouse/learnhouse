@@ -211,7 +211,13 @@ async def api_update_user_password(
     """
     Update User Password
     """
-    return await update_user_password(request, db_session, current_user, user_id, form)
+    response = await update_user_password(request, db_session, current_user, user_id, form)
+    
+    # Print the response
+    print("API Response:", type(response))
+    
+    return response
+    # return await update_user_password(request, db_session, current_user, user_id, form)
 
 
 @router.post("/reset_password/change_password/{email}", tags=["users"])

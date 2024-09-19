@@ -16,7 +16,11 @@ from src.services.courses.activities.pdf import create_documentpdf_activity
 from src.services.courses.activities.video import (
     ExternalVideo,
     create_external_video_activity,
-    create_video_activity,
+    create_video_activity
+)
+from src.services.courses.activities.iframe import (
+    IframeActivityCreate,
+    create_iframe_activity
 )
 
 router = APIRouter()
@@ -144,7 +148,6 @@ async def api_create_external_video_activity(
         request, current_user, external_video, db_session
     )
 
-
 @router.post("/documentpdf")
 async def api_create_documentpdf_activity(
     request: Request,
@@ -159,4 +162,27 @@ async def api_create_documentpdf_activity(
     """
     return await create_documentpdf_activity(
         request, name, chapter_id, current_user, db_session, pdf_file
+    )
+
+#this router handles iframeActivity creation    
+@router.post("/iframe")
+async def api_create_iframe_activity(
+    request: Request,
+    activity_object: IframeActivityCreate,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+) -> ActivityRead:
+    """
+    Create new iframe activity
+    """
+    # Print the request details
+    print("Request Method:", request.method)
+    print("Request URL:", request.url)
+    print("Request Headers:", request.headers)
+    
+    # To print the body, you'll need to read it as bytes and then decode it
+    body = await request.body()
+    print("Request Body:", body.decode())
+    return await create_iframe_activity(
+        request, activity_object    , current_user, db_session
     )
