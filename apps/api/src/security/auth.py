@@ -56,10 +56,18 @@ async def authenticate_user(
     password: str,
     db_session: Session,
 ) -> User | bool:
+    ##comment added by ARUN
+    print("authenticate_user function implementation")
     user = await security_get_user(request, db_session, email)
+    ##comment added by ARUN
+    print("authenticate_user 2222")
     if not user:
+        ##comment added by ARUN
+        print("authenticate_user function false")
         return False
     if not security_verify_password(password, user.password):
+        ##comment added by ARUN
+        print("authenticate_user function 3333")
         return False
     return user
 

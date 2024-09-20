@@ -34,6 +34,9 @@ export default {
           credentials?.password
         )
         let res = await getResponseMetadata(unsanitized_req)
+
+        //comment added by ARUN
+        console.log("getResponseMetadata ")
         if (res.success) {
           // If login failed, then this is the place you could do a registration
           return res.data

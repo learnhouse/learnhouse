@@ -15,7 +15,7 @@ export async function uploadNewVideoFile(
   formData.append('activity_uuid', activity_uuid)
 
   return fetch(
-    `${getAPIUrl()}blocks/external_video`,
+    `${getAPIUrl()}blocks/video`,
     RequestBodyFormWithAuthHeader('POST', formData, null, access_token)
   )
     .then((result) => result.json())

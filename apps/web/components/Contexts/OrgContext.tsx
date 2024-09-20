@@ -19,8 +19,8 @@ export function OrgProvider({ children, orgslug }: { children: React.ReactNode, 
   const isAllowedPathname = ['/login', '/signup'].includes(pathname);
 
   const { data: org, error: orgError } = useSWR(
-    // `${getAPIUrl()}orgs/slug/${orgslug}`,
-    `${getAPIUrl()}orgs/slug/default`,
+    `${getAPIUrl()}orgs/slug/${orgslug}`,
+    // `${getAPIUrl()}orgs/slug/default`,
     (url) => swrFetcher(url, accessToken)
   )
   const { data: orgs, error: orgsError } = useSWR(

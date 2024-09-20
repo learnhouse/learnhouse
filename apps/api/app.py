@@ -1,4 +1,4 @@
-import uvicorn
+import uvicorn 
 from fastapi import FastAPI, Request
 from config.config import LearnHouseConfig, get_learnhouse_config
 from src.core.events.events import shutdown_app, startup_app
@@ -76,3 +76,5 @@ if __name__ == "__main__":
 @app.get("/")
 async def root():
     return {"Message": "Welcome to LearnHouse ✨"}
+
+

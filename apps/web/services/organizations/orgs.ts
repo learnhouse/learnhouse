@@ -38,8 +38,8 @@ export async function getOrganizationContextInfo(
 ) {
   console.log("org_slug" +org_slug);
   const result = await fetch(
-    // `${getAPIUrl()}orgs/slug/${org_slug}`,
-    `${getAPIUrl()}orgs/slug/default`,
+    `${getAPIUrl()}orgs/slug/${org_slug}`,
+    // `${getAPIUrl()}orgs/slug/default`,
     RequestBodyWithAuthHeader('GET', null, next, access_token)
   )
   const res = await errorHandling(result)

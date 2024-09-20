@@ -41,6 +41,7 @@ chromadb = "0.5.3"
 alembic = "^1.13.2"
 alembic-postgresql-enum = "^1.2.0"
 sqlalchemy-utils = "^0.41.2"
+debugpy = "^1.8.5"
 
 [build-system]
 build-backend = "poetry.core.masonry.api"

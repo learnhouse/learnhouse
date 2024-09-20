@@ -45,9 +45,12 @@ async def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db_session: Session = Depends(get_db_session),
 ):
+    ##Debugging statement added by ARUN
+    print("authenticate_user function ")
     user = await authenticate_user(
         request, form_data.username, form_data.password, db_session
     )
+    print("authenticate 2 {vars(user)}")
     
     if not user:
         raise HTTPException(
@@ -55,6 +58,7 @@ async def login(
             detail="Incorrect Email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    print("authenticate 3 {user}")
 
     access_token = Authorize.create_access_token(subject=form_data.username)
     refresh_token = Authorize.create_refresh_token(subject=form_data.username)
