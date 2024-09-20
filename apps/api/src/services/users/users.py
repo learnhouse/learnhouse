@@ -350,12 +350,7 @@ async def update_user_password(
             status_code=400,
             detail="User does not exist",
         )
-        #added by ARUN
         
-        # return JSONResponse(
-        #     status_code=status.HTTP_401_UNAUTHORIZED,
-        #     content={"message": "Wrong password"},
-        # )
 
     # RBAC check
     responseRBAC = await rbac_check(request, current_user, "update", user.user_uuid, db_session)
