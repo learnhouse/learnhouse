@@ -3,12 +3,12 @@ import React from 'react'
 import Link from 'next/link'
 import { getUriWithOrg } from '@services/config/config'
 import { HeaderProfileBox } from '@components/Security/HeaderProfileBox'
-import MenuLinks from './MenuLinks'
+import MenuLinks from './OrgMenuLinks'
 import { getOrgLogoMediaDirectory } from '@services/media/media'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 
-export const Menu = (props: any) => {
+export const OrgMenu = (props: any) => {
   const orgslug = props.orgslug
   const session = useLHSession() as any;
   const access_token = session?.data?.tokens?.access_token;
