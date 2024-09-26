@@ -1,8 +1,8 @@
 'use client'
 import '@styles/globals.css'
-import { Menu } from '@components/Objects/Menu/Menu'
 import { SessionProvider } from 'next-auth/react'
 import Watermark from '@components/Watermark'
+import { OrgMenu } from '@components/Objects/Menus/OrgMenu/OrgMenu'
 
 export default function RootLayout({
   children,
@@ -14,7 +14,7 @@ export default function RootLayout({
   return (
     <>
       <SessionProvider>
-        <Menu orgslug={params?.orgslug}></Menu>
+        <OrgMenu orgslug={params?.orgslug}></OrgMenu>
         {children}
         <Watermark />
       </SessionProvider>
