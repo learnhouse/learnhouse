@@ -34,7 +34,7 @@ from src.security.features_utils.usage import (
     increase_feature_usage,
 )
 from src.security.rbac.rbac import (
-    authorization_verify_based_on_roles_and_authorship_and_usergroups,
+    authorization_verify_based_on_roles_and_authorship,
     authorization_verify_if_element_is_public,
     authorization_verify_if_user_is_anon,
 )
@@ -1666,7 +1666,7 @@ async def rbac_check(
             return res
         else:
             res = (
-                await authorization_verify_based_on_roles_and_authorship_and_usergroups(
+                await authorization_verify_based_on_roles_and_authorship(
                     request, current_user.id, action, course_uuid, db_session
                 )
             )
@@ -1674,7 +1674,7 @@ async def rbac_check(
     else:
         await authorization_verify_if_user_is_anon(current_user.id)
 
-        await authorization_verify_based_on_roles_and_authorship_and_usergroups(
+        await authorization_verify_based_on_roles_and_authorship(
             request,
             current_user.id,
             action,
