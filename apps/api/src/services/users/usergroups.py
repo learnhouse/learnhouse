@@ -9,7 +9,7 @@ from src.security.features_utils.usage import (
     increase_feature_usage,
 )
 from src.security.rbac.rbac import (
-    authorization_verify_based_on_roles_and_authorship_and_usergroups,
+    authorization_verify_based_on_roles_and_authorship,
     authorization_verify_if_user_is_anon,
 )
 from src.db.usergroup_resources import UserGroupResource
@@ -492,7 +492,7 @@ async def rbac_check(
 ):
     await authorization_verify_if_user_is_anon(current_user.id)
 
-    await authorization_verify_based_on_roles_and_authorship_and_usergroups(
+    await authorization_verify_based_on_roles_and_authorship(
         request,
         current_user.id,
         action,
