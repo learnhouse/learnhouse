@@ -38,3 +38,19 @@ export async function uploadOrganizationLogo(
   const res = await errorHandling(result)
   return res
 }
+
+export async function uploadOrganizationThumbnail(
+  org_id: string,
+  thumbnail_file: any,
+  access_token: string
+) {
+  // Send file thumbnail as form data
+  const formData = new FormData()
+  formData.append('thumbnail_file', thumbnail_file)
+  const result: any = await fetch(
+    `${getAPIUrl()}orgs/` + org_id + '/thumbnail',
+    RequestBodyFormWithAuthHeader('PUT', formData, null, access_token)
+  )
+  const res = await errorHandling(result)
+  return res
+}
