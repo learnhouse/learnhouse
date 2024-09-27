@@ -13,12 +13,13 @@ import {
   AlertTriangle,
   BadgeHelp,
   Code,
+  Cuboid,
   FileText,
   ImagePlus,
   Sigma,
   Video,
-  Youtube,
 } from 'lucide-react'
+import { SiYoutube } from '@icons-pack/react-simple-icons'
 import ToolTip from '@components/StyledElements/Tooltip/Tooltip'
 
 export const ToolbarButtons = ({ editor, props }: any) => {
@@ -139,7 +140,7 @@ export const ToolbarButtons = ({ editor, props }: any) => {
       </ToolTip>
       <ToolTip content={'YouTube video'}>
         <ToolBtn onClick={() => addYoutubeVideo()}>
-          <Youtube size={15} />
+          <SiYoutube size={15} />
         </ToolBtn>
       </ToolTip>
       <ToolTip content={'Math Equation (LaTeX)'}>
@@ -193,6 +194,13 @@ export const ToolbarButtons = ({ editor, props }: any) => {
           className={editor.isActive('codeBlock') ? 'is-active' : ''}
         >
           <Code size={15} />
+        </ToolBtn>
+      </ToolTip>
+      <ToolTip content={'External Object (Embed)'}>
+        <ToolBtn
+          onClick={() => editor.chain().focus().insertContent({ type: 'blockEmbed' }).run()}
+        >
+          <Cuboid size={15} />
         </ToolBtn>
       </ToolTip>
     </ToolButtonsWrapper>
