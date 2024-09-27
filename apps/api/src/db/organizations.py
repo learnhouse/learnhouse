@@ -12,6 +12,7 @@ class OrganizationBase(SQLModel):
     slug: str
     email: str
     logo_image: Optional[str]
+    thumbnail_image: Optional[str]
 
 
 class Organization(OrganizationBase, table=True):
