@@ -5,6 +5,7 @@ import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { nextAuthOptions } from 'app/auth/options'
 import { getServerSession } from 'next-auth'
 import { getOrgCourses } from '@services/courses/courses'
+import { getOrgThumbnailMediaDirectory } from '@services/media/media'
 
 type MetadataProps = {
   params: { orgslug: string }
@@ -39,6 +40,14 @@ export async function generateMetadata({
       title: 'Courses — ' + org.name,
       description: org.description,
       type: 'website',
+      images: [
+        {
+          url: getOrgThumbnailMediaDirectory(org?.org_uuid, org?.thumbnail_image),
+          width: 800,
+          height: 600,
+          alt: org.name,
+        },
+      ],
     },
   }
 }
