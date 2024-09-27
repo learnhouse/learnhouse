@@ -46,8 +46,8 @@ export async function getCollectionById(
 
 export async function getOrgCollections(
   org_id: string,
-  access_token: string,
-  next: any
+  access_token?: string,
+  next?: any
 ) {
   const result: any = await fetch(
     `${getAPIUrl()}collections/org/${org_id}/page/1/limit/10`,

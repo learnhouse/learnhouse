@@ -12,12 +12,12 @@ import {
 */
 
 export async function getOrgCourses(
-  org_id: number,
+  org_slug: string,
   next: any,
-  access_token: any
+  access_token?: any
 ) {
   const result: any = await fetch(
-    `${getAPIUrl()}courses/org_slug/${org_id}/page/1/limit/10`,
+    `${getAPIUrl()}courses/org_slug/${org_slug}/page/1/limit/10`,
     RequestBodyWithAuthHeader('GET', null, next, access_token)
   )
   const res = await errorHandling(result)
