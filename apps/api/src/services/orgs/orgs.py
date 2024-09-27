@@ -34,8 +34,9 @@ from src.db.organizations import (
     OrganizationRead,
     OrganizationUpdate,
 )
-from src.services.orgs.logos import upload_org_logo
 from fastapi import HTTPException, UploadFile, status, Request
+
+from src.services.orgs.uploads import upload_org_logo, upload_org_thumbnail
 
 
 async def get_organization(
@@ -420,6 +421,42 @@ async def update_org_logo(
     db_session.refresh(org)
 
     return {"detail": "Logo updated"}
+
+async def update_org_thumbnail(
+    request: Request,
+    thumbnail_file: UploadFile,
+    org_id: str,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+):
+    statement = select(Organization).where(Organization.id == org_id)
+    result = db_session.exec(statement)
+
+    org = result.first()
+
+    if not org:
+        raise HTTPException(
+            status_code=404,
+            detail="Organization not found",
+        )
+
+    # RBAC check
+    await rbac_check(request, org.org_uuid, current_user, "update", db_session)
+
+    # Upload logo
+    name_in_disk = await upload_org_thumbnail(thumbnail_file, org.org_uuid)
+
+    # Update org
+    org.thumbnail_image = name_in_disk
+
+    # Complete the org object
+    org.update_date = str(datetime.now())
+
+    db_session.add(org)
+    db_session.commit()
+    db_session.refresh(org)
+
+    return {"detail": "Thumbnail updated"}
 
 
 async def delete_org(

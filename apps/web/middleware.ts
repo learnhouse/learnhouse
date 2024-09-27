@@ -21,6 +21,7 @@ export const config = {
      * 5. all root files inside /public (e.g. /favicon.ico)
      */
     '/((?!api|_next|fonts|umami|examples|[\\w-]+\\.\\w+).*)',
+    '/sitemap.xml',
   ],
 }
 
@@ -97,6 +98,29 @@ export default async function middleware(req: NextRequest) {
     } else {
       return 'Did not find the orgslug in the cookie'
     }
+  }
+
+  if (pathname.startsWith('/sitemap.xml')) {
+    let orgslug: string;
+    
+    if (hosting_mode === 'multi') {
+      orgslug = fullhost
+        ? fullhost.replace(`.${LEARNHOUSE_DOMAIN}`, '')
+        : (default_org as string);
+    } else {
+      // Single hosting mode
+      orgslug = default_org as string;
+    }
+
+    const sitemapUrl = new URL(`/api/sitemap`, req.url);
+
+    // Create a response object
+    const response = NextResponse.rewrite(sitemapUrl);
+
+    // Set the orgslug in a header
+    response.headers.set('X-Sitemap-Orgslug', orgslug);
+
+    return response;
   }
 
   // Multi Organization Mode
