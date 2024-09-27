@@ -11,6 +11,7 @@ import ContentPlaceHolderIfUserIsNotAdmin from '@components/ContentPlaceHolder'
 import { nextAuthOptions } from 'app/auth/options'
 import { getServerSession } from 'next-auth'
 import { getOrgCollections } from '@services/courses/collections'
+import { getOrgThumbnailMediaDirectory } from '@services/media/media'
 
 type MetadataProps = {
   params: { orgslug: string; courseid: string }
@@ -44,6 +45,14 @@ export async function generateMetadata({
       title: `Collections — ${org.name}`,
       description: `Collections of courses from ${org.name}`,
       type: 'website',
+      images: [
+        {
+          url: getOrgThumbnailMediaDirectory(org?.org_uuid, org?.thumbnail_image),
+          width: 800,
+          height: 600,
+          alt: org.name,
+        },
+      ],
     },
   }
 }
