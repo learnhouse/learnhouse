@@ -1,6 +1,7 @@
 import { getUriWithOrg } from '@services/config/config';
 import { getOrgCourses } from '@services/courses/courses';
 import { getOrganizationContextInfo } from '@services/organizations/orgs';
+import { getOrgCollections } from '@services/courses/collections';
 import { NextRequest, NextResponse } from 'next/server';
 
 
@@ -13,6 +14,7 @@ export async function GET(request: NextRequest) {
 
   const orgInfo = await getOrganizationContextInfo(orgSlug, null);
   const courses = await getOrgCourses(orgSlug, null);
+  const collections = await getOrgCollections(orgInfo.id);
 
   const host = request.headers.get('host');
   if (!host) {
@@ -23,9 +25,18 @@ export async function GET(request: NextRequest) {
 
   const sitemapUrls: SitemapUrl[] = [
     { loc: baseUrl, priority: 1.0, changefreq: 'daily' },
+    { loc: `${baseUrl}collections`, priority: 0.9, changefreq: 'weekly' },
+    { loc: `${baseUrl}courses`, priority: 0.9, changefreq: 'weekly' },
+    // Courses
     ...courses.map((course: { course_uuid: string }) => ({ 
       loc: `${baseUrl}course/${course.course_uuid.replace('course_', '')}`, 
-      priority: 0.8,
+      priority: 0.7,
+      changefreq: 'weekly'
+    })),
+    // Collections
+    ...collections.map((collection: { collection_uuid: string }) => ({
+      loc: `${baseUrl}collections/${collection.collection_uuid.replace('collection_', '')}`,
+      priority: 0.6,
       changefreq: 'weekly'
     }))
   ];
