@@ -3,7 +3,7 @@ import BreadCrumbs from '@components/Dashboard/UI/BreadCrumbs'
 import { getUriWithOrg } from '@services/config/config'
 import { Info } from 'lucide-react'
 import Link from 'next/link'
-import React from 'react'
+import React, { useEffect } from 'react'
 import { motion } from 'framer-motion'
 import OrgEditGeneral from '@components/Dashboard/Org/OrgEditGeneral/OrgEditGeneral'
 
@@ -13,14 +13,31 @@ export type OrgParams = {
 }
 
 function OrgPage({ params }: { params: OrgParams }) {
+  const [H1Label, setH1Label] = React.useState('')
+  const [H2Label, setH2Label] = React.useState('')
+
+  function handleLabels() {
+    if (params.subpage == 'general') {
+      setH1Label('General')
+      setH2Label('Manage your organization settings')
+    }
+  }
+
+  useEffect(() => {
+    handleLabels()
+  }, [params.subpage, params])
+
   return (
     <div className="h-full w-full bg-[#f8f8f8]">
       <div className="pl-10 pr-10  tracking-tight bg-[#fcfbfc] shadow-[0px_4px_16px_rgba(0,0,0,0.02)]">
         <BreadCrumbs type="org"></BreadCrumbs>
-        <div className="my-2 tracking-tighter">
-          <div className="w-100 flex justify-between">
-            <div className="pt-3 flex font-bold text-4xl">
-              Organization Settings
+        <div className="my-2  py-3">
+          <div className="w-100 flex flex-col space-y-1">
+            <div className="pt-3 flex font-bold text-4xl tracking-tighter">
+              {H1Label}
+            </div>
+            <div className="flex font-medium text-gray-400 text-md">
+              {H2Label}{' '}
             </div>
           </div>
         </div>

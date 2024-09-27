@@ -25,7 +25,8 @@
       "@images/*": ["public/img/*"],
       "@styles/*": ["styles/*"],
       "@services/*": ["services/*"],
-      "@editor/*": ["components/Objects/Editor/*"]
+      "@editor/*": ["components/Objects/Editor/*"],
+      "@/*": ["./*"]  
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/**/*.tsx", ".next/types/**/*.ts"],
