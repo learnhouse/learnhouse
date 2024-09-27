@@ -48,6 +48,7 @@ import Collaboration from '@tiptap/extension-collaboration'
 import CollaborationCursor from '@tiptap/extension-collaboration-cursor'
 import ActiveAvatars from './ActiveAvatars'
 import { getUriWithOrg } from '@services/config/config'
+import EmbedObjects from './Extensions/EmbedObjects/EmbedObjects'
 
 interface Editor {
   content: string
@@ -132,6 +133,10 @@ function Editor(props: Editor) {
       }),
       CodeBlockLowlight.configure({
         lowlight,
+      }),
+      EmbedObjects.configure({
+        editable: true,
+        activity: props.activity,
       }),
 
       // Add Collaboration and CollaborationCursor only if isCollabEnabledOnThisOrg is true

@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@hocuspocus/provider": "^2.13.5",
+    "@icons-pack/react-simple-icons": "^10.0.0",
     "@radix-ui/colors": "^0.1.9",
     "@radix-ui/react-aspect-ratio": "^1.1.0",
     "@radix-ui/react-dialog": "^1.1.1",
