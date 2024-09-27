@@ -263,7 +263,7 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID }: Ta
                                 )}
                                 <div className='flex pt-4 font-semibold space-x-1.5 text-xs items-center text-gray-500 '>
                                     <Info size={16} />
-                                    <p>Allowed formats : pdf, docx, mp4, jpg, jpeg, png, pptx</p>
+                                    <p>Allowed formats : pdf, docx, mp4, jpg, jpeg, png, pptx, zip</p>
                                 </div>
                                 {isLoading ? (
                                     <div className="flex justify-center items-center">

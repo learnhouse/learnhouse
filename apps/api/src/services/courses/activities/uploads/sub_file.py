@@ -19,5 +19,5 @@ async def upload_submission_file(
         org_uuid,
         contents,
         f"{name_in_disk}",
-        ["pdf", "docx", "mp4", "jpg", "jpeg", "png", "pptx"],
+        ["pdf", "docx", "mp4", "jpg", "jpeg", "png", "pptx", "zip"],
     )
