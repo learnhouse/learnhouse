@@ -23,7 +23,7 @@ export async function generateMetadata({
 }: MetadataProps): Promise<Metadata> {
   // Get Org context information
   const org = await getOrganizationContextInfo(params.orgslug, {
-    revalidate: 1800,
+    revalidate: 0,
     tags: ['organizations'],
   })
 
