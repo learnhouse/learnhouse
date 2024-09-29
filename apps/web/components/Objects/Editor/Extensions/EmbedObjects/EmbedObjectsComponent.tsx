@@ -1,9 +1,10 @@
 import { NodeViewWrapper } from '@tiptap/react'
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { Upload, Link as LinkIcon, GripVertical, GripHorizontal, AlignCenter, Cuboid, Code } from 'lucide-react'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { SiGithub, SiReplit, SiSpotify, SiLoom, SiGooglemaps, SiCodepen, SiCanva, SiNotion, SiGoogledocs, SiGitlab, SiX, SiFigma, SiGiphy } from '@icons-pack/react-simple-icons'
 import { useRouter } from 'next/navigation'
+import DOMPurify from 'dompurify'
 
 function EmbedObjectsComponent(props: any) {
   const [embedType, setEmbedType] = useState<'url' | 'code'>(props.node.attrs.embedType || 'url')
@@ -33,6 +34,18 @@ function EmbedObjectsComponent(props: any) {
     { name: 'Giphy', icon: SiGiphy, color: '#FF6666', guide: 'https://developers.giphy.com/docs/embed/' },
   ]
 
+  const [sanitizedEmbedCode, setSanitizedEmbedCode] = useState('')
+
+  useEffect(() => {
+    if (embedType === 'code' && embedCode) {
+      const sanitized = DOMPurify.sanitize(embedCode, {
+        ADD_TAGS: ['iframe'],
+        ADD_ATTR: ['*']
+      })
+      setSanitizedEmbedCode(sanitized)
+    }
+  }, [embedCode, embedType])
+
   const handleEmbedTypeChange = (type: 'url' | 'code') => {
     setEmbedType(type)
     props.updateAttributes({ embedType: type })
@@ -40,9 +53,11 @@ function EmbedObjectsComponent(props: any) {
 
   const handleUrlChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newUrl = event.target.value;
-    setEmbedUrl(newUrl);
+    // Sanitize the URL
+    const sanitizedUrl = DOMPurify.sanitize(newUrl);
+    setEmbedUrl(sanitizedUrl);
     props.updateAttributes({
-      embedUrl: newUrl,
+      embedUrl: sanitizedUrl,
       embedType: 'url',
     });
   };
@@ -113,8 +128,8 @@ function EmbedObjectsComponent(props: any) {
             frameBorder="0"
             allowFullScreen
           />
-        ) : embedType === 'code' && embedCode ? (
-          <div dangerouslySetInnerHTML={{ __html: embedCode }} className="w-full h-full" />
+        ) : embedType === 'code' && sanitizedEmbedCode ? (
+          <div dangerouslySetInnerHTML={{ __html: sanitizedEmbedCode }} className="w-full h-full" />
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center p-6">
             <p className="text-gray-500 mb-4 font-medium tracking-tighter text-lg">Add an embed from :</p>
