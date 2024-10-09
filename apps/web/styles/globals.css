@@ -5,6 +5,7 @@
 @tailwind components;
 @tailwind utilities;
 
+
 .nice-shadow {
   @apply shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40
 }
