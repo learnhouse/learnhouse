@@ -484,13 +484,13 @@ numpy = "*"
 
 [[package]]
 name = "chromadb"
-version = "0.5.5"
+version = "0.5.11"
 description = "Chroma."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "chromadb-0.5.5-py3-none-any.whl", hash = "sha256:2a5a4b84cb0fc32b380e193be68cdbadf3d9f77dbbf141649be9886e42910ddd"},
-    {file = "chromadb-0.5.5.tar.gz", hash = "sha256:84f4bfee320fb4912cbeb4d738f01690891e9894f0ba81f39ee02867102a1c4d"},
+    {file = "chromadb-0.5.11-py3-none-any.whl", hash = "sha256:f02d9326869cea926f980bd6c9a0150a0ef2e151072f325998c16a9502fb4b25"},
+    {file = "chromadb-0.5.11.tar.gz", hash = "sha256:252e970b3e1a27b594cc7b3685238691bf8eaa232225d4dee9e33ec83580775f"},
 ]
 
 [package.dependencies]
@@ -503,7 +503,7 @@ httpx = ">=0.27.0"
 importlib-resources = "*"
 kubernetes = ">=28.1.0"
 mmh3 = ">=4.0.1"
-numpy = ">=1.22.5,<2.0.0"
+numpy = ">=1.22.5"
 onnxruntime = ">=1.14.1"
 opentelemetry-api = ">=1.2.0"
 opentelemetry-exporter-otlp-proto-grpc = ">=1.2.0"
@@ -515,6 +515,7 @@ posthog = ">=2.4.0"
 pydantic = ">=1.9"
 pypika = ">=0.48.9"
 PyYAML = ">=6.0.0"
+rich = ">=10.11.0"
 tenacity = ">=8.2.3"
 tokenizers = ">=0.13.2"
 tqdm = ">=4.65.0"
@@ -662,27 +663,28 @@ idna = ">=2.0.0"
 
 [[package]]
 name = "faker"
-version = "28.1.0"
+version = "30.1.0"
 description = "Faker is a Python package that generates fake data for you."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "Faker-28.1.0-py3-none-any.whl", hash = "sha256:b17d69312ef6485a720e21bffa997668c88876a5298b278e903ba706243c9c6b"},
-    {file = "faker-28.1.0.tar.gz", hash = "sha256:bc460a0e6020966410d0b276043879abca0fac51890f3324bc254bb0a383ee3a"},
+    {file = "Faker-30.1.0-py3-none-any.whl", hash = "sha256:dbf81295c948270a9e96cd48a9a3ebec73acac9a153d0c854fbbd0294557609f"},
+    {file = "faker-30.1.0.tar.gz", hash = "sha256:e0593931bd7be9a9ea984b5d8c302ef1cec19392585d1e90d444199271d0a94d"},
 ]
 
 [package.dependencies]
 python-dateutil = ">=2.4"
+typing-extensions = "*"
 
 [[package]]
 name = "fastapi"
-version = "0.112.2"
+version = "0.115.0"
 description = "FastAPI framework, high performance, easy to learn, fast to code, ready for production"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "fastapi-0.112.2-py3-none-any.whl", hash = "sha256:db84b470bd0e2b1075942231e90e3577e12a903c4dc8696f0d206a7904a7af1c"},
-    {file = "fastapi-0.112.2.tar.gz", hash = "sha256:3d4729c038414d5193840706907a41839d839523da6ed0c2811f1168cac1798c"},
+    {file = "fastapi-0.115.0-py3-none-any.whl", hash = "sha256:17ea427674467486e997206a5ab25760f6b09e069f099b96f5b55a32fb6f1631"},
+    {file = "fastapi-0.115.0.tar.gz", hash = "sha256:f93b4ca3529a8ebc6fc3fcf710e5efa8de3df9b41570958abf1d97d843138004"},
 ]
 
 [package.dependencies]
@@ -1974,13 +1976,13 @@ sympy = "*"
 
 [[package]]
 name = "openai"
-version = "1.40.3"
+version = "1.50.2"
 description = "The official Python library for the openai API"
 optional = false
 python-versions = ">=3.7.1"
 files = [
-    {file = "openai-1.40.3-py3-none-any.whl", hash = "sha256:09396cb6e2e15c921a5d872bf92841a60a9425da10dcd962b45fe7c4f48f8395"},
-    {file = "openai-1.40.3.tar.gz", hash = "sha256:f2ffe907618240938c59d7ccc67dd01dc8c50be203c0077240db6758d2f02480"},
+    {file = "openai-1.50.2-py3-none-any.whl", hash = "sha256:822dd2051baa3393d0d5406990611975dd6f533020dc9375a34d4fe67e8b75f7"},
+    {file = "openai-1.50.2.tar.gz", hash = "sha256:3987ae027152fc8bea745d60b02c8f4c4a76e1b5c70e73565fa556db6f78c9e6"},
 ]
 
 [package.dependencies]
@@ -3372,13 +3374,13 @@ telegram = ["requests"]
 
 [[package]]
 name = "typer"
-version = "0.12.3"
+version = "0.12.5"
 description = "Typer, build great CLIs. Easy to code. Based on Python type hints."
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "typer-0.12.3-py3-none-any.whl", hash = "sha256:070d7ca53f785acbccba8e7d28b08dcd88f79f1fbda035ade0aecec71ca5c914"},
-    {file = "typer-0.12.3.tar.gz", hash = "sha256:49e73131481d804288ef62598d97a1ceef3058905aa536a1134f90891ba35482"},
+    {file = "typer-0.12.5-py3-none-any.whl", hash = "sha256:62fe4e471711b147e3365034133904df3e235698399bc4de2b36c8579298d52b"},
+    {file = "typer-0.12.5.tar.gz", hash = "sha256:f592f089bedcc8ec1b974125d64851029c3b1af145f04aca64d69410f0c9b722"},
 ]
 
 [package.dependencies]
@@ -3895,4 +3897,4 @@ test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", 
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "f8b0ade0de90d5d38f602d3c7e2d28d1a0a97d352fa1aa129bc2c4e26d515fb4"
+content-hash = "f833ec3787697499d05e2aafb89bcb275b0d7468a6a4a33eb20cd139a21880d8"
