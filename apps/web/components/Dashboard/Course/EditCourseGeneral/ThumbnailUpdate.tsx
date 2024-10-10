@@ -3,10 +3,11 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import { getAPIUrl } from '@services/config/config'
 import { updateCourseThumbnail } from '@services/courses/courses'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
-import { ArrowBigUpDash, UploadCloud } from 'lucide-react'
+import { ArrowBigUpDash, UploadCloud, Image as ImageIcon } from 'lucide-react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import React from 'react'
+import React, { useState } from 'react'
 import { mutate } from 'swr'
+import UnsplashImagePicker from './UnsplashImagePicker'
 
 function ThumbnailUpdate() {
   const course = useCourse() as any
@@ -15,10 +16,24 @@ function ThumbnailUpdate() {
   const [localThumbnail, setLocalThumbnail] = React.useState(null) as any
   const [isLoading, setIsLoading] = React.useState(false) as any
   const [error, setError] = React.useState('') as any
+  const [showUnsplashPicker, setShowUnsplashPicker] = useState(false)
 
   const handleFileChange = async (event: any) => {
     const file = event.target.files[0]
     setLocalThumbnail(file)
+    await updateThumbnail(file)
+  }
+
+  const handleUnsplashSelect = async (imageUrl: string) => {
+    setIsLoading(true)
+    const response = await fetch(imageUrl)
+    const blob = await response.blob()
+    const file = new File([blob], 'unsplash_image.jpg', { type: 'image/jpeg' })
+    setLocalThumbnail(file)
+    await updateThumbnail(file)
+  }
+
+  const updateThumbnail = async (file: File) => {
     setIsLoading(true)
     const res = await updateCourseThumbnail(
       course.courseStructure.course_uuid,
@@ -49,8 +64,7 @@ function ThumbnailUpdate() {
             {localThumbnail ? (
               <img
                 src={URL.createObjectURL(localThumbnail)}
-                className={`${isLoading ? 'animate-pulse' : ''
-                  } shadow w-[200px] h-[100px] rounded-md`}
+                className={`${isLoading ? 'animate-pulse' : ''} shadow w-[200px] h-[100px] rounded-md`}
               />
             ) : (
               <img
@@ -65,19 +79,13 @@ function ThumbnailUpdate() {
           </div>
           {isLoading ? (
             <div className="flex justify-center items-center">
-              <input
-                type="file"
-                id="fileInput"
-                style={{ display: 'none' }}
-                onChange={handleFileChange}
-              />
-              <div className="font-bold  animate-pulse antialiased items-center bg-green-200 text-gray text-sm rounded-md px-4 py-2 mt-4 flex">
+              <div className="font-bold animate-pulse antialiased items-center bg-green-200 text-gray text-sm rounded-md px-4 py-2 mt-4 flex">
                 <ArrowBigUpDash size={16} className="mr-2" />
                 <span>Uploading</span>
               </div>
             </div>
           ) : (
-            <div className="flex justify-center items-center">
+            <div className="flex justify-center items-center space-x-2">
               <input
                 type="file"
                 id="fileInput"
@@ -85,16 +93,29 @@ function ThumbnailUpdate() {
                 onChange={handleFileChange}
               />
               <button
-                className="font-bold antialiased items-center  text-gray text-sm rounded-md px-4  mt-6 flex"
+                className="font-bold antialiased items-center text-gray text-sm rounded-md px-4 mt-6 flex"
                 onClick={() => document.getElementById('fileInput')?.click()}
               >
                 <UploadCloud size={16} className="mr-2" />
-                <span>Change Thumbnail</span>
+                <span>Upload Image</span>
+              </button>
+              <button
+                className="font-bold antialiased items-center text-gray text-sm rounded-md px-4 mt-6 flex"
+                onClick={() => setShowUnsplashPicker(true)}
+              >
+                <ImageIcon size={16} className="mr-2" />
+                <span>Choose from Gallery</span>
               </button>
             </div>
           )}
         </div>
       </div>
+      {showUnsplashPicker && (
+        <UnsplashImagePicker
+          onSelect={handleUnsplashSelect}
+          onClose={() => setShowUnsplashPicker(false)}
+        />
+      )}
     </div>
   )
 }
