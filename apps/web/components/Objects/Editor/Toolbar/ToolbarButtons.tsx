@@ -17,6 +17,7 @@ import {
   FileText,
   ImagePlus,
   Lightbulb,
+  MousePointerClick,
   Sigma,
   Tag,
   Tags,
@@ -211,14 +212,29 @@ export const ToolbarButtons = ({ editor, props }: any) => {
           onClick={() => editor.chain().focus().insertContent({
             type: 'badge',
             content: [
-                {
-                    type: 'text',
-                    text: 'This is a Badge'
-                }
+              {
+                type: 'text',
+                text: 'This is a Badge'
+              }
             ]
           }).run()}
         >
           <Tags size={15} />
+        </ToolBtn>
+      </ToolTip>
+      <ToolTip content={'Button'}>
+        <ToolBtn
+          onClick={() => editor.chain().focus().insertContent({
+            type: 'button',
+            content: [
+              {
+                type: 'text',
+                text: 'Click me'
+              }
+            ]
+          }).run()}
+        >
+          <MousePointerClick size={15} />
         </ToolBtn>
       </ToolTip>
     </ToolButtonsWrapper>
