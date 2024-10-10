@@ -49,6 +49,7 @@ import CollaborationCursor from '@tiptap/extension-collaboration-cursor'
 import ActiveAvatars from './ActiveAvatars'
 import { getUriWithOrg } from '@services/config/config'
 import EmbedObjects from './Extensions/EmbedObjects/EmbedObjects'
+import Badges from './Extensions/Badges/Badges'
 
 interface Editor {
   content: string
@@ -135,6 +136,10 @@ function Editor(props: Editor) {
         lowlight,
       }),
       EmbedObjects.configure({
+        editable: true,
+        activity: props.activity,
+      }),
+      Badges.configure({
         editable: true,
         activity: props.activity,
       }),
