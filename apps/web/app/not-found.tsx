@@ -20,7 +20,7 @@ export default function NotFound() {
           404!
         </h1>
         <p className='text-lg pt-8 text-black tracking-tight font-medium leading-normal'>
-          We are very sorry for the inconvinience. It looks like you're trying to
+          We are very sorry for the inconvenience. It looks like you're trying to
           <div>access a page that has been deleted or never existed before</div>
         </p>
       </div>

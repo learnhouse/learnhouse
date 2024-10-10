@@ -175,7 +175,7 @@ function UserEditGeneral() {
                           }
                         >
                           <UploadCloud size={16} className="mr-2" />
-                          <span>Change Thumbnail</span>
+                          <span>Change Avatar</span>
                         </button>
                       </div>
                     )}

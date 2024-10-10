@@ -24,6 +24,9 @@ import java from 'highlight.js/lib/languages/java'
 import { NoTextInput } from '@components/Objects/Editor/Extensions/NoTextInput/NoTextInput'
 import EditorOptionsProvider from '@components/Contexts/Editor/EditorContext'
 import AICanvaToolkit from './AI/AICanvaToolkit'
+import EmbedObjects from '@components/Objects/Editor/Extensions/EmbedObjects/EmbedObjects'
+import Badges from '@components/Objects/Editor/Extensions/Badges/Badges'
+import Buttons from '@components/Objects/Editor/Extensions/Buttons/Buttons'
 
 interface Editor {
   content: string
@@ -84,6 +87,18 @@ function Canva(props: Editor) {
       }),
       CodeBlockLowlight.configure({
         lowlight,
+      }),
+      EmbedObjects.configure({
+        editable: isEditable,
+        activity: props.activity,
+      }),
+      Badges.configure({
+        editable: isEditable,
+        activity: props.activity,
+      }),
+      Buttons.configure({
+        editable: isEditable,
+        activity: props.activity,
       }),
     ],
 
