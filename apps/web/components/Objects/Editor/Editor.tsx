@@ -50,6 +50,7 @@ import ActiveAvatars from './ActiveAvatars'
 import { getUriWithOrg } from '@services/config/config'
 import EmbedObjects from './Extensions/EmbedObjects/EmbedObjects'
 import Badges from './Extensions/Badges/Badges'
+import Buttons from './Extensions/Buttons/Buttons'
 
 interface Editor {
   content: string
@@ -140,6 +141,10 @@ function Editor(props: Editor) {
         activity: props.activity,
       }),
       Badges.configure({
+        editable: true,
+        activity: props.activity,
+      }),
+      Buttons.configure({
         editable: true,
         activity: props.activity,
       }),
