@@ -16,7 +16,10 @@ import {
   Cuboid,
   FileText,
   ImagePlus,
+  Lightbulb,
   Sigma,
+  Tag,
+  Tags,
   Video,
 } from 'lucide-react'
 import { SiYoutube } from '@icons-pack/react-simple-icons'
@@ -201,6 +204,21 @@ export const ToolbarButtons = ({ editor, props }: any) => {
           onClick={() => editor.chain().focus().insertContent({ type: 'blockEmbed' }).run()}
         >
           <Cuboid size={15} />
+        </ToolBtn>
+      </ToolTip>
+      <ToolTip content={'Badges'}>
+        <ToolBtn
+          onClick={() => editor.chain().focus().insertContent({
+            type: 'badge',
+            content: [
+                {
+                    type: 'text',
+                    text: 'This is a Badge'
+                }
+            ]
+          }).run()}
+        >
+          <Tags size={15} />
         </ToolBtn>
       </ToolTip>
     </ToolButtonsWrapper>

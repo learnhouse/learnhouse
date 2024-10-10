@@ -11,6 +11,7 @@
     "lint:fix": "eslint --fix ."
   },
   "dependencies": {
+    "@emoji-mart/react": "^1.1.1",
     "@hocuspocus/provider": "^2.13.7",
     "@icons-pack/react-simple-icons": "^10.0.0",
     "@radix-ui/colors": "^0.1.9",
