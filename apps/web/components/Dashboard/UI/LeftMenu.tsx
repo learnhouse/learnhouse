@@ -43,9 +43,9 @@ function LeftMenu() {
         background:
           'linear-gradient(0deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.2) 100%), radial-gradient(271.56% 105.16% at 50% -5.16%, rgba(255, 255, 255, 0.18) 0%, rgba(0, 0, 0, 0) 100%), rgb(20 19 19)',
       }}
-      className="flex flex-col w-[90px] bg-black h-screen  text-white shadow-xl"
+      className="flex flex-col w-[70px] bg-black h-screen  text-white shadow-xl"
     >
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-screen">
         <div className="flex h-20 mt-6">
           <Link
             className="flex flex-col items-center mx-auto space-y-3"
@@ -69,7 +69,7 @@ function LeftMenu() {
               sideOffset={8}
               side="right"
             >
-              <div className="py-1 px-3 bg-black/40 opacity-40 rounded-md text-[10px] justify-center text-center">
+              <div className="py-1 px-1 bg-black/40 opacity-40 rounded-md text-[10px] justify-center text-center">
                 {org?.name}
               </div>
             </ToolTip>

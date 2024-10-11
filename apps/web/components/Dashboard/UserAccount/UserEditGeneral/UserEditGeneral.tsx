@@ -40,7 +40,7 @@ function UserEditGeneral() {
   useEffect(() => { }, [session, session.data])
 
   return (
-    <div className="ml-10 mr-10 mx-auto bg-white rounded-xl shadow-sm px-6 py-5">
+    <div className="md:ml-10 ml-2 mr-10 mx-auto bg-white w-full rounded-xl shadow-sm px-1.5 sm:px-5 py-5">
       {session.data.user && (
         <Formik
           enableReinitialize
@@ -59,7 +59,7 @@ function UserEditGeneral() {
           }}
         >
           {({ isSubmitting }) => (
-            <div className="flex space-x-8">
+            <div className="flex -space-x-5">
               <Form className="max-w-md">
                 <label className="block mb-2 font-bold" htmlFor="email">
                   Email
@@ -135,7 +135,7 @@ function UserEditGeneral() {
                   </div>
                 )}
                 <div className="flex flex-col space-y-3">
-                  <div className="w-auto bg-gray-50 rounded-xl outline outline-1 outline-gray-200 h-[200px] shadow mx-20">
+                  <div className="w-auto bg-gray-50 rounded-xl outline outline-1 outline-gray-200 h-[200px] shadow mx-10 sm:mx-20">
                     <div className="flex flex-col justify-center items-center mt-10">
                       {localAvatar ? (
                         <UserAvatar
@@ -182,7 +182,7 @@ function UserEditGeneral() {
                   </div>
                   <div className="flex text-xs space-x-2 items-center text-gray-500 justify-center">
                     <Info size={13} />
-                    <p>Recommended size 100x100</p>
+                    <p>size 100x100</p>
                   </div>
                 </div>
               </div>

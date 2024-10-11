@@ -14,7 +14,7 @@ function BreadCrumbs(props: BreadCrumbsProps) {
 
   return (
     <div>
-      <div className="h-7"></div>
+      <div className="h-1"></div>
       <div className="text-gray-400 tracking-tight font-medium text-sm flex space-x-1">
         <div className="flex items-center space-x-1">
           {props.type == 'courses' ? (

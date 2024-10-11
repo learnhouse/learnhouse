@@ -21,12 +21,12 @@ function SettingsPage({ params }: { params: SettingsParams }) {
 
   return (
     <div className="h-full w-full bg-[#f8f8f8]">
-      <div className="pl-10 pr-10  tracking-tight bg-[#fcfbfc] z-10 shadow-[0px_4px_16px_rgba(0,0,0,0.06)]">
+      <div className="sm:pl-10 pl-2 pr-10 tracking-tight bg-[#fcfbfc] z-10 shadow-[0px_4px_16px_rgba(0,0,0,0.06)]">
         <BreadCrumbs
           type="user"
           last_breadcrumb={session?.user?.username}
         ></BreadCrumbs>
-        <div className="my-2 tracking-tighter">
+        <div className="my-2 mr-2 tracking-tighter">
           <div className="w-100 flex justify-between">
             <div className="pt-3 flex font-bold text-4xl">Account Settings</div>
           </div>
@@ -78,7 +78,7 @@ function SettingsPage({ params }: { params: SettingsParams }) {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.1, type: 'spring', stiffness: 80 }}
-        className="h-full overflow-y-auto"
+        className="h-[510px]"
       >
         {params.subpage == 'general' ? <UserEditGeneral /> : ''}
         {params.subpage == 'security' ? <UserEditPassword /> : ''}
