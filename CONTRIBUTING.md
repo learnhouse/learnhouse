@@ -14,9 +14,11 @@
 
 Use the Docker Image available in `./Dockerfile`
 
+> Make sure your container runtime has at least 4GB of RAM allocated, as default settings may vary by tool.
+
     docker-compose up -d
 
-Initiate a dev environment, please check the official guide [here](https://docs.learnhouse.app/technical-docs/dev-env)
+Initiate a dev environment, please check the official guide [here](https://docs.learnhouse.app/setup-dev-environment)
 
 ## Frontend Codebase
 
@@ -36,11 +38,11 @@ Use the Docker Image available in `front/Dockerfile`, or install the frontend pa
 
 #### Start the Backend server first
 
-You need to have the backend running, to initiate a dev environment please check the official guide [here](https://docs.learnhouse.app/technical-docs/dev-env)
+You need to have the backend running, to initiate a dev environment please check the official guide [here](https://docs.learnhouse.app/setup-dev-environment)
 
 #### Environment Files
 
-Please check if you initiated your `.env` files, here is a [guide](https://docs.learnhouse.app/technical-docs/dev-env) on how to do it.
+Please check if you initiated your `.env` files, here is a [guide](https://docs.learnhouse.app/setup-dev-environment) on how to do it.
 
 #### Install the frontend package
 
