@@ -15,6 +15,7 @@ import { getCollaborationServerUrl } from '@services/config/config'
 import randomColor from 'randomcolor'
 import MouseMovements from './MouseMovements'
 import { v4 as uuidv4 } from 'uuid';
+import { debounce } from '@/lib/utils';
 
 interface EditorWrapperProps {
   content: string
@@ -55,17 +56,18 @@ function EditorWrapper(props: EditorWrapperProps): JSX.Element {
   // Store the Y document in the browser
   new IndexeddbPersistence(props.activity.activity_uuid, doc)
 
-  document.addEventListener("mousemove", (event) => {
-    // Share any information you like
-    provider?.setAwarenessField("userMouseMovement", {
-      user: session.data.user,
-      mouseX: event.clientX,
-      mouseY: event.clientY,
-      color: thisPageColor,
-      onlineInstanceID: onlinePageInstanceID
-    });
-  });
-
+  document.addEventListener(
+    'mousemove',
+    debounce((event: MouseEvent) => {
+      provider?.setAwarenessField('userMouseMovement', {
+        user: session.data.user,
+        mouseX: event.clientX,
+        mouseY: event.clientY,
+        color: thisPageColor,
+        onlineInstanceID: onlinePageInstanceID,
+      })
+    }, 300)
+  )
 
   async function setContent(content: any) {
     let activity = props.activity
@@ -197,4 +199,3 @@ function EditorWrapper(props: EditorWrapperProps): JSX.Element {
 
 
 export default EditorWrapper
-
