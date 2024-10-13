@@ -1,15 +1,14 @@
 import { NodeViewWrapper } from '@tiptap/react'
 import React, { useEffect } from 'react'
-import styled from 'styled-components'
 import { Resizable } from 're-resizable'
-import { AlertTriangle, Image, Loader } from 'lucide-react'
+import { AlertTriangle, Image } from 'lucide-react'
 import { uploadNewImageFile } from '../../../../../services/blocks/Image/images'
-import { UploadIcon } from '@radix-ui/react-icons'
 import { getActivityBlockMediaDirectory } from '@services/media/media'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useCourse } from '@components/Contexts/CourseContext'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { FileUploadBlock, FileUploadBlockButton, FileUploadBlockInput } from '../../FileUploadBlock'
 
 function ImageBlockComponent(props: any) {
   const org = useOrg() as any
@@ -53,39 +52,11 @@ function ImageBlockComponent(props: any) {
 
   return (
     <NodeViewWrapper className="block-image">
-      {!blockObject && isEditable && (
-        <BlockImageWrapper
-          className="flex items-center space-x-3 py-7 bg-gray-50 rounded-xl text-gray-900 px-3 border-dashed border-gray-150 border-2"
-          contentEditable={isEditable}
-        >
-          {isLoading ? (
-            <Loader
-              className="animate-spin animate-pulse text-gray-200"
-              size={50}
-            />
-          ) : (
-            <>
-              <div>
-                <Image className="text-gray-200" size={50} />
-              </div>
-              <input
-                className="p-3 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 hover:file:cursor-pointer  file:bg-gray-200 cursor-pointer file:text-gray-500"
-                onChange={handleImageChange}
-                type="file"
-                name=""
-                id=""
-              />
-              <button
-                className="p-2 px-3 bg-gray-200 rounded-lg text-gray-500 hover:bg-gray-300 transition space-x-2 items-center flex"
-                onClick={handleSubmit}
-              >
-                <UploadIcon></UploadIcon>
-                <p>Submit</p>
-              </button>
-            </>
-          )}
-        </BlockImageWrapper>
-      )}
+     <FileUploadBlock isEditable={isEditable} isLoading={isLoading} isEmpty={!blockObject} Icon={Image}>
+        <FileUploadBlockInput onChange={handleImageChange} accept="image/*" />
+        <FileUploadBlockButton onClick={handleSubmit} disabled={!image}/>
+      </FileUploadBlock>
+      
       {blockObject && (
         <Resizable
           defaultSize={{ width: imageSize.width, height: '100%' }}
@@ -146,20 +117,3 @@ function ImageBlockComponent(props: any) {
 }
 
 export default ImageBlockComponent
-
-const BlockImageWrapper = styled.div`
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  font-size: 14px;
-`
-
-const BlockImage = styled.div`
-  display: flex;
-
-  // center
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  font-size: 14px;
-`
