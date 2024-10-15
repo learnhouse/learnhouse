@@ -8,6 +8,7 @@ import { CreditCard, Settings, Repeat, BookOpen, Users, DollarSign } from 'lucid
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import PaymentsConfigurationPage from '@components/Dashboard/Payments/PaymentsConfigurationPage'
+import PaymentsProductPage from '@components/Dashboard/Payments/PaymentsProductPage'
 
 
 
@@ -40,9 +41,9 @@ function PaymentsPage({ params }: { params: PaymentsParams }) {
       setH1Label('Subscriptions')
       setH2Label('Manage your subscription plans')
     }
-    if (selectedSubPage === 'paid-courses') {
-      setH1Label('Paid Courses')
-      setH2Label('Manage your paid courses and pricing')
+    if (selectedSubPage === 'paid-products') {
+      setH1Label('Paid Products')
+      setH2Label('Manage your paid products and pricing')
     }
     if (selectedSubPage === 'customers') {
       setH1Label('Customers')
@@ -66,18 +67,18 @@ function PaymentsPage({ params }: { params: PaymentsParams }) {
         </div>
         <div className="flex space-x-5 font-black text-sm">
           <TabLink
-            href={getUriWithOrg(params.orgslug, '/dash/payments/general')}
-            icon={<CreditCard size={16} />}
-            label="General"
-            isActive={selectedSubPage === 'general'}
-            onClick={() => setSelectedSubPage('general')}
+            href={getUriWithOrg(params.orgslug, '/dash/payments/customers')}
+            icon={<Users size={16} />}
+            label="Customers"
+            isActive={selectedSubPage === 'customers'}
+            onClick={() => setSelectedSubPage('customers')}
           />
           <TabLink
-            href={getUriWithOrg(params.orgslug, '/dash/payments/configuration')}
-            icon={<Settings size={16} />}
-            label="Configuration"
-            isActive={selectedSubPage === 'configuration'}
-            onClick={() => setSelectedSubPage('configuration')}
+            href={getUriWithOrg(params.orgslug, '/dash/payments/paid-products')}
+            icon={<BookOpen size={16} />}
+            label="One-time Products"
+            isActive={selectedSubPage === 'paid-products'}
+            onClick={() => setSelectedSubPage('paid-products')}
           />
           <TabLink
             href={getUriWithOrg(params.orgslug, '/dash/payments/subscriptions')}
@@ -87,19 +88,13 @@ function PaymentsPage({ params }: { params: PaymentsParams }) {
             onClick={() => setSelectedSubPage('subscriptions')}
           />
           <TabLink
-            href={getUriWithOrg(params.orgslug, '/dash/payments/paid-courses')}
-            icon={<BookOpen size={16} />}
-            label="Paid Courses"
-            isActive={selectedSubPage === 'paid-courses'}
-            onClick={() => setSelectedSubPage('paid-courses')}
+            href={getUriWithOrg(params.orgslug, '/dash/payments/configuration')}
+            icon={<Settings size={16} />}
+            label="Configuration"
+            isActive={selectedSubPage === 'configuration'}
+            onClick={() => setSelectedSubPage('configuration')}
           />
-          <TabLink
-            href={getUriWithOrg(params.orgslug, '/dash/payments/customers')}
-            icon={<Users size={16} />}
-            label="Customers"
-            isActive={selectedSubPage === 'customers'}
-            onClick={() => setSelectedSubPage('customers')}
-          />
+
         </div>
       </div>
       <div className="h-6"></div>
@@ -112,8 +107,8 @@ function PaymentsPage({ params }: { params: PaymentsParams }) {
       >
         {selectedSubPage === 'general' && <div>General</div>}
         {selectedSubPage === 'configuration' && <PaymentsConfigurationPage />}
+        {selectedSubPage === 'paid-products' && <PaymentsProductPage />}
         {selectedSubPage === 'subscriptions' && <div>Subscriptions</div>}
-        {selectedSubPage === 'paid-courses' && <div>Paid Courses</div>}
         {selectedSubPage === 'customers' && <div>Customers</div>}
       </motion.div>
     </div>
@@ -124,9 +119,8 @@ const TabLink = ({ href, icon, label, isActive, onClick }: { href: string, icon:
   <Link href={href}>
     <div
       onClick={onClick}
-      className={`py-2 w-fit text-center border-black transition-all ease-linear ${
-        isActive ? 'border-b-4' : 'opacity-50'
-      } cursor-pointer`}
+      className={`py-2 w-fit text-center border-black transition-all ease-linear ${isActive ? 'border-b-4' : 'opacity-50'
+        } cursor-pointer`}
     >
       <div className="flex items-center space-x-2.5 mx-2">
         {icon}
