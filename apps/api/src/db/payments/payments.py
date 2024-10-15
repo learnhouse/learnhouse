@@ -1,21 +1,22 @@
 from datetime import datetime
 from enum import Enum
-from typing import Literal, Optional
+from typing import  Optional
 from pydantic import BaseModel
 from sqlalchemy import JSON
 from sqlmodel import Field, SQLModel, Column, BigInteger, ForeignKey
 
-
+# Stripe provider config
 class StripeProviderConfig(BaseModel):
     stripe_key: str = ""
     stripe_secret_key: str = ""
     stripe_webhook_secret: str = ""
 
+# PaymentsConfig 
 class PaymentProviderEnum(str, Enum):
     STRIPE = "stripe"
     
 class PaymentsConfigBase(SQLModel):
-    enabled: bool = False
+    enabled: bool = True
     provider: PaymentProviderEnum = PaymentProviderEnum.STRIPE
     provider_config: dict = Field(default={}, sa_column=Column(JSON))
 
@@ -34,7 +35,7 @@ class PaymentsConfigCreate(PaymentsConfigBase):
 
 
 class PaymentsConfigUpdate(PaymentsConfigBase):
-    enabled: Optional[bool] = False
+    enabled: Optional[bool] = True
     provider_config: Optional[dict] = None
 
 
