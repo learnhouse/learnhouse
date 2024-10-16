@@ -25,6 +25,10 @@ import { Eye } from 'lucide-react'
 import MathEquationBlock from './Extensions/MathEquation/MathEquationBlock'
 import PDFBlock from './Extensions/PDF/PDFBlock'
 import QuizBlock from './Extensions/Quiz/QuizBlock'
+import Table from '@tiptap/extension-table'
+import TableCell from '@tiptap/extension-table-cell'
+import TableHeader from '@tiptap/extension-table-header'
+import TableRow from '@tiptap/extension-table-row'
 import ToolTip from '@components/StyledElements/Tooltip/Tooltip'
 import Link from 'next/link'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
@@ -148,6 +152,12 @@ function Editor(props: Editor) {
         editable: true,
         activity: props.activity,
       }),
+      Table.configure({
+        resizable: true,
+      }),
+      TableRow,
+      TableHeader,
+      TableCell,
 
       // Add Collaboration and CollaborationCursor only if isCollabEnabledOnThisOrg is true
       ...(props.isCollabEnabledOnThisOrg ? [
