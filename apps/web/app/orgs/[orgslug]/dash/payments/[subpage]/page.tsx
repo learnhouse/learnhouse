@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import BreadCrumbs from '@components/Dashboard/UI/BreadCrumbs'
 import Link from 'next/link'
 import { getUriWithOrg } from '@services/config/config'
-import { CreditCard, Settings, Repeat, BookOpen, Users, DollarSign } from 'lucide-react'
+import { CreditCard, Settings, Repeat, BookOpen, Users, DollarSign, Gem } from 'lucide-react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import PaymentsConfigurationPage from '@components/Dashboard/Payments/PaymentsConfigurationPage'
@@ -52,7 +52,7 @@ function PaymentsPage({ params }: { params: PaymentsParams }) {
   }
 
   return (
-    <div className="h-full w-full bg-[#f8f8f8]">
+    <div className="h-screen w-full bg-[#f8f8f8] flex flex-col">
       <div className="pl-10 pr-10 tracking-tight bg-[#fcfbfc] z-10 shadow-[0px_4px_16px_rgba(0,0,0,0.06)]">
         <BreadCrumbs type="payments" />
         <div className="my-2  py-3">
@@ -75,17 +75,10 @@ function PaymentsPage({ params }: { params: PaymentsParams }) {
           />
           <TabLink
             href={getUriWithOrg(params.orgslug, '/dash/payments/paid-products')}
-            icon={<BookOpen size={16} />}
-            label="One-time Products"
+            icon={<Gem size={16} />}
+            label="Products & Subscriptions"
             isActive={selectedSubPage === 'paid-products'}
             onClick={() => setSelectedSubPage('paid-products')}
-          />
-          <TabLink
-            href={getUriWithOrg(params.orgslug, '/dash/payments/subscriptions')}
-            icon={<Repeat size={16} />}
-            label="Subscriptions"
-            isActive={selectedSubPage === 'subscriptions'}
-            onClick={() => setSelectedSubPage('subscriptions')}
           />
           <TabLink
             href={getUriWithOrg(params.orgslug, '/dash/payments/configuration')}
@@ -103,12 +96,11 @@ function PaymentsPage({ params }: { params: PaymentsParams }) {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.1, type: 'spring', stiffness: 80 }}
-        className="h-full overflow-y-auto"
+        className="flex-1 overflow-y-auto"
       >
         {selectedSubPage === 'general' && <div>General</div>}
         {selectedSubPage === 'configuration' && <PaymentsConfigurationPage />}
         {selectedSubPage === 'paid-products' && <PaymentsProductPage />}
-        {selectedSubPage === 'subscriptions' && <div>Subscriptions</div>}
         {selectedSubPage === 'customers' && <div>Customers</div>}
       </motion.div>
     </div>

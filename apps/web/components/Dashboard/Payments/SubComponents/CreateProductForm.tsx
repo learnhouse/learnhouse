@@ -1,138 +1,157 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useOrg } from '@components/Contexts/OrgContext';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import { createProduct } from '@services/payments/products';
-import FormLayout, { ButtonBlack, Input, Textarea, FormField, FormLabelAndMessage, Flex } from '@components/StyledElements/Form/Form';
-import * as Form from '@radix-ui/react-form';
-import { useFormik } from 'formik';
+import { Formik, Form, Field, ErrorMessage } from 'formik';
+import * as Yup from 'yup';
 import toast from 'react-hot-toast';
 import { mutate } from 'swr';
-import { getAPIUrl } from '@services/config/config';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import currencyCodes from 'currency-codes';
+
+const validationSchema = Yup.object().shape({
+  name: Yup.string().required('Name is required'),
+  description: Yup.string().required('Description is required'),
+  amount: Yup.number().min(0, 'Amount must be positive').required('Amount is required'),
+  benefits: Yup.string(),
+  currency: Yup.string().required('Currency is required'),
+  product_type: Yup.string().oneOf(['one_time', 'subscription']).required('Product type is required'),
+});
 
 interface ProductFormValues {
   name: string;
   description: string;
-  product_type: string;
+  product_type: 'one_time' | 'subscription';
   benefits: string;
   amount: number;
+  currency: string;
 }
 
 const CreateProductForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
   const org = useOrg() as any;
   const session = useLHSession() as any;
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currencies, setCurrencies] = useState<{ code: string; name: string }[]>([]);
 
-  const validate = (values: any) => {
-    const errors: any = {};
+  useEffect(() => {
+    const allCurrencies = currencyCodes.data.map(currency => ({
+      code: currency.code,
+      name: `${currency.code} - ${currency.currency}`
+    }));
+    setCurrencies(allCurrencies);
+  }, []);
 
-    if (!values.name) {
-      errors.name = 'Required';
-    }
-
-    if (!values.description) {
-      errors.description = 'Required';
-    }
-
-    if (!values.amount) {
-      errors.amount = 'Required';
-    } else {
-      const numAmount = Number(values.amount);
-      if (isNaN(numAmount) || numAmount <= 0) {
-        errors.amount = 'Amount must be greater than 0';
-      }
-    }
-
-    return errors;
+  const initialValues: ProductFormValues = {
+    name: '',
+    description: '',
+    product_type: 'one_time',
+    benefits: '',
+    amount: 0,
+    currency: 'USD',
   };
 
-  const formik = useFormik<ProductFormValues>({
-    initialValues: {
-      name: '',
-      description: '',
-      product_type: 'one_time',
-      benefits: '',
-      amount: 0,
-    },
-    validate,
-    onSubmit: async (values) => {
-      setIsSubmitting(true);
-      try {
-        const res = await createProduct(org.id, values, session.data?.tokens?.access_token);
-        if (res.success) {
-          toast.success('Product created successfully');
-          mutate([`/payments/${org.id}/products`, session.data?.tokens?.access_token]);
-          formik.resetForm();
-          onSuccess(); // Call the onSuccess function to close the modal
-        } else {
-          toast.error('Failed to create product');
-        }
-      } catch (error) {
-        console.error('Error creating product:', error);
-        toast.error('An error occurred while creating the product');
-      } finally {
-        setIsSubmitting(false);
+  const handleSubmit = async (values: ProductFormValues, { setSubmitting, resetForm }: any) => {
+    try {
+      const res = await createProduct(org.id, values, session.data?.tokens?.access_token);
+      if (res.success) {
+        toast.success('Product created successfully');
+        mutate([`/payments/${org.id}/products`, session.data?.tokens?.access_token]);
+        resetForm();
+        onSuccess();
+      } else {
+        toast.error('Failed to create product');
       }
-    },
-  });
+    } catch (error) {
+      console.error('Error creating product:', error);
+      toast.error('An error occurred while creating the product');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
-    <div className="p-5">
-      <FormLayout onSubmit={formik.handleSubmit}>
-        <FormField name="name">
-          <FormLabelAndMessage label="Product Name" message={formik.errors.name} />
-          <Form.Control asChild>
-            <Input
-              onChange={formik.handleChange}
-              value={formik.values.name}
-              type="text"
-              required
-            />
-          </Form.Control>
-        </FormField>
+    <Formik
+      initialValues={initialValues}
+      validationSchema={validationSchema}
+      onSubmit={handleSubmit}
+    >
+      {({ isSubmitting, values, setFieldValue }) => (
+        <Form className="space-y-4">
+          <div className='px-1.5 py-2 flex-col space-y-3'>
+            <div>
+              <Label htmlFor="name">Product Name</Label>
+              <Field name="name" as={Input} placeholder="Product Name" />
+              <ErrorMessage name="name" component="div" className="text-red-500 text-sm mt-1" />
+            </div>
 
-        <FormField name="description">
-          <FormLabelAndMessage label="Description" message={formik.errors.description} />
-          <Form.Control asChild>
-            <Textarea
-              onChange={formik.handleChange}
-              value={formik.values.description}
-              required
-            />
-          </Form.Control>
-        </FormField>
+            <div>
+              <Label htmlFor="description">Description</Label>
+              <Field name="description" as={Textarea} placeholder="Product Description" />
+              <ErrorMessage name="description" component="div" className="text-red-500 text-sm mt-1" />
+            </div>
 
-        <FormField name="benefits">
-          <FormLabelAndMessage label="Benefits" />
-          <Form.Control asChild>
-            <Textarea
-              onChange={formik.handleChange}
-              value={formik.values.benefits}
-            />
-          </Form.Control>
-        </FormField>
+            <div className="flex space-x-2">
+              <div className="flex-grow">
+                <Label htmlFor="amount">Price</Label>
+                <Field name="amount" as={Input} type="number" placeholder="Price" />
+                <ErrorMessage name="amount" component="div" className="text-red-500 text-sm mt-1" />
+              </div>
+              <div className="w-1/3">
+                <Label htmlFor="currency">Currency</Label>
+                <Select
+                  value={values.currency}
+                  onValueChange={(value) => setFieldValue('currency', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Currency" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {currencies.map((currency) => (
+                      <SelectItem key={currency.code} value={currency.code}>
+                        {currency.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <ErrorMessage name="currency" component="div" className="text-red-500 text-sm mt-1" />
+              </div>
+            </div>
 
-        <FormField name="amount">
-          <FormLabelAndMessage label="Amount" message={formik.errors.amount} />
-          <Form.Control asChild>
-            <Input
-              onChange={formik.handleChange}
-              value={formik.values.amount}
-              type="number"
-              min="0"
-              step="0.01"
-              required
-            />
-          </Form.Control>
-        </FormField>
-        <Flex css={{ marginTop: 25, justifyContent: 'flex-end' }}>
-          <Form.Submit asChild>
-            <ButtonBlack type="submit" disabled={isSubmitting}>
+            <div>
+              <Label htmlFor="product_type">Product Type</Label>
+              <Select
+                value={values.product_type}
+                onValueChange={(value) => setFieldValue('product_type', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Product Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="one_time">One Time</SelectItem>
+                  <SelectItem value="subscription">Subscription</SelectItem>
+                </SelectContent>
+              </Select>
+              <ErrorMessage name="product_type" component="div" className="text-red-500 text-sm mt-1" />
+            </div>
+
+            <div>
+              <Label htmlFor="benefits">Benefits</Label>
+              <Field name="benefits" as={Textarea} placeholder="Product Benefits" />
+              <ErrorMessage name="benefits" component="div" className="text-red-500 text-sm mt-1" />
+            </div>
+          </div>
+
+          <div className="flex justify-end">
+            <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? 'Creating...' : 'Create Product'}
-            </ButtonBlack>
-          </Form.Submit>
-        </Flex>
-      </FormLayout>
-    </div>
+            </Button>
+          </div>
+        </Form>
+      )}
+    </Formik>
   );
 };
 
