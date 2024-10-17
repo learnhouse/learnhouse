@@ -1,9 +1,9 @@
 'use client'
+
 import React from 'react'
-import * as Dialog from '@radix-ui/react-dialog'
-import { styled, keyframes } from '@stitches/react'
-import { blackA, mauve } from '@radix-ui/colors'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
 import { ButtonBlack } from '../Form/Form'
+import { cn } from "@/lib/utils"
 
 type ModalParams = {
   dialogTitle?: string
@@ -12,7 +12,7 @@ type ModalParams = {
   dialogClose?: React.ReactNode | null
   dialogTrigger?: React.ReactNode
   addDefCloseButton?: boolean
-  onOpenChange: any
+  onOpenChange: (open: boolean) => void
   isDialogOpen?: boolean
   minHeight?: 'sm' | 'md' | 'lg' | 'xl' | 'no-min'
   minWidth?: 'sm' | 'md' | 'lg' | 'xl' | 'no-min'
@@ -20,161 +20,61 @@ type ModalParams = {
   customWidth?: string
 }
 
-const Modal = (params: ModalParams) => (
-  <Dialog.Root open={params.isDialogOpen} onOpenChange={params.onOpenChange}>
-    {params.dialogTrigger ? (
-      <Dialog.Trigger asChild>{params.dialogTrigger}</Dialog.Trigger>
-    ) : null}
+const Modal = (params: ModalParams) => {
+  const getMinHeight = () => {
+    switch (params.minHeight) {
+      case 'sm': return 'min-h-[300px]'
+      case 'md': return 'min-h-[500px]'
+      case 'lg': return 'min-h-[700px]'
+      case 'xl': return 'min-h-[900px]'
+      default: return ''
+    }
+  }
 
-    <Dialog.Portal>
-      <DialogOverlay />
-      <DialogContent
-        className="overflow-auto scrollbar-w-2 scrollbar-h-2 scrollbar scrollbar-thumb-black/20 scrollbar-thumb-rounded-full scrollbar-track-rounded-full"
-        minHeight={params.minHeight}
-        minWidth={params.minWidth}
-        
-      >
-        {params.dialogTitle && params.dialogDescription &&
-          <DialogTopBar className="-space-y-1">
+  const getMinWidth = () => {
+    switch (params.minWidth) {
+      case 'sm': return 'min-w-[600px]'
+      case 'md': return 'min-w-[800px]'
+      case 'lg': return 'min-w-[1000px]'
+      case 'xl': return 'min-w-[1200px]'
+      default: return ''
+    }
+  }
+
+  return (
+    <Dialog open={params.isDialogOpen} onOpenChange={params.onOpenChange}>
+      {params.dialogTrigger && (
+        <DialogTrigger asChild>{params.dialogTrigger}</DialogTrigger>
+      )}
+      <DialogContent className={cn(
+        "overflow-auto",
+        getMinHeight(),
+        getMinWidth(),
+        params.customHeight,
+        params.customWidth
+      )}>
+        {params.dialogTitle && params.dialogDescription && (
+          <DialogHeader className="text-center flex flex-col space-y-0.5 w-full">
             <DialogTitle>{params.dialogTitle}</DialogTitle>
             <DialogDescription>{params.dialogDescription}</DialogDescription>
-          </DialogTopBar>
-        }
-        {params.dialogContent}
-        {params.dialogClose ? (
-          <Flex css={{ marginTop: 25, justifyContent: 'flex-end' }}>
-            <Dialog.Close asChild>{params.dialogClose}</Dialog.Close>
-          </Flex>
-        ) : null}
-        {params.addDefCloseButton ? (
-          <Flex css={{ marginTop: 25, justifyContent: 'flex-end' }}>
-            <Dialog.Close asChild>
-              <ButtonBlack type="submit" css={{ marginTop: 10 }}>
+          </DialogHeader>
+        )}
+        <div className="overflow-auto">
+          {params.dialogContent}
+        </div>
+        {(params.dialogClose || params.addDefCloseButton) && (
+          <DialogFooter>
+            {params.dialogClose}
+            {params.addDefCloseButton && (
+              <ButtonBlack type="submit">
                 Close
               </ButtonBlack>
-            </Dialog.Close>
-          </Flex>
-        ) : null}
+            )}
+          </DialogFooter>
+        )}
       </DialogContent>
-    </Dialog.Portal>
-  </Dialog.Root>
-)
-
-const overlayShow = keyframes({
-  '0%': { opacity: 0 },
-  '100%': { opacity: 1 },
-})
-
-const overlayClose = keyframes({
-  '0%': { opacity: 1 },
-  '100%': { opacity: 0 },
-})
-
-const contentShow = keyframes({
-  '0%': { opacity: 0, transform: 'translate(-50%, -50%) scale(.96)' },
-  '100%': { opacity: 1, transform: 'translate(-50%, -50%) scale(1)' },
-})
-
-const contentClose = keyframes({
-  '0%': { opacity: 1, transform: 'translate(-50%, -50%) scale(1)' },
-  '100%': { opacity: 0, transform: 'translate(-50%, -52%) scale(.96)' },
-})
-
-const DialogOverlay = styled(Dialog.Overlay, {
-  backgroundColor: blackA.blackA9,
-  backdropFilter: 'blur(0.6px)',
-  position: 'fixed',
-  zIndex: 500,
-  inset: 0,
-  animation: `${overlayShow} 150ms cubic-bezier(0.16, 1, 0.3, 1)`,
-  '&[data-state="closed"]': {
-    animation: `${overlayClose} 150ms cubic-bezier(0.16, 1, 0.3, 1)`,
-  },
-})
-
-const DialogContent = styled(Dialog.Content, {
-  variants: {
-    minHeight: {
-      'no-min': {
-        minHeight: '0px',
-      },
-      sm: {
-        minHeight: '300px',
-      },
-      md: {
-        minHeight: '500px',
-      },
-      lg: {
-        minHeight: '700px',
-      },
-      xl: {
-        minHeight: '900px',
-      },
-    },
-    minWidth: {
-      'no-min': {
-        minWidth: '0px',
-      },
-      sm: {
-        minWidth: '600px',
-      },
-      md: {
-        minWidth: '800px',
-      },
-      lg: {
-        minWidth: '1000px',
-      },
-      xl: {
-        minWidth: '1200px',
-      },
-    },
-  },
-
-  backgroundColor: 'white',
-  borderRadius: 18,
-  zIndex: 501,
-  boxShadow:
-    'hsl(206 22% 7% / 35%) 0px 10px 38px -10px, hsl(206 22% 7% / 20%) 0px 10px 20px -15px',
-  position: 'fixed',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
-  width: '90vw',
-  maxHeight: '85vh',
-  minHeight: '300px',
-  maxWidth: '600px',
-  padding: 11,
-  animation: `${contentShow} 150ms cubic-bezier(0.16, 1, 0.3, 1)`,
-  '&:focus': { outline: 'none' },
-
-  '&[data-state="closed"]': {
-    animation: `${contentClose} 150ms cubic-bezier(0.16, 1, 0.3, 1)`,
-  },
-  transition: 'max-height 0.3s ease-out',
-})
-
-const DialogTopBar = styled('div', {
-  background: '#F7F7F7',
-  padding: '8px 14px ',
-  borderRadius: 14,
-})
-const DialogTitle = styled(Dialog.Title, {
-  margin: 0,
-  fontWeight: 700,
-  letterSpacing: '-0.05em',
-  padding: 0,
-  color: mauve.mauve12,
-  fontSize: 21,
-})
-
-const DialogDescription = styled(Dialog.Description, {
-  color: mauve.mauve11,
-  letterSpacing: '-0.03em',
-  fontSize: 15,
-  padding: 0,
-  margin: 0,
-})
-
-const Flex = styled('div', { display: 'flex' })
+    </Dialog>
+  )
+}
 
 export default Modal

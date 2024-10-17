@@ -1,5 +1,5 @@
 'use client';
-import LeftMenu from '@components/Dashboard/UI/LeftMenu'
+import DashMenu from '@components/Objects/Menus/DashMenu';
 import AdminAuthorization from '@components/Security/AdminAuthorization'
 import { SessionProvider } from 'next-auth/react'
 import React from 'react'
@@ -15,7 +15,7 @@ function ClientAdminLayout({
         <SessionProvider>
             <AdminAuthorization authorizationMode="page">
                 <div className="flex">
-                    <LeftMenu />
+                    <DashMenu />
                     <div className="flex w-full">{children}</div>
                 </div>
             </AdminAuthorization>
