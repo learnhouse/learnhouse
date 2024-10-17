@@ -13,6 +13,7 @@ class PaymentsProductBase(SQLModel):
     product_type: PaymentProductTypeEnum = PaymentProductTypeEnum.ONE_TIME
     benefits: str = ""
     amount: float = 0.0
+    currency: str = "USD"
 
 class PaymentsProduct(PaymentsProductBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)

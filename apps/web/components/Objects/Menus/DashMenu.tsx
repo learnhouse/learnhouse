@@ -120,7 +120,7 @@ function DashMenu() {
             >
               <Link
                 className="bg-white/5 rounded-lg p-2 hover:bg-white/10 transition-all ease-linear"
-                href={`/dash/payments/general`}
+                href={`/dash/payments/customers`}
               >
                 <CreditCard size={18} />
               </Link>
