@@ -7,6 +7,7 @@ import {
   ArrowRightIcon,
   DividerVerticalIcon,
   ListBulletIcon,
+  TableIcon,
 } from '@radix-ui/react-icons'
 import {
   AlertCircle,
@@ -92,6 +93,11 @@ export const ToolbarButtons = ({ editor, props }: any) => {
         <option value="5">Heading 5</option>
         <option value="6">Heading 6</option>
       </ToolSelect>
+      <ToolBtn 
+        onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
+      >
+        <TableIcon/>
+      </ToolBtn>
       {/* TODO: fix this : toggling only works one-way */}
       <DividerVerticalIcon
         style={{ marginTop: 'auto', marginBottom: 'auto', color: 'grey' }}
