@@ -338,6 +338,7 @@ const EditorTop = styled.div`
   position: fixed;
   z-index: 303;
   width: -webkit-fill-available;
+  width: -moz-available;
 `
 
 // Inside EditorTop
