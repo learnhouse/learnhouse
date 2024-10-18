@@ -110,7 +110,7 @@ function ActivityElement(props: ActivitiyElementProps) {
     >
       {(provided, snapshot) => (
         <div
-          className="flex flex-row py-2 my-2 w-full rounded-md bg-gray-50 text-gray-500 hover:bg-gray-100 hover:scale-102 hover:shadow space-x-1 items-center ring-1 ring-inset ring-gray-400/10 shadow-sm transition-all delay-100 duration-75 ease-linear"
+          className="flex flex-row py-2 my-2 w-full rounded-md bg-gray-50 text-gray-500 hover:bg-gray-100 hover:scale-102 hover:shadow space-x-1 items-center ring-1 ring-inset ring-gray-400/10 shadow-sm"
           key={props.activity.id}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
