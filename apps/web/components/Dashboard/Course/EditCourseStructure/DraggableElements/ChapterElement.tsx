@@ -52,7 +52,6 @@ function ChapterElement(props: ChapterElementProps) {
 
   async function updateChapterName(chapterId: string) {
     if (modifiedChapter?.chapterId === chapterId) {
-      setSelectedChapter(undefined)
       let modifiedChapterCopy = {
         name: modifiedChapter.chapterName,
       }
@@ -61,6 +60,7 @@ function ChapterElement(props: ChapterElementProps) {
       await revalidateTags(['courses'], props.orgslug)
       router.refresh()
     }
+    setSelectedChapter(undefined)
   }
 
   return (
