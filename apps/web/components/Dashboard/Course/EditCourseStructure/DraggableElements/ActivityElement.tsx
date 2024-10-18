@@ -88,7 +88,7 @@ function ActivityElement(props: ActivitiyElementProps) {
       modifiedActivity?.activityId === activityId &&
       selectedActivity !== undefined
     ) {
-      setSelectedActivity(undefined)
+      
       let modifiedActivityCopy = {
         ...props.activity,
         name: modifiedActivity.activityName,
@@ -99,6 +99,7 @@ function ActivityElement(props: ActivitiyElementProps) {
       await revalidateTags(['courses'], props.orgslug)
       router.refresh()
     }
+    setSelectedActivity(undefined)
   }
 
   return (
