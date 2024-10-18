@@ -4,9 +4,9 @@ import currencyCodes from 'currency-codes';
 import { useOrg } from '@components/Contexts/OrgContext';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import useSWR, { mutate } from 'swr';
-import { getProducts, deleteProduct, updateProduct } from '@services/payments/products';
+import { getProducts, updateProduct, archiveProduct } from '@services/payments/products';
 import CreateProductForm from '@components/Dashboard/Payments/SubComponents/CreateProductForm';
-import { Plus, Trash2, Pencil, Info, RefreshCcw, SquareCheck, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Trash2, Pencil, Info, RefreshCcw, SquareCheck, ChevronDown, ChevronUp, Archive } from 'lucide-react';
 import Modal from '@components/StyledElements/Modal/Modal';
 import ConfirmationModal from '@components/StyledElements/ConfirmationModal/ConfirmationModal';
 import toast from 'react-hot-toast';
@@ -18,6 +18,7 @@ import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { Label } from '@components/ui/label';
 import { Badge } from '@components/ui/badge';
+import { getPaymentConfigs } from '@services/payments/payments';
 
 const validationSchema = Yup.object().shape({
     name: Yup.string().required('Name is required'),
@@ -33,19 +34,32 @@ function PaymentsProductPage() {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [editingProductId, setEditingProductId] = useState<string | null>(null);
     const [expandedProducts, setExpandedProducts] = useState<{ [key: string]: boolean }>({});
+    const [isStripeEnabled, setIsStripeEnabled] = useState(false);
 
     const { data: products, error } = useSWR(
         () => org && session ? [`/payments/${org.id}/products`, session.data?.tokens?.access_token] : null,
         ([url, token]) => getProducts(org.id, token)
     );
 
-    const handleDeleteProduct = async (productId: string) => {
+    const { data: paymentConfigs, error: paymentConfigError } = useSWR(
+        () => org && session ? [`/payments/${org.id}/config`, session.data?.tokens?.access_token] : null,
+        ([url, token]) => getPaymentConfigs(org.id, token)
+    );
+
+    useEffect(() => {
+        if (paymentConfigs) {
+            const stripeConfig = paymentConfigs.find((config: any) => config.provider === 'stripe');
+            setIsStripeEnabled(!!stripeConfig);
+        }
+    }, [paymentConfigs]);
+
+    const handleArchiveProduct = async (productId: string) => {
         try {
-            await deleteProduct(org.id, productId, session.data?.tokens?.access_token);
+            await archiveProduct(org.id, productId, session.data?.tokens?.access_token);
             mutate([`/payments/${org.id}/products`, session.data?.tokens?.access_token]);
-            toast.success('Product deleted successfully');
+            toast.success('Product archived successfully');
         } catch (error) {
-            toast.error('Failed to delete product');
+            toast.error('Failed to archive product');
         }
     }
 
@@ -86,30 +100,31 @@ function PaymentsProductPage() {
                             ) : (
                                 <div className="flex flex-col h-full">
                                     <div className="flex justify-between items-start mb-2">
-                                        <div className="flex space-x-2 items-center">
+                                        <div className="flex flex-col space-y-1 items-start">
                                             <Badge className='w-fit flex items-center space-x-2' variant="outline">
                                                 {product.product_type === 'subscription' ? <RefreshCcw size={12} /> : <SquareCheck size={12} />}
-                                                <span className='text-sm'>{product.product_type}</span>
+                                                <span className='text-sm'>{product.product_type === 'subscription' ? 'Subscription' : 'One-time payment'}</span>
                                             </Badge>
                                             <h3 className="font-bold text-lg">{product.name}</h3>
                                         </div>
                                         <div className="flex space-x-2">
                                             <button
                                                 onClick={() => setEditingProductId(product.id)}
-                                                className="text-blue-500 hover:text-blue-700"
+                                                className={`text-blue-500 hover:text-blue-700 ${isStripeEnabled ? '' : 'opacity-50 cursor-not-allowed'}`}
+                                                disabled={!isStripeEnabled}
                                             >
                                                 <Pencil size={16} />
                                             </button>
                                             <ConfirmationModal
-                                                confirmationButtonText="Delete Product"
-                                                confirmationMessage="Are you sure you want to delete this product?"
-                                                dialogTitle={`Delete ${product.name}?`}
+                                                confirmationButtonText="Archive Product"
+                                                confirmationMessage="Are you sure you want to archive this product?"
+                                                dialogTitle={`Archive ${product.name}?`}
                                                 dialogTrigger={
                                                     <button className="text-red-500 hover:text-red-700">
-                                                        <Trash2 size={16} />
+                                                        <Archive size={16} />
                                                     </button>
                                                 }
-                                                functionToExecute={() => handleDeleteProduct(product.id)}
+                                                functionToExecute={() => handleArchiveProduct(product.id)}
                                                 status="warning"
                                             />
                                         </div>
@@ -164,10 +179,14 @@ function PaymentsProductPage() {
                         <p>No products available. Create a new product to get started.</p>
                     </div>
                 )}
+
                 <div className="flex justify-center items-center py-10">
                     <button
                         onClick={() => setIsCreateModalOpen(true)}
-                        className="mb-4 flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-gradient-to-bl text-white font-medium from-gray-700 to-gray-900 border border-gray-600 shadow-gray-900/20 nice-shadow hover:from-gray-600 hover:to-gray-800 transition duration-300"
+                        className={`mb-4 flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-gradient-to-bl text-white font-medium from-gray-700 to-gray-900 border border-gray-600 shadow-gray-900/20 nice-shadow transition duration-300 ${
+                            isStripeEnabled ? 'hover:from-gray-600 hover:to-gray-800' : 'opacity-50 cursor-not-allowed'
+                        }`}
+                        disabled={!isStripeEnabled}
                     >
                         <Plus size={18} />
                         <span className="text-sm font-bold">Create New Product</span>

@@ -1,13 +1,16 @@
-import React, { useState } from 'react';
+'use client';
+import React, { useState, useEffect } from 'react';
 import { useOrg } from '@components/Contexts/OrgContext';
 import { SiStripe } from '@icons-pack/react-simple-icons'
 import { useLHSession } from '@components/Contexts/LHSessionContext';
-import { getPaymentConfigs, createPaymentConfig, updatePaymentConfig } from '@services/payments/payments';
+import { getPaymentConfigs, createPaymentConfig, updatePaymentConfig, deletePaymentConfig } from '@services/payments/payments';
 import FormLayout, { ButtonBlack, Input, Textarea, FormField, FormLabelAndMessage, Flex } from '@components/StyledElements/Form/Form';
-import { Check, Edit } from 'lucide-react';
+import { Check, Edit, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import useSWR, { mutate } from 'swr';
 import Modal from '@components/StyledElements/Modal/Modal';
+import ConfirmationModal from '@components/StyledElements/ConfirmationModal/ConfirmationModal';
+import { Button } from '@components/ui/button';
 
 const PaymentsConfigurationPage: React.FC = () => {
     const org = useOrg() as any;
@@ -37,6 +40,17 @@ const PaymentsConfigurationPage: React.FC = () => {
         setIsModalOpen(true);
     };
 
+    const deleteConfig = async () => {
+        try {
+            await deletePaymentConfig(org.id, stripeConfig.id, access_token);
+            toast.success('Stripe configuration deleted successfully');
+            mutate([`/payments/${org.id}/config`, access_token]);
+        } catch (error) {
+            console.error('Error deleting Stripe configuration:', error);
+            toast.error('Failed to delete Stripe configuration');
+        }
+    };
+
     if (isLoading) {
         return <div>Loading...</div>;
     }
@@ -52,23 +66,44 @@ const PaymentsConfigurationPage: React.FC = () => {
                     <h1 className="font-bold text-xl text-gray-800">Payments Configuration</h1>
                     <h2 className="text-gray-500 text-md">Manage your organization payments configuration</h2>
                 </div>
-                <div className="flex flex-col py-4 px-6  rounded-lg light-shadow">
+                <div className="flex flex-col  rounded-lg light-shadow">
                     {stripeConfig ? (
-                        <div className="flex items-center justify-between bg-white ">
+                        <div className="flex items-center justify-between bg-gradient-to-r from-indigo-500 to-purple-600 p-6 rounded-lg shadow-md">
                             <div className="flex items-center space-x-3">
-                                <Check className="text-green-500" size={24} />
-                                <span className="text-lg font-semibold">Stripe is enabled</span>
+                                <SiStripe className="text-white" size={32} />
+                                <span className="text-xl font-semibold text-white">Stripe is enabled</span>
                             </div>
-                            <ButtonBlack onClick={editConfig} className="flex items-center space-x-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-300">
-                                <Edit size={16} />
-                                <span>Edit Configuration</span>
-                            </ButtonBlack>
+                            <div className="flex space-x-2">
+                                <Button 
+                                    onClick={editConfig} 
+                                    className="flex items-center space-x-2 px-4 py-2 bg-white text-purple-700 text-sm rounded-full hover:bg-gray-100 transition duration-300"
+                                >
+                                    <Edit size={16} />
+                                    <span>Edit Configuration</span>
+                                </Button>
+                                <ConfirmationModal
+                                    confirmationButtonText="Delete Configuration"
+                                    confirmationMessage="Are you sure you want to delete the Stripe configuration? This action cannot be undone."
+                                    dialogTitle="Delete Stripe Configuration"
+                                    dialogTrigger={
+                                        <Button className="flex items-center space-x-2 bg-red-500 text-white text-sm rounded-full hover:bg-red-600 transition duration-300">
+                                            <Trash2 size={16} />
+                                            <span>Delete Configuration</span>
+                                        </Button>
+                                    }
+                                    functionToExecute={deleteConfig}
+                                    status="warning"
+                                />
+                            </div>
                         </div>
                     ) : (
-                        <ButtonBlack onClick={enableStripe} className="flex items-center space-x-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-300">
-                            <SiStripe size={16} />
-                            <span>Enable Stripe</span>
-                        </ButtonBlack>
+                        <Button 
+                            onClick={enableStripe} 
+                            className="flex items-center justify-center space-x-2 bg-gradient-to-r p-3 from-indigo-500 to-purple-600 text-white px-6  rounded-lg hover:from-indigo-600 hover:to-purple-700 transition duration-300 shadow-md"
+                        >
+                            <SiStripe size={24} />
+                            <span className="text-lg font-semibold">Enable Stripe</span>
+                        </Button>
                     )}
                 </div>
             </div>
@@ -94,14 +129,36 @@ interface EditStripeConfigModalProps {
 }
 
 const EditStripeConfigModal: React.FC<EditStripeConfigModalProps> = ({ orgId, configId, accessToken, isOpen, onClose }) => {
-    const [stripeKey, setStripeKey] = useState('');
+    const [stripePublishableKey, setStripePublishableKey] = useState('');
     const [stripeSecretKey, setStripeSecretKey] = useState('');
     const [stripeWebhookSecret, setStripeWebhookSecret] = useState('');
+
+    // Add this useEffect hook to fetch and set the existing configuration
+    useEffect(() => {
+        const fetchConfig = async () => {
+            try {
+                const config = await getPaymentConfigs(orgId, accessToken);
+                const stripeConfig = config.find((c: any) => c.id === configId);
+                if (stripeConfig && stripeConfig.provider_config) {
+                    setStripePublishableKey(stripeConfig.provider_config.stripe_publishable_key || '');
+                    setStripeSecretKey(stripeConfig.provider_config.stripe_secret_key || '');
+                    setStripeWebhookSecret(stripeConfig.provider_config.stripe_webhook_secret || '');
+                }
+            } catch (error) {
+                console.error('Error fetching Stripe configuration:', error);
+                toast.error('Failed to load existing configuration');
+            }
+        };
+
+        if (isOpen) {
+            fetchConfig();
+        }
+    }, [isOpen, orgId, configId, accessToken]);
 
     const handleSubmit = async () => {
         try {
             const stripe_config = {
-                stripe_key: stripeKey,
+                stripe_publishable_key: stripePublishableKey,
                 stripe_secret_key: stripeSecretKey,
                 stripe_webhook_secret: stripeWebhookSecret,
             };
@@ -123,16 +180,31 @@ const EditStripeConfigModal: React.FC<EditStripeConfigModalProps> = ({ orgId, co
             dialogContent={
                 <FormLayout onSubmit={handleSubmit}>
                     <FormField name="stripe-key">
-                        <FormLabelAndMessage label="Stripe Key" />
-                        <Input type="password" value={stripeKey} onChange={(e) => setStripeKey(e.target.value)} />
+                        <FormLabelAndMessage label="Stripe Publishable Key" />
+                        <Input 
+                            type="text" 
+                            value={stripePublishableKey} 
+                            onChange={(e) => setStripePublishableKey(e.target.value)} 
+                            placeholder="pk_test_..."
+                        />
                     </FormField>
                     <FormField name="stripe-secret-key">
                         <FormLabelAndMessage label="Stripe Secret Key" />
-                        <Input type="password" value={stripeSecretKey} onChange={(e) => setStripeSecretKey(e.target.value)} />
+                        <Input 
+                            type="password" 
+                            value={stripeSecretKey} 
+                            onChange={(e) => setStripeSecretKey(e.target.value)} 
+                            placeholder="sk_test_..."
+                        />
                     </FormField>
                     <FormField name="stripe-webhook-secret">
                         <FormLabelAndMessage label="Stripe Webhook Secret" />
-                        <Input type="password" value={stripeWebhookSecret} onChange={(e) => setStripeWebhookSecret(e.target.value)} />
+                        <Input 
+                            type="password" 
+                            value={stripeWebhookSecret} 
+                            onChange={(e) => setStripeWebhookSecret(e.target.value)} 
+                            placeholder="whsec_..."
+                        />
                     </FormField>
                     <Flex css={{ marginTop: 25, justifyContent: 'flex-end' }}>
                         <ButtonBlack type="submit" className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-300">
