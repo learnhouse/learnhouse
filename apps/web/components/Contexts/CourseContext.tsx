@@ -17,7 +17,9 @@ export function CourseProvider({ children, courseuuid }: any) {
   );
 
   const initialState = {
-    courseStructure: {},
+    courseStructure: {
+      course_uuid: courseuuid,
+    },
     courseOrder: {},
     isSaved: true,
     isLoading: true
