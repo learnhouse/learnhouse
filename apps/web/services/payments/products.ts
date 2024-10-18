@@ -28,7 +28,7 @@ export async function updateProduct(orgId: number, productId: string, data: any,
   return res;
 }
 
-export async function deleteProduct(orgId: number, productId: string, access_token: string) {
+export async function archiveProduct(orgId: number, productId: string, access_token: string) {
   const result = await fetch(
     `${getAPIUrl()}payments/${orgId}/products/${productId}`,
     RequestBodyWithAuthHeader('DELETE', null, null, access_token)

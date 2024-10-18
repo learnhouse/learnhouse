@@ -21,7 +21,7 @@ export async function createPaymentConfig(orgId: number, data: any, access_token
 
 export async function updatePaymentConfig(orgId: number, id: string, data: any, access_token: string) {
   const result = await fetch(
-    `${getAPIUrl()}payments/${orgId}/config`,
+    `${getAPIUrl()}payments/${orgId}/config?id=${id}`,
     RequestBodyWithAuthHeader('PUT', data, null, access_token)
   );
   const res = await errorHandling(result);
@@ -30,7 +30,7 @@ export async function updatePaymentConfig(orgId: number, id: string, data: any, 
 
 export async function deletePaymentConfig(orgId: number, id: string, access_token: string) {
   const result = await fetch(
-    `${getAPIUrl()}payments/${orgId}/config/${id}`,
+    `${getAPIUrl()}payments/${orgId}/config?id=${id}`,
     RequestBodyWithAuthHeader('DELETE', null, null, access_token)
   );
   const res = await errorHandling(result);
