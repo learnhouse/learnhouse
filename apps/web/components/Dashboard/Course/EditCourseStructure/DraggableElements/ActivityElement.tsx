@@ -281,7 +281,7 @@ const ActivityElementOptions = ({ activity }: any) => {
   const session = useLHSession() as any;
   const access_token = session?.data?.tokens?.access_token;
 
-  async function getAssignmentUUIDFromActivityUUID(activityUUID: string) {
+  async function getAssignmentUUIDFromActivityUUID(activityUUID: string):  Promise<string | undefined> {
     const activity = await getAssignmentFromActivityUUID(activityUUID, access_token);
     if (activity) {
       return activity.data.assignment_uuid;
@@ -291,7 +291,8 @@ const ActivityElementOptions = ({ activity }: any) => {
   const fetchAssignmentUUID = async () => {
     if (activity.activity_type === 'TYPE_ASSIGNMENT') {
       const assignment_uuid = await getAssignmentUUIDFromActivityUUID(activity.activity_uuid);
-      setAssignmentUUID(assignment_uuid.replace('assignment_', ''));
+      if(assignment_uuid)
+        setAssignmentUUID(assignment_uuid.replace('assignment_', ''));
     }
   };
 
@@ -324,7 +325,7 @@ const ActivityElementOptions = ({ activity }: any) => {
           </Link>
         </>
       )}
-      {activity.activity_type === 'TYPE_ASSIGNMENT' && assignmentUUID && (
+      {activity.activity_type === 'TYPE_ASSIGNMENT' && (
         <>
           <Link
             href={
