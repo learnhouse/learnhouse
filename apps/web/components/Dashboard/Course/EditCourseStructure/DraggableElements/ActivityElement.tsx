@@ -144,7 +144,7 @@ function ActivityElement(props: ActivitiyElementProps) {
                   className="bg-transparent text-neutral-700 hover:cursor-pointer hover:text-neutral-900"
                 >
                   <Save
-                    size={11}
+                    size={12}
                     onClick={() => updateActivityName(props.activity.id)}
                   />
                 </button>
@@ -154,68 +154,69 @@ function ActivityElement(props: ActivitiyElementProps) {
             )}
             <Pencil
               onClick={() => setSelectedActivity(props.activity.id)}
-              size={12}
-              className="text-neutral-400 hover:cursor-pointer"
+              className="text-neutral-400 hover:cursor-pointer size-3 min-w-3"
             />
           </div>
 
 
           {/*   Edit and View Button  */}
-          <div className="flex flex-row space-x-2">
-            <ActivityElementOptions activity={props.activity} />
-            {/*   Publishing  */}
-            <div
-              className={`hover:cursor-pointer p-1 px-3 border shadow-lg rounded-md font-bold text-xs flex items-center space-x-1 ${!props.activity.published
-                ? 'bg-gradient-to-bl text-green-800 from-green-400/50 to-lime-200/80 border-green-600/10 shadow-green-900/10'
-                : 'bg-gradient-to-bl text-gray-800 from-gray-400/50 to-gray-200/80 border-gray-600/10 shadow-gray-900/10'
-                }`}
-              rel="noopener noreferrer"
-              onClick={() => changePublicStatus()}
-            >
-              {!props.activity.published ? (
-                <Globe strokeWidth={2} size={12} className="text-green-600" />
-              ) : (
-                <Lock strokeWidth={2} size={12} className="text-gray-600" />
-              )}
-              <span>{!props.activity.published ? 'Publish' : 'Unpublish'}</span>
+          <div className="flex basis-1/2 justify-end">
+            <div className="flex flex-row space-x-2">
+              <ActivityElementOptions activity={props.activity} />
+              {/*   Publishing  */}
+              <div
+                className={`hover:cursor-pointer p-1 px-3 border shadow-lg rounded-md font-bold text-xs flex items-center space-x-1 ${!props.activity.published
+                  ? 'bg-gradient-to-bl text-green-800 from-green-400/50 to-lime-200/80 border-green-600/10 shadow-green-900/10'
+                  : 'bg-gradient-to-bl text-gray-800 from-gray-400/50 to-gray-200/80 border-gray-600/10 shadow-gray-900/10'
+                  }`}
+                rel="noopener noreferrer"
+                onClick={() => changePublicStatus()}
+              >
+                {!props.activity.published ? (
+                  <Globe strokeWidth={2} size={12} className="text-green-600" />
+                ) : (
+                  <Lock strokeWidth={2} size={12} className="text-gray-600" />
+                )}
+                <span>{!props.activity.published ? 'Publish' : 'Unpublish'}</span>
+              </div>
+              <Link
+                href={
+                  getUriWithOrg(props.orgslug, '') +
+                  `/course/${props.course_uuid.replace(
+                    'course_',
+                    ''
+                  )}/activity/${props.activity.activity_uuid.replace(
+                    'activity_',
+                    ''
+                  )}`
+                }
+                prefetch
+                className=" hover:cursor-pointer p-1 px-3 bg-gradient-to-bl text-cyan-800  from-sky-400/50 to-cyan-200/80  border border-cyan-600/10 shadow-cyan-900/10 shadow-lg rounded-md font-bold text-xs flex items-center space-x-1"
+                rel="noopener noreferrer"
+              >
+                <Eye strokeWidth={2} size={12} className="text-sky-600" />
+                <span>Preview</span>
+              </Link>
             </div>
-            <Link
-              href={
-                getUriWithOrg(props.orgslug, '') +
-                `/course/${props.course_uuid.replace(
-                  'course_',
-                  ''
-                )}/activity/${props.activity.activity_uuid.replace(
-                  'activity_',
-                  ''
-                )}`
-              }
-              prefetch
-              className=" hover:cursor-pointer p-1 px-3 bg-gradient-to-bl text-cyan-800  from-sky-400/50 to-cyan-200/80  border border-cyan-600/10 shadow-cyan-900/10 shadow-lg rounded-md font-bold text-xs flex items-center space-x-1"
-              rel="noopener noreferrer"
-            >
-              <Eye strokeWidth={2} size={12} className="text-sky-600" />
-              <span>Preview</span>
-            </Link>
-          </div>
-          {/*   Delete Button  */}
-          <div className="flex flex-row pr-3 space-x-1 items-center">
-            <MoreVertical size={15} className="text-gray-300" />
-            <ConfirmationModal
-              confirmationMessage="Are you sure you want to delete this activity ?"
-              confirmationButtonText="Delete Activity"
-              dialogTitle={'Delete ' + props.activity.name + ' ?'}
-              dialogTrigger={
-                <div
-                  className=" hover:cursor-pointer p-1 px-5 bg-red-600 rounded-md"
-                  rel="noopener noreferrer"
-                >
-                  <X size={15} className="text-rose-200 font-bold" />
-                </div>
-              }
-              functionToExecute={() => deleteActivityUI()}
-              status="warning"
-            ></ConfirmationModal>
+            {/*   Delete Button  */}
+            <div className="flex flex-row pr-3 space-x-1 items-center">
+              <MoreVertical size={15} className="text-gray-300" />
+              <ConfirmationModal
+                confirmationMessage="Are you sure you want to delete this activity ?"
+                confirmationButtonText="Delete Activity"
+                dialogTitle={'Delete ' + props.activity.name + ' ?'}
+                dialogTrigger={
+                  <div
+                    className=" hover:cursor-pointer p-1 px-5 bg-red-600 rounded-md"
+                    rel="noopener noreferrer"
+                  >
+                    <X size={15} className="text-rose-200 font-bold" />
+                  </div>
+                }
+                functionToExecute={() => deleteActivityUI()}
+                status="warning"
+              ></ConfirmationModal>
+            </div>
           </div>
         </div>
       )}
