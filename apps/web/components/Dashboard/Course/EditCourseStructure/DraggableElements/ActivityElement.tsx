@@ -145,7 +145,6 @@ function ActivityElement(props: ActivitiyElementProps) {
                 >
                   <Save
                     size={12}
-                    onClick={() => updateActivityName(props.activity.id)}
                   />
                 </button>
               </div>
@@ -224,53 +223,36 @@ function ActivityElement(props: ActivitiyElementProps) {
   )
 }
 
-const ActivityTypeIndicator = (props: { activityType: string }) => {
+const ACTIVITIES = {
+  'TYPE_VIDEO': {
+    displayName: 'Video',
+    Icon: Video
+  },
+  'TYPE_DOCUMENT': {
+    displayName: 'Document',
+    Icon: File
+  },
+  'TYPE_ASSIGNMENT': {
+    displayName: 'Assignment',
+    Icon: Backpack
+  },
+  'TYPE_DYNAMIC': {
+    displayName: 'Dynamic',
+    Icon: Sparkles
+  }
+}
+
+const ActivityTypeIndicator = ({activityType} : { activityType: keyof typeof ACTIVITIES}) => {
+  const {displayName, Icon} = ACTIVITIES[activityType]
+
   return (
-    <div className="px-3 text-gray-300 space-x-1 w-28">
-      {props.activityType === 'TYPE_VIDEO' && (
-        <>
-          <div className="flex space-x-2 items-center">
-            <Video size={16} />{' '}
+    <div className="px-3 text-gray-300 space-x-1 w-28 flex">
+      <div className="flex space-x-2 items-center">
+            <Icon className="size-4" />{' '}
             <div className="text-xs bg-gray-200 text-gray-400 font-bold px-2 py-1 rounded-full mx-auto justify-center align-middle">
-              Video
+              {displayName}
             </div>{' '}
           </div>
-        </>
-      )}
-      {props.activityType === 'TYPE_DOCUMENT' && (
-        <>
-          <div className="flex space-x-2 items-center">
-            <div className="w-[30px]">
-              <File size={16} />{' '}
-            </div>
-            <div className="text-xs bg-gray-200 text-gray-400 font-bold px-2 py-1 rounded-full">
-              Document
-            </div>{' '}
-          </div>
-        </>
-      )}
-      {props.activityType === 'TYPE_ASSIGNMENT' && (
-        <>
-          <div className="flex space-x-2 items-center">
-            <div className="w-[30px]">
-              <Backpack size={16} />{' '}
-            </div>
-            <div className="text-xs bg-gray-200 text-gray-400 font-bold px-2 py-1 rounded-full">
-              Assignment
-            </div>{' '}
-          </div>
-        </>
-      )}
-      {props.activityType === 'TYPE_DYNAMIC' && (
-        <>
-          <div className="flex space-x-2 items-center">
-            <Sparkles size={16} />{' '}
-            <div className="text-xs bg-gray-200 text-gray-400 font-bold px-2 py-1 rounded-full">
-              Dynamic
-            </div>{' '}
-          </div>
-        </>
-      )}
     </div>
   )
 }
@@ -342,7 +324,7 @@ const ActivityElementOptions = ({ activity }: any) => {
           </Link>
         </>
       )}
-    </>
+    </> 
   );
 };
 
