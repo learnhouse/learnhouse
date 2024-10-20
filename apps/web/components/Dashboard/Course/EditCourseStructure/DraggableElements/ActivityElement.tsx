@@ -88,7 +88,7 @@ function ActivityElement(props: ActivitiyElementProps) {
       modifiedActivity?.activityId === activityId &&
       selectedActivity !== undefined
     ) {
-      setSelectedActivity(undefined)
+      
       let modifiedActivityCopy = {
         ...props.activity,
         name: modifiedActivity.activityName,
@@ -99,6 +99,7 @@ function ActivityElement(props: ActivitiyElementProps) {
       await revalidateTags(['courses'], props.orgslug)
       router.refresh()
     }
+    setSelectedActivity(undefined)
   }
 
   return (
@@ -109,7 +110,7 @@ function ActivityElement(props: ActivitiyElementProps) {
     >
       {(provided, snapshot) => (
         <div
-          className="flex flex-row py-2 my-2 w-full rounded-md bg-gray-50 text-gray-500 hover:bg-gray-100 hover:scale-102 hover:shadow space-x-1 items-center ring-1 ring-inset ring-gray-400/10 shadow-sm transition-all delay-100 duration-75 ease-linear"
+          className="flex flex-row py-2 my-2 w-full rounded-md bg-gray-50 text-gray-500 hover:bg-gray-100 hover:scale-102 hover:shadow space-x-1 items-center ring-1 ring-inset ring-gray-400/10 shadow-sm"
           key={props.activity.id}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
@@ -143,8 +144,7 @@ function ActivityElement(props: ActivitiyElementProps) {
                   className="bg-transparent text-neutral-700 hover:cursor-pointer hover:text-neutral-900"
                 >
                   <Save
-                    size={11}
-                    onClick={() => updateActivityName(props.activity.id)}
+                    size={12}
                   />
                 </button>
               </div>
@@ -153,68 +153,69 @@ function ActivityElement(props: ActivitiyElementProps) {
             )}
             <Pencil
               onClick={() => setSelectedActivity(props.activity.id)}
-              size={12}
-              className="text-neutral-400 hover:cursor-pointer"
+              className="text-neutral-400 hover:cursor-pointer size-3 min-w-3"
             />
           </div>
 
 
           {/*   Edit and View Button  */}
-          <div className="flex flex-row space-x-2">
-            <ActivityElementOptions activity={props.activity} />
-            {/*   Publishing  */}
-            <div
-              className={`hover:cursor-pointer p-1 px-3 border shadow-lg rounded-md font-bold text-xs flex items-center space-x-1 ${!props.activity.published
-                ? 'bg-gradient-to-bl text-green-800 from-green-400/50 to-lime-200/80 border-green-600/10 shadow-green-900/10'
-                : 'bg-gradient-to-bl text-gray-800 from-gray-400/50 to-gray-200/80 border-gray-600/10 shadow-gray-900/10'
-                }`}
-              rel="noopener noreferrer"
-              onClick={() => changePublicStatus()}
-            >
-              {!props.activity.published ? (
-                <Globe strokeWidth={2} size={12} className="text-green-600" />
-              ) : (
-                <Lock strokeWidth={2} size={12} className="text-gray-600" />
-              )}
-              <span>{!props.activity.published ? 'Publish' : 'Unpublish'}</span>
+          <div className="flex basis-1/2 justify-end">
+            <div className="flex flex-row space-x-2">
+              <ActivityElementOptions activity={props.activity} />
+              {/*   Publishing  */}
+              <div
+                className={`hover:cursor-pointer p-1 px-3 border shadow-lg rounded-md font-bold text-xs flex items-center space-x-1 ${!props.activity.published
+                  ? 'bg-gradient-to-bl text-green-800 from-green-400/50 to-lime-200/80 border-green-600/10 shadow-green-900/10'
+                  : 'bg-gradient-to-bl text-gray-800 from-gray-400/50 to-gray-200/80 border-gray-600/10 shadow-gray-900/10'
+                  }`}
+                rel="noopener noreferrer"
+                onClick={() => changePublicStatus()}
+              >
+                {!props.activity.published ? (
+                  <Globe strokeWidth={2} size={12} className="text-green-600" />
+                ) : (
+                  <Lock strokeWidth={2} size={12} className="text-gray-600" />
+                )}
+                <span>{!props.activity.published ? 'Publish' : 'Unpublish'}</span>
+              </div>
+              <Link
+                href={
+                  getUriWithOrg(props.orgslug, '') +
+                  `/course/${props.course_uuid.replace(
+                    'course_',
+                    ''
+                  )}/activity/${props.activity.activity_uuid.replace(
+                    'activity_',
+                    ''
+                  )}`
+                }
+                prefetch
+                className=" hover:cursor-pointer p-1 px-3 bg-gradient-to-bl text-cyan-800  from-sky-400/50 to-cyan-200/80  border border-cyan-600/10 shadow-cyan-900/10 shadow-lg rounded-md font-bold text-xs flex items-center space-x-1"
+                rel="noopener noreferrer"
+              >
+                <Eye strokeWidth={2} size={12} className="text-sky-600" />
+                <span>Preview</span>
+              </Link>
             </div>
-            <Link
-              href={
-                getUriWithOrg(props.orgslug, '') +
-                `/course/${props.course_uuid.replace(
-                  'course_',
-                  ''
-                )}/activity/${props.activity.activity_uuid.replace(
-                  'activity_',
-                  ''
-                )}`
-              }
-              prefetch
-              className=" hover:cursor-pointer p-1 px-3 bg-gradient-to-bl text-cyan-800  from-sky-400/50 to-cyan-200/80  border border-cyan-600/10 shadow-cyan-900/10 shadow-lg rounded-md font-bold text-xs flex items-center space-x-1"
-              rel="noopener noreferrer"
-            >
-              <Eye strokeWidth={2} size={12} className="text-sky-600" />
-              <span>Preview</span>
-            </Link>
-          </div>
-          {/*   Delete Button  */}
-          <div className="flex flex-row pr-3 space-x-1 items-center">
-            <MoreVertical size={15} className="text-gray-300" />
-            <ConfirmationModal
-              confirmationMessage="Are you sure you want to delete this activity ?"
-              confirmationButtonText="Delete Activity"
-              dialogTitle={'Delete ' + props.activity.name + ' ?'}
-              dialogTrigger={
-                <div
-                  className=" hover:cursor-pointer p-1 px-5 bg-red-600 rounded-md"
-                  rel="noopener noreferrer"
-                >
-                  <X size={15} className="text-rose-200 font-bold" />
-                </div>
-              }
-              functionToExecute={() => deleteActivityUI()}
-              status="warning"
-            ></ConfirmationModal>
+            {/*   Delete Button  */}
+            <div className="flex flex-row pr-3 space-x-1 items-center">
+              <MoreVertical size={15} className="text-gray-300" />
+              <ConfirmationModal
+                confirmationMessage="Are you sure you want to delete this activity ?"
+                confirmationButtonText="Delete Activity"
+                dialogTitle={'Delete ' + props.activity.name + ' ?'}
+                dialogTrigger={
+                  <div
+                    className=" hover:cursor-pointer p-1 px-5 bg-red-600 rounded-md"
+                    rel="noopener noreferrer"
+                  >
+                    <X size={15} className="text-rose-200 font-bold" />
+                  </div>
+                }
+                functionToExecute={() => deleteActivityUI()}
+                status="warning"
+              ></ConfirmationModal>
+            </div>
           </div>
         </div>
       )}
@@ -222,53 +223,36 @@ function ActivityElement(props: ActivitiyElementProps) {
   )
 }
 
-const ActivityTypeIndicator = (props: { activityType: string }) => {
+const ACTIVITIES = {
+  'TYPE_VIDEO': {
+    displayName: 'Video',
+    Icon: Video
+  },
+  'TYPE_DOCUMENT': {
+    displayName: 'Document',
+    Icon: File
+  },
+  'TYPE_ASSIGNMENT': {
+    displayName: 'Assignment',
+    Icon: Backpack
+  },
+  'TYPE_DYNAMIC': {
+    displayName: 'Dynamic',
+    Icon: Sparkles
+  }
+}
+
+const ActivityTypeIndicator = ({activityType} : { activityType: keyof typeof ACTIVITIES}) => {
+  const {displayName, Icon} = ACTIVITIES[activityType]
+
   return (
-    <div className="px-3 text-gray-300 space-x-1 w-28">
-      {props.activityType === 'TYPE_VIDEO' && (
-        <>
-          <div className="flex space-x-2 items-center">
-            <Video size={16} />{' '}
+    <div className="px-3 text-gray-300 space-x-1 w-28 flex">
+      <div className="flex space-x-2 items-center">
+            <Icon className="size-4" />{' '}
             <div className="text-xs bg-gray-200 text-gray-400 font-bold px-2 py-1 rounded-full mx-auto justify-center align-middle">
-              Video
+              {displayName}
             </div>{' '}
           </div>
-        </>
-      )}
-      {props.activityType === 'TYPE_DOCUMENT' && (
-        <>
-          <div className="flex space-x-2 items-center">
-            <div className="w-[30px]">
-              <File size={16} />{' '}
-            </div>
-            <div className="text-xs bg-gray-200 text-gray-400 font-bold px-2 py-1 rounded-full">
-              Document
-            </div>{' '}
-          </div>
-        </>
-      )}
-      {props.activityType === 'TYPE_ASSIGNMENT' && (
-        <>
-          <div className="flex space-x-2 items-center">
-            <div className="w-[30px]">
-              <Backpack size={16} />{' '}
-            </div>
-            <div className="text-xs bg-gray-200 text-gray-400 font-bold px-2 py-1 rounded-full">
-              Assignment
-            </div>{' '}
-          </div>
-        </>
-      )}
-      {props.activityType === 'TYPE_DYNAMIC' && (
-        <>
-          <div className="flex space-x-2 items-center">
-            <Sparkles size={16} />{' '}
-            <div className="text-xs bg-gray-200 text-gray-400 font-bold px-2 py-1 rounded-full">
-              Dynamic
-            </div>{' '}
-          </div>
-        </>
-      )}
     </div>
   )
 }
@@ -280,7 +264,7 @@ const ActivityElementOptions = ({ activity }: any) => {
   const session = useLHSession() as any;
   const access_token = session?.data?.tokens?.access_token;
 
-  async function getAssignmentUUIDFromActivityUUID(activityUUID: string) {
+  async function getAssignmentUUIDFromActivityUUID(activityUUID: string):  Promise<string | undefined> {
     const activity = await getAssignmentFromActivityUUID(activityUUID, access_token);
     if (activity) {
       return activity.data.assignment_uuid;
@@ -290,7 +274,8 @@ const ActivityElementOptions = ({ activity }: any) => {
   const fetchAssignmentUUID = async () => {
     if (activity.activity_type === 'TYPE_ASSIGNMENT') {
       const assignment_uuid = await getAssignmentUUIDFromActivityUUID(activity.activity_uuid);
-      setAssignmentUUID(assignment_uuid.replace('assignment_', ''));
+      if(assignment_uuid)
+        setAssignmentUUID(assignment_uuid.replace('assignment_', ''));
     }
   };
 
@@ -323,7 +308,7 @@ const ActivityElementOptions = ({ activity }: any) => {
           </Link>
         </>
       )}
-      {activity.activity_type === 'TYPE_ASSIGNMENT' && assignmentUUID && (
+      {activity.activity_type === 'TYPE_ASSIGNMENT' && (
         <>
           <Link
             href={
@@ -339,7 +324,7 @@ const ActivityElementOptions = ({ activity }: any) => {
           </Link>
         </>
       )}
-    </>
+    </> 
   );
 };
 

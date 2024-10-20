@@ -52,7 +52,6 @@ function ChapterElement(props: ChapterElementProps) {
 
   async function updateChapterName(chapterId: string) {
     if (modifiedChapter?.chapterId === chapterId) {
-      setSelectedChapter(undefined)
       let modifiedChapterCopy = {
         name: modifiedChapter.chapterName,
       }
@@ -61,6 +60,7 @@ function ChapterElement(props: ChapterElementProps) {
       await revalidateTags(['courses'], props.orgslug)
       router.refresh()
     }
+    setSelectedChapter(undefined)
   }
 
   return (
@@ -155,7 +155,7 @@ function ChapterElement(props: ChapterElementProps) {
                 <div className="flex flex-col">
                   {activities.map((activity: any, index: any) => {
                     return (
-                      <div key={index} className="flex items-center ">
+                      <div key={activity.activity_uuid} className="flex items-center ">
                         <ActivityElement
                           orgslug={props.orgslug}
                           course_uuid={props.course_uuid}
