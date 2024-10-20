@@ -544,6 +544,16 @@ export const EditorContentWrapper = styled.div`
         font-weight: 700;
       }
     }
+
+    &.resize-cursor {
+      cursor: ew-resize;
+      cursor: col-resize;
+    }
+
+    .tableWrapper {
+      margin: 1.5rem 0;
+      overflow-x: auto;
+    }
   }
 
   iframe {
@@ -601,7 +611,7 @@ export const EditorContentWrapper = styled.div`
     }
 
     .column-resize-handle {
-      background-color: #684fda;
+      background-color: #8d78eb;
       bottom: -2px;
       pointer-events: none;
       position: absolute;
@@ -609,16 +619,6 @@ export const EditorContentWrapper = styled.div`
       top: 0;
       width: 4px;
     }
-  }
-
-  .tableWrapper {
-    margin: 1.5rem 0;
-    overflow-x: auto;
-  }
-
-  &.resize-cursor {
-    cursor: ew-resize;
-    cursor: col-resize;
   }
 `
 
