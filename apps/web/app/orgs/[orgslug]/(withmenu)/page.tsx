@@ -82,48 +82,44 @@ const OrgHomePage = async (params: any) => {
   )
 
   return (
-    <div>
+    <div className="w-full">
       <GeneralWrapperStyled>
         {/* Collections */}
-        <div className="flex items-center ">
-          <div className="flex grow">
+        <div className="flex flex-col space-y-4 mb-8">
+          <div className="flex items-center justify-between">
             <TypeOfContentTitle title="Collections" type="col" />
-          </div>
-          <AuthenticatedClientElement
-            checkMethod="roles"
-            ressourceType="collections"
-            action="create"
-            orgId={org_id}
-          >
-            <Link href={getUriWithOrg(orgslug, '/collections/new')}>
-              <NewCollectionButton />
-            </Link>
-          </AuthenticatedClientElement>
-        </div>
-        <div className="home_collections flex flex-wrap">
-          {collections.map((collection: any) => (
-            <div
-              className="flex flex-col py-3 px-3"
-              key={collection.collection_id}
+            <AuthenticatedClientElement
+              checkMethod="roles"
+              ressourceType="collections"
+              action="create"
+              orgId={org_id}
             >
-              <CollectionThumbnail
-                collection={collection}
-                orgslug={orgslug}
-                org_id={org.org_id}
-              />
-            </div>
-          ))}
-          {collections.length == 0 && (
-            <div className="flex mx-auto h-[100px]">
-              <div className="flex flex-col justify-center text-center items-center space-y-3">
-                <div className="flex flex-col space-y-3">
-                  <div className="mx-auto">
+              <Link href={getUriWithOrg(orgslug, '/collections/new')}>
+                <NewCollectionButton />
+              </Link>
+            </AuthenticatedClientElement>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {collections.map((collection: any) => (
+              <div key={collection.collection_id} className="flex flex-col p-3">
+                <CollectionThumbnail
+                  collection={collection}
+                  orgslug={orgslug}
+                  org_id={org.org_id}
+                />
+              </div>
+            ))}
+            {collections.length === 0 && (
+              <div className="col-span-full flex justify-center items-center py-8">
+                <div className="text-center">
+                  <div className="mb-4">
                     <svg
                       width="50"
                       height="50"
                       viewBox="0 0 295 295"
                       fill="none"
                       xmlns="http://www.w3.org/2000/svg"
+                      className="mx-auto"
                     >
                       <rect
                         opacity="0.51"
@@ -143,53 +139,49 @@ const OrgHomePage = async (params: any) => {
                       />
                     </svg>
                   </div>
-                  <div className="space-y-0">
-                    <h1 className="text-xl font-bold text-gray-600">
-                      No collections yet
-                    </h1>
-                    <p className="text-md text-gray-400">
-                      <ContentPlaceHolderIfUserIsNotAdmin
-                        text="Create collections to group courses together"
-                      />
-                    </p>
-                  </div>
+                  <h1 className="text-xl font-bold text-gray-600 mb-2">
+                    No collections yet
+                  </h1>
+                  <p className="text-md text-gray-400">
+                    <ContentPlaceHolderIfUserIsNotAdmin
+                      text="Create collections to group courses together"
+                    />
+                  </p>
                 </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {/* Courses */}
-        <div className="h-5"></div>
-        <div className="flex items-center ">
-          <div className="flex grow">
+        <div className="flex flex-col space-y-4">
+          <div className="flex items-center justify-between">
             <TypeOfContentTitle title="Courses" type="cou" />
+            <AuthenticatedClientElement
+              ressourceType="courses"
+              action="create"
+              checkMethod="roles"
+              orgId={org_id}
+            >
+              <Link href={getUriWithOrg(orgslug, '/courses?new=true')}>
+                <NewCourseButton />
+              </Link>
+            </AuthenticatedClientElement>
           </div>
-          <AuthenticatedClientElement
-            ressourceType="courses"
-            action="create"
-            checkMethod="roles"
-            orgId={org_id}
-          >
-            <Link href={getUriWithOrg(orgslug, '/courses?new=true')}>
-              <NewCourseButton />
-            </Link>
-          </AuthenticatedClientElement>
-        </div>
-        <div className="home_courses flex flex-wrap">
-          {courses.map((course: any) => (
-            <div className="py-3 px-3" key={course.course_uuid}>
-              <CourseThumbnail course={course} orgslug={orgslug} />
-            </div>
-          ))}
-          {courses.length == 0 && (
-            <div className="flex mx-auto h-[300px]">
-              <div className="flex flex-col justify-center text-center items-center space-y-3">
-                <div className="flex flex-col space-y-3">
-                  <div className="mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {courses.map((course: any) => (
+              <div key={course.course_uuid} className="p-3">
+                <CourseThumbnail course={course} orgslug={orgslug} />
+              </div>
+            ))}
+            {courses.length === 0 && (
+              <div className="col-span-full flex justify-center items-center py-8">
+                <div className="text-center">
+                  <div className="mb-4 ">
                     <svg
                       width="50"
                       height="50"
+                      className="mx-auto"
                       viewBox="0 0 295 295"
                       fill="none"
                       xmlns="http://www.w3.org/2000/svg"
@@ -212,18 +204,16 @@ const OrgHomePage = async (params: any) => {
                       />
                     </svg>
                   </div>
-                  <div className="space-y-0">
-                    <h1 className="text-xl font-bold text-gray-600">
-                      No courses yet
-                    </h1>
-                    <p className="text-md text-gray-400">
-                      <ContentPlaceHolderIfUserIsNotAdmin text='Create courses to add content' />
-                    </p>
-                  </div>
+                  <h1 className="text-xl font-bold text-gray-600 mb-2">
+                    No courses yet
+                  </h1>
+                  <p className="text-md text-gray-400">
+                    <ContentPlaceHolderIfUserIsNotAdmin text='Create courses to add content' />
+                  </p>
                 </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </GeneralWrapperStyled>
     </div>
