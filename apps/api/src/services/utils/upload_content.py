@@ -8,6 +8,11 @@ from fastapi import HTTPException
 from config.config import get_learnhouse_config
 
 
+def ensure_directory_exists(directory: str):
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
+
 async def upload_content(
     directory: str,
     type_of_dir: Literal["orgs", "users"],
@@ -32,11 +37,9 @@ async def upload_content(
                 detail=f"File format {file_format} not allowed",
             )
 
+    ensure_directory_exists(f"content/{type_of_dir}/{uuid}/{directory}")
+
     if content_delivery == "filesystem":
-        # create folder for activity
-        if not os.path.exists(f"content/{type_of_dir}/{uuid}/{directory}"):
-            # create folder for activity
-            os.makedirs(f"content/{type_of_dir}/{uuid}/{directory}")
         # upload file to server
         with open(
             f"content/{type_of_dir}/{uuid}/{directory}/{file_and_format}",
@@ -53,11 +56,6 @@ async def upload_content(
             "s3",
             endpoint_url=learnhouse_config.hosting_config.content_delivery.s3api.endpoint_url,
         )
-
-        # Create folder for activity
-        if not os.path.exists(f"content/{type_of_dir}/{uuid}/{directory}"):
-            # create folder for activity
-            os.makedirs(f"content/{type_of_dir}/{uuid}/{directory}")
 
         # Upload file to server
         with open(
