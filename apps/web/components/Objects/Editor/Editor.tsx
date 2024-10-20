@@ -573,7 +573,7 @@ export const EditorContentWrapper = styled.div`
 
     td,
     th {
-      border: 1px solid var(--gray-3);
+      border: 1px solid rgba(139, 139, 139, 0.4);
       box-sizing: border-box;
       min-width: 1em;
       padding: 6px 8px;
@@ -586,13 +586,13 @@ export const EditorContentWrapper = styled.div`
     }
 
     th {
-      background-color: var(--gray-1);
+      background-color: rgba(217, 217, 217, 0.4);
       font-weight: bold;
       text-align: left;
     }
 
     .selectedCell:after {
-      background: var(--gray-2);
+      background: rgba(139, 139, 139, 0.2);
       content: "";
       left: 0; right: 0; top: 0; bottom: 0;
       pointer-events: none;
@@ -601,7 +601,7 @@ export const EditorContentWrapper = styled.div`
     }
 
     .column-resize-handle {
-      background-color: var(--purple);
+      background-color: #684fda;
       bottom: -2px;
       pointer-events: none;
       position: absolute;
