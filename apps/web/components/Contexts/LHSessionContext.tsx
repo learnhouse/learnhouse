@@ -1,16 +1,12 @@
 'use client'
 import PageLoading from '@components/Objects/Loaders/PageLoading';
 import { useSession } from 'next-auth/react';
-import React, { useContext, createContext, useEffect } from 'react'
+import React, { useContext, createContext } from 'react'
 
 export const SessionContext = createContext({}) as any
 
 function LHSessionProvider({ children }: { children: React.ReactNode }) {
     const session = useSession();
-
-    useEffect(() => {
-    }, [])
-
 
     if (session && session.status == 'loading') {
         return <PageLoading />

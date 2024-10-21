@@ -1,11 +1,11 @@
 'use client';
 import { useOrg } from '@components/Contexts/OrgContext';
-import { Backpack, Book, ChevronRight, School, User, Users } from 'lucide-react'
+import { Backpack, Book, ChevronRight, CreditCard, School, User, Users } from 'lucide-react'
 import Link from 'next/link'
 import React from 'react'
 
 type BreadCrumbsProps = {
-  type: 'courses' | 'user' | 'users' | 'org' | 'orgusers' | 'assignments'
+  type: 'courses' | 'user' | 'users' | 'org' | 'orgusers' | 'assignments' | 'payments'
   last_breadcrumb?: string
 }
 
@@ -61,6 +61,15 @@ function BreadCrumbs(props: BreadCrumbsProps) {
               {' '}
               <School className="text-gray" size={14}></School>
               <Link href="/dash/users">Organization Settings</Link>
+            </div>
+          ) : (
+            ''
+          )}
+          {props.type == 'payments' ? (
+            <div className="flex space-x-2 items-center">
+              {' '}
+              <CreditCard className="text-gray" size={14}></CreditCard>
+              <Link href="/dash/payments">Payments</Link>
             </div>
           ) : (
             ''

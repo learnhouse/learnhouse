@@ -30,7 +30,7 @@ class CollectionUpdate(CollectionBase):
     courses: Optional[list]
     name: Optional[str]
     public: Optional[bool]
-    description: Optional[str]
+    description: Optional[str] = ""
 
 
 class CollectionRead(CollectionBase):
