@@ -6,7 +6,7 @@ import {
   uploadOrganizationLogo,
   uploadOrganizationThumbnail,
 } from '@services/settings/org'
-import { UploadCloud, Info, Check, FileWarning } from 'lucide-react'
+import { UploadCloud, Info } from 'lucide-react'
 import { revalidateTags } from '@services/utils/ts/requests'
 import { useRouter } from 'next/navigation'
 import { useOrg } from '@components/Contexts/OrgContext'
@@ -14,6 +14,9 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { getOrgLogoMediaDirectory, getOrgThumbnailMediaDirectory } from '@services/media/media'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Toaster, toast } from 'react-hot-toast';
+import { constructAcceptValue } from '@/lib/constants';
+
+const SUPPORTED_FILES = constructAcceptValue(['png', 'jpg'])
 
 interface OrganizationValues {
   name: string
@@ -174,6 +177,7 @@ function OrgEditGeneral() {
                           <input
                             type="file"
                             id="fileInput"
+                            accept={SUPPORTED_FILES}
                             style={{ display: 'none' }}
                             onChange={handleFileChange}
                           />
@@ -205,6 +209,7 @@ function OrgEditGeneral() {
                         <div className="flex justify-center items-center">
                           <input
                             type="file"
+                            accept={SUPPORTED_FILES}
                             id="thumbnailInput"
                             style={{ display: 'none' }}
                             onChange={handleThumbnailChange}

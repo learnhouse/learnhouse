@@ -12,6 +12,9 @@ import {
 } from 'lucide-react'
 import UserAvatar from '@components/Objects/UserAvatar'
 import { updateUserAvatar } from '@services/users/users'
+import { constructAcceptValue } from '@/lib/constants';
+
+const SUPPORTED_FILES = constructAcceptValue(['image'])
 
 function UserEditGeneral() {
   const session = useLHSession() as any;
@@ -165,6 +168,7 @@ function UserEditGeneral() {
                         <input
                           type="file"
                           id="fileInput"
+                          accept={SUPPORTED_FILES}
                           style={{ display: 'none' }}
                           onChange={handleFileChange}
                         />
