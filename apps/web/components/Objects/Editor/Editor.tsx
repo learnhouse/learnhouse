@@ -21,7 +21,7 @@ import WarningCallout from './Extensions/Callout/Warning/WarningCallout'
 import ImageBlock from './Extensions/Image/ImageBlock'
 import Youtube from '@tiptap/extension-youtube'
 import VideoBlock from './Extensions/Video/VideoBlock'
-import { Eye } from 'lucide-react'
+import { ComputerIcon, Eye, Monitor } from 'lucide-react'
 import MathEquationBlock from './Extensions/MathEquation/MathEquationBlock'
 import PDFBlock from './Extensions/PDF/PDFBlock'
 import QuizBlock from './Extensions/Quiz/QuizBlock'
@@ -51,6 +51,7 @@ import { getUriWithOrg } from '@services/config/config'
 import EmbedObjects from './Extensions/EmbedObjects/EmbedObjects'
 import Badges from './Extensions/Badges/Badges'
 import Buttons from './Extensions/Buttons/Buttons'
+import { useMediaQuery } from 'usehooks-ts'
 
 interface Editor {
   content: string
@@ -169,6 +170,21 @@ function Editor(props: Editor) {
     // If collab is enabled the onSynced callback ensures initial content is set only once using editor.setContent(), preventing repetitive content insertion on editor syncs.
     content: props.isCollabEnabledOnThisOrg ? null : props.content,
   })
+
+  const isMobile = useMediaQuery('(max-width: 767px)')
+  if (isMobile) {
+    // TODO: Work on a better editor mobile experience
+    return (
+      <div className="h-screen w-full bg-[#f8f8f8] flex items-center justify-center p-4">
+        <div className="bg-white p-6 rounded-lg shadow-md text-center">
+          <h2 className="text-xl font-bold mb-4">Desktop Only</h2>
+          <Monitor className='mx-auto my-5' size={60} />
+          <p>The editor is only accessible from a desktop device.</p>
+          <p>Please switch to a desktop to view.</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <Page>

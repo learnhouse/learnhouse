@@ -74,87 +74,84 @@ const CollectionsPage = async (params: any) => {
 
   return (
     <GeneralWrapperStyled>
-      <div className="flex justify-between">
-        <TypeOfContentTitle title="Collections" type="col" />
-        <AuthenticatedClientElement
-          ressourceType="collections"
-          action="create"
-          checkMethod="roles"
-          orgId={org_id}
-        >
-          <Link
-            className="flex justify-center"
-            href={getUriWithOrg(orgslug, '/collections/new')}
+      <div className="flex flex-col space-y-4 mb-8">
+        <div className="flex items-center justify-between">
+          <TypeOfContentTitle title="Collections" type="col" />
+          <AuthenticatedClientElement
+            ressourceType="collections"
+            action="create"
+            checkMethod="roles"
+            orgId={org_id}
           >
-            <NewCollectionButton />
-          </Link>
-        </AuthenticatedClientElement>
-      </div>
-      <div className="home_collections flex flex-wrap">
-        {collections.map((collection: any) => (
-          <div
-            className="flex flex-col py-1 px-3"
-            key={collection.collection_uuid}
-          >
-            <CollectionThumbnail
-              collection={collection}
-              orgslug={orgslug}
-              org_id={org_id}
-            />
-          </div>
-        ))}
-        {collections.length == 0 && (
-          <div className="flex mx-auto h-[400px]">
-            <div className="flex flex-col justify-center text-center items-center space-y-5">
-              <div className="mx-auto">
-                <svg
-                  width="120"
-                  height="120"
-                  viewBox="0 0 295 295"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <rect
-                    opacity="0.51"
-                    x="10"
-                    y="10"
-                    width="275"
-                    height="275"
-                    rx="75"
-                    stroke="#4B5564"
-                    strokeOpacity="0.15"
-                    strokeWidth="20"
-                  />
-                  <path
-                    d="M135.8 200.8V130L122.2 114.6L135.8 110.4V102.8L122.2 87.4L159.8 76V200.8L174.6 218H121L135.8 200.8Z"
-                    fill="#4B5564"
-                    fillOpacity="0.08"
-                  />
-                </svg>
-              </div>
-              <div className="space-y-0">
-                <h1 className="text-3xl font-bold text-gray-600">
+            <Link href={getUriWithOrg(orgslug, '/collections/new')}>
+              <NewCollectionButton />
+            </Link>
+          </AuthenticatedClientElement>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {collections.map((collection: any) => (
+            <div key={collection.collection_uuid} className="p-3">
+              <CollectionThumbnail
+                collection={collection}
+                orgslug={orgslug}
+                org_id={org_id}
+              />
+            </div>
+          ))}
+          {collections.length === 0 && (
+            <div className="col-span-full flex justify-center items-center py-8">
+              <div className="text-center">
+                <div className="mb-4">
+                  <svg
+                    width="50"
+                    height="50"
+                    viewBox="0 0 295 295"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="mx-auto"
+                  >
+                    <rect
+                      opacity="0.51"
+                      x="10"
+                      y="10"
+                      width="275"
+                      height="275"
+                      rx="75"
+                      stroke="#4B5564"
+                      strokeOpacity="0.15"
+                      strokeWidth="20"
+                    />
+                    <path
+                      d="M135.8 200.8V130L122.2 114.6L135.8 110.4V102.8L122.2 87.4L159.8 76V200.8L174.6 218H121L135.8 200.8Z"
+                      fill="#4B5564"
+                      fillOpacity="0.08"
+                    />
+                  </svg>
+                </div>
+                <h1 className="text-xl font-bold text-gray-600 mb-2">
                   No collections yet
                 </h1>
-                <p className="text-lg text-gray-400">
+                <p className="text-md text-gray-400">
                   <ContentPlaceHolderIfUserIsNotAdmin
                     text="Create a collection to add content"
                   />
                 </p>
+                <div className="mt-4">
+                  <AuthenticatedClientElement
+                    checkMethod="roles"
+                    ressourceType="collections"
+                    action="create"
+                    orgId={org_id}
+                  >
+                    <Link href={getUriWithOrg(orgslug, '/collections/new')}>
+                      <NewCollectionButton />
+                    </Link>
+                  </AuthenticatedClientElement>
+                </div>
               </div>
-              <AuthenticatedClientElement
-                checkMethod="roles"
-                ressourceType="collections"
-                action="create"
-                orgId={org_id}
-              >
-                <Link href={getUriWithOrg(orgslug, '/collections/new')}>
-                  <NewCollectionButton />
-                </Link>
-              </AuthenticatedClientElement>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </GeneralWrapperStyled>
   )

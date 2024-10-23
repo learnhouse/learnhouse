@@ -25,43 +25,42 @@ const removeCollectionPrefix = (collectionid: string) => {
 function CollectionThumbnail(props: PropsType) {
   const org = useOrg() as any
   return (
-    <div className="">
-      <div className="flex flex-row space-x-4 inset-0 ring-1 ring-inset my-auto ring-black/10 rounded-xl shadow-xl relative w-[300px] h-[80px] bg-cover items-center justify-center bg-indigo-600 font-bold text-zinc-50">
-        <div className="flex -space-x-5">
-          {props.collection.courses.slice(0, 2).map((course: any) => (
-            <>
-              <Link
-                href={getUriWithOrg(
-                  props.orgslug,
-                  '/collection/' +
-                  removeCollectionPrefix(props.collection.collection_uuid)
-                )}
-              >
-                <div
-                  className="inset-0 rounded-full shadow-2xl bg-cover w-12 h-8 justify-center ring-indigo-800 ring-4"
-                  style={{
-                    backgroundImage: `url(${getCourseThumbnailMediaDirectory(
-                      org?.org_uuid,
-                      course.course_uuid,
-                      course.thumbnail_image
-                    )})`,
-                  }}
-                ></div>
-              </Link>
-            </>
-          ))}
+    <div className="group relative overflow-hidden rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl">
+      <div className="flex h-full w-full items-center justify-between bg-indigo-600 p-4">
+        <div className="flex items-center space-x-5">
+          <div className="flex -space-x-3">
+            {props.collection.courses.slice(0, 3).map((course: any, index: number) => (
+              <div
+                key={course.course_uuid}
+                className="relative h-12 w-12 overflow-hidden rounded-full border-2 border-white shadow-md transition-all duration-300 hover:z-10 hover:scale-110"
+                style={{
+                  backgroundImage: `url(${getCourseThumbnailMediaDirectory(
+                    org?.org_uuid,
+                    course.course_uuid,
+                    course.thumbnail_image
+                  )})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  zIndex: 3 - index,
+                }}
+              ></div>
+            ))}
+          </div>
+          <div className="flex flex-col">
+            <Link
+              href={getUriWithOrg(
+                props.orgslug,
+                '/collection/' + removeCollectionPrefix(props.collection.collection_uuid)
+              )}
+              className="text-2xl font-bold text-white hover:underline"
+            >
+              {props.collection.name}
+            </Link>
+            <span className="mt-1 text-sm font-medium text-indigo-200">
+              {props.collection.courses.length} course{props.collection.courses.length !== 1 ? 's' : ''}
+            </span>
+          </div>
         </div>
-        <Link
-          href={getUriWithOrg(
-            props.orgslug,
-            '/collection/' +
-            removeCollectionPrefix(props.collection.collection_uuid)
-          )}
-        >
-          <h1 className="font-bold text-md justify-center">
-            {props.collection.name}
-          </h1>
-        </Link>
         <CollectionAdminEditsArea
           orgslug={props.orgslug}
           org_id={props.org_id}
@@ -91,18 +90,18 @@ const CollectionAdminEditsArea = (props: any) => {
       orgId={props.org_id}
       checkMethod="roles"
     >
-      <div className="flex space-x-1  justify-center mx-auto z-20 ">
+      <div className="z-20">
         <ConfirmationModal
           confirmationMessage="Are you sure you want to delete this collection?"
           confirmationButtonText="Delete Collection"
-          dialogTitle={'Delete ' + props.collection.name + ' ?'}
+          dialogTitle={'Delete ' + props.collection.name + '?'}
           dialogTrigger={
-            <div
-              className="hover:cursor-pointer p-1 px-2 bg-red-600 rounded-xl items-center justify-center flex shadow-xl"
+            <button
+              className="absolute right-2 top-2 rounded-full bg-red-500 p-2 text-white transition-colors duration-300 hover:bg-red-600"
               rel="noopener noreferrer"
             >
-              <X size={10} className="text-rose-200 font-bold" />
-            </div>
+              <X size={18} />
+            </button>
           }
           functionToExecute={() => deleteCollectionUI(props.collection_uuid)}
           status="warning"
