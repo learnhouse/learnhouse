@@ -1,6 +1,6 @@
 'use client';
 import BreadCrumbs from '@components/Dashboard/UI/BreadCrumbs'
-import { BookOpen, BookX, EllipsisVertical, Eye, Layers2, UserRoundPen } from 'lucide-react'
+import { BookOpen, BookX, EllipsisVertical, Eye, Layers2, Monitor, UserRoundPen } from 'lucide-react'
 import React, { useEffect } from 'react'
 import { AssignmentProvider, useAssignments } from '@components/Contexts/Assignments/AssignmentContext';
 import ToolTip from '@components/StyledElements/Tooltip/Tooltip';
@@ -15,12 +15,29 @@ import { updateActivity } from '@services/courses/activities';
 // Lazy Loading
 import dynamic from 'next/dynamic';
 import AssignmentEditorSubPage from './subpages/AssignmentEditorSubPage';
+import { useMediaQuery } from 'usehooks-ts';
 const AssignmentSubmissionsSubPage = dynamic(() => import('./subpages/AssignmentSubmissionsSubPage'))
 
 function AssignmentEdit() {
     const params = useParams<{ assignmentuuid: string; }>()
     const searchParams = useSearchParams()
     const [selectedSubPage, setSelectedSubPage] = React.useState(searchParams.get('subpage') || 'editor')
+    const isMobile = useMediaQuery('(max-width: 767px)')
+
+    if (isMobile) {
+        // TODO: Work on a better mobile experience
+        return (
+          <div className="h-screen w-full bg-[#f8f8f8] flex items-center justify-center p-4">
+            <div className="bg-white p-6 rounded-lg shadow-md text-center">
+              <h2 className="text-xl font-bold mb-4">Desktop Only</h2>
+              <Monitor className='mx-auto my-5' size={60} />    
+              <p>This page is only accessible from a desktop device.</p>
+              <p>Please switch to a desktop to view and manage the assignment.</p>
+            </div>
+          </div>
+        )
+    }
+    
     return (
         <div className='flex w-full flex-col'>
             <AssignmentProvider assignment_uuid={'assignment_' + params.assignmentuuid}>

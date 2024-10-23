@@ -2,8 +2,9 @@
 import React, { useEffect } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
+import { useMediaQuery } from 'usehooks-ts'
 import { getUriWithOrg } from '@services/config/config'
-import { ScanEye, SquareUserRound, UserPlus, Users } from 'lucide-react'
+import { Monitor, ScanEye, SquareUserRound, UserPlus, Users } from 'lucide-react'
 import BreadCrumbs from '@components/Dashboard/UI/BreadCrumbs'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
@@ -22,6 +23,7 @@ function UsersSettingsPage({ params }: { params: SettingsParams }) {
   const org = useOrg() as any
   const [H1Label, setH1Label] = React.useState('')
   const [H2Label, setH2Label] = React.useState('')
+  const isMobile = useMediaQuery('(max-width: 767px)')
 
   function handleLabels() {
     if (params.subpage == 'users') {
@@ -45,6 +47,20 @@ function UsersSettingsPage({ params }: { params: SettingsParams }) {
   useEffect(() => {
     handleLabels()
   }, [session, org, params.subpage, params])
+
+  if (isMobile) {
+    // TODO: Work on a better mobile experience
+    return (
+      <div className="h-screen w-full bg-[#f8f8f8] flex items-center justify-center p-4">
+        <div className="bg-white p-6 rounded-lg shadow-md text-center">
+          <h2 className="text-xl font-bold mb-4">Desktop Only</h2>
+          <Monitor className='mx-auto my-5' size={60} />
+          <p>This page is only accessible from a desktop device.</p>
+          <p>Please switch to a desktop to view and manage user settings.</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="h-screen w-full bg-[#f8f8f8] grid grid-rows-[auto,1fr]">
