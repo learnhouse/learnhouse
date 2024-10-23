@@ -26,6 +26,7 @@ import { deleteAssignmentUsingActivityUUID, getAssignmentFromActivityUUID } from
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useCourse } from '@components/Contexts/CourseContext'
 import toast from 'react-hot-toast'
+import { useMediaQuery } from 'usehooks-ts'
 
 type ActivitiyElementProps = {
   orgslug: string
@@ -50,6 +51,7 @@ function ActivityElement(props: ActivitiyElementProps) {
     string | undefined
   >(undefined)
   const activityUUID = props.activity.activity_uuid
+  const isMobile = useMediaQuery('(max-width: 767px)')
 
   async function deleteActivityUI() {
     const toast_loading = toast.loading('Deleting activity...')
@@ -110,14 +112,14 @@ function ActivityElement(props: ActivitiyElementProps) {
     >
       {(provided, snapshot) => (
         <div
-          className="flex flex-row py-2 my-2 w-full rounded-md bg-gray-50 text-gray-500 hover:bg-gray-100 hover:scale-102 hover:shadow space-x-1 items-center ring-1 ring-inset ring-gray-400/10 shadow-sm"
+          className="flex flex-col sm:flex-row py-2 px-3 my-2 w-full rounded-md bg-gray-50 text-gray-500 hover:bg-gray-100 hover:scale-102 space-y-2 sm:space-y-0 sm:space-x-2 items-center ring-1 ring-inset ring-gray-400/10 nice-shadow"
           key={props.activity.id}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
           ref={provided.innerRef}
         >
           {/*   Activity Type Icon  */}
-          <ActivityTypeIndicator activityType={props.activity.activity_type} />
+          <ActivityTypeIndicator activityType={props.activity.activity_type} isMobile={isMobile} />
 
           {/*   Centered Activity Name  */}
           <div className="grow items-center space-x-2 flex mx-auto justify-center">
@@ -143,13 +145,11 @@ function ActivityElement(props: ActivitiyElementProps) {
                   onClick={() => updateActivityName(props.activity.id)}
                   className="bg-transparent text-neutral-700 hover:cursor-pointer hover:text-neutral-900"
                 >
-                  <Save
-                    size={12}
-                  />
+                  <Save size={12} />
                 </button>
               </div>
             ) : (
-              <p className="first-letter:uppercase"> {props.activity.name} </p>
+              <p className="first-letter:uppercase text-center sm:text-left"> {props.activity.name} </p>
             )}
             <Pencil
               onClick={() => setSelectedActivity(props.activity.id)}
@@ -157,65 +157,60 @@ function ActivityElement(props: ActivitiyElementProps) {
             />
           </div>
 
-
-          {/*   Edit and View Button  */}
-          <div className="flex basis-1/2 justify-end">
-            <div className="flex flex-row space-x-2">
-              <ActivityElementOptions activity={props.activity} />
-              {/*   Publishing  */}
-              <div
-                className={`hover:cursor-pointer p-1 px-3 border shadow-lg rounded-md font-bold text-xs flex items-center space-x-1 ${!props.activity.published
-                  ? 'bg-gradient-to-bl text-green-800 from-green-400/50 to-lime-200/80 border-green-600/10 shadow-green-900/10'
-                  : 'bg-gradient-to-bl text-gray-800 from-gray-400/50 to-gray-200/80 border-gray-600/10 shadow-gray-900/10'
-                  }`}
-                rel="noopener noreferrer"
-                onClick={() => changePublicStatus()}
-              >
-                {!props.activity.published ? (
-                  <Globe strokeWidth={2} size={12} className="text-green-600" />
-                ) : (
-                  <Lock strokeWidth={2} size={12} className="text-gray-600" />
-                )}
-                <span>{!props.activity.published ? 'Publish' : 'Unpublish'}</span>
-              </div>
-              <Link
-                href={
-                  getUriWithOrg(props.orgslug, '') +
-                  `/course/${props.course_uuid.replace(
-                    'course_',
-                    ''
-                  )}/activity/${props.activity.activity_uuid.replace(
-                    'activity_',
-                    ''
-                  )}`
-                }
-                prefetch
-                className=" hover:cursor-pointer p-1 px-3 bg-gradient-to-bl text-cyan-800  from-sky-400/50 to-cyan-200/80  border border-cyan-600/10 shadow-cyan-900/10 shadow-lg rounded-md font-bold text-xs flex items-center space-x-1"
-                rel="noopener noreferrer"
-              >
-                <Eye strokeWidth={2} size={12} className="text-sky-600" />
-                <span>Preview</span>
-              </Link>
-            </div>
+          {/*   Edit, View, Publish, and Delete Buttons  */}
+          <div className="flex flex-wrap justify-center sm:justify-end gap-2 w-full sm:w-auto">
+            <ActivityElementOptions activity={props.activity} isMobile={isMobile} />
+            {/*   Publishing  */}
+            <button
+              className={`p-1 px-2 sm:px-3 border shadow-md rounded-md font-bold text-xs flex items-center space-x-1 transition-colors duration-200 ${
+                !props.activity.published
+                  ? 'bg-gradient-to-bl text-green-800 from-green-400/50 to-lime-200/80 border-green-600/10 hover:from-green-500/50 hover:to-lime-300/80'
+                  : 'bg-gradient-to-bl text-gray-800 from-gray-400/50 to-gray-200/80 border-gray-600/10 hover:from-gray-500/50 hover:to-gray-300/80'
+              }`}
+              onClick={() => changePublicStatus()}
+            >
+              {!props.activity.published ? (
+                <Globe strokeWidth={2} size={12} className="text-green-600" />
+              ) : (
+                <Lock strokeWidth={2} size={12} className="text-gray-600" />
+              )}
+              <span>{!props.activity.published ? 'Publish' : 'Unpublish'}</span>
+            </button>
+            <Link
+              href={
+                getUriWithOrg(props.orgslug, '') +
+                `/course/${props.course_uuid.replace(
+                  'course_',
+                  ''
+                )}/activity/${props.activity.activity_uuid.replace(
+                  'activity_',
+                  ''
+                )}`
+              }
+              prefetch
+              className="p-1 px-2 sm:px-3 bg-gradient-to-bl text-cyan-800 from-sky-400/50 to-cyan-200/80 border border-cyan-600/10 shadow-md rounded-md font-bold text-xs flex items-center space-x-1 transition-colors duration-200 hover:from-sky-500/50 hover:to-cyan-300/80"
+              rel="noopener noreferrer"
+            >
+              <Eye strokeWidth={2} size={12} className="text-sky-600" />
+              <span>Preview</span>
+            </Link>
             {/*   Delete Button  */}
-            <div className="flex flex-row pr-3 space-x-1 items-center">
-              <MoreVertical size={15} className="text-gray-300" />
-              <ConfirmationModal
-                confirmationMessage="Are you sure you want to delete this activity ?"
-                confirmationButtonText="Delete Activity"
-                dialogTitle={'Delete ' + props.activity.name + ' ?'}
-                dialogTrigger={
-                  <div
-                    className=" hover:cursor-pointer p-1 px-5 bg-red-600 rounded-md"
-                    rel="noopener noreferrer"
-                  >
-                    <X size={15} className="text-rose-200 font-bold" />
-                  </div>
-                }
-                functionToExecute={() => deleteActivityUI()}
-                status="warning"
-              ></ConfirmationModal>
-            </div>
+            <ConfirmationModal
+              confirmationMessage="Are you sure you want to delete this activity ?"
+              confirmationButtonText="Delete Activity"
+              dialogTitle={'Delete ' + props.activity.name + ' ?'}
+              dialogTrigger={
+                <button
+                  className="p-1 px-2 sm:px-3 bg-red-600 rounded-md flex items-center space-x-1 shadow-md transition-colors duration-200 hover:bg-red-700"
+                  rel="noopener noreferrer"
+                >
+                  <X size={15} className="text-rose-200 font-bold" />
+                  {!isMobile && <span className="text-rose-200 font-bold text-xs">Delete</span>}
+                </button>
+              }
+              functionToExecute={() => deleteActivityUI()}
+              status="warning"
+            />
           </div>
         </div>
       )}
@@ -242,11 +237,11 @@ const ACTIVITIES = {
   }
 }
 
-const ActivityTypeIndicator = ({activityType} : { activityType: keyof typeof ACTIVITIES}) => {
+const ActivityTypeIndicator = ({activityType, isMobile} : { activityType: keyof typeof ACTIVITIES, isMobile: boolean}) => {
   const {displayName, Icon} = ACTIVITIES[activityType]
 
   return (
-    <div className="px-3 text-gray-300 space-x-1 w-28 flex">
+    <div className={`px-3 text-gray-300 space-x-1 w-28 flex ${isMobile ? 'flex-col' : ''}`}>
       <div className="flex space-x-2 items-center">
             <Icon className="size-4" />{' '}
             <div className="text-xs bg-gray-200 text-gray-400 font-bold px-2 py-1 rounded-full mx-auto justify-center align-middle">
@@ -257,7 +252,7 @@ const ActivityTypeIndicator = ({activityType} : { activityType: keyof typeof ACT
   )
 }
 
-const ActivityElementOptions = ({ activity }: any) => {
+const ActivityElementOptions = ({ activity, isMobile }: { activity: any; isMobile: boolean }) => {
   const [assignmentUUID, setAssignmentUUID] = useState('');
   const org = useOrg() as any;
   const course = useCourse() as any;
@@ -299,11 +294,11 @@ const ActivityElementOptions = ({ activity }: any) => {
               )}/edit`
             }
             prefetch
-            className=" hover:cursor-pointer p-1 px-3 bg-sky-700 rounded-md items-center"
-            target='_blank' // hotfix for an editor prosemirror bug 
+            className={`hover:cursor-pointer p-1 ${isMobile ? 'px-2' : 'px-3'} bg-sky-700 rounded-md items-center`}
+            target='_blank'
           >
             <div className="text-sky-100 font-bold text-xs flex items-center space-x-1">
-              <FilePenLine size={12} /> <span>Edit Page</span>
+              <FilePenLine size={12} />  <span>Edit Page</span>
             </div>
           </Link>
         </>
@@ -316,10 +311,10 @@ const ActivityElementOptions = ({ activity }: any) => {
               `/dash/assignments/${assignmentUUID}`
             }
             prefetch
-            className=" hover:cursor-pointer p-1 px-3 bg-teal-700 rounded-md items-center"
+            className={`hover:cursor-pointer p-1 ${isMobile ? 'px-2' : 'px-3'} bg-teal-700 rounded-md items-center`}
           >
             <div className="text-sky-100 font-bold text-xs flex items-center space-x-1">
-              <FilePenLine size={12} /> <span>Edit Assignment</span>
+              <FilePenLine size={12} /> {!isMobile && <span>Edit Assignment</span>}
             </div>
           </Link>
         </>
