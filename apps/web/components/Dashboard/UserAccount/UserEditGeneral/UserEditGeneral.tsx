@@ -40,7 +40,7 @@ function UserEditGeneral() {
   useEffect(() => { }, [session, session.data])
 
   return (
-    <div className="ml-10 mr-10 mx-auto bg-white rounded-xl shadow-sm px-6 py-5">
+    <div className="ml-10 mr-10 mx-auto bg-white rounded-xl shadow-sm px-6 py-5 sm:mb-0 mb-16">
       {session.data.user && (
         <Formik
           enableReinitialize
@@ -59,84 +59,53 @@ function UserEditGeneral() {
           }}
         >
           {({ isSubmitting }) => (
-            <div className="flex space-x-8">
-              <Form className="max-w-md">
-                <label className="block mb-2 font-bold" htmlFor="email">
-                  Email
-                </label>
-                <Field
-                  className="w-full px-4 py-2 mb-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  type="email"
-                  name="email"
-                />
-
-                <label className="block mb-2 font-bold" htmlFor="username">
-                  Username
-                </label>
-                <Field
-                  className="w-full px-4 py-2 mb-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  type="username"
-                  name="username"
-                />
-
-                <label className="block mb-2 font-bold" htmlFor="first_name">
-                  First Name
-                </label>
-
-                <Field
-                  className="w-full px-4 py-2 mb-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  type="first_name"
-                  name="first_name"
-                />
-
-                <label className="block mb-2 font-bold" htmlFor="last_name">
-                  Last Name
-                </label>
-
-                <Field
-                  className="w-full px-4 py-2 mb-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  type="last_name"
-                  name="last_name"
-                />
-
-                <label className="block mb-2 font-bold" htmlFor="bio">
-                  Bio
-                </label>
-
-                <Field
-                  className="w-full px-4 py-2 mb-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  type="bio"
-                  name="bio"
-                />
+            <div className="flex flex-col lg:flex-row gap-8">
+              <Form className="flex-1 min-w-0">
+                <div className="space-y-4">
+                  {[
+                    { label: 'Email', name: 'email', type: 'email' },
+                    { label: 'Username', name: 'username', type: 'text' },
+                    { label: 'First Name', name: 'first_name', type: 'text' },
+                    { label: 'Last Name', name: 'last_name', type: 'text' },
+                    { label: 'Bio', name: 'bio', type: 'text' },
+                  ].map((field) => (
+                    <div key={field.name}>
+                      <label className="block mb-2 font-bold" htmlFor={field.name}>
+                        {field.label}
+                      </label>
+                      <Field
+                        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        type={field.type}
+                        name={field.name}
+                      />
+                    </div>
+                  ))}
+                </div>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-6 py-3 text-white bg-black rounded-lg shadow-md hover:bg-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="mt-6 px-6 py-3 text-white bg-black rounded-lg shadow-md hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   Submit
                 </button>
               </Form>
-              <div className="flex flex-col grow justify-center align-middle space-y-3">
-                <label className="flex mx-auto mb-2 font-bold ">Avatar</label>
-                {error && (
-                  <div className="flex justify-center mx-auto bg-red-200 rounded-md text-red-950 space-x-1 px-4 items-center p-2 transition-all shadow-sm">
-                    <FileWarning size={16} className="mr-2" />
-                    <div className="text-sm font-semibold first-letter:uppercase">
-                      {error}
+              <div className="flex-1 min-w-0">
+                <div className="flex flex-col items-center space-y-4">
+                  <label className="font-bold">Avatar</label>
+                  {error && (
+                    <div className="flex items-center bg-red-200 rounded-md text-red-950 px-4 py-2 text-sm">
+                      <FileWarning size={16} className="mr-2" />
+                      <span className="font-semibold first-letter:uppercase">{error}</span>
                     </div>
-                  </div>
-                )}
-                {success && (
-                  <div className="flex justify-center mx-auto bg-green-200 rounded-md text-green-950 space-x-1 px-4 items-center p-2 transition-all shadow-sm">
-                    <Check size={16} className="mr-2" />
-                    <div className="text-sm font-semibold first-letter:uppercase">
-                      {success}
+                  )}
+                  {success && (
+                    <div className="flex items-center bg-green-200 rounded-md text-green-950 px-4 py-2 text-sm">
+                      <Check size={16} className="mr-2" />
+                      <span className="font-semibold first-letter:uppercase">{success}</span>
                     </div>
-                  </div>
-                )}
-                <div className="flex flex-col space-y-3">
-                  <div className="w-auto bg-gray-50 rounded-xl outline outline-1 outline-gray-200 h-[200px] shadow mx-20">
-                    <div className="flex flex-col justify-center items-center mt-10">
+                  )}
+                  <div className="w-full max-w-xs bg-gray-50 rounded-xl outline outline-1 outline-gray-200 shadow p-6">
+                    <div className="flex flex-col items-center space-y-4">
                       {localAvatar ? (
                         <UserAvatar
                           border="border-8"
@@ -146,42 +115,32 @@ function UserEditGeneral() {
                       ) : (
                         <UserAvatar border="border-8" width={100} />
                       )}
-                    </div>
-                    {isLoading ? (
-                      <div className="flex justify-center items-center">
-                        <input
-                          type="file"
-                          id="fileInput"
-                          style={{ display: 'none' }}
-                          onChange={handleFileChange}
-                        />
-                        <div className="font-bold  animate-pulse antialiased items-center bg-green-200 text-gray text-sm rounded-md px-4 py-2 mt-4 flex">
+                      {isLoading ? (
+                        <div className="font-bold animate-pulse antialiased bg-green-200 text-gray text-sm rounded-md px-4 py-2 flex items-center">
                           <ArrowBigUpDash size={16} className="mr-2" />
                           <span>Uploading</span>
                         </div>
-                      </div>
-                    ) : (
-                      <div className="flex justify-center items-center">
-                        <input
-                          type="file"
-                          id="fileInput"
-                          style={{ display: 'none' }}
-                          onChange={handleFileChange}
-                        />
-                        <button
-                          className="font-bold antialiased items-center text-gray text-sm rounded-md px-4 py-2 mt-4 flex"
-                          onClick={() =>
-                            document.getElementById('fileInput')?.click()
-                          }
-                        >
-                          <UploadCloud size={16} className="mr-2" />
-                          <span>Change Avatar</span>
-                        </button>
-                      </div>
-                    )}
+                      ) : (
+                        <>
+                          <input
+                            type="file"
+                            id="fileInput"
+                            className="hidden"
+                            onChange={handleFileChange}
+                          />
+                          <button
+                            className="font-bold antialiased text-gray text-sm rounded-md px-4 py-2 flex items-center"
+                            onClick={() => document.getElementById('fileInput')?.click()}
+                          >
+                            <UploadCloud size={16} className="mr-2" />
+                            <span>Change Avatar</span>
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex text-xs space-x-2 items-center text-gray-500 justify-center">
-                    <Info size={13} />
+                  <div className="flex items-center text-xs text-gray-500">
+                    <Info size={13} className="mr-2" />
                     <p>Recommended size 100x100</p>
                   </div>
                 </div>
