@@ -7,6 +7,11 @@ import {
   ArrowRightIcon,
   DividerVerticalIcon,
   ListBulletIcon,
+  TableIcon,
+  RowsIcon,
+  ColumnsIcon,
+  SectionIcon,
+  ContainerIcon,
 } from '@radix-ui/react-icons'
 import {
   AlertCircle,
@@ -92,6 +97,34 @@ export const ToolbarButtons = ({ editor, props }: any) => {
         <option value="5">Heading 5</option>
         <option value="6">Heading 6</option>
       </ToolSelect>
+      <DividerVerticalIcon
+        style={{ marginTop: 'auto', marginBottom: 'auto', color: 'grey' }}
+      />
+      <ToolBtn content={'Create table'}
+        onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
+      >
+        <TableIcon/>
+      </ToolBtn>
+      <ToolBtn content={'Insert row'}
+        onClick={() => editor.chain().focus().addRowAfter().run()}
+      >
+        <RowsIcon/>
+      </ToolBtn>
+      <ToolBtn content={'Insert column'}
+        onClick={() => editor.chain().focus().addColumnAfter().run()}
+      >
+        <ColumnsIcon/>
+      </ToolBtn>
+      <ToolBtn content={'Remove column'}
+        onClick={() => editor.chain().focus().deleteColumn().run()}
+      >
+        <ContainerIcon/>
+      </ToolBtn>
+      <ToolBtn content={'Remove row'}
+        onClick={() => editor.chain().focus().deleteRow().run()}
+      >
+        <SectionIcon/>
+      </ToolBtn>
       {/* TODO: fix this : toggling only works one-way */}
       <DividerVerticalIcon
         style={{ marginTop: 'auto', marginBottom: 'auto', color: 'grey' }}
