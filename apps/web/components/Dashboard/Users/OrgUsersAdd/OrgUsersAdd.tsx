@@ -102,33 +102,33 @@ function OrgUsersAdd() {
                                 Users who have been invited to join your organization{' '}
                             </h2>
                         </div>
-                        <table className="table-auto w-full text-left whitespace-nowrap rounded-md overflow-hidden">
-                            <thead className="bg-gray-100 text-gray-500 rounded-xl uppercase">
-                                <tr className="font-bolder text-sm">
-                                    <th className="py-3 px-4">Email</th>
-                                    <th className="py-3 px-4">Signup Status</th>
-                                    <th className="py-3 px-4">Email sent</th>
-                                </tr>
-                            </thead>
-                            <>
-                                <tbody className="mt-5 bg-white rounded-md">
-                                    {invited_users?.map((invited_user: any) => (
-                                        <tr
-                                            key={invited_user.email}
-                                            className="border-b border-gray-100 text-sm"
-                                        >
-                                            <td className="py-3 px-4">{invited_user.email}</td>
-                                            <td className="py-3 px-4">{invited_user.pending ? <div className='bg-orange-400 text-orange-100 w-fit px-2 py1 rounded-md'>Pending</div> : <div className='bg-green-400 text-green-100 w-fit px-2 py1 rounded-md'>Signed</div>}</td>
-                                            <td className="py-3 px-4">{invited_user.email_sent ? <div className='bg-green-600 text-green-100 w-fit px-2 py1 rounded-md'>Sent</div> : <div className='bg-red-400 text-red-100 w-fit px-2 py1 rounded-md'>No</div>}</td>
+                        <div className="overflow-x-auto">
+                            <table className="table-auto w-full text-left whitespace-nowrap rounded-md overflow-hidden">
+                                <thead className="bg-gray-100 text-gray-500 rounded-xl uppercase">
+                                    <tr className="font-bolder text-sm">
+                                        <th className="py-3 px-4">Email</th>
+                                        <th className="py-3 px-4">Signup Status</th>
+                                        <th className="py-3 px-4">Email sent</th>
+                                    </tr>
+                                </thead>
+                                <>
+                                    <tbody className="mt-5 bg-white rounded-md">
+                                        {invited_users?.map((invited_user: any) => (
+                                            <tr
+                                                key={invited_user.email}
+                                                className="border-b border-gray-100 text-sm"
+                                            >
+                                                <td className="py-3 px-4">{invited_user.email}</td>
+                                                <td className="py-3 px-4">{invited_user.pending ? <div className='bg-orange-400 text-orange-100 w-fit px-2 py1 rounded-md'>Pending</div> : <div className='bg-green-400 text-green-100 w-fit px-2 py1 rounded-md'>Signed</div>}</td>
+                                                <td className="py-3 px-4">{invited_user.email_sent ? <div className='bg-green-600 text-green-100 w-fit px-2 py1 rounded-md'>Sent</div> : <div className='bg-red-400 text-red-100 w-fit px-2 py1 rounded-md'>No</div>}</td>
 
 
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </>
-                        </table>
-
-
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </>
+                            </table>
+                        </div>
                     </div>
                 </>
             ) : (
