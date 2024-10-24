@@ -55,88 +55,90 @@ function OrgUserGroups() {
                         UserGroups are a way to group users together to manage their access to the resources (Courses) in your organization.{' '}
                     </h2>
                 </div>
-                <table className="table-auto w-full text-left whitespace-nowrap rounded-md overflow-hidden">
-                    <thead className="bg-gray-100 text-gray-500 rounded-xl uppercase">
-                        <tr className="font-bolder text-sm">
-                            <th className="py-3 px-4">UserGroup</th>
-                            <th className="py-3 px-4">Description</th>
-                            <th className="py-3 px-4">Manage Users</th>
-                            <th className="py-3 px-4">Actions</th>
-                        </tr>
-                    </thead>
-                    <>
-                        <tbody className="mt-5 bg-white rounded-md">
-                            {usergroups?.map((usergroup: any) => (
-                                <tr key={usergroup.id} className="border-b border-gray-100 text-sm">
-                                    <td className="py-3 px-4">{usergroup.name}</td>
-                                    <td className="py-3 px-4 ">{usergroup.description}</td>
-                                    <td className="py-3 px-4 ">
-                                        <Modal
-                                            isDialogOpen={
-                                                userGroupManagementModal &&
-                                                selectedUserGroup === usergroup.id
-                                            }
-                                            onOpenChange={() =>
-                                                handleUserGroupManagementModal(usergroup.id)
-                                            }
-                                            minHeight="lg"
-                                            minWidth='lg'
-                                            dialogContent={
-                                                <ManageUsers
-                                                    usergroup_id={usergroup.id}
-                                                />
-                                            }
-                                            dialogTitle="Manage UserGroup Users"
-                                            dialogDescription={
-                                                'Manage the users in this UserGroup'
-                                            }
+                <div className="overflow-x-auto">
+                    <table className="table-auto w-full text-left whitespace-nowrap rounded-md overflow-hidden">
+                        <thead className="bg-gray-100 text-gray-500 rounded-xl uppercase">
+                            <tr className="font-bolder text-sm">
+                                <th className="py-3 px-4">UserGroup</th>
+                                <th className="py-3 px-4">Description</th>
+                                <th className="py-3 px-4">Manage Users</th>
+                                <th className="py-3 px-4">Actions</th>
+                            </tr>
+                        </thead>
+                        <>
+                            <tbody className="mt-5 bg-white rounded-md">
+                                {usergroups?.map((usergroup: any) => (
+                                    <tr key={usergroup.id} className="border-b border-gray-100 text-sm">
+                                        <td className="py-3 px-4">{usergroup.name}</td>
+                                        <td className="py-3 px-4 ">{usergroup.description}</td>
+                                        <td className="py-3 px-4 ">
+                                            <Modal
+                                                isDialogOpen={
+                                                    userGroupManagementModal &&
+                                                    selectedUserGroup === usergroup.id
+                                                }
+                                                onOpenChange={() =>
+                                                    handleUserGroupManagementModal(usergroup.id)
+                                                }
+                                                minHeight="lg"
+                                                minWidth='lg'
+                                                dialogContent={
+                                                    <ManageUsers
+                                                        usergroup_id={usergroup.id}
+                                                    />
+                                                }
+                                                dialogTitle="Manage UserGroup Users"
+                                                dialogDescription={
+                                                    'Manage the users in this UserGroup'
+                                                }
+                                                dialogTrigger={
+                                                    <button className="flex space-x-2 hover:cursor-pointer p-1 px-3 bg-yellow-700 rounded-md font-bold items-center text-sm text-yellow-100">
+                                                        <Users className="w-4 h-4" />
+                                                        <span> Manage Users</span>
+                                                    </button>
+                                                }
+                                            />
+                                        </td>
+                                        <td className="py-3 px-4 flex space-x-2">
+                                            <Modal
+                                            isDialogOpen={editUserGroupModal}
                                             dialogTrigger={
-                                                <button className="flex space-x-2 hover:cursor-pointer p-1 px-3 bg-yellow-700 rounded-md font-bold items-center text-sm text-yellow-100">
-                                                    <Users className="w-4 h-4" />
-                                                    <span> Manage Users</span>
+                                                <button className="flex space-x-2 hover:cursor-pointer p-1 px-3 bg-sky-700 rounded-md font-bold items-center text-sm text-sky-100">
+                                                    <Pencil className="size-4" />
+                                                    <span>Edit</span>
                                                 </button>
                                             }
-                                        />
-                                    </td>
-                                    <td className="py-3 px-4 flex space-x-2">
-                                        <Modal
-                                         isDialogOpen={editUserGroupModal}
-                                         dialogTrigger={
-                                            <button className="flex space-x-2 hover:cursor-pointer p-1 px-3 bg-sky-700 rounded-md font-bold items-center text-sm text-sky-100">
-                                                <Pencil className="size-4" />
-                                                <span>Edit</span>
-                                             </button>
-                                         }
-                                         minHeight='sm'
-                                         minWidth='sm'
-                                         onOpenChange={() => {
-                                            setEditUserGroupModal(!editUserGroupModal)
-                                         }}
-                                         dialogContent={
-                                            <EditUserGroup usergroup={usergroup} />
-                                         }
-                                        />
-                                        <ConfirmationModal
-                                            confirmationButtonText="Delete UserGroup"
-                                            confirmationMessage="Access to all resources will be removed for all users in this UserGroup. Are you sure you want to delete this UserGroup ?"
-                                            dialogTitle={'Delete UserGroup ?'}
-                                            dialogTrigger={
-                                                <button className="flex space-x-2 hover:cursor-pointer p-1 px-3 bg-rose-700 rounded-md font-bold items-center text-sm text-rose-100">
-                                                    <X className="w-4 h-4" />
-                                                    <span>Delete</span>
-                                                </button>
-                                            }
-                                            functionToExecute={() => {
-                                                deleteUserGroupUI(usergroup.id)
+                                            minHeight='sm'
+                                            minWidth='sm'
+                                            onOpenChange={() => {
+                                                setEditUserGroupModal(!editUserGroupModal)
                                             }}
-                                            status="warning"
-                                        ></ConfirmationModal>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </>
-                </table>
+                                            dialogContent={
+                                                <EditUserGroup usergroup={usergroup} />
+                                            }
+                                            />
+                                            <ConfirmationModal
+                                                confirmationButtonText="Delete UserGroup"
+                                                confirmationMessage="Access to all resources will be removed for all users in this UserGroup. Are you sure you want to delete this UserGroup ?"
+                                                dialogTitle={'Delete UserGroup ?'}
+                                                dialogTrigger={
+                                                    <button className="flex space-x-2 hover:cursor-pointer p-1 px-3 bg-rose-700 rounded-md font-bold items-center text-sm text-rose-100">
+                                                        <X className="w-4 h-4" />
+                                                        <span>Delete</span>
+                                                    </button>
+                                                }
+                                                functionToExecute={() => {
+                                                    deleteUserGroupUI(usergroup.id)
+                                                }}
+                                                status="warning"
+                                            ></ConfirmationModal>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </>
+                    </table>
+                </div>
                 <div className='flex justify-end mt-3 mr-2'>
                     <Modal
                         isDialogOpen={
