@@ -25,6 +25,7 @@ import AssignmentSubmissionProvider, {  useAssignmentSubmission } from '@compone
 import toast from 'react-hot-toast'
 import { mutate } from 'swr'
 import ConfirmationModal from '@components/StyledElements/ConfirmationModal/ConfirmationModal'
+import { useMediaQuery } from 'usehooks-ts'
 
 interface ActivityClientProps {
   activityid: string
@@ -47,6 +48,7 @@ function ActivityClient(props: ActivityClientProps) {
   const [bgColor, setBgColor] = React.useState('bg-white')
   const [assignment, setAssignment] = React.useState(null) as any;
   const [markStatusButtonActive, setMarkStatusButtonActive] = React.useState(false);
+ 
 
   function getChapterNameByActivityId(course: any, activity_id: any) {
     for (let i = 0; i < course.chapters.length; i++) {
@@ -223,7 +225,7 @@ export function MarkStatus(props: {
 }) {
   const router = useRouter()
   const session = useLHSession() as any;
-
+  const isMobile = useMediaQuery('(max-width: 768px)')
   async function markActivityAsCompleteFront() {
     const trail = await markActivityAsComplete(
       props.orgslug,
@@ -263,7 +265,7 @@ export function MarkStatus(props: {
           <i>
             <Check size={17}></Check>
           </i>{' '}
-          <i className="not-italic text-xs font-bold">Mark as complete</i>
+          {!isMobile && <i className="not-italic text-xs font-bold">Mark as complete</i>}
         </div>
       )}
     </>
