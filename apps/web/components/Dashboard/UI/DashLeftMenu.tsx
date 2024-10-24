@@ -12,7 +12,7 @@ import AdminAuthorization from '@components/Security/AdminAuthorization'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { getUriWithOrg, getUriWithoutOrg } from '@services/config/config'
 
-function LeftMenu() {
+function DashLeftMenu() {
   const org = useOrg() as any
   const session = useLHSession() as any
   const [loading, setLoading] = React.useState(true)
@@ -176,4 +176,4 @@ function LeftMenu() {
   )
 }
 
-export default LeftMenu
+export default DashLeftMenu

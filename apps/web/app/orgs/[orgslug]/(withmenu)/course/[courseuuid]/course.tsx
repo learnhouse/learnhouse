@@ -18,6 +18,7 @@ import UserAvatar from '@components/Objects/UserAvatar'
 import CourseUpdates from '@components/Objects/CourseUpdates/CourseUpdates'
 import { CourseProvider } from '@components/Contexts/CourseContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { useMediaQuery } from 'usehooks-ts'
 
 const CourseClient = (props: any) => {
   const [user, setUser] = useState<any>({})
@@ -28,6 +29,7 @@ const CourseClient = (props: any) => {
   const course = props.course
   const org = useOrg() as any
   const router = useRouter()
+  const isMobile = useMediaQuery('(max-width: 768px)')
 
   function getLearningTags() {
     // create array of learnings from a string object (comma separated)
@@ -72,21 +74,21 @@ const CourseClient = (props: any) => {
         <PageLoading></PageLoading>
       ) : (
         <GeneralWrapperStyled>
-          <div className="pb-3 flex justify-between items-center">
+          <div className="pb-3 flex flex-col md:flex-row justify-between items-start md:items-center">
             <div>
               <p className="text-md font-bold text-gray-400 pb-2">Course</p>
-              <h1 className="text-3xl -mt-3 font-bold">{course.name}</h1>
+              <h1 className="text-3xl md:text-3xl -mt-3 font-bold">{course.name}</h1>
             </div>
-            <div>
-              <CourseProvider courseuuid={course.course_uuid}>
+            <div className="mt-4 md:mt-0">
+             {!isMobile &&  <CourseProvider courseuuid={course.course_uuid}>
                 <CourseUpdates />
-              </CourseProvider>
+              </CourseProvider>}
             </div>
           </div>
 
           {props.course?.thumbnail_image && org ? (
             <div
-              className="inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl relative w-auto h-[400px] bg-cover bg-center mb-4"
+              className="inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl relative w-auto h-[200px] md:h-[400px] bg-cover bg-center mb-4"
               style={{
                 backgroundImage: `url(${getCourseThumbnailMediaDirectory(
                   org?.org_uuid,
@@ -111,7 +113,7 @@ const CourseClient = (props: any) => {
             course={course}
           />
 
-          <div className="flex flex-row pt-10">
+          <div className="flex flex-col md:flex-row pt-10">
             <div className="course_metadata_left grow space-y-2">
               <h2 className="py-3 text-2xl font-bold">Description</h2>
               <div className="bg-white shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40 rounded-lg overflow-hidden">
@@ -141,7 +143,7 @@ const CourseClient = (props: any) => {
                 </div>
               )}
 
-              <h2 className="py-3 text-2xl font-bold">Course Lessons</h2>
+              <h2 className="py-3 text-xl md:text-2xl font-bold">Course Lessons</h2>
               <div className="bg-white shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40 rounded-lg overflow-hidden">
                 {course.chapters.map((chapter: any) => {
                   return (
@@ -303,20 +305,20 @@ const CourseClient = (props: any) => {
                 })}
               </div>
             </div>
-            <div className="course_metadata_right space-y-3 w-72 antialiased flex flex-col ml-10 h-fit p-3 py-5 bg-white shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40 rounded-lg overflow-hidden">
+            <div className="course_metadata_right space-y-3 w-full md:w-72 antialiased flex flex-col md:ml-10 h-fit p-3 py-5 bg-white shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40 rounded-lg overflow-hidden mt-6 md:mt-0">
               {user && (
-                <div className="flex flex-col mx-auto space-y-3 px-2 py-2 items-center">
+                <div className="flex flex-row md:flex-col mx-auto space-y-0 md:space-y-3 space-x-4 md:space-x-0 px-2 py-2 items-center">
                   <UserAvatar
                     border="border-8"
                     avatar_url={course.authors[0].avatar_image ? getUserAvatarMediaDirectory(course.authors[0].user_uuid, course.authors[0].avatar_image) : ''}
                     predefined_avatar={course.authors[0].avatar_image ? undefined : 'empty'}
-                    width={100}
+                    width={isMobile ? 60 : 100}
                   />
-                  <div className="-space-y-2 ">
+                  <div className="md:-space-y-2">
                     <div className="text-[12px] text-neutral-400 font-semibold">
                       Author
                     </div>
-                    <div className="text-xl font-bold text-neutral-800">
+                    <div className="text-lg md:text-xl font-bold text-neutral-800">
                       {course.authors[0].first_name &&
                         course.authors[0].last_name && (
                           <div className="flex space-x-2 items-center">
@@ -344,14 +346,14 @@ const CourseClient = (props: any) => {
 
               {isCourseStarted() ? (
                 <button
-                  className="py-2 px-5 mx-auto rounded-xl text-white font-bold h-12 w-[200px] drop-shadow-md bg-red-600 hover:bg-red-700 hover:cursor-pointer"
+                  className="py-2 px-5 mx-auto rounded-xl text-white font-bold h-12 w-full md:w-[200px] drop-shadow-md bg-red-600 hover:bg-red-700 hover:cursor-pointer"
                   onClick={quitCourse}
                 >
                   Quit Course
                 </button>
               ) : (
                 <button
-                  className="py-2 px-5 mx-auto rounded-xl text-white font-bold h-12 w-[200px] drop-shadow-md bg-black hover:bg-gray-900 hover:cursor-pointer"
+                  className="py-2 px-5 mx-auto rounded-xl text-white font-bold h-12 w-full md:w-[200px] drop-shadow-md bg-black hover:bg-gray-900 hover:cursor-pointer"
                   onClick={startCourseUI}
                 >
                   Start Course
