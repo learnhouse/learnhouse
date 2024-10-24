@@ -195,16 +195,16 @@ async def delete_chapter(
     # RBAC check
     await rbac_check(request, chapter.chapter_uuid, current_user, "delete", db_session)
 
-    db_session.delete(chapter)
-    db_session.commit()
-
-    # Remove all linked activities
-    statement = select(ChapterActivity).where(ChapterActivity.id == chapter.id)
+    # Remove all linked chapter activities
+    statement = select(ChapterActivity).where(ChapterActivity.chapter_id == chapter.id)
     chapter_activities = db_session.exec(statement).all()
 
     for chapter_activity in chapter_activities:
         db_session.delete(chapter_activity)
-        db_session.commit()
+
+    # Delete the chapter
+    db_session.delete(chapter)
+    db_session.commit()
 
     return {"detail": "chapter deleted"}
 

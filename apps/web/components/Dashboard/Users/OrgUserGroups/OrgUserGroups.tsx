@@ -2,13 +2,14 @@
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import AddUserGroup from '@components/Objects/Modals/Dash/OrgUserGroups/AddUserGroup'
+import EditUserGroup from '@components/Objects/Modals/Dash/OrgUserGroups/EditUserGroup'
 import ManageUsers from '@components/Objects/Modals/Dash/OrgUserGroups/ManageUsers'
 import ConfirmationModal from '@components/StyledElements/ConfirmationModal/ConfirmationModal'
 import Modal from '@components/StyledElements/Modal/Modal'
 import { getAPIUrl } from '@services/config/config'
 import { deleteUserGroup } from '@services/usergroups/usergroups'
 import { swrFetcher } from '@services/utils/ts/requests'
-import { SquareUserRound, Users, X } from 'lucide-react'
+import { Pencil, SquareUserRound, Users, X } from 'lucide-react'
 import React from 'react'
 import toast from 'react-hot-toast'
 import useSWR, { mutate } from 'swr'
@@ -19,6 +20,7 @@ function OrgUserGroups() {
     const access_token = session?.data?.tokens?.access_token;
     const [userGroupManagementModal, setUserGroupManagementModal] = React.useState(false)
     const [createUserGroupModal, setCreateUserGroupModal] = React.useState(false)
+    const [editUserGroupModal, setEditUserGroupModal] = React.useState(false)
     const [selectedUserGroup, setSelectedUserGroup] = React.useState(null) as any
 
     const { data: usergroups } = useSWR(
@@ -96,8 +98,24 @@ function OrgUserGroups() {
                                             }
                                         />
                                     </td>
-                                    <td className="py-3 px-4 ">
-
+                                    <td className="py-3 px-4 flex space-x-2">
+                                        <Modal
+                                         isDialogOpen={editUserGroupModal}
+                                         dialogTrigger={
+                                            <button className="flex space-x-2 hover:cursor-pointer p-1 px-3 bg-sky-700 rounded-md font-bold items-center text-sm text-sky-100">
+                                                <Pencil className="size-4" />
+                                                <span>Edit</span>
+                                             </button>
+                                         }
+                                         minHeight='sm'
+                                         minWidth='sm'
+                                         onOpenChange={() => {
+                                            setEditUserGroupModal(!editUserGroupModal)
+                                         }}
+                                         dialogContent={
+                                            <EditUserGroup usergroup={usergroup} />
+                                         }
+                                        />
                                         <ConfirmationModal
                                             confirmationButtonText="Delete UserGroup"
                                             confirmationMessage="Access to all resources will be removed for all users in this UserGroup. Are you sure you want to delete this UserGroup ?"
@@ -105,7 +123,7 @@ function OrgUserGroups() {
                                             dialogTrigger={
                                                 <button className="flex space-x-2 hover:cursor-pointer p-1 px-3 bg-rose-700 rounded-md font-bold items-center text-sm text-rose-100">
                                                     <X className="w-4 h-4" />
-                                                    <span> Delete</span>
+                                                    <span>Delete</span>
                                                 </button>
                                             }
                                             functionToExecute={() => {
