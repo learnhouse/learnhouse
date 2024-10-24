@@ -48,6 +48,19 @@ export async function unLinkUserToUserGroup(
   return res
 }
 
+export async function updateUserGroup(
+  usergroup_id: number,
+  access_token: string,
+  data: any
+) {
+  const result: any = await fetch(
+    `${getAPIUrl()}usergroups/${usergroup_id}`,
+    RequestBodyWithAuthHeader('PUT', data, null, access_token)
+  )
+  const res = await getResponseMetadata(result)
+  return res
+}
+
 export async function deleteUserGroup(
   usergroup_id: number,
   access_token: string

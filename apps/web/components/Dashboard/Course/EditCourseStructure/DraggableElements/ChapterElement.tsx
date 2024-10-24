@@ -6,6 +6,7 @@ import {
   Pencil,
   Save,
   X,
+  Trash2,
 } from 'lucide-react'
 import React from 'react'
 import { Draggable, Droppable } from 'react-beautiful-dnd'
@@ -71,27 +72,27 @@ function ChapterElement(props: ChapterElementProps) {
     >
       {(provided, snapshot) => (
         <div
-          className="ml-10 mr-10 mx-auto bg-white rounded-xl shadow-sm px-6 pt-6"
+          className="mx-2 sm:mx-4 md:mx-6 lg:mx-10 bg-white rounded-xl nice-shadow px-3 sm:px-4 md:px-6 pt-4 sm:pt-6"
           key={props.chapter.chapter_uuid}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
           ref={provided.innerRef}
         >
-          <div className="flex font-bold text-md items-center space-x-2 pb-3">
-            <div className="flex grow text-lg space-x-3 items-center rounded-md ">
+          <div className="flex flex-wrap items-center justify-between pb-3">
+            <div className="flex grow items-center space-x-2 mb-2 sm:mb-0">
               <div className="bg-neutral-100 rounded-md p-2">
                 <Hexagon
                   strokeWidth={3}
                   size={16}
-                  className="text-neutral-600 "
+                  className="text-neutral-600"
                 />
               </div>
-              <div className="flex space-x-2 items-center">
+              <div className="flex items-center space-x-2">
                 {selectedChapter === props.chapter.id ? (
-                  <div className="chapter-modification-zone bg-neutral-100 py-1 px-4 rounded-lg space-x-3">
+                  <div className="chapter-modification-zone bg-neutral-100 py-1 px-2 sm:px-4 rounded-lg flex items-center space-x-2">
                     <input
                       type="text"
-                      className="bg-transparent outline-none text-sm text-neutral-700"
+                      className="bg-transparent outline-none text-sm text-neutral-700 w-full max-w-[150px] sm:max-w-none"
                       placeholder="Chapter name"
                       value={
                         modifiedChapter
@@ -109,14 +110,11 @@ function ChapterElement(props: ChapterElementProps) {
                       onClick={() => updateChapterName(props.chapter.id)}
                       className="bg-transparent text-neutral-700 hover:cursor-pointer hover:text-neutral-900"
                     >
-                      <Save
-                        size={15}
-                        onClick={() => updateChapterName(props.chapter.id)}
-                      />
+                      <Save size={15} />
                     </button>
                   </div>
                 ) : (
-                  <p className="text-neutral-700 first-letter:uppercase">
+                  <p className="text-neutral-700 first-letter:uppercase text-sm sm:text-base">
                     {props.chapter.name}
                   </p>
                 )}
@@ -127,23 +125,24 @@ function ChapterElement(props: ChapterElementProps) {
                 />
               </div>
             </div>
-            <MoreVertical size={15} className="text-gray-300" />
-            <ConfirmationModal
-              confirmationButtonText="Delete Chapter"
-              confirmationMessage="Are you sure you want to delete this chapter?"
-              dialogTitle={'Delete ' + props.chapter.name + ' ?'}
-              dialogTrigger={
-                <div
-                  className=" hover:cursor-pointer p-1 px-4 bg-red-600 rounded-md shadow flex space-x-1 items-center text-rose-100 text-sm"
-                  rel="noopener noreferrer"
-                >
-                  <X size={15} className="text-rose-200 font-bold" />
-                  <p>Delete Chapter</p>
-                </div>
-              }
-              functionToExecute={() => deleteChapterUI()}
-              status="warning"
-            ></ConfirmationModal>
+            <div className="flex items-center space-x-2">
+              <MoreVertical size={15} className="text-gray-300" />
+              <ConfirmationModal
+                confirmationButtonText="Delete Chapter"
+                confirmationMessage="Are you sure you want to delete this chapter?"
+                dialogTitle={'Delete ' + props.chapter.name + ' ?'}
+                dialogTrigger={
+                  <button
+                    className="hover:cursor-pointer p-1 px-2 sm:px-3 bg-red-600 rounded-md shadow flex items-center text-rose-100 text-sm"
+                    rel="noopener noreferrer"
+                  >
+                    <Trash2 size={15} className="text-rose-200" />
+                  </button>
+                }
+                functionToExecute={() => deleteChapterUI()}
+                status="warning"
+              />
+            </div>
           </div>
           <Droppable
             key={props.chapter.chapter_uuid}
