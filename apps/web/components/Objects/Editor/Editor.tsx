@@ -21,10 +21,14 @@ import WarningCallout from './Extensions/Callout/Warning/WarningCallout'
 import ImageBlock from './Extensions/Image/ImageBlock'
 import Youtube from '@tiptap/extension-youtube'
 import VideoBlock from './Extensions/Video/VideoBlock'
-import { Eye } from 'lucide-react'
+import { ComputerIcon, Eye, Monitor } from 'lucide-react'
 import MathEquationBlock from './Extensions/MathEquation/MathEquationBlock'
 import PDFBlock from './Extensions/PDF/PDFBlock'
 import QuizBlock from './Extensions/Quiz/QuizBlock'
+import Table from '@tiptap/extension-table'
+import TableCell from '@tiptap/extension-table-cell'
+import TableHeader from '@tiptap/extension-table-header'
+import TableRow from '@tiptap/extension-table-row'
 import ToolTip from '@components/StyledElements/Tooltip/Tooltip'
 import Link from 'next/link'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
@@ -51,6 +55,7 @@ import { getUriWithOrg } from '@services/config/config'
 import EmbedObjects from './Extensions/EmbedObjects/EmbedObjects'
 import Badges from './Extensions/Badges/Badges'
 import Buttons from './Extensions/Buttons/Buttons'
+import { useMediaQuery } from 'usehooks-ts'
 
 interface Editor {
   content: string
@@ -148,6 +153,12 @@ function Editor(props: Editor) {
         editable: true,
         activity: props.activity,
       }),
+      Table.configure({
+        resizable: true,
+      }),
+      TableRow,
+      TableHeader,
+      TableCell,
 
       // Add Collaboration and CollaborationCursor only if isCollabEnabledOnThisOrg is true
       ...(props.isCollabEnabledOnThisOrg ? [
@@ -169,6 +180,21 @@ function Editor(props: Editor) {
     // If collab is enabled the onSynced callback ensures initial content is set only once using editor.setContent(), preventing repetitive content insertion on editor syncs.
     content: props.isCollabEnabledOnThisOrg ? null : props.content,
   })
+
+  const isMobile = useMediaQuery('(max-width: 767px)')
+  if (isMobile) {
+    // TODO: Work on a better editor mobile experience
+    return (
+      <div className="h-screen w-full bg-[#f8f8f8] flex items-center justify-center p-4">
+        <div className="bg-white p-6 rounded-lg shadow-md text-center">
+          <h2 className="text-xl font-bold mb-4">Desktop Only</h2>
+          <Monitor className='mx-auto my-5' size={60} />
+          <p>The editor is only accessible from a desktop device.</p>
+          <p>Please switch to a desktop to view.</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <Page>
@@ -535,6 +561,16 @@ export const EditorContentWrapper = styled.div`
         font-weight: 700;
       }
     }
+
+    &.resize-cursor {
+      cursor: ew-resize;
+      cursor: col-resize;
+    }
+
+    .tableWrapper {
+      margin: 1.5rem 0;
+      overflow-x: auto;
+    }
   }
 
   iframe {
@@ -553,6 +589,53 @@ export const EditorContentWrapper = styled.div`
     padding: 0 1rem;
     padding-left: 20px;
     list-style-type: decimal;
+  }
+
+  table {
+    border-collapse: collapse;
+    margin: 0;
+    overflow: hidden;
+    table-layout: fixed;
+    width: 100%;
+
+    td,
+    th {
+      border: 1px solid rgba(139, 139, 139, 0.4);
+      box-sizing: border-box;
+      min-width: 1em;
+      padding: 6px 8px;
+      position: relative;
+      vertical-align: top;
+
+      > * {
+        margin-bottom: 0;
+      }
+    }
+
+    th {
+      background-color: rgba(217, 217, 217, 0.4);
+      font-weight: bold;
+      text-align: left;
+    }
+
+    .selectedCell:after {
+      background: rgba(139, 139, 139, 0.2);
+      content: "";
+      left: 0; right: 0; top: 0; bottom: 0;
+      pointer-events: none;
+      position: absolute;
+      z-index: 2;
+    }
+
+    .column-resize-handle {
+      background-color: #8d78eb;
+      bottom: -2px;
+      pointer-events: none;
+      position: absolute;
+      right: -2px;
+      top: 0;
+      width: 4px;
+    }
   }
 `
 
