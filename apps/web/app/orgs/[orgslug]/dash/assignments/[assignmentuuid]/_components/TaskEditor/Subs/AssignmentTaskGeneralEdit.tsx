@@ -13,6 +13,9 @@ import { Cloud, File, Info, Loader, UploadCloud } from 'lucide-react'
 import Link from 'next/link';
 import React, { useEffect } from 'react'
 import toast from 'react-hot-toast';
+import { constructAcceptValue } from '@/lib/constants';
+
+const SUPPORTED_FILES = constructAcceptValue(['pdf', 'docx', 'mp4', 'jpg', 'png', 'pptx', 'zip'])
 
 export function AssignmentTaskGeneralEdit() {
     const session = useLHSession() as any;
@@ -242,6 +245,7 @@ function UpdateTaskRef() {
                         <div className="flex justify-center items-center">
                             <input
                                 type="file"
+                                accept={SUPPORTED_FILES}
                                 id="fileInput"
                                 style={{ display: 'none' }}
                                 onChange={handleFileChange}
@@ -255,6 +259,7 @@ function UpdateTaskRef() {
                         <div className="flex justify-center items-center">
                             <input
                                 type="file"
+                                accept={SUPPORTED_FILES}
                                 id="fileInput"
                                 style={{ display: 'none' }}
                                 onChange={handleFileChange}
