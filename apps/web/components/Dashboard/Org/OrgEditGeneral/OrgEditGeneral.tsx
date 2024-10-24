@@ -96,7 +96,7 @@ function OrgEditGeneral() {
   useEffect(() => {}, [org])
 
   return (
-    <div className="ml-10 mr-10 mx-auto bg-white rounded-xl shadow-sm px-6 py-5">
+    <div className="sm:ml-10 sm:mr-10 ml-0 mr-0 mx-auto bg-white rounded-xl shadow-sm px-6 py-5 sm:mb-0 mb-16">
       <Toaster />
       <Formik
         enableReinitialize
@@ -110,8 +110,8 @@ function OrgEditGeneral() {
       >
         {({ isSubmitting }) => (
           <Form>
-            <div className="flex space-x-8">
-              <div className="max-w-md flex-grow">
+            <div className="flex flex-col lg:flex-row lg:space-x-8">
+              <div className="w-full lg:w-1/2 mb-8 lg:mb-0">
                 <label className="block mb-2 font-bold" htmlFor="name">
                   Name
                 </label>
@@ -152,24 +152,24 @@ function OrgEditGeneral() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-6 py-3 text-white bg-black rounded-lg shadow-md hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black"
+                  className="w-full sm:w-auto px-6 py-3 text-white bg-black rounded-lg shadow-md hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black"
                 >
                   Submit
                 </button>
               </div>
 
-              <div className="flex flex-col grow  space-y-3">
-                <Tabs defaultValue="logo" className="w-full ">
-                  <TabsList className="grid w-full grid-cols-2 mb-20">
+              <div className="w-full lg:w-1/2">
+                <Tabs defaultValue="logo" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2 mb-6 sm:mb-10">
                     <TabsTrigger value="logo">Logo</TabsTrigger>
                     <TabsTrigger value="thumbnail">Thumbnail</TabsTrigger>
                   </TabsList>
                   <TabsContent value="logo">
                     <div className="flex flex-col space-y-3">
-                      <div className="w-auto bg-gray-50 rounded-xl outline outline-1 outline-gray-200 h-[200px] shadow mx-20">
-                        <div className="flex flex-col justify-center items-center mt-10">
+                      <div className="w-auto bg-gray-50 rounded-xl outline outline-1 outline-gray-200 h-[200px] shadow mx-4 sm:mx-10">
+                        <div className="flex flex-col justify-center items-center mt-6 sm:mt-10">
                           <div
-                            className="w-[200px] h-[100px] bg-contain bg-no-repeat bg-center rounded-lg nice-shadow bg-white"
+                            className="w-[150px] sm:w-[200px] h-[75px] sm:h-[100px] bg-contain bg-no-repeat bg-center rounded-lg nice-shadow bg-white"
                             style={{ backgroundImage: `url(${localLogo || getOrgLogoMediaDirectory(org?.org_uuid, org?.logo_image)})` }}
                           />
                         </div>
@@ -193,16 +193,16 @@ function OrgEditGeneral() {
                       </div>
                       <div className="flex text-xs space-x-2 items-center text-gray-500 justify-center">
                         <Info size={13} />
-                        <p>Accepts PNG , JPG</p>
+                        <p>Accepts PNG, JPG</p>
                       </div>
                     </div>
                   </TabsContent>
                   <TabsContent value="thumbnail">
                     <div className="flex flex-col space-y-3">
-                      <div className="w-auto bg-gray-50 rounded-xl outline outline-1 outline-gray-200 h-[200px] shadow mx-20">
-                        <div className="flex flex-col justify-center items-center mt-10">
+                      <div className="w-auto bg-gray-50 rounded-xl outline outline-1 outline-gray-200 h-[200px] shadow mx-4 sm:mx-10">
+                        <div className="flex flex-col justify-center items-center mt-6 sm:mt-10">
                           <div
-                            className="w-[200px] h-[100px] bg-contain bg-no-repeat bg-center rounded-lg nice-shadow bg-white"
+                            className="w-[150px] sm:w-[200px] h-[75px] sm:h-[100px] bg-contain bg-no-repeat bg-center rounded-lg nice-shadow bg-white"
                             style={{ backgroundImage: `url(${localThumbnail || getOrgThumbnailMediaDirectory(org?.org_uuid, org?.thumbnail_image)})` }}
                           />
                         </div>

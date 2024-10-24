@@ -46,19 +46,19 @@ function AssignmentsHome() {
 
   return (
     <div className='flex w-full'>
-      <div className='pl-10 mr-10 tracking-tighter flex flex-col space-y-5 w-full'>
+      <div className='pl-4 sm:pl-10 mr-4 sm:mr-10 tracking-tighter flex flex-col space-y-5 w-full'>
         <div className='flex flex-col space-y-2'>
           <BreadCrumbs type="assignments" />
           <h1 className="pt-3 flex font-bold text-4xl">Assignments</h1>
         </div>
         <div className='flex flex-col space-y-3 w-full'>
           {courseAssignments.map((assignments: any, index: number) => (
-            <div key={index} className='flex flex-col space-y-2 bg-white nice-shadow p-4 rounded-xl w-full'>
+            <div key={index} className='flex flex-col space-y-2 bg-white nice-shadow p-3 sm:p-4 rounded-xl w-full'>
               <div>
-                <div className='flex space-x-2 items-center justify-between w-full'>
+                <div className='flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 items-start sm:items-center justify-between w-full'>
                   <div className='flex space-x-2 items-center'>
                     <MiniThumbnail course={courses[index]} />
-                    <div className='flex flex-col font-bold text-lg  '>
+                    <div className='flex flex-col font-bold text-lg'>
                       <p className='bg-gray-200 text-gray-700 px-2 text-xs py-0.5 rounded-full w-fit'>Course</p>
                       <p>{courses[index].name}</p>
                     </div>
@@ -75,10 +75,9 @@ function AssignmentsHome() {
                   </Link>
                 </div>
 
-
                 {assignments && assignments.map((assignment: any) => (
-                  <div key={assignment.assignment_uuid} className='flex mt-3 p-3 rounded flex-row space-x-2 w-full light-shadow justify-between bg-gray-50 items-center'>
-                    <div className='flex flex-row items-center  space-x-2 '>
+                  <div key={assignment.assignment_uuid} className='flex mt-3 p-2 sm:p-3 rounded flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 w-full light-shadow justify-between bg-gray-50 items-start sm:items-center'>
+                    <div className='flex flex-col sm:flex-row items-start sm:items-center space-y-1 sm:space-y-0 sm:space-x-2'>
                       <div className='flex text-xs font-bold bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full h-fit'>
                         <p>Assignment</p>
                       </div>
@@ -86,7 +85,6 @@ function AssignmentsHome() {
                       <div className='flex font-semibold text-gray-600 px-2 py-0.5 rounded outline outline-gray-200/70'>{assignment.description}</div>
                     </div>
                     <div className='flex space-x-2 font-bold text-sm items-center'>
-
                       <EllipsisVertical className='text-gray-500' size={17} />
                       <Link
                         href={{
@@ -103,7 +101,6 @@ function AssignmentsHome() {
                           pathname: getUriWithOrg(org.slug, `/dash/assignments/${removeAssignmentPrefix(assignment.assignment_uuid)}`),
                           query: { subpage: 'submissions' }
                         }}
-
                         prefetch
                         className='bg-white rounded-full flex space-x-2 nice-shadow items-center px-3 py-0.5'>
                         <UserRoundPen size={15} />
@@ -124,10 +121,8 @@ function AssignmentsHome() {
               </div>
             </div>
           ))}
-
         </div>
       </div>
-
     </div>
   )
 }
