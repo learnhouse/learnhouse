@@ -9,6 +9,9 @@ import { useCourse } from '@components/Contexts/CourseContext'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { FileUploadBlock, FileUploadBlockButton, FileUploadBlockInput } from '../../FileUploadBlock'
+import { constructAcceptValue } from '@/lib/constants';
+
+const SUPPORTED_FILES = constructAcceptValue(['webm', 'mp4'])
 
 function VideoBlockComponents(props: any) {
   const org = useOrg() as any
@@ -51,7 +54,7 @@ function VideoBlockComponents(props: any) {
   return (
     <NodeViewWrapper className="block-video">    
       <FileUploadBlock isEditable={isEditable} isLoading={isLoading} isEmpty={!blockObject} Icon={Video}>
-        <FileUploadBlockInput onChange={handleVideoChange} accept="video/*" />
+        <FileUploadBlockInput onChange={handleVideoChange} accept={SUPPORTED_FILES} />
         <FileUploadBlockButton onClick={handleSubmit} disabled={!video}/>
       </FileUploadBlock>
 

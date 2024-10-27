@@ -9,6 +9,9 @@ import { useCourse } from '@components/Contexts/CourseContext'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { FileUploadBlock, FileUploadBlockButton, FileUploadBlockInput } from '../../FileUploadBlock'
+import { constructAcceptValue } from '@/lib/constants';
+
+const SUPPORTED_FILES = constructAcceptValue(['image'])
 
 function ImageBlockComponent(props: any) {
   const org = useOrg() as any
@@ -53,7 +56,7 @@ function ImageBlockComponent(props: any) {
   return (
     <NodeViewWrapper className="block-image">
      <FileUploadBlock isEditable={isEditable} isLoading={isLoading} isEmpty={!blockObject} Icon={Image}>
-        <FileUploadBlockInput onChange={handleImageChange} accept="image/*" />
+        <FileUploadBlockInput onChange={handleImageChange} accept={SUPPORTED_FILES} />
         <FileUploadBlockButton onClick={handleSubmit} disabled={!image}/>
       </FileUploadBlock>
       
