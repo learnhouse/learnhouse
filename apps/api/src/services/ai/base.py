@@ -1,17 +1,17 @@
 from typing import Optional
 from uuid import uuid4
 from langchain.agents import AgentExecutor
-from langchain.text_splitter import CharacterTextSplitter
+from langchain_text_splitters import CharacterTextSplitter
 from langchain_community.vectorstores import Chroma
 from langchain.agents.openai_functions_agent.base import OpenAIFunctionsAgent
-from langchain.prompts import MessagesPlaceholder
+from langchain_core.prompts import MessagesPlaceholder
 from langchain_community.chat_message_histories import RedisChatMessageHistory
 from langchain_core.messages import SystemMessage
 from langchain.agents.openai_functions_agent.agent_token_buffer_memory import (
     AgentTokenBufferMemory,
 )
 from langchain_openai import OpenAIEmbeddings
-from langchain_community.chat_models import ChatOpenAI
+from langchain_openai import ChatOpenAI
 from langchain.agents.agent_toolkits import (
     create_retriever_tool,
 )
@@ -121,3 +121,6 @@ def get_chat_session_history(aichat_uuid: Optional[str] = None):
         message_history = []
 
     return {"message_history": message_history, "aichat_uuid": session_id}
+
+if __name__ == '__main__':
+    pass
