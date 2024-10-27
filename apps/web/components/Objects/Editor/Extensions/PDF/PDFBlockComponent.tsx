@@ -9,6 +9,9 @@ import { useCourse } from '@components/Contexts/CourseContext'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { FileUploadBlock, FileUploadBlockButton, FileUploadBlockInput } from '../../FileUploadBlock'
+import { constructAcceptValue } from '@/lib/constants';
+
+const SUPPORTED_FILES = constructAcceptValue(['pdf'])
 
 function PDFBlockComponent(props: any) {
   const org = useOrg() as any
@@ -49,7 +52,7 @@ function PDFBlockComponent(props: any) {
   return (
     <NodeViewWrapper className="block-pdf">
       <FileUploadBlock isEditable={isEditable} isLoading={isLoading} isEmpty={!blockObject} Icon={FileText}>
-        <FileUploadBlockInput onChange={handlePDFChange} accept="application/pdf" />
+        <FileUploadBlockInput onChange={handlePDFChange} accept={SUPPORTED_FILES} />
         <FileUploadBlockButton onClick={handleSubmit} disabled={!pdf}/>
       </FileUploadBlock>
       
