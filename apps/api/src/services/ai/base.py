@@ -122,5 +122,3 @@ def get_chat_session_history(aichat_uuid: Optional[str] = None):
 
     return {"message_history": message_history, "aichat_uuid": session_id}
 
-if __name__ == '__main__':
-    pass
