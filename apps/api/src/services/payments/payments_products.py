@@ -11,7 +11,6 @@ from src.db.users import PublicUser, AnonymousUser
 from src.db.organizations import Organization
 from src.services.orgs.orgs import rbac_check
 from datetime import datetime
-from uuid import uuid4
 
 from src.services.payments.stripe import archive_stripe_product, create_stripe_product, update_stripe_product
 

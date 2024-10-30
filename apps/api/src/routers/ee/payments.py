@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Request
 from sqlmodel import Session
 from src.core.events.database import get_db_session
-from src.db.payments.payments import PaymentsConfig, PaymentsConfigBase, PaymentsConfigCreate, PaymentsConfigRead, PaymentsConfigUpdate
+from src.db.payments.payments import PaymentsConfig, PaymentsConfigCreate, PaymentsConfigRead, PaymentsConfigUpdate
 from src.db.users import PublicUser
 from src.security.auth import get_current_user
 from src.services.payments.payments import (
@@ -10,7 +10,7 @@ from src.services.payments.payments import (
     update_payments_config,
     delete_payments_config,
 )
-from src.db.payments.payments_products import PaymentsProduct, PaymentsProductCreate, PaymentsProductRead, PaymentsProductUpdate
+from src.db.payments.payments_products import PaymentsProductCreate, PaymentsProductRead, PaymentsProductUpdate
 from src.services.payments.payments_products import create_payments_product, delete_payments_product, get_payments_product, list_payments_products, update_payments_product
 
 

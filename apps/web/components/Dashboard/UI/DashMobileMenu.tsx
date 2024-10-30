@@ -1,7 +1,7 @@
 'use client'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { signOut } from 'next-auth/react'
-import { Backpack, BookCopy, Home, LogOut, School, Settings, Users } from 'lucide-react'
+import { Backpack, BadgeDollarSign, BookCopy, Home, LogOut, School, Settings, Users } from 'lucide-react'
 import Link from 'next/link'
 import React from 'react'
 import AdminAuthorization from '@components/Security/AdminAuthorization'
@@ -40,6 +40,12 @@ function DashMobileMenu() {
             <Link href={`/dash/assignments`} className="flex flex-col items-center p-2">
               <Backpack size={20} />
               <span className="text-xs mt-1">Assignments</span>
+            </Link>
+          </ToolTip>
+          <ToolTip content={'Payments'} slateBlack sideOffset={8} side="top">
+            <Link href={`/dash/payments/customers`} className="flex flex-col items-center p-2">
+              <BadgeDollarSign size={20} />
+              <span className="text-xs mt-1">Payments</span>
             </Link>
           </ToolTip>
           <ToolTip content={'Users'} slateBlack sideOffset={8} side="top">
