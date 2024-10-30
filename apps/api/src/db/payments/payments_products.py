@@ -1,5 +1,5 @@
 from enum import Enum
-from sqlmodel import SQLModel, Field, Column, BigInteger, ForeignKey, String, JSON
+from sqlmodel import SQLModel, Field, Column, BigInteger, ForeignKey, String
 from typing import Optional
 from datetime import datetime
 

@@ -3,7 +3,7 @@ import DashLeftMenu from '@components/Dashboard/UI/DashLeftMenu'
 import DashMobileMenu from '@components/Dashboard/UI/DashMobileMenu'
 import AdminAuthorization from '@components/Security/AdminAuthorization'
 import { SessionProvider } from 'next-auth/react'
-import React, { useState, useEffect } from 'react'
+import React from 'react'
 import { useMediaQuery } from 'usehooks-ts';
 
 function ClientAdminLayout({

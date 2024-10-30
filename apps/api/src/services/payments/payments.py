@@ -1,4 +1,3 @@
-from typing import Optional
 from fastapi import HTTPException, Request
 from sqlmodel import Session, select
 from src.db.payments.payments import (

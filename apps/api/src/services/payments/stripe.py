@@ -1,8 +1,7 @@
-from email.policy import default
 from fastapi import HTTPException, Request
 from sqlmodel import Session
 import stripe
-from src.db.payments.payments_products import PaymentProductTypeEnum, PaymentsProduct, PaymentsProductCreate
+from src.db.payments.payments_products import PaymentProductTypeEnum, PaymentsProduct
 from src.db.users import AnonymousUser, PublicUser
 from src.services.payments.payments import get_payments_config
 

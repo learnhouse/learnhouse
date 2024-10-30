@@ -3,7 +3,7 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import { signOut } from 'next-auth/react'
 import ToolTip from '@components/StyledElements/Tooltip/Tooltip'
 import LearnHouseDashboardLogo from '@public/dashLogo.png'
-import { Backpack, BookCopy, Home, LogOut, School, Settings, Users } from 'lucide-react'
+import { Backpack, BadgeDollarSign, BookCopy, Home, LogOut, School, Settings, Users } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import React, { useEffect } from 'react'
@@ -110,6 +110,14 @@ function DashLeftMenu() {
                 href={`/dash/users/settings/users`}
               >
                 <Users size={18} />
+              </Link>
+            </ToolTip>
+            <ToolTip content={'Payments'} slateBlack sideOffset={8} side="right">
+              <Link
+                className="bg-white/5 rounded-lg p-2 hover:bg-white/10 transition-all ease-linear"
+                href={`/dash/payments/customers`}
+              >
+                <BadgeDollarSign size={18} />
               </Link>
             </ToolTip>
             <ToolTip
