@@ -3,6 +3,7 @@ import { createApi } from 'unsplash-js';
 import { Search, X, Cpu, Briefcase, GraduationCap, Heart, Palette, Plane, Utensils, 
   Dumbbell, Music, Shirt, Book, Building, Bike, Camera, Microscope, Coins, Coffee, Gamepad, 
   Flower} from 'lucide-react';
+import Modal from '@components/StyledElements/Modal/Modal';
 
 const unsplash = createApi({
   accessKey: process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY as string,
@@ -36,9 +37,10 @@ const predefinedLabels = [
 interface UnsplashImagePickerProps {
   onSelect: (imageUrl: string) => void;
   onClose: () => void;
+  isOpen?: boolean;
 }
 
-const UnsplashImagePicker: React.FC<UnsplashImagePickerProps> = ({ onSelect, onClose }) => {
+const UnsplashImagePicker: React.FC<UnsplashImagePickerProps> = ({ onSelect, onClose, isOpen = true }) => {
   const [query, setQuery] = useState('');
   const [images, setImages] = useState<any[]>([]);
   const [page, setPage] = useState(1);
@@ -54,8 +56,6 @@ const UnsplashImagePicker: React.FC<UnsplashImagePickerProps> = ({ onSelect, onC
       });
       if (result && result.response) {
         setImages(prevImages => pageNum === 1 ? result.response.results : [...prevImages, ...result.response.results]);
-      } else {
-        console.error('Unexpected response structure:', result);
       }
     } catch (error) {
       console.error('Error fetching images:', error);
@@ -97,16 +97,10 @@ const UnsplashImagePicker: React.FC<UnsplashImagePickerProps> = ({ onSelect, onC
     onClose();
   };
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-3/4 max-w-4xl max-h-[80vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold">Choose an image from Unsplash</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
-            <X size={24} />
-          </button>
-        </div>
-        <div className="relative mb-4">
+  const modalContent = (
+    <div className="flex flex-col h-full">
+      <div className="p-4 space-y-4">
+        <div className="relative">
           <input
             type="text"
             value={query}
@@ -116,7 +110,7 @@ const UnsplashImagePicker: React.FC<UnsplashImagePickerProps> = ({ onSelect, onC
           />
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
         </div>
-        <div className="flex flex-wrap gap-2 mb-4">
+        <div className="flex flex-wrap gap-2">
           {predefinedLabels.map(label => (
             <button
               key={label.name}
@@ -128,6 +122,9 @@ const UnsplashImagePicker: React.FC<UnsplashImagePickerProps> = ({ onSelect, onC
             </button>
           ))}
         </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-4 pt-0">
         <div className="grid grid-cols-3 gap-4">
           {images.map(image => (
             <div key={image.id} className="relative w-full pb-[56.25%]">
@@ -135,7 +132,7 @@ const UnsplashImagePicker: React.FC<UnsplashImagePickerProps> = ({ onSelect, onC
                 src={image.urls.small}
                 alt={image.alt_description}
                 className="absolute inset-0 w-full h-full object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
-                onClick={() => handleImageSelect(image.urls.full)}
+                onClick={() => handleImageSelect(image.urls.regular)}
               />
             </div>
           ))}
@@ -144,13 +141,25 @@ const UnsplashImagePicker: React.FC<UnsplashImagePickerProps> = ({ onSelect, onC
         {!loading && images.length > 0 && (
           <button
             onClick={handleLoadMore}
-            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            className="mt-4 w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
           >
             Load More
           </button>
         )}
       </div>
     </div>
+  );
+
+  return (
+    <Modal
+      dialogTitle="Choose an image from Unsplash"
+      dialogContent={modalContent}
+      onOpenChange={onClose}
+      isDialogOpen={isOpen}
+      minWidth="lg"
+      minHeight="lg"
+      customHeight="h-[80vh]"
+    />
   );
 };
 
