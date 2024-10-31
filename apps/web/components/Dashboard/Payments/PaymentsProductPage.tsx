@@ -19,6 +19,7 @@ import * as Yup from 'yup';
 import { Label } from '@components/ui/label';
 import { Badge } from '@components/ui/badge';
 import { getPaymentConfigs } from '@services/payments/payments';
+import ProductLinkedCourses from './SubComponents/ProductLinkedCourses';
 
 const validationSchema = Yup.object().shape({
     name: Yup.string().required('Name is required'),
@@ -162,6 +163,7 @@ function PaymentsProductPage() {
                                             )}
                                         </button>
                                     </div>
+                                    <ProductLinkedCourses productId={product.id} />
                                     <div className="mt-2 flex items-center justify-between bg-gray-100 rounded-md p-2">
                                         <span className="text-sm text-gray-600">Price:</span>
                                         <span className="font-semibold text-lg">

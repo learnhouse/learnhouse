@@ -4,7 +4,7 @@ from src.core.events.database import get_db_session
 from src.db.payments.payments import PaymentsConfig, PaymentsConfigCreate, PaymentsConfigRead, PaymentsConfigUpdate
 from src.db.users import PublicUser
 from src.security.auth import get_current_user
-from src.services.payments.payments import (
+from src.services.payments.payments_config import (
     create_payments_config,
     get_payments_config,
     update_payments_config,
@@ -12,6 +12,11 @@ from src.services.payments.payments import (
 )
 from src.db.payments.payments_products import PaymentsProductCreate, PaymentsProductRead, PaymentsProductUpdate
 from src.services.payments.payments_products import create_payments_product, delete_payments_product, get_payments_product, list_payments_products, update_payments_product
+from src.services.payments.payments_courses import (
+    link_course_to_product,
+    unlink_course_from_product,
+    get_courses_by_product
+)
 
 
 router = APIRouter()
@@ -105,3 +110,41 @@ async def api_delete_payments_product(
 ):
     await delete_payments_product(request, org_id, product_id, current_user, db_session)
     return {"message": "Payments product deleted successfully"}
+
+@router.post("/{org_id}/products/{product_id}/courses/{course_id}")
+async def api_link_course_to_product(
+    request: Request,
+    org_id: int,
+    product_id: int,
+    course_id: int,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+):
+    return await link_course_to_product(
+        request, org_id, course_id, product_id, current_user, db_session
+    )
+
+@router.delete("/{org_id}/products/{product_id}/courses/{course_id}")
+async def api_unlink_course_from_product(
+    request: Request,
+    org_id: int,
+    product_id: int,
+    course_id: int,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+):
+    return await unlink_course_from_product(
+        request, org_id, course_id, current_user, db_session
+    )
+
+@router.get("/{org_id}/products/{product_id}/courses")
+async def api_get_courses_by_product(
+    request: Request,
+    org_id: int,
+    product_id: int,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+):
+    return await get_courses_by_product(
+        request, org_id, product_id, current_user, db_session
+    )
