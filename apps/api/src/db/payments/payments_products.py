@@ -7,10 +7,15 @@ class PaymentProductTypeEnum(str, Enum):
     SUBSCRIPTION = "subscription"
     ONE_TIME = "one_time"
 
+class PaymentPriceTypeEnum(str, Enum):
+    CUSTOMER_CHOICE = "customer_choice"
+    FIXED_PRICE = "fixed_price"
+    
 class PaymentsProductBase(SQLModel):
     name: str = ""
     description: Optional[str] = ""
     product_type: PaymentProductTypeEnum = PaymentProductTypeEnum.ONE_TIME
+    price_type: PaymentPriceTypeEnum = PaymentPriceTypeEnum.FIXED_PRICE
     benefits: str = ""
     amount: float = 0.0
     currency: str = "USD"

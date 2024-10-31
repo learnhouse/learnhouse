@@ -1,7 +1,7 @@
 from fastapi import HTTPException, Request
 from sqlmodel import Session
 import stripe
-from src.db.payments.payments_products import PaymentProductTypeEnum, PaymentsProduct
+from src.db.payments.payments_products import PaymentPriceTypeEnum, PaymentProductTypeEnum, PaymentsProduct
 from src.db.users import AnonymousUser, PublicUser
 from src.services.payments.payments import get_payments_config
 
@@ -43,22 +43,23 @@ async def create_stripe_product(
     # Set the Stripe API key using the credentials
     stripe.api_key = creds.get('stripe_secret_key')
     
-    ## Create product
-
-    # Interval or one time 
-    if product_data.product_type == PaymentProductTypeEnum.SUBSCRIPTION:
-        interval = "month"
+    # Prepare default_price_data based on price_type
+    if product_data.price_type == PaymentPriceTypeEnum.CUSTOMER_CHOICE:
+        default_price_data = {
+            "currency": product_data.currency,
+            "custom_unit_amount": {
+                "enabled": True,
+                "minimum": int(product_data.amount * 100),  # Convert to cents
+            }
+        }
     else:
-        interval = None
-    
-    # Prepare default_price_data
-    default_price_data = {
-        "currency": product_data.currency,
-        "unit_amount": int(product_data.amount * 100)  # Convert to cents
-    }
-    
-    if interval:
-        default_price_data["recurring"] = {"interval": interval}
+        default_price_data = {
+            "currency": product_data.currency,
+            "unit_amount": int(product_data.amount * 100)  # Convert to cents
+        }
+
+    if product_data.product_type == PaymentProductTypeEnum.SUBSCRIPTION:
+        default_price_data["recurring"] = {"interval": "month"}
 
     product = stripe.Product.create(
         name=product_data.name,
@@ -104,13 +105,22 @@ async def update_stripe_product(
     stripe.api_key = creds.get('stripe_secret_key')
     
     try:
-
-         # Always create a new price
-        new_price_data = {
-            "currency": product_data.currency,
-            "unit_amount": int(product_data.amount * 100),  # Convert to cents
-            "product": product_id,
-        }
+        # Create new price based on price_type
+        if product_data.price_type == PaymentPriceTypeEnum.CUSTOMER_CHOICE:
+            new_price_data = {
+                "currency": product_data.currency,
+                "product": product_id,
+                "custom_unit_amount": {
+                    "enabled": True,
+                    "minimum": int(product_data.amount * 100),  # Convert to cents
+                }
+            }
+        else:
+            new_price_data = {
+                "currency": product_data.currency,
+                "unit_amount": int(product_data.amount * 100),  # Convert to cents
+                "product": product_id,
+            }
 
         if product_data.product_type == PaymentProductTypeEnum.SUBSCRIPTION:
             new_price_data["recurring"] = {"interval": "month"}
@@ -128,16 +138,12 @@ async def update_stripe_product(
 
         # Update the product in Stripe
         updated_product = stripe.Product.modify(product_id, **update_data)
-
         
         # Archive all existing prices for the product
         existing_prices = stripe.Price.list(product=product_id, active=True)
         for price in existing_prices:
             if price.id != new_price.id:
                 stripe.Price.modify(price.id, active=False)
-        
-        # Set the new price as the default price for the product
-        updated_product = stripe.Product.modify(product_id, default_price=new_price.id)
 
         return updated_product
     except stripe.StripeError as e:
