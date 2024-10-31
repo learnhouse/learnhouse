@@ -3,7 +3,7 @@ from sqlmodel import Session
 import stripe
 from src.db.payments.payments_products import PaymentPriceTypeEnum, PaymentProductTypeEnum, PaymentsProduct
 from src.db.users import AnonymousUser, PublicUser
-from src.services.payments.payments import get_payments_config
+from src.services.payments.payments_config import get_payments_config
 
 
 async def get_stripe_credentials(

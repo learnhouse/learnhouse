@@ -46,5 +46,31 @@ export async function getProductDetails(orgId: number, productId: string, access
   return res;
 }
 
+export async function linkCourseToProduct(orgId: number, productId: string, courseId: string, access_token: string) {
+  const result = await fetch(
+    `${getAPIUrl()}payments/${orgId}/products/${productId}/courses/${courseId}`,
+    RequestBodyWithAuthHeader('POST', null, null, access_token)
+  );
+  const res = await getResponseMetadata(result);
+  return res;
+}
+
+export async function unlinkCourseFromProduct(orgId: number, productId: string, courseId: string, access_token: string) {
+  const result = await fetch(
+    `${getAPIUrl()}payments/${orgId}/products/${productId}/courses/${courseId}`,
+    RequestBodyWithAuthHeader('DELETE', null, null, access_token)
+  );
+  const res = await getResponseMetadata(result);
+  return res;
+}
+
+export async function getCoursesLinkedToProduct(orgId: number, productId: string, access_token: string) {
+  const result = await fetch(
+    `${getAPIUrl()}payments/${orgId}/products/${productId}/courses`,
+    RequestBodyWithAuthHeader('GET', null, null, access_token)
+  );
+  const res = await getResponseMetadata(result);
+  return res;
+}
 
 
