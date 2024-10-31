@@ -16,16 +16,20 @@ import currencyCodes from 'currency-codes';
 const validationSchema = Yup.object().shape({
   name: Yup.string().required('Name is required'),
   description: Yup.string().required('Description is required'),
-  amount: Yup.number().min(0, 'Amount must be positive').required('Amount is required'),
+  amount: Yup.number()
+    .min(1, 'Amount must be greater than zero')
+    .required('Amount is required'),
   benefits: Yup.string(),
   currency: Yup.string().required('Currency is required'),
   product_type: Yup.string().oneOf(['one_time', 'subscription']).required('Product type is required'),
+  price_type: Yup.string().oneOf(['fixed_price', 'customer_choice']).required('Price type is required'),
 });
 
 interface ProductFormValues {
   name: string;
   description: string;
   product_type: 'one_time' | 'subscription';
+  price_type: 'fixed_price' | 'customer_choice';
   benefits: string;
   amount: number;
   currency: string;
@@ -48,6 +52,7 @@ const CreateProductForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) =
     name: '',
     description: '',
     product_type: 'one_time',
+    price_type: 'fixed_price',
     benefits: '',
     amount: 0,
     currency: 'USD',
@@ -92,11 +97,49 @@ const CreateProductForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) =
               <Field name="description" as={Textarea} placeholder="Product Description" />
               <ErrorMessage name="description" component="div" className="text-red-500 text-sm mt-1" />
             </div>
+            
+            <div>
+              <Label htmlFor="product_type">Product Type</Label>
+              <Select
+                value={values.product_type}
+                onValueChange={(value) => setFieldValue('product_type', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Product Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="one_time">One Time</SelectItem>
+                  <SelectItem value="subscription">Subscription</SelectItem>
+                </SelectContent>
+              </Select>
+              <ErrorMessage name="product_type" component="div" className="text-red-500 text-sm mt-1" />
+            </div>
+
+            <div>
+              <Label htmlFor="price_type">Price Type</Label>
+              <Select
+                value={values.price_type}
+                onValueChange={(value) => setFieldValue('price_type', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Price Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="fixed_price">Fixed Price</SelectItem>
+                  {values.product_type !== 'subscription' && (
+                    <SelectItem value="customer_choice">Customer Choice</SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+              <ErrorMessage name="price_type" component="div" className="text-red-500 text-sm mt-1" />
+            </div>
 
             <div className="flex space-x-2">
               <div className="flex-grow">
-                <Label htmlFor="amount">Price</Label>
-                <Field name="amount" as={Input} type="number" placeholder="Price" />
+                <Label htmlFor="amount">
+                  {values.price_type === 'fixed_price' ? 'Price' : 'Minimum Amount'}
+                </Label>
+                <Field name="amount" as={Input} type="number" placeholder={values.price_type === 'fixed_price' ? 'Price' : 'Minimum Amount'} />
                 <ErrorMessage name="amount" component="div" className="text-red-500 text-sm mt-1" />
               </div>
               <div className="w-1/3">
@@ -118,23 +161,6 @@ const CreateProductForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) =
                 </Select>
                 <ErrorMessage name="currency" component="div" className="text-red-500 text-sm mt-1" />
               </div>
-            </div>
-
-            <div>
-              <Label htmlFor="product_type">Product Type</Label>
-              <Select
-                value={values.product_type}
-                onValueChange={(value) => setFieldValue('product_type', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Product Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="one_time">One Time</SelectItem>
-                  <SelectItem value="subscription">Subscription</SelectItem>
-                </SelectContent>
-              </Select>
-              <ErrorMessage name="product_type" component="div" className="text-red-500 text-sm mt-1" />
             </div>
 
             <div>
