@@ -73,4 +73,21 @@ export async function getCoursesLinkedToProduct(orgId: number, productId: string
   return res;
 }
 
+export async function getProductsByCourse(orgId: number, courseId: string, access_token: string) {
+  const result = await fetch(
+    `${getAPIUrl()}payments/${orgId}/courses/${courseId}/products`,
+    RequestBodyWithAuthHeader('GET', null, null, access_token)
+  );
+  const res = await getResponseMetadata(result);
+  return res;
+}
+
+export async function getStripeProductCheckoutSession(orgId: number, productId: number, redirect_uri: string, access_token: string) {
+  const result = await fetch(
+    `${getAPIUrl()}payments/${orgId}/stripe/checkout/product/${productId}?redirect_uri=${redirect_uri}`,
+    RequestBodyWithAuthHeader('POST', null, null, access_token)
+  );
+  const res = await getResponseMetadata(result);
+  return res;
+}
 

@@ -59,6 +59,11 @@ class AnonymousUser(SQLModel):
     user_uuid: str = "user_anonymous"
     username: str = "anonymous"
 
+class InternalUser(SQLModel):
+    id: int = 0
+    user_uuid: str = "user_internal"
+    username: str = "internal"
+
 
 class User(UserBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)

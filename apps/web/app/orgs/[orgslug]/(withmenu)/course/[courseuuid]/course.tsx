@@ -1,5 +1,4 @@
 'use client'
-import { removeCourse, startCourse } from '@services/courses/activity'
 import Link from 'next/link'
 import React, { useEffect, useState } from 'react'
 import { getUriWithOrg } from '@services/config/config'
@@ -15,15 +14,13 @@ import {
 import { ArrowRight, Backpack, Check, File, Sparkles, Video } from 'lucide-react'
 import { useOrg } from '@components/Contexts/OrgContext'
 import UserAvatar from '@components/Objects/UserAvatar'
-import CourseUpdates from '@components/Objects/CourseUpdates/CourseUpdates'
+import CourseUpdates from '@components/Objects/Courses/CourseUpdates/CourseUpdates'
 import { CourseProvider } from '@components/Contexts/CourseContext'
-import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useMediaQuery } from 'usehooks-ts'
+import CoursesActions from '@components/Objects/Courses/CourseActions/CoursesActions'
 
 const CourseClient = (props: any) => {
-  const [user, setUser] = useState<any>({})
   const [learnings, setLearnings] = useState<any>([])
-  const session = useLHSession() as any;
   const courseuuid = props.courseuuid
   const orgslug = props.orgslug
   const course = props.course
@@ -35,33 +32,6 @@ const CourseClient = (props: any) => {
     // create array of learnings from a string object (comma separated)
     let learnings = course?.learnings ? course?.learnings.split(',') : []
     setLearnings(learnings)
-  }
-
-  async function startCourseUI() {
-    // Create activity
-    await startCourse('course_' + courseuuid, orgslug, session.data?.tokens?.access_token)
-    await revalidateTags(['courses'], orgslug)
-    router.refresh()
-
-    // refresh page (FIX for Next.js BUG)
-    // window.location.reload();
-  }
-
-  function isCourseStarted() {
-    const runs = course.trail?.runs
-    if (!runs) return false
-    return runs.some(
-      (run: any) =>
-        run.status === 'STATUS_IN_PROGRESS' && run.course_id === course.id
-    )
-  }
-
-  async function quitCourse() {
-    // Close activity
-    let activity = await removeCourse('course_' + courseuuid, orgslug, session.data?.tokens?.access_token)
-    // Mutate course
-    await revalidateTags(['courses'], orgslug)
-    router.refresh()
   }
 
   useEffect(() => {
@@ -80,7 +50,7 @@ const CourseClient = (props: any) => {
               <h1 className="text-3xl md:text-3xl -mt-3 font-bold">{course.name}</h1>
             </div>
             <div className="mt-4 md:mt-0">
-             {!isMobile &&  <CourseProvider courseuuid={course.course_uuid}>
+              {!isMobile && <CourseProvider courseuuid={course.course_uuid}>
                 <CourseUpdates />
               </CourseProvider>}
             </div>
@@ -113,11 +83,11 @@ const CourseClient = (props: any) => {
             course={course}
           />
 
-          <div className="flex flex-col md:flex-row pt-10">
-            <div className="course_metadata_left grow space-y-2">
-              <h2 className="py-3 text-2xl font-bold">Description</h2>
+          <div className="flex flex-col md:flex-row md:space-x-10 space-y-6 md:space-y-0 pt-10">
+            <div className="course_metadata_left w-full md:basis-3/4 space-y-2">
+              <h2 className="py-3 text-2xl font-bold">About</h2>
               <div className="bg-white shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40 rounded-lg overflow-hidden">
-                <p className="py-5 px-5">{course.description}</p>
+                <p className="py-5 px-5 whitespace-pre-wrap">{course.about}</p>
               </div>
 
               {learnings.length > 0 && learnings[0] !== 'null' && (
@@ -187,7 +157,7 @@ const CourseClient = (props: any) => {
                                         />
                                       </div>
                                     )}
-                                    {activity.activity_type ===
+                                  {activity.activity_type ===
                                     'TYPE_ASSIGNMENT' && (
                                       <div className="bg-gray-100 px-2 py-2 rounded-full">
                                         <Backpack
@@ -273,7 +243,7 @@ const CourseClient = (props: any) => {
                                         </Link>
                                       </>
                                     )}
-                                    {activity.activity_type ===
+                                  {activity.activity_type ===
                                     'TYPE_ASSIGNMENT' && (
                                       <>
                                         <Link
@@ -305,60 +275,8 @@ const CourseClient = (props: any) => {
                 })}
               </div>
             </div>
-            <div className="course_metadata_right space-y-3 w-full md:w-72 antialiased flex flex-col md:ml-10 h-fit p-3 py-5 bg-white shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40 rounded-lg overflow-hidden mt-6 md:mt-0">
-              {user && (
-                <div className="flex flex-row md:flex-col mx-auto space-y-0 md:space-y-3 space-x-4 md:space-x-0 px-2 py-2 items-center">
-                  <UserAvatar
-                    border="border-8"
-                    avatar_url={course.authors[0].avatar_image ? getUserAvatarMediaDirectory(course.authors[0].user_uuid, course.authors[0].avatar_image) : ''}
-                    predefined_avatar={course.authors[0].avatar_image ? undefined : 'empty'}
-                    width={isMobile ? 60 : 100}
-                  />
-                  <div className="md:-space-y-2">
-                    <div className="text-[12px] text-neutral-400 font-semibold">
-                      Author
-                    </div>
-                    <div className="text-lg md:text-xl font-bold text-neutral-800">
-                      {course.authors[0].first_name &&
-                        course.authors[0].last_name && (
-                          <div className="flex space-x-2 items-center">
-                            <p>
-                              {course.authors[0].first_name +
-                                ' ' +
-                                course.authors[0].last_name}
-                            </p>
-                            <span className="text-xs bg-neutral-100 p-1 px-3 rounded-full text-neutral-400 font-semibold">
-                              {' '}
-                              @{course.authors[0].username}
-                            </span>
-                          </div>
-                        )}
-                      {!course.authors[0].first_name &&
-                        !course.authors[0].last_name && (
-                          <div className="flex space-x-2 items-center">
-                            <p>@{course.authors[0].username}</p>
-                          </div>
-                        )}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {isCourseStarted() ? (
-                <button
-                  className="py-2 px-5 mx-auto rounded-xl text-white font-bold h-12 w-full md:w-[200px] drop-shadow-md bg-red-600 hover:bg-red-700 hover:cursor-pointer"
-                  onClick={quitCourse}
-                >
-                  Quit Course
-                </button>
-              ) : (
-                <button
-                  className="py-2 px-5 mx-auto rounded-xl text-white font-bold h-12 w-full md:w-[200px] drop-shadow-md bg-black hover:bg-gray-900 hover:cursor-pointer"
-                  onClick={startCourseUI}
-                >
-                  Start Course
-                </button>
-              )}
+            <div className='course_metadata_right basis-1/4'>
+              <CoursesActions courseuuid={courseuuid} orgslug={orgslug} course={course} />
             </div>
           </div>
         </GeneralWrapperStyled>
