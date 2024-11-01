@@ -1,7 +1,7 @@
 from datetime import datetime
 from fastapi import HTTPException, Request
 from sqlmodel import Session, select
-from src.db.payments.payments_courses import PaymentCourse
+from src.db.payments.payments_courses import PaymentsCourse
 from src.db.payments.payments_products import PaymentsProduct
 from src.db.courses.courses import Course
 from src.db.users import PublicUser, AnonymousUser
@@ -36,7 +36,7 @@ async def link_course_to_product(
         raise HTTPException(status_code=404, detail="Product not found")
 
     # Check if course is already linked to another product
-    statement = select(PaymentCourse).where(PaymentCourse.course_id == course.id)
+    statement = select(PaymentsCourse).where(PaymentsCourse.course_id == course.id)
     existing_link = db_session.exec(statement).first()
 
     if existing_link:
@@ -46,7 +46,7 @@ async def link_course_to_product(
         )
 
     # Create new payment course link
-    payment_course = PaymentCourse(
+    payment_course = PaymentsCourse(
         course_id=course.id,  # type: ignore
         payment_product_id=product_id,
         org_id=org_id,
@@ -75,9 +75,9 @@ async def unlink_course_from_product(
     await rbac_check(request, course.course_uuid, current_user, "update", db_session)
 
     # Find and delete the payment course link
-    statement = select(PaymentCourse).where(
-        PaymentCourse.course_id == course.id,
-        PaymentCourse.org_id == org_id
+    statement = select(PaymentsCourse).where(
+        PaymentsCourse.course_id == course.id,
+        PaymentsCourse.org_id == org_id
     )
     payment_course = db_session.exec(statement).first()
 
@@ -113,12 +113,14 @@ async def get_courses_by_product(
     statement = (
         select(Course)
         .select_from(Course)
-        .join(PaymentCourse, Course.id == PaymentCourse.course_id)  # type: ignore
+        .join(PaymentsCourse, Course.id == PaymentsCourse.course_id)  # type: ignore
         .where(
-            PaymentCourse.payment_product_id == product_id,
-            PaymentCourse.org_id == org_id
+            PaymentsCourse.payment_product_id == product_id,
+            PaymentsCourse.org_id == org_id
         )
     )
     courses = db_session.exec(statement).all()
 
     return courses
+
+

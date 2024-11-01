@@ -6,7 +6,7 @@ from src.db.payments.payments import (
     PaymentsConfigUpdate,
     PaymentsConfigRead,
 )
-from src.db.users import PublicUser, AnonymousUser
+from src.db.users import PublicUser, AnonymousUser, InternalUser
 from src.db.organizations import Organization
 from src.services.orgs.orgs import rbac_check
 
@@ -48,7 +48,7 @@ async def create_payments_config(
 async def get_payments_config(
     request: Request,
     org_id: int,
-    current_user: PublicUser | AnonymousUser,
+    current_user: PublicUser | AnonymousUser | InternalUser,
     db_session: Session,
 ) -> list[PaymentsConfigRead]:
     # Check if organization exists

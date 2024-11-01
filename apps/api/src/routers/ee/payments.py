@@ -11,12 +11,14 @@ from src.services.payments.payments_config import (
     delete_payments_config,
 )
 from src.db.payments.payments_products import PaymentsProductCreate, PaymentsProductRead, PaymentsProductUpdate
-from src.services.payments.payments_products import create_payments_product, delete_payments_product, get_payments_product, list_payments_products, update_payments_product
+from src.services.payments.payments_products import create_payments_product, delete_payments_product, get_payments_product, get_products_by_course, list_payments_products, update_payments_product
 from src.services.payments.payments_courses import (
     link_course_to_product,
     unlink_course_from_product,
-    get_courses_by_product
+    get_courses_by_product,
 )
+from src.services.payments.payments_webhook import handle_stripe_webhook
+from src.services.payments.stripe import create_checkout_session
 
 
 router = APIRouter()
@@ -148,3 +150,38 @@ async def api_get_courses_by_product(
     return await get_courses_by_product(
         request, org_id, product_id, current_user, db_session
     )
+
+@router.get("/{org_id}/courses/{course_id}/products")
+async def api_get_products_by_course(
+    request: Request,
+    org_id: int,
+    course_id: int,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+):
+    return await get_products_by_course(
+        request, org_id, course_id, current_user, db_session
+    )
+
+# Payments webhooks
+
+@router.post("/{org_id}/stripe/webhook")
+async def api_handle_stripe_webhook(
+    request: Request,
+    org_id: int,
+    db_session: Session = Depends(get_db_session),
+):
+    return await handle_stripe_webhook(request, org_id, db_session)
+
+# Payments checkout
+
+@router.post("/{org_id}/stripe/checkout/product/{product_id}")
+async def api_create_checkout_session(
+    request: Request,
+    org_id: int,
+    product_id: int,
+    redirect_uri: str,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+):
+    return await create_checkout_session(request, org_id, product_id, redirect_uri, current_user, db_session)

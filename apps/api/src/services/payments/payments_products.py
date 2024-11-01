@@ -1,6 +1,8 @@
 from fastapi import HTTPException, Request
 from sqlmodel import Session, select
+from src.db.courses.courses import Course
 from src.db.payments.payments import PaymentsConfig
+from src.db.payments.payments_courses import PaymentsCourse
 from src.db.payments.payments_products import (
     PaymentsProduct,
     PaymentsProductCreate,
@@ -12,7 +14,7 @@ from src.db.organizations import Organization
 from src.services.orgs.orgs import rbac_check
 from datetime import datetime
 
-from src.services.payments.stripe import archive_stripe_product, create_stripe_product, update_stripe_product
+from src.services.payments.stripe import archive_stripe_product, create_stripe_product, get_stripe_credentials, update_stripe_product
 
 async def create_payments_product(
     request: Request,
@@ -163,3 +165,36 @@ async def list_payments_products(
     products = db_session.exec(statement).all()
 
     return [PaymentsProductRead.model_validate(product) for product in products]
+
+async def get_products_by_course(
+    request: Request,
+    org_id: int,
+    course_id: int,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+) -> list[PaymentsProductRead]:
+    # Check if course exists and user has permission
+    statement = select(Course).where(Course.id == course_id)
+    course = db_session.exec(statement).first()
+
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+
+    # RBAC check
+    await rbac_check(request, course.course_uuid, current_user, "read", db_session)
+
+    # Get all products linked to this course with explicit join
+    statement = (
+        select(PaymentsProduct)
+        .select_from(PaymentsProduct)
+        .join(PaymentsCourse, PaymentsProduct.id == PaymentsCourse.payment_product_id) # type: ignore
+        .where(
+            PaymentsCourse.course_id == course_id,
+            PaymentsCourse.org_id == org_id
+        )
+    )
+    products = db_session.exec(statement).all()
+
+    return [PaymentsProductRead.model_validate(product) for product in products]
+
+
