@@ -45,3 +45,12 @@ export async function deletePaymentConfig(orgId: number, id: string, access_toke
   const res = await errorHandling(result);
   return res;
 }
+
+export async function getOrgCustomers(orgId: number, access_token: string) {
+  const result = await fetch(
+    `${getAPIUrl()}payments/${orgId}/customers`,
+    RequestBodyWithAuthHeader('GET', null, null, access_token)
+  );
+  const res = await errorHandling(result);
+  return res;
+}
