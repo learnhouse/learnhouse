@@ -9,6 +9,7 @@ from src.db.payments.payments_products import (
     PaymentsProductUpdate,
     PaymentsProductRead,
 )
+from src.db.payments.payments_users import PaymentStatusEnum, PaymentsUser
 from src.db.users import PublicUser, AnonymousUser
 from src.db.organizations import Organization
 from src.services.orgs.orgs import rbac_check
@@ -138,6 +139,18 @@ async def delete_payments_product(
     if not product:
         raise HTTPException(status_code=404, detail="Payments product not found")
     
+    # Check if there are any payment users linked to this product
+    statement = select(PaymentsUser).where(
+        PaymentsUser.payment_product_id == product_id,
+        PaymentsUser.status.in_([PaymentStatusEnum.ACTIVE, PaymentStatusEnum.COMPLETED]) # type: ignore
+    )
+    payment_users = db_session.exec(statement).all()
+    if payment_users:
+        raise HTTPException(
+            status_code=400, 
+            detail="Cannot delete product because users have paid access to it."
+        )
+
     # Archive product in Stripe
     await archive_stripe_product(request, org_id, product.provider_product_id, current_user, db_session)
 

@@ -43,7 +43,7 @@ async def create_payment_user(
         stripe_customer=provider_data if provider_data else None,
     )
 
-    # Check if user already has a payment user
+    # Check if user already has a payment user for this product
     statement = select(PaymentsUser).where(
         PaymentsUser.user_id == user_id,
         PaymentsUser.org_id == org_id,
@@ -52,8 +52,12 @@ async def create_payment_user(
     existing_payment_user = db_session.exec(statement).first()
 
     if existing_payment_user:
-        if existing_payment_user.status == PaymentStatusEnum.PENDING:
-            # Delete existing pending payment
+        # If status is PENDING, CANCELLED, or FAILED, delete the existing record
+        if existing_payment_user.status in [
+            PaymentStatusEnum.PENDING,
+            PaymentStatusEnum.CANCELLED,
+            PaymentStatusEnum.FAILED
+        ]:
             db_session.delete(existing_payment_user)
             db_session.commit()
         else:

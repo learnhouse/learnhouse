@@ -1,3 +1,4 @@
+'use server';
 import { getAPIUrl } from '@services/config/config';
 import { RequestBodyWithAuthHeader, errorHandling } from '@services/utils/ts/requests';
 

@@ -55,12 +55,12 @@ function PaymentsProductPage() {
     }, [paymentConfigs]);
 
     const handleArchiveProduct = async (productId: string) => {
-        try {
-            await archiveProduct(org.id, productId, session.data?.tokens?.access_token);
-            mutate([`/payments/${org.id}/products`, session.data?.tokens?.access_token]);
+        const res = await archiveProduct(org.id, productId, session.data?.tokens?.access_token);
+        mutate([`/payments/${org.id}/products`, session.data?.tokens?.access_token]);
+        if (res.status === 200) {
             toast.success('Product archived successfully');
-        } catch (error) {
-            toast.error('Failed to archive product');
+        } else {
+            toast.error(res.data.detail);
         }
     }
 
@@ -77,7 +77,7 @@ function PaymentsProductPage() {
     return (
         <div className="h-full w-full bg-[#f8f8f8]">
             <div className="pl-10 pr-10 mx-auto">
-                
+
 
                 <Modal
                     isDialogOpen={isCreateModalOpen}
@@ -185,9 +185,8 @@ function PaymentsProductPage() {
                 <div className="flex justify-center items-center py-10">
                     <button
                         onClick={() => setIsCreateModalOpen(true)}
-                        className={`mb-4 flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-gradient-to-bl text-white font-medium from-gray-700 to-gray-900 border border-gray-600 shadow-gray-900/20 nice-shadow transition duration-300 ${
-                            isStripeEnabled ? 'hover:from-gray-600 hover:to-gray-800' : 'opacity-50 cursor-not-allowed'
-                        }`}
+                        className={`mb-4 flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-gradient-to-bl text-white font-medium from-gray-700 to-gray-900 border border-gray-600 shadow-gray-900/20 nice-shadow transition duration-300 ${isStripeEnabled ? 'hover:from-gray-600 hover:to-gray-800' : 'opacity-50 cursor-not-allowed'
+                            }`}
                         disabled={!isStripeEnabled}
                     >
                         <Plus size={18} />
