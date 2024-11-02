@@ -54,3 +54,12 @@ export async function getOrgCustomers(orgId: number, access_token: string) {
   const res = await errorHandling(result);
   return res;
 }
+
+export async function getOwnedCourses(orgId: number, access_token: string) {
+  const result = await fetch(
+    `${getAPIUrl()}payments/${orgId}/courses/owned`,
+    RequestBodyWithAuthHeader('GET', null, null, access_token)
+  );
+  const res = await errorHandling(result);
+  return res;
+}

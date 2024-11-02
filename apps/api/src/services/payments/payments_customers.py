@@ -1,9 +1,8 @@
 from fastapi import HTTPException, Request
 from sqlmodel import Session, select
 from src.db.organizations import Organization
-from src.db.users import PublicUser, AnonymousUser, User
+from src.db.users import PublicUser, AnonymousUser
 from src.db.payments.payments_users import PaymentsUser
-from src.db.payments.payments_products import PaymentsProduct
 from src.services.orgs.orgs import rbac_check
 from src.services.payments.payments_products import get_payments_product
 from src.services.users.users import read_user_by_id
