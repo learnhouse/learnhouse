@@ -14,6 +14,8 @@ from fastapi import HTTPException, Request
 from uuid import uuid4
 from datetime import datetime
 
+from src.services.payments.payments_access import check_activity_paid_access
+
 
 ####################################################
 # CRUD
@@ -112,7 +114,16 @@ async def get_activity(
     # RBAC check
     await rbac_check(request, course.course_uuid, current_user, "read", db_session)
 
-    activity = ActivityRead.model_validate(activity)
+    # Paid access check
+    has_paid_access = await check_activity_paid_access(
+        activity_id=activity.id if activity.id else 0,
+        user=current_user,
+        db_session=db_session
+    )
+
+    activity_read = ActivityRead.model_validate(activity)
+    activity_read.content = activity_read.content if has_paid_access else { "paid_access": False }
+    activity = activity_read
 
     return activity
 
@@ -258,30 +269,32 @@ async def get_activities(
 
 async def rbac_check(
     request: Request,
-    course_uuid: str,
+    element_uuid: str,
     current_user: PublicUser | AnonymousUser,
     action: Literal["create", "read", "update", "delete"],
     db_session: Session,
 ):
+    
+
     if action == "read":
         if current_user.id == 0:  # Anonymous user
             res = await authorization_verify_if_element_is_public(
-                request, course_uuid, action, db_session
+                request, element_uuid, action, db_session
             )
             return res
         else:
             res = await authorization_verify_based_on_roles_and_authorship(
-                request, current_user.id, action, course_uuid, db_session
+                request, current_user.id, action, element_uuid, db_session
             )
             return res
     else:
+        # For non-read actions, proceed with regular RBAC checks
         await authorization_verify_if_user_is_anon(current_user.id)
-
         await authorization_verify_based_on_roles_and_authorship(
             request,
             current_user.id,
             action,
-            course_uuid,
+            element_uuid,
             db_session,
         )
 

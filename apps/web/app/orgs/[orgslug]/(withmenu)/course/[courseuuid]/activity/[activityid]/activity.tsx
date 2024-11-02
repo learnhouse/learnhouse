@@ -26,6 +26,7 @@ import toast from 'react-hot-toast'
 import { mutate } from 'swr'
 import ConfirmationModal from '@components/StyledElements/ConfirmationModal/ConfirmationModal'
 import { useMediaQuery } from 'usehooks-ts'
+import PaidCourseActivity from '@components/Objects/Courses/CourseActions/PaidCourseActivity'
 
 interface ActivityClientProps {
   activityid: string
@@ -80,6 +81,7 @@ function ActivityClient(props: ActivityClientProps) {
     else {
       setBgColor('bg-zinc-950');
     }
+    console.log(activity.content)
   }
     , [activity, pathname])
 
@@ -129,7 +131,7 @@ function ActivityClient(props: ActivityClientProps) {
                   </h1>
                 </div>
                 <div className="flex space-x-1 items-center">
-                  {activity && activity.published == true && (
+                  {activity && activity.published == true && activity.content.paid_access != false && (
                     <AuthenticatedClientElement checkMethod="authentication">
                       {activity.activity_type != 'TYPE_ASSIGNMENT' &&
                         <>
@@ -176,6 +178,11 @@ function ActivityClient(props: ActivityClientProps) {
                 <div
                   className={`p-7 drop-shadow-sm rounded-lg ${bgColor}`}
                 >
+                  {/* Paid Courses */}
+                  {activity.content.paid_access == false && (
+                    <PaidCourseActivity course={course} />
+                  )}
+                  {/* Activity Types */}
                   <div>
                     {activity.activity_type == 'TYPE_DYNAMIC' && (
                       <Canva content={activity.content} activity={activity} />

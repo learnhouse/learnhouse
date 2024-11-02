@@ -121,5 +121,3 @@ async def get_courses_by_product(
     courses = db_session.exec(statement).all()
 
     return courses
-
-
