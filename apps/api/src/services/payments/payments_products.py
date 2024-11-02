@@ -14,7 +14,7 @@ from src.db.organizations import Organization
 from src.services.orgs.orgs import rbac_check
 from datetime import datetime
 
-from src.services.payments.stripe import archive_stripe_product, create_stripe_product, get_stripe_credentials, update_stripe_product
+from src.services.payments.stripe import archive_stripe_product, create_stripe_product, update_stripe_product
 
 async def create_payments_product(
     request: Request,
