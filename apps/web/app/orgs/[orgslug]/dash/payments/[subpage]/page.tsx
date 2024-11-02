@@ -9,6 +9,7 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import PaymentsConfigurationPage from '@components/Dashboard/Payments/PaymentsConfigurationPage'
 import PaymentsProductPage from '@components/Dashboard/Payments/PaymentsProductPage'
+import PaymentsCustomersPage from '@components/Dashboard/Payments/PaymentsCustomersPage'
 
 
 
@@ -101,7 +102,7 @@ function PaymentsPage({ params }: { params: PaymentsParams }) {
         {selectedSubPage === 'general' && <div>General</div>}
         {selectedSubPage === 'configuration' && <PaymentsConfigurationPage />}
         {selectedSubPage === 'paid-products' && <PaymentsProductPage />}
-        {selectedSubPage === 'customers' && <div>Customers</div>}
+        {selectedSubPage === 'customers' && <PaymentsCustomersPage />}
       </motion.div>
     </div>
   )

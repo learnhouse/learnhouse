@@ -20,6 +20,7 @@ from src.services.payments.payments_courses import (
 from src.services.payments.payments_webhook import handle_stripe_webhook
 from src.services.payments.stripe import create_checkout_session
 from src.services.payments.payments_access import check_course_paid_access
+from src.services.payments.payments_customers import get_customers
 
 
 router = APIRouter()
@@ -205,3 +206,15 @@ async def api_check_course_paid_access(
             db_session=db_session
         )
     }
+
+@router.get("/{org_id}/customers")
+async def api_get_customers(
+    request: Request,
+    org_id: int,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+):
+    """
+    Get list of customers and their subscriptions for an organization
+    """
+    return await get_customers(request, org_id, current_user, db_session)
