@@ -43,12 +43,18 @@ async def create_payment_user(
     # Check if user already has a payment user
     statement = select(PaymentsUser).where(
         PaymentsUser.user_id == user_id,
-        PaymentsUser.org_id == org_id
+        PaymentsUser.org_id == org_id,
+        PaymentsUser.payment_product_id == product_id
     )
     existing_payment_user = db_session.exec(statement).first()
 
     if existing_payment_user:
-        raise HTTPException(status_code=400, detail="User already has purchase for this product")
+        if existing_payment_user.status == PaymentStatusEnum.PENDING:
+            # Delete existing pending payment
+            db_session.delete(existing_payment_user)
+            db_session.commit()
+        else:
+            raise HTTPException(status_code=400, detail="User already has purchase for this product")
 
     # Create new payment user
     payment_user = PaymentsUser(

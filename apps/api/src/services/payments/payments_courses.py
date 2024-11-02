@@ -1,4 +1,3 @@
-from datetime import datetime
 from fastapi import HTTPException, Request
 from sqlmodel import Session, select
 from src.db.payments.payments_courses import PaymentsCourse

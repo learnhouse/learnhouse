@@ -1,10 +1,9 @@
 import logging
 import os
 import importlib
-from typing import Optional
 from config.config import get_learnhouse_config
 from fastapi import FastAPI
-from sqlmodel import Field, SQLModel, Session, create_engine
+from sqlmodel import SQLModel, Session, create_engine
 
 def import_all_models():
     base_dir = 'src/db'

@@ -1,11 +1,14 @@
+import logging
 from fastapi import HTTPException, Request
 from sqlmodel import Session
 import stripe
-from config.config import get_learnhouse_config
 from src.db.payments.payments_products import PaymentPriceTypeEnum, PaymentProductTypeEnum, PaymentsProduct
+from src.db.payments.payments_users import PaymentStatusEnum
 from src.db.users import AnonymousUser, InternalUser, PublicUser
 from src.services.payments.payments_config import get_payments_config
 from sqlmodel import select
+
+from src.services.payments.payments_users import create_payment_user, delete_payment_user
 
 async def get_stripe_credentials(
     request: Request,
@@ -179,9 +182,9 @@ async def create_checkout_session(
     # Get the default price for the product
     stripe_product = stripe.Product.retrieve(product.provider_product_id)
     line_items = [{
-            "price": stripe_product.default_price,
-            "quantity": 1
-        }]
+        "price": stripe_product.default_price,
+        "quantity": 1
+    }]
 
     # Create or retrieve Stripe customer
     try:
@@ -193,10 +196,29 @@ async def create_checkout_session(
                 email=current_user.email,
                 metadata={
                     "user_id": str(current_user.id),
-                    "org_id": str(org_id)
+                    "org_id": str(org_id),
                 }
             )
+            
+         # Create initial payment user with pending status
+        payment_user = await create_payment_user(
+            request=request,
+            org_id=org_id,
+            user_id=current_user.id,
+            product_id=product_id,
+            status=PaymentStatusEnum.PENDING,
+            provider_data=customer,
+            current_user=current_user,
+            db_session=db_session
+        )
+
+        if not payment_user:
+            raise HTTPException(status_code=400, detail="Error creating payment user")
+        
     except stripe.StripeError as e:
+        # Clean up payment user if customer creation fails
+        if payment_user and payment_user.id:
+            await delete_payment_user(request, org_id, payment_user.id, InternalUser(), db_session)
         raise HTTPException(status_code=400, detail=f"Error creating/retrieving customer: {str(e)}")
 
     # Create checkout session with customer
@@ -208,7 +230,8 @@ async def create_checkout_session(
             "line_items": line_items,
             "customer": customer.id,
             "metadata": {
-                "product_id": str(product.id)
+                "product_id": str(product.id),
+                "payment_user_id": str(payment_user.id)
             }
         }
 
@@ -216,14 +239,16 @@ async def create_checkout_session(
         if product.product_type == PaymentProductTypeEnum.ONE_TIME:
             checkout_session_params["payment_intent_data"] = {
                 "metadata": {
-                    "product_id": str(product.id)
+                    "product_id": str(product.id),
+                    "payment_user_id": str(payment_user.id)
                 }
             }
         # Add subscription_data for subscription payments
         else:
             checkout_session_params["subscription_data"] = {
                 "metadata": {
-                    "product_id": str(product.id)
+                    "product_id": str(product.id),
+                    "payment_user_id": str(payment_user.id)
                 }
             }
 
@@ -235,7 +260,10 @@ async def create_checkout_session(
         }
         
     except stripe.StripeError as e:
-        print(f"Error creating checkout session: {str(e)}")
+        # Clean up payment user if checkout session creation fails
+        if payment_user and payment_user.id:
+            await delete_payment_user(request, org_id, payment_user.id, InternalUser(), db_session)
+        logging.error(f"Error creating checkout session: {str(e)}")
         raise HTTPException(status_code=400, detail=str(e))
 
 
