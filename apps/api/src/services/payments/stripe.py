@@ -208,7 +208,7 @@ async def create_checkout_session(
             product_id=product_id,
             status=PaymentStatusEnum.PENDING,
             provider_data=customer,
-            current_user=current_user,
+            current_user=InternalUser(),
             db_session=db_session
         )
 

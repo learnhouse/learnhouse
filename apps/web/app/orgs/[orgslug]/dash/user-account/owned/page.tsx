@@ -7,7 +7,7 @@ import useSWR from 'swr'
 import { getOwnedCourses } from '@services/payments/payments'
 import CourseThumbnail from '@components/Objects/Thumbnails/CourseThumbnail'
 import PageLoading from '@components/Objects/Loaders/PageLoading'
-import { BookOpen } from 'lucide-react'
+import { BookOpen, Package2 } from 'lucide-react'
 
 function OwnedCoursesPage() {
   const org = useOrg() as any
@@ -24,9 +24,14 @@ function OwnedCoursesPage() {
 
   return (
     <div className="h-full w-full bg-[#f8f8f8] pl-10 pr-10 pt-5 ">
-      <div className="flex flex-col bg-gray-50 -space-y-1 px-5 py-3 rounded-md mb-6">
-        <h1 className="font-bold text-xl text-gray-800">My Courses</h1>
-        <h2 className="text-gray-500 text-md">Courses you have purchased or subscribed to</h2>
+      <div className="flex flex-col bg-white nice-shadow px-5 py-3 rounded-md mb-6">
+        <div className="flex items-center gap-4">
+          <Package2 className="w-8 h-8 text-gray-800" />
+          <div className="flex flex-col -space-y-1">
+            <h1 className="font-bold text-xl text-gray-800">My Courses</h1>
+            <h2 className="text-gray-500 text-md">Courses you have purchased or subscribed to</h2>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full">
