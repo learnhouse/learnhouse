@@ -10,6 +10,15 @@ export async function getPaymentConfigs(orgId: number, access_token: string) {
   return res;
 }
 
+export async function checkPaidAccess(courseId: number, orgId: number, access_token: string) {
+  const result = await fetch(
+    `${getAPIUrl()}payments/${orgId}/courses/${courseId}/access`,
+    RequestBodyWithAuthHeader('GET', null, null, access_token)
+  );
+  const res = await errorHandling(result);
+  return res;
+}
+
 export async function createPaymentConfig(orgId: number, data: any, access_token: string) {
   const result = await fetch(
     `${getAPIUrl()}payments/${orgId}/config`,

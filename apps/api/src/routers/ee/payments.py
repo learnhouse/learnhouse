@@ -19,6 +19,7 @@ from src.services.payments.payments_courses import (
 )
 from src.services.payments.payments_webhook import handle_stripe_webhook
 from src.services.payments.stripe import create_checkout_session
+from src.services.payments.payments_access import check_course_paid_access
 
 
 router = APIRouter()
@@ -185,3 +186,22 @@ async def api_create_checkout_session(
     db_session: Session = Depends(get_db_session),
 ):
     return await create_checkout_session(request, org_id, product_id, redirect_uri, current_user, db_session)
+
+@router.get("/{org_id}/courses/{course_id}/access")
+async def api_check_course_paid_access(
+    request: Request,
+    org_id: int,
+    course_id: int,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+):
+    """
+    Check if current user has paid access to a specific course
+    """
+    return {
+        "has_access": await check_course_paid_access(
+            course_id=course_id,
+            user=current_user,
+            db_session=db_session
+        )
+    }
