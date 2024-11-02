@@ -2,16 +2,17 @@
 import React, { useEffect } from 'react'
 import styled from 'styled-components'
 import Link from 'next/link'
-import { Settings } from 'lucide-react'
+import { Package2, Settings } from 'lucide-react'
 import UserAvatar from '@components/Objects/UserAvatar'
 import useAdminStatus from '@components/Hooks/useAdminStatus'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { getUriWithoutOrg } from '@services/config/config'
+import Tooltip from '@components/StyledElements/Tooltip/Tooltip'
 
 export const HeaderProfileBox = () => {
   const session = useLHSession() as any
-  const isUserAdmin = useAdminStatus() 
+  const isUserAdmin = useAdminStatus()
   const org = useOrg() as any
 
   useEffect(() => { }
@@ -39,12 +40,30 @@ export const HeaderProfileBox = () => {
               <p className='text-sm capitalize'>{session.data.user.username}</p>
               {isUserAdmin.isAdmin && <div className="text-[10px] bg-rose-300 px-2 font-bold rounded-md shadow-inner py-1">ADMIN</div>}
             </div>
+
+            <div className="flex items-center space-x-2">
+              <Tooltip 
+                content={"Your Owned Courses"}
+                sideOffset={15}
+                side="bottom"
+              >
+                <Link className="text-gray-600" href={'/dash/user-account/owned'}>
+                  <Package2 size={14} />
+                </Link>
+              </Tooltip>
+              <Tooltip 
+                content={"Your Settings"}
+                sideOffset={15}
+                side="bottom"
+              >
+                <Link className="text-gray-600" href={'/dash'}>
+                  <Settings size={14} />
+                </Link>
+              </Tooltip>
+            </div>
             <div className="py-4">
               <UserAvatar border="border-4" rounded="rounded-lg" width={30} />
             </div>
-            <Link className="text-gray-600" href={'/dash'}>
-              <Settings size={14} />
-            </Link>
           </div>
         </AccountArea>
       )}

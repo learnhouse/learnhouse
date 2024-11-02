@@ -3,7 +3,7 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import { signOut } from 'next-auth/react'
 import ToolTip from '@components/StyledElements/Tooltip/Tooltip'
 import LearnHouseDashboardLogo from '@public/dashLogo.png'
-import { Backpack, BadgeDollarSign, BookCopy, Home, LogOut, School, Settings, Users } from 'lucide-react'
+import { Backpack, BadgeDollarSign, BookCopy, Home, LogOut, Package2, School, Settings, Users, Vault } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import React, { useEffect } from 'react'
@@ -147,23 +147,41 @@ function DashLeftMenu() {
                 <UserAvatar border="border-4" width={35} />
               </div>
             </ToolTip>
-            <div className="flex items-center flex-col space-y-1">
-              <ToolTip
-                content={session.data.user.username + "'s Settings"}
+            <div className="flex items-center flex-col space-y-3">
+              <div className="flex flex-col space-y-1 py-1">
+                <ToolTip
+                  content={session.data.user.username + "'s Owned Courses"}
+                slateBlack
+                sideOffset={8}
+                side="right"
+              >
+                <Link
+                    href={'/dash/user-account/owned'}
+                    className="py-1"
+                >
+                  <Package2
+                    className="mx-auto text-neutral-400 cursor-pointer"
+                    size={18}
+                  />
+                </Link>
+              </ToolTip>
+                <ToolTip
+                  content={session.data.user.username + "'s Settings"}
                 slateBlack
                 sideOffset={8}
                 side="right"
               >
                 <Link
                   href={'/dash/user-account/settings/general'}
-                  className="py-3"
+                  className="py-1"
                 >
                   <Settings
                     className="mx-auto text-neutral-400 cursor-pointer"
                     size={18}
                   />
-                </Link>
-              </ToolTip>
+                  </Link>
+                </ToolTip>
+              </div>
               <ToolTip
                 content={'Logout'}
                 slateBlack

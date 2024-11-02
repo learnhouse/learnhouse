@@ -17,6 +17,7 @@ from src.services.payments.payments_courses import (
     unlink_course_from_product,
     get_courses_by_product,
 )
+from src.services.payments.payments_users import get_owned_courses
 from src.services.payments.payments_webhook import handle_stripe_webhook
 from src.services.payments.stripe import create_checkout_session
 from src.services.payments.payments_access import check_course_paid_access
@@ -218,3 +219,12 @@ async def api_get_customers(
     Get list of customers and their subscriptions for an organization
     """
     return await get_customers(request, org_id, current_user, db_session)
+
+@router.get("/{org_id}/courses/owned")
+async def api_get_owned_courses(
+    request: Request,
+    org_id: int,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+):
+    return await get_owned_courses(request, current_user, db_session)

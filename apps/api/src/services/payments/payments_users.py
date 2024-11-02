@@ -1,9 +1,12 @@
 from fastapi import HTTPException, Request
 from sqlmodel import Session, select
 from typing import Any
+from src.db.courses.courses import Course, CourseRead
+from src.db.payments.payments_courses import PaymentsCourse
 from src.db.payments.payments_users import PaymentsUser, PaymentStatusEnum, ProviderSpecificData
 from src.db.payments.payments_products import PaymentsProduct
-from src.db.users import InternalUser, PublicUser, AnonymousUser
+from src.db.resource_authors import ResourceAuthor
+from src.db.users import InternalUser, PublicUser, AnonymousUser, User, UserRead
 from src.db.organizations import Organization
 from src.services.orgs.orgs import rbac_check
 from datetime import datetime
@@ -185,3 +188,59 @@ async def delete_payment_user(
     # Delete payment user
     db_session.delete(payment_user)
     db_session.commit()
+
+
+async def get_owned_courses(
+    request: Request,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+) -> list[CourseRead]:
+    # Anonymous users don't own any courses
+    if isinstance(current_user, AnonymousUser):
+        return []
+
+    # Get all active/completed payment users for the current user
+    statement = select(PaymentsUser).where(
+        PaymentsUser.user_id == current_user.id,
+        PaymentsUser.status.in_([PaymentStatusEnum.ACTIVE, PaymentStatusEnum.COMPLETED])  # type: ignore
+    )
+    payment_users = db_session.exec(statement).all()
+
+    # Get all product IDs from payment users
+    product_ids = [pu.payment_product_id for pu in payment_users]
+
+    # Get all courses linked to these products
+    courses = []
+    for product_id in product_ids:
+        # Get courses linked to this product through PaymentsCourse
+        statement = (
+            select(Course)
+            .join(PaymentsCourse, Course.id == PaymentsCourse.course_id)  # type: ignore
+            .where(PaymentsCourse.payment_product_id == product_id)
+        )
+        product_courses = db_session.exec(statement).all()
+        courses.extend(product_courses)
+
+    # Remove duplicates by converting to set and back to list
+    unique_courses = list({course.id: course for course in courses}.values())
+
+    # Get authors for each course and convert to CourseRead
+    course_reads = []
+    for course in unique_courses:
+        # Get course authors
+        authors_statement = (
+            select(User)
+            .join(ResourceAuthor)
+            .where(ResourceAuthor.resource_uuid == course.course_uuid)
+        )
+        authors = db_session.exec(authors_statement).all()
+
+        # Convert authors to UserRead
+        author_reads = [UserRead.model_validate(author) for author in authors]
+
+        # Create CourseRead object
+        course_read = CourseRead(**course.model_dump(), authors=author_reads)
+        course_reads.append(course_read)
+
+    return course_reads
+
