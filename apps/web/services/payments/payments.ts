@@ -20,9 +20,9 @@ export async function checkPaidAccess(courseId: number, orgId: number, access_to
   return res;
 }
 
-export async function createPaymentConfig(orgId: number, data: any, access_token: string) {
+export async function initializePaymentConfig(orgId: number, data: any, provider: string, access_token: string) {
   const result = await fetch(
-    `${getAPIUrl()}payments/${orgId}/config`,
+    `${getAPIUrl()}payments/${orgId}/config?provider=${provider}`,
     RequestBodyWithAuthHeader('POST', data, null, access_token)
   );
   const res = await errorHandling(result);
@@ -33,6 +33,24 @@ export async function updatePaymentConfig(orgId: number, id: string, data: any, 
   const result = await fetch(
     `${getAPIUrl()}payments/${orgId}/config?id=${id}`,
     RequestBodyWithAuthHeader('PUT', data, null, access_token)
+  );
+  const res = await errorHandling(result);
+  return res;
+}
+
+export async function updateStripeAccountID(orgId: number, data: any, access_token: string) {
+  const result = await fetch(
+    `${getAPIUrl()}payments/${orgId}/stripe/account?stripe_account_id=${data.stripe_account_id}`,
+    RequestBodyWithAuthHeader('PUT', data, null, access_token)
+  );
+  const res = await errorHandling(result);
+  return res;
+}
+
+export async function getStripeOnboardingLink(orgId: number, access_token: string, redirect_uri: string) {
+  const result = await fetch(
+    `${getAPIUrl()}payments/${orgId}/stripe/connect/link?redirect_uri=${redirect_uri}`,
+    RequestBodyWithAuthHeader('POST', null, null, access_token)
   );
   const res = await errorHandling(result);
   return res;

@@ -71,6 +71,15 @@ class RedisConfig(BaseModel):
     redis_connection_string: Optional[str]
 
 
+class InternalStripeConfig(BaseModel):
+    stripe_secret_key: str | None
+    stripe_publishable_key: str | None
+
+
+class InternalPaymentsConfig(BaseModel):
+    stripe: InternalStripeConfig
+
+
 class LearnHouseConfig(BaseModel):
     site_name: str
     site_description: str
@@ -82,6 +91,7 @@ class LearnHouseConfig(BaseModel):
     security_config: SecurityConfig
     ai_config: AIConfig
     mailing_config: MailingConfig
+    payments_config: InternalPaymentsConfig
 
 
 def get_learnhouse_config() -> LearnHouseConfig:
@@ -261,6 +271,18 @@ def get_learnhouse_config() -> LearnHouseConfig:
     else:
         sentry_config = None
 
+    # Payments config
+    env_stripe_secret_key = os.environ.get("LEARNHOUSE_STRIPE_SECRET_KEY")
+    env_stripe_publishable_key = os.environ.get("LEARNHOUSE_STRIPE_PUBLISHABLE_KEY")
+    
+    stripe_secret_key = env_stripe_secret_key or yaml_config.get("payments_config", {}).get(
+        "stripe", {}
+    ).get("stripe_secret_key")
+    
+    stripe_publishable_key = env_stripe_publishable_key or yaml_config.get("payments_config", {}).get(
+        "stripe", {}
+    ).get("stripe_publishable_key")
+
     # Create HostingConfig and DatabaseConfig objects
     hosting_config = HostingConfig(
         domain=domain,
@@ -303,6 +325,12 @@ def get_learnhouse_config() -> LearnHouseConfig:
         mailing_config=MailingConfig(
             resend_api_key=resend_api_key, system_email_address=system_email_address
         ),
+        payments_config=InternalPaymentsConfig(
+            stripe=InternalStripeConfig(
+                stripe_secret_key=stripe_secret_key,
+                stripe_publishable_key=stripe_publishable_key
+            )
+        )
     )
 
     return config

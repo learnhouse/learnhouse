@@ -1,8 +1,9 @@
+from typing import Literal
 from fastapi import HTTPException, Request
 from sqlmodel import Session, select
 from src.db.payments.payments import (
+    PaymentProviderEnum,
     PaymentsConfig,
-    PaymentsConfigCreate,
     PaymentsConfigUpdate,
     PaymentsConfigRead,
 )
@@ -11,33 +12,45 @@ from src.db.organizations import Organization
 from src.services.orgs.orgs import rbac_check
 
 
-async def create_payments_config(
+async def init_payments_config(
     request: Request,
     org_id: int,
-    payments_config: PaymentsConfigCreate,
+    provider: Literal["stripe"],
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ) -> PaymentsConfig:
-    # Check if organization exists
-    statement = select(Organization).where(Organization.id == org_id)
-    org = db_session.exec(statement).first()
+    # Validate organization exists
+    org = db_session.exec(
+        select(Organization).where(Organization.id == org_id)
+    ).first()
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
 
-    # RBAC check
+    # Verify permissions
     await rbac_check(request, org.org_uuid, current_user, "create", db_session)
 
-    # Check if payments config already exists for this organization
-    statement = select(PaymentsConfig).where(PaymentsConfig.org_id == org_id)
-    existing_config = db_session.exec(statement).first()
+    # Check for existing config
+    existing_config = db_session.exec(
+        select(PaymentsConfig).where(PaymentsConfig.org_id == org_id)
+    ).first()
+    
     if existing_config:
         raise HTTPException(
             status_code=409,
-            detail="Payments config already exists for this organization",
+            detail="Payments config already exists for this organization"
         )
 
-    # Create new payments config
-    new_config = PaymentsConfig(**payments_config.model_dump(), org_id=org_id)
+    # Initialize new config
+    new_config = PaymentsConfig(
+        org_id=org_id,
+        provider=PaymentProviderEnum.STRIPE,
+        provider_config={
+            "onboarding_completed": False,
+            "stripe_account_id": ""
+        }
+    )
+
+    # Save to database
     db_session.add(new_config)
     db_session.commit()
     db_session.refresh(new_config)
@@ -71,7 +84,7 @@ async def update_payments_config(
     request: Request,
     org_id: int,
     payments_config: PaymentsConfigUpdate,
-    current_user: PublicUser | AnonymousUser,
+    current_user: PublicUser | AnonymousUser | InternalUser,
     db_session: Session,
 ) -> PaymentsConfig:
     # Check if organization exists

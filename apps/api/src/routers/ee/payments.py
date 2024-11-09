@@ -1,13 +1,13 @@
+from typing import Literal
 from fastapi import APIRouter, Depends, Request
 from sqlmodel import Session
 from src.core.events.database import get_db_session
-from src.db.payments.payments import PaymentsConfig, PaymentsConfigCreate, PaymentsConfigRead, PaymentsConfigUpdate
+from src.db.payments.payments import PaymentsConfig, PaymentsConfigRead
 from src.db.users import PublicUser
 from src.security.auth import get_current_user
 from src.services.payments.payments_config import (
-    create_payments_config,
+    init_payments_config,
     get_payments_config,
-    update_payments_config,
     delete_payments_config,
 )
 from src.db.payments.payments_products import PaymentsProductCreate, PaymentsProductRead, PaymentsProductUpdate
@@ -18,10 +18,11 @@ from src.services.payments.payments_courses import (
     get_courses_by_product,
 )
 from src.services.payments.payments_users import get_owned_courses
-from src.services.payments.payments_webhook import handle_stripe_webhook
-from src.services.payments.stripe import create_checkout_session
+from src.services.payments.webhooks.payments_connected_webhook import handle_stripe_webhook
+from src.services.payments.payments_stripe import create_checkout_session, update_stripe_account_id
 from src.services.payments.payments_access import check_course_paid_access
 from src.services.payments.payments_customers import get_customers
+from src.services.payments.payments_stripe import generate_stripe_connect_link
 
 
 router = APIRouter()
@@ -30,11 +31,12 @@ router = APIRouter()
 async def api_create_payments_config(
     request: Request,
     org_id: int,
-    payments_config: PaymentsConfigCreate,
+    provider: Literal["stripe"],
     current_user: PublicUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
 ) -> PaymentsConfig:
-    return await create_payments_config(request, org_id, payments_config, current_user, db_session)
+    return await init_payments_config(request, org_id, provider, current_user, db_session)
+
 
 @router.get("/{org_id}/config")
 async def api_get_payments_config(
@@ -44,16 +46,6 @@ async def api_get_payments_config(
     db_session: Session = Depends(get_db_session),
 ) -> list[PaymentsConfigRead]:
     return await get_payments_config(request, org_id, current_user, db_session)
-
-@router.put("/{org_id}/config")
-async def api_update_payments_config(
-    request: Request,
-    org_id: int,
-    payments_config: PaymentsConfigUpdate,
-    current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
-) -> PaymentsConfig:
-    return await update_payments_config(request, org_id, payments_config, current_user, db_session)
 
 @router.delete("/{org_id}/config")
 async def api_delete_payments_config(
@@ -228,3 +220,30 @@ async def api_get_owned_courses(
     db_session: Session = Depends(get_db_session),
 ):
     return await get_owned_courses(request, current_user, db_session)
+
+@router.put("/{org_id}/stripe/account")
+async def api_update_stripe_account_id(
+    request: Request,
+    org_id: int,
+    stripe_account_id: str,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+):
+    return await update_stripe_account_id(
+        request, org_id, stripe_account_id, current_user, db_session
+    )
+
+@router.post("/{org_id}/stripe/connect/link")
+async def api_generate_stripe_connect_link(
+    request: Request,
+    org_id: int,
+    redirect_uri: str,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+):
+    """
+    Generate a Stripe OAuth link for connecting a Stripe account
+    """
+    return await generate_stripe_connect_link(
+        request, org_id, redirect_uri, current_user, db_session
+    )

@@ -20,6 +20,11 @@ import { Label } from '@components/ui/label';
 import { Badge } from '@components/ui/badge';
 import { getPaymentConfigs } from '@services/payments/payments';
 import ProductLinkedCourses from './SubComponents/ProductLinkedCourses';
+import { AlertTriangle, Settings, CreditCard, ShoppingCart, Users, ChevronRight } from 'lucide-react';
+import Link from 'next/link';
+import { usePaymentsEnabled } from '@hooks/usePaymentsEnabled';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import UnconfiguredPaymentsDisclaimer from '../../Pages/Payments/UnconfiguredPaymentsDisclaimer';
 
 const validationSchema = Yup.object().shape({
     name: Yup.string().required('Name is required'),
@@ -36,6 +41,7 @@ function PaymentsProductPage() {
     const [editingProductId, setEditingProductId] = useState<string | null>(null);
     const [expandedProducts, setExpandedProducts] = useState<{ [key: string]: boolean }>({});
     const [isStripeEnabled, setIsStripeEnabled] = useState(false);
+    const { isEnabled, isLoading } = usePaymentsEnabled();
 
     const { data: products, error } = useSWR(
         () => org && session ? [`/payments/${org.id}/products`, session.data?.tokens?.access_token] : null,
@@ -70,6 +76,12 @@ function PaymentsProductPage() {
             [productId]: !prev[productId]
         }));
     };
+
+    if (!isEnabled && !isLoading) {
+        return (
+            <UnconfiguredPaymentsDisclaimer />
+        );
+    }
 
     if (error) return <div>Failed to load products</div>;
     if (!products) return <div>Loading...</div>;

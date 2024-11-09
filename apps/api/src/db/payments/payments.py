@@ -1,15 +1,8 @@
 from datetime import datetime
 from enum import Enum
 from typing import  Optional
-from pydantic import BaseModel
 from sqlalchemy import JSON
 from sqlmodel import Field, SQLModel, Column, BigInteger, ForeignKey
-
-# Stripe provider config
-class StripeProviderConfig(BaseModel):
-    stripe_key: str = ""
-    stripe_secret_key: str = ""
-    stripe_webhook_secret: str = ""
 
 # PaymentsConfig 
 class PaymentProviderEnum(str, Enum):
@@ -17,6 +10,7 @@ class PaymentProviderEnum(str, Enum):
     
 class PaymentsConfigBase(SQLModel):
     enabled: bool = True
+    active: bool = False
     provider: PaymentProviderEnum = PaymentProviderEnum.STRIPE
     provider_config: dict = Field(default={}, sa_column=Column(JSON))
 
