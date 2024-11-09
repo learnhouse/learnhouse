@@ -26,6 +26,7 @@
       "@styles/*": ["styles/*"],
       "@services/*": ["services/*"],
       "@editor/*": ["components/Objects/Editor/*"],
+      "@hooks/*": ["components/Hooks/*"],
       "@/*": ["./*"]  
     }
   },

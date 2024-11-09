@@ -15,7 +15,7 @@ from src.db.organizations import Organization
 from src.services.orgs.orgs import rbac_check
 from datetime import datetime
 
-from src.services.payments.stripe import archive_stripe_product, create_stripe_product, update_stripe_product
+from src.services.payments.payments_stripe import archive_stripe_product, create_stripe_product, update_stripe_product
 
 async def create_payments_product(
     request: Request,
@@ -33,11 +33,14 @@ async def create_payments_product(
     # RBAC check
     await rbac_check(request, org.org_uuid, current_user, "create", db_session)
 
-    # Check if payments config exists and has a valid id
+    # Check if payments config exists, has a valid id, and is active
     statement = select(PaymentsConfig).where(PaymentsConfig.org_id == org_id)
     config = db_session.exec(statement).first()
     if not config or config.id is None:
         raise HTTPException(status_code=404, detail="Valid payments config not found")
+
+    if not config.active:
+        raise HTTPException(status_code=400, detail="Payments config is not active")
 
     # Create new payments product
     new_product = PaymentsProduct(**payments_product.model_dump(), org_id=org_id, payments_config_id=config.id)

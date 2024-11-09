@@ -7,7 +7,7 @@ from src.db.payments.payments_users import PaymentStatusEnum
 from src.db.payments.payments_products import PaymentsProduct
 from src.db.users import InternalUser, User
 from src.services.payments.payments_users import update_payment_user_status
-from src.services.payments.stripe import get_stripe_credentials
+from src.services.payments.payments_stripe import get_stripe_credentials
 
 logger = logging.getLogger(__name__)
 

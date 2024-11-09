@@ -16,6 +16,11 @@ import PageLoading from '@components/Objects/Loaders/PageLoading'
 import { RefreshCcw, SquareCheck } from 'lucide-react'
 import { getUserAvatarMediaDirectory } from '@services/media/media'
 import UserAvatar from '@components/Objects/UserAvatar'
+import { usePaymentsEnabled } from '@hooks/usePaymentsEnabled'
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { AlertTriangle, Settings, CreditCard, ShoppingCart, Users, ChevronRight } from 'lucide-react'
+import Link from 'next/link'
+import UnconfiguredPaymentsDisclaimer from '../../Pages/Payments/UnconfiguredPaymentsDisclaimer'
 
 interface PaymentUserData {
   payment_user_id: number;
@@ -113,11 +118,18 @@ function PaymentsCustomersPage() {
   const org = useOrg() as any
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
+  const { isEnabled, isLoading } = usePaymentsEnabled()
 
-  const { data: customers, error, isLoading } = useSWR(
+  const { data: customers, error, isLoading: customersLoading } = useSWR(
     org ? [`/payments/${org.id}/customers`, access_token] : null,
     ([url, token]) => getOrgCustomers(org.id, token)
   )
+
+  if (!isEnabled && !isLoading) {
+    return (
+      <UnconfiguredPaymentsDisclaimer />
+    )
+  }
 
   if (isLoading) return <PageLoading />
   if (error) return <div>Error loading customers</div>
