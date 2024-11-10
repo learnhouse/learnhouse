@@ -54,7 +54,7 @@ const CreateProductForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) =
     product_type: 'one_time',
     price_type: 'fixed_price',
     benefits: '',
-    amount: 0,
+    amount: 1,
     currency: 'USD',
   };
 
