@@ -46,8 +46,8 @@ async def init_payments_config(
         provider=PaymentProviderEnum.STRIPE,
         provider_config={
             "onboarding_completed": False,
-            "stripe_account_id": ""
-        }
+        },
+        provider_specific_id=None
     )
 
     # Save to database

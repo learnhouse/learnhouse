@@ -18,11 +18,11 @@ from src.services.payments.payments_courses import (
     get_courses_by_product,
 )
 from src.services.payments.payments_users import get_owned_courses
-from src.services.payments.webhooks.payments_connected_webhook import handle_stripe_webhook
 from src.services.payments.payments_stripe import create_checkout_session, update_stripe_account_id
 from src.services.payments.payments_access import check_course_paid_access
 from src.services.payments.payments_customers import get_customers
 from src.services.payments.payments_stripe import generate_stripe_connect_link
+from src.services.payments.webhooks.payments_webhooks import handle_stripe_webhook
 
 
 router = APIRouter()
@@ -160,13 +160,12 @@ async def api_get_products_by_course(
 
 # Payments webhooks
 
-@router.post("/{org_id}/stripe/webhook")
-async def api_handle_stripe_webhook(
+@router.post("/stripe/webhook")
+async def api_handle_connected_accounts_stripe_webhook(
     request: Request,
-    org_id: int,
     db_session: Session = Depends(get_db_session),
 ):
-    return await handle_stripe_webhook(request, org_id, db_session)
+    return await handle_stripe_webhook(request, db_session)
 
 # Payments checkout
 

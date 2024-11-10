@@ -132,7 +132,7 @@ const PaymentsConfigurationPage: React.FC = () => {
                                 <div className="flex flex-col">
                                     <div className="flex items-center space-x-2">
                                         <span className="text-xl font-semibold text-white">Stripe</span>
-                                        {stripeConfig.provider_config?.stripe_account_id && stripeConfig.active ? (
+                                        {stripeConfig.provider_specific_id && stripeConfig.active ? (
                                             <div className="flex items-center space-x-1 bg-green-500/20 px-2 py-0.5 rounded-full">
                                                 <div className="h-2 w-2 bg-green-500 rounded-full" />
                                                 <span className="text-xs text-green-100">Connected</span>
@@ -145,14 +145,14 @@ const PaymentsConfigurationPage: React.FC = () => {
                                         )}
                                     </div>
                                     <span className="text-white/80 text-sm">
-                                        {stripeConfig.provider_config?.stripe_account_id ? 
-                                            `Linked Account: ${stripeConfig.provider_config.stripe_account_id}` : 
+                                        {stripeConfig.provider_specific_id ? 
+                                            `Linked Account: ${stripeConfig.provider_specific_id}` : 
                                             'Account ID not configured'}
                                     </span>
                                 </div>
                             </div>
                             <div className="flex space-x-2">
-                                {!stripeConfig.active && stripeConfig.provider_config?.stripe_account_id && (
+                                { (
                                     <Button
                                         onClick={handleStripeOnboarding}
                                         className="flex items-center space-x-2 px-4 py-2 bg-yellow-500 text-white text-sm rounded-full hover:bg-yellow-600 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed border-2 border-yellow-400 shadow-md"
@@ -240,8 +240,8 @@ const EditStripeConfigModal: React.FC<EditStripeConfigModalProps> = ({ orgId, co
             try {
                 const config = await getPaymentConfigs(orgId, accessToken);
                 const stripeConfig = config.find((c: any) => c.id === configId);
-                if (stripeConfig && stripeConfig.provider_config) {
-                    setStripeAccountId(stripeConfig.provider_config.stripe_account_id || '');
+                if (stripeConfig && stripeConfig.provider_specific_id) {
+                    setStripeAccountId(stripeConfig.provider_specific_id || '');
                 }
             } catch (error) {
                 console.error('Error fetching Stripe configuration:', error);

@@ -33,14 +33,10 @@ async def get_stripe_connected_account_id(
     # Get payments config
     payments_config = await get_payments_config(request, org_id, current_user, db_session)
 
-    return payments_config[0].provider_config.get("stripe_account_id")
+    return payments_config[0].provider_specific_id
 
 
-async def get_stripe_credentials(
-    request: Request,
-    org_id: int,
-    current_user: PublicUser | AnonymousUser | InternalUser,
-    db_session: Session,
+async def get_stripe_internal_credentials(
 ):
     # Get payments config from config file
     learnhouse_config = get_learnhouse_config()
@@ -56,6 +52,7 @@ async def get_stripe_credentials(
     return {
         "stripe_secret_key": learnhouse_config.payments_config.stripe.stripe_secret_key,
         "stripe_publishable_key": learnhouse_config.payments_config.stripe.stripe_publishable_key,
+        "stripe_webhook_secret": learnhouse_config.payments_config.stripe.stripe_webhook_secret,
     }
 
 
@@ -66,7 +63,7 @@ async def create_stripe_product(
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
-    creds = await get_stripe_credentials(request, org_id, current_user, db_session)
+    creds = await get_stripe_internal_credentials()
 
     # Set the Stripe API key using the credentials
     stripe.api_key = creds.get("stripe_secret_key")
@@ -113,14 +110,16 @@ async def archive_stripe_product(
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
-    creds = await get_stripe_credentials(request, org_id, current_user, db_session)
+    creds = await get_stripe_internal_credentials()
 
     # Set the Stripe API key using the credentials
     stripe.api_key = creds.get("stripe_secret_key")
 
+    stripe_acc_id = await get_stripe_connected_account_id(request, org_id, current_user, db_session)
+
     try:
         # Archive the product in Stripe
-        archived_product = stripe.Product.modify(product_id, active=False)
+        archived_product = stripe.Product.modify(product_id, active=False, stripe_account=stripe_acc_id)
 
         return archived_product
     except stripe.StripeError as e:
@@ -138,10 +137,12 @@ async def update_stripe_product(
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
-    creds = await get_stripe_credentials(request, org_id, current_user, db_session)
+    creds = await get_stripe_internal_credentials()
 
     # Set the Stripe API key using the credentials
     stripe.api_key = creds.get("stripe_secret_key")
+
+    stripe_acc_id = await get_stripe_connected_account_id(request, org_id, current_user, db_session)
 
     try:
         # Create new price based on price_type
@@ -180,13 +181,13 @@ async def update_stripe_product(
         }
 
         # Update the product in Stripe
-        updated_product = stripe.Product.modify(product_id, **update_data)
+        updated_product = stripe.Product.modify(product_id, **update_data, stripe_account=stripe_acc_id)
 
         # Archive all existing prices for the product
         existing_prices = stripe.Price.list(product=product_id, active=True)
         for price in existing_prices:
             if price.id != new_price.id:
-                stripe.Price.modify(price.id, active=False)
+                stripe.Price.modify(price.id, active=False, stripe_account=stripe_acc_id)
 
         return updated_product
     except stripe.StripeError as e:
@@ -204,8 +205,11 @@ async def create_checkout_session(
     db_session: Session,
 ):
     # Get Stripe credentials
-    creds = await get_stripe_credentials(request, org_id, current_user, db_session)
+    creds = await get_stripe_internal_credentials()
     stripe.api_key = creds.get("stripe_secret_key")
+
+
+    stripe_acc_id = await get_stripe_connected_account_id(request, org_id, current_user, db_session)
 
     # Get product details
     statement = select(PaymentsProduct).where(
@@ -220,10 +224,9 @@ async def create_checkout_session(
     cancel_url = redirect_uri
 
     # Get the default price for the product
-    stripe_product = stripe.Product.retrieve(product.provider_product_id)
+    stripe_product = stripe.Product.retrieve(product.provider_product_id, stripe_account=stripe_acc_id)
     line_items = [{"price": stripe_product.default_price, "quantity": 1}]
 
-    stripe_acc_id = await get_stripe_connected_account_id(request, org_id, current_user, db_session)
 
     # Create or retrieve Stripe customer
     try:
@@ -282,8 +285,7 @@ async def create_checkout_session(
             "metadata": {
                 "product_id": str(product.id),
                 "payment_user_id": str(payment_user.id),
-            },
-            "stripe_account": stripe_acc_id,
+            }
         }
 
         # Add payment_intent_data only for one-time payments
@@ -303,7 +305,7 @@ async def create_checkout_session(
                 }
             }
 
-        checkout_session = stripe.checkout.Session.create(**checkout_session_params)
+        checkout_session = stripe.checkout.Session.create(**checkout_session_params, stripe_account=stripe_acc_id)
 
         return {"checkout_url": checkout_session.url, "session_id": checkout_session.id}
 
@@ -328,20 +330,26 @@ async def generate_stripe_connect_link(
     Generate a Stripe OAuth link for connecting a Stripe account
     """
     # Get credentials
-    creds = await get_stripe_credentials(request, org_id, current_user, db_session)
+    creds = await get_stripe_internal_credentials()
     stripe.api_key = creds.get("stripe_secret_key")
 
-    # Get config
-    learnhouse_config = get_learnhouse_config()
-
-    # Get client id
-    stripe_acc_id = await get_stripe_connected_account_id(request, org_id, current_user, db_session)
-    if not stripe_acc_id:
-        raise HTTPException(status_code=400, detail="No Stripe account ID found for this organization")
+    try:
+        # Try to get existing account ID
+        stripe_acc_id = await get_stripe_connected_account_id(request, org_id, current_user, db_session)
+    except HTTPException:
+        # If no account exists, create one
+        stripe_account = await create_stripe_account(
+            request,
+            org_id,
+            "standard",
+            current_user,
+            db_session
+        )
+        stripe_acc_id = stripe_account
 
     # Generate OAuth link
     connect_link = stripe.AccountLink.create(
-        account=stripe_acc_id,
+        account=str(stripe_acc_id),
         type="account_onboarding",
         return_url=redirect_uri,
         refresh_url=redirect_uri,
@@ -357,18 +365,16 @@ async def create_stripe_account(
     db_session: Session,
 ):
     # Get credentials
-    creds = await get_stripe_credentials(request, org_id, current_user, db_session)
+    creds = await get_stripe_internal_credentials()
     stripe.api_key = creds.get("stripe_secret_key")
 
     # Get existing payments config
     statement = select(PaymentsConfig).where(PaymentsConfig.org_id == org_id)
     existing_config = db_session.exec(statement).first()
 
-    if existing_config and existing_config.provider_config.get("stripe_account_id"):
-        raise HTTPException(
-            status_code=400,
-            detail="A Stripe Express account is already linked to this organization"
-        )
+    if existing_config and existing_config.provider_specific_id:
+        logging.error(f"A Stripe Account is already linked to this organization: {existing_config.provider_specific_id}")
+        return existing_config.provider_specific_id
 
     # Create Stripe account
     stripe_account = stripe.Account.create(
@@ -379,14 +385,18 @@ async def create_stripe_account(
         },
     )
 
+    config_data = existing_config.model_dump() if existing_config else {}
+    config_data.update({
+            "enabled": True,
+            "provider_specific_id": stripe_account.id,  # Use the ID directly
+        "provider_config": {"onboarding_completed": False}
+    })
+
     # Update payments config for the org
     await update_payments_config(
         request,
         org_id,
-        PaymentsConfigUpdate(
-            enabled=True, 
-            provider_config={"stripe_account_id": stripe_account.id}
-        ),
+        PaymentsConfigUpdate(**config_data),
         current_user,
         db_session,
     )
@@ -414,14 +424,15 @@ async def update_stripe_account_id(
             detail="No payments configuration found for this organization"
         )
 
-    # Update payments config with new stripe account id
+    # Create config update with existing values but new stripe account id
+    config_data = existing_config.model_dump()
+    config_data["provider_specific_id"] = stripe_account_id
+
+    # Update payments config
     await update_payments_config(
         request,
         org_id,
-        PaymentsConfigUpdate(
-            enabled=True, 
-            provider_config={"stripe_account_id": stripe_account_id}
-        ),
+        PaymentsConfigUpdate(**config_data),
         current_user,
         db_session,
     )

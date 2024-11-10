@@ -17,9 +17,6 @@ import { RefreshCcw, SquareCheck } from 'lucide-react'
 import { getUserAvatarMediaDirectory } from '@services/media/media'
 import UserAvatar from '@components/Objects/UserAvatar'
 import { usePaymentsEnabled } from '@hooks/usePaymentsEnabled'
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { AlertTriangle, Settings, CreditCard, ShoppingCart, Users, ChevronRight } from 'lucide-react'
-import Link from 'next/link'
 import UnconfiguredPaymentsDisclaimer from '../../Pages/Payments/UnconfiguredPaymentsDisclaimer'
 
 interface PaymentUserData {
@@ -44,6 +41,14 @@ interface PaymentUserData {
 }
 
 function PaymentsUsersTable({ data }: { data: PaymentUserData[] }) {
+  if (!data || data.length === 0) {
+    return (
+      <div className="text-center py-8 text-gray-500">
+        No customers found
+      </div>
+    );
+  }
+
   return (
     <Table>
       <TableHeader>
@@ -131,8 +136,9 @@ function PaymentsCustomersPage() {
     )
   }
 
-  if (isLoading) return <PageLoading />
+  if (isLoading || customersLoading) return <PageLoading />
   if (error) return <div>Error loading customers</div>
+  if (!customers) return <div>No customer data available</div>
 
   return (
     <div className="ml-10 mr-10 mx-auto bg-white rounded-xl shadow-sm px-4 py-4">
