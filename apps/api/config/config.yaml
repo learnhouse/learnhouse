@@ -41,7 +41,8 @@ payments_config:
   stripe:
     stripe_secret_key: ""
     stripe_publishable_key: ""
-    stripe_webhook_secret: ""
+    stripe_webhook_standard_secret: ""
+    stripe_client_id: ""
 
 ai_config:
   chromadb_config:

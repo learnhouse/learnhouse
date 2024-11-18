@@ -18,7 +18,7 @@ from src.services.payments.payments_courses import (
     get_courses_by_product,
 )
 from src.services.payments.payments_users import get_owned_courses
-from src.services.payments.payments_stripe import create_checkout_session, update_stripe_account_id
+from src.services.payments.payments_stripe import create_checkout_session, handle_stripe_oauth_callback, update_stripe_account_id
 from src.services.payments.payments_access import check_course_paid_access
 from src.services.payments.payments_customers import get_customers
 from src.services.payments.payments_stripe import generate_stripe_connect_link
@@ -165,7 +165,14 @@ async def api_handle_connected_accounts_stripe_webhook(
     request: Request,
     db_session: Session = Depends(get_db_session),
 ):
-    return await handle_stripe_webhook(request, db_session)
+    return await handle_stripe_webhook(request, "standard", db_session)
+
+@router.post("/stripe/webhook/connect")
+async def api_handle_connected_accounts_stripe_webhook_connect(
+    request: Request,
+    db_session: Session = Depends(get_db_session),
+):
+    return await handle_stripe_webhook(request, "connect", db_session)
 
 # Payments checkout
 
@@ -246,3 +253,13 @@ async def api_generate_stripe_connect_link(
     return await generate_stripe_connect_link(
         request, org_id, redirect_uri, current_user, db_session
     )
+
+@router.get("/stripe/oauth/callback")
+async def stripe_oauth_callback(
+    request: Request,
+    code: str,
+    org_id: int,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+):
+    return await handle_stripe_oauth_callback(request, org_id, code, current_user, db_session)

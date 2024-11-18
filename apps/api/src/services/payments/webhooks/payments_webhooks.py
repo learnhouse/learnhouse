@@ -1,3 +1,4 @@
+from typing import Literal
 from fastapi import HTTPException, Request
 from sqlmodel import Session, select
 import stripe
@@ -15,11 +16,12 @@ logger = logging.getLogger(__name__)
 
 async def handle_stripe_webhook(
     request: Request,
+    webhook_type: Literal["connect", "standard"],
     db_session: Session,
 ) -> dict:
     # Get Stripe credentials
     creds = await get_stripe_internal_credentials()
-    webhook_secret = creds.get('stripe_webhook_secret')
+    webhook_secret = creds.get(f'stripe_webhook_{webhook_type}_secret')
     stripe.api_key = creds.get("stripe_secret_key")
     
     if not webhook_secret:
