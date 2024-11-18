@@ -39,12 +39,11 @@ COPY --from=deps --chown=app:system /app/web/.next/static ./app/web/.next/static
 
 # Backend Build
 WORKDIR /app/api
-COPY ./apps/api/poetry.lock* ./
+COPY ./apps/api/uv.lock ./
 COPY ./apps/api/pyproject.toml ./
 RUN pip install --upgrade pip \
-    && pip install poetry \
-    && poetry config virtualenvs.create false \
-    && poetry install --no-interaction --no-ansi
+    && pip install uv \
+    && uv sync
 COPY ./apps/api ./
 
 # Run the backend

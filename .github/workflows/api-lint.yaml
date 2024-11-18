@@ -1,6 +1,8 @@
 name: API Lint
 on:
   push:
+    branches:
+      - dev
     paths:
       - "apps/api/**"
   pull_request:

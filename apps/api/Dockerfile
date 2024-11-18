@@ -15,14 +15,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     build-essential \
     && rm -rf /var/lib/apt/lists/* \
-    && pip install --no-cache-dir poetry \
-    && poetry config virtualenvs.create false
+    && pip install --no-cache-dir uv
 
 # Copy only requirements to cache them in docker layer
-COPY poetry.lock pyproject.toml ./
+COPY uv.lock pyproject.toml ./
 
-# Install dependencies
-RUN poetry install --no-interaction --no-ansi --no-root --only main
+# Install dependencies using uv
+RUN uv sync
 
 # Copy the current directory contents into the container
 COPY . .

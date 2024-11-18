@@ -1,6 +1,8 @@
 name: Web Lint
 on:
   push:
+    branches:
+      - dev
     paths:
       - "apps/web/**"
   pull_request:
