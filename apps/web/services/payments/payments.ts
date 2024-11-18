@@ -56,6 +56,15 @@ export async function getStripeOnboardingLink(orgId: number, access_token: strin
   return res;
 }
 
+export async function verifyStripeConnection(orgId: number, code: string, access_token: string) {
+  const result = await fetch(
+    `${getAPIUrl()}payments/stripe/oauth/callback?code=${code}&org_id=${orgId}`,
+    RequestBodyWithAuthHeader('GET', null, null, access_token)
+  );
+  const res = await errorHandling(result);
+  return res;
+}
+
 export async function deletePaymentConfig(orgId: number, id: string, access_token: string) {
   const result = await fetch(
     `${getAPIUrl()}payments/${orgId}/config?id=${id}`,

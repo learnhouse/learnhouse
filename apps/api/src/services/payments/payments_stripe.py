@@ -52,7 +52,8 @@ async def get_stripe_internal_credentials(
     return {
         "stripe_secret_key": learnhouse_config.payments_config.stripe.stripe_secret_key,
         "stripe_publishable_key": learnhouse_config.payments_config.stripe.stripe_publishable_key,
-        "stripe_webhook_secret": learnhouse_config.payments_config.stripe.stripe_webhook_secret,
+        "stripe_webhook_standard_secret": learnhouse_config.payments_config.stripe.stripe_webhook_standard_secret,
+        "stripe_webhook_connect_secret": learnhouse_config.payments_config.stripe.stripe_webhook_connect_secret,
     }
 
 
@@ -332,30 +333,20 @@ async def generate_stripe_connect_link(
     # Get credentials
     creds = await get_stripe_internal_credentials()
     stripe.api_key = creds.get("stripe_secret_key")
+    
+    # Get learnhouse config for client_id
+    learnhouse_config = get_learnhouse_config()
+    client_id = learnhouse_config.payments_config.stripe.stripe_client_id
+    
+    if not client_id:
+        raise HTTPException(status_code=400, detail="Stripe client ID not configured")
 
-    try:
-        # Try to get existing account ID
-        stripe_acc_id = await get_stripe_connected_account_id(request, org_id, current_user, db_session)
-    except HTTPException:
-        # If no account exists, create one
-        stripe_account = await create_stripe_account(
-            request,
-            org_id,
-            "standard",
-            current_user,
-            db_session
-        )
-        stripe_acc_id = stripe_account
+    state = f"org_id={org_id}"
+    
+    # Generate OAuth link for existing accounts
+    oauth_link = f"https://connect.stripe.com/oauth/authorize?response_type=code&client_id={client_id}&scope=read_write&redirect_uri={redirect_uri}&state={state}"
 
-    # Generate OAuth link
-    connect_link = stripe.AccountLink.create(
-        account=str(stripe_acc_id),
-        type="account_onboarding",
-        return_url=redirect_uri,
-        refresh_url=redirect_uri,
-    )
-
-    return {"connect_url": connect_link.url}
+    return {"connect_url": oauth_link}
 
 async def create_stripe_account(
     request: Request,
@@ -438,3 +429,45 @@ async def update_stripe_account_id(
     )
 
     return {"message": "Stripe account ID updated successfully"}
+
+async def handle_stripe_oauth_callback(
+    request: Request,
+    org_id: int,
+    code: str,
+    current_user: PublicUser | AnonymousUser | InternalUser,
+    db_session: Session,
+):
+    """
+    Handle the OAuth callback from Stripe and complete the account connection
+    """
+    creds = await get_stripe_internal_credentials()
+    stripe.api_key = creds.get("stripe_secret_key")
+
+    try:
+        # Exchange the authorization code for an access token
+        response = stripe.OAuth.token(
+            grant_type='authorization_code',
+            code=code,
+        )
+        
+        connected_account_id = response.stripe_user_id
+        if not connected_account_id:
+            raise HTTPException(status_code=400, detail="No account ID received from Stripe")
+
+        # Now connected_account_id is guaranteed to be a string
+        await update_stripe_account_id(
+            request,
+            org_id,
+            connected_account_id,
+            current_user,
+            db_session,
+        )
+
+        return {"success": True, "account_id": connected_account_id}
+
+    except stripe.StripeError as e:
+        logging.error(f"Error connecting Stripe account: {str(e)}")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Error connecting Stripe account: {str(e)}"
+        )

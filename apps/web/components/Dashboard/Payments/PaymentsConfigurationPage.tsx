@@ -5,7 +5,7 @@ import { SiStripe } from '@icons-pack/react-simple-icons'
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import { getPaymentConfigs, initializePaymentConfig, updatePaymentConfig, deletePaymentConfig, updateStripeAccountID, getStripeOnboardingLink } from '@services/payments/payments';
 import FormLayout, { ButtonBlack, Input, Textarea, FormField, FormLabelAndMessage, Flex } from '@components/StyledElements/Form/Form';
-import { AlertTriangle, BarChart2, Check, Coins, CreditCard, Edit, ExternalLink, Info, Loader2, RefreshCcw, Trash2 } from 'lucide-react';
+import { AlertTriangle, BarChart2, Check, Coins, CreditCard, Edit, ExternalLink, Info, Loader2, RefreshCcw, Trash2, UnplugIcon } from 'lucide-react';
 import toast from 'react-hot-toast';
 import useSWR, { mutate } from 'swr';
 import Modal from '@components/StyledElements/Modal/Modal';
@@ -13,6 +13,7 @@ import ConfirmationModal from '@components/StyledElements/ConfirmationModal/Conf
 import { Button } from '@components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@components/ui/alert';
 import { useRouter } from 'next/navigation';
+import { getUriWithoutOrg } from '@services/config/config';
 
 const PaymentsConfigurationPage: React.FC = () => {
     const org = useOrg() as any;
@@ -62,8 +63,8 @@ const PaymentsConfigurationPage: React.FC = () => {
     const handleStripeOnboarding = async () => {
         try {
             setIsOnboardingLoading(true);
-            const { connect_url } = await getStripeOnboardingLink(org.id, access_token, window.location.href);
-            router.push(connect_url);
+            const { connect_url } = await getStripeOnboardingLink(org.id, access_token, getUriWithoutOrg('/payments/stripe/connect/oauth'));
+            window.open(connect_url, '_blank');
         } catch (error) {
             console.error('Error getting onboarding link:', error);
             toast.error('Failed to start Stripe onboarding');
@@ -152,37 +153,30 @@ const PaymentsConfigurationPage: React.FC = () => {
                                 </div>
                             </div>
                             <div className="flex space-x-2">
-                                { (
+                                {(!stripeConfig.provider_specific_id || !stripeConfig.active) && (
                                     <Button
                                         onClick={handleStripeOnboarding}
-                                        className="flex items-center space-x-2 px-4 py-2 bg-yellow-500 text-white text-sm rounded-full hover:bg-yellow-600 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed border-2 border-yellow-400 shadow-md"
+                                        className="flex items-center space-x-2 px-4 py-2 bg-green-500 text-white text-sm rounded-full hover:bg-green-600 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed border-2 border-green-400 shadow-md"
                                         disabled={isOnboardingLoading}
                                     >
                                         {isOnboardingLoading ? (
                                             <Loader2 className="animate-spin h-4 w-4" />
                                         ) : (
-                                            <AlertTriangle className="h-4 w-4" />
+                                            <UnplugIcon className="h-3 w-3" />
                                         )}
-                                        <span className="font-semibold">Complete Onboarding</span>
+                                        <span className="font-semibold">Connect with Stripe</span>
                                     </Button>
                                 )}
-                                <Button 
-                                    onClick={editConfig} 
-                                    className="flex items-center space-x-2 px-4 py-2 bg-white text-purple-700 text-sm rounded-full hover:bg-gray-100 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    <Edit size={16} />
-                                    <span>Edit Configuration</span>
-                                </Button>
                                 <ConfirmationModal
-                                    confirmationButtonText="Delete Configuration"
-                                    confirmationMessage="Are you sure you want to delete the Stripe configuration? This action cannot be undone."
-                                    dialogTitle="Delete Stripe Configuration"
+                                    confirmationButtonText="Remove Connection"
+                                    confirmationMessage="Are you sure you want to remove the Stripe connection? This action cannot be undone."
+                                    dialogTitle="Remove Stripe Connection"
                                     dialogTrigger={
                                         <Button 
                                             className="flex items-center space-x-2 bg-red-500 text-white text-sm rounded-full hover:bg-red-600 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                             <Trash2 size={16} />
-                                            <span>Delete Configuration</span>
+                                            <span>Remove Connection</span>
                                         </Button>
                                     }
                                     functionToExecute={deleteConfig}
