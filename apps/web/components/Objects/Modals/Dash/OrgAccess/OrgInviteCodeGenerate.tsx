@@ -61,7 +61,7 @@ function OrgInviteCodeGenerate(props: OrgInviteCodeGenerateProps) {
                             <div className='flex space-x-4 items-center'>
                                 <select
                                     defaultValue={usergroup_id}
-                                    className='flex p-2 w-fit  rounded-md text-sm bg-gray-100'>
+                                    className='flex p-2 w-fit  rounded-md text-sm bg-gray-100 border-2 border-slate-300'>
                                     {usergroups?.map((usergroup: any) => (
                                         <option key={usergroup.id} value={usergroup.id}>
                                             {usergroup.name}
