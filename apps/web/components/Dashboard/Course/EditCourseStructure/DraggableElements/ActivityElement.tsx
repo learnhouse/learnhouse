@@ -7,6 +7,7 @@ import {
   Eye,
   File,
   FilePenLine,
+  FileSymlink,
   Globe,
   Lock,
   MoreVertical,
@@ -27,6 +28,7 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import { useCourse } from '@components/Contexts/CourseContext'
 import toast from 'react-hot-toast'
 import { useMediaQuery } from 'usehooks-ts'
+import ToolTip from '@components/StyledElements/Tooltip/Tooltip'
 
 type ActivitiyElementProps = {
   orgslug: string
@@ -176,24 +178,26 @@ function ActivityElement(props: ActivitiyElementProps) {
               )}
               <span>{!props.activity.published ? 'Publish' : 'Unpublish'}</span>
             </button>
-            <Link
-              href={
-                getUriWithOrg(props.orgslug, '') +
-                `/course/${props.course_uuid.replace(
-                  'course_',
-                  ''
-                )}/activity/${props.activity.activity_uuid.replace(
-                  'activity_',
-                  ''
-                )}`
-              }
-              prefetch
-              className="p-1 px-2 sm:px-3 bg-gradient-to-bl text-cyan-800 from-sky-400/50 to-cyan-200/80 border border-cyan-600/10 shadow-md rounded-md font-bold text-xs flex items-center space-x-1 transition-colors duration-200 hover:from-sky-500/50 hover:to-cyan-300/80"
-              rel="noopener noreferrer"
-            >
-              <Eye strokeWidth={2} size={12} className="text-sky-600" />
-              <span>Preview</span>
-            </Link>
+            <div className="w-px h-3 bg-gray-300 mx-1 self-center rounded-full hidden sm:block" />
+            <ToolTip content="Preview Activity" sideOffset={8}>
+              <Link
+                href={
+                  getUriWithOrg(props.orgslug, '') +
+                  `/course/${props.course_uuid.replace(
+                    'course_',
+                    ''
+                  )}/activity/${props.activity.activity_uuid.replace(
+                    'activity_',
+                    ''
+                  )}`
+                }
+                prefetch
+                className="p-1 px-2 sm:px-3 bg-gradient-to-bl text-cyan-800 from-sky-400/50 to-cyan-200/80 border border-cyan-600/10 shadow-md rounded-md font-bold text-xs flex items-center space-x-1 transition-colors duration-200 hover:from-sky-500/50 hover:to-cyan-300/80"
+                rel="noopener noreferrer"
+              >
+                <Eye strokeWidth={2} size={14} className="text-sky-600" />
+              </Link>
+            </ToolTip>
             {/*   Delete Button  */}
             <ConfirmationModal
               confirmationMessage="Are you sure you want to delete this activity ?"
@@ -205,7 +209,6 @@ function ActivityElement(props: ActivitiyElementProps) {
                   rel="noopener noreferrer"
                 >
                   <X size={15} className="text-rose-200 font-bold" />
-                  {!isMobile && <span className="text-rose-200 font-bold text-xs">Delete</span>}
                 </button>
               }
               functionToExecute={() => deleteActivityUI()}

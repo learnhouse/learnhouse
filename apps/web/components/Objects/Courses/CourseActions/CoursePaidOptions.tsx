@@ -74,7 +74,7 @@ function CoursePaidOptions({ course }: CoursePaidOptionsProps) {
         <div key={product.id} className="bg-slate-50/30 p-4 rounded-lg nice-shadow flex flex-col">
           <div className="flex justify-between items-start mb-2">
             <div className="flex flex-col space-y-1 items-start">
-              <Badge className='w-fit flex items-center space-x-2' variant="outline">
+              <Badge className='w-fit flex items-center space-x-2 bg-gray-100/50' variant="outline">
                 {product.product_type === 'subscription' ? <RefreshCcw size={12} /> : <SquareCheck size={12} />}
                 <span className='text-sm'>
                   {product.product_type === 'subscription' ? 'Subscription' : 'One-time payment'}
