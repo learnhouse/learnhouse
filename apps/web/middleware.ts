@@ -102,6 +102,11 @@ export default async function middleware(req: NextRequest) {
     return NextResponse.rewrite(redirectUrl)
   }
 
+  // Health Check
+  if (pathname.startsWith('/health')) {
+    return NextResponse.rewrite(new URL(`/api/health`, req.url))
+  }
+
   // Auth Redirects
   if (pathname == '/redirect_from_auth') {
     if (cookie_orgslug) {

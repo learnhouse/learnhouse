@@ -1,5 +1,6 @@
 import os
 from fastapi import APIRouter, Depends
+from src.routers import health
 from src.routers import usergroups
 from src.routers import dev, trail, users, auth, orgs, roles
 from src.routers.ai import ai
@@ -41,6 +42,8 @@ if os.environ.get("CLOUD_INTERNAL_KEY"):
         tags=["cloud_internal"],
         dependencies=[Depends(cloud_internal.check_internal_cloud_key)],
     )
+
+v1_router.include_router(health.router, prefix="/health", tags=["health"])
 
 # Dev Routes
 v1_router.include_router(
