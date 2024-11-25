@@ -12,7 +12,7 @@ import { useRouter } from 'next/navigation'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { getOrgLogoMediaDirectory, getOrgThumbnailMediaDirectory } from '@services/media/media'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@components/Ui/tabs"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@components/ui/tabs"
 import { Toaster, toast } from 'react-hot-toast';
 import { constructAcceptValue } from '@/lib/constants';
 

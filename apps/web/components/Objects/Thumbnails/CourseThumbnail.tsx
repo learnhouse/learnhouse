@@ -17,7 +17,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@components/Ui/dropdown-menu"
+} from "@components/ui/dropdown-menu"
 
 type Course = {
   course_uuid: string
