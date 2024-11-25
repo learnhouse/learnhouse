@@ -46,8 +46,6 @@ export const getDefaultOrg = () => {
   return process.env.NEXT_PUBLIC_LEARNHOUSE_DEFAULT_ORG
 }
 
-export const getCollaborationServerUrl = () => {
-  return `${LEARNHOUSE_COLLABORATION_WS_URL}`
-}
+
 
 
