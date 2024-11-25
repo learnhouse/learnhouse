@@ -116,6 +116,7 @@ async def get_activity(
 
     # Paid access check
     has_paid_access = await check_activity_paid_access(
+        request=request,
         activity_id=activity.id if activity.id else 0,
         user=current_user,
         db_session=db_session
