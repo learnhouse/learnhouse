@@ -1,6 +1,6 @@
 'use client'
 import { OrgProvider } from '@components/Contexts/OrgContext'
-import ErrorUI from '@components/StyledElements/Error/Error'
+import ErrorUI from '@components/Objects/StyledElements/Error/Error'
 import { useSearchParams } from 'next/navigation'
 
 

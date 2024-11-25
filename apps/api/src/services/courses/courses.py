@@ -1,7 +1,6 @@
-from typing import Literal
+from typing import Literal, List
 from uuid import uuid4
-from sqlalchemy import union
-from sqlmodel import Session, select
+from sqlmodel import Session, select, or_, and_
 from src.db.usergroup_resources import UserGroupResource
 from src.db.usergroup_user import UserGroupUser
 from src.db.organizations import Organization
@@ -21,7 +20,7 @@ from src.db.courses.courses import (
     FullCourseReadWithTrail,
 )
 from src.security.rbac.rbac import (
-    authorization_verify_based_on_roles_and_authorship_and_usergroups,
+    authorization_verify_based_on_roles_and_authorship,
     authorization_verify_if_element_is_public,
     authorization_verify_if_user_is_anon,
 )
@@ -150,6 +149,69 @@ async def get_course_meta(
         chapters=chapters,
         trail=trail if trail else None,
     )
+
+async def get_courses_orgslug(
+    request: Request,
+    current_user: PublicUser | AnonymousUser,
+    org_slug: str,
+    db_session: Session,
+    page: int = 1,
+    limit: int = 10,
+) -> List[CourseRead]:
+    offset = (page - 1) * limit
+
+    # Base query
+    query = (
+        select(Course)
+        .join(Organization)
+        .where(Organization.slug == org_slug)
+    )
+
+    if isinstance(current_user, AnonymousUser):
+        # For anonymous users, only show public courses
+        query = query.where(Course.public == True)
+    else:
+        # For authenticated users, show:
+        # 1. Public courses
+        # 2. Courses not in any UserGroup
+        # 3. Courses in UserGroups where the user is a member
+        # 4. Courses where the user is a resource author
+        query = (
+            query
+            .outerjoin(UserGroupResource, UserGroupResource.resource_uuid == Course.course_uuid)  # type: ignore
+            .outerjoin(UserGroupUser, and_(
+                UserGroupUser.usergroup_id == UserGroupResource.usergroup_id,
+                UserGroupUser.user_id == current_user.id
+            ))
+            .outerjoin(ResourceAuthor, ResourceAuthor.resource_uuid == Course.course_uuid)  # type: ignore
+            .where(or_(
+                Course.public == True,
+                UserGroupResource.resource_uuid == None,  # Courses not in any UserGroup # noqa: E711
+                UserGroupUser.user_id == current_user.id,  # Courses in UserGroups where user is a member
+                ResourceAuthor.user_id == current_user.id  # Courses where user is a resource author
+            ))
+        )
+
+    # Apply pagination
+    query = query.offset(offset).limit(limit).distinct()
+
+    courses = db_session.exec(query).all()
+
+    # Fetch authors for each course
+    course_reads = []
+    for course in courses:
+        authors_query = (
+            select(User)
+            .join(ResourceAuthor, ResourceAuthor.user_id == User.id)  # type: ignore
+            .where(ResourceAuthor.resource_uuid == course.course_uuid)
+        )
+        authors = db_session.exec(authors_query).all()
+        
+        course_read = CourseRead.model_validate(course)
+        course_read.authors = [UserRead.model_validate(author) for author in authors]
+        course_reads.append(course_read)
+
+    return course_reads
 
 
 async def create_course(
@@ -366,72 +428,7 @@ async def delete_course(
     return {"detail": "Course deleted"}
 
 
-async def get_courses_orgslug(
-    request: Request,
-    current_user: PublicUser | AnonymousUser,
-    org_slug: str,
-    db_session: Session,
-    page: int = 1,
-    limit: int = 10,
-):
 
-    # TODO : This entire function is a mess. It needs to be rewritten.
-
-    # Query for public courses
-    statement_public = (
-        select(Course)
-        .join(Organization)
-        .where(Organization.slug == org_slug, Course.public == True)
-    )
-
-    # Query for courses where the current user is an author
-    statement_author = (
-        select(Course)
-        .join(Organization)
-        .join(ResourceAuthor, ResourceAuthor.user_id == current_user.id)  # type: ignore
-        .where(
-            Organization.slug == org_slug,
-            ResourceAuthor.resource_uuid == Course.course_uuid,
-        )
-    )
-
-    # Query for courses where the current user is in a user group that has access to the course
-    statement_usergroup = (
-        select(Course)
-        .join(Organization)
-        .join(UserGroupResource, UserGroupResource.resource_uuid == Course.course_uuid)  # type: ignore
-        .join(
-            UserGroupUser, UserGroupUser.usergroup_id == UserGroupResource.usergroup_id  # type: ignore
-        )
-        .where(Organization.slug == org_slug, UserGroupUser.user_id == current_user.id)
-    )
-
-    # Combine the results
-    statement_complete = union(
-        statement_public, statement_author, statement_usergroup
-    ).subquery()
-
-    # TODO: migrate this to exec
-    courses = db_session.execute(select(statement_complete)).all()  # type: ignore
-
-    # TODO: I have no idea why this is necessary, but it is
-    courses = [CourseRead(**course._asdict(), authors=[]) for course in courses]
-
-    # for every course, get the authors
-    for course in courses:
-        authors_statement = (
-            select(User)
-            .join(ResourceAuthor)
-            .where(ResourceAuthor.resource_uuid == course.course_uuid)
-        )
-        authors = db_session.exec(authors_statement).all()
-
-        # convert from User to UserRead
-        authors = [UserRead.model_validate(author) for author in authors]
-
-        course.authors = authors
-
-    return courses
 
 
 ## 🔒 RBAC Utils ##
@@ -452,7 +449,7 @@ async def rbac_check(
             return res
         else:
             res = (
-                await authorization_verify_based_on_roles_and_authorship_and_usergroups(
+                await authorization_verify_based_on_roles_and_authorship(
                     request, current_user.id, action, course_uuid, db_session
                 )
             )
@@ -460,7 +457,7 @@ async def rbac_check(
     else:
         await authorization_verify_if_user_is_anon(current_user.id)
 
-        await authorization_verify_based_on_roles_and_authorship_and_usergroups(
+        await authorization_verify_based_on_roles_and_authorship(
             request,
             current_user.id,
             action,

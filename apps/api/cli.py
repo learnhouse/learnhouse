@@ -48,6 +48,7 @@ def install(
             slug="default",
             email="",
             logo_image="",
+            thumbnail_image="",
         )
         install_create_organization(org, db_session)
         print("Default organization created ✅")
@@ -89,6 +90,7 @@ def install(
             slug=slug.lower(),
             email="",
             logo_image="",
+            thumbnail_image="",
         )
         install_create_organization(org, db_session)
         print(orgname + " Organization created ✅")

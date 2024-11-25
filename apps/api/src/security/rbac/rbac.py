@@ -142,7 +142,7 @@ async def authorization_verify_based_on_org_admin_status(
 
 
 # Tested and working
-async def authorization_verify_based_on_roles_and_authorship_and_usergroups(
+async def authorization_verify_based_on_roles_and_authorship(
     request: Request,
     user_id: int,
     action: Literal["read", "update", "delete", "create"],

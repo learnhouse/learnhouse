@@ -1,14 +1,14 @@
 'use client'
-import EditCourseStructure from '../../../../../../../../components/Dashboard/Course/EditCourseStructure/EditCourseStructure'
 import { getUriWithOrg } from '@services/config/config'
 import React from 'react'
 import { CourseProvider } from '../../../../../../../../components/Contexts/CourseContext'
 import Link from 'next/link'
-import { CourseOverviewTop } from '@components/Dashboard/UI/CourseOverviewTop'
+import { CourseOverviewTop } from '@components/Dashboard/Misc/CourseOverviewTop'
 import { motion } from 'framer-motion'
-import EditCourseGeneral from '@components/Dashboard/Course/EditCourseGeneral/EditCourseGeneral'
 import { GalleryVerticalEnd, Info, UserRoundCog } from 'lucide-react'
-import EditCourseAccess from '@components/Dashboard/Course/EditCourseAccess/EditCourseAccess'
+import EditCourseStructure from '@components/Dashboard/Pages/Course/EditCourseStructure/EditCourseStructure'
+import EditCourseGeneral from '@components/Dashboard/Pages/Course/EditCourseGeneral/EditCourseGeneral'
+import EditCourseAccess from '@components/Dashboard/Pages/Course/EditCourseAccess/EditCourseAccess'
 
 export type CourseOverviewParams = {
   orgslug: string

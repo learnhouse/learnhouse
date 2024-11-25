@@ -15,7 +15,7 @@ from src.services.orgs.invites import get_invite_code
 from src.services.users.avatars import upload_avatar
 from src.db.roles import Role, RoleRead
 from src.security.rbac.rbac import (
-    authorization_verify_based_on_roles_and_authorship_and_usergroups,
+    authorization_verify_based_on_roles_and_authorship,
     authorization_verify_if_user_is_anon,
 )
 from src.db.organizations import Organization, OrganizationRead
@@ -491,7 +491,7 @@ async def authorize_user_action(
 
     # RBAC check
     authorized = (
-        await authorization_verify_based_on_roles_and_authorship_and_usergroups(
+        await authorization_verify_based_on_roles_and_authorship(
             request, current_user.id, action, resource_uuid, db_session
         )
     )
@@ -564,7 +564,7 @@ async def rbac_check(
         if current_user.id == 0:  # if user is anonymous
             return True
         else:
-            await authorization_verify_based_on_roles_and_authorship_and_usergroups(
+            await authorization_verify_based_on_roles_and_authorship(
                 request, current_user.id, "create", "user_x", db_session
             )
 
@@ -575,7 +575,7 @@ async def rbac_check(
         if current_user.user_uuid == user_uuid:
             return True
 
-        await authorization_verify_based_on_roles_and_authorship_and_usergroups(
+        await authorization_verify_based_on_roles_and_authorship(
             request, current_user.id, action, user_uuid, db_session
         )
 
