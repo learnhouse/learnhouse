@@ -3,7 +3,7 @@ import { useAssignments } from '@components/Contexts/Assignments/AssignmentConte
 import { useAssignmentsTask, useAssignmentsTaskDispatch } from '@components/Contexts/Assignments/AssignmentsTaskContext';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import { useOrg } from '@components/Contexts/OrgContext';
-import FormLayout, { FormField, FormLabelAndMessage, Input, Textarea } from '@components/StyledElements/Form/Form';
+import FormLayout, { FormField, FormLabelAndMessage, Input, Textarea } from '@components/Objects/StyledElements/Form/Form';
 import * as Form from '@radix-ui/react-form';
 import { getActivityByID } from '@services/courses/activities';
 import { updateAssignmentTask, updateReferenceFile } from '@services/courses/assignments';

@@ -4,7 +4,7 @@ import learnhouseAI_icon from 'public/learnhouse_ai_simple.png'
 import Image from 'next/image'
 import { BookOpen, FormInput, Languages, MoreVertical } from 'lucide-react'
 import { BubbleMenu } from '@tiptap/react'
-import ToolTip from '@components/StyledElements/Tooltip/Tooltip'
+import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
 import {
   AIChatBotStateTypes,
   useAIChatBot,
@@ -14,7 +14,7 @@ import {
   sendActivityAIChatMessage,
   startActivityAIChatSession,
 } from '@services/ai/ai'
-import useGetAIFeatures from '../../../../AI/Hooks/useGetAIFeatures'
+import useGetAIFeatures from '../../../../Hooks/useGetAIFeatures'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 
 type AICanvaToolkitProps = {

@@ -5,13 +5,13 @@ import Link from 'next/link'
 import { useMediaQuery } from 'usehooks-ts'
 import { getUriWithOrg } from '@services/config/config'
 import { Monitor, ScanEye, SquareUserRound, UserPlus, Users } from 'lucide-react'
-import BreadCrumbs from '@components/Dashboard/UI/BreadCrumbs'
+import BreadCrumbs from '@components/Dashboard/Misc/BreadCrumbs'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
-import OrgUsers from '@components/Dashboard/Users/OrgUsers/OrgUsers'
-import OrgAccess from '@components/Dashboard/Users/OrgAccess/OrgAccess'
-import OrgUsersAdd from '@components/Dashboard/Users/OrgUsersAdd/OrgUsersAdd'
-import OrgUserGroups from '@components/Dashboard/Users/OrgUserGroups/OrgUserGroups'
+import OrgUsers from '@components/Dashboard/Pages/Users/OrgUsers/OrgUsers'
+import OrgAccess from '@components/Dashboard/Pages/Users/OrgAccess/OrgAccess'
+import OrgUsersAdd from '@components/Dashboard/Pages/Users/OrgUsersAdd/OrgUsersAdd'
+import OrgUserGroups from '@components/Dashboard/Pages/Users/OrgUserGroups/OrgUserGroups'
 
 export type SettingsParams = {
   subpage: string

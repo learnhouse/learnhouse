@@ -1,12 +1,11 @@
 'use client'
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Label } from "@/components/ui/label"
+import { Input } from "@components/Ui/input"
+import { Textarea } from "@components/Ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@components/Ui/select"
 import FormLayout, {
   FormField,
   FormLabelAndMessage,
-} from '@components/StyledElements/Form/Form'
+} from '@components/Objects/StyledElements/Form/Form'
 import * as Form from '@radix-ui/react-form'
 import { createNewCourse } from '@services/courses/courses'
 import { getOrganizationContextInfoWithoutCredentials } from '@services/organizations/orgs'
@@ -18,9 +17,8 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import toast from 'react-hot-toast'
 import { useFormik } from 'formik'
 import * as Yup from 'yup'
-import { getCourseThumbnailMediaDirectory } from '@services/media/media'
-import { ArrowBigUpDash, UploadCloud, Image as ImageIcon } from 'lucide-react'
-import UnsplashImagePicker from "@components/Dashboard/Course/EditCourseGeneral/UnsplashImagePicker"
+import {  UploadCloud, Image as ImageIcon } from 'lucide-react'
+import UnsplashImagePicker from "@components/Dashboard/Pages/Course/EditCourseGeneral/UnsplashImagePicker"
 
 const validationSchema = Yup.object().shape({
   name: Yup.string()

@@ -6,7 +6,7 @@ import PageLoading from '@components/Objects/Loaders/PageLoading'
 import { revalidateTags } from '@services/utils/ts/requests'
 import ActivityIndicators from '@components/Pages/Courses/ActivityIndicators'
 import { useRouter } from 'next/navigation'
-import GeneralWrapperStyled from '@components/StyledElements/Wrappers/GeneralWrapper'
+import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
 import {
   getCourseThumbnailMediaDirectory,
   getUserAvatarMediaDirectory,

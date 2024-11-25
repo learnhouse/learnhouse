@@ -1,17 +1,17 @@
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
-import TypeOfContentTitle from '@components/StyledElements/Titles/TypeOfContentTitle'
-import GeneralWrapperStyled from '@components/StyledElements/Wrappers/GeneralWrapper'
+import TypeOfContentTitle from '@components/Objects/StyledElements/Titles/TypeOfContentTitle'
+import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
 import { getUriWithOrg } from '@services/config/config'
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { Metadata } from 'next'
 import Link from 'next/link'
 import CollectionThumbnail from '@components/Objects/Thumbnails/CollectionThumbnail'
-import NewCollectionButton from '@components/StyledElements/Buttons/NewCollectionButton'
-import ContentPlaceHolderIfUserIsNotAdmin from '@components/ContentPlaceHolder'
+import NewCollectionButton from '@components/Objects/StyledElements/Buttons/NewCollectionButton'
 import { nextAuthOptions } from 'app/auth/options'
 import { getServerSession } from 'next-auth'
 import { getOrgCollections } from '@services/courses/collections'
 import { getOrgThumbnailMediaDirectory } from '@services/media/media'
+import ContentPlaceHolderIfUserIsNotAdmin from '@components/Objects/ContentPlaceHolder'
 
 type MetadataProps = {
   params: { orgslug: string; courseid: string }

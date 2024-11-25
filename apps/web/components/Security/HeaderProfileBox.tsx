@@ -8,7 +8,7 @@ import useAdminStatus from '@components/Hooks/useAdminStatus'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { getUriWithoutOrg } from '@services/config/config'
-import Tooltip from '@components/StyledElements/Tooltip/Tooltip'
+import Tooltip from '@components/Objects/StyledElements/Tooltip/Tooltip'
 
 export const HeaderProfileBox = () => {
   const session = useLHSession() as any

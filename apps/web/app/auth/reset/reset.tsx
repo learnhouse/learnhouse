@@ -6,7 +6,7 @@ import FormLayout, {
     FormField,
     FormLabelAndMessage,
     Input,
-} from '@components/StyledElements/Form/Form'
+} from '@components/Objects/StyledElements/Form/Form'
 import * as Form from '@radix-ui/react-form'
 import { getOrgLogoMediaDirectory } from '@services/media/media'
 import { AlertTriangle, Info } from 'lucide-react'

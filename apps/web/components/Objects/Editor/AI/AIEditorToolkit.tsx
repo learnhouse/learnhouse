@@ -23,7 +23,7 @@ import {
   sendActivityAIChatMessage,
   startActivityAIChatSession,
 } from '@services/ai/ai'
-import useGetAIFeatures from '@components/AI/Hooks/useGetAIFeatures'
+import useGetAIFeatures from '@components/Hooks/useGetAIFeatures'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 
 type AIEditorToolkitProps = {

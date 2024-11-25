@@ -4,7 +4,7 @@ import FormLayout, {
   FormField,
   FormLabelAndMessage,
   Input,
-} from '@components/StyledElements/Form/Form'
+} from '@components/Objects/StyledElements/Form/Form'
 import * as Form from '@radix-ui/react-form'
 import { getAPIUrl } from '@services/config/config'
 import { createNewUserInstall, updateInstall } from '@services/install/install'

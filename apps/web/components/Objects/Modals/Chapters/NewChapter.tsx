@@ -5,7 +5,7 @@ import FormLayout, {
   Textarea,
   FormLabel,
   ButtonBlack,
-} from '@components/StyledElements/Form/Form'
+} from '@components/Objects/StyledElements/Form/Form'
 import { FormMessage } from '@radix-ui/react-form'
 import * as Form from '@radix-ui/react-form'
 import React, { useState } from 'react'

@@ -29,7 +29,7 @@ import {
   Video,
 } from 'lucide-react'
 import { SiYoutube } from '@icons-pack/react-simple-icons'
-import ToolTip from '@components/StyledElements/Tooltip/Tooltip'
+import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
 
 export const ToolbarButtons = ({ editor, props }: any) => {
   if (!editor) {

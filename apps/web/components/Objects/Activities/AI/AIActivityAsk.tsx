@@ -15,7 +15,7 @@ import {
   useAIChatBot,
   useAIChatBotDispatch,
 } from '@components/Contexts/AI/AIChatBotContext'
-import useGetAIFeatures from '../../../AI/Hooks/useGetAIFeatures'
+import useGetAIFeatures from '../../../Hooks/useGetAIFeatures'
 import UserAvatar from '@components/Objects/UserAvatar'
 
 type AIActivityAskProps = {

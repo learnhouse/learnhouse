@@ -1,7 +1,7 @@
 'use client'
 import { useOrg } from '@components/Contexts/OrgContext'
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
-import ConfirmationModal from '@components/StyledElements/ConfirmationModal/ConfirmationModal'
+import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import { getUriWithOrg } from '@services/config/config'
 import { deleteCourseFromBackend } from '@services/courses/courses'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
@@ -17,7 +17,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@components/Ui/dropdown-menu"
 
 type Course = {
   course_uuid: string

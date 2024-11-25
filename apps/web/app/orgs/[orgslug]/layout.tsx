@@ -1,9 +1,9 @@
 'use client'
 import { OrgProvider } from '@components/Contexts/OrgContext'
 import NextTopLoader from 'nextjs-toploader';
-import Toast from '@components/StyledElements/Toast/Toast'
+import Toast from '@components/Objects/StyledElements/Toast/Toast'
 import '@styles/globals.css'
-import Onboarding from '@components/Onboarding/Onboarding';
+import Onboarding from '@components/Objects/Onboarding/Onboarding';
 
 export default function RootLayout({
   children,

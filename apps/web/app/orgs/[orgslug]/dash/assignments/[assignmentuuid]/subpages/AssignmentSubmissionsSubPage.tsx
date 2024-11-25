@@ -1,6 +1,6 @@
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import UserAvatar from '@components/Objects/UserAvatar';
-import Modal from '@components/StyledElements/Modal/Modal';
+import Modal from '@components/Objects/StyledElements/Modal/Modal';
 import { getAPIUrl } from '@services/config/config';
 import { getUserAvatarMediaDirectory } from '@services/media/media';
 import { swrFetcher } from '@services/utils/ts/requests';

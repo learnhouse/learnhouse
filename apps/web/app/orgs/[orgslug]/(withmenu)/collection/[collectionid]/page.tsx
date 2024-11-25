@@ -1,4 +1,4 @@
-import GeneralWrapperStyled from '@components/StyledElements/Wrappers/GeneralWrapper'
+import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
 import { getUriWithOrg } from '@services/config/config'
 import { getCollectionById } from '@services/courses/collections'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'

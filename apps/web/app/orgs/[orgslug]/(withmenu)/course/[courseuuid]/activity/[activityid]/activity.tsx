@@ -7,7 +7,7 @@ import { BookOpenCheck, Check, CheckCircle, MoreVertical, UserRoundPen } from 'l
 import { markActivityAsComplete } from '@services/courses/activity'
 import DocumentPdfActivity from '@components/Objects/Activities/DocumentPdf/DocumentPdf'
 import ActivityIndicators from '@components/Pages/Courses/ActivityIndicators'
-import GeneralWrapperStyled from '@components/StyledElements/Wrappers/GeneralWrapper'
+import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
 import { usePathname, useRouter } from 'next/navigation'
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
@@ -24,7 +24,7 @@ import { AssignmentsTaskProvider } from '@components/Contexts/Assignments/Assign
 import AssignmentSubmissionProvider, {  useAssignmentSubmission } from '@components/Contexts/Assignments/AssignmentSubmissionContext'
 import toast from 'react-hot-toast'
 import { mutate } from 'swr'
-import ConfirmationModal from '@components/StyledElements/ConfirmationModal/ConfirmationModal'
+import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import { useMediaQuery } from 'usehooks-ts'
 import PaidCourseActivityDisclaimer from '@components/Objects/Courses/CourseActions/PaidCourseActivityDisclaimer'
 

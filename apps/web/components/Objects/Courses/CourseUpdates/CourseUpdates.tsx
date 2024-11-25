@@ -8,7 +8,7 @@ import FormLayout, {
   FormLabelAndMessage,
   Input,
   Textarea,
-} from '@components/StyledElements/Form/Form'
+} from '@components/Objects/StyledElements/Form/Form'
 import { useCourse } from '@components/Contexts/CourseContext'
 import useSWR, { mutate } from 'swr'
 import { getAPIUrl } from '@services/config/config'
@@ -17,7 +17,7 @@ import useAdminStatus from '@components/Hooks/useAdminStatus'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { createCourseUpdate, deleteCourseUpdate } from '@services/courses/updates'
 import toast from 'react-hot-toast'
-import ConfirmationModal from '@components/StyledElements/ConfirmationModal/ConfirmationModal'
+import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { useLHSession } from '@components/Contexts/LHSessionContext'
