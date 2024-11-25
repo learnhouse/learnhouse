@@ -1,7 +1,7 @@
 'use client'
-import { Input } from "@components/Ui/input"
-import { Textarea } from "@components/Ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@components/Ui/select"
+import { Input } from "@components/ui/input"
+import { Textarea } from "@components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@components/ui/select"
 import FormLayout, {
   FormField,
   FormLabelAndMessage,

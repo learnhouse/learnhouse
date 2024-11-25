@@ -1,5 +1,5 @@
 import {  Settings, ChevronRight, CreditCard } from 'lucide-react'
-import { Alert, AlertTitle, AlertDescription } from '@components/Ui/alert'
+import { Alert, AlertTitle, AlertDescription } from '@components/ui/alert'
 import { AlertTriangle, ShoppingCart, Users } from 'lucide-react'
 import React from 'react'
 import Link from 'next/link'

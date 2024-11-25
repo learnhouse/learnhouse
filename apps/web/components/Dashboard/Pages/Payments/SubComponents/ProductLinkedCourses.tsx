@@ -3,7 +3,7 @@ import { getCoursesLinkedToProduct, unlinkCourseFromProduct } from '@services/pa
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import { useOrg } from '@components/Contexts/OrgContext';
 import { Trash2, Plus, BookOpen } from 'lucide-react';
-import { Button } from "@components/Ui/button";
+import { Button } from "@components/ui/button";
 import toast from 'react-hot-toast';
 import { mutate } from 'swr';
 import Modal from '@components/Objects/StyledElements/Modal/Modal';

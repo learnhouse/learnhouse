@@ -40,7 +40,6 @@ class AssignmentOrgConfig(BaseModel):
 
 class PaymentOrgConfig(BaseModel):
     enabled: bool = True
-    stripe_key: str = ""
 
 
 class DiscussionOrgConfig(BaseModel):
@@ -91,7 +90,7 @@ class OrgCloudConfig(BaseModel):
 
 # Main Config
 class OrganizationConfigBase(BaseModel):
-    config_version: str = "1.1"
+    config_version: str = "1.2"
     general: OrgGeneralConfig
     features: OrgFeatureConfig
     cloud: OrgCloudConfig

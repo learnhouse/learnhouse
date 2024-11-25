@@ -9,14 +9,14 @@ import { Plus, Pencil, Info, RefreshCcw, SquareCheck, ChevronDown, ChevronUp, Ar
 import Modal from '@components/Objects/StyledElements/Modal/Modal';
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal';
 import toast from 'react-hot-toast';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@components/Ui/select"
-import { Button } from "@components/Ui/button"
-import { Input } from "@components/Ui/input"
-import { Textarea } from "@components/Ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@components/ui/select"
+import { Button } from "@components/ui/button"
+import { Input } from "@components/ui/input"
+import { Textarea } from "@components/ui/textarea"
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
-import { Label } from '@components/Ui/label';
-import { Badge } from '@components/Ui/badge';
+import { Label } from '@components/ui/label';
+import { Badge } from '@components/ui/badge';
 import { getPaymentConfigs } from '@services/payments/payments';
 import ProductLinkedCourses from './SubComponents/ProductLinkedCourses';
 import { usePaymentsEnabled } from '@hooks/usePaymentsEnabled';

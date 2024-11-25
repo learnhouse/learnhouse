@@ -10,8 +10,7 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import PaymentsConfigurationPage from '@components/Dashboard/Pages/Payments/PaymentsConfigurationPage'
 import PaymentsProductPage from '@components/Dashboard/Pages/Payments/PaymentsProductPage'
 import PaymentsCustomersPage from '@components/Dashboard/Pages/Payments/PaymentsCustomersPage'
-
-
+import useFeatureFlag from '@components/Hooks/useFeatureFlag'
 
 export type PaymentsParams = {
   subpage: string
@@ -24,10 +23,27 @@ function PaymentsPage({ params }: { params: PaymentsParams }) {
   const [selectedSubPage, setSelectedSubPage] = useState(params.subpage || 'general')
   const [H1Label, setH1Label] = useState('')
   const [H2Label, setH2Label] = useState('')
+  
+  const isPaymentsEnabled = useFeatureFlag({
+    path: ['features', 'payments', 'enabled'],
+    defaultValue: false
+  })
 
   useEffect(() => {
     handleLabels()
   }, [selectedSubPage])
+
+  if (!isPaymentsEnabled) {
+    return (
+      <div className="h-screen w-full bg-[#f8f8f8] flex items-center justify-center p-4">
+        <div className="bg-white p-6 rounded-lg shadow-md text-center max-w-md">
+          <h2 className="text-xl font-bold mb-4">Payments Not Available</h2>
+          <p className="text-gray-600">The payments feature is not enabled for this organization.</p>
+          <p className="text-gray-600 mt-2">Please contact your administrator to enable payments.</p>
+        </div>
+      </div>
+    )
+  }
 
   function handleLabels() {
     if (selectedSubPage === 'general') {

@@ -11,11 +11,13 @@ import UserAvatar from '../../Objects/UserAvatar'
 import AdminAuthorization from '@components/Security/AdminAuthorization'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { getUriWithOrg, getUriWithoutOrg } from '@services/config/config'
+import useFeatureFlag from '@components/Hooks/useFeatureFlag'
 
 function DashLeftMenu() {
   const org = useOrg() as any
   const session = useLHSession() as any
   const [loading, setLoading] = React.useState(true)
+  const isPaymentsEnabled = useFeatureFlag({ path: ['features', 'payments', 'enabled'], defaultValue: false })
 
   function waitForEverythingToLoad() {
     if (org && session) {
@@ -112,14 +114,16 @@ function DashLeftMenu() {
                 <Users size={18} />
               </Link>
             </ToolTip>
-            <ToolTip content={'Payments'} slateBlack sideOffset={8} side="right">
-              <Link
-                className="bg-white/5 rounded-lg p-2 hover:bg-white/10 transition-all ease-linear"
-                href={`/dash/payments/customers`}
-              >
-                <BadgeDollarSign size={18} />
-              </Link>
-            </ToolTip>
+            {isPaymentsEnabled && (
+              <ToolTip content={'Payments'} slateBlack sideOffset={8} side="right">
+                <Link
+                  className="bg-white/5 rounded-lg p-2 hover:bg-white/10 transition-all ease-linear"
+                  href={`/dash/payments/customers`}
+                >
+                  <BadgeDollarSign size={18} />
+                </Link>
+              </ToolTip>
+            )}
             <ToolTip
               content={'Organization'}
               slateBlack

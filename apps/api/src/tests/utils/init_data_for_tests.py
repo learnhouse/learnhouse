@@ -8,7 +8,7 @@ from src.services.install.install import (
     install_default_elements,
 )
 
-
+# TODO: Depreceated and need to be removed and remade
 async def create_initial_data_for_tests(db_session: Session):
     # Install default elements
     await install_default_elements({}, db_session)

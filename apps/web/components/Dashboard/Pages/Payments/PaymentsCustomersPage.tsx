@@ -9,9 +9,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@components/Ui/table"
+} from "@components/ui/table"
 import { getOrgCustomers } from '@services/payments/payments'
-import { Badge } from '@components/Ui/badge'
+import { Badge } from '@components/ui/badge'
 import PageLoading from '@components/Objects/Loaders/PageLoading'
 import { RefreshCcw, SquareCheck } from 'lucide-react'
 import { getUserAvatarMediaDirectory } from '@services/media/media'

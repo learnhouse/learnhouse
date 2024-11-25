@@ -6,11 +6,11 @@ import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import toast from 'react-hot-toast';
 import { mutate } from 'swr';
-import { Button } from "@components/Ui/button";
-import { Input } from "@components/Ui/input";
-import { Textarea } from "@components/Ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@components/Ui/select";
-import { Label } from "@components/Ui/label";
+import { Button } from "@components/ui/button";
+import { Input } from "@components/ui/input";
+import { Textarea } from "@components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@components/ui/select";
+import { Label } from "@components/ui/label";
 import currencyCodes from 'currency-codes';
 
 const validationSchema = Yup.object().shape({
