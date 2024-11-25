@@ -1,9 +1,9 @@
 'use client';
-import BreadCrumbs from '@components/Dashboard/UI/BreadCrumbs'
+import BreadCrumbs from '@components/Dashboard/Misc/BreadCrumbs'
 import { BookOpen, BookX, EllipsisVertical, Eye, Layers2, Monitor, UserRoundPen } from 'lucide-react'
 import React, { useEffect } from 'react'
 import { AssignmentProvider, useAssignments } from '@components/Contexts/Assignments/AssignmentContext';
-import ToolTip from '@components/StyledElements/Tooltip/Tooltip';
+import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip';
 import { updateAssignment } from '@services/courses/assignments';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import { mutate } from 'swr';

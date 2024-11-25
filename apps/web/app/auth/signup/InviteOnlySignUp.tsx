@@ -7,7 +7,7 @@ import FormLayout, {
   FormLabelAndMessage,
   Input,
   Textarea,
-} from '@components/StyledElements/Form/Form'
+} from '@components/Objects/StyledElements/Form/Form'
 import * as Form from '@radix-ui/react-form'
 import { AlertTriangle, Check, User } from 'lucide-react'
 import Link from 'next/link'
@@ -110,8 +110,10 @@ function InviteOnlySignUpComponent(props: InviteOnlySignUpProps) {
             <div className="font-bold text-sm">{message}</div>
           </div>
           <hr className="border-green-900/20 800 w-40 border" />
-          <Link className="flex space-x-2 items-center" href={'/login'}>
-            <User size={14} /> <div>Login </div>
+          <Link className="flex space-x-2 items-center" href={
+            `/login?orgslug=${org?.slug}`
+          } >
+            <User size={14} /> <div>Login to your account</div>
           </Link>
         </div>
       )}

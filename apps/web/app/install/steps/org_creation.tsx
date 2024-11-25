@@ -3,7 +3,7 @@ import FormLayout, {
   FormField,
   FormLabelAndMessage,
   Input,
-} from '@components/StyledElements/Form/Form'
+} from '@components/Objects/StyledElements/Form/Form'
 import * as Form from '@radix-ui/react-form'
 import { useFormik } from 'formik'
 import { BarLoader } from 'react-spinners'

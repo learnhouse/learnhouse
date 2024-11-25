@@ -1,7 +1,7 @@
 'use client';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import { useOrg } from '@components/Contexts/OrgContext';
-import BreadCrumbs from '@components/Dashboard/UI/BreadCrumbs'
+import BreadCrumbs from '@components/Dashboard/Misc/BreadCrumbs'
 import { getAPIUrl, getUriWithOrg } from '@services/config/config';
 import { getAssignmentsFromACourse } from '@services/courses/assignments';
 import { getCourseThumbnailMediaDirectory } from '@services/media/media';

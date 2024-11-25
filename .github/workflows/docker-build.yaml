@@ -1,6 +1,8 @@
 name: App Build
 on:
   push:
+    branches:
+      - dev
     paths:
       - "**"
   pull_request:
@@ -14,3 +16,14 @@ jobs:
       - name: Build Docker Image
         run: docker build -t learnhouse .
         working-directory: .
+      - name: Repository Dispatch
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+          repository: learnhouse/images
+          event-type: build-images
+          client-payload: |
+            {
+              "ref": "${{ github.sha }}",
+              "branch": "${{ github.head_ref || github.ref_name }}"
+            }

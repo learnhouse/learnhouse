@@ -1,189 +1,262 @@
 'use client'
+import { Input } from "@components/ui/input"
+import { Textarea } from "@components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@components/ui/select"
 import FormLayout, {
-  ButtonBlack,
-  Flex,
   FormField,
-  FormLabel,
-  Input,
-  Textarea,
-} from '@components/StyledElements/Form/Form'
+  FormLabelAndMessage,
+} from '@components/Objects/StyledElements/Form/Form'
 import * as Form from '@radix-ui/react-form'
-import { FormMessage } from '@radix-ui/react-form'
 import { createNewCourse } from '@services/courses/courses'
 import { getOrganizationContextInfoWithoutCredentials } from '@services/organizations/orgs'
-import React, { useState } from 'react'
+import React, { useEffect } from 'react'
 import { BarLoader } from 'react-spinners'
 import { revalidateTags } from '@services/utils/ts/requests'
 import { useRouter } from 'next/navigation'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import toast from 'react-hot-toast'
+import { useFormik } from 'formik'
+import * as Yup from 'yup'
+import {  UploadCloud, Image as ImageIcon } from 'lucide-react'
+import UnsplashImagePicker from "@components/Dashboard/Pages/Course/EditCourseGeneral/UnsplashImagePicker"
+
+const validationSchema = Yup.object().shape({
+  name: Yup.string()
+    .required('Course name is required')
+    .max(100, 'Must be 100 characters or less'),
+  description: Yup.string()
+    .max(1000, 'Must be 1000 characters or less'),
+  learnings: Yup.string(),
+  tags: Yup.string(),
+  visibility: Yup.boolean(),
+  thumbnail: Yup.mixed().nullable()
+})
 
 function CreateCourseModal({ closeModal, orgslug }: any) {
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const session = useLHSession() as any;
-  const [name, setName] = React.useState('')
-  const [description, setDescription] = React.useState('')
-  const [learnings, setLearnings] = React.useState('')
-  const [visibility, setVisibility] = React.useState(true)
-  const [tags, setTags] = React.useState('')
-  const [isLoading, setIsLoading] = React.useState(false)
-  const [thumbnail, setThumbnail] = React.useState(null) as any
   const router = useRouter()
-
+  const session = useLHSession() as any
   const [orgId, setOrgId] = React.useState(null) as any
-  const [org, setOrg] = React.useState(null) as any
+  const [showUnsplashPicker, setShowUnsplashPicker] = React.useState(false)
+  const [isUploading, setIsUploading] = React.useState(false)
+
+  const formik = useFormik({
+    initialValues: {
+      name: '',
+      description: '',
+      learnings: '',
+      visibility: true,
+      tags: '',
+      thumbnail: null
+    },
+    validationSchema,
+    onSubmit: async (values, { setSubmitting }) => {
+      const toast_loading = toast.loading('Creating course...')
+      
+      try {
+        const res = await createNewCourse(
+          orgId,
+          { 
+            name: values.name, 
+            description: values.description, 
+            tags: values.tags, 
+            visibility: values.visibility 
+          },
+          values.thumbnail,
+          session.data?.tokens?.access_token
+        )
+
+        if (res.success) {
+          await revalidateTags(['courses'], orgslug)
+          toast.dismiss(toast_loading)
+          toast.success('Course created successfully')
+
+          if (res.data.org_id === orgId) {
+            closeModal()
+            router.refresh()
+            await revalidateTags(['courses'], orgslug)
+          }
+        } else {
+          toast.error(res.data.detail)
+        }
+      } catch (error) {
+        toast.error('Failed to create course')
+      } finally {
+        setSubmitting(false)
+      }
+    }
+  })
 
   const getOrgMetadata = async () => {
     const org = await getOrganizationContextInfoWithoutCredentials(orgslug, {
       revalidate: 360,
       tags: ['organizations'],
     })
-
     setOrgId(org.id)
   }
 
-  const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setName(event.target.value)
-  }
-
-  const handleDescriptionChange = (event: React.ChangeEvent<any>) => {
-    setDescription(event.target.value)
-  }
-
-  const handleLearningsChange = (event: React.ChangeEvent<any>) => {
-    setLearnings(event.target.value)
-  }
-
-  const handleVisibilityChange = (event: React.ChangeEvent<any>) => {
-    setVisibility(event.target.value)
-  }
-
-  const handleTagsChange = (event: React.ChangeEvent<any>) => {
-    setTags(event.target.value)
-  }
-
-  const handleThumbnailChange = (event: React.ChangeEvent<any>) => {
-    setThumbnail(event.target.files[0])
-  }
-
-  const handleSubmit = async (e: any) => {
-    e.preventDefault()
-    setIsSubmitting(true)
-
-    let res = await createNewCourse(
-      orgId,
-      { name, description, tags, visibility },
-      thumbnail,
-      session.data?.tokens?.access_token
-    )
-    const toast_loading = toast.loading('Creating course...')
-    if (res.success) {
-      await revalidateTags(['courses'], orgslug)
-      setIsSubmitting(false)
-      toast.dismiss(toast_loading)
-      toast.success('Course created successfully')
-
-      if (res.data.org_id == orgId) {
-        closeModal()
-        router.refresh()
-        await revalidateTags(['courses'], orgslug)
-      }
-
-    }
-    else {
-      setIsSubmitting(false)
-      toast.error(res.data.detail)
-    }
-  }
-
-  React.useEffect(() => {
+  useEffect(() => {
     if (orgslug) {
       getOrgMetadata()
     }
-  }, [isLoading, orgslug])
+  }, [orgslug])
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      formik.setFieldValue('thumbnail', file)
+    }
+  }
+
+  const handleUnsplashSelect = async (imageUrl: string) => {
+    setIsUploading(true)
+    try {
+      const response = await fetch(imageUrl)
+      const blob = await response.blob()
+      const file = new File([blob], 'unsplash_image.jpg', { type: 'image/jpeg' })
+      formik.setFieldValue('thumbnail', file)
+    } catch (error) {
+      toast.error('Failed to load image from Unsplash')
+    }
+    setIsUploading(false)
+  }
 
   return (
-    <FormLayout onSubmit={handleSubmit}>
-      <FormField name="course-name">
-        <Flex css={{ alignItems: 'baseline', justifyContent: 'space-between' }}>
-          <FormLabel>Course name</FormLabel>
-          <FormMessage match="valueMissing">
-            Please provide a course name
-          </FormMessage>
-        </Flex>
+    <FormLayout onSubmit={formik.handleSubmit} >
+      <FormField name="name">
+        <FormLabelAndMessage 
+          label="Course Name" 
+          message={formik.errors.name}
+        />
         <Form.Control asChild>
-          <Input onChange={handleNameChange} type="text" required />
-        </Form.Control>
-      </FormField>
-      <FormField name="course-desc">
-        <Flex css={{ alignItems: 'baseline', justifyContent: 'space-between' }}>
-          <FormLabel>Course description</FormLabel>
-          <FormMessage match="valueMissing">
-            Please provide a course description
-          </FormMessage>
-        </Flex>
-        <Form.Control asChild>
-          <Textarea onChange={handleDescriptionChange} required />
-        </Form.Control>
-      </FormField>
-      <FormField name="course-thumbnail">
-        <Flex css={{ alignItems: 'baseline', justifyContent: 'space-between' }}>
-          <FormLabel>Course thumbnail</FormLabel>
-          <FormMessage match="valueMissing">
-            Please provide a thumbnail for your course
-          </FormMessage>
-        </Flex>
-        <Form.Control asChild>
-          <Input onChange={handleThumbnailChange} type="file" />
-        </Form.Control>
-      </FormField>
-      <FormField name="course-tags">
-        <Flex css={{ alignItems: 'baseline', justifyContent: 'space-between' }}>
-          <FormLabel>Course Learnings (separated by comma)</FormLabel>
-          <FormMessage match="valueMissing">
-            Please provide learning elements, separated by comma (,)
-          </FormMessage>
-        </Flex>
-        <Form.Control asChild>
-          <Textarea onChange={handleTagsChange} />
-        </Form.Control>
-      </FormField>
-      <FormField name="course-visibility">
-        <Flex css={{ alignItems: 'baseline', justifyContent: 'space-between' }}>
-          <FormLabel>Course Visibility</FormLabel>
-          <FormMessage match="valueMissing">
-            Please choose course visibility
-          </FormMessage>
-        </Flex>
-        <Form.Control asChild>
-          <select
-            onChange={handleVisibilityChange}
-            className="border border-gray-300 rounded-md p-2"
+          <Input
+            onChange={formik.handleChange}
+            value={formik.values.name}
+            type="text"
             required
-          >
-            <option value="true">
-              Public (Available to see on the internet){' '}
-            </option>
-            <option value="false">Private (Private to users) </option>
-          </select>
+          />
         </Form.Control>
       </FormField>
 
-      <Flex css={{ marginTop: 25, justifyContent: 'flex-end' }}>
-        <Form.Submit asChild>
-          <ButtonBlack type="submit" css={{ marginTop: 10 }}>
-            {isSubmitting ? (
-              <BarLoader
-                cssOverride={{ borderRadius: 60 }}
-                width={60}
-                color="#ffffff"
-              />
-            ) : (
-              'Create Course'
-            )}
-          </ButtonBlack>
-        </Form.Submit>
-      </Flex>
+      <FormField name="description">
+        <FormLabelAndMessage 
+          label="Description" 
+          message={formik.errors.description}
+        />
+        <Form.Control asChild>
+          <Textarea
+            onChange={formik.handleChange}
+            value={formik.values.description}
+            
+          />
+        </Form.Control>
+      </FormField>
+
+      <FormField name="thumbnail">
+        <FormLabelAndMessage 
+          label="Course Thumbnail"
+          message={formik.errors.thumbnail}
+        />
+        <div className="w-auto bg-gray-50 rounded-xl outline outline-1 outline-gray-200 h-[200px] shadow">
+          <div className="flex flex-col justify-center items-center h-full">
+            <div className="flex flex-col justify-center items-center">
+              {formik.values.thumbnail ? (
+                <img
+                  src={URL.createObjectURL(formik.values.thumbnail)}
+                  className={`${isUploading ? 'animate-pulse' : ''} shadow w-[200px] h-[100px] rounded-md`}
+                />
+              ) : (
+                <img
+                  src="/empty_thumbnail.png"
+                  className="shadow w-[200px] h-[100px] rounded-md bg-gray-200"
+                />
+              )}
+              <div className="flex justify-center items-center space-x-2">
+                <input
+                  type="file"
+                  id="fileInput"
+                  style={{ display: 'none' }}
+                  onChange={handleFileChange}
+                  accept="image/*"
+                />
+                <button
+                  type="button"
+                  className="font-bold antialiased items-center text-gray text-sm rounded-md px-4 mt-6 flex"
+                  onClick={() => document.getElementById('fileInput')?.click()}
+                >
+                  <UploadCloud size={16} className="mr-2" />
+                  <span>Upload Image</span>
+                </button>
+                <button
+                  type="button"
+                  className="font-bold antialiased items-center text-gray text-sm rounded-md px-4 mt-6 flex"
+                  onClick={() => setShowUnsplashPicker(true)}
+                >
+                  <ImageIcon size={16} className="mr-2" />
+                  <span>Choose from Gallery</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </FormField>
+
+      <FormField name="tags">
+        <FormLabelAndMessage 
+          label="Course Tags"
+          message={formik.errors.tags}
+        />
+        <Form.Control asChild>
+          <Textarea
+            onChange={formik.handleChange}
+            value={formik.values.tags}
+            placeholder="Enter tags separated by commas"
+          />
+        </Form.Control>
+      </FormField>
+
+      <FormField name="visibility">
+        <FormLabelAndMessage 
+          label="Course Visibility"
+          message={formik.errors.visibility}
+        />
+        <Select
+          value={formik.values.visibility.toString()}
+          onValueChange={(value) => formik.setFieldValue('visibility', value === 'true')}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select visibility" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="true">Public (Available to see on the internet)</SelectItem>
+            <SelectItem value="false">Private (Private to users)</SelectItem>
+          </SelectContent>
+        </Select>
+      </FormField>
+
+      <div className="flex justify-end mt-6">
+        <button
+          type="submit"
+          disabled={formik.isSubmitting}
+          className="px-4 py-2 bg-black text-white text-sm font-bold rounded-md"
+        >
+          {formik.isSubmitting ? (
+            <BarLoader
+              cssOverride={{ borderRadius: 60 }}
+              width={60}
+              color="#ffffff"
+            />
+          ) : (
+            'Create Course'
+          )}
+        </button>
+      </div>
+
+      {showUnsplashPicker && (
+        <UnsplashImagePicker
+          onSelect={handleUnsplashSelect}
+          onClose={() => setShowUnsplashPicker(false)}
+        />
+      )}
     </FormLayout>
   )
 }

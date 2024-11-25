@@ -1,11 +1,11 @@
 'use client'
-import BreadCrumbs from '@components/Dashboard/UI/BreadCrumbs'
+import BreadCrumbs from '@components/Dashboard/Misc/BreadCrumbs'
 import { getUriWithOrg } from '@services/config/config'
 import { Info } from 'lucide-react'
 import Link from 'next/link'
 import React, { useEffect } from 'react'
 import { motion } from 'framer-motion'
-import OrgEditGeneral from '@components/Dashboard/Org/OrgEditGeneral/OrgEditGeneral'
+import OrgEditGeneral from '@components/Dashboard/Pages/Org/OrgEditGeneral/OrgEditGeneral'
 
 export type OrgParams = {
   subpage: string

@@ -4,8 +4,8 @@ import { swrFetcher } from '@services/utils/ts/requests'
 import React, { createContext, useContext, useMemo } from 'react'
 import useSWR from 'swr'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import ErrorUI from '@components/StyledElements/Error/Error'
-import InfoUI from '@components/StyledElements/Info/Info'
+import ErrorUI from '@components/Objects/StyledElements/Error/Error'
+import InfoUI from '@components/Objects/StyledElements/Info/Info'
 import { usePathname } from 'next/navigation'
 
 export const OrgContext = createContext(null)

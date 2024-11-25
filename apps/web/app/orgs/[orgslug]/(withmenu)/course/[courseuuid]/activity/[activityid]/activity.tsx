@@ -7,7 +7,7 @@ import { BookOpenCheck, Check, CheckCircle, MoreVertical, UserRoundPen } from 'l
 import { markActivityAsComplete } from '@services/courses/activity'
 import DocumentPdfActivity from '@components/Objects/Activities/DocumentPdf/DocumentPdf'
 import ActivityIndicators from '@components/Pages/Courses/ActivityIndicators'
-import GeneralWrapperStyled from '@components/StyledElements/Wrappers/GeneralWrapper'
+import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
 import { usePathname, useRouter } from 'next/navigation'
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
@@ -24,8 +24,9 @@ import { AssignmentsTaskProvider } from '@components/Contexts/Assignments/Assign
 import AssignmentSubmissionProvider, {  useAssignmentSubmission } from '@components/Contexts/Assignments/AssignmentSubmissionContext'
 import toast from 'react-hot-toast'
 import { mutate } from 'swr'
-import ConfirmationModal from '@components/StyledElements/ConfirmationModal/ConfirmationModal'
+import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import { useMediaQuery } from 'usehooks-ts'
+import PaidCourseActivityDisclaimer from '@components/Objects/Courses/CourseActions/PaidCourseActivityDisclaimer'
 
 interface ActivityClientProps {
   activityid: string
@@ -129,7 +130,7 @@ function ActivityClient(props: ActivityClientProps) {
                   </h1>
                 </div>
                 <div className="flex space-x-1 items-center">
-                  {activity && activity.published == true && (
+                  {activity && activity.published == true && activity.content.paid_access != false && (
                     <AuthenticatedClientElement checkMethod="authentication">
                       {activity.activity_type != 'TYPE_ASSIGNMENT' &&
                         <>
@@ -173,40 +174,44 @@ function ActivityClient(props: ActivityClientProps) {
               )}
 
               {activity && activity.published == true && (
-                <div
-                  className={`p-7 drop-shadow-sm rounded-lg ${bgColor}`}
-                >
-                  <div>
-                    {activity.activity_type == 'TYPE_DYNAMIC' && (
-                      <Canva content={activity.content} activity={activity} />
-                    )}
-                    {/* todo : use apis & streams instead of this */}
-                    {activity.activity_type == 'TYPE_VIDEO' && (
-                      <VideoActivity course={course} activity={activity} />
-                    )}
-                    {activity.activity_type == 'TYPE_DOCUMENT' && (
-                      <DocumentPdfActivity
-                        course={course}
-                        activity={activity}
-                      />
-                    )}
-                    {activity.activity_type == 'TYPE_ASSIGNMENT' && (
+                <>
+                  {activity.content.paid_access == false ? (
+                    <PaidCourseActivityDisclaimer course={course} />
+                  ) : (
+                    <div className={`p-7 drop-shadow-sm rounded-lg ${bgColor}`}>
+                      {/* Activity Types */}
                       <div>
-                        {assignment ? (
-                          <AssignmentProvider assignment_uuid={assignment?.assignment_uuid}>
-                            <AssignmentsTaskProvider>
-                              <AssignmentSubmissionProvider assignment_uuid={assignment?.assignment_uuid}>
-                                <AssignmentStudentActivity />
-                              </AssignmentSubmissionProvider>
-                            </AssignmentsTaskProvider>
-                          </AssignmentProvider>
-                        ) : (
-                          <div></div>
+                        {activity.activity_type == 'TYPE_DYNAMIC' && (
+                          <Canva content={activity.content} activity={activity} />
+                        )}
+                        {activity.activity_type == 'TYPE_VIDEO' && (
+                          <VideoActivity course={course} activity={activity} />
+                        )}
+                        {activity.activity_type == 'TYPE_DOCUMENT' && (
+                          <DocumentPdfActivity
+                            course={course}
+                            activity={activity}
+                          />
+                        )}
+                        {activity.activity_type == 'TYPE_ASSIGNMENT' && (
+                          <div>
+                            {assignment ? (
+                              <AssignmentProvider assignment_uuid={assignment?.assignment_uuid}>
+                                <AssignmentsTaskProvider>
+                                  <AssignmentSubmissionProvider assignment_uuid={assignment?.assignment_uuid}>
+                                    <AssignmentStudentActivity />
+                                  </AssignmentSubmissionProvider>
+                                </AssignmentsTaskProvider>
+                              </AssignmentProvider>
+                            ) : (
+                              <div></div>
+                            )}
+                          </div>
                         )}
                       </div>
-                    )}
-                  </div>
-                </div>
+                    </div>
+                  )}
+                </>
               )}
               {<div style={{ height: '100px' }}></div>}
             </div>

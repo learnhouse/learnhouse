@@ -3,7 +3,7 @@ import { default as React, useEffect, useRef, useState } from 'react'
 import Editor from './Editor'
 import { updateActivity } from '@services/courses/activities'
 import { toast } from 'react-hot-toast'
-import Toast from '@components/StyledElements/Toast/Toast'
+import Toast from '@components/Objects/StyledElements/Toast/Toast'
 import { OrgProvider } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 
