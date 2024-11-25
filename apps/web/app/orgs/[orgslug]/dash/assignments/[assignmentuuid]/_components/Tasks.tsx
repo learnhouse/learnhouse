@@ -1,5 +1,5 @@
 import { useAssignments } from '@components/Contexts/Assignments/AssignmentContext'
-import Modal from '@components/StyledElements/Modal/Modal';
+import Modal from '@components/Objects/StyledElements/Modal/Modal';
 import { FileUp, ListTodo, PanelLeftOpen, Plus } from 'lucide-react';
 import React, { useEffect } from 'react'
 import NewTaskModal from './Modals/NewTaskModal';

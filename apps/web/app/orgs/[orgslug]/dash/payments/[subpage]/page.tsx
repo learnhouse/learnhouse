@@ -1,15 +1,15 @@
 'use client'
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import BreadCrumbs from '@components/Dashboard/UI/BreadCrumbs'
+import BreadCrumbs from '@components/Dashboard/Misc/BreadCrumbs'
 import Link from 'next/link'
 import { getUriWithOrg } from '@services/config/config'
 import { CreditCard, Settings, Repeat, BookOpen, Users, DollarSign, Gem } from 'lucide-react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
-import PaymentsConfigurationPage from '@components/Dashboard/Payments/PaymentsConfigurationPage'
-import PaymentsProductPage from '@components/Dashboard/Payments/PaymentsProductPage'
-import PaymentsCustomersPage from '@components/Dashboard/Payments/PaymentsCustomersPage'
+import PaymentsConfigurationPage from '@components/Dashboard/Pages/Payments/PaymentsConfigurationPage'
+import PaymentsProductPage from '@components/Dashboard/Pages/Payments/PaymentsProductPage'
+import PaymentsCustomersPage from '@components/Dashboard/Pages/Payments/PaymentsCustomersPage'
 
 
 

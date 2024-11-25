@@ -1,4 +1,4 @@
-import ToolTip from '@components/StyledElements/Tooltip/Tooltip'
+import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
 import { getUriWithOrg } from '@services/config/config'
 import Link from 'next/link'
 import React from 'react'

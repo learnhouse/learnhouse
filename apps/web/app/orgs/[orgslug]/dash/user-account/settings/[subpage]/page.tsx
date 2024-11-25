@@ -1,12 +1,12 @@
 'use client'
 import React, { useEffect } from 'react'
 import { motion } from 'framer-motion'
-import UserEditGeneral from '@components/Dashboard/UserAccount/UserEditGeneral/UserEditGeneral'
-import UserEditPassword from '@components/Dashboard/UserAccount/UserEditPassword/UserEditPassword'
+import UserEditGeneral from '@components/Dashboard/Pages/UserAccount/UserEditGeneral/UserEditGeneral'
+import UserEditPassword from '@components/Dashboard/Pages/UserAccount/UserEditPassword/UserEditPassword'
 import Link from 'next/link'
 import { getUriWithOrg } from '@services/config/config'
 import { Info, Lock } from 'lucide-react'
-import BreadCrumbs from '@components/Dashboard/UI/BreadCrumbs'
+import BreadCrumbs from '@components/Dashboard/Misc/BreadCrumbs'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 
 export type SettingsParams = {

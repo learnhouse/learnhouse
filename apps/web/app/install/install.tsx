@@ -1,7 +1,7 @@
 'use client'
 import React, { useEffect } from 'react'
 import { INSTALL_STEPS } from './steps/steps'
-import GeneralWrapperStyled from '@components/StyledElements/Wrappers/GeneralWrapper'
+import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
 

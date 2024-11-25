@@ -15,7 +15,7 @@ import {
 import { mutate } from 'swr'
 import { revalidateTags } from '@services/utils/ts/requests'
 import { useRouter } from 'next/navigation'
-import ConfirmationModal from '@components/StyledElements/ConfirmationModal/ConfirmationModal'
+import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import { deleteActivity, updateActivity } from '@services/courses/activities'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 

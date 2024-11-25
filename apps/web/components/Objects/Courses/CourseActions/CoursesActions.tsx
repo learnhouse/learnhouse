@@ -9,7 +9,7 @@ import { useMediaQuery } from 'usehooks-ts'
 import { getUriWithOrg } from '@services/config/config'
 import { getProductsByCourse } from '@services/payments/products'
 import { LogIn, LogOut, ShoppingCart, AlertCircle } from 'lucide-react'
-import Modal from '@components/StyledElements/Modal/Modal'
+import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import CoursePaidOptions from './CoursePaidOptions'
 import { checkPaidAccess } from '@services/payments/payments'
 

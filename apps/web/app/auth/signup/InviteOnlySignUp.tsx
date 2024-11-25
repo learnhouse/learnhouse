@@ -7,7 +7,7 @@ import FormLayout, {
   FormLabelAndMessage,
   Input,
   Textarea,
-} from '@components/StyledElements/Form/Form'
+} from '@components/Objects/StyledElements/Form/Form'
 import * as Form from '@radix-ui/react-form'
 import { AlertTriangle, Check, User } from 'lucide-react'
 import Link from 'next/link'

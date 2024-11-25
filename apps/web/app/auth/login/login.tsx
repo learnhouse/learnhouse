@@ -4,7 +4,7 @@ import FormLayout, {
   FormField,
   FormLabelAndMessage,
   Input,
-} from '@components/StyledElements/Form/Form'
+} from '@components/Objects/StyledElements/Form/Form'
 import Image from 'next/image'
 import * as Form from '@radix-ui/react-form'
 import { useFormik } from 'formik'
