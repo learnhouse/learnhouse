@@ -67,3 +67,33 @@ def migrate_v0_to_v1(v0_config):
     }
 
     return v1_config
+
+
+def migrate_to_v1_1(v1_config):
+    # Start by copying the existing configuration
+    v1_1_config = v1_config.copy()
+    
+    # Update the config version
+    v1_1_config["config_version"] = "1.1"
+    
+    # Add the new 'cloud' object at the end
+    v1_1_config['cloud'] = {
+        "plan": "free",
+        "custom_domain": False
+    }
+    
+    return v1_1_config
+
+def migrate_to_v1_2(v1_1_config):
+    v1_2_config = v1_1_config.copy()
+
+    v1_2_config['config_version'] = '1.2'
+
+    # Enable payments for everyone
+    v1_2_config['features']['payments']['enabled'] = True
+    
+    # Only delete stripe_key if it exists
+    if 'stripe_key' in v1_2_config['features']['payments']:
+        del v1_2_config['features']['payments']['stripe_key']
+
+    return v1_2_config
