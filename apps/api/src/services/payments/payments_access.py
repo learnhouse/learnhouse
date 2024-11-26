@@ -1,12 +1,14 @@
 from sqlmodel import Session, select
+from src.security.rbac.rbac import authorization_verify_if_user_is_author
 from src.db.payments.payments_users import PaymentStatusEnum, PaymentsUser
 from src.db.users import PublicUser, AnonymousUser
 from src.db.payments.payments_courses import PaymentsCourse
 from src.db.courses.activities import Activity
 from src.db.courses.courses import Course
-from fastapi import HTTPException
+from fastapi import HTTPException, Request
 
 async def check_activity_paid_access(
+    request: Request,
     activity_id: int,
     user: PublicUser | AnonymousUser,
     db_session: Session,
@@ -33,6 +35,12 @@ async def check_activity_paid_access(
 
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
+    
+    # Check if user is author of the course
+    is_course_author = await authorization_verify_if_user_is_author(request, user.id, "update", course.course_uuid, db_session)
+
+    if is_course_author:
+        return True
 
     # Check if course is linked to a product
     statement = select(PaymentsCourse).where(PaymentsCourse.course_id == course.id)

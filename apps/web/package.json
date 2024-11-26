@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "@emoji-mart/react": "^1.1.1",
-    "@hocuspocus/provider": "^2.13.7",
     "@icons-pack/react-simple-icons": "^10.1.0",
     "@radix-ui/colors": "^0.1.9",
     "@radix-ui/react-aspect-ratio": "^1.1.0",
@@ -34,8 +33,6 @@
     "@tanstack/react-table": "^8.20.5",
     "@tiptap/core": "^2.9.1",
     "@tiptap/extension-code-block-lowlight": "^2.9.1",
-    "@tiptap/extension-collaboration": "^2.9.1",
-    "@tiptap/extension-collaboration-cursor": "^2.9.1",
     "@tiptap/extension-table": "^2.9.1",
     "@tiptap/extension-table-cell": "^2.9.1",
     "@tiptap/extension-table-header": "^2.9.1",
@@ -47,6 +44,7 @@
     "@tiptap/starter-kit": "^2.9.1",
     "@types/dompurify": "^3.0.5",
     "@types/randomcolor": "^0.5.9",
+    "prosemirror-state": "^1.4.3",
     "avvvatars-react": "^0.4.2",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
@@ -63,7 +61,6 @@
     "next": "14.2.15",
     "next-auth": "^4.24.10",
     "nextjs-toploader": "^1.6.12",
-    "prosemirror-state": "^1.4.3",
     "randomcolor": "^0.6.2",
     "re-resizable": "^6.10.0",
     "react": "^18.3.1",
@@ -83,10 +80,6 @@
     "unsplash-js": "^7.0.19",
     "usehooks-ts": "^3.1.0",
     "uuid": "^9.0.1",
-    "y-indexeddb": "^9.0.12",
-    "y-prosemirror": "^1.2.12",
-    "y-webrtc": "^10.3.0",
-    "yjs": "^13.6.20",
     "yup": "^1.4.0"
   },
   "devDependencies": {
