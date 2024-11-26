@@ -21,7 +21,7 @@ import WarningCallout from './Extensions/Callout/Warning/WarningCallout'
 import ImageBlock from './Extensions/Image/ImageBlock'
 import Youtube from '@tiptap/extension-youtube'
 import VideoBlock from './Extensions/Video/VideoBlock'
-import { ComputerIcon, Eye, Monitor } from 'lucide-react'
+import { Eye, Monitor } from 'lucide-react'
 import MathEquationBlock from './Extensions/MathEquation/MathEquationBlock'
 import PDFBlock from './Extensions/PDF/PDFBlock'
 import QuizBlock from './Extensions/Quiz/QuizBlock'
@@ -45,17 +45,14 @@ import html from 'highlight.js/lib/languages/xml'
 import python from 'highlight.js/lib/languages/python'
 import java from 'highlight.js/lib/languages/java'
 import { CourseProvider } from '@components/Contexts/CourseContext'
-import { useLHSession } from '@components/Contexts/LHSessionContext'
 import AIEditorToolkit from './AI/AIEditorToolkit'
 import useGetAIFeatures from '@components/Hooks/useGetAIFeatures'
-import Collaboration from '@tiptap/extension-collaboration'
-import CollaborationCursor from '@tiptap/extension-collaboration-cursor'
-import ActiveAvatars from './ActiveAvatars'
 import { getUriWithOrg } from '@services/config/config'
 import EmbedObjects from './Extensions/EmbedObjects/EmbedObjects'
 import Badges from './Extensions/Badges/Badges'
 import Buttons from './Extensions/Buttons/Buttons'
 import { useMediaQuery } from 'usehooks-ts'
+import UserAvatar from '../UserAvatar'
 
 interface Editor {
   content: string
@@ -63,16 +60,10 @@ interface Editor {
   course: any
   org: any
   session: any
-  ydoc: any
-  hocuspocusProvider: any,
-  isCollabEnabledOnThisOrg: boolean
-  userRandomColor: string
-  mouseMovements: any
   setContent: (content: string) => void
 }
 
 function Editor(props: Editor) {
-  const session = useLHSession() as any
   const dispatchAIEditor = useAIEditorDispatch() as any
   const aiEditorState = useAIEditor() as AIEditorStateTypes
   const is_ai_feature_enabled = useGetAIFeatures({ feature: 'editor' })
@@ -102,12 +93,8 @@ function Editor(props: Editor) {
 
   const editor: any = useEditor({
     editable: true,
-
     extensions: [
-      StarterKit.configure({
-        // The Collaboration extension comes with its own history handling
-        history: props.isCollabEnabledOnThisOrg ? false : undefined,
-      }),
+      StarterKit,
       InfoCallout.configure({
         editable: true,
       }),
@@ -159,27 +146,12 @@ function Editor(props: Editor) {
       TableRow,
       TableHeader,
       TableCell,
-
-      // Add Collaboration and CollaborationCursor only if isCollabEnabledOnThisOrg is true
-      ...(props.isCollabEnabledOnThisOrg ? [
-        Collaboration.configure({
-          document: props.hocuspocusProvider?.document,
-
-        }),
-
-        CollaborationCursor.configure({
-          provider: props.hocuspocusProvider,
-          user: {
-            name: props.session.data.user.first_name + ' ' + props.session.data.user.last_name,
-            color: props.userRandomColor,
-          },
-        }),
-      ] : []),
     ],
-
-    // If collab is enabled the onSynced callback ensures initial content is set only once using editor.setContent(), preventing repetitive content insertion on editor syncs.
-    content: props.isCollabEnabledOnThisOrg ? null : props.content,
+    content: props.content,
+    immediatelyRender: false,
   })
+
+  console.log(props.content)
 
   const isMobile = useMediaQuery('(max-width: 767px)')
   if (isMobile) {
@@ -310,7 +282,7 @@ function Editor(props: Editor) {
               />
 
               <EditorUserProfileWrapper>
-                <ActiveAvatars userRandomColor={props.userRandomColor} mouseMovements={props.mouseMovements}  />
+                <UserAvatar border="border-4" use_with_session={true} width={45} />
               </EditorUserProfileWrapper>
             </EditorUsersSection>
           </EditorTop>
