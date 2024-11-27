@@ -12,6 +12,7 @@ import { mutate } from 'swr'
 import { getAPIUrl } from '@services/config/config'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useFormik } from 'formik'
+import toast from 'react-hot-toast'
 
 type AddUserGroupProps = {
     setCreateUserGroupModal: any
@@ -42,13 +43,16 @@ function AddUserGroup(props: AddUserGroupProps) {
         onSubmit: async (values) => {
             setIsSubmitting(true)
             const res = await createUserGroup(values, access_token)
+            const toastId = toast.loading("Creating user group...")
             if (res.status == 200) {
                 setIsSubmitting(false)
                 mutate(`${getAPIUrl()}usergroups/org/${org.id}`)
                 props.setCreateUserGroupModal(false)
+                toast.success("Created user group", {id:toastId})
 
             } else {
                 setIsSubmitting(false)
+                toast.error("Couldn't create user group", {id:toastId})
             }
         },
     })

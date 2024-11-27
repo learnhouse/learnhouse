@@ -18,6 +18,7 @@ import { useRouter } from 'next/navigation'
 import { getAPIUrl } from '@services/config/config'
 import { mutate } from 'swr'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import toast from 'react-hot-toast'
 
 type ChapterElementProps = {
   chapter: any
@@ -45,10 +46,16 @@ function ChapterElement(props: ChapterElementProps) {
   const router = useRouter()
 
   const deleteChapterUI = async () => {
-    await deleteChapter(props.chapter.id, access_token)
-    mutate(`${getAPIUrl()}courses/${props.course_uuid}/meta`)
-    await revalidateTags(['courses'], props.orgslug)
-    router.refresh()
+    const toastId = toast.loading("Deleting...")
+    try {
+      await deleteChapter(props.chapter.id, access_token)
+      mutate(`${getAPIUrl()}courses/${props.course_uuid}/meta`)
+      await revalidateTags(['courses'], props.orgslug)
+      toast.success("Deleted chapter", {id:toastId})
+      router.refresh()
+    } catch (error) {
+      toast.error("Couldn't delete chapter", {id:toastId})
+    }
   }
 
   async function updateChapterName(chapterId: string) {

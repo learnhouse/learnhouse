@@ -2,14 +2,21 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { updatePassword } from '@services/settings/password'
 import { Formik, Form, Field } from 'formik'
 import React, { useEffect } from 'react'
+import toast from 'react-hot-toast'
 
 function UserEditPassword() {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token;
 
   const updatePasswordUI = async (values: any) => {
-    let user_id = session.data.user.id
-    await updatePassword(user_id, values, access_token)
+    const toastId = toast.loading("changing...");
+    try {
+      let user_id = session.data.user.id
+      await updatePassword(user_id, values, access_token)
+      toast.success("Changed", {id:toastId});
+    } catch (error) {
+      toast.error("Couldn't change", {id:toastId});
+    }
   }
 
   useEffect(() => { }, [session])

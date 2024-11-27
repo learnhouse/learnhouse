@@ -13,6 +13,7 @@ import {
 import UserAvatar from '@components/Objects/UserAvatar'
 import { updateUserAvatar } from '@services/users/users'
 import { constructAcceptValue } from '@/lib/constants';
+import toast from 'react-hot-toast';
 
 const SUPPORTED_FILES = constructAcceptValue(['image'])
 
@@ -55,10 +56,16 @@ function UserEditGeneral() {
             bio: session.data.user.bio,
           }}
           onSubmit={(values, { setSubmitting }) => {
-            setTimeout(() => {
-              setSubmitting(false)
-              updateProfile(values, session.data.user.id, access_token)
-            }, 400)
+            const toastId = toast.loading("Updating profile...")
+            try {
+              setTimeout(() => {
+                setSubmitting(false)
+                updateProfile(values, session.data.user.id, access_token)
+                toast.success("Updated", {id:toastId})
+;              }, 400)
+            } catch (error) {
+              toast.error("Couldn't update", {id:toastId})
+            }
           }}
         >
           {({ isSubmitting }) => (

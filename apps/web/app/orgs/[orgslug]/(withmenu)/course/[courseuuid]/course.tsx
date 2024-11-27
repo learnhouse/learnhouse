@@ -19,6 +19,7 @@ import CourseUpdates from '@components/Objects/CourseUpdates/CourseUpdates'
 import { CourseProvider } from '@components/Contexts/CourseContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useMediaQuery } from 'usehooks-ts'
+import toast from 'react-hot-toast'
 
 const CourseClient = (props: any) => {
   const [user, setUser] = useState<any>({})
@@ -38,13 +39,18 @@ const CourseClient = (props: any) => {
   }
 
   async function startCourseUI() {
-    // Create activity
-    await startCourse('course_' + courseuuid, orgslug, session.data?.tokens?.access_token)
-    await revalidateTags(['courses'], orgslug)
-    router.refresh()
-
-    // refresh page (FIX for Next.js BUG)
-    // window.location.reload();
+    const toastId= toast.loading("Starting course...")
+    try {
+      // Create activity
+      await startCourse('course_' + courseuuid, orgslug, session.data?.tokens?.access_token)
+      await revalidateTags(['courses'], orgslug)
+      toast.success("Started course", {id:toastId})
+      router.refresh()
+      // refresh page (FIX for Next.js BUG)
+      // window.location.reload();
+    } catch (error) {
+      toast.error("Couldn't start course", {id:toastId})
+    }
   }
 
   function isCourseStarted() {
@@ -57,11 +63,17 @@ const CourseClient = (props: any) => {
   }
 
   async function quitCourse() {
-    // Close activity
-    let activity = await removeCourse('course_' + courseuuid, orgslug, session.data?.tokens?.access_token)
-    // Mutate course
-    await revalidateTags(['courses'], orgslug)
-    router.refresh()
+    const toastId = toast.loading("Quitting course...")
+    try {
+      // Close activity
+      let activity = await removeCourse('course_' + courseuuid, orgslug, session.data?.tokens?.access_token)
+      // Mutate course
+      await revalidateTags(['courses'], orgslug)
+      toast.success("Quitted course", {id:toastId})
+      router.refresh()
+    } catch (error) {
+      toast.error("Couldn't quit course", {id:toastId})
+    }
   }
 
   useEffect(() => {

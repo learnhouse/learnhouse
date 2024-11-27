@@ -43,20 +43,24 @@ function OrgAccess() {
 
   async function deleteInvite(invite: any) {
     let res = await deleteInviteCode(org.id, invite.invite_code_uuid, access_token)
+    const toastId = toast.loading("Deleting...")
     if (res.status == 200) {
       mutate(`${getAPIUrl()}orgs/${org.id}/invites`)
+      toast.success("Deleted Invite Code", {id:toastId})
     } else {
-      toast.error('Error ' + res.status + ': ' + res.data.detail)
+      toast.error('Error deleting invite code', {id:toastId})
     }
   }
 
   async function changeJoinMethod(method: 'open' | 'inviteOnly') {
     let res = await changeSignupMechanism(org.id, method, access_token)
+    const toastId= toast.loading("Changing join method...")
     if (res.status == 200) {
       router.refresh()
       mutate(`${getAPIUrl()}orgs/slug/${org?.slug}`)
+      toast.success(`Join method changed to ${method}`, {id:toastId})
     } else {
-      toast.error('Error ' + res.status + ': ' + res.data.detail)
+      toast.error('Error changing join method', {id:toastId})
     }
   }
 

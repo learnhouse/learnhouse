@@ -12,6 +12,7 @@ import { FormMessage } from '@radix-ui/react-form'
 import { getAPIUrl } from '@services/config/config'
 import { updateUserRole } from '@services/organizations/orgs'
 import React, { useEffect } from 'react'
+import toast from 'react-hot-toast'
 import { BarLoader } from 'react-spinners'
 import { mutate } from 'swr'
 
@@ -39,14 +40,16 @@ function RolesUpdate(props: Props) {
   const handleSubmit = async (e: any) => {
     e.preventDefault()
     setIsSubmitting(true)
+    const toastId = toast.loading('Updating role...')
     const res = await updateUserRole(org.id, props.user.user.id, assignedRole,access_token)
-
     if (res.status === 200) {
       await mutate(`${getAPIUrl()}orgs/${org.id}/users`)
       props.setRolesModal(false)
+      toast.success('Role updated', { id: toastId })
     } else {
       setIsSubmitting(false)
       setError('Error ' + res.status + ': ' + res.data.detail)
+      toast.error("couldn't update role", { id: toastId })
     }
   }
 

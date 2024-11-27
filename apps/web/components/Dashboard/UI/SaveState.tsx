@@ -12,6 +12,7 @@ import React, { useEffect } from 'react'
 import { mutate } from 'swr'
 import { updateCourse } from '@services/courses/courses'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import toast from 'react-hot-toast'
 
 function SaveState(props: { orgslug: string }) {
   const course = useCourse() as any
@@ -24,13 +25,19 @@ function SaveState(props: { orgslug: string }) {
   const saveCourseState = async () => {
     // Course  order
     if (saved) return
-    await changeOrderBackend()
-    mutate(`${getAPIUrl()}courses/${course.courseStructure.course_uuid}/meta`)
-    // Course metadata
-    await changeMetadataBackend()
-    mutate(`${getAPIUrl()}courses/${course.courseStructure.course_uuid}/meta`)
-    await revalidateTags(['courses'], props.orgslug)
-    dispatchCourse({ type: 'setIsSaved' })
+    const toastId = toast.loading("Saving...")
+    try {
+      await changeOrderBackend()
+      mutate(`${getAPIUrl()}courses/${course.courseStructure.course_uuid}/meta`)
+      // Course metadata
+      await changeMetadataBackend()
+      mutate(`${getAPIUrl()}courses/${course.courseStructure.course_uuid}/meta`)
+      await revalidateTags(['courses'], props.orgslug)
+      dispatchCourse({ type: 'setIsSaved' })
+      toast.success("Saved", {id:toastId})
+    } catch (error) {
+      toast.error("Failed to save", {id:toastId})
+    }
   }
 
   //
