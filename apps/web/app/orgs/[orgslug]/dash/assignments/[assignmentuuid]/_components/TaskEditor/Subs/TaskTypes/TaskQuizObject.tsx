@@ -74,8 +74,12 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id }: TaskQuizObjectPro
 
     const removeOption = (qIndex: number, oIndex: number) => {
         const updatedQuestions = [...questions];
-        updatedQuestions[qIndex].options.splice(oIndex, 1);
-        setQuestions(updatedQuestions);
+        if (updatedQuestions[qIndex].options.length > 1) {
+            updatedQuestions[qIndex].options.splice(oIndex, 1);
+            setQuestions(updatedQuestions);
+        } else {
+            toast.error('Cannot delete the last option. At least one option is required.');
+        }
     };
 
     const addQuestion = () => {
