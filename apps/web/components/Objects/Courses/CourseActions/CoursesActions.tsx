@@ -6,7 +6,7 @@ import { revalidateTags } from '@services/utils/ts/requests'
 import { useRouter } from 'next/navigation'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useMediaQuery } from 'usehooks-ts'
-import { getUriWithOrg } from '@services/config/config'
+import { getUriWithOrg, getUriWithoutOrg } from '@services/config/config'
 import { getProductsByCourse } from '@services/payments/products'
 import { LogIn, LogOut, ShoppingCart, AlertCircle } from 'lucide-react'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
@@ -126,7 +126,7 @@ const Actions = ({ courseuuid, orgslug, course }: CourseActionsProps) => {
 
   const handleCourseAction = async () => {
     if (!session.data?.user) {
-      router.push(getUriWithOrg(orgslug, '/signup?orgslug=' + orgslug))
+      router.push(getUriWithoutOrg(`/signup?orgslug=${orgslug}`))
       return
     }
     const action = isStarted ? removeCourse : startCourse

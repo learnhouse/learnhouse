@@ -3,7 +3,7 @@ import learnhouseIcon from 'public/learnhouse_bigicon_1.png'
 import Image from 'next/image'
 import { getOrgLogoMediaDirectory } from '@services/media/media'
 import Link from 'next/link'
-import { getUriWithOrg } from '@services/config/config'
+import { getUriWithOrg, getUriWithoutOrg } from '@services/config/config'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import React, { useEffect } from 'react'
 import { MailWarning, Ticket, UserPlus } from 'lucide-react'
@@ -191,7 +191,7 @@ const NoTokenScreen = (props: any) => {
         "Invite code is valid, you'll be redirected to the signup page in a few seconds"
       )
       setTimeout(() => {
-        router.push(`/signup?inviteCode=${inviteCode}&orgslug=${org.slug}`)
+        router.push(getUriWithoutOrg(`/signup?inviteCode=${inviteCode}&orgslug=${org.slug}`))
       }, 2000)
     } else {
       toast.error('Invite code is invalid')

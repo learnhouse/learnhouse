@@ -163,7 +163,9 @@ function AIActionButton(props: {
       })
       await dispatchAIChatBot({ type: 'setIsWaitingForResponse' })
       const response = await startActivityAIChatSession(
-        message, access_token
+        message,
+        access_token,
+        props.activity.activity_uuid
       )
       if (response.success == false) {
         await dispatchAIChatBot({ type: 'setIsNoLongerWaitingForResponse' })

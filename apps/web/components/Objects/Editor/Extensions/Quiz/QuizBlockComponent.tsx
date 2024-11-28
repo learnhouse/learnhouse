@@ -291,7 +291,7 @@ function QuizBlockComponent(props: any) {
                   <div
                     key={answer.answer_id}
                     className={twMerge(
-                      'outline outline-3 pr-2 shadow w-full flex items-center space-x-2 h-[30px] bg-opacity-50 hover:bg-opacity-100 hover:shadow-md rounded-s rounded-lg bg-white text-sm hover:scale-105 active:scale-110 duration-150 cursor-pointer ease-linear',
+                      'outline outline-3 pr-2 shadow w-full flex items-center space-x-2 h-[30px] bg-opacity-50 hover:bg-opacity-100 hover:shadow-md rounded-s rounded-lg bg-white text-sm duration-150 cursor-pointer ease-linear',
                       answer.correct && isEditable ? 'outline-lime-300' : 'outline-white',
                       userAnswers.some(
                         (userAnswer: any) =>
