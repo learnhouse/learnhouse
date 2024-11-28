@@ -1,10 +1,65 @@
 import { NodeViewWrapper } from '@tiptap/react'
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useMemo } from 'react'
 import { Upload, Link as LinkIcon, GripVertical, GripHorizontal, AlignCenter, Cuboid, Code } from 'lucide-react'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { SiGithub, SiReplit, SiSpotify, SiLoom, SiGooglemaps, SiCodepen, SiCanva, SiNotion, SiGoogledocs, SiGitlab, SiX, SiFigma, SiGiphy } from '@icons-pack/react-simple-icons'
 import { useRouter } from 'next/navigation'
 import DOMPurify from 'dompurify'
+
+// Add new type for script-based embeds
+const SCRIPT_BASED_EMBEDS = {
+  twitter: { src: 'https://platform.twitter.com/widgets.js', identifier: 'twitter-tweet' },
+  instagram: { src: 'https://www.instagram.com/embed.js', identifier: 'instagram-media' },
+  tiktok: { src: 'https://www.tiktok.com/embed.js', identifier: 'tiktok-embed' },
+  // Add more platforms as needed
+};
+
+// Add new memoized component for the embed content
+const MemoizedEmbed = React.memo(({ embedUrl, sanitizedEmbedCode, embedType }: {
+  embedUrl: string;
+  sanitizedEmbedCode: string;
+  embedType: 'url' | 'code';
+}) => {
+  useEffect(() => {
+    if (embedType === 'code' && sanitizedEmbedCode) {
+      // Check for any matching script-based embeds
+      const matchingPlatform = Object.entries(SCRIPT_BASED_EMBEDS).find(([_, config]) => 
+        sanitizedEmbedCode.includes(config.identifier)
+      );
+
+      if (matchingPlatform) {
+        const [_, config] = matchingPlatform;
+        const script = document.createElement('script');
+        script.src = config.src;
+        script.async = true;
+        script.charset = 'utf-8';
+        document.body.appendChild(script);
+
+        return () => {
+          document.body.removeChild(script);
+        };
+      }
+    }
+  }, [embedType, sanitizedEmbedCode]);
+
+  if (embedType === 'url' && embedUrl) {
+    return (
+      <iframe 
+        src={embedUrl} 
+        className="w-full h-full"
+        frameBorder="0"
+        allowFullScreen
+      />
+    );
+  }
+  
+  if (embedType === 'code' && sanitizedEmbedCode) {
+    return <div dangerouslySetInnerHTML={{ __html: sanitizedEmbedCode }} className="w-full h-full" />;
+  }
+  
+  return null;
+});
+MemoizedEmbed.displayName = 'MemoizedEmbed';
 
 function EmbedObjectsComponent(props: any) {
   const [embedType, setEmbedType] = useState<'url' | 'code'>(props.node.attrs.embedType || 'url')
@@ -13,6 +68,7 @@ function EmbedObjectsComponent(props: any) {
   const [embedHeight, setEmbedHeight] = useState(props.node.attrs.embedHeight || 300)
   const [embedWidth, setEmbedWidth] = useState(props.node.attrs.embedWidth || '100%')
   const [alignment, setAlignment] = useState(props.node.attrs.alignment || 'left')
+  const [isResizing, setIsResizing] = useState(false)
 
   const resizeRef = useRef<HTMLDivElement>(null)
   const editorState = useEditorProvider() as any
@@ -53,26 +109,40 @@ function EmbedObjectsComponent(props: any) {
 
   const handleUrlChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newUrl = event.target.value;
-    // Sanitize the URL
-    const sanitizedUrl = DOMPurify.sanitize(newUrl);
-    setEmbedUrl(sanitizedUrl);
-    props.updateAttributes({
-      embedUrl: sanitizedUrl,
-      embedType: 'url',
-    });
+    const trimmedUrl = newUrl.trim();
+    // Only update if URL is not just whitespace
+    if (newUrl === '' || trimmedUrl) {
+      const sanitizedUrl = DOMPurify.sanitize(newUrl);
+      setEmbedUrl(sanitizedUrl);
+      props.updateAttributes({
+        embedUrl: sanitizedUrl,
+        embedType: 'url',
+      });
+    }
   };
 
   const handleCodeChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newCode = event.target.value;
-    setEmbedCode(newCode);
-    props.updateAttributes({
-      embedCode: newCode,
-      embedType: 'code',
-    });
+    const trimmedCode = newCode.trim();
+    // Only update if code is not just whitespace
+    if (newCode === '' || trimmedCode) {
+      setEmbedCode(newCode);
+      props.updateAttributes({
+        embedCode: newCode,
+        embedType: 'code',
+      });
+    }
   };
+
+  // Add refs for storing dimensions during resize
+  const dimensionsRef = useRef({
+    width: props.node.attrs.embedWidth || '100%',
+    height: props.node.attrs.embedHeight || 300
+  })
 
   const handleResizeStart = (event: React.MouseEvent<HTMLDivElement>, direction: 'horizontal' | 'vertical') => {
     event.preventDefault()
+    setIsResizing(true)
     const startX = event.clientX
     const startY = event.clientY
     const startWidth = resizeRef.current?.offsetWidth || 0
@@ -85,17 +155,29 @@ function EmbedObjectsComponent(props: any) {
           const parentWidth = resizeRef.current.parentElement?.offsetWidth || 1
           const widthPercentage = Math.min(100, Math.max(10, (newWidth / parentWidth) * 100))
           const newWidthValue = `${widthPercentage}%`
-          setEmbedWidth(newWidthValue)
-          props.updateAttributes({ embedWidth: newWidthValue })
+          
+          // Update ref and DOM directly during resize
+          dimensionsRef.current.width = newWidthValue
+          resizeRef.current.style.width = newWidthValue
         } else {
           const newHeight = Math.max(100, startHeight + e.clientY - startY)
-          setEmbedHeight(newHeight)
-          props.updateAttributes({ embedHeight: newHeight })
+          
+          // Update ref and DOM directly during resize
+          dimensionsRef.current.height = newHeight
+          resizeRef.current.style.height = `${newHeight}px`
         }
       }
     }
 
     const handleMouseUp = () => {
+      setIsResizing(false)
+      // Only update state and attributes after resize is complete
+      setEmbedWidth(dimensionsRef.current.width)
+      setEmbedHeight(dimensionsRef.current.height)
+      props.updateAttributes({ 
+        embedWidth: dimensionsRef.current.width,
+        embedHeight: dimensionsRef.current.height
+      })
       document.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseup', handleMouseUp)
     }
@@ -114,6 +196,19 @@ function EmbedObjectsComponent(props: any) {
     window.open(guide, '_blank', 'noopener,noreferrer')
   }
 
+  // Memoize the embed content
+  const embedContent = useMemo(() => (
+    !isResizing && (embedUrl || sanitizedEmbedCode) ? (
+      <MemoizedEmbed 
+        embedUrl={embedUrl}
+        sanitizedEmbedCode={sanitizedEmbedCode}
+        embedType={embedType}
+      />
+    ) : (
+      <div className="w-full h-full bg-gray-200" />
+    )
+  ), [embedUrl, sanitizedEmbedCode, embedType, isResizing]);
+
   return (
     <NodeViewWrapper className="embed-block">
       <div 
@@ -121,16 +216,7 @@ function EmbedObjectsComponent(props: any) {
         className={`relative bg-gray-100 rounded-lg overflow-hidden flex justify-center items-center ${alignment === 'center' ? 'mx-auto' : ''}`}
         style={{ height: `${embedHeight}px`, width: embedWidth, minWidth: '400px' }}
       >
-        {embedType === 'url' && embedUrl ? (
-          <iframe 
-            src={embedUrl} 
-            className="w-full h-full"
-            frameBorder="0"
-            allowFullScreen
-          />
-        ) : embedType === 'code' && sanitizedEmbedCode ? (
-          <div dangerouslySetInnerHTML={{ __html: sanitizedEmbedCode }} className="w-full h-full" />
-        ) : (
+        {(embedUrl || sanitizedEmbedCode) ? embedContent : (
           <div className="w-full h-full flex flex-col items-center justify-center p-6">
             <p className="text-gray-500 mb-4 font-medium tracking-tighter text-lg">Add an embed from :</p>
             <div className="flex flex-wrap gap-5 justify-center">
@@ -210,3 +296,4 @@ function EmbedObjectsComponent(props: any) {
 }
 
 export default EmbedObjectsComponent
+

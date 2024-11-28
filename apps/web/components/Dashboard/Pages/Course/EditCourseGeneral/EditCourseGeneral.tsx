@@ -51,7 +51,7 @@ function EditCourseGeneral(props: EditCourseStructureProps) {
       about: courseStructure?.about || '',
       learnings: courseStructure?.learnings || '',
       tags: courseStructure?.tags || '',
-      public: courseStructure?.public || '',
+      public: courseStructure?.public || false,
     },
     validate,
     onSubmit: async values => {
