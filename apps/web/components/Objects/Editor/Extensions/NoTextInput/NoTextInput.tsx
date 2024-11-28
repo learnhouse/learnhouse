@@ -9,19 +9,8 @@ export const NoTextInput = Extension.create({
       new Plugin({
         key: new PluginKey('noTextInput'),
         filterTransaction: (transaction) => {
-          // If the transaction is adding text, stop it
-          return (
-            !transaction.docChanged ||
-            transaction.steps.every((step) => {
-              const { slice } = step.toJSON()
-              return (
-                !slice ||
-                !slice.content.some(
-                  (node: { type: string }) => node.type === 'text'
-                )
-              )
-            })
-          )
+          // Block all content-changing transactions
+          return !transaction.docChanged
         },
       }),
     ]
