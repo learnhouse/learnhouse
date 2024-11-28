@@ -53,22 +53,29 @@ function EmbedObjectsComponent(props: any) {
 
   const handleUrlChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newUrl = event.target.value;
-    // Sanitize the URL
-    const sanitizedUrl = DOMPurify.sanitize(newUrl);
-    setEmbedUrl(sanitizedUrl);
-    props.updateAttributes({
-      embedUrl: sanitizedUrl,
-      embedType: 'url',
-    });
+    const trimmedUrl = newUrl.trim();
+    // Only update if URL is not just whitespace
+    if (newUrl === '' || trimmedUrl) {
+      const sanitizedUrl = DOMPurify.sanitize(newUrl);
+      setEmbedUrl(sanitizedUrl);
+      props.updateAttributes({
+        embedUrl: sanitizedUrl,
+        embedType: 'url',
+      });
+    }
   };
 
   const handleCodeChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newCode = event.target.value;
-    setEmbedCode(newCode);
-    props.updateAttributes({
-      embedCode: newCode,
-      embedType: 'code',
-    });
+    const trimmedCode = newCode.trim();
+    // Only update if code is not just whitespace
+    if (newCode === '' || trimmedCode) {
+      setEmbedCode(newCode);
+      props.updateAttributes({
+        embedCode: newCode,
+        embedType: 'code',
+      });
+    }
   };
 
   const handleResizeStart = (event: React.MouseEvent<HTMLDivElement>, direction: 'horizontal' | 'vertical') => {
