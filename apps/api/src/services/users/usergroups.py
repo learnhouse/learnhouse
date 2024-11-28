@@ -16,7 +16,7 @@ from src.db.usergroup_resources import UserGroupResource
 from src.db.usergroup_user import UserGroupUser
 from src.db.organizations import Organization
 from src.db.usergroups import UserGroup, UserGroupCreate, UserGroupRead, UserGroupUpdate
-from src.db.users import AnonymousUser, PublicUser, User, UserRead
+from src.db.users import AnonymousUser, InternalUser, PublicUser, User, UserRead
 
 
 async def create_usergroup(
@@ -275,7 +275,7 @@ async def delete_usergroup_by_id(
 async def add_users_to_usergroup(
     request: Request,
     db_session: Session,
-    current_user: PublicUser | AnonymousUser,
+    current_user: PublicUser | AnonymousUser | InternalUser,
     usergroup_id: int,
     user_ids: str,
 ) -> str:
@@ -486,10 +486,13 @@ async def remove_resources_from_usergroup(
 async def rbac_check(
     request: Request,
     usergroup_uuid: str,
-    current_user: PublicUser | AnonymousUser,
+    current_user: PublicUser | AnonymousUser | InternalUser,
     action: Literal["create", "read", "update", "delete"],
     db_session: Session,
 ):
+    if isinstance(current_user, InternalUser):
+        return True
+
     await authorization_verify_if_user_is_anon(current_user.id)
 
     await authorization_verify_based_on_roles_and_authorship(
