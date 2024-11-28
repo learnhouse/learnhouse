@@ -135,13 +135,11 @@ const BadgesExtension: React.FC = (props: any) => {
 
   return (
     <NodeViewWrapper>
-      <div className='flex space-x-2 items-center'>
-        <div
-          className={twMerge(
-            'flex space-x-1 py-1.5 items-center w-fit rounded-full outline outline-2 outline-white/20 px-3.5 font-semibold nice-shadow text-sm my-2',
-            getBadgeColor(color)
-          )}
-        >
+      <div className='flex space-x-2 items-center relative'>
+        <div className={twMerge(
+          'flex space-x-1 py-1.5 items-center w-fit rounded-full outline outline-2 outline-white/20 px-3.5 font-semibold nice-shadow text-sm my-2',
+          getBadgeColor(color)
+        )}>
           <div className="flex items-center justify-center space-x-1">
             <span className='text'>{emoji}</span>
             {isEditable && (
@@ -176,6 +174,7 @@ const BadgesExtension: React.FC = (props: any) => {
             </div>
           )}
         </div>
+        
         {isEditable && (
           <button
             onClick={() => setShowPredefinedCallouts(!showPredefinedCallouts)}
@@ -184,8 +183,9 @@ const BadgesExtension: React.FC = (props: any) => {
             <ChevronRight size={16} />
           </button>
         )}
+
         {isEditable && showPredefinedCallouts && (
-          <div className='flex flex-wrap gap-2 absolute mt-8 bg-white/90 backdrop-blur-md p-2 rounded-lg nice-shadow'>
+          <div className='flex flex-wrap gap-2 absolute top-full mt-2 left-0 bg-white/90 backdrop-blur-md p-2 rounded-lg nice-shadow z-10'>
             {predefinedBadges.map((badge, index) => (
               <button
                 key={index}
