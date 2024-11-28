@@ -21,6 +21,7 @@ from src.security.rbac.rbac import (
 from src.db.organizations import Organization, OrganizationRead
 from src.db.users import (
     AnonymousUser,
+    InternalUser,
     PublicUser,
     User,
     UserCreate,
@@ -147,18 +148,20 @@ async def create_user_with_invite(
     # Usage check
     check_limits_with_usage("members", org_id, db_session)
 
+    
+
+    user = await create_user(request, db_session, current_user, user_object, org_id)
+
     # Check if invite code contains UserGroup
-    if inviteCode.usergroup_id:
+    if inviteCode.get("usergroup_id"):
         # Add user to UserGroup
         await add_users_to_usergroup(
             request,
             db_session,
-            current_user,
-            inviteCode.usergroup_id,
-            user_object.username,
+            InternalUser(id=0),
+            int(inviteCode.get("usergroup_id")), # Convert to int since usergroup_id is expected to be int
+            str(user.id),
         )
-
-    user = await create_user(request, db_session, current_user, user_object, org_id)
 
     increase_feature_usage("members", org_id, db_session)
 
