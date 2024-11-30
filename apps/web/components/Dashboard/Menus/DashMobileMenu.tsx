@@ -13,13 +13,6 @@ function DashMobileMenu() {
   const org = useOrg() as any
   const session = useLHSession() as any
 
-  async function logOutUI() {
-    const res = await signOut({ redirect: true, callbackUrl: getUriWithoutOrg('/login?orgslug=' + org.slug) })
-    if (res) {
-      getUriWithOrg(org.slug, '/')
-    }
-  }
-
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-lg text-white shadow-xl">
       <div className="flex justify-around items-center h-16 px-2">
