@@ -9,7 +9,9 @@ import OnBoardAI from '@public/onboarding/OnBoardAI.png';
 import OnBoardUGs from '@public/onboarding/OnBoardUGs.png';
 import OnBoardAccess from '@public/onboarding/OnBoardAccess.png';
 import OnBoardMore from '@public/onboarding/OnBoardMore.png';
-import { ArrowRight, Book, Check, Globe, Info, PictureInPicture, Sparkle, Sprout, SquareUser } from 'lucide-react';
+import OnBoardAssignments from '@public/onboarding/OnBoardAssignments.png';
+import OnBoardPayments from '@public/onboarding/OnBoardPayments.png';
+import { ArrowRight, Book, Check, Globe, Info, PictureInPicture, Sparkle, Sprout, SquareUser, CreditCard } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { getUriWithOrg } from '@services/config/config';
 import { useOrg } from '@components/Contexts/OrgContext';
@@ -27,9 +29,14 @@ interface OnboardingStep {
 }
 
 const Onboarding: React.FC = () => {
-  const [currentStep, setCurrentStep] = useState(0);
+  const [currentStep, setCurrentStep] = useState(() => {
+    // Initialize with saved step or 0
+    const savedStep = localStorage.getItem('onboardingLastStep');
+    return savedStep ? parseInt(savedStep) : 0;
+  });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isOnboardingComplete, setIsOnboardingComplete] = useState(true);
+  const [isTemporarilyClosed, setIsTemporarilyClosed] = useState(false);
   const router = useRouter();
   const org = useOrg() as any;
   const isUserAdmin = useAdminStatus() as any;
@@ -109,6 +116,30 @@ const Onboarding: React.FC = () => {
       ],
     },
     {
+      imageSrc: OnBoardAssignments,
+      title: 'Create and Grade Assignments',
+      description: 'Engage students with assignments, track their progress, and provide feedback through our intuitive grading system.',
+      buttons: [
+        {
+          label: 'Create Assignment',
+          action: () => router.push(getUriWithOrg(org?.slug, '/dash/assignments?new=true')),
+          icon: <Book size={16} />,
+        },
+      ],
+    },
+    {
+      imageSrc: OnBoardPayments,
+      title: 'Monetize Your Content',
+      description: 'Set up payment plans, sell courses, and manage subscriptions with our integrated payment system.',
+      buttons: [
+        {
+          label: 'Payment Settings',
+          action: () => router.push(getUriWithOrg(org?.slug, '/dash/payments/customers')),
+          icon: <CreditCard size={16} />,
+        },
+      ],
+    },
+    {
       imageSrc: OnBoardMore,
       title: 'To infinity and beyond',
       description: "To Learn more about LearnHouse, you're welcome to follow our Original courses on the LearnHouse University",
@@ -123,11 +154,42 @@ const Onboarding: React.FC = () => {
   ];
 
   useEffect(() => {
-    // Check if onboarding is already completed in local storage
+    // Check both completion and temporary closure status
     const isOnboardingCompleted = localStorage.getItem('isOnboardingCompleted');
+    const temporarilyClosed = localStorage.getItem('onboardingTemporarilyClosed');
+    const lastClosedTime = localStorage.getItem('onboardingLastClosedTime');
+
     setIsOnboardingComplete(isOnboardingCompleted === 'true');
-    setIsModalOpen(!isOnboardingCompleted); // Show modal if onboarding is not completed
+    setIsTemporarilyClosed(temporarilyClosed === 'true');
+
+    // If temporarily closed, check if 24 hours have passed
+    if (temporarilyClosed === 'true' && lastClosedTime) {
+      const hoursSinceClosed = (Date.now() - parseInt(lastClosedTime)) / (1000 * 60 * 60);
+      if (hoursSinceClosed >= 24) {
+        // Reset temporary closure after 24 hours
+        localStorage.removeItem('onboardingTemporarilyClosed');
+        localStorage.removeItem('onboardingLastClosedTime');
+        setIsTemporarilyClosed(false);
+      }
+    }
+
+    // Show modal if onboarding is not completed and not temporarily closed
+    setIsModalOpen(!isOnboardingCompleted && !temporarilyClosed);
   }, []);
+
+  // Update stored step whenever currentStep changes
+  useEffect(() => {
+    localStorage.setItem('onboardingLastStep', currentStep.toString());
+  }, [currentStep]);
+
+  const handleModalClose = () => {
+    // Store temporary closure status and timestamp
+    localStorage.setItem('onboardingTemporarilyClosed', 'true');
+    localStorage.setItem('onboardingLastClosedTime', Date.now().toString());
+    // Current step is already saved via the useEffect above
+    setIsTemporarilyClosed(true);
+    setIsModalOpen(false);
+  };
 
   const nextStep = () => {
     if (currentStep < onboardingData.length - 1) {
@@ -135,16 +197,17 @@ const Onboarding: React.FC = () => {
     } else {
       // Mark onboarding as completed in local storage
       localStorage.setItem('isOnboardingCompleted', 'true');
-      setIsModalOpen(false); // Close modal after completion
-      setIsOnboardingComplete(true); // Show success message
+      localStorage.removeItem('onboardingLastStep'); // Clean up stored step
+      setIsModalOpen(false);
+      setIsOnboardingComplete(true);
       console.log('Onboarding completed');
     }
   };
 
   const skipOnboarding = () => {
-    // Mark onboarding as completed in local storage
     localStorage.setItem('isOnboardingCompleted', 'true');
-    setIsModalOpen(false); // Close modal after skipping
+    localStorage.removeItem('onboardingLastStep'); // Clean up stored step
+    setIsModalOpen(false);
     console.log('Onboarding skipped');
   };
 
@@ -168,8 +231,7 @@ const Onboarding: React.FC = () => {
             currentStep={currentStep}
             nextStep={nextStep}
             skipOnboarding={skipOnboarding}
-            setIsModalOpen={setIsModalOpen}
-
+            setIsModalOpen={handleModalClose}
             goToStep={goToStep}
           />
         }
@@ -213,7 +275,14 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
     <div className='flex flex-col'>
       <div className='onboarding_screens flex-col px-4 py-4'>
         <div className='flex-grow rounded-xl'>
-          <Image unoptimized className='mx-auto shadow-md shadow-gray-200 rounded-lg aspect-auto' alt='' priority quality={100} src={step.imageSrc} />
+          <Image 
+            unoptimized 
+            className='mx-auto shadow-md shadow-gray-200 rounded-lg w-[730px] h-[330px] object-cover' 
+            alt='' 
+            priority 
+            quality={100} 
+            src={step.imageSrc} 
+          />
         </div>
         <div className='grid grid-flow-col justify-stretch space-x-3 mt-4'>
           {onboardingData.map((_, index) => (
