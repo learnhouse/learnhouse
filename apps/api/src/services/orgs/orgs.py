@@ -36,7 +36,7 @@ from src.db.organizations import (
 )
 from fastapi import HTTPException, UploadFile, status, Request
 
-from src.services.orgs.uploads import upload_org_logo, upload_org_thumbnail
+from src.services.orgs.uploads import upload_org_logo, upload_org_preview, upload_org_thumbnail
 
 
 async def get_organization(
@@ -174,7 +174,7 @@ async def create_org(
             storage=StorageOrgConfig(enabled=True, limit=0),
             ai=AIOrgConfig(enabled=True, limit=0, model="gpt-4o-mini"),
             assignments=AssignmentOrgConfig(enabled=True, limit=0),
-            payments=PaymentOrgConfig(enabled=True, stripe_key=""),
+            payments=PaymentOrgConfig(enabled=True),
             discussions=DiscussionOrgConfig(enabled=True, limit=0),
             analytics=AnalyticsOrgConfig(enabled=True, limit=0),
             collaboration=CollaborationOrgConfig(enabled=True, limit=0),
@@ -458,6 +458,31 @@ async def update_org_thumbnail(
 
     return {"detail": "Thumbnail updated"}
 
+async def update_org_preview(
+    request: Request,
+    preview_file: UploadFile,
+    org_id: str,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+):
+    statement = select(Organization).where(Organization.id == org_id)
+    result = db_session.exec(statement)
+
+    org = result.first()
+
+    if not org:
+        raise HTTPException(
+            status_code=404,
+            detail="Organization not found",
+        )
+
+    # RBAC check
+    await rbac_check(request, org.org_uuid, current_user, "update", db_session)
+
+    # Upload logo
+    name_in_disk = await upload_org_preview(preview_file, org.org_uuid)
+
+    return {"name_in_disk": name_in_disk}
 
 async def delete_org(
     request: Request,
@@ -675,6 +700,19 @@ async def get_org_join_mechanism(
 
     return signup_mechanism
 
+async def upload_org_preview_service(
+    preview_file: UploadFile,
+    org_uuid: str,
+) -> dict:
+    # No need for request or current_user since we're not doing RBAC checks for previews
+    
+    # Upload preview
+    name_in_disk = await upload_org_preview(preview_file, org_uuid)
+
+    return {
+        "detail": "Preview uploaded successfully",
+        "filename": name_in_disk
+    }
 
 ## 🔒 RBAC Utils ##
 

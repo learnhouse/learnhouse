@@ -31,3 +31,18 @@ async def upload_org_thumbnail(thumbnail_file, org_uuid):
     )
 
     return name_in_disk
+
+
+async def upload_org_preview(file, org_uuid: str) -> str:
+    contents = file.file.read()
+    name_in_disk = f"{uuid4()}.{file.filename.split('.')[-1]}"
+
+    await upload_content(
+        "previews",
+        "orgs",
+        org_uuid,
+        contents,
+        name_in_disk,
+    )
+
+    return name_in_disk

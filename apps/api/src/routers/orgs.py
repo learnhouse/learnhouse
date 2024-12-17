@@ -37,6 +37,7 @@ from src.services.orgs.orgs import (
     get_orgs_by_user_admin,
     update_org,
     update_org_logo,
+    update_org_preview,
     update_org_signup_mechanism,
     update_org_thumbnail,
 )
@@ -329,6 +330,25 @@ async def api_update_org_thumbnail(
     return await update_org_thumbnail(
         request=request,
         thumbnail_file=thumbnail_file,
+        org_id=org_id,
+        current_user=current_user,
+        db_session=db_session,
+    )
+
+@router.put("/{org_id}/preview")
+async def api_update_org_preview(
+    request: Request,
+    org_id: str,
+    preview_file: UploadFile,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+):
+    """
+    Update org thumbnail
+    """
+    return await update_org_preview(
+        request=request,
+        preview_file=preview_file,
         org_id=org_id,
         current_user=current_user,
         db_session=db_session,
