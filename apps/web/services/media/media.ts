@@ -96,3 +96,8 @@ export function getOrgThumbnailMediaDirectory(orgUUID: string, fileId: string) {
   let uri = `${getMediaUrl()}content/orgs/${orgUUID}/thumbnails/${fileId}`
   return uri
 }
+
+export function getOrgPreviewMediaDirectory(orgUUID: string, fileId: string) {
+  let uri = `${getMediaUrl()}content/orgs/${orgUUID}/previews/${fileId}`
+  return uri
+}

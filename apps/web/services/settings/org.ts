@@ -54,3 +54,15 @@ export async function uploadOrganizationThumbnail(
   const res = await errorHandling(result)
   return res
 }
+
+export const uploadOrganizationPreview = async (orgId: string, file: File, access_token: string) => {
+  const formData = new FormData();
+  formData.append('preview_file', file);
+
+  const result: any = await fetch(
+    `${getAPIUrl()}orgs/` + orgId + '/preview',
+    RequestBodyFormWithAuthHeader('PUT', formData, null, access_token)
+  )
+  const res = await errorHandling(result)
+  return res
+};
