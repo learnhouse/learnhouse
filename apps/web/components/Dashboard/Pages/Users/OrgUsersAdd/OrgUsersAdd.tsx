@@ -20,13 +20,15 @@ function OrgUsersAdd() {
     const [selectedInviteCode, setSelectedInviteCode] = React.useState('');
 
     async function sendInvites() {
+        const toastId = toast.loading("Sending invite...")
         setIsLoading(true)
         let res = await inviteBatchUsers(org.id, invitedUsers, selectedInviteCode,access_token)
         if (res.status == 200) {
             mutate(`${getAPIUrl()}orgs/${org?.id}/invites/users`)
             setIsLoading(false)
+            toast.success("Invite sent", {id:toastId})
         } else {
-            toast.error('Error ' + res.status + ': ' + res.data.detail)
+            toast.error('Error sending invite', {id:toastId})
             setIsLoading(false)
         }
 

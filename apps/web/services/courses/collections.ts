@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast'
 import { getAPIUrl } from '../config/config'
 import {
   RequestBodyWithAuthHeader,
@@ -13,22 +14,34 @@ export async function deleteCollection(
   collection_uuid: any,
   access_token: any
 ) {
-  const result: any = await fetch(
-    `${getAPIUrl()}collections/${collection_uuid}`,
-    RequestBodyWithAuthHeader('DELETE', null, null, access_token)
-  )
-  const res = await errorHandling(result)
-  return res
+  const toastId = toast.loading("Deleting collection...")
+  try {
+    const result: any = await fetch(
+      `${getAPIUrl()}collections/${collection_uuid}`,
+      RequestBodyWithAuthHeader('DELETE', null, null, access_token)
+    )
+    toast.success("Deleted colletion", {id:toastId})
+    const res = await errorHandling(result)
+    return res
+  } catch (error) {
+    toast.error("Couldn't delete collection", {id:toastId})
+  }
 }
 
 // Create a new collection
 export async function createCollection(collection: any, access_token: any) {
-  const result: any = await fetch(
-    `${getAPIUrl()}collections/`,
-    RequestBodyWithAuthHeader('POST', collection, null, access_token)
-  )
-  const res = await errorHandling(result)
-  return res
+  const toastId = toast.loading("Creating...")
+  try {
+    const result: any = await fetch(
+      `${getAPIUrl()}collections/`,
+      RequestBodyWithAuthHeader('POST', collection, null, access_token)
+    )
+    toast.success("New collection created", {id:toastId})
+    const res = await errorHandling(result)
+    return res
+  } catch (error) {
+    toast.error("Couldn't create collection", {id:toastId})
+  }
 }
 
 export async function getCollectionById(
