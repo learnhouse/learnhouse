@@ -4,6 +4,7 @@ import {
   errorHandling,
   getResponseMetadata,
 } from '@services/utils/ts/requests'
+import toast from 'react-hot-toast'
 
 /*
  This file includes only POST, PUT, DELETE requests
