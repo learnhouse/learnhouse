@@ -41,15 +41,15 @@ function RolesUpdate(props: Props) {
     e.preventDefault()
     setIsSubmitting(true)
     const res = await updateUserRole(org.id, props.user.user.id, assignedRole,access_token)
-
+    const toastId = toast.loading("Updating role...")
     if (res.status === 200) {
       await mutate(`${getAPIUrl()}orgs/${org.id}/users`)
       props.setRolesModal(false)
-      toast.success("Updated role")
+      toast.success("Updated role", {id:toastId})
     } else {
       setIsSubmitting(false)
       setError('Error ' + res.status + ': ' + res.data.detail)
-      toast.error("Couldn't update now")
+      toast.error("Couldn't update now", {id:toastId})
     }
   }
 
