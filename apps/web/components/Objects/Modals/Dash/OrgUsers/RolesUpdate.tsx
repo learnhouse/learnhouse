@@ -49,7 +49,7 @@ function RolesUpdate(props: Props) {
     } else {
       setIsSubmitting(false)
       setError('Error ' + res.status + ': ' + res.data.detail)
-      toast.error("Couldn't update now", {id:toastId})
+      toast.error("Error while updating role", {id:toastId})
     }
   }
 
