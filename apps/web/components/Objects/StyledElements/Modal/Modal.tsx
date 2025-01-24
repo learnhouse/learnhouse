@@ -23,21 +23,21 @@ type ModalParams = {
 const Modal = (params: ModalParams) => {
   const getMinHeight = () => {
     switch (params.minHeight) {
-      case 'sm': return 'min-h-[300px]'
-      case 'md': return 'min-h-[500px]'
-      case 'lg': return 'min-h-[700px]'
-      case 'xl': return 'min-h-[900px]'
-      default: return ''
+      case 'sm': return 'min-h-[300px] max-h-[90vh]'
+      case 'md': return 'min-h-[400px] max-h-[90vh]'
+      case 'lg': return 'min-h-[500px] max-h-[90vh]'
+      case 'xl': return 'min-h-[600px] max-h-[90vh]'
+      default: return 'max-h-[90vh]'
     }
   }
 
   const getMinWidth = () => {
     switch (params.minWidth) {
-      case 'sm': return 'min-w-[600px]'
-      case 'md': return 'min-w-[800px]'
-      case 'lg': return 'min-w-[1000px]'
-      case 'xl': return 'min-w-[1200px]'
-      default: return ''
+      case 'sm': return 'w-[95vw] sm:w-[90vw] md:w-[600px]'
+      case 'md': return 'w-[95vw] sm:w-[90vw] md:w-[800px]'
+      case 'lg': return 'w-[95vw] sm:w-[90vw] lg:w-[1000px]'
+      case 'xl': return 'w-[95vw] sm:w-[90vw] xl:w-[1200px]'
+      default: return 'w-[95vw] sm:w-[90vw]'
     }
   }
 
@@ -47,7 +47,8 @@ const Modal = (params: ModalParams) => {
         <DialogTrigger asChild>{params.dialogTrigger}</DialogTrigger>
       )}
       <DialogContent className={cn(
-        "overflow-auto",
+        "overflow-auto mx-auto",
+        "p-4 md:p-6",
         getMinHeight(),
         getMinWidth(),
         params.customHeight,
