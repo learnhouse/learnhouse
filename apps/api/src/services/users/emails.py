@@ -39,7 +39,9 @@ def send_password_reset_email(
 <html>
     <body>
         <p>Hello {user.username}</p>
-        <p>Click <a href="https://{organization.slug}.learnhouse.io/reset?email={email}&resetCode={generated_reset_code}">here</a> to reset your password.</p>
+        <p>You have requested to reset your password.</p>
+        <p>Here is your reset code: {generated_reset_code}</p>
+        <p>Click <a href="https://{organization.slug}.learnhouse.io/reset?orgslug={organization.slug}&email={email}&resetCode={generated_reset_code}">here</a> to reset your password.</p>
     </body>
 </html>
 """,
