@@ -47,15 +47,23 @@ async def get_collection(
     # get courses in collection
     statement_all = (
         select(Course)
-        .join(CollectionCourse, Course.id == CollectionCourse.course_id)
-        .where(CollectionCourse.org_id == collection.org_id)
-        .distinct(Course.id)
+        .join(CollectionCourse)
+        .where(
+            CollectionCourse.collection_id == collection.id,
+            CollectionCourse.org_id == collection.org_id
+        )
+        .distinct()
     )
 
     statement_public = (
         select(Course)
-        .join(CollectionCourse, Course.id == CollectionCourse.course_id)
-        .where(CollectionCourse.org_id == collection.org_id, Course.public == True)
+        .join(CollectionCourse)
+        .where(
+            CollectionCourse.collection_id == collection.id,
+            CollectionCourse.org_id == collection.org_id,
+            Course.public == True
+        )
+        .distinct()
     )
 
     if current_user.user_uuid == "user_anonymous":
@@ -63,7 +71,7 @@ async def get_collection(
     else:
         statement = statement_all
 
-    courses = db_session.exec(statement).all()
+    courses = list(db_session.exec(statement).all())
 
     collection = CollectionRead(**collection.model_dump(), courses=courses)
 
@@ -110,10 +118,11 @@ async def create_collection(
     # Get courses once again
     statement = (
         select(Course)
-        .join(CollectionCourse, Course.id == CollectionCourse.course_id)
-        .distinct(Course.id)
+        .join(CollectionCourse)
+        .where(CollectionCourse.collection_id == collection.id)
+        .distinct()
     )
-    courses = db_session.exec(statement).all()
+    courses = list(db_session.exec(statement).all())
 
     collection = CollectionRead(**collection.model_dump(), courses=courses)
 
@@ -183,12 +192,11 @@ async def update_collection(
     # Get courses once again
     statement = (
         select(Course)
-        .join(CollectionCourse, Course.id == CollectionCourse.course_id)
-        .where(Course.org_id == collection.org_id)
-        .distinct(Course.id)
+        .join(CollectionCourse)
+        .where(CollectionCourse.collection_id == collection.id)
+        .distinct()
     )
-
-    courses = db_session.exec(statement).all()
+    courses = list(db_session.exec(statement).all())
 
     collection = CollectionRead(**collection.model_dump(), courses=courses)
 
@@ -255,14 +263,22 @@ async def get_collections(
     for collection in collections:
         statement_all = (
             select(Course)
-            .join(CollectionCourse, Course.id == CollectionCourse.course_id)
-            .where(CollectionCourse.org_id == collection.org_id)
-            .distinct(Course.id)
+            .join(CollectionCourse)
+            .where(
+                CollectionCourse.collection_id == collection.id,
+                CollectionCourse.org_id == collection.org_id
+            )
+            .distinct()
         )
         statement_public = (
             select(Course)
-            .join(CollectionCourse, Course.id == CollectionCourse.course_id)
-            .where(CollectionCourse.org_id == org_id, Course.public == True)
+            .join(CollectionCourse)
+            .where(
+                CollectionCourse.collection_id == collection.id,
+                CollectionCourse.org_id == org_id,
+                Course.public == True
+            )
+            .distinct()
         )
         if current_user.id == 0:
             statement = statement_public

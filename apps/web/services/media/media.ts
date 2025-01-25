@@ -11,10 +11,10 @@ function getMediaUrl() {
 
 export function getCourseThumbnailMediaDirectory(
   orgUUID: string,
-  courseId: string,
+  courseUUID: string,
   fileId: string
 ) {
-  let uri = `${getMediaUrl()}content/orgs/${orgUUID}/courses/${courseId}/thumbnails/${fileId}`
+  let uri = `${getMediaUrl()}content/orgs/${orgUUID}/courses/${courseUUID}/thumbnails/${fileId}`
   return uri
 }
 
@@ -94,5 +94,10 @@ export function getOrgLogoMediaDirectory(orgUUID: string, fileId: string) {
 
 export function getOrgThumbnailMediaDirectory(orgUUID: string, fileId: string) {
   let uri = `${getMediaUrl()}content/orgs/${orgUUID}/thumbnails/${fileId}`
+  return uri
+}
+
+export function getOrgPreviewMediaDirectory(orgUUID: string, fileId: string) {
+  let uri = `${getMediaUrl()}content/orgs/${orgUUID}/previews/${fileId}`
   return uri
 }
