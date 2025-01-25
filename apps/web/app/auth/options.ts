@@ -9,6 +9,16 @@ import { getResponseMetadata } from '@services/utils/ts/requests'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import GoogleProvider from 'next-auth/providers/google'
 
+// Add type declarations at the top of the file
+declare global {
+  var sessionCache: {
+    [key: string]: {
+      data: any;
+      timestamp: number;
+    };
+  };
+}
+
 export const isDevEnv = LEARNHOUSE_TOP_DOMAIN == 'localhost' ? true : false
 
 export const nextAuthOptions = {
@@ -67,7 +77,7 @@ export const nextAuthOptions = {
     async jwt({ token, user, account }: any) {
       // First sign in with Credentials provider
       if (account?.provider == 'credentials' && user) {
-        token.user = user
+        token.user = user;
       }
 
       // Sign up with Google
@@ -76,17 +86,20 @@ export const nextAuthOptions = {
           user.email,
           'google',
           account.access_token
-        )
-        let userFromOAuth = await getResponseMetadata(unsanitized_req)
-        token.user = userFromOAuth.data
+        );
+        let userFromOAuth = await getResponseMetadata(unsanitized_req);
+        token.user = userFromOAuth.data;
       }
 
-        // Refresh token
-        // TODO : Improve this implementation
-        if (token?.user?.tokens) {
+      // Refresh token only if it's close to expiring (5 minutes before expiry)
+      if (token?.user?.tokens) {
+        const tokenExpiry = token.user.tokens.expiry || 0;
+        const fiveMinutes = 5 * 60 * 1000;
+        
+        if (Date.now() + fiveMinutes >= tokenExpiry) {
           const RefreshedToken = await getNewAccessTokenUsingRefreshTokenServer(
             token?.user?.tokens?.refresh_token
-          )
+          );
           token = {
             ...token,
             user: {
@@ -94,21 +107,40 @@ export const nextAuthOptions = {
               tokens: {
                 ...token.user.tokens,
                 access_token: RefreshedToken.access_token,
+                expiry: Date.now() + (60 * 60 * 1000), // 1 hour from now
               },
             },
-          }
+          };
         }
-        return token
+      }
+      return token;
     },
     async session({ session, token }: any) {
       // Include user information in the session
       if (token.user) {
-        let api_SESSION = await getUserSession(token.user.tokens.access_token)
-        session.user = api_SESSION.user
-        session.roles = api_SESSION.roles
-        session.tokens = token.user.tokens
+        // Cache the session for 5 minutes to avoid frequent API calls
+        const cacheKey = `user_session_${token.user.tokens.access_token}`;
+        let cachedSession = global.sessionCache?.[cacheKey];
+        
+        if (cachedSession && Date.now() - cachedSession.timestamp < 5 * 60 * 1000) {
+          return cachedSession.data;
+        }
+
+        let api_SESSION = await getUserSession(token.user.tokens.access_token);
+        session.user = api_SESSION.user;
+        session.roles = api_SESSION.roles;
+        session.tokens = token.user.tokens;
+
+        // Cache the session
+        if (!global.sessionCache) {
+          global.sessionCache = {};
+        }
+        global.sessionCache[cacheKey] = {
+          data: session,
+          timestamp: Date.now()
+        };
       }
-      return session
+      return session;
     },
   },
 }
