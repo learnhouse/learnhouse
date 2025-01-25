@@ -136,7 +136,7 @@ const CollectionsPage = async (params: any) => {
                     text="Create a collection to add content"
                   />
                 </p>
-                <div className="mt-4">
+                <div className="mt-4 flex justify-center">
                   <AuthenticatedClientElement
                     checkMethod="roles"
                     ressourceType="collections"
