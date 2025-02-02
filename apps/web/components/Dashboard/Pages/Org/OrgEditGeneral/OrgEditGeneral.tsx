@@ -20,6 +20,7 @@ import { mutate } from 'swr'
 import { getAPIUrl } from '@services/config/config'
 import Image from 'next/image'
 import learnhouseIcon from '@public/learnhouse_logo.png'
+import Link from 'next/link'
 
 const ORG_LABELS = [
   { value: 'languages', label: '🌐 Languages' },
@@ -86,7 +87,7 @@ const OrgEditGeneral: React.FC = () => {
     description: org?.description || '',
     about: org?.about || '',
     label: org?.label || '',
-    explore: org?.explore ?? true,
+    explore: org?.explore ?? false,
   }
 
   const updateOrg = async (values: OrganizationValues) => {
@@ -216,7 +217,7 @@ const OrgEditGeneral: React.FC = () => {
 
                     <div className="flex items-center justify-between space-x-2 mt-6 bg-gray-50/50 p-4 rounded-lg nice-shadow">
                       <div className="flex items-center space-x-4">
-                        <div className="flex items-center space-x-2">
+                        <Link href="https://www.learnhouse.app/explore" target="_blank" className="flex items-center space-x-2">
                           <Image
                             quality={100}
                             width={120}
@@ -227,7 +228,7 @@ const OrgEditGeneral: React.FC = () => {
                           <span className="px-2 py-1 mt-1 bg-black rounded-md text-[10px] font-semibold text-white">
                             EXPLORE
                           </span>
-                        </div>
+                        </Link>
                         <div className="space-y-0.5">
                           <Label className="text-base">Showcase in LearnHouse Explore</Label>
                           <p className="text-sm text-gray-500">
@@ -238,7 +239,7 @@ const OrgEditGeneral: React.FC = () => {
                       </div>
                       <Switch
                         name="explore"
-                        checked={values.explore}
+                        checked={values.explore ?? false}
                         onCheckedChange={(checked) => setFieldValue('explore', checked)}
                       />
                     </div>
