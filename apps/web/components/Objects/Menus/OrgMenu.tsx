@@ -1,12 +1,14 @@
 'use client'
 import React from 'react'
 import Link from 'next/link'
+import { Search } from 'lucide-react'
 import { getUriWithOrg } from '@services/config/config'
 import { HeaderProfileBox } from '@components/Security/HeaderProfileBox'
 import MenuLinks from './OrgMenuLinks'
 import { getOrgLogoMediaDirectory } from '@services/media/media'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
+import { SearchBar } from '@components/Objects/Search/SearchBar'
 
 export const OrgMenu = (props: any) => {
   const orgslug = props.orgslug
@@ -50,6 +52,12 @@ export const OrgMenu = (props: any) => {
               <MenuLinks orgslug={orgslug} />
             </div>
           </div>
+          
+          {/* Search Section */}
+          <div className="hidden md:flex flex-1 justify-center max-w-lg px-4">
+            <SearchBar orgslug={orgslug} className="w-full" />
+          </div>
+
           <div className="flex items-center space-x-4">
             <div className="hidden md:flex">
               <HeaderProfileBox />
@@ -77,6 +85,10 @@ export const OrgMenu = (props: any) => {
         }`}
       >
         <div className="flex flex-col px-4 py-3 space-y-4 justify-center items-center">
+          {/* Mobile Search */}
+          <div className="w-full px-2">
+            <SearchBar orgslug={orgslug} isMobile={true} />
+          </div>
           <div className='py-4'>
             <MenuLinks orgslug={orgslug} />
           </div>
