@@ -24,6 +24,7 @@ from src.services.courses.courses import (
     update_course,
     delete_course,
     update_course_thumbnail,
+    search_courses,
 )
 from src.services.courses.updates import (
     create_update,
@@ -143,6 +144,24 @@ async def api_get_course_by_orgslug(
     """
     return await get_courses_orgslug(
         request, current_user, org_slug, db_session, page, limit
+    )
+
+
+@router.get("/org_slug/{org_slug}/search")
+async def api_search_courses(
+    request: Request,
+    org_slug: str,
+    query: str,
+    page: int = 1,
+    limit: int = 10,
+    db_session: Session = Depends(get_db_session),
+    current_user: PublicUser = Depends(get_current_user),
+) -> List[CourseRead]:
+    """
+    Search courses by title and description
+    """
+    return await search_courses(
+        request, current_user, org_slug, query, db_session, page, limit
     )
 
 
