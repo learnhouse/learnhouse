@@ -1,6 +1,6 @@
 from typing import Literal, List
 from uuid import uuid4
-from sqlmodel import Session, select, or_, and_
+from sqlmodel import Session, select, or_, and_, text
 from src.db.usergroup_resources import UserGroupResource
 from src.db.usergroup_user import UserGroupUser
 from src.db.organizations import Organization
@@ -165,6 +165,80 @@ async def get_courses_orgslug(
         select(Course)
         .join(Organization)
         .where(Organization.slug == org_slug)
+    )
+
+    if isinstance(current_user, AnonymousUser):
+        # For anonymous users, only show public courses
+        query = query.where(Course.public == True)
+    else:
+        # For authenticated users, show:
+        # 1. Public courses
+        # 2. Courses not in any UserGroup
+        # 3. Courses in UserGroups where the user is a member
+        # 4. Courses where the user is a resource author
+        query = (
+            query
+            .outerjoin(UserGroupResource, UserGroupResource.resource_uuid == Course.course_uuid)  # type: ignore
+            .outerjoin(UserGroupUser, and_(
+                UserGroupUser.usergroup_id == UserGroupResource.usergroup_id,
+                UserGroupUser.user_id == current_user.id
+            ))
+            .outerjoin(ResourceAuthor, ResourceAuthor.resource_uuid == Course.course_uuid)  # type: ignore
+            .where(or_(
+                Course.public == True,
+                UserGroupResource.resource_uuid == None,  # Courses not in any UserGroup # noqa: E711
+                UserGroupUser.user_id == current_user.id,  # Courses in UserGroups where user is a member
+                ResourceAuthor.user_id == current_user.id  # Courses where user is a resource author
+            ))
+        )
+
+    # Apply pagination
+    query = query.offset(offset).limit(limit).distinct()
+
+    courses = db_session.exec(query).all()
+
+    # Fetch authors for each course
+    course_reads = []
+    for course in courses:
+        authors_query = (
+            select(User)
+            .join(ResourceAuthor, ResourceAuthor.user_id == User.id)  # type: ignore
+            .where(ResourceAuthor.resource_uuid == course.course_uuid)
+        )
+        authors = db_session.exec(authors_query).all()
+        
+        course_read = CourseRead.model_validate(course)
+        course_read.authors = [UserRead.model_validate(author) for author in authors]
+        course_reads.append(course_read)
+
+    return course_reads
+
+
+async def search_courses(
+    request: Request,
+    current_user: PublicUser | AnonymousUser,
+    org_slug: str,
+    search_query: str,
+    db_session: Session,
+    page: int = 1,
+    limit: int = 10,
+) -> List[CourseRead]:
+    offset = (page - 1) * limit
+
+    # Base query
+    query = (
+        select(Course)
+        .join(Organization)
+        .where(Organization.slug == org_slug)
+        .where(
+            or_(
+                text(f"LOWER(course.name) LIKE LOWER('%{search_query}%')"),
+                text(f"LOWER(course.description) LIKE LOWER('%{search_query}%')"),
+                text(f"LOWER(course.about) LIKE LOWER('%{search_query}%')"),
+                text(f"LOWER(course.learnings) LIKE LOWER('%{search_query}%')"),
+                text(f"LOWER(course.tags) LIKE LOWER('%{search_query}%')")
+            )
+        )
     )
 
     if isinstance(current_user, AnonymousUser):
