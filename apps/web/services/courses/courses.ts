@@ -24,6 +24,22 @@ export async function getOrgCourses(
   return res
 }
 
+export async function searchOrgCourses(
+  org_slug: string,
+  query: string,
+  page: number = 1,
+  limit: number = 10,
+  next: any,
+  access_token?: any
+) {
+  const result: any = await fetch(
+    `${getAPIUrl()}courses/org_slug/${org_slug}/search?query=${encodeURIComponent(query)}&page=${page}&limit=${limit}`,
+    RequestBodyWithAuthHeader('GET', null, next, access_token)
+  )
+  const res = await errorHandling(result)
+  return res
+}
+
 export async function getCourseMetadata(
   course_uuid: any,
   next: any,
