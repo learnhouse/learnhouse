@@ -1,10 +1,10 @@
 from typing import Optional, Dict, Any
 from uuid import uuid4
 from langchain.agents import AgentExecutor
-from langchain_text_splitters import CharacterTextSplitter
+from langchain.text_splitter import CharacterTextSplitter
 from langchain_community.vectorstores import Chroma
 from langchain.agents.openai_functions_agent.base import OpenAIFunctionsAgent
-from langchain_core.prompts import MessagesPlaceholder
+from langchain.prompts import MessagesPlaceholder
 from langchain_community.chat_message_histories import RedisChatMessageHistory
 from langchain_core.messages import SystemMessage
 from langchain.agents.openai_functions_agent.agent_token_buffer_memory import (

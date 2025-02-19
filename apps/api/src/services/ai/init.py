@@ -1,7 +1,8 @@
 from typing import Optional
 from functools import lru_cache
 import chromadb
-from langchain_openai import OpenAIEmbeddings, ChatOpenAI
+from langchain_openai import OpenAIEmbeddings
+from langchain_community.chat_models import ChatOpenAI
 from config.config import get_learnhouse_config
 
 @lru_cache()
