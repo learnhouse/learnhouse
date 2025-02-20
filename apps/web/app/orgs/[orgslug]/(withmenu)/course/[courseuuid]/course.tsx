@@ -30,7 +30,7 @@ const CourseClient = (props: any) => {
 
   function getLearningTags() {
     // create array of learnings from a string object (comma separated)
-    let learnings = course?.learnings ? course?.learnings.split(',') : []
+    let learnings = course?.learnings ? course?.learnings.split('|') : []
     setLearnings(learnings)
   }
 
