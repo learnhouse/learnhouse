@@ -50,6 +50,7 @@
     "currency-codes": "^2.2.0",
     "dayjs": "^1.11.13",
     "dompurify": "^3.2.4",
+    "emblor": "^1.4.7",
     "formik": "^2.4.6",
     "framer-motion": "^10.18.0",
     "get-youtube-id": "^1.0.1",
