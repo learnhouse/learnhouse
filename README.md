@@ -16,7 +16,7 @@ We prioritize issues depending on the most requested features from our users, pl
 
 [🚢 LearnHouse General Roadmap](https://www.learnhouse.app/roadmap)
 
-[👨‍💻 Detailed Roadmap](https://github.com/orgs/learnhouse/projects/4/views/1)
+[👨‍💻 Detailed Roadmap](https://github.com/orgs/learnhouse/projects/4)
 
 ## Overview
 
