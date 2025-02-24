@@ -18,40 +18,50 @@ function UserAvatar(props: UserAvatarProps) {
   const session = useLHSession() as any
   const params = useParams() as any
 
-  const isValidUrl = (url: string): boolean => {
-    try {
-      new URL(url)
-      return true
-    } catch {
-      return false
+  const isExternalUrl = (url: string): boolean => {
+    return url.startsWith('http://') || url.startsWith('https://')
+  }
+
+  const extractExternalUrl = (url: string): string | null => {
+    // Check if the URL contains an embedded external URL
+    const matches = url.match(/avatars\/(https?:\/\/[^/]+.*$)/)
+    if (matches && matches[1]) {
+      return matches[1]
     }
+    return null
   }
 
   const getAvatarUrl = (): string => {
-    // If avatar_url prop is provided and is a valid URL, use it directly
-    if (props.avatar_url && isValidUrl(props.avatar_url)) {
-      return props.avatar_url
-    }
-
-    // If user has an avatar in session and it's a valid URL, use it directly
-    if (session?.data?.user?.avatar_image && isValidUrl(session.data.user.avatar_image)) {
-      return session.data.user.avatar_image
-    }
-
     // If predefined avatar is specified
     if (props.predefined_avatar) {
       const avatarType = props.predefined_avatar === 'ai' ? 'ai_avatar.png' : 'empty_avatar.png'
       return getUriWithOrg(params.orgslug, `/${avatarType}`)
     }
 
-    // If avatar_url prop is provided but not a URL, process it
+    // If avatar_url prop is provided
     if (props.avatar_url) {
+      // Check if it's a malformed URL (external URL processed through getUserAvatarMediaDirectory)
+      const extractedUrl = extractExternalUrl(props.avatar_url)
+      if (extractedUrl) {
+        return extractedUrl
+      }
+      // If it's a direct external URL
+      if (isExternalUrl(props.avatar_url)) {
+        return props.avatar_url
+      }
+      // Otherwise use as is
       return props.avatar_url
     }
 
-    // If user has an avatar in session but not a URL, process it
+    // If user has an avatar in session
     if (session?.data?.user?.avatar_image) {
-      return getUserAvatarMediaDirectory(session.data.user.user_uuid, session.data.user.avatar_image)
+      const avatarUrl = session.data.user.avatar_image
+      // If it's an external URL (e.g., from Google, Facebook, etc.), use it directly
+      if (isExternalUrl(avatarUrl)) {
+        return avatarUrl
+      }
+      // Otherwise, get the local avatar URL
+      return getUserAvatarMediaDirectory(session.data.user.user_uuid, avatarUrl)
     }
 
     // Fallback to empty avatar
