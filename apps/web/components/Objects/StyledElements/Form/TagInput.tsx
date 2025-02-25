@@ -1,4 +1,4 @@
-import React, { useState, Dispatch, SetStateAction } from 'react'
+import React, { useState, Dispatch, SetStateAction, useEffect } from 'react'
 import { Tag, TagInput } from 'emblor'
 
 interface FormTagInputProps {
@@ -16,14 +16,29 @@ const FormTagInput = ({
   error,
 	placeholder,
 }: FormTagInputProps) => {
-  const initialTags = value
-    ? value.split(separator).map((text, i) => ({
-        id: i.toString(),
-        text: text.trim(),
-      }))
-    : []
+  const [tags, setTags] = useState<Tag[]>(() =>
+    value && typeof value === 'string'
+      ? value.split(separator).filter(text => text.trim()).map((text, i) => ({
+          id: i.toString(),
+          text: text.trim(),
+        }))
+      : []
+  );
 
-  const [tags, setTags] = useState<Tag[]>(initialTags)
+  useEffect(() => {
+    if (value && typeof value === 'string') {
+      const newTags = value.split(separator)
+        .filter(text => text.trim())
+        .map((text, i) => ({
+          id: i.toString(),
+          text: text.trim(),
+        }));
+      setTags(newTags);
+    } else {
+      setTags([]);
+    }
+  }, [value, separator]);
+
   const [activeTagIndex, setActiveTagIndex] = useState<number | null>(null)
 
   const handleTagsChange: Dispatch<SetStateAction<Tag[]>> = (
