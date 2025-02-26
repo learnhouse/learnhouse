@@ -102,7 +102,7 @@ export async function createNewCourse(
   formData.append('name', course_body.name)
   formData.append('description', course_body.description)
   formData.append('public', course_body.visibility)
-  formData.append('learnings', course_body.tags)
+  formData.append('learnings', course_body.learnings)
   formData.append('tags', course_body.tags)
   formData.append('about', course_body.description)
 

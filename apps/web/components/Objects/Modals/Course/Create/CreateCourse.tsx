@@ -19,6 +19,7 @@ import { useFormik } from 'formik'
 import * as Yup from 'yup'
 import {  UploadCloud, Image as ImageIcon } from 'lucide-react'
 import UnsplashImagePicker from "@components/Dashboard/Pages/Course/EditCourseGeneral/UnsplashImagePicker"
+import FormTagInput from "@components/Objects/StyledElements/Form/TagInput"
 
 const validationSchema = Yup.object().shape({
   name: Yup.string()
@@ -51,15 +52,16 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
     validationSchema,
     onSubmit: async (values, { setSubmitting }) => {
       const toast_loading = toast.loading('Creating course...')
-      
+
       try {
         const res = await createNewCourse(
           orgId,
-          { 
-            name: values.name, 
-            description: values.description, 
-            tags: values.tags, 
-            visibility: values.visibility 
+          {
+            name: values.name,
+            description: values.description,
+            learnings: values.learnings,
+            tags: values.tags,
+            visibility: values.visibility
           },
           values.thumbnail,
           session.data?.tokens?.access_token
@@ -123,8 +125,8 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
   return (
     <FormLayout onSubmit={formik.handleSubmit} >
       <FormField name="name">
-        <FormLabelAndMessage 
-          label="Course Name" 
+        <FormLabelAndMessage
+          label="Course Name"
           message={formik.errors.name}
         />
         <Form.Control asChild>
@@ -138,21 +140,21 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
       </FormField>
 
       <FormField name="description">
-        <FormLabelAndMessage 
-          label="Description" 
+        <FormLabelAndMessage
+          label="Description"
           message={formik.errors.description}
         />
         <Form.Control asChild>
           <Textarea
             onChange={formik.handleChange}
             value={formik.values.description}
-            
+
           />
         </Form.Control>
       </FormField>
 
       <FormField name="thumbnail">
-        <FormLabelAndMessage 
+        <FormLabelAndMessage
           label="Course Thumbnail"
           message={formik.errors.thumbnail}
         />
@@ -200,22 +202,34 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
         </div>
       </FormField>
 
-      <FormField name="tags">
-        <FormLabelAndMessage 
-          label="Course Tags"
-          message={formik.errors.tags}
-        />
-        <Form.Control asChild>
-          <Textarea
-            onChange={formik.handleChange}
-            value={formik.values.tags}
-            placeholder="Enter tags separated by commas"
-          />
-        </Form.Control>
-      </FormField>
+			<FormField name="learnings">
+				<FormLabelAndMessage
+					label="Course Learnings (What will you teach?)"
+					message={formik.errors.learnings}
+				/>
+				<FormTagInput
+					placeholder="Enter to add..."
+					value={formik.values.learnings}
+					onChange={(value) => formik.setFieldValue('learnings', value)}
+					error={formik.errors.learnings}
+				/>
+			</FormField>
+
+			<FormField name="tags">
+				<FormLabelAndMessage
+					label="Course Tags"
+					message={formik.errors.tags}
+				/>
+				<FormTagInput
+					placeholder="Enter to add..."
+					value={formik.values.tags}
+					onChange={(value) => formik.setFieldValue('tags', value)}
+					error={formik.errors.tags}
+				/>
+			</FormField>
 
       <FormField name="visibility">
-        <FormLabelAndMessage 
+        <FormLabelAndMessage
           label="Course Visibility"
           message={formik.errors.visibility}
         />
