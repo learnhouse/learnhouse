@@ -10,6 +10,7 @@ import * as Form from '@radix-ui/react-form';
 import React, { useEffect, useState } from 'react';
 import ThumbnailUpdate from './ThumbnailUpdate';
 import { useCourse, useCourseDispatch } from '@components/Contexts/CourseContext';
+import FormTagInput from '@components/Objects/StyledElements/Form/TagInput';
 
 type EditCourseStructureProps = {
   orgslug: string
@@ -138,24 +139,22 @@ function EditCourseGeneral(props: EditCourseStructureProps) {
               <FormField name="learnings">
                 <FormLabelAndMessage label="Learnings" message={formik.errors.learnings} />
                 <Form.Control asChild>
-                  <Textarea
-                    style={{ backgroundColor: 'white' }}
-                    onChange={formik.handleChange}
-                    value={formik.values.learnings}
-                    required
-                  />
+									<FormTagInput
+										placeholder="Enter to add..."
+										onChange={(value) => formik.setFieldValue('learnings', value)}
+										value={formik.values.learnings}
+									/>
                 </Form.Control>
               </FormField>
 
               <FormField name="tags">
                 <FormLabelAndMessage label="Tags" message={formik.errors.tags} />
                 <Form.Control asChild>
-                  <Textarea
-                    style={{ backgroundColor: 'white' }}
-                    onChange={formik.handleChange}
-                    value={formik.values.tags}
-                    required
-                  />
+									<FormTagInput
+										placeholder="Enter to add..."
+										onChange={(value) => formik.setFieldValue('tags', value)}
+										value={formik.values.tags}
+									/>
                 </Form.Control>
               </FormField>
 
