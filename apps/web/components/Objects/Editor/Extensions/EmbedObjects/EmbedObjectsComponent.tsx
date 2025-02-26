@@ -16,17 +16,40 @@ const SCRIPT_BASED_EMBEDS = {
 
 // Helper function to convert YouTube URLs to embed format
 const getYouTubeEmbedUrl = (url: string): string => {
-  // Handle different YouTube URL formats
-  const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
-  const match = url.match(youtubeRegex);
-  
-  if (match && match[1]) {
-    // Return the embed URL with the video ID
-    return `https://www.youtube.com/embed/${match[1]}?autoplay=0&rel=0`;
+  try {
+    // First validate that this is a proper URL
+    const parsedUrl = new URL(url);
+    
+    // Ensure the hostname is actually YouTube
+    const isYoutubeHostname = 
+      parsedUrl.hostname === 'youtube.com' || 
+      parsedUrl.hostname === 'www.youtube.com' || 
+      parsedUrl.hostname === 'youtu.be' || 
+      parsedUrl.hostname === 'www.youtu.be';
+    
+    if (!isYoutubeHostname) {
+      return url; // Not a YouTube URL, return as is
+    }
+    
+    // Handle different YouTube URL formats with a more precise regex
+    const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
+    const match = url.match(youtubeRegex);
+    
+    if (match && match[1]) {
+      // Validate the video ID format (should be exactly 11 characters)
+      const videoId = match[1];
+      if (videoId.length === 11) {
+        // Return the embed URL with the video ID and secure protocol
+        return `https://www.youtube.com/embed/${videoId}?autoplay=0&rel=0`;
+      }
+    }
+    
+    // If no valid match found, return the original URL
+    return url;
+  } catch (e) {
+    // If URL parsing fails, return the original URL
+    return url;
   }
-  
-  // If no match found, return the original URL
-  return url;
 };
 
 // Add new memoized component for the embed content
@@ -58,10 +81,22 @@ const MemoizedEmbed = React.memo(({ embedUrl, sanitizedEmbedCode, embedType }: {
   }, [embedType, sanitizedEmbedCode]);
 
   if (embedType === 'url' && embedUrl) {
-    // Process the URL if it's a YouTube URL
-    const processedUrl = embedUrl.includes('youtube.com') || embedUrl.includes('youtu.be') 
-      ? getYouTubeEmbedUrl(embedUrl) 
-      : embedUrl;
+    // Process the URL if it's a YouTube URL - using proper URL validation
+    let isYoutubeUrl = false;
+    
+    try {
+      const url = new URL(embedUrl);
+      // Check if the hostname is exactly youtube.com or youtu.be (or www variants)
+      isYoutubeUrl = url.hostname === 'youtube.com' || 
+                     url.hostname === 'www.youtube.com' || 
+                     url.hostname === 'youtu.be' || 
+                     url.hostname === 'www.youtu.be';
+    } catch (e) {
+      // Invalid URL format, not a YouTube URL
+      isYoutubeUrl = false;
+    }
+    
+    const processedUrl = isYoutubeUrl ? getYouTubeEmbedUrl(embedUrl) : embedUrl;
       
     return (
       <iframe 
@@ -178,12 +213,38 @@ function EmbedObjectsComponent(props: any) {
   const handleUrlChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newUrl = event.target.value;
     const trimmedUrl = newUrl.trim();
+    
     // Only update if URL is not just whitespace
     if (newUrl === '' || trimmedUrl) {
+      // First sanitize with DOMPurify
       const sanitizedUrl = DOMPurify.sanitize(newUrl);
-      setEmbedUrl(sanitizedUrl);
+      
+      // Additional URL validation for security
+      let validatedUrl = sanitizedUrl;
+      
+      if (sanitizedUrl) {
+        try {
+          // Ensure it's a valid URL by parsing it
+          const url = new URL(sanitizedUrl);
+          
+          // Only allow http and https protocols
+          if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+            // If invalid protocol, default to https
+            url.protocol = 'https:';
+            validatedUrl = url.toString();
+          }
+        } catch (e) {
+          // If it's not a valid URL, prepend https:// to make it valid
+          // Only do this if it's not empty and doesn't already start with a protocol
+          if (sanitizedUrl && !sanitizedUrl.match(/^[a-zA-Z]+:\/\//)) {
+            validatedUrl = `https://${sanitizedUrl}`;
+          }
+        }
+      }
+      
+      setEmbedUrl(validatedUrl);
       props.updateAttributes({
-        embedUrl: sanitizedUrl,
+        embedUrl: validatedUrl,
         embedType: 'url',
       });
     }
