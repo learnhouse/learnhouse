@@ -205,7 +205,7 @@ export const ToolbarButtons = ({ editor, props }: any) => {
         </ToolBtn>
       </ToolTip>
       <ToolTip content={'YouTube video'}>
-        <ToolBtn onClick={() => addYoutubeVideo()}>
+        <ToolBtn  onClick={() => editor.chain().focus().insertContent({ type: 'blockEmbed' }).run()}>
           <SiYoutube size={15} />
         </ToolBtn>
       </ToolTip>

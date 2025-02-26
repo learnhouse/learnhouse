@@ -18,7 +18,7 @@ function ImageBlockComponent(props: any) {
   const course = useCourse() as any
   const editorState = useEditorProvider() as any
   const session = useLHSession() as any
-    const access_token = session?.data?.tokens?.access_token;
+  const access_token = session?.data?.tokens?.access_token;
 
   const isEditable = editorState.isEditable
   const [image, setImage] = React.useState(null)
@@ -29,6 +29,7 @@ function ImageBlockComponent(props: any) {
   const [imageSize, setImageSize] = React.useState({
     width: props.node.attrs.size ? props.node.attrs.size.width : 300,
   })
+  
   const fileId = blockObject
     ? `${blockObject.content.file_id}.${blockObject.content.file_format}`
     : null
@@ -54,48 +55,70 @@ function ImageBlockComponent(props: any) {
   useEffect(() => {}, [course, org])
 
   return (
-    <NodeViewWrapper className="block-image">
+    <NodeViewWrapper className="block-image w-full">
      <FileUploadBlock isEditable={isEditable} isLoading={isLoading} isEmpty={!blockObject} Icon={Image}>
         <FileUploadBlockInput onChange={handleImageChange} accept={SUPPORTED_FILES} />
         <FileUploadBlockButton onClick={handleSubmit} disabled={!image}/>
       </FileUploadBlock>
       
-      {blockObject && (
-        <Resizable
-          defaultSize={{ width: imageSize.width, height: '100%' }}
-          handleStyles={{
-            right: {
-              position: 'unset',
-              width: 7,
-              height: 30,
-              borderRadius: 20,
-              cursor: 'col-resize',
-              backgroundColor: 'black',
-              opacity: '0.3',
-              margin: 'auto',
-              marginLeft: 5,
-            },
-          }}
-          style={{
-            margin: 'auto',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            height: '100%',
-          }}
-          maxWidth={1000}
-          minWidth={200}
-          onResizeStop={(e, direction, ref, d) => {
-            props.updateAttributes({
-              size: {
-                width: imageSize.width + d.width,
+      {blockObject && isEditable && (
+        <div className="w-full flex justify-center">
+          <Resizable
+            defaultSize={{ width: imageSize.width, height: '100%' }}
+            handleStyles={{
+              right: {
+                position: 'unset',
+                width: 7,
+                height: 30,
+                borderRadius: 20,
+                cursor: 'col-resize',
+                backgroundColor: 'black',
+                opacity: '0.3',
+                margin: 'auto',
+                marginLeft: 5,
               },
-            })
-            setImageSize({
-              width: imageSize.width + d.width,
-            })
-          }}
-        >
+            }}
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              height: '100%',
+              maxWidth: '100%',
+            }}
+            maxWidth="100%"
+            minWidth={200}
+            enable={{ right: true }}
+            onResizeStop={(e, direction, ref, d) => {
+              const newWidth = Math.min(imageSize.width + d.width, ref.parentElement?.clientWidth || 1000);
+              props.updateAttributes({
+                size: {
+                  width: newWidth,
+                },
+              })
+              setImageSize({
+                width: newWidth,
+              })
+            }}
+          >
+            <img
+              src={`${getActivityBlockMediaDirectory(
+                org?.org_uuid,
+                course?.courseStructure.course_uuid,
+                props.extension.options.activity.activity_uuid,
+                blockObject.block_uuid,
+                blockObject ? fileId : ' ',
+                'imageBlock'
+              )}`}
+              alt=""
+              className="rounded-lg shadow max-w-full h-auto"
+              style={{ width: '100%' }}
+            />
+          </Resizable>
+        </div>
+      )}
+
+      {blockObject && !isEditable && (
+        <div className="w-full flex justify-center">
           <img
             src={`${getActivityBlockMediaDirectory(
               org?.org_uuid,
@@ -106,10 +129,12 @@ function ImageBlockComponent(props: any) {
               'imageBlock'
             )}`}
             alt=""
-            className="rounded-lg shadow "
+            className="rounded-lg shadow max-w-full h-auto"
+            style={{ width: imageSize.width, maxWidth: '100%' }}
           />
-        </Resizable>
+        </div>
       )}
+
       {isLoading && (
         <div>
           <AlertTriangle color="#e1e0e0" size={50} />
