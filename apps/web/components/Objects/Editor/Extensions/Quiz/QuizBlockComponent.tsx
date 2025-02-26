@@ -50,6 +50,7 @@ function QuizBlockComponent(props: any) {
   const refreshUserSubmission = () => {
     setUserAnswers([])
     setSubmitted(false)
+    setSubmissionMessage('')
   }
 
   const handleUserSubmission = () => {
@@ -124,7 +125,7 @@ function QuizBlockComponent(props: any) {
       correct: false,
     }
 
-    // check if there is already more thqn 5 answers
+    // check if there is already more than 5 answers
     const question: any = questions.find(
       (question: Question) => question.question_id === question_id
     )
@@ -206,11 +207,11 @@ function QuizBlockComponent(props: any) {
   return (
     <NodeViewWrapper className="block-quiz">
       <div
-        //style={{ background: "radial-gradient(152.15% 150.08% at 56.45% -6.67%, rgba(180, 255, 250, 0.10) 5.53%, rgba(202, 201, 255, 0.10) 66.76%)" }}
-        className="rounded-xl px-5 py-2 bg-slate-100 transition-all ease-linear"
+        className="rounded-xl px-3 sm:px-5 py-2 bg-slate-100 transition-all ease-linear"
       >
-        <div className="flex space-x-2 pt-1 items-center text-sm overflow-hidden">
-          {submitted && submissionMessage == 'All answers are correct!' && (
+        {/* Header section */}
+        <div className="flex flex-wrap gap-2 pt-1 items-center text-sm">
+          {submitted && submissionMessage === 'All answers are correct!' && (
             <ReactConfetti
               numberOfPieces={submitted ? 1400 : 0}
               recycle={false}
@@ -223,7 +224,21 @@ function QuizBlockComponent(props: any) {
               Quiz
             </p>
           </div>
-          <div className="grow flex items-center justify-center"></div>
+          
+          {/* Submission message */}
+          {submitted && (
+            <div className={`text-xs font-medium px-2 py-1 rounded-md ${
+              submissionMessage === 'All answers are correct!' 
+                ? 'bg-lime-100 text-lime-700' 
+                : 'bg-red-100 text-red-700'
+            }`}>
+              {submissionMessage}
+            </div>
+          )}
+          
+          <div className="grow"></div>
+          
+          {/* Action buttons */}
           {isEditable ? (
             <div>
               <button
@@ -237,10 +252,11 @@ function QuizBlockComponent(props: any) {
             <div className="flex space-x-1 items-center">
               <div
                 onClick={() => refreshUserSubmission()}
-                className="cursor-pointer px-2"
+                className="cursor-pointer p-1.5 rounded-md hover:bg-slate-200"
+                title="Reset answers"
               >
                 <RefreshCcw
-                  className="text-slate-400 cursor-pointer"
+                  className="text-slate-500"
                   size={15}
                 />
               </div>
@@ -254,8 +270,9 @@ function QuizBlockComponent(props: any) {
           )}
         </div>
 
+        {/* Questions section */}
         {questions.map((question: Question) => (
-          <div key={question.question_id} className="pt-1 space-y-2">
+          <div key={question.question_id} className="pt-3 space-y-2">
             <div className="question">
               <div className="flex space-x-2 items-center">
                 <div className="flex-grow">
@@ -269,10 +286,10 @@ function QuizBlockComponent(props: any) {
                           e.target.value
                         )
                       }
-                      className="text-slate-800 bg-[#00008b00] border-2 border-gray-200 rounded-md border-dotted text-md font-bold w-full"
+                      className="text-slate-800 bg-[#00008b00] border-2 border-gray-200 rounded-md border-dotted text-md font-bold w-full p-2"
                     ></input>
                   ) : (
-                    <p className="text-slate-800 bg-[#00008b00] rounded-md text-md font-bold w-full">
+                    <p className="text-slate-800 bg-[#00008b00] rounded-md text-md font-bold w-full p-2 break-words">
                       {question.question}
                     </p>
                   )}
@@ -280,25 +297,27 @@ function QuizBlockComponent(props: any) {
                 {isEditable && (
                   <div
                     onClick={() => deleteQuestion(question.question_id)}
-                    className="w-[20px] flex-none flex items-center h-[20px] rounded-lg bg-slate-200 hover:bg-slate-300 text-sm transition-all ease-linear cursor-pointer"
+                    className="w-[24px] flex-none flex items-center h-[24px] rounded-lg bg-slate-200 hover:bg-slate-300 text-sm transition-all ease-linear cursor-pointer"
                   >
-                    <Minus className="mx-auto text-slate-400" size={12} />
+                    <Minus className="mx-auto text-slate-500" size={14} />
                   </div>
                 )}
               </div>
-              <div className="answers flex py-2 space-x-3">
+              
+              {/* Answers section - changed to vertical layout for better responsiveness */}
+              <div className="answers flex flex-col py-2 space-y-2">
                 {question.answers.map((answer: Answer) => (
                   <div
                     key={answer.answer_id}
                     className={twMerge(
-                      'outline outline-3 pr-2 shadow w-full flex items-center space-x-2 h-[30px] bg-opacity-50 hover:bg-opacity-100 hover:shadow-md rounded-s rounded-lg bg-white text-sm duration-150 cursor-pointer ease-linear',
+                      'outline outline-2 pr-2 shadow w-full flex items-stretch space-x-2 min-h-[36px] bg-opacity-50 hover:bg-opacity-100 hover:shadow-md rounded-lg bg-white text-sm duration-150 cursor-pointer ease-linear',
                       answer.correct && isEditable ? 'outline-lime-300' : 'outline-white',
                       userAnswers.some(
                         (userAnswer: any) =>
                           userAnswer.question_id === question.question_id &&
                           userAnswer.answer_id === answer.answer_id &&
-                          !isEditable
-                      ) ? 'outline-slate-300' : '',
+                          !isEditable && !submitted
+                      ) ? 'outline-blue-400' : '',
                       submitted && answer.correct ? 'outline-lime-300 text-lime' : '',
                       submitted &&
                         !answer.correct &&
@@ -314,10 +333,16 @@ function QuizBlockComponent(props: any) {
                   >
                     <div
                       className={twMerge(
-                        'bg-white font-bold  text-base flex items-center h-full w-[40px] rounded-l-md text-slate-800',
+                        'font-bold text-base flex items-center justify-center self-stretch w-[40px] rounded-l-md text-slate-800 bg-white',
                         answer.correct && isEditable
                           ? 'bg-lime-300 text-lime-800 outline-none'
                           : 'bg-white',
+                        userAnswers.some(
+                          (userAnswer: any) =>
+                            userAnswer.question_id === question.question_id &&
+                            userAnswer.answer_id === answer.answer_id &&
+                            !isEditable && !submitted
+                        ) ? 'bg-blue-400 text-white outline-none' : '',
                         submitted && answer.correct
                           ? 'bg-lime-300 text-lime-800 outline-none'
                           : '',
@@ -332,7 +357,7 @@ function QuizBlockComponent(props: any) {
                           : ''
                       )}
                     >
-                      <p className="mx-auto font-bold text-sm ">
+                      <p className="font-bold text-sm">
                         {getAnswerID(
                           question.answers.indexOf(answer),
                           question.question_id
@@ -350,33 +375,37 @@ function QuizBlockComponent(props: any) {
                           )
                         }
                         placeholder="Answer"
-                        className="w-full mx-2 px-3 pr-6 text-neutral-600 bg-[#00008b00] border-2 border-gray-200 rounded-md border-dotted text-sm font-bold"
+                        className="w-full mx-2 px-3 pr-6 text-neutral-600 bg-[#00008b00] border-2 border-gray-200 rounded-md border-dotted text-sm font-bold py-1.5"
                       ></input>
                     ) : (
-                      <p className="w-full mx-2 px-3 pr-6 text-neutral-600 bg-[#00008b00] rounded-md ext-sm font-bold">
+                      <p className="w-full mx-2 px-3 pr-6 text-neutral-600 bg-[#00008b00] rounded-md text-sm font-bold py-1.5 break-words">
                         {answer.answer}
                       </p>
                     )}
                     {isEditable && (
                       <div className="flex space-x-1 items-center">
                         <div
-                          onClick={() =>
+                          onClick={(e) => {
+                            e.stopPropagation();
                             markAnswerCorrect(
                               question.question_id,
                               answer.answer_id
-                            )
-                          }
-                          className="w-[20px] flex-none flex items-center h-[20px] rounded-lg bg-lime-300 hover:bg-lime-400 transition-all ease-linear text-sm cursor-pointer "
+                            );
+                          }}
+                          className="w-[24px] flex-none flex items-center h-[24px] rounded-lg bg-lime-300 hover:bg-lime-400 transition-all ease-linear text-sm cursor-pointer"
+                          title={answer.correct ? "Mark as incorrect" : "Mark as correct"}
                         >
-                          <Check className="mx-auto text-lime-800" size={12} />
+                          <Check className="mx-auto text-lime-800" size={14} />
                         </div>
                         <div
-                          onClick={() =>
-                            deleteAnswer(question.question_id, answer.answer_id)
-                          }
-                          className="w-[20px] flex-none flex items-center h-[20px] rounded-lg bg-slate-200 hover:bg-slate-300 text-sm transition-all ease-linear cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteAnswer(question.question_id, answer.answer_id);
+                          }}
+                          className="w-[24px] flex-none flex items-center h-[24px] rounded-lg bg-slate-200 hover:bg-slate-300 text-sm transition-all ease-linear cursor-pointer"
+                          title="Delete answer"
                         >
-                          <Minus className="mx-auto text-slate-400" size={12} />
+                          <Minus className="mx-auto text-slate-500" size={14} />
                         </div>
                       </div>
                     )}
@@ -385,9 +414,10 @@ function QuizBlockComponent(props: any) {
                 {isEditable && (
                   <div
                     onClick={() => addAnswer(question.question_id)}
-                    className="outline outline-3 w-[30px] flex-none flex items-center h-[30px] outline-white hover:bg-opacity-100 hover:shadow-md rounded-lg bg-white text-sm hover:scale-105 active:scale-110 duration-150 cursor-pointer ease-linear"
+                    className="outline outline-2 w-full flex-none flex items-center h-[36px] outline-white hover:bg-opacity-100 hover:shadow-md rounded-lg bg-white text-sm hover:scale-[1.01] active:scale-[1.02] duration-150 cursor-pointer ease-linear justify-center"
                   >
-                    <Plus className="mx-auto text-slate-800" size={15} />
+                    <Plus className="text-slate-800 mr-1" size={15} />
+                    <span className="text-slate-800 text-sm">Add Answer</span>
                   </div>
                 )}
               </div>
