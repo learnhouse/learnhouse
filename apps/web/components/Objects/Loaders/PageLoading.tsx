@@ -7,44 +7,55 @@ const variants = {
   exit: { opacity: 0, x: 0, y: 0 },
 }
 
+// Animation variants for the dots
+const dotVariants = {
+  initial: { scale: 0.8, opacity: 0.4 },
+  animate: (i: number) => ({
+    scale: [0.8, 1.2, 0.8],
+    opacity: [0.4, 1, 0.4],
+    transition: {
+      duration: 1.5,
+      repeat: Infinity,
+      delay: i * 0.2,
+      ease: "easeInOut"
+    }
+  })
+}
+
 function PageLoading() {
   return (
     <motion.main
-      variants={variants} // Pass the variant object into Framer Motion
-      initial="hidden" // Set the initial state to variants.hidden
-      animate="enter" // Animated state to variants.enter
-      exit="exit" // Exit state (used later) to variants.exit
-      transition={{ type: 'linear' }} // Set the transition to linear
+      variants={variants}
+      initial="hidden"
+      animate="enter"
+      exit="exit"
+      transition={{ type: 'linear' }}
       className=""
     >
       <div className="max-w-7xl mx-auto px-4 py-20 transition-all">
-        <div className="animate-pulse mx-auto flex space-x-4">
-          <svg
-            className="mx-auto"
-            width="295"
-            height="295"
-            viewBox="0 0 295 295"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
+        <div className="flex flex-col items-center justify-center h-40">
+          {/* Animated dots */}
+          <div className="flex space-x-4">
+            {[0, 1, 2, 3, 4].map((i) => (
+              <motion.div
+                key={i}
+                custom={i}
+                variants={dotVariants}
+                initial="initial"
+                animate="animate"
+                className="w-4 h-4 rounded-full bg-gray-500 dark:bg-gray-400"
+              />
+            ))}
+          </div>
+          
+          <motion.p 
+            className="mt-6 text-sm text-gray-500 dark:text-gray-400"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0, 1, 0] }}
+            transition={{ duration: 2, repeat: Infinity }}
           >
-            <rect
-              opacity="0.51"
-              x="6.5"
-              y="6.5"
-              width="282"
-              height="282"
-              rx="78.5"
-              stroke="#454545"
-              strokeOpacity="0.46"
-              strokeWidth="13"
-              strokeDasharray="11 11"
-            />
-            <path
-              d="M135.8 200.8V130L122.2 114.6L135.8 110.4V102.8L122.2 87.4L159.8 76V200.8L174.6 218H121L135.8 200.8Z"
-              fill="#454545"
-              fillOpacity="0.13"
-            />
-          </svg>
+            Loading...
+          </motion.p>
         </div>
       </div>
     </motion.main>
