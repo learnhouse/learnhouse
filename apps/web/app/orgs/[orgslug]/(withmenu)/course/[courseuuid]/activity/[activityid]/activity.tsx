@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { getAPIUrl, getUriWithOrg } from '@services/config/config'
 import Canva from '@components/Objects/Activities/DynamicCanva/DynamicCanva'
 import VideoActivity from '@components/Objects/Activities/Video/Video'
-import { BookOpenCheck, Check, CheckCircle, MoreVertical, UserRoundPen } from 'lucide-react'
+import { BookOpenCheck, Check, CheckCircle, ChevronDown, ChevronLeft, ChevronRight, FileText, Folder, List, Menu, MoreVertical, UserRoundPen, Video, Layers, ListFilter, ListTree } from 'lucide-react'
 import { markActivityAsComplete } from '@services/courses/activity'
 import DocumentPdfActivity from '@components/Objects/Activities/DocumentPdf/DocumentPdf'
 import ActivityIndicators from '@components/Pages/Courses/ActivityIndicators'
@@ -121,13 +121,20 @@ function ActivityClient(props: ActivityClientProps) {
               />
 
               <div className="flex justify-between items-center">
-                <div className="flex flex-col -space-y-1">
-                  <p className="font-bold text-gray-700 text-md">
-                    Chapter : {getChapterNameByActivityId(course, activity.id)}
-                  </p>
-                  <h1 className="font-bold text-gray-950 text-2xl first-letter:uppercase">
-                    {activity.name}
-                  </h1>
+                <div className="flex items-center space-x-3">
+                  <ActivityChapterDropdown 
+                    course={course}
+                    currentActivityId={activity.activity_uuid ? activity.activity_uuid.replace('activity_', '') : activityid.replace('activity_', '')}
+                    orgslug={orgslug}
+                  />
+                  <div className="flex flex-col -space-y-1">
+                    <p className="font-bold text-gray-700 text-md">
+                      Chapter : {getChapterNameByActivityId(course, activity.id)}
+                    </p>
+                    <h1 className="font-bold text-gray-950 text-2xl first-letter:uppercase">
+                      {activity.name}
+                    </h1>
+                  </div>
                 </div>
                 <div className="flex space-x-1 items-center">
                   {activity && activity.published == true && activity.content.paid_access != false && (
@@ -213,6 +220,16 @@ function ActivityClient(props: ActivityClientProps) {
                   )}
                 </>
               )}
+              
+              {/* Activity Navigation */}
+              {activity && activity.published == true && activity.content.paid_access != false && (
+                <ActivityNavigation
+                  course={course}
+                  currentActivityId={activity.activity_uuid ? activity.activity_uuid.replace('activity_', '') : activityid.replace('activity_', '')}
+                  orgslug={orgslug}
+                />
+              )}
+              
               {<div style={{ height: '100px' }}></div>}
             </div>
           </GeneralWrapperStyled>
@@ -235,7 +252,7 @@ export function MarkStatus(props: {
     const trail = await markActivityAsComplete(
       props.orgslug,
       props.course.course_uuid,
-      'activity_' + props.activityid,
+      props.activity.activity_uuid,
       session.data?.tokens?.access_token
     )
     router.refresh()
@@ -391,6 +408,286 @@ function AssignmentTools(props: {
 
   // Default return in case none of the conditions are met
   return null
+}
+
+function ActivityChapterDropdown(props: {
+  course: any
+  currentActivityId: string
+  orgslug: string
+}): React.ReactNode {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
+  const isMobile = useMediaQuery('(max-width: 768px)');
+
+  // Close dropdown when clicking outside
+  React.useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const toggleDropdown = () => {
+    setIsOpen(!isOpen);
+  };
+
+  // Function to get the appropriate icon for activity type
+  const getActivityTypeIcon = (activityType: string) => {
+    switch (activityType) {
+      case 'TYPE_VIDEO':
+        return <Video size={16} />;
+      case 'TYPE_DOCUMENT':
+        return <FileText size={16} />;
+      case 'TYPE_DYNAMIC':
+        return <Layers size={16} />;
+      case 'TYPE_ASSIGNMENT':
+        return <BookOpenCheck size={16} />;
+      default:
+        return <FileText size={16} />;
+    }
+  };
+
+  // Function to get the appropriate badge color for activity type
+  const getActivityTypeBadgeColor = (activityType: string) => {
+    return 'bg-gray-100 text-gray-600';
+  };
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <button
+        onClick={toggleDropdown}
+        className="flex items-center justify-center bg-white nice-shadow p-2.5 rounded-full"
+        aria-label="View all activities"
+        title="View all activities"
+      >
+        <ListTree size={18} className="text-gray-700" />
+      </button>
+      
+      {isOpen && (
+        <div className={`absolute z-50 mt-2 ${isMobile ? 'left-0 w-[90vw] sm:w-80' : 'left-0 w-80'} max-h-[70vh] overflow-y-auto bg-white rounded-lg shadow-xl border border-gray-200 py-2 animate-in fade-in duration-200`}>
+          <div className="px-4 py-2 border-b border-gray-100 flex justify-between items-center">
+            <h3 className="font-bold text-gray-800">Course Content</h3>
+            <button 
+              onClick={() => setIsOpen(false)}
+              className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100"
+            >
+              <ChevronDown size={18} />
+            </button>
+          </div>
+          
+          <div className="py-1">
+            {props.course.chapters.map((chapter: any) => (
+              <div key={chapter.id} className="mb-2">
+                <div className="px-4 py-2 font-medium text-gray-600 bg-gray-50 border-y border-gray-100 flex items-center">
+                  <div className="flex items-center space-x-2">
+                    <Folder size={16} className="text-gray-400" />
+                    <span>{chapter.name}</span>
+                  </div>
+                </div>
+                <div className="py-1">
+                  {chapter.activities.map((activity: any) => {
+                    // Remove any prefixes from UUIDs
+                    const cleanActivityUuid = activity.activity_uuid?.replace('activity_', '');
+                    const cleanCourseUuid = props.course.course_uuid?.replace('course_', '');
+                    
+                    return (
+                      <Link
+                        key={activity.id}
+                        href={getUriWithOrg(props.orgslug, '') + `/course/${cleanCourseUuid}/activity/${cleanActivityUuid}`}
+                        onClick={() => setIsOpen(false)}
+                      >
+                        <div 
+                          className={`px-4 py-2.5 hover:bg-gray-100 transition-colors flex items-center ${
+                            cleanActivityUuid === props.currentActivityId.replace('activity_', '') ? 'bg-gray-50 border-l-2 border-gray-300 pl-3 font-medium' : ''
+                          }`}
+                        >
+                          <div className="flex-1 flex items-center gap-2">
+                            <span className="text-gray-400">
+                              {getActivityTypeIcon(activity.activity_type)}
+                            </span>
+                            <div className="text-sm">
+                              {activity.name}
+                            </div>
+                          </div>
+                          {props.course.trail?.runs?.find(
+                            (run: any) => run.course_id === props.course.id
+                          )?.steps?.find(
+                            (step: any) => (step.activity_id === activity.id || step.activity_id === activity.activity_uuid) && step.complete === true
+                          ) && (
+                            <span className="ml-2 text-gray-400 flex-shrink-0">
+                              <Check size={14} />
+                            </span>
+                          )}
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ActivityNavigation(props: {
+  course: any
+  currentActivityId: string
+  orgslug: string
+}): React.ReactNode {
+  const router = useRouter();
+  const isMobile = useMediaQuery('(max-width: 768px)');
+  const [isBottomNavVisible, setIsBottomNavVisible] = React.useState(true);
+  const bottomNavRef = React.useRef<HTMLDivElement>(null);
+  const [navWidth, setNavWidth] = React.useState<number | null>(null);
+  
+  // Function to find the current activity's position in the course
+  const findActivityPosition = () => {
+    let allActivities: any[] = [];
+    let currentIndex = -1;
+    
+    // Flatten all activities from all chapters
+    props.course.chapters.forEach((chapter: any) => {
+      chapter.activities.forEach((activity: any) => {
+        const cleanActivityUuid = activity.activity_uuid?.replace('activity_', '');
+        allActivities.push({
+          ...activity,
+          cleanUuid: cleanActivityUuid,
+          chapterName: chapter.name
+        });
+        
+        // Check if this is the current activity
+        if (cleanActivityUuid === props.currentActivityId.replace('activity_', '')) {
+          currentIndex = allActivities.length - 1;
+        }
+      });
+    });
+    
+    return { allActivities, currentIndex };
+  };
+  
+  const { allActivities, currentIndex } = findActivityPosition();
+  
+  // Get previous and next activities
+  const prevActivity = currentIndex > 0 ? allActivities[currentIndex - 1] : null;
+  const nextActivity = currentIndex < allActivities.length - 1 ? allActivities[currentIndex + 1] : null;
+  
+  // Navigate to an activity
+  const navigateToActivity = (activity: any) => {
+    if (!activity) return;
+    
+    const cleanCourseUuid = props.course.course_uuid?.replace('course_', '');
+    router.push(getUriWithOrg(props.orgslug, '') + `/course/${cleanCourseUuid}/activity/${activity.cleanUuid}`);
+  };
+
+  // Set up intersection observer to detect when bottom nav is out of viewport
+  // and measure the width of the bottom navigation
+  React.useEffect(() => {
+    if (!bottomNavRef.current) return;
+    
+    // Update width when component mounts and on window resize
+    const updateWidth = () => {
+      if (bottomNavRef.current) {
+        setNavWidth(bottomNavRef.current.offsetWidth);
+      }
+    };
+    
+    // Initial width measurement
+    updateWidth();
+    
+    // Set up resize listener
+    window.addEventListener('resize', updateWidth);
+    
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsBottomNavVisible(entry.isIntersecting);
+      },
+      { threshold: 0.1 }
+    );
+    
+    observer.observe(bottomNavRef.current);
+    
+    return () => {
+      window.removeEventListener('resize', updateWidth);
+      if (bottomNavRef.current) {
+        observer.unobserve(bottomNavRef.current);
+      }
+    };
+  }, []);
+
+  // Navigation buttons component - reused for both top and bottom
+  const NavigationButtons = ({ isFloating = false }) => (
+    <div className={`flex justify-between items-center w-full ${isFloating ? 'space-x-1.5' : 'space-x-2'}`}>
+      <button
+        onClick={() => navigateToActivity(prevActivity)}
+        className={`flex items-center ${isFloating ? 'space-x-1.5 p-2' : 'space-x-1.5 px-3.5 py-2'} rounded-md transition-all duration-200 ${
+          prevActivity 
+            ? `${isFloating ? '' : 'bg-white nice-shadow'} text-gray-700` 
+            : `${isFloating ? 'opacity-50' : 'bg-gray-100'} text-gray-400 cursor-not-allowed`
+        }`}
+        disabled={!prevActivity}
+        title={prevActivity ? `Previous: ${prevActivity.name}` : 'No previous activity'}
+      >
+        <ChevronLeft size={isFloating ? 20 : 16} className={isFloating ? 'text-gray-800' : ''} />
+        <div className="flex flex-col items-start">
+          <span className="text-xs text-gray-500">Previous</span>
+            <span className="text-sm capitalize truncate max-w-[100px] sm:max-w-[120px] font-semibold">
+            {prevActivity ? prevActivity.name : 'No previous activity'}
+          </span>
+        </div>
+      </button>
+      
+      <div className={`text-sm text-gray-500 ${isFloating ? 'hidden' : 'hidden sm:block'}`}>
+        {currentIndex + 1} of {allActivities.length}
+      </div>
+      
+      <button
+        onClick={() => navigateToActivity(nextActivity)}
+        className={`flex items-center ${isFloating ? 'space-x-1.5 p-2' : 'space-x-1.5 px-3.5 py-2'} rounded-md transition-all duration-200 ${
+          nextActivity 
+            ? `${isFloating ? '' : 'bg-white nice-shadow'} text-gray-700` 
+            : `${isFloating ? 'opacity-50' : 'bg-gray-100'} text-gray-400 cursor-not-allowed`
+        }`}
+        disabled={!nextActivity}
+        title={nextActivity ? `Next: ${nextActivity.name}` : 'No next activity'}
+      >
+        <div className="flex flex-col items-end">
+          <span className="text-xs text-gray-500">Next</span>
+          <span className="text-sm capitalize truncate max-w-[100px] sm:max-w-[120px] font-semibold">
+            {nextActivity ? nextActivity.name : 'No next activity'}
+          </span>
+        </div>
+        <ChevronRight size={isFloating ? 20 : 16} className={isFloating ? 'text-gray-800' : ''} />
+      </button>
+    </div>
+  );
+  
+  return (
+    <>
+      {/* Bottom navigation (in-place) */}
+      <div ref={bottomNavRef} className="mt-6 mb-2 max-w-xl mx-auto">
+        <NavigationButtons isFloating={false} />
+      </div>
+      
+      {/* Floating bottom navigation - shown when bottom nav is not visible */}
+      {!isBottomNavVisible && (
+        <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50 w-[85%] sm:w-auto sm:min-w-[350px] max-w-lg transition-all duration-300 ease-in-out">
+          <div 
+            className="bg-white/90 backdrop-blur-xl  rounded-full py-1.5 px-2.5 shadow-sm animate-in fade-in slide-in-from-bottom duration-300"
+          >
+            <NavigationButtons isFloating={true} />
+          </div>
+        </div>
+      )}
+    </>
+  );
 }
 
 export default ActivityClient
