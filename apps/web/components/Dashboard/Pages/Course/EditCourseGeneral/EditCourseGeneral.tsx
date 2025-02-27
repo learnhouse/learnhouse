@@ -11,6 +11,7 @@ import React, { useEffect, useState } from 'react';
 import ThumbnailUpdate from './ThumbnailUpdate';
 import { useCourse, useCourseDispatch } from '@components/Contexts/CourseContext';
 import FormTagInput from '@components/Objects/StyledElements/Form/TagInput';
+import LearningItemsList from './LearningItemsList';
 
 type EditCourseStructureProps = {
   orgslug: string
@@ -34,6 +35,23 @@ const validate = (values: any) => {
 
   if (!values.learnings) {
     errors.learnings = 'Required';
+  } else {
+    try {
+      const learningItems = JSON.parse(values.learnings);
+      if (!Array.isArray(learningItems)) {
+        errors.learnings = 'Invalid format';
+      } else if (learningItems.length === 0) {
+        errors.learnings = 'At least one learning item is required';
+      } else {
+        // Check if any item has empty text
+        const hasEmptyText = learningItems.some(item => !item.text || item.text.trim() === '');
+        if (hasEmptyText) {
+          errors.learnings = 'All learning items must have text';
+        }
+      }
+    } catch (e) {
+      errors.learnings = 'Invalid JSON format';
+    }
   }
 
   return errors;
@@ -45,12 +63,51 @@ function EditCourseGeneral(props: EditCourseStructureProps) {
   const dispatchCourse = useCourseDispatch() as any;
   const { isLoading, courseStructure } = course as any;
 
+  // Initialize learnings as a JSON array if it's not already
+  const initializeLearnings = (learnings: any) => {
+    if (!learnings) {
+      return JSON.stringify([{ id: Date.now().toString(), text: '', emoji: '📝' }]);
+    }
+    
+    try {
+      // Check if it's already a valid JSON array
+      const parsed = JSON.parse(learnings);
+      if (Array.isArray(parsed)) {
+        return learnings;
+      }
+      
+      // If it's a string but not a JSON array, convert it to a learning item
+      if (typeof learnings === 'string') {
+        return JSON.stringify([{ 
+          id: Date.now().toString(), 
+          text: learnings, 
+          emoji: '📝' 
+        }]);
+      }
+      
+      // Default empty array
+      return JSON.stringify([{ id: Date.now().toString(), text: '', emoji: '📝' }]);
+    } catch (e) {
+      // If it's not valid JSON, convert the string to a learning item
+      if (typeof learnings === 'string') {
+        return JSON.stringify([{ 
+          id: Date.now().toString(), 
+          text: learnings, 
+          emoji: '📝' 
+        }]);
+      }
+      
+      // Default empty array
+      return JSON.stringify([{ id: Date.now().toString(), text: '', emoji: '📝' }]);
+    }
+  };
+
   const formik = useFormik({
     initialValues: {
       name: courseStructure?.name || '',
       description: courseStructure?.description || '',
       about: courseStructure?.about || '',
-      learnings: courseStructure?.learnings || '',
+      learnings: initializeLearnings(courseStructure?.learnings || ''),
       tags: courseStructure?.tags || '',
       public: courseStructure?.public || false,
     },
@@ -139,11 +196,11 @@ function EditCourseGeneral(props: EditCourseStructureProps) {
               <FormField name="learnings">
                 <FormLabelAndMessage label="Learnings" message={formik.errors.learnings} />
                 <Form.Control asChild>
-									<FormTagInput
-										placeholder="Enter to add..."
-										onChange={(value) => formik.setFieldValue('learnings', value)}
-										value={formik.values.learnings}
-									/>
+                  <LearningItemsList
+                    value={formik.values.learnings}
+                    onChange={(value) => formik.setFieldValue('learnings', value)}
+                    error={formik.errors.learnings}
+                  />
                 </Form.Control>
               </FormField>
 
