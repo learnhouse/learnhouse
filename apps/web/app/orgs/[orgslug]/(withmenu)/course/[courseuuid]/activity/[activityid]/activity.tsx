@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { getAPIUrl, getUriWithOrg } from '@services/config/config'
 import Canva from '@components/Objects/Activities/DynamicCanva/DynamicCanva'
 import VideoActivity from '@components/Objects/Activities/Video/Video'
-import { BookOpenCheck, Check, CheckCircle, ChevronDown, ChevronLeft, ChevronRight, FileText, Folder, List, Menu, MoreVertical, UserRoundPen, Video, Layers, ListFilter, ListTree } from 'lucide-react'
+import { BookOpenCheck, Check, CheckCircle, ChevronDown, ChevronLeft, ChevronRight, FileText, Folder, List, Menu, MoreVertical, UserRoundPen, Video, Layers, ListFilter, ListTree, X } from 'lucide-react'
 import { markActivityAsComplete } from '@services/courses/activity'
 import DocumentPdfActivity from '@components/Objects/Activities/DocumentPdf/DocumentPdf'
 import ActivityIndicators from '@components/Pages/Courses/ActivityIndicators'
@@ -476,7 +476,7 @@ function ActivityChapterDropdown(props: {
               onClick={() => setIsOpen(false)}
               className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100"
             >
-              <ChevronDown size={18} />
+              <X size={18} />
             </button>
           </div>
           
@@ -624,55 +624,105 @@ function ActivityNavigation(props: {
 
   // Navigation buttons component - reused for both top and bottom
   const NavigationButtons = ({ isFloating = false }) => (
-    <div className={`flex justify-between items-center w-full ${isFloating ? 'space-x-1.5' : 'space-x-2'}`}>
-      <button
-        onClick={() => navigateToActivity(prevActivity)}
-        className={`flex items-center ${isFloating ? 'space-x-1.5 p-2' : 'space-x-1.5 px-3.5 py-2'} rounded-md transition-all duration-200 ${
-          prevActivity 
-            ? `${isFloating ? '' : 'bg-white nice-shadow'} text-gray-700` 
-            : `${isFloating ? 'opacity-50' : 'bg-gray-100'} text-gray-400 cursor-not-allowed`
-        }`}
-        disabled={!prevActivity}
-        title={prevActivity ? `Previous: ${prevActivity.name}` : 'No previous activity'}
-      >
-        <ChevronLeft size={isFloating ? 20 : 16} className={isFloating ? 'text-gray-800' : ''} />
-        <div className="flex flex-col items-start">
-          <span className="text-xs text-gray-500">Previous</span>
-            <span className="text-sm capitalize truncate max-w-[100px] sm:max-w-[120px] font-semibold">
-            {prevActivity ? prevActivity.name : 'No previous activity'}
-          </span>
-        </div>
-      </button>
-      
-      <div className={`text-sm text-gray-500 ${isFloating ? 'hidden' : 'hidden sm:block'}`}>
-        {currentIndex + 1} of {allActivities.length}
-      </div>
-      
-      <button
-        onClick={() => navigateToActivity(nextActivity)}
-        className={`flex items-center ${isFloating ? 'space-x-1.5 p-2' : 'space-x-1.5 px-3.5 py-2'} rounded-md transition-all duration-200 ${
-          nextActivity 
-            ? `${isFloating ? '' : 'bg-white nice-shadow'} text-gray-700` 
-            : `${isFloating ? 'opacity-50' : 'bg-gray-100'} text-gray-400 cursor-not-allowed`
-        }`}
-        disabled={!nextActivity}
-        title={nextActivity ? `Next: ${nextActivity.name}` : 'No next activity'}
-      >
-        <div className="flex flex-col items-end">
-          <span className="text-xs text-gray-500">Next</span>
-          <span className="text-sm capitalize truncate max-w-[100px] sm:max-w-[120px] font-semibold">
-            {nextActivity ? nextActivity.name : 'No next activity'}
-          </span>
-        </div>
-        <ChevronRight size={isFloating ? 20 : 16} className={isFloating ? 'text-gray-800' : ''} />
-      </button>
+    <div className={`${isFloating ? 'flex justify-between' : 'grid grid-cols-3'} items-center w-full`}>
+      {isFloating ? (
+        // Floating navigation - original flex layout
+        <>
+          <button
+            onClick={() => navigateToActivity(prevActivity)}
+            className={`flex items-center space-x-1.5 p-2 rounded-md transition-all duration-200 ${
+              prevActivity 
+                ? 'text-gray-700' 
+                : 'opacity-50 text-gray-400 cursor-not-allowed'
+            }`}
+            disabled={!prevActivity}
+            title={prevActivity ? `Previous: ${prevActivity.name}` : 'No previous activity'}
+          >
+            <ChevronLeft size={20} className="text-gray-800 flex-shrink-0" />
+            <div className="flex flex-col items-start">
+              <span className="text-xs text-gray-500">Previous</span>
+              <span className="text-sm capitalize font-semibold text-left">
+                {prevActivity ? prevActivity.name : 'No previous activity'}
+              </span>
+            </div>
+          </button>
+          
+          <button
+            onClick={() => navigateToActivity(nextActivity)}
+            className={`flex items-center space-x-1.5 p-2 rounded-md transition-all duration-200 ${
+              nextActivity 
+                ? 'text-gray-700' 
+                : 'opacity-50 text-gray-400 cursor-not-allowed'
+            }`}
+            disabled={!nextActivity}
+            title={nextActivity ? `Next: ${nextActivity.name}` : 'No next activity'}
+          >
+            <div className="flex flex-col items-end">
+              <span className="text-xs text-gray-500">Next</span>
+              <span className="text-sm capitalize font-semibold text-right">
+                {nextActivity ? nextActivity.name : 'No next activity'}
+              </span>
+            </div>
+            <ChevronRight size={20} className="text-gray-800 flex-shrink-0" />
+          </button>
+        </>
+      ) : (
+        // Regular navigation - grid layout with centered counter
+        <>
+          <div className="justify-self-start">
+            <button
+              onClick={() => navigateToActivity(prevActivity)}
+              className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-md transition-all duration-200 ${
+                prevActivity 
+                  ? 'bg-white nice-shadow text-gray-700' 
+                  : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              }`}
+              disabled={!prevActivity}
+              title={prevActivity ? `Previous: ${prevActivity.name}` : 'No previous activity'}
+            >
+              <ChevronLeft size={16} className="flex-shrink-0" />
+              <div className="flex flex-col items-start">
+                <span className="text-xs text-gray-500">Previous</span>
+                <span className="text-sm capitalize font-semibold text-left">
+                  {prevActivity ? prevActivity.name : 'No previous activity'}
+                </span>
+              </div>
+            </button>
+          </div>
+          
+          <div className="text-sm text-gray-500 justify-self-center">
+            {currentIndex + 1} of {allActivities.length}
+          </div>
+          
+          <div className="justify-self-end">
+            <button
+              onClick={() => navigateToActivity(nextActivity)}
+              className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-md transition-all duration-200 ${
+                nextActivity 
+                  ? 'bg-white nice-shadow text-gray-700' 
+                  : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              }`}
+              disabled={!nextActivity}
+              title={nextActivity ? `Next: ${nextActivity.name}` : 'No next activity'}
+            >
+              <div className="flex flex-col items-end">
+                <span className="text-xs text-gray-500">Next</span>
+                <span className="text-sm capitalize font-semibold text-right">
+                  {nextActivity ? nextActivity.name : 'No next activity'}
+                </span>
+              </div>
+              <ChevronRight size={16} className="flex-shrink-0" />
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
   
   return (
     <>
       {/* Bottom navigation (in-place) */}
-      <div ref={bottomNavRef} className="mt-6 mb-2 max-w-xl mx-auto">
+      <div ref={bottomNavRef} className="mt-6 mb-2 w-full">
         <NavigationButtons isFloating={false} />
       </div>
       
@@ -680,7 +730,7 @@ function ActivityNavigation(props: {
       {!isBottomNavVisible && (
         <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50 w-[85%] sm:w-auto sm:min-w-[350px] max-w-lg transition-all duration-300 ease-in-out">
           <div 
-            className="bg-white/90 backdrop-blur-xl  rounded-full py-1.5 px-2.5 shadow-sm animate-in fade-in slide-in-from-bottom duration-300"
+            className="bg-white/90 backdrop-blur-xl rounded-full py-1.5 px-2.5 shadow-sm animate-in fade-in slide-in-from-bottom duration-300"
           >
             <NavigationButtons isFloating={true} />
           </div>
