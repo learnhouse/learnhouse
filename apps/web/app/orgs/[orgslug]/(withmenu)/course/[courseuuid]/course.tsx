@@ -29,9 +29,31 @@ const CourseClient = (props: any) => {
   const isMobile = useMediaQuery('(max-width: 768px)')
 
   function getLearningTags() {
-    // create array of learnings from a string object (comma separated)
-    let learnings = course?.learnings ? course?.learnings.split('|') : []
-    setLearnings(learnings)
+    if (!course?.learnings) {
+      setLearnings([])
+      return
+    }
+
+    try {
+      // Try to parse as JSON (new format)
+      const parsedLearnings = JSON.parse(course.learnings)
+      if (Array.isArray(parsedLearnings)) {
+        // New format: array of learning items with text and emoji
+        setLearnings(parsedLearnings)
+        return
+      }
+    } catch (e) {
+      // Not valid JSON, continue to legacy format handling
+    }
+
+    // Legacy format: comma-separated string (changed from pipe-separated)
+    const learningItems = course.learnings.split(',').map((text: string) => ({
+      id: crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(),
+      text: text.trim(), // Trim whitespace that might be present after commas
+      emoji: '📝' // Default emoji for legacy items
+    }))
+    
+    setLearnings(learningItems)
   }
 
   useEffect(() => {
@@ -90,22 +112,44 @@ const CourseClient = (props: any) => {
                 <p className="py-5 px-5 whitespace-pre-wrap">{course.about}</p>
               </div>
 
-              {learnings.length > 0 && learnings[0] !== 'null' && (
+              {learnings.length > 0 && learnings[0]?.text !== 'null' && (
                 <div>
                   <h2 className="py-3 text-2xl font-bold">
                     What you will learn
                   </h2>
                   <div className="bg-white shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40 rounded-lg overflow-hidden px-5 py-5 space-y-2">
                     {learnings.map((learning: any) => {
+                      // Handle both new format (object with text and emoji) and legacy format (string)
+                      const learningText = typeof learning === 'string' ? learning : learning.text
+                      const learningEmoji = typeof learning === 'string' ? null : learning.emoji
+                      const learningId = typeof learning === 'string' ? learning : learning.id || learning.text
+                      
+                      if (!learningText) return null
+                      
                       return (
                         <div
-                          key={learning}
+                          key={learningId}
                           className="flex space-x-2 items-center font-semibold text-gray-500"
                         >
                           <div className="px-2 py-2 rounded-full">
-                            <Check className="text-gray-400" size={15} />
+                            {learningEmoji ? (
+                              <span>{learningEmoji}</span>
+                            ) : (
+                              <Check className="text-gray-400" size={15} />
+                            )}
                           </div>
-                          <p>{learning}</p>
+                          <p>{learningText}</p>
+                          {learning.link && (
+                            <a 
+                              href={learning.link} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-blue-500 hover:underline text-sm"
+                            >
+                              <span className="sr-only">Link to {learningText}</span>
+                              <ArrowRight size={14} />
+                            </a>
+                          )}
                         </div>
                       )
                     })}
