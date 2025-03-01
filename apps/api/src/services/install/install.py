@@ -330,7 +330,7 @@ def install_create_organization(org_object: OrganizationCreate, db_session: Sess
 
     # Org Config
     org_config = OrganizationConfigBase(
-        config_version="1.2",
+        config_version="1.3",
         general=OrgGeneralConfig(
             enabled=True,
             color="normal",
@@ -354,7 +354,8 @@ def install_create_organization(org_object: OrganizationCreate, db_session: Sess
         cloud=OrgCloudConfig(
             plan='free',
             custom_domain=False
-        )
+        ),
+        landing={}
     )
 
     org_config = json.loads(org_config.json())
