@@ -82,6 +82,7 @@ class OrgGeneralConfig(BaseModel):
     color: str = "normal"
     watermark: bool = True
 
+
 # Cloud
 class OrgCloudConfig(BaseModel):
     plan: Literal["free", "standard", "pro"] = "free"
@@ -90,10 +91,11 @@ class OrgCloudConfig(BaseModel):
 
 # Main Config
 class OrganizationConfigBase(BaseModel):
-    config_version: str = "1.2"
+    config_version: str = "1.3"
     general: OrgGeneralConfig
     features: OrgFeatureConfig
     cloud: OrgCloudConfig
+    landing: dict = {}
 
 
 class OrganizationConfig(SQLModel, table=True):

@@ -40,6 +40,7 @@ from src.services.orgs.orgs import (
     update_org_preview,
     update_org_signup_mechanism,
     update_org_thumbnail,
+    update_org_landing,
 )
 
 
@@ -413,3 +414,17 @@ async def api_delete_org(
     """
 
     return await delete_org(request, org_id, current_user, db_session)
+
+
+@router.put("/{org_id}/landing")
+async def api_update_org_landing(
+    request: Request,
+    org_id: int,
+    landing_object: dict,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+):
+    """
+    Update organization landing object
+    """
+    return await update_org_landing(request, landing_object, org_id, current_user, db_session)
