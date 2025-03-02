@@ -1,5 +1,11 @@
+'use client'
+
 import React from 'react'
 import { LandingSection } from '@components/Dashboard/Pages/Org/OrgEditLanding/landing_types'
+import CourseThumbnail from '@components/Objects/Thumbnails/CourseThumbnail'
+import useSWR from 'swr'
+import { getOrgCourses } from '@services/courses/courses'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 
 interface LandingCustomProps {
   landing: {
@@ -10,6 +16,15 @@ interface LandingCustomProps {
 }
 
 function LandingCustom({ landing, orgslug }: LandingCustomProps) {
+  const session = useLHSession() as any
+  const access_token = session?.data?.tokens?.access_token
+
+  // Fetch all courses for the organization
+  const { data: allCourses } = useSWR(
+    orgslug ? [orgslug, access_token] : null,
+    ([slug, token]) => getOrgCourses(slug, null, token)
+  )
+
   const renderSection = (section: LandingSection) => {
     switch (section.type) {
       case 'hero':
@@ -149,19 +164,42 @@ function LandingCustom({ landing, orgslug }: LandingCustomProps) {
           </div>
         )
       case 'featured-courses':
+        if (!allCourses) {
+          return (
+            <div 
+              key={`featured-courses-${section.title}`}
+              className="mt-[20px] sm:mt-[40px] mx-2 sm:mx-4 lg:mx-16 w-full py-12"
+            >
+              <h2 className="text-2xl md:text-3xl font-bold text-left mb-6 text-gray-900">{section.title}</h2>
+              <div className="text-center py-6 text-gray-500">Loading courses...</div>
+            </div>
+          )
+        }
+
+        const featuredCourses = allCourses.filter((course: any) => 
+          section.courses.includes(course.course_uuid)
+        )
+
         return (
           <div 
             key={`featured-courses-${section.title}`}
-            className="mt-[20px] sm:mt-[40px] mx-2 sm:mx-4 lg:mx-16 w-full py-16"
+            className="mt-[20px] sm:mt-[40px] mx-2 sm:mx-4 lg:mx-16 w-full py-12"
           >
-            <h2 className="text-2xl md:text-3xl font-bold text-left mb-8 text-gray-900">{section.title}</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {section.courses.map((course, index) => (
-                <div key={index} className="bg-white rounded-lg shadow-lg p-4">
-                  {/* Course card content - you'll need to fetch course details */}
-                  <p>Course ID: {course.course_uuid}</p>
+            <h2 className="text-2xl md:text-3xl font-bold text-left mb-6 text-gray-900">{section.title}</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6">
+              {featuredCourses.map((course: any) => (
+                <div key={course.course_uuid} >
+                  <CourseThumbnail
+                    course={course}
+                    orgslug={orgslug}
+                  />
                 </div>
               ))}
+              {featuredCourses.length === 0 && (
+                <div className="col-span-full text-center py-6 text-gray-500">
+                  No featured courses selected
+                </div>
+              )}
             </div>
           </div>
         )
