@@ -52,16 +52,56 @@ const PREDEFINED_GRADIENTS = {
     colors: ['#f0fff4', '#dcfce7'] as Array<string>,
     direction: '45deg'
   },
-  'lavender-mist': {
-    colors: ['#faf5ff', '#f3e8ff'] as Array<string>,
+  'deep-ocean': {
+    colors: ['#0f172a', '#1e3a8a'] as Array<string>,
+    direction: '135deg'
+  },
+  'sunset-blaze': {
+    colors: ['#7f1d1d', '#ea580c'] as Array<string>,
     direction: '45deg'
   },
-  'ocean-spray': {
-    colors: ['#f0f9ff', '#e0f2fe'] as Array<string>,
+  'midnight-purple': {
+    colors: ['#581c87', '#7e22ce'] as Array<string>,
+    direction: '90deg'
+  },
+  'forest-depths': {
+    colors: ['#064e3b', '#059669'] as Array<string>,
+    direction: '225deg'
+  },
+  'berry-fusion': {
+    colors: ['#831843', '#be185d'] as Array<string>,
+    direction: '135deg'
+  },
+  'cosmic-night': {
+    colors: ['#1e1b4b', '#4338ca'] as Array<string>,
     direction: '45deg'
   },
-  'peach-cream': {
-    colors: ['#fff7ed', '#ffedd5'] as Array<string>,
+  'autumn-fire': {
+    colors: ['#7c2d12', '#c2410c'] as Array<string>,
+    direction: '90deg'
+  },
+  'emerald-depths': {
+    colors: ['#064e3b', '#10b981'] as Array<string>,
+    direction: '135deg'
+  },
+  'royal-navy': {
+    colors: ['#1e3a8a', '#3b82f6'] as Array<string>,
+    direction: '225deg'
+  },
+  'volcanic': {
+    colors: ['#991b1b', '#f97316'] as Array<string>,
+    direction: '315deg'
+  },
+  'arctic-night': {
+    colors: ['#0f172a', '#475569'] as Array<string>,
+    direction: '90deg'
+  },
+  'grape-punch': {
+    colors: ['#6b21a8', '#d946ef'] as Array<string>,
+    direction: '135deg'
+  },
+  'marine-blue': {
+    colors: ['#0c4a6e', '#0ea5e9'] as Array<string>,
     direction: '45deg'
   }
 } as const
@@ -150,6 +190,7 @@ const OrgEditLanding = () => {
       case 'logos':
         return {
           type: 'logos',
+          title: 'New Logos Section',
           logos: []
         }
       case 'people':
@@ -282,38 +323,62 @@ const OrgEditLanding = () => {
                               <div
                                 ref={provided.innerRef}
                                 {...provided.draggableProps}
-                                className={`p-4 bg-white/80 backdrop-blur-sm rounded-lg cursor-pointer nice-shadow ${
-                                  selectedSection === index ? 'border-blue-500 bg-blue-50/50' : 'border-gray-200 hover:border-gray-300'
-                                } ${snapshot.isDragging ? 'shadow-lg ring-2 ring-blue-500/20' : ''}`}
+                                onClick={() => setSelectedSection(index)}
+                                className={`p-4 bg-white/80 backdrop-blur-sm rounded-lg cursor-pointer border  ${
+                                  selectedSection === index 
+                                    ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-500/20 shadow-sm' 
+                                    : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50/50 hover:shadow-sm'
+                                } ${snapshot.isDragging ? 'shadow-lg ring-2 ring-blue-500/20 rotate-2' : ''}`}
                               >
-                                <div className="flex items-center justify-between">
+                                <div className="flex items-center justify-between group">
                                   <div className="flex items-center space-x-3">
-                                    <div {...provided.dragHandleProps} className="text-gray-400 hover:text-gray-600">
+                                    <div {...provided.dragHandleProps} 
+                                      className={`p-1.5 rounded-md transition-colors duration-200 ${
+                                        selectedSection === index 
+                                          ? 'text-blue-500 bg-blue-100/50' 
+                                          : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
+                                      }`}>
                                       <GripVertical size={16} />
                                     </div>
-                                    {React.createElement(SECTION_TYPES[section.type as keyof typeof SECTION_TYPES].icon, {
-                                      size: 16,
-                                      className: "text-gray-600"
-                                    })}
-                                    <span className="text-sm font-medium truncate capitalize">
+                                    <div className={`p-1.5 rounded-md ${
+                                      selectedSection === index 
+                                        ? 'text-blue-600 bg-blue-100/50' 
+                                        : 'text-gray-600 bg-gray-100/50'
+                                    }`}>
+                                      {React.createElement(SECTION_TYPES[section.type as keyof typeof SECTION_TYPES].icon, {
+                                        size: 16
+                                      })}
+                                    </div>
+                                    <span className={`text-sm font-medium truncate capitalize ${
+                                      selectedSection === index 
+                                        ? 'text-blue-700' 
+                                        : 'text-gray-700'
+                                    }`}>
                                       {getSectionDisplayName(section)}
                                     </span>
                                   </div>
-                                  <div className="flex space-x-2">
+                                  <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                                     <button
-                                      onClick={() => setSelectedSection(index)}
-                                      className="p-1.5 hover:bg-gray-100 rounded-md transition-colors duration-200"
+                                      onClick={(e) => {
+                                        e.stopPropagation()
+                                        setSelectedSection(index)
+                                      }}
+                                      className={`p-1.5 rounded-md transition-colors duration-200 ${
+                                        selectedSection === index
+                                          ? 'text-blue-500 hover:bg-blue-100'
+                                          : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
+                                      }`}
                                     >
-                                      <Edit size={14} className="text-gray-600" />
+                                      <Edit size={14} />
                                     </button>
                                     <button
                                       onClick={(e) => {
                                         e.stopPropagation()
                                         deleteSection(index)
                                       }}
-                                      className="p-1.5 hover:bg-red-50 rounded-md transition-colors duration-200"
+                                      className="p-1.5 text-red-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors duration-200"
                                     >
-                                      <Trash2 size={14} className="text-red-500" />
+                                      <Trash2 size={14} />
                                     </button>
                                   </div>
                                 </div>
@@ -986,6 +1051,17 @@ const LogosSectionEditor: React.FC<{
       <div>
         <Label>Logos</Label>
         <div className="space-y-3 mt-2">
+          {/* Title */}
+          <div>
+            <Label htmlFor="title">Title</Label>
+            <Input
+              id="title"
+              value={section.title}
+              onChange={(e) => onChange({ ...section, title: e.target.value })}
+              placeholder="Enter section title"
+            />
+          </div>
+
           {section.logos.map((logo, index) => (
             <div key={index} className="grid grid-cols-[1fr,1fr,auto] gap-2">
               <Input

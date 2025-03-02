@@ -31,6 +31,7 @@ export interface LandingButton {
 
 export interface LandingLogos {
   type: 'logos';
+  title: string;
   logos: LandingImage[];
 }
 
