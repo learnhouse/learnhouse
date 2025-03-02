@@ -1,13 +1,14 @@
 'use client'
 import BreadCrumbs from '@components/Dashboard/Misc/BreadCrumbs'
 import { getUriWithOrg } from '@services/config/config'
-import { ImageIcon, Info, LockIcon, SearchIcon, TextIcon, LucideIcon, Share2Icon } from 'lucide-react'
+import { ImageIcon, Info, LockIcon, SearchIcon, TextIcon, LucideIcon, Share2Icon, LayoutDashboardIcon } from 'lucide-react'
 import Link from 'next/link'
 import React, { useEffect } from 'react'
 import { motion } from 'framer-motion'
 import OrgEditGeneral from '@components/Dashboard/Pages/Org/OrgEditGeneral/OrgEditGeneral'
 import OrgEditImages from '@components/Dashboard/Pages/Org/OrgEditImages/OrgEditImages'
 import OrgEditSocials from '@components/Dashboard/Pages/Org/OrgEditSocials/OrgEditSocials'
+import OrgEditLanding from '@components/Dashboard/Pages/Org/OrgEditLanding/OrgEditLanding'
 
 export type OrgParams = {
   subpage: string
@@ -22,6 +23,7 @@ interface TabItem {
 
 const SETTING_TABS: TabItem[] = [
   { id: 'general', label: 'General', icon: TextIcon },
+  { id: 'landing', label: 'Landing Page', icon: LayoutDashboardIcon },
   { id: 'previews', label: 'Images & Previews', icon: ImageIcon },
   { id: 'socials', label: 'Socials', icon: Share2Icon },
 ]
@@ -61,6 +63,9 @@ function OrgPage({ params }: { params: OrgParams }) {
     } else if (params.subpage == 'socials') {
       setH1Label('Socials')
       setH2Label('Manage your organization social media links')
+    } else if (params.subpage == 'landing') {
+      setH1Label('Landing Page')
+      setH2Label('Customize your organization landing page')
     }
   }
 
@@ -103,6 +108,7 @@ function OrgPage({ params }: { params: OrgParams }) {
         {params.subpage == 'general' ? <OrgEditGeneral /> : ''}
         {params.subpage == 'previews' ? <OrgEditImages /> : ''}
         {params.subpage == 'socials' ? <OrgEditSocials /> : ''}
+        {params.subpage == 'landing' ? <OrgEditLanding /> : ''}
       </motion.div>
     </div>
   )
