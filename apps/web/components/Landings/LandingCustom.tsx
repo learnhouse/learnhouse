@@ -75,7 +75,7 @@ function LandingCustom({ landing, orgslug }: LandingCustomProps) {
         return (
           <div 
             key={`text-image-${section.title}`}
-            className="mt-[20px] sm:mt-[40px] mx-2 sm:mx-4 lg:mx-16 w-full"
+            className="py-16 mx-2 sm:mx-4 lg:mx-16 w-full"
           >
             <div className={`flex flex-col md:flex-row items-center gap-8 md:gap-12 bg-white rounded-xl p-6 md:p-8 lg:p-12 nice-shadow ${
               section.flow === 'right' ? 'md:flex-row-reverse' : ''
@@ -119,7 +119,7 @@ function LandingCustom({ landing, orgslug }: LandingCustomProps) {
         return (
           <div 
             key={`logos-${section.type}`}
-            className="mt-[20px] sm:mt-[40px] mx-2 sm:mx-4 lg:mx-16 w-full py-20"
+            className="py-16 mx-2 sm:mx-4 lg:mx-16 w-full"
           >
             {section.title && (
               <h2 className="text-2xl md:text-3xl font-bold text-left mb-16 text-gray-900">{section.title}</h2>
@@ -143,7 +143,7 @@ function LandingCustom({ landing, orgslug }: LandingCustomProps) {
         return (
           <div 
             key={`people-${section.title}`}
-            className="mt-[20px] sm:mt-[40px] mx-2 sm:mx-4 lg:mx-16 w-full py-16"
+            className="py-16 mx-2 sm:mx-4 lg:mx-16 w-full"
           >
             <h2 className="text-2xl md:text-3xl font-bold text-left mb-10 text-gray-900">{section.title}</h2>
             <div className="flex flex-wrap justify-center gap-x-20 gap-y-8">
@@ -168,7 +168,7 @@ function LandingCustom({ landing, orgslug }: LandingCustomProps) {
           return (
             <div 
               key={`featured-courses-${section.title}`}
-              className="mt-[20px] sm:mt-[40px] mx-2 sm:mx-4 lg:mx-16 w-full py-12"
+              className="py-16 mx-2 sm:mx-4 lg:mx-16 w-full"
             >
               <h2 className="text-2xl md:text-3xl font-bold text-left mb-6 text-gray-900">{section.title}</h2>
               <div className="text-center py-6 text-gray-500">Loading courses...</div>
@@ -183,7 +183,7 @@ function LandingCustom({ landing, orgslug }: LandingCustomProps) {
         return (
           <div 
             key={`featured-courses-${section.title}`}
-            className="mt-[20px] sm:mt-[40px] mx-2 sm:mx-4 lg:mx-16 w-full py-12"
+            className="py-16 mx-2 sm:mx-4 lg:mx-16 w-full"
           >
             <h2 className="text-2xl md:text-3xl font-bold text-left mb-6 text-gray-900">{section.title}</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6">

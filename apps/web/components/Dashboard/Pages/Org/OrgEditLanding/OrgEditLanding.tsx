@@ -10,7 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@components/ui/button"
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { updateOrgLanding } from '@services/organizations/orgs'
+import { updateOrgLanding, uploadLandingContent } from '@services/organizations/orgs'
+import { getOrgLandingMediaDirectory } from '@services/media/media'
 import { getOrgCourses } from '@services/courses/courses'
 import toast from 'react-hot-toast'
 import useSWR from 'swr'
@@ -273,7 +274,7 @@ const OrgEditLanding = () => {
         {/* Enable/Disable Landing Page */}
         <div className="flex items-center justify-between border-b pb-4">
           <div>
-            <h2 className="text-xl font-semibold">Landing Page</h2>
+            <h2 className="text-xl font-semibold flex items-center">Landing Page <div className="text-xs ml-2 bg-gray-200 text-gray-700 px-2 py-1 rounded-full"> BETA </div></h2>
             <p className="text-gray-600">Customize your organization's landing page</p>
           </div>
           <div className="flex items-center space-x-4">
@@ -954,6 +955,64 @@ const HeroSectionEditor: React.FC<{
   )
 }
 
+interface ImageUploaderProps {
+  onImageUploaded: (imageUrl: string) => void
+  className?: string
+  buttonText?: string
+  id: string
+}
+
+const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUploaded, className, buttonText = "Upload Image", id }) => {
+  const org = useOrg() as any
+  const session = useLHSession() as any
+  const access_token = session?.data?.tokens?.access_token
+  const [isUploading, setIsUploading] = React.useState(false)
+  const inputId = `imageUpload-${id}`
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setIsUploading(true)
+    try {
+      const response = await uploadLandingContent(org.id, file, access_token)
+      if (response.status === 200) {
+        const imageUrl = getOrgLandingMediaDirectory(org.org_uuid, response.data.filename)
+        onImageUploaded(imageUrl)
+        toast.success('Image uploaded successfully')
+      } else {
+        toast.error('Failed to upload image')
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error)
+      toast.error('Failed to upload image')
+    } finally {
+      setIsUploading(false)
+    }
+  }
+
+  return (
+    <div className={className}>
+      <Button
+        variant="outline"
+        onClick={() => document.getElementById(inputId)?.click()}
+        disabled={isUploading}
+        className="w-full"
+      >
+        <Upload className="h-4 w-4 mr-2" />
+        {isUploading ? 'Uploading...' : buttonText}
+      </Button>
+      <input
+        id={inputId}
+        type="file"
+        accept="image/*"
+        onChange={handleFileChange}
+        className="hidden"
+      />
+    </div>
+  )
+}
+
 const TextAndImageSectionEditor: React.FC<{
   section: LandingTextAndImageSection
   onChange: (section: LandingTextAndImageSection) => void
@@ -1010,7 +1069,7 @@ const TextAndImageSectionEditor: React.FC<{
         <div>
           <Label>Image</Label>
           <div className="grid grid-cols-2 gap-4 mt-2">
-            <div>
+            <div className="space-y-2">
               <Input
                 value={section.image.url}
                 onChange={(e) => onChange({
@@ -1018,6 +1077,14 @@ const TextAndImageSectionEditor: React.FC<{
                   image: { ...section.image, url: e.target.value }
                 })}
                 placeholder="Image URL"
+              />
+              <ImageUploader
+                id="text-image-section"
+                onImageUploaded={(url) => onChange({
+                  ...section,
+                  image: { ...section.image, url }
+                })}
+                buttonText="Upload New Image"
               />
             </div>
             <div>
@@ -1031,6 +1098,15 @@ const TextAndImageSectionEditor: React.FC<{
               />
             </div>
           </div>
+          {section.image.url && (
+            <div className="mt-4">
+              <img
+                src={section.image.url}
+                alt={section.image.alt}
+                className="max-h-40 rounded-lg object-cover"
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -1064,24 +1140,44 @@ const LogosSectionEditor: React.FC<{
 
           {section.logos.map((logo, index) => (
             <div key={index} className="grid grid-cols-[1fr,1fr,auto] gap-2">
-              <Input
-                value={logo.url}
-                onChange={(e) => {
-                  const newLogos = [...section.logos]
-                  newLogos[index] = { ...logo, url: e.target.value }
-                  onChange({ ...section, logos: newLogos })
-                }}
-                placeholder="Logo URL"
-              />
-              <Input
-                value={logo.alt}
-                onChange={(e) => {
-                  const newLogos = [...section.logos]
-                  newLogos[index] = { ...logo, alt: e.target.value }
-                  onChange({ ...section, logos: newLogos })
-                }}
-                placeholder="Alt text"
-              />
+              <div className="space-y-2">
+                <Input
+                  value={logo.url}
+                  onChange={(e) => {
+                    const newLogos = [...section.logos]
+                    newLogos[index] = { ...logo, url: e.target.value }
+                    onChange({ ...section, logos: newLogos })
+                  }}
+                  placeholder="Logo URL"
+                />
+                <ImageUploader
+                  id={`logo-${index}`}
+                  onImageUploaded={(url) => {
+                    const newLogos = [...section.logos]
+                    newLogos[index] = { ...section.logos[index], url }
+                    onChange({ ...section, logos: newLogos })
+                  }}
+                  buttonText="Upload Logo"
+                />
+              </div>
+              <div className="space-y-2">
+                <Input
+                  value={logo.alt}
+                  onChange={(e) => {
+                    const newLogos = [...section.logos]
+                    newLogos[index] = { ...logo, alt: e.target.value }
+                    onChange({ ...section, logos: newLogos })
+                  }}
+                  placeholder="Alt text"
+                />
+                {logo.url && (
+                  <img
+                    src={logo.url}
+                    alt={logo.alt}
+                    className="h-10 object-contain"
+                  />
+                )}
+              </div>
               <Button
                 variant="ghost"
                 size="icon"
@@ -1161,16 +1257,34 @@ const PeopleSectionEditor: React.FC<{
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Image URL</Label>
-                  <Input
-                    value={person.image_url}
-                    onChange={(e) => {
-                      const newPeople = [...section.people]
-                      newPeople[index] = { ...person, image_url: e.target.value }
-                      onChange({ ...section, people: newPeople })
-                    }}
-                    placeholder="Image URL"
-                  />
+                  <Label>Image</Label>
+                  <div className="space-y-2">
+                    <Input
+                      value={person.image_url}
+                      onChange={(e) => {
+                        const newPeople = [...section.people]
+                        newPeople[index] = { ...person, image_url: e.target.value }
+                        onChange({ ...section, people: newPeople })
+                      }}
+                      placeholder="Image URL"
+                    />
+                    <ImageUploader
+                      id={`person-${index}`}
+                      onImageUploaded={(url) => {
+                        const newPeople = [...section.people]
+                        newPeople[index] = { ...section.people[index], image_url: url }
+                        onChange({ ...section, people: newPeople })
+                      }}
+                      buttonText="Upload Avatar"
+                    />
+                    {person.image_url && (
+                      <img
+                        src={person.image_url}
+                        alt={person.name}
+                        className="w-12 h-12 rounded-full object-cover"
+                      />
+                    )}
+                  </div>
                 </div>
 
                 <div className="space-y-2">

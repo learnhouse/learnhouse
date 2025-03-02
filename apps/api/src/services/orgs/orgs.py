@@ -36,7 +36,7 @@ from src.db.organizations import (
 )
 from fastapi import HTTPException, UploadFile, status, Request
 
-from src.services.orgs.uploads import upload_org_logo, upload_org_preview, upload_org_thumbnail
+from src.services.orgs.uploads import upload_org_logo, upload_org_preview, upload_org_thumbnail, upload_org_landing_content
 
 
 async def get_organization(
@@ -764,6 +764,35 @@ async def update_org_landing(
     db_session.refresh(org_config)
 
     return {"detail": "Landing object updated"}
+
+async def upload_org_landing_content_service(
+    request: Request,
+    content_file: UploadFile,
+    org_id: int,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+) -> dict:
+    statement = select(Organization).where(Organization.id == org_id)
+    result = db_session.exec(statement)
+
+    org = result.first()
+
+    if not org:
+        raise HTTPException(
+            status_code=404,
+            detail="Organization not found",
+        )
+
+    # RBAC check
+    await rbac_check(request, org.org_uuid, current_user, "update", db_session)
+
+    # Upload content
+    name_in_disk = await upload_org_landing_content(content_file, org.org_uuid)
+
+    return {
+        "detail": "Landing content uploaded successfully",
+        "filename": name_in_disk
+    }
 
 ## 🔒 RBAC Utils ##
 
