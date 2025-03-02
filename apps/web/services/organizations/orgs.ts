@@ -101,6 +101,19 @@ export async function updateUserRole(
   return res
 }
 
+export async function updateOrgLanding(
+  org_id: any,
+  landing_object: any,
+  access_token: string
+) {
+  const result = await fetch(
+    `${getAPIUrl()}orgs/${org_id}/landing`,
+    RequestBodyWithAuthHeader('PUT', landing_object, null, access_token)
+  )
+  const res = await getResponseMetadata(result)
+  return res
+}
+
 export async function removeUserFromOrg(
   org_id: any,
   user_id: any,
