@@ -32,6 +32,14 @@ interface Course {
   trail?: {
     runs: CourseRun[]
   }
+  chapters?: Array<{
+    name: string
+    activities: Array<{
+      activity_uuid: string
+      name: string
+      activity_type: string
+    }>
+  }>
 }
 
 interface CourseActionsProps {
@@ -129,10 +137,29 @@ const Actions = ({ courseuuid, orgslug, course }: CourseActionsProps) => {
       router.push(getUriWithoutOrg(`/signup?orgslug=${orgslug}`))
       return
     }
-    const action = isStarted ? removeCourse : startCourse
-    await action('course_' + courseuuid, orgslug, session.data?.tokens?.access_token)
-    await revalidateTags(['courses'], orgslug)
-    router.refresh()
+
+    if (isStarted) {
+      await removeCourse('course_' + courseuuid, orgslug, session.data?.tokens?.access_token)
+      await revalidateTags(['courses'], orgslug)
+      router.refresh()
+    } else {
+      await startCourse('course_' + courseuuid, orgslug, session.data?.tokens?.access_token)
+      await revalidateTags(['courses'], orgslug)
+      
+      // Get the first activity from the first chapter
+      const firstChapter = course.chapters?.[0]
+      const firstActivity = firstChapter?.activities?.[0]
+      
+      if (firstActivity) {
+        // Redirect to the first activity
+        router.push(
+          getUriWithOrg(orgslug, '') +
+          `/course/${courseuuid}/activity/${firstActivity.activity_uuid.replace('activity_', '')}`
+        )
+      } else {
+        router.refresh()
+      }
+    }
   }
 
   if (isLoading) {
