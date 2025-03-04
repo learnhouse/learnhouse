@@ -189,13 +189,14 @@ function LandingCustom({ landing, orgslug }: LandingCustomProps) {
             className="py-16 mx-2 sm:mx-4 lg:mx-16 w-full"
           >
             <h2 className="text-2xl md:text-3xl font-bold text-left mb-6 text-gray-900">{section.title}</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 w-full">
               {featuredCourses.map((course: any) => (
-                <CourseThumbnailLanding
-                  key={course.course_uuid}
-                  course={course}
-                  orgslug={orgslug}
-                />
+                <div key={course.course_uuid} className="w-full flex justify-center">
+                  <CourseThumbnailLanding
+                    course={course}
+                    orgslug={orgslug}
+                  />
+                </div>
               ))}
               {featuredCourses.length === 0 && (
                 <div className="col-span-full text-center py-6 text-gray-500">
