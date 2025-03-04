@@ -6,6 +6,7 @@ import CourseThumbnail from '@components/Objects/Thumbnails/CourseThumbnail'
 import useSWR from 'swr'
 import { getOrgCourses } from '@services/courses/courses'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import CourseThumbnailLanding from '@components/Objects/Thumbnails/CourseThumbnailLanding'
 
 interface LandingCustomProps {
   landing: {
@@ -104,12 +105,14 @@ function LandingCustom({ landing, orgslug }: LandingCustomProps) {
                 </div>
               </div>
               <div className="flex-1 w-full md:w-auto">
-                <div className="relative w-full aspect-[4/3] max-w-[500px] mx-auto">
-                  <img
-                    src={section.image.url}
-                    alt={section.image.alt}
-                    className="object-cover w-full h-full"
-                  />
+                <div className="relative w-full max-w-[500px] mx-auto px-4 md:px-8">
+                  <div className="relative w-full aspect-[4/3]">
+                    <img
+                      src={section.image.url}
+                      alt={section.image.alt}
+                      className="object-contain w-full h-full rounded-lg"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -125,13 +128,13 @@ function LandingCustom({ landing, orgslug }: LandingCustomProps) {
               <h2 className="text-2xl md:text-3xl font-bold text-left mb-16 text-gray-900">{section.title}</h2>
             )}
             <div className="flex justify-center w-full">
-              <div className="flex flex-wrap justify-center gap-16 max-w-6xl">
+              <div className="flex flex-wrap justify-center gap-16 max-w-7xl">
                 {section.logos.map((logo, index) => (
-                  <div key={index} className="flex items-center justify-center w-[140px] h-[80px]">
+                  <div key={index} className="flex items-center justify-center w-[220px] h-[120px]">
                     <img
                       src={logo.url}
                       alt={logo.alt}
-                      className="max-h-16 max-w-[120px] object-contain hover:opacity-80 transition-opacity"
+                      className="max-h-24 max-w-[200px] object-contain hover:opacity-80 transition-opacity"
                     />
                   </div>
                 ))}
@@ -186,14 +189,13 @@ function LandingCustom({ landing, orgslug }: LandingCustomProps) {
             className="py-16 mx-2 sm:mx-4 lg:mx-16 w-full"
           >
             <h2 className="text-2xl md:text-3xl font-bold text-left mb-6 text-gray-900">{section.title}</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {featuredCourses.map((course: any) => (
-                <div key={course.course_uuid} >
-                  <CourseThumbnail
-                    course={course}
-                    orgslug={orgslug}
-                  />
-                </div>
+                <CourseThumbnailLanding
+                  key={course.course_uuid}
+                  course={course}
+                  orgslug={orgslug}
+                />
               ))}
               {featuredCourses.length === 0 && (
                 <div className="col-span-full text-center py-6 text-gray-500">
