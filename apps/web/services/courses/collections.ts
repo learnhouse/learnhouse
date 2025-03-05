@@ -14,33 +14,33 @@ export async function deleteCollection(
   collection_uuid: any,
   access_token: any
 ) {
-  const toastId = toast.loading("Deleting collection...")
+  const  = toast.loading("Deleting collection...")
   try {
     const result: any = await fetch(
       `${getAPIUrl()}collections/${collection_uuid}`,
       RequestBodyWithAuthHeader('DELETE', null, null, access_token)
     )
-    toast.success("Deleted colletion", {id:toastId})
+    toast.success("Deleted colletion", {id:})
     const res = await errorHandling(result)
     return res
   } catch (error) {
-    toast.error("Couldn't delete collection", {id:toastId})
+    toast.error("Couldn't delete collection", {id:})
   }
 }
 
 // Create a new collection
 export async function createCollection(collection: any, access_token: any) {
-  const toastId = toast.loading("Creating...")
+  const  = toast.loading("Creating...")
   try {
     const result: any = await fetch(
       `${getAPIUrl()}collections/`,
       RequestBodyWithAuthHeader('POST', collection, null, access_token)
     )
-    toast.success("New collection created", {id:toastId})
+    toast.success("New collection created", {id:})
     const res = await errorHandling(result)
     return res
   } catch (error) {
-    toast.error("Couldn't create collection", {id:toastId})
+    toast.error("Couldn't create collection", {id:})
   }
 }
 
