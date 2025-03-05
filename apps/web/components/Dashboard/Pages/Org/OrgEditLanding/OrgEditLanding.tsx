@@ -1,7 +1,7 @@
 'use client'
 import React from 'react'
 import { LandingObject, LandingSection, LandingHeroSection, LandingTextAndImageSection, LandingLogos, LandingPeople, LandingBackground, LandingButton, LandingHeading, LandingImage, LandingFeaturedCourses } from './landing_types'
-import { Plus, Eye, ArrowUpDown, Trash2, GripVertical, LayoutTemplate, ImageIcon, Users, Award, ArrowRight, Edit, Link, Upload, Save, BookOpen } from 'lucide-react'
+import { Plus, Eye, ArrowUpDown, Trash2, GripVertical, LayoutTemplate, ImageIcon, Users, Award, ArrowRight, Edit, Link, Upload, Save, BookOpen, TextIcon } from 'lucide-react'
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd'
 import { Input } from "@components/ui/input"
 import { Textarea } from "@components/ui/textarea"
@@ -15,6 +15,7 @@ import { getOrgLandingMediaDirectory } from '@services/media/media'
 import { getOrgCourses } from '@services/courses/courses'
 import toast from 'react-hot-toast'
 import useSWR from 'swr'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@components/ui/tabs"
 
 const SECTION_TYPES = {
   hero: {
@@ -504,7 +505,7 @@ const HeroSectionEditor: React.FC<{
       <div className="space-y-4">
         {/* Title */}
         <div>
-          <Label htmlFor="title">Title</Label>
+          <Label htmlFor="title">Section Title</Label>
           <Input
             id="title"
             value={section.title}
@@ -513,574 +514,600 @@ const HeroSectionEditor: React.FC<{
           />
         </div>
 
-        {/* Background */}
-        <div className="space-y-4">
-          <div>
-            <Label htmlFor="background">Background Type</Label>
-            <Select
-              value={section.background.type}
-              onValueChange={(value) => {
-                onChange({
-                  ...section,
-                  background: { 
-                    type: value as LandingBackground['type'],
-                    color: value === 'solid' ? '#ffffff' : undefined,
-                    colors: value === 'gradient' ? PREDEFINED_GRADIENTS['sunrise'].colors : undefined,
-                    image: value === 'image' ? '' : undefined
-                  }
-                })
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select background type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="solid">Solid Color</SelectItem>
-                <SelectItem value="gradient">Gradient</SelectItem>
-                <SelectItem value="image">Image</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+        <Tabs defaultValue="content" className="w-full">
+          <TabsList className="grid w-full grid-cols-4 p-1 bg-gray-100 rounded-lg">
+            <TabsTrigger value="content" className="flex items-center space-x-2">
+              <TextIcon className="h-4 w-4" />
+              <span>Content</span>
+            </TabsTrigger>
+            <TabsTrigger value="background" className="flex items-center space-x-2">
+              <LayoutTemplate className="h-4 w-4" />
+              <span>Background</span>
+            </TabsTrigger>
+            <TabsTrigger value="buttons" className="flex items-center space-x-2">
+              <Button className="h-4 w-4" />
+              <span>Buttons</span>
+            </TabsTrigger>
+            <TabsTrigger value="illustration" className="flex items-center space-x-2">
+              <ImageIcon className="h-4 w-4" />
+              <span>Illustration</span>
+            </TabsTrigger>
+          </TabsList>
 
-          {section.background.type === 'solid' && (
-            <div>
-              <Label htmlFor="backgroundColor">Background Color</Label>
-              <div className="flex items-center space-x-2">
-                <Input
-                  id="backgroundColor"
-                  type="color"
-                  value={section.background.color || '#ffffff'}
-                  onChange={(e) => onChange({
-                    ...section,
-                    background: { ...section.background, color: e.target.value }
-                  })}
-                  className="w-20 h-10 p-1"
-                />
-                <Input
-                  value={section.background.color || '#ffffff'}
-                  onChange={(e) => onChange({
-                    ...section,
-                    background: { ...section.background, color: e.target.value }
-                  })}
-                  placeholder="#ffffff"
-                  className="font-mono"
-                />
-              </div>
-            </div>
-          )}
-
-          {section.background.type === 'gradient' && (
+          <TabsContent value="content" className="space-y-4 mt-4">
+            {/* Heading */}
             <div className="space-y-4">
               <div>
-                <Label>Gradient Type</Label>
-                <Select
-                  value={Object.values(PREDEFINED_GRADIENTS).some(
-                    preset => preset.colors[0] === section.background.colors?.[0] && 
-                              preset.colors[1] === section.background.colors?.[1]
-                  ) ? 'preset' : 'custom'}
-                  onValueChange={(value) => {
-                    if (value === 'custom') {
-                      onChange({
-                        ...section,
-                        background: {
-                          type: 'gradient',
-                          colors: ['#ffffff', '#f0f0f0'],
-                          direction: section.background.direction || '45deg'
-                        }
-                      })
-                    } else {
-                      onChange({
-                        ...section,
-                        background: {
-                          type: 'gradient',
-                          colors: PREDEFINED_GRADIENTS['sunrise'].colors,
-                          direction: PREDEFINED_GRADIENTS['sunrise'].direction
-                        }
-                      })
-                    }
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select gradient type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="preset">Preset Gradients</SelectItem>
-                    <SelectItem value="custom">Custom Gradient</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label htmlFor="heading">Heading</Label>
+                <Input
+                  id="heading"
+                  value={section.heading.text}
+                  onChange={(e) => onChange({
+                    ...section,
+                    heading: { ...section.heading, text: e.target.value }
+                  })}
+                  placeholder="Enter heading text"
+                />
               </div>
-
-              {!Object.values(PREDEFINED_GRADIENTS).some(
-                preset => preset.colors[0] === section.background.colors?.[0] && 
-                          preset.colors[1] === section.background.colors?.[1]
-              ) ? (
-                <div className="space-y-4">
-                  <div>
-                    <Label>Start Color</Label>
-                    <div className="flex items-center space-x-2">
-                      <Input
-                        type="color"
-                        value={section.background.colors?.[0] || '#ffffff'}
-                        onChange={(e) => onChange({
-                          ...section,
-                          background: {
-                            ...section.background,
-                            colors: [e.target.value, section.background.colors?.[1] || '#f0f0f0']
-                          }
-                        })}
-                        className="w-20 h-10 p-1"
-                      />
-                      <Input
-                        value={section.background.colors?.[0] || '#ffffff'}
-                        onChange={(e) => onChange({
-                          ...section,
-                          background: {
-                            ...section.background,
-                            colors: [e.target.value, section.background.colors?.[1] || '#f0f0f0']
-                          }
-                        })}
-                        placeholder="#ffffff"
-                        className="font-mono"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label>End Color</Label>
-                    <div className="flex items-center space-x-2">
-                      <Input
-                        type="color"
-                        value={section.background.colors?.[1] || '#f0f0f0'}
-                        onChange={(e) => onChange({
-                          ...section,
-                          background: {
-                            ...section.background,
-                            colors: [section.background.colors?.[0] || '#ffffff', e.target.value]
-                          }
-                        })}
-                        className="w-20 h-10 p-1"
-                      />
-                      <Input
-                        value={section.background.colors?.[1] || '#f0f0f0'}
-                        onChange={(e) => onChange({
-                          ...section,
-                          background: {
-                            ...section.background,
-                            colors: [section.background.colors?.[0] || '#ffffff', e.target.value]
-                          }
-                        })}
-                        placeholder="#f0f0f0"
-                        className="font-mono"
-                      />
-                    </div>
-                  </div>
+              <div>
+                <Label htmlFor="headingColor">Heading Color</Label>
+                <div className="flex items-center space-x-2">
+                  <Input
+                    id="headingColor"
+                    type="color"
+                    value={section.heading.color}
+                    onChange={(e) => onChange({
+                      ...section,
+                      heading: { ...section.heading, color: e.target.value }
+                    })}
+                    className="w-20 h-10 p-1"
+                  />
+                  <Input
+                    value={section.heading.color}
+                    onChange={(e) => onChange({
+                      ...section,
+                      heading: { ...section.heading, color: e.target.value }
+                    })}
+                    placeholder="#000000"
+                    className="font-mono"
+                  />
                 </div>
-              ) : (
+              </div>
+            </div>
+
+            {/* Subheading */}
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="subheading">Subheading</Label>
+                <Input
+                  id="subheading"
+                  value={section.subheading.text}
+                  onChange={(e) => onChange({
+                    ...section,
+                    subheading: { ...section.subheading, text: e.target.value }
+                  })}
+                  placeholder="Enter subheading text"
+                />
+              </div>
+              <div>
+                <Label htmlFor="subheadingColor">Subheading Color</Label>
+                <div className="flex items-center space-x-2">
+                  <Input
+                    id="subheadingColor"
+                    type="color"
+                    value={section.subheading.color}
+                    onChange={(e) => onChange({
+                      ...section,
+                      subheading: { ...section.subheading, color: e.target.value }
+                    })}
+                    className="w-20 h-10 p-1"
+                  />
+                  <Input
+                    value={section.subheading.color}
+                    onChange={(e) => onChange({
+                      ...section,
+                      subheading: { ...section.subheading, color: e.target.value }
+                    })}
+                    placeholder="#666666"
+                    className="font-mono"
+                  />
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="background" className="space-y-4 mt-4">
+            <div>
+              <Label htmlFor="background">Background Type</Label>
+              <Select
+                value={section.background.type}
+                onValueChange={(value) => {
+                  onChange({
+                    ...section,
+                    background: { 
+                      type: value as LandingBackground['type'],
+                      color: value === 'solid' ? '#ffffff' : undefined,
+                      colors: value === 'gradient' ? PREDEFINED_GRADIENTS['sunrise'].colors : undefined,
+                      image: value === 'image' ? '' : undefined
+                    }
+                  })
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select background type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="solid">Solid Color</SelectItem>
+                  <SelectItem value="gradient">Gradient</SelectItem>
+                  <SelectItem value="image">Image</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {section.background.type === 'solid' && (
+              <div>
+                <Label htmlFor="backgroundColor">Background Color</Label>
+                <div className="flex items-center space-x-2">
+                  <Input
+                    id="backgroundColor"
+                    type="color"
+                    value={section.background.color || '#ffffff'}
+                    onChange={(e) => onChange({
+                      ...section,
+                      background: { ...section.background, color: e.target.value }
+                    })}
+                    className="w-20 h-10 p-1"
+                  />
+                  <Input
+                    value={section.background.color || '#ffffff'}
+                    onChange={(e) => onChange({
+                      ...section,
+                      background: { ...section.background, color: e.target.value }
+                    })}
+                    placeholder="#ffffff"
+                    className="font-mono"
+                  />
+                </div>
+              </div>
+            )}
+
+            {section.background.type === 'gradient' && (
+              <div className="space-y-4">
                 <div>
-                  <Label>Gradient Preset</Label>
+                  <Label>Gradient Type</Label>
                   <Select
-                    value={Object.entries(PREDEFINED_GRADIENTS).find(
-                      ([_, gradient]) => 
-                        gradient.colors[0] === section.background.colors?.[0] &&
-                        gradient.colors[1] === section.background.colors?.[1]
-                    )?.[0] || 'sunrise'}
+                    value={Object.values(PREDEFINED_GRADIENTS).some(
+                      preset => preset.colors[0] === section.background.colors?.[0] && 
+                                preset.colors[1] === section.background.colors?.[1]
+                    ) ? 'preset' : 'custom'}
+                    onValueChange={(value) => {
+                      if (value === 'custom') {
+                        onChange({
+                          ...section,
+                          background: {
+                            type: 'gradient',
+                            colors: ['#ffffff', '#f0f0f0'],
+                            direction: section.background.direction || '45deg'
+                          }
+                        })
+                      } else {
+                        onChange({
+                          ...section,
+                          background: {
+                            type: 'gradient',
+                            colors: PREDEFINED_GRADIENTS['sunrise'].colors,
+                            direction: PREDEFINED_GRADIENTS['sunrise'].direction
+                          }
+                        })
+                      }
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select gradient type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="preset">Preset Gradients</SelectItem>
+                      <SelectItem value="custom">Custom Gradient</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {!Object.values(PREDEFINED_GRADIENTS).some(
+                  preset => preset.colors[0] === section.background.colors?.[0] && 
+                            preset.colors[1] === section.background.colors?.[1]
+                ) ? (
+                  <div className="space-y-4">
+                    <div>
+                      <Label>Start Color</Label>
+                      <div className="flex items-center space-x-2">
+                        <Input
+                          type="color"
+                          value={section.background.colors?.[0] || '#ffffff'}
+                          onChange={(e) => onChange({
+                            ...section,
+                            background: {
+                              ...section.background,
+                              colors: [e.target.value, section.background.colors?.[1] || '#f0f0f0']
+                            }
+                          })}
+                          className="w-20 h-10 p-1"
+                        />
+                        <Input
+                          value={section.background.colors?.[0] || '#ffffff'}
+                          onChange={(e) => onChange({
+                            ...section,
+                            background: {
+                              ...section.background,
+                              colors: [e.target.value, section.background.colors?.[1] || '#f0f0f0']
+                            }
+                          })}
+                          placeholder="#ffffff"
+                          className="font-mono"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label>End Color</Label>
+                      <div className="flex items-center space-x-2">
+                        <Input
+                          type="color"
+                          value={section.background.colors?.[1] || '#f0f0f0'}
+                          onChange={(e) => onChange({
+                            ...section,
+                            background: {
+                              ...section.background,
+                              colors: [section.background.colors?.[0] || '#ffffff', e.target.value]
+                            }
+                          })}
+                          className="w-20 h-10 p-1"
+                        />
+                        <Input
+                          value={section.background.colors?.[1] || '#f0f0f0'}
+                          onChange={(e) => onChange({
+                            ...section,
+                            background: {
+                              ...section.background,
+                              colors: [section.background.colors?.[0] || '#ffffff', e.target.value]
+                            }
+                          })}
+                          placeholder="#f0f0f0"
+                          className="font-mono"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <Label>Gradient Preset</Label>
+                    <Select
+                      value={Object.entries(PREDEFINED_GRADIENTS).find(
+                        ([_, gradient]) => 
+                          gradient.colors[0] === section.background.colors?.[0] &&
+                          gradient.colors[1] === section.background.colors?.[1]
+                      )?.[0] || 'sunrise'}
+                      onValueChange={(value) => onChange({
+                        ...section,
+                        background: {
+                          ...section.background,
+                          colors: PREDEFINED_GRADIENTS[value as keyof typeof PREDEFINED_GRADIENTS].colors,
+                          direction: PREDEFINED_GRADIENTS[value as keyof typeof PREDEFINED_GRADIENTS].direction
+                        }
+                      })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select gradient preset" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(PREDEFINED_GRADIENTS).map(([name]) => (
+                          <SelectItem key={name} value={name}>
+                            <div className="flex items-center space-x-2">
+                              <div 
+                                className="w-8 h-8 rounded-md"
+                                style={{
+                                  background: `linear-gradient(${PREDEFINED_GRADIENTS[name as keyof typeof PREDEFINED_GRADIENTS].direction}, ${PREDEFINED_GRADIENTS[name as keyof typeof PREDEFINED_GRADIENTS].colors.join(', ')})`
+                                }}
+                              />
+                              <span className="capitalize">{name.replace('-', ' ')}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                <div>
+                  <Label>Gradient Direction</Label>
+                  <Select
+                    value={section.background.direction || '45deg'}
                     onValueChange={(value) => onChange({
                       ...section,
-                      background: {
-                        ...section.background,
-                        colors: PREDEFINED_GRADIENTS[value as keyof typeof PREDEFINED_GRADIENTS].colors,
-                        direction: PREDEFINED_GRADIENTS[value as keyof typeof PREDEFINED_GRADIENTS].direction
-                      }
+                      background: { ...section.background, direction: value }
                     })}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select gradient preset" />
+                      <SelectValue placeholder="Select gradient direction" />
                     </SelectTrigger>
                     <SelectContent>
-                      {Object.entries(PREDEFINED_GRADIENTS).map(([name]) => (
-                        <SelectItem key={name} value={name}>
-                          <div className="flex items-center space-x-2">
-                            <div 
-                              className="w-8 h-8 rounded-md"
-                              style={{
-                                background: `linear-gradient(${PREDEFINED_GRADIENTS[name as keyof typeof PREDEFINED_GRADIENTS].direction}, ${PREDEFINED_GRADIENTS[name as keyof typeof PREDEFINED_GRADIENTS].colors.join(', ')})`
-                              }}
-                            />
-                            <span className="capitalize">{name.replace('-', ' ')}</span>
-                          </div>
+                      {Object.entries(GRADIENT_DIRECTIONS).map(([value, label]) => (
+                        <SelectItem key={value} value={value}>
+                          {label}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-              )}
 
-              <div>
-                <Label>Gradient Direction</Label>
-                <Select
-                  value={section.background.direction || '45deg'}
-                  onValueChange={(value) => onChange({
-                    ...section,
-                    background: { ...section.background, direction: value }
-                  })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select gradient direction" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(GRADIENT_DIRECTIONS).map(([value, label]) => (
-                      <SelectItem key={value} value={value}>
-                        {label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="mt-2">
-                <div 
-                  className="w-full h-20 rounded-lg"
-                  style={{
-                    background: `linear-gradient(${section.background.direction}, ${section.background.colors?.join(', ')})`
-                  }}
-                />
-              </div>
-            </div>
-          )}
-
-          {section.background.type === 'image' && (
-            <div className="space-y-4">
-              <div>
-                <Label>Background Image</Label>
-                <div className="mt-2 flex items-center space-x-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => document.getElementById('imageUpload')?.click()}
-                    className="w-full"
-                  >
-                    <Upload className="h-4 w-4 mr-2" />
-                    Upload Image
-                  </Button>
-                  <input
-                    id="imageUpload"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="hidden"
+                <div className="mt-2">
+                  <div 
+                    className="w-full h-20 rounded-lg"
+                    style={{
+                      background: `linear-gradient(${section.background.direction}, ${section.background.colors?.join(', ')})`
+                    }}
                   />
                 </div>
-                {section.background.image && (
-                  <div className="mt-4">
-                    <img
-                      src={section.background.image}
-                      alt="Background preview"
-                      className="max-h-40 rounded-lg object-cover"
+              </div>
+            )}
+
+            {section.background.type === 'image' && (
+              <div className="space-y-4">
+                <div>
+                  <Label>Background Image</Label>
+                  <div className="mt-2 flex items-center space-x-4">
+                    <Button
+                      variant="outline"
+                      onClick={() => document.getElementById('imageUpload')?.click()}
+                      className="w-full"
+                    >
+                      <Upload className="h-4 w-4 mr-2" />
+                      Upload Image
+                    </Button>
+                    <input
+                      id="imageUpload"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
                     />
                   </div>
-                )}
+                  {section.background.image && (
+                    <div className="mt-4">
+                      <img
+                        src={section.background.image}
+                        alt="Background preview"
+                        className="max-h-40 rounded-lg object-cover"
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </TabsContent>
 
-        {/* Heading */}
-        <div className="space-y-4">
-          <div>
-            <Label htmlFor="heading">Heading</Label>
-            <Input
-              id="heading"
-              value={section.heading.text}
-              onChange={(e) => onChange({
-                ...section,
-                heading: { ...section.heading, text: e.target.value }
-              })}
-              placeholder="Enter heading text"
-            />
-          </div>
-          <div>
-            <Label htmlFor="headingColor">Heading Color</Label>
-            <div className="flex items-center space-x-2">
-              <Input
-                id="headingColor"
-                type="color"
-                value={section.heading.color}
-                onChange={(e) => onChange({
-                  ...section,
-                  heading: { ...section.heading, color: e.target.value }
-                })}
-                className="w-20 h-10 p-1"
-              />
-              <Input
-                value={section.heading.color}
-                onChange={(e) => onChange({
-                  ...section,
-                  heading: { ...section.heading, color: e.target.value }
-                })}
-                placeholder="#000000"
-                className="font-mono"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Subheading */}
-        <div className="space-y-4">
-          <div>
-            <Label htmlFor="subheading">Subheading</Label>
-            <Input
-              id="subheading"
-              value={section.subheading.text}
-              onChange={(e) => onChange({
-                ...section,
-                subheading: { ...section.subheading, text: e.target.value }
-              })}
-              placeholder="Enter subheading text"
-            />
-          </div>
-          <div>
-            <Label htmlFor="subheadingColor">Subheading Color</Label>
-            <div className="flex items-center space-x-2">
-              <Input
-                id="subheadingColor"
-                type="color"
-                value={section.subheading.color}
-                onChange={(e) => onChange({
-                  ...section,
-                  subheading: { ...section.subheading, color: e.target.value }
-                })}
-                className="w-20 h-10 p-1"
-              />
-              <Input
-                value={section.subheading.color}
-                onChange={(e) => onChange({
-                  ...section,
-                  subheading: { ...section.subheading, color: e.target.value }
-                })}
-                placeholder="#666666"
-                className="font-mono"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Buttons */}
-        <div>
-          <Label>Buttons (Max 2)</Label>
-          <div className="space-y-3 mt-2">
-            {section.buttons.map((button, index) => (
-              <div key={index} className="grid grid-cols-[1fr,1fr,auto] gap-2">
-                <div className="space-y-2">
-                  <Input
-                    value={button.text}
-                    onChange={(e) => {
-                      const newButtons = [...section.buttons]
-                      newButtons[index] = { ...button, text: e.target.value }
+          <TabsContent value="buttons" className="space-y-4 mt-4">
+            <div className="space-y-3">
+              {section.buttons.map((button, index) => (
+                <div key={index} className="grid grid-cols-[1fr,1fr,auto] gap-2 p-4 border rounded-lg">
+                  <div className="space-y-2">
+                    <Label>Button Text & Colors</Label>
+                    <Input
+                      value={button.text}
+                      onChange={(e) => {
+                        const newButtons = [...section.buttons]
+                        newButtons[index] = { ...button, text: e.target.value }
+                        onChange({ ...section, buttons: newButtons })
+                      }}
+                      placeholder="Button text"
+                    />
+                    <div className="flex items-center space-x-2">
+                      <div className="space-y-1">
+                        <Label className="text-xs">Text</Label>
+                        <Input
+                          type="color"
+                          value={button.color}
+                          onChange={(e) => {
+                            const newButtons = [...section.buttons]
+                            newButtons[index] = { ...button, color: e.target.value }
+                            onChange({ ...section, buttons: newButtons })
+                          }}
+                          className="w-full h-8 p-1"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Background</Label>
+                        <Input
+                          type="color"
+                          value={button.background}
+                          onChange={(e) => {
+                            const newButtons = [...section.buttons]
+                            newButtons[index] = { ...button, background: e.target.value }
+                            onChange({ ...section, buttons: newButtons })
+                          }}
+                          className="w-full h-8 p-1"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Button Link</Label>
+                    <div className="flex items-center space-x-2">
+                      <Link className="h-4 w-4 text-gray-500" />
+                      <Input
+                        value={button.link}
+                        onChange={(e) => {
+                          const newButtons = [...section.buttons]
+                          newButtons[index] = { ...button, link: e.target.value }
+                          onChange({ ...section, buttons: newButtons })
+                        }}
+                        placeholder="Button link"
+                      />
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      const newButtons = section.buttons.filter((_, i) => i !== index)
                       onChange({ ...section, buttons: newButtons })
                     }}
-                    placeholder="Button text"
-                  />
-                  <div className="flex items-center space-x-2">
-                    <Input
-                      type="color"
-                      value={button.color}
-                      onChange={(e) => {
-                        const newButtons = [...section.buttons]
-                        newButtons[index] = { ...button, color: e.target.value }
-                        onChange({ ...section, buttons: newButtons })
-                      }}
-                      className="w-10 h-8 p-1"
-                    />
-                    <Input
-                      type="color"
-                      value={button.background}
-                      onChange={(e) => {
-                        const newButtons = [...section.buttons]
-                        newButtons[index] = { ...button, background: e.target.value }
-                        onChange({ ...section, buttons: newButtons })
-                      }}
-                      className="w-10 h-8 p-1"
-                    />
-                  </div>
+                    className="text-red-500 hover:text-red-600 hover:bg-red-50 self-start mt-8"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <Link className="h-4 w-4 text-gray-500" />
-                    <Input
-                      value={button.link}
-                      onChange={(e) => {
-                        const newButtons = [...section.buttons]
-                        newButtons[index] = { ...button, link: e.target.value }
-                        onChange({ ...section, buttons: newButtons })
-                      }}
-                      placeholder="Button link"
-                    />
-                  </div>
-                </div>
+              ))}
+              {section.buttons.length < 2 && (
                 <Button
-                  variant="ghost"
-                  size="icon"
+                  variant="outline"
                   onClick={() => {
-                    const newButtons = section.buttons.filter((_, i) => i !== index)
-                    onChange({ ...section, buttons: newButtons })
-                  }}
-                  className="text-red-500 hover:text-red-600 hover:bg-red-50"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-            {section.buttons.length < 2 && (
-              <Button
-                variant="outline"
-                onClick={() => {
-                  const newButton: LandingButton = {
-                    text: 'New Button',
-                    link: '#',
-                    color: '#ffffff',
-                    background: '#000000'
-                  }
-                  onChange({
-                    ...section,
-                    buttons: [...section.buttons, newButton]
-                  })
-                }}
-                className="w-full"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Button
-              </Button>
-            )}
-          </div>
-        </div>
-
-        {/* Illustration */}
-        <div className="space-y-4">
-          <Label>Illustration</Label>
-          <div className="border rounded-lg p-4 space-y-4">
-            <div className="space-y-2">
-              <Label>Illustration Image</Label>
-              <Input
-                value={section.illustration?.image.url || ''}
-                onChange={(e) => {
-                  if (e.target.value) {
+                    const newButton: LandingButton = {
+                      text: 'New Button',
+                      link: '#',
+                      color: '#ffffff',
+                      background: '#000000'
+                    }
                     onChange({
                       ...section,
-                      illustration: {
-                        image: { url: e.target.value, alt: section.illustration?.image.alt || '' },
-                        position: 'left',
-                        verticalAlign: 'center',
-                        size: 'medium'
-                      }
+                      buttons: [...section.buttons, newButton]
                     })
-                  }
-                }}
-                placeholder="Illustration URL"
-              />
-              <Input
-                value={section.illustration?.image.alt || ''}
-                onChange={(e) => {
-                  if (section.illustration?.image.url) {
-                    onChange({
+                  }}
+                  className="w-full"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Button
+                </Button>
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="illustration" className="space-y-4 mt-4">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Illustration Image</Label>
+                <Input
+                  value={section.illustration?.image.url || ''}
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      onChange({
+                        ...section,
+                        illustration: {
+                          image: { url: e.target.value, alt: section.illustration?.image.alt || '' },
+                          position: 'left',
+                          verticalAlign: 'center',
+                          size: 'medium'
+                        }
+                      })
+                    }
+                  }}
+                  placeholder="Illustration URL"
+                />
+                <Input
+                  value={section.illustration?.image.alt || ''}
+                  onChange={(e) => {
+                    if (section.illustration?.image.url) {
+                      onChange({
+                        ...section,
+                        illustration: {
+                          ...section.illustration,
+                          image: { ...section.illustration.image, alt: e.target.value }
+                        }
+                      })
+                    }
+                  }}
+                  placeholder="Alt text"
+                />
+                <ImageUploader
+                  id="hero-illustration"
+                  onImageUploaded={(url) => onChange({
+                    ...section,
+                    illustration: {
+                      image: { url, alt: section.illustration?.image.alt || '' },
+                      position: 'left',
+                      verticalAlign: 'center',
+                      size: 'medium'
+                    }
+                  })}
+                  buttonText="Upload Illustration"
+                />
+                {section.illustration?.image.url && (
+                  <img
+                    src={section.illustration?.image.url}
+                    alt={section.illustration?.image.alt}
+                    className="h-12 object-contain"
+                  />
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Position</Label>
+                  <Select
+                    value={section.illustration?.position || 'left'}
+                    onValueChange={(value: 'left' | 'right') => onChange({
                       ...section,
                       illustration: {
                         ...section.illustration,
-                        image: { ...section.illustration.image, alt: e.target.value }
+                        position: value,
+                        image: section.illustration?.image || { url: '', alt: '' },
+                        size: section.illustration?.size || 'medium',
+                        verticalAlign: section.illustration?.verticalAlign || 'center'
                       }
-                    })
-                  }
-                }}
-                placeholder="Alt text"
-              />
-              <ImageUploader
-                id="hero-illustration"
-                onImageUploaded={(url) => onChange({
-                  ...section,
-                  illustration: {
-                    image: { url, alt: section.illustration?.image.alt || '' },
-                    position: 'left',
-                    verticalAlign: 'center',
-                    size: 'medium'
-                  }
-                })}
-                buttonText="Upload Illustration"
-              />
+                    })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select position" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="left">Left</SelectItem>
+                      <SelectItem value="right">Right</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Size</Label>
+                  <Select
+                    value={section.illustration?.size || 'medium'}
+                    onValueChange={(value: 'small' | 'medium' | 'large') => onChange({
+                      ...section,
+                      illustration: {
+                        ...section.illustration,
+                        size: value,
+                        image: section.illustration?.image || { url: '', alt: '' },
+                        position: (section.illustration?.position || 'left') as 'left' | 'right',
+                        verticalAlign: section.illustration?.verticalAlign || 'center'
+                      }
+                    })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select size" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="small">Small</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="large">Large</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
               {section.illustration?.image.url && (
-                <img
-                  src={section.illustration?.image.url}
-                  alt={section.illustration?.image.alt}
-                  className="h-12 object-contain"
-                />
+                <Button
+                  variant="ghost"
+                  onClick={() => onChange({
+                    ...section,
+                    illustration: undefined
+                  })}
+                  className="text-red-500 hover:text-red-600 hover:bg-red-50 w-full"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Remove Illustration
+                </Button>
               )}
             </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Position</Label>
-                <Select
-                  value={section.illustration?.position || 'left'}
-                  onValueChange={(value: 'left' | 'right') => onChange({
-                    ...section,
-                    illustration: {
-                      ...section.illustration,
-                      position: value,
-                      image: section.illustration?.image || { url: '', alt: '' },
-                      size: section.illustration?.size || 'medium',
-                      verticalAlign: section.illustration?.verticalAlign || 'center'
-                    }
-                  })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select position" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="left">Left</SelectItem>
-                    <SelectItem value="right">Right</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Size</Label>
-                <Select
-                  value={section.illustration?.size || 'medium'}
-                  onValueChange={(value: 'small' | 'medium' | 'large') => onChange({
-                    ...section,
-                    illustration: {
-                      ...section.illustration,
-                      size: value,
-                      image: section.illustration?.image || { url: '', alt: '' },
-                      position: (section.illustration?.position || 'left') as 'left' | 'right',
-                      verticalAlign: section.illustration?.verticalAlign || 'center'
-                    }
-                  })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select size" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="small">Small</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="large">Large</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {section.illustration?.image.url && (
-              <Button
-                variant="ghost"
-                onClick={() => onChange({
-                  ...section,
-                  illustration: undefined
-                })}
-                className="text-red-500 hover:text-red-600 hover:bg-red-50 w-full"
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Remove Illustration
-              </Button>
-            )}
-          </div>
-        </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   )
