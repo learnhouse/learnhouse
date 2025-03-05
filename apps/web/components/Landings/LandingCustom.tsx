@@ -41,33 +41,63 @@ function LandingCustom({ landing, orgslug }: LandingCustomProps) {
                 : `url(${section.background.image}) center/cover`
             }}
           >
-            <div className="text-center w-full max-w-4xl mx-auto px-4 sm:px-6">
-              <h1 
-                className="text-xl sm:text-2xl md:text-3xl font-bold mb-2 sm:mb-4"
-                style={{ color: section.heading.color }}
-              >
-                {section.heading.text}
-              </h1>
-              <h2
-                className="text-sm sm:text-base md:text-lg mb-4 sm:mb-6 md:mb-8 font-medium px-4 max-w-2xl mx-auto"
-                style={{ color: section.subheading.color }}
-              >
-                {section.subheading.text}
-              </h2>
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
-                {section.buttons.map((button, index) => (
-                  <a
-                    key={index}
-                    href={button.link}
-                    className="w-full sm:w-auto px-6 py-2.5 rounded-lg text-sm font-extrabold shadow transition-transform hover:scale-105"
-                    style={{
-                      backgroundColor: button.background,
-                      color: button.color
-                    }}
+            <div className={`w-full h-full flex flex-col sm:flex-row ${
+              section.illustration?.position === 'right' ? 'sm:flex-row-reverse' : 'sm:flex-row'
+            } items-stretch`}>
+              {/* Logo */}
+              {section.illustration?.image.url && (
+                <div className={`flex items-${section.illustration.verticalAlign} p-6 w-full ${
+                  section.illustration.size === 'small' ? 'sm:w-1/4' :
+                  section.illustration.size === 'medium' ? 'sm:w-1/3' :
+                  'sm:w-2/5'
+                }`}>
+                  <img
+                    src={section.illustration.image.url}
+                    alt={section.illustration.image.alt}
+                    className="w-full object-contain"
+                  />
+                </div>
+              )}
+
+              {/* Content */}
+              <div className={`flex-1 flex items-center ${
+                section.contentAlign === 'left' ? 'justify-start text-left' :
+                section.contentAlign === 'right' ? 'justify-end text-right' :
+                'justify-center text-center'
+              } p-6`}>
+                <div className="max-w-2xl">
+                  <h1 
+                    className="text-xl sm:text-2xl md:text-3xl font-bold mb-2 sm:mb-4"
+                    style={{ color: section.heading.color }}
                   >
-                    {button.text}
-                  </a>
-                ))}
+                    {section.heading.text}
+                  </h1>
+                  <h2
+                    className="text-sm sm:text-base md:text-lg mb-4 sm:mb-6 md:mb-8 font-medium"
+                    style={{ color: section.subheading.color }}
+                  >
+                    {section.subheading.text}
+                  </h2>
+                  <div className={`flex flex-col sm:flex-row gap-3 sm:gap-4 ${
+                    section.contentAlign === 'left' ? 'justify-start' :
+                    section.contentAlign === 'right' ? 'justify-end' :
+                    'justify-center'
+                  } items-center`}>
+                    {section.buttons.map((button, index) => (
+                      <a
+                        key={index}
+                        href={button.link}
+                        className="w-full sm:w-auto px-6 py-2.5 rounded-lg text-sm font-extrabold shadow transition-transform hover:scale-105"
+                        style={{
+                          backgroundColor: button.background,
+                          color: button.color
+                        }}
+                      >
+                        {button.text}
+                      </a>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           </div>

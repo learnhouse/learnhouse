@@ -74,6 +74,13 @@ export interface LandingHeroSection {
   heading: LandingHeading;
   subheading: LandingHeading;
   buttons: LandingButton[];
+  illustration?: {
+    image: LandingImage;
+    position: 'left' | 'right';
+    verticalAlign: 'top' | 'center' | 'bottom';
+    size: 'small' | 'medium' | 'large';
+  };
+  contentAlign?: 'left' | 'center' | 'right';
 }
 
 export type LandingSection = LandingTextAndImageSection | LandingHeroSection | LandingLogos | LandingPeople | LandingFeaturedCourses;

@@ -174,7 +174,9 @@ const OrgEditLanding = () => {
             color: '#666666',
             size: 'medium'
           },
-          buttons: []
+          buttons: [],
+          illustration: undefined,
+          contentAlign: 'center'
         }
       case 'text-and-image':
         return {
@@ -946,6 +948,135 @@ const HeroSectionEditor: React.FC<{
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Add Button
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* Illustration */}
+        <div className="space-y-4">
+          <Label>Illustration</Label>
+          <div className="border rounded-lg p-4 space-y-4">
+            <div className="space-y-2">
+              <Label>Illustration Image</Label>
+              <Input
+                value={section.illustration?.image.url || ''}
+                onChange={(e) => {
+                  if (e.target.value) {
+                    onChange({
+                      ...section,
+                      illustration: {
+                        image: { url: e.target.value, alt: section.illustration?.image.alt || '' },
+                        position: 'left',
+                        verticalAlign: 'center',
+                        size: 'medium'
+                      }
+                    })
+                  }
+                }}
+                placeholder="Illustration URL"
+              />
+              <Input
+                value={section.illustration?.image.alt || ''}
+                onChange={(e) => {
+                  if (section.illustration?.image.url) {
+                    onChange({
+                      ...section,
+                      illustration: {
+                        ...section.illustration,
+                        image: { ...section.illustration.image, alt: e.target.value }
+                      }
+                    })
+                  }
+                }}
+                placeholder="Alt text"
+              />
+              <ImageUploader
+                id="hero-illustration"
+                onImageUploaded={(url) => onChange({
+                  ...section,
+                  illustration: {
+                    image: { url, alt: section.illustration?.image.alt || '' },
+                    position: 'left',
+                    verticalAlign: 'center',
+                    size: 'medium'
+                  }
+                })}
+                buttonText="Upload Illustration"
+              />
+              {section.illustration?.image.url && (
+                <img
+                  src={section.illustration?.image.url}
+                  alt={section.illustration?.image.alt}
+                  className="h-12 object-contain"
+                />
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Position</Label>
+                <Select
+                  value={section.illustration?.position || 'left'}
+                  onValueChange={(value: 'left' | 'right') => onChange({
+                    ...section,
+                    illustration: {
+                      ...section.illustration,
+                      position: value,
+                      image: section.illustration?.image || { url: '', alt: '' },
+                      size: section.illustration?.size || 'medium',
+                      verticalAlign: section.illustration?.verticalAlign || 'center'
+                    }
+                  })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select position" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="left">Left</SelectItem>
+                    <SelectItem value="right">Right</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Size</Label>
+                <Select
+                  value={section.illustration?.size || 'medium'}
+                  onValueChange={(value: 'small' | 'medium' | 'large') => onChange({
+                    ...section,
+                    illustration: {
+                      ...section.illustration,
+                      size: value,
+                      image: section.illustration?.image || { url: '', alt: '' },
+                      position: (section.illustration?.position || 'left') as 'left' | 'right',
+                      verticalAlign: section.illustration?.verticalAlign || 'center'
+                    }
+                  })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select size" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="small">Small</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="large">Large</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {section.illustration?.image.url && (
+              <Button
+                variant="ghost"
+                onClick={() => onChange({
+                  ...section,
+                  illustration: undefined
+                })}
+                className="text-red-500 hover:text-red-600 hover:bg-red-50 w-full"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Remove Illustration
               </Button>
             )}
           </div>
