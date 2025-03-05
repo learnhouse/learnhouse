@@ -37,9 +37,25 @@ const Onboarding: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isOnboardingComplete, setIsOnboardingComplete] = useState(true);
   const [isTemporarilyClosed, setIsTemporarilyClosed] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const router = useRouter();
   const org = useOrg() as any;
   const isUserAdmin = useAdminStatus() as any;
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    // Initial check
+    checkMobile();
+
+    // Add event listener for window resize
+    window.addEventListener('resize', checkMobile);
+
+    // Cleanup
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const onboardingData: OnboardingStep[] = [
     {
@@ -208,6 +224,7 @@ const Onboarding: React.FC = () => {
     localStorage.setItem('isOnboardingCompleted', 'true');
     localStorage.removeItem('onboardingLastStep'); // Clean up stored step
     setIsModalOpen(false);
+    setIsOnboardingComplete(true);
     console.log('Onboarding skipped');
   };
 
@@ -219,7 +236,7 @@ const Onboarding: React.FC = () => {
 
   return (
     <div>
-      {isUserAdmin.isAdmin && !isUserAdmin.loading && !isOnboardingComplete && <Modal
+      {isUserAdmin.isAdmin && !isUserAdmin.loading && !isOnboardingComplete && !isMobile && <Modal
         isDialogOpen={isModalOpen}
         onOpenChange={setIsModalOpen}
         minHeight="sm"
@@ -236,12 +253,20 @@ const Onboarding: React.FC = () => {
           />
         }
         dialogTrigger={
-
           <div className='fixed pb-10 w-full bottom-0 bg-gradient-to-t from-1% from-gray-950/25 to-transparent'>
             <div className='bg-gray-950 flex space-x-2 font-bold cursor-pointer hover:bg-gray-900 shadow-md items-center text-gray-200 px-5 py-2 w-fit rounded-full mx-auto'>
               <Sprout size={20} />
               <p>Onboarding</p>
               <div className='h-2 w-2 bg-green-500 animate-pulse rounded-full'></div>
+              <div 
+                className="ml-2 pl-2 border-l border-gray-700 cursor-pointer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  skipOnboarding();
+                }}
+              >
+                <Check size={16} className="hover:text-green-500" />
+              </div>
             </div>
           </div>
         }
@@ -306,6 +331,13 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
               onClick={() => setIsModalOpen(false)}
             >
               <PictureInPicture size={16} />
+            </div>
+            <div
+              className="inline-flex items-center px-5 space-x-2 cursor-pointer py-1 rounded-full text-gray-600 antialiased font-bold bg-gray-100 hover:bg-gray-200"
+              onClick={skipOnboarding}
+            >
+              <p>End</p>
+              <Check size={16} />
             </div>
           </div>
           <div className='actions_buttons flex space-x-2'>
