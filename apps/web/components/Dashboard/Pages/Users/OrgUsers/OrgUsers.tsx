@@ -31,11 +31,13 @@ function OrgUsers() {
   }
 
   const handleRemoveUser = async (user_id: any) => {
+    const toastId = toast.loading("Removing...");
     const res = await removeUserFromOrg(org.id, user_id,access_token)
     if (res.status === 200) {
       await mutate(`${getAPIUrl()}orgs/${org.id}/users`)
+      toast.success("Removed user from org", {id:toastId});
     } else {
-      toast.error('Error ' + res.status + ': ' + res.data.detail)
+      toast.error('Error removing user', {id:toastId});
     }
   }
 
