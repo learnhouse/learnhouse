@@ -36,7 +36,7 @@ from src.db.organizations import (
 )
 from fastapi import HTTPException, UploadFile, status, Request
 
-from src.services.orgs.uploads import upload_org_logo, upload_org_preview, upload_org_thumbnail
+from src.services.orgs.uploads import upload_org_logo, upload_org_preview, upload_org_thumbnail, upload_org_landing_content
 
 
 async def get_organization(
@@ -711,6 +711,86 @@ async def upload_org_preview_service(
 
     return {
         "detail": "Preview uploaded successfully",
+        "filename": name_in_disk
+    }
+
+async def update_org_landing(
+    request: Request,
+    landing_object: dict,
+    org_id: int,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+):
+    statement = select(Organization).where(Organization.id == org_id)
+    result = db_session.exec(statement)
+
+    org = result.first()
+
+    if not org:
+        raise HTTPException(
+            status_code=404,
+            detail="Organization not found",
+        )
+
+    # RBAC check
+    await rbac_check(request, org.org_uuid, current_user, "update", db_session)
+
+    # Get org config
+    statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
+    result = db_session.exec(statement)
+
+    org_config = result.first()
+
+    if org_config is None:
+        logging.error(f"Organization {org_id} has no config")
+        raise HTTPException(
+            status_code=404,
+            detail="Organization config not found",
+        )
+
+    # Convert to OrganizationConfigBase model and back to ensure all fields exist
+    config_model = OrganizationConfigBase(**org_config.config)
+    
+    # Update the landing object
+    config_model.landing = landing_object
+
+    # Convert back to dict and update
+    updated_config = json.loads(config_model.json())
+    org_config.config = updated_config
+    org_config.update_date = str(datetime.now())
+
+    db_session.add(org_config)
+    db_session.commit()
+    db_session.refresh(org_config)
+
+    return {"detail": "Landing object updated"}
+
+async def upload_org_landing_content_service(
+    request: Request,
+    content_file: UploadFile,
+    org_id: int,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+) -> dict:
+    statement = select(Organization).where(Organization.id == org_id)
+    result = db_session.exec(statement)
+
+    org = result.first()
+
+    if not org:
+        raise HTTPException(
+            status_code=404,
+            detail="Organization not found",
+        )
+
+    # RBAC check
+    await rbac_check(request, org.org_uuid, current_user, "update", db_session)
+
+    # Upload content
+    name_in_disk = await upload_org_landing_content(content_file, org.org_uuid)
+
+    return {
+        "detail": "Landing content uploaded successfully",
         "filename": name_in_disk
     }
 
