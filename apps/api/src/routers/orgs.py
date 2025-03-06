@@ -40,6 +40,8 @@ from src.services.orgs.orgs import (
     update_org_preview,
     update_org_signup_mechanism,
     update_org_thumbnail,
+    update_org_landing,
+    upload_org_landing_content_service,
 )
 
 
@@ -413,3 +415,37 @@ async def api_delete_org(
     """
 
     return await delete_org(request, org_id, current_user, db_session)
+
+
+@router.put("/{org_id}/landing")
+async def api_update_org_landing(
+    request: Request,
+    org_id: int,
+    landing_object: dict,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+):
+    """
+    Update organization landing object
+    """
+    return await update_org_landing(request, landing_object, org_id, current_user, db_session)
+
+
+@router.post("/{org_id}/landing/content")
+async def api_upload_org_landing_content(
+    request: Request,
+    org_id: int,
+    content_file: UploadFile,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+):
+    """
+    Upload content for organization landing page
+    """
+    return await upload_org_landing_content_service(
+        request=request,
+        content_file=content_file,
+        org_id=org_id,
+        current_user=current_user,
+        db_session=db_session,
+    )

@@ -18,6 +18,11 @@ export function getCourseThumbnailMediaDirectory(
   return uri
 }
 
+export function getOrgLandingMediaDirectory(orgUUID: string, fileId: string) {
+  let uri = `${getMediaUrl()}content/orgs/${orgUUID}/landing/${fileId}`
+  return uri
+}
+
 export function getUserAvatarMediaDirectory(userUUID: string, fileId: string) {
   let uri = `${getMediaUrl()}content/users/${userUUID}/avatars/${fileId}`
   return uri
