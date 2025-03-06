@@ -8,6 +8,7 @@ import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { useSearchParams } from 'next/navigation'
 import React from 'react'
 import useAdminStatus from '@components/Hooks/useAdminStatus'
+import { useTranslations } from 'next-intl'
 
 type CourseProps = {
   orgslug: string
@@ -22,6 +23,7 @@ function CoursesHome(params: CourseProps) {
   const orgslug = params.orgslug
   const courses = params.courses
   const isUserAdmin = useAdminStatus() as any
+  const t = useTranslations("DashPage.Courses")
 
   async function closeNewCourseModal() {
     setNewCourseModal(false)
@@ -32,7 +34,7 @@ function CoursesHome(params: CourseProps) {
       <div className="mb-6">
         <BreadCrumbs type="courses" />
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-4">
-          <h1 className="text-3xl font-bold mb-4 sm:mb-0">Courses</h1>
+          <h1 className="text-3xl font-bold mb-4 sm:mb-0">{t("title")}</h1>
           <AuthenticatedClientElement
             checkMethod="roles"
             action="create"
@@ -83,13 +85,13 @@ function CoursesHome(params: CourseProps) {
                 </svg>
               </div>
               <h2 className="text-2xl font-bold text-gray-600 mb-2">
-                No courses yet
+                {t("noCourses")}
               </h2>
               <p className="text-lg text-gray-400">
                 {isUserAdmin ? (
-                  "Create a course to add content"
+                  t("createACourse")
                 ) : (
-                  "No courses available yet"
+                  t("noCoursesAvailable")
                 )}
               </p>
               {isUserAdmin && (

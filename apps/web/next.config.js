@@ -1,4 +1,6 @@
 /** @type {import('next').NextConfig} */
+const createNextIntlPlugin = require('next-intl/plugin');
+
 const nextConfig = {
   async rewrites() {
     return [
@@ -16,7 +18,10 @@ const nextConfig = {
   output: 'standalone',
 }
 
-module.exports = nextConfig
+// Next intl
+const withNextIntl = createNextIntlPlugin();
+
+module.exports = withNextIntl(nextConfig);
 
 
 // Injected content via Sentry wizard below

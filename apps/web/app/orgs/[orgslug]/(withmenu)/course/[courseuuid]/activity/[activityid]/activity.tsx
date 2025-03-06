@@ -27,6 +27,7 @@ import { mutate } from 'swr'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import { useMediaQuery } from 'usehooks-ts'
 import PaidCourseActivityDisclaimer from '@components/Objects/Courses/CourseActions/PaidCourseActivityDisclaimer'
+import { useTranslations } from 'next-intl'
 
 interface ActivityClientProps {
   activityid: string
@@ -37,6 +38,7 @@ interface ActivityClientProps {
 }
 
 function ActivityClient(props: ActivityClientProps) {
+  const t = useTranslations("General");
   const activityid = props.activityid
   const courseuuid = props.courseuuid
   const orgslug = props.orgslug
@@ -107,7 +109,7 @@ function ActivityClient(props: ActivityClientProps) {
                   </Link>
                 </div>
                 <div className="flex flex-col -space-y-1">
-                  <p className="font-bold text-gray-700 text-md">Course </p>
+                  <p className="font-bold text-gray-700 text-md">{t("Course")} </p>
                   <h1 className="font-bold text-gray-950 text-2xl first-letter:uppercase">
                     {course.name}
                   </h1>

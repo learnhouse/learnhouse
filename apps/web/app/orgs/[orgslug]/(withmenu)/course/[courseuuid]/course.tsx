@@ -18,8 +18,10 @@ import CourseUpdates from '@components/Objects/Courses/CourseUpdates/CourseUpdat
 import { CourseProvider } from '@components/Contexts/CourseContext'
 import { useMediaQuery } from 'usehooks-ts'
 import CoursesActions from '@components/Objects/Courses/CourseActions/CoursesActions'
+import { useTranslations } from 'next-intl'
 
 const CourseClient = (props: any) => {
+  const t = useTranslations("General");
   const [learnings, setLearnings] = useState<any>([])
   const courseuuid = props.courseuuid
   const orgslug = props.orgslug
@@ -29,6 +31,7 @@ const CourseClient = (props: any) => {
   const isMobile = useMediaQuery('(max-width: 768px)')
 
   function getLearningTags() {
+
     if (!course?.learnings) {
       setLearnings([])
       return
@@ -68,7 +71,7 @@ const CourseClient = (props: any) => {
         <GeneralWrapperStyled>
           <div className="pb-3 flex flex-col md:flex-row justify-between items-start md:items-center">
             <div>
-              <p className="text-md font-bold text-gray-400 pb-2">Course</p>
+              <p className="text-md font-bold text-gray-400 pb-2">{t("course")}</p>
               <h1 className="text-3xl md:text-3xl -mt-3 font-bold">{course.name}</h1>
             </div>
             <div className="mt-4 md:mt-0">

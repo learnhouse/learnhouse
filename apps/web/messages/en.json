@@ -1,0 +1,56 @@
+{ 
+  "General": {
+    "course": "Course",
+    "courses": "Courses",
+    "collection": "Collection",
+    "collections": "Collections"
+  },
+  "Components": {
+    "Button": {
+      "newCourse": "New Course ",
+      "newCollecction": "New Collection "
+    }
+  },
+  "NotFoundPage": {
+    "message": "We are very sorry for the inconvenience. It looks like you're trying to<br></br>access a page that has been deleted or never existed before",
+    "button": "Go back to the home page"
+  },
+  "SignupPage":{
+    "signUp": "Sign up",
+    "invited": "You've been invited to join",
+    "hi": "Hi",
+    "join": "join",
+    "inviteCodeRequired": "An invite code is required to join",
+    "submit": "Submit"
+  },
+  "DashPage":{
+    "Card":{
+      "Courses": {
+        "title": "Courses",
+        "description": "Create and manage courses, chapters and activities"
+      },
+      "Organization": {
+        "title": "Organization",
+        "description": "Configure your Organization general settings"
+      },
+      "Users": {
+        "title": "Users",
+        "description": "Manage your Organization's users, roles"
+      },
+      "AccountSettings": {
+        "title": "Account Settings",
+        "description": "Configure your personal settings, passwords, email"
+      }
+    },
+    "LearnhouseUniversity": "LearnHouse University",
+    "Courses": {
+      "title": "Courses",
+      "noCourses": "No courses yet",
+      "noCoursesavailable": "No courses available yet",
+      "createACourse": "Create a course to add content",
+      "general": "General",
+      "access": "Access",
+      "content": "Content"
+    }
+  }
+}

@@ -3,6 +3,7 @@ import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import SignUpClient from './signup'
 import { Suspense } from 'react'
 import PageLoading from '@components/Objects/Loaders/PageLoading'
+import { useTranslations } from 'next-intl'
 
 type MetadataProps = {
   params: { orgslug: string; courseid: string }
@@ -19,8 +20,10 @@ export async function generateMetadata(
     tags: ['organizations'],
   })
 
+  const t = useTranslations('SignUpPage');
+
   return {
-    title: 'Sign up' + ` — ${org.name}`,
+    title: t("signUp") + ` — ${org.name}`,
   }
 }
 

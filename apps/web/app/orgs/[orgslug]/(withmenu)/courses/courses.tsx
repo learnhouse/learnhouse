@@ -9,6 +9,7 @@ import AuthenticatedClientElement from '@components/Security/AuthenticatedClient
 import CourseThumbnail from '@components/Objects/Thumbnails/CourseThumbnail'
 import NewCourseButton from '@components/Objects/StyledElements/Buttons/NewCourseButton'
 import useAdminStatus from '@components/Hooks/useAdminStatus'
+import { useTranslations } from 'next-intl'
 
 interface CourseProps {
   orgslug: string
@@ -17,6 +18,7 @@ interface CourseProps {
 }
 
 function Courses(props: CourseProps) {
+  const t = useTranslations("General")
   const orgslug = props.orgslug
   const courses = props.courses
   const searchParams = useSearchParams()
@@ -33,7 +35,7 @@ function Courses(props: CourseProps) {
       <GeneralWrapperStyled>
         <div className="flex flex-col space-y-2 mb-2">
           <div className="flex items-center justify-between">
-            <TypeOfContentTitle title="Courses" type="cou" />
+            <TypeOfContentTitle title={t("courses")} type="cou" />
             <AuthenticatedClientElement
               checkMethod="roles"
               action="create"

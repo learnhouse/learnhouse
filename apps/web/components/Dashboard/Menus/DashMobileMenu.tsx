@@ -8,8 +8,10 @@ import AdminAuthorization from '@components/Security/AdminAuthorization'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { getUriWithOrg, getUriWithoutOrg } from '@services/config/config'
 import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
+import { useTranslations } from 'next-intl'
 
 function DashMobileMenu() {
+  const t = useTranslations("General")
   const org = useOrg() as any
   const session = useLHSession() as any
 
@@ -26,7 +28,7 @@ function DashMobileMenu() {
           <ToolTip content={'Courses'} slateBlack sideOffset={8} side="top">
             <Link href={`/dash/courses`} className="flex flex-col items-center p-2">
               <BookCopy size={20} />
-              <span className="text-xs mt-1">Courses</span>
+              <span className="text-xs mt-1">{t("courses")}</span>
             </Link>
           </ToolTip>
           <ToolTip content={'Assignments'} slateBlack sideOffset={8} side="top">

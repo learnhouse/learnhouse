@@ -9,6 +9,7 @@ import { GalleryVerticalEnd, Info, UserRoundCog } from 'lucide-react'
 import EditCourseStructure from '@components/Dashboard/Pages/Course/EditCourseStructure/EditCourseStructure'
 import EditCourseGeneral from '@components/Dashboard/Pages/Course/EditCourseGeneral/EditCourseGeneral'
 import EditCourseAccess from '@components/Dashboard/Pages/Course/EditCourseAccess/EditCourseAccess'
+import { useTranslations } from 'next-intl'
 
 export type CourseOverviewParams = {
   orgslug: string
@@ -21,6 +22,8 @@ function CourseOverviewPage({ params }: { params: CourseOverviewParams }) {
     // add course_ to uuid
     return `course_${courseuuid}`
   }
+
+  const t = useTranslations("DashPage.Courses")
 
   return (
     <div className="h-screen w-full bg-[#f8f8f8] grid grid-rows-[auto,1fr]">
@@ -42,7 +45,7 @@ function CourseOverviewPage({ params }: { params: CourseOverviewParams }) {
               >
                 <div className="flex items-center space-x-2.5 mx-2">
                   <Info size={16} />
-                  <div>General</div>
+                  <div>{t("general")}</div>
                 </div>
               </div>
             </Link>
@@ -60,7 +63,7 @@ function CourseOverviewPage({ params }: { params: CourseOverviewParams }) {
               >
                 <div className="flex items-center space-x-2.5 mx-2">
                   <UserRoundCog size={16} />
-                  <div>Access</div>
+                  <div>{t("access")}</div>
                 </div>
               </div>
             </Link>
@@ -78,7 +81,7 @@ function CourseOverviewPage({ params }: { params: CourseOverviewParams }) {
               >
                 <div className="flex items-center space-x-2.5 mx-2">
                   <GalleryVerticalEnd size={16} />
-                  <div>Content</div>
+                  <div>{t("content")}</div>
                 </div>
               </div>
             </Link>

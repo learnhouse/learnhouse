@@ -18,12 +18,14 @@ import Toast from '@components/Objects/StyledElements/Toast/Toast'
 import toast from 'react-hot-toast'
 import { BarLoader } from 'react-spinners'
 import { joinOrg } from '@services/organizations/orgs'
+import { useTranslations } from 'next-intl'
 
 interface SignUpClientProps {
   org: any
 }
 
 function SignUpClient(props: SignUpClientProps) {
+  const t = useTranslations("SignupPage"); 
   const session = useLHSession() as any
   const [joinMethod, setJoinMethod] = React.useState('open')
   const [inviteCode, setInviteCode] = React.useState('')
@@ -63,7 +65,7 @@ function SignUpClient(props: SignUpClientProps) {
         </div>
         <div className="ml-10 h-3/4 flex flex-row text-white">
           <div className="m-auto flex space-x-4 items-center flex-wrap">
-            <div>You've been invited to join </div>
+            <div>{t("invited")}</div>
             <div className="shadow-[0px_4px_16px_rgba(0,0,0,0.02)]">
               {props.org?.logo_image ? (
                 <img
@@ -112,6 +114,7 @@ function SignUpClient(props: SignUpClientProps) {
 }
 
 const LoggedInJoinScreen = (props: any) => {
+  const t = useTranslations("SignupPage"); 
   const session = useLHSession() as any
   const org = useOrg() as any
   const invite_code = props.inviteCode
@@ -150,12 +153,12 @@ const LoggedInJoinScreen = (props: any) => {
        <Toast />
       <div className="flex space-y-7 flex-col justify-center items-center">
         <p className="pt-3 text-2xl font-semibold text-black/70 flex justify-center space-x-2 items-center">
-          <span className="items-center">Hi</span>
+          <span className="items-center">{t("hi")}</span>
           <span className="capitalize flex space-x-2 items-center">
             <UserAvatar rounded="rounded-xl" border="border-4" width={35} />
             <span>{session.data.username},</span>
           </span>
-          <span>join {org?.name} ?</span>
+          <span>{t("join")} {org?.name} ?</span>
         </p>
         <button onClick={() => join()} className="flex w-fit h-[35px] space-x-2 bg-black px-6 py-2 text-md rounded-lg font-semibold h-fit text-white items-center shadow-md">
           {isSumbitting ? <BarLoader
@@ -163,7 +166,7 @@ const LoggedInJoinScreen = (props: any) => {
             width={60}
             color="#ffffff"
           /> : <><UserPlus size={18} />
-            <p>Join </p></>}
+            <p>{t("join")} </p></>}
         </button>
       </div>
     </div>
@@ -171,6 +174,7 @@ const LoggedInJoinScreen = (props: any) => {
 }
 
 const NoTokenScreen = (props: any) => {
+  const t = useTranslations("SignupPage"); 
   const session = useLHSession() as any
   const org = useOrg() as any
   const router = useRouter()
@@ -216,7 +220,7 @@ const NoTokenScreen = (props: any) => {
         <div className="flex space-y-7 flex-col justify-center items-center">
           <p className="flex space-x-2 text-lg font-medium text-red-800 items-center">
             <MailWarning size={18} />
-            <span>An invite code is required to join {org?.name}</span>
+            <span>{t("inviteCodeRequired")} {org?.name}</span>
           </p>
           <input
             onChange={handleInviteCodeChange}
@@ -229,7 +233,7 @@ const NoTokenScreen = (props: any) => {
             className="flex w-fit space-x-2 bg-black px-6 py-2 text-md rounded-lg font-semibold h-fit text-white items-center shadow-md"
           >
             <Ticket size={18} />
-            <p>Submit </p>
+            <p>{t("submit")} </p>
           </button>
         </div>
       )}

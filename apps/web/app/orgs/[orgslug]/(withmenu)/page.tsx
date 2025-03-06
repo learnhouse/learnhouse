@@ -16,6 +16,7 @@ import { getOrgCollections } from '@services/courses/collections'
 import { getServerSession } from 'next-auth'
 import { nextAuthOptions } from 'app/auth/options'
 import { getOrgThumbnailMediaDirectory } from '@services/media/media'
+import { useTranslations } from 'next-intl'
 
 type MetadataProps = {
   params: { orgslug: string }
@@ -62,6 +63,7 @@ export async function generateMetadata({
 }
 
 const OrgHomePage = async (params: any) => {
+  const t = useTranslations("General")
   const orgslug = params.params.orgslug
   const session = await getServerSession(nextAuthOptions)
   const access_token = session?.tokens?.access_token
@@ -156,7 +158,7 @@ const OrgHomePage = async (params: any) => {
         {/* Courses */}
         <div className="flex flex-col space-y-4">
           <div className="flex items-center justify-between">
-            <TypeOfContentTitle title="Courses" type="cou" />
+            <TypeOfContentTitle title={t("courses")} type="cou" />
             <AuthenticatedClientElement
               ressourceType="courses"
               action="create"
