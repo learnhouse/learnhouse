@@ -57,7 +57,7 @@ function OrgUsers() {
         <>
           <Toast></Toast>
           <div className="h-6"></div>
-          <div className="ml-10 mr-10 mx-auto bg-white rounded-xl shadow-sm px-4 py-4  ">
+          <div className="ml-10 mr-10 mx-auto bg-white rounded-xl shadow-xs px-4 py-4  ">
             <div className="flex flex-col bg-gray-50 -space-y-1  px-5 py-3 rounded-md mb-3 ">
               <h1 className="font-bold text-xl text-gray-800">Active users</h1>
               <h2 className="text-gray-500  text-md">

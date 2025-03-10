@@ -1,112 +1,192 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400;1,500&display=swap')
+layer(base);
+/*
+  ---break---
+*/
+@plugin 'tailwindcss-animate';
 
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400;1,500&display=swap');
+@import 'tailwindcss';
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@custom-variant dark (&:is(.dark *));
 
-.nice-shadow {
-  @apply shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40
+@theme {
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+
+  --color-chart-1: hsl(var(--chart-1));
+  --color-chart-2: hsl(var(--chart-2));
+  --color-chart-3: hsl(var(--chart-3));
+  --color-chart-4: hsl(var(--chart-4));
+  --color-chart-5: hsl(var(--chart-5));
 }
 
-.light-shadow {
-  @apply shadow-lg shadow-gray-300/15 outline outline-1 outline-neutral-200/30
-}
+/*
+  The default border color has changed to `currentColor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
 
-
-.custom-dots-bg {
-  @apply bg-fixed;
-  background-image: radial-gradient(#4744446b 1px, transparent 1px),
-    radial-gradient(#4744446b 1px, transparent 1px);
-  background-position: 0 0, 25px 25px;
-  background-size: 50px 50px;
-  background-repeat: repeat;
-}
-
-html,
-body {
-  padding: 0;
-  margin: 0;
-  transition: all 0.2s ease;
-  font-family: 'DM Sans' , -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
-}
-
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-@media (prefers-color-scheme: dark) {
-  
-  body {
-    color: black;
-    background: #FBFBFB;
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentColor);
   }
 }
 
-/* Basic editor styles */
-.ProseMirror > * + * {
-  margin-top: 0.75em;
-}
-/* Placeholder (at the top) */
-.ProseMirror p.is-editor-empty:first-child::before {
-  color: #adb5bd;
-  content: attr(data-placeholder);
-  float: left;
-  height: 0;
-  pointer-events: none;
-}
-/* Give a remote user a caret */
-.collaboration-cursor__caret {
-  border-left: 1px solid #0d0d0d;
-  border-right: 1px solid #0d0d0d;
-  margin-left: -1px;
-  margin-right: -1px;
-  pointer-events: none;
-  position: relative;
-  word-break: normal;
-}
-/* Render the username above the caret */
-.collaboration-cursor__label {
-  border-radius: 3px 3px 3px 0;
-  color: #0d0d0d;
-  font-size: 12px;
-  font-style: normal;
-  font-weight: 600;
-  left: -1px;
-  line-height: normal;
-  padding: 0.1rem 0.3rem;
-  position: absolute;
-  top: -1.4em;
-  user-select: none;
-  white-space: nowrap;
-}
+@layer utilities {
+  .nice-shadow {
+    @apply shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40;
+  }
 
+  .light-shadow {
+    @apply shadow-lg shadow-gray-300/15 outline outline-1 outline-neutral-200/30;
+  }
 
-.fade-enter {
-  opacity: 0;
-  transform: translateY(-20px);
-}
+  .custom-dots-bg {
+    @apply bg-fixed;
+    background-image:
+      radial-gradient(#4744446b 1px, transparent 1px),
+      radial-gradient(#4744446b 1px, transparent 1px);
+    background-position:
+      0 0,
+      25px 25px;
+    background-size: 50px 50px;
+    background-repeat: repeat;
+  }
 
-.fade-enter-active {
-  opacity: 1;
-  transform: translateY(0);
-  transition: opacity 300ms, transform 300ms;
-}
+  html,
+  body {
+    padding: 0;
+    margin: 0;
+    transition: all 0.2s ease;
+    font-family:
+      'DM Sans',
+      -apple-system,
+      BlinkMacSystemFont,
+      Segoe UI,
+      Roboto,
+      Oxygen,
+      Ubuntu,
+      Cantarell,
+      Fira Sans,
+      Droid Sans,
+      Helvetica Neue,
+      sans-serif;
+  }
 
-.fade-exit {
-  opacity: 1;
-  transform: translateY(0);
-}
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
 
-.fade-exit-active {
-  opacity: 0;
-  transform: translateY(-20px);
-  transition: opacity 300ms, transform 300ms;
+  * {
+    box-sizing: border-box;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    body {
+      color: black;
+      background: #fbfbfb;
+    }
+  }
+
+  /* Basic editor styles */
+  .ProseMirror > * + * {
+    margin-top: 0.75em;
+  }
+  /* Placeholder (at the top) */
+  .ProseMirror p.is-editor-empty:first-child::before {
+    color: #adb5bd;
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
+  }
+  /* Give a remote user a caret */
+  .collaboration-cursor__caret {
+    border-left: 1px solid #0d0d0d;
+    border-right: 1px solid #0d0d0d;
+    margin-left: -1px;
+    margin-right: -1px;
+    pointer-events: none;
+    position: relative;
+    word-break: normal;
+  }
+  /* Render the username above the caret */
+  .collaboration-cursor__label {
+    border-radius: 3px 3px 3px 0;
+    color: #0d0d0d;
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 600;
+    left: -1px;
+    line-height: normal;
+    padding: 0.1rem 0.3rem;
+    position: absolute;
+    top: -1.4em;
+    user-select: none;
+    white-space: nowrap;
+  }
+
+  .fade-enter {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+
+  .fade-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+    transition:
+      opacity 300ms,
+      transform 300ms;
+  }
+
+  .fade-exit {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .fade-exit-active {
+    opacity: 0;
+    transform: translateY(-20px);
+    transition:
+      opacity 300ms,
+      transform 300ms;
+  }
 }
 
 @layer base {

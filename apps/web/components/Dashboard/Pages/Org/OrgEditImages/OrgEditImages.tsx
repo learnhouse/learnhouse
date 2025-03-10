@@ -367,21 +367,21 @@ export default function OrgEditImages() {
         <TabsList className="grid w-full grid-cols-3 p-1 bg-gray-100 rounded-lg">
           <TabsTrigger 
             value="logo" 
-            className="data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all flex items-center space-x-2"
+            className="data-[state=active]:bg-white data-[state=active]:shadow-xs transition-all flex items-center space-x-2"
           >
             <StarIcon size={16} />
             <span>Logo</span>
           </TabsTrigger>
           <TabsTrigger 
             value="thumbnail"
-            className="data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all flex items-center space-x-2"
+            className="data-[state=active]:bg-white data-[state=active]:shadow-xs transition-all flex items-center space-x-2"
           >
             <ImageIcon size={16} />
             <span>Thumbnail</span>
           </TabsTrigger>
           <TabsTrigger 
             value="previews"
-            className="data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all flex items-center space-x-2"
+            className="data-[state=active]:bg-white data-[state=active]:shadow-xs transition-all flex items-center space-x-2"
           >
             <Images size={16} />
             <span>Previews</span>
@@ -390,7 +390,7 @@ export default function OrgEditImages() {
 
         <TabsContent value="logo" className="mt-2">
           <div className="flex flex-col space-y-5 w-full">
-            <div className="w-full bg-gradient-to-b from-gray-50 to-white rounded-xl  transition-all duration-300 py-8">
+            <div className="w-full bg-linear-to-b from-gray-50 to-white rounded-xl  transition-all duration-300 py-8">
               <div className="flex flex-col justify-center items-center space-y-8">
                 <div className="relative group">
                   <div
@@ -416,9 +416,9 @@ export default function OrgEditImages() {
                     disabled={isLogoUploading}
                     className={cn(
                       "font-medium text-sm px-6 py-2.5 rounded-full",
-                      "bg-gradient-to-r from-blue-500 to-blue-600 text-white",
+                      "bg-linear-to-r from-blue-500 to-blue-600 text-white",
                       "hover:from-blue-600 hover:to-blue-700",
-                      "shadow-sm hover:shadow transition-all duration-300",
+                      "shadow-xs hover:shadow-sm transition-all duration-300",
                       "flex items-center space-x-2",
                       isLogoUploading && "opacity-75 cursor-not-allowed"
                     )}
@@ -443,7 +443,7 @@ export default function OrgEditImages() {
 
         <TabsContent value="thumbnail" className="mt-2">
           <div className="flex flex-col space-y-5 w-full">
-            <div className="w-full bg-gradient-to-b from-gray-50 to-white rounded-xl  transition-all duration-300 py-8">
+            <div className="w-full bg-linear-to-b from-gray-50 to-white rounded-xl  transition-all duration-300 py-8">
               <div className="flex flex-col justify-center items-center space-y-8">
                 <div className="relative group">
                   <div
@@ -469,9 +469,9 @@ export default function OrgEditImages() {
                     disabled={isThumbnailUploading}
                     className={cn(
                       "font-medium text-sm px-6 py-2.5 rounded-full",
-                      "bg-gradient-to-r from-purple-500 to-purple-600 text-white",
+                      "bg-linear-to-r from-purple-500 to-purple-600 text-white",
                       "hover:from-purple-600 hover:to-purple-700",
-                      "shadow-sm hover:shadow transition-all duration-300",
+                      "shadow-xs hover:shadow-sm transition-all duration-300",
                       "flex items-center space-x-2",
                       isThumbnailUploading && "opacity-75 cursor-not-allowed"
                     )}
@@ -496,7 +496,7 @@ export default function OrgEditImages() {
 
         <TabsContent value="previews" className="mt-4">
           <div className="flex flex-col space-y-5 w-full">
-            <div className="w-full bg-gradient-to-b from-gray-50 to-white rounded-xl transition-all duration-300 py-6">
+            <div className="w-full bg-linear-to-b from-gray-50 to-white rounded-xl transition-all duration-300 py-6">
               <div className="flex flex-col justify-center items-center space-y-6">
                 <DragDropContext onDragEnd={handleDragEnd}>
                   <Droppable droppableId="previews" direction="horizontal">
@@ -520,7 +520,7 @@ export default function OrgEditImages() {
                                 ref={provided.innerRef}
                                 {...provided.draggableProps}
                                 className={cn(
-                                  "relative group flex-shrink-0",
+                                  "relative group shrink-0",
                                   "w-48",
                                   snapshot.isDragging ? "scale-105 z-50" : "hover:scale-102",
                                 )}
@@ -529,7 +529,7 @@ export default function OrgEditImages() {
                                   onClick={() => removePreview(preview.id)}
                                   className={cn(
                                     "absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5",
-                                    "opacity-0 group-hover:opacity-100 z-10 shadow-sm",
+                                    "opacity-0 group-hover:opacity-100 z-10 shadow-xs",
                                     "transition-opacity duration-200"
                                   )}
                                 >
@@ -539,7 +539,7 @@ export default function OrgEditImages() {
                                   {...provided.dragHandleProps}
                                   className={cn(
                                     "absolute -top-2 -left-2 bg-gray-600 hover:bg-gray-700 text-white rounded-full p-1.5",
-                                    "opacity-0 group-hover:opacity-100 cursor-grab active:cursor-grabbing z-10 shadow-sm",
+                                    "opacity-0 group-hover:opacity-100 cursor-grab active:cursor-grabbing z-10 shadow-xs",
                                     "transition-opacity duration-200"
                                   )}
                                 >
@@ -551,7 +551,7 @@ export default function OrgEditImages() {
                                       `w-full ${PREVIEW_HEIGHT} bg-contain bg-no-repeat bg-center rounded-xl bg-white`,
                                       "border border-gray-200 hover:border-gray-300",
                                       "transition-colors duration-200",
-                                      snapshot.isDragging ? "shadow-lg" : "shadow-sm hover:shadow-md"
+                                      snapshot.isDragging ? "shadow-lg" : "shadow-xs hover:shadow-md"
                                     )}
                                     style={{ 
                                       backgroundImage: `url(${getOrgPreviewMediaDirectory(org?.org_uuid, preview.id)})`,
@@ -561,7 +561,7 @@ export default function OrgEditImages() {
                                   <div className={cn(
                                     `w-full ${PREVIEW_HEIGHT} relative rounded-xl overflow-hidden`,
                                     "border border-gray-200 hover:border-gray-300 transition-colors duration-200",
-                                    snapshot.isDragging ? "shadow-lg" : "shadow-sm hover:shadow-md"
+                                    snapshot.isDragging ? "shadow-lg" : "shadow-xs hover:shadow-md"
                                   )}>
                                     <div
                                       className="absolute inset-0 bg-cover bg-center"
@@ -583,7 +583,7 @@ export default function OrgEditImages() {
                         {provided.placeholder}
                         {previews.length < 4 && (
                           <div className={cn(
-                            "flex-shrink-0 w-48",
+                            "shrink-0 w-48",
                             previews.length === 0 && "m-0"
                           )}>
                             <Dialog open={videoDialogOpen} onOpenChange={(open) => {

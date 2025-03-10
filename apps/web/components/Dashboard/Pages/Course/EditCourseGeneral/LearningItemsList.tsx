@@ -249,7 +249,7 @@ const LearningItemsList = ({ value, onChange, error }: LearningItemsListProps) =
                   setShowEmojiPicker(showEmojiPicker === item.id ? null : item.id);
                   setShowLinkInput(null);
                 }}
-                className="text-lg flex-shrink-0"
+                className="text-lg shrink-0"
               >
                 <span>{item.emoji}</span>
               </button>
@@ -261,7 +261,7 @@ const LearningItemsList = ({ value, onChange, error }: LearningItemsListProps) =
                 onFocus={() => handleInputFocus(item.id)}
                 onBlur={handleInputBlur}
                 placeholder="Enter learning item..."
-                className="flex-grow border-0 bg-transparent focus-visible:ring-0 px-0 h-8 text-sm learning-item-input"
+                className="grow border-0 bg-transparent focus-visible:ring-0 px-0 h-8 text-sm learning-item-input"
               />
               
               {item.link && (
@@ -318,7 +318,7 @@ const LearningItemsList = ({ value, onChange, error }: LearningItemsListProps) =
             )}
             
             {showLinkInput === item.id && (
-              <div ref={linkInputRef} className="mt-1 p-2 bg-white border border-gray-200 rounded-lg shadow-sm">
+              <div ref={linkInputRef} className="mt-1 p-2 bg-white border border-gray-200 rounded-lg shadow-xs">
                 <Input
                   ref={setLinkInputRef(item.id)}
                   value={items.find(i => i.id === item.id)?.link || ''}

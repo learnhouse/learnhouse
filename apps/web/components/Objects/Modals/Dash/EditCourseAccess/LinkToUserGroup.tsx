@@ -77,7 +77,7 @@ function LinkToUserGroup(props: LinkToUserGroupProps) {
                         <Link className='px-3 text-blue-700 font-bold rounded-full py-1 bg-blue-100 mx-1' target='_blank' href={getUriWithOrg(org.slug, '/dash/users/settings/usergroups')}>Create a UserGroup</Link>
                     </div>}
                 <div className='py-3'>
-                    <button onClick={() => { handleLink() }} className='bg-green-700 text-white font-bold px-4 py-2 rounded-md shadow'>Link</button>
+                    <button onClick={() => { handleLink() }} className='bg-green-700 text-white font-bold px-4 py-2 rounded-md shadow-sm'>Link</button>
                 </div>
             </div>
         </div>

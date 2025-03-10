@@ -92,7 +92,7 @@ function ChapterElement(props: ChapterElementProps) {
                   <div className="chapter-modification-zone bg-neutral-100 py-1 px-2 sm:px-4 rounded-lg flex items-center space-x-2">
                     <input
                       type="text"
-                      className="bg-transparent outline-none text-sm text-neutral-700 w-full max-w-[150px] sm:max-w-none"
+                      className="bg-transparent outline-hidden text-sm text-neutral-700 w-full max-w-[150px] sm:max-w-none"
                       placeholder="Chapter name"
                       value={
                         modifiedChapter
@@ -133,7 +133,7 @@ function ChapterElement(props: ChapterElementProps) {
                 dialogTitle={'Delete ' + props.chapter.name + ' ?'}
                 dialogTrigger={
                   <button
-                    className="hover:cursor-pointer p-1 px-2 sm:px-3 bg-red-600 rounded-md shadow flex items-center text-rose-100 text-sm"
+                    className="hover:cursor-pointer p-1 px-2 sm:px-3 bg-red-600 rounded-md shadow-sm flex items-center text-rose-100 text-sm"
                     rel="noopener noreferrer"
                   >
                     <Trash2 size={15} className="text-rose-200" />

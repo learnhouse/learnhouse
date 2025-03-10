@@ -107,7 +107,7 @@ function NewCollection(params: any) {
                 placeholder="Enter collection name"
                 value={name}
                 onChange={handleNameChange}
-                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                 maxLength={100}
               />
             </label>
@@ -116,7 +116,7 @@ function NewCollection(params: any) {
               <span className="text-sm font-medium text-gray-700">Visibility</span>
               <select
                 onChange={handleVisibilityChange}
-                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                 defaultValue={isPublic}
               >
                 <option value="true">Public Collection - Visible to everyone</option>
@@ -131,7 +131,7 @@ function NewCollection(params: any) {
                 value={description}
                 onChange={handleDescriptionChange}
                 rows={4}
-                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                 maxLength={500}
               />
             </label>
@@ -168,7 +168,7 @@ function NewCollection(params: any) {
                           }}
                           className="h-4 w-4 text-blue-500 rounded border-gray-300 focus:ring-blue-500"
                         />
-                        <div className="relative w-24 h-16 rounded-md overflow-hidden bg-gray-100 flex-shrink-0">
+                        <div className="relative w-24 h-16 rounded-md overflow-hidden bg-gray-100 shrink-0">
                           {course.thumbnail_image ? (
                             <img
                               src={getCourseThumbnailMediaDirectory(org.org_uuid, course.course_uuid, course.thumbnail_image)}
@@ -204,14 +204,14 @@ function NewCollection(params: any) {
             <button
               type="button"
               onClick={() => router.back()}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition"
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+              className="px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg shadow-xs hover:bg-blue-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
             >
               {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
               <span>{isSubmitting ? 'Creating...' : 'Create Collection'}</span>

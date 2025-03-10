@@ -87,7 +87,7 @@ function LandingCustom({ landing, orgslug }: LandingCustomProps) {
                       <a
                         key={index}
                         href={button.link}
-                        className="w-full sm:w-auto px-6 py-2.5 rounded-lg text-sm font-extrabold shadow transition-transform hover:scale-105"
+                        className="w-full sm:w-auto px-6 py-2.5 rounded-lg text-sm font-extrabold shadow-sm transition-transform hover:scale-105"
                         style={{
                           backgroundColor: button.background,
                           color: button.color
@@ -123,7 +123,7 @@ function LandingCustom({ landing, orgslug }: LandingCustomProps) {
                     <a
                       key={index}
                       href={button.link}
-                      className="px-6 py-3 rounded-xl font-medium shadow-sm transition-all duration-200 hover:scale-105"
+                      className="px-6 py-3 rounded-xl font-medium shadow-xs transition-all duration-200 hover:scale-105"
                       style={{
                         backgroundColor: button.background,
                         color: button.color
@@ -136,7 +136,7 @@ function LandingCustom({ landing, orgslug }: LandingCustomProps) {
               </div>
               <div className="flex-1 w-full md:w-auto">
                 <div className="relative w-full max-w-[500px] mx-auto px-4 md:px-8">
-                  <div className="relative w-full aspect-[4/3]">
+                  <div className="relative w-full aspect-4/3">
                     <img
                       src={section.image.url}
                       alt={section.image.alt}
@@ -242,7 +242,7 @@ function LandingCustom({ landing, orgslug }: LandingCustomProps) {
   }
 
   return (
-    <div className="flex flex-col items-center justify-between w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-16 h-full">
+    <div className="flex flex-col items-center justify-between w-full max-w-(--breakpoint-2xl) mx-auto px-4 sm:px-6 lg:px-16 h-full">
       {landing.sections.map((section) => renderSection(section))}
     </div>
   )

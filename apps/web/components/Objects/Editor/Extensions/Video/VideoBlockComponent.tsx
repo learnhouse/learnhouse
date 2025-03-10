@@ -62,7 +62,7 @@ function VideoBlockComponents(props: any) {
         <BlockVideo>
           <video
             controls
-            className="rounded-lg shadow h-96 w-full object-scale-down bg-black"
+            className="rounded-lg shadow-sm h-96 w-full object-scale-down bg-black"
             src={`${getActivityBlockMediaDirectory(
               org?.org_uuid,
               course?.courseStructure.course_uuid,
