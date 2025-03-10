@@ -171,7 +171,7 @@ function ActivityClient(props: ActivityClientProps) {
                 </div>
               </div>
               {activity && activity.published == false && (
-                <div className="p-7 drop-shadow-sm rounded-lg bg-gray-800">
+                <div className="p-7 drop-shadow-xs rounded-lg bg-gray-800">
                   <div className="text-white">
                     <h1 className="font-bold text-2xl">
                       This activity is not published yet
@@ -185,7 +185,7 @@ function ActivityClient(props: ActivityClientProps) {
                   {activity.content.paid_access == false ? (
                     <PaidCourseActivityDisclaimer course={course} />
                   ) : (
-                    <div className={`p-7 drop-shadow-sm rounded-lg ${bgColor}`}>
+                    <div className={`p-7 drop-shadow-xs rounded-lg ${bgColor}`}>
                       {/* Activity Types */}
                       <div>
                         {activity.activity_type == 'TYPE_DYNAMIC' && (
@@ -519,7 +519,7 @@ function ActivityChapterDropdown(props: {
                           )?.steps?.find(
                             (step: any) => (step.activity_id === activity.id || step.activity_id === activity.activity_uuid) && step.complete === true
                           ) && (
-                            <span className="ml-2 text-gray-400 flex-shrink-0">
+                            <span className="ml-2 text-gray-400 shrink-0">
                               <Check size={14} />
                             </span>
                           )}
@@ -638,7 +638,7 @@ function ActivityNavigation(props: {
             disabled={!prevActivity}
             title={prevActivity ? `Previous: ${prevActivity.name}` : 'No previous activity'}
           >
-            <ChevronLeft size={20} className="text-gray-800 flex-shrink-0" />
+            <ChevronLeft size={20} className="text-gray-800 shrink-0" />
             <div className="flex flex-col items-start">
               <span className="text-xs text-gray-500">Previous</span>
               <span className="text-sm capitalize font-semibold text-left">
@@ -663,7 +663,7 @@ function ActivityNavigation(props: {
                 {nextActivity ? nextActivity.name : 'No next activity'}
               </span>
             </div>
-            <ChevronRight size={20} className="text-gray-800 flex-shrink-0" />
+            <ChevronRight size={20} className="text-gray-800 shrink-0" />
           </button>
         </>
       ) : (
@@ -680,7 +680,7 @@ function ActivityNavigation(props: {
               disabled={!prevActivity}
               title={prevActivity ? `Previous: ${prevActivity.name}` : 'No previous activity'}
             >
-              <ChevronLeft size={16} className="flex-shrink-0" />
+              <ChevronLeft size={16} className="shrink-0" />
               <div className="flex flex-col items-start">
                 <span className="text-xs text-gray-500">Previous</span>
                 <span className="text-sm capitalize font-semibold text-left">
@@ -711,7 +711,7 @@ function ActivityNavigation(props: {
                   {nextActivity ? nextActivity.name : 'No next activity'}
                 </span>
               </div>
-              <ChevronRight size={16} className="flex-shrink-0" />
+              <ChevronRight size={16} className="shrink-0" />
             </button>
           </div>
         </>
@@ -730,7 +730,7 @@ function ActivityNavigation(props: {
       {!isBottomNavVisible && (
         <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50 w-[85%] sm:w-auto sm:min-w-[350px] max-w-lg transition-all duration-300 ease-in-out">
           <div 
-            className="bg-white/90 backdrop-blur-xl rounded-full py-1.5 px-2.5 shadow-sm animate-in fade-in slide-in-from-bottom duration-300"
+            className="bg-white/90 backdrop-blur-xl rounded-full py-1.5 px-2.5 shadow-xs animate-in fade-in slide-in-from-bottom duration-300"
           >
             <NavigationButtons isFloating={true} />
           </div>

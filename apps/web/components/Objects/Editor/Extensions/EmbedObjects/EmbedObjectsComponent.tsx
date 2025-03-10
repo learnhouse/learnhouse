@@ -417,7 +417,7 @@ function EmbedObjectsComponent(props: any) {
             
             {/* Minimal toolbar for existing embeds */}
             {isEditable && (
-              <div className="absolute top-2 right-2 flex items-center gap-1.5 bg-white bg-opacity-90 backdrop-blur-sm rounded-lg p-1 shadow-sm transition-opacity opacity-70 hover:opacity-100">
+              <div className="absolute top-2 right-2 flex items-center gap-1.5 bg-white bg-opacity-90 backdrop-blur-xs rounded-lg p-1 shadow-xs transition-opacity opacity-70 hover:opacity-100">
                 <button
                   onClick={() => setActiveInput(embedType)}
                   className="p-1.5 rounded-md hover:bg-gray-100 text-gray-600"
@@ -487,7 +487,7 @@ function EmbedObjectsComponent(props: any) {
                     setEmbedType('url');
                     setActiveInput('url');
                   }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-lg shadow-sm hover:shadow-md transition-all text-sm text-gray-700"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-lg shadow-xs hover:shadow-md transition-all text-sm text-gray-700"
                 >
                   <LinkIcon size={14} />
                   <span>URL</span>
@@ -497,7 +497,7 @@ function EmbedObjectsComponent(props: any) {
                     setEmbedType('code');
                     setActiveInput('code');
                   }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-lg shadow-sm hover:shadow-md transition-all text-sm text-gray-700"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-lg shadow-xs hover:shadow-md transition-all text-sm text-gray-700"
                 >
                   <Code size={14} />
                   <span>Code</span>
@@ -509,7 +509,7 @@ function EmbedObjectsComponent(props: any) {
         
         {/* Inline input UI - appears in place without covering content */}
         {isEditable && activeInput !== 'none' && (
-          <div className="absolute inset-0 bg-gray-100 bg-opacity-95 backdrop-blur-sm flex items-center justify-center p-4 z-10">
+          <div className="absolute inset-0 bg-gray-100 bg-opacity-95 backdrop-blur-xs flex items-center justify-center p-4 z-10">
             <form 
               onSubmit={handleInputSubmit}
               className="w-full max-w-lg bg-white rounded-xl shadow-lg p-4"
@@ -554,7 +554,7 @@ function EmbedObjectsComponent(props: any) {
                       type="text"
                       value={embedUrl}
                       onChange={handleUrlChange}
-                      className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition-all"
+                      className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-hidden transition-all"
                       placeholder={selectedProduct ? `Paste ${selectedProduct.name} embed URL` : "Paste embed URL (YouTube, Spotify, etc.)"}
                       autoFocus
                     />
@@ -586,7 +586,7 @@ function EmbedObjectsComponent(props: any) {
                       ref={codeInputRef}
                       value={embedCode}
                       onChange={handleCodeChange}
-                      className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl h-32 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition-all font-mono text-sm"
+                      className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl h-32 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-hidden transition-all font-mono text-sm"
                       placeholder="Paste embed code (iframe, embed script, etc.)"
                       autoFocus
                     />

@@ -133,14 +133,14 @@ function ResetPasswordClient() {
                     </p>
 
                     {error && (
-                        <div className="flex justify-center bg-red-200 rounded-md text-red-950 space-x-2 items-center p-4 transition-all shadow-sm">
+                        <div className="flex justify-center bg-red-200 rounded-md text-red-950 space-x-2 items-center p-4 transition-all shadow-xs">
                             <AlertTriangle size={18} />
                             <div className="font-bold text-sm">{error}</div>
                         </div>
                     )}
                     {message && (
                         <div className="flex flex-col gap-2">
-                            <div className="flex justify-center bg-green-200 rounded-md text-green-950 space-x-2 items-center p-4 transition-all shadow-sm">
+                            <div className="flex justify-center bg-green-200 rounded-md text-green-950 space-x-2 items-center p-4 transition-all shadow-xs">
                                 <Info size={18} />
                                 <div className="font-bold text-sm">{message}</div>
                             </div>

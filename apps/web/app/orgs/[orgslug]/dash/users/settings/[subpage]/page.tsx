@@ -63,7 +63,7 @@ function UsersSettingsPage({ params }: { params: SettingsParams }) {
   }
 
   return (
-    <div className="h-screen w-full bg-[#f8f8f8] grid grid-rows-[auto,1fr]">
+    <div className="h-screen w-full bg-[#f8f8f8] grid grid-rows-[auto_1fr]">
       <div className="pl-10 pr-10  tracking-tight bg-[#fcfbfc] z-10 shadow-[0px_4px_16px_rgba(0,0,0,0.06)]">
         <BreadCrumbs type="orgusers"></BreadCrumbs>
         <div className="my-2  py-3">

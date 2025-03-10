@@ -129,7 +129,7 @@ function ActivityElement(props: ActivitiyElementProps) {
               <div className="chapter-modification-zone text-[7px] text-gray-600 shadow-inner bg-gray-200/60 py-1 px-4 rounded-lg space-x-3">
                 <input
                   type="text"
-                  className="bg-transparent outline-none text-xs text-gray-500"
+                  className="bg-transparent outline-hidden text-xs text-gray-500"
                   placeholder="Activity name"
                   value={
                     modifiedActivity
@@ -166,8 +166,8 @@ function ActivityElement(props: ActivitiyElementProps) {
             <button
               className={`p-1 px-2 sm:px-3 border shadow-md rounded-md font-bold text-xs flex items-center space-x-1 transition-colors duration-200 ${
                 !props.activity.published
-                  ? 'bg-gradient-to-bl text-green-800 from-green-400/50 to-lime-200/80 border-green-600/10 hover:from-green-500/50 hover:to-lime-300/80'
-                  : 'bg-gradient-to-bl text-gray-800 from-gray-400/50 to-gray-200/80 border-gray-600/10 hover:from-gray-500/50 hover:to-gray-300/80'
+                  ? 'bg-linear-to-bl text-green-800 from-green-400/50 to-lime-200/80 border-green-600/10 hover:from-green-500/50 hover:to-lime-300/80'
+                  : 'bg-linear-to-bl text-gray-800 from-gray-400/50 to-gray-200/80 border-gray-600/10 hover:from-gray-500/50 hover:to-gray-300/80'
               }`}
               onClick={() => changePublicStatus()}
             >
@@ -192,7 +192,7 @@ function ActivityElement(props: ActivitiyElementProps) {
                   )}`
                 }
                 prefetch
-                className="p-1 px-2 sm:px-3 bg-gradient-to-bl text-cyan-800 from-sky-400/50 to-cyan-200/80 border border-cyan-600/10 shadow-md rounded-md font-bold text-xs flex items-center space-x-1 transition-colors duration-200 hover:from-sky-500/50 hover:to-cyan-300/80"
+                className="p-1 px-2 sm:px-3 bg-linear-to-bl text-cyan-800 from-sky-400/50 to-cyan-200/80 border border-cyan-600/10 shadow-md rounded-md font-bold text-xs flex items-center space-x-1 transition-colors duration-200 hover:from-sky-500/50 hover:to-cyan-300/80"
                 rel="noopener noreferrer"
               >
                 <Eye strokeWidth={2} size={14} className="text-sky-600" />

@@ -164,7 +164,7 @@ const BadgesExtension: React.FC = (props: any) => {
                     {colors.map((c) => (
                       <button
                         key={c}
-                        className={`w-8 h-8 rounded-full ${getBadgeColor(c)} hover:ring-2 hover:ring-opacity-50 focus:outline-none focus:ring-2 focus:ring-opacity-50`}
+                        className={`w-8 h-8 rounded-full ${getBadgeColor(c)} hover:ring-2 hover:ring-opacity-50 focus:outline-hidden focus:ring-2 focus:ring-opacity-50`}
                         onClick={() => handleColorSelect(c)}
                       />
                     ))}

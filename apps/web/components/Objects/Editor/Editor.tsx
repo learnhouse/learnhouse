@@ -182,7 +182,7 @@ function Editor(props: Editor) {
           }}
           exit={{ opacity: 0 }}
         >
-          <EditorTop className="fixed bg-white bg-opacity-95 backdrop-blur backdrop-brightness-125">
+          <EditorTop className="fixed bg-white bg-opacity-95 backdrop-blur-sm backdrop-brightness-125">
             <EditorDocSection>
               <EditorInfoWrapper>
                 <Link href="/">
@@ -254,7 +254,7 @@ function Editor(props: Editor) {
               />
               <EditorLeftOptionsSection className="space-x-2 ">
                 <div
-                  className="bg-sky-600 hover:bg-sky-700 transition-all ease-linear px-3 py-2 font-black text-sm shadow text-teal-100 rounded-lg hover:cursor-pointer"
+                  className="bg-sky-600 hover:bg-sky-700 transition-all ease-linear px-3 py-2 font-black text-sm shadow-sm text-teal-100 rounded-lg hover:cursor-pointer"
                   onClick={() => props.setContent(editor.getJSON())}
                 >
                   {' '}
@@ -265,7 +265,7 @@ function Editor(props: Editor) {
                     target="_blank"
                     href={`/course/${course_uuid}/activity/${activity_uuid}`}
                   >
-                    <div className="flex bg-neutral-600 hover:bg-neutral-700 transition-all ease-linear h-9 px-3 py-2 font-black justify-center items-center text-sm shadow text-neutral-100 rounded-lg hover:cursor-pointer">
+                    <div className="flex bg-neutral-600 hover:bg-neutral-700 transition-all ease-linear h-9 px-3 py-2 font-black justify-center items-center text-sm shadow-sm text-neutral-100 rounded-lg hover:cursor-pointer">
                       <Eye className="mx-auto items-center" size={15} />
                     </div>
                   </Link>

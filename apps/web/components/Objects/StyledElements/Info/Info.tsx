@@ -6,7 +6,7 @@ import React from 'react'
 
 function InfoUI(params: { message?: string, submessage?: string, cta?: string, href: string }) {
     return (
-        <div className="flex flex-col py-10 mx-auto antialiased items-center space-y-6 bg-gradient-to-b from-yellow-100 to-yellow-100/5 ">
+        <div className="flex flex-col py-10 mx-auto antialiased items-center space-y-6 bg-linear-to-b from-yellow-100 to-yellow-100/5 ">
             <div className="flex flex-row  items-center space-x-5  rounded-xl ">
                 <Diamond className="text-yellow-700" size={45} />
                 <div className='flex flex-col'>

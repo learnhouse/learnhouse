@@ -86,7 +86,7 @@ function AIEditorToolkit(props: AIEditorToolkitProps) {
                       background:
                         'linear-gradient(0deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.2) 100%), radial-gradient(105.16% 105.16% at 50% -5.16%, rgba(255, 255, 255, 0.18) 0%, rgba(0, 0, 0, 0) 100%), rgb(2 1 25 / 98%)',
                     }}
-                    className="z-50 rounded-2xl max-w-screen-2xl my-10 mx-auto w-fit fixed bottom-0 left-1/2 transform -translate-x-1/2 shadow-xl ring-1 ring-inset ring-white/10 text-white p-3 flex-col-reverse backdrop-blur-md"
+                    className="z-50 rounded-2xl max-w-(--breakpoint-2xl) my-10 mx-auto w-fit fixed bottom-0 left-1/2 transform -translate-x-1/2 shadow-xl ring-1 ring-inset ring-white/10 text-white p-3 flex-col-reverse backdrop-blur-md"
                   >
                     <div className="flex space-x-2">
                       <div className="pr-1">
@@ -447,7 +447,7 @@ const UserFeedbackModal = (props: AIEditorToolkitProps) => {
           background:
             'linear-gradient(0deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.2) 100%), radial-gradient(105.16% 105.16% at 50% -5.16%, rgba(255, 255, 255, 0.18) 0%, rgba(0, 0, 0, 0) 100%), rgb(2 1 25 / 95%)',
         }}
-        className="backdrop-blur-md	z-50 rounded-2xl max-w-screen-2xl my-10 mx-auto w-[500px] h-[200px] fixed bottom-16 left-1/2 transform -translate-x-1/2 shadow-xl ring-1 ring-inset ring-white/10 text-white p-3 flex-col-reverse"
+        className="backdrop-blur-md	z-50 rounded-2xl max-w-(--breakpoint-2xl) my-10 mx-auto w-[500px] h-[200px] fixed bottom-16 left-1/2 transform -translate-x-1/2 shadow-xl ring-1 ring-inset ring-white/10 text-white p-3 flex-col-reverse"
       >
         <div className="flex space-x-2 justify-center">
           <Image
@@ -469,7 +469,7 @@ const UserFeedbackModal = (props: AIEditorToolkitProps) => {
               value={aiEditorState.chatInputValue}
               onChange={handleChange}
               placeholder="Ask AI"
-              className="ring-1 ring-inset ring-white/20 w-full bg-gray-950/20 rounded-lg outline-none px-4 py-2 text-white text-sm placeholder:text-white/30"
+              className="ring-1 ring-inset ring-white/20 w-full bg-gray-950/20 rounded-lg outline-hidden px-4 py-2 text-white text-sm placeholder:text-white/30"
             ></input>
             <div
               onClick={() =>
@@ -620,7 +620,7 @@ const AiEditorActionScreen = ({
                 value={aiEditorState.chatInputValue}
                 onChange={handleChange}
                 placeholder="Japanese, Arabic, German, etc. "
-                className="ring-1 ring-inset ring-white/20 w-full bg-gray-950/20 rounded-lg outline-none px-4 py- text-white text-sm placeholder:text-white/30"
+                className="ring-1 ring-inset ring-white/20 w-full bg-gray-950/20 rounded-lg outline-hidden px-4 py- text-white text-sm placeholder:text-white/30"
               ></input>
             </div>
             <div

@@ -253,7 +253,7 @@ const Onboarding: React.FC = () => {
           />
         }
         dialogTrigger={
-          <div className='fixed pb-10 w-full bottom-0 bg-gradient-to-t from-1% from-gray-950/25 to-transparent'>
+          <div className='fixed pb-10 w-full bottom-0 bg-linear-to-t from-1% from-gray-950/25 to-transparent'>
             <div className='bg-gray-950 flex space-x-2 font-bold cursor-pointer hover:bg-gray-900 shadow-md items-center text-gray-200 px-5 py-2 w-fit rounded-full mx-auto'>
               <Sprout size={20} />
               <p>Onboarding</p>
@@ -299,7 +299,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
   return (
     <div className='flex flex-col'>
       <div className='onboarding_screens flex-col px-4 py-4'>
-        <div className='flex-grow rounded-xl'>
+        <div className='grow rounded-xl'>
           <Image 
             unoptimized 
             className='mx-auto shadow-md shadow-gray-200 rounded-lg w-[730px] h-[330px] object-cover' 

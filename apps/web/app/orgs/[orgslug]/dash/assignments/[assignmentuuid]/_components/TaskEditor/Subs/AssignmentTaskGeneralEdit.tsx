@@ -209,12 +209,12 @@ function UpdateTaskRef() {
 
 
     return (
-        <div className="w-auto bg-gray-50 rounded-xl outline outline-1 outline-gray-200 h-[200px] shadow">
+        <div className="w-auto bg-gray-50 rounded-xl outline outline-1 outline-gray-200 h-[200px] shadow-sm">
             <div className="flex flex-col justify-center items-center h-full">
                 <div className="flex flex-col justify-center items-center">
                     <div className="flex flex-col justify-center items-center">
                         {error && (
-                            <div className="flex justify-center bg-red-200 rounded-md text-red-950 space-x-2 items-center p-2 transition-all shadow-sm">
+                            <div className="flex justify-center bg-red-200 rounded-md text-red-950 space-x-2 items-center p-2 transition-all shadow-xs">
                                 <div className="text-sm font-semibold">{error}</div>
                             </div>
                         )}

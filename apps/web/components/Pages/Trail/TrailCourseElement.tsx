@@ -61,7 +61,7 @@ function TrailCourseElement(props: TrailCourseElementProps) {
           }}
         ></div>
       </Link>
-      <div className="course_meta pl-5 flex-grow space-y-1">
+      <div className="course_meta pl-5 grow space-y-1">
         <div className="course_top">
           <div className="course_info flex">
             <div className="course_basic flex flex-col flex-end -space-y-2">
@@ -72,7 +72,7 @@ function TrailCourseElement(props: TrailCourseElementProps) {
                 <h2>{course_progress}%</h2>
               </div>
             </div>
-            <div className="course_actions flex-grow flex flex-row-reverse">
+            <div className="course_actions grow flex flex-row-reverse">
               <button
                 onClick={() => quitCourse(course.course_uuid)}
                 className="bg-red-200 text-red-700 hover:bg-red-300  rounded-full text-xs h-5 px-2 font-bold"

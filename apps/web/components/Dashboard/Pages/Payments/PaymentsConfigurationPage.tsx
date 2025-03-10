@@ -127,7 +127,7 @@ const PaymentsConfigurationPage: React.FC = () => {
 
                 <div className="flex flex-col rounded-lg light-shadow">
                     {stripeConfig ? (
-                        <div className="flex items-center justify-between bg-gradient-to-r from-indigo-500 to-purple-600 p-6 rounded-lg shadow-md">
+                        <div className="flex items-center justify-between bg-linear-to-r from-indigo-500 to-purple-600 p-6 rounded-lg shadow-md">
                             <div className="flex items-center space-x-3">
                                 <SiStripe className="text-white" size={32} />
                                 <div className="flex flex-col">
@@ -187,7 +187,7 @@ const PaymentsConfigurationPage: React.FC = () => {
                     ) : (
                         <Button 
                             onClick={enableStripe} 
-                            className="flex items-center justify-center space-x-2 bg-gradient-to-r p-3 from-indigo-500 to-purple-600 text-white px-6 rounded-lg hover:from-indigo-600 hover:to-purple-700 transition duration-300 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="flex items-center justify-center space-x-2 bg-linear-to-r p-3 from-indigo-500 to-purple-600 text-white px-6 rounded-lg hover:from-indigo-600 hover:to-purple-700 transition duration-300 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                             disabled={isOnboarding}
                         >
                             {isOnboarding ? (
