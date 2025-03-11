@@ -14,13 +14,12 @@ import { getOrgThumbnailMediaDirectory } from '@services/media/media'
 import ContentPlaceHolderIfUserIsNotAdmin from '@components/Objects/ContentPlaceHolder'
 
 type MetadataProps = {
-  params: { orgslug: string; courseid: string }
-  searchParams: { [key: string]: string | string[] | undefined }
+  params: Promise<{ orgslug: string; courseid: string }>
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
 
-export async function generateMetadata({
-  params,
-}: MetadataProps): Promise<Metadata> {
+export async function generateMetadata(props: MetadataProps): Promise<Metadata> {
+  const params = await props.params;
   // Get Org context information
   const org = await getOrganizationContextInfo(params.orgslug, {
     revalidate: 0,
@@ -60,7 +59,7 @@ export async function generateMetadata({
 const CollectionsPage = async (params: any) => {
   const session = await getServerSession(nextAuthOptions)
   const access_token = session?.tokens?.access_token
-  const orgslug = params.params.orgslug
+  const orgslug = (await params.params).orgslug
   const org = await getOrganizationContextInfo(orgslug, {
     revalidate: 1800,
     tags: ['organizations'],

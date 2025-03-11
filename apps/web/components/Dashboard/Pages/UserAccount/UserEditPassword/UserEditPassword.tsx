@@ -33,7 +33,7 @@ function UserEditPassword() {
         
         // Show success message and notify about logout
         toast.success('Password updated successfully', { duration: 4000 })
-        toast((t) => (
+        toast((t: any) => (
           <div className="flex items-center gap-2">
             <span>Please login again with your new password</span>
           </div>

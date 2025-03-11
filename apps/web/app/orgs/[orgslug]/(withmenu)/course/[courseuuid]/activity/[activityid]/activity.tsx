@@ -461,7 +461,7 @@ function ActivityChapterDropdown(props: {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={toggleDropdown}
-        className="flex items-center justify-center bg-white nice-shadow p-2.5 rounded-full"
+        className="flex items-center justify-center bg-white nice-shadow p-2.5 rounded-full cursor-pointer"
         aria-label="View all activities"
         title="View all activities"
       >
@@ -469,12 +469,12 @@ function ActivityChapterDropdown(props: {
       </button>
       
       {isOpen && (
-        <div className={`absolute z-50 mt-2 ${isMobile ? 'left-0 w-[90vw] sm:w-80' : 'left-0 w-80'} max-h-[70vh] overflow-y-auto bg-white rounded-lg shadow-xl border border-gray-200 py-2 animate-in fade-in duration-200`}>
+        <div className={`absolute z-50 mt-2 ${isMobile ? 'left-0 w-[90vw] sm:w-80' : 'left-0 w-80'} max-h-[70vh] cursor-pointer overflow-y-auto bg-white rounded-lg shadow-xl border border-gray-200 py-2 animate-in fade-in duration-200`}>
           <div className="px-4 py-2 border-b border-gray-100 flex justify-between items-center">
             <h3 className="font-bold text-gray-800">Course Content</h3>
             <button 
               onClick={() => setIsOpen(false)}
-              className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100"
+              className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100 cursor-pointer"
             >
               <X size={18} />
             </button>
@@ -630,7 +630,7 @@ function ActivityNavigation(props: {
         <>
           <button
             onClick={() => navigateToActivity(prevActivity)}
-            className={`flex items-center space-x-1.5 p-2 rounded-md transition-all duration-200 ${
+            className={`flex items-center space-x-1.5 p-2 rounded-md transition-all duration-200 cursor-pointer ${
               prevActivity 
                 ? 'text-gray-700' 
                 : 'opacity-50 text-gray-400 cursor-not-allowed'
@@ -649,7 +649,7 @@ function ActivityNavigation(props: {
           
           <button
             onClick={() => navigateToActivity(nextActivity)}
-            className={`flex items-center space-x-1.5 p-2 rounded-md transition-all duration-200 ${
+            className={`flex items-center space-x-1.5 p-2 rounded-md transition-all duration-200 cursor-pointer ${
               nextActivity 
                 ? 'text-gray-700' 
                 : 'opacity-50 text-gray-400 cursor-not-allowed'
@@ -672,7 +672,7 @@ function ActivityNavigation(props: {
           <div className="justify-self-start">
             <button
               onClick={() => navigateToActivity(prevActivity)}
-              className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-md transition-all duration-200 ${
+              className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-md transition-all duration-200 cursor-pointer ${
                 prevActivity 
                   ? 'bg-white nice-shadow text-gray-700' 
                   : 'bg-gray-100 text-gray-400 cursor-not-allowed'
@@ -697,7 +697,7 @@ function ActivityNavigation(props: {
           <div className="justify-self-end">
             <button
               onClick={() => navigateToActivity(nextActivity)}
-              className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-md transition-all duration-200 ${
+              className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-md transition-all duration-200 cursor-pointer ${
                 nextActivity 
                   ? 'bg-white nice-shadow text-gray-700' 
                   : 'bg-gray-100 text-gray-400 cursor-not-allowed'

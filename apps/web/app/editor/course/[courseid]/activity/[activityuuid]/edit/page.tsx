@@ -1,3 +1,4 @@
+
 import { default as React } from 'react'
 import dynamic from 'next/dynamic'
 import { getCourseMetadata } from '@services/courses/courses'
@@ -8,17 +9,16 @@ import EditorOptionsProvider from '@components/Contexts/Editor/EditorContext'
 import AIEditorProvider from '@components/Contexts/AI/AIEditorContext'
 import { nextAuthOptions } from 'app/auth/options'
 import { getServerSession } from 'next-auth'
-const EditorWrapper = dynamic(() => import('@components/Objects/Editor/EditorWrapper'), { ssr: false })
+import EditorWrapper from '@components/Objects/Editor/EditorWrapper'
 
 
 type MetadataProps = {
-  params: { orgslug: string; courseid: string; activityid: string }
-  searchParams: { [key: string]: string | string[] | undefined }
+  params: Promise<{ orgslug: string; courseid: string; activityid: string }>
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
 
-export async function generateMetadata({
-  params,
-}: MetadataProps): Promise<Metadata> {
+export async function generateMetadata(props: MetadataProps): Promise<Metadata> {
+  const params = await props.params;
   const session = await getServerSession(nextAuthOptions)
   const access_token = session?.tokens?.access_token
   // Get Org context information
@@ -37,8 +37,8 @@ export async function generateMetadata({
 const EditActivity = async (params: any) => {
   const session = await getServerSession(nextAuthOptions)
   const access_token = session?.tokens?.access_token
-  const activityuuid = params.params.activityuuid
-  const courseid = params.params.courseid
+  const activityuuid = (await params.params).activityuuid
+  const courseid = (await params.params).courseid
   const courseInfo = await getCourseMetadata(
     courseid,
     { revalidate: 0, tags: ['courses'] },

@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect } from 'react'
+import React, { useEffect, use } from 'react';
 import { motion } from 'framer-motion'
 import UserEditGeneral from '@components/Dashboard/Pages/UserAccount/UserEditGeneral/UserEditGeneral'
 import UserEditPassword from '@components/Dashboard/Pages/UserAccount/UserEditPassword/UserEditPassword'
@@ -14,7 +14,8 @@ export type SettingsParams = {
   orgslug: string
 }
 
-function SettingsPage({ params }: { params: SettingsParams }) {
+function SettingsPage(props: { params: Promise<SettingsParams> }) {
+  const params = use(props.params);
   const session = useLHSession() as any
 
   useEffect(() => {}, [session])
