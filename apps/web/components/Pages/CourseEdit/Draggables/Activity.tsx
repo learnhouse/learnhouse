@@ -1,6 +1,6 @@
 import React from 'react'
 import Link from 'next/link'
-import { Draggable } from 'react-beautiful-dnd'
+import { Draggable } from '@hello-pangea/dnd'
 import { getAPIUrl, getUriWithOrg } from '@services/config/config'
 import {
   Video,

@@ -2,7 +2,7 @@
 import { getAPIUrl } from '@services/config/config'
 import { revalidateTags } from '@services/utils/ts/requests'
 import React, { useEffect, useState } from 'react'
-import { DragDropContext, Droppable } from 'react-beautiful-dnd'
+import { DragDropContext, Droppable } from '@hello-pangea/dnd'
 import { mutate } from 'swr'
 import ChapterElement from './DraggableElements/ChapterElement'
 import PageLoading from '@components/Objects/Loaders/PageLoading'

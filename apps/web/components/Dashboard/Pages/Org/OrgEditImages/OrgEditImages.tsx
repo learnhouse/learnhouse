@@ -15,7 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from "@components/ui/button"
 import { Label } from "@components/ui/label"
 import { SiLoom, SiYoutube } from '@icons-pack/react-simple-icons'
-import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd'
+import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd'
 
 const SUPPORTED_FILES = constructAcceptValue(['png', 'jpg'])
 

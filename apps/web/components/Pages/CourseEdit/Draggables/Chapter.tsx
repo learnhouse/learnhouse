@@ -1,6 +1,6 @@
 import React from 'react'
 import styled from 'styled-components'
-import { Droppable, Draggable } from 'react-beautiful-dnd'
+import { Droppable, Draggable } from '@hello-pangea/dnd'
 import Activity from './Activity'
 import { Hexagon, MoreVertical, Pencil, Save, Sparkles, X } from 'lucide-react'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
