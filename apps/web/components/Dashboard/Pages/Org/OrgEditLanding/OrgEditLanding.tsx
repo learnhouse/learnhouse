@@ -2,7 +2,7 @@
 import React from 'react'
 import { LandingObject, LandingSection, LandingHeroSection, LandingTextAndImageSection, LandingLogos, LandingPeople, LandingBackground, LandingButton, LandingHeading, LandingImage, LandingFeaturedCourses } from './landing_types'
 import { Plus, Eye, ArrowUpDown, Trash2, GripVertical, LayoutTemplate, ImageIcon, Users, Award, ArrowRight, Edit, Link, Upload, Save, BookOpen, TextIcon } from 'lucide-react'
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd'
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
 import { Input } from "@components/ui/input"
 import { Textarea } from "@components/ui/textarea"
 import { Label } from "@components/ui/label"

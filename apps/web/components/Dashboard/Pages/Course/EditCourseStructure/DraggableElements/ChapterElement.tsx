@@ -9,7 +9,7 @@ import {
   Trash2,
 } from 'lucide-react'
 import React from 'react'
-import { Draggable, Droppable } from 'react-beautiful-dnd'
+import { Draggable, Droppable } from '@hello-pangea/dnd'
 import ActivityElement from './ActivityElement'
 import NewActivityButton from '../Buttons/NewActivityButton'
 import { deleteChapter, updateChapter } from '@services/courses/chapters'
