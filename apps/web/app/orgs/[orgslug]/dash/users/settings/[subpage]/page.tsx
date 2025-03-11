@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect } from 'react'
+import React, { useEffect, use } from 'react';
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { useMediaQuery } from 'usehooks-ts'
@@ -18,7 +18,8 @@ export type SettingsParams = {
   orgslug: string
 }
 
-function UsersSettingsPage({ params }: { params: SettingsParams }) {
+function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
+  const params = use(props.params);
   const session = useLHSession() as any
   const org = useOrg() as any
   const [H1Label, setH1Label] = React.useState('')

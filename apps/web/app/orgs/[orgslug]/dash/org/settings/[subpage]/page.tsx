@@ -3,7 +3,7 @@ import BreadCrumbs from '@components/Dashboard/Misc/BreadCrumbs'
 import { getUriWithOrg } from '@services/config/config'
 import { ImageIcon, Info, LockIcon, SearchIcon, TextIcon, LucideIcon, Share2Icon, LayoutDashboardIcon } from 'lucide-react'
 import Link from 'next/link'
-import React, { useEffect } from 'react'
+import React, { useEffect, use } from 'react';
 import { motion } from 'framer-motion'
 import OrgEditGeneral from '@components/Dashboard/Pages/Org/OrgEditGeneral/OrgEditGeneral'
 import OrgEditImages from '@components/Dashboard/Pages/Org/OrgEditImages/OrgEditImages'
@@ -49,7 +49,8 @@ function TabLink({ tab, isActive, orgslug }: {
   )
 }
 
-function OrgPage({ params }: { params: OrgParams }) {
+function OrgPage(props: { params: Promise<OrgParams> }) {
+  const params = use(props.params);
   const [H1Label, setH1Label] = React.useState('')
   const [H2Label, setH2Label] = React.useState('')
 

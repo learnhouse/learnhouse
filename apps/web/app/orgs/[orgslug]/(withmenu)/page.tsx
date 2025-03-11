@@ -20,13 +20,12 @@ import LandingClassic from '@components/Landings/LandingClassic'
 import LandingCustom from '@components/Landings/LandingCustom'
 
 type MetadataProps = {
-  params: { orgslug: string }
-  searchParams: { [key: string]: string | string[] | undefined }
+  params: Promise<{ orgslug: string }>
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
 
-export async function generateMetadata({
-  params,
-}: MetadataProps): Promise<Metadata> {
+export async function generateMetadata(props: MetadataProps): Promise<Metadata> {
+  const params = await props.params;
   // Get Org context information
   const org = await getOrganizationContextInfo(params.orgslug, {
     revalidate: 0,
@@ -64,7 +63,7 @@ export async function generateMetadata({
 }
 
 const OrgHomePage = async (params: any) => {
-  const orgslug = params.params.orgslug
+  const orgslug = (await params.params).orgslug
   const session = await getServerSession(nextAuthOptions)
   const access_token = session?.tokens?.access_token
   const courses = await getOrgCourses(

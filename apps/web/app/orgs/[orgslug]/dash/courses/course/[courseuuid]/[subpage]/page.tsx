@@ -1,6 +1,6 @@
 'use client'
 import { getUriWithOrg } from '@services/config/config'
-import React from 'react'
+import React, { use } from 'react';
 import { CourseProvider } from '../../../../../../../../components/Contexts/CourseContext'
 import Link from 'next/link'
 import { CourseOverviewTop } from '@components/Dashboard/Misc/CourseOverviewTop'
@@ -16,7 +16,8 @@ export type CourseOverviewParams = {
   subpage: string
 }
 
-function CourseOverviewPage({ params }: { params: CourseOverviewParams }) {
+function CourseOverviewPage(props: { params: Promise<CourseOverviewParams> }) {
+  const params = use(props.params);
   function getEntireCourseUUID(courseuuid: string) {
     // add course_ to uuid
     return `course_${courseuuid}`
