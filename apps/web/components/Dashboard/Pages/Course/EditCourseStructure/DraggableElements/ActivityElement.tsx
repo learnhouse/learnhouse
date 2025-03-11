@@ -114,7 +114,7 @@ function ActivityElement(props: ActivitiyElementProps) {
     >
       {(provided, snapshot) => (
         <div
-          className="flex flex-col sm:flex-row py-2 px-3 my-2 w-full rounded-md bg-gray-50 text-gray-500 hover:bg-gray-100 hover:scale-102 space-y-2 sm:space-y-0 sm:space-x-2 items-center ring-1 ring-inset ring-gray-400/10 nice-shadow"
+          className="flex flex-col sm:flex-row py-2 px-3 my-2 w-full rounded-md bg-gray-50 text-gray-500 hover:bg-gray-100 hover:scale-102 space-y-2 sm:space-y-0 sm:space-x-2 items-center shadow-md border-1 border-gray-200 nice-shadow transition-all duration-200"
           key={props.activity.id}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
@@ -244,7 +244,7 @@ const ActivityTypeIndicator = ({activityType, isMobile} : { activityType: keyof 
   const {displayName, Icon} = ACTIVITIES[activityType]
 
   return (
-    <div className={`px-3 text-gray-300 space-x-1 w-28 flex ${isMobile ? 'flex-col' : ''}`}>
+    <div className={`text-gray-300 space-x-1 w-28 flex ${isMobile ? 'flex-col' : ''}`}>
       <div className="flex space-x-2 items-center">
             <Icon className="size-4" />{' '}
             <div className="text-xs bg-gray-200 text-gray-400 font-bold px-2 py-1 rounded-full mx-auto justify-center align-middle">

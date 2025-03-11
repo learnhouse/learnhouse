@@ -151,7 +151,7 @@ function ChapterElement(props: ChapterElementProps) {
           >
             {(provided) => (
               <div {...provided.droppableProps} ref={provided.innerRef}>
-                <div className="flex flex-col">
+                <div className="flex flex-col min-h-[60px]">
                   {activities.map((activity: any, index: any) => {
                     return (
                       <div key={activity.activity_uuid} className="flex items-center ">
