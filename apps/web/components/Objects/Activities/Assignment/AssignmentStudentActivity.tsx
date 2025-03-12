@@ -40,7 +40,22 @@ function AssignmentStudentActivity() {
         </div>
       </div>
       
-      <div className='w-full rounded-full bg-slate-500/5 nice-shadow h-[2px]'></div>
+      
+      
+      {assignments?.assignment_object?.description && (
+        <div className='flex flex-col space-y-2 p-4 md:p-6 bg-slate-100/30 rounded-md nice-shadow'>
+          <div className='flex flex-col space-y-3'>
+            <div className='flex items-center gap-2 text-slate-700'>
+              <Info size={16} className="text-slate-500" />
+              <h3 className='text-sm font-semibold'>Assignment Description</h3>
+            </div>
+            <div className='pl-6'>
+              <p className='text-sm leading-relaxed text-slate-600'>{assignments.assignment_object.description}</p>
+            </div>
+          </div>
+        </div>
+      )}
+      
       
       {assignments && assignments?.assignment_tasks?.sort((a: any, b: any) => a.id - b.id).map((task: any, index: number) => {
         return (
