@@ -110,7 +110,7 @@ function ImageBlockComponent(props: any) {
                 'imageBlock'
               )}`}
               alt=""
-              className="rounded-lg shadow max-w-full h-auto"
+              className="rounded-lg shadow-sm max-w-full h-auto"
               style={{ width: '100%' }}
             />
           </Resizable>
@@ -129,7 +129,7 @@ function ImageBlockComponent(props: any) {
               'imageBlock'
             )}`}
             alt=""
-            className="rounded-lg shadow max-w-full h-auto"
+            className="rounded-lg shadow-sm max-w-full h-auto"
             style={{ width: imageSize.width, maxWidth: '100%' }}
           />
         </div>

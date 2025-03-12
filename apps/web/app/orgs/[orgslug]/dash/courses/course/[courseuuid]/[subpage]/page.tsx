@@ -1,6 +1,6 @@
 'use client'
 import { getUriWithOrg } from '@services/config/config'
-import React from 'react'
+import React, { use } from 'react';
 import { CourseProvider } from '../../../../../../../../components/Contexts/CourseContext'
 import Link from 'next/link'
 import { CourseOverviewTop } from '@components/Dashboard/Misc/CourseOverviewTop'
@@ -16,14 +16,15 @@ export type CourseOverviewParams = {
   subpage: string
 }
 
-function CourseOverviewPage({ params }: { params: CourseOverviewParams }) {
+function CourseOverviewPage(props: { params: Promise<CourseOverviewParams> }) {
+  const params = use(props.params);
   function getEntireCourseUUID(courseuuid: string) {
     // add course_ to uuid
     return `course_${courseuuid}`
   }
 
   return (
-    <div className="h-screen w-full bg-[#f8f8f8] grid grid-rows-[auto,1fr]">
+    <div className="h-screen w-full bg-[#f8f8f8] grid grid-rows-[auto_1fr]">
       <CourseProvider courseuuid={getEntireCourseUUID(params.courseuuid)}>
         <div className="pl-10 pr-10 text-sm tracking-tight bg-[#fcfbfc] z-10 shadow-[0px_4px_16px_rgba(0,0,0,0.06)]">
           <CourseOverviewTop params={params} />

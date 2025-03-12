@@ -9,13 +9,12 @@ import { getServerSession } from 'next-auth'
 import Link from 'next/link'
 
 type MetadataProps = {
-  params: { orgslug: string; courseid: string; collectionid: string }
-  searchParams: { [key: string]: string | string[] | undefined }
+  params: Promise<{ orgslug: string; courseid: string; collectionid: string }>
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
 
-export async function generateMetadata({
-  params,
-}: MetadataProps): Promise<Metadata> {
+export async function generateMetadata(props: MetadataProps): Promise<Metadata> {
+  const params = await props.params;
   const session = await getServerSession(nextAuthOptions)
   const access_token = session?.tokens?.access_token
 
@@ -55,13 +54,13 @@ export async function generateMetadata({
 const CollectionPage = async (params: any) => {
   const session = await getServerSession(nextAuthOptions)
   const access_token = session?.tokens?.access_token
-  const org = await getOrganizationContextInfo(params.params.orgslug, {
+  const org = await getOrganizationContextInfo((await params.params).orgslug, {
     revalidate: 1800,
     tags: ['organizations'],
   })
-  const orgslug = params.params.orgslug
+  const orgslug = (await params.params).orgslug
   const col = await getCollectionById(
-    params.params.collectionid,
+    (await params.params).collectionid,
     access_token ? access_token : null,
     { revalidate: 0, tags: ['collections'] }
   )

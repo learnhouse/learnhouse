@@ -1,6 +1,6 @@
 import React from 'react'
 import styled from 'styled-components'
-import { Droppable, Draggable } from 'react-beautiful-dnd'
+import { Droppable, Draggable } from '@hello-pangea/dnd'
 import Activity from './Activity'
 import { Hexagon, MoreVertical, Pencil, Save, Sparkles, X } from 'lucide-react'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
@@ -51,7 +51,7 @@ function Chapter(props: any) {
           {...provided.draggableProps}
           ref={provided.innerRef}
           //  isDragging={snapshot.isDragging}
-          className="max-w-screen-2xl mx-auto bg-white px-5"
+          className="max-w-(--breakpoint-2xl) mx-auto bg-white px-5"
           key={props.info.list.chapter.id}
         >
           <div className="flex pt-3 pr-3 font-bold text-md items-center space-x-2">
@@ -69,7 +69,7 @@ function Chapter(props: any) {
                   <div className="chapter-modification-zone bg-neutral-100 py-1 px-4 rounded-lg space-x-3">
                     <input
                       type="text"
-                      className="bg-transparent outline-none text-sm text-neutral-700"
+                      className="bg-transparent outline-hidden text-sm text-neutral-700"
                       placeholder="Chapter name"
                       value={
                         modifiedChapter
@@ -116,7 +116,7 @@ function Chapter(props: any) {
               dialogTitle={'Delete ' + props.info.list.chapter.name + ' ?'}
               dialogTrigger={
                 <div
-                  className=" hover:cursor-pointer p-1 px-4 bg-red-600 rounded-md shadow flex space-x-1 items-center text-rose-100 text-sm"
+                  className=" hover:cursor-pointer p-1 px-4 bg-red-600 rounded-md shadow-sm flex space-x-1 items-center text-rose-100 text-sm"
                   rel="noopener noreferrer"
                 >
                   <X size={15} className="text-rose-200 font-bold" />
@@ -157,7 +157,7 @@ function Chapter(props: any) {
                     onClick={() => {
                       props.openNewActivityModal(props.info.list.chapter.id)
                     }}
-                    className="flex space-x-2 items-center py-2 my-3 rounded-md justify-center text-white  bg-black  hover:cursor-pointer"
+                    className="flex space-x-2 items-center py-5 my-3 rounded-md justify-center text-white  bg-black  hover:cursor-pointer"
                   >
                     <Sparkles className="" size={17} />
                     <div className="text-sm mx-auto my-auto  items-center font-bold">

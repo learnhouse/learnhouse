@@ -224,8 +224,8 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID }: Ta
                         <Link
                             href={getTaskFileSubmissionDir(org?.org_uuid, assignment.course_object.course_uuid, assignment.activity_object.activity_uuid, assignment.assignment_object.assignment_uuid, assignmentTaskUUID, userSubmissions.fileUUID)}
                             target='_blank'
-                            className='flex flex-col rounded-lg bg-white text-gray-500 shadow-sm hover:shadow-md transition-shadow border border-gray-100 px-4 sm:px-5 py-4 space-y-1 items-center relative w-full sm:w-auto mx-auto'>
-                            <div className='absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 bg-emerald-500 rounded-full p-1.5 text-white flex justify-center items-center shadow-sm'>
+                            className='flex flex-col rounded-lg bg-white text-gray-500 shadow-xs hover:shadow-md transition-shadow border border-gray-100 px-4 sm:px-5 py-4 space-y-1 items-center relative w-full sm:w-auto mx-auto'>
+                            <div className='absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 bg-emerald-500 rounded-full p-1.5 text-white flex justify-center items-center shadow-xs'>
                                 <Cloud size={14} />
                             </div>
 
@@ -241,19 +241,19 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID }: Ta
             )}
             {view === 'student' && (
                 <>
-                    <div className="w-full bg-white rounded-lg border border-gray-100 min-h-[200px] shadow-sm px-4 sm:px-6 py-5 sm:py-6">
+                    <div className="w-full bg-white rounded-lg border border-gray-100 min-h-[200px] shadow-xs px-4 sm:px-6 py-5 sm:py-6">
                         <div className="flex flex-col justify-center items-center h-full w-full">
                             <div className="flex flex-col justify-center items-center w-full max-w-full">
                                 <div className="flex flex-col justify-center items-center w-full">
                                     {error && (
-                                        <div className="flex justify-center bg-red-50 border border-red-100 rounded-md text-red-600 space-x-2 items-center p-3 transition-all shadow-sm w-full sm:w-auto mb-4">
+                                        <div className="flex justify-center bg-red-50 border border-red-100 rounded-md text-red-600 space-x-2 items-center p-3 transition-all shadow-xs w-full sm:w-auto mb-4">
                                             <div className="text-xs sm:text-sm font-medium">{error}</div>
                                         </div>
                                     )}
                                 </div>
                                 {localUploadFile && !isLoading && (
-                                    <div className='flex flex-col rounded-lg bg-white text-gray-500 shadow-sm border border-gray-100 px-4 sm:px-5 py-4 space-y-1 items-center relative w-full sm:w-auto mt-3'>
-                                        <div className='absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 bg-emerald-500 rounded-full p-1.5 text-white flex justify-center items-center shadow-sm'>
+                                    <div className='flex flex-col rounded-lg bg-white text-gray-500 shadow-xs border border-gray-100 px-4 sm:px-5 py-4 space-y-1 items-center relative w-full sm:w-auto mt-3'>
+                                        <div className='absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 bg-emerald-500 rounded-full p-1.5 text-white flex justify-center items-center shadow-xs'>
                                             <Cloud size={14} />
                                         </div>
 
@@ -268,8 +268,8 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID }: Ta
                                     </div>
                                 )}
                                 {userSubmissions.fileUUID && !isLoading && !localUploadFile && (
-                                    <div className='flex flex-col rounded-lg bg-white text-gray-500 shadow-sm border border-gray-100 px-4 sm:px-5 py-4 space-y-1 items-center relative w-full sm:w-auto mt-3'>
-                                        <div className='absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 bg-emerald-500 rounded-full p-1.5 text-white flex justify-center items-center shadow-sm'>
+                                    <div className='flex flex-col rounded-lg bg-white text-gray-500 shadow-xs border border-gray-100 px-4 sm:px-5 py-4 space-y-1 items-center relative w-full sm:w-auto mt-3'>
+                                        <div className='absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 bg-emerald-500 rounded-full p-1.5 text-white flex justify-center items-center shadow-xs'>
                                             <Cloud size={14} />
                                         </div>
 
@@ -287,7 +287,7 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID }: Ta
                                 </div>
                                 {!access_token ? (
                                     <div className="flex justify-center items-center w-full mt-5">
-                                        <div className="flex justify-center bg-amber-50 border border-amber-100 rounded-md text-amber-600 space-x-2 items-center p-3 transition-all shadow-sm w-full sm:w-auto">
+                                        <div className="flex justify-center bg-amber-50 border border-amber-100 rounded-md text-amber-600 space-x-2 items-center p-3 transition-all shadow-xs w-full sm:w-auto">
                                             <Info size={15} className="text-amber-500" />
                                             <div className="text-xs sm:text-sm font-medium">Please sign in to upload files</div>
                                         </div>
@@ -314,7 +314,7 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID }: Ta
                                             onChange={handleFileChange}
                                         />
                                         <button
-                                            className="font-medium antialiased items-center text-white text-xs sm:text-sm rounded-md px-4 sm:px-5 py-2.5 flex bg-emerald-500 hover:bg-emerald-600 transition-colors shadow-sm"
+                                            className="font-medium antialiased items-center text-white text-xs sm:text-sm rounded-md px-4 sm:px-5 py-2.5 flex bg-emerald-500 hover:bg-emerald-600 transition-colors shadow-xs"
                                             onClick={() => document.getElementById("fileInput_" + assignmentTaskUUID)?.click()}
                                         >
                                             <UploadCloud size={15} className="mr-2" />

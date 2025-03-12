@@ -21,7 +21,7 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
-import { Draggable } from 'react-beautiful-dnd'
+import { Draggable } from '@hello-pangea/dnd'
 import { mutate } from 'swr'
 import { deleteAssignmentUsingActivityUUID, getAssignmentFromActivityUUID } from '@services/courses/assignments'
 import { useOrg } from '@components/Contexts/OrgContext'
@@ -114,7 +114,7 @@ function ActivityElement(props: ActivitiyElementProps) {
     >
       {(provided, snapshot) => (
         <div
-          className="flex flex-col sm:flex-row py-2 px-3 my-2 w-full rounded-md bg-gray-50 text-gray-500 hover:bg-gray-100 hover:scale-102 space-y-2 sm:space-y-0 sm:space-x-2 items-center ring-1 ring-inset ring-gray-400/10 nice-shadow"
+          className="flex flex-col sm:flex-row py-2 px-3 my-2 w-full rounded-md bg-gray-50 text-gray-500 hover:bg-gray-100 hover:scale-102 space-y-2 sm:space-y-0 sm:space-x-2 items-center shadow-md border-1 border-gray-200 nice-shadow transition-all duration-200"
           key={props.activity.id}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
@@ -129,7 +129,7 @@ function ActivityElement(props: ActivitiyElementProps) {
               <div className="chapter-modification-zone text-[7px] text-gray-600 shadow-inner bg-gray-200/60 py-1 px-4 rounded-lg space-x-3">
                 <input
                   type="text"
-                  className="bg-transparent outline-none text-xs text-gray-500"
+                  className="bg-transparent outline-hidden text-xs text-gray-500"
                   placeholder="Activity name"
                   value={
                     modifiedActivity
@@ -166,8 +166,8 @@ function ActivityElement(props: ActivitiyElementProps) {
             <button
               className={`p-1 px-2 sm:px-3 border shadow-md rounded-md font-bold text-xs flex items-center space-x-1 transition-colors duration-200 ${
                 !props.activity.published
-                  ? 'bg-gradient-to-bl text-green-800 from-green-400/50 to-lime-200/80 border-green-600/10 hover:from-green-500/50 hover:to-lime-300/80'
-                  : 'bg-gradient-to-bl text-gray-800 from-gray-400/50 to-gray-200/80 border-gray-600/10 hover:from-gray-500/50 hover:to-gray-300/80'
+                  ? 'bg-linear-to-bl text-green-800 from-green-400/50 to-lime-200/80 border-green-600/10 hover:from-green-500/50 hover:to-lime-300/80'
+                  : 'bg-linear-to-bl text-gray-800 from-gray-400/50 to-gray-200/80 border-gray-600/10 hover:from-gray-500/50 hover:to-gray-300/80'
               }`}
               onClick={() => changePublicStatus()}
             >
@@ -192,7 +192,7 @@ function ActivityElement(props: ActivitiyElementProps) {
                   )}`
                 }
                 prefetch
-                className="p-1 px-2 sm:px-3 bg-gradient-to-bl text-cyan-800 from-sky-400/50 to-cyan-200/80 border border-cyan-600/10 shadow-md rounded-md font-bold text-xs flex items-center space-x-1 transition-colors duration-200 hover:from-sky-500/50 hover:to-cyan-300/80"
+                className="p-1 px-2 sm:px-3 bg-linear-to-bl text-cyan-800 from-sky-400/50 to-cyan-200/80 border border-cyan-600/10 shadow-md rounded-md font-bold text-xs flex items-center space-x-1 transition-colors duration-200 hover:from-sky-500/50 hover:to-cyan-300/80"
                 rel="noopener noreferrer"
               >
                 <Eye strokeWidth={2} size={14} className="text-sky-600" />
@@ -244,7 +244,7 @@ const ActivityTypeIndicator = ({activityType, isMobile} : { activityType: keyof 
   const {displayName, Icon} = ACTIVITIES[activityType]
 
   return (
-    <div className={`px-3 text-gray-300 space-x-1 w-28 flex ${isMobile ? 'flex-col' : ''}`}>
+    <div className={`text-gray-300 space-x-1 w-28 flex ${isMobile ? 'flex-col' : ''}`}>
       <div className="flex space-x-2 items-center">
             <Icon className="size-4" />{' '}
             <div className="text-xs bg-gray-200 text-gray-400 font-bold px-2 py-1 rounded-full mx-auto justify-center align-middle">

@@ -139,7 +139,7 @@ function PaymentsProductPage() {
                                             />
                                         </div>
                                     </div>
-                                    <div className="flex-grow overflow-hidden">
+                                    <div className="grow overflow-hidden">
                                         <div className={`transition-all duration-300 ease-in-out ${expandedProducts[product.id] ? 'max-h-[1000px]' : 'max-h-24'} overflow-hidden`}>
                                             <p className="text-gray-600">
                                                 {product.description}
@@ -194,7 +194,7 @@ function PaymentsProductPage() {
                 <div className="flex justify-center items-center py-10">
                     <button
                         onClick={() => setIsCreateModalOpen(true)}
-                        className={`mb-4 flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-gradient-to-bl text-white font-medium from-gray-700 to-gray-900 border border-gray-600 shadow-gray-900/20 nice-shadow transition duration-300 ${isStripeEnabled ? 'hover:from-gray-600 hover:to-gray-800' : 'opacity-50 cursor-not-allowed'
+                        className={`mb-4 flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-linear-to-bl text-white font-medium from-gray-700 to-gray-900 border border-gray-600 shadow-gray-900/20 nice-shadow transition duration-300 ${isStripeEnabled ? 'hover:from-gray-600 hover:to-gray-800' : 'opacity-50 cursor-not-allowed'
                             }`}
                         disabled={!isStripeEnabled}
                     >
@@ -264,7 +264,7 @@ const EditProductForm = ({ product, onSuccess, onCancel }: { product: any, onSuc
                         </div>
 
                         <div className="flex space-x-2">
-                            <div className="flex-grow">
+                            <div className="grow">
                                 <Label htmlFor="amount">Price</Label>
                                 <Field name="amount" as={Input} type="number" placeholder="Price" />
                                 <ErrorMessage name="amount" component="div" className="text-red-500 text-sm mt-1" />

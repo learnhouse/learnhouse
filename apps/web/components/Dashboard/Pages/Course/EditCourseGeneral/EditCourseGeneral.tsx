@@ -145,11 +145,11 @@ function EditCourseGeneral(props: EditCourseStructureProps) {
   return (
     <div>
       <div className="h-6"></div>
-      <div className="ml-10 mr-10 mx-auto bg-white rounded-xl shadow-sm px-6 py-5">
+      <div className="ml-10 mr-10 mx-auto bg-white rounded-xl shadow-xs px-6 py-5">
         {courseStructure && (
           <div className="editcourse-form">
             {error && (
-              <div className="flex justify-center bg-red-200 rounded-md text-red-950 space-x-2 items-center p-4 transition-all shadow-sm">
+              <div className="flex justify-center bg-red-200 rounded-md text-red-950 space-x-2 items-center p-4 transition-all shadow-xs">
                 <AlertTriangle size={18} />
                 <div className="font-bold text-sm">{error}</div>
               </div>

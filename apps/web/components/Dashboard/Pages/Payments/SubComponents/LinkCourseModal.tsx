@@ -43,12 +43,12 @@ const CoursePreview = ({ course, orgslug, onLink, isLinked }: CoursePreviewProps
     <div className="flex gap-4 p-4 bg-white rounded-lg border border-gray-100 hover:border-gray-200 transition-colors">
       {/* Thumbnail */}
       <div 
-        className="flex-shrink-0 w-[120px] h-[68px] rounded-md bg-cover bg-center ring-1 ring-inset ring-black/10"
+        className="shrink-0 w-[120px] h-[68px] rounded-md bg-cover bg-center ring-1 ring-inset ring-black/10"
         style={{ backgroundImage: `url(${thumbnailImage})` }}
       />
       
       {/* Content */}
-      <div className="flex-grow space-y-1">
+      <div className="grow space-y-1">
         <h3 className="font-medium text-gray-900 line-clamp-1">
           {course.name}
         </h3>
@@ -58,7 +58,7 @@ const CoursePreview = ({ course, orgslug, onLink, isLinked }: CoursePreviewProps
       </div>
 
       {/* Action Button */}
-      <div className="flex-shrink-0 flex items-center">
+      <div className="shrink-0 flex items-center">
         {isLinked ? (
           <Button
             variant="outline"

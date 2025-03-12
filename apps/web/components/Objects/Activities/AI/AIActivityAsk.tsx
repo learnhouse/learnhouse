@@ -81,8 +81,8 @@ function ActivityChatMessageBox(props: ActivityChatMessageBoxProps) {
 
   // TODO : come up with a better way to handle this
   const inputClass = aiChatBotState.isWaitingForResponse
-    ? 'ring-1 ring-inset ring-white/10 bg-gray-950/40 w-full rounded-lg outline-none px-4 py-2 text-white text-sm placeholder:text-white/30 opacity-30 '
-    : 'ring-1 ring-inset ring-white/10 bg-gray-950/40 w-full rounded-lg outline-none px-4 py-2 text-white text-sm placeholder:text-white/30'
+    ? 'ring-1 ring-inset ring-white/10 bg-gray-950/40 w-full rounded-lg outline-hidden px-4 py-2 text-white text-sm placeholder:text-white/30 opacity-30 '
+    : 'ring-1 ring-inset ring-white/10 bg-gray-950/40 w-full rounded-lg outline-hidden px-4 py-2 text-white text-sm placeholder:text-white/30'
 
   useEffect(() => {
     if (aiChatBotState.isModalOpen) {
@@ -211,7 +211,7 @@ function ActivityChatMessageBox(props: ActivityChatMessageBoxProps) {
                 background:
                   'linear-gradient(0deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.2) 100%), radial-gradient(105.16% 105.16% at 50% -5.16%, rgba(255, 255, 255, 0.18) 0%, rgba(0, 0, 0, 0) 100%), rgb(2 1 25 / 98%)',
               }}
-              className="bg-black z-50 rounded-2xl max-w-screen-2xl w-10/12 my-10 mx-auto h-[350px] fixed bottom-0 left-1/2 transform -translate-x-1/2 shadow-lg ring-1 ring-inset ring-white/10 text-white p-4 flex-col-reverse backdrop-blur-md"
+              className="bg-black z-50 rounded-2xl max-w-(--breakpoint-2xl) w-10/12 my-10 mx-auto h-[350px] fixed bottom-0 left-1/2 transform -translate-x-1/2 shadow-lg ring-1 ring-inset ring-white/10 text-white p-4 flex-col-reverse backdrop-blur-md"
             >
               <div className="flex flex-row-reverse pb-3 justify-between items-center">
                 <div className="flex space-x-2 items-center">
@@ -348,7 +348,7 @@ function AIMessage(props: AIMessageProps) {
       </div>
       <div className="w-full">
         <p
-          className="w-full rounded-lg outline-none px-2 py-1 text-white text-md placeholder:text-white/30"
+          className="w-full rounded-lg outline-hidden px-2 py-1 text-white text-md placeholder:text-white/30"
           id=""
         >
           <AnimatePresence>

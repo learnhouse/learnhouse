@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect } from 'react'
+import React, { useEffect, use } from 'react';
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { useMediaQuery } from 'usehooks-ts'
@@ -18,7 +18,8 @@ export type SettingsParams = {
   orgslug: string
 }
 
-function UsersSettingsPage({ params }: { params: SettingsParams }) {
+function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
+  const params = use(props.params);
   const session = useLHSession() as any
   const org = useOrg() as any
   const [H1Label, setH1Label] = React.useState('')
@@ -63,7 +64,7 @@ function UsersSettingsPage({ params }: { params: SettingsParams }) {
   }
 
   return (
-    <div className="h-screen w-full bg-[#f8f8f8] grid grid-rows-[auto,1fr]">
+    <div className="h-screen w-full bg-[#f8f8f8] grid grid-rows-[auto_1fr]">
       <div className="pl-10 pr-10  tracking-tight bg-[#fcfbfc] z-10 shadow-[0px_4px_16px_rgba(0,0,0,0.06)]">
         <BreadCrumbs type="orgusers"></BreadCrumbs>
         <div className="my-2  py-3">

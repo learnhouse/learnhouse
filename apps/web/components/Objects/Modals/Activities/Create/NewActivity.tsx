@@ -23,7 +23,7 @@ function NewActivityModal({
   return (
     <>
       {selectedView === 'home' && (
-        <div className="flex flex-row space-x-2 justify-start mt-2.5 w-full">
+        <div className="grid grid-cols-4 gap-2 mt-2.5 w-full">
           <ActivityOption
             onClick={() => {
               setSelectedView('dynamic')

@@ -50,7 +50,7 @@ const ConfirmationModal = (params: ModalParams) => {
                 <Info size={35} />
               )}
             </div>
-            <div className="text pt-1 space-x-0 w-auto flex-grow">
+            <div className="text pt-1 space-x-0 w-auto grow">
               <div className="text-xl font-bold text-black ">
                 {params.dialogTitle}
               </div>

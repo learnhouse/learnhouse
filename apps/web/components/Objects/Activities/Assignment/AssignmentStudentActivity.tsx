@@ -21,16 +21,16 @@ function AssignmentStudentActivity() {
     <div className='flex flex-col space-y-4 md:space-y-6'>
       <div className='flex flex-col md:flex-row justify-center md:space-x-3 space-y-3 md:space-y-0 items-center'>
         <div className='text-xs h-fit flex space-x-3 items-center'>
-          <div className='flex space-x-2 py-2 px-4 md:px-5 h-fit text-sm text-slate-700 bg-slate-100/5 rounded-full nice-shadow'>
-            <Backpack size={16} className="md:size-18" />
+          <div className='flex gap-2 py-2 px-4 md:px-5 h-fit text-sm text-slate-700 bg-slate-100/5 rounded-full nice-shadow items-center'>
+            <Backpack size={14} className="md:size-[14px]" />
             <p className='font-semibold'>Assignment</p>
           </div>
         </div>
         <div>
-          <div className='flex space-x-2 items-center'>
+          <div className='flex gap-2 items-center'>
             <EllipsisVertical className='text-slate-400 hidden md:block' size={18} />
-            <div className='flex space-x-2 items-center'>
-              <div className='flex space-x-1 md:space-x-2 text-xs items-center text-slate-400'>
+            <div className='flex gap-2 items-center'>
+              <div className='flex gap-1 md:space-x-2 text-xs items-center text-slate-400'>
                 <Calendar size={14} />
                 <p className='font-semibold'>Due Date</p>
                 <p className='font-semibold'>{assignments?.assignment_object?.due_date}</p>

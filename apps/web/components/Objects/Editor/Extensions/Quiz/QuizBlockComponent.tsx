@@ -275,7 +275,7 @@ function QuizBlockComponent(props: any) {
           <div key={question.question_id} className="pt-3 space-y-2">
             <div className="question">
               <div className="flex space-x-2 items-center">
-                <div className="flex-grow">
+                <div className="grow">
                   {isEditable ? (
                     <input
                       value={question.question}
@@ -310,7 +310,7 @@ function QuizBlockComponent(props: any) {
                   <div
                     key={answer.answer_id}
                     className={twMerge(
-                      'outline outline-2 pr-2 shadow w-full flex items-stretch space-x-2 min-h-[36px] bg-opacity-50 hover:bg-opacity-100 hover:shadow-md rounded-lg bg-white text-sm duration-150 cursor-pointer ease-linear',
+                      'outline outline-2 pr-2 shadow-sm w-full flex items-stretch space-x-2 min-h-[36px] bg-opacity-50 hover:bg-opacity-100 hover:shadow-md rounded-lg bg-white text-sm duration-150 cursor-pointer ease-linear',
                       answer.correct && isEditable ? 'outline-lime-300' : 'outline-white',
                       userAnswers.some(
                         (userAnswer: any) =>
@@ -335,16 +335,16 @@ function QuizBlockComponent(props: any) {
                       className={twMerge(
                         'font-bold text-base flex items-center justify-center self-stretch w-[40px] rounded-l-md text-slate-800 bg-white',
                         answer.correct && isEditable
-                          ? 'bg-lime-300 text-lime-800 outline-none'
+                          ? 'bg-lime-300 text-lime-800 outline-hidden'
                           : 'bg-white',
                         userAnswers.some(
                           (userAnswer: any) =>
                             userAnswer.question_id === question.question_id &&
                             userAnswer.answer_id === answer.answer_id &&
                             !isEditable && !submitted
-                        ) ? 'bg-blue-400 text-white outline-none' : '',
+                        ) ? 'bg-blue-400 text-white outline-hidden' : '',
                         submitted && answer.correct
-                          ? 'bg-lime-300 text-lime-800 outline-none'
+                          ? 'bg-lime-300 text-lime-800 outline-hidden'
                           : '',
                         submitted &&
                           !answer.correct &&
@@ -353,7 +353,7 @@ function QuizBlockComponent(props: any) {
                               userAnswer.question_id === question.question_id &&
                               userAnswer.answer_id === answer.answer_id
                           )
-                          ? 'bg-red-400 text-red-800 outline-none'
+                          ? 'bg-red-400 text-red-800 outline-hidden'
                           : ''
                       )}
                     >

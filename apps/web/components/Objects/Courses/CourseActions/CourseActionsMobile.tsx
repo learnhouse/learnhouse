@@ -155,7 +155,7 @@ const CourseActionsMobile = ({ courseuuid, orgslug, course }: CourseActionsMobil
         </div>
       </div>
 
-      <div className="flex-shrink-0">
+      <div className="shrink-0">
         {linkedProducts.length > 0 ? (
           hasAccess ? (
             <button

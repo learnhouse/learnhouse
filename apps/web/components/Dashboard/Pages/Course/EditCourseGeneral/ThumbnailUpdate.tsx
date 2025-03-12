@@ -52,19 +52,19 @@ function ThumbnailUpdate() {
   }
 
   return (
-    <div className="w-auto bg-gray-50 rounded-xl outline outline-1 outline-gray-200 h-[200px] shadow">
+    <div className="w-auto bg-gray-50 rounded-xl outline outline-1 outline-gray-200 h-[200px] shadow-sm">
       <div className="flex flex-col justify-center items-center h-full">
         <div className="flex flex-col justify-center items-center">
           <div className="flex flex-col justify-center items-center">
             {error && (
-              <div className="flex justify-center bg-red-200 rounded-md text-red-950 space-x-2 items-center p-2 transition-all shadow-sm">
+              <div className="flex justify-center bg-red-200 rounded-md text-red-950 space-x-2 items-center p-2 transition-all shadow-xs">
                 <div className="text-sm font-semibold">{error}</div>
               </div>
             )}
             {localThumbnail ? (
               <img
                 src={URL.createObjectURL(localThumbnail)}
-                className={`${isLoading ? 'animate-pulse' : ''} shadow w-[200px] h-[100px] rounded-md`}
+                className={`${isLoading ? 'animate-pulse' : ''} shadow-sm w-[200px] h-[100px] rounded-md`}
               />
             ) : (
               <img
@@ -73,7 +73,7 @@ function ThumbnailUpdate() {
                   course.courseStructure.course_uuid,
                   course.courseStructure.thumbnail_image
                 ) : '/empty_thumbnail.png'}`}
-                className="shadow w-[200px] h-[100px] rounded-md bg-gray-200"
+                className="shadow-sm w-[200px] h-[100px] rounded-md bg-gray-200"
               />
             )}
           </div>

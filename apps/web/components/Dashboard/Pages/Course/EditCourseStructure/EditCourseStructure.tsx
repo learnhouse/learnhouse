@@ -2,7 +2,7 @@
 import { getAPIUrl } from '@services/config/config'
 import { revalidateTags } from '@services/utils/ts/requests'
 import React, { useEffect, useState } from 'react'
-import { DragDropContext, Droppable } from 'react-beautiful-dnd'
+import { DragDropContext, Droppable } from '@hello-pangea/dnd'
 import { mutate } from 'swr'
 import ChapterElement from './DraggableElements/ChapterElement'
 import PageLoading from '@components/Objects/Loaders/PageLoading'
@@ -164,7 +164,7 @@ const EditCourseStructure = (props: EditCourseStructureProps) => {
             dialogTitle="Create chapter"
             dialogDescription="Add a new chapter to the course"
             dialogTrigger={
-              <div className="w-44 my-16 py-5 max-w-screen-2xl mx-auto bg-cyan-800 text-white rounded-xl shadow-sm px-6 items-center flex flex-row h-10">
+              <div className="w-44 my-16 py-5 max-w-(--breakpoint-2xl) mx-auto bg-cyan-800 text-white rounded-xl shadow-xs px-6 items-center flex flex-row h-10">
                 <div className="mx-auto flex space-x-2 items-center hover:cursor-pointer">
                   <Hexagon
                     strokeWidth={3}
