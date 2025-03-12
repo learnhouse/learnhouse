@@ -171,7 +171,7 @@ function ActivityClient(props: ActivityClientProps) {
                 </div>
               </div>
               {activity && activity.published == false && (
-                <div className="p-7 drop-shadow-sm rounded-lg bg-gray-800">
+                <div className="p-7 drop-shadow-xs rounded-lg bg-gray-800">
                   <div className="text-white">
                     <h1 className="font-bold text-2xl">
                       This activity is not published yet
@@ -185,7 +185,7 @@ function ActivityClient(props: ActivityClientProps) {
                   {activity.content.paid_access == false ? (
                     <PaidCourseActivityDisclaimer course={course} />
                   ) : (
-                    <div className={`p-7 drop-shadow-sm rounded-lg ${bgColor}`}>
+                    <div className={`p-7 drop-shadow-xs rounded-lg ${bgColor}`}>
                       {/* Activity Types */}
                       <div>
                         {activity.activity_type == 'TYPE_DYNAMIC' && (
@@ -461,7 +461,7 @@ function ActivityChapterDropdown(props: {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={toggleDropdown}
-        className="flex items-center justify-center bg-white nice-shadow p-2.5 rounded-full"
+        className="flex items-center justify-center bg-white nice-shadow p-2.5 rounded-full cursor-pointer"
         aria-label="View all activities"
         title="View all activities"
       >
@@ -469,12 +469,12 @@ function ActivityChapterDropdown(props: {
       </button>
       
       {isOpen && (
-        <div className={`absolute z-50 mt-2 ${isMobile ? 'left-0 w-[90vw] sm:w-80' : 'left-0 w-80'} max-h-[70vh] overflow-y-auto bg-white rounded-lg shadow-xl border border-gray-200 py-2 animate-in fade-in duration-200`}>
+        <div className={`absolute z-50 mt-2 ${isMobile ? 'left-0 w-[90vw] sm:w-80' : 'left-0 w-80'} max-h-[70vh] cursor-pointer overflow-y-auto bg-white rounded-lg shadow-xl border border-gray-200 py-2 animate-in fade-in duration-200`}>
           <div className="px-4 py-2 border-b border-gray-100 flex justify-between items-center">
             <h3 className="font-bold text-gray-800">Course Content</h3>
             <button 
               onClick={() => setIsOpen(false)}
-              className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100"
+              className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100 cursor-pointer"
             >
               <X size={18} />
             </button>
@@ -519,7 +519,7 @@ function ActivityChapterDropdown(props: {
                           )?.steps?.find(
                             (step: any) => (step.activity_id === activity.id || step.activity_id === activity.activity_uuid) && step.complete === true
                           ) && (
-                            <span className="ml-2 text-gray-400 flex-shrink-0">
+                            <span className="ml-2 text-gray-400 shrink-0">
                               <Check size={14} />
                             </span>
                           )}
@@ -630,7 +630,7 @@ function ActivityNavigation(props: {
         <>
           <button
             onClick={() => navigateToActivity(prevActivity)}
-            className={`flex items-center space-x-1.5 p-2 rounded-md transition-all duration-200 ${
+            className={`flex items-center space-x-1.5 p-2 rounded-md transition-all duration-200 cursor-pointer ${
               prevActivity 
                 ? 'text-gray-700' 
                 : 'opacity-50 text-gray-400 cursor-not-allowed'
@@ -638,7 +638,7 @@ function ActivityNavigation(props: {
             disabled={!prevActivity}
             title={prevActivity ? `Previous: ${prevActivity.name}` : 'No previous activity'}
           >
-            <ChevronLeft size={20} className="text-gray-800 flex-shrink-0" />
+            <ChevronLeft size={20} className="text-gray-800 shrink-0" />
             <div className="flex flex-col items-start">
               <span className="text-xs text-gray-500">Previous</span>
               <span className="text-sm capitalize font-semibold text-left">
@@ -649,7 +649,7 @@ function ActivityNavigation(props: {
           
           <button
             onClick={() => navigateToActivity(nextActivity)}
-            className={`flex items-center space-x-1.5 p-2 rounded-md transition-all duration-200 ${
+            className={`flex items-center space-x-1.5 p-2 rounded-md transition-all duration-200 cursor-pointer ${
               nextActivity 
                 ? 'text-gray-700' 
                 : 'opacity-50 text-gray-400 cursor-not-allowed'
@@ -663,7 +663,7 @@ function ActivityNavigation(props: {
                 {nextActivity ? nextActivity.name : 'No next activity'}
               </span>
             </div>
-            <ChevronRight size={20} className="text-gray-800 flex-shrink-0" />
+            <ChevronRight size={20} className="text-gray-800 shrink-0" />
           </button>
         </>
       ) : (
@@ -672,7 +672,7 @@ function ActivityNavigation(props: {
           <div className="justify-self-start">
             <button
               onClick={() => navigateToActivity(prevActivity)}
-              className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-md transition-all duration-200 ${
+              className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-md transition-all duration-200 cursor-pointer ${
                 prevActivity 
                   ? 'bg-white nice-shadow text-gray-700' 
                   : 'bg-gray-100 text-gray-400 cursor-not-allowed'
@@ -680,7 +680,7 @@ function ActivityNavigation(props: {
               disabled={!prevActivity}
               title={prevActivity ? `Previous: ${prevActivity.name}` : 'No previous activity'}
             >
-              <ChevronLeft size={16} className="flex-shrink-0" />
+              <ChevronLeft size={16} className="shrink-0" />
               <div className="flex flex-col items-start">
                 <span className="text-xs text-gray-500">Previous</span>
                 <span className="text-sm capitalize font-semibold text-left">
@@ -697,7 +697,7 @@ function ActivityNavigation(props: {
           <div className="justify-self-end">
             <button
               onClick={() => navigateToActivity(nextActivity)}
-              className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-md transition-all duration-200 ${
+              className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-md transition-all duration-200 cursor-pointer ${
                 nextActivity 
                   ? 'bg-white nice-shadow text-gray-700' 
                   : 'bg-gray-100 text-gray-400 cursor-not-allowed'
@@ -711,7 +711,7 @@ function ActivityNavigation(props: {
                   {nextActivity ? nextActivity.name : 'No next activity'}
                 </span>
               </div>
-              <ChevronRight size={16} className="flex-shrink-0" />
+              <ChevronRight size={16} className="shrink-0" />
             </button>
           </div>
         </>
@@ -730,7 +730,7 @@ function ActivityNavigation(props: {
       {!isBottomNavVisible && (
         <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50 w-[85%] sm:w-auto sm:min-w-[350px] max-w-lg transition-all duration-300 ease-in-out">
           <div 
-            className="bg-white/90 backdrop-blur-xl rounded-full py-1.5 px-2.5 shadow-sm animate-in fade-in slide-in-from-bottom duration-300"
+            className="bg-white/90 backdrop-blur-xl rounded-full py-1.5 px-2.5 shadow-xs animate-in fade-in slide-in-from-bottom duration-300"
           >
             <NavigationButtons isFloating={true} />
           </div>

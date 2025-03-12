@@ -70,7 +70,7 @@ function UserEditGeneral() {
     toast.success('Profile Updated Successfully', { duration: 4000 })
     
     // Show message about logging in with new email
-    toast((t) => (
+    toast((t: any) => (
       <div className="flex items-center gap-2">
         <span>Please login again with your new email: {newEmail}</span>
       </div>

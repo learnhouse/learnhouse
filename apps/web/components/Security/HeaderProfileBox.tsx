@@ -89,5 +89,5 @@ const ProfileArea = styled.div`
 const UnidentifiedArea = styled.div`
   display: flex;
   place-items: stretch;
-  flex-grow: 1;
+  grow: 1;
 `

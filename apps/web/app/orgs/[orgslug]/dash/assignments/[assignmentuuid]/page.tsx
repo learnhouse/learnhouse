@@ -139,7 +139,7 @@ function PublishingState() {
                 <Link
                     target='_blank'
                     href={`/course/${assignment?.course_object?.course_uuid.replace('course_', '')}/activity/${assignment?.activity_object?.activity_uuid.replace('activity_', '')}`}
-                    className='flex px-3 py-2 cursor-pointer rounded-md space-x-2 items-center bg-gradient-to-bl text-cyan-800 font-medium from-sky-400/50 to-cyan-200/80  border border-cyan-600/10 shadow-cyan-900/10 shadow-lg'>
+                    className='flex px-3 py-2 cursor-pointer rounded-md space-x-2 items-center bg-linear-to-bl text-cyan-800 font-medium from-sky-400/50 to-cyan-200/80  border border-cyan-600/10 shadow-cyan-900/10 shadow-lg'>
                     <Eye size={18} />
                     <p className=' text-sm font-bold'>Preview</p>
                 </Link>
@@ -151,7 +151,7 @@ function PublishingState() {
                 content="Make your Assignment unavailable for students" >
                 <div
                     onClick={() => updateAssignmentPublishState(assignment?.assignment_object?.assignment_uuid)}
-                    className='flex px-3 py-2 cursor-pointer rounded-md space-x-2 items-center bg-gradient-to-bl text-gray-800 font-medium from-gray-400/50 to-gray-200/80 border border-gray-600/10 shadow-gray-900/10 shadow-lg'>
+                    className='flex px-3 py-2 cursor-pointer rounded-md space-x-2 items-center bg-linear-to-bl text-gray-800 font-medium from-gray-400/50 to-gray-200/80 border border-gray-600/10 shadow-gray-900/10 shadow-lg'>
                     <BookX size={18} />
                     <p className='text-sm font-bold'>Unpublish</p>
                 </div>
@@ -164,7 +164,7 @@ function PublishingState() {
                     content="Make your Assignment public and available for students" >
                     <div
                         onClick={() => updateAssignmentPublishState(assignment?.assignment_object?.assignment_uuid)}
-                        className='flex px-3 py-2 cursor-pointer rounded-md space-x-2 items-center bg-gradient-to-bl text-green-800 font-medium from-green-400/50 to-lime-200/80  border border-green-600/10 shadow-green-900/10 shadow-lg'>
+                        className='flex px-3 py-2 cursor-pointer rounded-md space-x-2 items-center bg-linear-to-bl text-green-800 font-medium from-green-400/50 to-lime-200/80  border border-green-600/10 shadow-green-900/10 shadow-lg'>
                         <BookOpen size={18} />
                         <p className=' text-sm font-bold'>Publish</p>
                     </div>

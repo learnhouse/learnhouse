@@ -1,17 +1,23 @@
-'use client'
+'use client';
+import { use } from "react";
 import { OrgProvider } from '@components/Contexts/OrgContext'
 import NextTopLoader from 'nextjs-toploader';
 import Toast from '@components/Objects/StyledElements/Toast/Toast'
 import '@styles/globals.css'
 import Onboarding from '@components/Objects/Onboarding/Onboarding';
 
-export default function RootLayout({
-  children,
-  params,
-}: {
-  children: React.ReactNode
-  params: any
-}) {
+export default function RootLayout(
+  props: {
+    children: React.ReactNode
+    params: Promise<any>
+  }
+) {
+  const params = use(props.params);
+
+  const {
+    children
+  } = props;
+
   return (
     <div>
       <OrgProvider orgslug={params.orgslug}>

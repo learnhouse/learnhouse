@@ -93,7 +93,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ orgslug, className = '', i
           }}
           onFocus={handleSearchFocus}
           placeholder="Search courses..."
-          className="w-full h-9 pl-10 pr-4 rounded-lg border border-gray-200 bg-white/50 focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-transparent text-sm placeholder:text-gray-400"
+          className="w-full h-9 pl-10 pr-4 rounded-lg border border-gray-200 bg-white/50 focus:outline-hidden focus:ring-2 focus:ring-gray-200 focus:border-transparent text-sm placeholder:text-gray-400"
         />
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
       </div>

@@ -62,7 +62,7 @@ const FormTagInput = ({
 					placeholder={placeholder}
 					styleClasses={{
 						inlineTagsContainer:
-							'border-input rounded-lg bg-background shadow-xs transition-shadow focus-within:border-ring/40 focus-within:outline-hidden focus-within:ring-[3px] ring-ring/8 dark:ring-ring/12 p-1 gap-1',
+							'border-input rounded-lg bg-background shadow-2xs transition-shadow focus-within:border-ring/40 focus-within:outline-hidden focus-within:ring-[3px] ring-ring/8 dark:ring-ring/12 p-1 gap-1',
 						input:
 							'w-full min-w-[80px] focus-visible:outline-hidden shadow-none px-2 h-7',
 						tag: {

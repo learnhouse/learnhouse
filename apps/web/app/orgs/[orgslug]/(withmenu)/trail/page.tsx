@@ -6,13 +6,12 @@ import { getServerSession } from 'next-auth'
 import { nextAuthOptions } from 'app/auth/options'
 
 type MetadataProps = {
-  params: { orgslug: string }
-  searchParams: { [key: string]: string | string[] | undefined }
+  params: Promise<{ orgslug: string }>
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
 
-export async function generateMetadata({
-  params,
-}: MetadataProps): Promise<Metadata> {
+export async function generateMetadata(props: MetadataProps): Promise<Metadata> {
+  const params = await props.params;
   const session = await getServerSession(nextAuthOptions)
   const access_token = session?.tokens?.access_token
   // Get Org context information
@@ -28,7 +27,7 @@ export async function generateMetadata({
 }
 
 const TrailPage = async (params: any) => {
-  let orgslug = params.params.orgslug
+  let orgslug = (await params.params).orgslug
 
   return (
     <div>

@@ -135,7 +135,7 @@ const CreateProductForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) =
             </div>
 
             <div className="flex space-x-2">
-              <div className="flex-grow">
+              <div className="grow">
                 <Label htmlFor="amount">
                   {values.price_type === 'fixed_price' ? 'Price' : 'Minimum Amount'}
                 </Label>

@@ -8,13 +8,12 @@ import { getOrgCourses } from '@services/courses/courses'
 import { getOrgThumbnailMediaDirectory } from '@services/media/media'
 
 type MetadataProps = {
-  params: { orgslug: string }
-  searchParams: { [key: string]: string | string[] | undefined }
+  params: Promise<{ orgslug: string }>
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
 
-export async function generateMetadata({
-  params,
-}: MetadataProps): Promise<Metadata> {
+export async function generateMetadata(props: MetadataProps): Promise<Metadata> {
+  const params = await props.params;
   // Get Org context information
   const org = await getOrganizationContextInfo(params.orgslug, {
     revalidate: 0,
@@ -53,7 +52,7 @@ export async function generateMetadata({
 }
 
 const CoursesPage = async (params: any) => {
-  const orgslug = params.params.orgslug
+  const orgslug = (await params.params).orgslug
   const org = await getOrganizationContextInfo(orgslug, {
     revalidate: 1800,
     tags: ['organizations'],

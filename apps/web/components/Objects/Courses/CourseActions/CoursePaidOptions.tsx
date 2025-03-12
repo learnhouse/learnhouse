@@ -85,7 +85,7 @@ function CoursePaidOptions({ course }: CoursePaidOptionsProps) {
             </div>
           </div>
 
-          <div className="flex-grow overflow-hidden">
+          <div className="grow overflow-hidden">
             <div className={`transition-all duration-300 ease-in-out ${expandedProducts[product.id] ? 'max-h-[1000px]' : 'max-h-24'
               } overflow-hidden`}>
               <p className="text-gray-600">

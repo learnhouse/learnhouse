@@ -14,7 +14,7 @@ const IconWrapper = styled.div<{ size?: string }>`
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
+  shrink: 0;
   margin-right: 0.5rem;
   padding-left: 0.5rem;
   
@@ -126,7 +126,7 @@ function WarningCalloutComponent(props: any) {
         <IconWrapper size={options.size}>
           <AlertTriangle />
         </IconWrapper>
-        <ContentWrapper className="flex-grow">
+        <ContentWrapper className="grow">
           <NodeViewContent contentEditable={isEditable} className="content" />
         </ContentWrapper>
         {options.dismissible && !isEditable && (

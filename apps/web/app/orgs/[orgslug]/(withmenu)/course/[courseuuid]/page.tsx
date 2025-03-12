@@ -8,13 +8,12 @@ import { nextAuthOptions } from 'app/auth/options'
 import { getServerSession } from 'next-auth'
 
 type MetadataProps = {
-  params: { orgslug: string; courseuuid: string }
-  searchParams: { [key: string]: string | string[] | undefined }
+  params: Promise<{ orgslug: string; courseuuid: string }>
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
 
-export async function generateMetadata({
-  params,
-}: MetadataProps): Promise<Metadata> {
+export async function generateMetadata(props: MetadataProps): Promise<Metadata> {
+  const params = await props.params;
   const session = await getServerSession(nextAuthOptions)
   const access_token = session?.tokens?.access_token
 
@@ -67,8 +66,8 @@ export async function generateMetadata({
 }
 
 const CoursePage = async (params: any) => {
-  const courseuuid = params.params.courseuuid
-  const orgslug = params.params.orgslug
+  const courseuuid = (await params.params).courseuuid
+  const orgslug = (await params.params).orgslug
   const session = await getServerSession(nextAuthOptions)
   const access_token = session?.tokens?.access_token
   const course_meta = await getCourseMetadata(

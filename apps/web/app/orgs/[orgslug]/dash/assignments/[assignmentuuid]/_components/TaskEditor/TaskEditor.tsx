@@ -58,7 +58,7 @@ function AssignmentTaskEditor({ page }: any) {
                             <div>
                                 <div
                                     onClick={() => deleteTaskUI()}
-                                    className='flex px-2 py-1.5 cursor-pointer rounded-md space-x-2 items-center bg-gradient-to-bl text-red-800  bg-rose-100  border border-rose-600/10 shadow-rose-900/10 shadow-lg'>
+                                    className='flex px-2 py-1.5 cursor-pointer rounded-md space-x-2 items-center bg-linear-to-bl text-red-800  bg-rose-100  border border-rose-600/10 shadow-rose-900/10 shadow-lg'>
                                     <Trash size={18} />
                                     <p className='text-xs font-semibold'>Delete Task</p>
                                 </div>
@@ -91,7 +91,7 @@ function AssignmentTaskEditor({ page }: any) {
                             </div>
                         </div>
                     </div>
-                    <div className='ml-10 mr-10 mt-10 mx-auto bg-white rounded-xl shadow-sm px-6 py-5 nice-shadow'>
+                    <div className='ml-10 mr-10 mt-10 mx-auto bg-white rounded-xl shadow-xs px-6 py-5 nice-shadow'>
                         {selectedSubPage === 'general' && <AssignmentTaskGeneralEdit />}
                         {selectedSubPage === 'content' && <AssignmentTaskContentEdit />}
                     </div>

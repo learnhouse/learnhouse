@@ -166,7 +166,7 @@ const CourseClient = (props: any) => {
                       <div key={chapter} className="">
                         <div className="flex text-lg py-4 px-4 outline outline-1 outline-neutral-200/40 font-bold bg-neutral-50 text-neutral-600 items-center">
                           <h3 className="grow mr-3 break-words">{chapter.name}</h3>
-                          <p className="text-sm font-normal text-neutral-400 px-3 py-[2px] outline-1 outline outline-neutral-200 rounded-full whitespace-nowrap flex-shrink-0">
+                          <p className="text-sm font-normal text-neutral-400 px-3 py-[2px] outline-1 outline outline-neutral-200 rounded-full whitespace-nowrap shrink-0">
                             {chapter.activities.length} Activities
                           </p>
                         </div>

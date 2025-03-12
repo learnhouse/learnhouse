@@ -1,5 +1,5 @@
 'use client'
-import React from 'react'
+import React, { use } from 'react';
 import { motion } from 'framer-motion'
 import BreadCrumbs from '@components/Dashboard/Misc/BreadCrumbs'
 import Link from 'next/link'
@@ -17,11 +17,12 @@ export type PaymentsParams = {
   orgslug: string
 }
 
-function PaymentsPage({ params }: { params: PaymentsParams }) {
+function PaymentsPage(props: { params: Promise<PaymentsParams> }) {
+  const params = use(props.params);
   const session = useLHSession() as any
   const org = useOrg() as any
   const subpage = params.subpage || 'customers'
-  
+
   const isPaymentsEnabled = useFeatureFlag({
     path: ['features', 'payments', 'enabled'],
     defaultValue: false

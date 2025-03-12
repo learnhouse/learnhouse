@@ -158,18 +158,18 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
           label="Course Thumbnail"
           message={formik.errors.thumbnail}
         />
-        <div className="w-auto bg-gray-50 rounded-xl outline outline-1 outline-gray-200 h-[200px] shadow">
+        <div className="w-auto bg-gray-50 rounded-xl outline outline-1 outline-gray-200 h-[200px] shadow-sm">
           <div className="flex flex-col justify-center items-center h-full">
             <div className="flex flex-col justify-center items-center">
               {formik.values.thumbnail ? (
                 <img
                   src={URL.createObjectURL(formik.values.thumbnail)}
-                  className={`${isUploading ? 'animate-pulse' : ''} shadow w-[200px] h-[100px] rounded-md`}
+                  className={`${isUploading ? 'animate-pulse' : ''} shadow-sm w-[200px] h-[100px] rounded-md`}
                 />
               ) : (
                 <img
                   src="/empty_thumbnail.png"
-                  className="shadow w-[200px] h-[100px] rounded-md bg-gray-200"
+                  className="shadow-sm w-[200px] h-[100px] rounded-md bg-gray-200"
                 />
               )}
               <div className="flex justify-center items-center space-x-2">

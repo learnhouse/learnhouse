@@ -1,13 +1,11 @@
 'use client'
-import { default as React } from 'react'
+import { default as React, type JSX } from 'react';
 import Editor from './Editor'
 import { updateActivity } from '@services/courses/activities'
 import { toast } from 'react-hot-toast'
 import Toast from '@components/Objects/StyledElements/Toast/Toast'
 import { OrgProvider } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-
-
 
 interface EditorWrapperProps {
   content: string
