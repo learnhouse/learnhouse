@@ -191,7 +191,6 @@ function ActivityElement(props: ActivitiyElementProps) {
                     ''
                   )}`
                 }
-                prefetch
                 className="p-1 px-2 sm:px-3 bg-linear-to-bl text-cyan-800 from-sky-400/50 to-cyan-200/80 border border-cyan-600/10 shadow-md rounded-md font-bold text-xs flex items-center space-x-1 transition-colors duration-200 hover:from-sky-500/50 hover:to-cyan-300/80"
                 rel="noopener noreferrer"
               >
@@ -296,7 +295,6 @@ const ActivityElementOptions = ({ activity, isMobile }: { activity: any; isMobil
                 ''
               )}/edit`
             }
-            prefetch
             className={`hover:cursor-pointer p-1 ${isMobile ? 'px-2' : 'px-3'} bg-sky-700 rounded-md items-center`}
             target='_blank'
           >
@@ -313,7 +311,6 @@ const ActivityElementOptions = ({ activity, isMobile }: { activity: any; isMobil
               getUriWithOrg(org.slug, '') +
               `/dash/assignments/${assignmentUUID}`
             }
-            prefetch
             className={`hover:cursor-pointer p-1 ${isMobile ? 'px-2' : 'px-3'} bg-teal-700 rounded-md items-center`}
           >
             <div className="text-sky-100 font-bold text-xs flex items-center space-x-1">
