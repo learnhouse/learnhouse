@@ -1,4 +1,5 @@
 import uvicorn
+import logfire
 from fastapi import FastAPI, Request
 from config.config import LearnHouseConfig, get_learnhouse_config
 from src.core.events.events import shutdown_app, startup_app
@@ -37,6 +38,9 @@ app.add_middleware(
     allow_credentials=True,
     allow_headers=["*"],
 )
+
+logfire.configure(console=False, service_name=learnhouse_config.site_name,)
+logfire.instrument_fastapi(app)
 
 # Gzip Middleware (will add brotli later)
 app.add_middleware(GZipMiddleware, minimum_size=1000)

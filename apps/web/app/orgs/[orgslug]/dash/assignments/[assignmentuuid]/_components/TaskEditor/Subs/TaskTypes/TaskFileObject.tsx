@@ -12,6 +12,7 @@ import toast from 'react-hot-toast';
 
 type FileSchema = {
     fileUUID: string;
+    assignment_task_submission_uuid?: string;
 };
 
 type TaskFileObjectProps = {
@@ -64,13 +65,13 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID }: Ta
         // wait for 1 second to show loading animation
         await new Promise((r) => setTimeout(r, 1500))
         if (res.success === false) {
-
             setError(res.data.detail)
             setIsLoading(false)
         } else {
             assignmentTaskStateHook({ type: 'reload' })
             setUserSubmissions({
                 fileUUID: res.data.file_uuid,
+                assignment_task_submission_uuid: res.data.assignment_task_submission_uuid
             })
             setIsLoading(false)
             setError('')
@@ -86,8 +87,14 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID }: Ta
         if (assignmentTaskUUID) {
             const res = await getAssignmentTaskSubmissionsMe(assignmentTaskUUID, assignment.assignment_object.assignment_uuid, access_token);
             if (res.success) {
-                setUserSubmissions(res.data.task_submission);
-                setInitialUserSubmissions(res.data.task_submission);
+                setUserSubmissions({
+                    ...res.data.task_submission,
+                    assignment_task_submission_uuid: res.data.assignment_task_submission_uuid
+                });
+                setInitialUserSubmissions({
+                    ...res.data.task_submission,
+                    assignment_task_submission_uuid: res.data.assignment_task_submission_uuid
+                });
             }
         }
     }
@@ -101,6 +108,7 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID }: Ta
 
         // Save the quiz to the server
         const values = {
+            assignment_task_submission_uuid: userSubmissions.assignment_task_submission_uuid,
             task_submission: userSubmissions,
             grade: 0,
             task_submission_grade_feedback: '',
@@ -156,9 +164,15 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID }: Ta
         if (assignmentTaskUUID && user_id) {
             const res = await getAssignmentTaskSubmissionsUser(assignmentTaskUUID, user_id, assignment.assignment_object.assignment_uuid, access_token);
             if (res.success) {
-                setUserSubmissions(res.data.task_submission);
+                setUserSubmissions({
+                    ...res.data.task_submission,
+                    assignment_task_submission_uuid: res.data.assignment_task_submission_uuid
+                });
                 setUserSubmissionObject(res.data);
-                setInitialUserSubmissions(res.data.task_submission);
+                setInitialUserSubmissions({
+                    ...res.data.task_submission,
+                    assignment_task_submission_uuid: res.data.assignment_task_submission_uuid
+                });
             }
         }
     }
@@ -173,6 +187,7 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID }: Ta
     
             // Save the grade to the server
             const values = {
+                assignment_task_submission_uuid: userSubmissions.assignment_task_submission_uuid,
                 task_submission: userSubmissions,
                 grade: grade,
                 task_submission_grade_feedback: 'Graded by teacher : @' + session.data.user.username,

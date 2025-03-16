@@ -38,7 +38,7 @@ const ConfirmationModal = (params: ModalParams) => {
       <Dialog.Portal>
         <DialogOverlay />
         <DialogContent>
-          <div className="h-26 flex space-x-4 tracking-tight">
+          <div className="flex space-x-4 tracking-tight">
             <div
               className={`icon p-6 rounded-xl flex items-center align-content-center ${
                 params.status === 'warning' ? warningColors : infoColors
@@ -51,13 +51,13 @@ const ConfirmationModal = (params: ModalParams) => {
               )}
             </div>
             <div className="text pt-1 space-x-0 w-auto grow">
-              <div className="text-xl font-bold text-black ">
+              <div className="text-xl font-bold text-black">
                 {params.dialogTitle}
               </div>
-              <div className="text-md text-gray-500 w-60 leading-tight">
+              <div className="text-md text-gray-500 leading-tight mt-1">
                 {params.confirmationMessage}
               </div>
-              <div className="flex flex-row-reverse pt-2">
+              <div className="flex flex-row-reverse mt-4">
                 <div
                   id={params.buttonid}
                   className={`rounded-md text-sm px-3 py-2 font-bold flex justify-center items-center hover:cursor-pointer ${
@@ -126,11 +126,11 @@ const DialogContent = styled(Dialog.Content, {
   transform: 'translate(-50%, -50%)',
   width: 'auto',
   minWidth: '500px',
-  overflow: 'hidden',
+  maxWidth: '600px',
+  overflow: 'visible',
   height: 'auto',
   maxHeight: '85vh',
-  maxWidth: '600px',
-  padding: 11,
+  padding: '24px',
   animation: `${contentShow} 150ms cubic-bezier(0.16, 1, 0.3, 1)`,
   '&:focus': { outline: 'none' },
 
