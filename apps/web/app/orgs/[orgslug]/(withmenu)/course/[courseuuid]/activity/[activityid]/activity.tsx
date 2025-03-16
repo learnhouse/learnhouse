@@ -499,6 +499,7 @@ function ActivityChapterDropdown(props: {
                       <Link
                         key={activity.id}
                         href={getUriWithOrg(props.orgslug, '') + `/course/${cleanCourseUuid}/activity/${cleanActivityUuid}`}
+                        prefetch={false}
                         onClick={() => setIsOpen(false)}
                       >
                         <div 

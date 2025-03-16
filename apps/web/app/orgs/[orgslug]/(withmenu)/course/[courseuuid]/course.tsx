@@ -223,6 +223,7 @@ const CourseClient = (props: any) => {
                                       )}`
                                     }
                                     rel="noopener noreferrer"
+                                    prefetch={false}
                                   >
                                     <p>{activity.name}</p>
                                   </Link>
@@ -240,6 +241,7 @@ const CourseClient = (props: any) => {
                                               )}`
                                             }
                                             rel="noopener noreferrer"
+                                            prefetch={false}
                                           >
                                             <div className="text-xs bg-gray-100 text-gray-400 font-bold px-2 py-1 rounded-full flex space-x-1 items-center">
                                               <p>Page</p>
@@ -260,6 +262,7 @@ const CourseClient = (props: any) => {
                                             )}`
                                           }
                                           rel="noopener noreferrer"
+                                          prefetch={false}
                                         >
                                           <div className="text-xs bg-gray-100 text-gray-400 font-bold px-2 py-1 rounded-full flex space-x-1 items-center">
                                             <p>Video</p>
@@ -281,6 +284,7 @@ const CourseClient = (props: any) => {
                                               )}`
                                             }
                                             rel="noopener noreferrer"
+                                            prefetch={false}
                                           >
                                             <div className="text-xs bg-gray-100 text-gray-400 font-bold px-2 py-1 rounded-full flex space-x-1 items-center">
                                               <p>Document</p>
@@ -302,6 +306,7 @@ const CourseClient = (props: any) => {
                                               )}`
                                             }
                                             rel="noopener noreferrer"
+                                            prefetch={false}
                                           >
                                             <div className="text-xs bg-gray-100 text-gray-400 font-bold px-2 py-1 rounded-full flex space-x-1 items-center">
                                               <p>Assignment</p>

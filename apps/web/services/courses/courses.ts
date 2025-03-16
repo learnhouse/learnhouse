@@ -41,13 +41,13 @@ export async function searchOrgCourses(
 }
 
 export async function getCourseMetadata(
-  course_uuid: any,
+  course_uuid: string,
   next: any,
-  access_token: string
+  access_token: string | null | undefined
 ) {
   const result = await fetch(
     `${getAPIUrl()}courses/course_${course_uuid}/meta`,
-    RequestBodyWithAuthHeader('GET', null, next, access_token)
+    RequestBodyWithAuthHeader('GET', null, next, access_token || undefined)
   )
   const res = await errorHandling(result)
   return res
