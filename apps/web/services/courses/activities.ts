@@ -111,11 +111,11 @@ export async function deleteActivity(activity_uuid: any, access_token: string) {
 export async function getActivityWithAuthHeader(
   activity_uuid: any,
   next: any,
-  access_token: string
+  access_token: string | null | undefined
 ) {
   const result = await fetch(
     `${getAPIUrl()}activities/activity_${activity_uuid}`,
-    RequestBodyWithAuthHeader('GET', null, next, access_token)
+    RequestBodyWithAuthHeader('GET', null, next, access_token || undefined)
   )
   const res = await result.json()
   return res
