@@ -15,7 +15,6 @@ function EvaluateAssignment({ user_id }: any) {
     const assignments = useAssignments() as any;
     const session = useLHSession() as any;
     const org = useOrg() as any;
-    const router = useRouter();
 
     async function gradeAssignment() {
         const res = await putFinalGrade(user_id, assignments?.assignment_object.assignment_uuid, session.data?.tokens?.access_token);
@@ -92,17 +91,17 @@ function EvaluateAssignment({ user_id }: any) {
                 )
             })}
             <div className='flex  space-x-4 font-semibold items-center justify-between'>
-                <button onClick={rejectAssignment} className='flex space-x-2 px-4 py-2 text-sm bg-rose-600/80 text-white rounded-lg nice-shadow items-center'>
+                <button onClick={rejectAssignment} className='flex space-x-2 px-4 py-2 text-sm bg-rose-600/80 text-white rounded-lg nice-shadow items-center cursor-pointer'>
                     <X size={18} />
                     <span>Reject Assignment</span>
                 </button>
                 <div className='flex space-x-3 items-center'>
-                    <button onClick={gradeAssignment} className='flex space-x-2 px-4 py-2 text-sm bg-violet-600/80 text-white rounded-lg nice-shadow items-center'>
+                    <button onClick={gradeAssignment} className='flex space-x-2 px-4 py-2 text-sm bg-violet-600/80 text-white rounded-lg nice-shadow items-center cursor-pointer'>
                         <BookOpenCheck size={18} />
                         <span>Set final grade</span>
                     </button>
                     <MoveRight className='text-gray-400' size={18} />
-                    <button onClick={markActivityAsDone} className='flex space-x-2 px-4 py-2 text-sm bg-teal-600/80 text-white rounded-lg nice-shadow items-center'>
+                    <button onClick={markActivityAsDone} className='flex space-x-2 px-4 py-2 text-sm bg-teal-600/80 text-white rounded-lg nice-shadow items-center cursor-pointer'>
                         <Check size={18} />
                         <span>Mark Activity as Done for User</span>
                     </button>
