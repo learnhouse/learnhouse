@@ -11,25 +11,36 @@ type MetadataProps = {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
 
+type Session = {
+  tokens?: {
+    access_token?: string
+  }
+}
+
+// Add this function at the top level to avoid duplicate fetches
+async function fetchCourseMetadata(courseuuid: string, access_token: string | null | undefined) {
+  return await getCourseMetadata(
+    courseuuid,
+    { revalidate: 1800, tags: ['courses'] },
+    access_token || null
+  )
+}
+
 export async function generateMetadata(props: MetadataProps): Promise<Metadata> {
   const params = await props.params;
-  const session = await getServerSession(nextAuthOptions)
-  const access_token = session?.tokens?.access_token
+  const session = await getServerSession(nextAuthOptions as any) as Session
+  const access_token = session?.tokens?.access_token || null
 
   // Get Org context information
   const org = await getOrganizationContextInfo(params.orgslug, {
     revalidate: 1800,
     tags: ['organizations'],
   })
-  const course_meta = await getCourseMetadata(
-    params.courseuuid,
-    { revalidate: 0, tags: ['courses'] },
-    access_token ? access_token : null
-  )
+  const course_meta = await fetchCourseMetadata(params.courseuuid, access_token)
   const activity = await getActivityWithAuthHeader(
     params.activityid,
-    { revalidate: 0, tags: ['activities'] },
-    access_token ? access_token : null
+    { revalidate: 1800, tags: ['activities'] },
+    access_token || null
   )
 
   // SEO
@@ -57,32 +68,29 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
 }
 
 const ActivityPage = async (params: any) => {
-  const session = await getServerSession(nextAuthOptions)
-  const access_token = session?.tokens?.access_token
+  const session = await getServerSession(nextAuthOptions as any) as Session
+  const access_token = session?.tokens?.access_token || null
   const activityid = (await params.params).activityid
   const courseuuid = (await params.params).courseuuid
   const orgslug = (await params.params).orgslug
 
-  const course_meta = await getCourseMetadata(
-    courseuuid,
-    { revalidate: 0, tags: ['courses'] },
-    access_token ? access_token : null
-  )
-  const activity = await getActivityWithAuthHeader(
-    activityid,
-    { revalidate: 0, tags: ['activities'] },
-    access_token ? access_token : null
-  )
+  const [course_meta, activity] = await Promise.all([
+    fetchCourseMetadata(courseuuid, access_token),
+    getActivityWithAuthHeader(
+      activityid,
+      { revalidate: 1800, tags: ['activities'] },
+      access_token || null
+    )
+  ])
+
   return (
-    <>
-      <ActivityClient
-        activityid={activityid}
-        courseuuid={courseuuid}
-        orgslug={orgslug}
-        activity={activity}
-        course={course_meta}
-      />
-    </>
+    <ActivityClient
+      activityid={activityid}
+      courseuuid={courseuuid}
+      orgslug={orgslug}
+      activity={activity}
+      course={course_meta}
+    />
   )
 }
 

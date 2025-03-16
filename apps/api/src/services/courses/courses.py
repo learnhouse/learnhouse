@@ -27,6 +27,7 @@ from src.security.rbac.rbac import (
 from src.services.courses.thumbnails import upload_thumbnail
 from fastapi import HTTPException, Request, UploadFile
 from datetime import datetime
+import asyncio
 
 
 async def get_course(
@@ -106,6 +107,7 @@ async def get_course_meta(
     # Avoid circular import
     from src.services.courses.chapters import get_course_chapters
 
+    # Get course with a single query
     course_statement = select(Course).where(Course.course_uuid == course_uuid)
     course = db_session.exec(course_statement).first()
 
@@ -118,36 +120,51 @@ async def get_course_meta(
     # RBAC check
     await rbac_check(request, course.course_uuid, current_user, "read", db_session)
 
-    # Get course authors
-    authors_statement = (
-        select(User)
-        .join(ResourceAuthor)
-        .where(ResourceAuthor.resource_uuid == course.course_uuid)
-    )
-    authors = db_session.exec(authors_statement).all()
-
-    # convert from User to UserRead
-    authors = [UserRead.model_validate(author) for author in authors]
-
-    course = CourseRead(**course.model_dump(), authors=authors)
-
-    # Get course chapters
-    chapters = await get_course_chapters(request, course.id, db_session, current_user)
-
-    # Trail
-    trail = None
-
-    if isinstance(current_user, AnonymousUser):
-        trail = None
-    else:
-        trail = await get_user_trail_with_orgid(
+    # Start async tasks concurrently
+    tasks = []
+    
+    # Task 1: Get course authors
+    async def get_authors():
+        authors_statement = (
+            select(User)
+            .join(ResourceAuthor)
+            .where(ResourceAuthor.resource_uuid == course.course_uuid)
+        )
+        return db_session.exec(authors_statement).all()
+    
+    # Task 2: Get course chapters
+    async def get_chapters():
+        # Ensure course.id is not None
+        if course.id is None:
+            return []
+        return await get_course_chapters(request, course.id, db_session, current_user)
+    
+    # Task 3: Get user trail (only for authenticated users)
+    async def get_trail():
+        if isinstance(current_user, AnonymousUser):
+            return None
+        return await get_user_trail_with_orgid(
             request, current_user, course.org_id, db_session
         )
-
+    
+    # Add tasks to the list
+    tasks.append(get_authors())
+    tasks.append(get_chapters())
+    tasks.append(get_trail())
+    
+    # Run all tasks concurrently
+    authors_raw, chapters, trail = await asyncio.gather(*tasks)
+    
+    # Convert authors from User to UserRead
+    authors = [UserRead.model_validate(author) for author in authors_raw]
+    
+    # Create course read model
+    course_read = CourseRead(**course.model_dump(), authors=authors)
+    
     return FullCourseReadWithTrail(
-        **course.model_dump(),
+        **course_read.model_dump(),
         chapters=chapters,
-        trail=trail if trail else None,
+        trail=trail,
     )
 
 async def get_courses_orgslug(
@@ -196,19 +213,34 @@ async def get_courses_orgslug(
     query = query.offset(offset).limit(limit).distinct()
 
     courses = db_session.exec(query).all()
-
-    # Fetch authors for each course
+    
+    if not courses:
+        return []
+        
+    # Get all course UUIDs
+    course_uuids = [course.course_uuid for course in courses]
+    
+    # Fetch all authors for all courses in a single query
+    authors_query = (
+        select(ResourceAuthor, User)
+        .join(User, ResourceAuthor.user_id == User.id)  # type: ignore
+        .where(ResourceAuthor.resource_uuid.in_(course_uuids))  # type: ignore
+    )
+    
+    author_results = db_session.exec(authors_query).all()
+    
+    # Create a dictionary mapping course_uuid to list of authors
+    course_authors = {}
+    for resource_author, user in author_results:
+        if resource_author.resource_uuid not in course_authors:
+            course_authors[resource_author.resource_uuid] = []
+        course_authors[resource_author.resource_uuid].append(UserRead.model_validate(user))
+    
+    # Create CourseRead objects with authors
     course_reads = []
     for course in courses:
-        authors_query = (
-            select(User)
-            .join(ResourceAuthor, ResourceAuthor.user_id == User.id)  # type: ignore
-            .where(ResourceAuthor.resource_uuid == course.course_uuid)
-        )
-        authors = db_session.exec(authors_query).all()
-        
         course_read = CourseRead.model_validate(course)
-        course_read.authors = [UserRead.model_validate(author) for author in authors]
+        course_read.authors = course_authors.get(course.course_uuid, [])
         course_reads.append(course_read)
 
     return course_reads

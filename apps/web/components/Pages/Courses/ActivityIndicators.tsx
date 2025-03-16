@@ -65,7 +65,7 @@ function ActivityIndicators(props: Props) {
                     key={activity.activity_uuid}
                   >
                     <Link
-                      prefetch={true}
+                      prefetch={false}
                       href={
                         getUriWithOrg(orgslug, '') +
                         `/course/${courseid}/activity/${activity.activity_uuid.replace(
