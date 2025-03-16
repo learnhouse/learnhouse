@@ -27,6 +27,7 @@ type QuizSubmitSchema = {
         optionUUID: string;
         answer: boolean
     }[];
+    assignment_task_submission_uuid?: string;
 };
 
 type TaskQuizObjectProps = {
@@ -175,8 +176,14 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id }: TaskQuizObjectPro
         if (assignmentTaskUUID) {
             const res = await getAssignmentTaskSubmissionsMe(assignmentTaskUUID, assignment.assignment_object.assignment_uuid, access_token);
             if (res.success) {
-                setUserSubmissions(res.data.task_submission);
-                setInitialUserSubmissions(res.data.task_submission);
+                setUserSubmissions({
+                    ...res.data.task_submission,
+                    assignment_task_submission_uuid: res.data.assignment_task_submission_uuid
+                });
+                setInitialUserSubmissions({
+                    ...res.data.task_submission,
+                    assignment_task_submission_uuid: res.data.assignment_task_submission_uuid
+                });
             }
 
         }
@@ -242,9 +249,15 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id }: TaskQuizObjectPro
         if (assignmentTaskUUID && user_id) {
             const res = await getAssignmentTaskSubmissionsUser(assignmentTaskUUID, user_id, assignment.assignment_object.assignment_uuid, access_token);
             if (res.success) {
-                setUserSubmissions(res.data.task_submission);
+                setUserSubmissions({
+                    ...res.data.task_submission,
+                    assignment_task_submission_uuid: res.data.assignment_task_submission_uuid
+                });
                 setUserSubmissionObject(res.data);
-                setInitialUserSubmissions(res.data.task_submission);
+                setInitialUserSubmissions({
+                    ...res.data.task_submission,
+                    assignment_task_submission_uuid: res.data.assignment_task_submission_uuid
+                });
             }
 
         }
@@ -271,6 +284,7 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id }: TaskQuizObjectPro
 
             // Save the grade to the server
             const values = {
+                assignment_task_submission_uuid: userSubmissions.assignment_task_submission_uuid,
                 task_submission: userSubmissions,
                 grade: finalGrade,
                 task_submission_grade_feedback: 'Auto graded by system',

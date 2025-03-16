@@ -41,21 +41,27 @@ function AssignmentSubmissionsSubPage({ assignment_uuid }: { assignment_uuid: st
                         <X size={18} />
                         <h3>Late</h3>
                     </div>
-                    {renderSubmissions('LATE')}
+                    <div className='flex flex-col gap-4'>
+                        {renderSubmissions('LATE')}
+                    </div>
                 </div>
                 <div className='flex-1'>
                     <div className='flex w-fit mx-auto px-3.5 py-1 bg-amber-600/80 space-x-2 my-5 items-center text-sm font-bold text-white rounded-full'>
                         <SendHorizonal size={18} />
                         <h3>Submitted</h3>
                     </div>
-                    {renderSubmissions('SUBMITTED')}
+                    <div className='flex flex-col gap-4'>
+                        {renderSubmissions('SUBMITTED')}
+                    </div>
                 </div>
                 <div className='flex-1'>
                     <div className='flex w-fit mx-auto px-3.5 py-1 bg-emerald-600/80 space-x-2 my-5 items-center text-sm font-bold text-white rounded-full'>
                         <UserCheck size={18} />
                         <h3>Graded</h3>
                     </div>
-                    {renderSubmissions('GRADED')}
+                    <div className='flex flex-col gap-4'>
+                        {renderSubmissions('GRADED')}
+                    </div>
                 </div>
 
             </div>
