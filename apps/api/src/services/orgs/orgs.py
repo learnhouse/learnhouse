@@ -529,39 +529,31 @@ async def get_orgs_by_user_admin(
     page: int = 1,
     limit: int = 10,
 ) -> list[OrganizationRead]:
-
+    # Join Organization, UserOrganization and OrganizationConfig in a single query
     statement = (
-        select(Organization)
+        select(Organization, OrganizationConfig)
         .join(UserOrganization)
+        .outerjoin(OrganizationConfig)
         .where(
             UserOrganization.user_id == user_id,
             UserOrganization.role_id == 1,  # Only where the user is admin
+            UserOrganization.org_id == Organization.id,
+            OrganizationConfig.org_id == Organization.id
         )
         .offset((page - 1) * limit)
         .limit(limit)
     )
 
-    # Get organizations where the user is an admin
+    # Execute single query to get all data
     result = db_session.exec(statement)
-    orgs = result.all()
+    org_data = result.all()
 
+    # Process results in memory
     orgsWithConfig = []
-
-    for org in orgs:
-
-        # Get org config
-        statement = select(OrganizationConfig).where(
-            OrganizationConfig.org_id == org.id
-        )
-        result = db_session.exec(statement)
-
-        org_config = result.first()
-
+    for org, org_config in org_data:
         config = OrganizationConfig.model_validate(org_config) if org_config else {}
-
-        org = OrganizationRead(**org.model_dump(), config=config)
-
-        orgsWithConfig.append(org)
+        org_read = OrganizationRead(**org.model_dump(), config=config)
+        orgsWithConfig.append(org_read)
 
     return orgsWithConfig
 
@@ -573,36 +565,30 @@ async def get_orgs_by_user(
     page: int = 1,
     limit: int = 10,
 ) -> list[OrganizationRead]:
-
+    # Join Organization, UserOrganization and OrganizationConfig in a single query
     statement = (
-        select(Organization)
+        select(Organization, OrganizationConfig)
         .join(UserOrganization)
-        .where(UserOrganization.user_id == user_id)
+        .outerjoin(OrganizationConfig)
+        .where(
+            UserOrganization.user_id == user_id,
+            UserOrganization.org_id == Organization.id,
+            OrganizationConfig.org_id == Organization.id
+        )
         .offset((page - 1) * limit)
         .limit(limit)
     )
 
-    # Get organizations where the user is an admin
+    # Execute single query to get all data
     result = db_session.exec(statement)
-    orgs = result.all()
+    org_data = result.all()
 
+    # Process results in memory
     orgsWithConfig = []
-
-    for org in orgs:
-
-        # Get org config
-        statement = select(OrganizationConfig).where(
-            OrganizationConfig.org_id == org.id
-        )
-        result = db_session.exec(statement)
-
-        org_config = result.first()
-
+    for org, org_config in org_data:
         config = OrganizationConfig.model_validate(org_config) if org_config else {}
-
-        org = OrganizationRead(**org.model_dump(), config=config)
-
-        orgsWithConfig.append(org)
+        org_read = OrganizationRead(**org.model_dump(), config=config)
+        orgsWithConfig.append(org_read)
 
     return orgsWithConfig
 

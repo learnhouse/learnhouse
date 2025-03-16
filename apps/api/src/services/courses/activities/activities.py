@@ -92,24 +92,21 @@ async def get_activity(
     current_user: PublicUser,
     db_session: Session,
 ):
-    statement = select(Activity).where(Activity.activity_uuid == activity_uuid)
-    activity = db_session.exec(statement).first()
+    # Optimize by joining Activity with Course in a single query
+    statement = (
+        select(Activity, Course)
+        .join(Course)
+        .where(Activity.activity_uuid == activity_uuid)
+    )
+    result = db_session.exec(statement).first()
 
-    if not activity:
+    if not result:
         raise HTTPException(
             status_code=404,
             detail="Activity not found",
         )
-
-    # Get course from that activity
-    statement = select(Course).where(Course.id == activity.course_id)
-    course = db_session.exec(statement).first()
-
-    if not course:
-        raise HTTPException(
-            status_code=404,
-            detail="Course not found",
-        )
+    
+    activity, course = result
 
     # RBAC check
     await rbac_check(request, course.course_uuid, current_user, "read", db_session)
@@ -124,9 +121,8 @@ async def get_activity(
 
     activity_read = ActivityRead.model_validate(activity)
     activity_read.content = activity_read.content if has_paid_access else { "paid_access": False }
-    activity = activity_read
 
-    return activity
+    return activity_read
 
 async def get_activityby_id(
     request: Request,
@@ -134,31 +130,26 @@ async def get_activityby_id(
     current_user: PublicUser,
     db_session: Session,
 ):
-    statement = select(Activity).where(Activity.id == activity_id)
-    activity = db_session.exec(statement).first()
+    # Optimize by joining Activity with Course in a single query
+    statement = (
+        select(Activity, Course)
+        .join(Course)
+        .where(Activity.id == activity_id)
+    )
+    result = db_session.exec(statement).first()
 
-    if not activity:
+    if not result:
         raise HTTPException(
             status_code=404,
             detail="Activity not found",
         )
-
-    # Get course from that activity
-    statement = select(Course).where(Course.id == activity.course_id)
-    course = db_session.exec(statement).first()
-
-    if not course:
-        raise HTTPException(
-            status_code=404,
-            detail="Course not found",
-        )
+    
+    activity, course = result
 
     # RBAC check
     await rbac_check(request, course.course_uuid, current_user, "read", db_session)
 
-    activity = ActivityRead.model_validate(activity)
-
-    return activity
+    return ActivityRead.model_validate(activity)
 
 
 async def update_activity(
