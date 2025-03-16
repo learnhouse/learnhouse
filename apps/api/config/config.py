@@ -5,12 +5,6 @@ from pydantic import BaseModel
 from dotenv import load_dotenv
 
 
-class SentryConfig(BaseModel):
-    dsn: str
-    environment: str
-    release: str
-
-
 class CookieConfig(BaseModel):
     domain: str
 
@@ -53,7 +47,6 @@ class HostingConfig(BaseModel):
     allowed_origins: list
     allowed_regexp: str
     self_hosted: bool
-    sentry_config: Optional[SentryConfig]
     cookie_config: CookieConfig
     content_delivery: ContentDeliveryConfig
 
@@ -150,10 +143,7 @@ def get_learnhouse_config() -> LearnHouseConfig:
     env_self_hosted = os.environ.get("LEARNHOUSE_SELF_HOSTED")
     env_sql_connection_string = os.environ.get("LEARNHOUSE_SQL_CONNECTION_STRING")
 
-    # Sentry Config
-    env_sentry_dsn = os.environ.get("LEARNHOUSE_SENTRY_DSN")
-    env_sentry_environment = os.environ.get("LEARNHOUSE_SENTRY_ENVIRONMENT")
-    env_sentry_release = os.environ.get("LEARNHOUSE_SENTRY_RELEASE")
+    
 
     # Fill in values with YAML file if they are not provided
     site_name = env_site_name or yaml_config.get("site_name")
@@ -247,33 +237,6 @@ def get_learnhouse_config() -> LearnHouseConfig:
         "mailing_config", {}
     ).get("system_email_adress")
 
-    # Sentry config
-    # check if the sentry config is provided in the YAML file
-    sentry_config_verif = (
-        yaml_config.get("hosting_config", {}).get("sentry_config")
-        or env_sentry_dsn
-        or env_sentry_environment
-        or env_sentry_release
-        or None
-    )
-
-    sentry_dsn = env_sentry_dsn or yaml_config.get("hosting_config", {}).get(
-        "sentry_config", {}
-    ).get("dsn")
-    sentry_environment = env_sentry_environment or yaml_config.get(
-        "hosting_config", {}
-    ).get("sentry_config", {}).get("environment")
-    sentry_release = env_sentry_release or yaml_config.get("hosting_config", {}).get(
-        "sentry_config", {}
-    ).get("release")
-
-    if sentry_config_verif:
-        sentry_config = SentryConfig(
-            dsn=sentry_dsn, environment=sentry_environment, release=sentry_release
-        )
-    else:
-        sentry_config = None
-
     # Payments config
     env_stripe_secret_key = os.environ.get("LEARNHOUSE_STRIPE_SECRET_KEY")
     env_stripe_publishable_key = os.environ.get("LEARNHOUSE_STRIPE_PUBLISHABLE_KEY")
@@ -310,7 +273,6 @@ def get_learnhouse_config() -> LearnHouseConfig:
         allowed_origins=list(allowed_origins),
         allowed_regexp=allowed_regexp,
         self_hosted=bool(self_hosted),
-        sentry_config=sentry_config,
         cookie_config=cookie_config,
         content_delivery=content_delivery,
     )
