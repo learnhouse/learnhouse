@@ -14,6 +14,7 @@ class CourseBase(SQLModel):
     tags: Optional[str]
     thumbnail_image: Optional[str]
     public: bool
+    open_to_contributors: bool
 
 
 class Course(CourseBase, table=True):
@@ -38,7 +39,7 @@ class CourseUpdate(CourseBase):
     learnings: Optional[str]
     tags: Optional[str]
     public: Optional[bool]
-
+    open_to_contributors: Optional[bool]
 
 class CourseRead(CourseBase):
     id: int
