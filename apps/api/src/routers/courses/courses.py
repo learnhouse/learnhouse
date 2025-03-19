@@ -32,6 +32,12 @@ from src.services.courses.updates import (
     get_updates_by_course_uuid,
     update_update,
 )
+from src.services.courses.contributors import (
+    apply_course_contributor,
+    update_course_contributor,
+    get_course_contributors,
+)
+from src.db.resource_authors import ResourceAuthorshipEnum, ResourceAuthorshipStatusEnum
 
 
 router = APIRouter()
@@ -63,6 +69,7 @@ async def api_create_course(
         about=about,
         learnings=learnings,
         tags=tags,
+        open_to_contributors=False,
     )
     return await create_course(
         request, org_id, course, current_user, db_session, thumbnail
@@ -195,6 +202,19 @@ async def api_delete_course(
     return await delete_course(request, course_uuid, current_user, db_session)
 
 
+@router.post("/{course_uuid}/apply-contributor")
+async def api_apply_course_contributor(
+    request: Request,
+    course_uuid: str,
+    db_session: Session = Depends(get_db_session),
+    current_user: PublicUser = Depends(get_current_user),
+):
+    """
+    Apply to be a contributor for a course
+    """
+    return await apply_course_contributor(request, course_uuid, current_user, db_session)
+
+
 @router.get("/{course_uuid}/updates")
 async def api_get_course_updates(
     request: Request,
@@ -259,3 +279,41 @@ async def api_delete_course_update(
     """
 
     return await delete_update(request, courseupdate_uuid, current_user, db_session)
+
+
+@router.get("/{course_uuid}/contributors")
+async def api_get_course_contributors(
+    request: Request,
+    course_uuid: str,
+    db_session: Session = Depends(get_db_session),
+    current_user: PublicUser = Depends(get_current_user),
+):
+    """
+    Get all contributors for a course
+    """
+    return await get_course_contributors(request, course_uuid, current_user, db_session)
+
+
+@router.put("/{course_uuid}/contributors/{contributor_id}")
+async def api_update_course_contributor(
+    request: Request,
+    course_uuid: str,
+    contributor_user_id: int,
+    authorship: ResourceAuthorshipEnum,
+    authorship_status: ResourceAuthorshipStatusEnum,
+    db_session: Session = Depends(get_db_session),
+    current_user: PublicUser = Depends(get_current_user),
+):
+    """
+    Update a course contributor's role and status
+    Only administrators can perform this action
+    """
+    return await update_course_contributor(
+        request,
+        course_uuid,
+        contributor_user_id,
+        authorship,
+        authorship_status,
+        current_user,
+        db_session
+    )

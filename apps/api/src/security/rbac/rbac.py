@@ -70,6 +70,8 @@ async def authorization_verify_if_user_is_author(
             if resource_author.user_id == int(user_id):
                 if (resource_author.authorship == ResourceAuthorshipEnum.CREATOR) or (
                     resource_author.authorship == ResourceAuthorshipEnum.MAINTAINER
+                ) or (
+                    resource_author.authorship == ResourceAuthorshipEnum.CONTRIBUTOR
                 ):
                     return True
                 else:
