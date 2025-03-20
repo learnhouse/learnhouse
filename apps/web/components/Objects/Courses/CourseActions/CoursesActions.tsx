@@ -14,11 +14,14 @@ import CoursePaidOptions from './CoursePaidOptions'
 import { checkPaidAccess } from '@services/payments/payments'
 
 interface Author {
-  user_uuid: string
-  avatar_image: string
-  first_name: string
-  last_name: string
-  username: string
+  user: {
+    user_uuid: string
+    avatar_image: string
+    first_name: string
+    last_name: string
+    username: string
+  }
+  authorship: 'CREATOR' | 'CONTRIBUTOR' | 'MAINTAINER' | 'REPORTER'
 }
 
 interface CourseRun {
@@ -55,23 +58,23 @@ const AuthorInfo = ({ author, isMobile }: { author: Author, isMobile: boolean })
   <div className="flex flex-row md:flex-col mx-auto space-y-0 md:space-y-3 space-x-4 md:space-x-0 px-2 py-2 items-center">
     <UserAvatar
       border="border-8"
-      avatar_url={author.avatar_image ? getUserAvatarMediaDirectory(author.user_uuid, author.avatar_image) : ''}
-      predefined_avatar={author.avatar_image ? undefined : 'empty'}
+      avatar_url={author.user.avatar_image ? getUserAvatarMediaDirectory(author.user.user_uuid, author.user.avatar_image) : ''}
+      predefined_avatar={author.user.avatar_image ? undefined : 'empty'}
       width={isMobile ? 60 : 100}
     />
     <div className="md:-space-y-2">
       <div className="text-[12px] text-neutral-400 font-semibold">Author</div>
       <div className="text-lg md:text-xl font-bold text-neutral-800">
-        {(author.first_name && author.last_name) ? (
+        {(author.user.first_name && author.user.last_name) ? (
           <div className="flex space-x-2 items-center">
-            <p>{`${author.first_name} ${author.last_name}`}</p>
+            <p>{`${author.user.first_name} ${author.user.last_name}`}</p>
             <span className="text-xs bg-neutral-100 p-1 px-3 rounded-full text-neutral-400 font-semibold">
-              @{author.username}
+              @{author.user.username}
             </span>
           </div>
         ) : (
           <div className="flex space-x-2 items-center">
-            <p>@{author.username}</p>
+            <p>@{author.user.username}</p>
           </div>
         )}
       </div>
@@ -270,10 +273,20 @@ function CoursesActions({ courseuuid, orgslug, course }: CourseActionsProps) {
   const session = useLHSession() as any
   const isMobile = useMediaQuery('(max-width: 768px)')
 
+  // Sort authors by role priority
+  const sortedAuthors = [...course.authors].sort((a, b) => {
+    const rolePriority: Record<string, number> = {
+      'CREATOR': 0,
+      'MAINTAINER': 1,
+      'CONTRIBUTOR': 2,
+      'REPORTER': 3
+    };
+    return rolePriority[a.authorship] - rolePriority[b.authorship];
+  });
 
   return (
     <div className=" space-y-3  antialiased flex flex-col   p-3 py-5 bg-white shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40 rounded-lg overflow-hidden">
-     <AuthorInfo author={course.authors[0]} isMobile={isMobile} />
+     <AuthorInfo author={sortedAuthors[0]} isMobile={isMobile} />
       <div className='px-3 py-2'>
         <Actions courseuuid={courseuuid} orgslug={orgslug} course={course} />
       </div>

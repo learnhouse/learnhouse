@@ -294,7 +294,7 @@ async def api_get_course_contributors(
     return await get_course_contributors(request, course_uuid, current_user, db_session)
 
 
-@router.put("/{course_uuid}/contributors/{contributor_id}")
+@router.put("/{course_uuid}/contributors/{contributor_user_id}")
 async def api_update_course_contributor(
     request: Request,
     course_uuid: str,
