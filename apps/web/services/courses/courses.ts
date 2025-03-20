@@ -126,3 +126,30 @@ export async function deleteCourseFromBackend(course_uuid: any, access_token:any
   const res = await errorHandling(result)
   return res
 }
+
+export async function getCourseContributors(course_uuid: string, access_token:string | null | undefined) {
+  const result: any = await fetch(
+    `${getAPIUrl()}courses/${course_uuid}/contributors`,
+    RequestBodyWithAuthHeader('GET', null, null,access_token || undefined)
+  )
+  const res = await getResponseMetadata(result)
+  return res
+}
+
+export async function editContributor(course_uuid: string, contributor_id: string, authorship: any, authorship_status: any, access_token:string | null | undefined) {
+  const result: any = await fetch(
+    `${getAPIUrl()}courses/${course_uuid}/contributors/${contributor_id}?authorship=${authorship}&authorship_status=${authorship_status}`,
+    RequestBodyWithAuthHeader('PUT', null, null,access_token || undefined)
+  )
+  const res = await getResponseMetadata(result)
+  return res
+}
+
+export async function applyForContributor(course_uuid: string, data: any, access_token:string | null | undefined) {
+  const result: any = await fetch(
+    `${getAPIUrl()}courses/${course_uuid}/apply-contributor`,
+    RequestBodyWithAuthHeader('POST', data, null,access_token || undefined)
+  )
+  const res = await getResponseMetadata(result)
+  return res
+}

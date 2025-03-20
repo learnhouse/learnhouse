@@ -22,7 +22,7 @@ class ResourceAuthor(SQLModel, table=True):
     user_id: int = Field(
         sa_column=Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))
     )
-    authorship: ResourceAuthorshipEnum = ResourceAuthorshipEnum.CREATOR
-    authorship_status: ResourceAuthorshipStatusEnum = ResourceAuthorshipStatusEnum.ACTIVE
+    authorship: ResourceAuthorshipEnum
+    authorship_status: ResourceAuthorshipStatusEnum
     creation_date: str = ""
     update_date: str = ""
