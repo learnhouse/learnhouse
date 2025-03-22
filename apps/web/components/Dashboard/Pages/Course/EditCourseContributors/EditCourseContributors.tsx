@@ -123,7 +123,7 @@ function EditCourseContributors(props: EditCourseContributorsProps) {
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-[200px]">
-                {['CREATOR', 'CONTRIBUTOR', 'MAINTAINER', 'REPORTER'].map((role) => (
+                {['CONTRIBUTOR', 'MAINTAINER', 'REPORTER'].map((role) => (
                     <DropdownMenuItem
                         key={role}
                         onClick={() => updateContributor(contributor.user_id, { authorship: role as ContributorRole })}
@@ -180,23 +180,12 @@ function EditCourseContributors(props: EditCourseContributorsProps) {
     const sortContributors = (contributors: Contributor[] | undefined) => {
         if (!contributors) return [];
         
-        return [...contributors].sort((a, b) => {
-            // First sort by role priority
-            const rolePriority: Record<ContributorRole, number> = {
-                'CREATOR': 0,
-                'MAINTAINER': 1,
-                'CONTRIBUTOR': 2,
-                'REPORTER': 3
-            };
-            
-            const roleDiff = rolePriority[a.authorship] - rolePriority[b.authorship];
-            if (roleDiff !== 0) return roleDiff;
-            
-            // Then sort by name
-            const nameA = `${a.user.first_name} ${a.user.last_name}`.toLowerCase();
-            const nameB = `${b.user.first_name} ${b.user.last_name}`.toLowerCase();
-            return nameA.localeCompare(nameB);
-        });
+        // Find the creator and other contributors
+        const creator = contributors.find(c => c.authorship === 'CREATOR');
+        const otherContributors = contributors.filter(c => c.authorship !== 'CREATOR');
+        
+        // Return array with creator at the top, followed by other contributors in their original order
+        return creator ? [creator, ...otherContributors] : otherContributors;
     };
 
     return (

@@ -1,6 +1,6 @@
 from fastapi import HTTPException, Request
 from sqlmodel import Session, select
-from typing import Any, List
+from typing import Any
 from src.db.courses.courses import Course, CourseRead, AuthorWithRole
 from src.db.payments.payments_courses import PaymentsCourse
 from src.db.payments.payments_users import PaymentsUser, PaymentStatusEnum, ProviderSpecificData
