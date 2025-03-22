@@ -12,8 +12,9 @@ import { LogIn, LogOut, ShoppingCart, AlertCircle, UserPen, ClockIcon } from 'lu
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import CoursePaidOptions from './CoursePaidOptions'
 import { checkPaidAccess } from '@services/payments/payments'
-import { applyForContributor, getCourseContributors } from '@services/courses/courses'
+import { applyForContributor } from '@services/courses/courses'
 import toast from 'react-hot-toast'
+import { useContributorStatus } from '../../../../hooks/useContributorStatus'
 
 interface Author {
   user: {
@@ -192,7 +193,7 @@ const Actions = ({ courseuuid, orgslug, course }: CourseActionsProps) => {
   const [isContributeLoading, setIsContributeLoading] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [hasAccess, setHasAccess] = useState<boolean | null>(null)
-  const [contributorStatus, setContributorStatus] = useState<'NONE' | 'PENDING' | 'ACTIVE' | 'INACTIVE'>('NONE')
+  const { contributorStatus } = useContributorStatus(courseuuid);
 
   const isStarted = course.trail?.runs?.some(
     (run) => run.status === 'STATUS_IN_PROGRESS' && run.course_id === course.id
@@ -216,39 +217,6 @@ const Actions = ({ courseuuid, orgslug, course }: CourseActionsProps) => {
 
     fetchLinkedProducts()
   }, [course.id, course.org_id, session.data?.tokens?.access_token])
-
-  // Check if the current user is already a contributor
-  useEffect(() => {
-    const checkContributorStatus = async () => {
-      if (!session.data?.user) return
-
-      try {
-        const response = await getCourseContributors(
-          'course_' + courseuuid,
-          session.data?.tokens?.access_token
-        )
-        
-        if (response && response.data) {
-          const currentUser = response.data.find(
-            (contributor: any) => contributor.user_id === session.data.user.id
-          )
-          
-          if (currentUser) {
-            setContributorStatus(currentUser.authorship_status as 'PENDING' | 'ACTIVE' | 'INACTIVE')
-          } else {
-            setContributorStatus('NONE')
-          }
-        }
-      } catch (error) {
-        console.error('Failed to check contributor status:', error)
-        toast.error('Failed to check contributor status. Please try again later.')
-      }
-    }
-
-    if (session.data?.user) {
-      checkContributorStatus()
-    }
-  }, [courseuuid, session.data?.tokens?.access_token, session.data?.user])
 
   useEffect(() => {
     const checkAccess = async () => {
@@ -337,7 +305,6 @@ const Actions = ({ courseuuid, orgslug, course }: CourseActionsProps) => {
       }
       
       await applyForContributor('course_' + courseuuid, data, session.data?.tokens?.access_token)
-      setContributorStatus('PENDING')
       await revalidateTags(['courses'], orgslug)
       toast.success('Your application to contribute has been submitted successfully', { id: loadingToast })
     } catch (error) {

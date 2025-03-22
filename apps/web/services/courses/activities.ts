@@ -2,6 +2,7 @@ import { getAPIUrl } from '@services/config/config'
 import {
   RequestBodyFormWithAuthHeader,
   RequestBodyWithAuthHeader,
+  getResponseMetadata,
 } from '@services/utils/ts/requests'
 
 export async function createActivity(
@@ -130,6 +131,6 @@ export async function updateActivity(
     `${getAPIUrl()}activities/${activity_uuid}`,
     RequestBodyWithAuthHeader('PUT', data, null, access_token)
   )
-  const res = await result.json()
+  const res = await getResponseMetadata(result)
   return res
 }
