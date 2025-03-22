@@ -9,6 +9,7 @@ import {
   FilePenLine,
   FileSymlink,
   Globe,
+  Loader2,
   Lock,
   MoreVertical,
   Pencil,
@@ -52,6 +53,7 @@ function ActivityElement(props: ActivitiyElementProps) {
   const [selectedActivity, setSelectedActivity] = React.useState<
     string | undefined
   >(undefined)
+  const [isUpdatingName, setIsUpdatingName] = React.useState<boolean>(false)
   const activityUUID = props.activity.activity_uuid
   const isMobile = useMediaQuery('(max-width: 767px)')
 
@@ -92,18 +94,29 @@ function ActivityElement(props: ActivitiyElementProps) {
       modifiedActivity?.activityId === activityId &&
       selectedActivity !== undefined
     ) {
+      setIsUpdatingName(true)
       
       let modifiedActivityCopy = {
         ...props.activity,
         name: modifiedActivity.activityName,
       }
 
-      await updateActivity(modifiedActivityCopy, activityUUID, access_token)
-      mutate(`${getAPIUrl()}courses/${props.course_uuid}/meta`)
-      await revalidateTags(['courses'], props.orgslug)
-      router.refresh()
+      try {
+        await updateActivity(modifiedActivityCopy, activityUUID, access_token)
+        mutate(`${getAPIUrl()}courses/${props.course_uuid}/meta`)
+        await revalidateTags(['courses'], props.orgslug)
+        toast.success('Activity name updated successfully')
+        router.refresh()
+      } catch (error) {
+        toast.error('Failed to update activity name')
+        console.error('Error updating activity name:', error)
+      } finally {
+        setIsUpdatingName(false)
+        setSelectedActivity(undefined)
+      }
+    } else {
+      setSelectedActivity(undefined)
     }
-    setSelectedActivity(undefined)
   }
 
   return (
@@ -142,20 +155,26 @@ function ActivityElement(props: ActivitiyElementProps) {
                       activityName: e.target.value,
                     })
                   }
+                  disabled={isUpdatingName}
                 />
                 <button
                   onClick={() => updateActivityName(props.activity.id)}
-                  className="bg-transparent text-neutral-700 hover:cursor-pointer hover:text-neutral-900"
+                  className="bg-transparent text-neutral-700 hover:cursor-pointer hover:text-neutral-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isUpdatingName}
                 >
-                  <Save size={12} />
+                  {isUpdatingName ? (
+                    <Loader2 size={12} className="animate-spin" />
+                  ) : (
+                    <Save size={12} />
+                  )}
                 </button>
               </div>
             ) : (
               <p className="first-letter:uppercase text-center sm:text-left"> {props.activity.name} </p>
             )}
             <Pencil
-              onClick={() => setSelectedActivity(props.activity.id)}
-              className="text-neutral-400 hover:cursor-pointer size-3 min-w-3"
+              onClick={() => !isUpdatingName && setSelectedActivity(props.activity.id)}
+              className={`text-neutral-400 hover:cursor-pointer size-3 min-w-3 ${isUpdatingName ? 'opacity-50 cursor-not-allowed' : ''}`}
             />
           </div>
 
