@@ -3,8 +3,10 @@ from fastapi import HTTPException, Request
 from sqlmodel import Session, select
 from sqlalchemy import text
 
-from src.db.courses.courses import Course, CourseRead
+from src.db.courses.courses import Course, CourseRead, AuthorWithRole
 from src.db.organizations import Organization, OrganizationRead
+from src.db.users import User, UserRead
+from src.db.resource_authors import ResourceAuthor
 
 
 def _get_sort_expression(salt: str):
@@ -96,7 +98,27 @@ async def get_course_for_explore(
             detail="Course not found",
         )
 
-    return CourseRead.model_validate(course)
+    # Get course authors with their roles
+    authors_statement = (
+        select(ResourceAuthor, User)
+        .join(User, ResourceAuthor.user_id == User.id)
+        .where(ResourceAuthor.resource_uuid == course.course_uuid)
+    )
+    author_results = db_session.exec(authors_statement).all()
+
+    # Convert to AuthorWithRole objects
+    authors = [
+        AuthorWithRole(
+            user=UserRead.model_validate(user),
+            authorship=resource_author.authorship,
+            authorship_status=resource_author.authorship_status,
+            creation_date=resource_author.creation_date,
+            update_date=resource_author.update_date
+        )
+        for resource_author, user in author_results
+    ]
+
+    return CourseRead(**course.model_dump(), authors=authors)
 
 async def search_orgs_for_explore(
     request: Request,

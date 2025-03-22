@@ -6,8 +6,14 @@ from sqlmodel import Field, SQLModel
 
 class ResourceAuthorshipEnum(str, Enum):
     CREATOR = "CREATOR"
+    CONTRIBUTOR = "CONTRIBUTOR"
     MAINTAINER = "MAINTAINER"
     REPORTER = "REPORTER"
+
+class ResourceAuthorshipStatusEnum(str, Enum):
+    ACTIVE = "ACTIVE"
+    PENDING = "PENDING"
+    INACTIVE = "INACTIVE"
 
 
 class ResourceAuthor(SQLModel, table=True):
@@ -16,6 +22,7 @@ class ResourceAuthor(SQLModel, table=True):
     user_id: int = Field(
         sa_column=Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))
     )
-    authorship: ResourceAuthorshipEnum = ResourceAuthorshipEnum.CREATOR
+    authorship: ResourceAuthorshipEnum
+    authorship_status: ResourceAuthorshipStatusEnum
     creation_date: str = ""
     update_date: str = ""

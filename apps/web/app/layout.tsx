@@ -22,7 +22,7 @@ export default function RootLayout({
       <head />
       <body>
         {isDevEnv ? '' : <Script data-website-id="a1af6d7a-9286-4a1f-8385-ddad2a29fcbb" src="/umami/script.js" />}
-        <SessionProvider>
+        <SessionProvider key="session-provider">
           <LHSessionProvider>
             <StyledComponentsRegistry>
               <motion.main
