@@ -40,7 +40,16 @@ async def create_activity(
         )
 
     # RBAC check
-    await rbac_check(request, chapter.chapter_uuid, current_user, "create", db_session)
+    statement = select(Course).where(Course.id == chapter.course_id)
+    course = db_session.exec(statement).first()
+
+    if not course:
+        raise HTTPException(
+            status_code=404,
+            detail="Course not found",
+        )
+
+    await rbac_check(request, course.course_uuid, current_user, "create", db_session)
 
     # Create Activity
     activity = Activity(**activity_object.model_dump())
@@ -169,9 +178,16 @@ async def update_activity(
         )
 
     # RBAC check
-    await rbac_check(
-        request, activity.activity_uuid, current_user, "update", db_session
-    )
+    statement = select(Course).where(Course.id == activity.course_id)
+    course = db_session.exec(statement).first()
+
+    if not course:
+        raise HTTPException(
+            status_code=404,
+            detail="Course not found",
+        )
+
+    await rbac_check(request, course.course_uuid, current_user, "update", db_session)
 
     # Update only the fields that were passed in
     for var, value in vars(activity_object).items():
@@ -203,9 +219,16 @@ async def delete_activity(
         )
 
     # RBAC check
-    await rbac_check(
-        request, activity.activity_uuid, current_user, "delete", db_session
-    )
+    statement = select(Course).where(Course.id == activity.course_id)
+    course = db_session.exec(statement).first()
+
+    if not course:
+        raise HTTPException(
+            status_code=404,
+            detail="Course not found",
+        )
+
+    await rbac_check(request, course.course_uuid, current_user, "delete", db_session)
 
     # Delete activity from chapter
     statement = select(ChapterActivity).where(
@@ -249,7 +272,25 @@ async def get_activities(
         )
 
     # RBAC check
-    await rbac_check(request, "activity_x", current_user, "read", db_session)
+    statement = select(Chapter).where(Chapter.id == coursechapter_id)
+    chapter = db_session.exec(statement).first()
+    
+    if not chapter:
+        raise HTTPException(
+            status_code=404,
+            detail="Chapter not found",
+        )
+
+    statement = select(Course).where(Course.id == chapter.course_id)
+    course = db_session.exec(statement).first()
+
+    if not course:
+        raise HTTPException(
+            status_code=404,
+            detail="Course not found",
+        )
+
+    await rbac_check(request, course.course_uuid, current_user, "read", db_session)
 
     activities = [ActivityRead.model_validate(activity) for activity in activities]
 

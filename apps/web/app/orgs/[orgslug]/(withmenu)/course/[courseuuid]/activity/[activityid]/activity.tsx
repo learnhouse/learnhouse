@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { getAPIUrl, getUriWithOrg } from '@services/config/config'
 import Canva from '@components/Objects/Activities/DynamicCanva/DynamicCanva'
 import VideoActivity from '@components/Objects/Activities/Video/Video'
-import { BookOpenCheck, Check, CheckCircle, ChevronDown, ChevronLeft, ChevronRight, FileText, Folder, List, Menu, MoreVertical, UserRoundPen, Video, Layers, ListFilter, ListTree, X } from 'lucide-react'
+import { BookOpenCheck, Check, CheckCircle, ChevronDown, ChevronLeft, ChevronRight, FileText, Folder, List, Menu, MoreVertical, UserRoundPen, Video, Layers, ListFilter, ListTree, X, Edit2 } from 'lucide-react'
 import { markActivityAsComplete } from '@services/courses/activity'
 import DocumentPdfActivity from '@components/Objects/Activities/DocumentPdf/DocumentPdf'
 import ActivityIndicators from '@components/Pages/Courses/ActivityIndicators'
@@ -27,6 +27,7 @@ import { mutate } from 'swr'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import { useMediaQuery } from 'usehooks-ts'
 import PaidCourseActivityDisclaimer from '@components/Objects/Courses/CourseActions/PaidCourseActivityDisclaimer'
+import { useContributorStatus } from '../../../../../../../../hooks/useContributorStatus'
 
 interface ActivityClientProps {
   activityid: string
@@ -49,6 +50,7 @@ function ActivityClient(props: ActivityClientProps) {
   const [bgColor, setBgColor] = React.useState('bg-white')
   const [assignment, setAssignment] = React.useState(null) as any;
   const [markStatusButtonActive, setMarkStatusButtonActive] = React.useState(false);
+  const { contributorStatus } = useContributorStatus(courseuuid);
  
 
   function getChapterNameByActivityId(course: any, activity_id: any) {
@@ -90,27 +92,29 @@ function ActivityClient(props: ActivityClientProps) {
         <AIChatBotProvider>
           <GeneralWrapperStyled>
             <div className="space-y-4 pt-4">
-              <div className="flex space-x-6">
-                <div className="flex">
-                  <Link
-                    href={getUriWithOrg(orgslug, '') + `/course/${courseuuid}`}
-                  >
-                    <img
-                      className="w-[100px] h-[57px] rounded-md drop-shadow-md"
-                      src={`${getCourseThumbnailMediaDirectory(
-                        org?.org_uuid,
-                        course.course_uuid,
-                        course.thumbnail_image
-                      )}`}
-                      alt=""
-                    />
-                  </Link>
-                </div>
-                <div className="flex flex-col -space-y-1">
-                  <p className="font-bold text-gray-700 text-md">Course </p>
-                  <h1 className="font-bold text-gray-950 text-2xl first-letter:uppercase">
-                    {course.name}
-                  </h1>
+              <div className="flex justify-between items-center">
+                <div className="flex space-x-6">
+                  <div className="flex">
+                    <Link
+                      href={getUriWithOrg(orgslug, '') + `/course/${courseuuid}`}
+                    >
+                      <img
+                        className="w-[100px] h-[57px] rounded-md drop-shadow-md"
+                        src={`${getCourseThumbnailMediaDirectory(
+                          org?.org_uuid,
+                          course.course_uuid,
+                          course.thumbnail_image
+                        )}`}
+                        alt=""
+                      />
+                    </Link>
+                  </div>
+                  <div className="flex flex-col -space-y-1">
+                    <p className="font-bold text-gray-700 text-md">Course </p>
+                    <h1 className="font-bold text-gray-950 text-2xl first-letter:uppercase">
+                      {course.name}
+                    </h1>
+                  </div>
                 </div>
               </div>
               <ActivityIndicators
@@ -136,13 +140,22 @@ function ActivityClient(props: ActivityClientProps) {
                     </h1>
                   </div>
                 </div>
-                <div className="flex space-x-1 items-center">
+                <div className="flex space-x-2 items-center">
                   {activity && activity.published == true && activity.content.paid_access != false && (
                     <AuthenticatedClientElement checkMethod="authentication">
                       {activity.activity_type != 'TYPE_ASSIGNMENT' &&
                         <>
                           <AIActivityAsk activity={activity} />
-                          <MoreVertical size={17} className="text-gray-300 " />
+                          {contributorStatus === 'ACTIVE' && activity.activity_type == 'TYPE_DYNAMIC' && (
+                            <Link
+                              href={getUriWithOrg(orgslug, '') + `/course/${courseuuid}/activity/${activityid}/edit`}
+                              className="bg-emerald-600 rounded-full px-5 drop-shadow-md flex items-center space-x-2 p-2.5 text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out"
+                            >
+                              <Edit2 size={17} />
+                              <span className="text-xs font-bold">Contribute to Activity</span>
+                            </Link>
+                          )}
+                          <MoreVertical size={17} className="text-gray-300" />
                           <MarkStatus
                             activity={activity}
                             activityid={activityid}
@@ -165,7 +178,6 @@ function ActivityClient(props: ActivityClientProps) {
                           </AssignmentSubmissionProvider>
                         </>
                       }
-
                     </AuthenticatedClientElement>
                   )}
                 </div>

@@ -4,7 +4,7 @@ from sqlalchemy import null
 from sqlmodel import Session, select
 from src.db.collections import Collection
 from src.db.courses.courses import Course
-from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum
+from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum, ResourceAuthorshipStatusEnum
 from src.db.roles import Role
 from src.db.user_organizations import UserOrganization
 from src.security.rbac.utils import check_element_type
@@ -68,11 +68,10 @@ async def authorization_verify_if_user_is_author(
 
         if resource_author:
             if resource_author.user_id == int(user_id):
-                if (resource_author.authorship == ResourceAuthorshipEnum.CREATOR) or (
-                    resource_author.authorship == ResourceAuthorshipEnum.MAINTAINER
-                ) or (
-                    resource_author.authorship == ResourceAuthorshipEnum.CONTRIBUTOR
-                ):
+                if ((resource_author.authorship == ResourceAuthorshipEnum.CREATOR) or 
+                    (resource_author.authorship == ResourceAuthorshipEnum.MAINTAINER) or 
+                    (resource_author.authorship == ResourceAuthorshipEnum.CONTRIBUTOR)) and \
+                    resource_author.authorship_status == ResourceAuthorshipStatusEnum.ACTIVE:
                     return True
                 else:
                     return False

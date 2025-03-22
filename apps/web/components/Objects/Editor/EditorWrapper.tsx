@@ -22,11 +22,22 @@ function EditorWrapper(props: EditorWrapperProps): JSX.Element {
     let activity = props.activity
     activity.content = content
 
-    toast.promise(updateActivity(activity, activity.activity_uuid, access_token), {
-      loading: 'Saving...',
-      success: <b>Activity saved!</b>,
-      error: <b>Could not save.</b>,
-    })
+    toast.promise(
+      updateActivity(activity, activity.activity_uuid, access_token).then(res => {
+        if (!res.success) {
+          throw res;
+        }
+        return res;
+      }),
+      {
+        loading: 'Saving...',
+        success: () => <b>Activity saved!</b>,
+        error: (err) => {
+          const errorMessage = err?.data?.detail || err?.data?.message || `Error ${err?.status}: Could not save`;
+          return <b>{errorMessage}</b>;
+        },
+      }
+    )
   }
 
 
