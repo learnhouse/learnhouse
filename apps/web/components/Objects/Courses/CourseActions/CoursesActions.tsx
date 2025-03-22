@@ -22,6 +22,7 @@ interface Author {
     username: string
   }
   authorship: 'CREATOR' | 'CONTRIBUTOR' | 'MAINTAINER' | 'REPORTER'
+  authorship_status: 'ACTIVE' | 'INACTIVE' | 'PENDING'
 }
 
 interface CourseRun {
@@ -82,11 +83,109 @@ const AuthorInfo = ({ author, isMobile }: { author: Author, isMobile: boolean })
   </div>
 )
 
+const MultipleAuthors = ({ authors, isMobile }: { authors: Author[], isMobile: boolean }) => {
+  const displayedAvatars = authors.slice(0, 3)
+  const displayedNames = authors.slice(0, 2)
+  const remainingCount = Math.max(0, authors.length - 3)
+  
+  // Consistent sizes for both avatars and badge
+  const avatarSize = isMobile ? 72 : 86
+  const borderSize = "border-4"
+
+  return (
+    <div className="flex flex-col items-center space-y-4 px-2 py-2">
+      <div className="text-[12px] text-neutral-400 font-semibold self-start">Authors</div>
+      
+      {/* Avatars row */}
+      <div className="flex justify-center -space-x-6 relative">
+        {displayedAvatars.map((author, index) => (
+          <div
+            key={author.user.user_uuid}
+            className="relative"
+            style={{ zIndex: displayedAvatars.length - index }}
+          >
+            <div className="ring-white">
+              <UserAvatar
+                border={borderSize}
+                rounded='rounded-full'
+                avatar_url={author.user.avatar_image ? getUserAvatarMediaDirectory(author.user.user_uuid, author.user.avatar_image) : ''}
+                predefined_avatar={author.user.avatar_image ? undefined : 'empty'}
+                width={avatarSize}
+              />
+            </div>
+          </div>
+        ))}
+        {remainingCount > 0 && (
+          <div 
+            className="relative"
+            style={{ zIndex: 0 }}
+          >
+            <div 
+              className="flex items-center justify-center bg-neutral-100 text-neutral-600 font-medium rounded-full border-4 border-white shadow-sm"
+              style={{ 
+                width: `${avatarSize}px`, 
+                height: `${avatarSize}px`,
+                fontSize: isMobile ? '14px' : '16px'
+              }}
+            >
+              +{remainingCount}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Names row - improved display logic */}
+      <div className="text-center mt-2">
+        <div className="text-sm font-medium text-neutral-800">
+          {authors.length === 1 ? (
+            <span>
+              {authors[0].user.first_name && authors[0].user.last_name
+                ? `${authors[0].user.first_name} ${authors[0].user.last_name}`
+                : `@${authors[0].user.username}`}
+            </span>
+          ) : (
+            <>
+              {displayedNames.map((author, index) => (
+                <span key={author.user.user_uuid}>
+                  {author.user.first_name && author.user.last_name
+                    ? `${author.user.first_name} ${author.user.last_name}`
+                    : `@${author.user.username}`}
+                  {index === 0 && authors.length > 1 && index < displayedNames.length - 1 && " & "}
+                </span>
+              ))}
+              {authors.length > 2 && (
+                <span className="text-neutral-500 ml-1">
+                  & {authors.length - 2} more
+                </span>
+              )}
+            </>
+          )}
+        </div>
+        <div className="text-xs text-neutral-500 mt-0.5">
+          {authors.length === 1 ? (
+            <span>@{authors[0].user.username}</span>
+          ) : (
+            <>
+              {displayedNames.map((author, index) => (
+                <span key={author.user.user_uuid}>
+                  @{author.user.username}
+                  {index === 0 && authors.length > 1 && index < displayedNames.length - 1 && " & "}
+                </span>
+              ))}
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 const Actions = ({ courseuuid, orgslug, course }: CourseActionsProps) => {
   const router = useRouter()
   const session = useLHSession() as any
   const [linkedProducts, setLinkedProducts] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isActionLoading, setIsActionLoading] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [hasAccess, setHasAccess] = useState<boolean | null>(null)
 
@@ -141,27 +240,34 @@ const Actions = ({ courseuuid, orgslug, course }: CourseActionsProps) => {
       return
     }
 
-    if (isStarted) {
-      await removeCourse('course_' + courseuuid, orgslug, session.data?.tokens?.access_token)
-      await revalidateTags(['courses'], orgslug)
-      router.refresh()
-    } else {
-      await startCourse('course_' + courseuuid, orgslug, session.data?.tokens?.access_token)
-      await revalidateTags(['courses'], orgslug)
-      
-      // Get the first activity from the first chapter
-      const firstChapter = course.chapters?.[0]
-      const firstActivity = firstChapter?.activities?.[0]
-      
-      if (firstActivity) {
-        // Redirect to the first activity
-        router.push(
-          getUriWithOrg(orgslug, '') +
-          `/course/${courseuuid}/activity/${firstActivity.activity_uuid.replace('activity_', '')}`
-        )
-      } else {
+    setIsActionLoading(true)
+    try {
+      if (isStarted) {
+        await removeCourse('course_' + courseuuid, orgslug, session.data?.tokens?.access_token)
+        await revalidateTags(['courses'], orgslug)
         router.refresh()
+      } else {
+        await startCourse('course_' + courseuuid, orgslug, session.data?.tokens?.access_token)
+        await revalidateTags(['courses'], orgslug)
+        
+        // Get the first activity from the first chapter
+        const firstChapter = course.chapters?.[0]
+        const firstActivity = firstChapter?.activities?.[0]
+        
+        if (firstActivity) {
+          // Redirect to the first activity
+          router.push(
+            getUriWithOrg(orgslug, '') +
+            `/course/${courseuuid}/activity/${firstActivity.activity_uuid.replace('activity_', '')}`
+          )
+        } else {
+          router.refresh()
+        }
       }
+    } catch (error) {
+      console.error('Failed to perform course action:', error)
+    } finally {
+      setIsActionLoading(false)
     }
   }
 
@@ -185,13 +291,16 @@ const Actions = ({ courseuuid, orgslug, course }: CourseActionsProps) => {
             </div>
             <button
               onClick={handleCourseAction}
-              className={`w-full py-3 rounded-lg nice-shadow font-semibold transition-colors flex items-center justify-center gap-2 ${
+              disabled={isActionLoading}
+              className={`w-full py-3 rounded-lg nice-shadow font-semibold transition-colors flex items-center justify-center gap-2 cursor-pointer ${
                 isStarted
-                  ? 'bg-red-500 text-white hover:bg-red-600'
-                  : 'bg-neutral-900 text-white hover:bg-neutral-800'
+                  ? 'bg-red-500 text-white hover:bg-red-600 disabled:bg-red-400'
+                  : 'bg-neutral-900 text-white hover:bg-neutral-800 disabled:bg-neutral-700'
               }`}
             >
-              {isStarted ? (
+              {isActionLoading ? (
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : isStarted ? (
                 <>
                   <LogOut className="w-5 h-5" />
                   Leave Course
@@ -242,13 +351,16 @@ const Actions = ({ courseuuid, orgslug, course }: CourseActionsProps) => {
   return (
     <button
       onClick={handleCourseAction}
-      className={`w-full py-3 rounded-lg nice-shadow font-semibold transition-colors flex items-center justify-center gap-2 ${
+      disabled={isActionLoading}
+      className={`w-full py-3 rounded-lg nice-shadow font-semibold transition-colors flex items-center justify-center gap-2 cursor-pointer ${
         isStarted
-          ? 'bg-red-500 text-white hover:bg-red-600'
-          : 'bg-neutral-900 text-white hover:bg-neutral-800'
+          ? 'bg-red-500 text-white hover:bg-red-600 disabled:bg-red-400'
+          : 'bg-neutral-900 text-white hover:bg-neutral-800 disabled:bg-neutral-700'
       }`}
     >
-      {!session.data?.user ? (
+      {isActionLoading ? (
+        <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+      ) : !session.data?.user ? (
         <>
           <LogIn className="w-5 h-5" />
           Authenticate to start course
@@ -273,20 +385,22 @@ function CoursesActions({ courseuuid, orgslug, course }: CourseActionsProps) {
   const session = useLHSession() as any
   const isMobile = useMediaQuery('(max-width: 768px)')
 
-  // Sort authors by role priority
-  const sortedAuthors = [...course.authors].sort((a, b) => {
-    const rolePriority: Record<string, number> = {
-      'CREATOR': 0,
-      'MAINTAINER': 1,
-      'CONTRIBUTOR': 2,
-      'REPORTER': 3
-    };
-    return rolePriority[a.authorship] - rolePriority[b.authorship];
-  });
+  // Filter active authors and sort by role priority
+  const sortedAuthors = [...course.authors]
+    .filter(author => author.authorship_status === 'ACTIVE')
+    .sort((a, b) => {
+      const rolePriority: Record<string, number> = {
+        'CREATOR': 0,
+        'MAINTAINER': 1,
+        'CONTRIBUTOR': 2,
+        'REPORTER': 3
+      };
+      return rolePriority[a.authorship] - rolePriority[b.authorship];
+    });
 
   return (
-    <div className=" space-y-3  antialiased flex flex-col   p-3 py-5 bg-white shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40 rounded-lg overflow-hidden">
-     <AuthorInfo author={sortedAuthors[0]} isMobile={isMobile} />
+    <div className="space-y-3 antialiased flex flex-col p-3 py-5 bg-white shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40 rounded-lg overflow-hidden">
+      <MultipleAuthors authors={sortedAuthors} isMobile={isMobile} />
       <div className='px-3 py-2'>
         <Actions courseuuid={courseuuid} orgslug={orgslug} course={course} />
       </div>

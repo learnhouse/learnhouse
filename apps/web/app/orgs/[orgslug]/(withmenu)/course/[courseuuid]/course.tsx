@@ -29,6 +29,8 @@ const CourseClient = (props: any) => {
   const router = useRouter()
   const isMobile = useMediaQuery('(max-width: 768px)')
 
+  console.log(course)
+
   function getLearningTags() {
     if (!course?.learnings) {
       setLearnings([])
@@ -333,7 +335,7 @@ const CourseClient = (props: any) => {
           </GeneralWrapperStyled>
           
           {isMobile && (
-            <div className="fixed bottom-0 left-0 right-0 bg-white shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40 p-4 z-50">
+            <div className="fixed bottom-0 left-0 right-0  p-4 z-50">
               <CourseActionsMobile courseuuid={courseuuid} orgslug={orgslug} course={course} />
             </div>
           )}

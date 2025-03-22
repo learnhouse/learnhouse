@@ -72,7 +72,7 @@ const CoursePage = async (params: any) => {
   // Fetch course metadata once
   const course_meta = await getCourseMetadata(
     params.params.courseuuid,
-    { revalidate: 1800, tags: ['courses'] },
+    { revalidate: 0, tags: ['courses'] },
     access_token ? access_token : null
   )
 
