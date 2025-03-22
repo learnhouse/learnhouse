@@ -80,7 +80,7 @@ function UserAvatar(props: UserAvatarProps) {
         ${props.border ? `border ${props.border}` : ''}
         ${props.borderColor ?? 'border-white'}
         ${props.backgroundColor ?? 'bg-gray-100'}
-        shadow-xl
+        shadow-md shadow-gray-300/45
         aspect-square
         w-[${props.width ?? 50}px]
         h-[${props.width ?? 50}px]
