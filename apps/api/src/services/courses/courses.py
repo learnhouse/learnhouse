@@ -152,10 +152,10 @@ async def get_course_meta(
     async def get_authors():
         authors_statement = (
             select(ResourceAuthor, User)
-            .join(User, ResourceAuthor.user_id == User.id)
+            .join(User, ResourceAuthor.user_id == User.id)  # type: ignore  
             .where(ResourceAuthor.resource_uuid == course.course_uuid)
             .order_by(
-                ResourceAuthor.id.asc()
+                ResourceAuthor.id.asc()  # type: ignore
             )
         )
         return db_session.exec(authors_statement).all()
