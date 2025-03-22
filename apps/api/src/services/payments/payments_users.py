@@ -1,7 +1,7 @@
 from fastapi import HTTPException, Request
 from sqlmodel import Session, select
 from typing import Any
-from src.db.courses.courses import Course, CourseRead
+from src.db.courses.courses import Course, CourseRead, AuthorWithRole
 from src.db.payments.payments_courses import PaymentsCourse
 from src.db.payments.payments_users import PaymentsUser, PaymentStatusEnum, ProviderSpecificData
 from src.db.payments.payments_products import PaymentsProduct
@@ -231,19 +231,28 @@ async def get_owned_courses(
     # Get authors for each course and convert to CourseRead
     course_reads = []
     for course in unique_courses:
-        # Get course authors
+        # Get course authors with their roles
         authors_statement = (
-            select(User)
-            .join(ResourceAuthor)
+            select(ResourceAuthor, User)
+            .join(User, ResourceAuthor.user_id == User.id)
             .where(ResourceAuthor.resource_uuid == course.course_uuid)
         )
-        authors = db_session.exec(authors_statement).all()
+        author_results = db_session.exec(authors_statement).all()
 
-        # Convert authors to UserRead
-        author_reads = [UserRead.model_validate(author) for author in authors]
+        # Convert to AuthorWithRole objects
+        authors = [
+            AuthorWithRole(
+                user=UserRead.model_validate(user),
+                authorship=resource_author.authorship,
+                authorship_status=resource_author.authorship_status,
+                creation_date=resource_author.creation_date,
+                update_date=resource_author.update_date
+            )
+            for resource_author, user in author_results
+        ]
 
         # Create CourseRead object
-        course_read = CourseRead(**course.model_dump(), authors=author_reads)
+        course_read = CourseRead(**course.model_dump(), authors=authors)
         course_reads.append(course_read)
 
     return course_reads

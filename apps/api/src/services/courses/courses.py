@@ -10,7 +10,7 @@ from src.security.features_utils.usage import (
     increase_feature_usage,
 )
 from src.services.trail.trail import get_user_trail_with_orgid
-from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum
+from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum, ResourceAuthorshipStatusEnum
 from src.db.users import PublicUser, AnonymousUser, User, UserRead
 from src.db.courses.courses import (
     Course,
@@ -18,6 +18,7 @@ from src.db.courses.courses import (
     CourseRead,
     CourseUpdate,
     FullCourseReadWithTrail,
+    AuthorWithRole,
 )
 from src.security.rbac.rbac import (
     authorization_verify_based_on_roles_and_authorship,
@@ -48,16 +49,28 @@ async def get_course(
     # RBAC check
     await rbac_check(request, course.course_uuid, current_user, "read", db_session)
 
-    # Get course authors
+    # Get course authors with their roles
     authors_statement = (
-        select(User)
-        .join(ResourceAuthor)
+        select(ResourceAuthor, User)
+        .join(User, ResourceAuthor.user_id == User.id)
         .where(ResourceAuthor.resource_uuid == course.course_uuid)
+        .order_by(
+            ResourceAuthor.id.asc()
+        )
     )
-    authors = db_session.exec(authors_statement).all()
+    author_results = db_session.exec(authors_statement).all()
 
-    # convert from User to UserRead
-    authors = [UserRead.model_validate(author) for author in authors]
+    # Convert to AuthorWithRole objects
+    authors = [
+        AuthorWithRole(
+            user=UserRead.model_validate(user),
+            authorship=resource_author.authorship,
+            authorship_status=resource_author.authorship_status,
+            creation_date=resource_author.creation_date,
+            update_date=resource_author.update_date
+        )
+        for resource_author, user in author_results
+    ]
 
     course = CourseRead(**course.model_dump(), authors=authors)
 
@@ -82,16 +95,28 @@ async def get_course_by_id(
     # RBAC check
     await rbac_check(request, course.course_uuid, current_user, "read", db_session)
 
-    # Get course authors
+    # Get course authors with their roles
     authors_statement = (
-        select(User)
-        .join(ResourceAuthor)
+        select(ResourceAuthor, User)
+        .join(User, ResourceAuthor.user_id == User.id)
         .where(ResourceAuthor.resource_uuid == course.course_uuid)
+        .order_by(
+            ResourceAuthor.id.asc()
+        )
     )
-    authors = db_session.exec(authors_statement).all()
+    author_results = db_session.exec(authors_statement).all()
 
-    # convert from User to UserRead
-    authors = [UserRead.model_validate(author) for author in authors]
+    # Convert to AuthorWithRole objects
+    authors = [
+        AuthorWithRole(
+            user=UserRead.model_validate(user),
+            authorship=resource_author.authorship,
+            authorship_status=resource_author.authorship_status,
+            creation_date=resource_author.creation_date,
+            update_date=resource_author.update_date
+        )
+        for resource_author, user in author_results
+    ]
 
     course = CourseRead(**course.model_dump(), authors=authors)
 
@@ -123,12 +148,15 @@ async def get_course_meta(
     # Start async tasks concurrently
     tasks = []
     
-    # Task 1: Get course authors
+    # Task 1: Get course authors with their roles
     async def get_authors():
         authors_statement = (
-            select(User)
-            .join(ResourceAuthor)
+            select(ResourceAuthor, User)
+            .join(User, ResourceAuthor.user_id == User.id)  # type: ignore  
             .where(ResourceAuthor.resource_uuid == course.course_uuid)
+            .order_by(
+                ResourceAuthor.id.asc()  # type: ignore
+            )
         )
         return db_session.exec(authors_statement).all()
     
@@ -153,10 +181,19 @@ async def get_course_meta(
     tasks.append(get_trail())
     
     # Run all tasks concurrently
-    authors_raw, chapters, trail = await asyncio.gather(*tasks)
+    author_results, chapters, trail = await asyncio.gather(*tasks)
     
-    # Convert authors from User to UserRead
-    authors = [UserRead.model_validate(author) for author in authors_raw]
+    # Convert to AuthorWithRole objects
+    authors = [
+        AuthorWithRole(
+            user=UserRead.model_validate(user),
+            authorship=resource_author.authorship,
+            authorship_status=resource_author.authorship_status,
+            creation_date=resource_author.creation_date,
+            update_date=resource_author.update_date
+        )
+        for resource_author, user in author_results
+    ]
     
     # Create course read model
     course_read = CourseRead(**course.model_dump(), authors=authors)
@@ -166,6 +203,7 @@ async def get_course_meta(
         chapters=chapters,
         trail=trail,
     )
+
 
 async def get_courses_orgslug(
     request: Request,
@@ -225,6 +263,9 @@ async def get_courses_orgslug(
         select(ResourceAuthor, User)
         .join(User, ResourceAuthor.user_id == User.id)  # type: ignore
         .where(ResourceAuthor.resource_uuid.in_(course_uuids))  # type: ignore
+        .order_by(
+            ResourceAuthor.id.asc()
+        )
     )
     
     author_results = db_session.exec(authors_query).all()
@@ -234,13 +275,23 @@ async def get_courses_orgslug(
     for resource_author, user in author_results:
         if resource_author.resource_uuid not in course_authors:
             course_authors[resource_author.resource_uuid] = []
-        course_authors[resource_author.resource_uuid].append(UserRead.model_validate(user))
+        course_authors[resource_author.resource_uuid].append(
+            AuthorWithRole(
+                user=UserRead.model_validate(user),
+                authorship=resource_author.authorship,
+                authorship_status=resource_author.authorship_status,
+                creation_date=resource_author.creation_date,
+                update_date=resource_author.update_date
+            )
+        )
     
     # Create CourseRead objects with authors
     course_reads = []
     for course in courses:
-        course_read = CourseRead.model_validate(course)
-        course_read.authors = course_authors.get(course.course_uuid, [])
+        course_read = CourseRead(
+            **course.model_dump(),
+            authors=course_authors.get(course.course_uuid, [])
+        )
         course_reads.append(course_read)
 
     return course_reads
@@ -306,15 +357,31 @@ async def search_courses(
     # Fetch authors for each course
     course_reads = []
     for course in courses:
-        authors_query = (
-            select(User)
-            .join(ResourceAuthor, ResourceAuthor.user_id == User.id)  # type: ignore
+        # Get course authors with their roles
+        authors_statement = (
+            select(ResourceAuthor, User)
+            .join(User, ResourceAuthor.user_id == User.id)
             .where(ResourceAuthor.resource_uuid == course.course_uuid)
+            .order_by(
+                ResourceAuthor.id.asc()
+            )
         )
-        authors = db_session.exec(authors_query).all()
+        author_results = db_session.exec(authors_statement).all()
+
+        # Convert to AuthorWithRole objects
+        authors = [
+            AuthorWithRole(
+                user=UserRead.model_validate(user),
+                authorship=resource_author.authorship,
+                authorship_status=resource_author.authorship_status,
+                creation_date=resource_author.creation_date,
+                update_date=resource_author.update_date
+            )
+            for resource_author, user in author_results
+        ]
         
         course_read = CourseRead.model_validate(course)
-        course_read.authors = [UserRead.model_validate(author) for author in authors]
+        course_read.authors = authors
         course_reads.append(course_read)
 
     return course_reads
@@ -368,6 +435,7 @@ async def create_course(
         resource_uuid=course.course_uuid,
         user_id=current_user.id,
         authorship=ResourceAuthorshipEnum.CREATOR,
+        authorship_status=ResourceAuthorshipStatusEnum.ACTIVE,
         creation_date=str(datetime.now()),
         update_date=str(datetime.now()),
     )
@@ -377,19 +445,31 @@ async def create_course(
     db_session.commit()
     db_session.refresh(resource_author)
 
-    # Get course authors
+    # Get course authors with their roles
     authors_statement = (
-        select(User)
-        .join(ResourceAuthor)
+        select(ResourceAuthor, User)
+        .join(User, ResourceAuthor.user_id == User.id)
         .where(ResourceAuthor.resource_uuid == course.course_uuid)
+        .order_by(
+            ResourceAuthor.id.asc()
+        )
     )
-    authors = db_session.exec(authors_statement).all()
+    author_results = db_session.exec(authors_statement).all()
+
+    # Convert to AuthorWithRole objects
+    authors = [
+        AuthorWithRole(
+            user=UserRead.model_validate(user),
+            authorship=resource_author.authorship,
+            authorship_status=resource_author.authorship_status,
+            creation_date=resource_author.creation_date,
+            update_date=resource_author.update_date
+        )
+        for resource_author, user in author_results
+    ]
 
     # Feature usage
     increase_feature_usage("courses", course.org_id, db_session)
-
-    # convert from User to UserRead
-    authors = [UserRead.model_validate(author) for author in authors]
 
     course = CourseRead(**course.model_dump(), authors=authors)
 
@@ -444,16 +524,28 @@ async def update_course_thumbnail(
     db_session.commit()
     db_session.refresh(course)
 
-    # Get course authors
+    # Get course authors with their roles
     authors_statement = (
-        select(User)
-        .join(ResourceAuthor)
+        select(ResourceAuthor, User)
+        .join(User, ResourceAuthor.user_id == User.id)
         .where(ResourceAuthor.resource_uuid == course.course_uuid)
+        .order_by(
+            ResourceAuthor.id.asc()
+        )
     )
-    authors = db_session.exec(authors_statement).all()
+    author_results = db_session.exec(authors_statement).all()
 
-    # convert from User to UserRead
-    authors = [UserRead.model_validate(author) for author in authors]
+    # Convert to AuthorWithRole objects
+    authors = [
+        AuthorWithRole(
+            user=UserRead.model_validate(user),
+            authorship=resource_author.authorship,
+            authorship_status=resource_author.authorship_status,
+            creation_date=resource_author.creation_date,
+            update_date=resource_author.update_date
+        )
+        for resource_author, user in author_results
+    ]
 
     course = CourseRead(**course.model_dump(), authors=authors)
 
@@ -491,16 +583,28 @@ async def update_course(
     db_session.commit()
     db_session.refresh(course)
 
-    # Get course authors
+    # Get course authors with their roles
     authors_statement = (
-        select(User)
-        .join(ResourceAuthor)
+        select(ResourceAuthor, User)
+        .join(User, ResourceAuthor.user_id == User.id)
         .where(ResourceAuthor.resource_uuid == course.course_uuid)
+        .order_by(
+            ResourceAuthor.id.asc()
+        )
     )
-    authors = db_session.exec(authors_statement).all()
+    author_results = db_session.exec(authors_statement).all()
 
-    # convert from User to UserRead
-    authors = [UserRead.model_validate(author) for author in authors]
+    # Convert to AuthorWithRole objects
+    authors = [
+        AuthorWithRole(
+            user=UserRead.model_validate(user),
+            authorship=resource_author.authorship,
+            authorship_status=resource_author.authorship_status,
+            creation_date=resource_author.creation_date,
+            update_date=resource_author.update_date
+        )
+        for resource_author, user in author_results
+    ]
 
     course = CourseRead(**course.model_dump(), authors=authors)
 
