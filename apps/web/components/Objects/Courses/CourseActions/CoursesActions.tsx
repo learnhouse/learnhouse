@@ -8,10 +8,12 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useMediaQuery } from 'usehooks-ts'
 import { getUriWithOrg, getUriWithoutOrg } from '@services/config/config'
 import { getProductsByCourse } from '@services/payments/products'
-import { LogIn, LogOut, ShoppingCart, AlertCircle } from 'lucide-react'
+import { LogIn, LogOut, ShoppingCart, AlertCircle, UserPen, ClockIcon } from 'lucide-react'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import CoursePaidOptions from './CoursePaidOptions'
 import { checkPaidAccess } from '@services/payments/payments'
+import { applyForContributor, getCourseContributors } from '@services/courses/courses'
+import toast from 'react-hot-toast'
 
 interface Author {
   user: {
@@ -44,6 +46,7 @@ interface Course {
       activity_type: string
     }>
   }>
+  open_to_contributors?: boolean
 }
 
 interface CourseActionsProps {
@@ -186,8 +189,10 @@ const Actions = ({ courseuuid, orgslug, course }: CourseActionsProps) => {
   const [linkedProducts, setLinkedProducts] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isActionLoading, setIsActionLoading] = useState(false)
+  const [isContributeLoading, setIsContributeLoading] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [hasAccess, setHasAccess] = useState<boolean | null>(null)
+  const [contributorStatus, setContributorStatus] = useState<'NONE' | 'PENDING' | 'ACTIVE' | 'INACTIVE'>('NONE')
 
   const isStarted = course.trail?.runs?.some(
     (run) => run.status === 'STATUS_IN_PROGRESS' && run.course_id === course.id
@@ -212,6 +217,39 @@ const Actions = ({ courseuuid, orgslug, course }: CourseActionsProps) => {
     fetchLinkedProducts()
   }, [course.id, course.org_id, session.data?.tokens?.access_token])
 
+  // Check if the current user is already a contributor
+  useEffect(() => {
+    const checkContributorStatus = async () => {
+      if (!session.data?.user) return
+
+      try {
+        const response = await getCourseContributors(
+          'course_' + courseuuid,
+          session.data?.tokens?.access_token
+        )
+        
+        if (response && response.data) {
+          const currentUser = response.data.find(
+            (contributor: any) => contributor.user_id === session.data.user.id
+          )
+          
+          if (currentUser) {
+            setContributorStatus(currentUser.authorship_status as 'PENDING' | 'ACTIVE' | 'INACTIVE')
+          } else {
+            setContributorStatus('NONE')
+          }
+        }
+      } catch (error) {
+        console.error('Failed to check contributor status:', error)
+        toast.error('Failed to check contributor status. Please try again later.')
+      }
+    }
+
+    if (session.data?.user) {
+      checkContributorStatus()
+    }
+  }, [courseuuid, session.data?.tokens?.access_token, session.data?.user])
+
   useEffect(() => {
     const checkAccess = async () => {
       if (!session.data?.user) return
@@ -225,6 +263,7 @@ const Actions = ({ courseuuid, orgslug, course }: CourseActionsProps) => {
         
       } catch (error) {
         console.error('Failed to check course access')
+        toast.error('Failed to check course access. Please try again later.')
         setHasAccess(false)
       }
     }
@@ -241,14 +280,20 @@ const Actions = ({ courseuuid, orgslug, course }: CourseActionsProps) => {
     }
 
     setIsActionLoading(true)
+    const loadingToast = toast.loading(
+      isStarted ? 'Leaving course...' : 'Starting course...'
+    )
+    
     try {
       if (isStarted) {
         await removeCourse('course_' + courseuuid, orgslug, session.data?.tokens?.access_token)
         await revalidateTags(['courses'], orgslug)
+        toast.success('Successfully left the course', { id: loadingToast })
         router.refresh()
       } else {
         await startCourse('course_' + courseuuid, orgslug, session.data?.tokens?.access_token)
         await revalidateTags(['courses'], orgslug)
+        toast.success('Successfully started the course', { id: loadingToast })
         
         // Get the first activity from the first chapter
         const firstChapter = course.chapters?.[0]
@@ -266,14 +311,100 @@ const Actions = ({ courseuuid, orgslug, course }: CourseActionsProps) => {
       }
     } catch (error) {
       console.error('Failed to perform course action:', error)
+      toast.error(
+        isStarted
+          ? 'Failed to leave the course. Please try again later.'
+          : 'Failed to start the course. Please try again later.',
+        { id: loadingToast }
+      )
     } finally {
       setIsActionLoading(false)
+    }
+  }
+
+  const handleApplyToContribute = async () => {
+    if (!session.data?.user) {
+      router.push(getUriWithoutOrg(`/signup?orgslug=${orgslug}`))
+      return
+    }
+
+    setIsContributeLoading(true)
+    const loadingToast = toast.loading('Submitting contributor application...')
+    
+    try {
+      const data = {
+        message: "I would like to contribute to this course."
+      }
+      
+      await applyForContributor('course_' + courseuuid, data, session.data?.tokens?.access_token)
+      setContributorStatus('PENDING')
+      await revalidateTags(['courses'], orgslug)
+      toast.success('Your application to contribute has been submitted successfully', { id: loadingToast })
+    } catch (error) {
+      console.error('Failed to apply as contributor:', error)
+      toast.error('Failed to submit your application. Please try again later.', { id: loadingToast })
+    } finally {
+      setIsContributeLoading(false)
     }
   }
 
   if (isLoading) {
     return <div className="animate-pulse h-20 bg-gray-100 rounded-lg nice-shadow" />
   }
+
+  const renderContributorButton = () => {
+    // Don't render anything if the course is not open to contributors or if the user status is INACTIVE
+    if (contributorStatus === 'INACTIVE' || course.open_to_contributors !== true) {
+      return null;
+    }
+    
+    if (!session.data?.user) {
+      return (
+        <button
+          onClick={() => router.push(getUriWithoutOrg(`/signup?orgslug=${orgslug}`))}
+          className="w-full bg-white text-neutral-700 border border-neutral-200 py-3 rounded-lg nice-shadow font-semibold hover:bg-neutral-50 transition-colors flex items-center justify-center gap-2 mt-3 cursor-pointer"
+        >
+          <UserPen className="w-5 h-5" />
+          Authenticate to contribute
+        </button>
+      );
+    }
+
+    if (contributorStatus === 'ACTIVE') {
+      return (
+        <div className="w-full bg-green-50 text-green-700 border border-green-200 py-3 rounded-lg nice-shadow font-semibold flex items-center justify-center gap-2 mt-3">
+          <UserPen className="w-5 h-5" />
+          You are a contributor
+        </div>
+      );
+    }
+
+    if (contributorStatus === 'PENDING') {
+      return (
+        <div className="w-full bg-amber-50 text-amber-700 border border-amber-200 py-3 rounded-lg nice-shadow font-semibold flex items-center justify-center gap-2 mt-3">
+          <ClockIcon className="w-5 h-5" />
+          Contributor application pending
+        </div>
+      );
+    }
+
+    return (
+      <button
+        onClick={handleApplyToContribute}
+        disabled={isContributeLoading}
+        className="w-full bg-white text-neutral-700 py-3 rounded-lg nice-shadow font-semibold hover:bg-neutral-50 transition-colors flex items-center justify-center gap-2 mt-3 cursor-pointer disabled:cursor-not-allowed"
+      >
+        {isContributeLoading ? (
+          <div className="w-5 h-5 border-2 border-neutral-700 border-t-transparent rounded-full animate-spin" />
+        ) : (
+          <>
+            <UserPen className="w-5 h-5" />
+            Apply to contribute
+          </>
+        )}
+      </button>
+    );
+  };
 
   if (linkedProducts.length > 0) {
     return (
@@ -312,6 +443,7 @@ const Actions = ({ courseuuid, orgslug, course }: CourseActionsProps) => {
                 </>
               )}
             </button>
+            {renderContributorButton()}
           </>
         ) : (
           <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg nice-shadow">
@@ -342,6 +474,7 @@ const Actions = ({ courseuuid, orgslug, course }: CourseActionsProps) => {
               <ShoppingCart className="w-5 h-5" />
               Purchase Course
             </button>
+            {renderContributorButton()}
           </>
         )}
       </div>
@@ -349,34 +482,37 @@ const Actions = ({ courseuuid, orgslug, course }: CourseActionsProps) => {
   }
 
   return (
-    <button
-      onClick={handleCourseAction}
-      disabled={isActionLoading}
-      className={`w-full py-3 rounded-lg nice-shadow font-semibold transition-colors flex items-center justify-center gap-2 cursor-pointer ${
-        isStarted
-          ? 'bg-red-500 text-white hover:bg-red-600 disabled:bg-red-400'
-          : 'bg-neutral-900 text-white hover:bg-neutral-800 disabled:bg-neutral-700'
-      }`}
-    >
-      {isActionLoading ? (
-        <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
-      ) : !session.data?.user ? (
-        <>
-          <LogIn className="w-5 h-5" />
-          Authenticate to start course
-        </>
-      ) : isStarted ? (
-        <>
-          <LogOut className="w-5 h-5" />
-          Leave Course
-        </>
-      ) : (
-        <>
-          <LogIn className="w-5 h-5" />
-          Start Course
-        </>
-      )}
-    </button>
+    <div className="space-y-4">
+      <button
+        onClick={handleCourseAction}
+        disabled={isActionLoading}
+        className={`w-full py-3 rounded-lg nice-shadow font-semibold transition-colors flex items-center justify-center gap-2 cursor-pointer ${
+          isStarted
+            ? 'bg-red-500 text-white hover:bg-red-600 disabled:bg-red-400'
+            : 'bg-neutral-900 text-white hover:bg-neutral-800 disabled:bg-neutral-700'
+        }`}
+      >
+        {isActionLoading ? (
+          <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+        ) : !session.data?.user ? (
+          <>
+            <LogIn className="w-5 h-5" />
+            Authenticate to start course
+          </>
+        ) : isStarted ? (
+          <>
+            <LogOut className="w-5 h-5" />
+            Leave Course
+          </>
+        ) : (
+          <>
+            <LogIn className="w-5 h-5" />
+            Start Course
+          </>
+        )}
+      </button>
+      {renderContributorButton()}
+    </div>
   )
 }
 
