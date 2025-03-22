@@ -165,7 +165,7 @@ const CourseClient = (props: any) => {
                 <div className="bg-white shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40 rounded-lg overflow-hidden">
                   {course.chapters.map((chapter: any) => {
                     return (
-                      <div key={chapter} className="">
+                      <div key={chapter.chapter_uuid || `chapter-${chapter.name}`} className="">
                         <div className="flex text-lg py-4 px-4 outline outline-1 outline-neutral-200/40 font-bold bg-neutral-50 text-neutral-600 items-center">
                           <h3 className="grow mr-3 break-words">{chapter.name}</h3>
                           <p className="text-sm font-normal text-neutral-400 px-3 py-[2px] outline-1 outline outline-neutral-200 rounded-full whitespace-nowrap shrink-0">
@@ -175,7 +175,7 @@ const CourseClient = (props: any) => {
                         <div className="py-3">
                           {chapter.activities.map((activity: any) => {
                             return (
-                              <>
+                              <div key={activity.activity_uuid} className="activity-container">
                                 <p className="flex text-md"></p>
                                 <div className="flex space-x-1 py-2 px-4 items-center">
                                   <div className="courseicon items-center flex space-x-2 text-neutral-400">
@@ -232,7 +232,7 @@ const CourseClient = (props: any) => {
                                   <div className="flex ">
                                     {activity.activity_type ===
                                       'TYPE_DYNAMIC' && (
-                                        <>
+                                        <div>
                                           <Link
                                             className="flex grow pl-2 text-gray-500"
                                             href={
@@ -250,10 +250,10 @@ const CourseClient = (props: any) => {
                                               <ArrowRight size={13} />
                                             </div>
                                           </Link>
-                                        </>
+                                        </div>
                                       )}
                                     {activity.activity_type === 'TYPE_VIDEO' && (
-                                      <>
+                                      <div>
                                         <Link
                                           className="flex grow pl-2 text-gray-500"
                                           href={
@@ -271,11 +271,11 @@ const CourseClient = (props: any) => {
                                             <ArrowRight size={13} />
                                           </div>
                                         </Link>
-                                      </>
+                                      </div>
                                     )}
                                     {activity.activity_type ===
                                       'TYPE_DOCUMENT' && (
-                                        <>
+                                        <div>
                                           <Link
                                             className="flex grow pl-2 text-gray-500"
                                             href={
@@ -293,11 +293,11 @@ const CourseClient = (props: any) => {
                                               <ArrowRight size={13} />
                                             </div>
                                           </Link>
-                                        </>
+                                        </div>
                                       )}
                                     {activity.activity_type ===
                                       'TYPE_ASSIGNMENT' && (
-                                        <>
+                                        <div>
                                           <Link
                                             className="flex grow pl-2 text-gray-500"
                                             href={
@@ -315,11 +315,11 @@ const CourseClient = (props: any) => {
                                               <ArrowRight size={13} />
                                             </div>
                                           </Link>
-                                        </>
+                                        </div>
                                       )}
                                   </div>
                                 </div>
-                              </>
+                              </div>
                             )
                           })}
                         </div>
