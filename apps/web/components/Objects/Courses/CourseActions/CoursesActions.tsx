@@ -193,7 +193,7 @@ const Actions = ({ courseuuid, orgslug, course }: CourseActionsProps) => {
   const [isContributeLoading, setIsContributeLoading] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [hasAccess, setHasAccess] = useState<boolean | null>(null)
-  const { contributorStatus } = useContributorStatus(courseuuid);
+  const { contributorStatus, refetch } = useContributorStatus(courseuuid);
 
   const isStarted = course.trail?.runs?.some(
     (run) => run.status === 'STATUS_IN_PROGRESS' && run.course_id === course.id
@@ -306,6 +306,7 @@ const Actions = ({ courseuuid, orgslug, course }: CourseActionsProps) => {
       
       await applyForContributor('course_' + courseuuid, data, session.data?.tokens?.access_token)
       await revalidateTags(['courses'], orgslug)
+      await refetch()
       toast.success('Your application to contribute has been submitted successfully', { id: loadingToast })
     } catch (error) {
       console.error('Failed to apply as contributor:', error)
