@@ -154,7 +154,7 @@ function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.1, type: 'spring', stiffness: 80 }}
-        className="h-full overflow-y-auto"
+        className="flex-1 overflow-y-auto"
       >
         {params.subpage == 'users' ? <OrgUsers /> : ''}
         {params.subpage == 'signups' ? <OrgAccess /> : ''}
