@@ -18,6 +18,7 @@ import { useContributorStatus } from '../../../../hooks/useContributorStatus'
 
 interface Author {
   user: {
+    id: string
     user_uuid: string
     avatar_image: string
     first_name: string
@@ -66,6 +67,8 @@ const AuthorInfo = ({ author, isMobile }: { author: Author, isMobile: boolean })
       avatar_url={author.user.avatar_image ? getUserAvatarMediaDirectory(author.user.user_uuid, author.user.avatar_image) : ''}
       predefined_avatar={author.user.avatar_image ? undefined : 'empty'}
       width={isMobile ? 60 : 100}
+      showProfilePopup={true}
+      userId={author.user.user_uuid}
     />
     <div className="md:-space-y-2">
       <div className="text-[12px] text-neutral-400 font-semibold">Author</div>
@@ -115,6 +118,8 @@ const MultipleAuthors = ({ authors, isMobile }: { authors: Author[], isMobile: b
                 avatar_url={author.user.avatar_image ? getUserAvatarMediaDirectory(author.user.user_uuid, author.user.avatar_image) : ''}
                 predefined_avatar={author.user.avatar_image ? undefined : 'empty'}
                 width={avatarSize}
+                showProfilePopup={true}
+                userId={author.user.id}
               />
             </div>
           </div>
