@@ -1,6 +1,7 @@
 from typing import Optional
 from pydantic import BaseModel, EmailStr
 from sqlmodel import Field, SQLModel
+from sqlalchemy import JSON, Column
 from src.db.roles import RoleRead
 
 
@@ -12,7 +13,8 @@ class UserBase(SQLModel):
     email: EmailStr
     avatar_image: Optional[str] = ""
     bio: Optional[str] = ""
-
+    details: Optional[dict] = Field(default={}, sa_column=Column(JSON))
+    profile: Optional[dict] = Field(default={}, sa_column=Column(JSON))
 
 class UserCreate(UserBase):
     first_name: str = ""
@@ -27,6 +29,8 @@ class UserUpdate(UserBase):
     email: str
     avatar_image: Optional[str] = ""
     bio: Optional[str] = ""
+    details: Optional[dict] = {}
+    profile: Optional[dict] = {}
 
 
 class UserUpdatePassword(SQLModel):
