@@ -3,6 +3,7 @@ import { getUriWithOrg } from '@services/config/config'
 import { useParams } from 'next/navigation'
 import { getUserAvatarMediaDirectory } from '@services/media/media'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import UserProfilePopup from './UserProfilePopup'
 
 type UserAvatarProps = {
   width?: number
@@ -13,6 +14,8 @@ type UserAvatarProps = {
   borderColor?: string
   predefined_avatar?: 'ai' | 'empty'
   backgroundColor?: 'bg-white' | 'bg-gray-100' 
+  showProfilePopup?: boolean
+  userId?: string
 }
 
 function UserAvatar(props: UserAvatarProps) {
@@ -69,7 +72,7 @@ function UserAvatar(props: UserAvatarProps) {
     return getUriWithOrg(params.orgslug, '/empty_avatar.png')
   }
 
-  return (
+  const avatarImage = (
     <img
       alt="User Avatar"
       width={props.width ?? 50}
@@ -88,6 +91,16 @@ function UserAvatar(props: UserAvatarProps) {
       `}
     />
   )
+
+  if (props.showProfilePopup && props.userId) {
+    return (
+      <UserProfilePopup userId={props.userId}>
+        {avatarImage}
+      </UserProfilePopup>
+    )
+  }
+
+  return avatarImage
 }
 
 export default UserAvatar
