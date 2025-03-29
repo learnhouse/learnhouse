@@ -92,8 +92,8 @@ function SettingsPage({ params }: { params: Promise<SettingsParams> }) {
   const CurrentComponent = navigationItems.find(item => item.id === subpage)?.component;
 
   return (
-    <div className="h-full w-full bg-[#f8f8f8]">
-      <div className="pl-10 pr-10 tracking-tight bg-[#fcfbfc] z-10 nice-shadow">
+    <div className="h-full w-full bg-[#f8f8f8] flex flex-col">
+      <div className="pl-10 pr-10 tracking-tight bg-[#fcfbfc] z-10 nice-shadow flex-shrink-0">
         <BreadCrumbs
           type="user"
           last_breadcrumb={session?.user?.username}
@@ -109,13 +109,13 @@ function SettingsPage({ params }: { params: Promise<SettingsParams> }) {
           orgslug={orgslug}
         />
       </div>
-      <div className="h-6" />
+      <div className="h-6 flex-shrink-0" />
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.1, type: 'spring', stiffness: 80 }}
-        className="h-full overflow-y-auto"
+        className="flex-1 overflow-y-auto"
       >
         {CurrentComponent && <CurrentComponent />}
       </motion.div>
