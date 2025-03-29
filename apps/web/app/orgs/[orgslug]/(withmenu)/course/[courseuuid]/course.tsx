@@ -22,6 +22,7 @@ import CourseActionsMobile from '@components/Objects/Courses/CourseActions/Cours
 
 const CourseClient = (props: any) => {
   const [learnings, setLearnings] = useState<any>([])
+  const [expandedChapters, setExpandedChapters] = useState<{[key: string]: boolean}>({})
   const courseuuid = props.courseuuid
   const orgslug = props.orgslug
   const course = props.course
@@ -112,8 +113,8 @@ const CourseClient = (props: any) => {
             <div className="flex flex-col md:flex-row md:space-x-10 space-y-6 md:space-y-0 pt-10">
               <div className="course_metadata_left w-full md:basis-3/4 space-y-2">
                 <h2 className="py-3 text-2xl font-bold">About</h2>
-                <div className="bg-white shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40 rounded-lg overflow-hidden">
-                  <p className="py-5 px-5 whitespace-pre-wrap">{course.about}</p>
+                <div className="">
+                  <p className="py-5  whitespace-pre-wrap">{course.about}</p>
                 </div>
 
                 {learnings.length > 0 && learnings[0]?.text !== 'null' && (
@@ -164,117 +165,113 @@ const CourseClient = (props: any) => {
                 <h2 className="py-3 text-xl md:text-2xl font-bold">Course Lessons</h2>
                 <div className="bg-white shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40 rounded-lg overflow-hidden">
                   {course.chapters.map((chapter: any) => {
+                    const isExpanded = expandedChapters[chapter.chapter_uuid] ?? true; // Default to expanded
                     return (
                       <div key={chapter.chapter_uuid || `chapter-${chapter.name}`} className="">
-                        <div className="flex text-lg py-4 px-4 outline outline-1 outline-neutral-200/40 font-bold bg-neutral-50 text-neutral-600 items-center">
+                        <div 
+                          className="flex text-lg py-4 px-4 outline outline-1 outline-neutral-200/40 font-bold bg-neutral-50 text-neutral-600 items-center cursor-pointer hover:bg-neutral-100 transition-colors"
+                          onClick={() => setExpandedChapters(prev => ({
+                            ...prev,
+                            [chapter.chapter_uuid]: !isExpanded
+                          }))}
+                        >
                           <h3 className="grow mr-3 break-words">{chapter.name}</h3>
-                          <p className="text-sm font-normal text-neutral-400 px-3 py-[2px] outline-1 outline outline-neutral-200 rounded-full whitespace-nowrap shrink-0">
-                            {chapter.activities.length} Activities
-                          </p>
+                          <div className="flex items-center space-x-3">
+                            <p className="text-sm font-normal text-neutral-400 px-3 py-[2px] outline-1 outline outline-neutral-200 rounded-full whitespace-nowrap shrink-0">
+                              {chapter.activities.length} Activities
+                            </p>
+                            <svg 
+                              className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
+                              fill="none" 
+                              stroke="currentColor" 
+                              viewBox="0 0 24 24"
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </div>
                         </div>
-                        <div className="py-3">
-                          {chapter.activities.map((activity: any) => {
-                            return (
-                              <div key={activity.activity_uuid} className="activity-container">
-                                <p className="flex text-md"></p>
-                                <div className="flex space-x-1 py-2 px-4 items-center">
-                                  <div className="courseicon items-center flex space-x-2 text-neutral-400">
-                                    {activity.activity_type ===
-                                      'TYPE_DYNAMIC' && (
-                                        <div className="bg-gray-100 px-2 py-2 rounded-full">
-                                          <Sparkles
-                                            className="text-gray-400"
-                                            size={13}
-                                          />
-                                        </div>
-                                      )}
-                                    {activity.activity_type === 'TYPE_VIDEO' && (
-                                      <div className="bg-gray-100 px-2 py-2 rounded-full">
-                                        <Video
-                                          className="text-gray-400"
-                                          size={13}
-                                        />
-                                      </div>
-                                    )}
-                                    {activity.activity_type ===
-                                      'TYPE_DOCUMENT' && (
-                                        <div className="bg-gray-100 px-2 py-2 rounded-full">
-                                          <File
-                                            className="text-gray-400"
-                                            size={13}
-                                          />
-                                        </div>
-                                      )}
-                                    {activity.activity_type ===
-                                      'TYPE_ASSIGNMENT' && (
-                                        <div className="bg-gray-100 px-2 py-2 rounded-full">
-                                          <Backpack
-                                            className="text-gray-400"
-                                            size={13}
-                                          />
-                                        </div>
-                                      )}
-                                  </div>
-                                  <Link
-                                    className="flex font-semibold grow pl-2 text-neutral-500"
-                                    href={
-                                      getUriWithOrg(orgslug, '') +
-                                      `/course/${courseuuid}/activity/${activity.activity_uuid.replace(
-                                        'activity_',
-                                        ''
-                                      )}`
-                                    }
-                                    rel="noopener noreferrer"
-                                    prefetch={false}
-                                  >
-                                    <p>{activity.name}</p>
-                                  </Link>
-                                  <div className="flex ">
-                                    {activity.activity_type ===
-                                      'TYPE_DYNAMIC' && (
-                                        <div>
-                                          <Link
-                                            className="flex grow pl-2 text-gray-500"
-                                            href={
-                                              getUriWithOrg(orgslug, '') +
-                                              `/course/${courseuuid}/activity/${activity.activity_uuid.replace(
-                                                'activity_',
-                                                ''
-                                              )}`
-                                            }
-                                            rel="noopener noreferrer"
-                                            prefetch={false}
-                                          >
-                                            <div className="text-xs bg-gray-100 text-gray-400 font-bold px-2 py-1 rounded-full flex space-x-1 items-center">
-                                              <p>Page</p>
-                                              <ArrowRight size={13} />
-                                            </div>
-                                          </Link>
-                                        </div>
-                                      )}
-                                    {activity.activity_type === 'TYPE_VIDEO' && (
-                                      <div>
-                                        <Link
-                                          className="flex grow pl-2 text-gray-500"
-                                          href={
-                                            getUriWithOrg(orgslug, '') +
-                                            `/course/${courseuuid}/activity/${activity.activity_uuid.replace(
-                                              'activity_',
-                                              ''
-                                            )}`
-                                          }
-                                          rel="noopener noreferrer"
-                                          prefetch={false}
-                                        >
-                                          <div className="text-xs bg-gray-100 text-gray-400 font-bold px-2 py-1 rounded-full flex space-x-1 items-center">
-                                            <p>Video</p>
-                                            <ArrowRight size={13} />
+                        <div className={`py-3 transition-all duration-200 ${isExpanded ? 'block' : 'hidden'}`}>
+                          <div className="py-3">
+                            {chapter.activities.map((activity: any) => {
+                              return (
+                                <div key={activity.activity_uuid} className="activity-container">
+                                  <p className="flex text-md"></p>
+                                  <div className="flex space-x-1 py-2 px-4 items-center">
+                                    <div className="courseicon items-center flex space-x-2 text-neutral-400">
+                                      {activity.activity_type ===
+                                        'TYPE_DYNAMIC' && (
+                                          <div className="bg-gray-100 px-2 py-2 rounded-full">
+                                            <Sparkles
+                                              className="text-gray-400"
+                                              size={13}
+                                            />
                                           </div>
-                                        </Link>
-                                      </div>
-                                    )}
-                                    {activity.activity_type ===
-                                      'TYPE_DOCUMENT' && (
+                                        )}
+                                      {activity.activity_type === 'TYPE_VIDEO' && (
+                                        <div className="bg-gray-100 px-2 py-2 rounded-full">
+                                          <Video
+                                            className="text-gray-400"
+                                            size={13}
+                                          />
+                                        </div>
+                                      )}
+                                      {activity.activity_type ===
+                                        'TYPE_DOCUMENT' && (
+                                          <div className="bg-gray-100 px-2 py-2 rounded-full">
+                                            <File
+                                              className="text-gray-400"
+                                              size={13}
+                                            />
+                                          </div>
+                                        )}
+                                      {activity.activity_type ===
+                                        'TYPE_ASSIGNMENT' && (
+                                          <div className="bg-gray-100 px-2 py-2 rounded-full">
+                                            <Backpack
+                                              className="text-gray-400"
+                                              size={13}
+                                            />
+                                          </div>
+                                        )}
+                                    </div>
+                                    <Link
+                                      className="flex font-semibold grow pl-2 text-neutral-500"
+                                      href={
+                                        getUriWithOrg(orgslug, '') +
+                                        `/course/${courseuuid}/activity/${activity.activity_uuid.replace(
+                                          'activity_',
+                                          ''
+                                        )}`
+                                      }
+                                      rel="noopener noreferrer"
+                                      prefetch={false}
+                                    >
+                                      <p>{activity.name}</p>
+                                    </Link>
+                                    <div className="flex ">
+                                      {activity.activity_type ===
+                                        'TYPE_DYNAMIC' && (
+                                          <div>
+                                            <Link
+                                              className="flex grow pl-2 text-gray-500"
+                                              href={
+                                                getUriWithOrg(orgslug, '') +
+                                                `/course/${courseuuid}/activity/${activity.activity_uuid.replace(
+                                                  'activity_',
+                                                  ''
+                                                )}`
+                                              }
+                                              rel="noopener noreferrer"
+                                              prefetch={false}
+                                            >
+                                              <div className="text-xs bg-gray-100 text-gray-400 font-bold px-2 py-1 rounded-full flex space-x-1 items-center">
+                                                <p>Page</p>
+                                                <ArrowRight size={13} />
+                                              </div>
+                                            </Link>
+                                          </div>
+                                        )}
+                                      {activity.activity_type === 'TYPE_VIDEO' && (
                                         <div>
                                           <Link
                                             className="flex grow pl-2 text-gray-500"
@@ -289,39 +286,62 @@ const CourseClient = (props: any) => {
                                             prefetch={false}
                                           >
                                             <div className="text-xs bg-gray-100 text-gray-400 font-bold px-2 py-1 rounded-full flex space-x-1 items-center">
-                                              <p>Document</p>
+                                              <p>Video</p>
                                               <ArrowRight size={13} />
                                             </div>
                                           </Link>
                                         </div>
                                       )}
-                                    {activity.activity_type ===
-                                      'TYPE_ASSIGNMENT' && (
-                                        <div>
-                                          <Link
-                                            className="flex grow pl-2 text-gray-500"
-                                            href={
-                                              getUriWithOrg(orgslug, '') +
-                                              `/course/${courseuuid}/activity/${activity.activity_uuid.replace(
-                                                'activity_',
-                                                ''
-                                              )}`
-                                            }
-                                            rel="noopener noreferrer"
-                                            prefetch={false}
-                                          >
-                                            <div className="text-xs bg-gray-100 text-gray-400 font-bold px-2 py-1 rounded-full flex space-x-1 items-center">
-                                              <p>Assignment</p>
-                                              <ArrowRight size={13} />
-                                            </div>
-                                          </Link>
-                                        </div>
-                                      )}
+                                      {activity.activity_type ===
+                                        'TYPE_DOCUMENT' && (
+                                          <div>
+                                            <Link
+                                              className="flex grow pl-2 text-gray-500"
+                                              href={
+                                                getUriWithOrg(orgslug, '') +
+                                                `/course/${courseuuid}/activity/${activity.activity_uuid.replace(
+                                                  'activity_',
+                                                  ''
+                                                )}`
+                                              }
+                                              rel="noopener noreferrer"
+                                              prefetch={false}
+                                            >
+                                              <div className="text-xs bg-gray-100 text-gray-400 font-bold px-2 py-1 rounded-full flex space-x-1 items-center">
+                                                <p>Document</p>
+                                                <ArrowRight size={13} />
+                                              </div>
+                                            </Link>
+                                          </div>
+                                        )}
+                                      {activity.activity_type ===
+                                        'TYPE_ASSIGNMENT' && (
+                                          <div>
+                                            <Link
+                                              className="flex grow pl-2 text-gray-500"
+                                              href={
+                                                getUriWithOrg(orgslug, '') +
+                                                `/course/${courseuuid}/activity/${activity.activity_uuid.replace(
+                                                  'activity_',
+                                                  ''
+                                                )}`
+                                              }
+                                              rel="noopener noreferrer"
+                                              prefetch={false}
+                                            >
+                                              <div className="text-xs bg-gray-100 text-gray-400 font-bold px-2 py-1 rounded-full flex space-x-1 items-center">
+                                                <p>Assignment</p>
+                                                <ArrowRight size={13} />
+                                              </div>
+                                            </Link>
+                                          </div>
+                                        )}
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
-                            )
-                          })}
+                              )
+                            })}
+                          </div>
                         </div>
                       </div>
                     )
