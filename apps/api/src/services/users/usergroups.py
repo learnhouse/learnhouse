@@ -25,7 +25,6 @@ async def create_usergroup(
     current_user: PublicUser | AnonymousUser,
     usergroup_create: UserGroupCreate,
 ) -> UserGroupRead:
-
     usergroup = UserGroup.model_validate(usergroup_create)
 
     # RBAC check
@@ -74,7 +73,6 @@ async def read_usergroup_by_id(
     current_user: PublicUser | AnonymousUser,
     usergroup_id: int,
 ) -> UserGroupRead:
-
     statement = select(UserGroup).where(UserGroup.id == usergroup_id)
     usergroup = db_session.exec(statement).first()
 
@@ -104,7 +102,6 @@ async def get_users_linked_to_usergroup(
     current_user: PublicUser | AnonymousUser,
     usergroup_id: int,
 ) -> list[UserRead]:
-
     statement = select(UserGroup).where(UserGroup.id == usergroup_id)
     usergroup = db_session.exec(statement).first()
 
@@ -146,7 +143,6 @@ async def read_usergroups_by_org_id(
     current_user: PublicUser | AnonymousUser,
     org_id: int,
 ) -> list[UserGroupRead]:
-
     statement = select(UserGroup).where(UserGroup.org_id == org_id)
     usergroups = db_session.exec(statement).all()
 
@@ -170,7 +166,6 @@ async def get_usergroups_by_resource(
     current_user: PublicUser | AnonymousUser,
     resource_uuid: str,
 ) -> list[UserGroupRead]:
-
     statement = select(UserGroupResource).where(
         UserGroupResource.resource_uuid == resource_uuid
     )
@@ -206,7 +201,6 @@ async def update_usergroup_by_id(
     usergroup_id: int,
     usergroup_update: UserGroupUpdate,
 ) -> UserGroupRead:
-
     statement = select(UserGroup).where(UserGroup.id == usergroup_id)
     usergroup = db_session.exec(statement).first()
 
@@ -244,7 +238,6 @@ async def delete_usergroup_by_id(
     current_user: PublicUser | AnonymousUser,
     usergroup_id: int,
 ) -> str:
-
     statement = select(UserGroup).where(UserGroup.id == usergroup_id)
     usergroup = db_session.exec(statement).first()
 
@@ -279,7 +272,6 @@ async def add_users_to_usergroup(
     usergroup_id: int,
     user_ids: str,
 ) -> str:
-
     statement = select(UserGroup).where(UserGroup.id == usergroup_id)
     usergroup = db_session.exec(statement).first()
 
@@ -342,7 +334,6 @@ async def remove_users_from_usergroup(
     usergroup_id: int,
     user_ids: str,
 ) -> str:
-
     statement = select(UserGroup).where(UserGroup.id == usergroup_id)
     usergroup = db_session.exec(statement).first()
 
@@ -385,7 +376,6 @@ async def add_resources_to_usergroup(
     usergroup_id: int,
     resources_uuids: str,
 ) -> str:
-
     statement = select(UserGroup).where(UserGroup.id == usergroup_id)
     usergroup = db_session.exec(statement).first()
 
@@ -444,7 +434,6 @@ async def remove_resources_from_usergroup(
     usergroup_id: int,
     resources_uuids: str,
 ) -> str:
-
     statement = select(UserGroup).where(UserGroup.id == usergroup_id)
     usergroup = db_session.exec(statement).first()
 

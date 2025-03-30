@@ -1,13 +1,15 @@
 from datetime import datetime
 from enum import Enum
-from typing import  Optional
+from typing import Optional
 from sqlalchemy import JSON
 from sqlmodel import Field, SQLModel, Column, BigInteger, ForeignKey
 
-# PaymentsConfig 
+
+# PaymentsConfig
 class PaymentProviderEnum(str, Enum):
     STRIPE = "stripe"
-    
+
+
 class PaymentsConfigBase(SQLModel):
     enabled: bool = True
     active: bool = False

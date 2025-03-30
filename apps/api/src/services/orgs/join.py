@@ -64,7 +64,6 @@ async def join_org(
 
     if join_method == "inviteOnly" and user and org and args.invite_code:
         if user.id is not None and org.id is not None:
-
             # Check if invite code exists
             inviteCode = await get_invite_code(
                 request, org.id, args.invite_code, current_user, db_session

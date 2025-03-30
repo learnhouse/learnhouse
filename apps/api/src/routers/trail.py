@@ -92,6 +92,4 @@ async def api_add_activity_to_trail(
     """
     Add Course to trail
     """
-    return await add_activity_to_trail(
-        request, user, activity_uuid, db_session
-    )
+    return await add_activity_to_trail(request, user, activity_uuid, db_session)

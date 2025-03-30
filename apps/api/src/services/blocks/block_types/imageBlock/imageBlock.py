@@ -23,7 +23,7 @@ async def create_image_block(
 
     block_type = "imageBlock"
 
-    # get org_uuid 
+    # get org_uuid
     statement = select(Organization).where(Organization.id == activity.org_id)
     org = db_session.exec(statement).first()
 
@@ -49,7 +49,7 @@ async def create_image_block(
         org.org_uuid,
         str(course.course_uuid),
     )
-    
+
     # create block
     block = Block(
         activity_id=activity.id if activity.id else 0,
@@ -79,9 +79,8 @@ async def get_image_block(
     block = db_session.exec(statement).first()
 
     if block:
-
         block = BlockRead.from_orm(block)
-        
+
         return block
     else:
         raise HTTPException(

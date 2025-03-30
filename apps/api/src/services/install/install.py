@@ -351,11 +351,8 @@ def install_create_organization(org_object: OrganizationCreate, db_session: Sess
             collaboration=CollaborationOrgConfig(enabled=True, limit=0),
             api=APIOrgConfig(enabled=True, limit=0),
         ),
-        cloud=OrgCloudConfig(
-            plan='free',
-            custom_domain=False
-        ),
-        landing={}
+        cloud=OrgCloudConfig(plan="free", custom_domain=False),
+        landing={},
     )
 
     org_config = json.loads(org_config.json())

@@ -215,8 +215,6 @@ async def get_invite_codes(
     # Get invite codes
     invite_codes = r.keys(f"org_invite_code_*:org:{org.org_uuid}:code:*")
 
-
-
     invite_codes_list = []
 
     for invite_code in invite_codes:  # type: ignore
@@ -376,8 +374,8 @@ def send_invite_email(
 <html>
     <body>
         <p>Hello {email}</p>
-        <p>You have been invited to {org.name} by @{user.username}. Your invite code is {invite['invite_code']}.</p>
-        <p>Click <a href="{org.slug}.learnhouse.io/signup?orgslug={org.slug}&inviteCode={invite['invite_code']}">here</a> to sign up.</p>
+        <p>You have been invited to {org.name} by @{user.username}. Your invite code is {invite["invite_code"]}.</p>
+        <p>Click <a href="{org.slug}.learnhouse.io/signup?orgslug={org.slug}&inviteCode={invite["invite_code"]}">here</a> to sign up.</p>
         <p>Thank you</p>
     </body>
 </html>

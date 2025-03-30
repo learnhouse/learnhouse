@@ -4,7 +4,6 @@ from sqlmodel import Field, SQLModel
 from src.db.roles import RoleRead
 
 
-
 class UserBase(SQLModel):
     username: str
     first_name: str
@@ -45,6 +44,7 @@ class PublicUser(UserRead):
 
 class UserRoleWithOrg(BaseModel):
     from src.db.organizations import OrganizationRead
+
     role: RoleRead
     org: OrganizationRead
 
@@ -58,6 +58,7 @@ class AnonymousUser(SQLModel):
     id: int = 0
     user_uuid: str = "user_anonymous"
     username: str = "anonymous"
+
 
 class InternalUser(SQLModel):
     id: int = 0

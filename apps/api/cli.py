@@ -16,19 +16,23 @@ from src.services.install.install import (
 
 cli = typer.Typer()
 
+
 def generate_password(length):
     characters = string.ascii_uppercase + string.ascii_lowercase + string.digits
-    password = ''.join(random.choice(characters) for _ in range(length))
+    password = "".join(random.choice(characters) for _ in range(length))
     return password
+
 
 @cli.command()
 def install(
-    short: Annotated[bool, typer.Option(help="Install with predefined values")] = False
+    short: Annotated[bool, typer.Option(help="Install with predefined values")] = False,
 ):
     # Get the database session
     learnhouse_config = get_learnhouse_config()
     engine = create_engine(
-        learnhouse_config.database_config.sql_connection_string, echo=False, pool_pre_ping=True  # type: ignore
+        learnhouse_config.database_config.sql_connection_string,
+        echo=False,
+        pool_pre_ping=True,  # type: ignore
     )
     SQLModel.metadata.create_all(engine)
 
@@ -58,9 +62,7 @@ def install(
         # Generate random 6 digit password
         email = "admin@school.dev"
         password = generate_password(8)
-        user = UserCreate(
-            username="admin", email=EmailStr(email), password=password
-        )
+        user = UserCreate(username="admin", email=EmailStr(email), password=password)
         install_create_organization_user(user, "default", db_session)
         print("Default organization user created ✅")
 
@@ -110,8 +112,6 @@ def install(
         print("Login with the following credentials:")
         print("email: " + email)
         print("password: The password you entered")
-
-
 
 
 @cli.command()

@@ -49,6 +49,7 @@ async def api_get_activity(
         request, activity_uuid, current_user=current_user, db_session=db_session
     )
 
+
 @router.get("/id/{activity_id}")
 async def api_get_activityby_id(
     request: Request,
@@ -62,7 +63,8 @@ async def api_get_activityby_id(
     return await get_activityby_id(
         request, activity_id, current_user=current_user, db_session=db_session
     )
-            
+
+
 @router.get("/chapter/{chapter_id}")
 async def api_get_chapter_activities(
     request: Request,

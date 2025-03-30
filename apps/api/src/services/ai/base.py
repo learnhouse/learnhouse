@@ -34,6 +34,7 @@ TEXT_SPLITTER = CharacterTextSplitter(
     length_function=len,
 )
 
+
 def ask_ai(
     question: str,
     message_history: Any,
@@ -48,29 +49,31 @@ def ask_ai(
     # Get embedding function
     embedding_function = get_embedding_function(embedding_model_name)
     if not embedding_function:
-        raise Exception(f"Embedding model {embedding_model_name} not found or API key not configured")
+        raise Exception(
+            f"Embedding model {embedding_model_name} not found or API key not configured"
+        )
 
     # Split text into chunks efficiently
     documents = TEXT_SPLITTER.create_documents([text_reference])
-    
+
     # Create vector store
     db = Chroma.from_documents(
-        documents,
-        embedding_function,
-        client=get_chromadb_client()
+        documents, embedding_function, client=get_chromadb_client()
     )
-    
+
     # Create retriever tool
     retriever_tool = create_retriever_tool(
         db.as_retriever(search_kwargs={"k": 3}),
         "find_context_text",
         "Find associated text to get context about a course or a lecture",
     )
-    
+
     # Get LLM
     llm = get_llm(openai_model_name)
     if not llm:
-        raise Exception(f"LLM model {openai_model_name} not found or API key not configured")
+        raise Exception(
+            f"LLM model {openai_model_name} not found or API key not configured"
+        )
 
     # Setup memory with optimized token limit
     memory = AgentTokenBufferMemory(
@@ -87,11 +90,7 @@ def ask_ai(
         extra_prompt_messages=[MessagesPlaceholder(variable_name="history")],
     )
 
-    agent = OpenAIFunctionsAgent(
-        llm=llm,
-        tools=[retriever_tool],
-        prompt=prompt
-    )
+    agent = OpenAIFunctionsAgent(llm=llm, tools=[retriever_tool], prompt=prompt)
 
     # Create and execute agent
     agent_executor = AgentExecutor(
@@ -109,10 +108,11 @@ def ask_ai(
     except Exception as e:
         raise Exception(f"Error processing AI request: {str(e)}")
 
+
 def get_chat_session_history(aichat_uuid: Optional[str] = None) -> Dict[str, Any]:
     """Get or create a new chat session history"""
     session_id = aichat_uuid if aichat_uuid else f"aichat_{uuid4()}"
-    
+
     LH_CONFIG = get_learnhouse_config()
     redis_conn_string = LH_CONFIG.redis_config.redis_connection_string
 
@@ -121,7 +121,7 @@ def get_chat_session_history(aichat_uuid: Optional[str] = None) -> Dict[str, Any
             message_history = RedisChatMessageHistory(
                 url=redis_conn_string,
                 ttl=2160000,  # 25 days
-                session_id=session_id
+                session_id=session_id,
             )
         except Exception:
             print("Failed to connect to Redis, falling back to local memory")
@@ -130,8 +130,4 @@ def get_chat_session_history(aichat_uuid: Optional[str] = None) -> Dict[str, Any
         print("Redis connection string not found, using local memory")
         message_history = []
 
-    return {
-        "message_history": message_history,
-        "aichat_uuid": session_id
-    }
-
+    return {"message_history": message_history, "aichat_uuid": session_id}

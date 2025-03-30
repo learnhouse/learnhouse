@@ -1,7 +1,11 @@
 from fastapi import APIRouter, Depends
 from sqlmodel import Session, select
 from config.config import get_learnhouse_config
-from migrations.orgconfigs.orgconfigs_migrations import migrate_to_v1_1, migrate_to_v1_2, migrate_v0_to_v1
+from migrations.orgconfigs.orgconfigs_migrations import (
+    migrate_to_v1_1,
+    migrate_to_v1_2,
+    migrate_v0_to_v1,
+)
 from src.core.events.database import get_db_session
 from src.db.organization_config import OrganizationConfig
 
@@ -51,6 +55,7 @@ async def migratev1_1(
         db_session.commit()
 
     return {"message": "Migration successful"}
+
 
 @router.post("/migrate_orgconfig_v1_to_v1.2")
 async def migratev1_2(

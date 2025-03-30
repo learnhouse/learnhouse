@@ -49,8 +49,8 @@ async def api_install_def_elements(
 
 @router.post("/org")
 async def api_install_org(
-        org: OrganizationCreate,
-        db_session=Depends(get_db_session),
+    org: OrganizationCreate,
+    db_session=Depends(get_db_session),
 ):
     organization = install_create_organization(org, db_session)
 
@@ -75,7 +75,6 @@ async def api_update_install_instance(
     step: int,
     db_session=Depends(get_db_session),
 ) -> InstallRead:
-
     # get latest created install
     install = await update_install_instance(request, data, step, db_session)
 

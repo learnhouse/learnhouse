@@ -27,6 +27,7 @@ class Organization(OrganizationBase, table=True):
     creation_date: str = ""
     update_date: str = ""
 
+
 class OrganizationWithConfig(BaseModel):
     org: Organization
     config: OrganizationConfig
@@ -46,6 +47,7 @@ class OrganizationUpdate(SQLModel):
     email: Optional[str] = None
     explore: Optional[bool] = None
 
+
 class OrganizationCreate(OrganizationBase):
     pass
 
@@ -60,5 +62,6 @@ class OrganizationRead(OrganizationBase):
 
 class OrganizationUser(BaseModel):
     from src.db.users import UserRead
+
     user: UserRead
     role: RoleRead

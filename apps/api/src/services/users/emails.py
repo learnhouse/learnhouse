@@ -30,7 +30,6 @@ def send_password_reset_email(
     organization: OrganizationRead,
     email: EmailStr,
 ):
-    
     # send email
     return send_email(
         to=email,

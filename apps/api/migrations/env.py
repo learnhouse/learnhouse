@@ -1,7 +1,7 @@
 import importlib
 from logging.config import fileConfig
 import os
-import alembic_postgresql_enum # noqa: F401
+import alembic_postgresql_enum  # noqa: F401
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 from sqlmodel import SQLModel
@@ -28,22 +28,22 @@ if config.config_file_name is not None:
 # target_metadata = mymodel.Base.metadata
 
 # IMPORTING ALL SCHEMAS
-base_dir = 'src/db'
-base_module_path = 'src.db'
+base_dir = "src/db"
+base_module_path = "src.db"
 
 # Recursively walk through the base directory
 for root, dirs, files in os.walk(base_dir):
     # Filter out __init__.py and non-Python files
-    module_files = [f for f in files if f.endswith('.py') and f != '__init__.py']
+    module_files = [f for f in files if f.endswith(".py") and f != "__init__.py"]
     # Calculate the module's base path from its directory structure
     path_diff = os.path.relpath(root, base_dir)
-    if path_diff == '.':
+    if path_diff == ".":
         # Root of the base_dir, no additional path to add
         current_module_base = base_module_path
     else:
         # Convert directory path to a module path
         current_module_base = f"{base_module_path}.{path_diff.replace(os.sep, '.')}"
-    
+
     # Dynamically import each module
     for file_name in module_files:
         module_name = file_name[:-3]  # Remove the '.py' extension

@@ -13,11 +13,10 @@ def _get_sort_expression(salt: str):
     """Helper function to create consistent sort expression"""
     if not salt:
         return Organization.name
-    
+
     # Create a deterministic ordering using md5(salt + id)
-    return text(
-        f"md5('{salt}' || id)"
-    )
+    return text(f"md5('{salt}' || id)")
+
 
 async def get_orgs_for_explore(
     request: Request,
@@ -27,33 +26,24 @@ async def get_orgs_for_explore(
     label: str = "",
     salt: str = "",
 ) -> list[OrganizationRead]:
-
-    statement = (
-        select(Organization)
-        .where(
-            Organization.explore == True,
-        )
+    statement = select(Organization).where(
+        Organization.explore == True,
     )
 
     # Add label filter if provided
     if label:
-        statement = statement.where(Organization.label == label)  #type: ignore
+        statement = statement.where(Organization.label == label)  # type: ignore
 
     # Add deterministic ordering based on salt
     statement = statement.order_by(_get_sort_expression(salt))
 
     # Add pagination
-    statement = (
-        statement
-        .offset((page - 1) * limit)
-        .limit(limit)
-    )
+    statement = statement.offset((page - 1) * limit).limit(limit)
 
     result = db_session.exec(statement)
     orgs = result.all()
 
     return [OrganizationRead.model_validate(org) for org in orgs]
-
 
 
 async def get_courses_for_an_org_explore(
@@ -70,7 +60,7 @@ async def get_courses_for_an_org_explore(
             status_code=404,
             detail="Organization not found",
         )
-    
+
     statement = select(Course).where(Course.org_id == org.id, Course.public == True)
     result = db_session.exec(statement)
     courses = result.all()
@@ -82,6 +72,7 @@ async def get_courses_for_an_org_explore(
 
     return courses_list
 
+
 async def get_course_for_explore(
     request: Request,
     course_id: str,
@@ -89,7 +80,7 @@ async def get_course_for_explore(
 ) -> CourseRead:
     statement = select(Course).where(Course.id == course_id)
     result = db_session.exec(statement)
-    
+
     course = result.first()
 
     if not course:
@@ -113,12 +104,13 @@ async def get_course_for_explore(
             authorship=resource_author.authorship,
             authorship_status=resource_author.authorship_status,
             creation_date=resource_author.creation_date,
-            update_date=resource_author.update_date
+            update_date=resource_author.update_date,
         )
         for resource_author, user in author_results
     ]
 
     return CourseRead(**course.model_dump(), authors=authors)
+
 
 async def search_orgs_for_explore(
     request: Request,
@@ -132,23 +124,20 @@ async def search_orgs_for_explore(
     # Create a combined search vector
     search_terms = search_query.split()
     search_conditions = []
-    
+
     for term in search_terms:
         term_pattern = f"%{term}%"
         search_conditions.append(
-            (Organization.name.ilike(term_pattern)) | #type: ignore
-            (Organization.about.ilike(term_pattern)) | #type: ignore
-            (Organization.description.ilike(term_pattern)) | #type: ignore
-            (Organization.label.ilike(term_pattern)) #type: ignore
+            (Organization.name.ilike(term_pattern))  # type: ignore
+            | (Organization.about.ilike(term_pattern))  # type: ignore
+            | (Organization.description.ilike(term_pattern))  # type: ignore
+            | (Organization.label.ilike(term_pattern))  # type: ignore
         )
-    
-    statement = (
-        select(Organization)
-        .where(Organization.explore == True)
-    )
+
+    statement = select(Organization).where(Organization.explore == True)
 
     if label and label != "all":
-        statement = statement.where(Organization.label == label)  #type: ignore
+        statement = statement.where(Organization.label == label)  # type: ignore
 
     if search_conditions:
         statement = statement.where(*search_conditions)
@@ -157,22 +146,19 @@ async def search_orgs_for_explore(
     statement = statement.order_by(_get_sort_expression(salt))
 
     # Add pagination
-    statement = (
-        statement
-        .offset((page - 1) * limit)
-        .limit(limit)
-    )
-    
+    statement = statement.offset((page - 1) * limit).limit(limit)
+
     result = db_session.exec(statement)
     orgs = result.all()
 
     return [OrganizationRead.model_validate(org) for org in orgs]
 
+
 async def get_org_for_explore(
     request: Request,
     org_slug: str,
     db_session: Session,
- ) -> OrganizationRead:
+) -> OrganizationRead:
     statement = select(Organization).where(Organization.slug == org_slug)
     result = db_session.exec(statement)
     org = result.first()
@@ -182,6 +168,5 @@ async def get_org_for_explore(
             status_code=404,
             detail="Organization not found",
         )
-    
+
     return OrganizationRead.model_validate(org)
-    

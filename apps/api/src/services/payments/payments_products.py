@@ -15,7 +15,12 @@ from src.db.organizations import Organization
 from src.services.orgs.orgs import rbac_check
 from datetime import datetime
 
-from src.services.payments.payments_stripe import archive_stripe_product, create_stripe_product, update_stripe_product
+from src.services.payments.payments_stripe import (
+    archive_stripe_product,
+    create_stripe_product,
+    update_stripe_product,
+)
+
 
 async def create_payments_product(
     request: Request,
@@ -43,20 +48,25 @@ async def create_payments_product(
         raise HTTPException(status_code=400, detail="Payments config is not active")
 
     # Create new payments product
-    new_product = PaymentsProduct(**payments_product.model_dump(), org_id=org_id, payments_config_id=config.id)
+    new_product = PaymentsProduct(
+        **payments_product.model_dump(), org_id=org_id, payments_config_id=config.id
+    )
     new_product.creation_date = datetime.now()
     new_product.update_date = datetime.now()
 
     # Create product in Stripe
-    stripe_product = await create_stripe_product(request, org_id, new_product, current_user, db_session)
+    stripe_product = await create_stripe_product(
+        request, org_id, new_product, current_user, db_session
+    )
     new_product.provider_product_id = stripe_product.id
 
     # Save to DB
     db_session.add(new_product)
     db_session.commit()
-    db_session.refresh(new_product)    
+    db_session.refresh(new_product)
 
     return PaymentsProductRead.model_validate(new_product)
+
 
 async def get_payments_product(
     request: Request,
@@ -75,12 +85,15 @@ async def get_payments_product(
     await rbac_check(request, org.org_uuid, current_user, "read", db_session)
 
     # Get payments product
-    statement = select(PaymentsProduct).where(PaymentsProduct.id == product_id, PaymentsProduct.org_id == org_id)
+    statement = select(PaymentsProduct).where(
+        PaymentsProduct.id == product_id, PaymentsProduct.org_id == org_id
+    )
     product = db_session.exec(statement).first()
     if not product:
         raise HTTPException(status_code=404, detail="Payments product not found")
 
     return PaymentsProductRead.model_validate(product)
+
 
 async def update_payments_product(
     request: Request,
@@ -100,7 +113,9 @@ async def update_payments_product(
     await rbac_check(request, org.org_uuid, current_user, "update", db_session)
 
     # Get existing payments product
-    statement = select(PaymentsProduct).where(PaymentsProduct.id == product_id, PaymentsProduct.org_id == org_id)
+    statement = select(PaymentsProduct).where(
+        PaymentsProduct.id == product_id, PaymentsProduct.org_id == org_id
+    )
     product = db_session.exec(statement).first()
     if not product:
         raise HTTPException(status_code=404, detail="Payments product not found")
@@ -108,7 +123,7 @@ async def update_payments_product(
     # Update product
     for key, value in payments_product.model_dump().items():
         setattr(product, key, value)
-    
+
     product.update_date = datetime.now()
 
     db_session.add(product)
@@ -116,9 +131,12 @@ async def update_payments_product(
     db_session.refresh(product)
 
     # Update product in Stripe
-    await update_stripe_product(request, org_id, product.provider_product_id, product, current_user, db_session)
+    await update_stripe_product(
+        request, org_id, product.provider_product_id, product, current_user, db_session
+    )
 
     return PaymentsProductRead.model_validate(product)
+
 
 async def delete_payments_product(
     request: Request,
@@ -137,29 +155,36 @@ async def delete_payments_product(
     await rbac_check(request, org.org_uuid, current_user, "delete", db_session)
 
     # Get existing payments product
-    statement = select(PaymentsProduct).where(PaymentsProduct.id == product_id, PaymentsProduct.org_id == org_id)
+    statement = select(PaymentsProduct).where(
+        PaymentsProduct.id == product_id, PaymentsProduct.org_id == org_id
+    )
     product = db_session.exec(statement).first()
     if not product:
         raise HTTPException(status_code=404, detail="Payments product not found")
-    
+
     # Check if there are any payment users linked to this product
     statement = select(PaymentsUser).where(
         PaymentsUser.payment_product_id == product_id,
-        PaymentsUser.status.in_([PaymentStatusEnum.ACTIVE, PaymentStatusEnum.COMPLETED]) # type: ignore
+        PaymentsUser.status.in_(
+            [PaymentStatusEnum.ACTIVE, PaymentStatusEnum.COMPLETED]
+        ),  # type: ignore
     )
     payment_users = db_session.exec(statement).all()
     if payment_users:
         raise HTTPException(
-            status_code=400, 
-            detail="Cannot delete product because users have paid access to it."
+            status_code=400,
+            detail="Cannot delete product because users have paid access to it.",
         )
 
     # Archive product in Stripe
-    await archive_stripe_product(request, org_id, product.provider_product_id, current_user, db_session)
+    await archive_stripe_product(
+        request, org_id, product.provider_product_id, current_user, db_session
+    )
 
     # Delete product
     db_session.delete(product)
     db_session.commit()
+
 
 async def list_payments_products(
     request: Request,
@@ -177,10 +202,15 @@ async def list_payments_products(
     await rbac_check(request, org.org_uuid, current_user, "read", db_session)
 
     # Get payments products ordered by id
-    statement = select(PaymentsProduct).where(PaymentsProduct.org_id == org_id).order_by(PaymentsProduct.id.desc()) # type: ignore
+    statement = (
+        select(PaymentsProduct)
+        .where(PaymentsProduct.org_id == org_id)
+        .order_by(PaymentsProduct.id.desc())
+    )  # type: ignore
     products = db_session.exec(statement).all()
 
     return [PaymentsProductRead.model_validate(product) for product in products]
+
 
 async def get_products_by_course(
     request: Request,
@@ -203,14 +233,9 @@ async def get_products_by_course(
     statement = (
         select(PaymentsProduct)
         .select_from(PaymentsProduct)
-        .join(PaymentsCourse, PaymentsProduct.id == PaymentsCourse.payment_product_id) # type: ignore
-        .where(
-            PaymentsCourse.course_id == course_id,
-            PaymentsCourse.org_id == org_id
-        )
+        .join(PaymentsCourse, PaymentsProduct.id == PaymentsCourse.payment_product_id)  # type: ignore
+        .where(PaymentsCourse.course_id == course_id, PaymentsCourse.org_id == org_id)
     )
     products = db_session.exec(statement).all()
 
     return [PaymentsProductRead.model_validate(product) for product in products]
-
-

@@ -172,7 +172,10 @@ async def update_chapter(
 
     if chapter:
         chapter = await get_chapter(
-            request, chapter.id, current_user, db_session  # type: ignore
+            request,
+            chapter.id,
+            current_user,
+            db_session,  # type: ignore
         )
 
     return chapter
@@ -217,7 +220,6 @@ async def get_course_chapters(
     page: int = 1,
     limit: int = 10,
 ) -> List[ChapterRead]:
-
     statement = select(Course).where(Course.id == course_id)
     course = db_session.exec(statement).first()
 
@@ -231,7 +233,9 @@ async def get_course_chapters(
     )
     chapters = db_session.exec(statement).all()
 
-    chapters = [ChapterRead(**chapter.model_dump(), activities=[]) for chapter in chapters]
+    chapters = [
+        ChapterRead(**chapter.model_dump(), activities=[]) for chapter in chapters
+    ]
 
     # RBAC check
     await rbac_check(request, course.course_uuid, current_user, "read", db_session)  # type: ignore
@@ -280,7 +284,9 @@ async def DEPRECEATED_get_course_chapters(
     # RBAC check
     await rbac_check(request, course.course_uuid, current_user, "read", db_session)
 
-    chapters_in_db = await get_course_chapters(request, course.id, db_session, current_user)  # type: ignore
+    chapters_in_db = await get_course_chapters(
+        request, course.id, db_session, current_user
+    )  # type: ignore
 
     # activities
 
@@ -368,8 +374,7 @@ async def reorder_chapters_and_activities(
 
     # Get all existing course chapters
     statement = select(CourseChapter).where(
-        CourseChapter.course_id == course.id,
-        CourseChapter.org_id == course.org_id
+        CourseChapter.course_id == course.id, CourseChapter.org_id == course.org_id
     )
     existing_course_chapters = db_session.exec(statement).all()
 
@@ -387,14 +392,14 @@ async def reorder_chapters_and_activities(
             # Create new course chapter
             course_chapter = CourseChapter(
                 chapter_id=chapter_order.chapter_id,
-                course_id=course.id, # type: ignore
+                course_id=course.id,  # type: ignore
                 org_id=course.org_id,
                 creation_date=str(datetime.now()),
                 update_date=str(datetime.now()),
                 order=index,
             )
             db_session.add(course_chapter)
-        
+
         db_session.commit()
 
     # Remove chapters that are no longer in the order
@@ -410,15 +415,13 @@ async def reorder_chapters_and_activities(
 
     # Get all existing chapter activities
     statement = select(ChapterActivity).where(
-        ChapterActivity.course_id == course.id,
-        ChapterActivity.org_id == course.org_id
+        ChapterActivity.course_id == course.id, ChapterActivity.org_id == course.org_id
     )
     existing_chapter_activities = db_session.exec(statement).all()
 
     # Create a map for faster lookup
     existing_activity_map = {
-        (ca.chapter_id, ca.activity_id): ca 
-        for ca in existing_chapter_activities
+        (ca.chapter_id, ca.activity_id): ca for ca in existing_chapter_activities
     }
 
     # Track which activities we want to keep
@@ -441,13 +444,13 @@ async def reorder_chapters_and_activities(
                     chapter_id=chapter_order.chapter_id,
                     activity_id=activity_order.activity_id,
                     org_id=course.org_id,
-                    course_id=course.id, # type: ignore
+                    course_id=course.id,  # type: ignore
                     creation_date=str(datetime.now()),
                     update_date=str(datetime.now()),
                     order=index,
                 )
                 db_session.add(chapter_activity)
-            
+
             db_session.commit()
 
     # Remove activities that are no longer in any chapter

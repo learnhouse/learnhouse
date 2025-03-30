@@ -9,6 +9,7 @@ from src.db.payments.payments import PaymentsConfig
 
 logger = logging.getLogger(__name__)
 
+
 async def get_user_from_customer(customer_id: str, db_session: Session) -> User:
     """Helper function to get user from Stripe customer ID"""
     try:

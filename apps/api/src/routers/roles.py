@@ -16,7 +16,7 @@ async def api_create_role(
     role_object: RoleCreate,
     current_user: PublicUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
-)-> RoleRead:
+) -> RoleRead:
     """
     Create new role
     """
@@ -29,7 +29,7 @@ async def api_get_role(
     role_id: str,
     current_user: PublicUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
-)-> RoleRead:
+) -> RoleRead:
     """
     Get single role by role_id
     """
@@ -42,7 +42,7 @@ async def api_update_role(
     role_object: RoleUpdate,
     current_user: PublicUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
-)-> RoleRead:
+) -> RoleRead:
     """
     Update role by role_id
     """

@@ -25,7 +25,6 @@ def check_limits_with_usage(
     org_id: int,
     db_session: Session,
 ):
-
     # Get the Organization Config
     statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org_id)
     result = db_session.exec(statement)

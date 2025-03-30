@@ -36,7 +36,12 @@ from src.db.organizations import (
 )
 from fastapi import HTTPException, UploadFile, status, Request
 
-from src.services.orgs.uploads import upload_org_logo, upload_org_preview, upload_org_thumbnail, upload_org_landing_content
+from src.services.orgs.uploads import (
+    upload_org_logo,
+    upload_org_preview,
+    upload_org_thumbnail,
+    upload_org_landing_content,
+)
 
 
 async def get_organization(
@@ -422,6 +427,7 @@ async def update_org_logo(
 
     return {"detail": "Logo updated"}
 
+
 async def update_org_thumbnail(
     request: Request,
     thumbnail_file: UploadFile,
@@ -458,6 +464,7 @@ async def update_org_thumbnail(
 
     return {"detail": "Thumbnail updated"}
 
+
 async def update_org_preview(
     request: Request,
     preview_file: UploadFile,
@@ -483,6 +490,7 @@ async def update_org_preview(
     name_in_disk = await upload_org_preview(preview_file, org.org_uuid)
 
     return {"name_in_disk": name_in_disk}
+
 
 async def delete_org(
     request: Request,
@@ -538,7 +546,7 @@ async def get_orgs_by_user_admin(
             UserOrganization.user_id == user_id,
             UserOrganization.role_id == 1,  # Only where the user is admin
             UserOrganization.org_id == Organization.id,
-            OrganizationConfig.org_id == Organization.id
+            OrganizationConfig.org_id == Organization.id,
         )
         .offset((page - 1) * limit)
         .limit(limit)
@@ -573,7 +581,7 @@ async def get_orgs_by_user(
         .where(
             UserOrganization.user_id == user_id,
             UserOrganization.org_id == Organization.id,
-            OrganizationConfig.org_id == Organization.id
+            OrganizationConfig.org_id == Organization.id,
         )
         .offset((page - 1) * limit)
         .limit(limit)
@@ -686,19 +694,18 @@ async def get_org_join_mechanism(
 
     return signup_mechanism
 
+
 async def upload_org_preview_service(
     preview_file: UploadFile,
     org_uuid: str,
 ) -> dict:
     # No need for request or current_user since we're not doing RBAC checks for previews
-    
+
     # Upload preview
     name_in_disk = await upload_org_preview(preview_file, org_uuid)
 
-    return {
-        "detail": "Preview uploaded successfully",
-        "filename": name_in_disk
-    }
+    return {"detail": "Preview uploaded successfully", "filename": name_in_disk}
+
 
 async def update_org_landing(
     request: Request,
@@ -736,7 +743,7 @@ async def update_org_landing(
 
     # Convert to OrganizationConfigBase model and back to ensure all fields exist
     config_model = OrganizationConfigBase(**org_config.config)
-    
+
     # Update the landing object
     config_model.landing = landing_object
 
@@ -750,6 +757,7 @@ async def update_org_landing(
     db_session.refresh(org_config)
 
     return {"detail": "Landing object updated"}
+
 
 async def upload_org_landing_content_service(
     request: Request,
@@ -775,10 +783,8 @@ async def upload_org_landing_content_service(
     # Upload content
     name_in_disk = await upload_org_landing_content(content_file, org.org_uuid)
 
-    return {
-        "detail": "Landing content uploaded successfully",
-        "filename": name_in_disk
-    }
+    return {"detail": "Landing content uploaded successfully", "filename": name_in_disk}
+
 
 ## 🔒 RBAC Utils ##
 
@@ -793,7 +799,7 @@ async def rbac_check(
     # Organizations are readable by anyone
     if action == "read":
         return True
-    
+
     # Internal users can do anything
     if isinstance(current_user, InternalUser):
         return True

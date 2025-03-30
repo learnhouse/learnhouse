@@ -3,7 +3,7 @@ from typing import Literal
 from fastapi import HTTPException, Request
 from sqlmodel import Session
 import stripe
-from config.config import  get_learnhouse_config
+from config.config import get_learnhouse_config
 from src.db.payments.payments import PaymentsConfigUpdate, PaymentsConfig
 from src.db.payments.payments_products import (
     PaymentPriceTypeEnum,
@@ -31,13 +31,14 @@ async def get_stripe_connected_account_id(
     db_session: Session,
 ):
     # Get payments config
-    payments_config = await get_payments_config(request, org_id, current_user, db_session)
+    payments_config = await get_payments_config(
+        request, org_id, current_user, db_session
+    )
 
     return payments_config[0].provider_specific_id
 
 
-async def get_stripe_internal_credentials(
-):
+async def get_stripe_internal_credentials():
     # Get payments config from config file
     learnhouse_config = get_learnhouse_config()
 
@@ -87,7 +88,9 @@ async def create_stripe_product(
     if product_data.product_type == PaymentProductTypeEnum.SUBSCRIPTION:
         default_price_data["recurring"] = {"interval": "month"}
 
-    stripe_acc_id = await get_stripe_connected_account_id(request, org_id, current_user, db_session)
+    stripe_acc_id = await get_stripe_connected_account_id(
+        request, org_id, current_user, db_session
+    )
 
     product = stripe.Product.create(
         name=product_data.name,
@@ -116,11 +119,15 @@ async def archive_stripe_product(
     # Set the Stripe API key using the credentials
     stripe.api_key = creds.get("stripe_secret_key")
 
-    stripe_acc_id = await get_stripe_connected_account_id(request, org_id, current_user, db_session)
+    stripe_acc_id = await get_stripe_connected_account_id(
+        request, org_id, current_user, db_session
+    )
 
     try:
         # Archive the product in Stripe
-        archived_product = stripe.Product.modify(product_id, active=False, stripe_account=stripe_acc_id)
+        archived_product = stripe.Product.modify(
+            product_id, active=False, stripe_account=stripe_acc_id
+        )
 
         return archived_product
     except stripe.StripeError as e:
@@ -143,7 +150,9 @@ async def update_stripe_product(
     # Set the Stripe API key using the credentials
     stripe.api_key = creds.get("stripe_secret_key")
 
-    stripe_acc_id = await get_stripe_connected_account_id(request, org_id, current_user, db_session)
+    stripe_acc_id = await get_stripe_connected_account_id(
+        request, org_id, current_user, db_session
+    )
 
     try:
         # Create new price based on price_type
@@ -182,13 +191,17 @@ async def update_stripe_product(
         }
 
         # Update the product in Stripe
-        updated_product = stripe.Product.modify(product_id, **update_data, stripe_account=stripe_acc_id)
+        updated_product = stripe.Product.modify(
+            product_id, **update_data, stripe_account=stripe_acc_id
+        )
 
         # Archive all existing prices for the product
         existing_prices = stripe.Price.list(product=product_id, active=True)
         for price in existing_prices:
             if price.id != new_price.id:
-                stripe.Price.modify(price.id, active=False, stripe_account=stripe_acc_id)
+                stripe.Price.modify(
+                    price.id, active=False, stripe_account=stripe_acc_id
+                )
 
         return updated_product
     except stripe.StripeError as e:
@@ -209,8 +222,9 @@ async def create_checkout_session(
     creds = await get_stripe_internal_credentials()
     stripe.api_key = creds.get("stripe_secret_key")
 
-
-    stripe_acc_id = await get_stripe_connected_account_id(request, org_id, current_user, db_session)
+    stripe_acc_id = await get_stripe_connected_account_id(
+        request, org_id, current_user, db_session
+    )
 
     # Get product details
     statement = select(PaymentsProduct).where(
@@ -225,9 +239,10 @@ async def create_checkout_session(
     cancel_url = redirect_uri
 
     # Get the default price for the product
-    stripe_product = stripe.Product.retrieve(product.provider_product_id, stripe_account=stripe_acc_id)
+    stripe_product = stripe.Product.retrieve(
+        product.provider_product_id, stripe_account=stripe_acc_id
+    )
     line_items = [{"price": stripe_product.default_price, "quantity": 1}]
-
 
     # Create or retrieve Stripe customer
     try:
@@ -286,7 +301,7 @@ async def create_checkout_session(
             "metadata": {
                 "product_id": str(product.id),
                 "payment_user_id": str(payment_user.id),
-            }
+            },
         }
 
         # Add payment_intent_data only for one-time payments
@@ -306,7 +321,9 @@ async def create_checkout_session(
                 }
             }
 
-        checkout_session = stripe.checkout.Session.create(**checkout_session_params, stripe_account=stripe_acc_id)
+        checkout_session = stripe.checkout.Session.create(
+            **checkout_session_params, stripe_account=stripe_acc_id
+        )
 
         return {"checkout_url": checkout_session.url, "session_id": checkout_session.id}
 
@@ -333,25 +350,28 @@ async def generate_stripe_connect_link(
     # Get credentials
     creds = await get_stripe_internal_credentials()
     stripe.api_key = creds.get("stripe_secret_key")
-    
+
     # Get learnhouse config for client_id
     learnhouse_config = get_learnhouse_config()
     client_id = learnhouse_config.payments_config.stripe.stripe_client_id
-    
+
     if not client_id:
         raise HTTPException(status_code=400, detail="Stripe client ID not configured")
 
     state = f"org_id={org_id}"
-    
+
     # Generate OAuth link for existing accounts
     oauth_link = f"https://connect.stripe.com/oauth/authorize?response_type=code&client_id={client_id}&scope=read_write&redirect_uri={redirect_uri}&state={state}"
 
     return {"connect_url": oauth_link}
 
+
 async def create_stripe_account(
     request: Request,
     org_id: int,
-    type: Literal["standard"], # Only standard is supported for now, we'll see if we need express later
+    type: Literal[
+        "standard"
+    ],  # Only standard is supported for now, we'll see if we need express later
     current_user: PublicUser | AnonymousUser | InternalUser,
     db_session: Session,
 ):
@@ -364,7 +384,9 @@ async def create_stripe_account(
     existing_config = db_session.exec(statement).first()
 
     if existing_config and existing_config.provider_specific_id:
-        logging.error(f"A Stripe Account is already linked to this organization: {existing_config.provider_specific_id}")
+        logging.error(
+            f"A Stripe Account is already linked to this organization: {existing_config.provider_specific_id}"
+        )
         return existing_config.provider_specific_id
 
     # Create Stripe account
@@ -377,11 +399,13 @@ async def create_stripe_account(
     )
 
     config_data = existing_config.model_dump() if existing_config else {}
-    config_data.update({
+    config_data.update(
+        {
             "enabled": True,
             "provider_specific_id": stripe_account.id,  # Use the ID directly
-        "provider_config": {"onboarding_completed": False}
-    })
+            "provider_config": {"onboarding_completed": False},
+        }
+    )
 
     # Update payments config for the org
     await update_payments_config(
@@ -412,7 +436,7 @@ async def update_stripe_account_id(
     if not existing_config:
         raise HTTPException(
             status_code=404,
-            detail="No payments configuration found for this organization"
+            detail="No payments configuration found for this organization",
         )
 
     # Create config update with existing values but new stripe account id
@@ -430,6 +454,7 @@ async def update_stripe_account_id(
 
     return {"message": "Stripe account ID updated successfully"}
 
+
 async def handle_stripe_oauth_callback(
     request: Request,
     org_id: int,
@@ -446,13 +471,15 @@ async def handle_stripe_oauth_callback(
     try:
         # Exchange the authorization code for an access token
         response = stripe.OAuth.token(
-            grant_type='authorization_code',
+            grant_type="authorization_code",
             code=code,
         )
-        
+
         connected_account_id = response.stripe_user_id
         if not connected_account_id:
-            raise HTTPException(status_code=400, detail="No account ID received from Stripe")
+            raise HTTPException(
+                status_code=400, detail="No account ID received from Stripe"
+            )
 
         # Now connected_account_id is guaranteed to be a string
         await update_stripe_account_id(
@@ -468,6 +495,5 @@ async def handle_stripe_oauth_callback(
     except stripe.StripeError as e:
         logging.error(f"Error connecting Stripe account: {str(e)}")
         raise HTTPException(
-            status_code=400,
-            detail=f"Error connecting Stripe account: {str(e)}"
+            status_code=400, detail=f"Error connecting Stripe account: {str(e)}"
         )

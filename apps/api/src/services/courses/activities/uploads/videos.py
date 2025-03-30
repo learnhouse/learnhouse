@@ -1,4 +1,3 @@
-
 from src.services.utils.upload_content import upload_content
 
 
@@ -9,7 +8,7 @@ async def upload_video(video_file, activity_uuid, org_uuid, course_uuid):
     try:
         await upload_content(
             f"courses/{course_uuid}/activities/{activity_uuid}/video",
-            'orgs',
+            "orgs",
             org_uuid,
             contents,
             f"video.{video_format}",

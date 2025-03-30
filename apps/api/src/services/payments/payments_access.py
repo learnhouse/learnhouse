@@ -7,6 +7,7 @@ from src.db.courses.activities import Activity
 from src.db.courses.courses import Course
 from fastapi import HTTPException, Request
 
+
 async def check_activity_paid_access(
     request: Request,
     activity_id: int,
@@ -21,7 +22,6 @@ async def check_activity_paid_access(
     - User has a valid subscription for the course
     """
 
-
     # Get activity and associated course
     statement = select(Activity).where(Activity.id == activity_id)
     activity = db_session.exec(statement).first()
@@ -35,9 +35,11 @@ async def check_activity_paid_access(
 
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
-    
+
     # Check if user is author of the course
-    is_course_author = await authorization_verify_if_user_is_author(request, user.id, "update", course.course_uuid, db_session)
+    is_course_author = await authorization_verify_if_user_is_author(
+        request, user.id, "update", course.course_uuid, db_session
+    )
 
     if is_course_author:
         return True
@@ -49,22 +51,23 @@ async def check_activity_paid_access(
     # If course is not linked to any product, it's free
     if not course_payment:
         return True
-    
+
     # Anonymous users have no access to paid activities
     if isinstance(user, AnonymousUser):
         return False
-    
+
     # Check if user has a valid subscription or payment
     statement = select(PaymentsUser).where(
         PaymentsUser.user_id == user.id,
         PaymentsUser.payment_product_id == course_payment.payment_product_id,
-        PaymentsUser.status.in_( # type: ignore
+        PaymentsUser.status.in_(  # type: ignore
             [PaymentStatusEnum.ACTIVE, PaymentStatusEnum.COMPLETED]
         ),
     )
     access = db_session.exec(statement).first()
 
     return bool(access)
+
 
 async def check_course_paid_access(
     course_id: int,
@@ -97,7 +100,7 @@ async def check_course_paid_access(
     statement = select(PaymentsUser).where(
         PaymentsUser.user_id == user.id,
         PaymentsUser.payment_product_id == course_payment.payment_product_id,
-        PaymentsUser.status.in_( # type: ignore
+        PaymentsUser.status.in_(  # type: ignore
             [PaymentStatusEnum.ACTIVE, PaymentStatusEnum.COMPLETED]
         ),
     )

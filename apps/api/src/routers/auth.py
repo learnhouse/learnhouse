@@ -95,7 +95,6 @@ async def third_party_login(
 ):
     # Google
     if body.provider == "google":
-
         user = await signWithGoogle(
             request, body.access_token, body.email, org_id, current_user, db_session
         )

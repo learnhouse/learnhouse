@@ -31,7 +31,7 @@ class Course(CourseBase, table=True):
     org_id: int = Field(
         sa_column=Column(Integer, ForeignKey("organization.id", ondelete="CASCADE"))
     )
-    course_uuid: str = ""   
+    course_uuid: str = ""
     creation_date: str = ""
     update_date: str = ""
 

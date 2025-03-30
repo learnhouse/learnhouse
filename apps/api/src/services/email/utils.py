@@ -16,4 +16,3 @@ def send_email(to: EmailStr, subject: str, body: str):
     email = resend.Emails.send(params)
 
     return email
-        

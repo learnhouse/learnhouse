@@ -50,7 +50,7 @@ async def get_collection(
         .join(CollectionCourse)
         .where(
             CollectionCourse.collection_id == collection.id,
-            CollectionCourse.org_id == collection.org_id
+            CollectionCourse.org_id == collection.org_id,
         )
         .distinct()
     )
@@ -61,7 +61,7 @@ async def get_collection(
         .where(
             CollectionCourse.collection_id == collection.id,
             CollectionCourse.org_id == collection.org_id,
-            Course.public == True
+            Course.public == True,
         )
         .distinct()
     )
@@ -243,7 +243,6 @@ async def get_collections(
     page: int = 1,
     limit: int = 10,
 ) -> List[CollectionRead]:
-
     statement_public = select(Collection).where(
         Collection.org_id == org_id, Collection.public == True
     )
@@ -266,7 +265,7 @@ async def get_collections(
             .join(CollectionCourse)
             .where(
                 CollectionCourse.collection_id == collection.id,
-                CollectionCourse.org_id == collection.org_id
+                CollectionCourse.org_id == collection.org_id,
             )
             .distinct()
         )
@@ -276,7 +275,7 @@ async def get_collections(
             .where(
                 CollectionCourse.collection_id == collection.id,
                 CollectionCourse.org_id == org_id,
-                Course.public == True
+                Course.public == True,
             )
             .distinct()
         )
@@ -315,10 +314,8 @@ async def rbac_check(
                     detail="User rights : You are not allowed to read this collection",
                 )
         else:
-            res = (
-                await authorization_verify_based_on_roles_and_authorship(
-                    request, current_user.id, action, collection_uuid, db_session
-                )
+            res = await authorization_verify_based_on_roles_and_authorship(
+                request, current_user.id, action, collection_uuid, db_session
             )
             return res
     else:

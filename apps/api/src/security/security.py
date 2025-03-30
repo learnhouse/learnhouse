@@ -26,5 +26,3 @@ def security_verify_password(plain_password: str, hashed_password: str):
 
 
 ### 🔒 Passwords Hashing ##############################################################
-
-

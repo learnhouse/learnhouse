@@ -290,7 +290,7 @@ async def delete_assignment_from_activity_uuid(
     # RBAC check
     await rbac_check(request, course.course_uuid, current_user, "delete", db_session)
 
-     # Feature usage
+    # Feature usage
     decrease_feature_usage("assignments", course.org_id, db_session)
 
     # Delete Assignment
@@ -570,10 +570,12 @@ async def put_assignment_task_submission_file(
     await rbac_check(request, course.course_uuid, current_user, "read", db_session)
 
     # Check if user is enrolled in the course
-    if not await authorization_verify_based_on_roles(request, current_user.id, "read", course.course_uuid, db_session):
+    if not await authorization_verify_based_on_roles(
+        request, current_user.id, "read", course.course_uuid, db_session
+    ):
         raise HTTPException(
             status_code=403,
-            detail="You must be enrolled in this course to submit files"
+            detail="You must be enrolled in this course to submit files",
         )
 
     # Upload submission file
@@ -707,7 +709,9 @@ async def handle_assignment_task_submission(
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
-    assignment_task_submission_uuid = assignment_task_submission_object.assignment_task_submission_uuid
+    assignment_task_submission_uuid = (
+        assignment_task_submission_object.assignment_task_submission_uuid
+    )
     # Check if assignment task exists
     statement = select(AssignmentTask).where(
         AssignmentTask.assignment_task_uuid == assignment_task_uuid
@@ -741,36 +745,47 @@ async def handle_assignment_task_submission(
         )
 
     # Check if user has instructor/admin permissions
-    is_instructor = await authorization_verify_based_on_roles(request, current_user.id, "update", course.course_uuid, db_session)
+    is_instructor = await authorization_verify_based_on_roles(
+        request, current_user.id, "update", course.course_uuid, db_session
+    )
 
     # For regular users, ensure they can only submit their own work
     if not is_instructor:
         # Check if user is enrolled in the course
-        if not await authorization_verify_based_on_roles(request, current_user.id, "read", course.course_uuid, db_session):
+        if not await authorization_verify_based_on_roles(
+            request, current_user.id, "read", course.course_uuid, db_session
+        ):
             raise HTTPException(
                 status_code=403,
-                detail="You must be enrolled in this course to submit assignments"
+                detail="You must be enrolled in this course to submit assignments",
             )
-        
+
         # Regular users cannot update grades - only check if actual values are being set
-        if (assignment_task_submission_object.grade is not None and assignment_task_submission_object.grade != 0) or \
-           (assignment_task_submission_object.task_submission_grade_feedback is not None and assignment_task_submission_object.task_submission_grade_feedback != ""):
+        if (
+            assignment_task_submission_object.grade is not None
+            and assignment_task_submission_object.grade != 0
+        ) or (
+            assignment_task_submission_object.task_submission_grade_feedback is not None
+            and assignment_task_submission_object.task_submission_grade_feedback != ""
+        ):
             raise HTTPException(
-                status_code=403,
-                detail="You do not have permission to update grades"
+                status_code=403, detail="You do not have permission to update grades"
             )
 
         # Only need read permission for submissions
         await rbac_check(request, course.course_uuid, current_user, "read", db_session)
     else:
         # Instructors/admins need update permission to grade
-        await rbac_check(request, course.course_uuid, current_user, "update", db_session)
+        await rbac_check(
+            request, course.course_uuid, current_user, "update", db_session
+        )
 
     # Try to find existing submission if UUID is provided
     assignment_task_submission = None
     if assignment_task_submission_uuid:
         statement = select(AssignmentTaskSubmission).where(
-            AssignmentTaskSubmission.assignment_task_submission_uuid == assignment_task_submission_uuid
+            AssignmentTaskSubmission.assignment_task_submission_uuid
+            == assignment_task_submission_uuid
         )
         assignment_task_submission = db_session.exec(statement).first()
 
@@ -779,8 +794,7 @@ async def handle_assignment_task_submission(
         # For regular users, ensure they can only update their own submissions
         if not is_instructor and assignment_task_submission.user_id != current_user.id:
             raise HTTPException(
-                status_code=403,
-                detail="You can only update your own submissions"
+                status_code=403, detail="You can only update your own submissions"
             )
 
         # Update only the fields that were passed in
@@ -802,7 +816,8 @@ async def handle_assignment_task_submission(
         model_data = assignment_task_submission_object.model_dump()
 
         assignment_task_submission = AssignmentTaskSubmission(
-            assignment_task_submission_uuid=assignment_task_submission_uuid or f"assignmenttasksubmission_{uuid4()}",
+            assignment_task_submission_uuid=assignment_task_submission_uuid
+            or f"assignmenttasksubmission_{uuid4()}",
             task_submission=model_data["task_submission"],
             grade=0,  # Always start with 0 for new submissions
             task_submission_grade_feedback="",  # Start with empty feedback
@@ -832,7 +847,6 @@ async def read_user_assignment_task_submissions(
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
-
     # Check if assignment task exists
     statement = select(AssignmentTask).where(
         AssignmentTask.assignment_task_uuid == assignment_task_uuid
@@ -1229,7 +1243,7 @@ async def create_assignment_submission(
             complete=True,
             teacher_verified=False,
             grade="",
-            user_id=user.id, # type: ignore
+            user_id=user.id,  # type: ignore
             creation_date=str(datetime.now()),
             update_date=str(datetime.now()),
         )
@@ -1457,7 +1471,6 @@ async def grade_assignment_submission(
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
-
     # Check if assignment exists
     statement = select(Assignment).where(Assignment.assignment_uuid == assignment_uuid)
     assignment = db_session.exec(statement).first()
@@ -1533,7 +1546,6 @@ async def get_grade_assignment_submission(
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
-
     # Check if assignment exists
     statement = select(Assignment).where(Assignment.assignment_uuid == assignment_uuid)
     assignment = db_session.exec(statement).first()
@@ -1707,7 +1719,6 @@ async def rbac_check(
     action: Literal["create", "read", "update", "delete"],
     db_session: Session,
 ):
-
     if action == "read":
         if current_user.id == 0:  # Anonymous user
             res = await authorization_verify_if_element_is_public(
@@ -1715,10 +1726,8 @@ async def rbac_check(
             )
             return res
         else:
-            res = (
-                await authorization_verify_based_on_roles_and_authorship(
-                    request, current_user.id, action, course_uuid, db_session
-                )
+            res = await authorization_verify_based_on_roles_and_authorship(
+                request, current_user.id, action, course_uuid, db_session
             )
             return res
     else:

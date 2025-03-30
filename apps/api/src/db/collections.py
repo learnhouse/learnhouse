@@ -7,7 +7,7 @@ class CollectionBase(SQLModel):
     name: str
     public: bool
     description: Optional[str] = ""
-    
+
 
 class Collection(CollectionBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)

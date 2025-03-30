@@ -19,8 +19,8 @@ class SecurityConfig(BaseModel):
 
 
 class ChromaDBConfig(BaseModel):
-    isSeparateDatabaseEnabled: bool | None 
-    db_host: str | None 
+    isSeparateDatabaseEnabled: bool | None
+    db_host: str | None
 
 
 class AIConfig(BaseModel):
@@ -91,7 +91,6 @@ class LearnHouseConfig(BaseModel):
 
 
 def get_learnhouse_config() -> LearnHouseConfig:
-
     load_dotenv()
 
     # Get the YAML file
@@ -142,8 +141,6 @@ def get_learnhouse_config() -> LearnHouseConfig:
     env_allowed_regexp = os.environ.get("LEARNHOUSE_ALLOWED_REGEXP")
     env_self_hosted = os.environ.get("LEARNHOUSE_SELF_HOSTED")
     env_sql_connection_string = os.environ.get("LEARNHOUSE_SQL_CONNECTION_STRING")
-
-    
 
     # Fill in values with YAML file if they are not provided
     site_name = env_site_name or yaml_config.get("site_name")
@@ -240,29 +237,39 @@ def get_learnhouse_config() -> LearnHouseConfig:
     # Payments config
     env_stripe_secret_key = os.environ.get("LEARNHOUSE_STRIPE_SECRET_KEY")
     env_stripe_publishable_key = os.environ.get("LEARNHOUSE_STRIPE_PUBLISHABLE_KEY")
-    env_stripe_webhook_standard_secret = os.environ.get("LEARNHOUSE_STRIPE_WEBHOOK_STANDARD_SECRET")
-    env_stripe_webhook_connect_secret = os.environ.get("LEARNHOUSE_STRIPE_WEBHOOK_CONNECT_SECRET")
+    env_stripe_webhook_standard_secret = os.environ.get(
+        "LEARNHOUSE_STRIPE_WEBHOOK_STANDARD_SECRET"
+    )
+    env_stripe_webhook_connect_secret = os.environ.get(
+        "LEARNHOUSE_STRIPE_WEBHOOK_CONNECT_SECRET"
+    )
     env_stripe_client_id = os.environ.get("LEARNHOUSE_STRIPE_CLIENT_ID")
-    
-    stripe_secret_key = env_stripe_secret_key or yaml_config.get("payments_config", {}).get(
-        "stripe", {}
-    ).get("stripe_secret_key")
-    
-    stripe_publishable_key = env_stripe_publishable_key or yaml_config.get("payments_config", {}).get(
-        "stripe", {}
-    ).get("stripe_publishable_key")
 
-    stripe_webhook_standard_secret = env_stripe_webhook_standard_secret or yaml_config.get("payments_config", {}).get(
-        "stripe", {}
-    ).get("stripe_webhook_standard_secret")
+    stripe_secret_key = env_stripe_secret_key or yaml_config.get(
+        "payments_config", {}
+    ).get("stripe", {}).get("stripe_secret_key")
 
-    stripe_webhook_connect_secret = env_stripe_webhook_connect_secret or yaml_config.get("payments_config", {}).get(
-        "stripe", {}
-    ).get("stripe_webhook_connect_secret")
+    stripe_publishable_key = env_stripe_publishable_key or yaml_config.get(
+        "payments_config", {}
+    ).get("stripe", {}).get("stripe_publishable_key")
 
-    stripe_client_id = env_stripe_client_id or yaml_config.get("payments_config", {}).get(
-        "stripe", {}
-    ).get("stripe_client_id")
+    stripe_webhook_standard_secret = (
+        env_stripe_webhook_standard_secret
+        or yaml_config.get("payments_config", {})
+        .get("stripe", {})
+        .get("stripe_webhook_standard_secret")
+    )
+
+    stripe_webhook_connect_secret = (
+        env_stripe_webhook_connect_secret
+        or yaml_config.get("payments_config", {})
+        .get("stripe", {})
+        .get("stripe_webhook_connect_secret")
+    )
+
+    stripe_client_id = env_stripe_client_id or yaml_config.get(
+        "payments_config", {}
+    ).get("stripe", {}).get("stripe_client_id")
 
     # Create HostingConfig and DatabaseConfig objects
     hosting_config = HostingConfig(
@@ -311,9 +318,9 @@ def get_learnhouse_config() -> LearnHouseConfig:
                 stripe_publishable_key=stripe_publishable_key,
                 stripe_webhook_standard_secret=stripe_webhook_standard_secret,
                 stripe_webhook_connect_secret=stripe_webhook_connect_secret,
-                stripe_client_id=stripe_client_id
+                stripe_client_id=stripe_client_id,
             )
-        )
+        ),
     )
 
     return config

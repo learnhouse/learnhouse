@@ -52,8 +52,10 @@ async def upload_org_preview(file, org_uuid: str) -> str:
 
 async def upload_org_landing_content(file: UploadFile, org_uuid: str) -> str:
     if not file or not file.filename:
-        raise HTTPException(status_code=400, detail="No file provided or invalid filename")
-        
+        raise HTTPException(
+            status_code=400, detail="No file provided or invalid filename"
+        )
+
     contents = file.file.read()
     name_in_disk = f"{uuid4()}.{file.filename.split('.')[-1]}"
 
@@ -63,7 +65,16 @@ async def upload_org_landing_content(file: UploadFile, org_uuid: str) -> str:
         org_uuid,
         contents,
         name_in_disk,
-        ["jpg", "jpeg", "png", "gif", "webp", "mp4", "webm", "pdf"]  # Common web content formats
+        [
+            "jpg",
+            "jpeg",
+            "png",
+            "gif",
+            "webp",
+            "mp4",
+            "webm",
+            "pdf",
+        ],  # Common web content formats
     )
 
     return name_in_disk

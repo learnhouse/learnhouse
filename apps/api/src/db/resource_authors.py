@@ -10,6 +10,7 @@ class ResourceAuthorshipEnum(str, Enum):
     MAINTAINER = "MAINTAINER"
     REPORTER = "REPORTER"
 
+
 class ResourceAuthorshipStatusEnum(str, Enum):
     ACTIVE = "ACTIVE"
     PENDING = "PENDING"

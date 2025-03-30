@@ -16,5 +16,3 @@ def isDevModeEnabledOrRaise():
         return True
     else:
         raise HTTPException(status_code=403, detail="Development mode is disabled")
-    
-

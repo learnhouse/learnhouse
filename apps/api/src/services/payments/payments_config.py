@@ -20,9 +20,7 @@ async def init_payments_config(
     db_session: Session,
 ) -> PaymentsConfig:
     # Validate organization exists
-    org = db_session.exec(
-        select(Organization).where(Organization.id == org_id)
-    ).first()
+    org = db_session.exec(select(Organization).where(Organization.id == org_id)).first()
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
 
@@ -33,11 +31,11 @@ async def init_payments_config(
     existing_config = db_session.exec(
         select(PaymentsConfig).where(PaymentsConfig.org_id == org_id)
     ).first()
-    
+
     if existing_config:
         raise HTTPException(
             status_code=409,
-            detail="Payments config already exists for this organization"
+            detail="Payments config already exists for this organization",
         )
 
     # Initialize new config
@@ -47,7 +45,7 @@ async def init_payments_config(
         provider_config={
             "onboarding_completed": False,
         },
-        provider_specific_id=None
+        provider_specific_id=None,
     )
 
     # Save to database

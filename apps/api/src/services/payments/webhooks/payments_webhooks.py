@@ -21,16 +21,18 @@ async def handle_stripe_webhook(
 ) -> dict:
     # Get Stripe credentials
     creds = await get_stripe_internal_credentials()
-    webhook_secret = creds.get(f'stripe_webhook_{webhook_type}_secret')
+    webhook_secret = creds.get(f"stripe_webhook_{webhook_type}_secret")
     stripe.api_key = creds.get("stripe_secret_key")
-    
+
     if not webhook_secret:
         logger.error("Stripe webhook secret not configured")
-        raise HTTPException(status_code=400, detail="Stripe webhook secret not configured")
+        raise HTTPException(
+            status_code=400, detail="Stripe webhook secret not configured"
+        )
 
     # Get request data
     payload = await request.body()
-    sig_header = request.headers.get('stripe-signature')
+    sig_header = request.headers.get("stripe-signature")
 
     try:
         # Verify webhook signature
@@ -51,30 +53,32 @@ async def handle_stripe_webhook(
         if not stripe_account_id:
             logger.error("Stripe account ID not found")
             raise HTTPException(status_code=400, detail="Stripe account ID not found")
-        
+
         org_id = await get_org_id_from_stripe_account(stripe_account_id, db_session)
 
         # Handle internal account events
-        if event_type == 'account.application.authorized':
+        if event_type == "account.application.authorized":
             statement = select(PaymentsConfig).where(PaymentsConfig.org_id == org_id)
             config = db_session.exec(statement).first()
-            
+
             if not config:
                 logger.error("No payments configuration found for this organization")
                 raise HTTPException(
                     status_code=404,
-                    detail="No payments configuration found for this organization"
+                    detail="No payments configuration found for this organization",
                 )
 
             config_data = config.model_dump()
-            config_data.update({
-                "enabled": True,
-                "active": True,
-                "provider_config": {
-                    **config.provider_config,
-                    "onboarding_completed": True
+            config_data.update(
+                {
+                    "enabled": True,
+                    "active": True,
+                    "provider_config": {
+                        **config.provider_config,
+                        "onboarding_completed": True,
+                    },
                 }
-            })
+            )
             await update_payments_config(
                 request,
                 org_id,
@@ -86,25 +90,27 @@ async def handle_stripe_webhook(
             logger.info(f"Account authorized for organization {org_id}")
             return {"status": "success", "message": "Account authorized successfully"}
 
-        elif event_type == 'account.application.deauthorized':
+        elif event_type == "account.application.deauthorized":
             statement = select(PaymentsConfig).where(PaymentsConfig.org_id == org_id)
             config = db_session.exec(statement).first()
-            
+
             if not config:
                 raise HTTPException(
                     status_code=404,
-                    detail="No payments configuration found for this organization"
+                    detail="No payments configuration found for this organization",
                 )
 
             config_data = config.model_dump()
-            config_data.update({
-                "enabled": True,
-                "active": False,
-                "provider_config": {
-                    **config.provider_config,
-                    "onboarding_completed": False
+            config_data.update(
+                {
+                    "enabled": True,
+                    "active": False,
+                    "provider_config": {
+                        **config.provider_config,
+                        "onboarding_completed": False,
+                    },
                 }
-            })
+            )
             await update_payments_config(
                 request,
                 org_id,
@@ -144,7 +150,9 @@ async def handle_stripe_webhook(
 
         elif event_type == "customer.subscription.deleted":
             subscription = event_data
-            payment_user_id = int(subscription.get("metadata", {}).get("payment_user_id"))
+            payment_user_id = int(
+                subscription.get("metadata", {}).get("payment_user_id")
+            )
 
             await update_payment_user_status(
                 request=request,
@@ -157,7 +165,9 @@ async def handle_stripe_webhook(
 
         elif event_type == "payment_intent.payment_failed":
             payment_intent = event_data
-            payment_user_id = int(payment_intent.get("metadata", {}).get("payment_user_id"))
+            payment_user_id = int(
+                payment_intent.get("metadata", {}).get("payment_user_id")
+            )
 
             await update_payment_user_status(
                 request=request,
@@ -170,10 +180,15 @@ async def handle_stripe_webhook(
 
         else:
             logger.warning(f"Unhandled event type: {event_type}")
-            return {"status": "ignored", "message": f"Unhandled event type: {event_type}"}
+            return {
+                "status": "ignored",
+                "message": f"Unhandled event type: {event_type}",
+            }
 
         return {"status": "success"}
 
     except Exception as e:
         logger.error(f"Error processing webhook: {str(e)}")
-        raise HTTPException(status_code=400, detail=f"Error processing webhook: {str(e)}") 
+        raise HTTPException(
+            status_code=400, detail=f"Error processing webhook: {str(e)}"
+        )

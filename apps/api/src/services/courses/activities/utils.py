@@ -49,7 +49,6 @@ def serialize_activity_text_to_ai_comprehensible_text(
     activity: ActivityRead,
     isActivityEmpty: bool = False,
 ):
-
     if isActivityEmpty:
         text = (
             "Use this as a context "

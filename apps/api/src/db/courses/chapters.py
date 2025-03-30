@@ -10,10 +10,14 @@ class ChapterBase(SQLModel):
     description: Optional[str] = ""
     thumbnail_image: Optional[str] = ""
     org_id: int = Field(
-        sa_column=Column("org_id", Integer, ForeignKey("organization.id", ondelete="CASCADE"))
+        sa_column=Column(
+            "org_id", Integer, ForeignKey("organization.id", ondelete="CASCADE")
+        )
     )
     course_id: int = Field(
-        sa_column=Column("course_id", Integer, ForeignKey("course.id", ondelete="CASCADE"))
+        sa_column=Column(
+            "course_id", Integer, ForeignKey("course.id", ondelete="CASCADE")
+        )
     )
 
 
@@ -35,7 +39,7 @@ class ChapterUpdate(ChapterBase):
     description: Optional[str] = ""
     thumbnail_image: Optional[str] = ""
     course_id: Optional[int]
-    org_id: Optional[int] # type: ignore
+    org_id: Optional[int]  # type: ignore
 
 
 class ChapterRead(ChapterBase):

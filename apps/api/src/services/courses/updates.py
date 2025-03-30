@@ -22,7 +22,6 @@ async def create_update(
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ) -> CourseUpdateRead:
-
     # CHekc if org exists
     statement_org = select(Organization).where(Organization.id == update_object.org_id)
     org = db_session.exec(statement_org).first()
