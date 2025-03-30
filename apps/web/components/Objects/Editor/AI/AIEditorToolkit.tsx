@@ -1,7 +1,16 @@
-import React from 'react'
-import learnhouseAI_icon from 'public/learnhouse_ai_simple.png'
-import { motion, AnimatePresence } from 'framer-motion'
-import Image from 'next/image'
+import {
+  type AIEditorStateTypes,
+  useAIEditor,
+  useAIEditorDispatch,
+} from '@components/Contexts/AI/AIEditorContext'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
+import useGetAIFeatures from '@components/Hooks/useGetAIFeatures'
+import {
+  sendActivityAIChatMessage,
+  startActivityAIChatSession,
+} from '@services/ai/ai'
+import type { Editor } from '@tiptap/react'
+import { AnimatePresence, motion } from 'framer-motion'
 import {
   AlertTriangle,
   BetweenHorizontalStart,
@@ -13,18 +22,9 @@ import {
   MoreVertical,
   X,
 } from 'lucide-react'
-import { Editor } from '@tiptap/react'
-import {
-  AIEditorStateTypes,
-  useAIEditor,
-  useAIEditorDispatch,
-} from '@components/Contexts/AI/AIEditorContext'
-import {
-  sendActivityAIChatMessage,
-  startActivityAIChatSession,
-} from '@services/ai/ai'
-import useGetAIFeatures from '@components/Hooks/useGetAIFeatures'
-import { useLHSession } from '@components/Contexts/LHSessionContext'
+import Image from 'next/image'
+import learnhouseAI_icon from 'public/learnhouse_ai_simple.png'
+import React from 'react'
 
 type AIEditorToolkitProps = {
   editor: Editor
@@ -255,7 +255,7 @@ const UserFeedbackModal = (props: AIEditorToolkitProps) => {
     // Check what operation that was
     if (label === 'Writer') {
       let ai_message = ''
-      let prompt = getPrompt({ label: label, selection: message })
+      const prompt = getPrompt({ label: label, selection: message })
       await dispatchAIEditor({ type: 'setIsUserInputEnabled', payload: true })
       if (prompt) {
         await dispatchAIEditor({
@@ -266,12 +266,15 @@ const UserFeedbackModal = (props: AIEditorToolkitProps) => {
         ai_message = await sendReqWithMessage(prompt)
         await fillEditorWithText(ai_message)
         await dispatchAIEditor({ type: 'setIsNoLongerWaitingForResponse' })
-        await dispatchAIEditor({ type: 'setIsUserInputEnabled', payload: true })
+        await dispatchAIEditor({
+          type: 'setIsUserInputEnabled',
+          payload: true,
+        })
       }
     } else if (label === 'ContinueWriting') {
       let ai_message = ''
-      let text_selection = getTipTapEditorSelectedTextGlobal()
-      let prompt = getPrompt({ label: label, selection: text_selection })
+      const text_selection = getTipTapEditorSelectedTextGlobal()
+      const prompt = getPrompt({ label: label, selection: text_selection })
       if (prompt) {
         await dispatchAIEditor({ type: 'setIsWaitingForResponse' })
         ai_message = await sendReqWithMessage(prompt)
@@ -284,8 +287,8 @@ const UserFeedbackModal = (props: AIEditorToolkitProps) => {
       }
     } else if (label === 'MakeLonger') {
       let ai_message = ''
-      let text_selection = getTipTapEditorSelectedText()
-      let prompt = getPrompt({ label: label, selection: text_selection })
+      const text_selection = getTipTapEditorSelectedText()
+      const prompt = getPrompt({ label: label, selection: text_selection })
       if (prompt) {
         await dispatchAIEditor({ type: 'setIsWaitingForResponse' })
         ai_message = await sendReqWithMessage(prompt)
@@ -296,8 +299,8 @@ const UserFeedbackModal = (props: AIEditorToolkitProps) => {
       // will be implemented in future stages
     } else if (label === 'Translate') {
       let ai_message = ''
-      let text_selection = getTipTapEditorSelectedText()
-      let prompt = getPrompt({ label: label, selection: text_selection })
+      const text_selection = getTipTapEditorSelectedText()
+      const prompt = getPrompt({ label: label, selection: text_selection })
       if (prompt) {
         await dispatchAIEditor({ type: 'setIsWaitingForResponse' })
         ai_message = await sendReqWithMessage(prompt)
@@ -577,7 +580,8 @@ const AiEditorActionScreen = ({
         !aiEditorState.error.isError && (
           <div className="flex flex-col mx-auto justify-center align-middle items-center">
             <p className="mx-auto flex p-2 text-white/80 mt-4 font-bold justify-center text-sm align-middle">
-              Place your cursor at the end of a sentence to continue writing{' '}
+              Place your cursor at the end of a sentence to continue
+              writing{' '}
             </p>
             <div
               onClick={() => {

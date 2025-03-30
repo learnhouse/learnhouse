@@ -1,13 +1,13 @@
 'use client'
-import React, { useEffect, use } from 'react'
-import { motion } from 'framer-motion'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
+import BreadCrumbs from '@components/Dashboard/Misc/BreadCrumbs'
 import UserEditGeneral from '@components/Dashboard/Pages/UserAccount/UserEditGeneral/UserEditGeneral'
 import UserEditPassword from '@components/Dashboard/Pages/UserAccount/UserEditPassword/UserEditPassword'
-import Link from 'next/link'
 import { getUriWithOrg } from '@services/config/config'
+import { motion } from 'framer-motion'
 import { Info, Lock } from 'lucide-react'
-import BreadCrumbs from '@components/Dashboard/Misc/BreadCrumbs'
-import { useLHSession } from '@components/Contexts/LHSessionContext'
+import Link from 'next/link'
+import React, { useEffect, use } from 'react'
 
 export type SettingsParams = {
   subpage: string

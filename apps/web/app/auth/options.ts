@@ -37,11 +37,11 @@ export const nextAuthOptions = {
       },
       async authorize(credentials, req) {
         // logic to verify if user exists
-        let unsanitized_req = await loginAndGetToken(
+        const unsanitized_req = await loginAndGetToken(
           credentials?.email,
           credentials?.password
         )
-        let res = await getResponseMetadata(unsanitized_req)
+        const res = await getResponseMetadata(unsanitized_req)
         if (res.success) {
           // If login failed, then this is the place you could do a registration
           return res.data
@@ -82,12 +82,12 @@ export const nextAuthOptions = {
 
       // Sign up with Google
       if (account?.provider == 'google' && user) {
-        let unsanitized_req = await loginWithOAuthToken(
+        const unsanitized_req = await loginWithOAuthToken(
           user.email,
           'google',
           account.access_token
         )
-        let userFromOAuth = await getResponseMetadata(unsanitized_req)
+        const userFromOAuth = await getResponseMetadata(unsanitized_req)
         token.user = userFromOAuth.data
       }
 
@@ -120,7 +120,7 @@ export const nextAuthOptions = {
       if (token.user) {
         // Cache the session for 5 minutes to avoid frequent API calls
         const cacheKey = `user_session_${token.user.tokens.access_token}`
-        let cachedSession = global.sessionCache?.[cacheKey]
+        const cachedSession = global.sessionCache?.[cacheKey]
 
         if (
           cachedSession &&
@@ -129,7 +129,7 @@ export const nextAuthOptions = {
           return cachedSession.data
         }
 
-        let api_SESSION = await getUserSession(token.user.tokens.access_token)
+        const api_SESSION = await getUserSession(token.user.tokens.access_token)
         session.user = api_SESSION.user
         session.roles = api_SESSION.roles
         session.tokens = token.user.tokens

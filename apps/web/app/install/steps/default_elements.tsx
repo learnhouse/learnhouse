@@ -1,7 +1,7 @@
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { getAPIUrl } from '@services/config/config'
 import { createDefaultElements, updateInstall } from '@services/install/install'
 import { swrFetcher } from '@services/utils/ts/requests'
-import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useRouter } from 'next/navigation'
 import React from 'react'
 import useSWR from 'swr'
@@ -11,7 +11,7 @@ function DefaultElements() {
   const access_token = session?.data?.tokens?.access_token
   const {
     data: install,
-    error: error,
+    error,
     isLoading,
   } = useSWR(`${getAPIUrl()}install/latest`, (url) =>
     swrFetcher(url, access_token)
@@ -25,7 +25,7 @@ function DefaultElements() {
       createDefaultElements()
       // add an {} to the install.data object
 
-      let install_data = { ...install.data, 2: { status: 'OK' } }
+      const install_data = { ...install.data, 2: { status: 'OK' } }
 
       updateInstall(install_data, 3)
       // await 2 seconds

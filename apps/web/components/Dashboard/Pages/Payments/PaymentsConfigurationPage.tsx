@@ -1,31 +1,30 @@
 'use client'
-import React, { useState, useEffect } from 'react'
-import { useOrg } from '@components/Contexts/OrgContext'
-import { SiStripe } from '@icons-pack/react-simple-icons'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import {
-  getPaymentConfigs,
-  initializePaymentConfig,
-  updatePaymentConfig,
-  deletePaymentConfig,
-  updateStripeAccountID,
-  getStripeOnboardingLink,
-} from '@services/payments/payments'
+import { useOrg } from '@components/Contexts/OrgContext'
+import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import FormLayout, {
   ButtonBlack,
   Input,
-  Textarea,
   FormField,
   FormLabelAndMessage,
   Flex,
 } from '@components/Objects/StyledElements/Form/Form'
+import Modal from '@components/Objects/StyledElements/Modal/Modal'
+import { Alert, AlertDescription, AlertTitle } from '@components/ui/alert'
+import { Button } from '@components/ui/button'
+import { SiStripe } from '@icons-pack/react-simple-icons'
+import { getUriWithoutOrg } from '@services/config/config'
 import {
-  AlertTriangle,
+  deletePaymentConfig,
+  getPaymentConfigs,
+  getStripeOnboardingLink,
+  initializePaymentConfig,
+  updateStripeAccountID,
+} from '@services/payments/payments'
+import {
   BarChart2,
-  Check,
   Coins,
   CreditCard,
-  Edit,
   ExternalLink,
   Info,
   Loader2,
@@ -33,14 +32,11 @@ import {
   Trash2,
   UnplugIcon,
 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import type React from 'react'
+import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import useSWR, { mutate } from 'swr'
-import Modal from '@components/Objects/StyledElements/Modal/Modal'
-import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
-import { Button } from '@components/ui/button'
-import { Alert, AlertDescription, AlertTitle } from '@components/ui/alert'
-import { useRouter } from 'next/navigation'
-import { getUriWithoutOrg } from '@services/config/config'
 
 const PaymentsConfigurationPage: React.FC = () => {
   const org = useOrg() as any

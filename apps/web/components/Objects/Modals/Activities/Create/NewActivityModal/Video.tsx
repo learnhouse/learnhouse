@@ -1,3 +1,4 @@
+import { constructAcceptValue } from '@/lib/constants'
 import FormLayout, {
   ButtonBlack,
   Flex,
@@ -6,11 +7,10 @@ import FormLayout, {
   FormMessage,
   Input,
 } from '@components/Objects/StyledElements/Form/Form'
-import React, { useState } from 'react'
 import * as Form from '@radix-ui/react-form'
-import BarLoader from 'react-spinners/BarLoader'
 import { Youtube } from 'lucide-react'
-import { constructAcceptValue } from '@/lib/constants'
+import React, { useState } from 'react'
+import BarLoader from 'react-spinners/BarLoader'
 
 const SUPPORTED_FILES = constructAcceptValue(['mp4', 'webm'])
 
@@ -52,7 +52,7 @@ function VideoModal({
     setIsSubmitting(true)
 
     if (selectedView === 'file') {
-      let status = await submitFileActivity(
+      const status = await submitFileActivity(
         video,
         'video',
         {
@@ -70,14 +70,14 @@ function VideoModal({
       setIsSubmitting(false)
     }
     if (selectedView === 'youtube') {
-      let external_video_object: ExternalVideoObject = {
+      const external_video_object: ExternalVideoObject = {
         name,
         type: 'youtube',
         uri: youtubeUrl,
         chapter_id: chapterId,
       }
 
-      let status = await submitExternalVideo(
+      const status = await submitExternalVideo(
         external_video_object,
         'activity',
         chapterId

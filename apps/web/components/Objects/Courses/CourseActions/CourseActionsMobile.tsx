@@ -1,16 +1,16 @@
-import React, { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { getUriWithoutOrg, getUriWithOrg } from '@services/config/config'
-import { getProductsByCourse } from '@services/payments/products'
-import { LogIn, LogOut, ShoppingCart, AlertCircle } from 'lucide-react'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
-import CoursePaidOptions from './CoursePaidOptions'
-import { checkPaidAccess } from '@services/payments/payments'
+import { getUriWithOrg, getUriWithoutOrg } from '@services/config/config'
 import { removeCourse, startCourse } from '@services/courses/activity'
-import { revalidateTags } from '@services/utils/ts/requests'
-import UserAvatar from '../../UserAvatar'
 import { getUserAvatarMediaDirectory } from '@services/media/media'
+import { checkPaidAccess } from '@services/payments/payments'
+import { getProductsByCourse } from '@services/payments/products'
+import { revalidateTags } from '@services/utils/ts/requests'
+import { AlertCircle, LogIn, LogOut, ShoppingCart } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import React, { useState, useEffect } from 'react'
+import UserAvatar from '../../UserAvatar'
+import CoursePaidOptions from './CoursePaidOptions'
 
 interface Author {
   user: {
@@ -169,7 +169,7 @@ const CourseActionsMobile = ({
       if (!session.data?.user) return
       try {
         const response = await checkPaidAccess(
-          parseInt(course.id),
+          Number.parseInt(course.id),
           course.org_id,
           session.data?.tokens?.access_token
         )

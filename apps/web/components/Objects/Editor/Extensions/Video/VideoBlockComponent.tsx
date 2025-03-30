@@ -1,19 +1,19 @@
+import { constructAcceptValue } from '@/lib/constants'
+import { useCourse } from '@components/Contexts/CourseContext'
+import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { useOrg } from '@components/Contexts/OrgContext'
+import { getActivityBlockMediaDirectory } from '@services/media/media'
 import { NodeViewWrapper } from '@tiptap/react'
 import { Video } from 'lucide-react'
 import React, { useEffect } from 'react'
 import styled from 'styled-components'
 import { uploadNewVideoFile } from '../../../../../services/blocks/Video/video'
-import { getActivityBlockMediaDirectory } from '@services/media/media'
-import { useOrg } from '@components/Contexts/OrgContext'
-import { useCourse } from '@components/Contexts/CourseContext'
-import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
-import { useLHSession } from '@components/Contexts/LHSessionContext'
 import {
   FileUploadBlock,
   FileUploadBlockButton,
   FileUploadBlockInput,
 } from '../../FileUploadBlock'
-import { constructAcceptValue } from '@/lib/constants'
 
 const SUPPORTED_FILES = constructAcceptValue(['webm', 'mp4'])
 
@@ -40,7 +40,7 @@ function VideoBlockComponents(props: any) {
   const handleSubmit = async (e: any) => {
     e.preventDefault()
     setIsLoading(true)
-    let object = await uploadNewVideoFile(
+    const object = await uploadNewVideoFile(
       video,
       props.extension.options.activity.activity_uuid,
       access_token

@@ -1,23 +1,23 @@
 'use client'
-import learnhouseIcon from 'public/learnhouse_bigicon_1.png'
-import Image from 'next/image'
-import { getOrgLogoMediaDirectory } from '@services/media/media'
-import Link from 'next/link'
-import { getUriWithOrg, getUriWithoutOrg } from '@services/config/config'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import React, { useEffect } from 'react'
-import { MailWarning, Ticket, UserPlus } from 'lucide-react'
 import { useOrg } from '@components/Contexts/OrgContext'
-import UserAvatar from '@components/Objects/UserAvatar'
-import OpenSignUpComponent from './OpenSignup'
-import InviteOnlySignUpComponent from './InviteOnlySignUp'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { validateInviteCode } from '@services/organizations/invites'
 import PageLoading from '@components/Objects/Loaders/PageLoading'
 import Toast from '@components/Objects/StyledElements/Toast/Toast'
+import UserAvatar from '@components/Objects/UserAvatar'
+import { getUriWithOrg, getUriWithoutOrg } from '@services/config/config'
+import { getOrgLogoMediaDirectory } from '@services/media/media'
+import { validateInviteCode } from '@services/organizations/invites'
+import { joinOrg } from '@services/organizations/orgs'
+import { MailWarning, Ticket, UserPlus } from 'lucide-react'
+import Image from 'next/image'
+import Link from 'next/link'
+import { useRouter, useSearchParams } from 'next/navigation'
+import learnhouseIcon from 'public/learnhouse_bigicon_1.png'
+import React, { useEffect } from 'react'
 import toast from 'react-hot-toast'
 import { BarLoader } from 'react-spinners'
-import { joinOrg } from '@services/organizations/orgs'
+import InviteOnlySignUpComponent from './InviteOnlySignUp'
+import OpenSignUpComponent from './OpenSignup'
 
 interface SignUpClientProps {
   org: any
@@ -196,7 +196,7 @@ const NoTokenScreen = (props: any) => {
 
   const validateCode = async () => {
     setIsLoading(true)
-    let res = await validateInviteCode(
+    const res = await validateInviteCode(
       org?.id,
       inviteCode,
       session?.user?.tokens.access_token

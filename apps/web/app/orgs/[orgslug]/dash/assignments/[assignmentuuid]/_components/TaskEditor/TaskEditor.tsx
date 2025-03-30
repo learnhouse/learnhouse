@@ -8,10 +8,10 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { getAPIUrl } from '@services/config/config'
 import { deleteAssignmentTask } from '@services/courses/assignments'
 import { GalleryVerticalEnd, Info, TentTree, Trash } from 'lucide-react'
+import dynamic from 'next/dynamic'
 import React, { useEffect } from 'react'
 import toast from 'react-hot-toast'
 import { mutate } from 'swr'
-import dynamic from 'next/dynamic'
 import { AssignmentTaskGeneralEdit } from './Subs/AssignmentTaskGeneralEdit'
 const AssignmentTaskContentEdit = dynamic(
   () => import('./Subs/AssignmentTaskContentEdit')

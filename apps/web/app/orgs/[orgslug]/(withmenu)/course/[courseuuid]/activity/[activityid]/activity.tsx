@@ -1,57 +1,53 @@
 'use client'
-import Link from 'next/link'
-import { getAPIUrl, getUriWithOrg } from '@services/config/config'
+import AIChatBotProvider from '@components/Contexts/AI/AIChatBotContext'
+import { AssignmentProvider } from '@components/Contexts/Assignments/AssignmentContext'
+import AssignmentSubmissionProvider, {
+  useAssignmentSubmission,
+} from '@components/Contexts/Assignments/AssignmentSubmissionContext'
+import { AssignmentsTaskProvider } from '@components/Contexts/Assignments/AssignmentsTaskContext'
+import { CourseProvider } from '@components/Contexts/CourseContext'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { useOrg } from '@components/Contexts/OrgContext'
+import AIActivityAsk from '@components/Objects/Activities/AI/AIActivityAsk'
+import AssignmentStudentActivity from '@components/Objects/Activities/Assignment/AssignmentStudentActivity'
+import DocumentPdfActivity from '@components/Objects/Activities/DocumentPdf/DocumentPdf'
 import Canva from '@components/Objects/Activities/DynamicCanva/DynamicCanva'
 import VideoActivity from '@components/Objects/Activities/Video/Video'
-import {
-  BookOpenCheck,
-  Check,
-  CheckCircle,
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  FileText,
-  Folder,
-  List,
-  Menu,
-  MoreVertical,
-  UserRoundPen,
-  Video,
-  Layers,
-  ListFilter,
-  ListTree,
-  X,
-  Edit2,
-} from 'lucide-react'
-import { markActivityAsComplete } from '@services/courses/activity'
-import DocumentPdfActivity from '@components/Objects/Activities/DocumentPdf/DocumentPdf'
-import ActivityIndicators from '@components/Pages/Courses/ActivityIndicators'
+import PaidCourseActivityDisclaimer from '@components/Objects/Courses/CourseActions/PaidCourseActivityDisclaimer'
+import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
-import { usePathname, useRouter } from 'next/navigation'
+import ActivityIndicators from '@components/Pages/Courses/ActivityIndicators'
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
-import { getCourseThumbnailMediaDirectory } from '@services/media/media'
-import { useOrg } from '@components/Contexts/OrgContext'
-import { CourseProvider } from '@components/Contexts/CourseContext'
-import AIActivityAsk from '@components/Objects/Activities/AI/AIActivityAsk'
-import AIChatBotProvider from '@components/Contexts/AI/AIChatBotContext'
-import { useLHSession } from '@components/Contexts/LHSessionContext'
-import React, { useEffect } from 'react'
+import { getAPIUrl, getUriWithOrg } from '@services/config/config'
+import { markActivityAsComplete } from '@services/courses/activity'
 import {
   getAssignmentFromActivityUUID,
   getFinalGrade,
   submitAssignmentForGrading,
 } from '@services/courses/assignments'
-import AssignmentStudentActivity from '@components/Objects/Activities/Assignment/AssignmentStudentActivity'
-import { AssignmentProvider } from '@components/Contexts/Assignments/AssignmentContext'
-import { AssignmentsTaskProvider } from '@components/Contexts/Assignments/AssignmentsTaskContext'
-import AssignmentSubmissionProvider, {
-  useAssignmentSubmission,
-} from '@components/Contexts/Assignments/AssignmentSubmissionContext'
+import { getCourseThumbnailMediaDirectory } from '@services/media/media'
+import {
+  BookOpenCheck,
+  Check,
+  CheckCircle,
+  ChevronLeft,
+  ChevronRight,
+  Edit2,
+  FileText,
+  Folder,
+  Layers,
+  ListTree,
+  MoreVertical,
+  UserRoundPen,
+  Video,
+  X,
+} from 'lucide-react'
+import Link from 'next/link'
+import { usePathname, useRouter } from 'next/navigation'
+import React, { useEffect } from 'react'
 import toast from 'react-hot-toast'
 import { mutate } from 'swr'
-import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import { useMediaQuery } from 'usehooks-ts'
-import PaidCourseActivityDisclaimer from '@components/Objects/Courses/CourseActions/PaidCourseActivityDisclaimer'
 import { useContributorStatus } from '../../../../../../../../hooks/useContributorStatus'
 
 interface ActivityClientProps {
@@ -80,9 +76,9 @@ function ActivityClient(props: ActivityClientProps) {
 
   function getChapterNameByActivityId(course: any, activity_id: any) {
     for (let i = 0; i < course.chapters.length; i++) {
-      let chapter = course.chapters[i]
+      const chapter = course.chapters[i]
       for (let j = 0; j < chapter.activities.length; j++) {
-        let activity = chapter.activities[j]
+        const activity = chapter.activities[j]
         if (activity.id === activity_id) {
           return chapter.name
         }
@@ -331,7 +327,7 @@ export function MarkStatus(props: {
   }
 
   const isActivityCompleted = () => {
-    let run = props.course.trail.runs.find(
+    const run = props.course.trail.runs.find(
       (run: any) => run.course_id == props.course.id
     )
     if (run) {
@@ -656,7 +652,7 @@ function ActivityNavigation(props: {
 
   // Function to find the current activity's position in the course
   const findActivityPosition = () => {
-    let allActivities: any[] = []
+    const allActivities: any[] = []
     let currentIndex = -1
 
     // Flatten all activities from all chapters

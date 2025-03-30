@@ -1,28 +1,27 @@
 'use client'
-import { updateProfile } from '@services/settings/profile'
-import React, { useEffect } from 'react'
-import { Formik, Form } from 'formik'
+import { constructAcceptValue } from '@/lib/constants'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import UserAvatar from '@components/Objects/UserAvatar'
+import { Button } from '@components/ui/button'
+import { Input } from '@components/ui/input'
+import { Label } from '@components/ui/label'
+import { Textarea } from '@components/ui/textarea'
+import { getUriWithoutOrg } from '@services/config/config'
+import { updateProfile } from '@services/settings/profile'
+import { updateUserAvatar } from '@services/users/users'
+import { Form, Formik } from 'formik'
 import {
+  AlertTriangle,
   ArrowBigUpDash,
   Check,
   FileWarning,
   Info,
   UploadCloud,
-  AlertTriangle,
-  LogOut,
 } from 'lucide-react'
-import UserAvatar from '@components/Objects/UserAvatar'
-import { updateUserAvatar } from '@services/users/users'
-import { constructAcceptValue } from '@/lib/constants'
-import * as Yup from 'yup'
-import { Input } from '@components/ui/input'
-import { Textarea } from '@components/ui/textarea'
-import { Button } from '@components/ui/button'
-import { Label } from '@components/ui/label'
-import { toast } from 'react-hot-toast'
 import { signOut } from 'next-auth/react'
-import { getUriWithoutOrg } from '@services/config/config'
+import React, { useEffect } from 'react'
+import { toast } from 'react-hot-toast'
+import * as Yup from 'yup'
 
 const SUPPORTED_FILES = constructAcceptValue(['image'])
 

@@ -1,18 +1,19 @@
-import styled from 'styled-components'
+import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
+import { SiYoutube } from '@icons-pack/react-simple-icons'
 import {
-  FontBoldIcon,
-  FontItalicIcon,
-  StrikethroughIcon,
   ArrowLeftIcon,
   ArrowRightIcon,
-  DividerVerticalIcon,
-  ListBulletIcon,
-  TableIcon,
-  RowsIcon,
-  ColumnsIcon,
-  SectionIcon,
-  ContainerIcon,
   ChevronDownIcon,
+  ColumnsIcon,
+  ContainerIcon,
+  DividerVerticalIcon,
+  FontBoldIcon,
+  FontItalicIcon,
+  ListBulletIcon,
+  RowsIcon,
+  SectionIcon,
+  StrikethroughIcon,
+  TableIcon,
 } from '@radix-ui/react-icons'
 import {
   AlertCircle,
@@ -22,17 +23,13 @@ import {
   Cuboid,
   FileText,
   ImagePlus,
-  Lightbulb,
   MousePointerClick,
   Sigma,
-  Table,
-  Tag,
   Tags,
   Video,
 } from 'lucide-react'
-import { SiYoutube } from '@icons-pack/react-simple-icons'
-import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
 import React from 'react'
+import styled from 'styled-components'
 
 export const ToolbarButtons = ({ editor, props }: any) => {
   const [showTableMenu, setShowTableMenu] = React.useState(false)
@@ -124,7 +121,7 @@ export const ToolbarButtons = ({ editor, props }: any) => {
           editor
             .chain()
             .focus()
-            .toggleHeading({ level: parseInt(e.target.value) })
+            .toggleHeading({ level: Number.parseInt(e.target.value) })
             .run()
         }
       >

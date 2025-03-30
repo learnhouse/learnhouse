@@ -1,22 +1,22 @@
+import {
+  type AIChatBotStateTypes,
+  useAIChatBot,
+  useAIChatBotDispatch,
+} from '@components/Contexts/AI/AIChatBotContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import UserAvatar from '@components/Objects/UserAvatar'
 import {
   sendActivityAIChatMessage,
   startActivityAIChatSession,
 } from '@services/ai/ai'
+import { AnimatePresence, motion } from 'framer-motion'
 import { AlertTriangle, BadgeInfo, NotebookTabs } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
 import { FlaskConical, MessageCircle, X } from 'lucide-react'
 import Image from 'next/image'
-import learnhouseAI_icon from 'public/learnhouse_ai_simple.png'
 import learnhouseAI_logo_black from 'public/learnhouse_ai_black_logo.png'
+import learnhouseAI_icon from 'public/learnhouse_ai_simple.png'
 import React, { useEffect, useRef } from 'react'
-import {
-  AIChatBotStateTypes,
-  useAIChatBot,
-  useAIChatBotDispatch,
-} from '@components/Contexts/AI/AIChatBotContext'
 import useGetAIFeatures from '../../../Hooks/useGetAIFeatures'
-import UserAvatar from '@components/Objects/UserAvatar'
 
 type AIActivityAskProps = {
   activity: any

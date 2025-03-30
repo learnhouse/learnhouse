@@ -1,4 +1,4 @@
-import { OrderPayload } from '@components/Dashboard/Pages/Course/EditCourseStructure/EditCourseStructure'
+import type { OrderPayload } from '@components/Dashboard/Pages/Course/EditCourseStructure/EditCourseStructure'
 import { getAPIUrl } from '@services/config/config'
 import {
   RequestBodyWithAuthHeader,

@@ -1,3 +1,4 @@
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 import FormLayout, {
   ButtonBlack,
   FormField,
@@ -5,16 +6,15 @@ import FormLayout, {
   Input,
 } from '@components/Objects/StyledElements/Form/Form'
 import * as Form from '@radix-ui/react-form'
-import { useFormik } from 'formik'
-import { BarLoader } from 'react-spinners'
-import React from 'react'
-import { swrFetcher } from '@services/utils/ts/requests'
 import { getAPIUrl } from '@services/config/config'
-import useSWR from 'swr'
 import { createNewOrgInstall, updateInstall } from '@services/install/install'
-import { useRouter } from 'next/navigation'
+import { swrFetcher } from '@services/utils/ts/requests'
+import { useFormik } from 'formik'
 import { Check } from 'lucide-react'
-import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { useRouter } from 'next/navigation'
+import React from 'react'
+import { BarLoader } from 'react-spinners'
+import useSWR from 'swr'
 
 const validate = (values: any) => {
   const errors: any = {}
@@ -45,7 +45,7 @@ function OrgCreation() {
   const access_token = session?.data?.tokens?.access_token
   const {
     data: install,
-    error: error,
+    error,
     isLoading,
   } = useSWR(`${getAPIUrl()}install/latest`, (url) =>
     swrFetcher(url, access_token)
@@ -60,7 +60,7 @@ function OrgCreation() {
       install.data = {
         1: values,
       }
-      let install_data = { ...install.data, 1: values }
+      const install_data = { ...install.data, 1: values }
       updateInstall(install_data, 2)
       // await 2 seconds
       setTimeout(() => {

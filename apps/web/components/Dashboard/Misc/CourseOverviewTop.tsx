@@ -1,14 +1,14 @@
 import { useCourse } from '@components/Contexts/CourseContext'
+import { useOrg } from '@components/Contexts/OrgContext'
+import { getUriWithOrg } from '@services/config/config'
+import { getCourseThumbnailMediaDirectory } from '@services/media/media'
+import type { CourseOverviewParams } from 'app/orgs/[orgslug]/dash/courses/course/[courseuuid]/[subpage]/page'
+import Image from 'next/image'
+import Link from 'next/link'
 import { useEffect } from 'react'
+import EmptyThumbnailImage from '../../../public/empty_thumbnail.png'
 import BreadCrumbs from './BreadCrumbs'
 import SaveState from './SaveState'
-import { CourseOverviewParams } from 'app/orgs/[orgslug]/dash/courses/course/[courseuuid]/[subpage]/page'
-import { getUriWithOrg } from '@services/config/config'
-import { useOrg } from '@components/Contexts/OrgContext'
-import { getCourseThumbnailMediaDirectory } from '@services/media/media'
-import Link from 'next/link'
-import Image from 'next/image'
-import EmptyThumbnailImage from '../../../public/empty_thumbnail.png'
 
 export function CourseOverviewTop({
   params,

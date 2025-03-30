@@ -1,4 +1,5 @@
 import { useCourse } from '@components/Contexts/CourseContext'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 import NewActivityModal from '@components/Objects/Modals/Activities/Create/NewActivity'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { getAPIUrl } from '@services/config/config'
@@ -10,11 +11,10 @@ import {
 import { getOrganizationContextInfoWithoutCredentials } from '@services/organizations/orgs'
 import { revalidateTags } from '@services/utils/ts/requests'
 import { Layers } from 'lucide-react'
-import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useRouter } from 'next/navigation'
 import React, { useEffect } from 'react'
-import { mutate } from 'swr'
 import toast from 'react-hot-toast'
+import { mutate } from 'swr'
 
 type NewActivityButtonProps = {
   chapterId: string
@@ -38,7 +38,7 @@ function NewActivityButton(props: NewActivityButtonProps) {
 
   // Submit new activity
   const submitActivity = async (activity: any) => {
-    let org = await getOrganizationContextInfoWithoutCredentials(
+    const org = await getOrganizationContextInfoWithoutCredentials(
       props.orgslug,
       { revalidate: 1800 }
     )

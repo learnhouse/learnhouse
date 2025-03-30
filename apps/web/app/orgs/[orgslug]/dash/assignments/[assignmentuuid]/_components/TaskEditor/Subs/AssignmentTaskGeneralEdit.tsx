@@ -1,4 +1,5 @@
 'use client'
+import { constructAcceptValue } from '@/lib/constants'
 import { useAssignments } from '@components/Contexts/Assignments/AssignmentContext'
 import {
   useAssignmentsTask,
@@ -24,7 +25,6 @@ import { Cloud, File, Info, Loader, UploadCloud } from 'lucide-react'
 import Link from 'next/link'
 import React, { useEffect } from 'react'
 import toast from 'react-hot-toast'
-import { constructAcceptValue } from '@/lib/constants'
 
 const SUPPORTED_FILES = constructAcceptValue([
   'pdf',

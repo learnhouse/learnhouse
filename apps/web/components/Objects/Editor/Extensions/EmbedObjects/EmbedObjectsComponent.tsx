@@ -1,33 +1,30 @@
-import { NodeViewWrapper } from '@tiptap/react'
-import React, { useState, useRef, useEffect, useMemo } from 'react'
-import {
-  Upload,
-  Link as LinkIcon,
-  GripVertical,
-  GripHorizontal,
-  AlignCenter,
-  Cuboid,
-  Code,
-} from 'lucide-react'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import {
-  SiGithub,
-  SiReplit,
-  SiSpotify,
-  SiLoom,
-  SiGooglemaps,
-  SiCodepen,
   SiCanva,
-  SiNotion,
-  SiGoogledocs,
-  SiGitlab,
-  SiX,
+  SiCodepen,
   SiFigma,
   SiGiphy,
+  SiGithub,
+  SiGoogledocs,
+  SiGooglemaps,
+  SiLoom,
+  SiNotion,
+  SiReplit,
+  SiSpotify,
+  SiX,
   SiYoutube,
 } from '@icons-pack/react-simple-icons'
-import { useRouter } from 'next/navigation'
+import { NodeViewWrapper } from '@tiptap/react'
 import DOMPurify from 'dompurify'
+import {
+  AlignCenter,
+  Code,
+  GripHorizontal,
+  GripVertical,
+  Link as LinkIcon,
+} from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import React, { useState, useRef, useEffect, useMemo } from 'react'
 
 // Add new type for script-based embeds
 const SCRIPT_BASED_EMBEDS = {
@@ -202,11 +199,11 @@ function EmbedObjectsComponent(props: any) {
         // If embedWidth is set to a percentage, maintain that percentage
         // Otherwise, adjust to fit parent width
         if (typeof embedWidth === 'string' && embedWidth.endsWith('%')) {
-          const percentage = parseInt(embedWidth, 10)
+          const percentage = Number.parseInt(embedWidth, 10)
           const newWidth = `${Math.min(100, percentage)}%`
           setEmbedWidth(newWidth)
           props.updateAttributes({ embedWidth: newWidth })
-        } else if (newParentWidth < parseInt(String(embedWidth), 10)) {
+        } else if (newParentWidth < Number.parseInt(String(embedWidth), 10)) {
           // If parent is smaller than current width, adjust to fit
           setEmbedWidth('100%')
           props.updateAttributes({ embedWidth: '100%' })

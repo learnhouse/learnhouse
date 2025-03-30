@@ -1,20 +1,20 @@
+import {
+  useCourse,
+  useCourseDispatch,
+} from '@components/Contexts/CourseContext'
 import FormLayout, {
   FormField,
   FormLabelAndMessage,
   Input,
   Textarea,
 } from '@components/Objects/StyledElements/Form/Form'
+import FormTagInput from '@components/Objects/StyledElements/Form/TagInput'
+import * as Form from '@radix-ui/react-form'
 import { useFormik } from 'formik'
 import { AlertTriangle } from 'lucide-react'
-import * as Form from '@radix-ui/react-form'
 import React, { useEffect, useState } from 'react'
-import ThumbnailUpdate from './ThumbnailUpdate'
-import {
-  useCourse,
-  useCourseDispatch,
-} from '@components/Contexts/CourseContext'
-import FormTagInput from '@components/Objects/StyledElements/Form/TagInput'
 import LearningItemsList from './LearningItemsList'
+import ThumbnailUpdate from './ThumbnailUpdate'
 
 type EditCourseStructureProps = {
   orgslug: string

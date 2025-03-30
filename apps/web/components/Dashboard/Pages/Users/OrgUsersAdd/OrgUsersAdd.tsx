@@ -22,7 +22,7 @@ function OrgUsersAdd() {
   async function sendInvites() {
     const toastId = toast.loading('Sending invite...')
     setIsLoading(true)
-    let res = await inviteBatchUsers(
+    const res = await inviteBatchUsers(
       org.id,
       invitedUsers,
       selectedInviteCode,

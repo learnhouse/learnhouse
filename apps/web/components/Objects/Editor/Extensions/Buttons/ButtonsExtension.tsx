@@ -1,17 +1,18 @@
-import { NodeViewContent, NodeViewWrapper } from '@tiptap/react'
-import React, { useState, useRef, useEffect } from 'react'
+import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import Picker from '@emoji-mart/react'
+import { NodeViewContent, NodeViewWrapper } from '@tiptap/react'
 import {
+  AlignCenter,
+  AlignLeft,
+  AlignRight,
   ArrowRight,
   ChevronDown,
   Link,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
   Palette,
 } from 'lucide-react'
+import type React from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { twMerge } from 'tailwind-merge'
-import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 
 const ButtonsExtension: React.FC = (props: any) => {
   const [emoji, setEmoji] = useState(props.node.attrs.emoji)

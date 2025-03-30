@@ -1,14 +1,14 @@
-import React from 'react'
-import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
-import TypeOfContentTitle from '@components/Objects/StyledElements/Titles/TypeOfContentTitle'
-import CourseThumbnail from '@components/Objects/Thumbnails/CourseThumbnail'
-import CollectionThumbnail from '@components/Objects/Thumbnails/CollectionThumbnail'
-import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
-import NewCourseButton from '@components/Objects/StyledElements/Buttons/NewCourseButton'
-import NewCollectionButton from '@components/Objects/StyledElements/Buttons/NewCollectionButton'
 import ContentPlaceHolderIfUserIsNotAdmin from '@components/Objects/ContentPlaceHolder'
-import Link from 'next/link'
+import NewCollectionButton from '@components/Objects/StyledElements/Buttons/NewCollectionButton'
+import NewCourseButton from '@components/Objects/StyledElements/Buttons/NewCourseButton'
+import TypeOfContentTitle from '@components/Objects/StyledElements/Titles/TypeOfContentTitle'
+import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
+import CollectionThumbnail from '@components/Objects/Thumbnails/CollectionThumbnail'
+import CourseThumbnail from '@components/Objects/Thumbnails/CourseThumbnail'
+import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
 import { getUriWithOrg } from '@services/config/config'
+import Link from 'next/link'
+import React from 'react'
 
 interface LandingClassicProps {
   courses: any[]

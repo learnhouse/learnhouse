@@ -1,22 +1,15 @@
 'use client'
-import { getUriWithOrg } from '@services/config/config'
-import React, { use } from 'react'
-import { CourseProvider } from '../../../../../../../../components/Contexts/CourseContext'
-import Link from 'next/link'
 import { CourseOverviewTop } from '@components/Dashboard/Misc/CourseOverviewTop'
-import { motion } from 'framer-motion'
-import {
-  GalleryVerticalEnd,
-  Globe,
-  Info,
-  UserPen,
-  UserRoundCog,
-  Users,
-} from 'lucide-react'
-import EditCourseStructure from '@components/Dashboard/Pages/Course/EditCourseStructure/EditCourseStructure'
-import EditCourseGeneral from '@components/Dashboard/Pages/Course/EditCourseGeneral/EditCourseGeneral'
 import EditCourseAccess from '@components/Dashboard/Pages/Course/EditCourseAccess/EditCourseAccess'
 import EditCourseContributors from '@components/Dashboard/Pages/Course/EditCourseContributors/EditCourseContributors'
+import EditCourseGeneral from '@components/Dashboard/Pages/Course/EditCourseGeneral/EditCourseGeneral'
+import EditCourseStructure from '@components/Dashboard/Pages/Course/EditCourseStructure/EditCourseStructure'
+import { getUriWithOrg } from '@services/config/config'
+import { motion } from 'framer-motion'
+import { GalleryVerticalEnd, Globe, Info, UserPen } from 'lucide-react'
+import Link from 'next/link'
+import React, { use } from 'react'
+import { CourseProvider } from '../../../../../../../../components/Contexts/CourseContext'
 export type CourseOverviewParams = {
   orgslug: string
   courseuuid: string

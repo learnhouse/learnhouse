@@ -1,13 +1,13 @@
 'use client'
 
-import React from 'react'
-import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import useSWR from 'swr'
-import { getOwnedCourses } from '@services/payments/payments'
-import CourseThumbnail from '@components/Objects/Thumbnails/CourseThumbnail'
+import { useOrg } from '@components/Contexts/OrgContext'
 import PageLoading from '@components/Objects/Loaders/PageLoading'
+import CourseThumbnail from '@components/Objects/Thumbnails/CourseThumbnail'
+import { getOwnedCourses } from '@services/payments/payments'
 import { BookOpen, Package2 } from 'lucide-react'
+import React from 'react'
+import useSWR from 'swr'
 
 function OwnedCoursesPage() {
   const org = useOrg() as any

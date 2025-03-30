@@ -1,8 +1,8 @@
 import { getUriWithOrg } from '@services/config/config'
 
 export const RequestBody = (method: string, data: any, next: any) => {
-  let HeadersConfig = new Headers({ 'Content-Type': 'application/json' })
-  let options: any = {
+  const HeadersConfig = new Headers({ 'Content-Type': 'application/json' })
+  const options: any = {
     method: method,
     headers: HeadersConfig,
     redirect: 'follow',
@@ -22,12 +22,12 @@ export const RequestBodyWithAuthHeader = (
   next: any,
   token?: string
 ) => {
-  let HeadersConfig = new Headers(
+  const HeadersConfig = new Headers(
     token
       ? { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
       : { 'Content-Type': 'application/json' }
   )
-  let options: any = {
+  const options: any = {
     method: method,
     headers: HeadersConfig,
     redirect: 'follow',
@@ -40,8 +40,8 @@ export const RequestBodyWithAuthHeader = (
 }
 
 export const RequestBodyForm = (method: string, data: any, next: any) => {
-  let HeadersConfig = new Headers({})
-  let options: any = {
+  const HeadersConfig = new Headers({})
+  const options: any = {
     method: method,
     headers: HeadersConfig,
     redirect: 'follow',
@@ -59,10 +59,10 @@ export const RequestBodyFormWithAuthHeader = (
   next: any,
   access_token: string
 ) => {
-  let HeadersConfig = new Headers({
+  const HeadersConfig = new Headers({
     Authorization: `Bearer ${access_token}`,
   })
-  let options: any = {
+  const options: any = {
     method: method,
     headers: HeadersConfig,
     redirect: 'follow',
@@ -76,12 +76,12 @@ export const RequestBodyFormWithAuthHeader = (
 
 export const swrFetcher = async (url: string, token?: string) => {
   // Create the request options
-  let HeadersConfig = new Headers(
+  const HeadersConfig = new Headers(
     token
       ? { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
       : { 'Content-Type': 'application/json' }
   )
-  let options: any = {
+  const options: any = {
     method: 'GET',
     headers: HeadersConfig,
     redirect: 'follow',
@@ -91,7 +91,7 @@ export const swrFetcher = async (url: string, token?: string) => {
   try {
     // Fetch the data
     const request = await fetch(url, options)
-    let res = errorHandling(request)
+    const res = errorHandling(request)
 
     // Return the data
     return res

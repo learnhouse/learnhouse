@@ -1,7 +1,9 @@
-import React from 'react'
-import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import useSWR from 'swr'
+import { useOrg } from '@components/Contexts/OrgContext'
+import PageLoading from '@components/Objects/Loaders/PageLoading'
+import UserAvatar from '@components/Objects/UserAvatar'
+import UnconfiguredPaymentsDisclaimer from '@components/Pages/Payments/UnconfiguredPaymentsDisclaimer'
+import { Badge } from '@components/ui/badge'
 import {
   Table,
   TableBody,
@@ -10,14 +12,12 @@ import {
   TableHeader,
   TableRow,
 } from '@components/ui/table'
-import { getOrgCustomers } from '@services/payments/payments'
-import { Badge } from '@components/ui/badge'
-import PageLoading from '@components/Objects/Loaders/PageLoading'
-import { RefreshCcw, SquareCheck } from 'lucide-react'
-import { getUserAvatarMediaDirectory } from '@services/media/media'
-import UserAvatar from '@components/Objects/UserAvatar'
 import { usePaymentsEnabled } from '@hooks/usePaymentsEnabled'
-import UnconfiguredPaymentsDisclaimer from '@components/Pages/Payments/UnconfiguredPaymentsDisclaimer'
+import { getUserAvatarMediaDirectory } from '@services/media/media'
+import { getOrgCustomers } from '@services/payments/payments'
+import { RefreshCcw, SquareCheck } from 'lucide-react'
+import React from 'react'
+import useSWR from 'swr'
 
 interface PaymentUserData {
   payment_user_id: number

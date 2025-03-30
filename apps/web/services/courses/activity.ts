@@ -1,8 +1,8 @@
+import { getAPIUrl } from '@services/config/config'
 import {
   RequestBodyWithAuthHeader,
   errorHandling,
 } from '@services/utils/ts/requests'
-import { getAPIUrl } from '@services/config/config'
 
 /*
  This file includes only POST, PUT, DELETE requests

@@ -1,3 +1,4 @@
+import { constructAcceptValue } from '@/lib/constants'
 import FormLayout, {
   ButtonBlack,
   Flex,
@@ -6,10 +7,9 @@ import FormLayout, {
   FormMessage,
   Input,
 } from '@components/Objects/StyledElements/Form/Form'
-import React, { useState } from 'react'
 import * as Form from '@radix-ui/react-form'
+import React, { useState } from 'react'
 import BarLoader from 'react-spinners/BarLoader'
-import { constructAcceptValue } from '@/lib/constants'
 
 const SUPPORTED_FILES = constructAcceptValue(['pdf'])
 
@@ -29,7 +29,7 @@ function DocumentPdfModal({ submitFileActivity, chapterId, course }: any) {
   const handleSubmit = async (e: any) => {
     e.preventDefault()
     setIsSubmitting(true)
-    let status = await submitFileActivity(
+    const status = await submitFileActivity(
       documentpdf,
       'documentpdf',
       {

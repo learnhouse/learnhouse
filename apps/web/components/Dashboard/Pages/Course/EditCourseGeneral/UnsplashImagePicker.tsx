@@ -1,29 +1,29 @@
-import React, { useState, useEffect, useCallback } from 'react'
-import { createApi } from 'unsplash-js'
+import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import {
-  Search,
-  X,
-  Cpu,
+  Bike,
+  Book,
   Briefcase,
+  Building,
+  Camera,
+  Coffee,
+  Coins,
+  Cpu,
+  Dumbbell,
+  Flower,
+  Gamepad,
   GraduationCap,
   Heart,
+  Microscope,
+  Music,
   Palette,
   Plane,
-  Utensils,
-  Dumbbell,
-  Music,
+  Search,
   Shirt,
-  Book,
-  Building,
-  Bike,
-  Camera,
-  Microscope,
-  Coins,
-  Coffee,
-  Gamepad,
-  Flower,
+  Utensils,
 } from 'lucide-react'
-import Modal from '@components/Objects/StyledElements/Modal/Modal'
+import type React from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import { createApi } from 'unsplash-js'
 
 const unsplash = createApi({
   accessKey: process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY as string,

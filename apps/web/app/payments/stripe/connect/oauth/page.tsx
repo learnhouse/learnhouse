@@ -1,15 +1,13 @@
 'use client'
-import React, { useEffect, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { useOrg } from '@components/Contexts/OrgContext'
-import { getUriWithOrg } from '@services/config/config'
-import { Check, Loader2, AlertTriangle } from 'lucide-react'
-import { motion } from 'framer-motion'
-import toast from 'react-hot-toast'
 import { verifyStripeConnection } from '@services/payments/payments'
+import { motion } from 'framer-motion'
+import { AlertTriangle, Check, Loader2 } from 'lucide-react'
 import Image from 'next/image'
+import { useRouter, useSearchParams } from 'next/navigation'
 import learnhouseIcon from 'public/learnhouse_bigicon_1.png'
+import React, { useEffect, useState } from 'react'
+import toast from 'react-hot-toast'
 
 function StripeConnectCallback() {
   const router = useRouter()
@@ -32,7 +30,7 @@ function StripeConnectCallback() {
         }
 
         const response = await verifyStripeConnection(
-          parseInt(orgId),
+          Number.parseInt(orgId),
           code,
           session?.data?.tokens?.access_token
         )

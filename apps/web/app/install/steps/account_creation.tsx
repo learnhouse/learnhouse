@@ -1,4 +1,5 @@
 'use client'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 import FormLayout, {
   ButtonBlack,
   FormField,
@@ -10,7 +11,6 @@ import { getAPIUrl } from '@services/config/config'
 import { createNewUserInstall, updateInstall } from '@services/install/install'
 import { swrFetcher } from '@services/utils/ts/requests'
 import { useFormik } from 'formik'
-import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useRouter } from 'next/navigation'
 import React from 'react'
 import { BarLoader } from 'react-spinners'
@@ -52,7 +52,7 @@ function AccountCreation() {
   const access_token = session?.data?.tokens?.access_token
   const {
     data: install,
-    error: error,
+    error,
     isLoading,
   } = useSWR(`${getAPIUrl()}install/latest`, (url) =>
     swrFetcher(url, access_token)
@@ -68,13 +68,13 @@ function AccountCreation() {
     },
     validate,
     onSubmit: async (values) => {
-      let finalvalueswithoutpasswords = {
+      const finalvalueswithoutpasswords = {
         ...values,
         password: '',
         confirmPassword: '',
         org_slug: install.data[1].slug,
       }
-      let install_data_without_passwords = {
+      const install_data_without_passwords = {
         ...install.data,
         3: finalvalueswithoutpasswords,
       }

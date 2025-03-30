@@ -1,16 +1,8 @@
 'use client'
-import React, { useState } from 'react'
-import { Form, Formik } from 'formik'
-import * as Yup from 'yup'
-import { updateOrganization } from '@services/settings/org'
-import { revalidateTags } from '@services/utils/ts/requests'
-import { useRouter } from 'next/navigation'
-import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { toast } from 'react-hot-toast'
-import { Input } from '@components/ui/input'
-import { Textarea } from '@components/ui/textarea'
+import { useOrg } from '@components/Contexts/OrgContext'
 import { Button } from '@components/ui/button'
+import { Input } from '@components/ui/input'
 import { Label } from '@components/ui/label'
 import {
   Select,
@@ -20,11 +12,19 @@ import {
   SelectValue,
 } from '@components/ui/select'
 import { Switch } from '@components/ui/switch'
-import { mutate } from 'swr'
-import { getAPIUrl } from '@services/config/config'
-import Image from 'next/image'
+import { Textarea } from '@components/ui/textarea'
 import learnhouseIcon from '@public/learnhouse_logo.png'
+import { getAPIUrl } from '@services/config/config'
+import { updateOrganization } from '@services/settings/org'
+import { revalidateTags } from '@services/utils/ts/requests'
+import { Form, Formik } from 'formik'
+import Image from 'next/image'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import type React from 'react'
+import { toast } from 'react-hot-toast'
+import { mutate } from 'swr'
+import * as Yup from 'yup'
 
 const ORG_LABELS = [
   { value: 'languages', label: '🌐 Languages' },

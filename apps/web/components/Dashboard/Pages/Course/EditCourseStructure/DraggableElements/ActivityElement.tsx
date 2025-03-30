@@ -1,38 +1,36 @@
+import { useCourse } from '@components/Contexts/CourseContext'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { useOrg } from '@components/Contexts/OrgContext'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
+import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
+import { Draggable } from '@hello-pangea/dnd'
 import { getAPIUrl, getUriWithOrg } from '@services/config/config'
 import { deleteActivity, updateActivity } from '@services/courses/activities'
+import {
+  deleteAssignmentUsingActivityUUID,
+  getAssignmentFromActivityUUID,
+} from '@services/courses/assignments'
 import { revalidateTags } from '@services/utils/ts/requests'
 import {
   Backpack,
   Eye,
   File,
   FilePenLine,
-  FileSymlink,
   Globe,
   Loader2,
   Lock,
-  MoreVertical,
   Pencil,
   Save,
   Sparkles,
   Video,
   X,
 } from 'lucide-react'
-import { useLHSession } from '@components/Contexts/LHSessionContext'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
-import { Draggable } from '@hello-pangea/dnd'
-import { mutate } from 'swr'
-import {
-  deleteAssignmentUsingActivityUUID,
-  getAssignmentFromActivityUUID,
-} from '@services/courses/assignments'
-import { useOrg } from '@components/Contexts/OrgContext'
-import { useCourse } from '@components/Contexts/CourseContext'
 import toast from 'react-hot-toast'
+import { mutate } from 'swr'
 import { useMediaQuery } from 'usehooks-ts'
-import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
 
 type ActivitiyElementProps = {
   orgslug: string
@@ -102,7 +100,7 @@ function ActivityElement(props: ActivitiyElementProps) {
     ) {
       setIsUpdatingName(true)
 
-      let modifiedActivityCopy = {
+      const modifiedActivityCopy = {
         ...props.activity,
         name: modifiedActivity.activityName,
       }

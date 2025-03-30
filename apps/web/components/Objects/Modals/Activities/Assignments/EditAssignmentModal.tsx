@@ -1,20 +1,19 @@
-import React from 'react'
-import { updateAssignment } from '@services/courses/assignments'
-import { mutate } from 'swr'
-import { getAPIUrl } from '@services/config/config'
-import toast from 'react-hot-toast'
 import FormLayout, {
   FormField,
-  FormLabelAndMessage,
   Input,
   Textarea,
   Flex,
   FormLabel,
   FormMessage,
 } from '@components/Objects/StyledElements/Form/Form'
-import * as Form from '@radix-ui/react-form'
-import { useFormik } from 'formik'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
+import * as Form from '@radix-ui/react-form'
+import { getAPIUrl } from '@services/config/config'
+import { updateAssignment } from '@services/courses/assignments'
+import { useFormik } from 'formik'
+import type React from 'react'
+import toast from 'react-hot-toast'
+import { mutate } from 'swr'
 
 interface Assignment {
   assignment_uuid: string

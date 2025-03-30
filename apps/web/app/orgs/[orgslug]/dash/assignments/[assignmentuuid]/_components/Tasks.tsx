@@ -1,12 +1,12 @@
 import { useAssignments } from '@components/Contexts/Assignments/AssignmentContext'
-import Modal from '@components/Objects/StyledElements/Modal/Modal'
-import { FileUp, ListTodo, PanelLeftOpen, Plus } from 'lucide-react'
-import React, { useEffect } from 'react'
-import NewTaskModal from './Modals/NewTaskModal'
 import {
   useAssignmentsTask,
   useAssignmentsTaskDispatch,
 } from '@components/Contexts/Assignments/AssignmentsTaskContext'
+import Modal from '@components/Objects/StyledElements/Modal/Modal'
+import { FileUp, ListTodo, PanelLeftOpen, Plus } from 'lucide-react'
+import React, { useEffect } from 'react'
+import NewTaskModal from './Modals/NewTaskModal'
 
 function AssignmentTasks({ assignment_uuid }: any) {
   const assignments = useAssignments() as any

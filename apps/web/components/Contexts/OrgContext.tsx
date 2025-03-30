@@ -1,12 +1,13 @@
 'use client'
-import { getAPIUrl, getUriWithoutOrg } from '@services/config/config'
-import { swrFetcher } from '@services/utils/ts/requests'
-import React, { createContext, useContext, useMemo } from 'react'
-import useSWR from 'swr'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import ErrorUI from '@components/Objects/StyledElements/Error/Error'
 import InfoUI from '@components/Objects/StyledElements/Info/Info'
+import { getAPIUrl, getUriWithoutOrg } from '@services/config/config'
+import { swrFetcher } from '@services/utils/ts/requests'
 import { usePathname } from 'next/navigation'
+import type React from 'react'
+import { createContext, useContext, useMemo } from 'react'
+import useSWR from 'swr'
 
 export const OrgContext = createContext(null)
 

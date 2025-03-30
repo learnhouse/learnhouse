@@ -1,7 +1,16 @@
 'use client'
-import BreadCrumbs from '@components/Dashboard/Misc/BreadCrumbs'
 import {
-  ArrowRight,
+  AssignmentProvider,
+  useAssignments,
+} from '@components/Contexts/Assignments/AssignmentContext'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
+import BreadCrumbs from '@components/Dashboard/Misc/BreadCrumbs'
+import EditAssignmentModal from '@components/Objects/Modals/Activities/Assignments/EditAssignmentModal'
+import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
+import { getAPIUrl } from '@services/config/config'
+import { updateActivity } from '@services/courses/activities'
+import { updateAssignment } from '@services/courses/assignments'
+import {
   BookOpen,
   BookX,
   EllipsisVertical,
@@ -11,25 +20,15 @@ import {
   Pencil,
   UserRoundPen,
 } from 'lucide-react'
-import React, { useEffect } from 'react'
-import {
-  AssignmentProvider,
-  useAssignments,
-} from '@components/Contexts/Assignments/AssignmentContext'
-import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
-import { updateAssignment } from '@services/courses/assignments'
-import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { mutate } from 'swr'
-import { getAPIUrl } from '@services/config/config'
-import toast from 'react-hot-toast'
-import Link from 'next/link'
-import { useParams, useSearchParams } from 'next/navigation'
-import { updateActivity } from '@services/courses/activities'
 // Lazy Loading
 import dynamic from 'next/dynamic'
-import AssignmentEditorSubPage from './subpages/AssignmentEditorSubPage'
+import Link from 'next/link'
+import { useParams, useSearchParams } from 'next/navigation'
+import React, { useEffect } from 'react'
+import toast from 'react-hot-toast'
+import { mutate } from 'swr'
 import { useMediaQuery } from 'usehooks-ts'
-import EditAssignmentModal from '@components/Objects/Modals/Activities/Assignments/EditAssignmentModal'
+import AssignmentEditorSubPage from './subpages/AssignmentEditorSubPage'
 const AssignmentSubmissionsSubPage = dynamic(
   () => import('./subpages/AssignmentSubmissionsSubPage')
 )

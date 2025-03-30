@@ -1,10 +1,10 @@
-import { NodeViewWrapper } from '@tiptap/react'
-import { v4 as uuidv4 } from 'uuid'
-import { twMerge } from 'tailwind-merge'
-import React from 'react'
-import { BadgeHelp, Check, Minus, Plus, RefreshCcw } from 'lucide-react'
-import ReactConfetti from 'react-confetti'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
+import { NodeViewWrapper } from '@tiptap/react'
+import { BadgeHelp, Check, Minus, Plus, RefreshCcw } from 'lucide-react'
+import React from 'react'
+import ReactConfetti from 'react-confetti'
+import { twMerge } from 'tailwind-merge'
+import { v4 as uuidv4 } from 'uuid'
 
 interface Answer {
   answer_id: string
@@ -95,13 +95,13 @@ function QuizBlockComponent(props: any) {
     const alphabet = Array.from({ length: 26 }, (_, i) =>
       String.fromCharCode('A'.charCodeAt(0) + i)
     )
-    let alphabetID = alphabet[answerIndex]
+    const alphabetID = alphabet[answerIndex]
 
     // Get question index
     const questionIndex = questions.findIndex(
       (question: Question) => question.question_id === questionId
     )
-    let questionID = questionIndex + 1
+    const questionID = questionIndex + 1
 
     return `${alphabetID}`
   }

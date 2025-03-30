@@ -1,16 +1,10 @@
-import { NodeViewContent, NodeViewWrapper } from '@tiptap/react'
-import React, { useState, useRef, useEffect } from 'react'
-import Picker from '@emoji-mart/react'
-import {
-  ArrowRight,
-  ChevronDown,
-  ChevronRight,
-  EllipsisVertical,
-  Palette,
-  Plus,
-} from 'lucide-react'
-import { twMerge } from 'tailwind-merge'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
+import Picker from '@emoji-mart/react'
+import { NodeViewContent, NodeViewWrapper } from '@tiptap/react'
+import { ChevronDown, ChevronRight, Palette } from 'lucide-react'
+import type React from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { twMerge } from 'tailwind-merge'
 
 const BadgesExtension: React.FC = (props: any) => {
   const [color, setColor] = useState(props.node.attrs.color)

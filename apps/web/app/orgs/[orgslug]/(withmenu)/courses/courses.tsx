@@ -1,14 +1,14 @@
 'use client'
-import CreateCourseModal from '@components/Objects/Modals/Course/Create/CreateCourse'
-import Modal from '@components/Objects/StyledElements/Modal/Modal'
-import React from 'react'
-import { useSearchParams } from 'next/navigation'
-import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
-import TypeOfContentTitle from '@components/Objects/StyledElements/Titles/TypeOfContentTitle'
-import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
-import CourseThumbnail from '@components/Objects/Thumbnails/CourseThumbnail'
-import NewCourseButton from '@components/Objects/StyledElements/Buttons/NewCourseButton'
 import useAdminStatus from '@components/Hooks/useAdminStatus'
+import CreateCourseModal from '@components/Objects/Modals/Course/Create/CreateCourse'
+import NewCourseButton from '@components/Objects/StyledElements/Buttons/NewCourseButton'
+import Modal from '@components/Objects/StyledElements/Modal/Modal'
+import TypeOfContentTitle from '@components/Objects/StyledElements/Titles/TypeOfContentTitle'
+import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
+import CourseThumbnail from '@components/Objects/Thumbnails/CourseThumbnail'
+import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
+import { useSearchParams } from 'next/navigation'
+import React from 'react'
 
 interface CourseProps {
   orgslug: string

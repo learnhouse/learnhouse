@@ -1,16 +1,15 @@
 'use client'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { useOrg } from '@components/Contexts/OrgContext'
+import { getAPIUrl, getUriWithOrg } from '@services/config/config'
+import { createCollection } from '@services/courses/collections'
+import { getCourseThumbnailMediaDirectory } from '@services/media/media'
+import { revalidateTags, swrFetcher } from '@services/utils/ts/requests'
+import { Image as ImageIcon, Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
-import { createCollection } from '@services/courses/collections'
-import useSWR from 'swr'
-import { getAPIUrl, getUriWithOrg } from '@services/config/config'
-import { revalidateTags, swrFetcher } from '@services/utils/ts/requests'
-import { useOrg } from '@components/Contexts/OrgContext'
-import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { Loader2, Image as ImageIcon } from 'lucide-react'
 import { toast } from 'react-hot-toast'
-import Image from 'next/image'
-import { getCourseThumbnailMediaDirectory } from '@services/media/media'
+import useSWR from 'swr'
 
 function NewCollection(params: any) {
   const org = useOrg() as any
@@ -24,7 +23,7 @@ function NewCollection(params: any) {
   const router = useRouter()
   const {
     data: courses,
-    error: error,
+    error,
     isLoading,
   } = useSWR(
     `${getAPIUrl()}courses/org_slug/${orgslug}/page/1/limit/10`,

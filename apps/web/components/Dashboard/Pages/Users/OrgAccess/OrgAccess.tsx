@@ -1,26 +1,22 @@
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import PageLoading from '@components/Objects/Loaders/PageLoading'
+import OrgInviteCodeGenerate from '@components/Objects/Modals/Dash/OrgAccess/OrgInviteCodeGenerate'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
-import {
-  getAPIUrl,
-  getUriWithOrg,
-  getUriWithoutOrg,
-} from '@services/config/config'
-import { swrFetcher } from '@services/utils/ts/requests'
-import { Globe, Ticket, UserSquare, Users, X } from 'lucide-react'
-import Link from 'next/link'
-import React, { useEffect } from 'react'
-import useSWR, { mutate } from 'swr'
-import dayjs from 'dayjs'
+import Modal from '@components/Objects/StyledElements/Modal/Modal'
+import { getAPIUrl, getUriWithoutOrg } from '@services/config/config'
 import {
   changeSignupMechanism,
   deleteInviteCode,
 } from '@services/organizations/invites'
-import toast from 'react-hot-toast'
+import { swrFetcher } from '@services/utils/ts/requests'
+import dayjs from 'dayjs'
+import { Globe, Ticket, UserSquare, Users, X } from 'lucide-react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import Modal from '@components/Objects/StyledElements/Modal/Modal'
-import OrgInviteCodeGenerate from '@components/Objects/Modals/Dash/OrgAccess/OrgInviteCodeGenerate'
-import { useLHSession } from '@components/Contexts/LHSessionContext'
+import React, { useEffect } from 'react'
+import toast from 'react-hot-toast'
+import useSWR, { mutate } from 'swr'
 
 function OrgAccess() {
   const org = useOrg() as any
@@ -47,7 +43,7 @@ function OrgAccess() {
 
   async function deleteInvite(invite: any) {
     const toastId = toast.loading('Deleting...')
-    let res = await deleteInviteCode(
+    const res = await deleteInviteCode(
       org.id,
       invite.invite_code_uuid,
       access_token
@@ -62,7 +58,7 @@ function OrgAccess() {
 
   async function changeJoinMethod(method: 'open' | 'inviteOnly') {
     const toastId = toast.loading('Changing join method...')
-    let res = await changeSignupMechanism(org.id, method, access_token)
+    const res = await changeSignupMechanism(org.id, method, access_token)
     if (res.status == 200) {
       router.refresh()
       mutate(`${getAPIUrl()}orgs/slug/${org?.slug}`)
@@ -160,7 +156,8 @@ function OrgAccess() {
                   Invite codes
                 </h1>
                 <h2 className="text-gray-500  text-md">
-                  Invite codes can be copied and used to join your organization{' '}
+                  Invite codes can be copied and used to join your
+                  organization{' '}
                 </h2>
               </div>
               <table className="table-auto w-full text-left whitespace-nowrap rounded-md overflow-hidden">

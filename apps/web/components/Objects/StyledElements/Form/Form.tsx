@@ -1,8 +1,8 @@
-import React from 'react'
+import { blackA } from '@radix-ui/colors'
 import * as Form from '@radix-ui/react-form'
 import { styled } from '@stitches/react'
-import { blackA } from '@radix-ui/colors'
 import { Info } from 'lucide-react'
+import type React from 'react'
 
 const FormLayout: React.FC<{
   children: React.ReactNode

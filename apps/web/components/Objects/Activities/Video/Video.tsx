@@ -1,7 +1,7 @@
+import { useOrg } from '@components/Contexts/OrgContext'
+import { getActivityMediaDirectory } from '@services/media/media'
 import React from 'react'
 import YouTube from 'react-youtube'
-import { getActivityMediaDirectory } from '@services/media/media'
-import { useOrg } from '@components/Contexts/OrgContext'
 
 function VideoActivity({ activity, course }: { activity: any; course: any }) {
   const org = useOrg() as any

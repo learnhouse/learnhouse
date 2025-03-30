@@ -1,37 +1,9 @@
 'use client'
-import React, { useState } from 'react'
-import {
-  UploadCloud,
-  Info,
-  Plus,
-  X,
-  Video,
-  GripVertical,
-  Image,
-  Layout,
-  Images,
-  StarIcon,
-  ImageIcon,
-} from 'lucide-react'
-import { useRouter } from 'next/navigation'
-import { useOrg } from '@components/Contexts/OrgContext'
-import { useLHSession } from '@components/Contexts/LHSessionContext'
-import {
-  getOrgLogoMediaDirectory,
-  getOrgPreviewMediaDirectory,
-  getOrgThumbnailMediaDirectory,
-} from '@services/media/media'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@components/ui/tabs'
-import { toast } from 'react-hot-toast'
 import { constructAcceptValue } from '@/lib/constants'
-import {
-  uploadOrganizationLogo,
-  uploadOrganizationThumbnail,
-  uploadOrganizationPreview,
-  updateOrganization,
-} from '@services/settings/org'
 import { cn } from '@/lib/utils'
-import { Input } from '@components/ui/input'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { useOrg } from '@components/Contexts/OrgContext'
+import { Button } from '@components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -39,15 +11,40 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@components/ui/dialog'
-import { Button } from '@components/ui/button'
-import { Label } from '@components/ui/label'
-import { SiLoom, SiYoutube } from '@icons-pack/react-simple-icons'
+import { Input } from '@components/ui/input'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@components/ui/tabs'
 import {
   DragDropContext,
-  Droppable,
   Draggable,
-  DropResult,
+  type DropResult,
+  Droppable,
 } from '@hello-pangea/dnd'
+import { SiLoom, SiYoutube } from '@icons-pack/react-simple-icons'
+import {
+  getOrgLogoMediaDirectory,
+  getOrgPreviewMediaDirectory,
+  getOrgThumbnailMediaDirectory,
+} from '@services/media/media'
+import {
+  updateOrganization,
+  uploadOrganizationLogo,
+  uploadOrganizationPreview,
+  uploadOrganizationThumbnail,
+} from '@services/settings/org'
+import {
+  GripVertical,
+  ImageIcon,
+  Images,
+  Info,
+  Plus,
+  StarIcon,
+  UploadCloud,
+  X,
+} from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import type React from 'react'
+import { useState } from 'react'
+import { toast } from 'react-hot-toast'
 
 const SUPPORTED_FILES = constructAcceptValue(['png', 'jpg'])
 

@@ -1,19 +1,19 @@
-import { NodeViewWrapper } from '@tiptap/react'
-import React, { useEffect } from 'react'
-import { Resizable } from 're-resizable'
-import { AlertTriangle, Image } from 'lucide-react'
-import { uploadNewImageFile } from '../../../../../services/blocks/Image/images'
-import { getActivityBlockMediaDirectory } from '@services/media/media'
-import { useOrg } from '@components/Contexts/OrgContext'
+import { constructAcceptValue } from '@/lib/constants'
 import { useCourse } from '@components/Contexts/CourseContext'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { useOrg } from '@components/Contexts/OrgContext'
+import { getActivityBlockMediaDirectory } from '@services/media/media'
+import { NodeViewWrapper } from '@tiptap/react'
+import { AlertTriangle, Image } from 'lucide-react'
+import { Resizable } from 're-resizable'
+import React, { useEffect } from 'react'
+import { uploadNewImageFile } from '../../../../../services/blocks/Image/images'
 import {
   FileUploadBlock,
   FileUploadBlockButton,
   FileUploadBlockInput,
 } from '../../FileUploadBlock'
-import { constructAcceptValue } from '@/lib/constants'
 
 const SUPPORTED_FILES = constructAcceptValue(['image'])
 
@@ -44,7 +44,7 @@ function ImageBlockComponent(props: any) {
   const handleSubmit = async (e: any) => {
     e.preventDefault()
     setIsLoading(true)
-    let object = await uploadNewImageFile(
+    const object = await uploadNewImageFile(
       image,
       props.extension.options.activity.activity_uuid,
       access_token

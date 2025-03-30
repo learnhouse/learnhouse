@@ -1,17 +1,17 @@
 'use client'
 
-import React from 'react'
+import { cn } from '@/lib/utils'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogFooter,
 } from '@components/ui/dialog'
+import type React from 'react'
 import { ButtonBlack } from '../Form/Form'
-import { cn } from '@/lib/utils'
 
 type ModalParams = {
   dialogTitle?: string

@@ -1,12 +1,11 @@
 'use client'
 
-import React from 'react'
-import { LandingSection } from '@components/Dashboard/Pages/Org/OrgEditLanding/landing_types'
-import CourseThumbnail from '@components/Objects/Thumbnails/CourseThumbnail'
-import useSWR from 'swr'
-import { getOrgCourses } from '@services/courses/courses'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import type { LandingSection } from '@components/Dashboard/Pages/Org/OrgEditLanding/landing_types'
 import CourseThumbnailLanding from '@components/Objects/Thumbnails/CourseThumbnailLanding'
+import { getOrgCourses } from '@services/courses/courses'
+import React from 'react'
+import useSWR from 'swr'
 
 interface LandingCustomProps {
   landing: {

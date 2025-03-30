@@ -1,6 +1,12 @@
 'use client'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
+import UnsplashImagePicker from '@components/Dashboard/Pages/Course/EditCourseGeneral/UnsplashImagePicker'
+import FormLayout, {
+  FormField,
+  FormLabelAndMessage,
+} from '@components/Objects/StyledElements/Form/Form'
+import FormTagInput from '@components/Objects/StyledElements/Form/TagInput'
 import { Input } from '@components/ui/input'
-import { Textarea } from '@components/ui/textarea'
 import {
   Select,
   SelectContent,
@@ -8,24 +14,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@components/ui/select'
-import FormLayout, {
-  FormField,
-  FormLabelAndMessage,
-} from '@components/Objects/StyledElements/Form/Form'
+import { Textarea } from '@components/ui/textarea'
 import * as Form from '@radix-ui/react-form'
 import { createNewCourse } from '@services/courses/courses'
 import { getOrganizationContextInfoWithoutCredentials } from '@services/organizations/orgs'
-import React, { useEffect } from 'react'
-import { BarLoader } from 'react-spinners'
 import { revalidateTags } from '@services/utils/ts/requests'
-import { useRouter } from 'next/navigation'
-import { useLHSession } from '@components/Contexts/LHSessionContext'
-import toast from 'react-hot-toast'
 import { useFormik } from 'formik'
+import { Image as ImageIcon, UploadCloud } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import React, { useEffect } from 'react'
+import toast from 'react-hot-toast'
+import { BarLoader } from 'react-spinners'
 import * as Yup from 'yup'
-import { UploadCloud, Image as ImageIcon } from 'lucide-react'
-import UnsplashImagePicker from '@components/Dashboard/Pages/Course/EditCourseGeneral/UnsplashImagePicker'
-import FormTagInput from '@components/Objects/StyledElements/Form/TagInput'
 
 const validationSchema = Yup.object().shape({
   name: Yup.string()

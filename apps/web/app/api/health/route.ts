@@ -1,8 +1,8 @@
 export const dynamic = 'force-dynamic' // defaults to auto
 export const revalidate = 0
 
-import { NextResponse } from 'next/server'
 import { checkHealth } from '@services/utils/health'
+import { NextResponse } from 'next/server'
 
 export async function GET() {
   const health = await checkHealth()

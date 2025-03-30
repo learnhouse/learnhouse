@@ -1,14 +1,8 @@
-import React, { useEffect, useState } from 'react'
-import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { createProduct } from '@services/payments/products'
-import { Formik, Form, Field, ErrorMessage } from 'formik'
-import * as Yup from 'yup'
-import toast from 'react-hot-toast'
-import { mutate } from 'swr'
+import { useOrg } from '@components/Contexts/OrgContext'
 import { Button } from '@components/ui/button'
 import { Input } from '@components/ui/input'
-import { Textarea } from '@components/ui/textarea'
+import { Label } from '@components/ui/label'
 import {
   Select,
   SelectContent,
@@ -16,8 +10,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@components/ui/select'
-import { Label } from '@components/ui/label'
+import { Textarea } from '@components/ui/textarea'
+import { createProduct } from '@services/payments/products'
 import currencyCodes from 'currency-codes'
+import { ErrorMessage, Field, Form, Formik } from 'formik'
+import type React from 'react'
+import { useEffect, useState } from 'react'
+import toast from 'react-hot-toast'
+import { mutate } from 'swr'
+import * as Yup from 'yup'
 
 const validationSchema = Yup.object().shape({
   name: Yup.string().required('Name is required'),

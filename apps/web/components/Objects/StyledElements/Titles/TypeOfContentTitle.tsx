@@ -1,6 +1,6 @@
 import Image from 'next/image'
-import CoursesLogo from 'public/svg/courses.svg'
 import CollectionsLogo from 'public/svg/collections.svg'
+import CoursesLogo from 'public/svg/courses.svg'
 import TrailLogo from 'public/svg/trail.svg'
 
 function TypeOfContentTitle(props: { title: string; type: string }) {

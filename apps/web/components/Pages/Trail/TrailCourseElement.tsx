@@ -1,10 +1,10 @@
 'use client'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { getAPIUrl, getUriWithOrg } from '@services/config/config'
 import { removeCourse } from '@services/courses/activity'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import { revalidateTags } from '@services/utils/ts/requests'
-import { useLHSession } from '@components/Contexts/LHSessionContext'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
@@ -32,7 +32,11 @@ function TrailCourseElement(props: TrailCourseElementProps) {
 
   async function quitCourse(course_uuid: string) {
     // Close activity
-    let activity = await removeCourse(course_uuid, props.orgslug, access_token)
+    const activity = await removeCourse(
+      course_uuid,
+      props.orgslug,
+      access_token
+    )
     // Mutate course
     await revalidateTags(['courses'], props.orgslug)
     router.refresh()

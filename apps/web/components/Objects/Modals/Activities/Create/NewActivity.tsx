@@ -1,14 +1,14 @@
-import React, { useState } from 'react'
-import DynamicPageActivityImage from 'public/activities_types/dynamic-page-activity.png'
-import VideoPageActivityImage from 'public//activities_types/video-page-activity.png'
-import DocumentPdfPageActivityImage from 'public//activities_types/documentpdf-page-activity.png'
 import AssignmentActivityImage from 'public//activities_types/assignment-page-activity.png'
+import DocumentPdfPageActivityImage from 'public//activities_types/documentpdf-page-activity.png'
+import VideoPageActivityImage from 'public//activities_types/video-page-activity.png'
+import DynamicPageActivityImage from 'public/activities_types/dynamic-page-activity.png'
+import React, { useState } from 'react'
 
+import Image from 'next/image'
+import Assignment from './NewActivityModal/Assignment'
+import DocumentPdfModal from './NewActivityModal/DocumentPdf'
 import DynamicCanvaModal from './NewActivityModal/DynamicCanva'
 import VideoModal from './NewActivityModal/Video'
-import Image from 'next/image'
-import DocumentPdfModal from './NewActivityModal/DocumentPdf'
-import Assignment from './NewActivityModal/Assignment'
 
 function NewActivityModal({
   closeModal,

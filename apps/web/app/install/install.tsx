@@ -1,9 +1,9 @@
 'use client'
-import React, { useEffect } from 'react'
-import { INSTALL_STEPS } from './steps/steps'
 import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
 import { useRouter, useSearchParams } from 'next/navigation'
+import React, { useEffect } from 'react'
 import { Suspense } from 'react'
+import { INSTALL_STEPS } from './steps/steps'
 
 function InstallClient() {
   return (
@@ -20,7 +20,7 @@ function InstallClient() {
 const Stepscomp = () => {
   const searchParams = useSearchParams()
   const router = useRouter()
-  const step: any = parseInt(searchParams.get('step') || '0')
+  const step: any = Number.parseInt(searchParams.get('step') || '0')
   const [stepNumber, setStepNumber] = React.useState(step)
   const [stepsState, setStepsState] = React.useState(INSTALL_STEPS)
 

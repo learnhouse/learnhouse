@@ -1,4 +1,5 @@
 import { useAssignmentSubmission } from '@components/Contexts/Assignments/AssignmentSubmissionContext'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 import {
   BookPlus,
   BookUser,
@@ -10,7 +11,6 @@ import {
   Save,
 } from 'lucide-react'
 import React, { useEffect } from 'react'
-import { useLHSession } from '@components/Contexts/LHSessionContext'
 
 type AssignmentBoxProps = {
   type: 'quiz' | 'file'
@@ -143,7 +143,9 @@ function AssignmentBoxUI({
               </p>
               <div className="flex items-center gap-2 w-full sm:w-auto">
                 <input
-                  onChange={(e) => setCustomGrade(parseInt(e.target.value))}
+                  onChange={(e) =>
+                    setCustomGrade(Number.parseInt(e.target.value))
+                  }
                   placeholder={maxPoints.toString()}
                   className="w-full sm:w-[100px] light-shadow text-sm py-0.5 outline outline-gray-200 rounded-lg px-2"
                   type="number"

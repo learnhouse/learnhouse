@@ -1,8 +1,8 @@
 'use client'
-import { use } from 'react'
 import { OrgProvider } from '@components/Contexts/OrgContext'
-import NextTopLoader from 'nextjs-toploader'
 import Toast from '@components/Objects/StyledElements/Toast/Toast'
+import NextTopLoader from 'nextjs-toploader'
+import { use } from 'react'
 import '@styles/globals.css'
 import Onboarding from '@components/Objects/Onboarding/Onboarding'
 

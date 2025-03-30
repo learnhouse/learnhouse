@@ -1,9 +1,9 @@
 'use client'
-import React from 'react'
-import * as Dialog from '@radix-ui/react-dialog'
-import { styled, keyframes } from '@stitches/react'
 import { blackA } from '@radix-ui/colors'
+import * as Dialog from '@radix-ui/react-dialog'
+import { keyframes, styled } from '@stitches/react'
 import { AlertTriangle, Info } from 'lucide-react'
+import React from 'react'
 
 type ModalParams = {
   confirmationMessage: string

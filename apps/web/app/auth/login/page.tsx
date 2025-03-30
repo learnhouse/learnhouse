@@ -1,6 +1,6 @@
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
+import type { Metadata } from 'next'
 import LoginClient from './login'
-import { Metadata } from 'next'
 
 type MetadataProps = {
   params: Promise<{ orgslug: string }>

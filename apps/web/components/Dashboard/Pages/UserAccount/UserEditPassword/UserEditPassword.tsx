@@ -1,14 +1,14 @@
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { updatePassword } from '@services/settings/password'
-import { Formik, Form } from 'formik'
-import React, { useEffect } from 'react'
-import { AlertTriangle } from 'lucide-react'
-import { Input } from '@components/ui/input'
 import { Button } from '@components/ui/button'
+import { Input } from '@components/ui/input'
 import { Label } from '@components/ui/label'
-import { toast } from 'react-hot-toast'
-import { signOut } from 'next-auth/react'
 import { getUriWithoutOrg } from '@services/config/config'
+import { updatePassword } from '@services/settings/password'
+import { Form, Formik } from 'formik'
+import { AlertTriangle } from 'lucide-react'
+import { signOut } from 'next-auth/react'
+import React, { useEffect } from 'react'
+import { toast } from 'react-hot-toast'
 import * as Yup from 'yup'
 
 const validationSchema = Yup.object().shape({
@@ -25,7 +25,7 @@ function UserEditPassword() {
   const updatePasswordUI = async (values: any) => {
     const loadingToast = toast.loading('Updating password...')
     try {
-      let user_id = session.data.user.id
+      const user_id = session.data.user.id
       const response = await updatePassword(user_id, values, access_token)
 
       if (response.success) {

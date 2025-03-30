@@ -1,8 +1,11 @@
 'use client'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
-import { signOut } from 'next-auth/react'
+import useFeatureFlag from '@components/Hooks/useFeatureFlag'
 import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
+import AdminAuthorization from '@components/Security/AdminAuthorization'
 import LearnHouseDashboardLogo from '@public/dashLogo.png'
+import { getUriWithOrg, getUriWithoutOrg } from '@services/config/config'
 import {
   Backpack,
   BadgeDollarSign,
@@ -13,16 +16,12 @@ import {
   School,
   Settings,
   Users,
-  Vault,
 } from 'lucide-react'
+import { signOut } from 'next-auth/react'
 import Image from 'next/image'
 import Link from 'next/link'
 import React, { useEffect } from 'react'
 import UserAvatar from '../../Objects/UserAvatar'
-import AdminAuthorization from '@components/Security/AdminAuthorization'
-import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { getUriWithOrg, getUriWithoutOrg } from '@services/config/config'
-import useFeatureFlag from '@components/Hooks/useFeatureFlag'
 
 function DashLeftMenu() {
   const org = useOrg() as any

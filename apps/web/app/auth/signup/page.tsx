@@ -1,8 +1,8 @@
-import { Metadata } from 'next'
-import { getOrganizationContextInfo } from '@services/organizations/orgs'
-import SignUpClient from './signup'
-import { Suspense } from 'react'
 import PageLoading from '@components/Objects/Loaders/PageLoading'
+import { getOrganizationContextInfo } from '@services/organizations/orgs'
+import type { Metadata } from 'next'
+import { Suspense } from 'react'
+import SignUpClient from './signup'
 
 type MetadataProps = {
   params: Promise<{ orgslug: string; courseid: string }>

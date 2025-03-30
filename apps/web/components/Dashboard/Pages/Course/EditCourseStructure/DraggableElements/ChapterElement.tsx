@@ -1,23 +1,22 @@
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
+import { Draggable, Droppable } from '@hello-pangea/dnd'
+import { getAPIUrl } from '@services/config/config'
+import { deleteChapter, updateChapter } from '@services/courses/chapters'
+import { revalidateTags } from '@services/utils/ts/requests'
 import {
   Hexagon,
   MoreHorizontal,
   MoreVertical,
   Pencil,
   Save,
-  X,
   Trash2,
 } from 'lucide-react'
-import React from 'react'
-import { Draggable, Droppable } from '@hello-pangea/dnd'
-import ActivityElement from './ActivityElement'
-import NewActivityButton from '../Buttons/NewActivityButton'
-import { deleteChapter, updateChapter } from '@services/courses/chapters'
-import { revalidateTags } from '@services/utils/ts/requests'
 import { useRouter } from 'next/navigation'
-import { getAPIUrl } from '@services/config/config'
+import React from 'react'
 import { mutate } from 'swr'
-import { useLHSession } from '@components/Contexts/LHSessionContext'
+import NewActivityButton from '../Buttons/NewActivityButton'
+import ActivityElement from './ActivityElement'
 
 type ChapterElementProps = {
   chapter: any
@@ -53,7 +52,7 @@ function ChapterElement(props: ChapterElementProps) {
 
   async function updateChapterName(chapterId: string) {
     if (modifiedChapter?.chapterId === chapterId) {
-      let modifiedChapterCopy = {
+      const modifiedChapterCopy = {
         name: modifiedChapter.chapterName,
       }
       await updateChapter(chapterId, modifiedChapterCopy, access_token)

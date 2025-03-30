@@ -1,11 +1,11 @@
+import { getCourseMetadata } from '@services/courses/courses'
+import { getCourseThumbnailMediaDirectory } from '@services/media/media'
+import { getOrganizationContextInfo } from '@services/organizations/orgs'
+import { nextAuthOptions } from 'app/auth/options'
+import type { Metadata } from 'next'
+import { getServerSession } from 'next-auth'
 import React from 'react'
 import CourseClient from './course'
-import { getCourseMetadata } from '@services/courses/courses'
-import { getOrganizationContextInfo } from '@services/organizations/orgs'
-import { Metadata } from 'next'
-import { getCourseThumbnailMediaDirectory } from '@services/media/media'
-import { nextAuthOptions } from 'app/auth/options'
-import { getServerSession } from 'next-auth'
 
 type MetadataProps = {
   params: Promise<{ orgslug: string; courseuuid: string }>

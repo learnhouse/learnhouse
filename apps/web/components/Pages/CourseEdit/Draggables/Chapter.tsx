@@ -1,15 +1,15 @@
+import { useLHSession } from '@components/Contexts/LHSessionContext'
+import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
+import { Draggable, Droppable } from '@hello-pangea/dnd'
+import { getAPIUrl } from '@services/config/config'
+import { updateChapter } from '@services/courses/chapters'
+import { revalidateTags } from '@services/utils/ts/requests'
+import { Hexagon, MoreVertical, Pencil, Save, Sparkles, X } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import React from 'react'
 import styled from 'styled-components'
-import { Droppable, Draggable } from '@hello-pangea/dnd'
-import Activity from './Activity'
-import { Hexagon, MoreVertical, Pencil, Save, Sparkles, X } from 'lucide-react'
-import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
-import { useRouter } from 'next/navigation'
-import { updateChapter } from '@services/courses/chapters'
 import { mutate } from 'swr'
-import { getAPIUrl } from '@services/config/config'
-import { revalidateTags } from '@services/utils/ts/requests'
-import { useLHSession } from '@components/Contexts/LHSessionContext'
+import Activity from './Activity'
 
 interface ModifiedChapterInterface {
   chapterId: string
@@ -28,7 +28,7 @@ function Chapter(props: any) {
 
   async function updateChapterName(chapterId: string) {
     if (modifiedChapter?.chapterId === chapterId) {
-      let modifiedChapterCopy = {
+      const modifiedChapterCopy = {
         name: modifiedChapter.chapterName,
       }
       await updateChapter(

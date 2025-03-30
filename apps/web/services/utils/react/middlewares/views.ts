@@ -1,4 +1,4 @@
-import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime'
+import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime'
 
 export const denyAccessToUser = (error: any, router: AppRouterInstance) => {
   if (error.status === 401) {

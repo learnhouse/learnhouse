@@ -1,7 +1,7 @@
 'use client'
-import React from 'react'
 import * as Tooltip from '@radix-ui/react-tooltip'
-import { styled, keyframes } from '@stitches/react'
+import { keyframes, styled } from '@stitches/react'
+import type React from 'react'
 
 type TooltipProps = {
   sideOffset?: number

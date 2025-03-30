@@ -22,7 +22,7 @@ function ActivityIndicators(props: Props) {
   const trail = props.course.trail
 
   function isActivityDone(activity: any) {
-    let run = props.course.trail?.runs.find(
+    const run = props.course.trail?.runs.find(
       (run: any) => run.course_id == props.course.id
     )
     if (run) {
@@ -33,7 +33,7 @@ function ActivityIndicators(props: Props) {
   }
 
   function isActivityCurrent(activity: any) {
-    let activity_uuid = activity.activity_uuid.replace('activity_', '')
+    const activity_uuid = activity.activity_uuid.replace('activity_', '')
     if (props.current_activity && props.current_activity == activity_uuid) {
       return true
     }

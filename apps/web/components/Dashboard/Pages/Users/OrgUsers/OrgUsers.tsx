@@ -62,7 +62,8 @@ function OrgUsers() {
               <h1 className="font-bold text-xl text-gray-800">Active users</h1>
               <h2 className="text-gray-500  text-md">
                 {' '}
-                Manage your organization users, assign roles and permissions{' '}
+                Manage your organization users, assign roles and
+                permissions{' '}
               </h2>
             </div>
             <table className="table-auto w-full text-left whitespace-nowrap rounded-md overflow-hidden">

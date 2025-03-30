@@ -1,6 +1,7 @@
 'use client'
-import { AIMessage } from '@components/Objects/Activities/AI/AIActivityAsk'
-import React, { createContext, useContext, useReducer } from 'react'
+import type { AIMessage } from '@components/Objects/Activities/AI/AIActivityAsk'
+import type React from 'react'
+import { createContext, useContext, useReducer } from 'react'
 export const AIEditorContext = createContext(null) as any
 export const AIEditorDispatchContext = createContext(null) as any
 

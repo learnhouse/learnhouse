@@ -1,4 +1,6 @@
 import { isInstallModeEnabled } from '@services/install/install'
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 import {
   LEARNHOUSE_DOMAIN,
   LEARNHOUSE_TOP_DOMAIN,
@@ -6,8 +8,6 @@ import {
   getUriWithOrg,
   isMultiOrgModeEnabled,
 } from './services/config/config'
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
 
 export const config = {
   matcher: [

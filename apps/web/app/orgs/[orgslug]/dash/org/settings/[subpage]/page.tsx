@@ -1,23 +1,20 @@
 'use client'
 import BreadCrumbs from '@components/Dashboard/Misc/BreadCrumbs'
+import OrgEditGeneral from '@components/Dashboard/Pages/Org/OrgEditGeneral/OrgEditGeneral'
+import OrgEditImages from '@components/Dashboard/Pages/Org/OrgEditImages/OrgEditImages'
+import OrgEditLanding from '@components/Dashboard/Pages/Org/OrgEditLanding/OrgEditLanding'
+import OrgEditSocials from '@components/Dashboard/Pages/Org/OrgEditSocials/OrgEditSocials'
 import { getUriWithOrg } from '@services/config/config'
+import { motion } from 'framer-motion'
 import {
   ImageIcon,
-  Info,
-  LockIcon,
-  SearchIcon,
-  TextIcon,
-  LucideIcon,
-  Share2Icon,
   LayoutDashboardIcon,
+  type LucideIcon,
+  Share2Icon,
+  TextIcon,
 } from 'lucide-react'
 import Link from 'next/link'
 import React, { useEffect, use } from 'react'
-import { motion } from 'framer-motion'
-import OrgEditGeneral from '@components/Dashboard/Pages/Org/OrgEditGeneral/OrgEditGeneral'
-import OrgEditImages from '@components/Dashboard/Pages/Org/OrgEditImages/OrgEditImages'
-import OrgEditSocials from '@components/Dashboard/Pages/Org/OrgEditSocials/OrgEditSocials'
-import OrgEditLanding from '@components/Dashboard/Pages/Org/OrgEditLanding/OrgEditLanding'
 
 export type OrgParams = {
   subpage: string

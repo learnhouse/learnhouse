@@ -1,18 +1,18 @@
 'use client'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { useOrg } from '@components/Contexts/OrgContext'
 import FormLayout, {
   FormField,
   FormLabelAndMessage,
   Input,
 } from '@components/Objects/StyledElements/Form/Form'
 import * as Form from '@radix-ui/react-form'
-import { useOrg } from '@components/Contexts/OrgContext'
-import React from 'react'
-import { updateUserGroup } from '@services/usergroups/usergroups'
-import { mutate } from 'swr'
 import { getAPIUrl } from '@services/config/config'
-import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { updateUserGroup } from '@services/usergroups/usergroups'
 import { useFormik } from 'formik'
+import React from 'react'
 import toast from 'react-hot-toast'
+import { mutate } from 'swr'
 
 type EditUserGroupProps = {
   usergroup: {

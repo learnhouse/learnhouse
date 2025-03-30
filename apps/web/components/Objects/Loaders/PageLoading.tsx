@@ -15,7 +15,7 @@ const dotVariants = {
     opacity: [0.4, 1, 0.4],
     transition: {
       duration: 1.5,
-      repeat: Infinity,
+      repeat: Number.POSITIVE_INFINITY,
       delay: i * 0.2,
       ease: 'easeInOut',
     },
@@ -52,7 +52,7 @@ function PageLoading() {
             className="mt-6 text-sm text-gray-500 dark:text-gray-400"
             initial={{ opacity: 0 }}
             animate={{ opacity: [0, 1, 0] }}
-            transition={{ duration: 2, repeat: Infinity }}
+            transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
           >
             Loading...
           </motion.p>

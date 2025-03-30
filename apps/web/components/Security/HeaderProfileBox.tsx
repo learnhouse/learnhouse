@@ -1,14 +1,14 @@
 'use client'
-import React, { useEffect } from 'react'
-import styled from 'styled-components'
-import Link from 'next/link'
-import { Package2, Settings } from 'lucide-react'
-import UserAvatar from '@components/Objects/UserAvatar'
-import useAdminStatus from '@components/Hooks/useAdminStatus'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
-import { getUriWithoutOrg } from '@services/config/config'
+import useAdminStatus from '@components/Hooks/useAdminStatus'
 import Tooltip from '@components/Objects/StyledElements/Tooltip/Tooltip'
+import UserAvatar from '@components/Objects/UserAvatar'
+import { getUriWithoutOrg } from '@services/config/config'
+import { Package2, Settings } from 'lucide-react'
+import Link from 'next/link'
+import React, { useEffect } from 'react'
+import styled from 'styled-components'
 
 export const HeaderProfileBox = () => {
   const session = useLHSession() as any

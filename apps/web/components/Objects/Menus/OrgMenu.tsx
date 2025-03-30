@@ -1,14 +1,13 @@
 'use client'
-import React from 'react'
-import Link from 'next/link'
-import { Search } from 'lucide-react'
-import { getUriWithOrg } from '@services/config/config'
-import { HeaderProfileBox } from '@components/Security/HeaderProfileBox'
-import MenuLinks from './OrgMenuLinks'
-import { getOrgLogoMediaDirectory } from '@services/media/media'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { SearchBar } from '@components/Objects/Search/SearchBar'
+import { HeaderProfileBox } from '@components/Security/HeaderProfileBox'
+import { getUriWithOrg } from '@services/config/config'
+import { getOrgLogoMediaDirectory } from '@services/media/media'
+import Link from 'next/link'
+import React from 'react'
+import MenuLinks from './OrgMenuLinks'
 
 export const OrgMenu = (props: any) => {
   const orgslug = props.orgslug

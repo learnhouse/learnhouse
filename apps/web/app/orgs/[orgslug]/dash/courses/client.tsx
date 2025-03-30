@@ -1,15 +1,15 @@
 'use client'
 import BreadCrumbs from '@components/Dashboard/Misc/BreadCrumbs'
+import useAdminStatus from '@components/Hooks/useAdminStatus'
 import CreateCourseModal from '@components/Objects/Modals/Course/Create/CreateCourse'
+import NewCourseButton from '@components/Objects/StyledElements/Buttons/NewCourseButton'
+import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import CourseThumbnail, {
   removeCoursePrefix,
 } from '@components/Objects/Thumbnails/CourseThumbnail'
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
-import NewCourseButton from '@components/Objects/StyledElements/Buttons/NewCourseButton'
-import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { useSearchParams } from 'next/navigation'
 import React from 'react'
-import useAdminStatus from '@components/Hooks/useAdminStatus'
 
 type CourseProps = {
   orgslug: string

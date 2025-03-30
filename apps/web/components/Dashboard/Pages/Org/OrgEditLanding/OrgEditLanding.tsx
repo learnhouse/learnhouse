@@ -1,39 +1,8 @@
 'use client'
-import React from 'react'
-import {
-  LandingObject,
-  LandingSection,
-  LandingHeroSection,
-  LandingTextAndImageSection,
-  LandingLogos,
-  LandingPeople,
-  LandingBackground,
-  LandingButton,
-  LandingHeading,
-  LandingImage,
-  LandingFeaturedCourses,
-} from './landing_types'
-import {
-  Plus,
-  Eye,
-  ArrowUpDown,
-  Trash2,
-  GripVertical,
-  LayoutTemplate,
-  ImageIcon,
-  Users,
-  Award,
-  ArrowRight,
-  Edit,
-  Link,
-  Upload,
-  Save,
-  BookOpen,
-  TextIcon,
-} from 'lucide-react'
-import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { useOrg } from '@components/Contexts/OrgContext'
+import { Button } from '@components/ui/button'
 import { Input } from '@components/ui/input'
-import { Textarea } from '@components/ui/textarea'
 import { Label } from '@components/ui/label'
 import {
   Select,
@@ -42,18 +11,45 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@components/ui/select'
-import { Button } from '@components/ui/button'
-import { useOrg } from '@components/Contexts/OrgContext'
-import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@components/ui/tabs'
+import { Textarea } from '@components/ui/textarea'
+import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd'
+import { getOrgCourses } from '@services/courses/courses'
+import { getOrgLandingMediaDirectory } from '@services/media/media'
 import {
   updateOrgLanding,
   uploadLandingContent,
 } from '@services/organizations/orgs'
-import { getOrgLandingMediaDirectory } from '@services/media/media'
-import { getOrgCourses } from '@services/courses/courses'
+import {
+  Award,
+  BookOpen,
+  Edit,
+  GripVertical,
+  ImageIcon,
+  LayoutTemplate,
+  Link,
+  Plus,
+  Save,
+  TextIcon,
+  Trash2,
+  Upload,
+  Users,
+} from 'lucide-react'
+import React from 'react'
 import toast from 'react-hot-toast'
 import useSWR from 'swr'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@components/ui/tabs'
+import type {
+  LandingBackground,
+  LandingButton,
+  LandingFeaturedCourses,
+  LandingHeroSection,
+  LandingImage,
+  LandingLogos,
+  LandingObject,
+  LandingPeople,
+  LandingSection,
+  LandingTextAndImageSection,
+} from './landing_types'
 
 const SECTION_TYPES = {
   hero: {

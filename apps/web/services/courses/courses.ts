@@ -27,8 +27,8 @@ export async function getOrgCourses(
 export async function searchOrgCourses(
   org_slug: string,
   query: string,
-  page: number = 1,
-  limit: number = 10,
+  page = 1,
+  limit = 10,
   next: any,
   access_token?: any
 ) {

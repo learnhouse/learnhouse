@@ -1,16 +1,14 @@
 'use client'
-import Link from 'next/link'
-import React, { useEffect, useState } from 'react'
-import { getUriWithOrg } from '@services/config/config'
+import { CourseProvider } from '@components/Contexts/CourseContext'
+import { useOrg } from '@components/Contexts/OrgContext'
+import CourseActionsMobile from '@components/Objects/Courses/CourseActions/CourseActionsMobile'
+import CoursesActions from '@components/Objects/Courses/CourseActions/CoursesActions'
+import CourseUpdates from '@components/Objects/Courses/CourseUpdates/CourseUpdates'
 import PageLoading from '@components/Objects/Loaders/PageLoading'
-import { revalidateTags } from '@services/utils/ts/requests'
-import ActivityIndicators from '@components/Pages/Courses/ActivityIndicators'
-import { useRouter } from 'next/navigation'
 import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
-import {
-  getCourseThumbnailMediaDirectory,
-  getUserAvatarMediaDirectory,
-} from '@services/media/media'
+import ActivityIndicators from '@components/Pages/Courses/ActivityIndicators'
+import { getUriWithOrg } from '@services/config/config'
+import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import {
   ArrowRight,
   Backpack,
@@ -19,13 +17,10 @@ import {
   Sparkles,
   Video,
 } from 'lucide-react'
-import { useOrg } from '@components/Contexts/OrgContext'
-import UserAvatar from '@components/Objects/UserAvatar'
-import CourseUpdates from '@components/Objects/Courses/CourseUpdates/CourseUpdates'
-import { CourseProvider } from '@components/Contexts/CourseContext'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import React, { useEffect, useState } from 'react'
 import { useMediaQuery } from 'usehooks-ts'
-import CoursesActions from '@components/Objects/Courses/CourseActions/CoursesActions'
-import CourseActionsMobile from '@components/Objects/Courses/CourseActions/CourseActionsMobile'
 
 const CourseClient = (props: any) => {
   const [learnings, setLearnings] = useState<any>([])

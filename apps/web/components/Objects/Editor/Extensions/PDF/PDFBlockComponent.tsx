@@ -1,19 +1,19 @@
-import { NodeViewWrapper } from '@tiptap/react'
-import React, { useEffect } from 'react'
-import styled from 'styled-components'
-import { AlertTriangle, FileText } from 'lucide-react'
-import { uploadNewPDFFile } from '../../../../../services/blocks/Pdf/pdf'
-import { getActivityBlockMediaDirectory } from '@services/media/media'
-import { useOrg } from '@components/Contexts/OrgContext'
+import { constructAcceptValue } from '@/lib/constants'
 import { useCourse } from '@components/Contexts/CourseContext'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { useOrg } from '@components/Contexts/OrgContext'
+import { getActivityBlockMediaDirectory } from '@services/media/media'
+import { NodeViewWrapper } from '@tiptap/react'
+import { AlertTriangle, FileText } from 'lucide-react'
+import React, { useEffect } from 'react'
+import styled from 'styled-components'
+import { uploadNewPDFFile } from '../../../../../services/blocks/Pdf/pdf'
 import {
   FileUploadBlock,
   FileUploadBlockButton,
   FileUploadBlockInput,
 } from '../../FileUploadBlock'
-import { constructAcceptValue } from '@/lib/constants'
 
 const SUPPORTED_FILES = constructAcceptValue(['pdf'])
 
@@ -40,7 +40,7 @@ function PDFBlockComponent(props: any) {
   const handleSubmit = async (e: any) => {
     e.preventDefault()
     setIsLoading(true)
-    let object = await uploadNewPDFFile(
+    const object = await uploadNewPDFFile(
       pdf,
       props.extension.options.activity.activity_uuid,
       access_token

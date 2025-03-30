@@ -1,14 +1,13 @@
-import { default as React } from 'react'
-import dynamic from 'next/dynamic'
-import { getCourseMetadata } from '@services/courses/courses'
-import { Metadata } from 'next'
-import { getActivityWithAuthHeader } from '@services/courses/activities'
-import { getOrganizationContextInfoWithId } from '@services/organizations/orgs'
-import EditorOptionsProvider from '@components/Contexts/Editor/EditorContext'
 import AIEditorProvider from '@components/Contexts/AI/AIEditorContext'
-import { nextAuthOptions } from 'app/auth/options'
-import { getServerSession } from 'next-auth'
+import EditorOptionsProvider from '@components/Contexts/Editor/EditorContext'
 import EditorWrapper from '@components/Objects/Editor/EditorWrapper'
+import { getActivityWithAuthHeader } from '@services/courses/activities'
+import { getCourseMetadata } from '@services/courses/courses'
+import { getOrganizationContextInfoWithId } from '@services/organizations/orgs'
+import { nextAuthOptions } from 'app/auth/options'
+import type { Metadata } from 'next'
+import { getServerSession } from 'next-auth'
+import { default as React } from 'react'
 
 type MetadataProps = {
   params: Promise<{ orgslug: string; courseid: string; activityid: string }>

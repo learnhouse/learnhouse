@@ -62,8 +62,8 @@ export async function getOrganizationContextInfoWithoutCredentials(
   org_slug: any,
   next: any
 ) {
-  let HeadersConfig = new Headers({ 'Content-Type': 'application/json' })
-  let options: any = {
+  const HeadersConfig = new Headers({ 'Content-Type': 'application/json' })
+  const options: any = {
     method: 'GET',
     headers: HeadersConfig,
     redirect: 'follow',

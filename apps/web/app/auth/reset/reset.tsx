@@ -1,21 +1,21 @@
 'use client'
-import Image from 'next/image'
-import React from 'react'
-import learnhouseIcon from 'public/learnhouse_bigicon_1.png'
+import { useOrg } from '@components/Contexts/OrgContext'
 import FormLayout, {
   FormField,
   FormLabelAndMessage,
   Input,
 } from '@components/Objects/StyledElements/Form/Form'
 import * as Form from '@radix-ui/react-form'
-import { getOrgLogoMediaDirectory } from '@services/media/media'
-import { AlertTriangle, Info } from 'lucide-react'
-import Link from 'next/link'
-import { getUriWithOrg, getUriWithoutOrg } from '@services/config/config'
-import { useOrg } from '@components/Contexts/OrgContext'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { useFormik } from 'formik'
 import { resetPassword } from '@services/auth/auth'
+import { getUriWithOrg, getUriWithoutOrg } from '@services/config/config'
+import { getOrgLogoMediaDirectory } from '@services/media/media'
+import { useFormik } from 'formik'
+import { AlertTriangle, Info } from 'lucide-react'
+import Image from 'next/image'
+import Link from 'next/link'
+import { useRouter, useSearchParams } from 'next/navigation'
+import learnhouseIcon from 'public/learnhouse_bigicon_1.png'
+import React from 'react'
 
 const validate = (values: any) => {
   const errors: any = {}
@@ -65,7 +65,7 @@ function ResetPasswordClient() {
     enableReinitialize: true,
     onSubmit: async (values) => {
       setIsSubmitting(true)
-      let res = await resetPassword(
+      const res = await resetPassword(
         values.email,
         values.new_password,
         org?.id,

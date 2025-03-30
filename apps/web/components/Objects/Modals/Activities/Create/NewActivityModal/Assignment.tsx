@@ -1,4 +1,5 @@
-import React from 'react'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { useOrg } from '@components/Contexts/OrgContext'
 import FormLayout, {
   ButtonBlack,
   Flex,
@@ -8,14 +9,13 @@ import FormLayout, {
   Input,
 } from '@components/Objects/StyledElements/Form/Form'
 import * as Form from '@radix-ui/react-form'
-import { BarLoader } from 'react-spinners'
-import { useOrg } from '@components/Contexts/OrgContext'
 import { getAPIUrl } from '@services/config/config'
-import { mutate } from 'swr'
-import { createAssignment } from '@services/courses/assignments'
-import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { createActivity, deleteActivity } from '@services/courses/activities'
+import { createAssignment } from '@services/courses/assignments'
+import React from 'react'
 import toast from 'react-hot-toast'
+import { BarLoader } from 'react-spinners'
+import { mutate } from 'swr'
 
 function NewAssignment({ submitActivity, chapterId, course, closeModal }: any) {
   const org = useOrg() as any

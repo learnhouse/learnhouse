@@ -1,57 +1,57 @@
 'use client'
-import React from 'react'
-import { useEditor, EditorContent } from '@tiptap/react'
-import StarterKit from '@tiptap/starter-kit'
-import learnhouseIcon from 'public/learnhouse_icon.png'
-import { ToolbarButtons } from './Toolbar/ToolbarButtons'
-import { motion } from 'framer-motion'
-import Image from 'next/image'
-import styled from 'styled-components'
-import { DividerVerticalIcon, SlashIcon } from '@radix-ui/react-icons'
-import learnhouseAI_icon from 'public/learnhouse_ai_simple.png'
 import {
-  AIEditorStateTypes,
+  type AIEditorStateTypes,
   useAIEditor,
   useAIEditorDispatch,
 } from '@components/Contexts/AI/AIEditorContext'
+import { DividerVerticalIcon, SlashIcon } from '@radix-ui/react-icons'
+import { EditorContent, useEditor } from '@tiptap/react'
+import StarterKit from '@tiptap/starter-kit'
+import { motion } from 'framer-motion'
+import Image from 'next/image'
+import learnhouseAI_icon from 'public/learnhouse_ai_simple.png'
+import learnhouseIcon from 'public/learnhouse_icon.png'
+import React from 'react'
+import styled from 'styled-components'
+import { ToolbarButtons } from './Toolbar/ToolbarButtons'
 
-// Extensions
-import InfoCallout from './Extensions/Callout/Info/InfoCallout'
-import WarningCallout from './Extensions/Callout/Warning/WarningCallout'
-import ImageBlock from './Extensions/Image/ImageBlock'
-import Youtube from '@tiptap/extension-youtube'
-import VideoBlock from './Extensions/Video/VideoBlock'
-import { Eye, Monitor } from 'lucide-react'
-import MathEquationBlock from './Extensions/MathEquation/MathEquationBlock'
-import PDFBlock from './Extensions/PDF/PDFBlock'
-import QuizBlock from './Extensions/Quiz/QuizBlock'
+import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
+import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import Table from '@tiptap/extension-table'
 import TableCell from '@tiptap/extension-table-cell'
 import TableHeader from '@tiptap/extension-table-header'
 import TableRow from '@tiptap/extension-table-row'
-import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
+import Youtube from '@tiptap/extension-youtube'
+import { Eye, Monitor } from 'lucide-react'
 import Link from 'next/link'
-import { getCourseThumbnailMediaDirectory } from '@services/media/media'
+// Extensions
+import InfoCallout from './Extensions/Callout/Info/InfoCallout'
+import WarningCallout from './Extensions/Callout/Warning/WarningCallout'
+import ImageBlock from './Extensions/Image/ImageBlock'
+import MathEquationBlock from './Extensions/MathEquation/MathEquationBlock'
+import PDFBlock from './Extensions/PDF/PDFBlock'
+import QuizBlock from './Extensions/Quiz/QuizBlock'
+import VideoBlock from './Extensions/Video/VideoBlock'
 
 // Lowlight
 import { common, createLowlight } from 'lowlight'
 const lowlight = createLowlight(common)
-import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
-import css from 'highlight.js/lib/languages/css'
-import js from 'highlight.js/lib/languages/javascript'
-import ts from 'highlight.js/lib/languages/typescript'
-import html from 'highlight.js/lib/languages/xml'
-import python from 'highlight.js/lib/languages/python'
-import java from 'highlight.js/lib/languages/java'
 import { CourseProvider } from '@components/Contexts/CourseContext'
-import AIEditorToolkit from './AI/AIEditorToolkit'
 import useGetAIFeatures from '@components/Hooks/useGetAIFeatures'
 import { getUriWithOrg } from '@services/config/config'
-import EmbedObjects from './Extensions/EmbedObjects/EmbedObjects'
-import Badges from './Extensions/Badges/Badges'
-import Buttons from './Extensions/Buttons/Buttons'
+import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
+import css from 'highlight.js/lib/languages/css'
+import java from 'highlight.js/lib/languages/java'
+import js from 'highlight.js/lib/languages/javascript'
+import python from 'highlight.js/lib/languages/python'
+import ts from 'highlight.js/lib/languages/typescript'
+import html from 'highlight.js/lib/languages/xml'
 import { useMediaQuery } from 'usehooks-ts'
 import UserAvatar from '../UserAvatar'
+import AIEditorToolkit from './AI/AIEditorToolkit'
+import Badges from './Extensions/Badges/Badges'
+import Buttons from './Extensions/Buttons/Buttons'
+import EmbedObjects from './Extensions/EmbedObjects/EmbedObjects'
 
 interface Editor {
   content: string
@@ -205,7 +205,8 @@ function Editor(props: Editor) {
                 </Link>
                 <EditorInfoDocName>
                   {' '}
-                  <b>{props.course.name}</b> <SlashIcon /> {props.activity.name}{' '}
+                  <b>{props.course.name}</b> <SlashIcon />{' '}
+                  {props.activity.name}{' '}
                 </EditorInfoDocName>
               </EditorInfoWrapper>
               <EditorButtonsWrapper>
@@ -317,7 +318,8 @@ const Page = styled.div`
   padding-top: 30px;
 
   // dots background
-  background-image: radial-gradient(#4744446b 1px, transparent 1px),
+  background-image:
+    radial-gradient(#4744446b 1px, transparent 1px),
     radial-gradient(#4744446b 1px, transparent 1px);
   background-position:
     0 0,

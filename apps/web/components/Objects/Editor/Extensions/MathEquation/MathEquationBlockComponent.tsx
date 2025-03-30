@@ -2,18 +2,18 @@ import { NodeViewWrapper } from '@tiptap/react'
 import React from 'react'
 import styled from 'styled-components'
 import 'katex/dist/katex.min.css'
-import { BlockMath } from 'react-katex'
-import {
-  Save,
-  Sigma,
-  ExternalLink,
-  ChevronDown,
-  BookOpen,
-  Lightbulb,
-} from 'lucide-react'
-import Link from 'next/link'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { motion } from 'framer-motion'
+import {
+  BookOpen,
+  ChevronDown,
+  ExternalLink,
+  Lightbulb,
+  Save,
+  Sigma,
+} from 'lucide-react'
+import Link from 'next/link'
+import { BlockMath } from 'react-katex'
 
 // Predefined LaTeX templates
 const mathTemplates = [

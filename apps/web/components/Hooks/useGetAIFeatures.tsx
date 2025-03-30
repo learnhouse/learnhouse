@@ -18,7 +18,7 @@ function useGetAIFeatures(props: UseGetAIFeatures) {
   React.useEffect(() => {
     if (org) {
       // Check if org is not null or undefined
-      let isEnabledStatus = checkAvailableAIFeaturesOnOrg(props.feature)
+      const isEnabledStatus = checkAvailableAIFeaturesOnOrg(props.feature)
       setisEnabled(isEnabledStatus)
     }
   }, [org])

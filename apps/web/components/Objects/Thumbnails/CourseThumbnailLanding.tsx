@@ -1,23 +1,23 @@
 'use client'
-import { useOrg } from '@components/Contexts/OrgContext'
-import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
-import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
-import { getUriWithOrg } from '@services/config/config'
-import { deleteCourseFromBackend } from '@services/courses/courses'
-import { getCourseThumbnailMediaDirectory } from '@services/media/media'
-import { revalidateTags } from '@services/utils/ts/requests'
-import { BookMinus, FilePenLine, Settings2, MoreVertical } from 'lucide-react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import React from 'react'
-import toast from 'react-hot-toast'
+import { useOrg } from '@components/Contexts/OrgContext'
+import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
+import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@components/ui/dropdown-menu'
+import { getUriWithOrg } from '@services/config/config'
+import { deleteCourseFromBackend } from '@services/courses/courses'
+import { getCourseThumbnailMediaDirectory } from '@services/media/media'
+import { revalidateTags } from '@services/utils/ts/requests'
+import { BookMinus, FilePenLine, MoreVertical, Settings2 } from 'lucide-react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import type React from 'react'
+import toast from 'react-hot-toast'
 
 type Course = {
   course_uuid: string

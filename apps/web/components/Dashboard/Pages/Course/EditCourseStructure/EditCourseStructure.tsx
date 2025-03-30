@@ -1,21 +1,21 @@
 'use client'
-import { getAPIUrl } from '@services/config/config'
-import { revalidateTags } from '@services/utils/ts/requests'
-import React, { useEffect, useState } from 'react'
-import { DragDropContext, Droppable } from '@hello-pangea/dnd'
-import { mutate } from 'swr'
-import ChapterElement from './DraggableElements/ChapterElement'
-import PageLoading from '@components/Objects/Loaders/PageLoading'
-import { createChapter } from '@services/courses/chapters'
-import { useRouter } from 'next/navigation'
 import {
   useCourse,
   useCourseDispatch,
 } from '@components/Contexts/CourseContext'
-import { Hexagon } from 'lucide-react'
-import Modal from '@components/Objects/StyledElements/Modal/Modal'
-import NewChapterModal from '@components/Objects/Modals/Chapters/NewChapter'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import PageLoading from '@components/Objects/Loaders/PageLoading'
+import NewChapterModal from '@components/Objects/Modals/Chapters/NewChapter'
+import Modal from '@components/Objects/StyledElements/Modal/Modal'
+import { DragDropContext, Droppable } from '@hello-pangea/dnd'
+import { getAPIUrl } from '@services/config/config'
+import { createChapter } from '@services/courses/chapters'
+import { revalidateTags } from '@services/utils/ts/requests'
+import { Hexagon } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import React, { useEffect, useState } from 'react'
+import { mutate } from 'swr'
+import ChapterElement from './DraggableElements/ChapterElement'
 
 type EditCourseStructureProps = {
   orgslug: string

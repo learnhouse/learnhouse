@@ -1,27 +1,27 @@
-import React, { useState, useEffect } from 'react'
-import UserAvatar from '../../UserAvatar'
-import { getUserAvatarMediaDirectory } from '@services/media/media'
-import { removeCourse, startCourse } from '@services/courses/activity'
-import { revalidateTags } from '@services/utils/ts/requests'
-import { useRouter } from 'next/navigation'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { useMediaQuery } from 'usehooks-ts'
+import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { getUriWithOrg, getUriWithoutOrg } from '@services/config/config'
+import { removeCourse, startCourse } from '@services/courses/activity'
+import { applyForContributor } from '@services/courses/courses'
+import { getUserAvatarMediaDirectory } from '@services/media/media'
+import { checkPaidAccess } from '@services/payments/payments'
 import { getProductsByCourse } from '@services/payments/products'
+import { revalidateTags } from '@services/utils/ts/requests'
 import {
+  AlertCircle,
+  ClockIcon,
   LogIn,
   LogOut,
   ShoppingCart,
-  AlertCircle,
   UserPen,
-  ClockIcon,
 } from 'lucide-react'
-import Modal from '@components/Objects/StyledElements/Modal/Modal'
-import CoursePaidOptions from './CoursePaidOptions'
-import { checkPaidAccess } from '@services/payments/payments'
-import { applyForContributor } from '@services/courses/courses'
+import { useRouter } from 'next/navigation'
+import React, { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
+import { useMediaQuery } from 'usehooks-ts'
 import { useContributorStatus } from '../../../../hooks/useContributorStatus'
+import UserAvatar from '../../UserAvatar'
+import CoursePaidOptions from './CoursePaidOptions'
 
 interface Author {
   user: {
@@ -265,7 +265,7 @@ const Actions = ({ courseuuid, orgslug, course }: CourseActionsProps) => {
       if (!session.data?.user) return
       try {
         const response = await checkPaidAccess(
-          parseInt(course.id),
+          Number.parseInt(course.id),
           course.org_id,
           session.data?.tokens?.access_token
         )

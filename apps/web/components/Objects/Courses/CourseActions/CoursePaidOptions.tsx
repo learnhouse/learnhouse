@@ -1,17 +1,17 @@
-import React, { useState } from 'react'
-import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import useSWR from 'swr'
+import { useOrg } from '@components/Contexts/OrgContext'
+import { Badge } from '@components/ui/badge'
+import { Button } from '@components/ui/button'
+import { getUriWithOrg } from '@services/config/config'
 import {
   getProductsByCourse,
   getStripeProductCheckoutSession,
 } from '@services/payments/products'
-import { RefreshCcw, SquareCheck, ChevronDown, ChevronUp } from 'lucide-react'
-import { Badge } from '@components/ui/badge'
-import { Button } from '@components/ui/button'
-import toast from 'react-hot-toast'
+import { ChevronDown, ChevronUp, RefreshCcw, SquareCheck } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { getUriWithOrg } from '@services/config/config'
+import React, { useState } from 'react'
+import toast from 'react-hot-toast'
+import useSWR from 'swr'
 
 interface CoursePaidOptionsProps {
   course: {

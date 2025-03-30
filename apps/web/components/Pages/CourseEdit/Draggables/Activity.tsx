@@ -1,23 +1,23 @@
-import React from 'react'
-import Link from 'next/link'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
+import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import { Draggable } from '@hello-pangea/dnd'
 import { getAPIUrl, getUriWithOrg } from '@services/config/config'
-import {
-  Video,
-  Sparkles,
-  X,
-  Pencil,
-  MoreVertical,
-  Eye,
-  Save,
-  File,
-} from 'lucide-react'
-import { mutate } from 'swr'
-import { revalidateTags } from '@services/utils/ts/requests'
-import { useRouter } from 'next/navigation'
-import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import { deleteActivity, updateActivity } from '@services/courses/activities'
-import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { revalidateTags } from '@services/utils/ts/requests'
+import {
+  Eye,
+  File,
+  MoreVertical,
+  Pencil,
+  Save,
+  Sparkles,
+  Video,
+  X,
+} from 'lucide-react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import React from 'react'
+import { mutate } from 'swr'
 
 interface ModifiedActivityInterface {
   activityId: string
@@ -46,7 +46,7 @@ function Activity(props: any) {
       modifiedActivity?.activityId === activityId &&
       selectedActivity !== undefined
     ) {
-      let modifiedActivityCopy = {
+      const modifiedActivityCopy = {
         ...props.activity,
         name: modifiedActivity.activityName,
       }

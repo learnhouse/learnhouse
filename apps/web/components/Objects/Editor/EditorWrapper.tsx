@@ -1,11 +1,11 @@
 'use client'
-import { default as React, type JSX } from 'react'
-import Editor from './Editor'
-import { updateActivity } from '@services/courses/activities'
-import { toast } from 'react-hot-toast'
-import Toast from '@components/Objects/StyledElements/Toast/Toast'
-import { OrgProvider } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { OrgProvider } from '@components/Contexts/OrgContext'
+import Toast from '@components/Objects/StyledElements/Toast/Toast'
+import { updateActivity } from '@services/courses/activities'
+import { type JSX, default as React } from 'react'
+import { toast } from 'react-hot-toast'
+import Editor from './Editor'
 
 interface EditorWrapperProps {
   content: string
@@ -19,7 +19,7 @@ function EditorWrapper(props: EditorWrapperProps): JSX.Element {
   const access_token = session?.data?.tokens?.access_token
 
   async function setContent(content: any) {
-    let activity = props.activity
+    const activity = props.activity
     activity.content = content
 
     toast.promise(
@@ -44,26 +44,23 @@ function EditorWrapper(props: EditorWrapperProps): JSX.Element {
       }
     )
   }
-
-  {
-    return (
-      <>
-        <Toast></Toast>
-        <OrgProvider orgslug={props.org.slug}>
-          {!session.isLoading && (
-            <Editor
-              org={props.org}
-              course={props.course}
-              activity={props.activity}
-              content={props.content}
-              setContent={setContent}
-              session={session}
-            ></Editor>
-          )}
-        </OrgProvider>
-      </>
-    )
-  }
+  return (
+    <>
+      <Toast></Toast>
+      <OrgProvider orgslug={props.org.slug}>
+        {!session.isLoading && (
+          <Editor
+            org={props.org}
+            course={props.course}
+            activity={props.activity}
+            content={props.content}
+            setContent={setContent}
+            session={session}
+          ></Editor>
+        )}
+      </OrgProvider>
+    </>
+  )
 }
 
 export default EditorWrapper

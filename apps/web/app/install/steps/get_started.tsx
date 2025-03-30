@@ -1,7 +1,7 @@
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 import PageLoading from '@components/Objects/Loaders/PageLoading'
 import { getAPIUrl } from '@services/config/config'
 import { swrFetcher } from '@services/utils/ts/requests'
-import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useRouter } from 'next/navigation'
 import React, { useEffect } from 'react'
 import useSWR, { mutate } from 'swr'
@@ -11,7 +11,7 @@ function GetStarted() {
   const access_token = session?.data?.tokens?.access_token
   const {
     data: install,
-    error: error,
+    error,
     isLoading,
   } = useSWR(`${getAPIUrl()}install/latest`, (url) =>
     swrFetcher(url, access_token)
@@ -19,7 +19,7 @@ function GetStarted() {
   const router = useRouter()
 
   async function startInstallation() {
-    let res = await fetch(`${getAPIUrl()}install/start`, {
+    const res = await fetch(`${getAPIUrl()}install/start`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

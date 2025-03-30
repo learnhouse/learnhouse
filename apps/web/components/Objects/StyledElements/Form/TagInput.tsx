@@ -1,5 +1,10 @@
-import React, { useState, Dispatch, SetStateAction, useEffect } from 'react'
-import { Tag, TagInput } from 'emblor'
+import { type Tag, TagInput } from 'emblor'
+import React, {
+  useState,
+  type Dispatch,
+  type SetStateAction,
+  useEffect,
+} from 'react'
 
 interface FormTagInputProps {
   value: string

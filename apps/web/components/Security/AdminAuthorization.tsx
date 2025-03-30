@@ -1,11 +1,12 @@
 'use client'
-import React, { useEffect, useState, useCallback, useMemo } from 'react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { useOrg } from '@components/Contexts/OrgContext'
 import useAdminStatus from '@components/Hooks/useAdminStatus'
-import { usePathname, useRouter } from 'next/navigation'
 import PageLoading from '@components/Objects/Loaders/PageLoading'
 import { getUriWithoutOrg } from '@services/config/config'
-import { useOrg } from '@components/Contexts/OrgContext'
+import { usePathname, useRouter } from 'next/navigation'
+import type React from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 type AuthorizationProps = {
   children: React.ReactNode

@@ -1,8 +1,8 @@
 import { getUriWithOrg } from '@services/config/config'
+import { getOrgCollections } from '@services/courses/collections'
 import { getOrgCourses } from '@services/courses/courses'
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
-import { getOrgCollections } from '@services/courses/collections'
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 
 export async function GET(request: NextRequest) {
   const orgSlug = request.headers.get('X-Sitemap-Orgslug')

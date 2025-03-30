@@ -1,19 +1,4 @@
-import {
-  useCourse,
-  useCourseDispatch,
-} from '@components/Contexts/CourseContext'
-import { useLHSession } from '@components/Contexts/LHSessionContext'
-import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
-import { getAPIUrl } from '@services/config/config'
-import {
-  editContributor,
-  getCourseContributors,
-} from '@services/courses/courses'
-import { swrFetcher } from '@services/utils/ts/requests'
-import { Check, ChevronDown, UserPen, Users } from 'lucide-react'
-import React, { useEffect, useState } from 'react'
-import toast from 'react-hot-toast'
-import useSWR, { mutate } from 'swr'
+import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,8 +13,20 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Button } from '@/components/ui/button'
+import {
+  useCourse,
+  useCourseDispatch,
+} from '@components/Contexts/CourseContext'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
+import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import UserAvatar from '@components/Objects/UserAvatar'
+import { getAPIUrl } from '@services/config/config'
+import { editContributor } from '@services/courses/courses'
+import { swrFetcher } from '@services/utils/ts/requests'
+import { Check, ChevronDown, UserPen, Users } from 'lucide-react'
+import React, { useEffect, useState } from 'react'
+import toast from 'react-hot-toast'
+import useSWR, { mutate } from 'swr'
 
 type EditCourseContributorsProps = {
   orgslug: string

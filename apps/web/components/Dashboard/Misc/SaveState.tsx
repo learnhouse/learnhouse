@@ -1,17 +1,17 @@
 'use client'
-import { getAPIUrl } from '@services/config/config'
-import { updateCourseOrderStructure } from '@services/courses/chapters'
-import { revalidateTags } from '@services/utils/ts/requests'
 import {
   useCourse,
   useCourseDispatch,
 } from '@components/Contexts/CourseContext'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { getAPIUrl } from '@services/config/config'
+import { updateCourseOrderStructure } from '@services/courses/chapters'
+import { updateCourse } from '@services/courses/courses'
+import { revalidateTags } from '@services/utils/ts/requests'
 import { Check, SaveAllIcon, Timer } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import React, { useEffect } from 'react'
 import { mutate } from 'swr'
-import { updateCourse } from '@services/courses/courses'
-import { useLHSession } from '@components/Contexts/LHSessionContext'
 
 function SaveState(props: { orgslug: string }) {
   const course = useCourse() as any

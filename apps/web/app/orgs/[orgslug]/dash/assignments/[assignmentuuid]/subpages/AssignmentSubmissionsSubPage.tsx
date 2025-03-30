@@ -1,6 +1,9 @@
+import { AssignmentProvider } from '@components/Contexts/Assignments/AssignmentContext'
+import AssignmentSubmissionProvider from '@components/Contexts/Assignments/AssignmentSubmissionContext'
+import { AssignmentsTaskProvider } from '@components/Contexts/Assignments/AssignmentsTaskContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import UserAvatar from '@components/Objects/UserAvatar'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
+import UserAvatar from '@components/Objects/UserAvatar'
 import { getAPIUrl } from '@services/config/config'
 import { getUserAvatarMediaDirectory } from '@services/media/media'
 import { swrFetcher } from '@services/utils/ts/requests'
@@ -8,9 +11,6 @@ import { SendHorizonal, UserCheck, X } from 'lucide-react'
 import React, { useEffect } from 'react'
 import useSWR from 'swr'
 import EvaluateAssignment from './Modals/EvaluateAssignment'
-import { AssignmentProvider } from '@components/Contexts/Assignments/AssignmentContext'
-import { AssignmentsTaskProvider } from '@components/Contexts/Assignments/AssignmentsTaskContext'
-import AssignmentSubmissionProvider from '@components/Contexts/Assignments/AssignmentSubmissionContext'
 
 function AssignmentSubmissionsSubPage({
   assignment_uuid,

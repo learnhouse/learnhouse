@@ -1,7 +1,5 @@
 'use client'
-import { useFormik } from 'formik'
-import { useRouter } from 'next/navigation'
-import React, { useEffect } from 'react'
+import { useOrg } from '@components/Contexts/OrgContext'
 import FormLayout, {
   FormField,
   FormLabelAndMessage,
@@ -9,11 +7,13 @@ import FormLayout, {
   Textarea,
 } from '@components/Objects/StyledElements/Form/Form'
 import * as Form from '@radix-ui/react-form'
-import { AlertTriangle, Check, User } from 'lucide-react'
-import Link from 'next/link'
 import { signUpWithInviteCode } from '@services/auth/auth'
-import { useOrg } from '@components/Contexts/OrgContext'
+import { useFormik } from 'formik'
+import { AlertTriangle, Check, User } from 'lucide-react'
 import { signIn } from 'next-auth/react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import React, { useEffect } from 'react'
 
 const validate = (values: any) => {
   const errors: any = {}
@@ -72,8 +72,8 @@ function InviteOnlySignUpComponent(props: InviteOnlySignUpProps) {
       setError('')
       setMessage('')
       setIsSubmitting(true)
-      let res = await signUpWithInviteCode(values, props.inviteCode)
-      let message = await res.json()
+      const res = await signUpWithInviteCode(values, props.inviteCode)
+      const message = await res.json()
       if (res.status == 200) {
         //router.push(`/login`);
         setMessage('Your account was successfully created')

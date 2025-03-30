@@ -1,10 +1,10 @@
+import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { getAPIUrl } from '@services/config/config'
 import {
   createSampleDataInstall,
   updateInstall,
 } from '@services/install/install'
 import { swrFetcher } from '@services/utils/ts/requests'
-import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useRouter } from 'next/navigation'
 import React from 'react'
 import useSWR from 'swr'
@@ -14,7 +14,7 @@ function SampleData() {
   const access_token = session?.data?.tokens?.access_token
   const {
     data: install,
-    error: error,
+    error,
     isLoading,
   } = useSWR(`${getAPIUrl()}install/latest`, (url) =>
     swrFetcher(url, access_token)
@@ -23,12 +23,12 @@ function SampleData() {
 
   function createSampleData() {
     try {
-      let username = install.data[3].username
-      let slug = install.data[1].slug
+      const username = install.data[3].username
+      const slug = install.data[1].slug
 
       createSampleDataInstall(username, slug)
 
-      let install_data = { ...install.data, 4: { status: 'OK' } }
+      const install_data = { ...install.data, 4: { status: 'OK' } }
       updateInstall(install_data, 5)
 
       router.push('/install?step=5')

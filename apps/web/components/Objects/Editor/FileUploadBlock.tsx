@@ -1,11 +1,12 @@
-import { Loader } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { UploadIcon } from '@radix-ui/react-icons'
-import React, {
+import { Loader } from 'lucide-react'
+import type React from 'react'
+import type {
   ButtonHTMLAttributes,
   HTMLAttributes,
   InputHTMLAttributes,
 } from 'react'
-import { cn } from '@/lib/utils'
 
 const FileUploadBlockInput: React.FC<InputHTMLAttributes<HTMLInputElement>> = ({
   onChange,

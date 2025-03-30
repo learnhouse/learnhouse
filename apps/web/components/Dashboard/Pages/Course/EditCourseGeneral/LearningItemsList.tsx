@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react'
-import { Plus, X, Link as LinkIcon, Smile } from 'lucide-react'
-import Picker from '@emoji-mart/react'
-import data from '@emoji-mart/data'
 import { Input } from '@components/ui/input'
+import data from '@emoji-mart/data'
+import Picker from '@emoji-mart/react'
+import { Link as LinkIcon, Plus, X } from 'lucide-react'
+import React, { useState, useEffect, useRef } from 'react'
 
 interface LearningItem {
   id: string
