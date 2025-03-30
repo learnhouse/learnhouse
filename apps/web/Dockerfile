@@ -39,7 +39,7 @@ RUN \
 FROM base AS runner
 WORKDIR /app
 
-# Install curl 
+# Install curl
 RUN apk add --no-cache curl
 
 ENV NODE_ENV production

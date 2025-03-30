@@ -1,5 +1,5 @@
 # Base image
-FROM python:3.12.3-slim-bookworm as base
+FROM python:3.12.3-slim-bookworm AS base
 
 # Install Nginx, curl, and build-essential
 RUN apt update && apt install -y nginx curl build-essential \
@@ -22,13 +22,13 @@ ENV NEXT_PUBLIC_LEARNHOUSE_DOMAIN=localhost
 WORKDIR /app/web
 COPY ./apps/web/package.json ./apps/web/pnpm-lock.yaml* ./
 COPY ./apps/web /app/web
-RUN rm -f .env* 
+RUN rm -f .env*
 RUN if [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm i --frozen-lockfile && pnpm run build; \
     else echo "Lockfile not found." && exit 1; \
     fi
 
 # Final image
-FROM base as runner 
+FROM base AS runner
 RUN addgroup --system --gid 1001 system \
     && adduser --system --uid 1001 app \
     && mkdir .next \

@@ -1,0 +1,56 @@
+# All node_modules directories
+**/node_modules
+**/dist
+**/.next
+
+# All secrets
+**/.env.local
+**/.env.*.local
+
+# By default all git files
+.git
+**/.gitignore
+.gitattributes
+.github
+
+# Tools caches
+.cache
+**/*.tsbuildinfo
+**/.eslintcache
+**/__pycache__
+
+# eslint
+**/.eslintrc.cjs
+**/lint-staged.config.js
+
+# npm
+!.npmrc
+
+# Docker related
+.dockerignore
+dockers
+*Dockerfile*
+*docker-compose*
+
+# Log files
+logs
+**/*.log
+
+# Temp files
+tmp
+*.tmp
+
+# IDE related
+.idea
+.vscode
+
+# other
+**/db
+**/.assets
+**/.temporary
+**.DS_Store
+docs
+**/*.md
+out
+.env*
+**/.venv
