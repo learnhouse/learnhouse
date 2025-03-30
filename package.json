@@ -1,16 +1,16 @@
 {
-  "private": true,
-  "scripts": {
-    "build": "turbo run build",
-    "start": "turbo run start",
-    "dev": "turbo run dev",
-    "lint": "turbo run lint",
-    "format": "prettier --write \"**/*.{js,ts,tsx,md}\""
-  },
-  "devDependencies": {
-    "eslint": "^8.57.1",
-    "prettier": "^3.5.3",
-    "turbo": "^2.4.4"
-  },
-  "packageManager": "pnpm@10.7.0"
+	"private": true,
+	"scripts": {
+		"build": "turbo run build",
+		"start": "turbo run start",
+		"dev": "turbo run dev",
+		"lint": "turbo run lint",
+		"format": "prettier --write \"**/*.{js,ts,tsx,md}\""
+	},
+	"devDependencies": {
+		"eslint": "^8.57.1",
+		"prettier": "^3.5.3",
+		"turbo": "^2.4.4"
+	},
+	"packageManager": "pnpm@10.7.0"
 }
