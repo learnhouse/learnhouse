@@ -40,6 +40,7 @@ export interface LandingUsers {
   name: string;
   description: string;
   image_url: string;
+  username?: string;
 }
 
 export interface LandingPeople {

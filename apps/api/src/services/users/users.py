@@ -424,6 +424,30 @@ async def read_user_by_uuid(
     return user
 
 
+async def read_user_by_username(
+    request: Request,
+    db_session: Session,
+    current_user: PublicUser | AnonymousUser,
+    username: str,
+):
+    # Get user
+    statement = select(User).where(User.username == username)
+    user = db_session.exec(statement).first()
+
+    if not user:
+        raise HTTPException(
+            status_code=400,
+            detail="User does not exist",
+        )
+
+    # RBAC check
+    await rbac_check(request, current_user, "read", user.user_uuid, db_session)
+
+    user = UserRead.model_validate(user)
+
+    return user
+
+
 async def get_user_session(
     request: Request,
     db_session: Session,

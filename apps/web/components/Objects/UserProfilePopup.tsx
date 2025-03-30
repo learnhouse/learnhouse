@@ -120,7 +120,7 @@ const UserProfilePopup = ({ children, userId }: UserProfilePopupProps) => {
                         variant="ghost"
                         size="icon"
                         className="h-6 w-6 text-gray-600 hover:text-gray-900 flex-shrink-0"
-                        onClick={() => router.push(`/profile/${userId}`)}
+                        onClick={() => userData.username && router.push(`/user/${userData.username}`)}
                       >
                         <ExternalLink className="w-4 h-4" />
                       </Button>

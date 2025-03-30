@@ -28,6 +28,7 @@ from src.services.users.users import (
     get_user_session,
     read_user_by_id,
     read_user_by_uuid,
+    read_user_by_username,
     update_user,
     update_user_avatar,
     update_user_password,
@@ -168,6 +169,20 @@ async def api_get_user_by_uuid(
     Get User by UUID
     """
     return await read_user_by_uuid(request, db_session, current_user, user_uuid)
+
+
+@router.get("/username/{username}", response_model=UserRead, tags=["users"])
+async def api_get_user_by_username(
+    *,
+    request: Request,
+    db_session: Session = Depends(get_db_session),
+    current_user: PublicUser = Depends(get_current_user),
+    username: str,
+) -> UserRead:
+    """
+    Get User by Username
+    """
+    return await read_user_by_username(request, db_session, current_user, username)
 
 
 @router.put("/{user_id}", response_model=UserRead, tags=["users"])

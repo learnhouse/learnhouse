@@ -2,6 +2,7 @@ import { getAPIUrl } from '@services/config/config'
 import {
   RequestBodyWithAuthHeader,
   errorHandling,
+  getResponseMetadata,
 } from '@services/utils/ts/requests'
 
 /*
@@ -18,6 +19,6 @@ export async function updateProfile(
     `${getAPIUrl()}users/` + user_id,
     RequestBodyWithAuthHeader('PUT', data, null, access_token)
   )
-  const res = await errorHandling(result)
+  const res = await getResponseMetadata(result)
   return res
 }

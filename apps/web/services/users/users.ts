@@ -16,6 +16,15 @@ export async function getUser(user_id: string, access_token: string) {
   return res
 }
 
+export async function getUserByUsername(username: string, access_token: string) {
+  const result = await fetch(
+    `${getAPIUrl()}users/username/${username}`,
+    RequestBodyWithAuthHeader('GET', null, null, access_token)
+  )
+  const res = await errorHandling(result)
+  return res
+}
+
 export async function updateUserAvatar(
   user_uuid: any,
   avatar_file: any,
