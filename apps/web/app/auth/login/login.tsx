@@ -13,7 +13,7 @@ import React from 'react'
 import { AlertTriangle, UserRoundPlus } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { signIn } from "next-auth/react"
+import { signIn } from 'next-auth/react'
 import { getUriWithOrg, getUriWithoutOrg } from '@services/config/config'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 
@@ -41,8 +41,8 @@ const validate = (values: any) => {
 
 const LoginClient = (props: LoginClientProps) => {
   const [isSubmitting, setIsSubmitting] = React.useState(false)
-  const router = useRouter();
-  const session = useLHSession() as any;
+  const router = useRouter()
+  const session = useLHSession() as any
 
   const [error, setError] = React.useState('')
   const formik = useFormik({
@@ -53,30 +53,30 @@ const LoginClient = (props: LoginClientProps) => {
     validate,
     validateOnBlur: true,
     validateOnChange: true,
-    onSubmit: async (values, {validateForm, setErrors, setSubmitting}) => {
+    onSubmit: async (values, { validateForm, setErrors, setSubmitting }) => {
       setIsSubmitting(true)
-      const errors = await validateForm(values);
+      const errors = await validateForm(values)
       if (Object.keys(errors).length > 0) {
-        setErrors(errors);
-        setSubmitting(false);
-        return;
+        setErrors(errors)
+        setSubmitting(false)
+        return
       }
-      
+
       const res = await signIn('credentials', {
         redirect: false,
         email: values.email,
         password: values.password,
-        callbackUrl: '/redirect_from_auth'
-      });
+        callbackUrl: '/redirect_from_auth',
+      })
       if (res && res.error) {
-        setError("Wrong Email or password");
-        setIsSubmitting(false);
+        setError('Wrong Email or password')
+        setIsSubmitting(false)
       } else {
         await signIn('credentials', {
           email: values.email,
           password: values.password,
-          callbackUrl: '/redirect_from_auth'
-        });
+          callbackUrl: '/redirect_from_auth',
+        })
       }
     },
   })
@@ -148,7 +148,6 @@ const LoginClient = (props: LoginClientProps) => {
                   onChange={formik.handleChange}
                   value={formik.values.email}
                   type="email"
-                  
                 />
               </Form.Control>
             </FormField>
@@ -164,13 +163,15 @@ const LoginClient = (props: LoginClientProps) => {
                   onChange={formik.handleChange}
                   value={formik.values.password}
                   type="password"
-                  
                 />
               </Form.Control>
             </FormField>
             <div>
               <Link
-                href={{ pathname: getUriWithoutOrg('/forgot'), query: props.org.slug ? { orgslug: props.org.slug } : null }}
+                href={{
+                  pathname: getUriWithoutOrg('/forgot'),
+                  query: props.org.slug ? { orgslug: props.org.slug } : null,
+                }}
                 passHref
                 className="text-xs text-gray-500 hover:underline"
               >
@@ -179,21 +180,35 @@ const LoginClient = (props: LoginClientProps) => {
             </div>
             <div className="flex  py-4">
               <Form.Submit asChild>
-                <button  className="w-full bg-black text-white font-bold text-center p-2 rounded-md shadow-md hover:cursor-pointer">
+                <button className="w-full bg-black text-white font-bold text-center p-2 rounded-md shadow-md hover:cursor-pointer">
                   {isSubmitting ? 'Loading...' : 'Login'}
                 </button>
               </Form.Submit>
             </div>
           </FormLayout>
-          <div className='flex h-0.5 rounded-2xl bg-slate-100 mt-5  mx-10'></div>
-          <div className='flex justify-center py-5 mx-auto'>OR </div>
-          <div className='flex flex-col space-y-4'>
-            <Link href={{ pathname: getUriWithoutOrg('/signup'), query: props.org.slug ? { orgslug: props.org.slug } : null }}  className="flex justify-center items-center py-3 text-md w-full bg-gray-800 text-gray-300 space-x-3 font-semibold text-center p-2 rounded-md shadow-sm hover:cursor-pointer">
+          <div className="flex h-0.5 rounded-2xl bg-slate-100 mt-5  mx-10"></div>
+          <div className="flex justify-center py-5 mx-auto">OR </div>
+          <div className="flex flex-col space-y-4">
+            <Link
+              href={{
+                pathname: getUriWithoutOrg('/signup'),
+                query: props.org.slug ? { orgslug: props.org.slug } : null,
+              }}
+              className="flex justify-center items-center py-3 text-md w-full bg-gray-800 text-gray-300 space-x-3 font-semibold text-center p-2 rounded-md shadow-sm hover:cursor-pointer"
+            >
               <UserRoundPlus size={17} />
               <span>Sign up</span>
             </Link>
-            <button onClick={() => signIn('google', { callbackUrl: '/redirect_from_auth' })} className="flex justify-center py-3 text-md w-full bg-white text-slate-600 space-x-3 font-semibold text-center p-2 rounded-md shadow-sm hover:cursor-pointer">
-              <img src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg" alt="" />
+            <button
+              onClick={() =>
+                signIn('google', { callbackUrl: '/redirect_from_auth' })
+              }
+              className="flex justify-center py-3 text-md w-full bg-white text-slate-600 space-x-3 font-semibold text-center p-2 rounded-md shadow-sm hover:cursor-pointer"
+            >
+              <img
+                src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg"
+                alt=""
+              />
               <span>Sign in with Google</span>
             </button>
           </div>

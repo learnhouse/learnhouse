@@ -1,12 +1,12 @@
-import { ReactNodeViewRenderer } from "@tiptap/react";
-import { mergeAttributes, Node } from "@tiptap/core";
-import BadgesExtension from "@/components/Objects/Editor/Extensions/Badges/BadgesExtension";
+import { ReactNodeViewRenderer } from '@tiptap/react'
+import { mergeAttributes, Node } from '@tiptap/core'
+import BadgesExtension from '@/components/Objects/Editor/Extensions/Badges/BadgesExtension'
 
 export default Node.create({
-  name: "badge",
-  group: "block",
+  name: 'badge',
+  group: 'block',
   draggable: true,
-  content: "text*",
+  content: 'text*',
 
   // TODO : multi line support
 
@@ -18,22 +18,22 @@ export default Node.create({
       emoji: {
         default: '💡',
       },
-    };
+    }
   },
 
   parseHTML() {
     return [
       {
-        tag: "badge",
+        tag: 'badge',
       },
-    ];
+    ]
   },
 
   renderHTML({ HTMLAttributes }) {
-    return ["badge", mergeAttributes(HTMLAttributes), 0];
+    return ['badge', mergeAttributes(HTMLAttributes), 0]
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(BadgesExtension);
+    return ReactNodeViewRenderer(BadgesExtension)
   },
-});
+})

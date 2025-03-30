@@ -25,5 +25,5 @@ export default function StyledComponentsRegistry({
     <StyleSheetManager sheet={styledComponentsStyleSheet.instance}>
       {children as React.ReactElement<any> | number | string}
     </StyleSheetManager>
-  );
+  )
 }

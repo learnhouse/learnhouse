@@ -33,7 +33,6 @@ import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
 import Link from 'next/link'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 
-
 // Lowlight
 import { common, createLowlight } from 'lowlight'
 const lowlight = createLowlight(common)
@@ -69,12 +68,10 @@ function Editor(props: Editor) {
   const is_ai_feature_enabled = useGetAIFeatures({ feature: 'editor' })
   const [isButtonAvailable, setIsButtonAvailable] = React.useState(false)
 
-
   React.useEffect(() => {
     if (is_ai_feature_enabled) {
       setIsButtonAvailable(true)
     }
-
   }, [is_ai_feature_enabled])
 
   // remove course_ from course_uuid
@@ -151,7 +148,6 @@ function Editor(props: Editor) {
     immediatelyRender: false,
   })
 
-
   const isMobile = useMediaQuery('(max-width: 767px)')
   if (isMobile) {
     // TODO: Work on a better editor mobile experience
@@ -159,7 +155,7 @@ function Editor(props: Editor) {
       <div className="h-screen w-full bg-[#f8f8f8] flex items-center justify-center p-4">
         <div className="bg-white p-6 rounded-lg shadow-md text-center">
           <h2 className="text-xl font-bold mb-4">Desktop Only</h2>
-          <Monitor className='mx-auto my-5' size={60} />
+          <Monitor className="mx-auto my-5" size={60} />
           <p>The editor is only accessible from a desktop device.</p>
           <p>Please switch to a desktop to view.</p>
         </div>
@@ -195,11 +191,15 @@ function Editor(props: Editor) {
                 </Link>
                 <Link target="_blank" href={`/course/${course_uuid}`}>
                   <EditorInfoThumbnail
-                    src={`${props.course.thumbnail_image ? getCourseThumbnailMediaDirectory(
-                      props.org?.org_uuid,
-                      props.course.course_uuid,
+                    src={`${
                       props.course.thumbnail_image
-                    ) : getUriWithOrg(props.org?.slug,'/empty_thumbnail.png')}`}
+                        ? getCourseThumbnailMediaDirectory(
+                            props.org?.org_uuid,
+                            props.course.course_uuid,
+                            props.course.thumbnail_image
+                          )
+                        : getUriWithOrg(props.org?.slug, '/empty_thumbnail.png')
+                    }`}
                     alt=""
                   ></EditorInfoThumbnail>
                 </Link>
@@ -281,7 +281,11 @@ function Editor(props: Editor) {
               />
 
               <EditorUserProfileWrapper>
-                <UserAvatar border="border-4" use_with_session={true} width={45} />
+                <UserAvatar
+                  border="border-4"
+                  use_with_session={true}
+                  width={45}
+                />
               </EditorUserProfileWrapper>
             </EditorUsersSection>
           </EditorTop>
@@ -591,8 +595,11 @@ export const EditorContentWrapper = styled.div`
 
     .selectedCell:after {
       background: rgba(139, 139, 139, 0.2);
-      content: "";
-      left: 0; right: 0; top: 0; bottom: 0;
+      content: '';
+      left: 0;
+      right: 0;
+      top: 0;
+      bottom: 0;
       pointer-events: none;
       position: absolute;
       z-index: 2;

@@ -3,7 +3,26 @@ import Link from 'next/link'
 import { getAPIUrl, getUriWithOrg } from '@services/config/config'
 import Canva from '@components/Objects/Activities/DynamicCanva/DynamicCanva'
 import VideoActivity from '@components/Objects/Activities/Video/Video'
-import { BookOpenCheck, Check, CheckCircle, ChevronDown, ChevronLeft, ChevronRight, FileText, Folder, List, Menu, MoreVertical, UserRoundPen, Video, Layers, ListFilter, ListTree, X, Edit2 } from 'lucide-react'
+import {
+  BookOpenCheck,
+  Check,
+  CheckCircle,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  FileText,
+  Folder,
+  List,
+  Menu,
+  MoreVertical,
+  UserRoundPen,
+  Video,
+  Layers,
+  ListFilter,
+  ListTree,
+  X,
+  Edit2,
+} from 'lucide-react'
 import { markActivityAsComplete } from '@services/courses/activity'
 import DocumentPdfActivity from '@components/Objects/Activities/DocumentPdf/DocumentPdf'
 import ActivityIndicators from '@components/Pages/Courses/ActivityIndicators'
@@ -17,11 +36,17 @@ import AIActivityAsk from '@components/Objects/Activities/AI/AIActivityAsk'
 import AIChatBotProvider from '@components/Contexts/AI/AIChatBotContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import React, { useEffect } from 'react'
-import { getAssignmentFromActivityUUID, getFinalGrade, submitAssignmentForGrading } from '@services/courses/assignments'
+import {
+  getAssignmentFromActivityUUID,
+  getFinalGrade,
+  submitAssignmentForGrading,
+} from '@services/courses/assignments'
 import AssignmentStudentActivity from '@components/Objects/Activities/Assignment/AssignmentStudentActivity'
 import { AssignmentProvider } from '@components/Contexts/Assignments/AssignmentContext'
 import { AssignmentsTaskProvider } from '@components/Contexts/Assignments/AssignmentsTaskContext'
-import AssignmentSubmissionProvider, {  useAssignmentSubmission } from '@components/Contexts/Assignments/AssignmentSubmissionContext'
+import AssignmentSubmissionProvider, {
+  useAssignmentSubmission,
+} from '@components/Contexts/Assignments/AssignmentSubmissionContext'
 import toast from 'react-hot-toast'
 import { mutate } from 'swr'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
@@ -44,14 +69,14 @@ function ActivityClient(props: ActivityClientProps) {
   const activity = props.activity
   const course = props.course
   const org = useOrg() as any
-  const session = useLHSession() as any;
+  const session = useLHSession() as any
   const pathname = usePathname()
-  const access_token = session?.data?.tokens?.access_token;
+  const access_token = session?.data?.tokens?.access_token
   const [bgColor, setBgColor] = React.useState('bg-white')
-  const [assignment, setAssignment] = React.useState(null) as any;
-  const [markStatusButtonActive, setMarkStatusButtonActive] = React.useState(false);
-  const { contributorStatus } = useContributorStatus(courseuuid);
- 
+  const [assignment, setAssignment] = React.useState(null) as any
+  const [markStatusButtonActive, setMarkStatusButtonActive] =
+    React.useState(false)
+  const { contributorStatus } = useContributorStatus(courseuuid)
 
   function getChapterNameByActivityId(course: any, activity_id: any) {
     for (let i = 0; i < course.chapters.length; i++) {
@@ -67,24 +92,24 @@ function ActivityClient(props: ActivityClientProps) {
   }
 
   async function getAssignmentUI() {
-    const assignment = await getAssignmentFromActivityUUID(activity.activity_uuid, access_token)
+    const assignment = await getAssignmentFromActivityUUID(
+      activity.activity_uuid,
+      access_token
+    )
     setAssignment(assignment.data)
   }
 
   useEffect(() => {
     if (activity.activity_type == 'TYPE_DYNAMIC') {
-      setBgColor('bg-white nice-shadow');
+      setBgColor('bg-white nice-shadow')
+    } else if (activity.activity_type == 'TYPE_ASSIGNMENT') {
+      setMarkStatusButtonActive(false)
+      setBgColor('bg-white nice-shadow')
+      getAssignmentUI()
+    } else {
+      setBgColor('bg-zinc-950')
     }
-    else if (activity.activity_type == 'TYPE_ASSIGNMENT') {
-      setMarkStatusButtonActive(false);
-      setBgColor('bg-white nice-shadow');
-      getAssignmentUI();
-    }
-    else {
-      setBgColor('bg-zinc-950');
-    }
-  }
-    , [activity, pathname])
+  }, [activity, pathname])
 
   return (
     <>
@@ -96,7 +121,9 @@ function ActivityClient(props: ActivityClientProps) {
                 <div className="flex space-x-6">
                   <div className="flex">
                     <Link
-                      href={getUriWithOrg(orgslug, '') + `/course/${courseuuid}`}
+                      href={
+                        getUriWithOrg(orgslug, '') + `/course/${courseuuid}`
+                      }
                     >
                       <img
                         className="w-[100px] h-[57px] rounded-md drop-shadow-md"
@@ -126,14 +153,19 @@ function ActivityClient(props: ActivityClientProps) {
 
               <div className="flex justify-between items-center">
                 <div className="flex items-center space-x-3">
-                  <ActivityChapterDropdown 
+                  <ActivityChapterDropdown
                     course={course}
-                    currentActivityId={activity.activity_uuid ? activity.activity_uuid.replace('activity_', '') : activityid.replace('activity_', '')}
+                    currentActivityId={
+                      activity.activity_uuid
+                        ? activity.activity_uuid.replace('activity_', '')
+                        : activityid.replace('activity_', '')
+                    }
                     orgslug={orgslug}
                   />
                   <div className="flex flex-col -space-y-1">
                     <p className="font-bold text-gray-700 text-md">
-                      Chapter : {getChapterNameByActivityId(course, activity.id)}
+                      Chapter :{' '}
+                      {getChapterNameByActivityId(course, activity.id)}
                     </p>
                     <h1 className="font-bold text-gray-950 text-2xl first-letter:uppercase">
                       {activity.name}
@@ -141,45 +173,58 @@ function ActivityClient(props: ActivityClientProps) {
                   </div>
                 </div>
                 <div className="flex space-x-2 items-center">
-                  {activity && activity.published == true && activity.content.paid_access != false && (
-                    <AuthenticatedClientElement checkMethod="authentication">
-                      {activity.activity_type != 'TYPE_ASSIGNMENT' &&
-                        <>
-                          <AIActivityAsk activity={activity} />
-                          {contributorStatus === 'ACTIVE' && activity.activity_type == 'TYPE_DYNAMIC' && (
-                            <Link
-                              href={getUriWithOrg(orgslug, '') + `/course/${courseuuid}/activity/${activityid}/edit`}
-                              className="bg-emerald-600 rounded-full px-5 drop-shadow-md flex items-center space-x-2 p-2.5 text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out"
-                            >
-                              <Edit2 size={17} />
-                              <span className="text-xs font-bold">Contribute to Activity</span>
-                            </Link>
-                          )}
-                          <MoreVertical size={17} className="text-gray-300" />
-                          <MarkStatus
-                            activity={activity}
-                            activityid={activityid}
-                            course={course}
-                            orgslug={orgslug}
-                          />
-                        </>
-                      }
-                      {activity.activity_type == 'TYPE_ASSIGNMENT' &&
-                        <>
-                          <MoreVertical size={17} className="text-gray-300 " />
-                          <AssignmentSubmissionProvider assignment_uuid={assignment?.assignment_uuid}>
-                            <AssignmentTools
-                              assignment={assignment}
+                  {activity &&
+                    activity.published == true &&
+                    activity.content.paid_access != false && (
+                      <AuthenticatedClientElement checkMethod="authentication">
+                        {activity.activity_type != 'TYPE_ASSIGNMENT' && (
+                          <>
+                            <AIActivityAsk activity={activity} />
+                            {contributorStatus === 'ACTIVE' &&
+                              activity.activity_type == 'TYPE_DYNAMIC' && (
+                                <Link
+                                  href={
+                                    getUriWithOrg(orgslug, '') +
+                                    `/course/${courseuuid}/activity/${activityid}/edit`
+                                  }
+                                  className="bg-emerald-600 rounded-full px-5 drop-shadow-md flex items-center space-x-2 p-2.5 text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out"
+                                >
+                                  <Edit2 size={17} />
+                                  <span className="text-xs font-bold">
+                                    Contribute to Activity
+                                  </span>
+                                </Link>
+                              )}
+                            <MoreVertical size={17} className="text-gray-300" />
+                            <MarkStatus
                               activity={activity}
                               activityid={activityid}
                               course={course}
                               orgslug={orgslug}
                             />
-                          </AssignmentSubmissionProvider>
-                        </>
-                      }
-                    </AuthenticatedClientElement>
-                  )}
+                          </>
+                        )}
+                        {activity.activity_type == 'TYPE_ASSIGNMENT' && (
+                          <>
+                            <MoreVertical
+                              size={17}
+                              className="text-gray-300 "
+                            />
+                            <AssignmentSubmissionProvider
+                              assignment_uuid={assignment?.assignment_uuid}
+                            >
+                              <AssignmentTools
+                                assignment={assignment}
+                                activity={activity}
+                                activityid={activityid}
+                                course={course}
+                                orgslug={orgslug}
+                              />
+                            </AssignmentSubmissionProvider>
+                          </>
+                        )}
+                      </AuthenticatedClientElement>
+                    )}
                 </div>
               </div>
               {activity && activity.published == false && (
@@ -201,7 +246,10 @@ function ActivityClient(props: ActivityClientProps) {
                       {/* Activity Types */}
                       <div>
                         {activity.activity_type == 'TYPE_DYNAMIC' && (
-                          <Canva content={activity.content} activity={activity} />
+                          <Canva
+                            content={activity.content}
+                            activity={activity}
+                          />
                         )}
                         {activity.activity_type == 'TYPE_VIDEO' && (
                           <VideoActivity course={course} activity={activity} />
@@ -215,9 +263,15 @@ function ActivityClient(props: ActivityClientProps) {
                         {activity.activity_type == 'TYPE_ASSIGNMENT' && (
                           <div>
                             {assignment ? (
-                              <AssignmentProvider assignment_uuid={assignment?.assignment_uuid}>
+                              <AssignmentProvider
+                                assignment_uuid={assignment?.assignment_uuid}
+                              >
                                 <AssignmentsTaskProvider>
-                                  <AssignmentSubmissionProvider assignment_uuid={assignment?.assignment_uuid}>
+                                  <AssignmentSubmissionProvider
+                                    assignment_uuid={
+                                      assignment?.assignment_uuid
+                                    }
+                                  >
                                     <AssignmentStudentActivity />
                                   </AssignmentSubmissionProvider>
                                 </AssignmentsTaskProvider>
@@ -232,16 +286,22 @@ function ActivityClient(props: ActivityClientProps) {
                   )}
                 </>
               )}
-              
+
               {/* Activity Navigation */}
-              {activity && activity.published == true && activity.content.paid_access != false && (
-                <ActivityNavigation
-                  course={course}
-                  currentActivityId={activity.activity_uuid ? activity.activity_uuid.replace('activity_', '') : activityid.replace('activity_', '')}
-                  orgslug={orgslug}
-                />
-              )}
-              
+              {activity &&
+                activity.published == true &&
+                activity.content.paid_access != false && (
+                  <ActivityNavigation
+                    course={course}
+                    currentActivityId={
+                      activity.activity_uuid
+                        ? activity.activity_uuid.replace('activity_', '')
+                        : activityid.replace('activity_', '')
+                    }
+                    orgslug={orgslug}
+                  />
+                )}
+
               {<div style={{ height: '100px' }}></div>}
             </div>
           </GeneralWrapperStyled>
@@ -258,7 +318,7 @@ export function MarkStatus(props: {
   orgslug: string
 }) {
   const router = useRouter()
-  const session = useLHSession() as any;
+  const session = useLHSession() as any
   const isMobile = useMediaQuery('(max-width: 768px)')
   async function markActivityAsCompleteFront() {
     const trail = await markActivityAsComplete(
@@ -276,7 +336,8 @@ export function MarkStatus(props: {
     )
     if (run) {
       return run.steps.find(
-        (step: any) => (step.activity_id == props.activity.id) && (step.complete == true)
+        (step: any) =>
+          step.activity_id == props.activity.id && step.complete == true
       )
     }
   }
@@ -299,7 +360,9 @@ export function MarkStatus(props: {
           <i>
             <Check size={17}></Check>
           </i>{' '}
-          {!isMobile && <i className="not-italic text-xs font-bold">Mark as complete</i>}
+          {!isMobile && (
+            <i className="not-italic text-xs font-bold">Mark as complete</i>
+          )}
         </div>
       )}
     </>
@@ -314,8 +377,8 @@ function AssignmentTools(props: {
   assignment: any
 }) {
   const submission = useAssignmentSubmission() as any
-  const session = useLHSession() as any;
-  const [finalGrade, setFinalGrade] = React.useState(null) as any;
+  const session = useLHSession() as any
+  const [finalGrade, setFinalGrade] = React.useState(null) as any
 
   const submitForGradingUI = async () => {
     if (props.assignment) {
@@ -325,9 +388,10 @@ function AssignmentTools(props: {
       )
       if (res.success) {
         toast.success('Assignment submitted for grading')
-        mutate(`${getAPIUrl()}assignments/${props.assignment?.assignment_uuid}/submissions/me`,)
-      }
-      else {
+        mutate(
+          `${getAPIUrl()}assignments/${props.assignment?.assignment_uuid}/submissions/me`
+        )
+      } else {
         toast.error('Failed to submit assignment for grading')
       }
     }
@@ -338,49 +402,52 @@ function AssignmentTools(props: {
       session.data?.user?.id,
       props.assignment?.assignment_uuid,
       session.data?.tokens?.access_token
-    );
+    )
 
     if (res.success) {
-      const { grade, max_grade, grading_type } = res.data;
-      let displayGrade;
+      const { grade, max_grade, grading_type } = res.data
+      let displayGrade
 
       switch (grading_type) {
         case 'ALPHABET':
-          displayGrade = convertNumericToAlphabet(grade, max_grade);
-          break;
+          displayGrade = convertNumericToAlphabet(grade, max_grade)
+          break
         case 'NUMERIC':
-          displayGrade = `${grade}/${max_grade}`;
-          break;
+          displayGrade = `${grade}/${max_grade}`
+          break
         case 'PERCENTAGE':
-          const percentage = (grade / max_grade) * 100;
-          displayGrade = `${percentage.toFixed(2)}%`;
-          break;
+          const percentage = (grade / max_grade) * 100
+          displayGrade = `${percentage.toFixed(2)}%`
+          break
         default:
-          displayGrade = 'Unknown grading type';
+          displayGrade = 'Unknown grading type'
       }
 
       // Use displayGrade here, e.g., update state or display it
-      setFinalGrade(displayGrade);
+      setFinalGrade(displayGrade)
     } else {
     }
-  };
+  }
 
   // Helper function to convert numeric grade to alphabet grade
   function convertNumericToAlphabet(grade: any, maxGrade: any) {
-    const percentage = (grade / maxGrade) * 100;
-    if (percentage >= 90) return 'A';
-    if (percentage >= 80) return 'B';
-    if (percentage >= 70) return 'C';
-    if (percentage >= 60) return 'D';
-    return 'F';
+    const percentage = (grade / maxGrade) * 100
+    if (percentage >= 90) return 'A'
+    if (percentage >= 80) return 'B'
+    if (percentage >= 70) return 'C'
+    if (percentage >= 60) return 'D'
+    return 'F'
   }
 
   useEffect(() => {
-    if ( submission && submission.length > 0 && submission[0].submission_status === 'GRADED') {
-      getGradingBasedOnMethod();
+    if (
+      submission &&
+      submission.length > 0 &&
+      submission[0].submission_status === 'GRADED'
+    ) {
+      getGradingBasedOnMethod()
     }
-  }
-    , [submission, props.assignment])
+  }, [submission, props.assignment])
 
   if (!submission || submission.length === 0) {
     return (
@@ -413,7 +480,12 @@ function AssignmentTools(props: {
     return (
       <div className="bg-teal-600 rounded-full px-5 drop-shadow-md flex items-center space-x-2 p-2.5 text-white transition delay-150 duration-300 ease-in-out">
         <CheckCircle size={17} />
-        <span className="text-xs flex space-x-2 font-bold items-center"><span>Graded </span> <span className='bg-white text-teal-800 px-1 py-0.5 rounded-md'>{finalGrade}</span></span>
+        <span className="text-xs flex space-x-2 font-bold items-center">
+          <span>Graded </span>{' '}
+          <span className="bg-white text-teal-800 px-1 py-0.5 rounded-md">
+            {finalGrade}
+          </span>
+        </span>
       </div>
     )
   }
@@ -427,47 +499,50 @@ function ActivityChapterDropdown(props: {
   currentActivityId: string
   orgslug: string
 }): React.ReactNode {
-  const [isOpen, setIsOpen] = React.useState(false);
-  const dropdownRef = React.useRef<HTMLDivElement>(null);
-  const isMobile = useMediaQuery('(max-width: 768px)');
+  const [isOpen, setIsOpen] = React.useState(false)
+  const dropdownRef = React.useRef<HTMLDivElement>(null)
+  const isMobile = useMediaQuery('(max-width: 768px)')
 
   // Close dropdown when clicking outside
   React.useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false)
       }
     }
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside)
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
 
   const toggleDropdown = () => {
-    setIsOpen(!isOpen);
-  };
+    setIsOpen(!isOpen)
+  }
 
   // Function to get the appropriate icon for activity type
   const getActivityTypeIcon = (activityType: string) => {
     switch (activityType) {
       case 'TYPE_VIDEO':
-        return <Video size={16} />;
+        return <Video size={16} />
       case 'TYPE_DOCUMENT':
-        return <FileText size={16} />;
+        return <FileText size={16} />
       case 'TYPE_DYNAMIC':
-        return <Layers size={16} />;
+        return <Layers size={16} />
       case 'TYPE_ASSIGNMENT':
-        return <BookOpenCheck size={16} />;
+        return <BookOpenCheck size={16} />
       default:
-        return <FileText size={16} />;
+        return <FileText size={16} />
     }
-  };
+  }
 
   // Function to get the appropriate badge color for activity type
   const getActivityTypeBadgeColor = (activityType: string) => {
-    return 'bg-gray-100 text-gray-600';
-  };
+    return 'bg-gray-100 text-gray-600'
+  }
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -479,19 +554,21 @@ function ActivityChapterDropdown(props: {
       >
         <ListTree size={18} className="text-gray-700" />
       </button>
-      
+
       {isOpen && (
-        <div className={`absolute z-50 mt-2 ${isMobile ? 'left-0 w-[90vw] sm:w-80' : 'left-0 w-80'} max-h-[70vh] cursor-pointer overflow-y-auto bg-white rounded-lg shadow-xl border border-gray-200 py-2 animate-in fade-in duration-200`}>
+        <div
+          className={`absolute z-50 mt-2 ${isMobile ? 'left-0 w-[90vw] sm:w-80' : 'left-0 w-80'} max-h-[70vh] cursor-pointer overflow-y-auto bg-white rounded-lg shadow-xl border border-gray-200 py-2 animate-in fade-in duration-200`}
+        >
           <div className="px-4 py-2 border-b border-gray-100 flex justify-between items-center">
             <h3 className="font-bold text-gray-800">Course Content</h3>
-            <button 
+            <button
               onClick={() => setIsOpen(false)}
               className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100 cursor-pointer"
             >
               <X size={18} />
             </button>
           </div>
-          
+
           <div className="py-1">
             {props.course.chapters.map((chapter: any) => (
               <div key={chapter.id} className="mb-2">
@@ -504,41 +581,57 @@ function ActivityChapterDropdown(props: {
                 <div className="py-1">
                   {chapter.activities.map((activity: any) => {
                     // Remove any prefixes from UUIDs
-                    const cleanActivityUuid = activity.activity_uuid?.replace('activity_', '');
-                    const cleanCourseUuid = props.course.course_uuid?.replace('course_', '');
-                    
+                    const cleanActivityUuid = activity.activity_uuid?.replace(
+                      'activity_',
+                      ''
+                    )
+                    const cleanCourseUuid = props.course.course_uuid?.replace(
+                      'course_',
+                      ''
+                    )
+
                     return (
                       <Link
                         key={activity.id}
-                        href={getUriWithOrg(props.orgslug, '') + `/course/${cleanCourseUuid}/activity/${cleanActivityUuid}`}
+                        href={
+                          getUriWithOrg(props.orgslug, '') +
+                          `/course/${cleanCourseUuid}/activity/${cleanActivityUuid}`
+                        }
                         prefetch={false}
                         onClick={() => setIsOpen(false)}
                       >
-                        <div 
+                        <div
                           className={`px-4 py-2.5 hover:bg-gray-100 transition-colors flex items-center ${
-                            cleanActivityUuid === props.currentActivityId.replace('activity_', '') ? 'bg-gray-50 border-l-2 border-gray-300 pl-3 font-medium' : ''
+                            cleanActivityUuid ===
+                            props.currentActivityId.replace('activity_', '')
+                              ? 'bg-gray-50 border-l-2 border-gray-300 pl-3 font-medium'
+                              : ''
                           }`}
                         >
                           <div className="flex-1 flex items-center gap-2">
                             <span className="text-gray-400">
                               {getActivityTypeIcon(activity.activity_type)}
                             </span>
-                            <div className="text-sm">
-                              {activity.name}
-                            </div>
+                            <div className="text-sm">{activity.name}</div>
                           </div>
-                          {props.course.trail?.runs?.find(
-                            (run: any) => run.course_id === props.course.id
-                          )?.steps?.find(
-                            (step: any) => (step.activity_id === activity.id || step.activity_id === activity.activity_uuid) && step.complete === true
-                          ) && (
+                          {props.course.trail?.runs
+                            ?.find(
+                              (run: any) => run.course_id === props.course.id
+                            )
+                            ?.steps?.find(
+                              (step: any) =>
+                                (step.activity_id === activity.id ||
+                                  step.activity_id ===
+                                    activity.activity_uuid) &&
+                                step.complete === true
+                            ) && (
                             <span className="ml-2 text-gray-400 shrink-0">
                               <Check size={14} />
                             </span>
                           )}
                         </div>
                       </Link>
-                    );
+                    )
                   })}
                 </div>
               </div>
@@ -547,7 +640,7 @@ function ActivityChapterDropdown(props: {
         </div>
       )}
     </div>
-  );
+  )
 }
 
 function ActivityNavigation(props: {
@@ -555,101 +648,118 @@ function ActivityNavigation(props: {
   currentActivityId: string
   orgslug: string
 }): React.ReactNode {
-  const router = useRouter();
-  const isMobile = useMediaQuery('(max-width: 768px)');
-  const [isBottomNavVisible, setIsBottomNavVisible] = React.useState(true);
-  const bottomNavRef = React.useRef<HTMLDivElement>(null);
-  const [navWidth, setNavWidth] = React.useState<number | null>(null);
-  
+  const router = useRouter()
+  const isMobile = useMediaQuery('(max-width: 768px)')
+  const [isBottomNavVisible, setIsBottomNavVisible] = React.useState(true)
+  const bottomNavRef = React.useRef<HTMLDivElement>(null)
+  const [navWidth, setNavWidth] = React.useState<number | null>(null)
+
   // Function to find the current activity's position in the course
   const findActivityPosition = () => {
-    let allActivities: any[] = [];
-    let currentIndex = -1;
-    
+    let allActivities: any[] = []
+    let currentIndex = -1
+
     // Flatten all activities from all chapters
     props.course.chapters.forEach((chapter: any) => {
       chapter.activities.forEach((activity: any) => {
-        const cleanActivityUuid = activity.activity_uuid?.replace('activity_', '');
+        const cleanActivityUuid = activity.activity_uuid?.replace(
+          'activity_',
+          ''
+        )
         allActivities.push({
           ...activity,
           cleanUuid: cleanActivityUuid,
-          chapterName: chapter.name
-        });
-        
+          chapterName: chapter.name,
+        })
+
         // Check if this is the current activity
-        if (cleanActivityUuid === props.currentActivityId.replace('activity_', '')) {
-          currentIndex = allActivities.length - 1;
+        if (
+          cleanActivityUuid === props.currentActivityId.replace('activity_', '')
+        ) {
+          currentIndex = allActivities.length - 1
         }
-      });
-    });
-    
-    return { allActivities, currentIndex };
-  };
-  
-  const { allActivities, currentIndex } = findActivityPosition();
-  
+      })
+    })
+
+    return { allActivities, currentIndex }
+  }
+
+  const { allActivities, currentIndex } = findActivityPosition()
+
   // Get previous and next activities
-  const prevActivity = currentIndex > 0 ? allActivities[currentIndex - 1] : null;
-  const nextActivity = currentIndex < allActivities.length - 1 ? allActivities[currentIndex + 1] : null;
-  
+  const prevActivity = currentIndex > 0 ? allActivities[currentIndex - 1] : null
+  const nextActivity =
+    currentIndex < allActivities.length - 1
+      ? allActivities[currentIndex + 1]
+      : null
+
   // Navigate to an activity
   const navigateToActivity = (activity: any) => {
-    if (!activity) return;
-    
-    const cleanCourseUuid = props.course.course_uuid?.replace('course_', '');
-    router.push(getUriWithOrg(props.orgslug, '') + `/course/${cleanCourseUuid}/activity/${activity.cleanUuid}`);
-  };
+    if (!activity) return
+
+    const cleanCourseUuid = props.course.course_uuid?.replace('course_', '')
+    router.push(
+      getUriWithOrg(props.orgslug, '') +
+        `/course/${cleanCourseUuid}/activity/${activity.cleanUuid}`
+    )
+  }
 
   // Set up intersection observer to detect when bottom nav is out of viewport
   // and measure the width of the bottom navigation
   React.useEffect(() => {
-    if (!bottomNavRef.current) return;
-    
+    if (!bottomNavRef.current) return
+
     // Update width when component mounts and on window resize
     const updateWidth = () => {
       if (bottomNavRef.current) {
-        setNavWidth(bottomNavRef.current.offsetWidth);
+        setNavWidth(bottomNavRef.current.offsetWidth)
       }
-    };
-    
+    }
+
     // Initial width measurement
-    updateWidth();
-    
+    updateWidth()
+
     // Set up resize listener
-    window.addEventListener('resize', updateWidth);
-    
+    window.addEventListener('resize', updateWidth)
+
     const observer = new IntersectionObserver(
       ([entry]) => {
-        setIsBottomNavVisible(entry.isIntersecting);
+        setIsBottomNavVisible(entry.isIntersecting)
       },
       { threshold: 0.1 }
-    );
-    
-    observer.observe(bottomNavRef.current);
-    
+    )
+
+    observer.observe(bottomNavRef.current)
+
     return () => {
-      window.removeEventListener('resize', updateWidth);
+      window.removeEventListener('resize', updateWidth)
       if (bottomNavRef.current) {
-        observer.unobserve(bottomNavRef.current);
+        observer.unobserve(bottomNavRef.current)
       }
-    };
-  }, []);
+    }
+  }, [])
 
   // Navigation buttons component - reused for both top and bottom
   const NavigationButtons = ({ isFloating = false }) => (
-    <div className={`${isFloating ? 'flex justify-between' : 'grid grid-cols-3'} items-center w-full`}>
+    <div
+      className={`${isFloating ? 'flex justify-between' : 'grid grid-cols-3'} items-center w-full`}
+    >
       {isFloating ? (
         // Floating navigation - original flex layout
         <>
           <button
             onClick={() => navigateToActivity(prevActivity)}
             className={`flex items-center space-x-1.5 p-2 rounded-md transition-all duration-200 cursor-pointer ${
-              prevActivity 
-                ? 'text-gray-700' 
+              prevActivity
+                ? 'text-gray-700'
                 : 'opacity-50 text-gray-400 cursor-not-allowed'
             }`}
             disabled={!prevActivity}
-            title={prevActivity ? `Previous: ${prevActivity.name}` : 'No previous activity'}
+            title={
+              prevActivity
+                ? `Previous: ${prevActivity.name}`
+                : 'No previous activity'
+            }
           >
             <ChevronLeft size={20} className="text-gray-800 shrink-0" />
             <div className="flex flex-col items-start">
@@ -659,16 +769,18 @@ function ActivityNavigation(props: {
               </span>
             </div>
           </button>
-          
+
           <button
             onClick={() => navigateToActivity(nextActivity)}
             className={`flex items-center space-x-1.5 p-2 rounded-md transition-all duration-200 cursor-pointer ${
-              nextActivity 
-                ? 'text-gray-700' 
+              nextActivity
+                ? 'text-gray-700'
                 : 'opacity-50 text-gray-400 cursor-not-allowed'
             }`}
             disabled={!nextActivity}
-            title={nextActivity ? `Next: ${nextActivity.name}` : 'No next activity'}
+            title={
+              nextActivity ? `Next: ${nextActivity.name}` : 'No next activity'
+            }
           >
             <div className="flex flex-col items-end">
               <span className="text-xs text-gray-500">Next</span>
@@ -686,12 +798,16 @@ function ActivityNavigation(props: {
             <button
               onClick={() => navigateToActivity(prevActivity)}
               className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-md transition-all duration-200 cursor-pointer ${
-                prevActivity 
-                  ? 'bg-white nice-shadow text-gray-700' 
+                prevActivity
+                  ? 'bg-white nice-shadow text-gray-700'
                   : 'bg-gray-100 text-gray-400 cursor-not-allowed'
               }`}
               disabled={!prevActivity}
-              title={prevActivity ? `Previous: ${prevActivity.name}` : 'No previous activity'}
+              title={
+                prevActivity
+                  ? `Previous: ${prevActivity.name}`
+                  : 'No previous activity'
+              }
             >
               <ChevronLeft size={16} className="shrink-0" />
               <div className="flex flex-col items-start">
@@ -702,21 +818,23 @@ function ActivityNavigation(props: {
               </div>
             </button>
           </div>
-          
+
           <div className="text-sm text-gray-500 justify-self-center">
             {currentIndex + 1} of {allActivities.length}
           </div>
-          
+
           <div className="justify-self-end">
             <button
               onClick={() => navigateToActivity(nextActivity)}
               className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-md transition-all duration-200 cursor-pointer ${
-                nextActivity 
-                  ? 'bg-white nice-shadow text-gray-700' 
+                nextActivity
+                  ? 'bg-white nice-shadow text-gray-700'
                   : 'bg-gray-100 text-gray-400 cursor-not-allowed'
               }`}
               disabled={!nextActivity}
-              title={nextActivity ? `Next: ${nextActivity.name}` : 'No next activity'}
+              title={
+                nextActivity ? `Next: ${nextActivity.name}` : 'No next activity'
+              }
             >
               <div className="flex flex-col items-end">
                 <span className="text-xs text-gray-500">Next</span>
@@ -730,27 +848,25 @@ function ActivityNavigation(props: {
         </>
       )}
     </div>
-  );
-  
+  )
+
   return (
     <>
       {/* Bottom navigation (in-place) */}
       <div ref={bottomNavRef} className="mt-6 mb-2 w-full">
         <NavigationButtons isFloating={false} />
       </div>
-      
+
       {/* Floating bottom navigation - shown when bottom nav is not visible */}
       {!isBottomNavVisible && (
         <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50 w-[85%] sm:w-auto sm:min-w-[350px] max-w-lg transition-all duration-300 ease-in-out">
-          <div 
-            className="bg-white/90 backdrop-blur-xl rounded-full py-1.5 px-2.5 shadow-xs animate-in fade-in slide-in-from-bottom duration-300"
-          >
+          <div className="bg-white/90 backdrop-blur-xl rounded-full py-1.5 px-2.5 shadow-xs animate-in fade-in slide-in-from-bottom duration-300">
             <NavigationButtons isFloating={true} />
           </div>
         </div>
       )}
     </>
-  );
+  )
 }
 
 export default ActivityClient

@@ -6,24 +6,17 @@ export const metadata: Metadata = {
   title: 'LearnHouse Dashboard',
 }
 
-async function DashboardLayout(
-  props: {
-    children: React.ReactNode
-    params: Promise<any>
-  }
-) {
-  const params = await props.params;
+async function DashboardLayout(props: {
+  children: React.ReactNode
+  params: Promise<any>
+}) {
+  const params = await props.params
 
-  const {
-    children
-  } = props;
+  const { children } = props
 
   return (
     <>
-      <ClientAdminLayout
-        params={params}>
-        {children}
-      </ClientAdminLayout>
+      <ClientAdminLayout params={params}>{children}</ClientAdminLayout>
     </>
   )
 }

@@ -17,7 +17,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@components/ui/dropdown-menu"
+} from '@components/ui/dropdown-menu'
 
 type Course = {
   course_uuid: string
@@ -33,17 +33,21 @@ type PropsType = {
   customLink?: string
 }
 
-export const removeCoursePrefix = (course_uuid: string) => course_uuid.replace('course_', '')
+export const removeCoursePrefix = (course_uuid: string) =>
+  course_uuid.replace('course_', '')
 
 function CourseThumbnail({ course, orgslug, customLink }: PropsType) {
-  const router = useRouter() 
+  const router = useRouter()
   const org = useOrg() as any
   const session = useLHSession() as any
 
   const deleteCourse = async () => {
     const toastId = toast.loading('Deleting course...')
     try {
-      await deleteCourseFromBackend(course.course_uuid, session.data?.tokens?.access_token)
+      await deleteCourseFromBackend(
+        course.course_uuid,
+        session.data?.tokens?.access_token
+      )
       await revalidateTags(['courses'], orgslug)
       toast.success('Course deleted successfully')
       router.refresh()
@@ -55,7 +59,11 @@ function CourseThumbnail({ course, orgslug, customLink }: PropsType) {
   }
 
   const thumbnailImage = course.thumbnail_image
-    ? getCourseThumbnailMediaDirectory(org?.org_uuid, course.course_uuid, course.thumbnail_image)
+    ? getCourseThumbnailMediaDirectory(
+        org?.org_uuid,
+        course.course_uuid,
+        course.thumbnail_image
+      )
     : '../empty_thumbnail.png'
 
   return (
@@ -65,21 +73,39 @@ function CourseThumbnail({ course, orgslug, customLink }: PropsType) {
         orgSlug={orgslug}
         deleteCourse={deleteCourse}
       />
-      <Link prefetch href={customLink ? customLink : getUriWithOrg(orgslug, `/course/${removeCoursePrefix(course.course_uuid)}`)}>
+      <Link
+        prefetch
+        href={
+          customLink
+            ? customLink
+            : getUriWithOrg(
+                orgslug,
+                `/course/${removeCoursePrefix(course.course_uuid)}`
+              )
+        }
+      >
         <div
           className="inset-0 ring-1 ring-inset ring-black/10 rounded-xl shadow-xl w-full aspect-video bg-cover bg-center"
           style={{ backgroundImage: `url(${thumbnailImage})` }}
         />
       </Link>
-      <div className='flex flex-col w-full pt-3 space-y-2'>
-        <h2 className="font-bold text-gray-800 line-clamp-2 leading-tight text-lg capitalize">{course.name}</h2>
-        <p className='text-sm text-gray-700 leading-normal line-clamp-3'>{course.description}</p>
+      <div className="flex flex-col w-full pt-3 space-y-2">
+        <h2 className="font-bold text-gray-800 line-clamp-2 leading-tight text-lg capitalize">
+          {course.name}
+        </h2>
+        <p className="text-sm text-gray-700 leading-normal line-clamp-3">
+          {course.description}
+        </p>
       </div>
     </div>
   )
 }
 
-const AdminEditOptions = ({ course, orgSlug, deleteCourse }: {
+const AdminEditOptions = ({
+  course,
+  orgSlug,
+  deleteCourse,
+}: {
   course: Course
   orgSlug: string
   deleteCourse: () => Promise<void>
@@ -100,12 +126,24 @@ const AdminEditOptions = ({ course, orgSlug, deleteCourse }: {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuItem asChild>
-              <Link prefetch href={getUriWithOrg(orgSlug, `/dash/courses/course/${removeCoursePrefix(course.course_uuid)}/content`)}>
+              <Link
+                prefetch
+                href={getUriWithOrg(
+                  orgSlug,
+                  `/dash/courses/course/${removeCoursePrefix(course.course_uuid)}/content`
+                )}
+              >
                 <FilePenLine className="mr-2 h-4 w-4" /> Edit Content
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link prefetch href={getUriWithOrg(orgSlug, `/dash/courses/course/${removeCoursePrefix(course.course_uuid)}/general`)}>
+              <Link
+                prefetch
+                href={getUriWithOrg(
+                  orgSlug,
+                  `/dash/courses/course/${removeCoursePrefix(course.course_uuid)}/general`
+                )}
+              >
                 <Settings2 className="mr-2 h-4 w-4" /> Settings
               </Link>
             </DropdownMenuItem>

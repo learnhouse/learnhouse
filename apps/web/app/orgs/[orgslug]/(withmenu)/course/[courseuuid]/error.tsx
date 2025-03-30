@@ -14,9 +14,5 @@ export default function Error({
     console.error(error)
   }, [error])
 
-  return (
-    <div>
-      
-    </div>
-  )
+  return <div></div>
 }

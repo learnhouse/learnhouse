@@ -3,7 +3,18 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import { signOut } from 'next-auth/react'
 import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
 import LearnHouseDashboardLogo from '@public/dashLogo.png'
-import { Backpack, BadgeDollarSign, BookCopy, Home, LogOut, Package2, School, Settings, Users, Vault } from 'lucide-react'
+import {
+  Backpack,
+  BadgeDollarSign,
+  BookCopy,
+  Home,
+  LogOut,
+  Package2,
+  School,
+  Settings,
+  Users,
+  Vault,
+} from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import React, { useEffect } from 'react'
@@ -17,7 +28,10 @@ function DashLeftMenu() {
   const org = useOrg() as any
   const session = useLHSession() as any
   const [loading, setLoading] = React.useState(true)
-  const isPaymentsEnabled = useFeatureFlag({ path: ['features', 'payments', 'enabled'], defaultValue: false })
+  const isPaymentsEnabled = useFeatureFlag({
+    path: ['features', 'payments', 'enabled'],
+    defaultValue: false,
+  })
 
   function waitForEverythingToLoad() {
     if (org && session) {
@@ -27,7 +41,10 @@ function DashLeftMenu() {
   }
 
   async function logOutUI() {
-    const res = await signOut({ redirect: true, callbackUrl: getUriWithoutOrg('/login?orgslug=' + org.slug) })
+    const res = await signOut({
+      redirect: true,
+      callbackUrl: getUriWithoutOrg('/login?orgslug=' + org.slug),
+    })
     if (res) {
       getUriWithOrg(org.slug, '/')
     }
@@ -98,7 +115,12 @@ function DashLeftMenu() {
                 <BookCopy size={18} />
               </Link>
             </ToolTip>
-            <ToolTip content={'Assignments'} slateBlack sideOffset={8} side="right">
+            <ToolTip
+              content={'Assignments'}
+              slateBlack
+              sideOffset={8}
+              side="right"
+            >
               <Link
                 className="bg-white/5 rounded-lg p-2 hover:bg-white/10 transition-all ease-linear"
                 href={`/dash/assignments`}
@@ -115,7 +137,12 @@ function DashLeftMenu() {
               </Link>
             </ToolTip>
             {isPaymentsEnabled && (
-              <ToolTip content={'Payments'} slateBlack sideOffset={8} side="right">
+              <ToolTip
+                content={'Payments'}
+                slateBlack
+                sideOffset={8}
+                side="right"
+              >
                 <Link
                   className="bg-white/5 rounded-lg p-2 hover:bg-white/10 transition-all ease-linear"
                   href={`/dash/payments/customers`}
@@ -155,34 +182,31 @@ function DashLeftMenu() {
               <div className="flex flex-col space-y-1 py-1">
                 <ToolTip
                   content={session.data.user.username + "'s Owned Courses"}
-                slateBlack
-                sideOffset={8}
-                side="right"
-              >
-                <Link
-                    href={'/dash/user-account/owned'}
-                    className="py-1"
+                  slateBlack
+                  sideOffset={8}
+                  side="right"
                 >
-                  <Package2
-                    className="mx-auto text-neutral-400 cursor-pointer"
-                    size={18}
-                  />
-                </Link>
-              </ToolTip>
+                  <Link href={'/dash/user-account/owned'} className="py-1">
+                    <Package2
+                      className="mx-auto text-neutral-400 cursor-pointer"
+                      size={18}
+                    />
+                  </Link>
+                </ToolTip>
                 <ToolTip
                   content={session.data.user.username + "'s Settings"}
-                slateBlack
-                sideOffset={8}
-                side="right"
-              >
-                <Link
-                  href={'/dash/user-account/settings/general'}
-                  className="py-1"
+                  slateBlack
+                  sideOffset={8}
+                  side="right"
                 >
-                  <Settings
-                    className="mx-auto text-neutral-400 cursor-pointer"
-                    size={18}
-                  />
+                  <Link
+                    href={'/dash/user-account/settings/general'}
+                    className="py-1"
+                  >
+                    <Settings
+                      className="mx-auto text-neutral-400 cursor-pointer"
+                      size={18}
+                    />
                   </Link>
                 </ToolTip>
               </div>

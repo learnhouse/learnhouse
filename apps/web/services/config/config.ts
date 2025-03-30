@@ -45,7 +45,3 @@ export const getOrgFromUri = () => {
 export const getDefaultOrg = () => {
   return process.env.NEXT_PUBLIC_LEARNHOUSE_DEFAULT_ORG
 }
-
-
-
-

@@ -17,7 +17,12 @@ interface LandingClassicProps {
   org_id: string
 }
 
-function LandingClassic({ courses, collections, orgslug, org_id }: LandingClassicProps) {
+function LandingClassic({
+  courses,
+  collections,
+  orgslug,
+  org_id,
+}: LandingClassicProps) {
   return (
     <div className="w-full">
       <GeneralWrapperStyled>
@@ -80,9 +85,7 @@ function LandingClassic({ courses, collections, orgslug, org_id }: LandingClassi
                     No collections yet
                   </h1>
                   <p className="text-md text-gray-400">
-                    <ContentPlaceHolderIfUserIsNotAdmin
-                      text="Create collections to group courses together"
-                    />
+                    <ContentPlaceHolderIfUserIsNotAdmin text="Create collections to group courses together" />
                   </p>
                 </div>
               </div>
@@ -145,7 +148,7 @@ function LandingClassic({ courses, collections, orgslug, org_id }: LandingClassi
                     No courses yet
                   </h1>
                   <p className="text-md text-gray-400">
-                    <ContentPlaceHolderIfUserIsNotAdmin text='Create courses to add content' />
+                    <ContentPlaceHolderIfUserIsNotAdmin text="Create courses to add content" />
                   </p>
                 </div>
               </div>

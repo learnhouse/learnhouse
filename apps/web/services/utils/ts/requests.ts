@@ -32,7 +32,7 @@ export const RequestBodyWithAuthHeader = (
     headers: HeadersConfig,
     redirect: 'follow',
     credentials: 'include',
-    body: (method === 'POST' || method === 'PUT') ? JSON.stringify(data) : null,
+    body: method === 'POST' || method === 'PUT' ? JSON.stringify(data) : null,
     // Next.js
     next: next,
   }
@@ -46,7 +46,7 @@ export const RequestBodyForm = (method: string, data: any, next: any) => {
     headers: HeadersConfig,
     redirect: 'follow',
     credentials: 'include',
-    body: (method === 'POST' || method === 'PUT') ? JSON.stringify(data) : null,
+    body: method === 'POST' || method === 'PUT' ? JSON.stringify(data) : null,
     // Next.js
     next: next,
   }

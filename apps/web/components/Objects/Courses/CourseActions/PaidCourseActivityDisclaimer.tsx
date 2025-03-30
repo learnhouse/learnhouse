@@ -3,7 +3,7 @@ import { AlertCircle, ShoppingCart } from 'lucide-react'
 import CoursePaidOptions from './CoursePaidOptions'
 
 interface PaidCourseActivityProps {
-  course: any;
+  course: any
 }
 
 function PaidCourseActivityDisclaimer({ course }: PaidCourseActivityProps) {
@@ -15,7 +15,7 @@ function PaidCourseActivityDisclaimer({ course }: PaidCourseActivityProps) {
           <h3 className="text-amber-800 font-semibold">Paid Content</h3>
         </div>
         <p className="text-amber-700 text-sm mt-1">
-          This content requires a course purchase to access. 
+          This content requires a course purchase to access.
         </p>
       </div>
       <CoursePaidOptions course={course} />

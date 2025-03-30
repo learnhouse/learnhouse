@@ -25,8 +25,8 @@ function NewActivityButton(props: NewActivityButtonProps) {
   const [newActivityModal, setNewActivityModal] = React.useState(false)
   const router = useRouter()
   const course = useCourse() as any
-  const session = useLHSession() as any;
-  const access_token = session?.data?.tokens?.access_token;
+  const session = useLHSession() as any
+  const access_token = session?.data?.tokens?.access_token
 
   const openNewActivityModal = async (chapterId: any) => {
     setNewActivityModal(true)
@@ -76,11 +76,14 @@ function NewActivityButton(props: NewActivityButtonProps) {
     activity: any,
     chapterId: string
   ) => {
-    const toast_loading = toast.loading('Creating activity and uploading file...')
+    const toast_loading = toast.loading(
+      'Creating activity and uploading file...'
+    )
     await createExternalVideoActivity(
       external_video_data,
       activity,
-      props.chapterId, access_token
+      props.chapterId,
+      access_token
     )
     mutate(`${getAPIUrl()}courses/${course.courseStructure.course_uuid}/meta`)
     setNewActivityModal(false)
@@ -90,7 +93,7 @@ function NewActivityButton(props: NewActivityButtonProps) {
     router.refresh()
   }
 
-  useEffect(() => { }, [course])
+  useEffect(() => {}, [course])
 
   return (
     <div className="flex justify-center">
@@ -98,7 +101,7 @@ function NewActivityButton(props: NewActivityButtonProps) {
         isDialogOpen={newActivityModal}
         onOpenChange={setNewActivityModal}
         minHeight="no-min"
-        minWidth='md'
+        minWidth="md"
         addDefCloseButton={false}
         dialogContent={
           <NewActivityModal
@@ -120,9 +123,7 @@ function NewActivityButton(props: NewActivityButtonProps) {
         className="flex w-44 h-10 items-center justify-center py-2 my-3 rounded-xl text-white bg-black hover:cursor-pointer"
       >
         <Layers size={17} />
-        <div className="text-sm font-bold ml-2">
-          Add Activity
-        </div>
+        <div className="text-sm font-bold ml-2">Add Activity</div>
       </div>
     </div>
   )

@@ -3,15 +3,18 @@ import FormLayout, {
   FormLabelAndMessage,
   Input,
   Textarea,
-} from '@components/Objects/StyledElements/Form/Form';
-import { useFormik } from 'formik';
-import { AlertTriangle } from 'lucide-react';
-import * as Form from '@radix-ui/react-form';
-import React, { useEffect, useState } from 'react';
-import ThumbnailUpdate from './ThumbnailUpdate';
-import { useCourse, useCourseDispatch } from '@components/Contexts/CourseContext';
-import FormTagInput from '@components/Objects/StyledElements/Form/TagInput';
-import LearningItemsList from './LearningItemsList';
+} from '@components/Objects/StyledElements/Form/Form'
+import { useFormik } from 'formik'
+import { AlertTriangle } from 'lucide-react'
+import * as Form from '@radix-ui/react-form'
+import React, { useEffect, useState } from 'react'
+import ThumbnailUpdate from './ThumbnailUpdate'
+import {
+  useCourse,
+  useCourseDispatch,
+} from '@components/Contexts/CourseContext'
+import FormTagInput from '@components/Objects/StyledElements/Form/TagInput'
+import LearningItemsList from './LearningItemsList'
 
 type EditCourseStructureProps = {
   orgslug: string
@@ -19,88 +22,100 @@ type EditCourseStructureProps = {
 }
 
 const validate = (values: any) => {
-  const errors = {} as any;
+  const errors = {} as any
 
   if (!values.name) {
-    errors.name = 'Required';
+    errors.name = 'Required'
   } else if (values.name.length > 100) {
-    errors.name = 'Must be 100 characters or less';
+    errors.name = 'Must be 100 characters or less'
   }
 
   if (!values.description) {
-    errors.description = 'Required';
+    errors.description = 'Required'
   } else if (values.description.length > 1000) {
-    errors.description = 'Must be 1000 characters or less';
+    errors.description = 'Must be 1000 characters or less'
   }
 
   if (!values.learnings) {
-    errors.learnings = 'Required';
+    errors.learnings = 'Required'
   } else {
     try {
-      const learningItems = JSON.parse(values.learnings);
+      const learningItems = JSON.parse(values.learnings)
       if (!Array.isArray(learningItems)) {
-        errors.learnings = 'Invalid format';
+        errors.learnings = 'Invalid format'
       } else if (learningItems.length === 0) {
-        errors.learnings = 'At least one learning item is required';
+        errors.learnings = 'At least one learning item is required'
       } else {
         // Check if any item has empty text
-        const hasEmptyText = learningItems.some(item => !item.text || item.text.trim() === '');
+        const hasEmptyText = learningItems.some(
+          (item) => !item.text || item.text.trim() === ''
+        )
         if (hasEmptyText) {
-          errors.learnings = 'All learning items must have text';
+          errors.learnings = 'All learning items must have text'
         }
       }
     } catch (e) {
-      errors.learnings = 'Invalid JSON format';
+      errors.learnings = 'Invalid JSON format'
     }
   }
 
-  return errors;
-};
+  return errors
+}
 
 function EditCourseGeneral(props: EditCourseStructureProps) {
-  const [error, setError] = useState('');
-  const course = useCourse();
-  const dispatchCourse = useCourseDispatch() as any;
-  const { isLoading, courseStructure } = course as any;
+  const [error, setError] = useState('')
+  const course = useCourse()
+  const dispatchCourse = useCourseDispatch() as any
+  const { isLoading, courseStructure } = course as any
 
   // Initialize learnings as a JSON array if it's not already
   const initializeLearnings = (learnings: any) => {
     if (!learnings) {
-      return JSON.stringify([{ id: Date.now().toString(), text: '', emoji: '📝' }]);
+      return JSON.stringify([
+        { id: Date.now().toString(), text: '', emoji: '📝' },
+      ])
     }
-    
+
     try {
       // Check if it's already a valid JSON array
-      const parsed = JSON.parse(learnings);
+      const parsed = JSON.parse(learnings)
       if (Array.isArray(parsed)) {
-        return learnings;
+        return learnings
       }
-      
+
       // If it's a string but not a JSON array, convert it to a learning item
       if (typeof learnings === 'string') {
-        return JSON.stringify([{ 
-          id: Date.now().toString(), 
-          text: learnings, 
-          emoji: '📝' 
-        }]);
+        return JSON.stringify([
+          {
+            id: Date.now().toString(),
+            text: learnings,
+            emoji: '📝',
+          },
+        ])
       }
-      
+
       // Default empty array
-      return JSON.stringify([{ id: Date.now().toString(), text: '', emoji: '📝' }]);
+      return JSON.stringify([
+        { id: Date.now().toString(), text: '', emoji: '📝' },
+      ])
     } catch (e) {
       // If it's not valid JSON, convert the string to a learning item
       if (typeof learnings === 'string') {
-        return JSON.stringify([{ 
-          id: Date.now().toString(), 
-          text: learnings, 
-          emoji: '📝' 
-        }]);
+        return JSON.stringify([
+          {
+            id: Date.now().toString(),
+            text: learnings,
+            emoji: '📝',
+          },
+        ])
       }
-      
+
       // Default empty array
-      return JSON.stringify([{ id: Date.now().toString(), text: '', emoji: '📝' }]);
+      return JSON.stringify([
+        { id: Date.now().toString(), text: '', emoji: '📝' },
+      ])
     }
-  };
+  }
 
   const formik = useFormik({
     initialValues: {
@@ -112,35 +127,35 @@ function EditCourseGeneral(props: EditCourseStructureProps) {
       public: courseStructure?.public || false,
     },
     validate,
-    onSubmit: async values => {
+    onSubmit: async (values) => {
       try {
         // Add your submission logic here
-        dispatchCourse({ type: 'setIsSaved' });
+        dispatchCourse({ type: 'setIsSaved' })
       } catch (e) {
-        setError('Failed to save course structure.');
+        setError('Failed to save course structure.')
       }
     },
     enableReinitialize: true,
-  }) as any;
+  }) as any
 
   useEffect(() => {
     if (!isLoading) {
-      const formikValues = formik.values as any;
-      const initialValues = formik.initialValues as any;
+      const formikValues = formik.values as any
+      const initialValues = formik.initialValues as any
       const valuesChanged = Object.keys(formikValues).some(
-        key => formikValues[key] !== initialValues[key]
-      );
+        (key) => formikValues[key] !== initialValues[key]
+      )
 
       if (valuesChanged) {
-        dispatchCourse({ type: 'setIsNotSaved' });
+        dispatchCourse({ type: 'setIsNotSaved' })
         const updatedCourse = {
           ...courseStructure,
           ...formikValues,
-        };
-        dispatchCourse({ type: 'setCourseStructure', payload: updatedCourse });
+        }
+        dispatchCourse({ type: 'setCourseStructure', payload: updatedCourse })
       }
     }
-  }, [formik.values, isLoading]);
+  }, [formik.values, isLoading])
 
   return (
     <div>
@@ -156,7 +171,10 @@ function EditCourseGeneral(props: EditCourseStructureProps) {
             )}
             <FormLayout onSubmit={formik.handleSubmit}>
               <FormField name="name">
-                <FormLabelAndMessage label="Name" message={formik.errors.name} />
+                <FormLabelAndMessage
+                  label="Name"
+                  message={formik.errors.name}
+                />
                 <Form.Control asChild>
                   <Input
                     style={{ backgroundColor: 'white' }}
@@ -169,7 +187,10 @@ function EditCourseGeneral(props: EditCourseStructureProps) {
               </FormField>
 
               <FormField name="description">
-                <FormLabelAndMessage label="Description" message={formik.errors.description} />
+                <FormLabelAndMessage
+                  label="Description"
+                  message={formik.errors.description}
+                />
                 <Form.Control asChild>
                   <Input
                     style={{ backgroundColor: 'white' }}
@@ -182,7 +203,10 @@ function EditCourseGeneral(props: EditCourseStructureProps) {
               </FormField>
 
               <FormField name="about">
-                <FormLabelAndMessage label="About" message={formik.errors.about} />
+                <FormLabelAndMessage
+                  label="About"
+                  message={formik.errors.about}
+                />
                 <Form.Control asChild>
                   <Textarea
                     style={{ backgroundColor: 'white' }}
@@ -194,24 +218,32 @@ function EditCourseGeneral(props: EditCourseStructureProps) {
               </FormField>
 
               <FormField name="learnings">
-                <FormLabelAndMessage label="Learnings" message={formik.errors.learnings} />
+                <FormLabelAndMessage
+                  label="Learnings"
+                  message={formik.errors.learnings}
+                />
                 <Form.Control asChild>
                   <LearningItemsList
                     value={formik.values.learnings}
-                    onChange={(value) => formik.setFieldValue('learnings', value)}
+                    onChange={(value) =>
+                      formik.setFieldValue('learnings', value)
+                    }
                     error={formik.errors.learnings}
                   />
                 </Form.Control>
               </FormField>
 
               <FormField name="tags">
-                <FormLabelAndMessage label="Tags" message={formik.errors.tags} />
+                <FormLabelAndMessage
+                  label="Tags"
+                  message={formik.errors.tags}
+                />
                 <Form.Control asChild>
-									<FormTagInput
-										placeholder="Enter to add..."
-										onChange={(value) => formik.setFieldValue('tags', value)}
-										value={formik.values.tags}
-									/>
+                  <FormTagInput
+                    placeholder="Enter to add..."
+                    onChange={(value) => formik.setFieldValue('tags', value)}
+                    value={formik.values.tags}
+                  />
                 </Form.Control>
               </FormField>
 
@@ -226,7 +258,7 @@ function EditCourseGeneral(props: EditCourseStructureProps) {
         )}
       </div>
     </div>
-  );
+  )
 }
 
-export default EditCourseGeneral;
+export default EditCourseGeneral

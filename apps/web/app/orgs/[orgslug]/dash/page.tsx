@@ -45,7 +45,7 @@ function DashboardHome() {
           <div className="flex justify-center items-center">
             <Link
               href={'https://university.learnhouse.io/'}
-              target='_blank'
+              target="_blank"
               className="flex mt-4 sm:mt-[40px] bg-black gap-2 items-center py-3 px-7 rounded-lg shadow-lg hover:scale-105 transition-all ease-linear cursor-pointer"
             >
               <University className="text-gray-100/100" size={20} />
@@ -64,7 +64,9 @@ function DashboardHome() {
           <div className="flex flex-col sm:flex-row mx-auto gap-2 sm:gap-3 items-center text-center sm:text-left">
             <Settings className="text-gray-500/100" size={20} />
             <div>
-              <div className="font-bold text-gray-500/100">Account Settings</div>
+              <div className="font-bold text-gray-500/100">
+                Account Settings
+              </div>
               <p className="text-sm text-gray-400/100">
                 Configure your personal settings, passwords, email
               </p>
@@ -77,7 +79,17 @@ function DashboardHome() {
 }
 
 // New component for dashboard cards
-function DashboardCard({ href, icon, title, description }: { href: string, icon: React.ReactNode, title: string, description: string }) {
+function DashboardCard({
+  href,
+  icon,
+  title,
+  description,
+}: {
+  href: string
+  icon: React.ReactNode
+  title: string
+  description: string
+}) {
   return (
     <Link
       href={href}

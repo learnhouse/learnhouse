@@ -11,7 +11,7 @@ import UnsplashImagePicker from './UnsplashImagePicker'
 
 function ThumbnailUpdate() {
   const course = useCourse() as any
-  const session = useLHSession() as any;
+  const session = useLHSession() as any
   const org = useOrg() as any
   const [localThumbnail, setLocalThumbnail] = React.useState(null) as any
   const [isLoading, setIsLoading] = React.useState(false) as any
@@ -68,11 +68,15 @@ function ThumbnailUpdate() {
               />
             ) : (
               <img
-                src={`${course.courseStructure.thumbnail_image ? getCourseThumbnailMediaDirectory(
-                  org?.org_uuid,
-                  course.courseStructure.course_uuid,
+                src={`${
                   course.courseStructure.thumbnail_image
-                ) : '/empty_thumbnail.png'}`}
+                    ? getCourseThumbnailMediaDirectory(
+                        org?.org_uuid,
+                        course.courseStructure.course_uuid,
+                        course.courseStructure.thumbnail_image
+                      )
+                    : '/empty_thumbnail.png'
+                }`}
                 className="shadow-sm w-[200px] h-[100px] rounded-md bg-gray-200"
               />
             )}

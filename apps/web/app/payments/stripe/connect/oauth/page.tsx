@@ -15,7 +15,9 @@ function StripeConnectCallback() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const session = useLHSession() as any
-  const [status, setStatus] = useState<'processing' | 'success' | 'error'>('processing')
+  const [status, setStatus] = useState<'processing' | 'success' | 'error'>(
+    'processing'
+  )
   const [message, setMessage] = useState('')
 
   useEffect(() => {
@@ -36,16 +38,15 @@ function StripeConnectCallback() {
         )
 
         // Wait for 1 second to show processing state
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        
+        await new Promise((resolve) => setTimeout(resolve, 1000))
+
         setStatus('success')
         setMessage('Successfully connected to Stripe!')
-        
+
         // Close the window after 2 seconds of showing success
         setTimeout(() => {
           window.close()
         }, 2000)
-        
       } catch (error) {
         console.error('Error verifying Stripe connection:', error)
         setStatus('error')
@@ -71,7 +72,7 @@ function StripeConnectCallback() {
             alt=""
           />
         </div>
-        
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -86,7 +87,8 @@ function StripeConnectCallback() {
                   Completing Stripe Connection
                 </h2>
                 <p className="text-gray-500">
-                  Please wait while we finish setting up your Stripe integration...
+                  Please wait while we finish setting up your Stripe
+                  integration...
                 </p>
               </>
             )}
@@ -96,7 +98,9 @@ function StripeConnectCallback() {
                 <div className="bg-green-100 p-3 rounded-full">
                   <Check className="h-8 w-8 text-green-600" />
                 </div>
-                <h2 className="text-xl font-semibold text-gray-800">{message}</h2>
+                <h2 className="text-xl font-semibold text-gray-800">
+                  {message}
+                </h2>
                 <p className="text-gray-500">
                   You can now return to the dashboard to start using payments.
                 </p>
@@ -108,7 +112,9 @@ function StripeConnectCallback() {
                 <div className="bg-red-100 p-3 rounded-full">
                   <AlertTriangle className="h-8 w-8 text-red-600" />
                 </div>
-                <h2 className="text-xl font-semibold text-gray-800">{message}</h2>
+                <h2 className="text-xl font-semibold text-gray-800">
+                  {message}
+                </h2>
                 <p className="text-gray-500">
                   Please try again or contact support if the problem persists.
                 </p>
@@ -121,4 +127,4 @@ function StripeConnectCallback() {
   )
 }
 
-export default StripeConnectCallback 
+export default StripeConnectCallback

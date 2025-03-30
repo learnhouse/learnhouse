@@ -10,8 +10,8 @@ type MetadataProps = {
 }
 
 export async function generateMetadata(
-  params
-    : MetadataProps): Promise<Metadata> {
+  params: MetadataProps
+): Promise<Metadata> {
   const orgslug = (await params.searchParams).orgslug
   // Get Org context information
   const org = await getOrganizationContextInfo(orgslug, {

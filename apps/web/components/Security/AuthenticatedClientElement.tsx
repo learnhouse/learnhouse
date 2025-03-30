@@ -8,11 +8,11 @@ interface AuthenticatedClientElementProps {
   checkMethod: 'authentication' | 'roles'
   orgId?: string
   ressourceType?:
-  | 'collections'
-  | 'courses'
-  | 'activities'
-  | 'users'
-  | 'organizations'
+    | 'collections'
+    | 'courses'
+    | 'activities'
+    | 'users'
+    | 'organizations'
   action?: 'create' | 'update' | 'delete' | 'read'
 }
 
@@ -55,7 +55,7 @@ export const AuthenticatedClientElement = (
     } else {
       if (props.checkMethod === 'authentication') {
         setIsAllowed(session.status == 'authenticated')
-      } else if (props.checkMethod === 'roles' ) {
+      } else if (props.checkMethod === 'roles') {
         return setIsAllowed(
           isUserAllowed(
             session?.data?.roles,

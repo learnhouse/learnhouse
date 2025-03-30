@@ -13,7 +13,7 @@ function useFeatureFlag(feature: FeatureType) {
   useEffect(() => {
     if (org?.config?.config) {
       let currentValue = org.config.config
-      
+
       // Traverse the path to get the feature flag value
       for (const key of feature.path) {
         if (currentValue && typeof currentValue === 'object') {

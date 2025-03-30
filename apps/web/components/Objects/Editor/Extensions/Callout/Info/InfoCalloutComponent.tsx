@@ -5,9 +5,9 @@ import React, { useState } from 'react'
 import styled from 'styled-components'
 
 interface CalloutOptions {
-  dismissible?: boolean;
-  variant?: 'default' | 'filled' | 'outlined';
-  size?: 'sm' | 'md' | 'lg';
+  dismissible?: boolean
+  variant?: 'default' | 'filled' | 'outlined'
+  size?: 'sm' | 'md' | 'lg'
 }
 
 const IconWrapper = styled.div<{ size?: string }>`
@@ -17,18 +17,18 @@ const IconWrapper = styled.div<{ size?: string }>`
   shrink: 0;
   margin-right: 0.5rem;
   padding-left: 0.5rem;
-  
+
   svg {
     width: 20px;
     height: 20px;
     min-width: 20px;
   }
-  
+
   @media (max-width: 640px) {
     margin-right: 0.25rem;
     padding-left: 0.375rem;
-    padding-top: ${props => props.size === 'sm' ? '0' : '0.5rem'};
-    align-self: ${props => props.size === 'sm' ? 'center' : 'flex-start'};
+    padding-top: ${(props) => (props.size === 'sm' ? '0' : '0.5rem')};
+    align-self: ${(props) => (props.size === 'sm' ? 'center' : 'flex-start')};
   }
 `
 
@@ -47,7 +47,7 @@ const DismissButton = styled.button`
   padding: 4px;
   margin-left: 8px;
   border-radius: 50%;
-  
+
   &:hover {
     background-color: rgba(0, 0, 0, 0.1);
   }
@@ -58,10 +58,10 @@ const InfoCalloutWrapper = styled.div<{ size?: string }>`
   display: flex;
   position: relative;
   margin: 1rem 0;
-  
+
   @media (max-width: 640px) {
-    flex-direction: ${props => props.size === 'sm' ? 'row' : 'column'};
-    align-items: ${props => props.size === 'sm' ? 'center' : 'flex-start'};
+    flex-direction: ${(props) => (props.size === 'sm' ? 'row' : 'column')};
+    align-items: ${(props) => (props.size === 'sm' ? 'center' : 'flex-start')};
   }
 
   svg {
@@ -74,10 +74,10 @@ const InfoCalloutWrapper = styled.div<{ size?: string }>`
     border: ${(props) =>
       props.contentEditable ? '2px dashed #1f3a8a12' : 'none'};
     border-radius: 0.5rem;
-    
+
     @media (max-width: 640px) {
-      margin: ${props => props.size === 'sm' ? '3px' : '5px 0'};
-      padding: ${props => props.size === 'sm' ? '0.25rem' : '0.5rem'};
+      margin: ${(props) => (props.size === 'sm' ? '3px' : '5px 0')};
+      padding: ${(props) => (props.size === 'sm' ? '0.25rem' : '0.5rem')};
       width: 100%;
     }
   }
@@ -87,32 +87,35 @@ function InfoCalloutComponent(props: any) {
   const editorState = useEditorProvider() as any
   const isEditable = editorState.isEditable
   const [dismissed, setDismissed] = useState(false)
-  
+
   // Extract options from props or use defaults
   const options: CalloutOptions = {
     dismissible: props.node?.attrs?.dismissible || false,
     variant: props.node?.attrs?.variant || 'default',
     size: props.node?.attrs?.size || 'md',
   }
-  
-  if (dismissed) return null;
-  
+
+  if (dismissed) return null
+
   const getVariantClasses = () => {
-    switch(options.variant) {
+    switch (options.variant) {
       case 'filled':
-        return 'bg-blue-500 text-white';
+        return 'bg-blue-500 text-white'
       case 'outlined':
-        return 'bg-transparent border-2 border-blue-500 text-blue-700';
+        return 'bg-transparent border-2 border-blue-500 text-blue-700'
       default:
-        return 'bg-blue-200 text-blue-900';
+        return 'bg-blue-200 text-blue-900'
     }
   }
-  
+
   const getSizeClasses = () => {
-    switch(options.size) {
-      case 'sm': return 'py-1 px-2 text-sm';
-      case 'lg': return 'py-3 px-4 text-lg';
-      default: return 'py-2 px-3';
+    switch (options.size) {
+      case 'sm':
+        return 'py-1 px-2 text-sm'
+      case 'lg':
+        return 'py-3 px-4 text-lg'
+      default:
+        return 'py-2 px-3'
     }
   }
 

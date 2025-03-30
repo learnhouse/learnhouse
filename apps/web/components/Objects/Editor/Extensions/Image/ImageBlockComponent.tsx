@@ -8,8 +8,12 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import { useCourse } from '@components/Contexts/CourseContext'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { FileUploadBlock, FileUploadBlockButton, FileUploadBlockInput } from '../../FileUploadBlock'
-import { constructAcceptValue } from '@/lib/constants';
+import {
+  FileUploadBlock,
+  FileUploadBlockButton,
+  FileUploadBlockInput,
+} from '../../FileUploadBlock'
+import { constructAcceptValue } from '@/lib/constants'
 
 const SUPPORTED_FILES = constructAcceptValue(['image'])
 
@@ -18,7 +22,7 @@ function ImageBlockComponent(props: any) {
   const course = useCourse() as any
   const editorState = useEditorProvider() as any
   const session = useLHSession() as any
-  const access_token = session?.data?.tokens?.access_token;
+  const access_token = session?.data?.tokens?.access_token
 
   const isEditable = editorState.isEditable
   const [image, setImage] = React.useState(null)
@@ -29,7 +33,7 @@ function ImageBlockComponent(props: any) {
   const [imageSize, setImageSize] = React.useState({
     width: props.node.attrs.size ? props.node.attrs.size.width : 300,
   })
-  
+
   const fileId = blockObject
     ? `${blockObject.content.file_id}.${blockObject.content.file_format}`
     : null
@@ -42,7 +46,8 @@ function ImageBlockComponent(props: any) {
     setIsLoading(true)
     let object = await uploadNewImageFile(
       image,
-      props.extension.options.activity.activity_uuid,access_token
+      props.extension.options.activity.activity_uuid,
+      access_token
     )
     setIsLoading(false)
     setblockObject(object)
@@ -56,11 +61,19 @@ function ImageBlockComponent(props: any) {
 
   return (
     <NodeViewWrapper className="block-image w-full">
-     <FileUploadBlock isEditable={isEditable} isLoading={isLoading} isEmpty={!blockObject} Icon={Image}>
-        <FileUploadBlockInput onChange={handleImageChange} accept={SUPPORTED_FILES} />
-        <FileUploadBlockButton onClick={handleSubmit} disabled={!image}/>
+      <FileUploadBlock
+        isEditable={isEditable}
+        isLoading={isLoading}
+        isEmpty={!blockObject}
+        Icon={Image}
+      >
+        <FileUploadBlockInput
+          onChange={handleImageChange}
+          accept={SUPPORTED_FILES}
+        />
+        <FileUploadBlockButton onClick={handleSubmit} disabled={!image} />
       </FileUploadBlock>
-      
+
       {blockObject && isEditable && (
         <div className="w-full flex justify-center">
           <Resizable
@@ -89,7 +102,10 @@ function ImageBlockComponent(props: any) {
             minWidth={200}
             enable={{ right: true }}
             onResizeStop={(e, direction, ref, d) => {
-              const newWidth = Math.min(imageSize.width + d.width, ref.parentElement?.clientWidth || 1000);
+              const newWidth = Math.min(
+                imageSize.width + d.width,
+                ref.parentElement?.clientWidth || 1000
+              )
               props.updateAttributes({
                 size: {
                   width: newWidth,

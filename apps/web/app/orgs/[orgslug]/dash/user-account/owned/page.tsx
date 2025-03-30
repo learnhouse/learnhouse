@@ -14,7 +14,11 @@ function OwnedCoursesPage() {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
 
-  const { data: ownedCourses, error, isLoading } = useSWR(
+  const {
+    data: ownedCourses,
+    error,
+    isLoading,
+  } = useSWR(
     org ? [`/payments/${org.id}/courses/owned`, access_token] : null,
     ([url, token]) => getOwnedCourses(org.id, token)
   )
@@ -29,7 +33,9 @@ function OwnedCoursesPage() {
           <Package2 className="w-8 h-8 text-gray-800" />
           <div className="flex flex-col -space-y-1">
             <h1 className="font-bold text-xl text-gray-800">My Courses</h1>
-            <h2 className="text-gray-500 text-md">Courses you have purchased or subscribed to</h2>
+            <h2 className="text-gray-500 text-md">
+              Courses you have purchased or subscribed to
+            </h2>
           </div>
         </div>
       </div>

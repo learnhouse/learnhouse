@@ -26,7 +26,7 @@ interface ModifiedActivityInterface {
 
 function Activity(props: any) {
   const router = useRouter()
-  const session = useLHSession() as any;
+  const session = useLHSession() as any
   const [modifiedActivity, setModifiedActivity] = React.useState<
     ModifiedActivityInterface | undefined
   >(undefined)
@@ -50,8 +50,12 @@ function Activity(props: any) {
         ...props.activity,
         name: modifiedActivity.activityName,
       }
-      
-      await updateActivity(modifiedActivityCopy, activityId, session.data?.tokens?.access_token)
+
+      await updateActivity(
+        modifiedActivityCopy,
+        activityId,
+        session.data?.tokens?.access_token
+      )
       await mutate(`${getAPIUrl()}chapters/meta/course_${props.courseid}`)
       await revalidateTags(['courses'], props.orgslug)
       router.refresh()
@@ -153,7 +157,8 @@ function Activity(props: any) {
                 <Link
                   href={
                     getUriWithOrg(props.orgslug, '') +
-                    `/course/${props.courseid
+                    `/course/${
+                      props.courseid
                     }/activity/${props.activity.uuid.replace(
                       'activity_',
                       ''
@@ -169,7 +174,8 @@ function Activity(props: any) {
             <Link
               href={
                 getUriWithOrg(props.orgslug, '') +
-                `/course/${props.courseid
+                `/course/${
+                  props.courseid
                 }/activity/${props.activity.uuid.replace('activity_', '')}`
               }
               className=" hover:cursor-pointer p-1 px-3 bg-gray-200 rounded-md"

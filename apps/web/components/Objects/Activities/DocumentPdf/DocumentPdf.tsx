@@ -11,8 +11,7 @@ function DocumentPdfActivity({
 }) {
   const org = useOrg() as any
 
-  React.useEffect(() => {
-  }, [activity, org])
+  React.useEffect(() => {}, [activity, org])
 
   return (
     <div className="m-8 bg-zinc-900 rounded-md mt-14">

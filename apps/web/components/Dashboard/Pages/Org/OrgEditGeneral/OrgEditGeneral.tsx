@@ -2,20 +2,24 @@
 import React, { useState } from 'react'
 import { Form, Formik } from 'formik'
 import * as Yup from 'yup'
-import {
-  updateOrganization,
-} from '@services/settings/org'
+import { updateOrganization } from '@services/settings/org'
 import { revalidateTags } from '@services/utils/ts/requests'
 import { useRouter } from 'next/navigation'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { toast } from 'react-hot-toast'
-import { Input } from "@components/ui/input"
-import { Textarea } from "@components/ui/textarea"
-import { Button } from "@components/ui/button"
-import { Label } from "@components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@components/ui/select"
-import { Switch } from "@components/ui/switch"
+import { Input } from '@components/ui/input'
+import { Textarea } from '@components/ui/textarea'
+import { Button } from '@components/ui/button'
+import { Label } from '@components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@components/ui/select'
+import { Switch } from '@components/ui/switch'
 import { mutate } from 'swr'
 import { getAPIUrl } from '@services/config/config'
 import Image from 'next/image'
@@ -115,7 +119,14 @@ const OrgEditGeneral: React.FC = () => {
           }, 400)
         }}
       >
-        {({ isSubmitting, values, handleChange, errors, touched, setFieldValue }) => (
+        {({
+          isSubmitting,
+          values,
+          handleChange,
+          errors,
+          touched,
+          setFieldValue,
+        }) => (
           <Form>
             <div className="flex flex-col gap-0">
               <div className="flex flex-col bg-gray-50 -space-y-1 px-5 py-3 mx-3 my-3 rounded-md">
@@ -146,7 +157,9 @@ const OrgEditGeneral: React.FC = () => {
                         maxLength={60}
                       />
                       {touched.name && errors.name && (
-                        <p className="text-red-500 text-sm mt-1">{errors.name}</p>
+                        <p className="text-red-500 text-sm mt-1">
+                          {errors.name}
+                        </p>
                       )}
                     </div>
 
@@ -154,7 +167,8 @@ const OrgEditGeneral: React.FC = () => {
                       <Label htmlFor="description">
                         Short Description
                         <span className="text-gray-500 text-sm ml-2">
-                          ({100 - (values.description?.length || 0)} characters left)
+                          ({100 - (values.description?.length || 0)} characters
+                          left)
                         </span>
                       </Label>
                       <Input
@@ -166,7 +180,9 @@ const OrgEditGeneral: React.FC = () => {
                         maxLength={100}
                       />
                       {touched.description && errors.description && (
-                        <p className="text-red-500 text-sm mt-1">{errors.description}</p>
+                        <p className="text-red-500 text-sm mt-1">
+                          {errors.description}
+                        </p>
                       )}
                     </div>
 
@@ -188,7 +204,9 @@ const OrgEditGeneral: React.FC = () => {
                         </SelectContent>
                       </Select>
                       {touched.label && errors.label && (
-                        <p className="text-red-500 text-sm mt-1">{errors.label}</p>
+                        <p className="text-red-500 text-sm mt-1">
+                          {errors.label}
+                        </p>
                       )}
                     </div>
 
@@ -209,15 +227,19 @@ const OrgEditGeneral: React.FC = () => {
                         maxLength={400}
                       />
                       {touched.about && errors.about && (
-                        <p className="text-red-500 text-sm mt-1">{errors.about}</p>
+                        <p className="text-red-500 text-sm mt-1">
+                          {errors.about}
+                        </p>
                       )}
                     </div>
 
-                    
-
                     <div className="flex items-center justify-between space-x-2 mt-6 bg-gray-50/50 p-4 rounded-lg nice-shadow">
                       <div className="flex items-center space-x-4">
-                        <Link href="https://www.learnhouse.app/explore" target="_blank" className="flex items-center space-x-2">
+                        <Link
+                          href="https://www.learnhouse.app/explore"
+                          target="_blank"
+                          className="flex items-center space-x-2"
+                        >
                           <Image
                             quality={100}
                             width={120}
@@ -230,25 +252,31 @@ const OrgEditGeneral: React.FC = () => {
                           </span>
                         </Link>
                         <div className="space-y-0.5">
-                          <Label className="text-base">Showcase in LearnHouse Explore</Label>
+                          <Label className="text-base">
+                            Showcase in LearnHouse Explore
+                          </Label>
                           <p className="text-sm text-gray-500">
-                            Share your organization's courses and content with the LearnHouse community. 
-                            Enable this to help learners discover your valuable educational resources.
+                            Share your organization's courses and content with
+                            the LearnHouse community. Enable this to help
+                            learners discover your valuable educational
+                            resources.
                           </p>
                         </div>
                       </div>
                       <Switch
                         name="explore"
                         checked={values.explore ?? false}
-                        onCheckedChange={(checked) => setFieldValue('explore', checked)}
+                        onCheckedChange={(checked) =>
+                          setFieldValue('explore', checked)
+                        }
                       />
                     </div>
                   </div>
                 </div>
               </div>
               <div className="flex flex-row-reverse mt-0 mx-5 mb-5">
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   disabled={isSubmitting}
                   className="bg-black text-white hover:bg-black/90"
                 >

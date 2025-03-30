@@ -1,4 +1,3 @@
-
 import { default as React } from 'react'
 import dynamic from 'next/dynamic'
 import { getCourseMetadata } from '@services/courses/courses'
@@ -11,14 +10,15 @@ import { nextAuthOptions } from 'app/auth/options'
 import { getServerSession } from 'next-auth'
 import EditorWrapper from '@components/Objects/Editor/EditorWrapper'
 
-
 type MetadataProps = {
   params: Promise<{ orgslug: string; courseid: string; activityid: string }>
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
 
-export async function generateMetadata(props: MetadataProps): Promise<Metadata> {
-  const params = await props.params;
+export async function generateMetadata(
+  props: MetadataProps
+): Promise<Metadata> {
+  const params = await props.params
   const session = await getServerSession(nextAuthOptions)
   const access_token = session?.tokens?.access_token
   // Get Org context information
@@ -49,11 +49,15 @@ const EditActivity = async (params: any) => {
     { revalidate: 0, tags: ['activities'] },
     access_token ? access_token : null
   )
-  
-  const org = await getOrganizationContextInfoWithId(courseInfo.org_id, {
-    revalidate: 180,
-    tags: ['organizations'],
-  }, access_token)
+
+  const org = await getOrganizationContextInfoWithId(
+    courseInfo.org_id,
+    {
+      revalidate: 180,
+      tags: ['organizations'],
+    },
+    access_token
+  )
 
   return (
     <EditorOptionsProvider options={{ isEditable: true }}>

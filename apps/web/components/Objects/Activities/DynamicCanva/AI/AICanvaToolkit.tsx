@@ -94,7 +94,7 @@ function AIActionButton(props: {
   activity: any
 }) {
   const session = useLHSession() as any
-  const access_token = session?.data?.tokens?.access_token;
+  const access_token = session?.data?.tokens?.access_token
   const dispatchAIChatBot = useAIChatBotDispatch() as any
   const aiChatBotState = useAIChatBot() as AIChatBotStateTypes
 
@@ -135,7 +135,8 @@ function AIActionButton(props: {
       const response = await sendActivityAIChatMessage(
         message,
         aiChatBotState.aichat_uuid,
-        props.activity.activity_uuid, access_token
+        props.activity.activity_uuid,
+        access_token
       )
       if (response.success == false) {
         await dispatchAIChatBot({ type: 'setIsNoLongerWaitingForResponse' })

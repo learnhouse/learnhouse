@@ -2,7 +2,6 @@ import { mergeAttributes, Node } from '@tiptap/core'
 import { ReactNodeViewRenderer } from '@tiptap/react'
 import EmbedObjectsComponent from './EmbedObjectsComponent'
 
-
 export default Node.create({
   name: 'blockEmbed',
   group: 'block',
@@ -45,5 +44,4 @@ export default Node.create({
   addNodeView() {
     return ReactNodeViewRenderer(EmbedObjectsComponent)
   },
-  
 })

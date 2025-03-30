@@ -1,4 +1,4 @@
-'use client';
+'use client'
 import { updateProfile } from '@services/settings/profile'
 import React, { useEffect } from 'react'
 import { Formik, Form } from 'formik'
@@ -10,19 +10,19 @@ import {
   Info,
   UploadCloud,
   AlertTriangle,
-  LogOut
+  LogOut,
 } from 'lucide-react'
 import UserAvatar from '@components/Objects/UserAvatar'
 import { updateUserAvatar } from '@services/users/users'
 import { constructAcceptValue } from '@/lib/constants'
 import * as Yup from 'yup'
-import { Input } from "@components/ui/input"
-import { Textarea } from "@components/ui/textarea"
-import { Button } from "@components/ui/button"
-import { Label } from "@components/ui/label"
+import { Input } from '@components/ui/input'
+import { Textarea } from '@components/ui/textarea'
+import { Button } from '@components/ui/button'
+import { Label } from '@components/ui/label'
 import { toast } from 'react-hot-toast'
 import { signOut } from 'next-auth/react'
-import { getUriWithoutOrg } from '@services/config/config';
+import { getUriWithoutOrg } from '@services/config/config'
 
 const SUPPORTED_FILES = constructAcceptValue(['image'])
 
@@ -35,16 +35,16 @@ const validationSchema = Yup.object().shape({
 })
 
 interface FormValues {
-  username: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  bio: string;
+  username: string
+  first_name: string
+  last_name: string
+  email: string
+  bio: string
 }
 
 function UserEditGeneral() {
-  const session = useLHSession() as any;
-  const access_token = session?.data?.tokens?.access_token;
+  const session = useLHSession() as any
+  const access_token = session?.data?.tokens?.access_token
   const [localAvatar, setLocalAvatar] = React.useState(null) as any
   const [isLoading, setIsLoading] = React.useState(false) as any
   const [error, setError] = React.useState() as any
@@ -54,7 +54,11 @@ function UserEditGeneral() {
     const file = event.target.files[0]
     setLocalAvatar(file)
     setIsLoading(true)
-    const res = await updateUserAvatar(session.data.user_uuid, file, access_token)
+    const res = await updateUserAvatar(
+      session.data.user_uuid,
+      file,
+      access_token
+    )
     // wait for 1 second to show loading animation
     await new Promise((r) => setTimeout(r, 1500))
     if (res.success === false) {
@@ -68,23 +72,26 @@ function UserEditGeneral() {
 
   const handleEmailChange = async (newEmail: string) => {
     toast.success('Profile Updated Successfully', { duration: 4000 })
-    
+
     // Show message about logging in with new email
-    toast((t: any) => (
-      <div className="flex items-center gap-2">
-        <span>Please login again with your new email: {newEmail}</span>
-      </div>
-    ), { 
-      duration: 4000,
-      icon: '📧'
-    })
+    toast(
+      (t: any) => (
+        <div className="flex items-center gap-2">
+          <span>Please login again with your new email: {newEmail}</span>
+        </div>
+      ),
+      {
+        duration: 4000,
+        icon: '📧',
+      }
+    )
 
     // Wait for 4 seconds before signing out
-    await new Promise(resolve => setTimeout(resolve, 4000))
+    await new Promise((resolve) => setTimeout(resolve, 4000))
     signOut({ redirect: true, callbackUrl: getUriWithoutOrg('/') })
   }
 
-  useEffect(() => { }, [session, session.data])
+  useEffect(() => {}, [session, session.data])
 
   return (
     <div className="sm:mx-10 mx-0 bg-white rounded-xl nice-shadow">
@@ -102,7 +109,7 @@ function UserEditGeneral() {
           onSubmit={(values, { setSubmitting }) => {
             const isEmailChanged = values.email !== session.data.user.email
             const loadingToast = toast.loading('Updating profile...')
-            
+
             setTimeout(() => {
               setSubmitting(false)
               updateProfile(values, session.data.user.id, access_token)
@@ -146,12 +153,16 @@ function UserEditGeneral() {
                         placeholder="Your email address"
                       />
                       {touched.email && errors.email && (
-                        <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+                        <p className="text-red-500 text-sm mt-1">
+                          {errors.email}
+                        </p>
                       )}
                       {values.email !== session.data.user.email && (
                         <div className="flex items-center space-x-2 mt-2 text-amber-600 bg-amber-50 p-2 rounded-md">
                           <AlertTriangle size={16} />
-                          <span className="text-sm">You will be logged out after changing your email</span>
+                          <span className="text-sm">
+                            You will be logged out after changing your email
+                          </span>
                         </div>
                       )}
                     </div>
@@ -166,7 +177,9 @@ function UserEditGeneral() {
                         placeholder="Your username"
                       />
                       {touched.username && errors.username && (
-                        <p className="text-red-500 text-sm mt-1">{errors.username}</p>
+                        <p className="text-red-500 text-sm mt-1">
+                          {errors.username}
+                        </p>
                       )}
                     </div>
 
@@ -180,7 +193,9 @@ function UserEditGeneral() {
                         placeholder="Your first name"
                       />
                       {touched.first_name && errors.first_name && (
-                        <p className="text-red-500 text-sm mt-1">{errors.first_name}</p>
+                        <p className="text-red-500 text-sm mt-1">
+                          {errors.first_name}
+                        </p>
                       )}
                     </div>
 
@@ -194,7 +209,9 @@ function UserEditGeneral() {
                         placeholder="Your last name"
                       />
                       {touched.last_name && errors.last_name && (
-                        <p className="text-red-500 text-sm mt-1">{errors.last_name}</p>
+                        <p className="text-red-500 text-sm mt-1">
+                          {errors.last_name}
+                        </p>
                       )}
                     </div>
 
@@ -215,7 +232,9 @@ function UserEditGeneral() {
                         maxLength={400}
                       />
                       {touched.bio && errors.bio && (
-                        <p className="text-red-500 text-sm mt-1">{errors.bio}</p>
+                        <p className="text-red-500 text-sm mt-1">
+                          {errors.bio}
+                        </p>
                       )}
                     </div>
                   </div>
@@ -228,13 +247,17 @@ function UserEditGeneral() {
                         {error && (
                           <div className="flex items-center bg-red-200 rounded-md text-red-950 px-4 py-2 text-sm">
                             <FileWarning size={16} className="mr-2" />
-                            <span className="font-semibold first-letter:uppercase">{error}</span>
+                            <span className="font-semibold first-letter:uppercase">
+                              {error}
+                            </span>
                           </div>
                         )}
                         {success && (
                           <div className="flex items-center bg-green-200 rounded-md text-green-950 px-4 py-2 text-sm">
                             <Check size={16} className="mr-2" />
-                            <span className="font-semibold first-letter:uppercase">{success}</span>
+                            <span className="font-semibold first-letter:uppercase">
+                              {success}
+                            </span>
                           </div>
                         )}
                         {localAvatar ? (
@@ -263,7 +286,9 @@ function UserEditGeneral() {
                             <Button
                               type="button"
                               variant="outline"
-                              onClick={() => document.getElementById('fileInput')?.click()}
+                              onClick={() =>
+                                document.getElementById('fileInput')?.click()
+                              }
                               className="w-full"
                             >
                               <UploadCloud size={16} className="mr-2" />
@@ -281,8 +306,8 @@ function UserEditGeneral() {
                 </div>
 
                 <div className="flex flex-row-reverse mt-0 mx-5 mb-5">
-                  <Button 
-                    type="submit" 
+                  <Button
+                    type="submit"
                     disabled={isSubmitting}
                     className="bg-black text-white hover:bg-black/90"
                   >

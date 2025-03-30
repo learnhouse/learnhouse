@@ -1,10 +1,16 @@
 'use client'
-import React, { useEffect, use } from 'react';
+import React, { useEffect, use } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { useMediaQuery } from 'usehooks-ts'
 import { getUriWithOrg } from '@services/config/config'
-import { Monitor, ScanEye, SquareUserRound, UserPlus, Users } from 'lucide-react'
+import {
+  Monitor,
+  ScanEye,
+  SquareUserRound,
+  UserPlus,
+  Users,
+} from 'lucide-react'
 import BreadCrumbs from '@components/Dashboard/Misc/BreadCrumbs'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
@@ -19,7 +25,7 @@ export type SettingsParams = {
 }
 
 function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
-  const params = use(props.params);
+  const params = use(props.params)
   const session = useLHSession() as any
   const org = useOrg() as any
   const [H1Label, setH1Label] = React.useState('')
@@ -55,7 +61,7 @@ function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
       <div className="h-screen w-full bg-[#f8f8f8] flex items-center justify-center p-4">
         <div className="bg-white p-6 rounded-lg shadow-md text-center">
           <h2 className="text-xl font-bold mb-4">Desktop Only</h2>
-          <Monitor className='mx-auto my-5' size={60} />
+          <Monitor className="mx-auto my-5" size={60} />
           <p>This page is only accessible from a desktop device.</p>
           <p>Please switch to a desktop to view and manage user settings.</p>
         </div>
@@ -84,10 +90,11 @@ function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
             }
           >
             <div
-              className={`py-2 w-fit text-center border-black transition-all ease-linear ${params.subpage.toString() === 'users'
+              className={`py-2 w-fit text-center border-black transition-all ease-linear ${
+                params.subpage.toString() === 'users'
                   ? 'border-b-4'
                   : 'opacity-50'
-                } cursor-pointer`}
+              } cursor-pointer`}
             >
               <div className="flex items-center space-x-2.5 mx-2">
                 <Users size={16} />
@@ -97,14 +104,16 @@ function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
           </Link>
           <Link
             href={
-              getUriWithOrg(params.orgslug, '') + `/dash/users/settings/usergroups`
+              getUriWithOrg(params.orgslug, '') +
+              `/dash/users/settings/usergroups`
             }
           >
             <div
-              className={`py-2 w-fit text-center border-black transition-all ease-linear ${params.subpage.toString() === 'usergroups'
+              className={`py-2 w-fit text-center border-black transition-all ease-linear ${
+                params.subpage.toString() === 'usergroups'
                   ? 'border-b-4'
                   : 'opacity-50'
-                } cursor-pointer`}
+              } cursor-pointer`}
             >
               <div className="flex items-center space-x-2.5 mx-2">
                 <SquareUserRound size={16} />
@@ -118,10 +127,11 @@ function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
             }
           >
             <div
-              className={`py-2 w-fit text-center border-black transition-all ease-linear ${params.subpage.toString() === 'signups'
+              className={`py-2 w-fit text-center border-black transition-all ease-linear ${
+                params.subpage.toString() === 'signups'
                   ? 'border-b-4'
                   : 'opacity-50'
-                } cursor-pointer`}
+              } cursor-pointer`}
             >
               <div className="flex items-center space-x-2.5 mx-2">
                 <ScanEye size={16} />
@@ -135,10 +145,11 @@ function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
             }
           >
             <div
-              className={`py-2 w-fit text-center border-black transition-all ease-linear ${params.subpage.toString() === 'add'
+              className={`py-2 w-fit text-center border-black transition-all ease-linear ${
+                params.subpage.toString() === 'add'
                   ? 'border-b-4'
                   : 'opacity-50'
-                } cursor-pointer`}
+              } cursor-pointer`}
             >
               <div className="flex items-center space-x-2.5 mx-2">
                 <UserPlus size={16} />
@@ -146,7 +157,6 @@ function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
               </div>
             </div>
           </Link>
-          
         </div>
       </div>
       <motion.div

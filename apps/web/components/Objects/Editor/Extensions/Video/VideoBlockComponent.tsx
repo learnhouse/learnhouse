@@ -8,8 +8,12 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import { useCourse } from '@components/Contexts/CourseContext'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { FileUploadBlock, FileUploadBlockButton, FileUploadBlockInput } from '../../FileUploadBlock'
-import { constructAcceptValue } from '@/lib/constants';
+import {
+  FileUploadBlock,
+  FileUploadBlockButton,
+  FileUploadBlockInput,
+} from '../../FileUploadBlock'
+import { constructAcceptValue } from '@/lib/constants'
 
 const SUPPORTED_FILES = constructAcceptValue(['webm', 'mp4'])
 
@@ -20,7 +24,7 @@ function VideoBlockComponents(props: any) {
   const isEditable = editorState.isEditable
   const [video, setVideo] = React.useState(null)
   const session = useLHSession() as any
-  const access_token = session?.data?.tokens?.access_token;
+  const access_token = session?.data?.tokens?.access_token
   const [isLoading, setIsLoading] = React.useState(false)
   const [blockObject, setblockObject] = React.useState(
     props.node.attrs.blockObject
@@ -38,7 +42,8 @@ function VideoBlockComponents(props: any) {
     setIsLoading(true)
     let object = await uploadNewVideoFile(
       video,
-      props.extension.options.activity.activity_uuid, access_token
+      props.extension.options.activity.activity_uuid,
+      access_token
     )
     setIsLoading(false)
     setblockObject(object)
@@ -47,15 +52,23 @@ function VideoBlockComponents(props: any) {
     })
   }
 
-  useEffect(() => { }, [course, org])
+  useEffect(() => {}, [course, org])
 
   console.log(blockObject)
 
   return (
-    <NodeViewWrapper className="block-video">    
-      <FileUploadBlock isEditable={isEditable} isLoading={isLoading} isEmpty={!blockObject} Icon={Video}>
-        <FileUploadBlockInput onChange={handleVideoChange} accept={SUPPORTED_FILES} />
-        <FileUploadBlockButton onClick={handleSubmit} disabled={!video}/>
+    <NodeViewWrapper className="block-video">
+      <FileUploadBlock
+        isEditable={isEditable}
+        isLoading={isLoading}
+        isEmpty={!blockObject}
+        Icon={Video}
+      >
+        <FileUploadBlockInput
+          onChange={handleVideoChange}
+          accept={SUPPORTED_FILES}
+        />
+        <FileUploadBlockButton onClick={handleSubmit} disabled={!video} />
       </FileUploadBlock>
 
       {blockObject && (

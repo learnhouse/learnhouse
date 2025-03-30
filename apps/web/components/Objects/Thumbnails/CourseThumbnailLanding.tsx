@@ -17,7 +17,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@components/ui/dropdown-menu"
+} from '@components/ui/dropdown-menu'
 
 type Course = {
   course_uuid: string
@@ -40,9 +40,14 @@ interface AdminEditOptionsProps {
   deleteCourse: () => Promise<void>
 }
 
-export const removeCoursePrefix = (course_uuid: string) => course_uuid.replace('course_', '')
+export const removeCoursePrefix = (course_uuid: string) =>
+  course_uuid.replace('course_', '')
 
-const AdminEditOptions: React.FC<AdminEditOptionsProps> = ({ course, orgslug, deleteCourse }) => {
+const AdminEditOptions: React.FC<AdminEditOptionsProps> = ({
+  course,
+  orgslug,
+  deleteCourse,
+}) => {
   return (
     <AuthenticatedClientElement
       action="update"
@@ -59,12 +64,24 @@ const AdminEditOptions: React.FC<AdminEditOptionsProps> = ({ course, orgslug, de
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuItem asChild>
-              <Link prefetch href={getUriWithOrg(orgslug, `/dash/courses/course/${removeCoursePrefix(course.course_uuid)}/content`)}>
+              <Link
+                prefetch
+                href={getUriWithOrg(
+                  orgslug,
+                  `/dash/courses/course/${removeCoursePrefix(course.course_uuid)}/content`
+                )}
+              >
                 <FilePenLine className="mr-2 h-4 w-4" /> Edit Content
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link prefetch href={getUriWithOrg(orgslug, `/dash/courses/course/${removeCoursePrefix(course.course_uuid)}/general`)}>
+              <Link
+                prefetch
+                href={getUriWithOrg(
+                  orgslug,
+                  `/dash/courses/course/${removeCoursePrefix(course.course_uuid)}/general`
+                )}
+              >
                 <Settings2 className="mr-2 h-4 w-4" /> Settings
               </Link>
             </DropdownMenuItem>
@@ -89,15 +106,22 @@ const AdminEditOptions: React.FC<AdminEditOptionsProps> = ({ course, orgslug, de
   )
 }
 
-const CourseThumbnailLanding: React.FC<PropsType> = ({ course, orgslug, customLink }) => {
-  const router = useRouter() 
+const CourseThumbnailLanding: React.FC<PropsType> = ({
+  course,
+  orgslug,
+  customLink,
+}) => {
+  const router = useRouter()
   const org = useOrg() as any
   const session = useLHSession() as any
 
   const deleteCourse = async () => {
     const toastId = toast.loading('Deleting course...')
     try {
-      await deleteCourseFromBackend(course.course_uuid, session.data?.tokens?.access_token)
+      await deleteCourseFromBackend(
+        course.course_uuid,
+        session.data?.tokens?.access_token
+      )
       await revalidateTags(['courses'], orgslug)
       toast.success('Course deleted successfully')
       router.refresh()
@@ -109,7 +133,11 @@ const CourseThumbnailLanding: React.FC<PropsType> = ({ course, orgslug, customLi
   }
 
   const thumbnailImage = course.thumbnail_image
-    ? getCourseThumbnailMediaDirectory(org?.org_uuid, course.course_uuid, course.thumbnail_image)
+    ? getCourseThumbnailMediaDirectory(
+        org?.org_uuid,
+        course.course_uuid,
+        course.thumbnail_image
+      )
     : '../empty_thumbnail.png'
 
   return (
@@ -119,31 +147,57 @@ const CourseThumbnailLanding: React.FC<PropsType> = ({ course, orgslug, customLi
         orgslug={orgslug}
         deleteCourse={deleteCourse}
       />
-      <Link prefetch href={customLink ? customLink : getUriWithOrg(orgslug, `/course/${removeCoursePrefix(course.course_uuid)}`)}>
+      <Link
+        prefetch
+        href={
+          customLink
+            ? customLink
+            : getUriWithOrg(
+                orgslug,
+                `/course/${removeCoursePrefix(course.course_uuid)}`
+              )
+        }
+      >
         <div
           className="inset-0 ring-1 ring-inset ring-black/10 rounded-t-xl w-full aspect-video bg-cover bg-center"
           style={{ backgroundImage: `url(${thumbnailImage})` }}
         />
       </Link>
-      <div className='flex flex-col w-full p-4 space-y-3'>
+      <div className="flex flex-col w-full p-4 space-y-3">
         <div className="space-y-2">
-          <h2 className="font-bold text-gray-800 leading-tight text-base min-h-[2.75rem] line-clamp-2">{course.name}</h2>
-          <p className='text-xs text-gray-700 leading-normal min-h-[3.75rem] line-clamp-3'>{course.description}</p>
+          <h2 className="font-bold text-gray-800 leading-tight text-base min-h-[2.75rem] line-clamp-2">
+            {course.name}
+          </h2>
+          <p className="text-xs text-gray-700 leading-normal min-h-[3.75rem] line-clamp-3">
+            {course.description}
+          </p>
         </div>
-        
+
         <div className="flex flex-wrap items-center gap-2">
           {course.update_date && (
             <div className="inline-flex h-5 min-w-[140px] items-center justify-center px-2 rounded-md bg-gray-100/80 border border-gray-200">
               <span className="text-[10px] font-medium text-gray-600 truncate">
-                Updated {new Date(course.update_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                Updated{' '}
+                {new Date(course.update_date).toLocaleDateString('en-US', {
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric',
+                })}
               </span>
             </div>
           )}
         </div>
 
-        <Link 
-          prefetch 
-          href={customLink ? customLink : getUriWithOrg(orgslug, `/course/${removeCoursePrefix(course.course_uuid)}`)}
+        <Link
+          prefetch
+          href={
+            customLink
+              ? customLink
+              : getUriWithOrg(
+                  orgslug,
+                  `/course/${removeCoursePrefix(course.course_uuid)}`
+                )
+          }
           className="inline-flex items-center justify-center w-full px-3 py-1.5 bg-black text-white text-xs font-medium rounded-lg hover:bg-gray-800 transition-colors"
         >
           Start Learning

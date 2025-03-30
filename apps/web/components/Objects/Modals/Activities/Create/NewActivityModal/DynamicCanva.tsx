@@ -59,7 +59,7 @@ function DynamicCanvaModal({ submitActivity, chapterId, course }: any) {
           </FormMessage>
         </Flex>
         <Form.Control asChild>
-          <Textarea onChange={handleActivityDescriptionChange}  />
+          <Textarea onChange={handleActivityDescriptionChange} />
         </Form.Control>
       </FormField>
 

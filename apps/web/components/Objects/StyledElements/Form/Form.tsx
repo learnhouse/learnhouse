@@ -4,7 +4,10 @@ import { styled } from '@stitches/react'
 import { blackA } from '@radix-ui/colors'
 import { Info } from 'lucide-react'
 
-const FormLayout: React.FC<{ children: React.ReactNode; onSubmit: (e: any) => void }> = (props) => (
+const FormLayout: React.FC<{
+  children: React.ReactNode
+  onSubmit: (e: any) => void
+}> = (props) => (
   <FormRoot className="h-fit" onSubmit={props.onSubmit}>
     {props.children}
   </FormRoot>

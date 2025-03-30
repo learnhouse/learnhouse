@@ -9,7 +9,7 @@ function VideoActivity({ activity, course }: { activity: any; course: any }) {
 
   React.useEffect(() => {
     if (activity && activity.content && activity.content.uri) {
-      var getYouTubeID = require('get-youtube-id');
+      var getYouTubeID = require('get-youtube-id')
       setVideoId(getYouTubeID(activity.content.uri))
     }
   }, [activity, org])

@@ -18,8 +18,8 @@ interface TrailCourseElementProps {
 
 function TrailCourseElement(props: TrailCourseElementProps) {
   const org = useOrg() as any
-  const session = useLHSession() as any;
-  const access_token = session?.data?.tokens?.access_token;
+  const session = useLHSession() as any
+  const access_token = session?.data?.tokens?.access_token
   const courseid = props.course.course_uuid.replace('course_', '')
   const course = props.course
   const router = useRouter()
@@ -32,7 +32,7 @@ function TrailCourseElement(props: TrailCourseElementProps) {
 
   async function quitCourse(course_uuid: string) {
     // Close activity
-    let activity = await removeCourse(course_uuid, props.orgslug,access_token)
+    let activity = await removeCourse(course_uuid, props.orgslug, access_token)
     // Mutate course
     await revalidateTags(['courses'], props.orgslug)
     router.refresh()

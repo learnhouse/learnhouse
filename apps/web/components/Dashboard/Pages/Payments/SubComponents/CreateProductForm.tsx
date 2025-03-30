@@ -1,17 +1,23 @@
-import React, { useEffect, useState } from 'react';
-import { useOrg } from '@components/Contexts/OrgContext';
-import { useLHSession } from '@components/Contexts/LHSessionContext';
-import { createProduct } from '@services/payments/products';
-import { Formik, Form, Field, ErrorMessage } from 'formik';
-import * as Yup from 'yup';
-import toast from 'react-hot-toast';
-import { mutate } from 'swr';
-import { Button } from "@components/ui/button";
-import { Input } from "@components/ui/input";
-import { Textarea } from "@components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@components/ui/select";
-import { Label } from "@components/ui/label";
-import currencyCodes from 'currency-codes';
+import React, { useEffect, useState } from 'react'
+import { useOrg } from '@components/Contexts/OrgContext'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { createProduct } from '@services/payments/products'
+import { Formik, Form, Field, ErrorMessage } from 'formik'
+import * as Yup from 'yup'
+import toast from 'react-hot-toast'
+import { mutate } from 'swr'
+import { Button } from '@components/ui/button'
+import { Input } from '@components/ui/input'
+import { Textarea } from '@components/ui/textarea'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@components/ui/select'
+import { Label } from '@components/ui/label'
+import currencyCodes from 'currency-codes'
 
 const validationSchema = Yup.object().shape({
   name: Yup.string().required('Name is required'),
@@ -21,32 +27,40 @@ const validationSchema = Yup.object().shape({
     .required('Amount is required'),
   benefits: Yup.string(),
   currency: Yup.string().required('Currency is required'),
-  product_type: Yup.string().oneOf(['one_time', 'subscription']).required('Product type is required'),
-  price_type: Yup.string().oneOf(['fixed_price', 'customer_choice']).required('Price type is required'),
-});
+  product_type: Yup.string()
+    .oneOf(['one_time', 'subscription'])
+    .required('Product type is required'),
+  price_type: Yup.string()
+    .oneOf(['fixed_price', 'customer_choice'])
+    .required('Price type is required'),
+})
 
 interface ProductFormValues {
-  name: string;
-  description: string;
-  product_type: 'one_time' | 'subscription';
-  price_type: 'fixed_price' | 'customer_choice';
-  benefits: string;
-  amount: number;
-  currency: string;
+  name: string
+  description: string
+  product_type: 'one_time' | 'subscription'
+  price_type: 'fixed_price' | 'customer_choice'
+  benefits: string
+  amount: number
+  currency: string
 }
 
-const CreateProductForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
-  const org = useOrg() as any;
-  const session = useLHSession() as any;
-  const [currencies, setCurrencies] = useState<{ code: string; name: string }[]>([]);
+const CreateProductForm: React.FC<{ onSuccess: () => void }> = ({
+  onSuccess,
+}) => {
+  const org = useOrg() as any
+  const session = useLHSession() as any
+  const [currencies, setCurrencies] = useState<
+    { code: string; name: string }[]
+  >([])
 
   useEffect(() => {
-    const allCurrencies = currencyCodes.data.map(currency => ({
+    const allCurrencies = currencyCodes.data.map((currency) => ({
       code: currency.code,
-      name: `${currency.code} - ${currency.currency}`
-    }));
-    setCurrencies(allCurrencies);
-  }, []);
+      name: `${currency.code} - ${currency.currency}`,
+    }))
+    setCurrencies(allCurrencies)
+  }, [])
 
   const initialValues: ProductFormValues = {
     name: '',
@@ -56,26 +70,36 @@ const CreateProductForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) =
     benefits: '',
     amount: 1,
     currency: 'USD',
-  };
+  }
 
-  const handleSubmit = async (values: ProductFormValues, { setSubmitting, resetForm }: any) => {
+  const handleSubmit = async (
+    values: ProductFormValues,
+    { setSubmitting, resetForm }: any
+  ) => {
     try {
-      const res = await createProduct(org.id, values, session.data?.tokens?.access_token);
+      const res = await createProduct(
+        org.id,
+        values,
+        session.data?.tokens?.access_token
+      )
       if (res.success) {
-        toast.success('Product created successfully');
-        mutate([`/payments/${org.id}/products`, session.data?.tokens?.access_token]);
-        resetForm();
-        onSuccess();
+        toast.success('Product created successfully')
+        mutate([
+          `/payments/${org.id}/products`,
+          session.data?.tokens?.access_token,
+        ])
+        resetForm()
+        onSuccess()
       } else {
-        toast.error('Failed to create product');
+        toast.error('Failed to create product')
       }
     } catch (error) {
-      console.error('Error creating product:', error);
-      toast.error('An error occurred while creating the product');
+      console.error('Error creating product:', error)
+      toast.error('An error occurred while creating the product')
     } finally {
-      setSubmitting(false);
+      setSubmitting(false)
     }
-  };
+  }
 
   return (
     <Formik
@@ -85,19 +109,31 @@ const CreateProductForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) =
     >
       {({ isSubmitting, values, setFieldValue }) => (
         <Form className="space-y-4">
-          <div className='px-1.5 py-2 flex-col space-y-3'>
+          <div className="px-1.5 py-2 flex-col space-y-3">
             <div>
               <Label htmlFor="name">Product Name</Label>
               <Field name="name" as={Input} placeholder="Product Name" />
-              <ErrorMessage name="name" component="div" className="text-red-500 text-sm mt-1" />
+              <ErrorMessage
+                name="name"
+                component="div"
+                className="text-red-500 text-sm mt-1"
+              />
             </div>
 
             <div>
               <Label htmlFor="description">Description</Label>
-              <Field name="description" as={Textarea} placeholder="Product Description" />
-              <ErrorMessage name="description" component="div" className="text-red-500 text-sm mt-1" />
+              <Field
+                name="description"
+                as={Textarea}
+                placeholder="Product Description"
+              />
+              <ErrorMessage
+                name="description"
+                component="div"
+                className="text-red-500 text-sm mt-1"
+              />
             </div>
-            
+
             <div>
               <Label htmlFor="product_type">Product Type</Label>
               <Select
@@ -112,7 +148,11 @@ const CreateProductForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) =
                   <SelectItem value="subscription">Subscription</SelectItem>
                 </SelectContent>
               </Select>
-              <ErrorMessage name="product_type" component="div" className="text-red-500 text-sm mt-1" />
+              <ErrorMessage
+                name="product_type"
+                component="div"
+                className="text-red-500 text-sm mt-1"
+              />
             </div>
 
             <div>
@@ -127,20 +167,41 @@ const CreateProductForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) =
                 <SelectContent>
                   <SelectItem value="fixed_price">Fixed Price</SelectItem>
                   {values.product_type !== 'subscription' && (
-                    <SelectItem value="customer_choice">Customer Choice</SelectItem>
+                    <SelectItem value="customer_choice">
+                      Customer Choice
+                    </SelectItem>
                   )}
                 </SelectContent>
               </Select>
-              <ErrorMessage name="price_type" component="div" className="text-red-500 text-sm mt-1" />
+              <ErrorMessage
+                name="price_type"
+                component="div"
+                className="text-red-500 text-sm mt-1"
+              />
             </div>
 
             <div className="flex space-x-2">
               <div className="grow">
                 <Label htmlFor="amount">
-                  {values.price_type === 'fixed_price' ? 'Price' : 'Minimum Amount'}
+                  {values.price_type === 'fixed_price'
+                    ? 'Price'
+                    : 'Minimum Amount'}
                 </Label>
-                <Field name="amount" as={Input} type="number" placeholder={values.price_type === 'fixed_price' ? 'Price' : 'Minimum Amount'} />
-                <ErrorMessage name="amount" component="div" className="text-red-500 text-sm mt-1" />
+                <Field
+                  name="amount"
+                  as={Input}
+                  type="number"
+                  placeholder={
+                    values.price_type === 'fixed_price'
+                      ? 'Price'
+                      : 'Minimum Amount'
+                  }
+                />
+                <ErrorMessage
+                  name="amount"
+                  component="div"
+                  className="text-red-500 text-sm mt-1"
+                />
               </div>
               <div className="w-1/3">
                 <Label htmlFor="currency">Currency</Label>
@@ -159,14 +220,26 @@ const CreateProductForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) =
                     ))}
                   </SelectContent>
                 </Select>
-                <ErrorMessage name="currency" component="div" className="text-red-500 text-sm mt-1" />
+                <ErrorMessage
+                  name="currency"
+                  component="div"
+                  className="text-red-500 text-sm mt-1"
+                />
               </div>
             </div>
 
             <div>
               <Label htmlFor="benefits">Benefits</Label>
-              <Field name="benefits" as={Textarea} placeholder="Product Benefits" />
-              <ErrorMessage name="benefits" component="div" className="text-red-500 text-sm mt-1" />
+              <Field
+                name="benefits"
+                as={Textarea}
+                placeholder="Product Benefits"
+              />
+              <ErrorMessage
+                name="benefits"
+                component="div"
+                className="text-red-500 text-sm mt-1"
+              />
             </div>
           </div>
 
@@ -178,7 +251,7 @@ const CreateProductForm: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) =
         </Form>
       )}
     </Formik>
-  );
-};
+  )
+}
 
-export default CreateProductForm;
+export default CreateProductForm

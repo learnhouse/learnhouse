@@ -10,7 +10,7 @@ import React, { useState } from 'react'
 import * as Form from '@radix-ui/react-form'
 import BarLoader from 'react-spinners/BarLoader'
 import { Youtube } from 'lucide-react'
-import { constructAcceptValue } from '@/lib/constants';
+import { constructAcceptValue } from '@/lib/constants'
 
 const SUPPORTED_FILES = constructAcceptValue(['mp4', 'webm'])
 
@@ -137,7 +137,12 @@ function VideoModal({
                   </FormMessage>
                 </Flex>
                 <Form.Control asChild>
-                  <input accept={SUPPORTED_FILES} type="file" onChange={handleVideoChange} required />
+                  <input
+                    accept={SUPPORTED_FILES}
+                    type="file"
+                    onChange={handleVideoChange}
+                    required
+                  />
                 </Form.Control>
               </FormField>
             </div>

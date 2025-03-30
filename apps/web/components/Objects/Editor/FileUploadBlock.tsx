@@ -73,7 +73,7 @@ function FileUploadBlock({
   return (
     <>
       {<Icon className="text-gray-200" size={50} />}
-        {children}
+      {children}
     </>
   )
 }
@@ -85,9 +85,14 @@ function FileUploadBlockWrapper({
 }: UploadBlockComponentProps) {
   return (
     isEmpty && (
-    <div className="flex items-center justify-center space-x-3 py-7 bg-gray-50 rounded-xl text-gray-900 px-3 border-dashed border-gray-150 border-2 text-sm" contentEditable={false}>
-      <FileUploadBlock isEmpty {...props}>{children}</FileUploadBlock>
-    </div>
+      <div
+        className="flex items-center justify-center space-x-3 py-7 bg-gray-50 rounded-xl text-gray-900 px-3 border-dashed border-gray-150 border-2 text-sm"
+        contentEditable={false}
+      >
+        <FileUploadBlock isEmpty {...props}>
+          {children}
+        </FileUploadBlock>
+      </div>
     )
   )
 }

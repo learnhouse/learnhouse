@@ -12,10 +12,10 @@ import { SearchBar } from '@components/Objects/Search/SearchBar'
 
 export const OrgMenu = (props: any) => {
   const orgslug = props.orgslug
-  const session = useLHSession() as any;
-  const access_token = session?.data?.tokens?.access_token;
+  const session = useLHSession() as any
+  const access_token = session?.data?.tokens?.access_token
   const [feedbackModal, setFeedbackModal] = React.useState(false)
-  const org = useOrg() as any;
+  const org = useOrg() as any
   const [isMenuOpen, setIsMenuOpen] = React.useState(false)
 
   function closeFeedbackModal() {
@@ -52,7 +52,7 @@ export const OrgMenu = (props: any) => {
               <MenuLinks orgslug={orgslug} />
             </div>
           </div>
-          
+
           {/* Search Section */}
           <div className="hidden md:flex flex-1 justify-center max-w-lg px-4">
             <SearchBar orgslug={orgslug} className="w-full" />
@@ -67,12 +67,34 @@ export const OrgMenu = (props: any) => {
               onClick={toggleMenu}
             >
               {isMenuOpen ? (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
                 </svg>
               )}
             </button>
@@ -89,7 +111,7 @@ export const OrgMenu = (props: any) => {
           <div className="w-full px-2">
             <SearchBar orgslug={orgslug} isMobile={true} />
           </div>
-          <div className='py-4'>
+          <div className="py-4">
             <MenuLinks orgslug={orgslug} />
           </div>
           <div className="border-t border-gray-200">

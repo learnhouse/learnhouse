@@ -85,15 +85,15 @@ export default async function middleware(req: NextRequest) {
   if (req.nextUrl.pathname.startsWith('/payments/stripe/connect/oauth')) {
     const searchParams = req.nextUrl.searchParams
     const orgslug = searchParams.get('state')?.split('_')[0] // Assuming state parameter contains orgslug_randomstring
-    
+
     // Construct the new URL with the required parameters
     const redirectUrl = new URL('/payments/stripe/connect/oauth', req.url)
-    
+
     // Preserve all original search parameters
     searchParams.forEach((value, key) => {
       redirectUrl.searchParams.append(key, value)
     })
-    
+
     // Add orgslug if available
     if (orgslug) {
       redirectUrl.searchParams.set('orgslug', orgslug)
@@ -128,26 +128,26 @@ export default async function middleware(req: NextRequest) {
   }
 
   if (pathname.startsWith('/sitemap.xml')) {
-    let orgslug: string;
-    
+    let orgslug: string
+
     if (hosting_mode === 'multi') {
       orgslug = fullhost
         ? fullhost.replace(`.${LEARNHOUSE_DOMAIN}`, '')
-        : (default_org as string);
+        : (default_org as string)
     } else {
       // Single hosting mode
-      orgslug = default_org as string;
+      orgslug = default_org as string
     }
 
-    const sitemapUrl = new URL(`/api/sitemap`, req.url);
+    const sitemapUrl = new URL(`/api/sitemap`, req.url)
 
     // Create a response object
-    const response = NextResponse.rewrite(sitemapUrl);
+    const response = NextResponse.rewrite(sitemapUrl)
 
     // Set the orgslug in a header
-    response.headers.set('X-Sitemap-Orgslug', orgslug);
+    response.headers.set('X-Sitemap-Orgslug', orgslug)
 
-    return response;
+    return response
   }
 
   // Multi Organization Mode

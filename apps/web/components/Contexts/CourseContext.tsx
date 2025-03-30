@@ -9,12 +9,13 @@ export const CourseContext = createContext(null)
 export const CourseDispatchContext = createContext(null)
 
 export function CourseProvider({ children, courseuuid }: any) {
-  const session = useLHSession() as any;
-  const access_token = session?.data?.tokens?.access_token;
+  const session = useLHSession() as any
+  const access_token = session?.data?.tokens?.access_token
 
-  const { data: courseStructureData, error } = useSWR(`${getAPIUrl()}courses/${courseuuid}/meta`,
-    url => swrFetcher(url, access_token)
-  );
+  const { data: courseStructureData, error } = useSWR(
+    `${getAPIUrl()}courses/${courseuuid}/meta`,
+    (url) => swrFetcher(url, access_token)
+  )
 
   const initialState = {
     courseStructure: {
@@ -22,20 +23,20 @@ export function CourseProvider({ children, courseuuid }: any) {
     },
     courseOrder: {},
     isSaved: true,
-    isLoading: true
-  };
+    isLoading: true,
+  }
 
-  const [state, dispatch] = useReducer(courseReducer, initialState) as any;
+  const [state, dispatch] = useReducer(courseReducer, initialState) as any
 
   useEffect(() => {
     if (courseStructureData) {
-      dispatch({ type: 'setCourseStructure', payload: courseStructureData });
-      dispatch({ type: 'setIsLoaded' });
+      dispatch({ type: 'setCourseStructure', payload: courseStructureData })
+      dispatch({ type: 'setIsLoaded' })
     }
-  }, [courseStructureData]);
+  }, [courseStructureData])
 
-  if (error) return <div>Failed to load course structure</div>;
-  if (!courseStructureData) return '';
+  if (error) return <div>Failed to load course structure</div>
+  if (!courseStructureData) return ''
 
   if (courseStructureData) {
     return (

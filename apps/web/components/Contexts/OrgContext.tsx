@@ -10,11 +10,17 @@ import { usePathname } from 'next/navigation'
 
 export const OrgContext = createContext(null)
 
-export function OrgProvider({ children, orgslug }: { children: React.ReactNode, orgslug: string }) {
+export function OrgProvider({
+  children,
+  orgslug,
+}: {
+  children: React.ReactNode
+  orgslug: string
+}) {
   const session = useLHSession() as any
   const pathname = usePathname()
   const accessToken = session?.data?.tokens?.access_token
-  const isAllowedPathname = ['/login', '/signup'].includes(pathname);
+  const isAllowedPathname = ['/login', '/signup'].includes(pathname)
 
   const { data: org, error: orgError } = useSWR(
     `${getAPIUrl()}orgs/slug/${orgslug}`,
@@ -25,18 +31,29 @@ export function OrgProvider({ children, orgslug }: { children: React.ReactNode, 
     (url) => swrFetcher(url, accessToken)
   )
 
+  const isOrgActive = useMemo(
+    () => org?.config?.config?.general?.enabled !== false,
+    [org]
+  )
+  const isUserPartOfTheOrg = useMemo(
+    () => orgs?.some((userOrg: any) => userOrg.id === org?.id),
+    [orgs, org?.id]
+  )
 
-  const isOrgActive = useMemo(() => org?.config?.config?.general?.enabled !== false, [org])
-  const isUserPartOfTheOrg = useMemo(() => orgs?.some((userOrg: any) => userOrg.id === org?.id), [orgs, org?.id])
-
-  if (orgError || orgsError) return <ErrorUI message='An error occurred while fetching data' />
+  if (orgError || orgsError)
+    return <ErrorUI message="An error occurred while fetching data" />
   if (!org || !orgs || !session) return <div></div>
-  if (!isOrgActive) return <ErrorUI message='This organization is no longer active' />
-  if (!isUserPartOfTheOrg && session.status == 'authenticated' && !isAllowedPathname) {
+  if (!isOrgActive)
+    return <ErrorUI message="This organization is no longer active" />
+  if (
+    !isUserPartOfTheOrg &&
+    session.status == 'authenticated' &&
+    !isAllowedPathname
+  ) {
     return (
       <InfoUI
         href={getUriWithoutOrg(`/signup?orgslug=${orgslug}`)}
-        message='You are not part of this Organization yet'
+        message="You are not part of this Organization yet"
         cta={`Join ${org?.name}`}
       />
     )

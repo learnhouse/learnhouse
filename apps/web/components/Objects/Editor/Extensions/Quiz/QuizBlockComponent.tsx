@@ -32,18 +32,21 @@ function QuizBlockComponent(props: any) {
   const isEditable = editorState.isEditable
 
   const handleAnswerClick = (question_id: string, answer_id: string) => {
-    if (submitted) return;
+    if (submitted) return
 
     const existingAnswerIndex = userAnswers.findIndex(
-      (answer: any) => answer.question_id === question_id && answer.answer_id === answer_id
-    );
+      (answer: any) =>
+        answer.question_id === question_id && answer.answer_id === answer_id
+    )
 
     if (existingAnswerIndex !== -1) {
       // Remove the answer if it's already selected
-      setUserAnswers(userAnswers.filter((_, index) => index !== existingAnswerIndex));
+      setUserAnswers(
+        userAnswers.filter((_, index) => index !== existingAnswerIndex)
+      )
     } else {
       // Add the answer
-      setUserAnswers([...userAnswers, { question_id, answer_id }]);
+      setUserAnswers([...userAnswers, { question_id, answer_id }])
     }
   }
 
@@ -54,17 +57,19 @@ function QuizBlockComponent(props: any) {
   }
 
   const handleUserSubmission = () => {
-    setSubmitted(true);
+    setSubmitted(true)
 
     const correctAnswers = questions.every((question: Question) => {
-      const correctAnswers = question.answers.filter((answer: Answer) => answer.correct);
+      const correctAnswers = question.answers.filter(
+        (answer: Answer) => answer.correct
+      )
       const userAnswersForQuestion = userAnswers.filter(
         (userAnswer: any) => userAnswer.question_id === question.question_id
-      );
+      )
 
       // If no correct answers are set and user didn't select any, it's correct
       if (correctAnswers.length === 0 && userAnswersForQuestion.length === 0) {
-        return true;
+        return true
       }
 
       // Check if user selected all correct answers and no incorrect ones
@@ -72,13 +77,18 @@ function QuizBlockComponent(props: any) {
         correctAnswers.length === userAnswersForQuestion.length &&
         correctAnswers.every((correctAnswer: Answer) =>
           userAnswersForQuestion.some(
-            (userAnswer: any) => userAnswer.answer_id === correctAnswer.answer_id
+            (userAnswer: any) =>
+              userAnswer.answer_id === correctAnswer.answer_id
           )
         )
-      );
-    });
+      )
+    })
 
-    setSubmissionMessage(correctAnswers ? 'All answers are correct!' : 'Some answers are incorrect!');
+    setSubmissionMessage(
+      correctAnswers
+        ? 'All answers are correct!'
+        : 'Some answers are incorrect!'
+    )
   }
 
   const getAnswerID = (answerIndex: number, questionId: string) => {
@@ -196,19 +206,18 @@ function QuizBlockComponent(props: any) {
       if (question.question_id === question_id) {
         question.answers = question.answers.map((answer: Answer) => ({
           ...answer,
-          correct: answer.answer_id === answer_id ? !answer.correct : answer.correct,
-        }));
+          correct:
+            answer.answer_id === answer_id ? !answer.correct : answer.correct,
+        }))
       }
-      return question;
-    });
-    saveQuestions(newQuestions);
+      return question
+    })
+    saveQuestions(newQuestions)
   }
 
   return (
     <NodeViewWrapper className="block-quiz">
-      <div
-        className="rounded-xl px-3 sm:px-5 py-2 bg-slate-100 transition-all ease-linear"
-      >
+      <div className="rounded-xl px-3 sm:px-5 py-2 bg-slate-100 transition-all ease-linear">
         {/* Header section */}
         <div className="flex flex-wrap gap-2 pt-1 items-center text-sm">
           {submitted && submissionMessage === 'All answers are correct!' && (
@@ -224,20 +233,22 @@ function QuizBlockComponent(props: any) {
               Quiz
             </p>
           </div>
-          
+
           {/* Submission message */}
           {submitted && (
-            <div className={`text-xs font-medium px-2 py-1 rounded-md ${
-              submissionMessage === 'All answers are correct!' 
-                ? 'bg-lime-100 text-lime-700' 
-                : 'bg-red-100 text-red-700'
-            }`}>
+            <div
+              className={`text-xs font-medium px-2 py-1 rounded-md ${
+                submissionMessage === 'All answers are correct!'
+                  ? 'bg-lime-100 text-lime-700'
+                  : 'bg-red-100 text-red-700'
+              }`}
+            >
               {submissionMessage}
             </div>
           )}
-          
+
           <div className="grow"></div>
-          
+
           {/* Action buttons */}
           {isEditable ? (
             <div>
@@ -255,10 +266,7 @@ function QuizBlockComponent(props: any) {
                 className="cursor-pointer p-1.5 rounded-md hover:bg-slate-200"
                 title="Reset answers"
               >
-                <RefreshCcw
-                  className="text-slate-500"
-                  size={15}
-                />
+                <RefreshCcw className="text-slate-500" size={15} />
               </div>
               <button
                 onClick={() => handleUserSubmission()}
@@ -303,7 +311,7 @@ function QuizBlockComponent(props: any) {
                   </div>
                 )}
               </div>
-              
+
               {/* Answers section - changed to vertical layout for better responsiveness */}
               <div className="answers flex flex-col py-2 space-y-2">
                 {question.answers.map((answer: Answer) => (
@@ -311,21 +319,30 @@ function QuizBlockComponent(props: any) {
                     key={answer.answer_id}
                     className={twMerge(
                       'outline outline-2 pr-2 shadow-sm w-full flex items-stretch space-x-2 min-h-[36px] bg-opacity-50 hover:bg-opacity-100 hover:shadow-md rounded-lg bg-white text-sm duration-150 cursor-pointer ease-linear',
-                      answer.correct && isEditable ? 'outline-lime-300' : 'outline-white',
+                      answer.correct && isEditable
+                        ? 'outline-lime-300'
+                        : 'outline-white',
                       userAnswers.some(
                         (userAnswer: any) =>
                           userAnswer.question_id === question.question_id &&
                           userAnswer.answer_id === answer.answer_id &&
-                          !isEditable && !submitted
-                      ) ? 'outline-blue-400' : '',
-                      submitted && answer.correct ? 'outline-lime-300 text-lime' : '',
+                          !isEditable &&
+                          !submitted
+                      )
+                        ? 'outline-blue-400'
+                        : '',
+                      submitted && answer.correct
+                        ? 'outline-lime-300 text-lime'
+                        : '',
                       submitted &&
                         !answer.correct &&
                         userAnswers.some(
                           (userAnswer: any) =>
                             userAnswer.question_id === question.question_id &&
                             userAnswer.answer_id === answer.answer_id
-                        ) ? 'outline-red-400' : ''
+                        )
+                        ? 'outline-red-400'
+                        : ''
                     )}
                     onClick={() =>
                       handleAnswerClick(question.question_id, answer.answer_id)
@@ -341,8 +358,11 @@ function QuizBlockComponent(props: any) {
                           (userAnswer: any) =>
                             userAnswer.question_id === question.question_id &&
                             userAnswer.answer_id === answer.answer_id &&
-                            !isEditable && !submitted
-                        ) ? 'bg-blue-400 text-white outline-hidden' : '',
+                            !isEditable &&
+                            !submitted
+                        )
+                          ? 'bg-blue-400 text-white outline-hidden'
+                          : '',
                         submitted && answer.correct
                           ? 'bg-lime-300 text-lime-800 outline-hidden'
                           : '',
@@ -386,21 +406,25 @@ function QuizBlockComponent(props: any) {
                       <div className="flex space-x-1 items-center">
                         <div
                           onClick={(e) => {
-                            e.stopPropagation();
+                            e.stopPropagation()
                             markAnswerCorrect(
                               question.question_id,
                               answer.answer_id
-                            );
+                            )
                           }}
                           className="w-[24px] flex-none flex items-center h-[24px] rounded-lg bg-lime-300 hover:bg-lime-400 transition-all ease-linear text-sm cursor-pointer"
-                          title={answer.correct ? "Mark as incorrect" : "Mark as correct"}
+                          title={
+                            answer.correct
+                              ? 'Mark as incorrect'
+                              : 'Mark as correct'
+                          }
                         >
                           <Check className="mx-auto text-lime-800" size={14} />
                         </div>
                         <div
                           onClick={(e) => {
-                            e.stopPropagation();
-                            deleteAnswer(question.question_id, answer.answer_id);
+                            e.stopPropagation()
+                            deleteAnswer(question.question_id, answer.answer_id)
                           }}
                           className="w-[24px] flex-none flex items-center h-[24px] rounded-lg bg-slate-200 hover:bg-slate-300 text-sm transition-all ease-linear cursor-pointer"
                           title="Delete answer"

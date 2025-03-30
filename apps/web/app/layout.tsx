@@ -21,7 +21,14 @@ export default function RootLayout({
     <html className="" lang="en">
       <head />
       <body>
-        {isDevEnv ? '' : <Script data-website-id="a1af6d7a-9286-4a1f-8385-ddad2a29fcbb" src="/umami/script.js" />}
+        {isDevEnv ? (
+          ''
+        ) : (
+          <Script
+            data-website-id="a1af6d7a-9286-4a1f-8385-ddad2a29fcbb"
+            src="/umami/script.js"
+          />
+        )}
         <SessionProvider key="session-provider">
           <LHSessionProvider>
             <StyledComponentsRegistry>

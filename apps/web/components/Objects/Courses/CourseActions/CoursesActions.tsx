@@ -8,7 +8,14 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useMediaQuery } from 'usehooks-ts'
 import { getUriWithOrg, getUriWithoutOrg } from '@services/config/config'
 import { getProductsByCourse } from '@services/payments/products'
-import { LogIn, LogOut, ShoppingCart, AlertCircle, UserPen, ClockIcon } from 'lucide-react'
+import {
+  LogIn,
+  LogOut,
+  ShoppingCart,
+  AlertCircle,
+  UserPen,
+  ClockIcon,
+} from 'lucide-react'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import CoursePaidOptions from './CoursePaidOptions'
 import { checkPaidAccess } from '@services/payments/payments'
@@ -59,18 +66,31 @@ interface CourseActionsProps {
 }
 
 // Separate component for author display
-const AuthorInfo = ({ author, isMobile }: { author: Author, isMobile: boolean }) => (
+const AuthorInfo = ({
+  author,
+  isMobile,
+}: {
+  author: Author
+  isMobile: boolean
+}) => (
   <div className="flex flex-row md:flex-col mx-auto space-y-0 md:space-y-3 space-x-4 md:space-x-0 px-2 py-2 items-center">
     <UserAvatar
       border="border-8"
-      avatar_url={author.user.avatar_image ? getUserAvatarMediaDirectory(author.user.user_uuid, author.user.avatar_image) : ''}
+      avatar_url={
+        author.user.avatar_image
+          ? getUserAvatarMediaDirectory(
+              author.user.user_uuid,
+              author.user.avatar_image
+            )
+          : ''
+      }
       predefined_avatar={author.user.avatar_image ? undefined : 'empty'}
       width={isMobile ? 60 : 100}
     />
     <div className="md:-space-y-2">
       <div className="text-[12px] text-neutral-400 font-semibold">Author</div>
       <div className="text-lg md:text-xl font-bold text-neutral-800">
-        {(author.user.first_name && author.user.last_name) ? (
+        {author.user.first_name && author.user.last_name ? (
           <div className="flex space-x-2 items-center">
             <p>{`${author.user.first_name} ${author.user.last_name}`}</p>
             <span className="text-xs bg-neutral-100 p-1 px-3 rounded-full text-neutral-400 font-semibold">
@@ -87,19 +107,27 @@ const AuthorInfo = ({ author, isMobile }: { author: Author, isMobile: boolean })
   </div>
 )
 
-const MultipleAuthors = ({ authors, isMobile }: { authors: Author[], isMobile: boolean }) => {
+const MultipleAuthors = ({
+  authors,
+  isMobile,
+}: {
+  authors: Author[]
+  isMobile: boolean
+}) => {
   const displayedAvatars = authors.slice(0, 3)
   const displayedNames = authors.slice(0, 2)
   const remainingCount = Math.max(0, authors.length - 3)
-  
+
   // Consistent sizes for both avatars and badge
   const avatarSize = isMobile ? 72 : 86
-  const borderSize = "border-4"
+  const borderSize = 'border-4'
 
   return (
     <div className="flex flex-col items-center space-y-4 px-2 py-2">
-      <div className="text-[12px] text-neutral-400 font-semibold self-start">Authors</div>
-      
+      <div className="text-[12px] text-neutral-400 font-semibold self-start">
+        Authors
+      </div>
+
       {/* Avatars row */}
       <div className="flex justify-center -space-x-6 relative">
         {displayedAvatars.map((author, index) => (
@@ -111,25 +139,31 @@ const MultipleAuthors = ({ authors, isMobile }: { authors: Author[], isMobile: b
             <div className="ring-white">
               <UserAvatar
                 border={borderSize}
-                rounded='rounded-full'
-                avatar_url={author.user.avatar_image ? getUserAvatarMediaDirectory(author.user.user_uuid, author.user.avatar_image) : ''}
-                predefined_avatar={author.user.avatar_image ? undefined : 'empty'}
+                rounded="rounded-full"
+                avatar_url={
+                  author.user.avatar_image
+                    ? getUserAvatarMediaDirectory(
+                        author.user.user_uuid,
+                        author.user.avatar_image
+                      )
+                    : ''
+                }
+                predefined_avatar={
+                  author.user.avatar_image ? undefined : 'empty'
+                }
                 width={avatarSize}
               />
             </div>
           </div>
         ))}
         {remainingCount > 0 && (
-          <div 
-            className="relative"
-            style={{ zIndex: 0 }}
-          >
-            <div 
+          <div className="relative" style={{ zIndex: 0 }}>
+            <div
               className="flex items-center justify-center bg-neutral-100 text-neutral-600 font-medium rounded-full border-4 border-white shadow-sm"
-              style={{ 
-                width: `${avatarSize}px`, 
+              style={{
+                width: `${avatarSize}px`,
                 height: `${avatarSize}px`,
-                fontSize: isMobile ? '14px' : '16px'
+                fontSize: isMobile ? '14px' : '16px',
               }}
             >
               +{remainingCount}
@@ -154,7 +188,10 @@ const MultipleAuthors = ({ authors, isMobile }: { authors: Author[], isMobile: b
                   {author.user.first_name && author.user.last_name
                     ? `${author.user.first_name} ${author.user.last_name}`
                     : `@${author.user.username}`}
-                  {index === 0 && authors.length > 1 && index < displayedNames.length - 1 && " & "}
+                  {index === 0 &&
+                    authors.length > 1 &&
+                    index < displayedNames.length - 1 &&
+                    ' & '}
                 </span>
               ))}
               {authors.length > 2 && (
@@ -173,7 +210,10 @@ const MultipleAuthors = ({ authors, isMobile }: { authors: Author[], isMobile: b
               {displayedNames.map((author, index) => (
                 <span key={author.user.user_uuid}>
                   @{author.user.username}
-                  {index === 0 && authors.length > 1 && index < displayedNames.length - 1 && " & "}
+                  {index === 0 &&
+                    authors.length > 1 &&
+                    index < displayedNames.length - 1 &&
+                    ' & '}
                 </span>
               ))}
             </>
@@ -193,11 +233,13 @@ const Actions = ({ courseuuid, orgslug, course }: CourseActionsProps) => {
   const [isContributeLoading, setIsContributeLoading] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [hasAccess, setHasAccess] = useState<boolean | null>(null)
-  const { contributorStatus, refetch } = useContributorStatus(courseuuid);
+  const { contributorStatus, refetch } = useContributorStatus(courseuuid)
 
-  const isStarted = course.trail?.runs?.some(
-    (run) => run.status === 'STATUS_IN_PROGRESS' && run.course_id === course.id
-  ) ?? false
+  const isStarted =
+    course.trail?.runs?.some(
+      (run) =>
+        run.status === 'STATUS_IN_PROGRESS' && run.course_id === course.id
+    ) ?? false
 
   useEffect(() => {
     const fetchLinkedProducts = async () => {
@@ -228,7 +270,6 @@ const Actions = ({ courseuuid, orgslug, course }: CourseActionsProps) => {
           session.data?.tokens?.access_token
         )
         setHasAccess(response.has_access)
-        
       } catch (error) {
         console.error('Failed to check course access')
         toast.error('Failed to check course access. Please try again later.')
@@ -239,7 +280,12 @@ const Actions = ({ courseuuid, orgslug, course }: CourseActionsProps) => {
     if (linkedProducts.length > 0) {
       checkAccess()
     }
-  }, [course.id, course.org_id, session.data?.tokens?.access_token, linkedProducts])
+  }, [
+    course.id,
+    course.org_id,
+    session.data?.tokens?.access_token,
+    linkedProducts,
+  ])
 
   const handleCourseAction = async () => {
     if (!session.data?.user) {
@@ -251,27 +297,35 @@ const Actions = ({ courseuuid, orgslug, course }: CourseActionsProps) => {
     const loadingToast = toast.loading(
       isStarted ? 'Leaving course...' : 'Starting course...'
     )
-    
+
     try {
       if (isStarted) {
-        await removeCourse('course_' + courseuuid, orgslug, session.data?.tokens?.access_token)
+        await removeCourse(
+          'course_' + courseuuid,
+          orgslug,
+          session.data?.tokens?.access_token
+        )
         await revalidateTags(['courses'], orgslug)
         toast.success('Successfully left the course', { id: loadingToast })
         router.refresh()
       } else {
-        await startCourse('course_' + courseuuid, orgslug, session.data?.tokens?.access_token)
+        await startCourse(
+          'course_' + courseuuid,
+          orgslug,
+          session.data?.tokens?.access_token
+        )
         await revalidateTags(['courses'], orgslug)
         toast.success('Successfully started the course', { id: loadingToast })
-        
+
         // Get the first activity from the first chapter
         const firstChapter = course.chapters?.[0]
         const firstActivity = firstChapter?.activities?.[0]
-        
+
         if (firstActivity) {
           // Redirect to the first activity
           router.push(
             getUriWithOrg(orgslug, '') +
-            `/course/${courseuuid}/activity/${firstActivity.activity_uuid.replace('activity_', '')}`
+              `/course/${courseuuid}/activity/${firstActivity.activity_uuid.replace('activity_', '')}`
           )
         } else {
           router.refresh()
@@ -298,44 +352,61 @@ const Actions = ({ courseuuid, orgslug, course }: CourseActionsProps) => {
 
     setIsContributeLoading(true)
     const loadingToast = toast.loading('Submitting contributor application...')
-    
+
     try {
       const data = {
-        message: "I would like to contribute to this course."
+        message: 'I would like to contribute to this course.',
       }
-      
-      await applyForContributor('course_' + courseuuid, data, session.data?.tokens?.access_token)
+
+      await applyForContributor(
+        'course_' + courseuuid,
+        data,
+        session.data?.tokens?.access_token
+      )
       await revalidateTags(['courses'], orgslug)
       await refetch()
-      toast.success('Your application to contribute has been submitted successfully', { id: loadingToast })
+      toast.success(
+        'Your application to contribute has been submitted successfully',
+        { id: loadingToast }
+      )
     } catch (error) {
       console.error('Failed to apply as contributor:', error)
-      toast.error('Failed to submit your application. Please try again later.', { id: loadingToast })
+      toast.error(
+        'Failed to submit your application. Please try again later.',
+        { id: loadingToast }
+      )
     } finally {
       setIsContributeLoading(false)
     }
   }
 
   if (isLoading) {
-    return <div className="animate-pulse h-20 bg-gray-100 rounded-lg nice-shadow" />
+    return (
+      <div className="animate-pulse h-20 bg-gray-100 rounded-lg nice-shadow" />
+    )
   }
 
   const renderContributorButton = () => {
     // Don't render anything if the course is not open to contributors or if the user status is INACTIVE
-    if (contributorStatus === 'INACTIVE' || course.open_to_contributors !== true) {
-      return null;
+    if (
+      contributorStatus === 'INACTIVE' ||
+      course.open_to_contributors !== true
+    ) {
+      return null
     }
-    
+
     if (!session.data?.user) {
       return (
         <button
-          onClick={() => router.push(getUriWithoutOrg(`/signup?orgslug=${orgslug}`))}
+          onClick={() =>
+            router.push(getUriWithoutOrg(`/signup?orgslug=${orgslug}`))
+          }
           className="w-full bg-white text-neutral-700 border border-neutral-200 py-3 rounded-lg nice-shadow font-semibold hover:bg-neutral-50 transition-colors flex items-center justify-center gap-2 mt-3 cursor-pointer"
         >
           <UserPen className="w-5 h-5" />
           Authenticate to contribute
         </button>
-      );
+      )
     }
 
     if (contributorStatus === 'ACTIVE') {
@@ -344,7 +415,7 @@ const Actions = ({ courseuuid, orgslug, course }: CourseActionsProps) => {
           <UserPen className="w-5 h-5" />
           You are a contributor
         </div>
-      );
+      )
     }
 
     if (contributorStatus === 'PENDING') {
@@ -353,7 +424,7 @@ const Actions = ({ courseuuid, orgslug, course }: CourseActionsProps) => {
           <ClockIcon className="w-5 h-5" />
           Contributor application pending
         </div>
-      );
+      )
     }
 
     return (
@@ -371,8 +442,8 @@ const Actions = ({ courseuuid, orgslug, course }: CourseActionsProps) => {
           </>
         )}
       </button>
-    );
-  };
+    )
+  }
 
   if (linkedProducts.length > 0) {
     return (
@@ -382,10 +453,13 @@ const Actions = ({ courseuuid, orgslug, course }: CourseActionsProps) => {
             <div className="p-4 bg-green-50 border border-green-200 rounded-lg nice-shadow">
               <div className="flex items-center gap-3">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                <h3 className="text-green-800 font-semibold">You Own This Course</h3>
+                <h3 className="text-green-800 font-semibold">
+                  You Own This Course
+                </h3>
               </div>
               <p className="text-green-700 text-sm mt-1">
-                You have purchased this course and have full access to all content.
+                You have purchased this course and have full access to all
+                content.
               </p>
             </div>
             <button
@@ -424,7 +498,7 @@ const Actions = ({ courseuuid, orgslug, course }: CourseActionsProps) => {
             </p>
           </div>
         )}
-        
+
         {!hasAccess && (
           <>
             <Modal
@@ -491,21 +565,21 @@ function CoursesActions({ courseuuid, orgslug, course }: CourseActionsProps) {
 
   // Filter active authors and sort by role priority
   const sortedAuthors = [...course.authors]
-    .filter(author => author.authorship_status === 'ACTIVE')
+    .filter((author) => author.authorship_status === 'ACTIVE')
     .sort((a, b) => {
       const rolePriority: Record<string, number> = {
-        'CREATOR': 0,
-        'MAINTAINER': 1,
-        'CONTRIBUTOR': 2,
-        'REPORTER': 3
-      };
-      return rolePriority[a.authorship] - rolePriority[b.authorship];
-    });
+        CREATOR: 0,
+        MAINTAINER: 1,
+        CONTRIBUTOR: 2,
+        REPORTER: 3,
+      }
+      return rolePriority[a.authorship] - rolePriority[b.authorship]
+    })
 
   return (
     <div className="space-y-3 antialiased flex flex-col p-3 py-5 bg-white shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40 rounded-lg overflow-hidden">
       <MultipleAuthors authors={sortedAuthors} isMobile={isMobile} />
-      <div className='px-3 py-2'>
+      <div className="px-3 py-2">
         <Actions courseuuid={courseuuid} orgslug={orgslug} course={course} />
       </div>
     </div>

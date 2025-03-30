@@ -1,7 +1,11 @@
 import { useOrg } from '@components/Contexts/OrgContext'
 import PageLoading from '@components/Objects/Loaders/PageLoading'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
-import { getAPIUrl, getUriWithOrg, getUriWithoutOrg } from '@services/config/config'
+import {
+  getAPIUrl,
+  getUriWithOrg,
+  getUriWithoutOrg,
+} from '@services/config/config'
 import { swrFetcher } from '@services/utils/ts/requests'
 import { Globe, Ticket, UserSquare, Users, X } from 'lucide-react'
 import Link from 'next/link'
@@ -21,7 +25,7 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 function OrgAccess() {
   const org = useOrg() as any
   const session = useLHSession() as any
-  const access_token = session?.data?.tokens?.access_token;
+  const access_token = session?.data?.tokens?.access_token
   const { data: invites } = useSWR(
     org ? `${getAPIUrl()}orgs/${org?.id}/invites` : null,
     (url) => swrFetcher(url, access_token)
@@ -42,25 +46,29 @@ function OrgAccess() {
   }
 
   async function deleteInvite(invite: any) {
-    const toastId = toast.loading("Deleting...")
-    let res = await deleteInviteCode(org.id, invite.invite_code_uuid, access_token)
+    const toastId = toast.loading('Deleting...')
+    let res = await deleteInviteCode(
+      org.id,
+      invite.invite_code_uuid,
+      access_token
+    )
     if (res.status == 200) {
       mutate(`${getAPIUrl()}orgs/${org.id}/invites`)
-      toast.success("Deleted invite code", {id:toastId})
+      toast.success('Deleted invite code', { id: toastId })
     } else {
-      toast.error('Error deleting', {id:toastId})
+      toast.error('Error deleting', { id: toastId })
     }
   }
 
   async function changeJoinMethod(method: 'open' | 'inviteOnly') {
-    const toastId = toast.loading("Changing join method...")
+    const toastId = toast.loading('Changing join method...')
     let res = await changeSignupMechanism(org.id, method, access_token)
     if (res.status == 200) {
       router.refresh()
       mutate(`${getAPIUrl()}orgs/slug/${org?.slug}`)
-      toast.success(`Changed join method to ${method}`, {id:toastId})
+      toast.success(`Changed join method to ${method}`, { id: toastId })
     } else {
-      toast.error('Error changing join method', {id:toastId})
+      toast.error('Error changing join method', { id: toastId })
     }
   }
 
@@ -226,37 +234,27 @@ function OrgAccess() {
                   </tbody>
                 </>
               </table>
-              <div className='flex flex-row-reverse mt-3 mr-2'>
+              <div className="flex flex-row-reverse mt-3 mr-2">
                 <Modal
-                  isDialogOpen={
-                    invitesModal
-                  }
-                  onOpenChange={() =>
-                    setInvitesModal(!invitesModal)
-                  }
+                  isDialogOpen={invitesModal}
+                  onOpenChange={() => setInvitesModal(!invitesModal)}
                   minHeight="no-min"
-                  minWidth='lg'
+                  minWidth="lg"
                   dialogContent={
-                    <OrgInviteCodeGenerate
-                      setInvitesModal={setInvitesModal}
-                    />
+                    <OrgInviteCodeGenerate setInvitesModal={setInvitesModal} />
                   }
                   dialogTitle="Generate Invite Code"
                   dialogDescription={
                     'Generate a new invite code for your organization'
                   }
                   dialogTrigger={
-                    <button
-                      className=" flex space-x-2 hover:cursor-pointer p-1 px-3 bg-green-700 rounded-md font-bold items-center text-sm text-green-100"
-                    >
+                    <button className=" flex space-x-2 hover:cursor-pointer p-1 px-3 bg-green-700 rounded-md font-bold items-center text-sm text-green-100">
                       <Ticket className="w-4 h-4" />
                       <span> Generate invite code</span>
                     </button>
                   }
                 />
-
               </div>
-
             </div>
           </div>
         </>

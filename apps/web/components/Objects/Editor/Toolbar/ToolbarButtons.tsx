@@ -58,28 +58,33 @@ export const ToolbarButtons = ({ editor, props }: any) => {
     {
       label: 'Insert new table (3×3)',
       icon: <TableIcon />,
-      action: () => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
+      action: () =>
+        editor
+          .chain()
+          .focus()
+          .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+          .run(),
     },
     {
       label: 'Add row below',
       icon: <RowsIcon />,
-      action: () => editor.chain().focus().addRowAfter().run()
+      action: () => editor.chain().focus().addRowAfter().run(),
     },
     {
       label: 'Add column right',
       icon: <ColumnsIcon />,
-      action: () => editor.chain().focus().addColumnAfter().run()
+      action: () => editor.chain().focus().addColumnAfter().run(),
     },
     {
       label: 'Delete current row',
       icon: <SectionIcon />,
-      action: () => editor.chain().focus().deleteRow().run()
+      action: () => editor.chain().focus().deleteRow().run(),
     },
     {
       label: 'Delete current column',
       icon: <ContainerIcon />,
-      action: () => editor.chain().focus().deleteColumn().run()
-    }
+      action: () => editor.chain().focus().deleteColumn().run(),
+    },
   ]
 
   return (
@@ -131,17 +136,17 @@ export const ToolbarButtons = ({ editor, props }: any) => {
         <option value="6">Heading 6</option>
       </ToolSelect>
       <TableMenuWrapper>
-        <ToolBtn 
+        <ToolBtn
           onClick={() => setShowTableMenu(!showTableMenu)}
           className={showTableMenu ? 'is-active' : ''}
         >
           <TableIcon width={18} />
-          <ChevronDownIcon  />
+          <ChevronDownIcon />
         </ToolBtn>
         {showTableMenu && (
           <TableDropdown>
             {tableOptions.map((option, index) => (
-              <TableMenuItem 
+              <TableMenuItem
                 key={index}
                 onClick={() => {
                   option.action()
@@ -205,7 +210,11 @@ export const ToolbarButtons = ({ editor, props }: any) => {
         </ToolBtn>
       </ToolTip>
       <ToolTip content={'YouTube video'}>
-        <ToolBtn  onClick={() => editor.chain().focus().insertContent({ type: 'blockEmbed' }).run()}>
+        <ToolBtn
+          onClick={() =>
+            editor.chain().focus().insertContent({ type: 'blockEmbed' }).run()
+          }
+        >
           <SiYoutube size={15} />
         </ToolBtn>
       </ToolTip>
@@ -264,37 +273,51 @@ export const ToolbarButtons = ({ editor, props }: any) => {
       </ToolTip>
       <ToolTip content={'External Object (Embed)'}>
         <ToolBtn
-          onClick={() => editor.chain().focus().insertContent({ type: 'blockEmbed' }).run()}
+          onClick={() =>
+            editor.chain().focus().insertContent({ type: 'blockEmbed' }).run()
+          }
         >
           <Cuboid size={15} />
         </ToolBtn>
       </ToolTip>
       <ToolTip content={'Badges'}>
         <ToolBtn
-          onClick={() => editor.chain().focus().insertContent({
-            type: 'badge',
-            content: [
-              {
-                type: 'text',
-                text: 'This is a Badge'
-              }
-            ]
-          }).run()}
+          onClick={() =>
+            editor
+              .chain()
+              .focus()
+              .insertContent({
+                type: 'badge',
+                content: [
+                  {
+                    type: 'text',
+                    text: 'This is a Badge',
+                  },
+                ],
+              })
+              .run()
+          }
         >
           <Tags size={15} />
         </ToolBtn>
       </ToolTip>
       <ToolTip content={'Button'}>
         <ToolBtn
-          onClick={() => editor.chain().focus().insertContent({
-            type: 'button',
-            content: [
-              {
-                type: 'text',
-                text: 'Click me'
-              }
-            ]
-          }).run()}
+          onClick={() =>
+            editor
+              .chain()
+              .focus()
+              .insertContent({
+                type: 'button',
+                content: [
+                  {
+                    type: 'text',
+                    text: 'Click me',
+                  },
+                ],
+              })
+              .run()
+          }
         >
           <MousePointerClick size={15} />
         </ToolBtn>

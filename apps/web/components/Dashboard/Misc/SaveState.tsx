@@ -15,7 +15,7 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 
 function SaveState(props: { orgslug: string }) {
   const course = useCourse() as any
-  const session = useLHSession() as any;
+  const session = useLHSession() as any
   const router = useRouter()
   const saved = course ? course.isSaved : true
   const dispatchCourse = useCourseDispatch() as any

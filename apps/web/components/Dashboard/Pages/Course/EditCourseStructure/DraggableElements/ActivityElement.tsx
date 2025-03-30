@@ -24,7 +24,10 @@ import { useRouter } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 import { Draggable } from '@hello-pangea/dnd'
 import { mutate } from 'swr'
-import { deleteAssignmentUsingActivityUUID, getAssignmentFromActivityUUID } from '@services/courses/assignments'
+import {
+  deleteAssignmentUsingActivityUUID,
+  getAssignmentFromActivityUUID,
+} from '@services/courses/assignments'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useCourse } from '@components/Contexts/CourseContext'
 import toast from 'react-hot-toast'
@@ -45,8 +48,8 @@ interface ModifiedActivityInterface {
 
 function ActivityElement(props: ActivitiyElementProps) {
   const router = useRouter()
-  const session = useLHSession() as any;
-  const access_token = session?.data?.tokens?.access_token;
+  const session = useLHSession() as any
+  const access_token = session?.data?.tokens?.access_token
   const [modifiedActivity, setModifiedActivity] = React.useState<
     ModifiedActivityInterface | undefined
   >(undefined)
@@ -59,9 +62,12 @@ function ActivityElement(props: ActivitiyElementProps) {
 
   async function deleteActivityUI() {
     const toast_loading = toast.loading('Deleting activity...')
-    // Assignments 
+    // Assignments
     if (props.activity.activity_type === 'TYPE_ASSIGNMENT') {
-      await deleteAssignmentUsingActivityUUID(props.activity.activity_uuid, access_token)
+      await deleteAssignmentUsingActivityUUID(
+        props.activity.activity_uuid,
+        access_token
+      )
     }
 
     await deleteActivity(props.activity.activity_uuid, access_token)
@@ -95,7 +101,7 @@ function ActivityElement(props: ActivitiyElementProps) {
       selectedActivity !== undefined
     ) {
       setIsUpdatingName(true)
-      
+
       let modifiedActivityCopy = {
         ...props.activity,
         name: modifiedActivity.activityName,
@@ -134,7 +140,10 @@ function ActivityElement(props: ActivitiyElementProps) {
           ref={provided.innerRef}
         >
           {/*   Activity Type Icon  */}
-          <ActivityTypeIndicator activityType={props.activity.activity_type} isMobile={isMobile} />
+          <ActivityTypeIndicator
+            activityType={props.activity.activity_type}
+            isMobile={isMobile}
+          />
 
           {/*   Centered Activity Name  */}
           <div className="grow items-center space-x-2 flex mx-auto justify-center">
@@ -170,17 +179,25 @@ function ActivityElement(props: ActivitiyElementProps) {
                 </button>
               </div>
             ) : (
-              <p className="first-letter:uppercase text-center sm:text-left"> {props.activity.name} </p>
+              <p className="first-letter:uppercase text-center sm:text-left">
+                {' '}
+                {props.activity.name}{' '}
+              </p>
             )}
             <Pencil
-              onClick={() => !isUpdatingName && setSelectedActivity(props.activity.id)}
+              onClick={() =>
+                !isUpdatingName && setSelectedActivity(props.activity.id)
+              }
               className={`text-neutral-400 hover:cursor-pointer size-3 min-w-3 ${isUpdatingName ? 'opacity-50 cursor-not-allowed' : ''}`}
             />
           </div>
 
           {/*   Edit, View, Publish, and Delete Buttons  */}
           <div className="flex flex-wrap justify-center sm:justify-end gap-2 w-full sm:w-auto">
-            <ActivityElementOptions activity={props.activity} isMobile={isMobile} />
+            <ActivityElementOptions
+              activity={props.activity}
+              isMobile={isMobile}
+            />
             {/*   Publishing  */}
             <button
               className={`p-1 px-2 sm:px-3 border shadow-md rounded-md font-bold text-xs flex items-center space-x-1 transition-colors duration-200 ${
@@ -240,64 +257,85 @@ function ActivityElement(props: ActivitiyElementProps) {
 }
 
 const ACTIVITIES = {
-  'TYPE_VIDEO': {
+  TYPE_VIDEO: {
     displayName: 'Video',
-    Icon: Video
+    Icon: Video,
   },
-  'TYPE_DOCUMENT': {
+  TYPE_DOCUMENT: {
     displayName: 'Document',
-    Icon: File
+    Icon: File,
   },
-  'TYPE_ASSIGNMENT': {
+  TYPE_ASSIGNMENT: {
     displayName: 'Assignment',
-    Icon: Backpack
+    Icon: Backpack,
   },
-  'TYPE_DYNAMIC': {
+  TYPE_DYNAMIC: {
     displayName: 'Dynamic',
-    Icon: Sparkles
-  }
+    Icon: Sparkles,
+  },
 }
 
-const ActivityTypeIndicator = ({activityType, isMobile} : { activityType: keyof typeof ACTIVITIES, isMobile: boolean}) => {
-  const {displayName, Icon} = ACTIVITIES[activityType]
+const ActivityTypeIndicator = ({
+  activityType,
+  isMobile,
+}: {
+  activityType: keyof typeof ACTIVITIES
+  isMobile: boolean
+}) => {
+  const { displayName, Icon } = ACTIVITIES[activityType]
 
   return (
-    <div className={`text-gray-300 space-x-1 w-28 flex ${isMobile ? 'flex-col' : ''}`}>
+    <div
+      className={`text-gray-300 space-x-1 w-28 flex ${isMobile ? 'flex-col' : ''}`}
+    >
       <div className="flex space-x-2 items-center">
-            <Icon className="size-4" />{' '}
-            <div className="text-xs bg-gray-200 text-gray-400 font-bold px-2 py-1 rounded-full mx-auto justify-center align-middle">
-              {displayName}
-            </div>{' '}
-          </div>
+        <Icon className="size-4" />{' '}
+        <div className="text-xs bg-gray-200 text-gray-400 font-bold px-2 py-1 rounded-full mx-auto justify-center align-middle">
+          {displayName}
+        </div>{' '}
+      </div>
     </div>
   )
 }
 
-const ActivityElementOptions = ({ activity, isMobile }: { activity: any; isMobile: boolean }) => {
-  const [assignmentUUID, setAssignmentUUID] = useState('');
-  const org = useOrg() as any;
-  const course = useCourse() as any;
-  const session = useLHSession() as any;
-  const access_token = session?.data?.tokens?.access_token;
+const ActivityElementOptions = ({
+  activity,
+  isMobile,
+}: {
+  activity: any
+  isMobile: boolean
+}) => {
+  const [assignmentUUID, setAssignmentUUID] = useState('')
+  const org = useOrg() as any
+  const course = useCourse() as any
+  const session = useLHSession() as any
+  const access_token = session?.data?.tokens?.access_token
 
-  async function getAssignmentUUIDFromActivityUUID(activityUUID: string):  Promise<string | undefined> {
-    const activity = await getAssignmentFromActivityUUID(activityUUID, access_token);
+  async function getAssignmentUUIDFromActivityUUID(
+    activityUUID: string
+  ): Promise<string | undefined> {
+    const activity = await getAssignmentFromActivityUUID(
+      activityUUID,
+      access_token
+    )
     if (activity) {
-      return activity.data.assignment_uuid;
+      return activity.data.assignment_uuid
     }
   }
 
   const fetchAssignmentUUID = async () => {
     if (activity.activity_type === 'TYPE_ASSIGNMENT') {
-      const assignment_uuid = await getAssignmentUUIDFromActivityUUID(activity.activity_uuid);
-      if(assignment_uuid)
-        setAssignmentUUID(assignment_uuid.replace('assignment_', ''));
+      const assignment_uuid = await getAssignmentUUIDFromActivityUUID(
+        activity.activity_uuid
+      )
+      if (assignment_uuid)
+        setAssignmentUUID(assignment_uuid.replace('assignment_', ''))
     }
-  };
+  }
 
   useEffect(() => {
-    fetchAssignmentUUID();
-  }, [activity, course]);
+    fetchAssignmentUUID()
+  }, [activity, course])
 
   return (
     <>
@@ -315,10 +353,10 @@ const ActivityElementOptions = ({ activity, isMobile }: { activity: any; isMobil
               )}/edit`
             }
             className={`hover:cursor-pointer p-1 ${isMobile ? 'px-2' : 'px-3'} bg-sky-700 rounded-md items-center`}
-            target='_blank'
+            target="_blank"
           >
             <div className="text-sky-100 font-bold text-xs flex items-center space-x-1">
-              <FilePenLine size={12} />  <span>Edit Page</span>
+              <FilePenLine size={12} /> <span>Edit Page</span>
             </div>
           </Link>
         </>
@@ -333,13 +371,14 @@ const ActivityElementOptions = ({ activity, isMobile }: { activity: any; isMobil
             className={`hover:cursor-pointer p-1 ${isMobile ? 'px-2' : 'px-3'} bg-teal-700 rounded-md items-center`}
           >
             <div className="text-sky-100 font-bold text-xs flex items-center space-x-1">
-              <FilePenLine size={12} /> {!isMobile && <span>Edit Assignment</span>}
+              <FilePenLine size={12} />{' '}
+              {!isMobile && <span>Edit Assignment</span>}
             </div>
           </Link>
         </>
       )}
-    </> 
-  );
-};
+    </>
+  )
+}
 
 export default ActivityElement

@@ -24,8 +24,10 @@ type MetadataProps = {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
 
-export async function generateMetadata(props: MetadataProps): Promise<Metadata> {
-  const params = await props.params;
+export async function generateMetadata(
+  props: MetadataProps
+): Promise<Metadata> {
+  const params = await props.params
   // Get Org context information
   const org = await getOrganizationContextInfo(params.orgslug, {
     revalidate: 0,
@@ -52,7 +54,10 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
       type: 'website',
       images: [
         {
-          url: getOrgThumbnailMediaDirectory(org?.org_uuid, org?.thumbnail_image),
+          url: getOrgThumbnailMediaDirectory(
+            org?.org_uuid,
+            org?.thumbnail_image
+          ),
           width: 800,
           height: 600,
           alt: org.name,
@@ -83,17 +88,14 @@ const OrgHomePage = async (params: any) => {
   )
 
   // Check if custom landing is enabled
-  const hasCustomLanding = org.config?.config?.landing?.enabled 
+  const hasCustomLanding = org.config?.config?.landing?.enabled
 
   return (
     <div className="w-full">
       {hasCustomLanding ? (
-        <LandingCustom 
-          landing={org.config.config.landing}
-          orgslug={orgslug}
-        />
+        <LandingCustom landing={org.config.config.landing} orgslug={orgslug} />
       ) : (
-        <LandingClassic 
+        <LandingClassic
           courses={courses}
           collections={collections}
           orgslug={orgslug}

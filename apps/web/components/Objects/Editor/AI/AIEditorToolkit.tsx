@@ -33,11 +33,11 @@ type AIEditorToolkitProps = {
 
 type AIPromptsLabels = {
   label:
-  | 'Writer'
-  | 'ContinueWriting'
-  | 'MakeLonger'
-  | 'GenerateQuiz'
-  | 'Translate'
+    | 'Writer'
+    | 'ContinueWriting'
+    | 'MakeLonger'
+    | 'GenerateQuiz'
+    | 'Translate'
   selection: string
 }
 
@@ -143,7 +143,7 @@ const UserFeedbackModal = (props: AIEditorToolkitProps) => {
   const dispatchAIEditor = useAIEditorDispatch() as any
   const aiEditorState = useAIEditor() as AIEditorStateTypes
   const session = useLHSession() as any
-  const access_token = session?.data?.tokens?.access_token;
+  const access_token = session?.data?.tokens?.access_token
 
   const handleChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     await dispatchAIEditor({
@@ -162,7 +162,8 @@ const UserFeedbackModal = (props: AIEditorToolkitProps) => {
       const response = await sendActivityAIChatMessage(
         message,
         aiEditorState.aichat_uuid,
-        props.activity.activity_uuid, access_token
+        props.activity.activity_uuid,
+        access_token
       )
       if (response.success === false) {
         await dispatchAIEditor({ type: 'setIsNoLongerWaitingForResponse' })
@@ -194,7 +195,8 @@ const UserFeedbackModal = (props: AIEditorToolkitProps) => {
       })
       await dispatchAIEditor({ type: 'setIsWaitingForResponse' })
       const response = await startActivityAIChatSession(
-        message, access_token,
+        message,
+        access_token,
         props.activity.activity_uuid
       )
       if (response.success === false) {

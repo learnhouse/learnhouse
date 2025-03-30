@@ -7,13 +7,15 @@ import React, { useEffect } from 'react'
 import useSWR, { mutate } from 'swr'
 
 function GetStarted() {
-  const session = useLHSession() as any;
-  const access_token = session?.data?.tokens?.access_token;
+  const session = useLHSession() as any
+  const access_token = session?.data?.tokens?.access_token
   const {
     data: install,
     error: error,
     isLoading,
-  } = useSWR(`${getAPIUrl()}install/latest`, (url) => swrFetcher(url, access_token))
+  } = useSWR(`${getAPIUrl()}install/latest`, (url) =>
+    swrFetcher(url, access_token)
+  )
   const router = useRouter()
 
   async function startInstallation() {

@@ -33,8 +33,8 @@ interface ModifiedChapterInterface {
 
 function ChapterElement(props: ChapterElementProps) {
   const activities = props.chapter.activities || []
-  const session = useLHSession() as any;
-  const access_token = session?.data?.tokens?.access_token;
+  const session = useLHSession() as any
+  const access_token = session?.data?.tokens?.access_token
   const [modifiedChapter, setModifiedChapter] = React.useState<
     ModifiedChapterInterface | undefined
   >(undefined)
@@ -154,7 +154,10 @@ function ChapterElement(props: ChapterElementProps) {
                 <div className="flex flex-col min-h-[60px]">
                   {activities.map((activity: any, index: any) => {
                     return (
-                      <div key={activity.activity_uuid} className="flex items-center ">
+                      <div
+                        key={activity.activity_uuid}
+                        className="flex items-center "
+                      >
                         <ActivityElement
                           orgslug={props.orgslug}
                           course_uuid={props.course_uuid}

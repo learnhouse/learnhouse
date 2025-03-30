@@ -53,7 +53,7 @@ export async function loginWithOAuthToken(
     provider: provider,
     access_token: accessToken,
   }
-  const jsonBody = JSON.stringify(body);
+  const jsonBody = JSON.stringify(body)
 
   const requestOptions: any = {
     method: 'POST',

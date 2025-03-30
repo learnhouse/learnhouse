@@ -1,11 +1,26 @@
-'use client';
-import { useOrg } from '@components/Contexts/OrgContext';
-import { Backpack, Book, ChevronRight, CreditCard, School, User, Users } from 'lucide-react'
+'use client'
+import { useOrg } from '@components/Contexts/OrgContext'
+import {
+  Backpack,
+  Book,
+  ChevronRight,
+  CreditCard,
+  School,
+  User,
+  Users,
+} from 'lucide-react'
 import Link from 'next/link'
 import React from 'react'
 
 type BreadCrumbsProps = {
-  type: 'courses' | 'user' | 'users' | 'org' | 'orgusers' | 'assignments' | 'payments'
+  type:
+    | 'courses'
+    | 'user'
+    | 'users'
+    | 'org'
+    | 'orgusers'
+    | 'assignments'
+    | 'payments'
   last_breadcrumb?: string
 }
 

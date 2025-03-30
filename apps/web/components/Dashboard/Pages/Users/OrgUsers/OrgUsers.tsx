@@ -16,7 +16,7 @@ import useSWR, { mutate } from 'swr'
 function OrgUsers() {
   const org = useOrg() as any
   const session = useLHSession() as any
-  const access_token = session?.data?.tokens?.access_token;
+  const access_token = session?.data?.tokens?.access_token
   const { data: orgUsers } = useSWR(
     org ? `${getAPIUrl()}orgs/${org?.id}/users` : null,
     (url) => swrFetcher(url, access_token)
@@ -31,13 +31,13 @@ function OrgUsers() {
   }
 
   const handleRemoveUser = async (user_id: any) => {
-    const toastId = toast.loading("Removing...");
-    const res = await removeUserFromOrg(org.id, user_id,access_token)
+    const toastId = toast.loading('Removing...')
+    const res = await removeUserFromOrg(org.id, user_id, access_token)
     if (res.status === 200) {
       await mutate(`${getAPIUrl()}orgs/${org.id}/users`)
-      toast.success("Removed user from org", {id:toastId});
+      toast.success('Removed user from org', { id: toastId })
     } else {
-      toast.error('Error removing user', {id:toastId});
+      toast.error('Error removing user', { id: toastId })
     }
   }
 

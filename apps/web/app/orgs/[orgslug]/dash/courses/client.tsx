@@ -1,7 +1,9 @@
 'use client'
 import BreadCrumbs from '@components/Dashboard/Misc/BreadCrumbs'
 import CreateCourseModal from '@components/Objects/Modals/Course/Create/CreateCourse'
-import CourseThumbnail, { removeCoursePrefix } from '@components/Objects/Thumbnails/CourseThumbnail'
+import CourseThumbnail, {
+  removeCoursePrefix,
+} from '@components/Objects/Thumbnails/CourseThumbnail'
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
 import NewCourseButton from '@components/Objects/StyledElements/Buttons/NewCourseButton'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
@@ -60,11 +62,15 @@ function CoursesHome(params: CourseProps) {
           </AuthenticatedClientElement>
         </div>
       </div>
-      
+
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {courses.map((course: any) => (
           <div key={course.course_uuid}>
-            <CourseThumbnail customLink={`/dash/courses/course/${removeCoursePrefix(course.course_uuid)}/general`} course={course} orgslug={orgslug} />
+            <CourseThumbnail
+              customLink={`/dash/courses/course/${removeCoursePrefix(course.course_uuid)}/general`}
+              course={course}
+              orgslug={orgslug}
+            />
           </div>
         ))}
         {courses.length === 0 && (
@@ -86,11 +92,9 @@ function CoursesHome(params: CourseProps) {
                 No courses yet
               </h2>
               <p className="text-lg text-gray-400">
-                {isUserAdmin ? (
-                  "Create a course to add content"
-                ) : (
-                  "No courses available yet"
-                )}
+                {isUserAdmin
+                  ? 'Create a course to add content'
+                  : 'No courses available yet'}
               </p>
               {isUserAdmin && (
                 <div className="mt-6">

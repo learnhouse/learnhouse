@@ -53,39 +53,55 @@ export async function getCourseMetadata(
   return res
 }
 
-export async function updateCourse(course_uuid: any, data: any, access_token:any) {
+export async function updateCourse(
+  course_uuid: any,
+  data: any,
+  access_token: any
+) {
   const result: any = await fetch(
     `${getAPIUrl()}courses/${course_uuid}`,
-    RequestBodyWithAuthHeader('PUT', data, null,access_token)
+    RequestBodyWithAuthHeader('PUT', data, null, access_token)
   )
   const res = await errorHandling(result)
   return res
 }
 
-export async function getCourse(course_uuid: string, next: any, access_token:any) {
+export async function getCourse(
+  course_uuid: string,
+  next: any,
+  access_token: any
+) {
   const result: any = await fetch(
     `${getAPIUrl()}courses/${course_uuid}`,
-    RequestBodyWithAuthHeader('GET', null, next,access_token)
+    RequestBodyWithAuthHeader('GET', null, next, access_token)
   )
   const res = await errorHandling(result)
   return res
 }
 
-export async function getCourseById(course_id: string, next: any, access_token:any) {
+export async function getCourseById(
+  course_id: string,
+  next: any,
+  access_token: any
+) {
   const result: any = await fetch(
     `${getAPIUrl()}courses/id/${course_id}`,
-    RequestBodyWithAuthHeader('GET', null, next,access_token)
+    RequestBodyWithAuthHeader('GET', null, next, access_token)
   )
   const res = await errorHandling(result)
   return res
 }
 
-export async function updateCourseThumbnail(course_uuid: any, thumbnail: any, access_token:any) {
+export async function updateCourseThumbnail(
+  course_uuid: any,
+  thumbnail: any,
+  access_token: any
+) {
   const formData = new FormData()
   formData.append('thumbnail', thumbnail)
   const result: any = await fetch(
     `${getAPIUrl()}courses/${course_uuid}/thumbnail`,
-    RequestBodyFormWithAuthHeader('PUT', formData, null,access_token)
+    RequestBodyFormWithAuthHeader('PUT', formData, null, access_token)
   )
   const res = await getResponseMetadata(result)
   return res
@@ -118,37 +134,53 @@ export async function createNewCourse(
   return res
 }
 
-export async function deleteCourseFromBackend(course_uuid: any, access_token:any) {
+export async function deleteCourseFromBackend(
+  course_uuid: any,
+  access_token: any
+) {
   const result: any = await fetch(
     `${getAPIUrl()}courses/${course_uuid}`,
-    RequestBodyWithAuthHeader('DELETE', null, null,access_token)
+    RequestBodyWithAuthHeader('DELETE', null, null, access_token)
   )
   const res = await errorHandling(result)
   return res
 }
 
-export async function getCourseContributors(course_uuid: string, access_token:string | null | undefined) {
+export async function getCourseContributors(
+  course_uuid: string,
+  access_token: string | null | undefined
+) {
   const result: any = await fetch(
     `${getAPIUrl()}courses/${course_uuid}/contributors`,
-    RequestBodyWithAuthHeader('GET', null, null,access_token || undefined)
+    RequestBodyWithAuthHeader('GET', null, null, access_token || undefined)
   )
   const res = await getResponseMetadata(result)
   return res
 }
 
-export async function editContributor(course_uuid: string, contributor_id: string, authorship: any, authorship_status: any, access_token:string | null | undefined) {
+export async function editContributor(
+  course_uuid: string,
+  contributor_id: string,
+  authorship: any,
+  authorship_status: any,
+  access_token: string | null | undefined
+) {
   const result: any = await fetch(
     `${getAPIUrl()}courses/${course_uuid}/contributors/${contributor_id}?authorship=${authorship}&authorship_status=${authorship_status}`,
-    RequestBodyWithAuthHeader('PUT', null, null,access_token || undefined)
+    RequestBodyWithAuthHeader('PUT', null, null, access_token || undefined)
   )
   const res = await getResponseMetadata(result)
   return res
 }
 
-export async function applyForContributor(course_uuid: string, data: any, access_token:string | null | undefined) {
+export async function applyForContributor(
+  course_uuid: string,
+  data: any,
+  access_token: string | null | undefined
+) {
   const result: any = await fetch(
     `${getAPIUrl()}courses/${course_uuid}/apply-contributor`,
-    RequestBodyWithAuthHeader('POST', data, null,access_token || undefined)
+    RequestBodyWithAuthHeader('POST', data, null, access_token || undefined)
   )
   const res = await getResponseMetadata(result)
   return res

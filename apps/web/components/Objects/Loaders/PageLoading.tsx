@@ -17,9 +17,9 @@ const dotVariants = {
       duration: 1.5,
       repeat: Infinity,
       delay: i * 0.2,
-      ease: "easeInOut"
-    }
-  })
+      ease: 'easeInOut',
+    },
+  }),
 }
 
 function PageLoading() {
@@ -47,8 +47,8 @@ function PageLoading() {
               />
             ))}
           </div>
-          
-          <motion.p 
+
+          <motion.p
             className="mt-6 text-sm text-gray-500 dark:text-gray-400"
             initial={{ opacity: 0 }}
             animate={{ opacity: [0, 1, 0] }}

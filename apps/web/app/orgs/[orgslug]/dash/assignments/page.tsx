@@ -1,23 +1,32 @@
-'use client';
-import { useLHSession } from '@components/Contexts/LHSessionContext';
-import { useOrg } from '@components/Contexts/OrgContext';
+'use client'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { useOrg } from '@components/Contexts/OrgContext'
 import BreadCrumbs from '@components/Dashboard/Misc/BreadCrumbs'
-import { getAPIUrl, getUriWithOrg } from '@services/config/config';
-import { getAssignmentsFromACourse } from '@services/courses/assignments';
-import { getCourseThumbnailMediaDirectory } from '@services/media/media';
-import { swrFetcher } from '@services/utils/ts/requests';
-import { EllipsisVertical, GalleryVerticalEnd, Info, Layers2, UserRoundPen } from 'lucide-react';
-import Link from 'next/link';
+import { getAPIUrl, getUriWithOrg } from '@services/config/config'
+import { getAssignmentsFromACourse } from '@services/courses/assignments'
+import { getCourseThumbnailMediaDirectory } from '@services/media/media'
+import { swrFetcher } from '@services/utils/ts/requests'
+import {
+  EllipsisVertical,
+  GalleryVerticalEnd,
+  Info,
+  Layers2,
+  UserRoundPen,
+} from 'lucide-react'
+import Link from 'next/link'
 import React from 'react'
-import useSWR from 'swr';
+import useSWR from 'swr'
 
 function AssignmentsHome() {
-  const session = useLHSession() as any;
-  const access_token = session?.data?.tokens?.access_token;
-  const org = useOrg() as any;
+  const session = useLHSession() as any
+  const access_token = session?.data?.tokens?.access_token
+  const org = useOrg() as any
   const [courseAssignments, setCourseAssignments] = React.useState<any[]>([])
 
-  const { data: courses } = useSWR(`${getAPIUrl()}courses/org_slug/${org?.slug}/page/1/limit/50`, (url) => swrFetcher(url, access_token))
+  const { data: courses } = useSWR(
+    `${getAPIUrl()}courses/org_slug/${org?.slug}/page/1/limit/50`,
+    (url) => swrFetcher(url, access_token)
+  )
 
   async function getAvailableAssignmentsForCourse(course_uuid: string) {
     const res = await getAssignmentsFromACourse(course_uuid, access_token)
@@ -32,89 +41,117 @@ function AssignmentsHome() {
     return course_uuid.replace('course_', '')
   }
 
-
   React.useEffect(() => {
     if (courses) {
       const course_uuids = courses.map((course: any) => course.course_uuid)
-      const courseAssignmentsPromises = course_uuids.map((course_uuid: string) => getAvailableAssignmentsForCourse(course_uuid))
+      const courseAssignmentsPromises = course_uuids.map(
+        (course_uuid: string) => getAvailableAssignmentsForCourse(course_uuid)
+      )
       Promise.all(courseAssignmentsPromises).then((results) => {
         setCourseAssignments(results)
       })
     }
   }, [courses])
 
-
   return (
-    <div className='flex w-full'>
-      <div className='pl-4 sm:pl-10 mr-4 sm:mr-10 tracking-tighter flex flex-col space-y-5 w-full'>
-        <div className='flex flex-col space-y-2'>
+    <div className="flex w-full">
+      <div className="pl-4 sm:pl-10 mr-4 sm:mr-10 tracking-tighter flex flex-col space-y-5 w-full">
+        <div className="flex flex-col space-y-2">
           <BreadCrumbs type="assignments" />
           <h1 className="pt-3 flex font-bold text-4xl">Assignments</h1>
         </div>
-        <div className='flex flex-col space-y-3 w-full'>
+        <div className="flex flex-col space-y-3 w-full">
           {courseAssignments.map((assignments: any, index: number) => (
-            <div key={index} className='flex flex-col space-y-2 bg-white nice-shadow p-3 sm:p-4 rounded-xl w-full'>
+            <div
+              key={index}
+              className="flex flex-col space-y-2 bg-white nice-shadow p-3 sm:p-4 rounded-xl w-full"
+            >
               <div>
-                <div className='flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 items-start sm:items-center justify-between w-full'>
-                  <div className='flex space-x-2 items-center'>
+                <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 items-start sm:items-center justify-between w-full">
+                  <div className="flex space-x-2 items-center">
                     <MiniThumbnail course={courses[index]} />
-                    <div className='flex flex-col font-bold text-lg'>
-                      <p className='bg-gray-200 text-gray-700 px-2 text-xs py-0.5 rounded-full w-fit'>Course</p>
+                    <div className="flex flex-col font-bold text-lg">
+                      <p className="bg-gray-200 text-gray-700 px-2 text-xs py-0.5 rounded-full w-fit">
+                        Course
+                      </p>
                       <p>{courses[index].name}</p>
                     </div>
                   </div>
                   <Link
                     href={{
-                      pathname: getUriWithOrg(org.slug, `/dash/courses/course/${removeCoursePrefix(courses[index].course_uuid)}/content`),
-                      query: { subpage: 'editor' }
+                      pathname: getUriWithOrg(
+                        org.slug,
+                        `/dash/courses/course/${removeCoursePrefix(courses[index].course_uuid)}/content`
+                      ),
+                      query: { subpage: 'editor' },
                     }}
                     prefetch
-                    className='bg-black font-semibold text-sm text-zinc-100 rounded-md flex space-x-1.5 nice-shadow items-center px-3 py-1'>
+                    className="bg-black font-semibold text-sm text-zinc-100 rounded-md flex space-x-1.5 nice-shadow items-center px-3 py-1"
+                  >
                     <GalleryVerticalEnd size={15} />
                     <p>Course Editor</p>
                   </Link>
                 </div>
 
-                {assignments && assignments.map((assignment: any) => (
-                  <div key={assignment.assignment_uuid} className='flex mt-3 p-2 sm:p-3 rounded flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 w-full light-shadow justify-between bg-gray-50 items-start sm:items-center'>
-                    <div className='flex flex-col sm:flex-row items-start sm:items-center space-y-1 sm:space-y-0 sm:space-x-2'>
-                      <div className='flex text-xs font-bold bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full h-fit'>
-                        <p>Assignment</p>
+                {assignments &&
+                  assignments.map((assignment: any) => (
+                    <div
+                      key={assignment.assignment_uuid}
+                      className="flex mt-3 p-2 sm:p-3 rounded flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 w-full light-shadow justify-between bg-gray-50 items-start sm:items-center"
+                    >
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-1 sm:space-y-0 sm:space-x-2">
+                        <div className="flex text-xs font-bold bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full h-fit">
+                          <p>Assignment</p>
+                        </div>
+                        <div className="flex font-semibold text-lg">
+                          {assignment.title}
+                        </div>
+                        <div className="flex font-semibold text-gray-600 px-2 py-0.5 rounded outline outline-gray-200/70">
+                          {assignment.description}
+                        </div>
                       </div>
-                      <div className='flex font-semibold text-lg'>{assignment.title}</div>
-                      <div className='flex font-semibold text-gray-600 px-2 py-0.5 rounded outline outline-gray-200/70'>{assignment.description}</div>
+                      <div className="flex space-x-2 font-bold text-sm items-center">
+                        <EllipsisVertical className="text-gray-500" size={17} />
+                        <Link
+                          href={{
+                            pathname: getUriWithOrg(
+                              org.slug,
+                              `/dash/assignments/${removeAssignmentPrefix(assignment.assignment_uuid)}`
+                            ),
+                            query: { subpage: 'editor' },
+                          }}
+                          prefetch
+                          className="bg-white rounded-full flex space-x-2 nice-shadow items-center px-3 py-0.5"
+                        >
+                          <Layers2 size={15} />
+                          <p>Editor</p>
+                        </Link>
+                        <Link
+                          href={{
+                            pathname: getUriWithOrg(
+                              org.slug,
+                              `/dash/assignments/${removeAssignmentPrefix(assignment.assignment_uuid)}`
+                            ),
+                            query: { subpage: 'submissions' },
+                          }}
+                          prefetch
+                          className="bg-white rounded-full flex space-x-2 nice-shadow items-center px-3 py-0.5"
+                        >
+                          <UserRoundPen size={15} />
+                          <p>Submissions</p>
+                        </Link>
+                      </div>
                     </div>
-                    <div className='flex space-x-2 font-bold text-sm items-center'>
-                      <EllipsisVertical className='text-gray-500' size={17} />
-                      <Link
-                        href={{
-                          pathname: getUriWithOrg(org.slug, `/dash/assignments/${removeAssignmentPrefix(assignment.assignment_uuid)}`),
-                          query: { subpage: 'editor' }
-                        }}
-                        prefetch
-                        className='bg-white rounded-full flex space-x-2 nice-shadow items-center px-3 py-0.5'>
-                        <Layers2 size={15} />
-                        <p>Editor</p>
-                      </Link>
-                      <Link
-                        href={{
-                          pathname: getUriWithOrg(org.slug, `/dash/assignments/${removeAssignmentPrefix(assignment.assignment_uuid)}`),
-                          query: { subpage: 'submissions' }
-                        }}
-                        prefetch
-                        className='bg-white rounded-full flex space-x-2 nice-shadow items-center px-3 py-0.5'>
-                        <UserRoundPen size={15} />
-                        <p>Submissions</p>
-                      </Link>
-                    </div>
-                  </div>
-                ))}
+                  ))}
 
                 {assignments.length === 0 && (
                   <>
-                    <div className='flex mx-auto space-x-2 font-semibold mt-3 text-gray-600 items-center'>
+                    <div className="flex mx-auto space-x-2 font-semibold mt-3 text-gray-600 items-center">
                       <Info size={20} />
-                      <p>No assignments available for this course, create course assignments from the course editor</p>
+                      <p>
+                        No assignments available for this course, create course
+                        assignments from the course editor
+                      </p>
                     </div>
                   </>
                 )}
@@ -165,6 +202,5 @@ const MiniThumbnail = (props: { course: any }) => {
     </Link>
   )
 }
-
 
 export default AssignmentsHome

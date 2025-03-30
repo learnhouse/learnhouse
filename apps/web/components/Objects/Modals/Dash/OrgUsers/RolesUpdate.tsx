@@ -25,7 +25,7 @@ interface Props {
 function RolesUpdate(props: Props) {
   const org = useOrg() as any
   const session = useLHSession() as any
-    const access_token = session?.data?.tokens?.access_token;
+  const access_token = session?.data?.tokens?.access_token
   const [isSubmitting, setIsSubmitting] = React.useState(false)
   const [assignedRole, setAssignedRole] = React.useState(
     props.alreadyAssignedRole
@@ -40,16 +40,21 @@ function RolesUpdate(props: Props) {
   const handleSubmit = async (e: any) => {
     e.preventDefault()
     setIsSubmitting(true)
-    const res = await updateUserRole(org.id, props.user.user.id, assignedRole,access_token)
-    const toastId = toast.loading("Updating role...")
+    const res = await updateUserRole(
+      org.id,
+      props.user.user.id,
+      assignedRole,
+      access_token
+    )
+    const toastId = toast.loading('Updating role...')
     if (res.status === 200) {
       await mutate(`${getAPIUrl()}orgs/${org.id}/users`)
       props.setRolesModal(false)
-      toast.success("Updated role", {id:toastId})
+      toast.success('Updated role', { id: toastId })
     } else {
       setIsSubmitting(false)
       setError('Error ' + res.status + ': ' + res.data.detail)
-      toast.error("Error while updating role", {id:toastId})
+      toast.error('Error while updating role', { id: toastId })
     }
   }
 

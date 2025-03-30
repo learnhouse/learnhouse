@@ -122,7 +122,7 @@ export async function uploadLandingContent(
 ) {
   const formData = new FormData()
   formData.append('content_file', content_file)
-  
+
   const result = await fetch(
     `${getAPIUrl()}orgs/${org_uuid}/landing/content`,
     RequestBodyFormWithAuthHeader('POST', formData, null, access_token)

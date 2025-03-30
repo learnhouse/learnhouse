@@ -1,7 +1,15 @@
 import { NodeViewContent, NodeViewWrapper } from '@tiptap/react'
 import React, { useState, useRef, useEffect } from 'react'
 import Picker from '@emoji-mart/react'
-import { ArrowRight, ChevronDown, Link, AlignLeft, AlignCenter, AlignRight, Palette } from 'lucide-react'
+import {
+  ArrowRight,
+  ChevronDown,
+  Link,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  Palette,
+} from 'lucide-react'
 import { twMerge } from 'tailwind-merge'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 
@@ -21,13 +29,22 @@ const ButtonsExtension: React.FC = (props: any) => {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (pickerRef.current && !pickerRef.current.contains(event.target as Node)) {
+      if (
+        pickerRef.current &&
+        !pickerRef.current.contains(event.target as Node)
+      ) {
         setShowEmojiPicker(false)
       }
-      if (linkInputRef.current && !linkInputRef.current.contains(event.target as Node)) {
+      if (
+        linkInputRef.current &&
+        !linkInputRef.current.contains(event.target as Node)
+      ) {
         setShowLinkInput(false)
       }
-      if (colorPickerRef.current && !colorPickerRef.current.contains(event.target as Node)) {
+      if (
+        colorPickerRef.current &&
+        !colorPickerRef.current.contains(event.target as Node)
+      ) {
         setShowColorPicker(false)
       }
     }
@@ -62,10 +79,14 @@ const ButtonsExtension: React.FC = (props: any) => {
 
   const getAlignmentClass = () => {
     switch (alignment) {
-      case 'left': return 'text-left';
-      case 'center': return 'text-center';
-      case 'right': return 'text-right';
-      default: return 'text-left';
+      case 'left':
+        return 'text-left'
+      case 'center':
+        return 'text-center'
+      case 'right':
+        return 'text-right'
+      default:
+        return 'text-left'
     }
   }
 
@@ -79,24 +100,45 @@ const ButtonsExtension: React.FC = (props: any) => {
 
   const getButtonColor = (color: string) => {
     switch (color) {
-      case 'sky': return 'bg-sky-500 hover:bg-sky-600';
-      case 'green': return 'bg-green-500 hover:bg-green-600';
-      case 'yellow': return 'bg-yellow-500 hover:bg-yellow-600';
-      case 'red': return 'bg-red-500 hover:bg-red-600';
-      case 'purple': return 'bg-purple-500 hover:bg-purple-600';
-      case 'teal': return 'bg-teal-500 hover:bg-teal-600';
-      case 'amber': return 'bg-amber-500 hover:bg-amber-600';
-      case 'indigo': return 'bg-indigo-500 hover:bg-indigo-600';
-      case 'neutral': return 'bg-neutral-500 hover:bg-neutral-600';
-      default: return 'bg-blue-500 hover:bg-blue-600';
+      case 'sky':
+        return 'bg-sky-500 hover:bg-sky-600'
+      case 'green':
+        return 'bg-green-500 hover:bg-green-600'
+      case 'yellow':
+        return 'bg-yellow-500 hover:bg-yellow-600'
+      case 'red':
+        return 'bg-red-500 hover:bg-red-600'
+      case 'purple':
+        return 'bg-purple-500 hover:bg-purple-600'
+      case 'teal':
+        return 'bg-teal-500 hover:bg-teal-600'
+      case 'amber':
+        return 'bg-amber-500 hover:bg-amber-600'
+      case 'indigo':
+        return 'bg-indigo-500 hover:bg-indigo-600'
+      case 'neutral':
+        return 'bg-neutral-500 hover:bg-neutral-600'
+      default:
+        return 'bg-blue-500 hover:bg-blue-600'
     }
   }
 
-  const colors = ['sky', 'green', 'yellow', 'red', 'purple', 'teal', 'amber', 'indigo', 'neutral', 'blue']
+  const colors = [
+    'sky',
+    'green',
+    'yellow',
+    'red',
+    'purple',
+    'teal',
+    'amber',
+    'indigo',
+    'neutral',
+    'blue',
+  ]
 
   return (
     <NodeViewWrapper className={`block-button ${getAlignmentClass()}`}>
-      <div className='inline-block'>
+      <div className="inline-block">
         <button
           onClick={isEditable ? undefined : () => window.open(link, '_blank')}
           className={twMerge(
@@ -112,22 +154,40 @@ const ButtonsExtension: React.FC = (props: any) => {
         </button>
         {isEditable && (
           <div className="flex mt-2 space-x-2">
-            <button onClick={() => setShowEmojiPicker(!showEmojiPicker)} className="p-1 bg-gray-200 rounded-md">
+            <button
+              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+              className="p-1 bg-gray-200 rounded-md"
+            >
               <ChevronDown size={14} />
             </button>
-            <button onClick={() => setShowLinkInput(!showLinkInput)} className="p-1 bg-gray-200 rounded-md">
+            <button
+              onClick={() => setShowLinkInput(!showLinkInput)}
+              className="p-1 bg-gray-200 rounded-md"
+            >
               <Link size={14} />
             </button>
-            <button onClick={() => handleAlignmentChange('left')} className="p-1 bg-gray-200 rounded-md">
+            <button
+              onClick={() => handleAlignmentChange('left')}
+              className="p-1 bg-gray-200 rounded-md"
+            >
               <AlignLeft size={14} />
             </button>
-            <button onClick={() => handleAlignmentChange('center')} className="p-1 bg-gray-200 rounded-md">
+            <button
+              onClick={() => handleAlignmentChange('center')}
+              className="p-1 bg-gray-200 rounded-md"
+            >
               <AlignCenter size={14} />
             </button>
-            <button onClick={() => handleAlignmentChange('right')} className="p-1 bg-gray-200 rounded-md">
+            <button
+              onClick={() => handleAlignmentChange('right')}
+              className="p-1 bg-gray-200 rounded-md"
+            >
               <AlignRight size={14} />
             </button>
-            <button onClick={() => setShowColorPicker(!showColorPicker)} className="p-1 bg-gray-200 rounded-md">
+            <button
+              onClick={() => setShowColorPicker(!showColorPicker)}
+              className="p-1 bg-gray-200 rounded-md"
+            >
               <Palette size={14} />
             </button>
           </div>
@@ -149,7 +209,10 @@ const ButtonsExtension: React.FC = (props: any) => {
         />
       )}
       {isEditable && showColorPicker && (
-        <div ref={colorPickerRef} className="absolute mt-2 p-2 bg-white rounded-md nice-shadow">
+        <div
+          ref={colorPickerRef}
+          className="absolute mt-2 p-2 bg-white rounded-md nice-shadow"
+        >
           <div className="flex flex-wrap gap-2">
             {colors.map((c) => (
               <button

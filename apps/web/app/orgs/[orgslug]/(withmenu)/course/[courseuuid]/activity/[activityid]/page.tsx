@@ -18,7 +18,10 @@ type Session = {
 }
 
 // Add this function at the top level to avoid duplicate fetches
-async function fetchCourseMetadata(courseuuid: string, access_token: string | null | undefined) {
+async function fetchCourseMetadata(
+  courseuuid: string,
+  access_token: string | null | undefined
+) {
   return await getCourseMetadata(
     courseuuid,
     { revalidate: 1800, tags: ['courses'] },
@@ -26,9 +29,11 @@ async function fetchCourseMetadata(courseuuid: string, access_token: string | nu
   )
 }
 
-export async function generateMetadata(props: MetadataProps): Promise<Metadata> {
-  const params = await props.params;
-  const session = await getServerSession(nextAuthOptions as any) as Session
+export async function generateMetadata(
+  props: MetadataProps
+): Promise<Metadata> {
+  const params = await props.params
+  const session = (await getServerSession(nextAuthOptions as any)) as Session
   const access_token = session?.tokens?.access_token || null
 
   // Get Org context information
@@ -68,7 +73,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
 }
 
 const ActivityPage = async (params: any) => {
-  const session = await getServerSession(nextAuthOptions as any) as Session
+  const session = (await getServerSession(nextAuthOptions as any)) as Session
   const access_token = session?.tokens?.access_token || null
   const activityid = (await params.params).activityid
   const courseuuid = (await params.params).courseuuid
@@ -80,7 +85,7 @@ const ActivityPage = async (params: any) => {
       activityid,
       { revalidate: 0, tags: ['activities'] },
       access_token || null
-    )
+    ),
   ])
 
   return (

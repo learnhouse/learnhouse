@@ -22,7 +22,11 @@ function NewCollection(params: any) {
   const [selectedCourses, setSelectedCourses] = React.useState([]) as any
   const [isSubmitting, setIsSubmitting] = useState(false)
   const router = useRouter()
-  const { data: courses, error: error, isLoading } = useSWR(
+  const {
+    data: courses,
+    error: error,
+    isLoading,
+  } = useSWR(
     `${getAPIUrl()}courses/org_slug/${orgslug}/page/1/limit/10`,
     (url) => swrFetcher(url, access_token)
   )
@@ -44,7 +48,7 @@ function NewCollection(params: any) {
 
   const handleSubmit = async (e: any) => {
     e.preventDefault()
-    
+
     if (!name.trim()) {
       toast.error('Please enter a collection name')
       return
@@ -83,7 +87,9 @@ function NewCollection(params: any) {
   if (error) {
     return (
       <div className="flex items-center justify-center h-[60vh]">
-        <div className="text-red-500">Failed to load courses. Please try again later.</div>
+        <div className="text-red-500">
+          Failed to load courses. Please try again later.
+        </div>
       </div>
     )
   }
@@ -92,16 +98,21 @@ function NewCollection(params: any) {
     <div className="max-w-2xl mx-auto py-12 px-4">
       <div className="space-y-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Create New Collection</h1>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Create New Collection
+          </h1>
           <p className="mt-2 text-sm text-gray-600">
-            Group your courses together in a collection to make them easier to find and manage.
+            Group your courses together in a collection to make them easier to
+            find and manage.
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-4">
             <label className="block">
-              <span className="text-sm font-medium text-gray-700">Collection Name</span>
+              <span className="text-sm font-medium text-gray-700">
+                Collection Name
+              </span>
               <input
                 type="text"
                 placeholder="Enter collection name"
@@ -113,19 +124,27 @@ function NewCollection(params: any) {
             </label>
 
             <label className="block">
-              <span className="text-sm font-medium text-gray-700">Visibility</span>
+              <span className="text-sm font-medium text-gray-700">
+                Visibility
+              </span>
               <select
                 onChange={handleVisibilityChange}
                 className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                 defaultValue={isPublic}
               >
-                <option value="true">Public Collection - Visible to everyone</option>
-                <option value="false">Private Collection - Only visible to organization members</option>
+                <option value="true">
+                  Public Collection - Visible to everyone
+                </option>
+                <option value="false">
+                  Private Collection - Only visible to organization members
+                </option>
               </select>
             </label>
 
             <label className="block">
-              <span className="text-sm font-medium text-gray-700">Description</span>
+              <span className="text-sm font-medium text-gray-700">
+                Description
+              </span>
               <textarea
                 placeholder="Enter collection description"
                 value={description}
@@ -137,13 +156,17 @@ function NewCollection(params: any) {
             </label>
 
             <div className="space-y-2">
-              <span className="text-sm font-medium text-gray-700">Select Courses</span>
+              <span className="text-sm font-medium text-gray-700">
+                Select Courses
+              </span>
               {isLoading ? (
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="w-6 h-6 animate-spin text-gray-500" />
                 </div>
               ) : courses?.length === 0 ? (
-                <p className="text-sm text-gray-500 py-4">No courses available. Create some courses first.</p>
+                <p className="text-sm text-gray-500 py-4">
+                  No courses available. Create some courses first.
+                </p>
               ) : (
                 <div className="mt-2 border border-gray-200 rounded-lg bg-gray-50">
                   <div className="max-h-[400px] overflow-y-auto p-4 space-y-3 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent hover:scrollbar-thumb-gray-400">
@@ -159,10 +182,15 @@ function NewCollection(params: any) {
                           value={course.id}
                           onChange={(e) => {
                             if (e.target.checked) {
-                              setSelectedCourses([...selectedCourses, course.id])
+                              setSelectedCourses([
+                                ...selectedCourses,
+                                course.id,
+                              ])
                             } else {
                               setSelectedCourses(
-                                selectedCourses.filter((id: any) => id !== course.id)
+                                selectedCourses.filter(
+                                  (id: any) => id !== course.id
+                                )
                               )
                             }
                           }}
@@ -171,7 +199,11 @@ function NewCollection(params: any) {
                         <div className="relative w-24 h-16 rounded-md overflow-hidden bg-gray-100 shrink-0">
                           {course.thumbnail_image ? (
                             <img
-                              src={getCourseThumbnailMediaDirectory(org.org_uuid, course.course_uuid, course.thumbnail_image)}
+                              src={getCourseThumbnailMediaDirectory(
+                                org.org_uuid,
+                                course.course_uuid,
+                                course.thumbnail_image
+                              )}
                               alt={course.name}
                               className="object-cover"
                             />
@@ -182,9 +214,13 @@ function NewCollection(params: any) {
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h3 className="text-sm font-medium text-gray-900 truncate">{course.name}</h3>
+                          <h3 className="text-sm font-medium text-gray-900 truncate">
+                            {course.name}
+                          </h3>
                           {course.description && (
-                            <p className="mt-1 text-xs text-gray-500 line-clamp-2">{course.description}</p>
+                            <p className="mt-1 text-xs text-gray-500 line-clamp-2">
+                              {course.description}
+                            </p>
                           )}
                         </div>
                       </label>

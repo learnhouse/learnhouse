@@ -9,7 +9,7 @@ import FormLayout, {
 import React, { useState } from 'react'
 import * as Form from '@radix-ui/react-form'
 import BarLoader from 'react-spinners/BarLoader'
-import { constructAcceptValue } from '@/lib/constants';
+import { constructAcceptValue } from '@/lib/constants'
 
 const SUPPORTED_FILES = constructAcceptValue(['pdf'])
 
@@ -67,7 +67,12 @@ function DocumentPdfModal({ submitFileActivity, chapterId, course }: any) {
           </FormMessage>
         </Flex>
         <Form.Control asChild>
-          <input accept={SUPPORTED_FILES} type="file" onChange={handleDocumentPdfChange} required />
+          <input
+            accept={SUPPORTED_FILES}
+            type="file"
+            onChange={handleDocumentPdfChange}
+            required
+          />
         </Form.Control>
       </FormField>
 

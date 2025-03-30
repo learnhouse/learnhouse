@@ -86,11 +86,9 @@ function Courses(props: CourseProps) {
                     No courses yet
                   </h1>
                   <p className="text-md text-gray-400">
-                    {isUserAdmin ? (
-                      "Create a course to add content"
-                    ) : (
-                      "No courses available yet"
-                    )}
+                    {isUserAdmin
+                      ? 'Create a course to add content'
+                      : 'No courses available yet'}
                   </p>
                   {isUserAdmin && (
                     <div className="mt-4">

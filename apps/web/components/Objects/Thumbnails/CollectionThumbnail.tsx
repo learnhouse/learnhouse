@@ -29,35 +29,39 @@ function CollectionThumbnail(props: PropsType) {
       <div className="flex h-full w-full items-center justify-between bg-indigo-600 p-4">
         <div className="flex items-center space-x-5">
           <div className="flex -space-x-3">
-            {props.collection.courses.slice(0, 3).map((course: any, index: number) => (
-              <div
-                key={course.course_uuid}
-                className="relative h-12 w-12 overflow-hidden rounded-full border-2 border-white shadow-md transition-all duration-300 hover:z-10 hover:scale-110"
-                style={{
-                  backgroundImage: `url(${getCourseThumbnailMediaDirectory(
-                    org?.org_uuid,
-                    course.course_uuid,
-                    course.thumbnail_image
-                  )})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                  zIndex: 3 - index,
-                }}
-              ></div>
-            ))}
+            {props.collection.courses
+              .slice(0, 3)
+              .map((course: any, index: number) => (
+                <div
+                  key={course.course_uuid}
+                  className="relative h-12 w-12 overflow-hidden rounded-full border-2 border-white shadow-md transition-all duration-300 hover:z-10 hover:scale-110"
+                  style={{
+                    backgroundImage: `url(${getCourseThumbnailMediaDirectory(
+                      org?.org_uuid,
+                      course.course_uuid,
+                      course.thumbnail_image
+                    )})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    zIndex: 3 - index,
+                  }}
+                ></div>
+              ))}
           </div>
           <div className="flex flex-col">
             <Link
               href={getUriWithOrg(
                 props.orgslug,
-                '/collection/' + removeCollectionPrefix(props.collection.collection_uuid)
+                '/collection/' +
+                  removeCollectionPrefix(props.collection.collection_uuid)
               )}
               className="text-2xl font-bold text-white hover:underline"
             >
               {props.collection.name}
             </Link>
             <span className="mt-1 text-sm font-medium text-indigo-200">
-              {props.collection.courses.length} course{props.collection.courses.length !== 1 ? 's' : ''}
+              {props.collection.courses.length} course
+              {props.collection.courses.length !== 1 ? 's' : ''}
             </span>
           </div>
         </div>
@@ -74,7 +78,7 @@ function CollectionThumbnail(props: PropsType) {
 
 const CollectionAdminEditsArea = (props: any) => {
   const router = useRouter()
-  const session = useLHSession() as any;
+  const session = useLHSession() as any
 
   const deleteCollectionUI = async (collectionId: number) => {
     await deleteCollection(collectionId, session.data?.tokens?.access_token)
