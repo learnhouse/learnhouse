@@ -19,18 +19,9 @@
 **/.eslintcache
 **/__pycache__
 **/.ruff_cache
-# eslint
-
-**/.eslintrc.cjs
-**/lint-staged.config.js
-
-# npm
-!.npmrc
 
 # Docker related
-.dockerignore
 dockers
-*Dockerfile*
 *docker-compose*
 
 # Log files
@@ -46,12 +37,9 @@ tmp
 .vscode
 
 # other
-**/db
 **/.assets
 **/.temporary
 **.DS_Store
-docs
-**/*.md
 out
 .env*
 **/.venv

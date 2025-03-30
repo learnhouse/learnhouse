@@ -502,11 +502,11 @@ wheels = [
 
 [[package]]
 name = "fsspec"
-version = "2025.3.0"
+version = "2025.3.1"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/34/f4/5721faf47b8c499e776bc34c6a8fc17efdf7fdef0b00f398128bc5dcb4ac/fsspec-2025.3.0.tar.gz", hash = "sha256:a935fd1ea872591f2b5148907d103488fc523295e6c64b835cfad8c3eca44972", size = 298491 }
+sdist = { url = "https://files.pythonhosted.org/packages/f3/09/420cba8da6b88a89b47b940a02aceaeffe9d50ae9b9b789f94b18707fb2f/fsspec-2025.3.1.tar.gz", hash = "sha256:b3ec826bd18ed4ff0e5d172a8c6421ea5258e83d4f28369001369733d658a5f6", size = 299366 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/56/53/eb690efa8513166adef3e0669afd31e95ffde69fb3c52ec2ac7223ed6018/fsspec-2025.3.0-py3-none-any.whl", hash = "sha256:efb87af3efa9103f94ca91a7f8cb7a4df91af9f74fc106c9c7ea0efd7277c1b3", size = 193615 },
+    { url = "https://files.pythonhosted.org/packages/5c/0d/24d40adaacf77f133ac87a29c045ee0d81bb99732b09b6ff0251c76e5c67/fsspec-2025.3.1-py3-none-any.whl", hash = "sha256:2ce85886f37dfa12d5ad4764f1342efbf00ec0a4fe164f070038499d80142887", size = 194444 },
 ]
 
 [[package]]
@@ -1030,19 +1030,25 @@ requires-dist = [
     { name = "alembic-postgresql-enum", specifier = ">=1.7.0" },
     { name = "boto3", specifier = ">=1.37.23" },
     { name = "botocore", specifier = ">=1.37.23" },
+    { name = "alembic", specifier = ">=1.15.2" },
+    { name = "alembic-postgresql-enum", specifier = ">=1.7.0" },
+    { name = "boto3", specifier = ">=1.37.23" },
+    { name = "botocore", specifier = ">=1.37.23" },
     { name = "chromadb", specifier = "==0.6.3" },
+    { name = "faker", specifier = ">=37.1.0" },
     { name = "faker", specifier = ">=37.1.0" },
     { name = "fastapi", specifier = ">=0.115.12" },
     { name = "fastapi-jwt-auth", specifier = ">=0.5.0" },
+    { name = "httpx", specifier = ">=0.28.1" },
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "langchain", specifier = ">=0.1.7" },
     { name = "langchain-community", specifier = ">=0.0.20" },
     { name = "langchain-openai", specifier = ">=0.0.6" },
     { name = "logfire", extras = ["sqlalchemy"], specifier = ">=3.11.0" },
-    { name = "openai", specifier = ">=1.50.2" },
+    { name = "openai", specifier = ">=1.69.0" },
     { name = "passlib", specifier = ">=1.7.4" },
     { name = "psycopg2-binary", specifier = ">=2.9.10" },
-    { name = "pydantic", extras = ["email"], specifier = ">=1.8.0,<2.0.0" },
+    { name = "pydantic", extras = ["email"], specifier = ">=1.10.21,<2.0.0" },
     { name = "pytest", specifier = ">=8.3.5" },
     { name = "python-dotenv", specifier = ">=1.1.0" },
     { name = "python-jose", specifier = ">=3.4.0" },
@@ -1051,7 +1057,13 @@ requires-dist = [
     { name = "redis", specifier = ">=5.2.1" },
     { name = "requests", specifier = ">=2.32.3" },
     { name = "resend", specifier = ">=2.7.0" },
+    { name = "resend", specifier = ">=2.7.0" },
     { name = "sqlalchemy-utils", specifier = ">=0.41.2" },
+    { name = "sqlmodel", specifier = ">=0.0.24" },
+    { name = "stripe", specifier = ">=11.6.0" },
+    { name = "tiktoken", specifier = ">=0.9.0" },
+    { name = "typer", specifier = ">=0.15.2" },
+    { name = "uvicorn", specifier = "==0.34.0" },
     { name = "sqlmodel", specifier = ">=0.0.24" },
     { name = "stripe", specifier = ">=11.6.0" },
     { name = "tiktoken", specifier = ">=0.9.0" },
@@ -1839,15 +1851,15 @@ wheels = [
 
 [[package]]
 name = "rich"
-version = "13.9.4"
+version = "14.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "markdown-it-py" },
     { name = "pygments" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ab/3a/0316b28d0761c6734d6bc14e770d85506c986c85ffb239e688eeaab2c2bc/rich-13.9.4.tar.gz", hash = "sha256:439594978a49a09530cff7ebc4b5c7103ef57baf48d5ea3184f21d9a2befa098", size = 223149 }
+sdist = { url = "https://files.pythonhosted.org/packages/a1/53/830aa4c3066a8ab0ae9a9955976fb770fe9c6102117c8ec4ab3ea62d89e8/rich-14.0.0.tar.gz", hash = "sha256:82f1bc23a6a21ebca4ae0c45af9bdbc492ed20231dcb63f297d6d1021a9d5725", size = 224078 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/19/71/39c7c0d87f8d4e6c020a393182060eaefeeae6c01dab6a84ec346f2567df/rich-13.9.4-py3-none-any.whl", hash = "sha256:6049d5e6ec054bf2779ab3358186963bac2ea89175919d699e378b99738c2a90", size = 242424 },
+    { url = "https://files.pythonhosted.org/packages/0d/9b/63f4c7ebc259242c89b3acafdb37b41d1185c07ff0011164674e9076b491/rich-14.0.0-py3-none-any.whl", hash = "sha256:1c9491e1951aac09caffd42f448ee3d04e58923ffe14993f6e83068dc395d7e0", size = 243229 },
 ]
 
 [[package]]
@@ -2106,13 +2118,16 @@ wheels = [
 [[package]]
 name = "uvicorn"
 version = "0.34.0"
+version = "0.34.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
     { name = "h11" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/4b/4d/938bd85e5bf2edeec766267a5015ad969730bb91e31b44021dfe8b22df6c/uvicorn-0.34.0.tar.gz", hash = "sha256:404051050cd7e905de2c9a7e61790943440b3416f49cb409f965d9dcd0fa73e9", size = 76568 }
+sdist = { url = "https://files.pythonhosted.org/packages/4b/4d/938bd85e5bf2edeec766267a5015ad969730bb91e31b44021dfe8b22df6c/uvicorn-0.34.0.tar.gz", hash = "sha256:404051050cd7e905de2c9a7e61790943440b3416f49cb409f965d9dcd0fa73e9", size = 76568 }
 wheels = [
+    { url = "https://files.pythonhosted.org/packages/61/14/33a3a1352cfa71812a3a21e8c9bfb83f60b0011f5e36f2b1399d51928209/uvicorn-0.34.0-py3-none-any.whl", hash = "sha256:023dc038422502fa28a09c7a30bf2b6991512da7dcdb8fd35fe57cfc154126f4", size = 62315 },
     { url = "https://files.pythonhosted.org/packages/61/14/33a3a1352cfa71812a3a21e8c9bfb83f60b0011f5e36f2b1399d51928209/uvicorn-0.34.0-py3-none-any.whl", hash = "sha256:023dc038422502fa28a09c7a30bf2b6991512da7dcdb8fd35fe57cfc154126f4", size = 62315 },
 ]
 
