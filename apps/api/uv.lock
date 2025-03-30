@@ -1026,37 +1026,37 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "alembic", specifier = ">=1.13.2" },
-    { name = "alembic-postgresql-enum", specifier = ">=1.2.0" },
-    { name = "boto3", specifier = ">=1.34.79" },
-    { name = "botocore", specifier = ">=1.34.93" },
+    { name = "alembic", specifier = ">=1.15.2" },
+    { name = "alembic-postgresql-enum", specifier = ">=1.7.0" },
+    { name = "boto3", specifier = ">=1.37.23" },
+    { name = "botocore", specifier = ">=1.37.23" },
     { name = "chromadb", specifier = "==0.6.3" },
-    { name = "faker", specifier = ">=30.1.0" },
+    { name = "faker", specifier = ">=37.1.0" },
     { name = "fastapi", specifier = ">=0.115.12" },
     { name = "fastapi-jwt-auth", specifier = ">=0.5.0" },
-    { name = "httpx", specifier = ">=0.27.0" },
+    { name = "httpx", specifier = ">=0.28.1" },
     { name = "langchain", specifier = ">=0.1.7" },
     { name = "langchain-community", specifier = ">=0.0.20" },
     { name = "langchain-openai", specifier = ">=0.0.6" },
-    { name = "logfire", extras = ["sqlalchemy"], specifier = ">=3.8.0" },
+    { name = "logfire", extras = ["sqlalchemy"], specifier = ">=3.11.0" },
     { name = "openai", specifier = ">=1.50.2" },
     { name = "passlib", specifier = ">=1.7.4" },
-    { name = "psycopg2-binary", specifier = ">=2.9.9" },
+    { name = "psycopg2-binary", specifier = ">=2.9.10" },
     { name = "pydantic", extras = ["email"], specifier = ">=1.8.0,<2.0.0" },
-    { name = "pytest", specifier = ">=8.2.2" },
-    { name = "python-dotenv", specifier = ">=1.0.0" },
-    { name = "python-jose", specifier = ">=3.3.0" },
-    { name = "python-multipart", specifier = ">=0.0.9" },
-    { name = "pyyaml", specifier = ">=6.0.1" },
-    { name = "redis", specifier = ">=5.0.7" },
+    { name = "pytest", specifier = ">=8.3.5" },
+    { name = "python-dotenv", specifier = ">=1.1.0" },
+    { name = "python-jose", specifier = ">=3.4.0" },
+    { name = "python-multipart", specifier = ">=0.0.20" },
+    { name = "pyyaml", specifier = ">=6.0.2" },
+    { name = "redis", specifier = ">=5.2.1" },
     { name = "requests", specifier = ">=2.32.3" },
-    { name = "resend", specifier = ">=2.4.0" },
+    { name = "resend", specifier = ">=2.7.0" },
     { name = "sqlalchemy-utils", specifier = ">=0.41.2" },
-    { name = "sqlmodel", specifier = ">=0.0.19" },
-    { name = "stripe", specifier = ">=11.1.1" },
-    { name = "tiktoken", specifier = ">=0.7.0" },
-    { name = "typer", specifier = ">=0.12.5" },
-    { name = "uvicorn", specifier = "==0.30.1" },
+    { name = "sqlmodel", specifier = ">=0.0.24" },
+    { name = "stripe", specifier = ">=11.6.0" },
+    { name = "tiktoken", specifier = ">=0.9.0" },
+    { name = "typer", specifier = ">=0.15.2" },
+    { name = "uvicorn", specifier = "==0.34.0" },
 ]
 
 [[package]]
@@ -2105,15 +2105,15 @@ wheels = [
 
 [[package]]
 name = "uvicorn"
-version = "0.30.1"
+version = "0.34.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
     { name = "h11" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/37/16/9f5ccaa1a76e5bfbaa0c67640e2db8a5214ca08d92a1b427fa1677b3da88/uvicorn-0.30.1.tar.gz", hash = "sha256:d46cd8e0fd80240baffbcd9ec1012a712938754afcf81bce56c024c1656aece8", size = 42572 }
+sdist = { url = "https://files.pythonhosted.org/packages/4b/4d/938bd85e5bf2edeec766267a5015ad969730bb91e31b44021dfe8b22df6c/uvicorn-0.34.0.tar.gz", hash = "sha256:404051050cd7e905de2c9a7e61790943440b3416f49cb409f965d9dcd0fa73e9", size = 76568 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b2/f9/e6f30ba6094733e4f9794fd098ca0543a19b07ac1fa3075d595bf0f1fb60/uvicorn-0.30.1-py3-none-any.whl", hash = "sha256:cd17daa7f3b9d7a24de3617820e634d0933b69eed8e33a516071174427238c81", size = 62393 },
+    { url = "https://files.pythonhosted.org/packages/61/14/33a3a1352cfa71812a3a21e8c9bfb83f60b0011f5e36f2b1399d51928209/uvicorn-0.34.0-py3-none-any.whl", hash = "sha256:023dc038422502fa28a09c7a30bf2b6991512da7dcdb8fd35fe57cfc154126f4", size = 62315 },
 ]
 
 [package.optional-dependencies]

@@ -13,7 +13,7 @@ services:
       redis:
         condition: service_healthy
   db:
-    image: postgres:16-alpine
+    image: postgres:17-alpine
     restart: always
     ports:
       - "5432:5432"
@@ -27,7 +27,7 @@ services:
       timeout: 4s
       retries: 5
   redis:
-    image: redis:7.2.3
+    image: redis:7.4.2
     restart: always
     ports:
       - "6379:6379"
@@ -37,6 +37,6 @@ services:
       timeout: 4s
       retries: 5
   chromadb:
-    image: chromadb/chroma:0.5.16
+    image: chromadb/chroma:0.6.3
     ports:
       - "8000:8000"
