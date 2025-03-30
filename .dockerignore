@@ -18,8 +18,9 @@
 **/*.tsbuildinfo
 **/.eslintcache
 **/__pycache__
-
+**/.ruff_cache
 # eslint
+
 **/.eslintrc.cjs
 **/lint-staged.config.js
 
@@ -54,3 +55,4 @@ docs
 out
 .env*
 **/.venv
+.logfire

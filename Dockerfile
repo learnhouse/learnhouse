@@ -1,5 +1,5 @@
 # Base image
-FROM python:3.12.3-slim-bookworm AS base
+FROM python:3.12.9-slim-bookworm AS base
 
 # Install Nginx, curl, and build-essential
 RUN apt update && apt install -y nginx curl build-essential \
@@ -8,7 +8,7 @@ RUN apt update && apt install -y nginx curl build-essential \
     && rm /etc/nginx/sites-enabled/default
 
 # Install Node tools
-RUN curl -fsSL https://deb.nodesource.com/setup_21.x | bash - \
+RUN curl -fsSL https://deb.nodesource.com/setup_23.x | bash - \
     && apt-get install -y nodejs \
     && npm install -g corepack pm2
 

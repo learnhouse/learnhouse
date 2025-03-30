@@ -46,3 +46,6 @@ __pycache__/
 # Flyio
 .flyio/
 fly.toml
+
+.logfire
+.ruff_cache
