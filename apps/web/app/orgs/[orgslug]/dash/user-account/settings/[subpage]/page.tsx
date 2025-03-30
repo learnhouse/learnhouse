@@ -40,17 +40,17 @@ const navigationItems: NavigationItem[] = [
     component: UserEditGeneral
   },
   {
+    id: 'profile',
+    label: 'Profile',
+    icon: User,
+    component: UserProfile
+  },
+  {
     id: 'security',
     label: 'Password',
     icon: Lock,
     component: UserEditPassword
   },
-  {
-    id: 'profile',
-    label: 'Profile',
-    icon: User,
-    component: UserProfile
-  }
 ]
 
 const SettingsNavigation = ({ 

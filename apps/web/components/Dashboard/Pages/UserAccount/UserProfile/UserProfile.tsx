@@ -1,8 +1,11 @@
 import React from 'react'
+import UserProfileBuilder from './UserProfileBuilder'
 
 function UserProfile() {
   return (
-    <div>UserProfile</div>
+    <div>
+      <UserProfileBuilder />
+    </div>
   )
 }
 

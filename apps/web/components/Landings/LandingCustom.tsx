@@ -7,6 +7,7 @@ import useSWR from 'swr'
 import { getOrgCourses } from '@services/courses/courses'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import CourseThumbnailLanding from '@components/Objects/Thumbnails/CourseThumbnailLanding'
+import UserAvatar from '@components/Objects/UserAvatar'
 
 interface LandingCustomProps {
   landing: {
@@ -183,11 +184,21 @@ function LandingCustom({ landing, orgslug }: LandingCustomProps) {
               {section.people.map((person, index) => (
                 <div key={index} className="w-[140px] flex flex-col items-center">
                   <div className="w-24 h-24 mb-4">
-                    <img
-                      src={person.image_url}
-                      alt={person.name}
-                      className="w-full h-full rounded-full object-cover border-4 border-white nice-shadow"
-                    />
+                    {person.username ? (
+                      <UserAvatar
+                        username={person.username}
+                        width={96}
+                        rounded="rounded-full"
+                        border="border-4"
+                        showProfilePopup
+                      />
+                    ) : (
+                      <img
+                        src={person.image_url}
+                        alt={person.name}
+                        className="w-full h-full rounded-full object-cover border-4 border-white nice-shadow"
+                      />
+                    )}
                   </div>
                   <h3 className="text-lg font-semibold text-center text-gray-900">{person.name}</h3>
                   <p className="text-sm text-center text-gray-600 mt-1">{person.description}</p>

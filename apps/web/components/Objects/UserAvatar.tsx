@@ -1,9 +1,10 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { getUriWithOrg } from '@services/config/config'
 import { useParams } from 'next/navigation'
 import { getUserAvatarMediaDirectory } from '@services/media/media'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import UserProfilePopup from './UserProfilePopup'
+import { getUserByUsername } from '@services/users/users'
 
 type UserAvatarProps = {
   width?: number
@@ -16,11 +17,28 @@ type UserAvatarProps = {
   backgroundColor?: 'bg-white' | 'bg-gray-100' 
   showProfilePopup?: boolean
   userId?: string
+  username?: string
 }
 
 function UserAvatar(props: UserAvatarProps) {
   const session = useLHSession() as any
   const params = useParams() as any
+  const [userData, setUserData] = useState<any>(null)
+
+  useEffect(() => {
+    const fetchUserByUsername = async () => {
+      if (props.username && session?.data?.tokens?.access_token) {
+        try {
+          const data = await getUserByUsername(props.username, session.data.tokens.access_token)
+          setUserData(data)
+        } catch (error) {
+          console.error('Error fetching user by username:', error)
+        }
+      }
+    }
+
+    fetchUserByUsername()
+  }, [props.username, session?.data?.tokens?.access_token])
 
   const isExternalUrl = (url: string): boolean => {
     return url.startsWith('http://') || url.startsWith('https://')
@@ -55,6 +73,17 @@ function UserAvatar(props: UserAvatarProps) {
       }
       // Otherwise use as is
       return props.avatar_url
+    }
+
+    // If we have user data from username fetch
+    if (userData?.avatar_image) {
+      const avatarUrl = userData.avatar_image
+      // If it's an external URL (e.g., from Google, Facebook, etc.), use it directly
+      if (isExternalUrl(avatarUrl)) {
+        return avatarUrl
+      }
+      // Otherwise, get the local avatar URL
+      return getUserAvatarMediaDirectory(userData.user_uuid, avatarUrl)
     }
 
     // If user has an avatar in session
@@ -92,9 +121,9 @@ function UserAvatar(props: UserAvatarProps) {
     />
   )
 
-  if (props.showProfilePopup && props.userId) {
+  if (props.showProfilePopup && (props.userId || (userData?.id))) {
     return (
-      <UserProfilePopup userId={props.userId}>
+      <UserProfilePopup userId={props.userId || userData?.id}>
         {avatarImage}
       </UserProfilePopup>
     )
