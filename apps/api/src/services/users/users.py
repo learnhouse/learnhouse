@@ -416,8 +416,7 @@ async def read_user_by_uuid(
             detail="User does not exist",
         )
 
-    # RBAC check
-    await rbac_check(request, current_user, "read", user.user_uuid, db_session)
+    
 
     user = UserRead.model_validate(user)
 
@@ -440,8 +439,7 @@ async def read_user_by_username(
             detail="User does not exist",
         )
 
-    # RBAC check
-    await rbac_check(request, current_user, "read", user.user_uuid, db_session)
+    
 
     user = UserRead.model_validate(user)
 
@@ -587,7 +585,7 @@ async def rbac_check(
     user_uuid: str,
     db_session: Session,
 ):
-    if action == "create":
+    if action == "create" or action == "read":
         if current_user.id == 0:  # if user is anonymous
             return True
         else:
