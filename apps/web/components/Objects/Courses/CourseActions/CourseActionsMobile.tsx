@@ -9,7 +9,7 @@ import { revalidateTags } from '@services/utils/ts/requests'
 import { AlertCircle, LogIn, LogOut, ShoppingCart } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import React, { useState, useEffect } from 'react'
-import UserAvatar from '../../UserAvatar'
+import UserAvatar from '@components/Objects/UserAvatar'
 import CoursePaidOptions from './CoursePaidOptions'
 
 interface Author {

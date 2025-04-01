@@ -3,7 +3,7 @@ import { BookCopy, School, Settings, University, Users } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import type React from 'react'
-import learnhousetextlogo from '../../../../public/learnhouse_logo.png'
+import learnhousetextlogo from '@public/learnhouse_logo.png'
 
 function DashboardHome() {
   return (

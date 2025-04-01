@@ -8,12 +8,12 @@ import { NodeViewWrapper } from '@tiptap/react'
 import { AlertTriangle, FileText } from 'lucide-react'
 import React, { useEffect } from 'react'
 import styled from 'styled-components'
-import { uploadNewPDFFile } from '../../../../../services/blocks/Pdf/pdf'
+import { uploadNewPDFFile } from '@services/blocks/Pdf/pdf'
 import {
   FileUploadBlock,
   FileUploadBlockButton,
   FileUploadBlockInput,
-} from '../../FileUploadBlock'
+} from '@components/Objects/Editor/FileUploadBlock'
 
 const SUPPORTED_FILES = constructAcceptValue(['pdf'])
 

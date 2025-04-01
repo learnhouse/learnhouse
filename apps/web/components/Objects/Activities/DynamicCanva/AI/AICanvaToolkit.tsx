@@ -15,7 +15,7 @@ import { BookOpen, FormInput, Languages, MoreVertical } from 'lucide-react'
 import Image from 'next/image'
 import learnhouseAI_icon from 'public/learnhouse_ai_simple.png'
 import React from 'react'
-import useGetAIFeatures from '../../../../Hooks/useGetAIFeatures'
+import useGetAIFeatures from '@hooks/useGetAIFeatures'
 
 type AICanvaToolkitProps = {
   editor: Editor

@@ -16,7 +16,7 @@ import Image from 'next/image'
 import learnhouseAI_logo_black from 'public/learnhouse_ai_black_logo.png'
 import learnhouseAI_icon from 'public/learnhouse_ai_simple.png'
 import React, { useEffect, useRef } from 'react'
-import useGetAIFeatures from '../../../Hooks/useGetAIFeatures'
+import useGetAIFeatures from '@hooks/useGetAIFeatures'
 
 type AIActivityAskProps = {
   activity: any

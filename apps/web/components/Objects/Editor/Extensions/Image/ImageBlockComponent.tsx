@@ -8,12 +8,12 @@ import { NodeViewWrapper } from '@tiptap/react'
 import { AlertTriangle, Image } from 'lucide-react'
 import { Resizable } from 're-resizable'
 import React, { useEffect } from 'react'
-import { uploadNewImageFile } from '../../../../../services/blocks/Image/images'
+import { uploadNewImageFile } from '@services/blocks/Image/images'
 import {
   FileUploadBlock,
   FileUploadBlockButton,
   FileUploadBlockInput,
-} from '../../FileUploadBlock'
+} from '@components/Objects/Editor/FileUploadBlock'
 
 const SUPPORTED_FILES = constructAcceptValue(['image'])
 

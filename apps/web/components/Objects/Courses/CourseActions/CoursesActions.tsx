@@ -20,7 +20,7 @@ import React, { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import { useMediaQuery } from 'usehooks-ts'
 import { useContributorStatus } from '../../../../hooks/useContributorStatus'
-import UserAvatar from '../../UserAvatar'
+import UserAvatar from '@components/Objects/UserAvatar'
 import CoursePaidOptions from './CoursePaidOptions'
 
 interface Author {

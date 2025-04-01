@@ -8,12 +8,12 @@ import { NodeViewWrapper } from '@tiptap/react'
 import { Video } from 'lucide-react'
 import React, { useEffect } from 'react'
 import styled from 'styled-components'
-import { uploadNewVideoFile } from '../../../../../services/blocks/Video/video'
+import { uploadNewVideoFile } from '@services/blocks/Video/video'
 import {
   FileUploadBlock,
   FileUploadBlockButton,
   FileUploadBlockInput,
-} from '../../FileUploadBlock'
+} from '@components/Objects/Editor/FileUploadBlock'
 
 const SUPPORTED_FILES = constructAcceptValue(['webm', 'mp4'])
 

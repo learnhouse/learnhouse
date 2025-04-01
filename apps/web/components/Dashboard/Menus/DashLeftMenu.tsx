@@ -21,7 +21,7 @@ import { signOut } from 'next-auth/react'
 import Image from 'next/image'
 import Link from 'next/link'
 import React, { useEffect } from 'react'
-import UserAvatar from '../../Objects/UserAvatar'
+import UserAvatar from '@components/Objects/UserAvatar'
 
 function DashLeftMenu() {
   const org = useOrg() as any
