@@ -28,6 +28,7 @@ import {
   Table,
   Tag,
   Tags,
+  User,
   Video,
 } from 'lucide-react'
 import { SiYoutube } from '@icons-pack/react-simple-icons'
@@ -297,6 +298,13 @@ export const ToolbarButtons = ({ editor, props }: any) => {
           }).run()}
         >
           <MousePointerClick size={15} />
+        </ToolBtn>
+      </ToolTip>
+      <ToolTip content={'User'}>
+        <ToolBtn
+          onClick={() => editor.chain().focus().insertContent({ type: 'blockUser' }).run()}
+        >
+          <User size={15} />
         </ToolBtn>
       </ToolTip>
     </ToolButtonsWrapper>
