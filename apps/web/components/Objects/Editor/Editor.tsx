@@ -53,6 +53,7 @@ import Badges from './Extensions/Badges/Badges'
 import Buttons from './Extensions/Buttons/Buttons'
 import { useMediaQuery } from 'usehooks-ts'
 import UserAvatar from '../UserAvatar'
+import UserBlock from './Extensions/Users/UserBlock'
 
 interface Editor {
   content: string
@@ -137,6 +138,10 @@ function Editor(props: Editor) {
         activity: props.activity,
       }),
       Buttons.configure({
+        editable: true,
+        activity: props.activity,
+      }),
+      UserBlock.configure({
         editable: true,
         activity: props.activity,
       }),
