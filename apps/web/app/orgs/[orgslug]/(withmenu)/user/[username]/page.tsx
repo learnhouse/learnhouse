@@ -17,17 +17,11 @@ interface UserPageProps {
 
 export async function generateMetadata({ params }: UserPageProps): Promise<Metadata> {
   try {
-    const session = await getServerSession(nextAuthOptions)
-    const access_token = session?.tokens?.access_token
     const resolvedParams = await params
 
-    if (!access_token) {
-      return {
-        title: 'User Profile',
-      }
-    }
+    
 
-    const userData = await getUserByUsername(resolvedParams.username, access_token)
+    const userData = await getUserByUsername(resolvedParams.username)
     return {
       title: `${userData.first_name} ${userData.last_name} | Profile`,
       description: userData.bio || `Profile page of ${userData.first_name} ${userData.last_name}`,
@@ -44,16 +38,8 @@ async function UserPage({ params }: UserPageProps) {
   const { username } = resolvedParams;
   
   try {
-    // Get access token from server session
-    const session = await getServerSession(nextAuthOptions)
-    const access_token = session?.tokens?.access_token
-
-    if (!access_token) {
-      throw new Error('No access token available')
-    }
-
     // Fetch user data by username
-    const userData = await getUserByUsername(username, access_token);
+    const userData = await getUserByUsername(username);
     const profile = userData.profile ? (
       typeof userData.profile === 'string' ? JSON.parse(userData.profile) : userData.profile
     ) : { sections: [] };

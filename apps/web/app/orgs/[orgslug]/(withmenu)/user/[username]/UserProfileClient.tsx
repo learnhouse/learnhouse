@@ -14,7 +14,8 @@ import {
   Laptop2,
   Users,
   Calendar,
-  Lightbulb
+  Lightbulb,
+  X
 } from 'lucide-react'
 import { getUserAvatarMediaDirectory } from '@services/media/media'
 
@@ -38,7 +39,36 @@ const ICON_MAP = {
   'calendar': Calendar,
 } as const
 
+// Add Modal component
+const ImageModal: React.FC<{
+  image: { url: string; caption?: string };
+  onClose: () => void;
+}> = ({ image, onClose }) => {
+  return (
+    <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+      <div className="relative max-w-4xl w-full">
+        <button
+          onClick={onClose}
+          className="absolute -top-10 right-0 text-white hover:text-gray-300 transition-colors"
+        >
+          <X className="w-6 h-6" />
+        </button>
+        <img
+          src={image.url}
+          alt={image.caption || ''}
+          className="w-full h-auto rounded-lg"
+        />
+        {image.caption && (
+          <p className="mt-4 text-white text-center text-lg">{image.caption}</p>
+        )}
+      </div>
+    </div>
+  );
+};
+
 function UserProfileClient({ userData, profile }: UserProfileClientProps) {
+  const [selectedImage, setSelectedImage] = React.useState<{ url: string; caption?: string } | null>(null);
+
   const IconComponent = ({ iconName }: { iconName: string }) => {
     const IconElement = ICON_MAP[iconName as keyof typeof ICON_MAP]
     if (!IconElement) return null
@@ -126,6 +156,30 @@ function UserProfileClient({ userData, profile }: UserProfileClientProps) {
                   {profile.sections.map((section: any, index: number) => (
                     <div key={index} className="mb-8">
                       <h2 className="text-xl font-semibold mb-4">{section.title}</h2>
+                      
+                      {/* Add Image Gallery section */}
+                      {section.type === 'image-gallery' && (
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                          {section.images.map((image: any, imageIndex: number) => (
+                            <div
+                              key={imageIndex}
+                              className="relative group cursor-pointer"
+                              onClick={() => setSelectedImage(image)}
+                            >
+                              <img
+                                src={image.url}
+                                alt={image.caption || ''}
+                                className="w-full h-48 object-cover rounded-lg"
+                              />
+                              {image.caption && (
+                                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-lg flex items-center justify-center p-4">
+                                  <p className="text-white text-center text-sm">{image.caption}</p>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
                       
                       {section.type === 'text' && (
                         <div className="prose max-w-none">{section.content}</div>
@@ -227,6 +281,14 @@ function UserProfileClient({ userData, profile }: UserProfileClientProps) {
           </div>
         </div>
       </div>
+
+      {/* Image Modal */}
+      {selectedImage && (
+        <ImageModal
+          image={selectedImage}
+          onClose={() => setSelectedImage(null)}
+        />
+      )}
     </div>
   )
 }
