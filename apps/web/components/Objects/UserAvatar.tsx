@@ -27,9 +27,9 @@ function UserAvatar(props: UserAvatarProps) {
 
   useEffect(() => {
     const fetchUserByUsername = async () => {
-      if (props.username && session?.data?.tokens?.access_token) {
+      if (props.username) {
         try {
-          const data = await getUserByUsername(props.username, session.data.tokens.access_token)
+          const data = await getUserByUsername(props.username)
           setUserData(data)
         } catch (error) {
           console.error('Error fetching user by username:', error)
@@ -38,7 +38,7 @@ function UserAvatar(props: UserAvatarProps) {
     }
 
     fetchUserByUsername()
-  }, [props.username, session?.data?.tokens?.access_token])
+  }, [props.username])
 
   const isExternalUrl = (url: string): boolean => {
     return url.startsWith('http://') || url.startsWith('https://')
@@ -86,7 +86,7 @@ function UserAvatar(props: UserAvatarProps) {
       return getUserAvatarMediaDirectory(userData.user_uuid, avatarUrl)
     }
 
-    // If user has an avatar in session
+    // If user has an avatar in session (only if session exists)
     if (session?.data?.user?.avatar_image) {
       const avatarUrl = session.data.user.avatar_image
       // If it's an external URL (e.g., from Google, Facebook, etc.), use it directly

@@ -7,7 +7,7 @@ import {
   getResponseMetadata,
 } from '@services/utils/ts/requests'
 
-export async function getUser(user_id: string, access_token: string) {
+export async function getUser(user_id: string) {
   const result = await fetch(
     `${getAPIUrl()}users/id/${user_id}`,
     RequestBody('GET', null, null)
@@ -16,7 +16,7 @@ export async function getUser(user_id: string, access_token: string) {
   return res
 }
 
-export async function getUserByUsername(username: string, access_token: string) {
+export async function getUserByUsername(username: string) {
   const result = await fetch(
     `${getAPIUrl()}users/username/${username}`,
     RequestBody('GET', null, null)
