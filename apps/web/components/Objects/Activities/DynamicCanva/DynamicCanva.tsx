@@ -56,7 +56,9 @@ function Canva(props: Editor) {
   const editor: any = useEditor({
     editable: isEditable,
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        codeBlock: false,
+      }),
       NoTextInput,
       // Custom Extensions
       InfoCallout.configure({
@@ -113,6 +115,7 @@ function Canva(props: Editor) {
     ],
 
     content: props.content,
+    immediatelyRender: false,
   })
 
   return (

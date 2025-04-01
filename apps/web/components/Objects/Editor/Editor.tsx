@@ -91,7 +91,9 @@ function Editor(props: Editor) {
   const editor: any = useEditor({
     editable: true,
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        codeBlock: false,
+      }),
       InfoCallout.configure({
         editable: true,
       }),
