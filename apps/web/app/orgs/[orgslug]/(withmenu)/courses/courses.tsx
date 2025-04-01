@@ -53,9 +53,7 @@ function Courses(props: CourseProps) {
                 dialogTitle="Create Course"
                 dialogDescription="Create a new course"
                 dialogTrigger={
-                  <button>
-                    <NewCourseButton />
-                  </button>
+                  <NewCourseButton onClick={() => setNewCourseModal(true)} />
                 }
               />
             </AuthenticatedClientElement>
@@ -111,9 +109,9 @@ function Courses(props: CourseProps) {
                           dialogTitle="Create Course"
                           dialogDescription="Create a new course"
                           dialogTrigger={
-                            <button>
-                              <NewCourseButton />
-                            </button>
+                            <NewCourseButton
+                              onClick={() => setNewCourseModal(true)}
+                            />
                           }
                         />
                       </AuthenticatedClientElement>
