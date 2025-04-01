@@ -253,14 +253,14 @@ const LearningItemsList = ({
   return (
     <div className="space-y-2">
       {items.length === 0 && (
-        <div className="text-center py-3 text-gray-500 bg-gray-50/50 rounded-lg text-sm">
+        <div className="rounded-lg bg-gray-50/50 py-3 text-center text-sm text-gray-500">
           No learning items added yet. Click the button below to add one.
         </div>
       )}
 
       <div
         ref={scrollContainerRef}
-        className={`space-y-2 ${isScrollable ? 'max-h-[350px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent' : ''}`}
+        className={`space-y-2 ${isScrollable ? 'scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent max-h-[350px] overflow-y-auto pr-1' : ''}`}
       >
         {items.map((item) => (
           <div
@@ -268,7 +268,7 @@ const LearningItemsList = ({
             id={`learning-item-${item.id}`}
             className="group relative"
           >
-            <div className="flex items-center gap-2 py-2 px-3 bg-gray-50/70 hover:bg-gray-50 border border-gray-100 rounded-lg transition-colors">
+            <div className="flex items-center gap-2 rounded-lg border border-gray-100 bg-gray-50/70 px-3 py-2 transition-colors hover:bg-gray-50">
               <button
                 type="button"
                 onClick={() => {
@@ -277,7 +277,7 @@ const LearningItemsList = ({
                   )
                   setShowLinkInput(null)
                 }}
-                className="text-lg shrink-0"
+                className="shrink-0 text-lg"
               >
                 <span>{item.emoji}</span>
               </button>
@@ -289,13 +289,13 @@ const LearningItemsList = ({
                 onFocus={() => handleInputFocus(item.id)}
                 onBlur={handleInputBlur}
                 placeholder="Enter learning item..."
-                className="grow border-0 bg-transparent focus-visible:ring-0 px-0 h-8 text-sm learning-item-input"
+                className="learning-item-input h-8 grow border-0 bg-transparent px-0 text-sm focus-visible:ring-0"
               />
 
               {item.link && (
-                <div className="text-xs text-blue-500 flex items-center gap-1 bg-blue-50 px-2 py-0.5 rounded">
+                <div className="flex items-center gap-1 rounded bg-blue-50 px-2 py-0.5 text-xs text-blue-500">
                   <LinkIcon size={12} />
-                  <span className="truncate max-w-[100px]">{item.link}</span>
+                  <span className="max-w-[100px] truncate">{item.link}</span>
                 </div>
               )}
 
@@ -313,7 +313,7 @@ const LearningItemsList = ({
                       }
                     }, 0)
                   }}
-                  className="text-gray-400 hover:text-blue-500 transition-colors"
+                  className="text-gray-400 transition-colors hover:text-blue-500"
                   title={item.link ? 'Edit link' : 'Add link'}
                 >
                   <LinkIcon size={15} />
@@ -322,7 +322,7 @@ const LearningItemsList = ({
                 <button
                   type="button"
                   onClick={() => removeItem(item.id)}
-                  className="text-gray-300 hover:text-gray-500 transition-colors"
+                  className="text-gray-300 transition-colors hover:text-gray-500"
                   aria-label="Remove item"
                   title="Remove item"
                 >
@@ -332,7 +332,7 @@ const LearningItemsList = ({
             </div>
 
             {showEmojiPicker === item.id && (
-              <div ref={pickerRef} className="absolute z-10 mt-1 left-0">
+              <div ref={pickerRef} className="absolute left-0 z-10 mt-1">
                 <Picker
                   data={data}
                   onEmojiSelect={(emoji: any) =>
@@ -350,7 +350,7 @@ const LearningItemsList = ({
             {showLinkInput === item.id && (
               <div
                 ref={linkInputRef}
-                className="mt-1 p-2 bg-white border border-gray-200 rounded-lg shadow-xs"
+                className="mt-1 rounded-lg border border-gray-200 bg-white p-2 shadow-xs"
               >
                 <Input
                   ref={setLinkInputRef(item.id)}
@@ -359,7 +359,7 @@ const LearningItemsList = ({
                   onFocus={() => handleInputFocus(item.id)}
                   onBlur={handleInputBlur}
                   placeholder="Enter URL..."
-                  className="w-full text-sm learning-item-input"
+                  className="learning-item-input w-full text-sm"
                   autoFocus
                 />
               </div>
@@ -371,7 +371,7 @@ const LearningItemsList = ({
       <button
         type="button"
         onClick={addItem}
-        className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 transition-colors mt-2"
+        className="mt-2 flex items-center gap-1.5 text-sm text-gray-500 transition-colors hover:text-gray-700"
       >
         <Plus size={16} className="text-blue-500" />
         <span>Add learning item</span>

@@ -58,7 +58,7 @@ const AdminEditOptions: React.FC<AdminEditOptionsProps> = ({
       <div className="absolute top-2 right-2 z-20">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="p-1 bg-white rounded-full hover:bg-gray-100 transition-colors shadow-md">
+            <button className="rounded-full bg-white p-1 shadow-md transition-colors hover:bg-gray-100">
               <MoreVertical size={20} className="text-gray-700" />
             </button>
           </DropdownMenuTrigger>
@@ -91,7 +91,7 @@ const AdminEditOptions: React.FC<AdminEditOptionsProps> = ({
                 confirmationMessage="Are you sure you want to delete this course?"
                 dialogTitle={`Delete ${course.name}?`}
                 dialogTrigger={
-                  <button className="w-full text-left flex items-center px-2 py-1 rounded-md text-sm bg-rose-500/10 hover:bg-rose-500/20 transition-colors text-red-600">
+                  <button className="flex w-full items-center rounded-md bg-rose-500/10 px-2 py-1 text-left text-sm text-red-600 transition-colors hover:bg-rose-500/20">
                     <BookMinus className="mr-4 h-4 w-4" /> Delete Course
                   </button>
                 }
@@ -141,7 +141,7 @@ const CourseThumbnailLanding: React.FC<PropsType> = ({
     : '../empty_thumbnail.png'
 
   return (
-    <div className="relative flex flex-col bg-white rounded-xl nice-shadow overflow-hidden min-w-[280px] w-full max-w-sm shrink-0 m-2">
+    <div className="nice-shadow relative m-2 flex w-full max-w-sm min-w-[280px] shrink-0 flex-col overflow-hidden rounded-xl bg-white">
       <AdminEditOptions
         course={course}
         orgslug={orgslug}
@@ -159,24 +159,24 @@ const CourseThumbnailLanding: React.FC<PropsType> = ({
         }
       >
         <div
-          className="inset-0 ring-1 ring-inset ring-black/10 rounded-t-xl w-full aspect-video bg-cover bg-center"
+          className="inset-0 aspect-video w-full rounded-t-xl bg-cover bg-center ring-1 ring-black/10 ring-inset"
           style={{ backgroundImage: `url(${thumbnailImage})` }}
         />
       </Link>
-      <div className="flex flex-col w-full p-4 space-y-3">
+      <div className="flex w-full flex-col space-y-3 p-4">
         <div className="space-y-2">
-          <h2 className="font-bold text-gray-800 leading-tight text-base min-h-[2.75rem] line-clamp-2">
+          <h2 className="line-clamp-2 min-h-[2.75rem] text-base leading-tight font-bold text-gray-800">
             {course.name}
           </h2>
-          <p className="text-xs text-gray-700 leading-normal min-h-[3.75rem] line-clamp-3">
+          <p className="line-clamp-3 min-h-[3.75rem] text-xs leading-normal text-gray-700">
             {course.description}
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
           {course.update_date && (
-            <div className="inline-flex h-5 min-w-[140px] items-center justify-center px-2 rounded-md bg-gray-100/80 border border-gray-200">
-              <span className="text-[10px] font-medium text-gray-600 truncate">
+            <div className="inline-flex h-5 min-w-[140px] items-center justify-center rounded-md border border-gray-200 bg-gray-100/80 px-2">
+              <span className="truncate text-[10px] font-medium text-gray-600">
                 Updated{' '}
                 {new Date(course.update_date).toLocaleDateString('en-US', {
                   month: 'short',
@@ -198,7 +198,7 @@ const CourseThumbnailLanding: React.FC<PropsType> = ({
                   `/course/${removeCoursePrefix(course.course_uuid)}`
                 )
           }
-          className="inline-flex items-center justify-center w-full px-3 py-1.5 bg-black text-white text-xs font-medium rounded-lg hover:bg-gray-800 transition-colors"
+          className="inline-flex w-full items-center justify-center rounded-lg bg-black px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-gray-800"
         >
           Start Learning
         </Link>

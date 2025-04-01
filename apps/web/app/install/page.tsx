@@ -8,7 +8,7 @@ export const metadata = {
 
 function InstallPage() {
   return (
-    <div className="bg-white h-screen">
+    <div className="h-screen bg-white">
       <InstallClient />
     </div>
   )

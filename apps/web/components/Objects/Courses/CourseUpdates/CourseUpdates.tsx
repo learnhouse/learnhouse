@@ -58,19 +58,19 @@ function CourseUpdates() {
   return (
     <div
       style={{ position: 'relative' }}
-      className="bg-white hover:bg-neutral-50 transition-all ease-linear nice-shadow rounded-full z-20 px-5 py-1"
+      className="nice-shadow z-20 rounded-full bg-white px-5 py-1 transition-all ease-linear hover:bg-neutral-50"
     >
       <div
         onClick={handleModelOpen}
-        className="flex items-center space-x-2 font-normal hover:cursor-pointer text-gray-600"
+        className="flex items-center space-x-2 font-normal text-gray-600 hover:cursor-pointer"
       >
         <div>
           <Rss size={16} />{' '}
         </div>
-        <div className="flex space-x-2 items-center">
+        <div className="flex items-center space-x-2">
           <span>Updates</span>
           {updates && (
-            <span className="text-xs px-2 font-bold py-0.5 rounded-full bg-rose-100 text-rose-900">
+            <span className="rounded-full bg-rose-100 px-2 py-0.5 text-xs font-bold text-rose-900">
               {updates.length}
             </span>
           )}
@@ -98,16 +98,16 @@ const UpdatesSection = () => {
   const [selectedView, setSelectedView] = React.useState('list')
   const adminStatus = useAdminStatus()
   return (
-    <div className="bg-white/95 backdrop-blur-md nice-shadow rounded-lg w-[700px] overflow-hidden">
-      <div className="bg-gray-50/70 flex justify-between outline outline-1 rounded-lg outline-neutral-200/40">
-        <div className="py-2 px-4 font-bold text-gray-500 flex space-x-2 items-center">
+    <div className="nice-shadow w-[700px] overflow-hidden rounded-lg bg-white/95 backdrop-blur-md">
+      <div className="flex justify-between rounded-lg bg-gray-50/70 outline outline-1 outline-neutral-200/40">
+        <div className="flex items-center space-x-2 px-4 py-2 font-bold text-gray-500">
           <Rss size={16} />
           <span>Updates</span>
         </div>
         {adminStatus.isAdmin && (
           <div
             onClick={() => setSelectedView('new')}
-            className="py-2 px-4 space-x-2 items-center flex cursor-pointer text-xs font-medium hover:bg-gray-200 bg-gray-100 outline outline-1  outline-neutral-200/40"
+            className="flex cursor-pointer items-center space-x-2 bg-gray-100 px-4 py-2 text-xs font-medium outline outline-1 outline-neutral-200/40 hover:bg-gray-200"
           >
             <PencilLine size={14} />
             <span>New Update</span>
@@ -174,16 +174,16 @@ const NewUpdateForm = ({ setSelectedView }: any) => {
   useEffect(() => {}, [course, org])
 
   return (
-    <div className="bg-white/95 backdrop-blur-md nice-shadow rounded-lg w-[700px] overflow-hidden flex flex-col -space-y-2">
+    <div className="nice-shadow flex w-[700px] flex-col -space-y-2 overflow-hidden rounded-lg bg-white/95 backdrop-blur-md">
       <div className="flex flex-col -space-y-2 px-4 pt-4">
-        <div className="text-gray-500 px-3 py-0.5 rounded-full font-semibold text-xs">
+        <div className="rounded-full px-3 py-0.5 text-xs font-semibold text-gray-500">
           Test Course{' '}
         </div>
-        <div className="text-black px-3 py-0.5 rounded-full text-lg font-bold">
+        <div className="rounded-full px-3 py-0.5 text-lg font-bold text-black">
           Add new Course Update
         </div>
       </div>
-      <div className="px-5 -py-2">
+      <div className="-py-2 px-5">
         <FormLayout onSubmit={formik.handleSubmit}>
           <FormField name="title">
             <FormLabelAndMessage label="Title" message={formik.errors.title} />
@@ -214,11 +214,11 @@ const NewUpdateForm = ({ setSelectedView }: any) => {
           <div className="flex justify-end py-2">
             <button
               onClick={() => setSelectedView('list')}
-              className="text-gray-500 px-4 py-2 rounded-md text-sm font-bold antialiased"
+              className="rounded-md px-4 py-2 text-sm font-bold text-gray-500 antialiased"
             >
               Cancel
             </button>
-            <button className="bg-black  text-white px-4 py-2 rounded-md text-sm font-bold antialiased">
+            <button className="rounded-md bg-black px-4 py-2 text-sm font-bold text-white antialiased">
               Add Update
             </button>
           </div>
@@ -240,7 +240,7 @@ const UpdatesListView = () => {
 
   return (
     <div
-      className="px-5 bg-white overflow-y-auto"
+      className="overflow-y-auto bg-white px-5"
       style={{ maxHeight: '400px' }}
     >
       {updates &&
@@ -248,10 +248,10 @@ const UpdatesListView = () => {
         updates.map((update: any) => (
           <div
             key={update.id}
-            className="py-2 border-b border-neutral-200 antialiased"
+            className="border-b border-neutral-200 py-2 antialiased"
           >
-            <div className="font-bold text-gray-500 flex space-x-2 items-center justify-between ">
-              <div className="flex space-x-2 items-center">
+            <div className="flex items-center justify-between space-x-2 font-bold text-gray-500">
+              <div className="flex items-center space-x-2">
                 <span> {update.title}</span>
                 <span
                   title={
@@ -271,7 +271,7 @@ const UpdatesListView = () => {
           </div>
         ))}
       {(!updates || updates.length === 0) && (
-        <div className="text-gray-500 text-center my-10 py-2 flex flex-col space-y-2">
+        <div className="my-10 flex flex-col space-y-2 py-2 text-center text-gray-500">
           <TentTree className="mx-auto" size={40} />
           <p>No updates yet</p>
         </div>
@@ -312,7 +312,7 @@ const DeleteUpdateButton = ({ update }: any) => {
       dialogTrigger={
         <div
           id="delete-update-button"
-          className="text-rose-600 text-xs bg-rose-100 rounded-full px-2 py-0.5 hover:cursor-pointer"
+          className="rounded-full bg-rose-100 px-2 py-0.5 text-xs text-rose-600 hover:cursor-pointer"
         >
           Delete
         </div>

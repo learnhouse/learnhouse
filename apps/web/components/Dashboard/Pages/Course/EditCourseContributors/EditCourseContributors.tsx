@@ -149,7 +149,7 @@ function EditCourseContributors(props: EditCourseContributorsProps) {
           disabled={contributor.authorship === 'CREATOR'}
         >
           {contributor.authorship}
-          <ChevronDown className="ml-2 h-4 w-4 text-muted-foreground" />
+          <ChevronDown className="text-muted-foreground ml-2 h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-[200px]">
@@ -237,34 +237,34 @@ function EditCourseContributors(props: EditCourseContributorsProps) {
       {courseStructure && (
         <div>
           <div className="h-6"></div>
-          <div className="mx-4 sm:mx-10 bg-white rounded-xl shadow-xs px-4 py-4">
-            <div className="flex flex-col bg-gray-50 -space-y-1 px-3 sm:px-5 py-3 rounded-md mb-3">
-              <h1 className="font-bold text-lg sm:text-xl text-gray-800">
+          <div className="mx-4 rounded-xl bg-white px-4 py-4 shadow-xs sm:mx-10">
+            <div className="mb-3 flex flex-col -space-y-1 rounded-md bg-gray-50 px-3 py-3 sm:px-5">
+              <h1 className="text-lg font-bold text-gray-800 sm:text-xl">
                 Course Contributors
               </h1>
-              <h2 className="text-gray-500 text-xs sm:text-sm">
+              <h2 className="text-xs text-gray-500 sm:text-sm">
                 Choose if you want your course to be open for contributors and
                 manage existing contributors
               </h2>
             </div>
-            <div className="flex flex-col sm:flex-row sm:space-x-2 space-y-2 sm:space-y-0 mx-auto mb-3">
+            <div className="mx-auto mb-3 flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2">
               <ConfirmationModal
                 confirmationButtonText="Open to Contributors"
                 confirmationMessage="Are you sure you want to open this course to contributors?"
                 dialogTitle="Open to Contributors?"
                 dialogTrigger={
-                  <div className="w-full h-[200px] bg-slate-100 rounded-lg cursor-pointer hover:bg-slate-200 transition-all">
+                  <div className="h-[200px] w-full cursor-pointer rounded-lg bg-slate-100 transition-all hover:bg-slate-200">
                     {isOpenToContributors && (
-                      <div className="bg-green-200 text-green-600 font-bold w-fit my-3 mx-3 absolute text-sm px-3 py-1 rounded-lg">
+                      <div className="absolute mx-3 my-3 w-fit rounded-lg bg-green-200 px-3 py-1 text-sm font-bold text-green-600">
                         Active
                       </div>
                     )}
-                    <div className="flex flex-col space-y-1 justify-center items-center h-full p-2 sm:p-4">
+                    <div className="flex h-full flex-col items-center justify-center space-y-1 p-2 sm:p-4">
                       <UserPen className="text-slate-400" size={32} />
-                      <div className="text-xl sm:text-2xl text-slate-700 font-bold">
+                      <div className="text-xl font-bold text-slate-700 sm:text-2xl">
                         Open to Contributors
                       </div>
-                      <div className="text-gray-400 text-sm sm:text-md tracking-tight w-full sm:w-[500px] leading-5 text-center">
+                      <div className="sm:text-md w-full text-center text-sm leading-5 tracking-tight text-gray-400 sm:w-[500px]">
                         The course is open for contributors. Users can apply to
                         become contributors and help improve the course content.
                       </div>
@@ -279,18 +279,18 @@ function EditCourseContributors(props: EditCourseContributorsProps) {
                 confirmationMessage="Are you sure you want to close this course to contributors?"
                 dialogTitle="Close to Contributors?"
                 dialogTrigger={
-                  <div className="w-full h-[200px] bg-slate-100 rounded-lg cursor-pointer hover:bg-slate-200 transition-all">
+                  <div className="h-[200px] w-full cursor-pointer rounded-lg bg-slate-100 transition-all hover:bg-slate-200">
                     {!isOpenToContributors && (
-                      <div className="bg-green-200 text-green-600 font-bold w-fit my-3 mx-3 absolute text-sm px-3 py-1 rounded-lg">
+                      <div className="absolute mx-3 my-3 w-fit rounded-lg bg-green-200 px-3 py-1 text-sm font-bold text-green-600">
                         Active
                       </div>
                     )}
-                    <div className="flex flex-col space-y-1 justify-center items-center h-full p-2 sm:p-4">
+                    <div className="flex h-full flex-col items-center justify-center space-y-1 p-2 sm:p-4">
                       <Users className="text-slate-400" size={32} />
-                      <div className="text-xl sm:text-2xl text-slate-700 font-bold">
+                      <div className="text-xl font-bold text-slate-700 sm:text-2xl">
                         Closed to Contributors
                       </div>
-                      <div className="text-gray-400 text-sm sm:text-md tracking-tight w-full sm:w-[500px] leading-5 text-center">
+                      <div className="sm:text-md w-full text-center text-sm leading-5 tracking-tight text-gray-400 sm:w-[500px]">
                         The course is closed for contributors. Only existing
                         contributors can modify the course content.
                       </div>
@@ -301,11 +301,11 @@ function EditCourseContributors(props: EditCourseContributorsProps) {
                 status="info"
               />
             </div>
-            <div className="flex flex-col bg-gray-50 -space-y-1 px-3 sm:px-5 py-3 rounded-md mb-3">
-              <h1 className="font-bold text-lg sm:text-xl text-gray-800">
+            <div className="mb-3 flex flex-col -space-y-1 rounded-md bg-gray-50 px-3 py-3 sm:px-5">
+              <h1 className="text-lg font-bold text-gray-800 sm:text-xl">
                 Current Contributors
               </h1>
-              <h2 className="text-gray-500 text-xs sm:text-sm">
+              <h2 className="text-xs text-gray-500 sm:text-sm">
                 Manage the current contributors of this course
               </h2>
             </div>

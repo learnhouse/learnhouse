@@ -72,7 +72,7 @@ function PDFBlockComponent(props: any) {
       {blockObject && (
         <BlockPDF>
           <iframe
-            className="shadow-sm rounded-lg h-96 w-full object-scale-down bg-black"
+            className="h-96 w-full rounded-lg bg-black object-scale-down shadow-sm"
             src={`${getActivityBlockMediaDirectory(
               org?.org_uuid,
               course?.courseStructure.course_uuid,

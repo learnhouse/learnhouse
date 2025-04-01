@@ -8,13 +8,13 @@ interface PaidCourseActivityProps {
 
 function PaidCourseActivityDisclaimer({ course }: PaidCourseActivityProps) {
   return (
-    <div className="space-y-4 max-w-lg mx-auto">
-      <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg ">
+    <div className="mx-auto max-w-lg space-y-4">
+      <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
         <div className="flex items-center gap-3">
-          <AlertCircle className="w-5 h-5 text-amber-800" />
-          <h3 className="text-amber-800 font-semibold">Paid Content</h3>
+          <AlertCircle className="h-5 w-5 text-amber-800" />
+          <h3 className="font-semibold text-amber-800">Paid Content</h3>
         </div>
-        <p className="text-amber-700 text-sm mt-1">
+        <p className="mt-1 text-sm text-amber-700">
           This content requires a course purchase to access.
         </p>
       </div>

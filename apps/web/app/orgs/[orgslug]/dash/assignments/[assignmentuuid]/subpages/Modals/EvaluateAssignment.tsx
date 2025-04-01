@@ -63,7 +63,7 @@ function EvaluateAssignment({ user_id }: any) {
   }
 
   return (
-    <div className="flex-col space-y-4 px-3 py-3 overflow-y-auto min-h-fit">
+    <div className="min-h-fit flex-col space-y-4 overflow-y-auto px-3 py-3">
       {assignments &&
         assignments?.assignment_tasks
           ?.sort((a: any, b: any) => a.id - b.id)
@@ -81,7 +81,7 @@ function EvaluateAssignment({ user_id }: any) {
                   <div className="flex space-x-2">
                     <div
                       onClick={() => alert(task.hint)}
-                      className="px-3 py-1 flex items-center nice-shadow bg-amber-50/40 text-amber-900 rounded-full space-x-2 cursor-pointer"
+                      className="nice-shadow flex cursor-pointer items-center space-x-2 rounded-full bg-amber-50/40 px-3 py-1 text-amber-900"
                     >
                       <Info size={13} />
                       <p className="text-xs font-semibold">Hint</p>
@@ -97,13 +97,13 @@ function EvaluateAssignment({ user_id }: any) {
                       )}
                       target="_blank"
                       download={true}
-                      className="px-3 py-1 flex items-center nice-shadow bg-cyan-50/40 text-cyan-900 rounded-full space-x-2 cursor-pointer"
+                      className="nice-shadow flex cursor-pointer items-center space-x-2 rounded-full bg-cyan-50/40 px-3 py-1 text-cyan-900"
                     >
                       <Download size={13} />
                       <div className="flex items-center space-x-2">
                         {task.reference_file && (
                           <span className="relative">
-                            <span className="absolute right-0 top-0 block h-2 w-2 rounded-full ring-2 ring-white bg-green-400"></span>
+                            <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-green-400 ring-2 ring-white"></span>
                           </span>
                         )}
                         <p className="text-xs font-semibold">
@@ -134,18 +134,18 @@ function EvaluateAssignment({ user_id }: any) {
               </div>
             )
           })}
-      <div className="flex  space-x-4 font-semibold items-center justify-between">
+      <div className="flex items-center justify-between space-x-4 font-semibold">
         <button
           onClick={rejectAssignment}
-          className="flex space-x-2 px-4 py-2 text-sm bg-rose-600/80 text-white rounded-lg nice-shadow items-center cursor-pointer"
+          className="nice-shadow flex cursor-pointer items-center space-x-2 rounded-lg bg-rose-600/80 px-4 py-2 text-sm text-white"
         >
           <X size={18} />
           <span>Reject Assignment</span>
         </button>
-        <div className="flex space-x-3 items-center">
+        <div className="flex items-center space-x-3">
           <button
             onClick={gradeAssignment}
-            className="flex space-x-2 px-4 py-2 text-sm bg-violet-600/80 text-white rounded-lg nice-shadow items-center cursor-pointer"
+            className="nice-shadow flex cursor-pointer items-center space-x-2 rounded-lg bg-violet-600/80 px-4 py-2 text-sm text-white"
           >
             <BookOpenCheck size={18} />
             <span>Set final grade</span>
@@ -153,7 +153,7 @@ function EvaluateAssignment({ user_id }: any) {
           <MoveRight className="text-gray-400" size={18} />
           <button
             onClick={markActivityAsDone}
-            className="flex space-x-2 px-4 py-2 text-sm bg-teal-600/80 text-white rounded-lg nice-shadow items-center cursor-pointer"
+            className="nice-shadow flex cursor-pointer items-center space-x-2 rounded-lg bg-teal-600/80 px-4 py-2 text-sm text-white"
           >
             <Check size={18} />
             <span>Mark Activity as Done for User</span>

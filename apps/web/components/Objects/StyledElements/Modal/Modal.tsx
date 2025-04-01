@@ -79,7 +79,7 @@ const Modal = (params: ModalParams) => {
         )}
       >
         {params.dialogTitle && params.dialogDescription && (
-          <DialogHeader className="text-center flex flex-col space-y-0.5 w-full">
+          <DialogHeader className="flex w-full flex-col space-y-0.5 text-center">
             <DialogTitle>{params.dialogTitle}</DialogTitle>
             <DialogDescription>{params.dialogDescription}</DialogDescription>
           </DialogHeader>

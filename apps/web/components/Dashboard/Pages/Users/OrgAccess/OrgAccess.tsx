@@ -80,32 +80,32 @@ function OrgAccess() {
       {!isLoading ? (
         <>
           <div className="h-6"></div>
-          <div className="ml-10 mr-10 mx-auto bg-white rounded-xl shadow-xs px-4 py-4 anit ">
-            <div className="flex flex-col bg-gray-50 -space-y-1  px-5 py-3 rounded-md mb-3 ">
-              <h1 className="font-bold text-xl text-gray-800">Join method</h1>
-              <h2 className="text-gray-500  text-md">
+          <div className="anit mx-auto mr-10 ml-10 rounded-xl bg-white px-4 py-4 shadow-xs">
+            <div className="mb-3 flex flex-col -space-y-1 rounded-md bg-gray-50 px-5 py-3">
+              <h1 className="text-xl font-bold text-gray-800">Join method</h1>
+              <h2 className="text-md text-gray-500">
                 {' '}
                 Choose how users can join your organization{' '}
               </h2>
             </div>
-            <div className="flex space-x-2 mx-auto">
+            <div className="mx-auto flex space-x-2">
               <ConfirmationModal
                 confirmationButtonText="Change to open "
                 confirmationMessage="Are you sure you want to change the signup mechanism to open ? This will allow users to join your organization freely."
                 dialogTitle={'Change to open ?'}
                 dialogTrigger={
-                  <div className="w-full h-[160px] bg-slate-100 rounded-lg cursor-pointer hover:bg-slate-200 ease-linear transition-all">
+                  <div className="h-[160px] w-full cursor-pointer rounded-lg bg-slate-100 transition-all ease-linear hover:bg-slate-200">
                     {joinMethod == 'open' ? (
-                      <div className="bg-green-200 text-green-600 font-bold w-fit my-3 mx-3 absolute text-sm px-3 py-1 rounded-lg">
+                      <div className="absolute mx-3 my-3 w-fit rounded-lg bg-green-200 px-3 py-1 text-sm font-bold text-green-600">
                         Active
                       </div>
                     ) : null}
-                    <div className="flex flex-col space-y-1 justify-center items-center h-full">
+                    <div className="flex h-full flex-col items-center justify-center space-y-1">
                       <Globe className="text-slate-400" size={40}></Globe>
-                      <div className="text-2xl text-slate-700 font-bold">
+                      <div className="text-2xl font-bold text-slate-700">
                         Open
                       </div>
-                      <div className="text-gray-400 text-center">
+                      <div className="text-center text-gray-400">
                         Users can join freely from the signup page
                       </div>
                     </div>
@@ -121,18 +121,18 @@ function OrgAccess() {
                 confirmationMessage="Are you sure you want to change the signup mechanism to closed ? This will allow users to join your organization only by invitation."
                 dialogTitle={'Change to closed ?'}
                 dialogTrigger={
-                  <div className="w-full h-[160px] bg-slate-100 rounded-lg cursor-pointer hover:bg-slate-200 ease-linear transition-all">
+                  <div className="h-[160px] w-full cursor-pointer rounded-lg bg-slate-100 transition-all ease-linear hover:bg-slate-200">
                     {joinMethod == 'inviteOnly' ? (
-                      <div className="bg-green-200 text-green-600 font-bold w-fit my-3 mx-3 absolute text-sm px-3 py-1 rounded-lg">
+                      <div className="absolute mx-3 my-3 w-fit rounded-lg bg-green-200 px-3 py-1 text-sm font-bold text-green-600">
                         Active
                       </div>
                     ) : null}
-                    <div className="flex flex-col space-y-1 justify-center items-center h-full">
+                    <div className="flex h-full flex-col items-center justify-center space-y-1">
                       <Ticket className="text-slate-400" size={40}></Ticket>
-                      <div className="text-2xl text-slate-700 font-bold">
+                      <div className="text-2xl font-bold text-slate-700">
                         Closed
                       </div>
-                      <div className="text-gray-400 text-center">
+                      <div className="text-center text-gray-400">
                         Users can join only by invitation
                       </div>
                     </div>
@@ -147,40 +147,40 @@ function OrgAccess() {
             <div
               className={
                 joinMethod == 'open'
-                  ? 'opacity-20 pointer-events-none'
+                  ? 'pointer-events-none opacity-20'
                   : 'pointer-events-auto'
               }
             >
-              <div className="flex flex-col bg-gray-50 -space-y-1  px-5 py-3 rounded-md mt-3 mb-3 ">
-                <h1 className="font-bold text-xl text-gray-800">
+              <div className="mt-3 mb-3 flex flex-col -space-y-1 rounded-md bg-gray-50 px-5 py-3">
+                <h1 className="text-xl font-bold text-gray-800">
                   Invite codes
                 </h1>
-                <h2 className="text-gray-500  text-md">
+                <h2 className="text-md text-gray-500">
                   Invite codes can be copied and used to join your
                   organization{' '}
                 </h2>
               </div>
-              <table className="table-auto w-full text-left whitespace-nowrap rounded-md overflow-hidden">
-                <thead className="bg-gray-100 text-gray-500 rounded-xl uppercase">
+              <table className="w-full table-auto overflow-hidden rounded-md text-left whitespace-nowrap">
+                <thead className="rounded-xl bg-gray-100 text-gray-500 uppercase">
                   <tr className="font-bolder text-sm">
-                    <th className="py-3 px-4">Code</th>
-                    <th className="py-3 px-4">Signup link</th>
-                    <th className="py-3 px-4">Type</th>
-                    <th className="py-3 px-4">Expiration date</th>
-                    <th className="py-3 px-4">Actions</th>
+                    <th className="px-4 py-3">Code</th>
+                    <th className="px-4 py-3">Signup link</th>
+                    <th className="px-4 py-3">Type</th>
+                    <th className="px-4 py-3">Expiration date</th>
+                    <th className="px-4 py-3">Actions</th>
                   </tr>
                 </thead>
                 <>
-                  <tbody className="mt-5 bg-white rounded-md">
+                  <tbody className="mt-5 rounded-md bg-white">
                     {invites?.map((invite: any) => (
                       <tr
                         key={invite.invite_code_uuid}
                         className="border-b border-gray-100 text-sm"
                       >
-                        <td className="py-3 px-4">{invite.invite_code}</td>
-                        <td className="py-3 px-4 ">
+                        <td className="px-4 py-3">{invite.invite_code}</td>
+                        <td className="px-4 py-3">
                           <Link
-                            className="outline bg-gray-50 text-gray-600 px-2 py-1 rounded-md outline-gray-300 outline-dashed outline-1"
+                            className="rounded-md bg-gray-50 px-2 py-1 text-gray-600 outline outline-1 outline-gray-300 outline-dashed"
                             target="_blank"
                             href={getUriWithoutOrg(
                               `/signup?inviteCode=${invite.invite_code}&orgslug=${org.slug}`
@@ -191,32 +191,32 @@ function OrgAccess() {
                             )}
                           </Link>
                         </td>
-                        <td className="py-3 px-4">
+                        <td className="px-4 py-3">
                           {invite.usergroup_id ? (
-                            <div className="flex space-x-2 items-center">
-                              <UserSquare className="w-4 h-4" />
+                            <div className="flex items-center space-x-2">
+                              <UserSquare className="h-4 w-4" />
                               <span>Linked to a UserGroup</span>
                             </div>
                           ) : (
-                            <div className="flex space-x-2 items-center">
-                              <Users className="w-4 h-4" />
+                            <div className="flex items-center space-x-2">
+                              <Users className="h-4 w-4" />
                               <span>Normal</span>
                             </div>
                           )}
                         </td>
-                        <td className="py-3 px-4">
+                        <td className="px-4 py-3">
                           {dayjs(invite.expiration_date)
                             .add(1, 'year')
                             .format('DD/MM/YYYY')}{' '}
                         </td>
-                        <td className="py-3 px-4">
+                        <td className="px-4 py-3">
                           <ConfirmationModal
                             confirmationButtonText="Delete Code"
                             confirmationMessage="Are you sure you want remove this invite code ?"
                             dialogTitle={'Delete code ?'}
                             dialogTrigger={
-                              <button className="mr-2 flex space-x-2 hover:cursor-pointer p-1 px-3 bg-rose-700 rounded-md font-bold items-center text-sm text-rose-100">
-                                <X className="w-4 h-4" />
+                              <button className="mr-2 flex items-center space-x-2 rounded-md bg-rose-700 p-1 px-3 text-sm font-bold text-rose-100 hover:cursor-pointer">
+                                <X className="h-4 w-4" />
                                 <span> Delete code</span>
                               </button>
                             }
@@ -231,7 +231,7 @@ function OrgAccess() {
                   </tbody>
                 </>
               </table>
-              <div className="flex flex-row-reverse mt-3 mr-2">
+              <div className="mt-3 mr-2 flex flex-row-reverse">
                 <Modal
                   isDialogOpen={invitesModal}
                   onOpenChange={() => setInvitesModal(!invitesModal)}
@@ -245,8 +245,8 @@ function OrgAccess() {
                     'Generate a new invite code for your organization'
                   }
                   dialogTrigger={
-                    <button className=" flex space-x-2 hover:cursor-pointer p-1 px-3 bg-green-700 rounded-md font-bold items-center text-sm text-green-100">
-                      <Ticket className="w-4 h-4" />
+                    <button className="flex items-center space-x-2 rounded-md bg-green-700 p-1 px-3 text-sm font-bold text-green-100 hover:cursor-pointer">
+                      <Ticket className="h-4 w-4" />
                       <span> Generate invite code</span>
                     </button>
                   }

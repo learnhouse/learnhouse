@@ -27,13 +27,13 @@ export const OrgMenu = (props: any) => {
 
   return (
     <>
-      <div className="backdrop-blur-lg h-[60px] blur-3xl -z-10"></div>
-      <div className="backdrop-blur-lg bg-white/90 fixed top-0 left-0 right-0 h-[60px] ring-1 ring-inset ring-gray-500/10 shadow-[0px_4px_16px_rgba(0,0,0,0.03)] z-50">
-        <div className="flex items-center justify-between w-full max-w-(--breakpoint-2xl) mx-auto px-4 sm:px-6 lg:px-16 h-full">
-          <div className="flex items-center space-x-5 md:w-auto w-full">
-            <div className="logo flex md:w-auto w-full justify-center">
+      <div className="-z-10 h-[60px] blur-3xl backdrop-blur-lg"></div>
+      <div className="fixed top-0 right-0 left-0 z-50 h-[60px] bg-white/90 shadow-[0px_4px_16px_rgba(0,0,0,0.03)] ring-1 ring-gray-500/10 backdrop-blur-lg ring-inset">
+        <div className="mx-auto flex h-full w-full max-w-(--breakpoint-2xl) items-center justify-between px-4 sm:px-6 lg:px-16">
+          <div className="flex w-full items-center space-x-5 md:w-auto">
+            <div className="logo flex w-full justify-center md:w-auto">
               <Link href={getUriWithOrg(orgslug, '/')}>
-                <div className="flex w-auto h-9 rounded-md items-center m-auto py-1 justify-center">
+                <div className="m-auto flex h-9 w-auto items-center justify-center rounded-md py-1">
                   {org?.logo_image ? (
                     <img
                       src={`${getOrgLogoMediaDirectory(org.org_uuid, org?.logo_image)}`}
@@ -53,7 +53,7 @@ export const OrgMenu = (props: any) => {
           </div>
 
           {/* Search Section */}
-          <div className="hidden md:flex flex-1 justify-center max-w-lg px-4">
+          <div className="hidden max-w-lg flex-1 justify-center px-4 md:flex">
             <SearchBar orgslug={orgslug} className="w-full" />
           </div>
 
@@ -62,7 +62,7 @@ export const OrgMenu = (props: any) => {
               <HeaderProfileBox />
             </div>
             <button
-              className="md:hidden text-gray-600 focus:outline-hidden"
+              className="text-gray-600 focus:outline-hidden md:hidden"
               onClick={toggleMenu}
             >
               {isMenuOpen ? (
@@ -101,11 +101,11 @@ export const OrgMenu = (props: any) => {
         </div>
       </div>
       <div
-        className={`fixed inset-x-0 z-40 bg-white/80 backdrop-blur-lg md:hidden shadow-lg transition-all duration-300 ease-in-out ${
+        className={`fixed inset-x-0 z-40 bg-white/80 shadow-lg backdrop-blur-lg transition-all duration-300 ease-in-out md:hidden ${
           isMenuOpen ? 'top-[60px] opacity-100' : '-top-full opacity-0'
         }`}
       >
-        <div className="flex flex-col px-4 py-3 space-y-4 justify-center items-center">
+        <div className="flex flex-col items-center justify-center space-y-4 px-4 py-3">
           {/* Mobile Search */}
           <div className="w-full px-2">
             <SearchBar orgslug={orgslug} isMobile={true} />

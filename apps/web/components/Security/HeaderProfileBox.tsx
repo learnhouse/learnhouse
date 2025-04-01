@@ -20,8 +20,8 @@ export const HeaderProfileBox = () => {
   return (
     <ProfileArea>
       {session.status == 'unauthenticated' && (
-        <UnidentifiedArea className="flex text-sm text-gray-700 font-bold p-1.5 px-2 rounded-lg">
-          <ul className="flex space-x-3 items-center">
+        <UnidentifiedArea className="flex rounded-lg p-1.5 px-2 text-sm font-bold text-gray-700">
+          <ul className="flex items-center space-x-3">
             <li>
               <Link
                 href={{
@@ -32,7 +32,7 @@ export const HeaderProfileBox = () => {
                 Login
               </Link>
             </li>
-            <li className="bg-black rounded-lg shadow-md p-2 px-3 text-white">
+            <li className="rounded-lg bg-black p-2 px-3 text-white shadow-md">
               <Link
                 href={{
                   pathname: getUriWithoutOrg('/signup'),
@@ -51,7 +51,7 @@ export const HeaderProfileBox = () => {
             <div className="flex items-center space-x-2">
               <p className="text-sm capitalize">{session.data.user.username}</p>
               {isUserAdmin.isAdmin && (
-                <div className="text-[10px] bg-rose-300 px-2 font-bold rounded-md shadow-inner py-1">
+                <div className="rounded-md bg-rose-300 px-2 py-1 text-[10px] font-bold shadow-inner">
                   ADMIN
                 </div>
               )}

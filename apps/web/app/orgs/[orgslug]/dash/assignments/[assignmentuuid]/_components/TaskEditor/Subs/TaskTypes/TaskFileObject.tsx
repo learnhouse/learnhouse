@@ -276,8 +276,8 @@ export default function TaskFileObject({
       type="file"
     >
       {view === 'teacher' && (
-        <div className="flex flex-col sm:flex-row py-5 sm:py-6 text-xs sm:text-sm justify-center mx-auto space-y-2 sm:space-y-0 sm:space-x-3 text-slate-600 px-4 sm:px-2 text-center sm:text-left bg-slate-50 rounded-lg border border-slate-100">
-          <Info size={18} className="mx-auto sm:mx-0 text-slate-500" />
+        <div className="mx-auto flex flex-col justify-center space-y-2 rounded-lg border border-slate-100 bg-slate-50 px-4 py-5 text-center text-xs text-slate-600 sm:flex-row sm:space-y-0 sm:space-x-3 sm:px-2 sm:py-6 sm:text-left sm:text-sm">
+          <Info size={18} className="mx-auto text-slate-500 sm:mx-0" />
           <p>
             User will be able to submit a file for this task, you'll be able to
             review it in the Submissions Tab
@@ -285,9 +285,9 @@ export default function TaskFileObject({
         </div>
       )}
       {view === 'custom-grading' && (
-        <div className="flex flex-col space-y-4 w-full px-2 sm:px-0">
-          <div className="flex flex-col sm:flex-row py-5 sm:py-6 text-xs sm:text-sm justify-center mx-auto space-y-2 sm:space-y-0 sm:space-x-3 text-slate-600 px-4 sm:px-2 text-center sm:text-left bg-slate-50 rounded-lg border border-slate-100">
-            <Download size={18} className="mx-auto sm:mx-0 text-slate-500" />
+        <div className="flex w-full flex-col space-y-4 px-2 sm:px-0">
+          <div className="mx-auto flex flex-col justify-center space-y-2 rounded-lg border border-slate-100 bg-slate-50 px-4 py-5 text-center text-xs text-slate-600 sm:flex-row sm:space-y-0 sm:space-x-3 sm:px-2 sm:py-6 sm:text-left sm:text-sm">
+            <Download size={18} className="mx-auto text-slate-500 sm:mx-0" />
             <p>
               Please download the file and grade it manually, then input the
               grade above
@@ -304,15 +304,15 @@ export default function TaskFileObject({
                 userSubmissions.fileUUID
               )}
               target="_blank"
-              className="flex flex-col rounded-lg bg-white text-gray-500 shadow-xs hover:shadow-md transition-shadow border border-gray-100 px-4 sm:px-5 py-4 space-y-1 items-center relative w-full sm:w-auto mx-auto"
+              className="relative mx-auto flex w-full flex-col items-center space-y-1 rounded-lg border border-gray-100 bg-white px-4 py-4 text-gray-500 shadow-xs transition-shadow hover:shadow-md sm:w-auto sm:px-5"
             >
-              <div className="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 bg-emerald-500 rounded-full p-1.5 text-white flex justify-center items-center shadow-xs">
+              <div className="absolute top-0 right-0 flex translate-x-1/2 -translate-y-1/2 transform items-center justify-center rounded-full bg-emerald-500 p-1.5 text-white shadow-xs">
                 <Cloud size={14} />
               </div>
 
-              <div className="flex space-x-2 mt-2 items-center">
+              <div className="mt-2 flex items-center space-x-2">
                 <File size={18} className="text-emerald-500" />
-                <div className="font-medium text-xs sm:text-sm uppercase break-all">
+                <div className="text-xs font-medium break-all uppercase sm:text-sm">
                   {`${userSubmissions.fileUUID.slice(0, 8)}...${userSubmissions.fileUUID.slice(-4)}`}
                 </div>
               </div>
@@ -322,27 +322,27 @@ export default function TaskFileObject({
       )}
       {view === 'student' && (
         <>
-          <div className="w-full bg-white rounded-lg border border-gray-100 min-h-[200px] shadow-xs px-4 sm:px-6 py-5 sm:py-6">
-            <div className="flex flex-col justify-center items-center h-full w-full">
-              <div className="flex flex-col justify-center items-center w-full max-w-full">
-                <div className="flex flex-col justify-center items-center w-full">
+          <div className="min-h-[200px] w-full rounded-lg border border-gray-100 bg-white px-4 py-5 shadow-xs sm:px-6 sm:py-6">
+            <div className="flex h-full w-full flex-col items-center justify-center">
+              <div className="flex w-full max-w-full flex-col items-center justify-center">
+                <div className="flex w-full flex-col items-center justify-center">
                   {error && (
-                    <div className="flex justify-center bg-red-50 border border-red-100 rounded-md text-red-600 space-x-2 items-center p-3 transition-all shadow-xs w-full sm:w-auto mb-4">
-                      <div className="text-xs sm:text-sm font-medium">
+                    <div className="mb-4 flex w-full items-center justify-center space-x-2 rounded-md border border-red-100 bg-red-50 p-3 text-red-600 shadow-xs transition-all sm:w-auto">
+                      <div className="text-xs font-medium sm:text-sm">
                         {error}
                       </div>
                     </div>
                   )}
                 </div>
                 {localUploadFile && !isLoading && (
-                  <div className="flex flex-col rounded-lg bg-white text-gray-500 shadow-xs border border-gray-100 px-4 sm:px-5 py-4 space-y-1 items-center relative w-full sm:w-auto mt-3">
-                    <div className="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 bg-emerald-500 rounded-full p-1.5 text-white flex justify-center items-center shadow-xs">
+                  <div className="relative mt-3 flex w-full flex-col items-center space-y-1 rounded-lg border border-gray-100 bg-white px-4 py-4 text-gray-500 shadow-xs sm:w-auto sm:px-5">
+                    <div className="absolute top-0 right-0 flex translate-x-1/2 -translate-y-1/2 transform items-center justify-center rounded-full bg-emerald-500 p-1.5 text-white shadow-xs">
                       <Cloud size={14} />
                     </div>
 
-                    <div className="flex space-x-2 mt-2 items-center">
+                    <div className="mt-2 flex items-center space-x-2">
                       <File size={18} className="text-emerald-500" />
-                      <div className="font-medium text-xs sm:text-sm uppercase break-all">
+                      <div className="text-xs font-medium break-all uppercase sm:text-sm">
                         {localUploadFile.name.length > 20
                           ? `${localUploadFile.name.slice(0, 10)}...${localUploadFile.name.slice(-10)}`
                           : localUploadFile.name}
@@ -351,49 +351,49 @@ export default function TaskFileObject({
                   </div>
                 )}
                 {userSubmissions.fileUUID && !isLoading && !localUploadFile && (
-                  <div className="flex flex-col rounded-lg bg-white text-gray-500 shadow-xs border border-gray-100 px-4 sm:px-5 py-4 space-y-1 items-center relative w-full sm:w-auto mt-3">
-                    <div className="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 bg-emerald-500 rounded-full p-1.5 text-white flex justify-center items-center shadow-xs">
+                  <div className="relative mt-3 flex w-full flex-col items-center space-y-1 rounded-lg border border-gray-100 bg-white px-4 py-4 text-gray-500 shadow-xs sm:w-auto sm:px-5">
+                    <div className="absolute top-0 right-0 flex translate-x-1/2 -translate-y-1/2 transform items-center justify-center rounded-full bg-emerald-500 p-1.5 text-white shadow-xs">
                       <Cloud size={14} />
                     </div>
 
-                    <div className="flex space-x-2 mt-2 items-center">
+                    <div className="mt-2 flex items-center space-x-2">
                       <File size={18} className="text-emerald-500" />
-                      <div className="font-medium text-xs sm:text-sm uppercase break-all">
+                      <div className="text-xs font-medium break-all uppercase sm:text-sm">
                         {`${userSubmissions.fileUUID.slice(0, 8)}...${userSubmissions.fileUUID.slice(-4)}`}
                       </div>
                     </div>
                   </div>
                 )}
-                <div className="flex flex-col sm:flex-row pt-5 font-medium space-y-1 sm:space-y-0 sm:space-x-2 text-xs items-center text-slate-500 text-center sm:text-left bg-slate-50 rounded-lg px-3 py-2 mt-5 border border-slate-100 w-full sm:w-auto">
-                  <Info size={15} className="mx-auto sm:mx-0 text-slate-400" />
+                <div className="mt-5 flex w-full flex-col items-center space-y-1 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 pt-5 text-center text-xs font-medium text-slate-500 sm:w-auto sm:flex-row sm:space-y-0 sm:space-x-2 sm:text-left">
+                  <Info size={15} className="mx-auto text-slate-400 sm:mx-0" />
                   <p>
                     Allowed formats: pdf, docx, mp4, jpg, jpeg, png, pptx, zip
                   </p>
                 </div>
                 {!access_token ? (
-                  <div className="flex justify-center items-center w-full mt-5">
-                    <div className="flex justify-center bg-amber-50 border border-amber-100 rounded-md text-amber-600 space-x-2 items-center p-3 transition-all shadow-xs w-full sm:w-auto">
+                  <div className="mt-5 flex w-full items-center justify-center">
+                    <div className="flex w-full items-center justify-center space-x-2 rounded-md border border-amber-100 bg-amber-50 p-3 text-amber-600 shadow-xs transition-all sm:w-auto">
                       <Info size={15} className="text-amber-500" />
-                      <div className="text-xs sm:text-sm font-medium">
+                      <div className="text-xs font-medium sm:text-sm">
                         Please sign in to upload files
                       </div>
                     </div>
                   </div>
                 ) : isLoading ? (
-                  <div className="flex justify-center items-center w-full mt-5">
+                  <div className="mt-5 flex w-full items-center justify-center">
                     <input
                       type="file"
                       id="fileInput"
                       style={{ display: 'none' }}
                       onChange={handleFileChange}
                     />
-                    <div className="font-medium animate-pulse antialiased items-center bg-slate-100 text-slate-600 text-xs sm:text-sm rounded-md px-4 sm:px-5 py-2.5 flex">
+                    <div className="flex animate-pulse items-center rounded-md bg-slate-100 px-4 py-2.5 text-xs font-medium text-slate-600 antialiased sm:px-5 sm:text-sm">
                       <Loader size={15} className="mr-2" />
                       <span>Loading</span>
                     </div>
                   </div>
                 ) : (
-                  <div className="flex justify-center items-center w-full mt-5">
+                  <div className="mt-5 flex w-full items-center justify-center">
                     <input
                       type="file"
                       id={'fileInput_' + assignmentTaskUUID}
@@ -401,7 +401,7 @@ export default function TaskFileObject({
                       onChange={handleFileChange}
                     />
                     <button
-                      className="font-medium antialiased items-center text-white text-xs sm:text-sm rounded-md px-4 sm:px-5 py-2.5 flex bg-emerald-500 hover:bg-emerald-600 transition-colors shadow-xs"
+                      className="flex items-center rounded-md bg-emerald-500 px-4 py-2.5 text-xs font-medium text-white antialiased shadow-xs transition-colors hover:bg-emerald-600 sm:px-5 sm:text-sm"
                       onClick={() =>
                         document
                           .getElementById('fileInput_' + assignmentTaskUUID)

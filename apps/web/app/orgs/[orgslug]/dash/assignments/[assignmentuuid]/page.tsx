@@ -44,9 +44,9 @@ function AssignmentEdit() {
   if (isMobile) {
     // TODO: Work on a better mobile experience
     return (
-      <div className="h-screen w-full bg-[#f8f8f8] flex items-center justify-center p-4">
-        <div className="bg-white p-6 rounded-lg shadow-md text-center">
-          <h2 className="text-xl font-bold mb-4">Desktop Only</h2>
+      <div className="flex h-screen w-full items-center justify-center bg-[#f8f8f8] p-4">
+        <div className="rounded-lg bg-white p-6 text-center shadow-md">
+          <h2 className="mb-4 text-xl font-bold">Desktop Only</h2>
           <Monitor className="mx-auto my-5" size={60} />
           <p>This page is only accessible from a desktop device.</p>
           <p>Please switch to a desktop to view and manage the assignment.</p>
@@ -60,12 +60,12 @@ function AssignmentEdit() {
       <AssignmentProvider
         assignment_uuid={'assignment_' + params.assignmentuuid}
       >
-        <div className="flex flex-col  bg-white z-50 shadow-[0px_4px_16px_rgba(0,0,0,0.06)] nice-shadow">
-          <div className="flex justify-between mr-10 h-full">
-            <div className="pl-10 mr-10 tracking-tighter">
+        <div className="nice-shadow z-50 flex flex-col bg-white shadow-[0px_4px_16px_rgba(0,0,0,0.06)]">
+          <div className="mr-10 flex h-full justify-between">
+            <div className="mr-10 pl-10 tracking-tighter">
               <BrdCmpx />
-              <div className="w-100 flex justify-between">
-                <div className="flex font-bold text-2xl">
+              <div className="flex w-100 justify-between">
+                <div className="flex text-2xl font-bold">
                   <AssignmentTitle />
                 </div>
               </div>
@@ -74,25 +74,25 @@ function AssignmentEdit() {
               <PublishingState />
             </div>
           </div>
-          <div className="flex space-x-2 pt-2 text-sm tracking-tight font-semibold pl-10 mr-10">
+          <div className="mr-10 flex space-x-2 pt-2 pl-10 text-sm font-semibold tracking-tight">
             <div
               onClick={() => setSelectedSubPage('editor')}
-              className={`flex space-x-4 py-2 w-fit text-center border-black transition-all ease-linear ${
+              className={`flex w-fit space-x-4 border-black py-2 text-center transition-all ease-linear ${
                 selectedSubPage === 'editor' ? 'border-b-4' : 'opacity-50'
               } cursor-pointer`}
             >
-              <div className="flex items-center space-x-2.5 mx-2">
+              <div className="mx-2 flex items-center space-x-2.5">
                 <Layers2 size={16} />
                 <div>Editor</div>
               </div>
             </div>
             <div
               onClick={() => setSelectedSubPage('submissions')}
-              className={`flex space-x-4 py-2 w-fit text-center border-black transition-all ease-linear ${
+              className={`flex w-fit space-x-4 border-black py-2 text-center transition-all ease-linear ${
                 selectedSubPage === 'submissions' ? 'border-b-4' : 'opacity-50'
               } cursor-pointer`}
             >
-              <div className="flex items-center space-x-2.5 mx-2">
+              <div className="mx-2 flex items-center space-x-2.5">
                 <UserRoundPen size={16} />
                 <div>Submissions</div>
               </div>
@@ -160,9 +160,9 @@ function PublishingState() {
 
   return (
     <>
-      <div className="flex mx-auto mt-5 items-center space-x-4">
+      <div className="mx-auto mt-5 flex items-center space-x-4">
         <div
-          className={`flex text-xs rounded-full px-3.5 py-2 mx-auto font-bold outline outline-1 ${!assignment?.assignment_object?.published ? 'outline-gray-300 bg-gray-200/60' : 'outline-green-300 bg-green-200/60'}`}
+          className={`mx-auto flex rounded-full px-3.5 py-2 text-xs font-bold outline outline-1 ${!assignment?.assignment_object?.published ? 'bg-gray-200/60 outline-gray-300' : 'bg-green-200/60 outline-green-300'}`}
         >
           {assignment?.assignment_object?.published
             ? 'Published'
@@ -180,7 +180,7 @@ function PublishingState() {
         >
           <div
             onClick={() => setIsEditModalOpen(true)}
-            className="flex px-3 py-2 cursor-pointer rounded-md space-x-2 items-center bg-linear-to-bl text-blue-800 font-medium from-blue-400/50 to-blue-200/80 border border-blue-600/10 shadow-blue-900/10 shadow-lg"
+            className="flex cursor-pointer items-center space-x-2 rounded-md border border-blue-600/10 bg-linear-to-bl from-blue-400/50 to-blue-200/80 px-3 py-2 font-medium text-blue-800 shadow-lg shadow-blue-900/10"
           >
             <Pencil size={18} />
             <p className="text-sm font-bold">Edit</p>
@@ -196,10 +196,10 @@ function PublishingState() {
           <Link
             target="_blank"
             href={`/course/${assignment?.course_object?.course_uuid.replace('course_', '')}/activity/${assignment?.activity_object?.activity_uuid.replace('activity_', '')}`}
-            className="flex px-3 py-2 cursor-pointer rounded-md space-x-2 items-center bg-linear-to-bl text-cyan-800 font-medium from-sky-400/50 to-cyan-200/80  border border-cyan-600/10 shadow-cyan-900/10 shadow-lg"
+            className="flex cursor-pointer items-center space-x-2 rounded-md border border-cyan-600/10 bg-linear-to-bl from-sky-400/50 to-cyan-200/80 px-3 py-2 font-medium text-cyan-800 shadow-lg shadow-cyan-900/10"
           >
             <Eye size={18} />
-            <p className=" text-sm font-bold">Preview</p>
+            <p className="text-sm font-bold">Preview</p>
           </Link>
         </ToolTip>
         {assignment?.assignment_object?.published && (
@@ -215,7 +215,7 @@ function PublishingState() {
                   assignment?.assignment_object?.assignment_uuid
                 )
               }
-              className="flex px-3 py-2 cursor-pointer rounded-md space-x-2 items-center bg-linear-to-bl text-gray-800 font-medium from-gray-400/50 to-gray-200/80 border border-gray-600/10 shadow-gray-900/10 shadow-lg"
+              className="flex cursor-pointer items-center space-x-2 rounded-md border border-gray-600/10 bg-linear-to-bl from-gray-400/50 to-gray-200/80 px-3 py-2 font-medium text-gray-800 shadow-lg shadow-gray-900/10"
             >
               <BookX size={18} />
               <p className="text-sm font-bold">Unpublish</p>
@@ -235,10 +235,10 @@ function PublishingState() {
                   assignment?.assignment_object?.assignment_uuid
                 )
               }
-              className="flex px-3 py-2 cursor-pointer rounded-md space-x-2 items-center bg-linear-to-bl text-green-800 font-medium from-green-400/50 to-lime-200/80  border border-green-600/10 shadow-green-900/10 shadow-lg"
+              className="flex cursor-pointer items-center space-x-2 rounded-md border border-green-600/10 bg-linear-to-bl from-green-400/50 to-lime-200/80 px-3 py-2 font-medium text-green-800 shadow-lg shadow-green-900/10"
             >
               <BookOpen size={18} />
-              <p className=" text-sm font-bold">Publish</p>
+              <p className="text-sm font-bold">Publish</p>
             </div>
           </ToolTip>
         )}

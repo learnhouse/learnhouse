@@ -129,18 +129,18 @@ const UnsplashImagePicker: React.FC<UnsplashImagePickerProps> = ({
   }
 
   const modalContent = (
-    <div className="flex flex-col h-full">
-      <div className="p-4 space-y-4">
+    <div className="flex h-full flex-col">
+      <div className="space-y-4 p-4">
         <div className="relative">
           <input
             type="text"
             value={query}
             onChange={handleSearch}
             placeholder="Search for images..."
-            className="w-full p-2 pl-10 border rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+            className="w-full rounded-lg border p-2 pl-10 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
           />
           <Search
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+            className="absolute top-1/2 left-3 -translate-y-1/2 transform text-gray-400"
             size={20}
           />
         </div>
@@ -149,7 +149,7 @@ const UnsplashImagePicker: React.FC<UnsplashImagePickerProps> = ({
             <button
               key={label.name}
               onClick={() => handleLabelClick(label.name)}
-              className="px-3 py-1 bg-neutral-100 rounded-lg hover:bg-neutral-200 nice-shadow transition-colors flex items-center gap-1 space-x-1"
+              className="nice-shadow flex items-center gap-1 space-x-1 rounded-lg bg-neutral-100 px-3 py-1 transition-colors hover:bg-neutral-200"
             >
               <label.icon size={16} />
               <span>{label.name}</span>
@@ -165,17 +165,17 @@ const UnsplashImagePicker: React.FC<UnsplashImagePickerProps> = ({
               <img
                 src={image.urls.small}
                 alt={image.alt_description}
-                className="absolute inset-0 w-full h-full object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                className="absolute inset-0 h-full w-full cursor-pointer rounded-lg object-cover transition-opacity hover:opacity-80"
                 onClick={() => handleImageSelect(image.urls.regular)}
               />
             </div>
           ))}
         </div>
-        {loading && <p className="text-center mt-4">Loading...</p>}
+        {loading && <p className="mt-4 text-center">Loading...</p>}
         {!loading && images.length > 0 && (
           <button
             onClick={handleLoadMore}
-            className="mt-4 w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            className="mt-4 w-full rounded-lg bg-blue-500 px-4 py-2 text-white transition-colors hover:bg-blue-600"
           >
             Load More
           </button>

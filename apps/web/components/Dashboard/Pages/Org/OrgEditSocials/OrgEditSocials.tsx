@@ -57,7 +57,7 @@ export default function OrgEditSocials() {
   }
 
   return (
-    <div className="sm:mx-10 mx-0 bg-white rounded-xl nice-shadow">
+    <div className="nice-shadow mx-0 rounded-xl bg-white sm:mx-10">
       <Formik
         enableReinitialize
         initialValues={initialValues}
@@ -71,25 +71,25 @@ export default function OrgEditSocials() {
         {({ isSubmitting, values, handleChange, setFieldValue }) => (
           <Form>
             <div className="flex flex-col gap-0">
-              <div className="flex flex-col bg-gray-50 -space-y-1 px-5 py-3 mx-3 my-3 rounded-md">
-                <h1 className="font-bold text-xl text-gray-800">
+              <div className="mx-3 my-3 flex flex-col -space-y-1 rounded-md bg-gray-50 px-5 py-3">
+                <h1 className="text-xl font-bold text-gray-800">
                   Social Links
                 </h1>
-                <h2 className="text-gray-500 text-md">
+                <h2 className="text-md text-gray-500">
                   Manage your organization's social media presence
                 </h2>
               </div>
 
-              <div className="flex flex-col lg:flex-row lg:space-x-8 mt-0 mx-5 my-5">
+              <div className="mx-5 my-5 mt-0 flex flex-col lg:flex-row lg:space-x-8">
                 <div className="w-full space-y-6">
                   <div>
                     <Label className="text-lg font-semibold">
                       Social Links
                     </Label>
-                    <div className="space-y-3 bg-gray-50/50 p-4 rounded-lg nice-shadow mt-2">
+                    <div className="nice-shadow mt-2 space-y-3 rounded-lg bg-gray-50/50 p-4">
                       <div className="grid gap-3">
                         <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 flex items-center justify-center bg-[#1DA1F2]/10 rounded-md">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-[#1DA1F2]/10">
                             <SiX size={16} color="#1DA1F2" />
                           </div>
                           <Input
@@ -103,7 +103,7 @@ export default function OrgEditSocials() {
                         </div>
 
                         <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 flex items-center justify-center bg-[#1877F2]/10 rounded-md">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-[#1877F2]/10">
                             <SiFacebook size={16} color="#1877F2" />
                           </div>
                           <Input
@@ -117,7 +117,7 @@ export default function OrgEditSocials() {
                         </div>
 
                         <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 flex items-center justify-center bg-[#E4405F]/10 rounded-md">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-[#E4405F]/10">
                             <SiInstagram size={16} color="#E4405F" />
                           </div>
                           <Input
@@ -131,7 +131,7 @@ export default function OrgEditSocials() {
                         </div>
 
                         <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 flex items-center justify-center bg-[#FF0000]/10 rounded-md">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-[#FF0000]/10">
                             <SiYoutube size={16} color="#FF0000" />
                           </div>
                           <Input
@@ -153,14 +153,14 @@ export default function OrgEditSocials() {
                     <Label className="text-lg font-semibold">
                       Custom Links
                     </Label>
-                    <div className="space-y-3 bg-gray-50/50 p-4 rounded-lg nice-shadow mt-2">
+                    <div className="nice-shadow mt-2 space-y-3 rounded-lg bg-gray-50/50 p-4">
                       {Object.entries(values.links).map(
                         ([linkKey, linkValue], index) => (
-                          <div key={index} className="flex gap-3 items-center">
-                            <div className="w-8 h-8 flex items-center justify-center bg-gray-200/50 rounded-md text-xs font-medium text-gray-600">
+                          <div key={index} className="flex items-center gap-3">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-gray-200/50 text-xs font-medium text-gray-600">
                               {index + 1}
                             </div>
-                            <div className="flex-1 flex gap-2">
+                            <div className="flex flex-1 gap-2">
                               <Input
                                 placeholder="Label"
                                 value={linkKey}
@@ -213,12 +213,12 @@ export default function OrgEditSocials() {
                             setFieldValue('links', newLinks)
                           }}
                         >
-                          <Plus className="h-4 w-4 mr-2" />
+                          <Plus className="mr-2 h-4 w-4" />
                           Add Link
                         </Button>
                       )}
 
-                      <p className="text-xs text-gray-500 mt-2">
+                      <p className="mt-2 text-xs text-gray-500">
                         Add up to 3 custom links that will appear on your
                         organization's profile
                       </p>
@@ -227,7 +227,7 @@ export default function OrgEditSocials() {
                 </div>
               </div>
 
-              <div className="flex flex-row-reverse mt-3 mx-5 mb-5">
+              <div className="mx-5 mt-3 mb-5 flex flex-row-reverse">
                 <Button
                   type="submit"
                   disabled={isSubmitting}

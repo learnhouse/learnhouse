@@ -36,11 +36,11 @@ function SampleData() {
   }
 
   return (
-    <div className="flex py-10 justify-center items-center space-x-3">
+    <div className="flex items-center justify-center space-x-3 py-10">
       <h1>Install Sample data on your organization </h1>
       <div
         onClick={createSampleData}
-        className="p-3  font-bold bg-purple-200 text-pruple-900 rounded-lg hover:cursor-pointer"
+        className="text-pruple-900 rounded-lg bg-purple-200 p-3 font-bold hover:cursor-pointer"
       >
         Start
       </div>

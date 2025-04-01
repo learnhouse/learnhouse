@@ -307,13 +307,13 @@ function MathEquationBlockComponent(props: any) {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
       >
-        <MathEqWrapper className="flex flex-col space-y-3 rounded-lg py-6 px-5">
-          <div className="flex items-center space-x-2 text-sm text-zinc-500 mb-1">
+        <MathEqWrapper className="flex flex-col space-y-3 rounded-lg px-5 py-6">
+          <div className="mb-1 flex items-center space-x-2 text-sm text-zinc-500">
             <Sigma size={16} />
             <span className="font-medium">Math Equation</span>
           </div>
 
-          <div className="bg-white p-4 rounded-md nice-shadow">
+          <div className="nice-shadow rounded-md bg-white p-4">
             <BlockMath>{equation}</BlockMath>
           </div>
 
@@ -339,8 +339,8 @@ function MathEquationBlockComponent(props: any) {
                   </TemplateButton>
 
                   {showTemplates && (
-                    <TemplateDropdown className="absolute left-0 mt-1 z-10 w-64 max-h-80 overflow-y-auto">
-                      <div className="p-2 text-xs text-zinc-500 border-b">
+                    <TemplateDropdown className="absolute left-0 z-10 mt-1 max-h-80 w-64 overflow-y-auto">
+                      <div className="border-b p-2 text-xs text-zinc-500">
                         Select a template to insert
                       </div>
                       {mathTemplates.map((template, index) => (
@@ -374,8 +374,8 @@ function MathEquationBlockComponent(props: any) {
                   </TemplateButton>
 
                   {showSymbols && (
-                    <SymbolsDropdown className="absolute left-0 mt-1 z-10 w-64">
-                      <div className="p-2 text-xs text-zinc-500 border-b">
+                    <SymbolsDropdown className="absolute left-0 z-10 mt-1 w-64">
+                      <div className="border-b p-2 text-xs text-zinc-500">
                         Click a symbol to insert
                       </div>
                       <div className="flex flex-wrap p-2">
@@ -407,11 +407,11 @@ function MathEquationBlockComponent(props: any) {
                   </TemplateButton>
 
                   {showHelp && (
-                    <HelpDropdown className="absolute left-0 mt-1 z-10 w-72">
-                      <div className="p-2 text-xs font-medium text-zinc-700 border-b">
+                    <HelpDropdown className="absolute left-0 z-10 mt-1 w-72">
+                      <div className="border-b p-2 text-xs font-medium text-zinc-700">
                         LaTeX Math Quick Reference
                       </div>
-                      <div className="p-3 text-xs space-y-2">
+                      <div className="space-y-2 p-3 text-xs">
                         <div>
                           <span className="font-medium">Fractions:</span> \frac
                           {'{'}'numerator'{'}'}
@@ -437,9 +437,9 @@ function MathEquationBlockComponent(props: any) {
                           <span className="font-medium">Integral:</span> \int_
                           {'{'}'lower'{'}'}^{'{'}'upper'{'}'}
                         </div>
-                        <div className="pt-1 border-t">
+                        <div className="border-t pt-1">
                           <Link
-                            className="text-blue-600 hover:text-blue-800 font-medium flex items-center"
+                            className="flex items-center font-medium text-blue-600 hover:text-blue-800"
                             href="https://katex.org/docs/supported.html"
                             target="_blank"
                           >
@@ -471,10 +471,10 @@ function MathEquationBlockComponent(props: any) {
                 </SaveButton>
               </EditBar>
 
-              <InfoLink className="flex items-center text-zinc-500 text-sm">
+              <InfoLink className="flex items-center text-sm text-zinc-500">
                 <span>Please refer to this</span>
                 <Link
-                  className="inline-flex items-center mx-1 text-blue-600 hover:text-blue-800 font-medium"
+                  className="mx-1 inline-flex items-center font-medium text-blue-600 hover:text-blue-800"
                   href="https://katex.org/docs/supported.html"
                   target="_blank"
                 >

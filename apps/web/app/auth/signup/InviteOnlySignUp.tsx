@@ -98,20 +98,20 @@ function InviteOnlySignUpComponent(props: InviteOnlySignUpProps) {
   return (
     <div className="login-form m-auto w-72">
       {error && (
-        <div className="flex justify-center bg-red-200 rounded-md text-red-950 space-x-2 items-center p-4 transition-all shadow-xs">
+        <div className="flex items-center justify-center space-x-2 rounded-md bg-red-200 p-4 text-red-950 shadow-xs transition-all">
           <AlertTriangle size={18} />
-          <div className="font-bold text-sm">{error}</div>
+          <div className="text-sm font-bold">{error}</div>
         </div>
       )}
       {message && (
-        <div className="flex flex-col space-y-4 justify-center bg-green-200 rounded-md text-green-950 space-x-2 items-center p-4 transition-all shadow-xs">
+        <div className="flex flex-col items-center justify-center space-y-4 space-x-2 rounded-md bg-green-200 p-4 text-green-950 shadow-xs transition-all">
           <div className="flex space-x-2">
             <Check size={18} />
-            <div className="font-bold text-sm">{message}</div>
+            <div className="text-sm font-bold">{message}</div>
           </div>
-          <hr className="border-green-900/20 800 w-40 border" />
+          <hr className="800 w-40 border border-green-900/20" />
           <Link
-            className="flex space-x-2 items-center"
+            className="flex items-center space-x-2"
             href={`/login?orgslug=${org?.slug}`}
           >
             <User size={14} /> <div>Login to your account</div>
@@ -176,19 +176,19 @@ function InviteOnlySignUpComponent(props: InviteOnlySignUpProps) {
           </Form.Control>
         </FormField>
 
-        <div className="flex  py-4">
+        <div className="flex py-4">
           <Form.Submit asChild>
-            <button className="w-full bg-black text-white font-bold text-center p-2 rounded-md shadow-md hover:cursor-pointer">
+            <button className="w-full rounded-md bg-black p-2 text-center font-bold text-white shadow-md hover:cursor-pointer">
               {isSubmitting ? 'Loading...' : 'Create an account & Join'}
             </button>
           </Form.Submit>
         </div>
       </FormLayout>
       <div>
-        <div className="flex h-0.5 rounded-2xl bg-slate-100 mt-5 mb-5 mx-10"></div>
+        <div className="mx-10 mt-5 mb-5 flex h-0.5 rounded-2xl bg-slate-100"></div>
         <button
           onClick={() => signIn('google')}
-          className="flex justify-center py-3 text-md w-full bg-white text-slate-600 space-x-3 font-semibold text-center p-2 rounded-md shadow-sm hover:cursor-pointer"
+          className="text-md flex w-full justify-center space-x-3 rounded-md bg-white p-2 py-3 text-center font-semibold text-slate-600 shadow-sm hover:cursor-pointer"
         >
           <img
             src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg"

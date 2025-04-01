@@ -51,18 +51,18 @@ function LinkToUserGroup(props: LinkToUserGroupProps) {
   }, [usergroups])
 
   return (
-    <div className="flex flex-col space-y-1 ">
-      <div className="flex bg-yellow-100 text-yellow-900 mx-auto w-fit mt-3 px-4 py-2 space-x-2 text-sm rounded-full items-center">
+    <div className="flex flex-col space-y-1">
+      <div className="mx-auto mt-3 flex w-fit items-center space-x-2 rounded-full bg-yellow-100 px-4 py-2 text-sm text-yellow-900">
         <Info size={19} />
-        <h1 className=" font-medium">
+        <h1 className="font-medium">
           Users that are not part of the UserGroup will no longer have access to
           this course
         </h1>
       </div>
-      <div className="p-4 flex-row flex justify-between items-center">
+      <div className="flex flex-row items-center justify-between p-4">
         {usergroups?.length >= 1 && (
           <div className="py-1">
-            <span className="px-3 text-gray-400 font-bold rounded-full py-1 bg-gray-100 mx-3">
+            <span className="mx-3 rounded-full bg-gray-100 px-3 py-1 font-bold text-gray-400">
               UserGroup Name{' '}
             </span>
 
@@ -80,12 +80,12 @@ function LinkToUserGroup(props: LinkToUserGroupProps) {
           </div>
         )}
         {usergroups?.length == 0 && (
-          <div className="flex space-x-3 items-center">
-            <span className="px-3 text-yellow-700 font-bold rounded-full py-1 mx-3">
+          <div className="flex items-center space-x-3">
+            <span className="mx-3 rounded-full px-3 py-1 font-bold text-yellow-700">
               No UserGroups available{' '}
             </span>
             <Link
-              className="px-3 text-blue-700 font-bold rounded-full py-1 bg-blue-100 mx-1"
+              className="mx-1 rounded-full bg-blue-100 px-3 py-1 font-bold text-blue-700"
               target="_blank"
               href={getUriWithOrg(org.slug, '/dash/users/settings/usergroups')}
             >
@@ -98,7 +98,7 @@ function LinkToUserGroup(props: LinkToUserGroupProps) {
             onClick={() => {
               handleLink()
             }}
-            className="bg-green-700 text-white font-bold px-4 py-2 rounded-md shadow-sm"
+            className="rounded-md bg-green-700 px-4 py-2 font-bold text-white shadow-sm"
           >
             Link
           </button>

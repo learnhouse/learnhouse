@@ -31,7 +31,7 @@ function Courses(props: CourseProps) {
   return (
     <div className="w-full">
       <GeneralWrapperStyled>
-        <div className="flex flex-col space-y-2 mb-2">
+        <div className="mb-2 flex flex-col space-y-2">
           <div className="flex items-center justify-between">
             <TypeOfContentTitle title="Courses" type="cou" />
             <AuthenticatedClientElement
@@ -61,14 +61,14 @@ function Courses(props: CourseProps) {
             </AuthenticatedClientElement>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             {courses.map((course: any) => (
               <div key={course.course_uuid} className="p-3">
                 <CourseThumbnail course={course} orgslug={orgslug} />
               </div>
             ))}
             {courses.length === 0 && (
-              <div className="col-span-full flex justify-center items-center py-8">
+              <div className="col-span-full flex items-center justify-center py-8">
                 <div className="text-center">
                   <div className="mb-4">
                     <svg
@@ -82,7 +82,7 @@ function Courses(props: CourseProps) {
                       {/* ... SVG content ... */}
                     </svg>
                   </div>
-                  <h1 className="text-xl font-bold text-gray-600 mb-2">
+                  <h1 className="mb-2 text-xl font-bold text-gray-600">
                     No courses yet
                   </h1>
                   <p className="text-md text-gray-400">

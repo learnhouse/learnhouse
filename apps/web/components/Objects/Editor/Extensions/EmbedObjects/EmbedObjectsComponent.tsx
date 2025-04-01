@@ -139,7 +139,7 @@ const MemoizedEmbed = React.memo(
       return (
         <iframe
           src={processedUrl}
-          className="w-full h-full"
+          className="h-full w-full"
           frameBorder="0"
           allowFullScreen
         />
@@ -150,7 +150,7 @@ const MemoizedEmbed = React.memo(
       return (
         <div
           dangerouslySetInnerHTML={{ __html: sanitizedEmbedCode }}
-          className="w-full h-full"
+          className="h-full w-full"
         />
       )
     }
@@ -487,7 +487,7 @@ function EmbedObjectsComponent(props: any) {
           embedType={embedType}
         />
       ) : (
-        <div className="w-full h-full bg-gray-200" />
+        <div className="h-full w-full bg-gray-200" />
       ),
     [embedUrl, sanitizedEmbedCode, embedType, isResizing]
   )
@@ -541,7 +541,7 @@ function EmbedObjectsComponent(props: any) {
     <NodeViewWrapper className="embed-block w-full" ref={containerRef}>
       <div
         ref={resizeRef}
-        className={`relative bg-gray-100 rounded-lg overflow-hidden flex justify-center items-center ${alignment === 'center' ? 'mx-auto' : ''}`}
+        className={`relative flex items-center justify-center overflow-hidden rounded-lg bg-gray-100 ${alignment === 'center' ? 'mx-auto' : ''}`}
         style={getResponsiveStyles()}
       >
         {embedUrl || sanitizedEmbedCode ? (
@@ -551,10 +551,10 @@ function EmbedObjectsComponent(props: any) {
 
             {/* Minimal toolbar for existing embeds */}
             {isEditable && (
-              <div className="absolute top-2 right-2 flex items-center gap-1.5 bg-white bg-opacity-90 backdrop-blur-xs rounded-lg p-1 shadow-xs transition-opacity opacity-70 hover:opacity-100">
+              <div className="bg-opacity-90 absolute top-2 right-2 flex items-center gap-1.5 rounded-lg bg-white p-1 opacity-70 shadow-xs backdrop-blur-xs transition-opacity hover:opacity-100">
                 <button
                   onClick={() => setActiveInput(embedType)}
-                  className="p-1.5 rounded-md hover:bg-gray-100 text-gray-600"
+                  className="rounded-md p-1.5 text-gray-600 hover:bg-gray-100"
                   title="Edit embed"
                 >
                   <svg
@@ -573,7 +573,7 @@ function EmbedObjectsComponent(props: any) {
                 </button>
                 <button
                   onClick={handleCenterBlock}
-                  className="p-1.5 rounded-md hover:bg-gray-100 text-gray-600"
+                  className="rounded-md p-1.5 text-gray-600 hover:bg-gray-100"
                   title={alignment === 'center' ? 'Align left' : 'Center align'}
                 >
                   <AlignCenter size={16} />
@@ -587,7 +587,7 @@ function EmbedObjectsComponent(props: any) {
                       embedCode: '',
                     })
                   }}
-                  className="p-1.5 rounded-md hover:bg-gray-100 text-gray-600"
+                  className="rounded-md p-1.5 text-gray-600 hover:bg-gray-100"
                   title="Remove embed"
                 >
                   <svg
@@ -611,44 +611,44 @@ function EmbedObjectsComponent(props: any) {
           </>
         ) : (
           // Show the embed selection UI if we don't have content yet
-          <div className="w-full h-full flex flex-col items-center justify-center p-2 sm:p-6">
-            <p className="text-gray-500 mb-2 sm:mb-4 font-medium tracking-tighter text-base sm:text-lg text-center">
+          <div className="flex h-full w-full flex-col items-center justify-center p-2 sm:p-6">
+            <p className="mb-2 text-center text-base font-medium tracking-tighter text-gray-500 sm:mb-4 sm:text-lg">
               Add an embed from :
             </p>
-            <div className="flex flex-wrap gap-2 sm:gap-5 justify-center">
+            <div className="flex flex-wrap justify-center gap-2 sm:gap-5">
               {supportedProducts.map((product) => (
                 <button
                   key={product.name}
-                  className="flex flex-col items-center group transition-transform hover:scale-110"
+                  className="group flex flex-col items-center transition-transform hover:scale-110"
                   onClick={() => handleProductSelection(product)}
                   title={`Add ${product.name} embed`}
                 >
                   <div
-                    className="w-8 h-8 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg shadow-md transition-shadow group-hover:shadow-lg sm:h-12 sm:w-12"
                     style={{ backgroundColor: product.color }}
                   >
                     <product.icon size={isMobile ? 16 : 24} color="#FFFFFF" />
                   </div>
-                  <span className="text-xs mt-1 sm:mt-2 text-gray-700 group-hover:text-gray-900 font-medium">
+                  <span className="mt-1 text-xs font-medium text-gray-700 group-hover:text-gray-900 sm:mt-2">
                     {product.name}
                   </span>
                 </button>
               ))}
             </div>
 
-            <p className="text-xs text-gray-500 mt-3 mb-2 text-center max-w-md">
+            <p className="mt-3 mb-2 max-w-md text-center text-xs text-gray-500">
               Click a service to add an embed
             </p>
 
             {/* Direct input options */}
             {isEditable && (
-              <div className="mt-4 flex gap-3 justify-center">
+              <div className="mt-4 flex justify-center gap-3">
                 <button
                   onClick={() => {
                     setEmbedType('url')
                     setActiveInput('url')
                   }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-lg shadow-xs hover:shadow-md transition-all text-sm text-gray-700"
+                  className="flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-sm text-gray-700 shadow-xs transition-all hover:shadow-md"
                 >
                   <LinkIcon size={14} />
                   <span>URL</span>
@@ -658,7 +658,7 @@ function EmbedObjectsComponent(props: any) {
                     setEmbedType('code')
                     setActiveInput('code')
                   }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-lg shadow-xs hover:shadow-md transition-all text-sm text-gray-700"
+                  className="flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-sm text-gray-700 shadow-xs transition-all hover:shadow-md"
                 >
                   <Code size={14} />
                   <span>Code</span>
@@ -670,17 +670,17 @@ function EmbedObjectsComponent(props: any) {
 
         {/* Inline input UI - appears in place without covering content */}
         {isEditable && activeInput !== 'none' && (
-          <div className="absolute inset-0 bg-gray-100 bg-opacity-95 backdrop-blur-xs flex items-center justify-center p-4 z-10">
+          <div className="bg-opacity-95 absolute inset-0 z-10 flex items-center justify-center bg-gray-100 p-4 backdrop-blur-xs">
             <form
               onSubmit={handleInputSubmit}
-              className="w-full max-w-lg bg-white rounded-xl shadow-lg p-4"
+              className="w-full max-w-lg rounded-xl bg-white p-4 shadow-lg"
               onKeyDown={handleKeyDown}
             >
-              <div className="flex justify-between items-center mb-3">
+              <div className="mb-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   {selectedProduct && activeInput === 'url' && (
                     <div
-                      className="w-8 h-8 rounded-lg flex items-center justify-center"
+                      className="flex h-8 w-8 items-center justify-center rounded-lg"
                       style={{ backgroundColor: selectedProduct.color }}
                     >
                       <selectedProduct.icon size={18} color="#FFFFFF" />
@@ -697,7 +697,7 @@ function EmbedObjectsComponent(props: any) {
                 <button
                   type="button"
                   onClick={() => setActiveInput('none')}
-                  className="p-1 rounded-full hover:bg-gray-100 text-gray-500"
+                  className="rounded-full p-1 text-gray-500 hover:bg-gray-100"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -719,7 +719,7 @@ function EmbedObjectsComponent(props: any) {
               {activeInput === 'url' ? (
                 <>
                   <div className="relative mb-2">
-                    <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-500">
+                    <div className="absolute top-1/2 left-3 -translate-y-1/2 transform text-blue-500">
                       <LinkIcon size={16} />
                     </div>
                     <input
@@ -727,7 +727,7 @@ function EmbedObjectsComponent(props: any) {
                       type="text"
                       value={embedUrl}
                       onChange={handleUrlChange}
-                      className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-hidden transition-all"
+                      className="w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 pr-4 pl-10 transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                       placeholder={
                         selectedProduct
                           ? `Paste ${selectedProduct.name} embed URL`
@@ -736,7 +736,7 @@ function EmbedObjectsComponent(props: any) {
                       autoFocus
                     />
                   </div>
-                  <div className="flex justify-between items-center mb-4">
+                  <div className="mb-4 flex items-center justify-between">
                     <p className="text-xs text-gray-500">
                       Tip: Paste any{' '}
                       {selectedProduct?.name || 'YouTube, Spotify, or other'}{' '}
@@ -746,7 +746,7 @@ function EmbedObjectsComponent(props: any) {
                       <button
                         type="button"
                         onClick={() => handleOpenDocs(selectedProduct.guide)}
-                        className="text-xs text-blue-500 hover:text-blue-700 flex items-center gap-1"
+                        className="flex items-center gap-1 text-xs text-blue-500 hover:text-blue-700"
                       >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
@@ -775,12 +775,12 @@ function EmbedObjectsComponent(props: any) {
                       ref={codeInputRef}
                       value={embedCode}
                       onChange={handleCodeChange}
-                      className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl h-32 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-hidden transition-all font-mono text-sm"
+                      className="h-32 w-full rounded-xl border border-gray-200 bg-gray-50 p-3 font-mono text-sm transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                       placeholder="Paste embed code (iframe, embed script, etc.)"
                       autoFocus
                     />
                   </div>
-                  <div className="flex justify-between items-center mb-4">
+                  <div className="mb-4 flex items-center justify-between">
                     <p className="text-xs text-gray-500">
                       Tip: Paste iframe or embed code from any platform
                     </p>
@@ -788,7 +788,7 @@ function EmbedObjectsComponent(props: any) {
                       <button
                         type="button"
                         onClick={() => handleOpenDocs(selectedProduct.guide)}
-                        className="text-xs text-blue-500 hover:text-blue-700 flex items-center gap-1"
+                        className="flex items-center gap-1 text-xs text-blue-500 hover:text-blue-700"
                       >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
@@ -816,13 +816,13 @@ function EmbedObjectsComponent(props: any) {
                 <button
                   type="button"
                   onClick={() => setActiveInput('none')}
-                  className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 rounded-lg"
+                  className="rounded-lg px-4 py-2 text-sm text-gray-600 hover:text-gray-800"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors"
+                  className="rounded-lg bg-blue-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-600"
                   disabled={
                     (activeInput === 'url' && !embedUrl) ||
                     (activeInput === 'code' && !embedCode)
@@ -839,13 +839,13 @@ function EmbedObjectsComponent(props: any) {
         {isEditable && (
           <>
             <div
-              className="absolute right-0 top-0 bottom-0 w-4 cursor-ew-resize flex items-center justify-center bg-white bg-opacity-70 hover:bg-opacity-100 transition-opacity"
+              className="bg-opacity-70 hover:bg-opacity-100 absolute top-0 right-0 bottom-0 flex w-4 cursor-ew-resize items-center justify-center bg-white transition-opacity"
               onMouseDown={(e) => handleResizeStart(e, 'horizontal')}
             >
               <GripVertical size={16} className="text-gray-600" />
             </div>
             <div
-              className="absolute left-0 right-0 bottom-0 h-4 cursor-ns-resize flex items-center justify-center bg-white bg-opacity-70 hover:bg-opacity-100 transition-opacity"
+              className="bg-opacity-70 hover:bg-opacity-100 absolute right-0 bottom-0 left-0 flex h-4 cursor-ns-resize items-center justify-center bg-white transition-opacity"
               onMouseDown={(e) => handleResizeStart(e, 'vertical')}
             >
               <GripHorizontal size={16} className="text-gray-600" />

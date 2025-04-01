@@ -27,13 +27,13 @@ export function CourseOverviewTop({
         last_breadcrumb={course.courseStructure.name}
       ></BreadCrumbs>
       <div className="flex">
-        <div className="flex py-3 grow items-center">
+        <div className="flex grow items-center py-3">
           <Link
             href={getUriWithOrg(org?.slug, '') + `/course/${params.courseuuid}`}
           >
             {course?.courseStructure?.thumbnail_image ? (
               <img
-                className="w-[100px] h-[57px] rounded-md drop-shadow-md"
+                className="h-[57px] w-[100px] rounded-md drop-shadow-md"
                 src={`${getCourseThumbnailMediaDirectory(
                   org?.org_uuid,
                   'course_' + params.courseuuid,
@@ -50,9 +50,9 @@ export function CourseOverviewTop({
               />
             )}
           </Link>
-          <div className="flex flex-col course_metadata justify-center pl-5">
-            <div className="text-gray-400 font-semibold text-sm">Course</div>
-            <div className="text-black font-bold text-xl -mt-1 first-letter:uppercase">
+          <div className="course_metadata flex flex-col justify-center pl-5">
+            <div className="text-sm font-semibold text-gray-400">Course</div>
+            <div className="-mt-1 text-xl font-bold text-black first-letter:uppercase">
               {course.courseStructure.name}
             </div>
           </div>

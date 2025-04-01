@@ -56,13 +56,13 @@ function PaymentsPage(props: { params: Promise<PaymentsParams> }) {
 
   if (!isPaymentsEnabled) {
     return (
-      <div className="h-screen w-full bg-[#f8f8f8] flex items-center justify-center p-4">
-        <div className="bg-white p-6 rounded-lg shadow-md text-center max-w-md">
-          <h2 className="text-xl font-bold mb-4">Payments Not Available</h2>
+      <div className="flex h-screen w-full items-center justify-center bg-[#f8f8f8] p-4">
+        <div className="max-w-md rounded-lg bg-white p-6 text-center shadow-md">
+          <h2 className="mb-4 text-xl font-bold">Payments Not Available</h2>
           <p className="text-gray-600">
             The payments feature is not enabled for this organization.
           </p>
-          <p className="text-gray-600 mt-2">
+          <p className="mt-2 text-gray-600">
             Please contact your administrator to enable payments.
           </p>
         </div>
@@ -73,18 +73,18 @@ function PaymentsPage(props: { params: Promise<PaymentsParams> }) {
   const { h1, h2 } = getPageTitle()
 
   return (
-    <div className="h-screen w-full bg-[#f8f8f8] flex flex-col">
-      <div className="pl-10 pr-10 tracking-tight bg-[#fcfbfc] z-10 nice-shadow">
+    <div className="flex h-screen w-full flex-col bg-[#f8f8f8]">
+      <div className="nice-shadow z-10 bg-[#fcfbfc] pr-10 pl-10 tracking-tight">
         <BreadCrumbs type="payments" />
         <div className="my-2 py-2">
-          <div className="w-100 flex flex-col space-y-1">
-            <div className="pt-3 flex font-bold text-4xl tracking-tighter">
+          <div className="flex w-100 flex-col space-y-1">
+            <div className="flex pt-3 text-4xl font-bold tracking-tighter">
               {h1}
             </div>
-            <div className="flex font-medium text-gray-400 text-md">{h2}</div>
+            <div className="text-md flex font-medium text-gray-400">{h2}</div>
           </div>
         </div>
-        <div className="flex space-x-0.5 font-black text-sm">
+        <div className="flex space-x-0.5 text-sm font-black">
           <TabLink
             href={getUriWithOrg(params.orgslug, '/dash/payments/customers')}
             icon={<Users size={16} />}
@@ -134,9 +134,9 @@ const TabLink = ({
 }) => (
   <Link href={href}>
     <div
-      className={`py-2 w-fit text-center border-black transition-all ease-linear ${isActive ? 'border-b-4' : 'opacity-50'} cursor-pointer`}
+      className={`w-fit border-black py-2 text-center transition-all ease-linear ${isActive ? 'border-b-4' : 'opacity-50'} cursor-pointer`}
     >
-      <div className="flex items-center space-x-2.5 mx-2">
+      <div className="mx-2 flex items-center space-x-2.5">
         {icon}
         <div>{label}</div>
       </div>

@@ -84,7 +84,7 @@ function AddUserGroup(props: AddUserGroupProps) {
       </FormField>
       <div className="flex py-4">
         <Form.Submit asChild>
-          <button className="w-full bg-black text-white font-bold text-center p-2 rounded-md shadow-md hover:cursor-pointer">
+          <button className="w-full rounded-md bg-black p-2 text-center font-bold text-white shadow-md hover:cursor-pointer">
             {isSubmitting ? 'Loading...' : 'Create a UserGroup'}
           </button>
         </Form.Submit>

@@ -162,10 +162,10 @@ const BadgesExtension: React.FC = (props: any) => {
 
   return (
     <NodeViewWrapper>
-      <div className="flex space-x-2 items-center relative">
+      <div className="relative flex items-center space-x-2">
         <div
           className={twMerge(
-            'flex space-x-1 py-1.5 items-center w-fit rounded-full outline outline-2 outline-white/20 px-3.5 font-semibold nice-shadow text-sm my-2',
+            'nice-shadow my-2 flex w-fit items-center space-x-1 rounded-full px-3.5 py-1.5 text-sm font-semibold outline outline-2 outline-white/20',
             getBadgeColor(color)
           )}
         >
@@ -179,23 +179,23 @@ const BadgesExtension: React.FC = (props: any) => {
           </div>
           <NodeViewContent
             contentEditable={isEditable}
-            className="content capitalize text tracking-wide "
+            className="content text tracking-wide capitalize"
           ></NodeViewContent>
           {isEditable && (
-            <div className="flex items-center justify-center space-x-2 relative">
+            <div className="relative flex items-center justify-center space-x-2">
               <button onClick={() => setShowColorPicker(!showColorPicker)}>
                 <Palette size={14} />
               </button>
               {showColorPicker && (
                 <div
                   ref={colorPickerRef}
-                  className="absolute left-full ml-2 p-2 bg-white rounded-full nice-shadow"
+                  className="nice-shadow absolute left-full ml-2 rounded-full bg-white p-2"
                 >
                   <div className="flex space-x-2">
                     {colors.map((c) => (
                       <button
                         key={c}
-                        className={`w-8 h-8 rounded-full ${getBadgeColor(c)} hover:ring-2 hover:ring-opacity-50 focus:outline-hidden focus:ring-2 focus:ring-opacity-50`}
+                        className={`h-8 w-8 rounded-full ${getBadgeColor(c)} hover:ring-opacity-50 focus:ring-opacity-50 hover:ring-2 focus:ring-2 focus:outline-hidden`}
                         onClick={() => handleColorSelect(c)}
                       />
                     ))}
@@ -209,19 +209,19 @@ const BadgesExtension: React.FC = (props: any) => {
         {isEditable && (
           <button
             onClick={() => setShowPredefinedCallouts(!showPredefinedCallouts)}
-            className="text-neutral-300 hover:text-neutral-400 transition-colors"
+            className="text-neutral-300 transition-colors hover:text-neutral-400"
           >
             <ChevronRight size={16} />
           </button>
         )}
 
         {isEditable && showPredefinedCallouts && (
-          <div className="flex flex-wrap gap-2 absolute top-full mt-2 left-0 bg-white/90 backdrop-blur-md p-2 rounded-lg nice-shadow z-10">
+          <div className="nice-shadow absolute top-full left-0 z-10 mt-2 flex flex-wrap gap-2 rounded-lg bg-white/90 p-2 backdrop-blur-md">
             {predefinedBadges.map((badge, index) => (
               <button
                 key={index}
                 onClick={() => handlePredefinedBadgeSelect(badge)}
-                className={`flex text-xs items-center px-3 py-1 rounded-xl space-x-2 ${getBadgeColor(badge.color)} text-gray-600 font-bold light-shadow hover:opacity-80 transition-all duration-100 ease-linear`}
+                className={`flex items-center space-x-2 rounded-xl px-3 py-1 text-xs ${getBadgeColor(badge.color)} light-shadow font-bold text-gray-600 transition-all duration-100 ease-linear hover:opacity-80`}
               >
                 <span className="text-xs">{badge.emoji}</span>
                 <span className="content capitalize">{badge.content}</span>

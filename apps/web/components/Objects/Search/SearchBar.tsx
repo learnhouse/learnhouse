@@ -101,17 +101,17 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           }}
           onFocus={handleSearchFocus}
           placeholder="Search courses..."
-          className="w-full h-9 pl-10 pr-4 rounded-lg border border-gray-200 bg-white/50 focus:outline-hidden focus:ring-2 focus:ring-gray-200 focus:border-transparent text-sm placeholder:text-gray-400"
+          className="h-9 w-full rounded-lg border border-gray-200 bg-white/50 pr-4 pl-10 text-sm placeholder:text-gray-400 focus:border-transparent focus:ring-2 focus:ring-gray-200 focus:outline-hidden"
         />
         <Search
-          className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+          className="absolute top-1/2 left-3 -translate-y-1/2 transform text-gray-400"
           size={18}
         />
       </div>
 
       {showResults && (searchQuery.trim().length > 0 || isLoading) && (
         <div
-          className={`absolute z-50 w-full mt-2 bg-white rounded-lg shadow-lg border border-gray-100 max-h-[400px] overflow-y-auto ${isMobile ? 'max-w-full' : 'min-w-[400px]'}`}
+          className={`absolute z-50 mt-2 max-h-[400px] w-full overflow-y-auto rounded-lg border border-gray-100 bg-white shadow-lg ${isMobile ? 'max-w-full' : 'min-w-[400px]'}`}
         >
           {isLoading ? (
             <div className="p-4 text-center text-gray-500">
@@ -127,10 +127,10 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                     orgslug,
                     `/course/${removeCoursePrefix(course.course_uuid)}`
                   )}
-                  className="block hover:bg-gray-50 transition-colors"
+                  className="block transition-colors hover:bg-gray-50"
                   onClick={() => setShowResults(false)}
                 >
-                  <div className="flex items-center p-3 space-x-3">
+                  <div className="flex items-center space-x-3 p-3">
                     {course.thumbnail_image && (
                       <img
                         src={getCourseThumbnailMediaDirectory(
@@ -139,18 +139,18 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                           course.thumbnail_image
                         )}
                         alt={course.name}
-                        className="w-12 h-12 object-cover rounded-lg"
+                        className="h-12 w-12 rounded-lg object-cover"
                       />
                     )}
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-sm font-medium text-gray-900 truncate">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="truncate text-sm font-medium text-gray-900">
                         {course.name}
                       </h3>
-                      <p className="text-xs text-gray-500 truncate">
+                      <p className="truncate text-xs text-gray-500">
                         {course.description}
                       </p>
                       {course.authors && course.authors[0] && (
-                        <p className="text-xs text-gray-400 mt-1">
+                        <p className="mt-1 text-xs text-gray-400">
                           by {course.authors[0].first_name}{' '}
                           {course.authors[0].last_name}
                         </p>

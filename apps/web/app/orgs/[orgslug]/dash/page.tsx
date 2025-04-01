@@ -7,7 +7,7 @@ import learnhousetextlogo from '../../../../public/learnhouse_logo.png'
 
 function DashboardHome() {
   return (
-    <div className="flex items-center justify-center mx-auto min-h-screen flex-col p-4 sm:mb-0 mb-16">
+    <div className="mx-auto mb-16 flex min-h-screen flex-col items-center justify-center p-4 sm:mb-0">
       <div className="mx-auto pb-6 sm:pb-10">
         <Image
           alt="learnhouse logo"
@@ -17,7 +17,7 @@ function DashboardHome() {
         />
       </div>
       <AdminAuthorization authorizationMode="component">
-        <div className="flex flex-col sm:flex-row gap-4 lg:gap-10">
+        <div className="flex flex-col gap-4 sm:flex-row lg:gap-10">
           {/* Card components */}
           <DashboardCard
             href="/dash/courses"
@@ -39,14 +39,14 @@ function DashboardHome() {
           />
         </div>
       </AdminAuthorization>
-      <div className="flex flex-col gap-6 sm:gap-10 mt-6 sm:mt-10">
+      <div className="mt-6 flex flex-col gap-6 sm:mt-10 sm:gap-10">
         <AdminAuthorization authorizationMode="component">
-          <div className="h-1 w-[100px] bg-neutral-200/100 rounded-full mx-auto"></div>
-          <div className="flex justify-center items-center">
+          <div className="mx-auto h-1 w-[100px] rounded-full bg-neutral-200/100"></div>
+          <div className="flex items-center justify-center">
             <Link
               href={'https://university.learnhouse.io/'}
               target="_blank"
-              className="flex mt-4 sm:mt-[40px] bg-black gap-2 items-center py-3 px-7 rounded-lg shadow-lg hover:scale-105 transition-all ease-linear cursor-pointer"
+              className="mt-4 flex cursor-pointer items-center gap-2 rounded-lg bg-black px-7 py-3 shadow-lg transition-all ease-linear hover:scale-105 sm:mt-[40px]"
             >
               <University className="text-gray-100/100" size={20} />
               <div className="text-sm font-bold text-gray-100/100">
@@ -54,14 +54,14 @@ function DashboardHome() {
               </div>
             </Link>
           </div>
-          <div className="mx-auto mt-4 sm:mt-[40px] w-28 h-1 bg-neutral-200/100 rounded-full"></div>
+          <div className="mx-auto mt-4 h-1 w-28 rounded-full bg-neutral-200/100 sm:mt-[40px]"></div>
         </AdminAuthorization>
 
         <Link
           href={'/dash/user-account/settings/general'}
-          className="flex bg-white shadow-lg p-4 items-center rounded-lg mx-auto hover:scale-105 transition-all ease-linear cursor-pointer max-w-md"
+          className="mx-auto flex max-w-md cursor-pointer items-center rounded-lg bg-white p-4 shadow-lg transition-all ease-linear hover:scale-105"
         >
-          <div className="flex flex-col sm:flex-row mx-auto gap-2 sm:gap-3 items-center text-center sm:text-left">
+          <div className="mx-auto flex flex-col items-center gap-2 text-center sm:flex-row sm:gap-3 sm:text-left">
             <Settings className="text-gray-500/100" size={20} />
             <div>
               <div className="font-bold text-gray-500/100">
@@ -93,9 +93,9 @@ function DashboardCard({
   return (
     <Link
       href={href}
-      className="flex bg-white shadow-lg p-6 w-full sm:w-[250px] rounded-lg items-center mx-auto hover:scale-105 transition-all ease-linear cursor-pointer"
+      className="mx-auto flex w-full cursor-pointer items-center rounded-lg bg-white p-6 shadow-lg transition-all ease-linear hover:scale-105 sm:w-[250px]"
     >
-      <div className="flex flex-col mx-auto gap-2">
+      <div className="mx-auto flex flex-col gap-2">
         {icon}
         <div className="text-center font-bold text-gray-500/100">{title}</div>
         <p className="text-center text-sm text-gray-400/100">{description}</p>

@@ -64,7 +64,7 @@ const MultipleAuthors = ({ authors }: { authors: Author[] }) => {
 
   return (
     <div className="flex items-center gap-3">
-      <div className="flex -space-x-3 relative">
+      <div className="relative flex -space-x-3">
         {displayedAvatars.map((author, index) => (
           <div
             key={author.user.user_uuid}
@@ -90,7 +90,7 @@ const MultipleAuthors = ({ authors }: { authors: Author[] }) => {
         {remainingCount > 0 && (
           <div className="relative" style={{ zIndex: 0 }}>
             <div
-              className="flex items-center justify-center bg-neutral-100 text-neutral-600 font-medium rounded-full border-2 border-white shadow-sm"
+              className="flex items-center justify-center rounded-full border-2 border-white bg-neutral-100 font-medium text-neutral-600 shadow-sm"
               style={{
                 width: `${avatarSize}px`,
                 height: `${avatarSize}px`,
@@ -104,7 +104,7 @@ const MultipleAuthors = ({ authors }: { authors: Author[] }) => {
       </div>
 
       <div className="flex flex-col">
-        <span className="text-xs text-neutral-400 font-medium">
+        <span className="text-xs font-medium text-neutral-400">
           {authors.length > 1 ? 'Authors' : 'Author'}
         </span>
         {authors.length === 1 ? (
@@ -237,7 +237,7 @@ const CourseActionsMobile = ({
 
   if (isLoading) {
     return (
-      <div className="animate-pulse h-16 bg-gray-100 rounded-lg mt-4 mb-8" />
+      <div className="mt-4 mb-8 h-16 animate-pulse rounded-lg bg-gray-100" />
     )
   }
 
@@ -255,26 +255,26 @@ const CourseActionsMobile = ({
     })
 
   return (
-    <div className="bg-white/90 backdrop-blur-sm shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40 rounded-lg overflow-hidden p-4 my-6 mx-2">
+    <div className="mx-2 my-6 overflow-hidden rounded-lg bg-white/90 p-4 shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40 backdrop-blur-sm">
       <div className="flex flex-col space-y-4">
         <MultipleAuthors authors={sortedAuthors} />
 
         {linkedProducts.length > 0 ? (
           <div className="space-y-3">
             {hasAccess ? (
-              <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+              <div className="rounded-lg border border-green-200 bg-green-50 p-3">
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                  <span className="text-green-800 text-sm font-semibold">
+                  <div className="h-2 w-2 animate-pulse rounded-full bg-green-500" />
+                  <span className="text-sm font-semibold text-green-800">
                     You Own This Course
                   </span>
                 </div>
               </div>
             ) : (
-              <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
                 <div className="flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 text-amber-800" />
-                  <span className="text-amber-800 text-sm font-semibold">
+                  <AlertCircle className="h-4 w-4 text-amber-800" />
+                  <span className="text-sm font-semibold text-amber-800">
                     Paid Course
                   </span>
                 </div>
@@ -285,22 +285,22 @@ const CourseActionsMobile = ({
               <button
                 onClick={handleCourseAction}
                 disabled={isActionLoading}
-                className={`w-full py-2 px-4 rounded-lg font-semibold text-sm transition-colors flex items-center justify-center gap-2 ${
+                className={`flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
                   isStarted
                     ? 'bg-red-500 text-white hover:bg-red-600 disabled:bg-red-400'
                     : 'bg-neutral-900 text-white hover:bg-neutral-800 disabled:bg-neutral-700'
                 }`}
               >
                 {isActionLoading ? (
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                 ) : isStarted ? (
                   <>
-                    <LogOut className="w-4 h-4" />
+                    <LogOut className="h-4 w-4" />
                     Leave Course
                   </>
                 ) : (
                   <>
-                    <LogIn className="w-4 h-4" />
+                    <LogIn className="h-4 w-4" />
                     Start Course
                   </>
                 )}
@@ -318,13 +318,13 @@ const CourseActionsMobile = ({
                 <button
                   onClick={() => setIsModalOpen(true)}
                   disabled={isActionLoading}
-                  className="w-full py-2 px-4 rounded-lg bg-neutral-900 text-white font-semibold text-sm hover:bg-neutral-800 transition-colors flex items-center justify-center gap-2 disabled:bg-neutral-700"
+                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-neutral-900 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-neutral-800 disabled:bg-neutral-700"
                 >
                   {isActionLoading ? (
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                   ) : (
                     <>
-                      <ShoppingCart className="w-4 h-4" />
+                      <ShoppingCart className="h-4 w-4" />
                       Purchase Course
                     </>
                   )}
@@ -336,27 +336,27 @@ const CourseActionsMobile = ({
           <button
             onClick={handleCourseAction}
             disabled={isActionLoading}
-            className={`w-full py-2 px-4 rounded-lg font-semibold text-sm transition-colors flex items-center justify-center gap-2 ${
+            className={`flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
               isStarted
                 ? 'bg-red-500 text-white hover:bg-red-600 disabled:bg-red-400'
                 : 'bg-neutral-900 text-white hover:bg-neutral-800 disabled:bg-neutral-700'
             }`}
           >
             {isActionLoading ? (
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
             ) : !session.data?.user ? (
               <>
-                <LogIn className="w-4 h-4" />
+                <LogIn className="h-4 w-4" />
                 Sign In
               </>
             ) : isStarted ? (
               <>
-                <LogOut className="w-4 h-4" />
+                <LogOut className="h-4 w-4" />
                 Leave Course
               </>
             ) : (
               <>
-                <LogIn className="w-4 h-4" />
+                <LogIn className="h-4 w-4" />
                 Start Course
               </>
             )}

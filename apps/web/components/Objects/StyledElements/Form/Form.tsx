@@ -20,7 +20,7 @@ export const FormLabelAndMessage = (props: {
   <div className="flex items-center space-x-3">
     <FormLabel className="grow text-sm">{props.label}</FormLabel>
     {(props.message && (
-      <div className="text-red-700 text-sm items-center  rounded-md flex  space-x-1">
+      <div className="flex items-center space-x-1 rounded-md text-sm text-red-700">
         <Info size={10} />
         <div>{props.message}</div>
       </div>

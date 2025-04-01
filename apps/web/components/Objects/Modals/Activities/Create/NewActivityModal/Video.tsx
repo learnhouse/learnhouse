@@ -102,14 +102,14 @@ function VideoModal({
           <Input onChange={handleNameChange} type="text" required />
         </Form.Control>
       </FormField>
-      <div className="flex flex-col rounded-md bg-gray-50 outline-dashed outline-gray-200">
+      <div className="flex flex-col rounded-md bg-gray-50 outline-gray-200 outline-dashed">
         <div className="">
-          <div className="flex m-4 justify-center space-x-2 mb-0">
+          <div className="m-4 mb-0 flex justify-center space-x-2">
             <div
               onClick={() => {
                 setSelectedView('file')
               }}
-              className="rounded-full bg-slate-900 text-zinc-50 py-2 px-4 text-sm drop-shadow-md hover:cursor-pointer hover:bg-slate-700 "
+              className="rounded-full bg-slate-900 px-4 py-2 text-sm text-zinc-50 drop-shadow-md hover:cursor-pointer hover:bg-slate-700"
             >
               Video upload
             </div>
@@ -117,13 +117,13 @@ function VideoModal({
               onClick={() => {
                 setSelectedView('youtube')
               }}
-              className="rounded-full bg-slate-900 text-zinc-50 py-2 px-4 text-sm drop-shadow-md hover:cursor-pointer hover:bg-slate-700"
+              className="rounded-full bg-slate-900 px-4 py-2 text-sm text-zinc-50 drop-shadow-md hover:cursor-pointer hover:bg-slate-700"
             >
               YouTube Video
             </div>
           </div>
           {selectedView === 'file' && (
-            <div className="p-4 justify-center m-auto align-middle">
+            <div className="m-auto justify-center p-4 align-middle">
               <FormField name="video-activity-file">
                 <Flex
                   css={{
@@ -148,7 +148,7 @@ function VideoModal({
             </div>
           )}
           {selectedView === 'youtube' && (
-            <div className="p-4 justify-center m-auto align-middle">
+            <div className="m-auto justify-center p-4 align-middle">
               <FormField name="video-activity-file">
                 <Flex
                   css={{

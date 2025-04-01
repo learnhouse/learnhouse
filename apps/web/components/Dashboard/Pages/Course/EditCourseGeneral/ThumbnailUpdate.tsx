@@ -52,19 +52,19 @@ function ThumbnailUpdate() {
   }
 
   return (
-    <div className="w-auto bg-gray-50 rounded-xl outline outline-1 outline-gray-200 h-[200px] shadow-sm">
-      <div className="flex flex-col justify-center items-center h-full">
-        <div className="flex flex-col justify-center items-center">
-          <div className="flex flex-col justify-center items-center">
+    <div className="h-[200px] w-auto rounded-xl bg-gray-50 shadow-sm outline outline-1 outline-gray-200">
+      <div className="flex h-full flex-col items-center justify-center">
+        <div className="flex flex-col items-center justify-center">
+          <div className="flex flex-col items-center justify-center">
             {error && (
-              <div className="flex justify-center bg-red-200 rounded-md text-red-950 space-x-2 items-center p-2 transition-all shadow-xs">
+              <div className="flex items-center justify-center space-x-2 rounded-md bg-red-200 p-2 text-red-950 shadow-xs transition-all">
                 <div className="text-sm font-semibold">{error}</div>
               </div>
             )}
             {localThumbnail ? (
               <img
                 src={URL.createObjectURL(localThumbnail)}
-                className={`${isLoading ? 'animate-pulse' : ''} shadow-sm w-[200px] h-[100px] rounded-md`}
+                className={`${isLoading ? 'animate-pulse' : ''} h-[100px] w-[200px] rounded-md shadow-sm`}
               />
             ) : (
               <img
@@ -77,19 +77,19 @@ function ThumbnailUpdate() {
                       )
                     : '/empty_thumbnail.png'
                 }`}
-                className="shadow-sm w-[200px] h-[100px] rounded-md bg-gray-200"
+                className="h-[100px] w-[200px] rounded-md bg-gray-200 shadow-sm"
               />
             )}
           </div>
           {isLoading ? (
-            <div className="flex justify-center items-center">
-              <div className="font-bold animate-pulse antialiased items-center bg-green-200 text-gray text-sm rounded-md px-4 py-2 mt-4 flex">
+            <div className="flex items-center justify-center">
+              <div className="text-gray mt-4 flex animate-pulse items-center rounded-md bg-green-200 px-4 py-2 text-sm font-bold antialiased">
                 <ArrowBigUpDash size={16} className="mr-2" />
                 <span>Uploading</span>
               </div>
             </div>
           ) : (
-            <div className="flex justify-center items-center space-x-2">
+            <div className="flex items-center justify-center space-x-2">
               <input
                 type="file"
                 id="fileInput"
@@ -97,14 +97,14 @@ function ThumbnailUpdate() {
                 onChange={handleFileChange}
               />
               <button
-                className="font-bold antialiased items-center text-gray text-sm rounded-md px-4 mt-6 flex"
+                className="text-gray mt-6 flex items-center rounded-md px-4 text-sm font-bold antialiased"
                 onClick={() => document.getElementById('fileInput')?.click()}
               >
                 <UploadCloud size={16} className="mr-2" />
                 <span>Upload Image</span>
               </button>
               <button
-                className="font-bold antialiased items-center text-gray text-sm rounded-md px-4 mt-6 flex"
+                className="text-gray mt-6 flex items-center rounded-md px-4 text-sm font-bold antialiased"
                 onClick={() => setShowUnsplashPicker(true)}
               >
                 <ImageIcon size={16} className="mr-2" />

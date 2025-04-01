@@ -47,11 +47,11 @@ function GetStarted() {
 
   if (error)
     return (
-      <div className="flex py-10 justify-center items-center space-x-3">
+      <div className="flex items-center justify-center space-x-3 py-10">
         <h1>Start a new installation</h1>
         <div
           onClick={startInstallation}
-          className="p-3  font-bold bg-green-200 text-green-900 rounded-lg hover:cursor-pointer"
+          className="rounded-lg bg-green-200 p-3 font-bold text-green-900 hover:cursor-pointer"
         >
           Start
         </div>
@@ -62,17 +62,17 @@ function GetStarted() {
   if (install) {
     return (
       <div>
-        <div className="flex py-10 justify-center items-center space-x-3">
+        <div className="flex items-center justify-center space-x-3 py-10">
           <h1>You already started an installation</h1>
           <div
             onClick={redirectToStep}
-            className="p-3  font-bold bg-orange-200 text-orange-900 rounded-lg hover:cursor-pointer"
+            className="rounded-lg bg-orange-200 p-3 font-bold text-orange-900 hover:cursor-pointer"
           >
             Continue
           </div>
           <div
             onClick={startInstallation}
-            className="p-3  font-bold bg-green-200 text-green-900 rounded-lg hover:cursor-pointer"
+            className="rounded-lg bg-green-200 p-3 font-bold text-green-900 hover:cursor-pointer"
           >
             Start
           </div>

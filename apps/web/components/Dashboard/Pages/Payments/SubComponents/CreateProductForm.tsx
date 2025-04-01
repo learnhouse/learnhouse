@@ -110,14 +110,14 @@ const CreateProductForm: React.FC<{ onSuccess: () => void }> = ({
     >
       {({ isSubmitting, values, setFieldValue }) => (
         <Form className="space-y-4">
-          <div className="px-1.5 py-2 flex-col space-y-3">
+          <div className="flex-col space-y-3 px-1.5 py-2">
             <div>
               <Label htmlFor="name">Product Name</Label>
               <Field name="name" as={Input} placeholder="Product Name" />
               <ErrorMessage
                 name="name"
                 component="div"
-                className="text-red-500 text-sm mt-1"
+                className="mt-1 text-sm text-red-500"
               />
             </div>
 
@@ -131,7 +131,7 @@ const CreateProductForm: React.FC<{ onSuccess: () => void }> = ({
               <ErrorMessage
                 name="description"
                 component="div"
-                className="text-red-500 text-sm mt-1"
+                className="mt-1 text-sm text-red-500"
               />
             </div>
 
@@ -152,7 +152,7 @@ const CreateProductForm: React.FC<{ onSuccess: () => void }> = ({
               <ErrorMessage
                 name="product_type"
                 component="div"
-                className="text-red-500 text-sm mt-1"
+                className="mt-1 text-sm text-red-500"
               />
             </div>
 
@@ -177,7 +177,7 @@ const CreateProductForm: React.FC<{ onSuccess: () => void }> = ({
               <ErrorMessage
                 name="price_type"
                 component="div"
-                className="text-red-500 text-sm mt-1"
+                className="mt-1 text-sm text-red-500"
               />
             </div>
 
@@ -201,7 +201,7 @@ const CreateProductForm: React.FC<{ onSuccess: () => void }> = ({
                 <ErrorMessage
                   name="amount"
                   component="div"
-                  className="text-red-500 text-sm mt-1"
+                  className="mt-1 text-sm text-red-500"
                 />
               </div>
               <div className="w-1/3">
@@ -224,7 +224,7 @@ const CreateProductForm: React.FC<{ onSuccess: () => void }> = ({
                 <ErrorMessage
                   name="currency"
                   component="div"
-                  className="text-red-500 text-sm mt-1"
+                  className="mt-1 text-sm text-red-500"
                 />
               </div>
             </div>
@@ -239,7 +239,7 @@ const CreateProductForm: React.FC<{ onSuccess: () => void }> = ({
               <ErrorMessage
                 name="benefits"
                 component="div"
-                className="text-red-500 text-sm mt-1"
+                className="mt-1 text-sm text-red-500"
               />
             </div>
           </div>

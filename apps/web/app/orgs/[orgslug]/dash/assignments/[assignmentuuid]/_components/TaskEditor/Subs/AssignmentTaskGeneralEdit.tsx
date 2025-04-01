@@ -111,12 +111,12 @@ export function AssignmentTaskGeneralEdit() {
       </FormField>
 
       <FormField name="hint">
-        <div className="flex space-x-3 justify-between items-center">
+        <div className="flex items-center justify-between space-x-3">
           <FormLabelAndMessage
             label="Reference file"
             message={formik.errors.hint}
           />
-          <div className="flex space-x-1.5 text-xs items-center text-gray-500 ">
+          <div className="flex items-center space-x-1.5 text-xs text-gray-500">
             <Info size={16} />
             <p>Allowed formats : pdf, docx, mp4, jpg, jpeg, png, pptx, zip</p>
           </div>
@@ -144,7 +144,7 @@ export function AssignmentTaskGeneralEdit() {
       <Form.Submit>
         <button
           type="submit"
-          className="flex items-center justify-center w-full px-4 py-2 mt-4 font-semibold text-white bg-green-500 rounded-md hover:bg-green-600"
+          className="mt-4 flex w-full items-center justify-center rounded-md bg-green-500 px-4 py-2 font-semibold text-white hover:bg-green-600"
         >
           Submit
         </button>
@@ -233,33 +233,33 @@ function UpdateTaskRef() {
   }, [assignmentTaskState, org])
 
   return (
-    <div className="w-auto bg-gray-50 rounded-xl outline outline-1 outline-gray-200 h-[200px] shadow-sm">
-      <div className="flex flex-col justify-center items-center h-full">
-        <div className="flex flex-col justify-center items-center">
-          <div className="flex flex-col justify-center items-center">
+    <div className="h-[200px] w-auto rounded-xl bg-gray-50 shadow-sm outline outline-1 outline-gray-200">
+      <div className="flex h-full flex-col items-center justify-center">
+        <div className="flex flex-col items-center justify-center">
+          <div className="flex flex-col items-center justify-center">
             {error && (
-              <div className="flex justify-center bg-red-200 rounded-md text-red-950 space-x-2 items-center p-2 transition-all shadow-xs">
+              <div className="flex items-center justify-center space-x-2 rounded-md bg-red-200 p-2 text-red-950 shadow-xs transition-all">
                 <div className="text-sm font-semibold">{error}</div>
               </div>
             )}
           </div>
           {assignmentTaskState.assignmentTask.reference_file && !isLoading && (
-            <div className="flex flex-col rounded-lg bg-white text-gray-400 shadow-lg nice-shadow px-5 py-3 space-y-1 items-center relative">
-              <div className="absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2 bg-green-500 rounded-full px-1.5 py-1.5 text-white flex justify-center items-center">
+            <div className="nice-shadow relative flex flex-col items-center space-y-1 rounded-lg bg-white px-5 py-3 text-gray-400 shadow-lg">
+              <div className="absolute top-0 right-0 flex translate-x-1/2 -translate-y-1/2 transform items-center justify-center rounded-full bg-green-500 px-1.5 py-1.5 text-white">
                 <Cloud size={15} />
               </div>
               <File size={20} className="" />
-              <div className="font-semibold text-sm uppercase">
+              <div className="text-sm font-semibold uppercase">
                 {assignmentTaskState.assignmentTask.reference_file
                   .split('.')
                   .pop()}
               </div>
-              <div className="flex space-x-2 mt-2">
+              <div className="mt-2 flex space-x-2">
                 <Link
                   href={getTaskRefDirUI()}
                   download
                   target="_blank"
-                  className="bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-semibold"
+                  className="rounded-full bg-blue-500 px-3 py-1 text-xs font-semibold text-white"
                 >
                   Download
                 </Link>
@@ -270,7 +270,7 @@ function UpdateTaskRef() {
           )}
 
           {isLoading ? (
-            <div className="flex justify-center items-center">
+            <div className="flex items-center justify-center">
               <input
                 type="file"
                 accept={SUPPORTED_FILES}
@@ -278,13 +278,13 @@ function UpdateTaskRef() {
                 style={{ display: 'none' }}
                 onChange={handleFileChange}
               />
-              <div className="font-bold  animate-pulse antialiased items-center bg-slate-200 text-gray text-sm rounded-md px-4 py-2 mt-4 flex">
+              <div className="text-gray mt-4 flex animate-pulse items-center rounded-md bg-slate-200 px-4 py-2 text-sm font-bold antialiased">
                 <Loader size={16} className="mr-2" />
                 <span>Loading</span>
               </div>
             </div>
           ) : (
-            <div className="flex justify-center items-center">
+            <div className="flex items-center justify-center">
               <input
                 type="file"
                 accept={SUPPORTED_FILES}
@@ -293,7 +293,7 @@ function UpdateTaskRef() {
                 onChange={handleFileChange}
               />
               <button
-                className="font-bold antialiased items-center  text-gray text-sm rounded-md px-4  mt-6 flex"
+                className="text-gray mt-6 flex items-center rounded-md px-4 text-sm font-bold antialiased"
                 onClick={() => document.getElementById('fileInput')?.click()}
               >
                 <UploadCloud size={16} className="mr-2" />

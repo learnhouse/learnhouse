@@ -65,55 +65,55 @@ function ManageUsers(props: ManageUsersProps) {
 
   return (
     <div className="py-3">
-      <table className="table-auto w-full text-left whitespace-nowrap rounded-md overflow-hidden">
-        <thead className="bg-gray-100 text-gray-500 rounded-xl uppercase">
+      <table className="w-full table-auto overflow-hidden rounded-md text-left whitespace-nowrap">
+        <thead className="rounded-xl bg-gray-100 text-gray-500 uppercase">
           <tr className="font-bolder text-sm">
-            <th className="py-3 px-4">User</th>
-            <th className="py-3 px-4">Linked</th>
-            <th className="py-3 px-4">Actions</th>
+            <th className="px-4 py-3">User</th>
+            <th className="px-4 py-3">Linked</th>
+            <th className="px-4 py-3">Actions</th>
           </tr>
         </thead>
         <>
-          <tbody className="mt-5 bg-white rounded-md">
+          <tbody className="mt-5 rounded-md bg-white">
             {OrgUsers?.map((user: any) => (
               <tr
                 key={user.user.id}
-                className="border-b border-gray-200 border-dashed text-sm"
+                className="border-b border-dashed border-gray-200 text-sm"
               >
-                <td className="py-3 px-4 flex space-x-2 items-center">
+                <td className="flex items-center space-x-2 px-4 py-3">
                   <span>
                     {user.user.first_name + ' ' + user.user.last_name}
                   </span>
-                  <span className="text-xs bg-neutral-100 p-1 px-2 rounded-full text-neutral-400 font-semibold">
+                  <span className="rounded-full bg-neutral-100 p-1 px-2 text-xs font-semibold text-neutral-400">
                     @{user.user.username}
                   </span>
                 </td>
-                <td className="py-3 px-4">
+                <td className="px-4 py-3">
                   {isUserPartOfGroup(user.user.id) ? (
-                    <div className="space-x-1 flex w-fit px-4 py-1 bg-cyan-100 rounded-full items-center text-cyan-800">
+                    <div className="flex w-fit items-center space-x-1 rounded-full bg-cyan-100 px-4 py-1 text-cyan-800">
                       <Check size={16} />
                       <span>Linked</span>
                     </div>
                   ) : (
-                    <div className="space-x-1 flex w-fit px-4 py-1 bg-gray-100 rounded-full items-center text-gray-800">
+                    <div className="flex w-fit items-center space-x-1 rounded-full bg-gray-100 px-4 py-1 text-gray-800">
                       <X size={16} />
                       <span>Not linked</span>
                     </div>
                   )}
                 </td>
-                <td className="py-3 px-4 flex space-x-2 items-end">
+                <td className="flex items-end space-x-2 px-4 py-3">
                   <button
                     onClick={() => handleLinkUser(user.user.id)}
-                    className="flex space-x-2 hover:cursor-pointer p-1 px-3 bg-cyan-700 rounded-md font-bold items-center text-sm text-cyan-100"
+                    className="flex items-center space-x-2 rounded-md bg-cyan-700 p-1 px-3 text-sm font-bold text-cyan-100 hover:cursor-pointer"
                   >
-                    <Plus className="w-4 h-4" />
+                    <Plus className="h-4 w-4" />
                     <span> Link</span>
                   </button>
                   <button
                     onClick={() => handleUnlinkUser(user.user.id)}
-                    className="flex space-x-2 hover:cursor-pointer p-1 px-3 bg-gray-700 rounded-md font-bold items-center text-sm text-gray-100"
+                    className="flex items-center space-x-2 rounded-md bg-gray-700 p-1 px-3 text-sm font-bold text-gray-100 hover:cursor-pointer"
                   >
-                    <X className="w-4 h-4" />
+                    <X className="h-4 w-4" />
                     <span> Unlink</span>
                   </button>
                 </td>

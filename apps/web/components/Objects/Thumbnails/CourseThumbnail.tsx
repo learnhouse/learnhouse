@@ -85,15 +85,15 @@ function CourseThumbnail({ course, orgslug, customLink }: PropsType) {
         }
       >
         <div
-          className="inset-0 ring-1 ring-inset ring-black/10 rounded-xl shadow-xl w-full aspect-video bg-cover bg-center"
+          className="inset-0 aspect-video w-full rounded-xl bg-cover bg-center shadow-xl ring-1 ring-black/10 ring-inset"
           style={{ backgroundImage: `url(${thumbnailImage})` }}
         />
       </Link>
-      <div className="flex flex-col w-full pt-3 space-y-2">
-        <h2 className="font-bold text-gray-800 line-clamp-2 leading-tight text-lg capitalize">
+      <div className="flex w-full flex-col space-y-2 pt-3">
+        <h2 className="line-clamp-2 text-lg leading-tight font-bold text-gray-800 capitalize">
           {course.name}
         </h2>
-        <p className="text-sm text-gray-700 leading-normal line-clamp-3">
+        <p className="line-clamp-3 text-sm leading-normal text-gray-700">
           {course.description}
         </p>
       </div>
@@ -120,7 +120,7 @@ const AdminEditOptions = ({
       <div className="absolute top-2 right-2 z-20">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="p-1 bg-white rounded-full hover:bg-gray-100 transition-colors shadow-md">
+            <button className="rounded-full bg-white p-1 shadow-md transition-colors hover:bg-gray-100">
               <MoreVertical size={20} className="text-gray-700" />
             </button>
           </DropdownMenuTrigger>
@@ -153,7 +153,7 @@ const AdminEditOptions = ({
                 confirmationMessage="Are you sure you want to delete this course?"
                 dialogTitle={`Delete ${course.name}?`}
                 dialogTrigger={
-                  <button className="w-full text-left flex items-center px-2 py-1 rounded-md text-sm bg-rose-500/10 hover:bg-rose-500/20 transition-colors text-red-600">
+                  <button className="flex w-full items-center rounded-md bg-rose-500/10 px-2 py-1 text-left text-sm text-red-600 transition-colors hover:bg-rose-500/20">
                     <BookMinus className="mr-4 h-4 w-4" /> Delete Course
                   </button>
                 }

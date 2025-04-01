@@ -75,7 +75,7 @@ function ImageBlockComponent(props: any) {
       </FileUploadBlock>
 
       {blockObject && isEditable && (
-        <div className="w-full flex justify-center">
+        <div className="flex w-full justify-center">
           <Resizable
             defaultSize={{ width: imageSize.width, height: '100%' }}
             handleStyles={{
@@ -126,7 +126,7 @@ function ImageBlockComponent(props: any) {
                 'imageBlock'
               )}`}
               alt=""
-              className="rounded-lg shadow-sm max-w-full h-auto"
+              className="h-auto max-w-full rounded-lg shadow-sm"
               style={{ width: '100%' }}
             />
           </Resizable>
@@ -134,7 +134,7 @@ function ImageBlockComponent(props: any) {
       )}
 
       {blockObject && !isEditable && (
-        <div className="w-full flex justify-center">
+        <div className="flex w-full justify-center">
           <img
             src={`${getActivityBlockMediaDirectory(
               org?.org_uuid,
@@ -145,7 +145,7 @@ function ImageBlockComponent(props: any) {
               'imageBlock'
             )}`}
             alt=""
-            className="rounded-lg shadow-sm max-w-full h-auto"
+            className="h-auto max-w-full rounded-lg shadow-sm"
             style={{ width: imageSize.width, maxWidth: '100%' }}
           />
         </div>

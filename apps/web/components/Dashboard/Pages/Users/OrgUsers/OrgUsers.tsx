@@ -57,40 +57,40 @@ function OrgUsers() {
         <>
           <Toast></Toast>
           <div className="h-6"></div>
-          <div className="ml-10 mr-10 mx-auto bg-white rounded-xl shadow-xs px-4 py-4  ">
-            <div className="flex flex-col bg-gray-50 -space-y-1  px-5 py-3 rounded-md mb-3 ">
-              <h1 className="font-bold text-xl text-gray-800">Active users</h1>
-              <h2 className="text-gray-500  text-md">
+          <div className="mx-auto mr-10 ml-10 rounded-xl bg-white px-4 py-4 shadow-xs">
+            <div className="mb-3 flex flex-col -space-y-1 rounded-md bg-gray-50 px-5 py-3">
+              <h1 className="text-xl font-bold text-gray-800">Active users</h1>
+              <h2 className="text-md text-gray-500">
                 {' '}
                 Manage your organization users, assign roles and
                 permissions{' '}
               </h2>
             </div>
-            <table className="table-auto w-full text-left whitespace-nowrap rounded-md overflow-hidden">
-              <thead className="bg-gray-100 text-gray-500 rounded-xl uppercase">
+            <table className="w-full table-auto overflow-hidden rounded-md text-left whitespace-nowrap">
+              <thead className="rounded-xl bg-gray-100 text-gray-500 uppercase">
                 <tr className="font-bolder text-sm">
-                  <th className="py-3 px-4">User</th>
-                  <th className="py-3 px-4">Role</th>
-                  <th className="py-3 px-4">Actions</th>
+                  <th className="px-4 py-3">User</th>
+                  <th className="px-4 py-3">Role</th>
+                  <th className="px-4 py-3">Actions</th>
                 </tr>
               </thead>
               <>
-                <tbody className="mt-5 bg-white rounded-md">
+                <tbody className="mt-5 rounded-md bg-white">
                   {orgUsers?.map((user: any) => (
                     <tr
                       key={user.user.id}
-                      className="border-b border-gray-200 border-dashed"
+                      className="border-b border-dashed border-gray-200"
                     >
-                      <td className="py-3 px-4 flex space-x-2 items-center">
+                      <td className="flex items-center space-x-2 px-4 py-3">
                         <span>
                           {user.user.first_name + ' ' + user.user.last_name}
                         </span>
-                        <span className="text-xs bg-neutral-100 p-1 px-2 rounded-full text-neutral-400 font-semibold">
+                        <span className="rounded-full bg-neutral-100 p-1 px-2 text-xs font-semibold text-neutral-400">
                           @{user.user.username}
                         </span>
                       </td>
-                      <td className="py-3 px-4">{user.role.name}</td>
-                      <td className="py-3 px-4 flex space-x-2 items-end">
+                      <td className="px-4 py-3">{user.role.name}</td>
+                      <td className="flex items-end space-x-2 px-4 py-3">
                         <Modal
                           isDialogOpen={
                             rolesModal && selectedUser === user.user.user_uuid
@@ -111,8 +111,8 @@ function OrgUsers() {
                             'Update @' + user.user.username + "'s role"
                           }
                           dialogTrigger={
-                            <button className="flex space-x-2 hover:cursor-pointer p-1 px-3 bg-yellow-700 rounded-md font-bold items-center text-sm text-yellow-100">
-                              <KeyRound className="w-4 h-4" />
+                            <button className="flex items-center space-x-2 rounded-md bg-yellow-700 p-1 px-3 text-sm font-bold text-yellow-100 hover:cursor-pointer">
+                              <KeyRound className="h-4 w-4" />
                               <span> Edit Role</span>
                             </button>
                           }
@@ -123,8 +123,8 @@ function OrgUsers() {
                           confirmationMessage="Are you sure you want remove this user from the organization?"
                           dialogTitle={'Delete ' + user.user.username + ' ?'}
                           dialogTrigger={
-                            <button className="mr-2 flex space-x-2 hover:cursor-pointer p-1 px-3 bg-rose-700 rounded-md font-bold items-center text-sm text-rose-100">
-                              <LogOut className="w-4 h-4" />
+                            <button className="mr-2 flex items-center space-x-2 rounded-md bg-rose-700 p-1 px-3 text-sm font-bold text-rose-100 hover:cursor-pointer">
+                              <LogOut className="h-4 w-4" />
                               <span> Remove from organization</span>
                             </button>
                           }

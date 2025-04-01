@@ -22,17 +22,17 @@ function SettingsPage(props: { params: Promise<SettingsParams> }) {
 
   return (
     <div className="h-full w-full bg-[#f8f8f8]">
-      <div className="pl-10 pr-10  tracking-tight bg-[#fcfbfc] z-10 shadow-[0px_4px_16px_rgba(0,0,0,0.06)]">
+      <div className="z-10 bg-[#fcfbfc] pr-10 pl-10 tracking-tight shadow-[0px_4px_16px_rgba(0,0,0,0.06)]">
         <BreadCrumbs
           type="user"
           last_breadcrumb={session?.user?.username}
         ></BreadCrumbs>
         <div className="my-2 tracking-tighter">
-          <div className="w-100 flex justify-between">
-            <div className="pt-3 flex font-bold text-4xl">Account Settings</div>
+          <div className="flex w-100 justify-between">
+            <div className="flex pt-3 text-4xl font-bold">Account Settings</div>
           </div>
         </div>
-        <div className="flex space-x-5 font-black text-sm">
+        <div className="flex space-x-5 text-sm font-black">
           <Link
             href={
               getUriWithOrg(params.orgslug, '') +
@@ -40,13 +40,13 @@ function SettingsPage(props: { params: Promise<SettingsParams> }) {
             }
           >
             <div
-              className={`py-2 w-fit text-center border-black transition-all ease-linear ${
+              className={`w-fit border-black py-2 text-center transition-all ease-linear ${
                 params.subpage.toString() === 'general'
                   ? 'border-b-4'
                   : 'opacity-50'
               } cursor-pointer`}
             >
-              <div className="flex items-center space-x-2.5 mx-2">
+              <div className="mx-2 flex items-center space-x-2.5">
                 <Info size={16} />
                 <div>General</div>
               </div>
@@ -59,13 +59,13 @@ function SettingsPage(props: { params: Promise<SettingsParams> }) {
             }
           >
             <div
-              className={`flex space-x-4 py-2 w-fit text-center border-black transition-all ease-linear ${
+              className={`flex w-fit space-x-4 border-black py-2 text-center transition-all ease-linear ${
                 params.subpage.toString() === 'security'
                   ? 'border-b-4'
                   : 'opacity-50'
               } cursor-pointer`}
             >
-              <div className="flex items-center space-x-2.5 mx-2">
+              <div className="mx-2 flex items-center space-x-2.5">
                 <Lock size={16} />
                 <div>Password</div>
               </div>

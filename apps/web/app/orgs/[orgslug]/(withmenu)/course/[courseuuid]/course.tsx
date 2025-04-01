@@ -72,10 +72,10 @@ const CourseClient = (props: any) => {
       ) : (
         <>
           <GeneralWrapperStyled>
-            <div className="pb-3 flex flex-col md:flex-row justify-between items-start md:items-center">
+            <div className="flex flex-col items-start justify-between pb-3 md:flex-row md:items-center">
               <div>
-                <p className="text-md font-bold text-gray-400 pb-2">Course</p>
-                <h1 className="text-3xl md:text-3xl -mt-3 font-bold">
+                <p className="text-md pb-2 font-bold text-gray-400">Course</p>
+                <h1 className="-mt-3 text-3xl font-bold md:text-3xl">
                   {course.name}
                 </h1>
               </div>
@@ -90,7 +90,7 @@ const CourseClient = (props: any) => {
 
             {props.course?.thumbnail_image && org ? (
               <div
-                className="inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl relative w-auto h-[200px] md:h-[400px] bg-cover bg-center mb-4"
+                className="relative inset-0 mb-4 h-[200px] w-auto rounded-lg bg-cover bg-center shadow-xl ring-1 ring-black/10 ring-inset md:h-[400px]"
                 style={{
                   backgroundImage: `url(${getCourseThumbnailMediaDirectory(
                     org?.org_uuid,
@@ -101,7 +101,7 @@ const CourseClient = (props: any) => {
               ></div>
             ) : (
               <div
-                className="inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl relative w-auto h-[400px] bg-cover bg-center mb-4"
+                className="relative inset-0 mb-4 h-[400px] w-auto rounded-lg bg-cover bg-center shadow-xl ring-1 ring-black/10 ring-inset"
                 style={{
                   backgroundImage: `url('../empty_thumbnail.png')`,
                   backgroundSize: 'auto',
@@ -115,11 +115,11 @@ const CourseClient = (props: any) => {
               course={course}
             />
 
-            <div className="flex flex-col md:flex-row md:space-x-10 space-y-6 md:space-y-0 pt-10">
-              <div className="course_metadata_left w-full md:basis-3/4 space-y-2">
+            <div className="flex flex-col space-y-6 pt-10 md:flex-row md:space-y-0 md:space-x-10">
+              <div className="course_metadata_left w-full space-y-2 md:basis-3/4">
                 <h2 className="py-3 text-2xl font-bold">About</h2>
-                <div className="bg-white shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40 rounded-lg overflow-hidden">
-                  <p className="py-5 px-5 whitespace-pre-wrap">
+                <div className="overflow-hidden rounded-lg bg-white shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40">
+                  <p className="px-5 py-5 whitespace-pre-wrap">
                     {course.about}
                   </p>
                 </div>
@@ -129,7 +129,7 @@ const CourseClient = (props: any) => {
                     <h2 className="py-3 text-2xl font-bold">
                       What you will learn
                     </h2>
-                    <div className="bg-white shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40 rounded-lg overflow-hidden px-5 py-5 space-y-2">
+                    <div className="space-y-2 overflow-hidden rounded-lg bg-white px-5 py-5 shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40">
                       {learnings.map((learning: any) => {
                         // Handle both new format (object with text and emoji) and legacy format (string)
                         const learningText =
@@ -148,9 +148,9 @@ const CourseClient = (props: any) => {
                         return (
                           <div
                             key={learningId}
-                            className="flex space-x-2 items-center font-semibold text-gray-500"
+                            className="flex items-center space-x-2 font-semibold text-gray-500"
                           >
-                            <div className="px-2 py-2 rounded-full">
+                            <div className="rounded-full px-2 py-2">
                               {learningEmoji ? (
                                 <span>{learningEmoji}</span>
                               ) : (
@@ -163,7 +163,7 @@ const CourseClient = (props: any) => {
                                 href={learning.link}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-blue-500 hover:underline text-sm"
+                                className="text-sm text-blue-500 hover:underline"
                               >
                                 <span className="sr-only">
                                   Link to {learningText}
@@ -178,21 +178,21 @@ const CourseClient = (props: any) => {
                   </div>
                 )}
 
-                <h2 className="py-3 text-xl md:text-2xl font-bold">
+                <h2 className="py-3 text-xl font-bold md:text-2xl">
                   Course Lessons
                 </h2>
-                <div className="bg-white shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40 rounded-lg overflow-hidden">
+                <div className="overflow-hidden rounded-lg bg-white shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40">
                   {course.chapters.map((chapter: any) => {
                     return (
                       <div
                         key={chapter.chapter_uuid || `chapter-${chapter.name}`}
                         className=""
                       >
-                        <div className="flex text-lg py-4 px-4 outline outline-1 outline-neutral-200/40 font-bold bg-neutral-50 text-neutral-600 items-center">
-                          <h3 className="grow mr-3 break-words">
+                        <div className="flex items-center bg-neutral-50 px-4 py-4 text-lg font-bold text-neutral-600 outline outline-1 outline-neutral-200/40">
+                          <h3 className="mr-3 grow break-words">
                             {chapter.name}
                           </h3>
-                          <p className="text-sm font-normal text-neutral-400 px-3 py-[2px] outline-1 outline outline-neutral-200 rounded-full whitespace-nowrap shrink-0">
+                          <p className="shrink-0 rounded-full px-3 py-[2px] text-sm font-normal whitespace-nowrap text-neutral-400 outline outline-1 outline-neutral-200">
                             {chapter.activities.length} Activities
                           </p>
                         </div>
@@ -203,12 +203,12 @@ const CourseClient = (props: any) => {
                                 key={activity.activity_uuid}
                                 className="activity-container"
                               >
-                                <p className="flex text-md"></p>
-                                <div className="flex space-x-1 py-2 px-4 items-center">
-                                  <div className="courseicon items-center flex space-x-2 text-neutral-400">
+                                <p className="text-md flex"></p>
+                                <div className="flex items-center space-x-1 px-4 py-2">
+                                  <div className="courseicon flex items-center space-x-2 text-neutral-400">
                                     {activity.activity_type ===
                                       'TYPE_DYNAMIC' && (
-                                      <div className="bg-gray-100 px-2 py-2 rounded-full">
+                                      <div className="rounded-full bg-gray-100 px-2 py-2">
                                         <Sparkles
                                           className="text-gray-400"
                                           size={13}
@@ -217,7 +217,7 @@ const CourseClient = (props: any) => {
                                     )}
                                     {activity.activity_type ===
                                       'TYPE_VIDEO' && (
-                                      <div className="bg-gray-100 px-2 py-2 rounded-full">
+                                      <div className="rounded-full bg-gray-100 px-2 py-2">
                                         <Video
                                           className="text-gray-400"
                                           size={13}
@@ -226,7 +226,7 @@ const CourseClient = (props: any) => {
                                     )}
                                     {activity.activity_type ===
                                       'TYPE_DOCUMENT' && (
-                                      <div className="bg-gray-100 px-2 py-2 rounded-full">
+                                      <div className="rounded-full bg-gray-100 px-2 py-2">
                                         <File
                                           className="text-gray-400"
                                           size={13}
@@ -235,7 +235,7 @@ const CourseClient = (props: any) => {
                                     )}
                                     {activity.activity_type ===
                                       'TYPE_ASSIGNMENT' && (
-                                      <div className="bg-gray-100 px-2 py-2 rounded-full">
+                                      <div className="rounded-full bg-gray-100 px-2 py-2">
                                         <Backpack
                                           className="text-gray-400"
                                           size={13}
@@ -244,7 +244,7 @@ const CourseClient = (props: any) => {
                                     )}
                                   </div>
                                   <Link
-                                    className="flex font-semibold grow pl-2 text-neutral-500"
+                                    className="flex grow pl-2 font-semibold text-neutral-500"
                                     href={
                                       getUriWithOrg(orgslug, '') +
                                       `/course/${courseuuid}/activity/${activity.activity_uuid.replace(
@@ -257,7 +257,7 @@ const CourseClient = (props: any) => {
                                   >
                                     <p>{activity.name}</p>
                                   </Link>
-                                  <div className="flex ">
+                                  <div className="flex">
                                     {activity.activity_type ===
                                       'TYPE_DYNAMIC' && (
                                       <div>
@@ -273,7 +273,7 @@ const CourseClient = (props: any) => {
                                           rel="noopener noreferrer"
                                           prefetch={false}
                                         >
-                                          <div className="text-xs bg-gray-100 text-gray-400 font-bold px-2 py-1 rounded-full flex space-x-1 items-center">
+                                          <div className="flex items-center space-x-1 rounded-full bg-gray-100 px-2 py-1 text-xs font-bold text-gray-400">
                                             <p>Page</p>
                                             <ArrowRight size={13} />
                                           </div>
@@ -295,7 +295,7 @@ const CourseClient = (props: any) => {
                                           rel="noopener noreferrer"
                                           prefetch={false}
                                         >
-                                          <div className="text-xs bg-gray-100 text-gray-400 font-bold px-2 py-1 rounded-full flex space-x-1 items-center">
+                                          <div className="flex items-center space-x-1 rounded-full bg-gray-100 px-2 py-1 text-xs font-bold text-gray-400">
                                             <p>Video</p>
                                             <ArrowRight size={13} />
                                           </div>
@@ -317,7 +317,7 @@ const CourseClient = (props: any) => {
                                           rel="noopener noreferrer"
                                           prefetch={false}
                                         >
-                                          <div className="text-xs bg-gray-100 text-gray-400 font-bold px-2 py-1 rounded-full flex space-x-1 items-center">
+                                          <div className="flex items-center space-x-1 rounded-full bg-gray-100 px-2 py-1 text-xs font-bold text-gray-400">
                                             <p>Document</p>
                                             <ArrowRight size={13} />
                                           </div>
@@ -339,7 +339,7 @@ const CourseClient = (props: any) => {
                                           rel="noopener noreferrer"
                                           prefetch={false}
                                         >
-                                          <div className="text-xs bg-gray-100 text-gray-400 font-bold px-2 py-1 rounded-full flex space-x-1 items-center">
+                                          <div className="flex items-center space-x-1 rounded-full bg-gray-100 px-2 py-1 text-xs font-bold text-gray-400">
                                             <p>Assignment</p>
                                             <ArrowRight size={13} />
                                           </div>
@@ -368,7 +368,7 @@ const CourseClient = (props: any) => {
           </GeneralWrapperStyled>
 
           {isMobile && (
-            <div className="fixed bottom-0 left-0 right-0  p-4 z-50">
+            <div className="fixed right-0 bottom-0 left-0 z-50 p-4">
               <CourseActionsMobile
                 courseuuid={courseuuid}
                 orgslug={orgslug}

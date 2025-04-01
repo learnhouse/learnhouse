@@ -65,7 +65,7 @@ function RolesUpdate(props: Props) {
       <FormLayout onSubmit={handleSubmit}>
         <FormField name="course-visibility">
           {error ? (
-            <div className="text-red-500 font-bold text-xs px-3 py-2 bg-red-100 rounded-md">
+            <div className="rounded-md bg-red-100 px-3 py-2 text-xs font-bold text-red-500">
               {error}
             </div>
           ) : (
@@ -83,7 +83,7 @@ function RolesUpdate(props: Props) {
             <select
               onChange={handleAssignedRole}
               defaultValue={assignedRole}
-              className="border border-gray-300 rounded-md p-2"
+              className="rounded-md border border-gray-300 p-2"
               required
             >
               <option value="role_global_admin">Admin </option>

@@ -49,12 +49,12 @@ function TrailCourseElement(props: TrailCourseElementProps) {
 
   return (
     <div
-      className="trailcoursebox flex p-3 bg-white rounded-xl"
+      className="trailcoursebox flex rounded-xl bg-white p-3"
       style={{ boxShadow: '0px 4px 7px 0px rgba(0, 0, 0, 0.03)' }}
     >
       <Link href={getUriWithOrg(props.orgslug, '/course/' + courseid)}>
         <div
-          className="course_tumbnail inset-0 ring-1 ring-inset ring-black/10 rounded-lg relative h-[50px] w-[72px] bg-cover bg-center"
+          className="course_tumbnail relative inset-0 h-[50px] w-[72px] rounded-lg bg-cover bg-center ring-1 ring-black/10 ring-inset"
           style={{
             backgroundImage: `url(${getCourseThumbnailMediaDirectory(
               org.org_uuid,
@@ -65,21 +65,21 @@ function TrailCourseElement(props: TrailCourseElementProps) {
           }}
         ></div>
       </Link>
-      <div className="course_meta pl-5 grow space-y-1">
+      <div className="course_meta grow space-y-1 pl-5">
         <div className="course_top">
           <div className="course_info flex">
-            <div className="course_basic flex flex-col flex-end -space-y-2">
-              <p className="p-0 font-bold text-sm text-gray-700">Course</p>
+            <div className="course_basic flex-end flex flex-col -space-y-2">
+              <p className="p-0 text-sm font-bold text-gray-700">Course</p>
               <div className="course_progress flex items-center space-x-2">
-                <h2 className="font-bold text-xl">{course.name}</h2>
-                <div className="bg-slate-300 rounded-full w-[10px] h-[5px]"></div>
+                <h2 className="text-xl font-bold">{course.name}</h2>
+                <div className="h-[5px] w-[10px] rounded-full bg-slate-300"></div>
                 <h2>{course_progress}%</h2>
               </div>
             </div>
-            <div className="course_actions grow flex flex-row-reverse">
+            <div className="course_actions flex grow flex-row-reverse">
               <button
                 onClick={() => quitCourse(course.course_uuid)}
-                className="bg-red-200 text-red-700 hover:bg-red-300  rounded-full text-xs h-5 px-2 font-bold"
+                className="h-5 rounded-full bg-red-200 px-2 text-xs font-bold text-red-700 hover:bg-red-300"
               >
                 Quit Course
               </button>
@@ -87,9 +87,9 @@ function TrailCourseElement(props: TrailCourseElementProps) {
           </div>
         </div>
         <div className="course_progress indicator w-full">
-          <div className="w-full bg-gray-200 rounded-full h-1.5 ">
+          <div className="h-1.5 w-full rounded-full bg-gray-200">
             <div
-              className={`bg-teal-600 h-1.5 rounded-full`}
+              className={`h-1.5 rounded-full bg-teal-600`}
               style={{ width: `${course_progress}%` }}
             ></div>
           </div>

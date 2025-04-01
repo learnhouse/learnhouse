@@ -86,12 +86,12 @@ function CoursePaidOptions({ course }: CoursePaidOptionsProps) {
       {linkedProducts.data.map((product: any) => (
         <div
           key={product.id}
-          className="bg-slate-50/30 p-4 rounded-lg nice-shadow flex flex-col"
+          className="nice-shadow flex flex-col rounded-lg bg-slate-50/30 p-4"
         >
-          <div className="flex justify-between items-start mb-2">
-            <div className="flex flex-col space-y-1 items-start">
+          <div className="mb-2 flex items-start justify-between">
+            <div className="flex flex-col items-start space-y-1">
               <Badge
-                className="w-fit flex items-center space-x-2 bg-gray-100/50"
+                className="flex w-fit items-center space-x-2 bg-gray-100/50"
                 variant="outline"
               >
                 {product.product_type === 'subscription' ? (
@@ -106,7 +106,7 @@ function CoursePaidOptions({ course }: CoursePaidOptionsProps) {
                   {product.product_type === 'subscription' && ' (per month)'}
                 </span>
               </Badge>
-              <h3 className="font-bold text-lg">{product.name}</h3>
+              <h3 className="text-lg font-bold">{product.name}</h3>
             </div>
           </div>
 
@@ -119,7 +119,7 @@ function CoursePaidOptions({ course }: CoursePaidOptionsProps) {
               <p className="text-gray-600">{product.description}</p>
               {product.benefits && (
                 <div className="mt-2">
-                  <h4 className="font-semibold text-sm">Benefits:</h4>
+                  <h4 className="text-sm font-semibold">Benefits:</h4>
                   <p className="text-sm text-gray-600">{product.benefits}</p>
                 </div>
               )}
@@ -129,7 +129,7 @@ function CoursePaidOptions({ course }: CoursePaidOptionsProps) {
           <div className="mt-2">
             <button
               onClick={() => toggleProductExpansion(product.id)}
-              className="text-slate-500 hover:text-slate-700 text-sm flex items-center"
+              className="flex items-center text-sm text-slate-500 hover:text-slate-700"
             >
               {expandedProducts[product.id] ? (
                 <>
@@ -145,20 +145,20 @@ function CoursePaidOptions({ course }: CoursePaidOptionsProps) {
             </button>
           </div>
 
-          <div className="mt-2 flex items-center justify-between bg-gray-100 rounded-md p-2">
+          <div className="mt-2 flex items-center justify-between rounded-md bg-gray-100 p-2">
             <span className="text-sm text-gray-600">
               {product.price_type === 'customer_choice'
                 ? 'Minimum Price:'
                 : 'Price:'}
             </span>
             <div className="flex flex-col items-end">
-              <span className="font-semibold text-lg">
+              <span className="text-lg font-semibold">
                 {new Intl.NumberFormat('en-US', {
                   style: 'currency',
                   currency: product.currency,
                 }).format(product.amount)}
                 {product.product_type === 'subscription' && (
-                  <span className="text-sm text-gray-500 ml-1">/month</span>
+                  <span className="ml-1 text-sm text-gray-500">/month</span>
                 )}
               </span>
               {product.price_type === 'customer_choice' && (

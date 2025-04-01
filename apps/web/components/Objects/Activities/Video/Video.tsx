@@ -19,10 +19,10 @@ function VideoActivity({ activity, course }: { activity: any; course: any }) {
       {activity && (
         <>
           {activity.activity_sub_type === 'SUBTYPE_VIDEO_HOSTED' && (
-            <div className="my-3 md:my-5 w-full">
-              <div className="relative w-full aspect-video rounded-lg overflow-hidden ring-1 ring-gray-300/30 dark:ring-gray-600/30 sm:ring-gray-200/10 sm:dark:ring-gray-700/20 shadow-xs sm:shadow-none">
+            <div className="my-3 w-full md:my-5">
+              <div className="relative aspect-video w-full overflow-hidden rounded-lg shadow-xs ring-1 ring-gray-300/30 sm:shadow-none sm:ring-gray-200/10 dark:ring-gray-600/30 sm:dark:ring-gray-700/20">
                 <video
-                  className="w-full h-full object-cover"
+                  className="h-full w-full object-cover"
                   controls
                   src={getActivityMediaDirectory(
                     org?.org_uuid,
@@ -36,10 +36,10 @@ function VideoActivity({ activity, course }: { activity: any; course: any }) {
             </div>
           )}
           {activity.activity_sub_type === 'SUBTYPE_VIDEO_YOUTUBE' && (
-            <div className="my-3 md:my-5 w-full">
-              <div className="relative w-full aspect-video rounded-lg overflow-hidden ring-1 ring-gray-300/30 dark:ring-gray-600/30 sm:ring-gray-200/10 sm:dark:ring-gray-700/20 shadow-xs sm:shadow-none">
+            <div className="my-3 w-full md:my-5">
+              <div className="relative aspect-video w-full overflow-hidden rounded-lg shadow-xs ring-1 ring-gray-300/30 sm:shadow-none sm:ring-gray-200/10 dark:ring-gray-600/30 sm:dark:ring-gray-700/20">
                 <YouTube
-                  className="w-full h-full"
+                  className="h-full w-full"
                   opts={{
                     width: '100%',
                     height: '100%',

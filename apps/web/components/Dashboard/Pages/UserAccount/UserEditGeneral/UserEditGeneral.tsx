@@ -93,7 +93,7 @@ function UserEditGeneral() {
   useEffect(() => {}, [session, session.data])
 
   return (
-    <div className="sm:mx-10 mx-0 bg-white rounded-xl nice-shadow">
+    <div className="nice-shadow mx-0 rounded-xl bg-white sm:mx-10">
       {session.data.user && (
         <Formik<FormValues>
           enableReinitialize
@@ -129,18 +129,18 @@ function UserEditGeneral() {
           {({ isSubmitting, values, handleChange, errors, touched }) => (
             <Form>
               <div className="flex flex-col gap-0">
-                <div className="flex flex-col bg-gray-50 -space-y-1 px-5 py-3 mx-3 my-3 rounded-md">
-                  <h1 className="font-bold text-xl text-gray-800">
+                <div className="mx-3 my-3 flex flex-col -space-y-1 rounded-md bg-gray-50 px-5 py-3">
+                  <h1 className="text-xl font-bold text-gray-800">
                     Account Settings
                   </h1>
-                  <h2 className="text-gray-500 text-md">
+                  <h2 className="text-md text-gray-500">
                     Manage your personal information and preferences
                   </h2>
                 </div>
 
-                <div className="flex flex-col lg:flex-row mt-0 mx-5 my-5 gap-8">
+                <div className="mx-5 my-5 mt-0 flex flex-col gap-8 lg:flex-row">
                   {/* Profile Information Section */}
-                  <div className="flex-1 min-w-0 space-y-4">
+                  <div className="min-w-0 flex-1 space-y-4">
                     <div>
                       <Label htmlFor="email">Email</Label>
                       <Input
@@ -152,12 +152,12 @@ function UserEditGeneral() {
                         placeholder="Your email address"
                       />
                       {touched.email && errors.email && (
-                        <p className="text-red-500 text-sm mt-1">
+                        <p className="mt-1 text-sm text-red-500">
                           {errors.email}
                         </p>
                       )}
                       {values.email !== session.data.user.email && (
-                        <div className="flex items-center space-x-2 mt-2 text-amber-600 bg-amber-50 p-2 rounded-md">
+                        <div className="mt-2 flex items-center space-x-2 rounded-md bg-amber-50 p-2 text-amber-600">
                           <AlertTriangle size={16} />
                           <span className="text-sm">
                             You will be logged out after changing your email
@@ -176,7 +176,7 @@ function UserEditGeneral() {
                         placeholder="Your username"
                       />
                       {touched.username && errors.username && (
-                        <p className="text-red-500 text-sm mt-1">
+                        <p className="mt-1 text-sm text-red-500">
                           {errors.username}
                         </p>
                       )}
@@ -192,7 +192,7 @@ function UserEditGeneral() {
                         placeholder="Your first name"
                       />
                       {touched.first_name && errors.first_name && (
-                        <p className="text-red-500 text-sm mt-1">
+                        <p className="mt-1 text-sm text-red-500">
                           {errors.first_name}
                         </p>
                       )}
@@ -208,7 +208,7 @@ function UserEditGeneral() {
                         placeholder="Your last name"
                       />
                       {touched.last_name && errors.last_name && (
-                        <p className="text-red-500 text-sm mt-1">
+                        <p className="mt-1 text-sm text-red-500">
                           {errors.last_name}
                         </p>
                       )}
@@ -217,7 +217,7 @@ function UserEditGeneral() {
                     <div>
                       <Label htmlFor="bio">
                         Bio
-                        <span className="text-gray-500 text-sm ml-2">
+                        <span className="ml-2 text-sm text-gray-500">
                           ({400 - (values.bio?.length || 0)} characters left)
                         </span>
                       </Label>
@@ -231,7 +231,7 @@ function UserEditGeneral() {
                         maxLength={400}
                       />
                       {touched.bio && errors.bio && (
-                        <p className="text-red-500 text-sm mt-1">
+                        <p className="mt-1 text-sm text-red-500">
                           {errors.bio}
                         </p>
                       )}
@@ -239,12 +239,12 @@ function UserEditGeneral() {
                   </div>
 
                   {/* Profile Picture Section */}
-                  <div className="lg:w-80 w-full">
-                    <div className="bg-gray-50/50 p-6 rounded-lg nice-shadow h-full">
+                  <div className="w-full lg:w-80">
+                    <div className="nice-shadow h-full rounded-lg bg-gray-50/50 p-6">
                       <div className="flex flex-col items-center space-y-6">
                         <Label className="font-bold">Profile Picture</Label>
                         {error && (
-                          <div className="flex items-center bg-red-200 rounded-md text-red-950 px-4 py-2 text-sm">
+                          <div className="flex items-center rounded-md bg-red-200 px-4 py-2 text-sm text-red-950">
                             <FileWarning size={16} className="mr-2" />
                             <span className="font-semibold first-letter:uppercase">
                               {error}
@@ -252,7 +252,7 @@ function UserEditGeneral() {
                           </div>
                         )}
                         {success && (
-                          <div className="flex items-center bg-green-200 rounded-md text-green-950 px-4 py-2 text-sm">
+                          <div className="flex items-center rounded-md bg-green-200 px-4 py-2 text-sm text-green-950">
                             <Check size={16} className="mr-2" />
                             <span className="font-semibold first-letter:uppercase">
                               {success}
@@ -269,7 +269,7 @@ function UserEditGeneral() {
                           <UserAvatar border="border-8" width={120} />
                         )}
                         {isLoading ? (
-                          <div className="font-bold animate-pulse antialiased bg-green-200 text-gray text-sm rounded-md px-4 py-2 flex items-center">
+                          <div className="text-gray flex animate-pulse items-center rounded-md bg-green-200 px-4 py-2 text-sm font-bold antialiased">
                             <ArrowBigUpDash size={16} className="mr-2" />
                             <span>Uploading</span>
                           </div>
@@ -304,7 +304,7 @@ function UserEditGeneral() {
                   </div>
                 </div>
 
-                <div className="flex flex-row-reverse mt-0 mx-5 mb-5">
+                <div className="mx-5 mt-0 mb-5 flex flex-row-reverse">
                   <Button
                     type="submit"
                     disabled={isSubmitting}

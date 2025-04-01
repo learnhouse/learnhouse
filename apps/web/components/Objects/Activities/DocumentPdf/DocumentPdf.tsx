@@ -14,9 +14,9 @@ function DocumentPdfActivity({
   React.useEffect(() => {}, [activity, org])
 
   return (
-    <div className="m-8 bg-zinc-900 rounded-md mt-14">
+    <div className="m-8 mt-14 rounded-md bg-zinc-900">
       <iframe
-        className="rounded-lg w-full h-[900px]"
+        className="h-[900px] w-full rounded-lg"
         src={getActivityMediaDirectory(
           org?.org_uuid,
           course?.course_uuid,

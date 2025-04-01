@@ -32,8 +32,8 @@ function PageLoading() {
       transition={{ type: 'linear' }}
       className=""
     >
-      <div className="max-w-7xl mx-auto px-4 py-20 transition-all">
-        <div className="flex flex-col items-center justify-center h-40">
+      <div className="mx-auto max-w-7xl px-4 py-20 transition-all">
+        <div className="flex h-40 flex-col items-center justify-center">
           {/* Animated dots */}
           <div className="flex space-x-4">
             {[0, 1, 2, 3, 4].map((i) => (
@@ -43,7 +43,7 @@ function PageLoading() {
                 variants={dotVariants}
                 initial="initial"
                 animate="animate"
-                className="w-4 h-4 rounded-full bg-gray-500 dark:bg-gray-400"
+                className="h-4 w-4 rounded-full bg-gray-500 dark:bg-gray-400"
               />
             ))}
           </div>

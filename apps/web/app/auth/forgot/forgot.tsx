@@ -55,7 +55,7 @@ function ForgotPasswordClient() {
     },
   })
   return (
-    <div className="grid grid-flow-col justify-stretch h-screen">
+    <div className="grid h-screen grid-flow-col justify-stretch">
       <div
         className="right-login-part"
         style={{
@@ -74,8 +74,8 @@ function ForgotPasswordClient() {
             />
           </Link>
         </div>
-        <div className="ml-10 h-4/6 flex flex-row text-white">
-          <div className="m-auto flex space-x-4 items-center flex-wrap">
+        <div className="ml-10 flex h-4/6 flex-row text-white">
+          <div className="m-auto flex flex-wrap items-center space-x-4">
             <div className="shadow-[0px_4px_16px_rgba(0,0,0,0.02)]">
               {org?.logo_image ? (
                 <img
@@ -85,7 +85,7 @@ function ForgotPasswordClient() {
                   )}`}
                   alt="Learnhouse"
                   style={{ width: 'auto', height: 70 }}
-                  className="rounded-xl shadow-xl inset-0 ring-1 ring-inset ring-black/10 bg-white"
+                  className="inset-0 rounded-xl bg-white shadow-xl ring-1 ring-black/10 ring-inset"
                 />
               ) : (
                 <Image
@@ -97,28 +97,28 @@ function ForgotPasswordClient() {
                 />
               )}
             </div>
-            <div className="font-bold text-xl">{org?.name}</div>
+            <div className="text-xl font-bold">{org?.name}</div>
           </div>
         </div>
       </div>
-      <div className="left-login-part bg-white flex flex-row">
+      <div className="left-login-part flex flex-row bg-white">
         <div className="login-form m-auto w-72">
-          <h1 className="text-2xl font-bold mb-4">Forgot Password</h1>
-          <p className="text-sm mb-4">
+          <h1 className="mb-4 text-2xl font-bold">Forgot Password</h1>
+          <p className="mb-4 text-sm">
             Enter your email address and we will send you a link to reset your
             password
           </p>
 
           {error && (
-            <div className="flex justify-center bg-red-200 rounded-md text-red-950 space-x-2 items-center p-4 transition-all shadow-xs">
+            <div className="flex items-center justify-center space-x-2 rounded-md bg-red-200 p-4 text-red-950 shadow-xs transition-all">
               <AlertTriangle size={18} />
-              <div className="font-bold text-sm">{error}</div>
+              <div className="text-sm font-bold">{error}</div>
             </div>
           )}
           {message && (
-            <div className="flex justify-center bg-green-200 rounded-md text-green-950 space-x-2 items-center p-4 transition-all shadow-xs">
+            <div className="flex items-center justify-center space-x-2 rounded-md bg-green-200 p-4 text-green-950 shadow-xs transition-all">
               <Info size={18} />
-              <div className="font-bold text-sm">{message}</div>
+              <div className="text-sm font-bold">{message}</div>
             </div>
           )}
           <FormLayout onSubmit={formik.handleSubmit}>
@@ -136,9 +136,9 @@ function ForgotPasswordClient() {
                 />
               </Form.Control>
             </FormField>
-            <div className="flex  py-4">
+            <div className="flex py-4">
               <Form.Submit asChild>
-                <button className="w-full bg-black text-white font-bold text-center p-2 rounded-md shadow-md hover:cursor-pointer">
+                <button className="w-full rounded-md bg-black p-2 text-center font-bold text-white shadow-md hover:cursor-pointer">
                   {isSubmitting ? 'Loading...' : 'Send Reset Link'}
                 </button>
               </Form.Submit>

@@ -16,7 +16,7 @@ const FileUploadBlockInput: React.FC<InputHTMLAttributes<HTMLInputElement>> = ({
   return (
     <input
       className={cn(
-        'p-3 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 hover:file:cursor-pointer file:file:bg-gray-200 cursor-pointer file:text-gray-500',
+        'cursor-pointer rounded-lg p-3 file:mr-4 file:rounded-full file:border-0 file:file:bg-gray-200 file:px-4 file:py-2 file:text-gray-500 hover:file:cursor-pointer',
         className
       )}
       onChange={onChange}
@@ -33,7 +33,7 @@ const FileUploadBlockButton: React.FC<
   return (
     <button
       className={cn(
-        'p-2 px-3 bg-gray-200 rounded-lg text-gray-500 enabled:hover:bg-gray-300 transition space-x-2 items-center flex disabled:opacity-50 disabled:cursor-not-allowed',
+        'flex items-center space-x-2 rounded-lg bg-gray-200 p-2 px-3 text-gray-500 transition enabled:hover:bg-gray-300 disabled:cursor-not-allowed disabled:opacity-50',
         className
       )}
       onClick={onClick}
@@ -87,7 +87,7 @@ function FileUploadBlockWrapper({
   return (
     isEmpty && (
       <div
-        className="flex items-center justify-center space-x-3 py-7 bg-gray-50 rounded-xl text-gray-900 px-3 border-dashed border-gray-150 border-2 text-sm"
+        className="border-gray-150 flex items-center justify-center space-x-3 rounded-xl border-2 border-dashed bg-gray-50 px-3 py-7 text-sm text-gray-900"
         contentEditable={false}
       >
         <FileUploadBlock isEmpty {...props}>

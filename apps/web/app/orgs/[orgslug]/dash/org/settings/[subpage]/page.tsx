@@ -46,11 +46,11 @@ function TabLink({
   return (
     <Link href={getUriWithOrg(orgslug, '') + `/dash/org/settings/${tab.id}`}>
       <div
-        className={`py-2 w-fit text-center border-black transition-all ease-linear ${
+        className={`w-fit border-black py-2 text-center transition-all ease-linear ${
           isActive ? 'border-b-4' : 'opacity-50'
         } cursor-pointer`}
       >
-        <div className="flex items-center space-x-2.5 mx-2.5">
+        <div className="mx-2.5 flex items-center space-x-2.5">
           <tab.icon size={16} />
           <div>{tab.label}</div>
         </div>
@@ -86,19 +86,19 @@ function OrgPage(props: { params: Promise<OrgParams> }) {
 
   return (
     <div className="h-full w-full bg-[#f8f8f8]">
-      <div className="pl-10 pr-10  tracking-tight bg-[#fcfbfc] nice-shadow">
+      <div className="nice-shadow bg-[#fcfbfc] pr-10 pl-10 tracking-tight">
         <BreadCrumbs type="org"></BreadCrumbs>
-        <div className="my-2  py-2">
-          <div className="w-100 flex flex-col space-y-1">
-            <div className="pt-3 flex font-bold text-4xl tracking-tighter">
+        <div className="my-2 py-2">
+          <div className="flex w-100 flex-col space-y-1">
+            <div className="flex pt-3 text-4xl font-bold tracking-tighter">
               {H1Label}
             </div>
-            <div className="flex font-medium text-gray-400 text-md">
+            <div className="text-md flex font-medium text-gray-400">
               {H2Label}{' '}
             </div>
           </div>
         </div>
-        <div className="flex space-x-0.5 font-black text-sm">
+        <div className="flex space-x-0.5 text-sm font-black">
           {SETTING_TABS.map((tab) => (
             <TabLink
               key={tab.id}

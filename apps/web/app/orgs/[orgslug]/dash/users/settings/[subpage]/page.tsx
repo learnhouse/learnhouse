@@ -58,9 +58,9 @@ function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
   if (isMobile) {
     // TODO: Work on a better mobile experience
     return (
-      <div className="h-screen w-full bg-[#f8f8f8] flex items-center justify-center p-4">
-        <div className="bg-white p-6 rounded-lg shadow-md text-center">
-          <h2 className="text-xl font-bold mb-4">Desktop Only</h2>
+      <div className="flex h-screen w-full items-center justify-center bg-[#f8f8f8] p-4">
+        <div className="rounded-lg bg-white p-6 text-center shadow-md">
+          <h2 className="mb-4 text-xl font-bold">Desktop Only</h2>
           <Monitor className="mx-auto my-5" size={60} />
           <p>This page is only accessible from a desktop device.</p>
           <p>Please switch to a desktop to view and manage user settings.</p>
@@ -70,33 +70,33 @@ function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
   }
 
   return (
-    <div className="h-screen w-full bg-[#f8f8f8] grid grid-rows-[auto_1fr]">
-      <div className="pl-10 pr-10  tracking-tight bg-[#fcfbfc] z-10 shadow-[0px_4px_16px_rgba(0,0,0,0.06)]">
+    <div className="grid h-screen w-full grid-rows-[auto_1fr] bg-[#f8f8f8]">
+      <div className="z-10 bg-[#fcfbfc] pr-10 pl-10 tracking-tight shadow-[0px_4px_16px_rgba(0,0,0,0.06)]">
         <BreadCrumbs type="orgusers"></BreadCrumbs>
-        <div className="my-2  py-3">
-          <div className="w-100 flex flex-col space-y-1">
-            <div className="pt-3 flex font-bold text-4xl tracking-tighter">
+        <div className="my-2 py-3">
+          <div className="flex w-100 flex-col space-y-1">
+            <div className="flex pt-3 text-4xl font-bold tracking-tighter">
               {H1Label}
             </div>
-            <div className="flex font-medium text-gray-400 text-md">
+            <div className="text-md flex font-medium text-gray-400">
               {H2Label}{' '}
             </div>
           </div>
         </div>
-        <div className="flex space-x-5 font-black text-sm">
+        <div className="flex space-x-5 text-sm font-black">
           <Link
             href={
               getUriWithOrg(params.orgslug, '') + `/dash/users/settings/users`
             }
           >
             <div
-              className={`py-2 w-fit text-center border-black transition-all ease-linear ${
+              className={`w-fit border-black py-2 text-center transition-all ease-linear ${
                 params.subpage.toString() === 'users'
                   ? 'border-b-4'
                   : 'opacity-50'
               } cursor-pointer`}
             >
-              <div className="flex items-center space-x-2.5 mx-2">
+              <div className="mx-2 flex items-center space-x-2.5">
                 <Users size={16} />
                 <div>Users</div>
               </div>
@@ -109,13 +109,13 @@ function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
             }
           >
             <div
-              className={`py-2 w-fit text-center border-black transition-all ease-linear ${
+              className={`w-fit border-black py-2 text-center transition-all ease-linear ${
                 params.subpage.toString() === 'usergroups'
                   ? 'border-b-4'
                   : 'opacity-50'
               } cursor-pointer`}
             >
-              <div className="flex items-center space-x-2.5 mx-2">
+              <div className="mx-2 flex items-center space-x-2.5">
                 <SquareUserRound size={16} />
                 <div>UserGroups</div>
               </div>
@@ -127,13 +127,13 @@ function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
             }
           >
             <div
-              className={`py-2 w-fit text-center border-black transition-all ease-linear ${
+              className={`w-fit border-black py-2 text-center transition-all ease-linear ${
                 params.subpage.toString() === 'signups'
                   ? 'border-b-4'
                   : 'opacity-50'
               } cursor-pointer`}
             >
-              <div className="flex items-center space-x-2.5 mx-2">
+              <div className="mx-2 flex items-center space-x-2.5">
                 <ScanEye size={16} />
                 <div>Signups & Invite Codes</div>
               </div>
@@ -145,13 +145,13 @@ function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
             }
           >
             <div
-              className={`py-2 w-fit text-center border-black transition-all ease-linear ${
+              className={`w-fit border-black py-2 text-center transition-all ease-linear ${
                 params.subpage.toString() === 'add'
                   ? 'border-b-4'
                   : 'opacity-50'
               } cursor-pointer`}
             >
-              <div className="flex items-center space-x-2.5 mx-2">
+              <div className="mx-2 flex items-center space-x-2.5">
                 <UserPlus size={16} />
                 <div>Invite Members</div>
               </div>

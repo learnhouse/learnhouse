@@ -71,18 +71,18 @@ function Activity(props: any) {
     >
       {(provided) => (
         <div
-          className="flex flex-row py-2 my-2 rounded-md bg-gray-50 text-gray-500 hover:bg-gray-100 hover:scale-102 hover:shadow-sm space-x-1 w-auto items-center ring-1 ring-inset ring-gray-400/10 shadow-xs transition-all delay-100 duration-75 ease-linear"
+          className="my-2 flex w-auto flex-row items-center space-x-1 rounded-md bg-gray-50 py-2 text-gray-500 shadow-xs ring-1 ring-gray-400/10 transition-all delay-100 duration-75 ease-linear ring-inset hover:scale-102 hover:bg-gray-100 hover:shadow-sm"
           key={props.activity.id}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
           ref={provided.innerRef}
         >
-          <div className="px-3 text-gray-300 space-x-1 w-28">
+          <div className="w-28 space-x-1 px-3 text-gray-300">
             {props.activity.type === 'video' && (
               <>
-                <div className="flex space-x-2 items-center">
+                <div className="flex items-center space-x-2">
                   <Video size={16} />{' '}
-                  <div className="text-xs bg-gray-200 text-gray-400 font-bold px-2 py-1 rounded-full mx-auto justify-center align-middle">
+                  <div className="mx-auto justify-center rounded-full bg-gray-200 px-2 py-1 align-middle text-xs font-bold text-gray-400">
                     Video
                   </div>{' '}
                 </div>
@@ -90,11 +90,11 @@ function Activity(props: any) {
             )}
             {props.activity.type === 'documentpdf' && (
               <>
-                <div className="flex space-x-2 items-center">
+                <div className="flex items-center space-x-2">
                   <div className="w-[30px]">
                     <File size={16} />{' '}
                   </div>
-                  <div className="text-xs bg-gray-200 text-gray-400 font-bold px-2 py-1 rounded-full">
+                  <div className="rounded-full bg-gray-200 px-2 py-1 text-xs font-bold text-gray-400">
                     Document
                   </div>{' '}
                 </div>
@@ -102,9 +102,9 @@ function Activity(props: any) {
             )}
             {props.activity.type === 'dynamic' && (
               <>
-                <div className="flex space-x-2 items-center">
+                <div className="flex items-center space-x-2">
                   <Sparkles size={16} />{' '}
-                  <div className="text-xs bg-gray-200 text-gray-400 font-bold px-2 py-1 rounded-full">
+                  <div className="rounded-full bg-gray-200 px-2 py-1 text-xs font-bold text-gray-400">
                     Dynamic
                   </div>{' '}
                 </div>
@@ -112,12 +112,12 @@ function Activity(props: any) {
             )}
           </div>
 
-          <div className="grow items-center space-x-2 flex mx-auto justify-center">
+          <div className="mx-auto flex grow items-center justify-center space-x-2">
             {selectedActivity === props.activity.id ? (
-              <div className="chapter-modification-zone text-[7px] text-gray-600 shadow-inner bg-gray-200/60 py-1 px-4 rounded-lg space-x-3">
+              <div className="chapter-modification-zone space-x-3 rounded-lg bg-gray-200/60 px-4 py-1 text-[7px] text-gray-600 shadow-inner">
                 <input
                   type="text"
-                  className="bg-transparent outline-hidden text-xs text-gray-500"
+                  className="bg-transparent text-xs text-gray-500 outline-hidden"
                   placeholder="Activity name"
                   value={
                     modifiedActivity
@@ -164,10 +164,10 @@ function Activity(props: any) {
                       ''
                     )}/edit`
                   }
-                  className=" hover:cursor-pointer p-1 px-3 bg-sky-700 rounded-md items-center"
+                  className="items-center rounded-md bg-sky-700 p-1 px-3 hover:cursor-pointer"
                   rel="noopener noreferrer"
                 >
-                  <div className="text-sky-100 font-bold text-xs">Edit </div>
+                  <div className="text-xs font-bold text-sky-100">Edit </div>
                 </Link>
               </>
             )}
@@ -178,13 +178,13 @@ function Activity(props: any) {
                   props.courseid
                 }/activity/${props.activity.uuid.replace('activity_', '')}`
               }
-              className=" hover:cursor-pointer p-1 px-3 bg-gray-200 rounded-md"
+              className="rounded-md bg-gray-200 p-1 px-3 hover:cursor-pointer"
               rel="noopener noreferrer"
             >
               <Eye strokeWidth={2} size={15} className="text-gray-600" />
             </Link>
           </div>
-          <div className="flex flex-row pr-3 space-x-1 items-center">
+          <div className="flex flex-row items-center space-x-1 pr-3">
             <MoreVertical size={15} className="text-gray-300" />
             <ConfirmationModal
               confirmationMessage="Are you sure you want to delete this activity ?"
@@ -192,10 +192,10 @@ function Activity(props: any) {
               dialogTitle={'Delete ' + props.activity.name + ' ?'}
               dialogTrigger={
                 <div
-                  className=" hover:cursor-pointer p-1 px-5 bg-red-600 rounded-md"
+                  className="rounded-md bg-red-600 p-1 px-5 hover:cursor-pointer"
                   rel="noopener noreferrer"
                 >
-                  <X size={15} className="text-rose-200 font-bold" />
+                  <X size={15} className="font-bold text-rose-200" />
                 </div>
               }
               functionToExecute={() => removeActivity()}

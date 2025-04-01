@@ -23,13 +23,13 @@ function NewActivityModal({
   return (
     <>
       {selectedView === 'home' && (
-        <div className="grid grid-cols-4 gap-2 mt-2.5 w-full">
+        <div className="mt-2.5 grid w-full grid-cols-4 gap-2">
           <ActivityOption
             onClick={() => {
               setSelectedView('dynamic')
             }}
           >
-            <div className="h-20 rounded-lg m-0.5 flex flex-col items-center justify-end text-center bg-white hover:cursor-pointer">
+            <div className="m-0.5 flex h-20 flex-col items-center justify-end rounded-lg bg-white text-center hover:cursor-pointer">
               <Image
                 unoptimized
                 quality={100}
@@ -37,7 +37,7 @@ function NewActivityModal({
                 src={DynamicPageActivityImage}
               ></Image>
             </div>
-            <div className="flex text-sm h-5 font-medium text-gray-500 items-center justify-center text-center">
+            <div className="flex h-5 items-center justify-center text-center text-sm font-medium text-gray-500">
               Dynamic Page
             </div>
           </ActivityOption>
@@ -46,7 +46,7 @@ function NewActivityModal({
               setSelectedView('video')
             }}
           >
-            <div className="h-20 rounded-lg m-0.5 flex flex-col items-center justify-end text-center bg-white hover:cursor-pointer">
+            <div className="m-0.5 flex h-20 flex-col items-center justify-end rounded-lg bg-white text-center hover:cursor-pointer">
               <Image
                 unoptimized
                 quality={100}
@@ -54,7 +54,7 @@ function NewActivityModal({
                 src={VideoPageActivityImage}
               ></Image>
             </div>
-            <div className="flex text-sm h-5 font-medium text-gray-500 items-center justify-center text-center">
+            <div className="flex h-5 items-center justify-center text-center text-sm font-medium text-gray-500">
               Video
             </div>
           </ActivityOption>
@@ -63,7 +63,7 @@ function NewActivityModal({
               setSelectedView('documentpdf')
             }}
           >
-            <div className="h-20 rounded-lg m-0.5 flex flex-col items-center justify-end text-center bg-white hover:cursor-pointer">
+            <div className="m-0.5 flex h-20 flex-col items-center justify-end rounded-lg bg-white text-center hover:cursor-pointer">
               <Image
                 unoptimized
                 quality={100}
@@ -71,7 +71,7 @@ function NewActivityModal({
                 src={DocumentPdfPageActivityImage}
               ></Image>
             </div>
-            <div className="flex text-sm h-5 font-medium text-gray-500 items-center justify-center text-center">
+            <div className="flex h-5 items-center justify-center text-center text-sm font-medium text-gray-500">
               Document
             </div>
           </ActivityOption>
@@ -80,7 +80,7 @@ function NewActivityModal({
               setSelectedView('assignments')
             }}
           >
-            <div className="h-20 rounded-lg m-0.5 flex flex-col items-center justify-end text-center bg-white hover:cursor-pointer">
+            <div className="m-0.5 flex h-20 flex-col items-center justify-end rounded-lg bg-white text-center hover:cursor-pointer">
               <Image
                 unoptimized
                 quality={100}
@@ -88,7 +88,7 @@ function NewActivityModal({
                 src={AssignmentActivityImage}
               ></Image>
             </div>
-            <div className="flex text-sm h-5 font-medium text-gray-500 items-center justify-center text-center">
+            <div className="flex h-5 items-center justify-center text-center text-sm font-medium text-gray-500">
               Assignments
             </div>
           </ActivityOption>
@@ -135,7 +135,7 @@ function NewActivityModal({
 const ActivityOption = ({ onClick, children }: any) => (
   <div
     onClick={onClick}
-    className="w-full text-center rounded-xl bg-gray-100 border-4 border-gray-100 mx-auto hover:bg-gray-200 hover:border-gray-200 transition duration-200 ease-in-out cursor-pointer"
+    className="mx-auto w-full cursor-pointer rounded-xl border-4 border-gray-100 bg-gray-100 text-center transition duration-200 ease-in-out hover:border-gray-200 hover:bg-gray-200"
   >
     {children}
   </div>

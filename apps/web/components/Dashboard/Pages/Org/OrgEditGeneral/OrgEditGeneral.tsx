@@ -107,7 +107,7 @@ const OrgEditGeneral: React.FC = () => {
   }
 
   return (
-    <div className="sm:mx-10 mx-0 bg-white rounded-xl nice-shadow ">
+    <div className="nice-shadow mx-0 rounded-xl bg-white sm:mx-10">
       <Formik
         enableReinitialize
         initialValues={initialValues}
@@ -129,22 +129,22 @@ const OrgEditGeneral: React.FC = () => {
         }) => (
           <Form>
             <div className="flex flex-col gap-0">
-              <div className="flex flex-col bg-gray-50 -space-y-1 px-5 py-3 mx-3 my-3 rounded-md">
-                <h1 className="font-bold text-xl text-gray-800">
+              <div className="mx-3 my-3 flex flex-col -space-y-1 rounded-md bg-gray-50 px-5 py-3">
+                <h1 className="text-xl font-bold text-gray-800">
                   Organization Settings
                 </h1>
-                <h2 className="text-gray-500 text-md">
+                <h2 className="text-md text-gray-500">
                   Manage your organization's profile and settings
                 </h2>
               </div>
 
-              <div className="flex flex-col lg:flex-row lg:space-x-8 mt-0 mx-5 my-5">
+              <div className="mx-5 my-5 mt-0 flex flex-col lg:flex-row lg:space-x-8">
                 <div className="w-full space-y-6">
                   <div className="space-y-4">
                     <div>
                       <Label htmlFor="name">
                         Organization Name
-                        <span className="text-gray-500 text-sm ml-2">
+                        <span className="ml-2 text-sm text-gray-500">
                           ({60 - (values.name?.length || 0)} characters left)
                         </span>
                       </Label>
@@ -157,7 +157,7 @@ const OrgEditGeneral: React.FC = () => {
                         maxLength={60}
                       />
                       {touched.name && errors.name && (
-                        <p className="text-red-500 text-sm mt-1">
+                        <p className="mt-1 text-sm text-red-500">
                           {errors.name}
                         </p>
                       )}
@@ -166,7 +166,7 @@ const OrgEditGeneral: React.FC = () => {
                     <div>
                       <Label htmlFor="description">
                         Short Description
-                        <span className="text-gray-500 text-sm ml-2">
+                        <span className="ml-2 text-sm text-gray-500">
                           ({100 - (values.description?.length || 0)} characters
                           left)
                         </span>
@@ -180,7 +180,7 @@ const OrgEditGeneral: React.FC = () => {
                         maxLength={100}
                       />
                       {touched.description && errors.description && (
-                        <p className="text-red-500 text-sm mt-1">
+                        <p className="mt-1 text-sm text-red-500">
                           {errors.description}
                         </p>
                       )}
@@ -204,7 +204,7 @@ const OrgEditGeneral: React.FC = () => {
                         </SelectContent>
                       </Select>
                       {touched.label && errors.label && (
-                        <p className="text-red-500 text-sm mt-1">
+                        <p className="mt-1 text-sm text-red-500">
                           {errors.label}
                         </p>
                       )}
@@ -213,7 +213,7 @@ const OrgEditGeneral: React.FC = () => {
                     <div>
                       <Label htmlFor="about">
                         About Organization
-                        <span className="text-gray-500 text-sm ml-2">
+                        <span className="ml-2 text-sm text-gray-500">
                           ({400 - (values.about?.length || 0)} characters left)
                         </span>
                       </Label>
@@ -227,13 +227,13 @@ const OrgEditGeneral: React.FC = () => {
                         maxLength={400}
                       />
                       {touched.about && errors.about && (
-                        <p className="text-red-500 text-sm mt-1">
+                        <p className="mt-1 text-sm text-red-500">
                           {errors.about}
                         </p>
                       )}
                     </div>
 
-                    <div className="flex items-center justify-between space-x-2 mt-6 bg-gray-50/50 p-4 rounded-lg nice-shadow">
+                    <div className="nice-shadow mt-6 flex items-center justify-between space-x-2 rounded-lg bg-gray-50/50 p-4">
                       <div className="flex items-center space-x-4">
                         <Link
                           href="https://www.learnhouse.app/explore"
@@ -247,7 +247,7 @@ const OrgEditGeneral: React.FC = () => {
                             alt="LearnHouse"
                             className="rounded-lg"
                           />
-                          <span className="px-2 py-1 mt-1 bg-black rounded-md text-[10px] font-semibold text-white">
+                          <span className="mt-1 rounded-md bg-black px-2 py-1 text-[10px] font-semibold text-white">
                             EXPLORE
                           </span>
                         </Link>
@@ -274,7 +274,7 @@ const OrgEditGeneral: React.FC = () => {
                   </div>
                 </div>
               </div>
-              <div className="flex flex-row-reverse mt-0 mx-5 mb-5">
+              <div className="mx-5 mt-0 mb-5 flex flex-row-reverse">
                 <Button
                   type="submit"
                   disabled={isSubmitting}

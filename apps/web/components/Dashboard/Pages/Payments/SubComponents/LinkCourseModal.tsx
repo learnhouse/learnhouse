@@ -45,25 +45,25 @@ const CoursePreview = ({
     : '../empty_thumbnail.png'
 
   return (
-    <div className="flex gap-4 p-4 bg-white rounded-lg border border-gray-100 hover:border-gray-200 transition-colors">
+    <div className="flex gap-4 rounded-lg border border-gray-100 bg-white p-4 transition-colors hover:border-gray-200">
       {/* Thumbnail */}
       <div
-        className="shrink-0 w-[120px] h-[68px] rounded-md bg-cover bg-center ring-1 ring-inset ring-black/10"
+        className="h-[68px] w-[120px] shrink-0 rounded-md bg-cover bg-center ring-1 ring-black/10 ring-inset"
         style={{ backgroundImage: `url(${thumbnailImage})` }}
       />
 
       {/* Content */}
       <div className="grow space-y-1">
-        <h3 className="font-medium text-gray-900 line-clamp-1">
+        <h3 className="line-clamp-1 font-medium text-gray-900">
           {course.name}
         </h3>
-        <p className="text-sm text-gray-500 line-clamp-2">
+        <p className="line-clamp-2 text-sm text-gray-500">
           {course.description}
         </p>
       </div>
 
       {/* Action Button */}
-      <div className="shrink-0 flex items-center">
+      <div className="flex shrink-0 items-center">
         {isLinked ? (
           <Button
             variant="outline"
@@ -140,7 +140,7 @@ export default function LinkCourseModal({
   return (
     <div className="space-y-4">
       {/* Course List */}
-      <div className="max-h-[400px] overflow-y-auto space-y-2 px-3">
+      <div className="max-h-[400px] space-y-2 overflow-y-auto px-3">
         {courses?.map((course: any) => (
           <CoursePreview
             key={course.course_uuid}
@@ -153,7 +153,7 @@ export default function LinkCourseModal({
 
         {/* Empty State */}
         {(!courses || courses.length === 0) && (
-          <div className="text-center py-6 text-gray-500">No courses found</div>
+          <div className="py-6 text-center text-gray-500">No courses found</div>
         )}
       </div>
     </div>

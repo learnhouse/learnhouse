@@ -107,17 +107,17 @@ function SaveState(props: { orgslug: string }) {
       {saved ? (
         <></>
       ) : (
-        <div className="text-gray-600 flex space-x-2 items-center antialiased">
+        <div className="flex items-center space-x-2 text-gray-600 antialiased">
           <Timer size={15} />
           <div>Unsaved changes</div>
         </div>
       )}
       <div
         className={
-          `px-4 py-2 rounded-lg drop-shadow-md cursor-pointer flex space-x-2 items-center font-bold antialiased transition-all ease-linear ` +
+          `flex cursor-pointer items-center space-x-2 rounded-lg px-4 py-2 font-bold antialiased drop-shadow-md transition-all ease-linear ` +
           (saved
             ? 'bg-gray-600 text-white'
-            : 'bg-black text-white border hover:bg-gray-900 ')
+            : 'border bg-black text-white hover:bg-gray-900')
         }
         onClick={saveCourseState}
       >

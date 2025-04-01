@@ -30,13 +30,13 @@ const Finish = () => {
   }
 
   return (
-    <div className="flex py-10 justify-center items-center space-x-3">
+    <div className="flex items-center justify-center space-x-3 py-10">
       <h1>Installation Complete</h1>
       <br />
       <Check size={32} />
       <div
         onClick={finishInstall}
-        className="p-3  font-bold bg-gray-200 text-gray-900 rounded-lg hover:cursor-pointer"
+        className="rounded-lg bg-gray-200 p-3 font-bold text-gray-900 hover:cursor-pointer"
       >
         Next Step
       </div>

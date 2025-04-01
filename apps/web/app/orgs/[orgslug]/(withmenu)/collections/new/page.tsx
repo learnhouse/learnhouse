@@ -85,7 +85,7 @@ function NewCollection(params: any) {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-[60vh]">
+      <div className="flex h-[60vh] items-center justify-center">
         <div className="text-red-500">
           Failed to load courses. Please try again later.
         </div>
@@ -94,7 +94,7 @@ function NewCollection(params: any) {
   }
 
   return (
-    <div className="max-w-2xl mx-auto py-12 px-4">
+    <div className="mx-auto max-w-2xl px-4 py-12">
       <div className="space-y-8">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">
@@ -117,7 +117,7 @@ function NewCollection(params: any) {
                 placeholder="Enter collection name"
                 value={name}
                 onChange={handleNameChange}
-                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 transition focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                 maxLength={100}
               />
             </label>
@@ -128,7 +128,7 @@ function NewCollection(params: any) {
               </span>
               <select
                 onChange={handleVisibilityChange}
-                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 transition focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                 defaultValue={isPublic}
               >
                 <option value="true">
@@ -149,7 +149,7 @@ function NewCollection(params: any) {
                 value={description}
                 onChange={handleDescriptionChange}
                 rows={4}
-                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2 transition focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                 maxLength={500}
               />
             </label>
@@ -160,19 +160,19 @@ function NewCollection(params: any) {
               </span>
               {isLoading ? (
                 <div className="flex items-center justify-center py-8">
-                  <Loader2 className="w-6 h-6 animate-spin text-gray-500" />
+                  <Loader2 className="h-6 w-6 animate-spin text-gray-500" />
                 </div>
               ) : courses?.length === 0 ? (
-                <p className="text-sm text-gray-500 py-4">
+                <p className="py-4 text-sm text-gray-500">
                   No courses available. Create some courses first.
                 </p>
               ) : (
-                <div className="mt-2 border border-gray-200 rounded-lg bg-gray-50">
-                  <div className="max-h-[400px] overflow-y-auto p-4 space-y-3 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent hover:scrollbar-thumb-gray-400">
+                <div className="mt-2 rounded-lg border border-gray-200 bg-gray-50">
+                  <div className="scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent hover:scrollbar-thumb-gray-400 max-h-[400px] space-y-3 overflow-y-auto p-4">
                     {courses?.map((course: any) => (
                       <label
                         key={course.id}
-                        className="relative flex items-center p-4 bg-white rounded-md hover:bg-gray-50 transition cursor-pointer gap-4"
+                        className="relative flex cursor-pointer items-center gap-4 rounded-md bg-white p-4 transition hover:bg-gray-50"
                       >
                         <input
                           type="checkbox"
@@ -193,9 +193,9 @@ function NewCollection(params: any) {
                               )
                             }
                           }}
-                          className="h-4 w-4 text-blue-500 rounded border-gray-300 focus:ring-blue-500"
+                          className="h-4 w-4 rounded border-gray-300 text-blue-500 focus:ring-blue-500"
                         />
-                        <div className="relative w-24 h-16 rounded-md overflow-hidden bg-gray-100 shrink-0">
+                        <div className="relative h-16 w-24 shrink-0 overflow-hidden rounded-md bg-gray-100">
                           {course.thumbnail_image ? (
                             <img
                               src={getCourseThumbnailMediaDirectory(
@@ -207,17 +207,17 @@ function NewCollection(params: any) {
                               className="object-cover"
                             />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <ImageIcon className="w-6 h-6 text-gray-400" />
+                            <div className="flex h-full w-full items-center justify-center">
+                              <ImageIcon className="h-6 w-6 text-gray-400" />
                             </div>
                           )}
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="text-sm font-medium text-gray-900 truncate">
+                        <div className="min-w-0 flex-1">
+                          <h3 className="truncate text-sm font-medium text-gray-900">
                             {course.name}
                           </h3>
                           {course.description && (
-                            <p className="mt-1 text-xs text-gray-500 line-clamp-2">
+                            <p className="mt-1 line-clamp-2 text-xs text-gray-500">
                               {course.description}
                             </p>
                           )}
@@ -225,7 +225,7 @@ function NewCollection(params: any) {
                       </label>
                     ))}
                   </div>
-                  <div className="px-4 py-3 bg-gray-50 border-t border-gray-200">
+                  <div className="border-t border-gray-200 bg-gray-50 px-4 py-3">
                     <p className="text-xs text-gray-500">
                       Selected courses: {selectedCourses.length}
                     </p>
@@ -239,16 +239,16 @@ function NewCollection(params: any) {
             <button
               type="button"
               onClick={() => router.back()}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition"
+              className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-hidden"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg shadow-xs hover:bg-blue-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+              className="flex items-center space-x-2 rounded-lg bg-blue-600 px-6 py-2 text-sm font-medium text-white shadow-xs transition hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-hidden disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+              {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
               <span>{isSubmitting ? 'Creating...' : 'Create Collection'}</span>
             </button>
           </div>

@@ -49,19 +49,19 @@ function AssignmentBoxUI({
   const isAuthenticated = session?.status === 'authenticated'
 
   return (
-    <div className="flex flex-col px-3 sm:px-6 py-4 nice-shadow rounded-md bg-slate-100/30">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:space-x-2 pb-2 text-slate-400 sm:items-center">
+    <div className="nice-shadow flex flex-col rounded-md bg-slate-100/30 px-3 py-4 sm:px-6">
+      <div className="flex flex-col pb-2 text-slate-400 sm:flex-row sm:items-center sm:justify-between sm:space-x-2">
         {/* Left side with type and badges */}
-        <div className="flex flex-wrap gap-2 items-center mb-2 sm:mb-0">
+        <div className="mb-2 flex flex-wrap items-center gap-2 sm:mb-0">
           <div className="text-lg font-semibold">
             {type === 'quiz' && (
-              <div className="flex space-x-1.5 items-center">
+              <div className="flex items-center space-x-1.5">
                 <ListTodo size={17} />
                 <p>Quiz</p>
               </div>
             )}
             {type === 'file' && (
-              <div className="flex space-x-1.5 items-center">
+              <div className="flex items-center space-x-1.5">
                 <FileUp size={17} />
                 <p>File Submission</p>
               </div>
@@ -72,13 +72,13 @@ function AssignmentBoxUI({
             <EllipsisVertical size={15} />
           </div>
           {view === 'teacher' && (
-            <div className="flex bg-amber-200/20 text-xs rounded-full space-x-1 px-2 py-0.5 font-bold outline items-center text-amber-600 outline-1 outline-amber-300/40">
+            <div className="flex items-center space-x-1 rounded-full bg-amber-200/20 px-2 py-0.5 text-xs font-bold text-amber-600 outline outline-1 outline-amber-300/40">
               <BookUser size={12} />
               <p>Teacher view</p>
             </div>
           )}
           {maxPoints && (
-            <div className="flex bg-emerald-200/20 text-xs rounded-full space-x-1 px-2 py-0.5 font-bold outline items-center text-emerald-600 outline-1 outline-emerald-300/40">
+            <div className="flex items-center space-x-1 rounded-full bg-emerald-200/20 px-2 py-0.5 text-xs font-bold text-emerald-600 outline outline-1 outline-emerald-300/40">
               <BookPlus size={12} />
               <p>{maxPoints} points</p>
             </div>
@@ -86,9 +86,9 @@ function AssignmentBoxUI({
         </div>
 
         {/* Right side with buttons and actions */}
-        <div className="flex flex-wrap gap-2 items-center">
+        <div className="flex flex-wrap items-center gap-2">
           {showSavingDisclaimer && (
-            <div className="flex space-x-2 items-center font-semibold px-3 py-1 outline-dashed outline-red-200 text-red-400 sm:mr-5 rounded-full w-full sm:w-auto mb-2 sm:mb-0">
+            <div className="mb-2 flex w-full items-center space-x-2 rounded-full px-3 py-1 font-semibold text-red-400 outline-red-200 outline-dashed sm:mr-5 sm:mb-0 sm:w-auto">
               <InfoIcon size={14} />
               <p className="text-xs">Don't forget to save your progress</p>
             </div>
@@ -98,7 +98,7 @@ function AssignmentBoxUI({
           {view === 'teacher' && (
             <div
               onClick={() => saveFC && saveFC()}
-              className="flex px-2 py-1 cursor-pointer rounded-md space-x-2 items-center bg-linear-to-bl text-emerald-700 bg-emerald-300/20 hover:bg-emerald-300/10 hover:outline-offset-4 active:outline-offset-1 linear transition-all outline-offset-2 outline-dashed outline-emerald-500/60"
+              className="linear flex cursor-pointer items-center space-x-2 rounded-md bg-emerald-300/20 bg-linear-to-bl px-2 py-1 text-emerald-700 outline-offset-2 outline-emerald-500/60 transition-all outline-dashed hover:bg-emerald-300/10 hover:outline-offset-4 active:outline-offset-1"
             >
               <Save size={14} />
               <p className="text-xs font-semibold">Save</p>
@@ -112,7 +112,7 @@ function AssignmentBoxUI({
             submission.length <= 0 && (
               <div
                 onClick={() => submitFC && submitFC()}
-                className="flex px-2 py-1 cursor-pointer rounded-md space-x-2 items-center justify-center mx-auto w-full sm:w-auto bg-linear-to-bl text-emerald-700 bg-emerald-300/20 hover:bg-emerald-300/10 hover:outline-offset-4 active:outline-offset-1 linear transition-all outline-offset-2 outline-dashed outline-emerald-500/60"
+                className="linear mx-auto flex w-full cursor-pointer items-center justify-center space-x-2 rounded-md bg-emerald-300/20 bg-linear-to-bl px-2 py-1 text-emerald-700 outline-offset-2 outline-emerald-500/60 transition-all outline-dashed hover:bg-emerald-300/10 hover:outline-offset-4 active:outline-offset-1 sm:w-auto"
               >
                 <Forward size={14} />
                 <p className="text-xs font-semibold">Save your progress</p>
@@ -121,13 +121,13 @@ function AssignmentBoxUI({
 
           {/* Grading button */}
           {view === 'grading' && (
-            <div className="flex flex-wrap sm:flex-nowrap w-full sm:w-auto px-0.5 py-0.5 cursor-pointer rounded-md gap-2 sm:space-x-2 items-center bg-linear-to-bl hover:outline-offset-4 active:outline-offset-1 linear transition-all outline-offset-2 outline-dashed outline-orange-500/60">
-              <p className="font-semibold px-2 text-xs text-orange-700">
+            <div className="linear flex w-full cursor-pointer flex-wrap items-center gap-2 rounded-md bg-linear-to-bl px-0.5 py-0.5 outline-offset-2 outline-orange-500/60 transition-all outline-dashed hover:outline-offset-4 active:outline-offset-1 sm:w-auto sm:flex-nowrap sm:space-x-2">
+              <p className="px-2 text-xs font-semibold text-orange-700">
                 Current points: {currentPoints}
               </p>
               <div
                 onClick={() => gradeFC && gradeFC()}
-                className="bg-linear-to-bl text-orange-700 bg-orange-300/20 hover:bg-orange-300/10 items-center flex rounded-md px-2 py-1 space-x-2 ml-auto"
+                className="ml-auto flex items-center space-x-2 rounded-md bg-orange-300/20 bg-linear-to-bl px-2 py-1 text-orange-700 hover:bg-orange-300/10"
               >
                 <BookPlus size={14} />
                 <p className="text-xs font-semibold">Grade</p>
@@ -137,22 +137,22 @@ function AssignmentBoxUI({
 
           {/* CustomGrading button */}
           {view === 'custom-grading' && maxPoints && (
-            <div className="flex flex-wrap sm:flex-nowrap w-full sm:w-auto px-0.5 py-0.5 cursor-pointer rounded-md gap-2 sm:space-x-2 items-center bg-linear-to-bl hover:outline-offset-4 active:outline-offset-1 linear transition-all outline-offset-2 outline-dashed outline-orange-500/60">
-              <p className="font-semibold px-2 text-xs text-orange-700 w-full sm:w-auto">
+            <div className="linear flex w-full cursor-pointer flex-wrap items-center gap-2 rounded-md bg-linear-to-bl px-0.5 py-0.5 outline-offset-2 outline-orange-500/60 transition-all outline-dashed hover:outline-offset-4 active:outline-offset-1 sm:w-auto sm:flex-nowrap sm:space-x-2">
+              <p className="w-full px-2 text-xs font-semibold text-orange-700 sm:w-auto">
                 Current points: {currentPoints}
               </p>
-              <div className="flex items-center gap-2 w-full sm:w-auto">
+              <div className="flex w-full items-center gap-2 sm:w-auto">
                 <input
                   onChange={(e) =>
                     setCustomGrade(Number.parseInt(e.target.value))
                   }
                   placeholder={maxPoints.toString()}
-                  className="w-full sm:w-[100px] light-shadow text-sm py-0.5 outline outline-gray-200 rounded-lg px-2"
+                  className="light-shadow w-full rounded-lg px-2 py-0.5 text-sm outline outline-gray-200 sm:w-[100px]"
                   type="number"
                 />
                 <div
                   onClick={() => gradeCustomFC && gradeCustomFC(customGrade)}
-                  className="bg-linear-to-bl text-orange-700 bg-orange-300/20 hover:bg-orange-300/10 items-center flex rounded-md px-2 py-1 space-x-2 whitespace-nowrap"
+                  className="flex items-center space-x-2 rounded-md bg-orange-300/20 bg-linear-to-bl px-2 py-1 whitespace-nowrap text-orange-700 hover:bg-orange-300/10"
                 >
                   <BookPlus size={14} />
                   <p className="text-xs font-semibold">Grade</p>

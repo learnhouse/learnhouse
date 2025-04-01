@@ -59,7 +59,7 @@ function StripeConnectCallback() {
   }, [session, router, searchParams])
 
   return (
-    <div className="h-screen w-full bg-[#f8f8f8] flex items-center justify-center">
+    <div className="flex h-screen w-full items-center justify-center bg-[#f8f8f8]">
       <div className="flex flex-col items-center">
         <div className="mb-10">
           <Image
@@ -75,12 +75,12 @@ function StripeConnectCallback() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="bg-white p-8 rounded-xl nice-shadow max-w-md w-full mx-4"
+          className="nice-shadow mx-4 w-full max-w-md rounded-xl bg-white p-8"
         >
-          <div className="flex flex-col items-center text-center space-y-4">
+          <div className="flex flex-col items-center space-y-4 text-center">
             {status === 'processing' && (
               <>
-                <Loader2 className="h-12 w-12 text-blue-500 animate-spin" />
+                <Loader2 className="h-12 w-12 animate-spin text-blue-500" />
                 <h2 className="text-xl font-semibold text-gray-800">
                   Completing Stripe Connection
                 </h2>
@@ -93,7 +93,7 @@ function StripeConnectCallback() {
 
             {status === 'success' && (
               <>
-                <div className="bg-green-100 p-3 rounded-full">
+                <div className="rounded-full bg-green-100 p-3">
                   <Check className="h-8 w-8 text-green-600" />
                 </div>
                 <h2 className="text-xl font-semibold text-gray-800">
@@ -107,7 +107,7 @@ function StripeConnectCallback() {
 
             {status === 'error' && (
               <>
-                <div className="bg-red-100 p-3 rounded-full">
+                <div className="rounded-full bg-red-100 p-3">
                   <AlertTriangle className="h-8 w-8 text-red-600" />
                 </div>
                 <h2 className="text-xl font-semibold text-gray-800">

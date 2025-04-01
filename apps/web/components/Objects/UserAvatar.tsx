@@ -81,17 +81,7 @@ function UserAvatar(props: UserAvatarProps) {
       width={props.width ?? 50}
       height={props.width ?? 50}
       src={getAvatarUrl()}
-      className={`
-        ${props.avatar_url && session?.data?.user?.avatar_image ? '' : 'bg-gray-700'}
-        ${props.border ? `border ${props.border}` : ''}
-        ${props.borderColor ?? 'border-white'}
-        ${props.backgroundColor ?? 'bg-gray-100'}
-        shadow-md shadow-gray-300/45
-        aspect-square
-        w-[${props.width ?? 50}px]
-        h-[${props.width ?? 50}px]
-        ${props.rounded ?? 'rounded-xl'}
-      `}
+      className={` ${props.avatar_url && session?.data?.user?.avatar_image ? '' : 'bg-gray-700'} ${props.border ? `border ${props.border}` : ''} ${props.borderColor ?? 'border-white'} ${props.backgroundColor ?? 'bg-gray-100'} aspect-square shadow-md shadow-gray-300/45 w-[${props.width ?? 50}px] h-[${props.width ?? 50}px] ${props.rounded ?? 'rounded-xl'} `}
     />
   )
 }

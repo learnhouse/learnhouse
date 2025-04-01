@@ -71,15 +71,15 @@ function ChapterElement(props: ChapterElementProps) {
     >
       {(provided, snapshot) => (
         <div
-          className="mx-2 sm:mx-4 md:mx-6 lg:mx-10 bg-white rounded-xl nice-shadow px-3 sm:px-4 md:px-6 pt-4 sm:pt-6"
+          className="nice-shadow mx-2 rounded-xl bg-white px-3 pt-4 sm:mx-4 sm:px-4 sm:pt-6 md:mx-6 md:px-6 lg:mx-10"
           key={props.chapter.chapter_uuid}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
           ref={provided.innerRef}
         >
           <div className="flex flex-wrap items-center justify-between pb-3">
-            <div className="flex grow items-center space-x-2 mb-2 sm:mb-0">
-              <div className="bg-neutral-100 rounded-md p-2">
+            <div className="mb-2 flex grow items-center space-x-2 sm:mb-0">
+              <div className="rounded-md bg-neutral-100 p-2">
                 <Hexagon
                   strokeWidth={3}
                   size={16}
@@ -88,10 +88,10 @@ function ChapterElement(props: ChapterElementProps) {
               </div>
               <div className="flex items-center space-x-2">
                 {selectedChapter === props.chapter.id ? (
-                  <div className="chapter-modification-zone bg-neutral-100 py-1 px-2 sm:px-4 rounded-lg flex items-center space-x-2">
+                  <div className="chapter-modification-zone flex items-center space-x-2 rounded-lg bg-neutral-100 px-2 py-1 sm:px-4">
                     <input
                       type="text"
-                      className="bg-transparent outline-hidden text-sm text-neutral-700 w-full max-w-[150px] sm:max-w-none"
+                      className="w-full max-w-[150px] bg-transparent text-sm text-neutral-700 outline-hidden sm:max-w-none"
                       placeholder="Chapter name"
                       value={
                         modifiedChapter
@@ -113,7 +113,7 @@ function ChapterElement(props: ChapterElementProps) {
                     </button>
                   </div>
                 ) : (
-                  <p className="text-neutral-700 first-letter:uppercase text-sm sm:text-base">
+                  <p className="text-sm text-neutral-700 first-letter:uppercase sm:text-base">
                     {props.chapter.name}
                   </p>
                 )}
@@ -132,7 +132,7 @@ function ChapterElement(props: ChapterElementProps) {
                 dialogTitle={'Delete ' + props.chapter.name + ' ?'}
                 dialogTrigger={
                   <button
-                    className="hover:cursor-pointer p-1 px-2 sm:px-3 bg-red-600 rounded-md shadow-sm flex items-center text-rose-100 text-sm"
+                    className="flex items-center rounded-md bg-red-600 p-1 px-2 text-sm text-rose-100 shadow-sm hover:cursor-pointer sm:px-3"
                     rel="noopener noreferrer"
                   >
                     <Trash2 size={15} className="text-rose-200" />
@@ -150,12 +150,12 @@ function ChapterElement(props: ChapterElementProps) {
           >
             {(provided) => (
               <div {...provided.droppableProps} ref={provided.innerRef}>
-                <div className="flex flex-col min-h-[60px]">
+                <div className="flex min-h-[60px] flex-col">
                   {activities.map((activity: any, index: any) => {
                     return (
                       <div
                         key={activity.activity_uuid}
-                        className="flex items-center "
+                        className="flex items-center"
                       >
                         <ActivityElement
                           orgslug={props.orgslug}
@@ -177,7 +177,7 @@ function ChapterElement(props: ChapterElementProps) {
           />
           <div className="h-6">
             <div className="flex items-center">
-              <MoreHorizontal size={19} className="text-gray-300 mx-auto" />
+              <MoreHorizontal size={19} className="mx-auto text-gray-300" />
             </div>
           </div>
         </div>

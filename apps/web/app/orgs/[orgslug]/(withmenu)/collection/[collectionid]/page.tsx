@@ -86,7 +86,7 @@ const CollectionPage = async (params: any) => {
               )}
             >
               <div
-                className="inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl relative w-[249px] h-[131px] bg-cover"
+                className="relative inset-0 h-[131px] w-[249px] rounded-lg bg-cover shadow-xl ring-1 ring-black/10 ring-inset"
                 style={{
                   backgroundImage: `url(${getCourseThumbnailMediaDirectory(
                     org.org_uuid,
@@ -96,7 +96,7 @@ const CollectionPage = async (params: any) => {
                 }}
               ></div>
             </Link>
-            <h2 className="font-bold text-lg w-[250px] py-2">{course.name}</h2>
+            <h2 className="w-[250px] py-2 text-lg font-bold">{course.name}</h2>
           </div>
         ))}
       </div>

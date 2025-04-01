@@ -4,10 +4,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-overrides:
-  '@types/react': 19.0.12
-  '@types/react-dom': 19.0.4
-
 importers:
 
   .:

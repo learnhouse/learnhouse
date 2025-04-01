@@ -23,21 +23,21 @@ function AssignmentStudentActivity() {
 
   return (
     <div className="flex flex-col space-y-4 md:space-y-6">
-      <div className="flex flex-col md:flex-row justify-center md:space-x-3 space-y-3 md:space-y-0 items-center">
-        <div className="text-xs h-fit flex space-x-3 items-center">
-          <div className="flex gap-2 py-2 px-4 md:px-5 h-fit text-sm text-slate-700 bg-slate-100/5 rounded-full nice-shadow items-center">
+      <div className="flex flex-col items-center justify-center space-y-3 md:flex-row md:space-y-0 md:space-x-3">
+        <div className="flex h-fit items-center space-x-3 text-xs">
+          <div className="nice-shadow flex h-fit items-center gap-2 rounded-full bg-slate-100/5 px-4 py-2 text-sm text-slate-700 md:px-5">
             <Backpack size={14} className="md:size-[14px]" />
             <p className="font-semibold">Assignment</p>
           </div>
         </div>
         <div>
-          <div className="flex gap-2 items-center">
+          <div className="flex items-center gap-2">
             <EllipsisVertical
-              className="text-slate-400 hidden md:block"
+              className="hidden text-slate-400 md:block"
               size={18}
             />
-            <div className="flex gap-2 items-center">
-              <div className="flex gap-1 md:space-x-2 text-xs items-center text-slate-400">
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 text-xs text-slate-400 md:space-x-2">
                 <Calendar size={14} />
                 <p className="font-semibold">Due Date</p>
                 <p className="font-semibold">
@@ -50,7 +50,7 @@ function AssignmentStudentActivity() {
       </div>
 
       {assignments?.assignment_object?.description && (
-        <div className="flex flex-col space-y-2 p-4 md:p-6 bg-slate-100/30 rounded-md nice-shadow">
+        <div className="nice-shadow flex flex-col space-y-2 rounded-md bg-slate-100/30 p-4 md:p-6">
           <div className="flex flex-col space-y-3">
             <div className="flex items-center gap-2 text-slate-700">
               <Info size={16} className="text-slate-500" />
@@ -74,17 +74,17 @@ function AssignmentStudentActivity() {
                 className="flex flex-col space-y-2"
                 key={task.assignment_task_uuid}
               >
-                <div className="flex flex-col md:flex-row md:justify-between py-2 space-y-2 md:space-y-0">
+                <div className="flex flex-col space-y-2 py-2 md:flex-row md:justify-between md:space-y-0">
                   <div className="flex flex-wrap space-x-2 font-semibold text-slate-800">
                     <p>Task {index + 1} : </p>
-                    <p className="text-slate-500 break-words">
+                    <p className="break-words text-slate-500">
                       {task.description}
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <div
                       onClick={() => alert(task.hint)}
-                      className="px-3 py-1 flex items-center nice-shadow bg-amber-50/40 text-amber-900 rounded-full space-x-2 cursor-pointer"
+                      className="nice-shadow flex cursor-pointer items-center space-x-2 rounded-full bg-amber-50/40 px-3 py-1 text-amber-900"
                     >
                       <Info size={13} />
                       <p className="text-xs font-semibold">Hint</p>
@@ -100,13 +100,13 @@ function AssignmentStudentActivity() {
                       )}
                       target="_blank"
                       download={true}
-                      className="px-3 py-1 flex items-center nice-shadow bg-cyan-50/40 text-cyan-900 rounded-full space-x-1 md:space-x-2 cursor-pointer"
+                      className="nice-shadow flex cursor-pointer items-center space-x-1 rounded-full bg-cyan-50/40 px-3 py-1 text-cyan-900 md:space-x-2"
                     >
                       <Download size={13} />
                       <div className="flex items-center space-x-1 md:space-x-2">
                         {task.reference_file && (
                           <span className="relative">
-                            <span className="absolute right-0 top-0 block h-2 w-2 rounded-full ring-2 ring-white bg-green-400"></span>
+                            <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-green-400 ring-2 ring-white"></span>
                           </span>
                         )}
                         <p className="text-xs font-semibold">

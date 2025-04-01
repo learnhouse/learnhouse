@@ -78,7 +78,7 @@ const CollectionsPage = async (params: any) => {
 
   return (
     <GeneralWrapperStyled>
-      <div className="flex flex-col space-y-4 mb-8">
+      <div className="mb-8 flex flex-col space-y-4">
         <div className="flex items-center justify-between">
           <TypeOfContentTitle title="Collections" type="col" />
           <AuthenticatedClientElement
@@ -92,7 +92,7 @@ const CollectionsPage = async (params: any) => {
             </Link>
           </AuthenticatedClientElement>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {collections.map((collection: any) => (
             <div key={collection.collection_uuid} className="p-3">
               <CollectionThumbnail
@@ -103,7 +103,7 @@ const CollectionsPage = async (params: any) => {
             </div>
           ))}
           {collections.length === 0 && (
-            <div className="col-span-full flex justify-center items-center py-8">
+            <div className="col-span-full flex items-center justify-center py-8">
               <div className="text-center">
                 <div className="mb-4">
                   <svg
@@ -132,7 +132,7 @@ const CollectionsPage = async (params: any) => {
                     />
                   </svg>
                 </div>
-                <h1 className="text-xl font-bold text-gray-600 mb-2">
+                <h1 className="mb-2 text-xl font-bold text-gray-600">
                   No collections yet
                 </h1>
                 <p className="text-md text-gray-400">

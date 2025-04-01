@@ -61,21 +61,21 @@ function OrgInviteCodeGenerate(props: OrgInviteCodeGenerateProps) {
   }, [usergroups])
   return (
     <div className="flex space-x-2 pt-2">
-      <div className="flex bg-slate-100 w-full h-[140px] rounded-lg">
-        <div className="flex flex-col mx-auto">
-          <h1 className="mx-auto pt-4 text-gray-600 font-medium">
+      <div className="flex h-[140px] w-full rounded-lg bg-slate-100">
+        <div className="mx-auto flex flex-col">
+          <h1 className="mx-auto pt-4 font-medium text-gray-600">
             Invite Code linked to a UserGroup
           </h1>
-          <h2 className="mx-auto text-xs text-gray-600 font-medium">
+          <h2 className="mx-auto text-xs font-medium text-gray-600">
             On Signup, Users will be automatically linked to a UserGroup of your
             choice
           </h2>
-          <div className="flex items-center space-x-4 pt-3 mx-auto">
+          <div className="mx-auto flex items-center space-x-4 pt-3">
             {usergroups?.length >= 1 && (
-              <div className="flex space-x-4 items-center">
+              <div className="flex items-center space-x-4">
                 <select
                   defaultValue={usergroup_id}
-                  className="flex p-2 w-fit  rounded-md text-sm bg-gray-100 border-2 border-slate-300"
+                  className="flex w-fit rounded-md border-2 border-slate-300 bg-gray-100 p-2 text-sm"
                 >
                   {usergroups?.map((usergroup: any) => (
                     <option key={usergroup.id} value={usergroup.id}>
@@ -87,21 +87,21 @@ function OrgInviteCodeGenerate(props: OrgInviteCodeGenerateProps) {
                 <div className="">
                   <button
                     onClick={createInviteWithUserGroup}
-                    className="flex space-x-2 w-fit hover:cursor-pointer p-1 px-3 bg-green-700 rounded-md font-bold items-center text-sm text-green-100"
+                    className="flex w-fit items-center space-x-2 rounded-md bg-green-700 p-1 px-3 text-sm font-bold text-green-100 hover:cursor-pointer"
                   >
-                    <Ticket className="w-4 h-4" />
+                    <Ticket className="h-4 w-4" />
                     <span> Generate </span>
                   </button>
                 </div>
               </div>
             )}
             {usergroups?.length == 0 && (
-              <div className="flex space-x-3 items-center text-xs pt-3">
-                <span className="px-3 text-yellow-700 font-bold rounded-full py-1 mx-3">
+              <div className="flex items-center space-x-3 pt-3 text-xs">
+                <span className="mx-3 rounded-full px-3 py-1 font-bold text-yellow-700">
                   No UserGroups available{' '}
                 </span>
                 <Link
-                  className="px-3 text-blue-700 font-bold rounded-full py-1 bg-blue-100 mx-1"
+                  className="mx-1 rounded-full bg-blue-100 px-3 py-1 font-bold text-blue-700"
                   target="_blank"
                   href={getUriWithOrg(
                     org.slug,
@@ -115,20 +115,20 @@ function OrgInviteCodeGenerate(props: OrgInviteCodeGenerateProps) {
           </div>
         </div>
       </div>
-      <div className="flex bg-slate-100 w-full h-[140px] rounded-lg">
-        <div className="flex flex-col mx-auto">
-          <h1 className="mx-auto pt-4 text-gray-600 font-medium">
+      <div className="flex h-[140px] w-full rounded-lg bg-slate-100">
+        <div className="mx-auto flex flex-col">
+          <h1 className="mx-auto pt-4 font-medium text-gray-600">
             Normal Invite Code
           </h1>
-          <h2 className="mx-auto text-xs text-gray-600 font-medium">
+          <h2 className="mx-auto text-xs font-medium text-gray-600">
             On Signup, User will not be linked to any UserGroup
           </h2>
           <div className="mx-auto pt-4">
             <button
               onClick={createInvite}
-              className="flex space-x-2 w-fit hover:cursor-pointer p-1 px-3 bg-green-700 rounded-md font-bold items-center text-sm text-green-100"
+              className="flex w-fit items-center space-x-2 rounded-md bg-green-700 p-1 px-3 text-sm font-bold text-green-100 hover:cursor-pointer"
             >
-              <Ticket className="w-4 h-4" />
+              <Ticket className="h-4 w-4" />
               <span> Generate </span>
             </button>
           </div>

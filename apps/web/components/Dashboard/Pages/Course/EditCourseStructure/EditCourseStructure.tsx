@@ -164,14 +164,14 @@ const EditCourseStructure = (props: EditCourseStructureProps) => {
             dialogTitle="Create chapter"
             dialogDescription="Add a new chapter to the course"
             dialogTrigger={
-              <div className="w-44 my-16 py-5 max-w-(--breakpoint-2xl) mx-auto bg-cyan-800 text-white rounded-xl shadow-xs px-6 items-center flex flex-row h-10">
-                <div className="mx-auto flex space-x-2 items-center hover:cursor-pointer">
+              <div className="mx-auto my-16 flex h-10 w-44 max-w-(--breakpoint-2xl) flex-row items-center rounded-xl bg-cyan-800 px-6 py-5 text-white shadow-xs">
+                <div className="mx-auto flex items-center space-x-2 hover:cursor-pointer">
                   <Hexagon
                     strokeWidth={3}
                     size={16}
-                    className="text-white text-sm "
+                    className="text-sm text-white"
                   />
-                  <div className="font-bold text-sm">Add Chapter</div>
+                  <div className="text-sm font-bold">Add Chapter</div>
                 </div>
               </div>
             }

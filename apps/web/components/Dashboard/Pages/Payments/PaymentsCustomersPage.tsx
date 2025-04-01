@@ -43,7 +43,7 @@ interface PaymentUserData {
 function PaymentsUsersTable({ data }: { data: PaymentUserData[] }) {
   if (!data || data.length === 0) {
     return (
-      <div className="text-center py-8 text-gray-500">No customers found</div>
+      <div className="py-8 text-center text-gray-500">No customers found</div>
     )
   }
 
@@ -151,10 +151,10 @@ function PaymentsCustomersPage() {
   if (!customers) return <div>No customer data available</div>
 
   return (
-    <div className="ml-10 mr-10 mx-auto bg-white rounded-xl nice-shadow px-4 py-4">
-      <div className="flex flex-col bg-gray-50 -space-y-1 px-5 py-3 rounded-md mb-3">
-        <h1 className="font-bold text-xl text-gray-800">Customers</h1>
-        <h2 className="text-gray-500 text-md">
+    <div className="nice-shadow mx-auto mr-10 ml-10 rounded-xl bg-white px-4 py-4">
+      <div className="mb-3 flex flex-col -space-y-1 rounded-md bg-gray-50 px-5 py-3">
+        <h1 className="text-xl font-bold text-gray-800">Customers</h1>
+        <h2 className="text-md text-gray-500">
           View and manage your customer information
         </h2>
       </div>

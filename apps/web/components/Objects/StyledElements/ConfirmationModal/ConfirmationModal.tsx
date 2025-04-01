@@ -40,7 +40,7 @@ const ConfirmationModal = (params: ModalParams) => {
         <DialogContent>
           <div className="flex space-x-4 tracking-tight">
             <div
-              className={`icon p-6 rounded-xl flex items-center align-content-center ${
+              className={`icon align-content-center flex items-center rounded-xl p-6 ${
                 params.status === 'warning' ? warningColors : infoColors
               }`}
             >
@@ -50,23 +50,21 @@ const ConfirmationModal = (params: ModalParams) => {
                 <Info size={35} />
               )}
             </div>
-            <div className="text pt-1 space-x-0 w-auto grow">
+            <div className="text w-auto grow space-x-0 pt-1">
               <div className="text-xl font-bold text-black">
                 {params.dialogTitle}
               </div>
-              <div className="text-md text-gray-500 leading-tight mt-1">
+              <div className="text-md mt-1 leading-tight text-gray-500">
                 {params.confirmationMessage}
               </div>
-              <div className="flex flex-row-reverse mt-4">
+              <div className="mt-4 flex flex-row-reverse">
                 <div
                   id={params.buttonid}
-                  className={`rounded-md text-sm px-3 py-2 font-bold flex justify-center items-center hover:cursor-pointer ${
+                  className={`flex items-center justify-center rounded-md px-3 py-2 text-sm font-bold hover:cursor-pointer ${
                     params.status === 'warning'
                       ? warningButtonColors
                       : infoButtonColors
-                  }
-                                hover:shadow-lg transition duration-300 ease-in-out
-                                `}
+                  } transition duration-300 ease-in-out hover:shadow-lg`}
                   onClick={() => {
                     params.functionToExecute()
                     setIsDialogOpen(false)

@@ -98,7 +98,7 @@ const AdminAuthorization: React.FC<AuthorizationProps> = ({
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen">
+      <div className="flex h-screen items-center justify-center">
         <PageLoading />
       </div>
     )
@@ -106,7 +106,7 @@ const AdminAuthorization: React.FC<AuthorizationProps> = ({
 
   if (authorizationMode === 'page' && !isAuthorized) {
     return (
-      <div className="flex justify-center items-center h-screen">
+      <div className="flex h-screen items-center justify-center">
         <h1 className="text-2xl">You are not authorized to access this page</h1>
       </div>
     )

@@ -53,40 +53,40 @@ function NewTaskModal({ closeModal, assignment_uuid }: any) {
   }
 
   return (
-    <div className="flex space-x-6 mx-auto justify-center items-center">
+    <div className="mx-auto flex items-center justify-center space-x-6">
       <div
         onClick={() => createTask('QUIZ')}
-        className="flex flex-col space-y-2 justify-center  text-center pt-10"
+        className="flex flex-col justify-center space-y-2 pt-10 text-center"
       >
-        <div className="px-5 py-5 rounded-full nice-shadow w-fit mx-auto bg-gray-100/50 text-gray-500 cursor-pointer hover:bg-gray-100 transition-all ease-linear">
+        <div className="nice-shadow mx-auto w-fit cursor-pointer rounded-full bg-gray-100/50 px-5 py-5 text-gray-500 transition-all ease-linear hover:bg-gray-100">
           <ListTodo size={30} />
         </div>
-        <p className="text-xl text-gray-700 font-semibold">Quiz</p>
-        <p className="text-sm text-gray-500 w-40">
+        <p className="text-xl font-semibold text-gray-700">Quiz</p>
+        <p className="w-40 text-sm text-gray-500">
           Questions with multiple choice answers
         </p>
       </div>
       <div
         onClick={() => createTask('FILE_SUBMISSION')}
-        className="flex flex-col space-y-2 justify-center  text-center pt-10"
+        className="flex flex-col justify-center space-y-2 pt-10 text-center"
       >
-        <div className="px-5 py-5 rounded-full nice-shadow w-fit mx-auto bg-gray-100/50 text-gray-500 cursor-pointer hover:bg-gray-100 transition-all ease-linear">
+        <div className="nice-shadow mx-auto w-fit cursor-pointer rounded-full bg-gray-100/50 px-5 py-5 text-gray-500 transition-all ease-linear hover:bg-gray-100">
           <FileUp size={30} />
         </div>
-        <p className="text-xl text-gray-700 font-semibold">File submission</p>
-        <p className="text-sm text-gray-500 w-40">
+        <p className="text-xl font-semibold text-gray-700">File submission</p>
+        <p className="w-40 text-sm text-gray-500">
           Students can submit files for this task
         </p>
       </div>
       <div
         onClick={() => toast.error('Forms are not yet supported')}
-        className="flex flex-col space-y-2 justify-center  text-center pt-10 opacity-25"
+        className="flex flex-col justify-center space-y-2 pt-10 text-center opacity-25"
       >
-        <div className="px-5 py-5 rounded-full nice-shadow w-fit mx-auto bg-gray-100/50 text-gray-500 cursor-pointer hover:bg-gray-100 transition-all ease-linear">
+        <div className="nice-shadow mx-auto w-fit cursor-pointer rounded-full bg-gray-100/50 px-5 py-5 text-gray-500 transition-all ease-linear hover:bg-gray-100">
           <AArrowUp size={30} />
         </div>
-        <p className="text-xl text-gray-700 font-semibold">Form</p>
-        <p className="text-sm text-gray-500 w-40">
+        <p className="text-xl font-semibold text-gray-700">Form</p>
+        <p className="w-40 text-sm text-gray-500">
           Forms for students to fill out
         </p>
       </div>

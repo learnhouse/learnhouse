@@ -141,7 +141,7 @@ function NewAssignment({ submitActivity, chapterId, course, closeModal }: any) {
         </Flex>
         <Form.Control asChild>
           <select
-            className="bg-gray-100/40 rounded-lg px-1 py-2 outline outline-1 outline-gray-100"
+            className="rounded-lg bg-gray-100/40 px-1 py-2 outline outline-1 outline-gray-100"
             onChange={handleGradingTypeChange}
             required
           >

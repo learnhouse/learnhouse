@@ -16,14 +16,14 @@ function AssignmentEditorSubPage({
 }) {
   return (
     <AssignmentsTaskProvider>
-      <div className="flex w-[400px] flex-col h-full custom-dots-bg">
-        <div className="flex mx-auto px-3.5 py-1 bg-neutral-600/80 space-x-2 my-5 items-center text-sm font-bold text-white rounded-full">
+      <div className="custom-dots-bg flex h-full w-[400px] flex-col">
+        <div className="mx-auto my-5 flex items-center space-x-2 rounded-full bg-neutral-600/80 px-3.5 py-1 text-sm font-bold text-white">
           <LayoutList size={18} />
           <p>Tasks</p>
         </div>
         <AssignmentTasks assignment_uuid={'assignment_' + assignmentuuid} />
       </div>
-      <div className="flex grow bg-[#fefcfe] nice-shadow h-full w-full">
+      <div className="nice-shadow flex h-full w-full grow bg-[#fefcfe]">
         <AssignmentProvider assignment_uuid={'assignment_' + assignmentuuid}>
           <AssignmentTaskEditor page="general" />
         </AssignmentProvider>

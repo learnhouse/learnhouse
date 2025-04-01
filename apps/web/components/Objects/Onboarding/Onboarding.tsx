@@ -299,13 +299,13 @@ const Onboarding: React.FC = () => {
               />
             }
             dialogTrigger={
-              <div className="fixed pb-10 w-full bottom-0 bg-linear-to-t from-1% from-gray-950/25 to-transparent">
-                <div className="bg-gray-950 flex space-x-2 font-bold cursor-pointer hover:bg-gray-900 shadow-md items-center text-gray-200 px-5 py-2 w-fit rounded-full mx-auto">
+              <div className="fixed bottom-0 w-full bg-linear-to-t from-gray-950/25 from-1% to-transparent pb-10">
+                <div className="mx-auto flex w-fit cursor-pointer items-center space-x-2 rounded-full bg-gray-950 px-5 py-2 font-bold text-gray-200 shadow-md hover:bg-gray-900">
                   <Sprout size={20} />
                   <p>Onboarding</p>
-                  <div className="h-2 w-2 bg-green-500 animate-pulse rounded-full"></div>
+                  <div className="h-2 w-2 animate-pulse rounded-full bg-green-500"></div>
                   <div
-                    className="ml-2 pl-2 border-l border-gray-700 cursor-pointer"
+                    className="ml-2 cursor-pointer border-l border-gray-700 pl-2"
                     onClick={(e) => {
                       e.stopPropagation()
                       skipOnboarding()
@@ -349,38 +349,38 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
         <div className="grow rounded-xl">
           <Image
             unoptimized
-            className="mx-auto shadow-md shadow-gray-200 rounded-lg w-[730px] h-[330px] object-cover"
+            className="mx-auto h-[330px] w-[730px] rounded-lg object-cover shadow-md shadow-gray-200"
             alt=""
             priority
             quality={100}
             src={step.imageSrc}
           />
         </div>
-        <div className="grid grid-flow-col justify-stretch space-x-3 mt-4">
+        <div className="mt-4 grid grid-flow-col justify-stretch space-x-3">
           {onboardingData.map((_, index) => (
             <div
               key={index}
               onClick={() => goToStep(index)}
-              className={`h-[7px] w-auto ${index === currentStep ? 'bg-black' : 'bg-gray-300'} hover:bg-gray-700 rounded-lg shadow-md cursor-pointer`}
+              className={`h-[7px] w-auto ${index === currentStep ? 'bg-black' : 'bg-gray-300'} cursor-pointer rounded-lg shadow-md hover:bg-gray-700`}
             ></div>
           ))}
         </div>
       </div>
-      <div className="onboarding_text flex flex-col h-[90px] py-2 px-4 leading-tight">
+      <div className="onboarding_text flex h-[90px] flex-col px-4 py-2 leading-tight">
         <h2 className="text-xl font-bold">{step.title}</h2>
         <p className="text-md font-normal">{step.description}</p>
       </div>
-      <div className="onboarding_actions flex flex-row-reverse w-full px-4">
-        <div className="flex flex-row justify-between w-full py-2">
+      <div className="onboarding_actions flex w-full flex-row-reverse px-4">
+        <div className="flex w-full flex-row justify-between py-2">
           <div className="utils_buttons flex flex-row space-x-2">
             <div
-              className="inline-flex items-center px-5 space-x-1 cursor-pointer py-1 rounded-full text-gray-600 antialiased font-bold bg-gray-100 hover:bg-gray-200"
+              className="inline-flex cursor-pointer items-center space-x-1 rounded-full bg-gray-100 px-5 py-1 font-bold text-gray-600 antialiased hover:bg-gray-200"
               onClick={() => setIsModalOpen(false)}
             >
               <PictureInPicture size={16} />
             </div>
             <div
-              className="inline-flex items-center px-5 space-x-2 cursor-pointer py-1 rounded-full text-gray-600 antialiased font-bold bg-gray-100 hover:bg-gray-200"
+              className="inline-flex cursor-pointer items-center space-x-2 rounded-full bg-gray-100 px-5 py-1 font-bold text-gray-600 antialiased hover:bg-gray-200"
               onClick={skipOnboarding}
             >
               <p>End</p>
@@ -391,7 +391,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
             {step.buttons?.map((button, index) => (
               <div
                 key={index}
-                className="inline-flex items-center px-5 space-x-2 cursor-pointer py-1 rounded-full text-gray-200 antialiased font-bold bg-black hover:bg-gray-700 shadow-md whitespace-nowrap"
+                className="inline-flex cursor-pointer items-center space-x-2 rounded-full bg-black px-5 py-1 font-bold whitespace-nowrap text-gray-200 antialiased shadow-md hover:bg-gray-700"
                 onClick={button.action}
               >
                 <p>{button.label}</p>
@@ -400,7 +400,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
             ))}
             {isLastStep ? (
               <div
-                className="inline-flex items-center px-5 space-x-2 cursor-pointer py-1 rounded-full text-gray-200 antialiased font-bold bg-black hover:bg-gray-700 shadow-md whitespace-nowrap"
+                className="inline-flex cursor-pointer items-center space-x-2 rounded-full bg-black px-5 py-1 font-bold whitespace-nowrap text-gray-200 antialiased shadow-md hover:bg-gray-700"
                 onClick={nextStep}
               >
                 <p>Finish Onboarding</p>
@@ -408,7 +408,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
               </div>
             ) : (
               <div
-                className="inline-flex items-center px-5 space-x-2 cursor-pointer py-1 rounded-full text-gray-200 antialiased font-bold bg-black hover:bg-gray-700 shadow-md whitespace-nowrap"
+                className="inline-flex cursor-pointer items-center space-x-2 rounded-full bg-black px-5 py-1 font-bold whitespace-nowrap text-gray-200 antialiased shadow-md hover:bg-gray-700"
                 onClick={nextStep}
               >
                 <p>Next</p>

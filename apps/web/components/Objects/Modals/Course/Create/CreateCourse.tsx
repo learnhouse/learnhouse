@@ -163,21 +163,21 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
           label="Course Thumbnail"
           message={formik.errors.thumbnail}
         />
-        <div className="w-auto bg-gray-50 rounded-xl outline outline-1 outline-gray-200 h-[200px] shadow-sm">
-          <div className="flex flex-col justify-center items-center h-full">
-            <div className="flex flex-col justify-center items-center">
+        <div className="h-[200px] w-auto rounded-xl bg-gray-50 shadow-sm outline outline-1 outline-gray-200">
+          <div className="flex h-full flex-col items-center justify-center">
+            <div className="flex flex-col items-center justify-center">
               {formik.values.thumbnail ? (
                 <img
                   src={URL.createObjectURL(formik.values.thumbnail)}
-                  className={`${isUploading ? 'animate-pulse' : ''} shadow-sm w-[200px] h-[100px] rounded-md`}
+                  className={`${isUploading ? 'animate-pulse' : ''} h-[100px] w-[200px] rounded-md shadow-sm`}
                 />
               ) : (
                 <img
                   src="/empty_thumbnail.png"
-                  className="shadow-sm w-[200px] h-[100px] rounded-md bg-gray-200"
+                  className="h-[100px] w-[200px] rounded-md bg-gray-200 shadow-sm"
                 />
               )}
-              <div className="flex justify-center items-center space-x-2">
+              <div className="flex items-center justify-center space-x-2">
                 <input
                   type="file"
                   id="fileInput"
@@ -187,7 +187,7 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
                 />
                 <button
                   type="button"
-                  className="font-bold antialiased items-center text-gray text-sm rounded-md px-4 mt-6 flex"
+                  className="text-gray mt-6 flex items-center rounded-md px-4 text-sm font-bold antialiased"
                   onClick={() => document.getElementById('fileInput')?.click()}
                 >
                   <UploadCloud size={16} className="mr-2" />
@@ -195,7 +195,7 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
                 </button>
                 <button
                   type="button"
-                  className="font-bold antialiased items-center text-gray text-sm rounded-md px-4 mt-6 flex"
+                  className="text-gray mt-6 flex items-center rounded-md px-4 text-sm font-bold antialiased"
                   onClick={() => setShowUnsplashPicker(true)}
                 >
                   <ImageIcon size={16} className="mr-2" />
@@ -253,11 +253,11 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
         </Select>
       </FormField>
 
-      <div className="flex justify-end mt-6">
+      <div className="mt-6 flex justify-end">
         <button
           type="submit"
           disabled={formik.isSubmitting}
-          className="px-4 py-2 bg-black text-white text-sm font-bold rounded-md"
+          className="rounded-md bg-black px-4 py-2 text-sm font-bold text-white"
         >
           {formik.isSubmitting ? (
             <BarLoader

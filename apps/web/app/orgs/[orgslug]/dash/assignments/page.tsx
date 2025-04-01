@@ -55,23 +55,23 @@ function AssignmentsHome() {
 
   return (
     <div className="flex w-full">
-      <div className="pl-4 sm:pl-10 mr-4 sm:mr-10 tracking-tighter flex flex-col space-y-5 w-full">
+      <div className="mr-4 flex w-full flex-col space-y-5 pl-4 tracking-tighter sm:mr-10 sm:pl-10">
         <div className="flex flex-col space-y-2">
           <BreadCrumbs type="assignments" />
-          <h1 className="pt-3 flex font-bold text-4xl">Assignments</h1>
+          <h1 className="flex pt-3 text-4xl font-bold">Assignments</h1>
         </div>
-        <div className="flex flex-col space-y-3 w-full">
+        <div className="flex w-full flex-col space-y-3">
           {courseAssignments.map((assignments: any, index: number) => (
             <div
               key={index}
-              className="flex flex-col space-y-2 bg-white nice-shadow p-3 sm:p-4 rounded-xl w-full"
+              className="nice-shadow flex w-full flex-col space-y-2 rounded-xl bg-white p-3 sm:p-4"
             >
               <div>
-                <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 items-start sm:items-center justify-between w-full">
-                  <div className="flex space-x-2 items-center">
+                <div className="flex w-full flex-col items-start justify-between space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-2">
+                  <div className="flex items-center space-x-2">
                     <MiniThumbnail course={courses[index]} />
-                    <div className="flex flex-col font-bold text-lg">
-                      <p className="bg-gray-200 text-gray-700 px-2 text-xs py-0.5 rounded-full w-fit">
+                    <div className="flex flex-col text-lg font-bold">
+                      <p className="w-fit rounded-full bg-gray-200 px-2 py-0.5 text-xs text-gray-700">
                         Course
                       </p>
                       <p>{courses[index].name}</p>
@@ -86,7 +86,7 @@ function AssignmentsHome() {
                       query: { subpage: 'editor' },
                     }}
                     prefetch
-                    className="bg-black font-semibold text-sm text-zinc-100 rounded-md flex space-x-1.5 nice-shadow items-center px-3 py-1"
+                    className="nice-shadow flex items-center space-x-1.5 rounded-md bg-black px-3 py-1 text-sm font-semibold text-zinc-100"
                   >
                     <GalleryVerticalEnd size={15} />
                     <p>Course Editor</p>
@@ -97,20 +97,20 @@ function AssignmentsHome() {
                   assignments.map((assignment: any) => (
                     <div
                       key={assignment.assignment_uuid}
-                      className="flex mt-3 p-2 sm:p-3 rounded flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 w-full light-shadow justify-between bg-gray-50 items-start sm:items-center"
+                      className="light-shadow mt-3 flex w-full flex-col items-start justify-between space-y-2 rounded bg-gray-50 p-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-2 sm:p-3"
                     >
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-1 sm:space-y-0 sm:space-x-2">
-                        <div className="flex text-xs font-bold bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full h-fit">
+                      <div className="flex flex-col items-start space-y-1 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-2">
+                        <div className="flex h-fit rounded-full bg-gray-200 px-2 py-0.5 text-xs font-bold text-gray-700">
                           <p>Assignment</p>
                         </div>
-                        <div className="flex font-semibold text-lg">
+                        <div className="flex text-lg font-semibold">
                           {assignment.title}
                         </div>
-                        <div className="flex font-semibold text-gray-600 px-2 py-0.5 rounded outline outline-gray-200/70">
+                        <div className="flex rounded px-2 py-0.5 font-semibold text-gray-600 outline outline-gray-200/70">
                           {assignment.description}
                         </div>
                       </div>
-                      <div className="flex space-x-2 font-bold text-sm items-center">
+                      <div className="flex items-center space-x-2 text-sm font-bold">
                         <EllipsisVertical className="text-gray-500" size={17} />
                         <Link
                           href={{
@@ -121,7 +121,7 @@ function AssignmentsHome() {
                             query: { subpage: 'editor' },
                           }}
                           prefetch
-                          className="bg-white rounded-full flex space-x-2 nice-shadow items-center px-3 py-0.5"
+                          className="nice-shadow flex items-center space-x-2 rounded-full bg-white px-3 py-0.5"
                         >
                           <Layers2 size={15} />
                           <p>Editor</p>
@@ -135,7 +135,7 @@ function AssignmentsHome() {
                             query: { subpage: 'submissions' },
                           }}
                           prefetch
-                          className="bg-white rounded-full flex space-x-2 nice-shadow items-center px-3 py-0.5"
+                          className="nice-shadow flex items-center space-x-2 rounded-full bg-white px-3 py-0.5"
                         >
                           <UserRoundPen size={15} />
                           <p>Submissions</p>
@@ -146,7 +146,7 @@ function AssignmentsHome() {
 
                 {assignments.length === 0 && (
                   <>
-                    <div className="flex mx-auto space-x-2 font-semibold mt-3 text-gray-600 items-center">
+                    <div className="mx-auto mt-3 flex items-center space-x-2 font-semibold text-gray-600">
                       <Info size={20} />
                       <p>
                         No assignments available for this course, create course
@@ -181,7 +181,7 @@ const MiniThumbnail = (props: { course: any }) => {
     >
       {props.course.thumbnail_image ? (
         <div
-          className="inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl w-[70px] h-[40px]   bg-cover"
+          className="inset-0 h-[40px] w-[70px] rounded-lg bg-cover shadow-xl ring-1 ring-black/10 ring-inset"
           style={{
             backgroundImage: `url(${getCourseThumbnailMediaDirectory(
               org?.org_uuid,
@@ -192,7 +192,7 @@ const MiniThumbnail = (props: { course: any }) => {
         />
       ) : (
         <div
-          className="inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl w-[70px] h-[40px] bg-cover"
+          className="inset-0 h-[40px] w-[70px] rounded-lg bg-cover shadow-xl ring-1 ring-black/10 ring-inset"
           style={{
             backgroundImage: `url('../empty_thumbnail.png')`,
             backgroundSize: 'contain',
