@@ -14,7 +14,7 @@
 		"@emoji-mart/data": "^1.2.1",
 		"@emoji-mart/react": "^1.1.1",
 		"@hello-pangea/dnd": "^18.0.1",
-		"@icons-pack/react-simple-icons": "^12.3.0",
+		"@icons-pack/react-simple-icons": "^12.4.0",
 		"@radix-ui/colors": "^3.0.0",
 		"@radix-ui/react-aspect-ratio": "^1.1.2",
 		"@radix-ui/react-dialog": "^1.1.6",
@@ -61,7 +61,7 @@
 		"import-in-the-middle": "^1.13.1",
 		"katex": "^0.16.21",
 		"lowlight": "^3.3.0",
-		"lucide-react": "^0.486.0",
+		"lucide-react": "^0.487.0",
 		"next": "15.2.4",
 		"next-auth": "^4.24.11",
 		"nextjs-toploader": "^3.8.16",
@@ -80,7 +80,6 @@
 		"styled-components": "^6.1.16",
 		"swr": "^2.3.3",
 		"tailwind-merge": "^3.1.0",
-		"tailwindcss-animate": "^1.0.7",
 		"tw-animate-css": "^1.2.5",
 		"unsplash-js": "^7.0.19",
 		"usehooks-ts": "^3.1.1",
@@ -92,8 +91,8 @@
 		"@eslint/js": "^9.23.0",
 		"@tailwindcss/postcss": "4.0.17",
 		"@types/node": "22.13.17",
-		"@types/react": "19.0.12",
-		"@types/react-dom": "19.0.4",
+		"@types/react": "19.1.0",
+		"@types/react-dom": "19.1.1",
 		"@types/react-katex": "^3.0.4",
 		"@types/react-transition-group": "^4.4.12",
 		"@types/styled-components": "^5.1.34",
@@ -105,8 +104,8 @@
 	},
 	"pnpm": {
 		"overrides": {
-			"@types/react": "19.0.12",
-			"@types/react-dom": "19.0.4"
+			"@types/react": "19.1.0",
+			"@types/react-dom": "19.1.1"
 		}
 	}
 }

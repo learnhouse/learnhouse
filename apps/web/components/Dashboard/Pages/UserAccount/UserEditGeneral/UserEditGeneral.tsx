@@ -217,7 +217,7 @@ function UserEditGeneral() {
                     <div>
                       <Label htmlFor="bio">
                         Bio
-                        <span className="ml-2 text-sm text-gray-500">
+                        <span className="text-sm text-gray-500">
                           ({400 - (values.bio?.length || 0)} characters left)
                         </span>
                       </Label>

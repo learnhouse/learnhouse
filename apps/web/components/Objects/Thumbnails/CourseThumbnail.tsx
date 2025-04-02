@@ -64,7 +64,7 @@ function CourseThumbnail({ course, orgslug, customLink }: PropsType) {
         course.course_uuid,
         course.thumbnail_image
       )
-    : '../empty_thumbnail.png'
+    : '/empty_thumbnail.png'
 
   return (
     <div className="relative">

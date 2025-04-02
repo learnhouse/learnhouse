@@ -144,7 +144,7 @@ const OrgEditGeneral: React.FC = () => {
                     <div>
                       <Label htmlFor="name">
                         Organization Name
-                        <span className="ml-2 text-sm text-gray-500">
+                        <span className="text-sm text-gray-500">
                           ({60 - (values.name?.length || 0)} characters left)
                         </span>
                       </Label>
@@ -166,7 +166,7 @@ const OrgEditGeneral: React.FC = () => {
                     <div>
                       <Label htmlFor="description">
                         Short Description
-                        <span className="ml-2 text-sm text-gray-500">
+                        <span className="text-sm text-gray-500">
                           ({100 - (values.description?.length || 0)} characters
                           left)
                         </span>
@@ -213,7 +213,7 @@ const OrgEditGeneral: React.FC = () => {
                     <div>
                       <Label htmlFor="about">
                         About Organization
-                        <span className="ml-2 text-sm text-gray-500">
+                        <span className="text-sm text-gray-500">
                           ({400 - (values.about?.length || 0)} characters left)
                         </span>
                       </Label>
