@@ -29,6 +29,7 @@
 		"@radix-ui/react-toggle": "^1.1.2",
 		"@radix-ui/react-toggle-group": "^1.1.2",
 		"@radix-ui/react-tooltip": "^1.1.8",
+		"@radix-ui/react-visually-hidden": "^1.1.2",
 		"@sentry/nextjs": "^9.10.1",
 		"@sentry/utils": "^8.55.0",
 		"@stitches/react": "^1.2.8",
@@ -54,7 +55,7 @@
 		"dompurify": "^3.2.4",
 		"emblor": "^1.4.8",
 		"formik": "^2.4.6",
-		"framer-motion": "^12.6.2",
+		"framer-motion": "^12.6.3",
 		"get-youtube-id": "^1.0.1",
 		"highlight.js": "^11.11.1",
 		"import-in-the-middle": "^1.13.1",
@@ -89,8 +90,8 @@
 	"devDependencies": {
 		"@eslint/eslintrc": "^3.3.1",
 		"@eslint/js": "^9.23.0",
-		"@tailwindcss/postcss": "^4.0.17",
-		"@types/node": "22.13.16",
+		"@tailwindcss/postcss": "4.0.17",
+		"@types/node": "22.13.17",
 		"@types/react": "19.0.12",
 		"@types/react-dom": "19.0.4",
 		"@types/react-katex": "^3.0.4",
@@ -99,7 +100,7 @@
 		"@types/uuid": "^10.0.0",
 		"eslint": "^9.23.0",
 		"postcss": "^8.5.3",
-		"tailwindcss": "^4.0.17",
+		"tailwindcss": "4.0.17",
 		"typescript": "5.8.2"
 	},
 	"pnpm": {

@@ -58,7 +58,7 @@ const LearningItemsList = ({
       }
     }, 0)
   }
-
+  // TODO: Fix maximum update depth error.
   // Parse the JSON string to items array when the component mounts or value changes
   useEffect(() => {
     try {

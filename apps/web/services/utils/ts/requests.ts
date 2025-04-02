@@ -88,16 +88,10 @@ export const swrFetcher = async (url: string, token?: string) => {
     credentials: 'include',
   }
 
-  try {
-    // Fetch the data
-    const request = await fetch(url, options)
-    const res = errorHandling(request)
+  const request = await fetch(url, options)
 
-    // Return the data
-    return res
-  } catch (error: any) {
-    throw error
-  }
+  // Return the data
+  return errorHandling(request)
 }
 
 export const errorHandling = (res: any) => {

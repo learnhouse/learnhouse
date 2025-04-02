@@ -1,9 +1,11 @@
 'use client'
+import { DialogTitle } from '@components/ui/dialog'
 import { blackA } from '@radix-ui/colors'
 import * as Dialog from '@radix-ui/react-dialog'
 import { keyframes, styled } from '@stitches/react'
 import { AlertTriangle, Info } from 'lucide-react'
 import React from 'react'
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
 
 type ModalParams = {
   confirmationMessage: string
@@ -38,6 +40,9 @@ const ConfirmationModal = (params: ModalParams) => {
       <Dialog.Portal>
         <DialogOverlay />
         <DialogContent>
+          <VisuallyHidden>
+            <DialogTitle>{params.dialogTitle}</DialogTitle>
+          </VisuallyHidden>
           <div className="flex space-x-4 tracking-tight">
             <div
               className={`icon align-content-center flex items-center rounded-xl p-6 ${

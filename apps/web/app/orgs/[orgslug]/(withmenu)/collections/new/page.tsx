@@ -7,15 +7,16 @@ import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import { revalidateTags, swrFetcher } from '@services/utils/ts/requests'
 import { Image as ImageIcon, Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import React, { useState } from 'react'
+import React, { use, useState } from 'react'
 import { toast } from 'react-hot-toast'
 import useSWR from 'swr'
 
-function NewCollection(params: any) {
+function NewCollection(props: { params: Promise<any> }) {
   const org = useOrg() as any
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
-  const orgslug = params.params.orgslug
+  const params = use(props.params)
+  const orgslug = params.orgslug
   const [name, setName] = React.useState('')
   const [description, setDescription] = React.useState('')
   const [selectedCourses, setSelectedCourses] = React.useState([]) as any

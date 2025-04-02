@@ -101,7 +101,7 @@ const CollectionAdminEditsArea = (props: any) => {
           dialogTitle={'Delete ' + props.collection.name + '?'}
           dialogTrigger={
             <button
-              className="absolute top-2 right-2 rounded-full bg-red-500 p-2 text-white transition-colors duration-300 hover:bg-red-600"
+              className="absolute top-2 right-2 rounded-full bg-red-500 p-2 text-white transition-colors duration-300 cursor-pointer hover:bg-red-600"
               rel="noopener noreferrer"
             >
               <X size={18} />
