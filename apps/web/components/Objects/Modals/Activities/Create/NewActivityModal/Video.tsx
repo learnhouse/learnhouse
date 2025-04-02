@@ -9,7 +9,8 @@ import FormLayout, {
 } from '@components/Objects/StyledElements/Form/Form'
 import * as Form from '@radix-ui/react-form'
 import { Youtube } from 'lucide-react'
-import React, { useState } from 'react'
+import { useState } from 'react'
+import * as React from 'react'
 import BarLoader from 'react-spinners/BarLoader'
 
 const SUPPORTED_FILES = constructAcceptValue(['mp4', 'webm'])

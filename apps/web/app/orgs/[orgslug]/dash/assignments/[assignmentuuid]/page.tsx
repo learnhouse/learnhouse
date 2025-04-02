@@ -24,7 +24,7 @@ import {
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useParams, useSearchParams } from 'next/navigation'
-import React, { useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import { mutate } from 'swr'
 import { useMediaQuery } from 'usehooks-ts'
@@ -36,7 +36,7 @@ const AssignmentSubmissionsSubPage = dynamic(
 function AssignmentEdit() {
   const params = useParams<{ assignmentuuid: string }>()
   const searchParams = useSearchParams()
-  const [selectedSubPage, setSelectedSubPage] = React.useState(
+  const [selectedSubPage, setSelectedSubPage] = useState(
     searchParams.get('subpage') || 'editor'
   )
   const isMobile = useMediaQuery('(max-width: 767px)')
@@ -133,7 +133,7 @@ function PublishingState() {
   const assignment = useAssignments() as any
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
-  const [isEditModalOpen, setIsEditModalOpen] = React.useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
 
   async function updateAssignmentPublishState(assignmentUUID: string) {
     const res = await updateAssignment(

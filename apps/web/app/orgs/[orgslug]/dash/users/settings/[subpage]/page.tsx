@@ -16,7 +16,7 @@ import {
   Users,
 } from 'lucide-react'
 import Link from 'next/link'
-import React, { useEffect, use } from 'react'
+import { useState, useEffect, use } from 'react'
 import { useMediaQuery } from 'usehooks-ts'
 
 export type SettingsParams = {
@@ -28,8 +28,8 @@ function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
   const params = use(props.params)
   const session = useLHSession() as any
   const org = useOrg() as any
-  const [H1Label, setH1Label] = React.useState('')
-  const [H2Label, setH2Label] = React.useState('')
+  const [H1Label, setH1Label] = useState('')
+  const [H2Label, setH2Label] = useState('')
   const isMobile = useMediaQuery('(max-width: 767px)')
 
   function handleLabels() {

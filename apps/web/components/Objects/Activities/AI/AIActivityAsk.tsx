@@ -15,7 +15,8 @@ import { FlaskConical, MessageCircle, X } from 'lucide-react'
 import Image from 'next/image'
 import learnhouseAI_logo_black from 'public/learnhouse_ai_black_logo.png'
 import learnhouseAI_icon from 'public/learnhouse_ai_simple.png'
-import React, { useEffect, useRef } from 'react'
+import type { KeyboardEvent, ChangeEvent } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import useGetAIFeatures from '@hooks/useGetAIFeatures'
 
 type AIActivityAskProps = {
@@ -24,7 +25,7 @@ type AIActivityAskProps = {
 
 function AIActivityAsk(props: AIActivityAskProps) {
   const is_ai_feature_enabled = useGetAIFeatures({ feature: 'activity_ask' })
-  const [isButtonAvailable, setIsButtonAvailable] = React.useState(false)
+  const [isButtonAvailable, setIsButtonAvailable] = useState(false)
   const dispatchAIChatBot = useAIChatBotDispatch() as any
 
   useEffect(() => {
@@ -92,14 +93,14 @@ function ActivityChatMessageBox(props: ActivityChatMessageBoxProps) {
     }
   }, [aiChatBotState.isModalOpen])
 
-  function handleKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
+  function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
     if (event.key === 'Enter') {
       // Perform the sending action here
       sendMessage(event.currentTarget.value)
     }
   }
 
-  const handleChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = async (event: ChangeEvent<HTMLInputElement>) => {
     await dispatchAIChatBot({
       type: 'setChatInputValue',
       payload: event.currentTarget.value,
@@ -382,7 +383,7 @@ const AIMessagePlaceHolder = (props: {
   sendMessage: any
 }) => {
   const session = useLHSession() as any
-  const [feedbackModal, setFeedbackModal] = React.useState(false)
+  const [feedbackModal, setFeedbackModal] = useState(false)
   const aiChatBotState = useAIChatBot() as AIChatBotStateTypes
 
   if (!aiChatBotState.error.isError) {

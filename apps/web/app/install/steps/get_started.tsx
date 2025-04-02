@@ -3,7 +3,7 @@ import PageLoading from '@components/Objects/Loaders/PageLoading'
 import { getAPIUrl } from '@services/config/config'
 import { swrFetcher } from '@services/utils/ts/requests'
 import { useRouter } from 'next/navigation'
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import useSWR, { mutate } from 'swr'
 
 function GetStarted() {

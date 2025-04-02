@@ -16,7 +16,7 @@ import {
   UserPen,
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import { useMediaQuery } from 'usehooks-ts'
 import { useContributorStatus } from '../../../../hooks/useContributorStatus'

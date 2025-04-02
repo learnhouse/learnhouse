@@ -1,7 +1,7 @@
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { NodeViewContent, NodeViewWrapper } from '@tiptap/react'
 import { AlertTriangle, X } from 'lucide-react'
-import React, { useState } from 'react'
+import { useState } from 'react'
 import styled from 'styled-components'
 
 interface CalloutOptions {

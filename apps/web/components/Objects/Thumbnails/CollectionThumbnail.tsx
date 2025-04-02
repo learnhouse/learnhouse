@@ -10,7 +10,6 @@ import { revalidateTags } from '@services/utils/ts/requests'
 import { X } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import React from 'react'
 
 type PropsType = {
   collection: any

@@ -3,14 +3,14 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { getAPIUrl } from '@services/config/config'
 import { createAssignmentTask } from '@services/courses/assignments'
 import { AArrowUp, FileUp, ListTodo } from 'lucide-react'
-import React from 'react'
+import { useRef } from 'react'
 import toast from 'react-hot-toast'
 import { mutate } from 'swr'
 
 function NewTaskModal({ closeModal, assignment_uuid }: any) {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
-  const reminderShownRef = React.useRef(false)
+  const reminderShownRef = useRef(false)
   const assignmentTaskStateHook = useAssignmentsTaskDispatch() as any
 
   function showReminderToast() {

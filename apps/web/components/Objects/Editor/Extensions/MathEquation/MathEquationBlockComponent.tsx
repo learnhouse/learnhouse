@@ -1,5 +1,6 @@
 import { NodeViewWrapper } from '@tiptap/react'
-import React from 'react'
+import type { ChangeEvent } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import styled from 'styled-components'
 import 'katex/dist/katex.min.css'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
@@ -210,20 +211,20 @@ const HelpDropdown = styled.div`
 `
 
 function MathEquationBlockComponent(props: any) {
-  const [equation, setEquation] = React.useState(props.node.attrs.math_equation)
-  const [isEditing, setIsEditing] = React.useState(true)
-  const [showTemplates, setShowTemplates] = React.useState(false)
-  const [showSymbols, setShowSymbols] = React.useState(false)
-  const [showHelp, setShowHelp] = React.useState(false)
+  const [equation, setEquation] = useState(props.node.attrs.math_equation)
+  const [isEditing, setIsEditing] = useState(true)
+  const [showTemplates, setShowTemplates] = useState(false)
+  const [showSymbols, setShowSymbols] = useState(false)
+  const [showHelp, setShowHelp] = useState(false)
   const editorState = useEditorProvider() as any
   const isEditable = editorState.isEditable
-  const inputRef = React.useRef<HTMLInputElement>(null)
-  const templatesRef = React.useRef<HTMLDivElement>(null)
-  const symbolsRef = React.useRef<HTMLDivElement>(null)
-  const helpRef = React.useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const templatesRef = useRef<HTMLDivElement>(null)
+  const symbolsRef = useRef<HTMLDivElement>(null)
+  const helpRef = useRef<HTMLDivElement>(null)
 
   // Close dropdowns when clicking outside
-  React.useEffect(() => {
+  useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
         templatesRef.current &&
@@ -248,7 +249,7 @@ function MathEquationBlockComponent(props: any) {
     }
   }, [])
 
-  const handleEquationChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleEquationChange = (event: ChangeEvent<HTMLInputElement>) => {
     setEquation(event.target.value)
     props.updateAttributes({
       math_equation: event.target.value,

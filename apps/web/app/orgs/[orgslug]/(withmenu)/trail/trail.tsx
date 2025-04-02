@@ -7,7 +7,7 @@ import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/Ge
 import TrailCourseElement from '@components/Pages/Trail/TrailCourseElement'
 import { getAPIUrl } from '@services/config/config'
 import { swrFetcher } from '@services/utils/ts/requests'
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import useSWR from 'swr'
 
 function Trail(params: any) {

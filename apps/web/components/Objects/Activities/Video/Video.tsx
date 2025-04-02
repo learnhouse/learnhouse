@@ -1,13 +1,13 @@
 import { useOrg } from '@components/Contexts/OrgContext'
 import { getActivityMediaDirectory } from '@services/media/media'
-import React from 'react'
+import { useState, useEffect } from 'react'
 import YouTube from 'react-youtube'
 
 function VideoActivity({ activity, course }: { activity: any; course: any }) {
   const org = useOrg() as any
-  const [videoId, setVideoId] = React.useState('')
+  const [videoId, setVideoId] = useState('')
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (activity && activity.content && activity.content.uri) {
       var getYouTubeID = require('get-youtube-id')
       setVideoId(getYouTubeID(activity.content.uri))

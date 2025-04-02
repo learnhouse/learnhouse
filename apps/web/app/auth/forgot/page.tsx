@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import React from 'react'
 import ForgotPasswordClient from './forgot'
 
 export const metadata: Metadata = {

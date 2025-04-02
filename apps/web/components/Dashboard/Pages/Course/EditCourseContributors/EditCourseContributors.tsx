@@ -24,7 +24,7 @@ import { getAPIUrl } from '@services/config/config'
 import { editContributor } from '@services/courses/courses'
 import { swrFetcher } from '@services/utils/ts/requests'
 import { Check, ChevronDown, UserPen, Users } from 'lucide-react'
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import useSWR, { mutate } from 'swr'
 

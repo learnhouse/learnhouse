@@ -24,7 +24,8 @@ import {
 } from 'lucide-react'
 import Image from 'next/image'
 import learnhouseAI_icon from 'public/learnhouse_ai_simple.png'
-import React from 'react'
+import type { ChangeEvent, KeyboardEvent } from 'react'
+import { useState, useEffect } from 'react'
 
 type AIEditorToolkitProps = {
   editor: Editor
@@ -45,9 +46,9 @@ function AIEditorToolkit(props: AIEditorToolkitProps) {
   const dispatchAIEditor = useAIEditorDispatch() as any
   const aiEditorState = useAIEditor() as AIEditorStateTypes
   const is_ai_feature_enabled = useGetAIFeatures({ feature: 'editor' })
-  const [isToolkitAvailable, setIsToolkitAvailable] = React.useState(true)
+  const [isToolkitAvailable, setIsToolkitAvailable] = useState(true)
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (is_ai_feature_enabled) {
       setIsToolkitAvailable(true)
     }
@@ -145,7 +146,7 @@ const UserFeedbackModal = (props: AIEditorToolkitProps) => {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
 
-  const handleChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = async (event: ChangeEvent<HTMLInputElement>) => {
     await dispatchAIEditor({
       type: 'setChatInputValue',
       payload: event.currentTarget.value,
@@ -229,9 +230,7 @@ const UserFeedbackModal = (props: AIEditorToolkitProps) => {
     }
   }
 
-  const handleKeyPress = async (
-    event: React.KeyboardEvent<HTMLInputElement>
-  ) => {
+  const handleKeyPress = async (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
       await handleOperation(
         aiEditorState.selectedTool,
@@ -559,7 +558,7 @@ const AiEditorActionScreen = ({
   const dispatchAIEditor = useAIEditorDispatch() as any
   const aiEditorState = useAIEditor() as AIEditorStateTypes
 
-  const handleChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = async (event: ChangeEvent<HTMLInputElement>) => {
     await dispatchAIEditor({
       type: 'setChatInputValue',
       payload: event.currentTarget.value,

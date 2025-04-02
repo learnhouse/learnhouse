@@ -7,7 +7,7 @@ import {
   unlinkCourseFromProduct,
 } from '@services/payments/products'
 import { BookOpen, Plus, Trash2 } from 'lucide-react'
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { mutate } from 'swr'
 import LinkCourseModal from './LinkCourseModal'

@@ -5,14 +5,14 @@ import {
 } from '@components/Contexts/Assignments/AssignmentsTaskContext'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { FileUp, ListTodo, PanelLeftOpen, Plus } from 'lucide-react'
-import React, { useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import NewTaskModal from './Modals/NewTaskModal'
 
 function AssignmentTasks({ assignment_uuid }: any) {
   const assignments = useAssignments() as any
   const assignmentTask = useAssignmentsTask() as any
   const assignmentTaskHook = useAssignmentsTaskDispatch() as any
-  const [isNewTaskModalOpen, setIsNewTaskModalOpen] = React.useState(false)
+  const [isNewTaskModalOpen, setIsNewTaskModalOpen] = useState(false)
 
   async function setSelectTask(task_uuid: string) {
     assignmentTaskHook({

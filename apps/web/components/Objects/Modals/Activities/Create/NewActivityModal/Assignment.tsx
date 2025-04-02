@@ -12,7 +12,7 @@ import * as Form from '@radix-ui/react-form'
 import { getAPIUrl } from '@services/config/config'
 import { createActivity, deleteActivity } from '@services/courses/activities'
 import { createAssignment } from '@services/courses/assignments'
-import React from 'react'
+import { useState } from 'react'
 import toast from 'react-hot-toast'
 import { BarLoader } from 'react-spinners'
 import { mutate } from 'swr'
@@ -20,11 +20,11 @@ import { mutate } from 'swr'
 function NewAssignment({ submitActivity, chapterId, course, closeModal }: any) {
   const org = useOrg() as any
   const session = useLHSession() as any
-  const [activityName, setActivityName] = React.useState('')
-  const [isSubmitting, setIsSubmitting] = React.useState(false)
-  const [activityDescription, setActivityDescription] = React.useState('')
-  const [dueDate, setDueDate] = React.useState('')
-  const [gradingType, setGradingType] = React.useState('ALPHABET')
+  const [activityName, setActivityName] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [activityDescription, setActivityDescription] = useState('')
+  const [dueDate, setDueDate] = useState('')
+  const [gradingType, setGradingType] = useState('ALPHABET')
 
   const handleNameChange = (e: any) => {
     setActivityName(e.target.value)

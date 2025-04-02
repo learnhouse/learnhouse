@@ -9,7 +9,7 @@ import { getAPIUrl } from '@services/config/config'
 import { removeUserFromOrg } from '@services/organizations/orgs'
 import { swrFetcher } from '@services/utils/ts/requests'
 import { KeyRound, LogOut } from 'lucide-react'
-import React, { useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import useSWR, { mutate } from 'swr'
 
@@ -21,9 +21,9 @@ function OrgUsers() {
     org ? `${getAPIUrl()}orgs/${org?.id}/users` : null,
     (url) => swrFetcher(url, access_token)
   )
-  const [rolesModal, setRolesModal] = React.useState(false)
-  const [selectedUser, setSelectedUser] = React.useState(null) as any
-  const [isLoading, setIsLoading] = React.useState(true)
+  const [rolesModal, setRolesModal] = useState(false)
+  const [selectedUser, setSelectedUser] = useState(null) as any
+  const [isLoading, setIsLoading] = useState(true)
 
   const handleRolesModal = (user_uuid: any) => {
     setSelectedUser(user_uuid)

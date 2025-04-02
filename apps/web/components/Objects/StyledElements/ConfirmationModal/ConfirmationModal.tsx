@@ -4,7 +4,8 @@ import { blackA } from '@radix-ui/colors'
 import * as Dialog from '@radix-ui/react-dialog'
 import { keyframes, styled } from '@stitches/react'
 import { AlertTriangle, Info } from 'lucide-react'
-import React from 'react'
+import type { ReactNode } from 'react'
+import { useState, useCallback } from 'react'
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden'
 
 type ModalParams = {
@@ -12,19 +13,19 @@ type ModalParams = {
   confirmationButtonText: string
   dialogTitle: string
   functionToExecute: any
-  dialogTrigger?: React.ReactNode
+  dialogTrigger?: ReactNode
   status?: 'warning' | 'info'
   buttonid?: string
 }
 
 const ConfirmationModal = (params: ModalParams) => {
-  const [isDialogOpen, setIsDialogOpen] = React.useState(false)
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
   const warningColors = 'bg-red-100 text-red-600'
   const infoColors = 'bg-blue-100 text-blue-600'
   const warningButtonColors = 'text-white bg-red-500 hover:bg-red-600'
   const infoButtonColors = 'text-white bg-blue-500 hover:bg-blue-600'
 
-  const onOpenChange = React.useCallback(
+  const onOpenChange = useCallback(
     (open: any) => {
       setIsDialogOpen(open)
     },

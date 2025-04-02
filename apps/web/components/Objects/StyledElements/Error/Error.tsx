@@ -3,7 +3,6 @@ import { getUriWithoutOrg } from '@services/config/config'
 import { AlertTriangle, HomeIcon, RefreshCcw } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import React from 'react'
 
 function ErrorUI(params: { message?: string; submessage?: string }) {
   const router = useRouter()

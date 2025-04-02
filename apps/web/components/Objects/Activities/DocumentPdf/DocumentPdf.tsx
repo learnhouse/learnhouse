@@ -1,6 +1,6 @@
 import { useOrg } from '@components/Contexts/OrgContext'
 import { getActivityMediaDirectory } from '@services/media/media'
-import React from 'react'
+import { useEffect } from 'react'
 
 function DocumentPdfActivity({
   activity,
@@ -11,7 +11,7 @@ function DocumentPdfActivity({
 }) {
   const org = useOrg() as any
 
-  React.useEffect(() => {}, [activity, org])
+  useEffect(() => {}, [activity, org])
 
   return (
     <div className="m-8 mt-14 rounded-md bg-zinc-900">

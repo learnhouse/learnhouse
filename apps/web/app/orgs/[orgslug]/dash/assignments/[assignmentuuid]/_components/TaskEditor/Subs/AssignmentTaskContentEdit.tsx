@@ -3,7 +3,7 @@ import {
   useAssignmentsTaskDispatch,
 } from '@components/Contexts/Assignments/AssignmentsTaskContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import TaskFileObject from './TaskTypes/TaskFileObject'
 import TaskQuizObject from './TaskTypes/TaskQuizObject'
 

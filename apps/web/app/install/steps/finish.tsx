@@ -4,7 +4,6 @@ import { updateInstall } from '@services/install/install'
 import { swrFetcher } from '@services/utils/ts/requests'
 import { Check } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import React from 'react'
 import useSWR from 'swr'
 
 const Finish = () => {

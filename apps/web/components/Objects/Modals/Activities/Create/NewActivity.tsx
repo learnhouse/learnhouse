@@ -2,7 +2,7 @@ import AssignmentActivityImage from 'public//activities_types/assignment-page-ac
 import DocumentPdfPageActivityImage from 'public//activities_types/documentpdf-page-activity.png'
 import VideoPageActivityImage from 'public//activities_types/video-page-activity.png'
 import DynamicPageActivityImage from 'public/activities_types/dynamic-page-activity.png'
-import React, { useState } from 'react'
+import { useState } from 'react'
 
 import Image from 'next/image'
 import Assignment from './NewActivityModal/Assignment'

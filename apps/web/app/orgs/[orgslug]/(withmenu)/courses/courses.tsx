@@ -8,7 +8,7 @@ import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/Ge
 import CourseThumbnail from '@components/Objects/Thumbnails/CourseThumbnail'
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
 import { useSearchParams } from 'next/navigation'
-import React from 'react'
+import { useState } from 'react'
 
 interface CourseProps {
   orgslug: string
@@ -21,7 +21,7 @@ function Courses(props: CourseProps) {
   const courses = props.courses
   const searchParams = useSearchParams()
   const isCreatingCourse = searchParams.get('new') ? true : false
-  const [newCourseModal, setNewCourseModal] = React.useState(isCreatingCourse)
+  const [newCourseModal, setNewCourseModal] = useState(isCreatingCourse)
   const isUserAdmin = useAdminStatus() as any
 
   async function closeNewCourseModal() {

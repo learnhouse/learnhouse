@@ -7,7 +7,6 @@ import {
 } from '@services/usergroups/usergroups'
 import { swrFetcher } from '@services/utils/ts/requests'
 import { Check, Plus, X } from 'lucide-react'
-import React from 'react'
 import toast from 'react-hot-toast'
 import useSWR, { mutate } from 'swr'
 

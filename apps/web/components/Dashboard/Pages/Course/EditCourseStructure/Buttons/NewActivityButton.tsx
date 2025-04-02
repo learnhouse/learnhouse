@@ -12,7 +12,7 @@ import { getOrganizationContextInfoWithoutCredentials } from '@services/organiza
 import { revalidateTags } from '@services/utils/ts/requests'
 import { Layers } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import React, { useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import { mutate } from 'swr'
 
@@ -22,7 +22,7 @@ type NewActivityButtonProps = {
 }
 
 function NewActivityButton(props: NewActivityButtonProps) {
-  const [newActivityModal, setNewActivityModal] = React.useState(false)
+  const [newActivityModal, setNewActivityModal] = useState(false)
   const router = useRouter()
   const course = useCourse() as any
   const session = useLHSession() as any

@@ -6,16 +6,16 @@ import { HeaderProfileBox } from '@components/Security/HeaderProfileBox'
 import { getUriWithOrg } from '@services/config/config'
 import { getOrgLogoMediaDirectory } from '@services/media/media'
 import Link from 'next/link'
-import React from 'react'
+import { useState } from 'react'
 import MenuLinks from './OrgMenuLinks'
 
 export const OrgMenu = (props: any) => {
   const orgslug = props.orgslug
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
-  const [feedbackModal, setFeedbackModal] = React.useState(false)
+  const [feedbackModal, setFeedbackModal] = useState(false)
   const org = useOrg() as any
-  const [isMenuOpen, setIsMenuOpen] = React.useState(false)
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   function closeFeedbackModal() {
     setFeedbackModal(false)

@@ -6,7 +6,8 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import { getActivityBlockMediaDirectory } from '@services/media/media'
 import { NodeViewWrapper } from '@tiptap/react'
 import { AlertTriangle, FileText } from 'lucide-react'
-import React, { useEffect } from 'react'
+import type { ChangeEvent } from 'react'
+import { useState, useEffect } from 'react'
 import styled from 'styled-components'
 import { uploadNewPDFFile } from '@services/blocks/Pdf/pdf'
 import {
@@ -22,18 +23,16 @@ function PDFBlockComponent(props: any) {
   const course = useCourse() as any
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
-  const [pdf, setPDF] = React.useState(null)
-  const [isLoading, setIsLoading] = React.useState(false)
-  const [blockObject, setblockObject] = React.useState(
-    props.node.attrs.blockObject
-  )
+  const [pdf, setPDF] = useState(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [blockObject, setblockObject] = useState(props.node.attrs.blockObject)
   const fileId = blockObject
     ? `${blockObject.content.file_id}.${blockObject.content.file_format}`
     : null
   const editorState = useEditorProvider() as any
   const isEditable = editorState.isEditable
 
-  const handlePDFChange = (event: React.ChangeEvent<any>) => {
+  const handlePDFChange = (event: ChangeEvent<any>) => {
     setPDF(event.target.files[0])
   }
 

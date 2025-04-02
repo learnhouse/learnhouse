@@ -1,7 +1,7 @@
 import blacklogo from '@public/black_logo.png'
 import Image from 'next/image'
 import Link from 'next/link'
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import { useOrg } from '../Contexts/OrgContext'
 
 function Watermark() {

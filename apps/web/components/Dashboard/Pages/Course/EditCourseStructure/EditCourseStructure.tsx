@@ -13,7 +13,7 @@ import { createChapter } from '@services/courses/chapters'
 import { revalidateTags } from '@services/utils/ts/requests'
 import { Hexagon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { mutate } from 'swr'
 import ChapterElement from './DraggableElements/ChapterElement'
 

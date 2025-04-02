@@ -12,7 +12,7 @@ import { signOut } from 'next-auth/react'
 import Image from 'next/image'
 import Link from 'next/link'
 import learnhouseIcon from 'public/learnhouse_bigicon_1.png'
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import useSWR from 'swr'
 
 function HomeClient() {

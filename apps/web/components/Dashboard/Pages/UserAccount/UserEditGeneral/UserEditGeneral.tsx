@@ -19,7 +19,7 @@ import {
   UploadCloud,
 } from 'lucide-react'
 import { signOut } from 'next-auth/react'
-import React, { useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { toast } from 'react-hot-toast'
 import * as Yup from 'yup'
 
@@ -44,10 +44,10 @@ interface FormValues {
 function UserEditGeneral() {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
-  const [localAvatar, setLocalAvatar] = React.useState(null) as any
-  const [isLoading, setIsLoading] = React.useState(false) as any
-  const [error, setError] = React.useState() as any
-  const [success, setSuccess] = React.useState('') as any
+  const [localAvatar, setLocalAvatar] = useState(null) as any
+  const [isLoading, setIsLoading] = useState(false) as any
+  const [error, setError] = useState() as any
+  const [success, setSuccess] = useState('') as any
 
   const handleFileChange = async (event: any) => {
     const file = event.target.files[0]

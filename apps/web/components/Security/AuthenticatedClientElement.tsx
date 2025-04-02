@@ -1,10 +1,11 @@
 'use client'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
-import React from 'react'
+import type { ReactNode } from 'react'
+import { useState, useEffect } from 'react'
 
 interface AuthenticatedClientElementProps {
-  children: React.ReactNode
+  children: ReactNode
   checkMethod: 'authentication' | 'roles'
   orgId?: string
   ressourceType?:
@@ -19,7 +20,7 @@ interface AuthenticatedClientElementProps {
 export const AuthenticatedClientElement = (
   props: AuthenticatedClientElementProps
 ) => {
-  const [isAllowed, setIsAllowed] = React.useState(false)
+  const [isAllowed, setIsAllowed] = useState(false)
   const session = useLHSession() as any
   const org = useOrg() as any
 
@@ -68,7 +69,7 @@ export const AuthenticatedClientElement = (
     }
   }
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (session.status == 'loading') {
       return
     }

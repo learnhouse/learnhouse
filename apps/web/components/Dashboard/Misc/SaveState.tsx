@@ -10,7 +10,7 @@ import { updateCourse } from '@services/courses/courses'
 import { revalidateTags } from '@services/utils/ts/requests'
 import { Check, SaveAllIcon, Timer } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import { mutate } from 'swr'
 
 function SaveState(props: { orgslug: string }) {

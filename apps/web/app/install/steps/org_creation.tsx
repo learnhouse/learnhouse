@@ -12,7 +12,7 @@ import { swrFetcher } from '@services/utils/ts/requests'
 import { useFormik } from 'formik'
 import { Check } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import React from 'react'
+import { useState } from 'react'
 import { BarLoader } from 'react-spinners'
 import useSWR from 'swr'
 
@@ -50,8 +50,8 @@ function OrgCreation() {
   } = useSWR(`${getAPIUrl()}install/latest`, (url) =>
     swrFetcher(url, access_token)
   )
-  const [isSubmitting, setIsSubmitting] = React.useState(false)
-  const [isSubmitted, setIsSubmitted] = React.useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isSubmitted, setIsSubmitted] = useState(false)
   const router = useRouter()
 
   function createOrgAndUpdateInstall(values: any) {

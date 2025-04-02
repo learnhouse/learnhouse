@@ -6,7 +6,6 @@ import PageLoading from '@components/Objects/Loaders/PageLoading'
 import CourseThumbnail from '@components/Objects/Thumbnails/CourseThumbnail'
 import { getOwnedCourses } from '@services/payments/payments'
 import { BookOpen, Package2 } from 'lucide-react'
-import React from 'react'
 import useSWR from 'swr'
 
 function OwnedCoursesPage() {

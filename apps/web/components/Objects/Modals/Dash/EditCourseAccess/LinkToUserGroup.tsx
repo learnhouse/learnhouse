@@ -7,7 +7,7 @@ import { linkResourcesToUserGroup } from '@services/usergroups/usergroups'
 import { swrFetcher } from '@services/utils/ts/requests'
 import { Info } from 'lucide-react'
 import Link from 'next/link'
-import React, { useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import useSWR, { mutate } from 'swr'
 
@@ -27,7 +27,7 @@ function LinkToUserGroup(props: LinkToUserGroupProps) {
     courseStructure && org ? `${getAPIUrl()}usergroups/org/${org.id}` : null,
     (url) => swrFetcher(url, access_token)
   )
-  const [selectedUserGroup, setSelectedUserGroup] = React.useState(null) as any
+  const [selectedUserGroup, setSelectedUserGroup] = useState(null) as any
 
   const handleLink = async () => {
     const res = await linkResourcesToUserGroup(

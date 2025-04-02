@@ -13,7 +13,7 @@ import { AlertTriangle, Check, User } from 'lucide-react'
 import { signIn } from 'next-auth/react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import React, { useEffect } from 'react'
+import { useState, useEffect } from 'react'
 
 const validate = (values: any) => {
   const errors: any = {}
@@ -46,11 +46,11 @@ const validate = (values: any) => {
 }
 
 function OpenSignUpComponent() {
-  const [isSubmitting, setIsSubmitting] = React.useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const org = useOrg() as any
   const router = useRouter()
-  const [error, setError] = React.useState('')
-  const [message, setMessage] = React.useState('')
+  const [error, setError] = useState('')
+  const [message, setMessage] = useState('')
   const formik = useFormik({
     initialValues: {
       org_slug: org?.slug,

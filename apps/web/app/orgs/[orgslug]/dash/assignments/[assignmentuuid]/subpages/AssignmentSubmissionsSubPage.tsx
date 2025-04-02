@@ -8,7 +8,7 @@ import { getAPIUrl } from '@services/config/config'
 import { getUserAvatarMediaDirectory } from '@services/media/media'
 import { swrFetcher } from '@services/utils/ts/requests'
 import { SendHorizonal, UserCheck, X } from 'lucide-react'
-import React, { useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import useSWR from 'swr'
 import EvaluateAssignment from './Modals/EvaluateAssignment'
 
@@ -78,7 +78,7 @@ function AssignmentSubmissionsSubPage({
 function SubmissionBox({ assignment_uuid, user_id, submission }: any) {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
-  const [gradeSudmissionModal, setGradeSubmissionModal] = React.useState({
+  const [gradeSudmissionModal, setGradeSubmissionModal] = useState({
     open: false,
     submission_id: '',
   })

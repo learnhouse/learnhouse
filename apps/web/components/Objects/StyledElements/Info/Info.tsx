@@ -2,7 +2,6 @@
 import { getUriWithoutOrg } from '@services/config/config'
 import { Diamond, Home, PersonStanding } from 'lucide-react'
 import Link from 'next/link'
-import React from 'react'
 
 function InfoUI(params: {
   message?: string

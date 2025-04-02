@@ -7,7 +7,7 @@ import { updatePassword } from '@services/settings/password'
 import { Form, Formik } from 'formik'
 import { AlertTriangle } from 'lucide-react'
 import { signOut } from 'next-auth/react'
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import { toast } from 'react-hot-toast'
 import * as Yup from 'yup'
 

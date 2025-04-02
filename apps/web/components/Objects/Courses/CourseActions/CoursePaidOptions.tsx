@@ -9,7 +9,7 @@ import {
 } from '@services/payments/products'
 import { ChevronDown, ChevronUp, RefreshCcw, SquareCheck } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import React, { useState } from 'react'
+import { useState } from 'react'
 import toast from 'react-hot-toast'
 import useSWR from 'swr'
 

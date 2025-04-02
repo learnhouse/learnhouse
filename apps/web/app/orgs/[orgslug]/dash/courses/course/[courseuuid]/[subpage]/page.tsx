@@ -8,7 +8,7 @@ import { getUriWithOrg } from '@services/config/config'
 import { motion } from 'framer-motion'
 import { GalleryVerticalEnd, Globe, Info, UserPen } from 'lucide-react'
 import Link from 'next/link'
-import React, { use } from 'react'
+import { use } from 'react'
 import { CourseProvider } from '@components/Contexts/CourseContext'
 export type CourseOverviewParams = {
   orgslug: string

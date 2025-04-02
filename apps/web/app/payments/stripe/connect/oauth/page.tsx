@@ -6,7 +6,7 @@ import { AlertTriangle, Check, Loader2 } from 'lucide-react'
 import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
 import learnhouseIcon from 'public/learnhouse_bigicon_1.png'
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 
 function StripeConnectCallback() {

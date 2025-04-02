@@ -1,7 +1,7 @@
 import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
 import { getUriWithOrg } from '@services/config/config'
 import Link from 'next/link'
-import React from 'react'
+import { Fragment } from 'react'
 
 interface Props {
   course: any
@@ -54,7 +54,7 @@ function ActivityIndicators(props: Props) {
     <div className="grid grid-flow-col justify-stretch space-x-6">
       {course.chapters.map((chapter: any) => {
         return (
-          <React.Fragment key={chapter.id || `chapter-${chapter.name}`}>
+          <Fragment key={chapter.id || `chapter-${chapter.name}`}>
             <div className="grid grid-flow-col justify-stretch space-x-2">
               {chapter.activities.map((activity: any) => {
                 return (
@@ -84,7 +84,7 @@ function ActivityIndicators(props: Props) {
                 )
               })}
             </div>
-          </React.Fragment>
+          </Fragment>
         )
       })}
     </div>

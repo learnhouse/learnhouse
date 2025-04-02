@@ -35,7 +35,7 @@ import {
   RefreshCcw,
   SquareCheck,
 } from 'lucide-react'
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import useSWR, { mutate } from 'swr'
 import * as Yup from 'yup'

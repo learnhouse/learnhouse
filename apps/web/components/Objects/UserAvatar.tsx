@@ -2,7 +2,6 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { getUriWithOrg } from '@services/config/config'
 import { getUserAvatarMediaDirectory } from '@services/media/media'
 import { useParams } from 'next/navigation'
-import React from 'react'
 
 type UserAvatarProps = {
   width?: number

@@ -11,7 +11,7 @@ import { motion } from 'framer-motion'
 import Image from 'next/image'
 import learnhouseAI_icon from 'public/learnhouse_ai_simple.png'
 import learnhouseIcon from 'public/learnhouse_icon.png'
-import React from 'react'
+import { useState, useEffect } from 'react'
 import styled from 'styled-components'
 import { ToolbarButtons } from './Toolbar/ToolbarButtons'
 
@@ -66,9 +66,9 @@ function Editor(props: Editor) {
   const dispatchAIEditor = useAIEditorDispatch() as any
   const aiEditorState = useAIEditor() as AIEditorStateTypes
   const is_ai_feature_enabled = useGetAIFeatures({ feature: 'editor' })
-  const [isButtonAvailable, setIsButtonAvailable] = React.useState(false)
+  const [isButtonAvailable, setIsButtonAvailable] = useState(false)
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (is_ai_feature_enabled) {
       setIsButtonAvailable(true)
     }

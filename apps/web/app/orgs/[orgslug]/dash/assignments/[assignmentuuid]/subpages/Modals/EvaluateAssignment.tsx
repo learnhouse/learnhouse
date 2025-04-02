@@ -16,7 +16,6 @@ import {
   X,
 } from 'lucide-react'
 import Link from 'next/link'
-import React from 'react'
 import toast from 'react-hot-toast'
 import TaskFileObject from '../../_components/TaskEditor/Subs/TaskTypes/TaskFileObject'
 import TaskQuizObject from '../../_components/TaskEditor/Subs/TaskTypes/TaskQuizObject'

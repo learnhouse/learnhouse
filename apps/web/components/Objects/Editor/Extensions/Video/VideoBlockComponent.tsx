@@ -6,7 +6,8 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import { getActivityBlockMediaDirectory } from '@services/media/media'
 import { NodeViewWrapper } from '@tiptap/react'
 import { Video } from 'lucide-react'
-import React, { useEffect } from 'react'
+import type { ChangeEvent } from 'react'
+import { useState, useEffect } from 'react'
 import styled from 'styled-components'
 import { uploadNewVideoFile } from '@services/blocks/Video/video'
 import {
@@ -22,18 +23,16 @@ function VideoBlockComponents(props: any) {
   const course = useCourse() as any
   const editorState = useEditorProvider() as any
   const isEditable = editorState.isEditable
-  const [video, setVideo] = React.useState(null)
+  const [video, setVideo] = useState(null)
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
-  const [isLoading, setIsLoading] = React.useState(false)
-  const [blockObject, setblockObject] = React.useState(
-    props.node.attrs.blockObject
-  )
+  const [isLoading, setIsLoading] = useState(false)
+  const [blockObject, setblockObject] = useState(props.node.attrs.blockObject)
   const fileId = blockObject
     ? `${blockObject.content.file_id}.${blockObject.content.file_format}`
     : null
 
-  const handleVideoChange = (event: React.ChangeEvent<any>) => {
+  const handleVideoChange = (event: ChangeEvent<any>) => {
     setVideo(event.target.files[0])
   }
 

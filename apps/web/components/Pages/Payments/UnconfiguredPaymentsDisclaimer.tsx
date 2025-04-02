@@ -2,7 +2,6 @@ import { Alert, AlertDescription, AlertTitle } from '@components/ui/alert'
 import { ChevronRight, CreditCard, Settings } from 'lucide-react'
 import { AlertTriangle, ShoppingCart, Users } from 'lucide-react'
 import Link from 'next/link'
-import React from 'react'
 
 function UnconfiguredPaymentsDisclaimer() {
   return (

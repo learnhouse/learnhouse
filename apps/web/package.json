@@ -54,6 +54,7 @@
 		"dayjs": "^1.11.13",
 		"dompurify": "^3.2.4",
 		"emblor": "^1.4.8",
+		"eslint-plugin-unused-imports": "^4.1.4",
 		"formik": "^2.4.6",
 		"framer-motion": "^12.6.3",
 		"get-youtube-id": "^1.0.1",

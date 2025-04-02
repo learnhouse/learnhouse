@@ -21,7 +21,7 @@ import relativeTime from 'dayjs/plugin/relativeTime'
 import { useFormik } from 'formik'
 import { motion } from 'framer-motion'
 import { PencilLine, Rss, TentTree } from 'lucide-react'
-import React, { useEffect } from 'react'
+import { useState, useLayoutEffect, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import useSWR, { mutate } from 'swr'
 
@@ -35,14 +35,14 @@ function CourseUpdates() {
     `${getAPIUrl()}courses/${course?.courseStructure.course_uuid}/updates`,
     (url) => swrFetcher(url, access_token)
   )
-  const [isModelOpen, setIsModelOpen] = React.useState(false)
+  const [isModelOpen, setIsModelOpen] = useState(false)
 
   function handleModelOpen() {
     setIsModelOpen(!isModelOpen)
   }
 
   // if user clicks outside the model, close the model
-  React.useLayoutEffect(() => {
+  useLayoutEffect(() => {
     function handleClickOutside(event: any) {
       if (
         event.target.closest('.bg-white') ||
@@ -95,7 +95,7 @@ function CourseUpdates() {
 }
 
 const UpdatesSection = () => {
-  const [selectedView, setSelectedView] = React.useState('list')
+  const [selectedView, setSelectedView] = useState('list')
   const adminStatus = useAdminStatus()
   return (
     <div className="nice-shadow w-[700px] overflow-hidden rounded-lg bg-white/95 backdrop-blur-md">

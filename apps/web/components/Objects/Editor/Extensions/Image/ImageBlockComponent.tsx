@@ -7,7 +7,8 @@ import { getActivityBlockMediaDirectory } from '@services/media/media'
 import { NodeViewWrapper } from '@tiptap/react'
 import { AlertTriangle, Image } from 'lucide-react'
 import { Resizable } from 're-resizable'
-import React, { useEffect } from 'react'
+import type { ChangeEvent } from 'react'
+import { useState, useEffect } from 'react'
 import { uploadNewImageFile } from '@services/blocks/Image/images'
 import {
   FileUploadBlock,
@@ -25,19 +26,17 @@ function ImageBlockComponent(props: any) {
   const access_token = session?.data?.tokens?.access_token
 
   const isEditable = editorState.isEditable
-  const [image, setImage] = React.useState(null)
-  const [isLoading, setIsLoading] = React.useState(false)
-  const [blockObject, setblockObject] = React.useState(
-    props.node.attrs.blockObject
-  )
-  const [imageSize, setImageSize] = React.useState({
+  const [image, setImage] = useState(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [blockObject, setblockObject] = useState(props.node.attrs.blockObject)
+  const [imageSize, setImageSize] = useState({
     width: props.node.attrs.size ? props.node.attrs.size.width : 300,
   })
 
   const fileId = blockObject
     ? `${blockObject.content.file_id}.${blockObject.content.file_format}`
     : null
-  const handleImageChange = (event: React.ChangeEvent<any>) => {
+  const handleImageChange = (event: ChangeEvent<any>) => {
     setImage(event.target.files[0])
   }
 

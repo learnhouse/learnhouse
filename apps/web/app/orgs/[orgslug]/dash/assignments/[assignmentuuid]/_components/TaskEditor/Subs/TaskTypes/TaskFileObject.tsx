@@ -13,7 +13,8 @@ import {
 import { getTaskFileSubmissionDir } from '@services/media/media'
 import { Cloud, Download, File, Info, Loader, UploadCloud } from 'lucide-react'
 import Link from 'next/link'
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
+import * as React from 'react'
 import toast from 'react-hot-toast'
 
 type FileSchema = {

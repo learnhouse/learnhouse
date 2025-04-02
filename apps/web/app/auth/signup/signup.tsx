@@ -13,7 +13,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import learnhouseIcon from 'public/learnhouse_bigicon_1.png'
-import React, { useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import { BarLoader } from 'react-spinners'
 import InviteOnlySignUpComponent from './InviteOnlySignUp'
@@ -25,8 +25,8 @@ interface SignUpClientProps {
 
 function SignUpClient(props: SignUpClientProps) {
   const session = useLHSession() as any
-  const [joinMethod, setJoinMethod] = React.useState('open')
-  const [inviteCode, setInviteCode] = React.useState('')
+  const [joinMethod, setJoinMethod] = useState('open')
+  const [inviteCode, setInviteCode] = useState('')
   const searchParams = useSearchParams()
   const inviteCodeParam = searchParams.get('inviteCode')
 
@@ -113,8 +113,8 @@ const LoggedInJoinScreen = (props: any) => {
   const session = useLHSession() as any
   const org = useOrg() as any
   const invite_code = props.inviteCode
-  const [isLoading, setIsLoading] = React.useState(true)
-  const [isSumbitting, setIsSubmitting] = React.useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSumbitting, setIsSubmitting] = useState(false)
   const router = useRouter()
 
   const join = async () => {
@@ -186,9 +186,9 @@ const NoTokenScreen = (props: any) => {
   const session = useLHSession() as any
   const org = useOrg() as any
   const router = useRouter()
-  const [isLoading, setIsLoading] = React.useState(true)
-  const [inviteCode, setInviteCode] = React.useState('')
-  const [messsage, setMessage] = React.useState('bruh')
+  const [isLoading, setIsLoading] = useState(true)
+  const [inviteCode, setInviteCode] = useState('')
+  const [messsage, setMessage] = useState('bruh')
 
   const handleInviteCodeChange = (e: any) => {
     setInviteCode(e.target.value)

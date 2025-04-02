@@ -28,11 +28,11 @@ import {
   Tags,
   Video,
 } from 'lucide-react'
-import React from 'react'
+import { useState } from 'react'
 import styled from 'styled-components'
 
 export const ToolbarButtons = ({ editor, props }: any) => {
-  const [showTableMenu, setShowTableMenu] = React.useState(false)
+  const [showTableMenu, setShowTableMenu] = useState(false)
 
   if (!editor) {
     return null

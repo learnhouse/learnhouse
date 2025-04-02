@@ -16,7 +16,6 @@ import { revalidateTags } from '@services/utils/ts/requests'
 import { Form, Formik } from 'formik'
 import { Plus, X as XIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import React from 'react'
 import { toast } from 'react-hot-toast'
 import { mutate } from 'swr'
 

@@ -3,7 +3,6 @@ import { AssignmentProvider } from '@components/Contexts/Assignments/AssignmentC
 import { AssignmentsTaskProvider } from '@components/Contexts/Assignments/AssignmentsTaskContext'
 import { LayoutList } from 'lucide-react'
 import dynamic from 'next/dynamic'
-import React from 'react'
 import AssignmentTasks from '../_components/Tasks'
 const AssignmentTaskEditor = dynamic(
   () => import('../_components/TaskEditor/TaskEditor')

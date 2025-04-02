@@ -44,7 +44,8 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
+import * as React from 'react'
 import toast from 'react-hot-toast'
 import { mutate } from 'swr'
 import { useMediaQuery } from 'usehooks-ts'
@@ -762,7 +763,6 @@ function ActivityNavigation(props: {
               </span>
             </div>
           </button>
-
           <button
             onClick={() => navigateToActivity(nextActivity)}
             className={`flex cursor-pointer items-center space-x-1.5 rounded-md p-2 transition-all duration-200 ${
@@ -811,11 +811,9 @@ function ActivityNavigation(props: {
               </div>
             </button>
           </div>
-
           <div className="justify-self-center text-sm text-gray-500">
             {currentIndex + 1} of {allActivities.length}
           </div>
-
           <div className="justify-self-end">
             <button
               onClick={() => navigateToActivity(nextActivity)}

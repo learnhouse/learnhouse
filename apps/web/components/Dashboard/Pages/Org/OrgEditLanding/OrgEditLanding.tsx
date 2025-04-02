@@ -35,7 +35,8 @@ import {
   Upload,
   Users,
 } from 'lucide-react'
-import React from 'react'
+import type { FC, ChangeEvent } from 'react'
+import { useState, useEffect, createElement } from 'react'
 import toast from 'react-hot-toast'
 import useSWR from 'swr'
 import type {
@@ -161,18 +162,16 @@ const OrgEditLanding = () => {
   const org = useOrg() as any
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
-  const [isLandingEnabled, setIsLandingEnabled] = React.useState(false)
-  const [landingData, setLandingData] = React.useState<LandingObject>({
+  const [isLandingEnabled, setIsLandingEnabled] = useState(false)
+  const [landingData, setLandingData] = useState<LandingObject>({
     sections: [],
     enabled: false,
   })
-  const [selectedSection, setSelectedSection] = React.useState<number | null>(
-    null
-  )
-  const [isSaving, setIsSaving] = React.useState(false)
+  const [selectedSection, setSelectedSection] = useState<number | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
 
   // Initialize landing data from org config
-  React.useEffect(() => {
+  useEffect(() => {
     if (org?.config?.config?.landing) {
       const landingConfig = org.config.config.landing
       setLandingData({
@@ -401,7 +400,7 @@ const OrgEditLanding = () => {
                                           : 'bg-gray-100/50 text-gray-600'
                                       }`}
                                     >
-                                      {React.createElement(
+                                      {createElement(
                                         SECTION_TYPES[
                                           section.type as keyof typeof SECTION_TYPES
                                         ].icon,
@@ -527,7 +526,7 @@ interface SectionEditorProps {
   onChange: (section: LandingSection) => void
 }
 
-const SectionEditor: React.FC<SectionEditorProps> = ({ section, onChange }) => {
+const SectionEditor: FC<SectionEditorProps> = ({ section, onChange }) => {
   switch (section.type) {
     case 'hero':
       return <HeroSectionEditor section={section} onChange={onChange} />
@@ -544,11 +543,11 @@ const SectionEditor: React.FC<SectionEditorProps> = ({ section, onChange }) => {
   }
 }
 
-const HeroSectionEditor: React.FC<{
+const HeroSectionEditor: FC<{
   section: LandingHeroSection
   onChange: (section: LandingHeroSection) => void
 }> = ({ section, onChange }) => {
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
       const reader = new FileReader()
@@ -1323,7 +1322,7 @@ interface ImageUploaderProps {
   id: string
 }
 
-const ImageUploader: React.FC<ImageUploaderProps> = ({
+const ImageUploader: FC<ImageUploaderProps> = ({
   onImageUploaded,
   className,
   buttonText = 'Upload Image',
@@ -1332,10 +1331,10 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   const org = useOrg() as any
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
-  const [isUploading, setIsUploading] = React.useState(false)
+  const [isUploading, setIsUploading] = useState(false)
   const inputId = `imageUpload-${id}`
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
 
@@ -1382,7 +1381,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   )
 }
 
-const TextAndImageSectionEditor: React.FC<{
+const TextAndImageSectionEditor: FC<{
   section: LandingTextAndImageSection
   onChange: (section: LandingTextAndImageSection) => void
 }> = ({ section, onChange }) => {
@@ -1490,7 +1489,7 @@ const TextAndImageSectionEditor: React.FC<{
   )
 }
 
-const LogosSectionEditor: React.FC<{
+const LogosSectionEditor: FC<{
   section: LandingLogos
   onChange: (section: LandingLogos) => void
 }> = ({ section, onChange }) => {
@@ -1591,7 +1590,7 @@ const LogosSectionEditor: React.FC<{
   )
 }
 
-const PeopleSectionEditor: React.FC<{
+const PeopleSectionEditor: FC<{
   section: LandingPeople
   onChange: (section: LandingPeople) => void
 }> = ({ section, onChange }) => {
@@ -1732,7 +1731,7 @@ const PeopleSectionEditor: React.FC<{
   )
 }
 
-const FeaturedCoursesEditor: React.FC<{
+const FeaturedCoursesEditor: FC<{
   section: LandingFeaturedCourses
   onChange: (section: LandingFeaturedCourses) => void
 }> = ({ section, onChange }) => {
@@ -1751,7 +1750,6 @@ const FeaturedCoursesEditor: React.FC<{
         <BookOpen className="h-5 w-5 text-gray-500" />
         <h3 className="text-lg font-medium">Courses Section</h3>
       </div>
-
       <div className="space-y-4">
         {/* Title */}
         <div>

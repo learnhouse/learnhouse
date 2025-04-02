@@ -7,7 +7,7 @@ import { getAPIUrl } from '@services/config/config'
 import { inviteBatchUsers } from '@services/organizations/invites'
 import { swrFetcher } from '@services/utils/ts/requests'
 import { Info, UserPlus } from 'lucide-react'
-import React, { useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import useSWR, { mutate } from 'swr'
 
@@ -15,9 +15,9 @@ function OrgUsersAdd() {
   const org = useOrg() as any
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
-  const [isLoading, setIsLoading] = React.useState(false)
-  const [invitedUsers, setInvitedUsers] = React.useState('')
-  const [selectedInviteCode, setSelectedInviteCode] = React.useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [invitedUsers, setInvitedUsers] = useState('')
+  const [selectedInviteCode, setSelectedInviteCode] = useState('')
 
   async function sendInvites() {
     const toastId = toast.loading('Sending invite...')

@@ -7,7 +7,7 @@ import UserAvatar from '@components/Objects/UserAvatar'
 import { getUriWithoutOrg } from '@services/config/config'
 import { Package2, Settings } from 'lucide-react'
 import Link from 'next/link'
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import styled from 'styled-components'
 
 export const HeaderProfileBox = () => {

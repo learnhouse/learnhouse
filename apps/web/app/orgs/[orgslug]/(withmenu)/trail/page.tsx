@@ -2,7 +2,6 @@ import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { nextAuthOptions } from 'app/auth/options'
 import type { Metadata } from 'next'
 import { getServerSession } from 'next-auth'
-import React from 'react'
 import Trail from './trail'
 
 type MetadataProps = {

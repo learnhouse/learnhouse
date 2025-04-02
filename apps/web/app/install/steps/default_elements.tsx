@@ -3,7 +3,7 @@ import { getAPIUrl } from '@services/config/config'
 import { createDefaultElements, updateInstall } from '@services/install/install'
 import { swrFetcher } from '@services/utils/ts/requests'
 import { useRouter } from 'next/navigation'
-import React from 'react'
+import { useState } from 'react'
 import useSWR from 'swr'
 
 function DefaultElements() {
@@ -16,8 +16,8 @@ function DefaultElements() {
   } = useSWR(`${getAPIUrl()}install/latest`, (url) =>
     swrFetcher(url, access_token)
   )
-  const [isSubmitting, setIsSubmitting] = React.useState(false)
-  const [isSubmitted, setIsSubmitted] = React.useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isSubmitted, setIsSubmitted] = useState(false)
   const router = useRouter()
 
   function createDefElementsAndUpdateInstall() {

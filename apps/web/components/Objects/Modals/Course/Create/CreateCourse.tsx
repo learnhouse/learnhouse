@@ -22,7 +22,8 @@ import { revalidateTags } from '@services/utils/ts/requests'
 import { useFormik } from 'formik'
 import { Image as ImageIcon, UploadCloud } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import React, { useEffect } from 'react'
+import type { ChangeEvent } from 'react'
+import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import { BarLoader } from 'react-spinners'
 import * as Yup from 'yup'
@@ -41,9 +42,9 @@ const validationSchema = Yup.object().shape({
 function CreateCourseModal({ closeModal, orgslug }: any) {
   const router = useRouter()
   const session = useLHSession() as any
-  const [orgId, setOrgId] = React.useState(null) as any
-  const [showUnsplashPicker, setShowUnsplashPicker] = React.useState(false)
-  const [isUploading, setIsUploading] = React.useState(false)
+  const [orgId, setOrgId] = useState(null) as any
+  const [showUnsplashPicker, setShowUnsplashPicker] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
 
   const formik = useFormik({
     initialValues: {
@@ -107,9 +108,7 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
     }
   }, [orgslug])
 
-  const handleFileChange = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
       formik.setFieldValue('thumbnail', file)

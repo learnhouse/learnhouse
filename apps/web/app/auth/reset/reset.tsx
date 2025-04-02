@@ -15,7 +15,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import learnhouseIcon from 'public/learnhouse_bigicon_1.png'
-import React from 'react'
+import { useState } from 'react'
 
 const validate = (values: any) => {
   const errors: any = {}
@@ -46,13 +46,13 @@ const validate = (values: any) => {
 
 function ResetPasswordClient() {
   const org = useOrg() as any
-  const [isSubmitting, setIsSubmitting] = React.useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const searchParams = useSearchParams()
   const reset_code = searchParams.get('resetCode') || ''
   const email = searchParams.get('email') || ''
   const router = useRouter()
-  const [error, setError] = React.useState('')
-  const [message, setMessage] = React.useState('')
+  const [error, setError] = useState('')
+  const [message, setMessage] = useState('')
 
   const formik = useFormik({
     initialValues: {

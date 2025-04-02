@@ -16,7 +16,6 @@ import { usePaymentsEnabled } from '@hooks/usePaymentsEnabled'
 import { getUserAvatarMediaDirectory } from '@services/media/media'
 import { getOrgCustomers } from '@services/payments/payments'
 import { RefreshCcw, SquareCheck } from 'lucide-react'
-import React from 'react'
 import useSWR from 'swr'
 
 interface PaymentUserData {

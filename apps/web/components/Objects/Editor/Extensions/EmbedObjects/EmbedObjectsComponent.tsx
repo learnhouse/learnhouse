@@ -24,7 +24,8 @@ import {
   Link as LinkIcon,
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import React, { useState, useRef, useEffect, useMemo } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
+import * as React from 'react'
 
 // Add new type for script-based embeds
 const SCRIPT_BASED_EMBEDS = {
@@ -548,7 +549,6 @@ function EmbedObjectsComponent(props: any) {
           // Show the embed content if we have a URL or code
           <>
             {embedContent}
-
             {/* Minimal toolbar for existing embeds */}
             {isEditable && (
               <div className="bg-opacity-90 absolute top-2 right-2 flex items-center gap-1.5 rounded-lg bg-white p-1 opacity-70 shadow-xs backdrop-blur-xs transition-opacity hover:opacity-100">
@@ -635,11 +635,9 @@ function EmbedObjectsComponent(props: any) {
                 </button>
               ))}
             </div>
-
             <p className="mt-3 mb-2 max-w-md text-center text-xs text-gray-500">
               Click a service to add an embed
             </p>
-
             {/* Direct input options */}
             {isEditable && (
               <div className="mt-4 flex justify-center gap-3">

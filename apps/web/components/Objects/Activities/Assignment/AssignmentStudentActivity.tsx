@@ -12,7 +12,7 @@ import {
   Info,
 } from 'lucide-react'
 import Link from 'next/link'
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 
 function AssignmentStudentActivity() {
   const assignments = useAssignments() as any

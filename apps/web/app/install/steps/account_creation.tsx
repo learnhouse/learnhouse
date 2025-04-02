@@ -12,7 +12,7 @@ import { createNewUserInstall, updateInstall } from '@services/install/install'
 import { swrFetcher } from '@services/utils/ts/requests'
 import { useFormik } from 'formik'
 import { useRouter } from 'next/navigation'
-import React from 'react'
+import { useState } from 'react'
 import { BarLoader } from 'react-spinners'
 import useSWR from 'swr'
 
@@ -47,7 +47,7 @@ const validate = (values: any) => {
 }
 
 function AccountCreation() {
-  const [isSubmitting, setIsSubmitting] = React.useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const {

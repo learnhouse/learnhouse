@@ -11,7 +11,8 @@ import * as Form from '@radix-ui/react-form'
 import { FormMessage } from '@radix-ui/react-form'
 import { getAPIUrl } from '@services/config/config'
 import { updateUserRole } from '@services/organizations/orgs'
-import React, { useEffect } from 'react'
+import type { ChangeEvent } from 'react'
+import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import { BarLoader } from 'react-spinners'
 import { mutate } from 'swr'
@@ -26,13 +27,11 @@ function RolesUpdate(props: Props) {
   const org = useOrg() as any
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
-  const [isSubmitting, setIsSubmitting] = React.useState(false)
-  const [assignedRole, setAssignedRole] = React.useState(
-    props.alreadyAssignedRole
-  )
-  const [error, setError] = React.useState(null) as any
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [assignedRole, setAssignedRole] = useState(props.alreadyAssignedRole)
+  const [error, setError] = useState(null) as any
 
-  const handleAssignedRole = (event: React.ChangeEvent<any>) => {
+  const handleAssignedRole = (event: ChangeEvent<any>) => {
     setError(null)
     setAssignedRole(event.target.value)
   }

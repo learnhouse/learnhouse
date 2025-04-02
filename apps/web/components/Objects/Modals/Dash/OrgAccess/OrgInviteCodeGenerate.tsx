@@ -8,7 +8,7 @@ import {
 import { swrFetcher } from '@services/utils/ts/requests'
 import { Ticket } from 'lucide-react'
 import Link from 'next/link'
-import React, { useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import useSWR, { mutate } from 'swr'
 
@@ -20,7 +20,7 @@ function OrgInviteCodeGenerate(props: OrgInviteCodeGenerateProps) {
   const org = useOrg() as any
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
-  const [usergroup_id, setUsergroup_id] = React.useState(0)
+  const [usergroup_id, setUsergroup_id] = useState(0)
 
   const { data: usergroups } = useSWR(
     org ? `${getAPIUrl()}usergroups/org/${org.id}` : null,

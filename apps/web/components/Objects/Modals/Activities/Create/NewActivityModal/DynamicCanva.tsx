@@ -8,7 +8,7 @@ import FormLayout, {
   Textarea,
 } from '@components/Objects/StyledElements/Form/Form'
 import * as Form from '@radix-ui/react-form'
-import React, { useState } from 'react'
+import { useState } from 'react'
 import BarLoader from 'react-spinners/BarLoader'
 
 function DynamicCanvaModal({ submitActivity, chapterId, course }: any) {

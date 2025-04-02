@@ -1,5 +1,5 @@
 import { useOrg } from '@components/Contexts/OrgContext'
-import React from 'react'
+import { useState, useEffect } from 'react'
 
 interface UseGetAIFeatures {
   feature: 'editor' | 'activity_ask' | 'course_ask' | 'global_ai_ask'
@@ -7,7 +7,7 @@ interface UseGetAIFeatures {
 
 function useGetAIFeatures(props: UseGetAIFeatures) {
   const org = useOrg() as any
-  const [isEnabled, setisEnabled] = React.useState(false)
+  const [isEnabled, setisEnabled] = useState(false)
 
   function checkAvailableAIFeaturesOnOrg(feature: string) {
     const config = org?.config?.config?.features.ai.enabled
@@ -15,7 +15,7 @@ function useGetAIFeatures(props: UseGetAIFeatures) {
     return config
   }
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (org) {
       // Check if org is not null or undefined
       const isEnabledStatus = checkAvailableAIFeaturesOnOrg(props.feature)

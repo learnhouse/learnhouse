@@ -7,7 +7,7 @@ import { getUriWithOrg } from '@services/config/config'
 import { motion } from 'framer-motion'
 import { Info, Lock } from 'lucide-react'
 import Link from 'next/link'
-import React, { useEffect, use } from 'react'
+import { useEffect, use } from 'react'
 
 export type SettingsParams = {
   subpage: string

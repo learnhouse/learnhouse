@@ -23,7 +23,7 @@ import { getTaskRefFileDir } from '@services/media/media'
 import { useFormik } from 'formik'
 import { Cloud, File, Info, Loader, UploadCloud } from 'lucide-react'
 import Link from 'next/link'
-import React, { useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
 
 const SUPPORTED_FILES = constructAcceptValue([
@@ -160,10 +160,10 @@ function UpdateTaskRef() {
   const assignmentTaskState = useAssignmentsTask() as any
   const assignmentTaskStateHook = useAssignmentsTaskDispatch() as any
   const assignment = useAssignments() as any
-  const [isLoading, setIsLoading] = React.useState(false)
-  const [error, setError] = React.useState('') as any
-  const [localRefFile, setLocalRefFile] = React.useState(null) as any
-  const [activity, setActivity] = React.useState('') as any
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('') as any
+  const [localRefFile, setLocalRefFile] = useState(null) as any
+  const [activity, setActivity] = useState('') as any
 
   const handleFileChange = async (event: any) => {
     const file = event.target.files[0]

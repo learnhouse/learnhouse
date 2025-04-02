@@ -13,7 +13,7 @@ import {
   Trash2,
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import React from 'react'
+import { useState } from 'react'
 import { mutate } from 'swr'
 import NewActivityButton from '../Buttons/NewActivityButton'
 import ActivityElement from './ActivityElement'
@@ -34,12 +34,12 @@ function ChapterElement(props: ChapterElementProps) {
   const activities = props.chapter.activities || []
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
-  const [modifiedChapter, setModifiedChapter] = React.useState<
+  const [modifiedChapter, setModifiedChapter] = useState<
     ModifiedChapterInterface | undefined
   >(undefined)
-  const [selectedChapter, setSelectedChapter] = React.useState<
-    string | undefined
-  >(undefined)
+  const [selectedChapter, setSelectedChapter] = useState<string | undefined>(
+    undefined
+  )
 
   const router = useRouter()
 

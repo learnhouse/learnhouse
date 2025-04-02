@@ -10,7 +10,8 @@ import {
   ListTodo,
   Save,
 } from 'lucide-react'
-import React, { useEffect } from 'react'
+import type { ReactNode } from 'react'
+import { useState, useEffect } from 'react'
 
 type AssignmentBoxProps = {
   type: 'quiz' | 'file'
@@ -22,7 +23,7 @@ type AssignmentBoxProps = {
   gradeFC?: () => void
   gradeCustomFC?: (grade: number) => void
   showSavingDisclaimer?: boolean
-  children: React.ReactNode
+  children: ReactNode
 }
 
 function AssignmentBoxUI({
@@ -37,7 +38,7 @@ function AssignmentBoxUI({
   showSavingDisclaimer,
   children,
 }: AssignmentBoxProps) {
-  const [customGrade, setCustomGrade] = React.useState<number>(0)
+  const [customGrade, setCustomGrade] = useState<number>(0)
   const submission = useAssignmentSubmission() as any
   const session = useLHSession() as any
 

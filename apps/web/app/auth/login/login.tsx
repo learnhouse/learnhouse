@@ -15,7 +15,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import learnhouseIcon from 'public/learnhouse_bigicon_1.png'
-import React from 'react'
+import { useState } from 'react'
 
 interface LoginClientProps {
   org: any
@@ -40,11 +40,11 @@ const validate = (values: any) => {
 }
 
 const LoginClient = (props: LoginClientProps) => {
-  const [isSubmitting, setIsSubmitting] = React.useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const router = useRouter()
   const session = useLHSession() as any
 
-  const [error, setError] = React.useState('')
+  const [error, setError] = useState('')
   const formik = useFormik({
     initialValues: {
       email: '',

@@ -16,7 +16,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import React from 'react'
+import { useState } from 'react'
 import { mutate } from 'swr'
 
 interface ModifiedActivityInterface {
@@ -27,12 +27,12 @@ interface ModifiedActivityInterface {
 function Activity(props: any) {
   const router = useRouter()
   const session = useLHSession() as any
-  const [modifiedActivity, setModifiedActivity] = React.useState<
+  const [modifiedActivity, setModifiedActivity] = useState<
     ModifiedActivityInterface | undefined
   >(undefined)
-  const [selectedActivity, setSelectedActivity] = React.useState<
-    string | undefined
-  >(undefined)
+  const [selectedActivity, setSelectedActivity] = useState<string | undefined>(
+    undefined
+  )
 
   async function removeActivity() {
     await deleteActivity(props.activity.id, session.data?.tokens?.access_token)

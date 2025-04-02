@@ -14,7 +14,7 @@ import {
   TextIcon,
 } from 'lucide-react'
 import Link from 'next/link'
-import React, { useEffect, use } from 'react'
+import { useState, useEffect, use } from 'react'
 
 export type OrgParams = {
   subpage: string
@@ -61,8 +61,8 @@ function TabLink({
 
 function OrgPage(props: { params: Promise<OrgParams> }) {
   const params = use(props.params)
-  const [H1Label, setH1Label] = React.useState('')
-  const [H2Label, setH2Label] = React.useState('')
+  const [H1Label, setH1Label] = useState('')
+  const [H2Label, setH2Label] = useState('')
 
   function handleLabels() {
     if (params.subpage == 'general') {

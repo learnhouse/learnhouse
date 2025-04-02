@@ -9,7 +9,7 @@ import CourseThumbnail, {
 } from '@components/Objects/Thumbnails/CourseThumbnail'
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
 import { useSearchParams } from 'next/navigation'
-import React from 'react'
+import { useState } from 'react'
 
 type CourseProps = {
   orgslug: string
@@ -20,7 +20,7 @@ type CourseProps = {
 function CoursesHome(params: CourseProps) {
   const searchParams = useSearchParams()
   const isCreatingCourse = searchParams.get('new') ? true : false
-  const [newCourseModal, setNewCourseModal] = React.useState(isCreatingCourse)
+  const [newCourseModal, setNewCourseModal] = useState(isCreatingCourse)
   const orgslug = params.orgslug
   const courses = params.courses
   const isUserAdmin = useAdminStatus() as any

@@ -1,7 +1,7 @@
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { NodeViewWrapper } from '@tiptap/react'
 import { BadgeHelp, Check, Minus, Plus, RefreshCcw } from 'lucide-react'
-import React from 'react'
+import { useState } from 'react'
 import ReactConfetti from 'react-confetti'
 import { twMerge } from 'tailwind-merge'
 import { v4 as uuidv4 } from 'uuid'
@@ -19,12 +19,13 @@ interface Question {
 }
 
 function QuizBlockComponent(props: any) {
-  const [questions, setQuestions] = React.useState(
-    props.node.attrs.questions
-  ) as [Question[], any]
-  const [userAnswers, setUserAnswers] = React.useState([]) as [any[], any]
-  const [submitted, setSubmitted] = React.useState(false) as [boolean, any]
-  const [submissionMessage, setSubmissionMessage] = React.useState('') as [
+  const [questions, setQuestions] = useState(props.node.attrs.questions) as [
+    Question[],
+    any,
+  ]
+  const [userAnswers, setUserAnswers] = useState([]) as [any[], any]
+  const [submitted, setSubmitted] = useState(false) as [boolean, any]
+  const [submissionMessage, setSubmissionMessage] = useState('') as [
     string,
     any,
   ]

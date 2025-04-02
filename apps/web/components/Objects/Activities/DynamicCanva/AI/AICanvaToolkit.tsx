@@ -14,7 +14,7 @@ import { BubbleMenu } from '@tiptap/react'
 import { BookOpen, FormInput, Languages, MoreVertical } from 'lucide-react'
 import Image from 'next/image'
 import learnhouseAI_icon from 'public/learnhouse_ai_simple.png'
-import React from 'react'
+import { useState, useEffect } from 'react'
 import useGetAIFeatures from '@hooks/useGetAIFeatures'
 
 type AICanvaToolkitProps = {
@@ -24,9 +24,9 @@ type AICanvaToolkitProps = {
 
 function AICanvaToolkit(props: AICanvaToolkitProps) {
   const is_ai_feature_enabled = useGetAIFeatures({ feature: 'activity_ask' })
-  const [isBubbleMenuAvailable, setIsButtonAvailable] = React.useState(false)
+  const [isBubbleMenuAvailable, setIsButtonAvailable] = useState(false)
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (is_ai_feature_enabled) {
       setIsButtonAvailable(true)
     }

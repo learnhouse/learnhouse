@@ -3,7 +3,7 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { getAPIUrl } from '@services/config/config'
 import { getAssignmentTask } from '@services/courses/assignments'
 import type React from 'react'
-import { createContext, useContext, useEffect, useReducer } from 'react'
+import { createContext, use, useEffect, useReducer } from 'react'
 import { mutate } from 'swr'
 import { useAssignments } from './AssignmentContext'
 
@@ -60,16 +60,16 @@ export function AssignmentsTaskProvider({
   }, [state.selectedAssignmentTaskUUID, state.reloadTrigger, assignment])
 
   return (
-    <AssignmentsTaskContext.Provider value={state}>
-      <AssignmentsTaskDispatchContext.Provider value={dispatch}>
+    <AssignmentsTaskContext value={state}>
+      <AssignmentsTaskDispatchContext value={dispatch}>
         {children}
-      </AssignmentsTaskDispatchContext.Provider>
-    </AssignmentsTaskContext.Provider>
+      </AssignmentsTaskDispatchContext>
+    </AssignmentsTaskContext>
   )
 }
 
 export function useAssignmentsTask() {
-  const context = useContext(AssignmentsTaskContext)
+  const context = use(AssignmentsTaskContext)
   if (context === undefined) {
     throw new Error(
       'useAssignmentsTask must be used within an AssignmentsTaskProvider'
@@ -79,7 +79,7 @@ export function useAssignmentsTask() {
 }
 
 export function useAssignmentsTaskDispatch() {
-  const context = useContext(AssignmentsTaskDispatchContext)
+  const context = use(AssignmentsTaskDispatchContext)
   if (context === undefined) {
     throw new Error(
       'useAssignmentsTaskDispatch must be used within an AssignmentsTaskProvider'

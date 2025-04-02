@@ -20,13 +20,13 @@ import {
 import { signOut } from 'next-auth/react'
 import Image from 'next/image'
 import Link from 'next/link'
-import React, { useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import UserAvatar from '@components/Objects/UserAvatar'
 
 function DashLeftMenu() {
   const org = useOrg() as any
   const session = useLHSession() as any
-  const [loading, setLoading] = React.useState(true)
+  const [loading, setLoading] = useState(true)
   const isPaymentsEnabled = useFeatureFlag({
     path: ['features', 'payments', 'enabled'],
     defaultValue: false,

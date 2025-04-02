@@ -1,4 +1,3 @@
-import React from 'react'
 import InstallClient from './install'
 
 export const metadata = {

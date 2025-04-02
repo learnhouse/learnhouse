@@ -14,14 +14,14 @@ import {
   UserRoundPen,
 } from 'lucide-react'
 import Link from 'next/link'
-import React from 'react'
+import { useState, useEffect } from 'react'
 import useSWR from 'swr'
 
 function AssignmentsHome() {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const org = useOrg() as any
-  const [courseAssignments, setCourseAssignments] = React.useState<any[]>([])
+  const [courseAssignments, setCourseAssignments] = useState<any[]>([])
 
   const { data: courses } = useSWR(
     `${getAPIUrl()}courses/org_slug/${org?.slug}/page/1/limit/50`,
@@ -41,7 +41,7 @@ function AssignmentsHome() {
     return course_uuid.replace('course_', '')
   }
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (courses) {
       const course_uuids = courses.map((course: any) => course.course_uuid)
       const courseAssignmentsPromises = course_uuids.map(

@@ -9,7 +9,7 @@ import { getAPIUrl } from '@services/config/config'
 import { deleteAssignmentTask } from '@services/courses/assignments'
 import { GalleryVerticalEnd, Info, TentTree, Trash } from 'lucide-react'
 import dynamic from 'next/dynamic'
-import React, { useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import { mutate } from 'swr'
 import { AssignmentTaskGeneralEdit } from './Subs/AssignmentTaskGeneralEdit'
@@ -18,7 +18,7 @@ const AssignmentTaskContentEdit = dynamic(
 )
 
 function AssignmentTaskEditor({ page }: any) {
-  const [selectedSubPage, setSelectedSubPage] = React.useState(page)
+  const [selectedSubPage, setSelectedSubPage] = useState(page)
   const assignment = useAssignments() as any
   const assignmentTaskState = useAssignmentsTask() as any
   const assignmentTaskStateHook = useAssignmentsTaskDispatch() as any

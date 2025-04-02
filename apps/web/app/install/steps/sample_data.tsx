@@ -6,7 +6,6 @@ import {
 } from '@services/install/install'
 import { swrFetcher } from '@services/utils/ts/requests'
 import { useRouter } from 'next/navigation'
-import React from 'react'
 import useSWR from 'swr'
 
 function SampleData() {

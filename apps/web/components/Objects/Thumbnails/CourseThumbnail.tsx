@@ -16,7 +16,6 @@ import { revalidateTags } from '@services/utils/ts/requests'
 import { BookMinus, FilePenLine, MoreVertical, Settings2 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import React from 'react'
 import toast from 'react-hot-toast'
 
 type Course = {

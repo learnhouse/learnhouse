@@ -6,7 +6,7 @@ import { updateChapter } from '@services/courses/chapters'
 import { revalidateTags } from '@services/utils/ts/requests'
 import { Hexagon, MoreVertical, Pencil, Save, Sparkles, X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import React from 'react'
+import { useState } from 'react'
 import styled from 'styled-components'
 import { mutate } from 'swr'
 import Activity from './Activity'
@@ -19,12 +19,12 @@ interface ModifiedChapterInterface {
 function Chapter(props: any) {
   const router = useRouter()
   const session = useLHSession() as any
-  const [modifiedChapter, setModifiedChapter] = React.useState<
+  const [modifiedChapter, setModifiedChapter] = useState<
     ModifiedChapterInterface | undefined
   >(undefined)
-  const [selectedChapter, setSelectedChapter] = React.useState<
-    string | undefined
-  >(undefined)
+  const [selectedChapter, setSelectedChapter] = useState<string | undefined>(
+    undefined
+  )
 
   async function updateChapterName(chapterId: string) {
     if (modifiedChapter?.chapterId === chapterId) {

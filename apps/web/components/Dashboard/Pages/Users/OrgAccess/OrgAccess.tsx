@@ -14,7 +14,7 @@ import dayjs from 'dayjs'
 import { Globe, Ticket, UserSquare, Users, X } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import React, { useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import useSWR, { mutate } from 'swr'
 
@@ -26,9 +26,9 @@ function OrgAccess() {
     org ? `${getAPIUrl()}orgs/${org?.id}/invites` : null,
     (url) => swrFetcher(url, access_token)
   )
-  const [isLoading, setIsLoading] = React.useState(false)
-  const [joinMethod, setJoinMethod] = React.useState('closed')
-  const [invitesModal, setInvitesModal] = React.useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [joinMethod, setJoinMethod] = useState('closed')
+  const [invitesModal, setInvitesModal] = useState(false)
   const router = useRouter()
 
   async function getOrgJoinMethod() {

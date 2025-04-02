@@ -12,7 +12,7 @@ import FormTagInput from '@components/Objects/StyledElements/Form/TagInput'
 import * as Form from '@radix-ui/react-form'
 import { useFormik } from 'formik'
 import { AlertTriangle } from 'lucide-react'
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import LearningItemsList from './LearningItemsList'
 import ThumbnailUpdate from './ThumbnailUpdate'
 

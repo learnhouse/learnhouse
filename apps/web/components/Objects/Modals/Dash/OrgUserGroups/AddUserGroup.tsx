@@ -10,7 +10,7 @@ import * as Form from '@radix-ui/react-form'
 import { getAPIUrl } from '@services/config/config'
 import { createUserGroup } from '@services/usergroups/usergroups'
 import { useFormik } from 'formik'
-import React from 'react'
+import { useState } from 'react'
 import toast from 'react-hot-toast'
 import { mutate } from 'swr'
 
@@ -31,7 +31,7 @@ function AddUserGroup(props: AddUserGroupProps) {
   const org = useOrg() as any
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
-  const [isSubmitting, setIsSubmitting] = React.useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const formik = useFormik({
     initialValues: {

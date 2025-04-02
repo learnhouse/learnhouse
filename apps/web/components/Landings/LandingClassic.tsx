@@ -8,7 +8,6 @@ import CourseThumbnail from '@components/Objects/Thumbnails/CourseThumbnail'
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
 import { getUriWithOrg } from '@services/config/config'
 import Link from 'next/link'
-import React from 'react'
 
 interface LandingClassicProps {
   courses: any[]

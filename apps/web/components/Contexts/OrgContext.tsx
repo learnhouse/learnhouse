@@ -6,7 +6,7 @@ import { getAPIUrl, getUriWithoutOrg } from '@services/config/config'
 import { swrFetcher } from '@services/utils/ts/requests'
 import { usePathname } from 'next/navigation'
 import type React from 'react'
-import { createContext, useContext, useMemo } from 'react'
+import { createContext, use, useMemo } from 'react'
 import useSWR from 'swr'
 
 export const OrgContext = createContext(null)
@@ -60,9 +60,9 @@ export function OrgProvider({
     )
   }
 
-  return <OrgContext.Provider value={org}>{children}</OrgContext.Provider>
+  return <OrgContext value={org}>{children}</OrgContext>
 }
 
 export function useOrg() {
-  return useContext(OrgContext)
+  return use(OrgContext)
 }

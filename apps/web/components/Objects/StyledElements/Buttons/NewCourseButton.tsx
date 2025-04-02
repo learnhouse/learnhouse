@@ -1,8 +1,7 @@
-import React from 'react'
+import type { ComponentPropsWithoutRef, MouseEventHandler } from 'react'
 
-interface NewCourseButtonProps
-  extends React.ComponentPropsWithoutRef<'button'> {
-  onClick?: React.MouseEventHandler<HTMLButtonElement>
+interface NewCourseButtonProps extends ComponentPropsWithoutRef<'button'> {
+  onClick?: MouseEventHandler<HTMLButtonElement>
 }
 
 function NewCourseButton(props: NewCourseButtonProps) {

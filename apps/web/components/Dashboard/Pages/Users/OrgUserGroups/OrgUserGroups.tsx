@@ -10,7 +10,7 @@ import { getAPIUrl } from '@services/config/config'
 import { deleteUserGroup } from '@services/usergroups/usergroups'
 import { swrFetcher } from '@services/utils/ts/requests'
 import { Pencil, SquareUserRound, Users, X } from 'lucide-react'
-import React from 'react'
+import { useState } from 'react'
 import toast from 'react-hot-toast'
 import useSWR, { mutate } from 'swr'
 
@@ -19,10 +19,10 @@ function OrgUserGroups() {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const [userGroupManagementModal, setUserGroupManagementModal] =
-    React.useState(false)
-  const [createUserGroupModal, setCreateUserGroupModal] = React.useState(false)
-  const [editUserGroupModal, setEditUserGroupModal] = React.useState(false)
-  const [selectedUserGroup, setSelectedUserGroup] = React.useState(null) as any
+    useState(false)
+  const [createUserGroupModal, setCreateUserGroupModal] = useState(false)
+  const [editUserGroupModal, setEditUserGroupModal] = useState(false)
+  const [selectedUserGroup, setSelectedUserGroup] = useState(null) as any
 
   const { data: usergroups } = useSWR(
     org ? `${getAPIUrl()}usergroups/org/${org.id}` : null,
