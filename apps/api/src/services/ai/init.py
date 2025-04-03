@@ -2,7 +2,7 @@ from typing import Optional
 from functools import lru_cache
 import chromadb
 from langchain_openai import OpenAIEmbeddings
-from langchain_community.chat_models import ChatOpenAI
+from langchain_openai.chat_models.base import ChatOpenAI
 from config.config import get_learnhouse_config
 
 
@@ -32,7 +32,11 @@ def get_embedding_function(model_name: str) -> Optional[OpenAIEmbeddings]:
         return None
 
     if model_name == "text-embedding-ada-002":
-        return OpenAIEmbeddings(model=model_name, api_key=api_key)
+        try:
+            return OpenAIEmbeddings(model=model_name, api_key=api_key)
+        except Exception as e:
+            print(f"Error initializing OpenAIEmbeddings: {e}")
+            return None
     return None
 
 
@@ -45,4 +49,8 @@ def get_llm(model_name: str, temperature: float = 0) -> Optional[ChatOpenAI]:
     if not api_key:
         return None
 
-    return ChatOpenAI(temperature=temperature, api_key=api_key, model=model_name)
+    try:
+        return ChatOpenAI(temperature=temperature, api_key=api_key, model=model_name)
+    except Exception as e:
+        print(f"Error initializing ChatOpenAI: {e}")
+        return None

@@ -1,20 +1,25 @@
 from typing import Optional, Dict, Any
 from uuid import uuid4
-from langchain.agents import AgentExecutor
-from langchain.text_splitter import CharacterTextSplitter
-from langchain_community.vectorstores import Chroma
-from langchain.agents.openai_functions_agent.base import OpenAIFunctionsAgent
-from langchain.prompts import MessagesPlaceholder
-from langchain_community.chat_message_histories import RedisChatMessageHistory
+import chromadb
+from langchain_core.prompts import MessagesPlaceholder
 from langchain_core.messages import SystemMessage
+
+from langchain.agents.agent import AgentExecutor
+from langchain.agents.openai_functions_agent.base import (
+    OpenAIFunctionsAgent,
+)
+
 from langchain.agents.openai_functions_agent.agent_token_buffer_memory import (
     AgentTokenBufferMemory,
 )
-from langchain.agents.agent_toolkits import (
-    create_retriever_tool,
+from langchain_community.chat_message_histories.redis import (
+    RedisChatMessageHistory,
 )
 
-import chromadb
+from langchain_core.tools import create_retriever_tool
+
+from langchain_community.vectorstores.chroma import Chroma
+from langchain_text_splitters.character import CharacterTextSplitter
 
 from config.config import get_learnhouse_config
 from src.services.ai.init import get_chromadb_client, get_embedding_function, get_llm
@@ -85,11 +90,13 @@ def ask_ai(
 
     # Create agent with system message
     system_message = SystemMessage(content=message_for_the_prompt)
+    # Using the older style prompt creation associated with direct OpenAIFunctionsAgent
     prompt = OpenAIFunctionsAgent.create_prompt(
         system_message=system_message,
         extra_prompt_messages=[MessagesPlaceholder(variable_name="history")],
     )
 
+    # Using the older style direct agent instantiation
     agent = OpenAIFunctionsAgent(llm=llm, tools=[retriever_tool], prompt=prompt)
 
     # Create and execute agent
@@ -104,6 +111,7 @@ def ask_ai(
     )
 
     try:
+        # Using the older invoke style with dictionary input for this agent type
         return agent_executor({"input": question})
     except Exception as e:
         raise Exception(f"Error processing AI request: {str(e)}")
@@ -114,7 +122,10 @@ def get_chat_session_history(aichat_uuid: Optional[str] = None) -> Dict[str, Any
     session_id = aichat_uuid if aichat_uuid else f"aichat_{uuid4()}"
 
     LH_CONFIG = get_learnhouse_config()
-    redis_conn_string = LH_CONFIG.redis_config.redis_connection_string
+    # Safer access to nested config attribute
+    redis_conn_string = getattr(
+        getattr(LH_CONFIG, "redis_config", None), "redis_connection_string", None
+    )
 
     if redis_conn_string:
         try:
@@ -123,11 +134,15 @@ def get_chat_session_history(aichat_uuid: Optional[str] = None) -> Dict[str, Any
                 ttl=2160000,  # 25 days
                 session_id=session_id,
             )
-        except Exception:
-            print("Failed to connect to Redis, falling back to local memory")
+        except Exception as e:
+            print(
+                f"WARN: Failed to connect to Redis ({e}), falling back to local memory for session: {session_id}"
+            )
             message_history = []
     else:
-        print("Redis connection string not found, using local memory")
+        print(
+            f"WARN: Redis connection string not found, using local memory for session: {session_id}"
+        )
         message_history = []
 
     return {"message_history": message_history, "aichat_uuid": session_id}

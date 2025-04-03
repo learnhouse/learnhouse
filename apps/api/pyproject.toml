@@ -7,15 +7,15 @@ authors = [
     {name = "Badr B. (swve)"}
 ]
 dependencies = [
-    "boto3>=1.37.24",
-    "botocore>=1.37.24",
+    "boto3>=1.37.26",
+    "botocore>=1.37.26",
     "faker>=37.1.0",
     "fastapi>=0.115.12",
     "fastapi-jwt-auth>=0.5.0",
     "httpx>=0.28.1",
     "langchain>=0.2.5",
     "langchain-community>=0.2.5",
-    "langchain-openai>=0.1.5",
+    "langchain-openai>=0.1.14",
     "openai>=1.70.0",
     "passlib>=1.7.4",
     "psycopg2-binary>=2.9.10",
@@ -35,7 +35,7 @@ dependencies = [
     "alembic>=1.15.2",
     "alembic-postgresql-enum>=1.7.0",
     "sqlalchemy-utils>=0.41.2",
-    "stripe>=11.6.0",
+    "stripe>=12.0.0",
     "python-jose>=3.4.0",
     "logfire[sqlalchemy]>=3.12.0",
 ]
