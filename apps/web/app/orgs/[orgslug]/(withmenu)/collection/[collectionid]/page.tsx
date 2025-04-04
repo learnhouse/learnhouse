@@ -85,16 +85,25 @@ const CollectionPage = async (params: any) => {
                 '/course/' + removeCoursePrefix(course.course_uuid)
               )}
             >
-              <div
-                className="relative inset-0 h-[131px] w-[249px] rounded-lg bg-cover shadow-xl ring-1 ring-black/10 ring-inset"
-                style={{
-                  backgroundImage: `url(${getCourseThumbnailMediaDirectory(
-                    org.org_uuid,
-                    course.course_uuid,
-                    course.thumbnail_image
-                  )})`,
-                }}
-              ></div>
+              {course.thumbnail_image ? (
+                <div
+                  className="relative inset-0 h-[131px] w-[249px] rounded-lg bg-cover shadow-xl ring-1 ring-black/10 ring-inset"
+                  style={{
+                    backgroundImage: `url(${getCourseThumbnailMediaDirectory(
+                      org.org_uuid,
+                      course.course_uuid,
+                      course.thumbnail_image
+                    )})`,
+                  }}
+                />
+              ) : (
+                <div
+                  className="relative inset-0 h-[131px] w-[249px] rounded-lg bg-cover shadow-xl ring-1 ring-black/10 ring-inset"
+                  style={{
+                    backgroundImage: `url('../empty_thumbnail.png')`,
+                  }}
+                />
+              )}
             </Link>
             <h2 className="w-[250px] py-2 text-lg font-bold">{course.name}</h2>
           </div>

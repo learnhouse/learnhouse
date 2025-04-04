@@ -53,17 +53,27 @@ function TrailCourseElement(props: TrailCourseElementProps) {
       style={{ boxShadow: '0px 4px 7px 0px rgba(0, 0, 0, 0.03)' }}
     >
       <Link href={getUriWithOrg(props.orgslug, '/course/' + courseid)}>
-        <div
-          className="course_tumbnail relative inset-0 h-[50px] w-[72px] rounded-lg bg-cover bg-center ring-1 ring-black/10 ring-inset"
-          style={{
-            backgroundImage: `url(${getCourseThumbnailMediaDirectory(
-              org.org_uuid,
-              props.course.course_uuid,
-              props.course.thumbnail_image
-            )})`,
-            boxShadow: '0px 4px 7px 0px rgba(0, 0, 0, 0.03)',
-          }}
-        ></div>
+        {props.course.thumbnail_image ? (
+          <div
+            className="course_tumbnail relative inset-0 h-[50px] w-[72px] rounded-lg bg-cover bg-center ring-1 ring-black/10 ring-inset"
+            style={{
+              backgroundImage: `url(${getCourseThumbnailMediaDirectory(
+                org.org_uuid,
+                props.course.course_uuid,
+                props.course.thumbnail_image
+              )})`,
+              boxShadow: '0px 4px 7px 0px rgba(0, 0, 0, 0.03)',
+            }}
+          />
+        ) : (
+          <div
+            className="course_tumbnail relative inset-0 h-[50px] w-[72px] rounded-lg bg-cover bg-center ring-1 ring-black/10 ring-inset"
+            style={{
+              backgroundImage: "url('../empty_thumbnail.png')",
+              boxShadow: '0px 4px 7px 0px rgba(0, 0, 0, 0.03)',
+            }}
+          />
+        )}
       </Link>
       <div className="course_meta grow space-y-1 pl-5">
         <div className="course_top">

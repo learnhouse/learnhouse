@@ -27,17 +27,15 @@ function Trail(params: any) {
     <GeneralWrapperStyled>
       <TypeOfContentTitle title="Trail" type="tra" />
       {!trail ? (
-        <PageLoading></PageLoading>
+        <PageLoading />
       ) : (
         <div className="space-y-6">
           {trail.runs.map((run: any) => (
-            <>
-              <TrailCourseElement
-                run={run}
-                course={run.course}
-                orgslug={orgslug}
-              />
-            </>
+            <TrailCourseElement
+              run={run}
+              course={run.course}
+              orgslug={orgslug}
+            />
           ))}
         </div>
       )}

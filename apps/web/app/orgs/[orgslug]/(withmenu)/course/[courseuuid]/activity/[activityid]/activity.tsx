@@ -107,7 +107,6 @@ function ActivityClient(props: ActivityClientProps) {
       setBgColor('bg-zinc-950')
     }
   }, [activity, pathname])
-
   return (
     <>
       <CourseProvider courseuuid={course?.course_uuid}>
@@ -117,21 +116,23 @@ function ActivityClient(props: ActivityClientProps) {
               <div className="flex items-center justify-between">
                 <div className="flex space-x-6">
                   <div className="flex">
-                    <Link
-                      href={
-                        getUriWithOrg(orgslug, '') + `/course/${courseuuid}`
-                      }
-                    >
-                      <img
-                        className="h-[57px] w-[100px] rounded-md drop-shadow-md"
-                        src={`${getCourseThumbnailMediaDirectory(
-                          org?.org_uuid,
-                          course.course_uuid,
-                          course.thumbnail_image
-                        )}`}
-                        alt=""
-                      />
-                    </Link>
+                    {course.thumbnail_image && (
+                      <Link
+                        href={
+                          getUriWithOrg(orgslug, '') + `/course/${courseuuid}`
+                        }
+                      >
+                        <img
+                          className="h-[57px] w-[100px] rounded-md drop-shadow-md"
+                          src={`${getCourseThumbnailMediaDirectory(
+                            org?.org_uuid,
+                            course.course_uuid,
+                            course.thumbnail_image
+                          )}`}
+                          alt=""
+                        />
+                      </Link>
+                    )}
                   </div>
                   <div className="flex flex-col -space-y-1">
                     <p className="text-md font-bold text-gray-700">Course </p>

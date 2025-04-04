@@ -4,6 +4,7 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import type { LandingSection } from '@components/Dashboard/Pages/Org/OrgEditLanding/landing_types'
 import CourseThumbnailLanding from '@components/Objects/Thumbnails/CourseThumbnailLanding'
 import { getOrgCourses } from '@services/courses/courses'
+import Image from 'next/image'
 import useSWR from 'swr'
 
 interface LandingCustomProps {
@@ -154,15 +155,17 @@ function LandingCustom({ landing, orgslug }: LandingCustomProps) {
                 </div>
               </div>
               <div className="w-full flex-1 md:w-auto">
-                <div className="relative mx-auto w-full max-w-[500px] px-4 md:px-8">
-                  <div className="relative aspect-4/3 w-full">
-                    <img
-                      src={section.image.url}
-                      alt={section.image.alt}
-                      className="h-full w-full rounded-lg object-contain"
-                    />
+                {section.image?.url && (
+                  <div className="relative mx-auto w-full max-w-[500px] px-4 md:px-8">
+                    <div className="relative aspect-4/3 w-full">
+                      <Image
+                        src={section.image.url}
+                        alt={section.image.alt}
+                        className="h-full w-full rounded-lg object-contain"
+                      />
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
           </div>
