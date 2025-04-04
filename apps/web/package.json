@@ -8,7 +8,8 @@
 		"build": "next build",
 		"start": "next start",
 		"lint": "next lint",
-		"lint:fix": "eslint --fix ."
+		"lint:fix": "eslint --fix .",
+    "typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
 		"@emoji-mart/data": "^1.2.1",
@@ -78,7 +79,7 @@
 		"react-spinners": "^0.15.0",
 		"react-youtube": "^10.1.0",
 		"require-in-the-middle": "^7.5.2",
-		"sharp": "^0.33.5",
+		"sharp": "^0.34.0",
 		"styled-components": "^6.1.17",
 		"swr": "^2.3.3",
 		"tailwind-merge": "^3.1.0",
@@ -91,7 +92,7 @@
 	"devDependencies": {
 		"@eslint/eslintrc": "^3.3.1",
 		"@eslint/js": "^9.23.0",
-		"@tailwindcss/postcss": "4.0.17",
+		"@tailwindcss/postcss": "4.1.2",
 		"@types/node": "22.14.0",
 		"@types/react": "19.1.0",
 		"@types/react-dom": "19.1.1",
@@ -101,7 +102,7 @@
 		"@types/uuid": "^10.0.0",
 		"eslint": "^9.23.0",
 		"postcss": "^8.5.3",
-		"tailwindcss": "4.0.17",
+		"tailwindcss": "4.1.2",
 		"typescript": "5.8.2"
 	},
 	"pnpm": {

@@ -1,5 +1,5 @@
 import { type Tag, TagInput } from 'emblor'
-import type { type Dispatch, type SetStateAction } from 'react'
+import type { Dispatch, SetStateAction } from 'react'
 import { useState, useEffect } from 'react'
 
 interface FormTagInputProps {
