@@ -19,18 +19,19 @@ function EditorWrapper(props: EditorWrapperProps): JSX.Element {
   const access_token = session?.data?.tokens?.access_token
 
   async function setContent(content: any) {
-    const activity = props.activity
-    activity.content = content
+    const updatedActivity = { ...props.activity, content }
 
     toast.promise(
-      updateActivity(activity, activity.activity_uuid, access_token).then(
-        (res) => {
-          if (!res.success) {
-            throw res
-          }
-          return res
+      updateActivity(
+        updatedActivity,
+        updatedActivity.activity_uuid,
+        access_token
+      ).then((res) => {
+        if (!res.success) {
+          throw res
         }
-      ),
+        return res
+      }),
       {
         loading: 'Saving...',
         success: () => <b>Activity saved!</b>,
