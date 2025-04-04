@@ -57,11 +57,10 @@ function OrgCreation() {
   function createOrgAndUpdateInstall(values: any) {
     try {
       createNewOrgInstall(values)
-      install.data = {
-        1: values,
-      }
-      const install_data = { ...install.data, 1: values }
-      updateInstall(install_data, 2)
+      const updatedData = { ...install?.data, 1: values }
+
+      updateInstall(updatedData, 2)
+
       // await 2 seconds
       setTimeout(() => {
         setIsSubmitting(false)
