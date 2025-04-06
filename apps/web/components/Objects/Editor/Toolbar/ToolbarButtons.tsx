@@ -116,14 +116,24 @@ export const ToolbarButtons = ({ editor, props }: any) => {
         <ListBulletIcon />
       </ToolBtn>
       <ToolSelect
-        onChange={(e) =>
-          editor
-            .chain()
-            .focus()
-            .toggleHeading({ level: parseInt(e.target.value) })
-            .run()
+        value={
+          editor.isActive('heading', { level: 1 }) ? "1" :
+          editor.isActive('heading', { level: 2 }) ? "2" :
+          editor.isActive('heading', { level: 3 }) ? "3" :
+          editor.isActive('heading', { level: 4 }) ? "4" :
+          editor.isActive('heading', { level: 5 }) ? "5" :
+          editor.isActive('heading', { level: 6 }) ? "6" : "0"
         }
+        onChange={(e) => {
+          const value = e.target.value;
+          if (value === "0") {
+            editor.chain().focus().setParagraph().run();
+          } else {
+            editor.chain().focus().toggleHeading({ level: parseInt(value) }).run();
+          }
+        }}
       >
+        <option value="0">Paragraph</option>
         <option value="1">Heading 1</option>
         <option value="2">Heading 2</option>
         <option value="3">Heading 3</option>
@@ -351,13 +361,31 @@ const ToolSelect = styled.select`
   display: flex;
   background: rgba(217, 217, 217, 0.185);
   border-radius: 6px;
-  width: 100px;
+  width: 120px;
   border: none;
   height: 25px;
-  padding: 5px;
+  padding: 2px 5px;
   font-size: 11px;
   font-family: 'DM Sans';
   margin-right: 5px;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 5px center;
+  background-size: 12px;
+  padding-right: 20px;
+
+  &:hover {
+    background-color: rgba(217, 217, 217, 0.3);
+  }
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(217, 217, 217, 0.5);
+  }
 `
 
 const TableMenuWrapper = styled.div`
