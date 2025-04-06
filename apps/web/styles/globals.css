@@ -113,6 +113,10 @@ layer(base);
     text-decoration: none;
   }
 
+  button {
+    @apply cursor-pointer;
+  }
+
   * {
     box-sizing: border-box;
   }
