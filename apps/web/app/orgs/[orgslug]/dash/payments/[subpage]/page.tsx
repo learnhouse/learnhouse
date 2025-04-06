@@ -69,7 +69,7 @@ function PaymentsPage(props: { params: Promise<PaymentsParams> }) {
 
   return (
     <div className="h-screen w-full bg-[#f8f8f8] flex flex-col">
-      <div className="pl-10 pr-10 tracking-tight bg-[#fcfbfc] z-10 nice-shadow">
+      <div className="pl-10 pr-10 tracking-tight bg-[#fcfbfc] z-10 nice-shadow flex-shrink-0">
         <BreadCrumbs type="payments" />
         <div className="my-2 py-2">
           <div className="w-100 flex flex-col space-y-1">
@@ -102,7 +102,7 @@ function PaymentsPage(props: { params: Promise<PaymentsParams> }) {
           />
         </div>
       </div>
-      <div className="h-6"></div>
+      <div className="h-6 flex-shrink-0"></div>
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}

@@ -1,8 +1,10 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { getUriWithOrg } from '@services/config/config'
 import { useParams } from 'next/navigation'
 import { getUserAvatarMediaDirectory } from '@services/media/media'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import UserProfilePopup from './UserProfilePopup'
+import { getUserByUsername } from '@services/users/users'
 
 type UserAvatarProps = {
   width?: number
@@ -13,11 +15,30 @@ type UserAvatarProps = {
   borderColor?: string
   predefined_avatar?: 'ai' | 'empty'
   backgroundColor?: 'bg-white' | 'bg-gray-100' 
+  showProfilePopup?: boolean
+  userId?: string
+  username?: string
 }
 
 function UserAvatar(props: UserAvatarProps) {
   const session = useLHSession() as any
   const params = useParams() as any
+  const [userData, setUserData] = useState<any>(null)
+
+  useEffect(() => {
+    const fetchUserByUsername = async () => {
+      if (props.username) {
+        try {
+          const data = await getUserByUsername(props.username)
+          setUserData(data)
+        } catch (error) {
+          console.error('Error fetching user by username:', error)
+        }
+      }
+    }
+
+    fetchUserByUsername()
+  }, [props.username])
 
   const isExternalUrl = (url: string): boolean => {
     return url.startsWith('http://') || url.startsWith('https://')
@@ -54,7 +75,18 @@ function UserAvatar(props: UserAvatarProps) {
       return props.avatar_url
     }
 
-    // If user has an avatar in session
+    // If we have user data from username fetch
+    if (userData?.avatar_image) {
+      const avatarUrl = userData.avatar_image
+      // If it's an external URL (e.g., from Google, Facebook, etc.), use it directly
+      if (isExternalUrl(avatarUrl)) {
+        return avatarUrl
+      }
+      // Otherwise, get the local avatar URL
+      return getUserAvatarMediaDirectory(userData.user_uuid, avatarUrl)
+    }
+
+    // If user has an avatar in session (only if session exists)
     if (session?.data?.user?.avatar_image) {
       const avatarUrl = session.data.user.avatar_image
       // If it's an external URL (e.g., from Google, Facebook, etc.), use it directly
@@ -69,7 +101,7 @@ function UserAvatar(props: UserAvatarProps) {
     return getUriWithOrg(params.orgslug, '/empty_avatar.png')
   }
 
-  return (
+  const avatarImage = (
     <img
       alt="User Avatar"
       width={props.width ?? 50}
@@ -88,6 +120,16 @@ function UserAvatar(props: UserAvatarProps) {
       `}
     />
   )
+
+  if (props.showProfilePopup && (props.userId || (userData?.id))) {
+    return (
+      <UserProfilePopup userId={props.userId || userData?.id}>
+        {avatarImage}
+      </UserProfilePopup>
+    )
+  }
+
+  return avatarImage
 }
 
 export default UserAvatar

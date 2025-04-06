@@ -31,6 +31,7 @@ import Table from '@tiptap/extension-table'
 import TableHeader from '@tiptap/extension-table-header'
 import TableRow from '@tiptap/extension-table-row'
 import TableCell from '@tiptap/extension-table-cell'
+import UserBlock from '@components/Objects/Editor/Extensions/Users/UserBlock'
 
 interface Editor {
   content: string
@@ -101,6 +102,10 @@ function Canva(props: Editor) {
         activity: props.activity,
       }),
       Buttons.configure({
+        editable: isEditable,
+        activity: props.activity,
+      }),
+      UserBlock.configure({
         editable: isEditable,
         activity: props.activity,
       }),

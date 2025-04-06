@@ -75,8 +75,8 @@ function OrgPage(props: { params: Promise<OrgParams> }) {
   }, [params.subpage, params])
 
   return (
-    <div className="h-full w-full bg-[#f8f8f8]">
-      <div className="pl-10 pr-10  tracking-tight bg-[#fcfbfc] nice-shadow">
+    <div className="h-full w-full bg-[#f8f8f8] flex flex-col">
+      <div className="pl-10 pr-10 tracking-tight bg-[#fcfbfc] nice-shadow flex-shrink-0">
         <BreadCrumbs type="org"></BreadCrumbs>
         <div className="my-2  py-2">
           <div className="w-100 flex flex-col space-y-1">
@@ -99,12 +99,13 @@ function OrgPage(props: { params: Promise<OrgParams> }) {
           ))}
         </div>
       </div>
-      <div className="h-6"></div>
+      <div className="h-6 flex-shrink-0"></div>
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.1, type: 'spring', stiffness: 80 }}
+        className="flex-1 overflow-y-auto"
       >
         {params.subpage == 'general' ? <OrgEditGeneral /> : ''}
         {params.subpage == 'previews' ? <OrgEditImages /> : ''}

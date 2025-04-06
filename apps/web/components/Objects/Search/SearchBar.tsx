@@ -35,7 +35,30 @@ export const SearchBar: React.FC<SearchBarProps> = ({ orgslug, className = '', i
   const [showResults, setShowResults] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const session = useLHSession() as any;
-  const debouncedSearch = useDebounce(searchQuery, 300);
+
+  const debouncedSearchFunction = useDebounce(async (query: string) => {
+    if (query.trim().length === 0) {
+      setCourses([]);
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const results = await searchOrgCourses(
+        orgslug,
+        query,
+        1,
+        5,
+        null,
+        session?.data?.tokens?.access_token
+      );
+      setCourses(results);
+    } catch (error) {
+      console.error('Error searching courses:', error);
+      setCourses([]);
+    }
+    setIsLoading(false);
+  }, 300);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -49,31 +72,8 @@ export const SearchBar: React.FC<SearchBarProps> = ({ orgslug, className = '', i
   }, []);
 
   useEffect(() => {
-    const fetchCourses = async () => {
-      if (debouncedSearch.trim().length === 0) {
-        setCourses([]);
-        return;
-      }
-
-      setIsLoading(true);
-      try {
-        const results = await searchOrgCourses(
-          orgslug,
-          debouncedSearch,
-          1,
-          5,
-          null,
-          session?.data?.tokens?.access_token
-        );
-        setCourses(results);
-      } catch (error) {
-        console.error('Error searching courses:', error);
-        setCourses([]);
-      }
-      setIsLoading(false);
-    };
-    fetchCourses();
-  }, [debouncedSearch, orgslug, session?.data?.tokens?.access_token]);
+    debouncedSearchFunction(searchQuery);
+  }, [searchQuery, debouncedSearchFunction]);
 
   const handleSearchFocus = () => {
     if (searchQuery.trim().length > 0) {

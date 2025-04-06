@@ -153,13 +153,13 @@ async def create_user_with_invite(
     user = await create_user(request, db_session, current_user, user_object, org_id)
 
     # Check if invite code contains UserGroup
-    if inviteCode.get("usergroup_id"):
+    if inviteCode.get("usergroup_id"): # type: ignore
         # Add user to UserGroup
         await add_users_to_usergroup(
             request,
             db_session,
             InternalUser(id=0),
-            int(inviteCode.get("usergroup_id")), # Convert to int since usergroup_id is expected to be int
+            int(inviteCode.get("usergroup_id")), # type: ignore / Convert to int since usergroup_id is expected to be int
             str(user.id),
         )
 
@@ -416,8 +416,30 @@ async def read_user_by_uuid(
             detail="User does not exist",
         )
 
-    # RBAC check
-    await rbac_check(request, current_user, "read", user.user_uuid, db_session)
+    
+
+    user = UserRead.model_validate(user)
+
+    return user
+
+
+async def read_user_by_username(
+    request: Request,
+    db_session: Session,
+    current_user: PublicUser | AnonymousUser,
+    username: str,
+):
+    # Get user
+    statement = select(User).where(User.username == username)
+    user = db_session.exec(statement).first()
+
+    if not user:
+        raise HTTPException(
+            status_code=400,
+            detail="User does not exist",
+        )
+
+    
 
     user = UserRead.model_validate(user)
 
@@ -563,7 +585,7 @@ async def rbac_check(
     user_uuid: str,
     db_session: Session,
 ):
-    if action == "create":
+    if action == "create" or action == "read":
         if current_user.id == 0:  # if user is anonymous
             return True
         else:
