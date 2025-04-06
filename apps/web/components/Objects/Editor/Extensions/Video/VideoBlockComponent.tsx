@@ -1,4 +1,5 @@
-import { NodeViewWrapper } from '@tiptap/react'
+import { NodeViewProps, NodeViewWrapper } from '@tiptap/react'
+import { Node } from '@tiptap/core'
 import { 
   Loader2, Video, Upload, X, HelpCircle, 
   Maximize2, Minimize2, ArrowLeftRight, 
@@ -133,23 +134,30 @@ interface VideoBlockObject {
   size: VideoSize
 }
 
-interface VideoBlockProps {
-  node: {
-    attrs: {
-      blockObject: VideoBlockObject | LegacyVideoBlockObject | null
+interface VideoBlockAttrs {
+  blockObject: VideoBlockObject | LegacyVideoBlockObject | null
+}
+
+interface VideoBlockExtension {
+  options: {
+    activity: {
+      activity_uuid: string
     }
   }
-  extension: {
+}
+
+interface ExtendedNodeViewProps extends Omit<NodeViewProps, 'extension'> {
+  extension: Node & {
     options: {
       activity: {
         activity_uuid: string
       }
     }
   }
-  updateAttributes: (attrs: { blockObject: VideoBlockObject | null }) => void
 }
 
-function VideoBlockComponent({ node, extension, updateAttributes }: VideoBlockProps) {
+function VideoBlockComponent(props: ExtendedNodeViewProps) {
+  const { node, extension, updateAttributes } = props
   const org = useOrg() as Organization | null
   const course = useCourse() as Course | null
   const editorState = useEditorProvider() as EditorState
