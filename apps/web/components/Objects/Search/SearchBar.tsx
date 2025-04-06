@@ -1,31 +1,75 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { Search, ArrowRight, Sparkles, Book, GraduationCap, ArrowUpRight, TextSearch, ScanSearch } from 'lucide-react';
-import { searchOrgCourses } from '@services/courses/courses';
+import { Search, ArrowRight, Sparkles, Book, GraduationCap, ArrowUpRight, TextSearch, ScanSearch, Users } from 'lucide-react';
+import { searchOrgContent } from '@services/search/search';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import Link from 'next/link';
-import { getCourseThumbnailMediaDirectory } from '@services/media/media';
+import { getCourseThumbnailMediaDirectory, getUserAvatarMediaDirectory } from '@services/media/media';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useOrg } from '@components/Contexts/OrgContext';
 import { getUriWithOrg } from '@services/config/config';
 import { removeCoursePrefix } from '../Thumbnails/CourseThumbnail';
+import UserAvatar from '../UserAvatar';
+
+interface User {
+  username: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  avatar_image: string;
+  bio: string;
+  details: Record<string, any>;
+  profile: Record<string, any>;
+  id: number;
+  user_uuid: string;
+}
+
+interface Author {
+  user: User;
+  authorship: string;
+  authorship_status: string;
+  creation_date: string;
+  update_date: string;
+}
 
 interface Course {
   name: string;
   description: string;
+  about: string;
+  learnings: string;
+  tags: string;
   thumbnail_image: string;
+  public: boolean;
+  open_to_contributors: boolean;
+  id: number;
+  org_id: number;
+  authors: Author[];
   course_uuid: string;
-  tags?: string[];
-  authors: Array<{
-    first_name: string;
-    last_name: string;
-    avatar_image: string;
-  }>;
+  creation_date: string;
+  update_date: string;
+}
+
+interface Collection {
+  name: string;
+  public: boolean;
+  description: string;
+  id: number;
+  courses: string[];
+  collection_uuid: string;
+  creation_date: string;
+  update_date: string;
+}
+
+interface SearchResults {
+  courses: Course[];
+  collections: Collection[];
+  users: User[];
 }
 
 interface SearchBarProps {
   orgslug: string;
   className?: string;
   isMobile?: boolean;
+  showSearchSuggestions?: boolean;
 }
 
 const CourseResultsSkeleton = () => (
@@ -50,10 +94,15 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   orgslug, 
   className = '', 
   isMobile = false,
+  showSearchSuggestions = false,
 }) => {
   const org = useOrg() as any;
   const [searchQuery, setSearchQuery] = useState('');
-  const [courses, setCourses] = useState<Course[]>([]);
+  const [searchResults, setSearchResults] = useState<SearchResults>({
+    courses: [],
+    collections: [],
+    users: []
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
@@ -75,16 +124,16 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   }, []);
 
   useEffect(() => {
-    const fetchCourses = async () => {
+    const fetchResults = async () => {
       if (debouncedSearch.trim().length === 0) {
-        setCourses([]);
+        setSearchResults({ courses: [], collections: [], users: [] });
         setIsLoading(false);
         return;
       }
 
       setIsLoading(true);
       try {
-        const results = await searchOrgCourses(
+        const response = await searchOrgContent(
           orgslug,
           debouncedSearch,
           1,
@@ -92,16 +141,31 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           null,
           session?.data?.tokens?.access_token
         );
-        setCourses(results);
+        
+        console.log('Search API Response:', response); // Debug log
+
+        // Type assertion and safe access
+        const typedResponse = response.data as any;
+        
+        // Ensure we have the correct structure and handle potential undefined values
+        const processedResults: SearchResults = {
+          courses: Array.isArray(typedResponse?.courses) ? typedResponse.courses : [],
+          collections: Array.isArray(typedResponse?.collections) ? typedResponse.collections : [],
+          users: Array.isArray(typedResponse?.users) ? typedResponse.users : []
+        };
+
+        console.log('Processed Results:', processedResults); // Debug log
+        
+        setSearchResults(processedResults);
       } catch (error) {
-        console.error('Error searching courses:', error);
-        setCourses([]);
+        console.error('Error searching content:', error);
+        setSearchResults({ courses: [], collections: [], users: [] });
       }
       setIsLoading(false);
       setIsInitialLoad(false);
     };
 
-    fetchCourses();
+    fetchResults();
   }, [debouncedSearch, orgslug, session?.data?.tokens?.access_token]);
 
   const MemoizedEmptyState = useMemo(() => {
@@ -160,8 +224,12 @@ export const SearchBar: React.FC<SearchBarProps> = ({
     return null;
   }, [searchQuery, searchTerms, orgslug]);
 
-  const MemoizedCourseResults = useMemo(() => {
-    if (!courses.length) return null;
+  const MemoizedQuickResults = useMemo(() => {
+    const hasResults = searchResults.courses.length > 0 || 
+                      searchResults.collections.length > 0 || 
+                      searchResults.users.length > 0;
+    
+    if (!hasResults) return null;
     
     return (
       <div className="p-2">
@@ -169,40 +237,114 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           <TextSearch size={16} />
           <span className="font-medium">Quick Results</span>
         </div>
-        {courses.map((course) => (
-          <Link
-            key={course.course_uuid}
-            href={getUriWithOrg(orgslug, `/course/${removeCoursePrefix(course.course_uuid)}`)}
-            className="flex items-center gap-3 p-2 hover:bg-black/[0.02] rounded-lg transition-colors"
-          >
-            <div className="relative">
-              {course.thumbnail_image ? (
-                <img
-                  src={getCourseThumbnailMediaDirectory(org?.org_uuid, course.course_uuid, course.thumbnail_image)}
-                  alt={course.name}
-                  className="w-10 h-10 object-cover rounded-lg"
+
+        {/* Users Section */}
+        {searchResults.users.length > 0 && (
+          <div className="mb-2">
+            <div className="flex items-center gap-2 px-2 py-1 text-xs text-black/40">
+              <Users size={12} />
+              <span>Users</span>
+            </div>
+            {searchResults.users.map((user) => (
+              <Link
+                key={user.user_uuid}
+                href={getUriWithOrg(orgslug, `/user/${user.username}`)}
+                className="flex items-center gap-3 p-2 hover:bg-black/[0.02] rounded-lg transition-colors"
+              >
+                <UserAvatar
+                  width={40}
+                  avatar_url={user.avatar_image ? getUserAvatarMediaDirectory(user.user_uuid, user.avatar_image) : ''}
+                  predefined_avatar={user.avatar_image ? undefined : 'empty'}
+                  userId={user.id.toString()}
+                  showProfilePopup
+                  rounded="rounded-full"
+                  backgroundColor="bg-gray-100"
                 />
-              ) : (
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-medium text-black/80 truncate">
+                      {user.first_name} {user.last_name}
+                    </h3>
+                    <span className="text-[10px] font-medium text-black/40 uppercase tracking-wide whitespace-nowrap">User</span>
+                  </div>
+                  <p className="text-xs text-black/50 truncate">@{user.username}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+
+        {/* Courses Section */}
+        {searchResults.courses.length > 0 && (
+          <div className="mb-2">
+            <div className="flex items-center gap-2 px-2 py-1 text-xs text-black/40">
+              <GraduationCap size={12} />
+              <span>Courses</span>
+            </div>
+            {searchResults.courses.map((course) => (
+              <Link
+                key={course.course_uuid}
+                href={getUriWithOrg(orgslug, `/course/${removeCoursePrefix(course.course_uuid)}`)}
+                className="flex items-center gap-3 p-2 hover:bg-black/[0.02] rounded-lg transition-colors"
+              >
+                <div className="relative">
+                  {course.thumbnail_image ? (
+                    <img
+                      src={getCourseThumbnailMediaDirectory(org?.org_uuid, course.course_uuid, course.thumbnail_image)}
+                      alt={course.name}
+                      className="w-10 h-10 object-cover rounded-lg"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 bg-black/5 rounded-lg flex items-center justify-center">
+                      <Book size={20} className="text-black/40" />
+                    </div>
+                  )}
+                  <div className="absolute -bottom-1 -right-1 bg-white shadow-sm p-1 rounded-full">
+                    <GraduationCap size={11} className="text-black/60" />
+                  </div>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-medium text-black/80 truncate">{course.name}</h3>
+                    <span className="text-[10px] font-medium text-black/40 uppercase tracking-wide whitespace-nowrap">Course</span>
+                  </div>
+                  <p className="text-xs text-black/50 truncate">{course.description}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+
+        {/* Collections Section */}
+        {searchResults.collections.length > 0 && (
+          <div className="mb-2">
+            <div className="flex items-center gap-2 px-2 py-1 text-xs text-black/40">
+              <Book size={12} />
+              <span>Collections</span>
+            </div>
+            {searchResults.collections.map((collection) => (
+              <Link
+                key={collection.collection_uuid}
+                href={getUriWithOrg(orgslug, `/collection/${collection.collection_uuid}`)}
+                className="flex items-center gap-3 p-2 hover:bg-black/[0.02] rounded-lg transition-colors"
+              >
                 <div className="w-10 h-10 bg-black/5 rounded-lg flex items-center justify-center">
                   <Book size={20} className="text-black/40" />
                 </div>
-              )}
-              <div className="absolute -bottom-1 -right-1 bg-white shadow-sm p-1 rounded-full">
-                <GraduationCap size={11} className="text-black/60" />
-              </div>
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <h3 className="text-sm font-medium text-black/80 truncate">{course.name}</h3>
-                <span className="text-[10px] font-medium text-black/40 uppercase tracking-wide whitespace-nowrap">Course</span>
-              </div>
-              <p className="text-xs text-black/50 truncate">{course.description}</p>
-            </div>
-          </Link>
-        ))}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-medium text-black/80 truncate">{collection.name}</h3>
+                    <span className="text-[10px] font-medium text-black/40 uppercase tracking-wide whitespace-nowrap">Collection</span>
+                  </div>
+                  <p className="text-xs text-black/50 truncate">{collection.description}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
     );
-  }, [courses, orgslug, org?.org_uuid]);
+  }, [searchResults, orgslug, org?.org_uuid]);
 
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
@@ -238,13 +380,16 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           MemoizedEmptyState
         ) : (
           <>
-            {MemoizedSearchSuggestions}
+            {showSearchSuggestions && MemoizedSearchSuggestions}
             {isLoading ? (
               <CourseResultsSkeleton />
             ) : (
               <>
-                {MemoizedCourseResults}
-                {(courses.length > 0 || searchQuery.trim()) && (
+                {MemoizedQuickResults}
+                {((searchResults.courses.length > 0 || 
+                   searchResults.collections.length > 0 || 
+                   searchResults.users.length > 0) || 
+                   searchQuery.trim()) && (
                   <Link
                     href={getUriWithOrg(orgslug, `/search?q=${encodeURIComponent(searchQuery)}`)}
                     className="flex items-center justify-between px-4 py-2.5 text-xs text-black/50 hover:text-black/70 hover:bg-black/[0.02] transition-colors"
