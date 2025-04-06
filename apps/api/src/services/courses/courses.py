@@ -638,7 +638,88 @@ async def delete_course(
     return {"detail": "Course deleted"}
 
 
-
+async def get_user_courses(
+    request: Request,
+    current_user: PublicUser | AnonymousUser,
+    user_id: int,
+    db_session: Session,
+    page: int = 1,
+    limit: int = 10,
+) -> List[CourseRead]:
+    # Verify user is not anonymous
+    await authorization_verify_if_user_is_anon(current_user.id)
+    
+    # Get all resource authors for the user
+    statement = select(ResourceAuthor).where(
+        and_(
+            ResourceAuthor.user_id == user_id,
+            ResourceAuthor.authorship_status == ResourceAuthorshipStatusEnum.ACTIVE
+        )
+    )
+    resource_authors = db_session.exec(statement).all()
+    
+    # Extract course UUIDs from resource authors
+    course_uuids = [author.resource_uuid for author in resource_authors]
+    
+    if not course_uuids:
+        return []
+    
+    # Get courses with the extracted UUIDs
+    statement = select(Course).where(Course.course_uuid.in_(course_uuids))
+    
+    # Apply pagination
+    statement = statement.offset((page - 1) * limit).limit(limit)
+    
+    courses = db_session.exec(statement).all()
+    
+    # Convert to CourseRead objects
+    result = []
+    for course in courses:
+        # Get authors for the course
+        authors_statement = select(ResourceAuthor).where(
+            ResourceAuthor.resource_uuid == course.course_uuid
+        )
+        authors = db_session.exec(authors_statement).all()
+        
+        # Convert authors to AuthorWithRole objects
+        authors_with_role = []
+        for author in authors:
+            # Get user for the author
+            user_statement = select(User).where(User.id == author.user_id)
+            user = db_session.exec(user_statement).first()
+            
+            if user:
+                authors_with_role.append(
+                    AuthorWithRole(
+                        user=UserRead.model_validate(user),
+                        authorship=author.authorship,
+                        authorship_status=author.authorship_status,
+                        creation_date=author.creation_date,
+                        update_date=author.update_date,
+                    )
+                )
+        
+        # Create CourseRead object
+        course_read = CourseRead(
+            id=course.id,
+            org_id=course.org_id,
+            name=course.name,
+            description=course.description,
+            about=course.about,
+            learnings=course.learnings,
+            tags=course.tags,
+            thumbnail_image=course.thumbnail_image,
+            public=course.public,
+            open_to_contributors=course.open_to_contributors,
+            course_uuid=course.course_uuid,
+            creation_date=course.creation_date,
+            update_date=course.update_date,
+            authors=authors_with_role,
+        )
+        
+        result.append(course_read)
+    
+    return result
 
 
 ## 🔒 RBAC Utils ##

@@ -1400,7 +1400,7 @@ const PeopleSectionEditor: React.FC<{
           <Label>People</Label>
           <div className="space-y-4 mt-2">
             {section.people.map((person, index) => (
-              <div key={index} className="grid grid-cols-[1fr_1fr_1fr_auto] gap-4 p-4 border rounded-lg">
+              <div key={index} className="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-4 p-4 border rounded-lg">
                 <div className="space-y-2">
                   <Label>Name</Label>
                   <Input
@@ -1411,6 +1411,19 @@ const PeopleSectionEditor: React.FC<{
                       onChange({ ...section, people: newPeople })
                     }}
                     placeholder="Person's name"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Username</Label>
+                  <Input
+                    value={person.username || ''}
+                    onChange={(e) => {
+                      const newPeople = [...section.people]
+                      newPeople[index] = { ...person, username: e.target.value }
+                      onChange({ ...section, people: newPeople })
+                    }}
+                    placeholder="@username"
                   />
                 </div>
 
@@ -1480,7 +1493,8 @@ const PeopleSectionEditor: React.FC<{
                   user_uuid: '',
                   name: '',
                   description: '',
-                  image_url: ''
+                  image_url: '',
+                  username: ''
                 }
                 onChange({
                   ...section,
