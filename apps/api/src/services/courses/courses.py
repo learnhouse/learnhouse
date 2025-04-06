@@ -288,10 +288,22 @@ async def get_courses_orgslug(
     # Create CourseRead objects with authors
     course_reads = []
     for course in courses:
-        course_read = CourseRead(
-            **course.model_dump(),
-            authors=course_authors.get(course.course_uuid, [])
-        )
+        course_read = CourseRead.model_validate({
+            "id": course.id or 0,  # Ensure id is never None
+            "org_id": course.org_id,
+            "name": course.name,
+            "description": course.description or "",
+            "about": course.about or "",
+            "learnings": course.learnings or "",
+            "tags": course.tags or "",
+            "thumbnail_image": course.thumbnail_image or "",
+            "public": course.public,
+            "open_to_contributors": course.open_to_contributors,
+            "course_uuid": course.course_uuid,
+            "creation_date": course.creation_date,
+            "update_date": course.update_date,
+            "authors": course_authors.get(course.course_uuid, [])
+        })
         course_reads.append(course_read)
 
     return course_reads
@@ -380,8 +392,22 @@ async def search_courses(
             for resource_author, user in author_results
         ]
         
-        course_read = CourseRead.model_validate(course)
-        course_read.authors = authors
+        course_read = CourseRead.model_validate({
+            "id": course.id or 0,  # Ensure id is never None
+            "org_id": course.org_id,
+            "name": course.name,
+            "description": course.description or "",
+            "about": course.about or "",
+            "learnings": course.learnings or "",
+            "tags": course.tags or "",
+            "thumbnail_image": course.thumbnail_image or "",
+            "public": course.public,
+            "open_to_contributors": course.open_to_contributors,
+            "course_uuid": course.course_uuid,
+            "creation_date": course.creation_date,
+            "update_date": course.update_date,
+            "authors": authors
+        })
         course_reads.append(course_read)
 
     return course_reads
@@ -700,22 +726,22 @@ async def get_user_courses(
                 )
         
         # Create CourseRead object
-        course_read = CourseRead(
-            id=course.id,
-            org_id=course.org_id,
-            name=course.name,
-            description=course.description,
-            about=course.about,
-            learnings=course.learnings,
-            tags=course.tags,
-            thumbnail_image=course.thumbnail_image,
-            public=course.public,
-            open_to_contributors=course.open_to_contributors,
-            course_uuid=course.course_uuid,
-            creation_date=course.creation_date,
-            update_date=course.update_date,
-            authors=authors_with_role,
-        )
+        course_read = CourseRead.model_validate({
+            "id": course.id or 0,  # Ensure id is never None
+            "org_id": course.org_id,
+            "name": course.name,
+            "description": course.description or "",
+            "about": course.about or "",
+            "learnings": course.learnings or "",
+            "tags": course.tags or "",
+            "thumbnail_image": course.thumbnail_image or "",
+            "public": course.public,
+            "open_to_contributors": course.open_to_contributors,
+            "course_uuid": course.course_uuid,
+            "creation_date": course.creation_date,
+            "update_date": course.update_date,
+            "authors": authors_with_role
+        })
         
         result.append(course_read)
     
