@@ -238,42 +238,6 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           <span className="font-medium">Quick Results</span>
         </div>
 
-        {/* Users Section */}
-        {searchResults.users.length > 0 && (
-          <div className="mb-2">
-            <div className="flex items-center gap-2 px-2 py-1 text-xs text-black/40">
-              <Users size={12} />
-              <span>Users</span>
-            </div>
-            {searchResults.users.map((user) => (
-              <Link
-                key={user.user_uuid}
-                href={getUriWithOrg(orgslug, `/user/${user.username}`)}
-                className="flex items-center gap-3 p-2 hover:bg-black/[0.02] rounded-lg transition-colors"
-              >
-                <UserAvatar
-                  width={40}
-                  avatar_url={user.avatar_image ? getUserAvatarMediaDirectory(user.user_uuid, user.avatar_image) : ''}
-                  predefined_avatar={user.avatar_image ? undefined : 'empty'}
-                  userId={user.id.toString()}
-                  showProfilePopup
-                  rounded="rounded-full"
-                  backgroundColor="bg-gray-100"
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-medium text-black/80 truncate">
-                      {user.first_name} {user.last_name}
-                    </h3>
-                    <span className="text-[10px] font-medium text-black/40 uppercase tracking-wide whitespace-nowrap">User</span>
-                  </div>
-                  <p className="text-xs text-black/50 truncate">@{user.username}</p>
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
-
         {/* Courses Section */}
         {searchResults.courses.length > 0 && (
           <div className="mb-2">
@@ -337,6 +301,42 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                     <span className="text-[10px] font-medium text-black/40 uppercase tracking-wide whitespace-nowrap">Collection</span>
                   </div>
                   <p className="text-xs text-black/50 truncate">{collection.description}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+
+        {/* Users Section */}
+        {searchResults.users.length > 0 && (
+          <div className="mb-2">
+            <div className="flex items-center gap-2 px-2 py-1 text-xs text-black/40">
+              <Users size={12} />
+              <span>Users</span>
+            </div>
+            {searchResults.users.map((user) => (
+              <Link
+                key={user.user_uuid}
+                href={getUriWithOrg(orgslug, `/user/${user.username}`)}
+                className="flex items-center gap-3 p-2 hover:bg-black/[0.02] rounded-lg transition-colors"
+              >
+                <UserAvatar
+                  width={40}
+                  avatar_url={user.avatar_image ? getUserAvatarMediaDirectory(user.user_uuid, user.avatar_image) : ''}
+                  predefined_avatar={user.avatar_image ? undefined : 'empty'}
+                  userId={user.id.toString()}
+                  showProfilePopup
+                  rounded="rounded-full"
+                  backgroundColor="bg-gray-100"
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-medium text-black/80 truncate">
+                      {user.first_name} {user.last_name}
+                    </h3>
+                    <span className="text-[10px] font-medium text-black/40 uppercase tracking-wide whitespace-nowrap">User</span>
+                  </div>
+                  <p className="text-xs text-black/50 truncate">@{user.username}</p>
                 </div>
               </Link>
             ))}
