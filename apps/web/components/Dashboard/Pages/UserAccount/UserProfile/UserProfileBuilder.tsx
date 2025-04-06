@@ -1,6 +1,6 @@
 import React from 'react'
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
-import { Plus, Trash2, GripVertical, ImageIcon, Link as LinkIcon, Award, ArrowRight, Edit, TextIcon, Briefcase, GraduationCap, Upload, MapPin } from 'lucide-react'
+import { Plus, Trash2, GripVertical, ImageIcon, Link as LinkIcon, Award, ArrowRight, Edit, TextIcon, Briefcase, GraduationCap, Upload, MapPin, BookOpen } from 'lucide-react'
 import { Input } from "@components/ui/input"
 import { Textarea } from "@components/ui/textarea"
 import { Label } from "@components/ui/label"
@@ -48,6 +48,11 @@ const SECTION_TYPES = {
     icon: MapPin,
     label: 'Affiliation',
     description: 'Add organizational affiliations'
+  },
+  'courses': {
+    icon: BookOpen,
+    label: 'Courses',
+    description: 'Display authored courses'
   }
 } as const
 
@@ -94,6 +99,14 @@ interface ProfileAffiliation {
   logoUrl: string;
 }
 
+interface Course {
+  id: string;
+  title: string;
+  description: string;
+  thumbnail?: string;
+  status: string;
+}
+
 interface BaseSection {
   id: string;
   type: keyof typeof SECTION_TYPES;
@@ -135,6 +148,11 @@ interface AffiliationSection extends BaseSection {
   affiliations: ProfileAffiliation[];
 }
 
+interface CoursesSection extends BaseSection {
+  type: 'courses';
+  // No need to store courses as they will be fetched from API
+}
+
 type ProfileSection = 
   | ImageGallerySection 
   | TextSection 
@@ -142,7 +160,8 @@ type ProfileSection =
   | SkillsSection 
   | ExperienceSection 
   | EducationSection
-  | AffiliationSection;
+  | AffiliationSection
+  | CoursesSection;
 
 interface ProfileData {
   sections: ProfileSection[];
@@ -196,7 +215,7 @@ const UserProfileBuilder = () => {
     const baseSection = {
       id: `section-${Date.now()}`,
       type,
-      title: `New ${SECTION_TYPES[type].label} Section`
+      title: `${SECTION_TYPES[type].label} Section`
     }
 
     switch (type) {
@@ -241,6 +260,11 @@ const UserProfileBuilder = () => {
           ...baseSection,
           type: 'affiliation',
           affiliations: []
+        }
+      case 'courses':
+        return {
+          ...baseSection,
+          type: 'courses'
         }
     }
   }
@@ -507,6 +531,8 @@ const SectionEditor: React.FC<SectionEditorProps> = ({ section, onChange }) => {
       return <EducationEditor section={section} onChange={onChange} />
     case 'affiliation':
       return <AffiliationEditor section={section} onChange={onChange} />
+    case 'courses':
+      return <CoursesEditor section={section} onChange={onChange} />
     default:
       return <div>Unknown section type</div>
   }
@@ -1279,6 +1305,37 @@ const AffiliationEditor: React.FC<{
               Add Affiliation
             </Button>
           </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+const CoursesEditor: React.FC<{
+  section: CoursesSection;
+  onChange: (section: CoursesSection) => void;
+}> = ({ section, onChange }) => {
+  return (
+    <div className="space-y-6 p-6 bg-white rounded-lg nice-shadow">
+      <div className="flex items-center space-x-2">
+        <BookOpen className="w-5 h-5 text-gray-500" />
+        <h3 className="font-medium text-lg">Courses</h3>
+      </div>
+      
+      <div className="space-y-4">
+        {/* Title */}
+        <div>
+          <Label htmlFor="title">Section Title</Label>
+          <Input
+            id="title"
+            value={section.title}
+            onChange={(e) => onChange({ ...section, title: e.target.value })}
+            placeholder="Enter section title"
+          />
+        </div>
+
+        <div className="text-sm text-gray-500 italic">
+          Your authored courses will be automatically displayed in this section.
         </div>
       </div>
     </div>

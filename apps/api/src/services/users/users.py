@@ -153,13 +153,13 @@ async def create_user_with_invite(
     user = await create_user(request, db_session, current_user, user_object, org_id)
 
     # Check if invite code contains UserGroup
-    if inviteCode.get("usergroup_id"):
+    if inviteCode.get("usergroup_id"): # type: ignore
         # Add user to UserGroup
         await add_users_to_usergroup(
             request,
             db_session,
             InternalUser(id=0),
-            int(inviteCode.get("usergroup_id")), # Convert to int since usergroup_id is expected to be int
+            int(inviteCode.get("usergroup_id")), # type: ignore / Convert to int since usergroup_id is expected to be int
             str(user.id),
         )
 
