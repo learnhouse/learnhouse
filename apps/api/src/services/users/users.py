@@ -392,9 +392,6 @@ async def read_user_by_id(
             detail="User does not exist",
         )
 
-    # RBAC check
-    await rbac_check(request, current_user, "read", user.user_uuid, db_session)
-
     user = UserRead.model_validate(user)
 
     return user
