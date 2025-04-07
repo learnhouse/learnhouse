@@ -75,43 +75,35 @@ const EditCourseStructure = (props: EditCourseStructureProps) => {
       destination.index === source.index
     )
       return
+
+    const newCourseStructure = { ...course_structure }
+    
     if (type === 'chapter') {
-      const newChapterOrder = Array.from(course_structure.chapters)
-      newChapterOrder.splice(source.index, 1)
-      newChapterOrder.splice(
-        destination.index,
-        0,
-        course_structure.chapters[source.index]
-      )
-      dispatchCourse({
-        type: 'setCourseStructure',
-        payload: { ...course_structure, chapters: newChapterOrder },
-      })
-      dispatchCourse({ type: 'setIsNotSaved' })
+      const newChapterOrder = Array.from(newCourseStructure.chapters)
+      const [movedChapter] = newChapterOrder.splice(source.index, 1)
+      newChapterOrder.splice(destination.index, 0, movedChapter)
+      newCourseStructure.chapters = newChapterOrder
     }
+
     if (type === 'activity') {
-      const newChapterOrder = Array.from(course_structure.chapters)
+      const newChapterOrder = Array.from(newCourseStructure.chapters)
       const sourceChapter = newChapterOrder.find(
         (chapter: any) => chapter.chapter_uuid === source.droppableId
       ) as any
       const destinationChapter = newChapterOrder.find(
         (chapter: any) => chapter.chapter_uuid === destination.droppableId
-      )
-        ? newChapterOrder.find(
-            (chapter: any) => chapter.chapter_uuid === destination.droppableId
-          )
-        : sourceChapter
-      const activity = sourceChapter.activities.find(
-        (activity: any) => activity.activity_uuid === draggableId
-      )
-      sourceChapter.activities.splice(source.index, 1)
-      destinationChapter.activities.splice(destination.index, 0, activity)
-      dispatchCourse({
-        type: 'setCourseStructure',
-        payload: { ...course_structure, chapters: newChapterOrder },
-      })
-      dispatchCourse({ type: 'setIsNotSaved' })
+      ) ?? sourceChapter
+
+      const [movedActivity] = sourceChapter.activities.splice(source.index, 1)
+      destinationChapter.activities.splice(destination.index, 0, movedActivity)
+      newCourseStructure.chapters = newChapterOrder
     }
+
+    dispatchCourse({
+      type: 'setCourseStructure',
+      payload: newCourseStructure,
+    })
+    dispatchCourse({ type: 'setIsNotSaved' })
   }
 
   useEffect(() => {
@@ -125,10 +117,10 @@ const EditCourseStructure = (props: EditCourseStructureProps) => {
       <div className="h-6"></div>
       {winReady ? (
         <DragDropContext onDragEnd={updateStructure}>
-          <Droppable type="chapter" droppableId="chapters">
-            {(provided) => (
+          <Droppable type="chapter" droppableId="chapters" direction="vertical">
+            {(provided, snapshot) => (
               <div
-                className="space-y-4"
+                className={`space-y-4 ${snapshot.isDraggingOver ? 'bg-gray-50/50' : ''}`}
                 {...provided.droppableProps}
                 ref={provided.innerRef}
               >

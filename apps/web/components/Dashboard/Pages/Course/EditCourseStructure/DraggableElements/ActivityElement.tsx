@@ -127,17 +127,25 @@ function ActivityElement(props: ActivitiyElementProps) {
     >
       {(provided, snapshot) => (
         <div
-          className="flex flex-col sm:flex-row py-2 px-3 my-2 w-full rounded-md bg-gray-50 text-gray-500 hover:bg-gray-100 hover:scale-102 space-y-2 sm:space-y-0 sm:space-x-2 items-center shadow-md border-1 border-gray-200 nice-shadow transition-all duration-200"
+          className={`grid grid-cols-[auto_1fr_auto] gap-2 py-2 px-3 my-2 w-full rounded-md text-gray-500 
+            ${snapshot.isDragging 
+              ? 'nice-shadow bg-white ring-2 ring-blue-500/20 z-50 rotate-1 scale-[1.04]' 
+              : 'nice-shadow bg-gray-50 hover:bg-gray-100 '
+            }
+            items-center border-1 border-gray-200`}
           key={props.activity.id}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
           ref={provided.innerRef}
+          style={{
+            ...provided.draggableProps.style
+          }}
         >
           {/*   Activity Type Icon  */}
           <ActivityTypeIndicator activityType={props.activity.activity_type} isMobile={isMobile} />
 
           {/*   Centered Activity Name  */}
-          <div className="grow items-center space-x-2 flex mx-auto justify-center">
+          <div className="flex items-center space-x-2 justify-center">
             {selectedActivity === props.activity.id ? (
               <div className="chapter-modification-zone text-[7px] text-gray-600 shadow-inner bg-gray-200/60 py-1 px-4 rounded-lg space-x-3">
                 <input
@@ -179,7 +187,7 @@ function ActivityElement(props: ActivitiyElementProps) {
           </div>
 
           {/*   Edit, View, Publish, and Delete Buttons  */}
-          <div className="flex flex-wrap justify-center sm:justify-end gap-2 w-full sm:w-auto">
+          <div className="flex items-center gap-2 justify-end">
             <ActivityElementOptions activity={props.activity} isMobile={isMobile} />
             {/*   Publishing  */}
             <button
