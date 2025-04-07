@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  experimental: {
+    turbo: {}, // to disable this warning: "⚠ Webpack is configured while Turbopack is not, which may cause problems."
+  },
   async rewrites() {
     return [
       {
