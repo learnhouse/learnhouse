@@ -8,6 +8,7 @@ from src.db.courses.courses import Course, CourseRead
 from src.db.collections import Collection, CollectionRead
 from src.db.collections_courses import CollectionCourse
 from src.db.organizations import Organization
+from src.db.user_organizations import UserOrganization
 from src.services.courses.courses import search_courses
 
 T = TypeVar('T')
@@ -60,6 +61,10 @@ async def search_across_org(
     # Search users
     users_query = (
         select(User)
+        .join(UserOrganization, and_(
+            UserOrganization.user_id == User.id,
+            UserOrganization.org_id == org.id
+        ))
         .where(
             or_(
                 text('LOWER("user".username) LIKE LOWER(:pattern) OR ' +

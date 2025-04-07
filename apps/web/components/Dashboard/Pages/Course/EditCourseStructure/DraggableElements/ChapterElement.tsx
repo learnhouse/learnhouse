@@ -72,7 +72,9 @@ function ChapterElement(props: ChapterElementProps) {
     >
       {(provided, snapshot) => (
         <div
-          className="mx-2 sm:mx-4 md:mx-6 lg:mx-10 bg-white rounded-xl nice-shadow px-3 sm:px-4 md:px-6 pt-4 sm:pt-6"
+          className={`mx-2 sm:mx-4 md:mx-6 lg:mx-10 bg-white rounded-xl nice-shadow px-3 sm:px-4 md:px-6 pt-4 sm:pt-6 ${
+            snapshot.isDragging ? 'shadow-xl ring-2 ring-blue-500/20 rotate-1' : ''
+          }`}
           key={props.chapter.chapter_uuid}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
@@ -149,23 +151,24 @@ function ChapterElement(props: ChapterElementProps) {
             droppableId={props.chapter.chapter_uuid}
             type="activity"
           >
-            {(provided) => (
-              <div {...provided.droppableProps} ref={provided.innerRef}>
-                <div className="flex flex-col min-h-[60px]">
-                  {activities.map((activity: any, index: any) => {
-                    return (
-                      <div key={activity.activity_uuid} className="flex items-center ">
-                        <ActivityElement
-                          orgslug={props.orgslug}
-                          course_uuid={props.course_uuid}
-                          activityIndex={index}
-                          activity={activity}
-                        />
-                      </div>
-                    )
-                  })}
-                  {provided.placeholder}
-                </div>
+            {(provided, snapshot) => (
+              <div 
+                {...provided.droppableProps} 
+                ref={provided.innerRef}
+                className={`min-h-[60px] rounded-lg transition-colors duration-75 ${
+                  snapshot.isDraggingOver ? 'bg-blue-50/50' : ''
+                }`}
+              >
+                {activities.map((activity: any, index: any) => (
+                  <ActivityElement
+                    key={activity.activity_uuid}
+                    orgslug={props.orgslug}
+                    course_uuid={props.course_uuid}
+                    activityIndex={index}
+                    activity={activity}
+                  />
+                ))}
+                {provided.placeholder}
               </div>
             )}
           </Droppable>
