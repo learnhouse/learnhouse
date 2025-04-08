@@ -260,14 +260,26 @@ export function MarkStatus(props: {
   const router = useRouter()
   const session = useLHSession() as any;
   const isMobile = useMediaQuery('(max-width: 768px)')
+  const [isLoading, setIsLoading] = React.useState(false);
+
   async function markActivityAsCompleteFront() {
-    const trail = await markActivityAsComplete(
-      props.orgslug,
-      props.course.course_uuid,
-      props.activity.activity_uuid,
-      session.data?.tokens?.access_token
-    )
-    router.refresh()
+    try {
+      setIsLoading(true);
+      const trail = await markActivityAsComplete(
+        props.orgslug,
+        props.course.course_uuid,
+        props.activity.activity_uuid,
+        session.data?.tokens?.access_token
+      );
+      
+      // Mutate the course data to trigger re-render
+      await mutate(`${getAPIUrl()}courses/${props.course.course_uuid}/meta`);
+      router.refresh();
+    } catch (error) {
+      toast.error('Failed to mark activity as complete');
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   const isActivityCompleted = () => {
@@ -284,7 +296,7 @@ export function MarkStatus(props: {
   return (
     <>
       {isActivityCompleted() ? (
-        <div className="bg-teal-600 rounded-full px-5 drop-shadow-md flex items-center space-x-2  p-2.5  text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out">
+        <div className="bg-teal-600 rounded-full px-5 drop-shadow-md flex items-center space-x-2 p-2.5 text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out">
           <i>
             <Check size={17}></Check>
           </i>{' '}
@@ -292,14 +304,22 @@ export function MarkStatus(props: {
         </div>
       ) : (
         <div
-          className="bg-gray-800 rounded-full px-5 drop-shadow-md flex  items-center space-x-2 p-2.5  text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out"
-          onClick={markActivityAsCompleteFront}
+          className={`${isLoading ? 'opacity-75 cursor-not-allowed' : ''} bg-gray-800 rounded-full px-5 drop-shadow-md flex items-center space-x-2 p-2.5 text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out`}
+          onClick={!isLoading ? markActivityAsCompleteFront : undefined}
         >
-          {' '}
-          <i>
-            <Check size={17}></Check>
-          </i>{' '}
-          {!isMobile && <i className="not-italic text-xs font-bold">Mark as complete</i>}
+          {isLoading ? (
+            <div className="animate-spin">
+              <svg className="w-4 h-4" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            </div>
+          ) : (
+            <i>
+              <Check size={17}></Check>
+            </i>
+          )}{' '}
+          {!isMobile && <i className="not-italic text-xs font-bold">{isLoading ? 'Marking...' : 'Mark as complete'}</i>}
         </div>
       )}
     </>
