@@ -9,6 +9,7 @@ type TooltipProps = {
   children: React.ReactNode
   side?: 'top' | 'right' | 'bottom' | 'left' // default is bottom
   slateBlack?: boolean
+  unstyled?: boolean // new prop to remove default styling
 }
 
 const ToolTip = (props: TooltipProps) => {
@@ -19,6 +20,7 @@ const ToolTip = (props: TooltipProps) => {
         <Tooltip.Portal>
           <TooltipContent
             slateBlack={props.slateBlack}
+            unstyled={props.unstyled}
             side={props.side ? props.side : 'bottom'}
             sideOffset={props.sideOffset}
           >
@@ -61,6 +63,17 @@ const TooltipContent = styled(Tooltip.Content, {
       true: {
         backgroundColor: ' #0d0d0d',
         color: 'white',
+      },
+    },
+    unstyled: {
+      true: {
+        padding: 0,
+        backgroundColor: 'transparent',
+        boxShadow: 'none',
+        borderRadius: 0,
+        fontSize: 'inherit',
+        lineHeight: 'inherit',
+        color: 'inherit',
       },
     },
   },
