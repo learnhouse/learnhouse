@@ -84,15 +84,15 @@ function ActivityIndicators(props: Props) {
   const getActivityTypeBadgeColor = (activityType: string) => {
     switch (activityType) {
       case 'TYPE_VIDEO':
-        return 'bg-blue-50 text-blue-600 font-bold'
+        return 'bg-gray-100 text-gray-700 font-bold'
       case 'TYPE_DOCUMENT':
-        return 'bg-orange-50 text-orange-600 font-bold'
+        return 'bg-gray-100 text-gray-700 font-bold'
       case 'TYPE_DYNAMIC':
-        return 'bg-purple-50 text-purple-600 font-bold'
+        return 'bg-gray-100 text-gray-700 font-bold'
       case 'TYPE_ASSIGNMENT':
-        return 'bg-green-50 text-green-600 font-bold'
+        return 'bg-gray-100 text-gray-700 font-bold'
       default:
-        return 'bg-gray-50 text-gray-600 font-bold'
+        return 'bg-gray-100 text-gray-700 font-bold'
     }
   }
 
