@@ -235,7 +235,9 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
     setIsDragging(false)
 
     const file = e.dataTransfer.files[0]
-    if (file && SUPPORTED_FILES.split(',').some(format => file.name.toLowerCase().endsWith(format.trim()))) {
+    const fileExtension = file?.name.split('.').pop()?.toLowerCase()
+    
+    if (file && fileExtension && ['mp4', 'webm'].includes(fileExtension)) {
       setVideo(file)
       setError(null)
       handleUpload(file)
