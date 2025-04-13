@@ -1,7 +1,7 @@
 import { NodeViewWrapper } from '@tiptap/react'
 import React, { useEffect } from 'react'
 import styled from 'styled-components'
-import { AlertTriangle, FileText } from 'lucide-react'
+import { AlertTriangle, FileText, Download } from 'lucide-react'
 import { uploadNewPDFFile } from '../../../../../services/blocks/Pdf/pdf'
 import { getActivityBlockMediaDirectory } from '@services/media/media'
 import { useOrg } from '@components/Contexts/OrgContext'
@@ -47,6 +47,29 @@ function PDFBlockComponent(props: any) {
     })
   }
 
+  const handleDownload = () => {
+    if (!fileId) return;
+    
+    const pdfUrl = getActivityBlockMediaDirectory(
+      org?.org_uuid,
+      course?.courseStructure.course_uuid,
+      props.extension.options.activity.activity_uuid,
+      blockObject.block_uuid,
+      fileId,
+      'pdfBlock'
+    );
+    
+    const link = document.createElement('a');
+    link.href = pdfUrl || '';
+    link.download = `document-${blockObject?.block_uuid || 'download'}.${blockObject?.content.file_format || 'pdf'}`;
+    link.setAttribute('download', '');
+    link.setAttribute('target', '_blank');
+    link.setAttribute('rel', 'noopener noreferrer');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   useEffect(() => { }, [course, org])
 
   return (
@@ -58,17 +81,28 @@ function PDFBlockComponent(props: any) {
       
       {blockObject && (
         <BlockPDF>
-          <iframe
-            className="shadow-sm rounded-lg h-96 w-full object-scale-down bg-black"
-            src={`${getActivityBlockMediaDirectory(
-              org?.org_uuid,
-              course?.courseStructure.course_uuid,
-              props.extension.options.activity.activity_uuid,
-              blockObject.block_uuid,
-              blockObject ? fileId : ' ',
-              'pdfBlock'
-            )}`}
-          />
+          <div className="relative">
+            <iframe
+              className="shadow-sm rounded-lg h-96 w-full object-scale-down bg-black"
+              src={`${getActivityBlockMediaDirectory(
+                org?.org_uuid,
+                course?.courseStructure.course_uuid,
+                props.extension.options.activity.activity_uuid,
+                blockObject.block_uuid,
+                blockObject ? fileId : ' ',
+                'pdfBlock'
+              )}`}
+            />
+            {!isEditable && (
+              <button
+                onClick={handleDownload}
+                className="absolute top-2 right-2 p-2 bg-black/50 hover:bg-black/70 rounded-full transition-colors"
+                title="Download PDF"
+              >
+                <Download className="w-4 h-4 text-white" />
+              </button>
+            )}
+          </div>
         </BlockPDF>
       )}
       {isLoading && (
