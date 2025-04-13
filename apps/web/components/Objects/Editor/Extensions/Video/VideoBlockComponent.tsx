@@ -3,7 +3,7 @@ import { Node } from '@tiptap/core'
 import { 
   Loader2, Video, Upload, X, HelpCircle, 
   Maximize2, Minimize2, ArrowLeftRight, 
-  CheckCircle2, AlertCircle
+  CheckCircle2, AlertCircle, Download
 } from 'lucide-react'
 import React from 'react'
 import { uploadNewVideoFile } from '../../../../../services/blocks/Video/video'
@@ -308,6 +308,21 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
     'videoBlock'
   ) : null
 
+  const handleDownload = () => {
+    if (!videoUrl) return;
+    
+    // Create a temporary link element
+    const link = document.createElement('a');
+    link.href = videoUrl;
+    link.download = `video-${blockObject?.block_uuid || 'download'}.${blockObject?.content.file_format || 'mp4'}`;
+    link.setAttribute('download', '');
+    link.setAttribute('target', '_blank');
+    link.setAttribute('rel', 'noopener noreferrer');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   // If we're in preview mode and have a video, show only the video player
   if (!isEditable && blockObject && videoUrl) {
     const width = VIDEO_SIZES[blockObject.size].width
@@ -317,7 +332,7 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3 }}
-          className="w-full flex justify-center"
+          className="w-full flex justify-center relative"
         >
           <div
             style={{ 
@@ -325,11 +340,20 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
               width: '100%'
             }}
           >
-            <video
-              controls
-              className="w-full aspect-video object-contain rounded-lg shadow-sm"
-              src={videoUrl}
-            />
+            <div className="relative">
+              <video
+                controls
+                className="w-full aspect-video object-contain rounded-lg shadow-sm"
+                src={videoUrl}
+              />
+              <button
+                onClick={handleDownload}
+                className="absolute top-2 right-2 p-2 bg-black/50 hover:bg-black/70 rounded-full transition-colors"
+                title="Download video"
+              >
+                <Download className="w-4 h-4 text-white" />
+              </button>
+            </div>
           </div>
         </motion.div>
       </NodeViewWrapper>
@@ -465,6 +489,16 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
                     {VIDEO_SIZES[size].label}
                   </SizeButton>
                 ))}
+                <SizeButton
+                  isActive={false}
+                  onClick={handleDownload}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="ml-auto"
+                >
+                  <Download size={14} />
+                  Download
+                </SizeButton>
               </div>
 
               <VideoContainer>
