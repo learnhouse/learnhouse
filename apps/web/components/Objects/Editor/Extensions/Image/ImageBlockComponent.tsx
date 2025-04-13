@@ -1,7 +1,7 @@
 import { NodeViewWrapper } from '@tiptap/react'
 import React, { useEffect } from 'react'
 import { Resizable } from 're-resizable'
-import { AlertTriangle, Image } from 'lucide-react'
+import { AlertTriangle, Image, Download } from 'lucide-react'
 import { uploadNewImageFile } from '../../../../../services/blocks/Image/images'
 import { getActivityBlockMediaDirectory } from '@services/media/media'
 import { useOrg } from '@components/Contexts/OrgContext'
@@ -51,6 +51,29 @@ function ImageBlockComponent(props: any) {
       size: imageSize,
     })
   }
+
+  const handleDownload = () => {
+    if (!fileId) return;
+    
+    const imageUrl = getActivityBlockMediaDirectory(
+      org?.org_uuid,
+      course?.courseStructure.course_uuid,
+      props.extension.options.activity.activity_uuid,
+      blockObject.block_uuid,
+      fileId,
+      'imageBlock'
+    );
+    
+    const link = document.createElement('a');
+    link.href = imageUrl || '';
+    link.download = `image-${blockObject?.block_uuid || 'download'}.${blockObject?.content.file_format || 'jpg'}`;
+    link.setAttribute('download', '');
+    link.setAttribute('target', '_blank');
+    link.setAttribute('rel', 'noopener noreferrer');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   useEffect(() => {}, [course, org])
 
@@ -119,19 +142,28 @@ function ImageBlockComponent(props: any) {
 
       {blockObject && !isEditable && (
         <div className="w-full flex justify-center">
-          <img
-            src={`${getActivityBlockMediaDirectory(
-              org?.org_uuid,
-              course?.courseStructure.course_uuid,
-              props.extension.options.activity.activity_uuid,
-              blockObject.block_uuid,
-              blockObject ? fileId : ' ',
-              'imageBlock'
-            )}`}
-            alt=""
-            className="rounded-lg shadow-sm max-w-full h-auto"
-            style={{ width: imageSize.width, maxWidth: '100%' }}
-          />
+          <div className="relative">
+            <img
+              src={`${getActivityBlockMediaDirectory(
+                org?.org_uuid,
+                course?.courseStructure.course_uuid,
+                props.extension.options.activity.activity_uuid,
+                blockObject.block_uuid,
+                blockObject ? fileId : ' ',
+                'imageBlock'
+              )}`}
+              alt=""
+              className="rounded-lg shadow-sm max-w-full h-auto"
+              style={{ width: imageSize.width, maxWidth: '100%' }}
+            />
+            <button
+              onClick={handleDownload}
+              className="absolute top-2 right-2 p-2 bg-black/50 hover:bg-black/70 rounded-full transition-colors"
+              title="Download image"
+            >
+              <Download className="w-4 h-4 text-white" />
+            </button>
+          </div>
         </div>
       )}
 
