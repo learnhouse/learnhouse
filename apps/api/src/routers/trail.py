@@ -10,6 +10,7 @@ from src.services.trail.trail import (
     get_user_trails,
     get_user_trail_with_orgid,
     remove_course_from_trail,
+    remove_activity_from_trail,
 )
 
 
@@ -95,3 +96,16 @@ async def api_add_activity_to_trail(
     return await add_activity_to_trail(
         request, user, activity_uuid, db_session
     )
+
+
+@router.delete("/remove_activity/{activity_uuid}")
+async def api_remove_activity_from_trail(
+    request: Request,
+    activity_uuid: str,
+    user=Depends(get_current_user),
+    db_session=Depends(get_db_session),
+) -> TrailRead:
+    """
+    Remove Activity from trail
+    """
+    return await remove_activity_from_trail(request, user, activity_uuid, db_session)
