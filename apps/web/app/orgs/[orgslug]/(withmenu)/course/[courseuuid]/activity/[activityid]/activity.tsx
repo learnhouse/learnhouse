@@ -4,7 +4,7 @@ import { getAPIUrl, getUriWithOrg } from '@services/config/config'
 import Canva from '@components/Objects/Activities/DynamicCanva/DynamicCanva'
 import VideoActivity from '@components/Objects/Activities/Video/Video'
 import { BookOpenCheck, Check, CheckCircle, ChevronDown, ChevronLeft, ChevronRight, FileText, Folder, List, Menu, MoreVertical, UserRoundPen, Video, Layers, ListFilter, ListTree, X, Edit2 } from 'lucide-react'
-import { markActivityAsComplete } from '@services/courses/activity'
+import { markActivityAsComplete, unmarkActivityAsComplete } from '@services/courses/activity'
 import DocumentPdfActivity from '@components/Objects/Activities/DocumentPdf/DocumentPdf'
 import ActivityIndicators from '@components/Pages/Courses/ActivityIndicators'
 import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
@@ -28,6 +28,7 @@ import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationMo
 import { useMediaQuery } from 'usehooks-ts'
 import PaidCourseActivityDisclaimer from '@components/Objects/Courses/CourseActions/PaidCourseActivityDisclaimer'
 import { useContributorStatus } from '../../../../../../../../hooks/useContributorStatus'
+import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
 
 interface ActivityClientProps {
   activityid: string
@@ -282,6 +283,26 @@ export function MarkStatus(props: {
     }
   }
 
+  async function unmarkActivityAsCompleteFront() {
+    try {
+      setIsLoading(true);
+      const trail = await unmarkActivityAsComplete(
+        props.orgslug,
+        props.course.course_uuid,
+        props.activity.activity_uuid,
+        session.data?.tokens?.access_token
+      );
+      
+      // Mutate the course data to trigger re-render
+      await mutate(`${getAPIUrl()}courses/${props.course.course_uuid}/meta`);
+      router.refresh();
+    } catch (error) {
+      toast.error('Failed to unmark activity as complete');
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   const isActivityCompleted = () => {
     let run = props.course.trail.runs.find(
       (run: any) => run.course_id == props.course.id
@@ -296,11 +317,33 @@ export function MarkStatus(props: {
   return (
     <>
       {isActivityCompleted() ? (
-        <div className="bg-teal-600 rounded-full px-5 drop-shadow-md flex items-center space-x-2 p-2.5 text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out">
-          <i>
-            <Check size={17}></Check>
-          </i>{' '}
-          <i className="not-italic text-xs font-bold">Complete</i>
+        <div className="flex items-center space-x-2">
+          <div className="bg-teal-600 rounded-full px-5 drop-shadow-md flex items-center space-x-2 p-2.5 text-white">
+            <i>
+              <Check size={17}></Check>
+            </i>{' '}
+            <i className="not-italic text-xs font-bold">Complete</i>
+          </div>
+          <ToolTip
+            content="Unmark as complete"
+            side="top"
+          >
+            <div
+              className={`${isLoading ? 'opacity-75 cursor-not-allowed' : ''} bg-red-400 rounded-full p-2 drop-shadow-md flex items-center text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out`}
+              onClick={!isLoading ? unmarkActivityAsCompleteFront : undefined}
+            >
+              {isLoading ? (
+                <div className="animate-spin">
+                  <svg className="w-4 h-4" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                </div>
+              ) : (
+                <X size={17} />
+              )}
+            </div>
+          </ToolTip>
         </div>
       ) : (
         <div
