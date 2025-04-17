@@ -126,6 +126,7 @@ async def get_course_by_id(
 async def get_course_meta(
     request: Request,
     course_uuid: str,
+    with_unpublished_activities: bool,
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ) -> FullCourseReadWithTrail:
@@ -165,7 +166,7 @@ async def get_course_meta(
         # Ensure course.id is not None
         if course.id is None:
             return []
-        return await get_course_chapters(request, course.id, db_session, current_user)
+        return await get_course_chapters(request, course.id, db_session, current_user, with_unpublished_activities)
     
     # Task 3: Get user trail (only for authenticated users)
     async def get_trail():

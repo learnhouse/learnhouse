@@ -214,6 +214,7 @@ async def get_course_chapters(
     course_id: int,
     db_session: Session,
     current_user: PublicUser | AnonymousUser,
+    with_unpublished_activities: bool,
     page: int = 1,
     limit: int = 10,
 ) -> List[ChapterRead]:
@@ -249,7 +250,7 @@ async def get_course_chapters(
         for chapter_activity in chapter_activities:
             statement = (
                 select(Activity)
-                .where(Activity.id == chapter_activity.activity_id)
+                .where(Activity.id == chapter_activity.activity_id, with_unpublished_activities or Activity.published == True)
                 .distinct(Activity.id)
             )
             activity = db_session.exec(statement).first()
