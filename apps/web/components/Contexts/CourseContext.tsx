@@ -8,11 +8,11 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 export const CourseContext = createContext(null)
 export const CourseDispatchContext = createContext(null)
 
-export function CourseProvider({ children, courseuuid }: any) {
+export function CourseProvider({ children, courseuuid, withUnpublishedActivities = false }: any) {
   const session = useLHSession() as any;
   const access_token = session?.data?.tokens?.access_token;
 
-  const { data: courseStructureData, error } = useSWR(`${getAPIUrl()}courses/${courseuuid}/meta`,
+  const { data: courseStructureData, error } = useSWR(`${getAPIUrl()}courses/${courseuuid}/meta?with_unpublished_activities=${withUnpublishedActivities}`,
     url => swrFetcher(url, access_token)
   );
 
@@ -22,7 +22,8 @@ export function CourseProvider({ children, courseuuid }: any) {
     },
     courseOrder: {},
     isSaved: true,
-    isLoading: true
+    isLoading: true,
+    withUnpublishedActivities: withUnpublishedActivities
   };
 
   const [state, dispatch] = useReducer(courseReducer, initialState) as any;

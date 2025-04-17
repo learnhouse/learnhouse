@@ -17,6 +17,7 @@ function ThumbnailUpdate() {
   const [isLoading, setIsLoading] = React.useState(false) as any
   const [error, setError] = React.useState('') as any
   const [showUnsplashPicker, setShowUnsplashPicker] = useState(false)
+  const withUnpublishedActivities = course ? course.withUnpublishedActivities : false
 
   const handleFileChange = async (event: any) => {
     const file = event.target.files[0]
@@ -40,7 +41,7 @@ function ThumbnailUpdate() {
       file,
       session.data?.tokens?.access_token
     )
-    mutate(`${getAPIUrl()}courses/${course.courseStructure.course_uuid}/meta`)
+    mutate(`${getAPIUrl()}courses/${course.courseStructure.course_uuid}/meta?with_unpublished_activities=${withUnpublishedActivities}`)
     // wait for 1 second to show loading animation
     await new Promise((r) => setTimeout(r, 1500))
     if (res.success === false) {
