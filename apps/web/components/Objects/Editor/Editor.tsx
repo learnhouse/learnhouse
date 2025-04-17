@@ -32,6 +32,8 @@ import TableRow from '@tiptap/extension-table-row'
 import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
 import Link from 'next/link'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
+import { getLinkExtension } from './EditorConf'
+import { Link as LinkExtension } from '@tiptap/extension-link'
 
 
 // Lowlight
@@ -151,6 +153,7 @@ function Editor(props: Editor) {
       TableRow,
       TableHeader,
       TableCell,
+      getLinkExtension(),
     ],
     content: props.content,
     immediatelyRender: false,
@@ -204,7 +207,7 @@ function Editor(props: Editor) {
                       props.org?.org_uuid,
                       props.course.course_uuid,
                       props.course.thumbnail_image
-                    ) : getUriWithOrg(props.org?.slug,'/empty_thumbnail.png')}`}
+                    ) : getUriWithOrg(props.org?.slug, '/empty_thumbnail.png')}`}
                     alt=""
                   ></EditorInfoThumbnail>
                 </Link>
@@ -457,6 +460,19 @@ export const EditorContentWrapper = styled.div`
       font-weight: 600;
       margin-top: 10px;
       margin-bottom: 10px;
+    }
+
+    // Link styling
+    a {
+      color: #2563eb;
+      text-decoration: underline;
+      cursor: pointer;
+      transition: color 0.2s ease;
+
+      &:hover {
+        color: #1d4ed8;
+        text-decoration: none;
+      }
     }
 
     padding-left: 20px;

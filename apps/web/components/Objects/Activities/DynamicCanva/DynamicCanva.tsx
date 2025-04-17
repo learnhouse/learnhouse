@@ -32,6 +32,7 @@ import TableHeader from '@tiptap/extension-table-header'
 import TableRow from '@tiptap/extension-table-row'
 import TableCell from '@tiptap/extension-table-cell'
 import UserBlock from '@components/Objects/Editor/Extensions/Users/UserBlock'
+import { getLinkExtension } from '@components/Objects/Editor/EditorConf'
 
 interface Editor {
   content: string
@@ -112,6 +113,7 @@ function Canva(props: Editor) {
       Table.configure({
         resizable: true,
       }),
+      getLinkExtension(),
       TableRow,
       TableHeader,
       TableCell,
@@ -192,6 +194,19 @@ const CanvaWrapper = styled.div`
       font-weight: 600;
       margin-top: 10px;
       margin-bottom: 10px;
+    }
+
+    // Link styling
+    a {
+      color: #2563eb;
+      text-decoration: underline;
+      cursor: pointer;
+      transition: color 0.2s ease;
+
+      &:hover {
+        color: #1d4ed8;
+        text-decoration: none;
+      }
     }
 
     ul,

@@ -23,6 +23,7 @@ import {
   FileText,
   ImagePlus,
   Lightbulb,
+  Link2,
   MousePointerClick,
   Sigma,
   Table,
@@ -34,9 +35,12 @@ import {
 import { SiYoutube } from '@icons-pack/react-simple-icons'
 import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
 import React from 'react'
+import LinkInputTooltip from './LinkInputTooltip'
 
 export const ToolbarButtons = ({ editor, props }: any) => {
   const [showTableMenu, setShowTableMenu] = React.useState(false)
+  const [showLinkInput, setShowLinkInput] = React.useState(false)
+  const linkButtonRef = React.useRef<HTMLDivElement>(null)
 
   if (!editor) {
     return null
@@ -82,6 +86,47 @@ export const ToolbarButtons = ({ editor, props }: any) => {
       action: () => editor.chain().focus().deleteColumn().run()
     }
   ]
+
+  const handleLinkClick = () => {
+    // Store the current selection
+    const { from, to } = editor.state.selection
+    
+    if (editor.isActive('link')) {
+      const currentLink = editor.getAttributes('link')
+      setShowLinkInput(true)
+    } else {
+      setShowLinkInput(true)
+    }
+
+    // Restore the selection after a small delay to ensure the tooltip is rendered
+    setTimeout(() => {
+      editor.commands.setTextSelection({ from, to })
+    }, 0)
+  }
+
+  const getCurrentLinkUrl = () => {
+    if (editor.isActive('link')) {
+      return editor.getAttributes('link').href
+    }
+    return ''
+  }
+
+  const handleLinkSave = (url: string) => {
+    editor
+      .chain()
+      .focus()
+      .setLink({ 
+        href: url,
+        target: '_blank',
+        rel: 'noopener noreferrer'
+      })
+      .run()
+    setShowLinkInput(false)
+  }
+
+  const handleLinkCancel = () => {
+    setShowLinkInput(false)
+  }
 
   return (
     <ToolButtonsWrapper>
@@ -184,6 +229,24 @@ export const ToolbarButtons = ({ editor, props }: any) => {
         >
           <AlertTriangle size={15} />
         </ToolBtn>
+      </ToolTip>
+      <ToolTip content={'Link'}>
+        <div style={{ position: 'relative' }}>
+          <ToolBtn
+            ref={linkButtonRef}
+            onClick={handleLinkClick}
+            className={editor.isActive('link') ? 'is-active' : ''}
+          >
+            <Link2 size={15} />
+          </ToolBtn>
+          {showLinkInput && (
+            <LinkInputTooltip
+              onSave={handleLinkSave}
+              onCancel={handleLinkCancel}
+              currentUrl={getCurrentLinkUrl()}
+            />
+          )}
+        </div>
       </ToolTip>
       <ToolTip content={'Image'}>
         <ToolBtn
