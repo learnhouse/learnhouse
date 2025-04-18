@@ -58,7 +58,18 @@ function Canva(props: Editor) {
   const editor: any = useEditor({
     editable: isEditable,
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        bulletList: {
+          HTMLAttributes: {
+            class: 'bullet-list',
+          },
+        },
+        orderedList: {
+          HTMLAttributes: {
+            class: 'ordered-list',
+          },
+        },
+      }),
       NoTextInput,
       // Custom Extensions
       InfoCallout.configure({
@@ -213,6 +224,13 @@ const CanvaWrapper = styled.div`
     ol {
       padding: 0 1rem;
       padding-left: 20px;
+    }
+
+    ul {
+      list-style-type: disc;
+    }
+
+    ol {
       list-style-type: decimal;
     }
 

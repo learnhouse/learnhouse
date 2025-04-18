@@ -35,7 +35,6 @@ import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import { getLinkExtension } from './EditorConf'
 import { Link as LinkExtension } from '@tiptap/extension-link'
 
-
 // Lowlight
 import { common, createLowlight } from 'lowlight'
 const lowlight = createLowlight(common)
@@ -97,7 +96,18 @@ function Editor(props: Editor) {
   const editor: any = useEditor({
     editable: true,
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        bulletList: {
+          HTMLAttributes: {
+            class: 'bullet-list',
+          },
+        },
+        orderedList: {
+          HTMLAttributes: {
+            class: 'ordered-list',
+          },
+        },
+      }),
       InfoCallout.configure({
         editable: true,
       }),
@@ -580,6 +590,13 @@ export const EditorContentWrapper = styled.div`
   ol {
     padding: 0 1rem;
     padding-left: 20px;
+  }
+
+  ul {
+    list-style-type: disc;
+  }
+
+  ol {
     list-style-type: decimal;
   }
 

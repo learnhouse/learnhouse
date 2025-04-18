@@ -31,6 +31,8 @@ import {
   Tags,
   User,
   Video,
+  List,
+  ListOrdered,
 } from 'lucide-react'
 import { SiYoutube } from '@icons-pack/react-simple-icons'
 import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
@@ -39,6 +41,7 @@ import LinkInputTooltip from './LinkInputTooltip'
 
 export const ToolbarButtons = ({ editor, props }: any) => {
   const [showTableMenu, setShowTableMenu] = React.useState(false)
+  const [showListMenu, setShowListMenu] = React.useState(false)
   const [showLinkInput, setShowLinkInput] = React.useState(false)
   const linkButtonRef = React.useRef<HTMLDivElement>(null)
 
@@ -46,18 +49,6 @@ export const ToolbarButtons = ({ editor, props }: any) => {
     return null
   }
 
-  // YouTube extension
-  const addYoutubeVideo = () => {
-    const url = prompt('Enter YouTube URL')
-
-    if (url) {
-      editor.commands.setYoutubeVideo({
-        src: url,
-        width: 640,
-        height: 480,
-      })
-    }
-  }
 
   const tableOptions = [
     {
@@ -84,6 +75,33 @@ export const ToolbarButtons = ({ editor, props }: any) => {
       label: 'Delete current column',
       icon: <ContainerIcon />,
       action: () => editor.chain().focus().deleteColumn().run()
+    }
+  ]
+
+  const listOptions = [
+    {
+      label: 'Bullet List',
+      icon: <List size={15} />,
+      action: () => {
+        if (editor.isActive('bulletList')) {
+          editor.chain().focus().toggleBulletList().run()
+        } else {
+          editor.chain().focus().toggleOrderedList().run()
+          editor.chain().focus().toggleBulletList().run()
+        }
+      }
+    },
+    {
+      label: 'Ordered List',
+      icon: <ListOrdered size={15} />,
+      action: () => {
+        if (editor.isActive('orderedList')) {
+          editor.chain().focus().toggleOrderedList().run()
+        } else {
+          editor.chain().focus().toggleBulletList().run()
+          editor.chain().focus().toggleOrderedList().run()
+        }
+      }
     }
   ]
 
@@ -154,12 +172,32 @@ export const ToolbarButtons = ({ editor, props }: any) => {
       >
         <StrikethroughIcon />
       </ToolBtn>
-      <ToolBtn
-        onClick={() => editor.chain().focus().toggleOrderedList().run()}
-        className={editor.isActive('orderedList') ? 'is-active' : ''}
-      >
-        <ListBulletIcon />
-      </ToolBtn>
+      <ListMenuWrapper>
+        <ToolBtn 
+          onClick={() => setShowListMenu(!showListMenu)}
+          className={showListMenu || editor.isActive('bulletList') || editor.isActive('orderedList') ? 'is-active' : ''}
+        >
+          <ListBulletIcon />
+          <ChevronDownIcon />
+        </ToolBtn>
+        {showListMenu && (
+          <ListDropdown>
+            {listOptions.map((option, index) => (
+              <ListMenuItem 
+                key={index}
+                onClick={() => {
+                  option.action()
+                  setShowListMenu(false)
+                }}
+                className={editor.isActive(option.label === 'Bullet List' ? 'bulletList' : 'orderedList') ? 'is-active' : ''}
+              >
+                <span className="icon">{option.icon}</span>
+                <span className="label">{option.label}</span>
+              </ListMenuItem>
+            ))}
+          </ListDropdown>
+        )}
+      </ListMenuWrapper>
       <ToolSelect
         value={
           editor.isActive('heading', { level: 1 }) ? "1" :
@@ -478,6 +516,51 @@ const TableMenuItem = styled.div`
 
   &:hover {
     background: rgba(217, 217, 217, 0.24);
+  }
+
+  .icon {
+    margin-right: 8px;
+    display: flex;
+    align-items: center;
+  }
+
+  .label {
+    font-size: 12px;
+    font-family: 'DM Sans';
+  }
+`
+
+const ListMenuWrapper = styled.div`
+  position: relative;
+  display: inline-block;
+`
+
+const ListDropdown = styled.div`
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: white;
+  border: 1px solid rgba(217, 217, 217, 0.5);
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  min-width: 180px;
+  margin-top: 4px;
+`
+
+const ListMenuItem = styled.div`
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+
+  &:hover {
+    background: rgba(217, 217, 217, 0.24);
+  }
+
+  &.is-active {
+    background: rgba(176, 176, 176, 0.5);
   }
 
   .icon {
