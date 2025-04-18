@@ -125,8 +125,8 @@ export default function FixedActivitySecondaryBar(props: FixedActivitySecondaryB
                   orgslug={props.orgslug}
                 />
                 <div className="flex flex-col -space-y-0.5 min-w-0 hidden sm:block">
-                  <p className="text-xs font-medium text-gray-500">Course</p>
-                  <h1 className="font-semibold text-gray-900 text-sm truncate">
+                  <p className="text-sm font-medium text-gray-500">Course</p>
+                  <h1 className="font-semibold text-gray-900 text-base truncate">
                     {props.course.name}
                   </h1>
                 </div>
@@ -145,16 +145,16 @@ export default function FixedActivitySecondaryBar(props: FixedActivitySecondaryB
                     disabled={!prevActivity}
                     title={prevActivity ? `Previous: ${prevActivity.name}` : 'No previous activity'}
                   >
-                    <ChevronLeft size={14} className="shrink-0 sm:w-4 sm:h-4" />
+                    <ChevronLeft size={16} className="shrink-0 sm:w-5 sm:h-5" />
                     <div className="flex flex-col items-start hidden sm:flex">
-                      <span className="text-[10px] text-gray-500">Previous</span>
-                      <span className="text-xs font-medium text-left truncate max-w-[100px] sm:max-w-[150px]">
+                      <span className="text-xs text-gray-500">Previous</span>
+                      <span className="text-sm font-medium text-left truncate max-w-[100px] sm:max-w-[150px]">
                         {prevActivity ? prevActivity.name : 'No previous activity'}
                       </span>
                     </div>
                   </button>
 
-                  <span className="text-xs font-medium text-gray-500 px-1 sm:px-2">
+                  <span className="text-sm font-medium text-gray-500 px-1 sm:px-2">
                     {currentIndex + 1} of {allActivities.length}
                   </span>
 
@@ -169,12 +169,12 @@ export default function FixedActivitySecondaryBar(props: FixedActivitySecondaryB
                     title={nextActivity ? `Next: ${nextActivity.name}` : 'No next activity'}
                   >
                     <div className="flex flex-col items-end hidden sm:flex">
-                      <span className={`text-[10px] ${nextActivity ? 'text-gray-500' : 'text-gray-500'}`}>Next</span>
-                      <span className="text-xs font-medium text-right truncate max-w-[100px] sm:max-w-[150px]">
+                      <span className={`text-xs ${nextActivity ? 'text-gray-500' : 'text-gray-500'}`}>Next</span>
+                      <span className="text-sm font-medium text-right truncate max-w-[100px] sm:max-w-[150px]">
                         {nextActivity ? nextActivity.name : 'No next activity'}
                       </span>
                     </div>
-                    <ChevronRight size={14} className="shrink-0 sm:w-4 sm:h-4" />
+                    <ChevronRight size={16} className="shrink-0 sm:w-5 sm:h-5" />
                   </button>
                 </div>
               </div>
