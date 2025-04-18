@@ -29,9 +29,10 @@ import { useMediaQuery } from 'usehooks-ts'
 import PaidCourseActivityDisclaimer from '@components/Objects/Courses/CourseActions/PaidCourseActivityDisclaimer'
 import { useContributorStatus } from '../../../../../../../../hooks/useContributorStatus'
 import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
-import ActivityNavigation from '@components/Dashboard/Pages/Activity/ActivityNavigation'
-import ActivityChapterDropdown from '@components/Dashboard/Pages/Activity/ActivityChapterDropdown'
-import FixedActivitySecondaryBar from '@components/Dashboard/Pages/Activity/FixedActivitySecondaryBar'
+import ActivityNavigation from '@components/Pages/Activity/ActivityNavigation'
+import ActivityChapterDropdown from '@components/Pages/Activity/ActivityChapterDropdown'
+import FixedActivitySecondaryBar from '@components/Pages/Activity/FixedActivitySecondaryBar'
+import CourseEndView from '@components/Pages/Activity/CourseEndView'
 
 interface ActivityClientProps {
   activityid: string
@@ -95,168 +96,175 @@ function ActivityClient(props: ActivityClientProps) {
       <CourseProvider courseuuid={course?.course_uuid}>
         <AIChatBotProvider>
           <GeneralWrapperStyled>
-            <div className="space-y-4 pt-0">
-              
-              
-              <div className="pt-2">
-                <div className="space-y-4 pb-4 activity-info-section">
-                  <div className="flex justify-between items-center">
-                    <div className="flex space-x-6">
-                      <div className="flex">
-                        <Link
-                          href={getUriWithOrg(orgslug, '') + `/course/${courseuuid}`}
-                        >
-                          <img
-                            className="w-[100px] h-[57px] rounded-md drop-shadow-md"
-                            src={`${getCourseThumbnailMediaDirectory(
-                              org?.org_uuid,
-                              course.course_uuid,
-                              course.thumbnail_image
-                            )}`}
-                            alt=""
-                          />
-                        </Link>
-                      </div>
-                      <div className="flex flex-col -space-y-1">
-                        <p className="font-bold text-gray-700 text-md">Course </p>
-                        <h1 className="font-bold text-gray-950 text-2xl first-letter:uppercase">
-                          {course.name}
-                        </h1>
-                      </div>
-                    </div>
-                  </div>
-
-                  <ActivityIndicators
-                    course_uuid={courseuuid}
-                    current_activity={activityid}
-                    orgslug={orgslug}
-                    course={course}
-                  />
-
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center space-x-3">
-                      <ActivityChapterDropdown 
-                        course={course}
-                        currentActivityId={activity.activity_uuid ? activity.activity_uuid.replace('activity_', '') : activityid.replace('activity_', '')}
-                        orgslug={orgslug}
-                      />
-                      <div className="flex flex-col -space-y-1">
-                        <p className="font-bold text-gray-700 text-md">
-                          Chapter : {getChapterNameByActivityId(course, activity.id)}
-                        </p>
-                        <h1 className="font-bold text-gray-950 text-2xl first-letter:uppercase">
-                          {activity.name}
-                        </h1>
+            {activityid === 'end' ? (
+              <CourseEndView 
+                courseName={course.name}
+                orgslug={orgslug}
+                courseUuid={course.course_uuid}
+                thumbnailImage={course.thumbnail_image}
+              />
+            ) : (
+              <div className="space-y-4 pt-0">
+                <div className="pt-2">
+                  <div className="space-y-4 pb-4 activity-info-section">
+                    <div className="flex justify-between items-center">
+                      <div className="flex space-x-6">
+                        <div className="flex">
+                          <Link
+                            href={getUriWithOrg(orgslug, '') + `/course/${courseuuid}`}
+                          >
+                            <img
+                              className="w-[100px] h-[57px] rounded-md drop-shadow-md"
+                              src={`${getCourseThumbnailMediaDirectory(
+                                org?.org_uuid,
+                                course.course_uuid,
+                                course.thumbnail_image
+                              )}`}
+                              alt=""
+                            />
+                          </Link>
+                        </div>
+                        <div className="flex flex-col -space-y-1">
+                          <p className="font-bold text-gray-700 text-md">Course </p>
+                          <h1 className="font-bold text-gray-950 text-2xl first-letter:uppercase">
+                            {course.name}
+                          </h1>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex space-x-2 items-center">
-                      {activity && activity.published == true && activity.content.paid_access != false && (
-                        <AuthenticatedClientElement checkMethod="authentication">
-                          {activity.activity_type != 'TYPE_ASSIGNMENT' && (
-                            <>
-                              <AIActivityAsk activity={activity} />
-                              {contributorStatus === 'ACTIVE' && activity.activity_type == 'TYPE_DYNAMIC' && (
-                                <Link
-                                  href={getUriWithOrg(orgslug, '') + `/course/${courseuuid}/activity/${activityid}/edit`}
-                                  className="bg-emerald-600 rounded-full px-5 drop-shadow-md flex items-center space-x-2 p-2.5 text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out"
-                                >
-                                  <Edit2 size={17} />
-                                  <span className="text-xs font-bold">Contribute to Activity</span>
-                                </Link>
-                              )}
-                              <MoreVertical size={17} className="text-gray-300" />
-                              <MarkStatus
-                                activity={activity}
-                                activityid={activityid}
-                                course={course}
-                                orgslug={orgslug}
-                              />
-                            </>
-                          )}
-                          {activity.activity_type == 'TYPE_ASSIGNMENT' && (
-                            <>
-                              <MoreVertical size={17} className="text-gray-300 " />
-                              <AssignmentSubmissionProvider assignment_uuid={assignment?.assignment_uuid}>
-                                <AssignmentTools
-                                  assignment={assignment}
+
+                    <ActivityIndicators
+                      course_uuid={courseuuid}
+                      current_activity={activityid}
+                      orgslug={orgslug}
+                      course={course}
+                    />
+
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center space-x-3">
+                        <ActivityChapterDropdown 
+                          course={course}
+                          currentActivityId={activity.activity_uuid ? activity.activity_uuid.replace('activity_', '') : activityid.replace('activity_', '')}
+                          orgslug={orgslug}
+                        />
+                        <div className="flex flex-col -space-y-1">
+                          <p className="font-bold text-gray-700 text-md">
+                            Chapter : {getChapterNameByActivityId(course, activity.id)}
+                          </p>
+                          <h1 className="font-bold text-gray-950 text-2xl first-letter:uppercase">
+                            {activity.name}
+                          </h1>
+                        </div>
+                      </div>
+                      <div className="flex space-x-2 items-center">
+                        {activity && activity.published == true && activity.content.paid_access != false && (
+                          <AuthenticatedClientElement checkMethod="authentication">
+                            {activity.activity_type != 'TYPE_ASSIGNMENT' && (
+                              <>
+                                <AIActivityAsk activity={activity} />
+                                {contributorStatus === 'ACTIVE' && activity.activity_type == 'TYPE_DYNAMIC' && (
+                                  <Link
+                                    href={getUriWithOrg(orgslug, '') + `/course/${courseuuid}/activity/${activityid}/edit`}
+                                    className="bg-emerald-600 rounded-full px-5 drop-shadow-md flex items-center space-x-2 p-2.5 text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out"
+                                  >
+                                    <Edit2 size={17} />
+                                    <span className="text-xs font-bold">Contribute to Activity</span>
+                                  </Link>
+                                )}
+                                <MoreVertical size={17} className="text-gray-300" />
+                                <MarkStatus
                                   activity={activity}
                                   activityid={activityid}
                                   course={course}
                                   orgslug={orgslug}
                                 />
-                              </AssignmentSubmissionProvider>
-                            </>
-                          )}
-                        </AuthenticatedClientElement>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                {activity && activity.published == false && (
-                  <div className="p-7 drop-shadow-xs rounded-lg bg-gray-800">
-                    <div className="text-white">
-                      <h1 className="font-bold text-2xl">
-                        This activity is not published yet
-                      </h1>
-                    </div>
-                  </div>
-                )}
-
-                {activity && activity.published == true && (
-                  <>
-                    {activity.content.paid_access == false ? (
-                      <PaidCourseActivityDisclaimer course={course} />
-                    ) : (
-                      <div className={`p-7 drop-shadow-xs rounded-lg ${bgColor}`}>
-                        {/* Activity Types */}
-                        <div>
-                          {activity.activity_type == 'TYPE_DYNAMIC' && (
-                            <Canva content={activity.content} activity={activity} />
-                          )}
-                          {activity.activity_type == 'TYPE_VIDEO' && (
-                            <VideoActivity course={course} activity={activity} />
-                          )}
-                          {activity.activity_type == 'TYPE_DOCUMENT' && (
-                            <DocumentPdfActivity
-                              course={course}
-                              activity={activity}
-                            />
-                          )}
-                          {activity.activity_type == 'TYPE_ASSIGNMENT' && (
-                            <div>
-                              {assignment ? (
-                                <AssignmentProvider assignment_uuid={assignment?.assignment_uuid}>
-                                  <AssignmentsTaskProvider>
-                                    <AssignmentSubmissionProvider assignment_uuid={assignment?.assignment_uuid}>
-                                      <AssignmentStudentActivity />
-                                    </AssignmentSubmissionProvider>
-                                  </AssignmentsTaskProvider>
-                                </AssignmentProvider>
-                              ) : (
-                                <div></div>
-                              )}
-                            </div>
-                          )}
-                        </div>
+                              </>
+                            )}
+                            {activity.activity_type == 'TYPE_ASSIGNMENT' && (
+                              <>
+                                <MoreVertical size={17} className="text-gray-300 " />
+                                <AssignmentSubmissionProvider assignment_uuid={assignment?.assignment_uuid}>
+                                  <AssignmentTools
+                                    assignment={assignment}
+                                    activity={activity}
+                                    activityid={activityid}
+                                    course={course}
+                                    orgslug={orgslug}
+                                  />
+                                </AssignmentSubmissionProvider>
+                              </>
+                            )}
+                          </AuthenticatedClientElement>
+                        )}
                       </div>
-                    )}
-                  </>
-                )}
-              
+                    </div>
+                  </div>
+                  {activity && activity.published == false && (
+                    <div className="p-7 drop-shadow-xs rounded-lg bg-gray-800">
+                      <div className="text-white">
+                        <h1 className="font-bold text-2xl">
+                          This activity is not published yet
+                        </h1>
+                      </div>
+                    </div>
+                  )}
 
-                {/* Fixed Activity Secondary Bar */}
-                {activity && activity.published == true && activity.content.paid_access != false && (
-                  <FixedActivitySecondaryBar
-                    course={course}
-                    currentActivityId={activityid}
-                    orgslug={orgslug}
-                    activity={activity}
-                  />
-                )}
+                  {activity && activity.published == true && (
+                    <>
+                      {activity.content.paid_access == false ? (
+                        <PaidCourseActivityDisclaimer course={course} />
+                      ) : (
+                        <div className={`p-7 drop-shadow-xs rounded-lg ${bgColor}`}>
+                          {/* Activity Types */}
+                          <div>
+                            {activity.activity_type == 'TYPE_DYNAMIC' && (
+                              <Canva content={activity.content} activity={activity} />
+                            )}
+                            {activity.activity_type == 'TYPE_VIDEO' && (
+                              <VideoActivity course={course} activity={activity} />
+                            )}
+                            {activity.activity_type == 'TYPE_DOCUMENT' && (
+                              <DocumentPdfActivity
+                                course={course}
+                                activity={activity}
+                              />
+                            )}
+                            {activity.activity_type == 'TYPE_ASSIGNMENT' && (
+                              <div>
+                                {assignment ? (
+                                  <AssignmentProvider assignment_uuid={assignment?.assignment_uuid}>
+                                    <AssignmentsTaskProvider>
+                                      <AssignmentSubmissionProvider assignment_uuid={assignment?.assignment_uuid}>
+                                        <AssignmentStudentActivity />
+                                      </AssignmentSubmissionProvider>
+                                    </AssignmentsTaskProvider>
+                                  </AssignmentProvider>
+                                ) : (
+                                  <div></div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
                 
-                <div style={{ height: '100px' }}></div>
+
+                  {/* Fixed Activity Secondary Bar */}
+                  {activity && activity.published == true && activity.content.paid_access != false && (
+                    <FixedActivitySecondaryBar
+                      course={course}
+                      currentActivityId={activityid}
+                      orgslug={orgslug}
+                      activity={activity}
+                    />
+                  )}
+                  
+                  <div style={{ height: '100px' }}></div>
+                </div>
               </div>
-            </div>
+            )}
           </GeneralWrapperStyled>
         </AIChatBotProvider>
       </CourseProvider>
@@ -275,20 +283,63 @@ export function MarkStatus(props: {
   const isMobile = useMediaQuery('(max-width: 768px)')
   const [isLoading, setIsLoading] = React.useState(false);
 
+  const areAllActivitiesCompleted = () => {
+    const run = props.course.trail.runs.find(
+      (run: any) => run.course_id == props.course.id
+    );
+    if (!run) return false;
+
+    let totalActivities = 0;
+    let completedActivities = 0;
+
+    // Count all activities and completed activities
+    props.course.chapters.forEach((chapter: any) => {
+      chapter.activities.forEach((activity: any) => {
+        totalActivities++;
+        const isCompleted = run.steps.find(
+          (step: any) => step.activity_id === activity.id && step.complete === true
+        );
+        if (isCompleted) {
+          completedActivities++;
+        }
+      });
+    });
+
+    console.log('Total activities:', totalActivities);
+    console.log('Completed activities:', completedActivities);
+    console.log('All completed?', completedActivities >= totalActivities - 1);
+
+    // We check for totalActivities - 1 because the current activity completion 
+    // hasn't been counted yet (it's in progress)
+    return completedActivities >= totalActivities - 1;
+  };
+
   async function markActivityAsCompleteFront() {
     try {
+      // Check if this will be the last activity to complete
+      const willCompleteAll = areAllActivitiesCompleted();
+      console.log('Will complete all?', willCompleteAll);
+
       setIsLoading(true);
-      const trail = await markActivityAsComplete(
+      await markActivityAsComplete(
         props.orgslug,
         props.course.course_uuid,
         props.activity.activity_uuid,
         session.data?.tokens?.access_token
       );
       
-      // Mutate the course data to trigger re-render
+      // Mutate the course data
       await mutate(`${getAPIUrl()}courses/${props.course.course_uuid}/meta`);
-      router.refresh();
+      
+      if (willCompleteAll) {
+        console.log('Redirecting to end page...');
+        const cleanCourseUuid = props.course.course_uuid.replace('course_', '');
+        router.push(getUriWithOrg(props.orgslug, '') + `/course/${cleanCourseUuid}/activity/end`);
+      } else {
+        router.refresh();
+      }
     } catch (error) {
+      console.error('Error marking activity as complete:', error);
       toast.error('Failed to mark activity as complete');
     } finally {
       setIsLoading(false);
