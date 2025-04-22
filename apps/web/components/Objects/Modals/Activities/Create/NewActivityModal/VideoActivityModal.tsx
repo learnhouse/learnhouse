@@ -14,11 +14,19 @@ import { constructAcceptValue } from '@/lib/constants'
 
 const SUPPORTED_FILES = constructAcceptValue(['mp4', 'webm'])
 
+interface VideoDetails {
+  startTime: number
+  endTime: number | null
+  autoplay: boolean
+  muted: boolean
+}
+
 interface ExternalVideoObject {
   name: string
   type: string
   uri: string
   chapter_id: string
+  details: VideoDetails
 }
 
 function VideoModal({
@@ -32,6 +40,12 @@ function VideoModal({
   const [name, setName] = React.useState('')
   const [youtubeUrl, setYoutubeUrl] = React.useState('')
   const [selectedView, setSelectedView] = React.useState<'file' | 'youtube'>('file')
+  const [videoDetails, setVideoDetails] = React.useState<VideoDetails>({
+    startTime: 0,
+    endTime: null,
+    autoplay: false,
+    muted: false
+  })
 
   const handleVideoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files?.[0]) {
@@ -56,6 +70,7 @@ function VideoModal({
             published_version: 1,
             version: 1,
             course_id: course.id,
+            details: videoDetails
           },
           chapterId
         )
@@ -67,6 +82,7 @@ function VideoModal({
           type: 'youtube',
           uri: youtubeUrl,
           chapter_id: chapterId,
+          details: videoDetails
         }
 
         await submitExternalVideo(
@@ -79,6 +95,73 @@ function VideoModal({
       setIsSubmitting(false)
     }
   }
+
+  const VideoSettingsForm = () => (
+    <div className="space-y-4 mt-4 p-4 bg-gray-50 rounded-lg">
+      <h3 className="font-medium text-gray-900 mb-3">Video Settings</h3>
+      <div className="grid grid-cols-2 gap-4">
+        <FormField name="start-time">
+          <FormLabel>Start Time (seconds)</FormLabel>
+          <Form.Control asChild>
+            <Input
+              type="number"
+              min="0"
+              value={videoDetails.startTime}
+              onChange={(e) => setVideoDetails({
+                ...videoDetails,
+                startTime: Math.max(0, parseInt(e.target.value) || 0)
+              })}
+              placeholder="0"
+            />
+          </Form.Control>
+        </FormField>
+
+        <FormField name="end-time">
+          <FormLabel>End Time (seconds, optional)</FormLabel>
+          <Form.Control asChild>
+            <Input
+              type="number"
+              min={videoDetails.startTime + 1}
+              value={videoDetails.endTime || ''}
+              onChange={(e) => setVideoDetails({
+                ...videoDetails,
+                endTime: e.target.value ? parseInt(e.target.value) : null
+              })}
+              placeholder="Leave empty for full duration"
+            />
+          </Form.Control>
+        </FormField>
+      </div>
+
+      <div className="flex items-center space-x-6 mt-4">
+        <label className="flex items-center space-x-2">
+          <input
+            type="checkbox"
+            checked={videoDetails.autoplay}
+            onChange={(e) => setVideoDetails({
+              ...videoDetails,
+              autoplay: e.target.checked
+            })}
+            className="rounded border-gray-300 text-black focus:ring-black"
+          />
+          <span className="text-sm text-gray-700">Autoplay video</span>
+        </label>
+
+        <label className="flex items-center space-x-2">
+          <input
+            type="checkbox"
+            checked={videoDetails.muted}
+            onChange={(e) => setVideoDetails({
+              ...videoDetails,
+              muted: e.target.checked
+            })}
+            className="rounded border-gray-300 text-black focus:ring-black"
+          />
+          <span className="text-sm text-gray-700">Start muted</span>
+        </label>
+      </div>
+    </div>
+  )
 
   return (
     <FormLayout onSubmit={handleSubmit}>
@@ -143,6 +226,7 @@ function VideoModal({
                   />
                 </div>
               </FormField>
+              <VideoSettingsForm />
             </div>
           )}
 
@@ -160,6 +244,7 @@ function VideoModal({
                   />
                 </Form.Control>
               </FormField>
+              <VideoSettingsForm />
             </div>
           )}
         </div>

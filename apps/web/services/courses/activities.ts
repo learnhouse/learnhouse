@@ -39,6 +39,15 @@ export async function createFileActivity(
   if (type === 'video') {
     formData.append('name', data.name)
     formData.append('video_file', file)
+    // Add video details
+    if (data.details) {
+      formData.append('details', JSON.stringify({
+        startTime: data.details.startTime || 0,
+        endTime: data.details.endTime || null,
+        autoplay: data.details.autoplay || false,
+        muted: data.details.muted || false
+      }))
+    }
     endpoint = `${getAPIUrl()}activities/video`
   } else if (type === 'documentpdf') {
     formData.append('pdf_file', file)
@@ -65,6 +74,14 @@ export async function createExternalVideoActivity(
   // add coursechapter_id to data
   data.chapter_id = chapter_id
   data.activity_id = activity.id
+  
+  // Add video details if provided
+  data.details = {
+    startTime: data.startTime || 0,
+    endTime: data.endTime || null,
+    autoplay: data.autoplay || false,
+    muted: data.muted || false
+  }
 
   const result = await fetch(
     `${getAPIUrl()}activities/external_video`,
