@@ -3,16 +3,41 @@ import YouTube from 'react-youtube'
 import { getActivityMediaDirectory } from '@services/media/media'
 import { useOrg } from '@components/Contexts/OrgContext'
 
-function VideoActivity({ activity, course }: { activity: any; course: any }) {
+interface VideoActivityProps {
+  activity: {
+    activity_sub_type: string
+    activity_uuid: string
+    content: {
+      filename?: string
+      uri?: string
+    }
+  }
+  course: {
+    course_uuid: string
+  }
+}
+
+function VideoActivity({ activity, course }: VideoActivityProps) {
   const org = useOrg() as any
   const [videoId, setVideoId] = React.useState('')
 
   React.useEffect(() => {
-    if (activity && activity.content && activity.content.uri) {
-      var getYouTubeID = require('get-youtube-id');
+    if (activity?.content?.uri) {
+      var getYouTubeID = require('get-youtube-id')
       setVideoId(getYouTubeID(activity.content.uri))
     }
   }, [activity, org])
+
+  const getVideoSrc = () => {
+    if (!activity.content?.filename) return ''
+    return getActivityMediaDirectory(
+      org?.org_uuid,
+      course?.course_uuid,
+      activity.activity_uuid,
+      activity.content.filename,
+      'video'
+    )
+  }
 
   return (
     <div className="w-full max-w-full px-2 sm:px-4">
@@ -24,13 +49,7 @@ function VideoActivity({ activity, course }: { activity: any; course: any }) {
                 <video
                   className="w-full h-full object-cover"
                   controls
-                  src={getActivityMediaDirectory(
-                    org?.org_uuid,
-                    course?.course_uuid,
-                    activity.activity_uuid,
-                    activity.content?.filename,
-                    'video'
-                  )}
+                  src={getVideoSrc()}
                 ></video>
               </div>
             </div>
@@ -44,7 +63,7 @@ function VideoActivity({ activity, course }: { activity: any; course: any }) {
                     width: '100%',
                     height: '100%',
                     playerVars: {
-                      autoplay: 0,
+                      autoplay: 0
                     },
                   }}
                   videoId={videoId}

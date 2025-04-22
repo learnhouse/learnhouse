@@ -4,11 +4,11 @@ import VideoPageActivityImage from 'public//activities_types/video-page-activity
 import DocumentPdfPageActivityImage from 'public//activities_types/documentpdf-page-activity.png'
 import AssignmentActivityImage from 'public//activities_types/assignment-page-activity.png'
 
-import DynamicCanvaModal from './NewActivityModal/DynamicCanva'
-import VideoModal from './NewActivityModal/Video'
+import DynamicCanvaModal from './NewActivityModal/DynamicActivityModal'
+import VideoModal from './NewActivityModal/VideoActivityModal'
 import Image from 'next/image'
-import DocumentPdfModal from './NewActivityModal/DocumentPdf'
-import Assignment from './NewActivityModal/Assignment'
+import DocumentPdfModal from './NewActivityModal/DocumentActivityModal'
+import Assignment from './NewActivityModal/AssignmentActivityModal'
 
 function NewActivityModal({
   closeModal,
