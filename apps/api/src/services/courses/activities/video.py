@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Literal, Optional
 from src.db.courses.courses import Course
 from src.db.organizations import Organization
 
@@ -31,6 +31,7 @@ async def create_video_activity(
     current_user: PublicUser,
     db_session: Session,
     video_file: UploadFile | None = None,
+    details: Optional[dict] = None,
 ):
     # RBAC check
     await rbac_check(request, "activity_x", current_user, "create", db_session)
@@ -99,6 +100,7 @@ async def create_video_activity(
             "filename": "video." + video_format,
             "activity_uuid": activity_uuid,
         },
+        details=details,
         version=1,
         creation_date=str(datetime.now()),
         update_date=str(datetime.now()),
@@ -144,6 +146,7 @@ class ExternalVideo(BaseModel):
     uri: str
     type: Literal["youtube", "vimeo"]
     chapter_id: str
+    details: Optional[dict] = None
 
 
 class ExternalVideoInDB(BaseModel):
@@ -194,6 +197,7 @@ async def create_external_video_activity(
             "type": data.type,
             "activity_uuid": activity_uuid,
         },
+        details=data.details,
         version=1,
         creation_date=str(datetime.now()),
         update_date=str(datetime.now()),
