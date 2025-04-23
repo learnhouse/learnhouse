@@ -75,13 +75,22 @@ export async function createExternalVideoActivity(
   data.chapter_id = chapter_id
   data.activity_id = activity.id
   
-  // Add video details if provided
-  data.details = {
-    startTime: data.startTime || 0,
-    endTime: data.endTime || null,
-    autoplay: data.autoplay || false,
-    muted: data.muted || false
+  // Add video details with null checking
+  const defaultDetails = {
+    startTime: 0,
+    endTime: null,
+    autoplay: false,
+    muted: false
   }
+
+  const videoDetails = data.details ? {
+    startTime: data.details.startTime ?? defaultDetails.startTime,
+    endTime: data.details.endTime ?? defaultDetails.endTime,
+    autoplay: data.details.autoplay ?? defaultDetails.autoplay,
+    muted: data.details.muted ?? defaultDetails.muted
+  } : defaultDetails
+
+  data.details = JSON.stringify(videoDetails)
 
   const result = await fetch(
     `${getAPIUrl()}activities/external_video`,

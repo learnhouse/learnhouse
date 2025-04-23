@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List
 from fastapi import APIRouter, Depends, UploadFile, Form, Request
 from src.db.courses.activities import ActivityCreate, ActivityRead, ActivityUpdate
 from src.db.users import PublicUser
@@ -113,7 +113,7 @@ async def api_create_video_activity(
     request: Request,
     name: str = Form(),
     chapter_id: str = Form(),
-    details: Optional[dict] = Form(default=None),
+    details: str = Form(default="{}"),
     current_user: PublicUser = Depends(get_current_user),
     video_file: UploadFile | None = None,
     db_session=Depends(get_db_session),
