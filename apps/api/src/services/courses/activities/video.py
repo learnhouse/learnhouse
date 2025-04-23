@@ -1,4 +1,5 @@
-from typing import Literal, Optional
+from typing import Literal
+import json
 from src.db.courses.courses import Course
 from src.db.organizations import Organization
 
@@ -31,7 +32,7 @@ async def create_video_activity(
     current_user: PublicUser,
     db_session: Session,
     video_file: UploadFile | None = None,
-    details: Optional[dict] = None,
+    details: str = "{}",
 ):
     # RBAC check
     await rbac_check(request, "activity_x", current_user, "create", db_session)
@@ -39,6 +40,9 @@ async def create_video_activity(
     # get chapter_id
     statement = select(Chapter).where(Chapter.id == chapter_id)
     chapter = db_session.exec(statement).first()
+
+    # convert details to dict
+    details = json.loads(details)
 
     if not chapter:
         raise HTTPException(
@@ -146,7 +150,7 @@ class ExternalVideo(BaseModel):
     uri: str
     type: Literal["youtube", "vimeo"]
     chapter_id: str
-    details: Optional[dict] = None
+    details: str = "{}"
 
 
 class ExternalVideoInDB(BaseModel):
@@ -184,6 +188,9 @@ async def create_external_video_activity(
     # generate activity_uuid
     activity_uuid = str(f"activity_{uuid4()}")
 
+    # convert details to dict
+    details = json.loads(data.details)
+
     activity_object = Activity(
         name=data.name,
         activity_type=ActivityTypeEnum.TYPE_VIDEO,
@@ -197,7 +204,7 @@ async def create_external_video_activity(
             "type": data.type,
             "activity_uuid": activity_uuid,
         },
-        details=data.details,
+        details=details,
         version=1,
         creation_date=str(datetime.now()),
         update_date=str(datetime.now()),

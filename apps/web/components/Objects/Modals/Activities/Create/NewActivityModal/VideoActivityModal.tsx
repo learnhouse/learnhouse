@@ -1,11 +1,10 @@
-import FormLayout, {
-  ButtonBlack,
-  Flex,
-  FormField,
-  FormLabel,
-  FormMessage,
-  Input,
-} from '@components/Objects/StyledElements/Form/Form'
+import {
+  Button,
+} from "@components/ui/button"
+import {
+  Input
+} from "@components/ui/input"
+import { Label } from "@components/ui/label"
 import React, { useState } from 'react'
 import * as Form from '@radix-ui/react-form'
 import BarLoader from 'react-spinners/BarLoader'
@@ -100,37 +99,35 @@ function VideoModal({
     <div className="space-y-4 mt-4 p-4 bg-gray-50 rounded-lg">
       <h3 className="font-medium text-gray-900 mb-3">Video Settings</h3>
       <div className="grid grid-cols-2 gap-4">
-        <FormField name="start-time">
-          <FormLabel>Start Time (seconds)</FormLabel>
-          <Form.Control asChild>
-            <Input
-              type="number"
-              min="0"
-              value={videoDetails.startTime}
-              onChange={(e) => setVideoDetails({
-                ...videoDetails,
-                startTime: Math.max(0, parseInt(e.target.value) || 0)
-              })}
-              placeholder="0"
-            />
-          </Form.Control>
-        </FormField>
+        <div>
+          <Label htmlFor="start-time">Start Time (seconds)</Label>
+          <Input
+            id="start-time"
+            type="number"
+            min="0"
+            value={videoDetails.startTime}
+            onChange={(e) => setVideoDetails({
+              ...videoDetails,
+              startTime: Math.max(0, parseInt(e.target.value) || 0)
+            })}
+            placeholder="0"
+          />
+        </div>
 
-        <FormField name="end-time">
-          <FormLabel>End Time (seconds, optional)</FormLabel>
-          <Form.Control asChild>
-            <Input
-              type="number"
-              min={videoDetails.startTime + 1}
-              value={videoDetails.endTime || ''}
-              onChange={(e) => setVideoDetails({
-                ...videoDetails,
-                endTime: e.target.value ? parseInt(e.target.value) : null
-              })}
-              placeholder="Leave empty for full duration"
-            />
-          </Form.Control>
-        </FormField>
+        <div>
+          <Label htmlFor="end-time">End Time (seconds, optional)</Label>
+          <Input
+            id="end-time"
+            type="number"
+            min={videoDetails.startTime + 1}
+            value={videoDetails.endTime || ''}
+            onChange={(e) => setVideoDetails({
+              ...videoDetails,
+              endTime: e.target.value ? parseInt(e.target.value) : null
+            })}
+            placeholder="Leave empty for full duration"
+          />
+        </div>
       </div>
 
       <div className="flex items-center space-x-6 mt-4">
@@ -164,24 +161,18 @@ function VideoModal({
   )
 
   return (
-    <FormLayout onSubmit={handleSubmit}>
-      <FormField name="video-activity-name">
-        <Flex css={{ alignItems: 'baseline', justifyContent: 'space-between' }}>
-          <FormLabel>Activity Name</FormLabel>
-          <FormMessage match="valueMissing">
-            Please provide a name for your video activity
-          </FormMessage>
-        </Flex>
-        <Form.Control asChild>
-          <Input 
-            value={name}
-            onChange={(e) => setName(e.target.value)} 
-            type="text" 
-            required 
-            placeholder="Enter activity name..."
-          />
-        </Form.Control>
-      </FormField>
+    <Form.Root onSubmit={handleSubmit}>
+      <div>
+        <Label htmlFor="video-activity-name">Activity Name</Label>
+        <Input 
+          id="video-activity-name"
+          value={name}
+          onChange={(e) => setName(e.target.value)} 
+          type="text" 
+          required 
+          placeholder="Enter activity name..."
+        />
+      </div>
 
       <div className="mt-4 rounded-lg border border-gray-200">
         <div className="grid grid-cols-2 gap-0">
@@ -214,10 +205,11 @@ function VideoModal({
         <div className="p-6">
           {selectedView === 'file' && (
             <div className="space-y-4">
-              <FormField name="video-activity-file">
-                <FormLabel>Video File</FormLabel>
+              <div>
+                <Label htmlFor="video-activity-file">Video File</Label>
                 <div className="mt-2">
                   <input
+                    id="video-activity-file"
                     type="file"
                     accept={SUPPORTED_FILES}
                     onChange={handleVideoChange}
@@ -225,47 +217,48 @@ function VideoModal({
                     className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-black file:text-white hover:file:bg-gray-800"
                   />
                 </div>
-              </FormField>
+              </div>
               <VideoSettingsForm />
             </div>
           )}
 
           {selectedView === 'youtube' && (
             <div className="space-y-4">
-              <FormField name="youtube-url">
-                <FormLabel>YouTube URL</FormLabel>
-                <Form.Control asChild>
-                  <Input
-                    value={youtubeUrl}
-                    onChange={(e) => setYoutubeUrl(e.target.value)}
-                    type="text"
-                    required
-                    placeholder="https://youtube.com/watch?v=..."
-                  />
-                </Form.Control>
-              </FormField>
+              <div>
+                <Label htmlFor="youtube-url">YouTube URL</Label>
+                <Input
+                  id="youtube-url"
+                  value={youtubeUrl}
+                  onChange={(e) => setYoutubeUrl(e.target.value)}
+                  type="text"
+                  required
+                  placeholder="https://youtube.com/watch?v=..."
+                />
+              </div>
               <VideoSettingsForm />
             </div>
           )}
         </div>
       </div>
 
-      <Flex css={{ marginTop: 25, justifyContent: 'flex-end' }}>
-        <Form.Submit asChild>
-          <ButtonBlack type="submit" css={{ marginTop: 10 }}>
-            {isSubmitting ? (
-              <BarLoader
-                cssOverride={{ borderRadius: 60 }}
-                width={60}
-                color="#ffffff"
-              />
-            ) : (
-              'Create Activity'
-            )}
-          </ButtonBlack>
-        </Form.Submit>
-      </Flex>
-    </FormLayout>
+      <div className="flex justify-end mt-6">
+        <Button 
+          type="submit" 
+          disabled={isSubmitting}
+          className="bg-black text-white hover:bg-black/90"
+        >
+          {isSubmitting ? (
+            <BarLoader
+              cssOverride={{ borderRadius: 60 }}
+              width={60}
+              color="#ffffff"
+            />
+          ) : (
+            'Create Activity'
+          )}
+        </Button>
+      </div>
+    </Form.Root>
   )
 }
 
