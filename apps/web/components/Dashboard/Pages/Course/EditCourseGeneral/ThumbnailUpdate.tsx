@@ -5,66 +5,108 @@ import { updateCourseThumbnail } from '@services/courses/courses'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import { ArrowBigUpDash, UploadCloud, Image as ImageIcon } from 'lucide-react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { mutate } from 'swr'
 import UnsplashImagePicker from './UnsplashImagePicker'
+
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const VALID_MIME_TYPES = ['image/jpeg', 'image/jpg', 'image/png'] as const;
+
+type ValidMimeType = typeof VALID_MIME_TYPES[number];
 
 function ThumbnailUpdate() {
   const course = useCourse() as any
   const session = useLHSession() as any;
   const org = useOrg() as any
-  const [localThumbnail, setLocalThumbnail] = React.useState(null) as any
-  const [isLoading, setIsLoading] = React.useState(false) as any
-  const [error, setError] = React.useState('') as any
+  const [localThumbnail, setLocalThumbnail] = useState<{ file: File; url: string } | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string>('')
   const [showUnsplashPicker, setShowUnsplashPicker] = useState(false)
   const withUnpublishedActivities = course ? course.withUnpublishedActivities : false
 
-  const validateFileType = (file: File): boolean => {
-    const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
-    if (!validTypes.includes(file.type)) {
+  // Cleanup blob URLs when component unmounts or when thumbnail changes
+  useEffect(() => {
+    return () => {
+      if (localThumbnail?.url) {
+        URL.revokeObjectURL(localThumbnail.url);
+      }
+    };
+  }, [localThumbnail]);
+
+  const validateFile = (file: File): boolean => {
+    if (!VALID_MIME_TYPES.includes(file.type as ValidMimeType)) {
       setError('Please upload only PNG or JPG/JPEG images');
       return false;
     }
+
+    if (file.size > MAX_FILE_SIZE) {
+      setError('File size should be less than 5MB');
+      return false;
+    }
+
     return true;
   }
 
-  const handleFileChange = async (event: any) => {
-    const file = event.target.files[0]
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
     if (!file) return;
     
-    if (!validateFileType(file)) {
+    if (!validateFile(file)) {
       event.target.value = '';
       return;
     }
     
-    setLocalThumbnail(file)
-    await updateThumbnail(file)
+    const blobUrl = URL.createObjectURL(file);
+    setLocalThumbnail({ file, url: blobUrl });
+    await updateThumbnail(file);
   }
 
   const handleUnsplashSelect = async (imageUrl: string) => {
-    setIsLoading(true)
-    const response = await fetch(imageUrl)
-    const blob = await response.blob()
-    const file = new File([blob], 'unsplash_image.jpg', { type: 'image/jpeg' })
-    setLocalThumbnail(file)
-    await updateThumbnail(file)
+    try {
+      setIsLoading(true);
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      
+      if (!VALID_MIME_TYPES.includes(blob.type as ValidMimeType)) {
+        throw new Error('Invalid image format from Unsplash');
+      }
+
+      const file = new File([blob], `unsplash_${Date.now()}.jpg`, { type: blob.type });
+      
+      if (!validateFile(file)) {
+        return;
+      }
+
+      const blobUrl = URL.createObjectURL(file);
+      setLocalThumbnail({ file, url: blobUrl });
+      await updateThumbnail(file);
+    } catch (err) {
+      setError('Failed to process Unsplash image');
+      setIsLoading(false);
+    }
   }
 
   const updateThumbnail = async (file: File) => {
-    setIsLoading(true)
-    const res = await updateCourseThumbnail(
-      course.courseStructure.course_uuid,
-      file,
-      session.data?.tokens?.access_token
-    )
-    mutate(`${getAPIUrl()}courses/${course.courseStructure.course_uuid}/meta?with_unpublished_activities=${withUnpublishedActivities}`)
-    // wait for 1 second to show loading animation
-    await new Promise((r) => setTimeout(r, 1500))
-    if (res.success === false) {
-      setError(res.HTTPmessage)
-    } else {
-      setIsLoading(false)
-      setError('')
+    setIsLoading(true);
+    try {
+      const res = await updateCourseThumbnail(
+        course.courseStructure.course_uuid,
+        file,
+        session.data?.tokens?.access_token
+      );
+      
+      await mutate(`${getAPIUrl()}courses/${course.courseStructure.course_uuid}/meta?with_unpublished_activities=${withUnpublishedActivities}`);
+      await new Promise((r) => setTimeout(r, 1500));
+
+      if (res.success === false) {
+        setError(res.HTTPmessage);
+      } else {
+        setError('');
+      }
+    } catch (err) {
+      setError('Failed to update thumbnail');
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -80,7 +122,7 @@ function ThumbnailUpdate() {
         <div className="flex flex-col items-center space-y-4">
           {localThumbnail ? (
             <img
-              src={URL.createObjectURL(localThumbnail)}
+              src={localThumbnail.url}
               className={`${
                 isLoading ? 'animate-pulse' : ''
               } shadow-sm w-[280px] h-[140px] object-cover rounded-lg border border-gray-200`}
