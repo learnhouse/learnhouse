@@ -4,7 +4,7 @@ import AuthenticatedClientElement from '@components/Security/AuthenticatedClient
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import { getUriWithOrg } from '@services/config/config'
 import { deleteCourseFromBackend } from '@services/courses/courses'
-import { getCourseThumbnailMediaDirectory } from '@services/media/media'
+import { getCourseThumbnailMediaDirectory, getUserAvatarMediaDirectory } from '@services/media/media'
 import { revalidateTags } from '@services/utils/ts/requests'
 import { BookMinus, FilePenLine, Settings2, MoreVertical } from 'lucide-react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
@@ -12,6 +12,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import React from 'react'
 import toast from 'react-hot-toast'
+import UserAvatar from '@components/Objects/UserAvatar'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,6 +26,19 @@ type Course = {
   description: string
   thumbnail_image: string
   org_id: string
+  update_date: string
+  authors?: Array<{
+    user: {
+      id: string
+      user_uuid: string
+      avatar_image: string
+      first_name: string
+      last_name: string
+      username: string
+    }
+    authorship: 'CREATOR' | 'CONTRIBUTOR' | 'MAINTAINER' | 'REPORTER'
+    authorship_status: 'ACTIVE' | 'INACTIVE' | 'PENDING'
+  }>
 }
 
 type PropsType = {
@@ -39,6 +53,11 @@ function CourseThumbnail({ course, orgslug, customLink }: PropsType) {
   const router = useRouter() 
   const org = useOrg() as any
   const session = useLHSession() as any
+
+  const activeAuthors = course.authors?.filter(author => author.authorship_status === 'ACTIVE') || []
+  const displayedAuthors = activeAuthors.slice(0, 3)
+  const hasMoreAuthors = activeAuthors.length > 3
+  const remainingAuthorsCount = activeAuthors.length - 3
 
   const deleteCourse = async () => {
     const toastId = toast.loading('Deleting course...')
@@ -59,7 +78,7 @@ function CourseThumbnail({ course, orgslug, customLink }: PropsType) {
     : '../empty_thumbnail.png'
 
   return (
-    <div className="relative">
+    <div className="relative flex flex-col bg-white rounded-xl nice-shadow overflow-hidden min-w-[280px] w-full max-w-sm shrink-0">
       <AdminEditOptions
         course={course}
         orgSlug={orgslug}
@@ -67,13 +86,65 @@ function CourseThumbnail({ course, orgslug, customLink }: PropsType) {
       />
       <Link prefetch href={customLink ? customLink : getUriWithOrg(orgslug, `/course/${removeCoursePrefix(course.course_uuid)}`)}>
         <div
-          className="inset-0 ring-1 ring-inset ring-black/10 rounded-xl shadow-xl w-full aspect-video bg-cover bg-center"
+          className="inset-0 ring-1 ring-inset ring-black/10 rounded-t-xl w-full aspect-video bg-cover bg-center"
           style={{ backgroundImage: `url(${thumbnailImage})` }}
         />
       </Link>
-      <div className='flex flex-col w-full pt-3 space-y-2'>
-        <h2 className="font-bold text-gray-800 line-clamp-2 leading-tight text-lg capitalize">{course.name}</h2>
-        <p className='text-sm text-gray-700 leading-normal line-clamp-3'>{course.description}</p>
+      <div className='flex flex-col w-full p-4 space-y-3'>
+        <div className="space-y-2">
+          <h2 className="font-bold text-gray-800 leading-tight text-base min-h-[2.75rem] line-clamp-2">{course.name}</h2>
+          <p className='text-xs text-gray-700 leading-normal min-h-[3.75rem] line-clamp-3'>{course.description}</p>
+        </div>
+        
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          {course.update_date && (
+            <div className="inline-flex h-5 min-w-[140px] items-center justify-center px-2 rounded-md bg-gray-100/80 border border-gray-200">
+              <span className="text-[10px] font-medium text-gray-600 truncate">
+                Updated {new Date(course.update_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+              </span>
+            </div>
+          )}
+          
+          {displayedAuthors.length > 0 && (
+            <div className="flex -space-x-4 items-center">
+              {displayedAuthors.map((author, index) => (
+                <div 
+                  key={author.user.user_uuid} 
+                  className="relative"
+                  style={{ zIndex: displayedAuthors.length - index }}
+                >
+                  <UserAvatar
+                    border="border-2"
+                    rounded="rounded-full"
+                    avatar_url={author.user.avatar_image ? getUserAvatarMediaDirectory(author.user.user_uuid, author.user.avatar_image) : ''}
+                    predefined_avatar={author.user.avatar_image ? undefined : 'empty'}
+                    width={32}
+                    showProfilePopup={true}
+                    userId={author.user.id}
+                  />
+                </div>
+              ))}
+              {hasMoreAuthors && (
+                <div 
+                  className="relative -ml-1"
+                  style={{ zIndex: 0 }}
+                >
+                  <div className="flex items-center justify-center w-[32px] h-[32px] text-[11px] font-medium text-gray-600 bg-gray-100 border-2 border-white rounded-full">
+                    +{remainingAuthorsCount}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        <Link 
+          prefetch 
+          href={customLink ? customLink : getUriWithOrg(orgslug, `/course/${removeCoursePrefix(course.course_uuid)}`)}
+          className="inline-flex items-center justify-center w-full px-3 py-1.5 bg-black text-white text-xs font-medium rounded-lg hover:bg-gray-800 transition-colors"
+        >
+          Start Learning
+        </Link>
       </div>
     </div>
   )
