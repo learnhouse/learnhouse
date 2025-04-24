@@ -19,8 +19,24 @@ function ThumbnailUpdate() {
   const [showUnsplashPicker, setShowUnsplashPicker] = useState(false)
   const withUnpublishedActivities = course ? course.withUnpublishedActivities : false
 
+  const validateFileType = (file: File): boolean => {
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+    if (!validTypes.includes(file.type)) {
+      setError('Please upload only PNG or JPG/JPEG images');
+      return false;
+    }
+    return true;
+  }
+
   const handleFileChange = async (event: any) => {
     const file = event.target.files[0]
+    if (!file) return;
+    
+    if (!validateFileType(file)) {
+      event.target.value = '';
+      return;
+    }
+    
     setLocalThumbnail(file)
     await updateThumbnail(file)
   }
@@ -53,64 +69,74 @@ function ThumbnailUpdate() {
   }
 
   return (
-    <div className="w-auto bg-gray-50 rounded-xl outline outline-1 outline-gray-200 h-[200px] shadow-sm">
-      <div className="flex flex-col justify-center items-center h-full">
-        <div className="flex flex-col justify-center items-center">
-          <div className="flex flex-col justify-center items-center">
-            {error && (
-              <div className="flex justify-center bg-red-200 rounded-md text-red-950 space-x-2 items-center p-2 transition-all shadow-xs">
-                <div className="text-sm font-semibold">{error}</div>
-              </div>
-            )}
-            {localThumbnail ? (
-              <img
-                src={URL.createObjectURL(localThumbnail)}
-                className={`${isLoading ? 'animate-pulse' : ''} shadow-sm w-[200px] h-[100px] rounded-md`}
-              />
-            ) : (
-              <img
-                src={`${course.courseStructure.thumbnail_image ? getCourseThumbnailMediaDirectory(
-                  org?.org_uuid,
-                  course.courseStructure.course_uuid,
-                  course.courseStructure.thumbnail_image
-                ) : '/empty_thumbnail.png'}`}
-                className="shadow-sm w-[200px] h-[100px] rounded-md bg-gray-200"
-              />
-            )}
+    <div className="w-auto rounded-xl border border-gray-200 h-[250px] light-shadow bg-gray-50 transition-all duration-200">
+      <div className="flex flex-col justify-center items-center h-full p-6 space-y-4">
+        {error && (
+          <div className="absolute top-4 flex justify-center bg-red-50 rounded-lg text-red-800 space-x-2 items-center p-3 transition-all">
+            <div className="text-sm font-medium">{error}</div>
           </div>
-          {isLoading ? (
-            <div className="flex justify-center items-center">
-              <div className="font-bold animate-pulse antialiased items-center bg-green-200 text-gray text-sm rounded-md px-4 py-2 mt-4 flex">
-                <ArrowBigUpDash size={16} className="mr-2" />
-                <span>Uploading</span>
-              </div>
-            </div>
+        )}
+        
+        <div className="flex flex-col items-center space-y-4">
+          {localThumbnail ? (
+            <img
+              src={URL.createObjectURL(localThumbnail)}
+              className={`${
+                isLoading ? 'animate-pulse' : ''
+              } shadow-sm w-[280px] h-[140px] object-cover rounded-lg border border-gray-200`}
+              alt="Course thumbnail"
+            />
           ) : (
-            <div className="flex justify-center items-center space-x-2">
+            <img
+              src={`${course.courseStructure.thumbnail_image ? getCourseThumbnailMediaDirectory(
+                org?.org_uuid,
+                course.courseStructure.course_uuid,
+                course.courseStructure.thumbnail_image
+              ) : '/empty_thumbnail.png'}`}
+              className="shadow-sm w-[280px] h-[140px] object-cover rounded-lg border border-gray-200 bg-gray-50"
+              alt="Course thumbnail"
+            />
+          )}
+
+          {!isLoading && (
+            <div className="flex space-x-2">
               <input
                 type="file"
                 id="fileInput"
-                style={{ display: 'none' }}
+                className="hidden"
+                accept=".jpg,.jpeg,.png"
                 onChange={handleFileChange}
               />
               <button
-                className="font-bold antialiased items-center text-gray text-sm rounded-md px-4 mt-6 flex"
+                className="bg-gray-50 text-gray-800 px-4 py-2 rounded-md text-sm font-medium flex items-center hover:bg-gray-100 transition-colors duration-200 border border-gray-200"
                 onClick={() => document.getElementById('fileInput')?.click()}
               >
                 <UploadCloud size={16} className="mr-2" />
-                <span>Upload Image</span>
+                Upload
               </button>
               <button
-                className="font-bold antialiased items-center text-gray text-sm rounded-md px-4 mt-6 flex"
+                className="bg-gray-50 text-gray-800 px-4 py-2 rounded-md text-sm font-medium flex items-center hover:bg-gray-100 transition-colors duration-200 border border-gray-200"
                 onClick={() => setShowUnsplashPicker(true)}
               >
                 <ImageIcon size={16} className="mr-2" />
-                <span>Choose from Gallery</span>
+                Gallery
               </button>
             </div>
           )}
         </div>
+
+        {isLoading && (
+          <div className="flex justify-center items-center">
+            <div className="font-medium text-sm text-green-800 bg-green-50 rounded-full px-4 py-2 flex items-center">
+              <ArrowBigUpDash size={16} className="mr-2 animate-bounce" />
+              Uploading...
+            </div>
+          </div>
+        )}
+        
+        <p className="text-xs text-gray-500">Supported formats: PNG, JPG/JPEG</p>
       </div>
+      
       {showUnsplashPicker && (
         <UnsplashImagePicker
           onSelect={handleUnsplashSelect}
