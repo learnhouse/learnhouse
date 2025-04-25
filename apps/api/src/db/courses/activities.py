@@ -32,6 +32,7 @@ class ActivityBase(SQLModel):
     activity_type: ActivityTypeEnum 
     activity_sub_type: ActivitySubTypeEnum 
     content: dict = Field(default={}, sa_column=Column(JSON))
+    details: Optional[dict] = Field(default=None, sa_column=Column(JSON))
     published: bool = False
 
 
@@ -53,6 +54,7 @@ class ActivityCreate(ActivityBase):
     chapter_id: int
     activity_type: ActivityTypeEnum = ActivityTypeEnum.TYPE_CUSTOM
     activity_sub_type: ActivitySubTypeEnum = ActivitySubTypeEnum.SUBTYPE_CUSTOM
+    details: dict = Field(default={}, sa_column=Column(JSON))
     pass
 
 
@@ -61,6 +63,7 @@ class ActivityUpdate(ActivityBase):
     content: dict = Field(default={}, sa_column=Column(JSON))
     activity_type: Optional[ActivityTypeEnum] 
     activity_sub_type: Optional[ActivitySubTypeEnum] 
+    details: Optional[dict] = Field(default=None, sa_column=Column(JSON))
     published_version: Optional[int]
     version: Optional[int]
 
@@ -72,4 +75,5 @@ class ActivityRead(ActivityBase):
     activity_uuid: str
     creation_date: str
     update_date: str
+    details: Optional[dict] = Field(default=None, sa_column=Column(JSON))
     pass

@@ -282,6 +282,79 @@ async def add_activity_to_trail(
 
     return trail_read
 
+async def remove_activity_from_trail(
+    request: Request,
+    user: PublicUser,
+    activity_uuid: str,
+    db_session: Session,
+) -> TrailRead:
+    # Look for the activity
+    statement = select(Activity).where(Activity.activity_uuid == activity_uuid)
+    activity = db_session.exec(statement).first()
+
+    if not activity:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Activity not found"
+        )
+
+    statement = select(Course).where(Course.id == activity.course_id)
+    course = db_session.exec(statement).first()
+
+    if not course:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Course not found"
+        )
+
+    statement = select(Trail).where(
+        Trail.org_id == course.org_id, Trail.user_id == user.id
+    )
+    trail = db_session.exec(statement).first()
+
+    if not trail:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Trail not found"
+        )
+
+    # Delete the trail step for this activity
+    statement = select(TrailStep).where(
+        TrailStep.activity_id == activity.id, 
+        TrailStep.user_id == user.id,
+        TrailStep.trail_id == trail.id
+    )
+    trail_step = db_session.exec(statement).first()
+
+    if trail_step:
+        db_session.delete(trail_step)
+        db_session.commit()
+
+    # Get updated trail data
+    statement = select(TrailRun).where(TrailRun.trail_id == trail.id, TrailRun.user_id == user.id)
+    trail_runs = db_session.exec(statement).all()
+
+    trail_runs = [
+        TrailRunRead(**trail_run.__dict__, course={}, steps=[], course_total_steps=0)
+        for trail_run in trail_runs
+    ]
+
+    for trail_run in trail_runs:
+        statement = select(TrailStep).where(TrailStep.trailrun_id == trail_run.id, TrailStep.user_id == user.id)
+        trail_steps = db_session.exec(statement).all()
+
+        trail_steps = [TrailStep(**trail_step.__dict__) for trail_step in trail_steps]
+        trail_run.steps = trail_steps
+
+        for trail_step in trail_steps:
+            statement = select(Course).where(Course.id == trail_step.course_id)
+            course = db_session.exec(statement).first()
+            trail_step.data = dict(course=course)
+
+    trail_read = TrailRead(
+        **trail.model_dump(),
+        runs=trail_runs,
+    )
+
+    return trail_read
+
 
 async def add_course_to_trail(
     request: Request,

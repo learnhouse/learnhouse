@@ -27,6 +27,7 @@ function NewActivityButton(props: NewActivityButtonProps) {
   const course = useCourse() as any
   const session = useLHSession() as any;
   const access_token = session?.data?.tokens?.access_token;
+  const withUnpublishedActivities = course ? course.withUnpublishedActivities : false
 
   const openNewActivityModal = async (chapterId: any) => {
     setNewActivityModal(true)
@@ -44,7 +45,7 @@ function NewActivityButton(props: NewActivityButtonProps) {
     )
     const toast_loading = toast.loading('Creating activity...')
     await createActivity(activity, props.chapterId, org.org_id, access_token)
-    mutate(`${getAPIUrl()}courses/${course.courseStructure.course_uuid}/meta`)
+    mutate(`${getAPIUrl()}courses/${course.courseStructure.course_uuid}/meta?with_unpublished_activities=${withUnpublishedActivities}`)
     toast.dismiss(toast_loading)
     toast.success('Activity created successfully')
     setNewActivityModal(false)
@@ -61,7 +62,7 @@ function NewActivityButton(props: NewActivityButtonProps) {
   ) => {
     toast.loading('Uploading file and creating activity...')
     await createFileActivity(file, type, activity, chapterId, access_token)
-    mutate(`${getAPIUrl()}courses/${course.courseStructure.course_uuid}/meta`)
+    mutate(`${getAPIUrl()}courses/${course.courseStructure.course_uuid}/meta?with_unpublished_activities=${withUnpublishedActivities}`)
     setNewActivityModal(false)
     toast.dismiss()
     toast.success('File uploaded successfully')
@@ -82,7 +83,7 @@ function NewActivityButton(props: NewActivityButtonProps) {
       activity,
       props.chapterId, access_token
     )
-    mutate(`${getAPIUrl()}courses/${course.courseStructure.course_uuid}/meta`)
+    mutate(`${getAPIUrl()}courses/${course.courseStructure.course_uuid}/meta?with_unpublished_activities=${withUnpublishedActivities}`)
     setNewActivityModal(false)
     toast.dismiss(toast_loading)
     toast.success('Activity created successfully')

@@ -4,7 +4,7 @@ import AuthenticatedClientElement from '@components/Security/AuthenticatedClient
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import { getUriWithOrg } from '@services/config/config'
 import { deleteCourseFromBackend } from '@services/courses/courses'
-import { getCourseThumbnailMediaDirectory } from '@services/media/media'
+import { getCourseThumbnailMediaDirectory, getUserAvatarMediaDirectory } from '@services/media/media'
 import { revalidateTags } from '@services/utils/ts/requests'
 import { BookMinus, FilePenLine, Settings2, MoreVertical } from 'lucide-react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
@@ -12,6 +12,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import React from 'react'
 import toast from 'react-hot-toast'
+import UserAvatar from '@components/Objects/UserAvatar'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,6 +27,18 @@ type Course = {
   thumbnail_image: string
   org_id: string
   update_date: string
+  authors?: Array<{
+    user: {
+      id: string
+      user_uuid: string
+      avatar_image: string
+      first_name: string
+      last_name: string
+      username: string
+    }
+    authorship: 'CREATOR' | 'CONTRIBUTOR' | 'MAINTAINER' | 'REPORTER'
+    authorship_status: 'ACTIVE' | 'INACTIVE' | 'PENDING'
+  }>
 }
 
 type PropsType = {
@@ -94,6 +107,11 @@ const CourseThumbnailLanding: React.FC<PropsType> = ({ course, orgslug, customLi
   const org = useOrg() as any
   const session = useLHSession() as any
 
+  const activeAuthors = course.authors?.filter(author => author.authorship_status === 'ACTIVE') || []
+  const displayedAuthors = activeAuthors.slice(0, 3)
+  const hasMoreAuthors = activeAuthors.length > 3
+  const remainingAuthorsCount = activeAuthors.length - 3
+
   const deleteCourse = async () => {
     const toastId = toast.loading('Deleting course...')
     try {
@@ -131,12 +149,44 @@ const CourseThumbnailLanding: React.FC<PropsType> = ({ course, orgslug, customLi
           <p className='text-xs text-gray-700 leading-normal min-h-[3.75rem] line-clamp-3'>{course.description}</p>
         </div>
         
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           {course.update_date && (
             <div className="inline-flex h-5 min-w-[140px] items-center justify-center px-2 rounded-md bg-gray-100/80 border border-gray-200">
               <span className="text-[10px] font-medium text-gray-600 truncate">
                 Updated {new Date(course.update_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
               </span>
+            </div>
+          )}
+          
+          {displayedAuthors.length > 0 && (
+            <div className="flex -space-x-4 items-center">
+              {displayedAuthors.map((author, index) => (
+                <div 
+                  key={author.user.user_uuid} 
+                  className="relative"
+                  style={{ zIndex: displayedAuthors.length - index }}
+                >
+                  <UserAvatar
+                    border="border-2"
+                    rounded="rounded-full"
+                    avatar_url={author.user.avatar_image ? getUserAvatarMediaDirectory(author.user.user_uuid, author.user.avatar_image) : ''}
+                    predefined_avatar={author.user.avatar_image ? undefined : 'empty'}
+                    width={32}
+                    showProfilePopup={true}
+                    userId={author.user.id}
+                  />
+                </div>
+              ))}
+              {hasMoreAuthors && (
+                <div 
+                  className="relative -ml-1"
+                  style={{ zIndex: 0 }}
+                >
+                  <div className="flex items-center justify-center w-[32px] h-[32px] text-[11px] font-medium text-gray-600 bg-gray-100 border-2 border-white rounded-full">
+                    +{remainingAuthorsCount}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
