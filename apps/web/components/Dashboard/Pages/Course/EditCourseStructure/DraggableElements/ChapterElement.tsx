@@ -18,6 +18,7 @@ import { useRouter } from 'next/navigation'
 import { getAPIUrl } from '@services/config/config'
 import { mutate } from 'swr'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { useCourse } from '@components/Contexts/CourseContext'
 
 type ChapterElementProps = {
   chapter: any
@@ -41,12 +42,14 @@ function ChapterElement(props: ChapterElementProps) {
   const [selectedChapter, setSelectedChapter] = React.useState<
     string | undefined
   >(undefined)
+  const course = useCourse() as any;
+  const withUnpublishedActivities = course ? course.withUnpublishedActivities : false
 
   const router = useRouter()
 
   const deleteChapterUI = async () => {
     await deleteChapter(props.chapter.id, access_token)
-    mutate(`${getAPIUrl()}courses/${props.course_uuid}/meta`)
+    mutate(`${getAPIUrl()}courses/${props.course_uuid}/meta?with_unpublished_activities=${withUnpublishedActivities}`)
     await revalidateTags(['courses'], props.orgslug)
     router.refresh()
   }
@@ -57,7 +60,7 @@ function ChapterElement(props: ChapterElementProps) {
         name: modifiedChapter.chapterName,
       }
       await updateChapter(chapterId, modifiedChapterCopy, access_token)
-      mutate(`${getAPIUrl()}courses/${props.course_uuid}/meta`)
+      mutate(`${getAPIUrl()}courses/${props.course_uuid}/meta?with_unpublished_activities=${withUnpublishedActivities}`)
       await revalidateTags(['courses'], props.orgslug)
       router.refresh()
     }

@@ -113,6 +113,7 @@ async def api_create_video_activity(
     request: Request,
     name: str = Form(),
     chapter_id: str = Form(),
+    details: str = Form(default="{}"),
     current_user: PublicUser = Depends(get_current_user),
     video_file: UploadFile | None = None,
     db_session=Depends(get_db_session),
@@ -127,6 +128,7 @@ async def api_create_video_activity(
         current_user,
         db_session,
         video_file,
+        details,
     )
 
 

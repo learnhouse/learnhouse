@@ -32,6 +32,7 @@ import TableHeader from '@tiptap/extension-table-header'
 import TableRow from '@tiptap/extension-table-row'
 import TableCell from '@tiptap/extension-table-cell'
 import UserBlock from '@components/Objects/Editor/Extensions/Users/UserBlock'
+import { getLinkExtension } from '@components/Objects/Editor/EditorConf'
 
 interface Editor {
   content: string
@@ -57,7 +58,18 @@ function Canva(props: Editor) {
   const editor: any = useEditor({
     editable: isEditable,
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        bulletList: {
+          HTMLAttributes: {
+            class: 'bullet-list',
+          },
+        },
+        orderedList: {
+          HTMLAttributes: {
+            class: 'ordered-list',
+          },
+        },
+      }),
       NoTextInput,
       // Custom Extensions
       InfoCallout.configure({
@@ -112,6 +124,7 @@ function Canva(props: Editor) {
       Table.configure({
         resizable: true,
       }),
+      getLinkExtension(),
       TableRow,
       TableHeader,
       TableCell,
@@ -194,10 +207,30 @@ const CanvaWrapper = styled.div`
       margin-bottom: 10px;
     }
 
+    // Link styling
+    a {
+      color: #2563eb;
+      text-decoration: underline;
+      cursor: pointer;
+      transition: color 0.2s ease;
+
+      &:hover {
+        color: #1d4ed8;
+        text-decoration: none;
+      }
+    }
+
     ul,
     ol {
       padding: 0 1rem;
       padding-left: 20px;
+    }
+
+    ul {
+      list-style-type: disc;
+    }
+
+    ol {
       list-style-type: decimal;
     }
 

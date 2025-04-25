@@ -126,6 +126,7 @@ async def api_get_course_by_id(
 async def api_get_course_meta(
     request: Request,
     course_uuid: str,
+    with_unpublished_activities: bool = False,
     db_session: Session = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ) -> FullCourseReadWithTrail:
@@ -133,7 +134,7 @@ async def api_get_course_meta(
     Get single Course Metadata (chapters, activities) by course_uuid
     """
     return await get_course_meta(
-        request, course_uuid, current_user=current_user, db_session=db_session
+        request, course_uuid, with_unpublished_activities, current_user=current_user, db_session=db_session
     )
 
 

@@ -36,3 +36,17 @@ export async function markActivityAsComplete(
   const res = await errorHandling(result)
   return res
 }
+
+export async function unmarkActivityAsComplete(
+  org_slug: string,
+  course_uuid: string,
+  activity_uuid: string,
+  access_token: any
+) {
+  const result: any = await fetch(
+    `${getAPIUrl()}trail/remove_activity/${activity_uuid}`,
+    RequestBodyWithAuthHeader('DELETE', null, null, access_token)
+  )
+  const res = await errorHandling(result)
+  return res
+}
