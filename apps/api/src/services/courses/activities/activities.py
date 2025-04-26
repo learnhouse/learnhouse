@@ -260,15 +260,21 @@ async def get_activities(
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ) -> list[ActivityRead]:
-    statement = select(ChapterActivity).where(
-        ChapterActivity.chapter_id == coursechapter_id
+    # Get activities that are published and belong to the chapter
+    statement = (
+        select(Activity)
+        .join(ChapterActivity)
+        .where(
+            ChapterActivity.chapter_id == coursechapter_id,
+            Activity.published == True
+        )
     )
     activities = db_session.exec(statement).all()
 
     if not activities:
         raise HTTPException(
             status_code=404,
-            detail="No activities found",
+            detail="No published activities found",
         )
 
     # RBAC check

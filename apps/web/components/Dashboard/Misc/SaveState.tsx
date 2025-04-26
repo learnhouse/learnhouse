@@ -6,37 +6,43 @@ import {
   useCourse,
   useCourseDispatch,
 } from '@components/Contexts/CourseContext'
-import { Check, SaveAllIcon, Timer } from 'lucide-react'
+import { Check, SaveAllIcon, Timer, Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { mutate } from 'swr'
 import { updateCourse } from '@services/courses/courses'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 
 function SaveState(props: { orgslug: string }) {
+  const [isLoading, setIsLoading] = useState(false)
   const course = useCourse() as any
   const session = useLHSession() as any;
   const router = useRouter()
   const saved = course ? course.isSaved : true
   const dispatchCourse = useCourseDispatch() as any
   const course_structure = course.courseStructure
-
+  const withUnpublishedActivities = course ? course.withUnpublishedActivities : false
   const saveCourseState = async () => {
-    // Course  order
-    if (saved) return
-    await changeOrderBackend()
-    mutate(`${getAPIUrl()}courses/${course.courseStructure.course_uuid}/meta`)
-    // Course metadata
-    await changeMetadataBackend()
-    mutate(`${getAPIUrl()}courses/${course.courseStructure.course_uuid}/meta`)
-    await revalidateTags(['courses'], props.orgslug)
-    dispatchCourse({ type: 'setIsSaved' })
+    if (saved || isLoading) return
+    setIsLoading(true)
+    try {
+      // Course  order
+      await changeOrderBackend()
+      mutate(`${getAPIUrl()}courses/${course.courseStructure.course_uuid}/meta?with_unpublished_activities=${withUnpublishedActivities}`)
+      // Course metadata
+      await changeMetadataBackend()
+      mutate(`${getAPIUrl()}courses/${course.courseStructure.course_uuid}/meta?with_unpublished_activities=${withUnpublishedActivities}`)
+      await revalidateTags(['courses'], props.orgslug)
+      dispatchCourse({ type: 'setIsSaved' })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   //
   // Course Order
   const changeOrderBackend = async () => {
-    mutate(`${getAPIUrl()}courses/${course.courseStructure.course_uuid}/meta`)
+    mutate(`${getAPIUrl()}courses/${course.courseStructure.course_uuid}/meta?with_unpublished_activities=${withUnpublishedActivities}`)
     await updateCourseOrderStructure(
       course.courseStructure.course_uuid,
       course.courseOrder,
@@ -49,7 +55,7 @@ function SaveState(props: { orgslug: string }) {
 
   // Course metadata
   const changeMetadataBackend = async () => {
-    mutate(`${getAPIUrl()}courses/${course.courseStructure.course_uuid}/meta`)
+    mutate(`${getAPIUrl()}courses/${course.courseStructure.course_uuid}/meta?with_unpublished_activities=${withUnpublishedActivities}`)
     await updateCourse(
       course.courseStructure.course_uuid,
       course.courseStructure,
@@ -117,12 +123,25 @@ function SaveState(props: { orgslug: string }) {
           `px-4 py-2 rounded-lg drop-shadow-md cursor-pointer flex space-x-2 items-center font-bold antialiased transition-all ease-linear ` +
           (saved
             ? 'bg-gray-600 text-white'
-            : 'bg-black text-white border hover:bg-gray-900 ')
+            : 'bg-black text-white border hover:bg-gray-900 ') +
+          (isLoading ? 'opacity-50 cursor-not-allowed' : '')
         }
         onClick={saveCourseState}
       >
-        {saved ? <Check size={20} /> : <SaveAllIcon size={20} />}
-        {saved ? <div className="">Saved</div> : <div className="">Save</div>}
+        {isLoading ? (
+          <Loader2 size={20} className="animate-spin" />
+        ) : saved ? (
+          <Check size={20} />
+        ) : (
+          <SaveAllIcon size={20} />
+        )}
+        {isLoading ? (
+          <div className="">Saving...</div>
+        ) : saved ? (
+          <div className="">Saved</div>
+        ) : (
+          <div className="">Save</div>
+        )}
       </div>
     </div>
   )
