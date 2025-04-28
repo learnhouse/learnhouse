@@ -17,6 +17,9 @@ export default Node.create({
       size: {
         width: 300,
       },
+      alignment: {
+        default: 'center',
+      },
     }
   },
 
