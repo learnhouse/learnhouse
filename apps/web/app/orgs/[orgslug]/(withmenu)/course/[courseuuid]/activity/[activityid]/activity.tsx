@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { getAPIUrl, getUriWithOrg } from '@services/config/config'
 import Canva from '@components/Objects/Activities/DynamicCanva/DynamicCanva'
 import VideoActivity from '@components/Objects/Activities/Video/Video'
-import { BookOpenCheck, Check, CheckCircle, ChevronDown, ChevronLeft, ChevronRight, FileText, Folder, List, Menu, MoreVertical, UserRoundPen, Video, Layers, ListFilter, ListTree, X, Edit2 } from 'lucide-react'
+import { BookOpenCheck, Check, CheckCircle, ChevronDown, ChevronLeft, ChevronRight, FileText, Folder, List, Menu, MoreVertical, UserRoundPen, Video, Layers, ListFilter, ListTree, X, Edit2, EllipsisVertical } from 'lucide-react'
 import { markActivityAsComplete, unmarkActivityAsComplete } from '@services/courses/activity'
 import DocumentPdfActivity from '@components/Objects/Activities/DocumentPdf/DocumentPdf'
 import ActivityIndicators from '@components/Pages/Courses/ActivityIndicators'
@@ -40,6 +40,43 @@ interface ActivityClientProps {
   orgslug: string
   activity: any
   course: any
+}
+
+function ActivityActions({ activity, activityid, course, orgslug, assignment }: { activity: any, activityid: string, course: any, orgslug: string, assignment: any }) {
+  const session = useLHSession() as any;
+  const { contributorStatus } = useContributorStatus(course.course_uuid);
+
+  return (
+    <div className="flex space-x-2 items-center">
+      {activity && activity.published == true && activity.content.paid_access != false && (
+        <AuthenticatedClientElement checkMethod="authentication">
+          {activity.activity_type != 'TYPE_ASSIGNMENT' && (
+            <>
+              <MarkStatus
+                activity={activity}
+                activityid={activityid}
+                course={course}
+                orgslug={orgslug}
+              />
+            </>
+          )}
+          {activity.activity_type == 'TYPE_ASSIGNMENT' && (
+            <>
+              <AssignmentSubmissionProvider assignment_uuid={assignment?.assignment_uuid}>
+                <AssignmentTools
+                  assignment={assignment}
+                  activity={activity}
+                  activityid={activityid}
+                  course={course}
+                  orgslug={orgslug}
+                />
+              </AssignmentSubmissionProvider>
+            </>
+          )}
+        </AuthenticatedClientElement>
+      )}
+    </div>
+  );
 }
 
 function ActivityClient(props: ActivityClientProps) {
@@ -131,6 +168,24 @@ function ActivityClient(props: ActivityClientProps) {
                           </h1>
                         </div>
                       </div>
+                      {activity && activity.published == true && activity.content.paid_access != false && (
+                        <AuthenticatedClientElement checkMethod="authentication">
+                          { (
+                            <div className="flex space-x-2">
+                              <PreviousActivityButton 
+                                course={course} 
+                                currentActivityId={activity.id} 
+                                orgslug={orgslug} 
+                              />
+                              <NextActivityButton 
+                                course={course} 
+                                currentActivityId={activity.id} 
+                                orgslug={orgslug} 
+                              />
+                            </div>
+                          )}
+                        </AuthenticatedClientElement>
+                      )}
                     </div>
 
                     <ActivityIndicators
@@ -140,8 +195,8 @@ function ActivityClient(props: ActivityClientProps) {
                       course={course}
                     />
 
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center space-x-3">
+                    <div className="flex justify-between items-center w-full">
+                      <div className="flex flex-1/3 items-center space-x-3">
                         <ActivityChapterDropdown 
                           course={course}
                           currentActivityId={activity.activity_uuid ? activity.activity_uuid.replace('activity_', '') : activityid.replace('activity_', '')}
@@ -156,7 +211,7 @@ function ActivityClient(props: ActivityClientProps) {
                           </h1>
                         </div>
                       </div>
-                      <div className="flex space-x-2 items-center">
+                      <div className="flex  space-x-2 items-center">
                         {activity && activity.published == true && activity.content.paid_access != false && (
                           <AuthenticatedClientElement checkMethod="authentication">
                             {activity.activity_type != 'TYPE_ASSIGNMENT' && (
@@ -168,30 +223,9 @@ function ActivityClient(props: ActivityClientProps) {
                                     className="bg-emerald-600 rounded-full px-5 drop-shadow-md flex items-center space-x-2 p-2.5 text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out"
                                   >
                                     <Edit2 size={17} />
-                                    <span className="text-xs font-bold">Contribute to Activity</span>
+                                    <span className="text-xs font-bold">Contribute</span>
                                   </Link>
                                 )}
-                                <MoreVertical size={17} className="text-gray-300" />
-                                <MarkStatus
-                                  activity={activity}
-                                  activityid={activityid}
-                                  course={course}
-                                  orgslug={orgslug}
-                                />
-                              </>
-                            )}
-                            {activity.activity_type == 'TYPE_ASSIGNMENT' && (
-                              <>
-                                <MoreVertical size={17} className="text-gray-300 " />
-                                <AssignmentSubmissionProvider assignment_uuid={assignment?.assignment_uuid}>
-                                  <AssignmentTools
-                                    assignment={assignment}
-                                    activity={activity}
-                                    activityid={activityid}
-                                    course={course}
-                                    orgslug={orgslug}
-                                  />
-                                </AssignmentSubmissionProvider>
                               </>
                             )}
                           </AuthenticatedClientElement>
@@ -249,7 +283,19 @@ function ActivityClient(props: ActivityClientProps) {
                       )}
                     </>
                   )}
-                
+
+                  {/* Activity Actions below the content box */}
+                  {activity && activity.published == true && activity.content.paid_access != false && (
+                    <div className="flex justify-end mt-4">
+                      <ActivityActions 
+                        activity={activity}
+                        activityid={activityid}
+                        course={course}
+                        orgslug={orgslug}
+                        assignment={assignment}
+                      />
+                    </div>
+                  )}
 
                   {/* Fixed Activity Secondary Bar */}
                   {activity && activity.published == true && activity.content.paid_access != false && (
@@ -483,15 +529,66 @@ function NextActivityButton({ course, currentActivityId, orgslug }: { course: an
   };
 
   return (
-    <ToolTip content={`Next: ${nextActivity.name}`} side="top">
-      <div
-        onClick={navigateToActivity}
-        className="bg-gray-300 rounded-full px-5 nice-shadow flex items-center space-x-2 p-2.5 text-gray-600 hover:cursor-pointer transition delay-150 duration-300 ease-in-out"
-      >
-        {!isMobile && <span className="text-xs font-bold">Next</span>}
-        <ChevronRight size={17} />
-      </div>
-    </ToolTip>
+    <div
+      onClick={navigateToActivity}
+      className="bg-white rounded-full px-5 nice-shadow flex items-center space-x-1 p-2.5 text-gray-600 hover:cursor-pointer transition delay-150 duration-300 ease-in-out"
+    >
+      <span className="text-xs font-bold text-gray-500">Next</span>
+      <EllipsisVertical className='text-gray-400' size={13} />
+      <span className="text-sm font-semibold truncate max-w-[200px]">{nextActivity.name}</span>
+      <ChevronRight size={17} />
+    </div>
+  );
+}
+
+function PreviousActivityButton({ course, currentActivityId, orgslug }: { course: any, currentActivityId: string, orgslug: string }) {
+  const router = useRouter();
+  const isMobile = useMediaQuery('(max-width: 768px)');
+
+  const findPreviousActivity = () => {
+    let allActivities: any[] = [];
+    let currentIndex = -1;
+    
+    // Flatten all activities from all chapters
+    course.chapters.forEach((chapter: any) => {
+      chapter.activities.forEach((activity: any) => {
+        const cleanActivityUuid = activity.activity_uuid?.replace('activity_', '');
+        allActivities.push({
+          ...activity,
+          cleanUuid: cleanActivityUuid,
+          chapterName: chapter.name
+        });
+        
+        // Check if this is the current activity
+        if (activity.id === currentActivityId) {
+          currentIndex = allActivities.length - 1;
+        }
+      });
+    });
+    
+    // Get previous activity
+    return currentIndex > 0 ? allActivities[currentIndex - 1] : null;
+  };
+
+  const previousActivity = findPreviousActivity();
+
+  if (!previousActivity) return null;
+
+  const navigateToActivity = () => {
+    const cleanCourseUuid = course.course_uuid?.replace('course_', '');
+    router.push(getUriWithOrg(orgslug, '') + `/course/${cleanCourseUuid}/activity/${previousActivity.cleanUuid}`);
+  };
+
+  return (
+    <div
+      onClick={navigateToActivity}
+      className="bg-white rounded-full px-5 nice-shadow flex items-center space-x-1 p-2.5 text-gray-600 hover:cursor-pointer transition delay-150 duration-300 ease-in-out"
+    >
+      <ChevronLeft size={17} />
+      <span className="text-xs font-bold text-gray-500">Previous</span>
+      <EllipsisVertical className='text-gray-400' size={13} />
+      <span className="text-sm font-semibold truncate max-w-[200px]">{previousActivity.name}</span>
+    </div>
   );
 }
 
