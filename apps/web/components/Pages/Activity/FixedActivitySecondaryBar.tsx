@@ -160,11 +160,7 @@ export default function FixedActivitySecondaryBar(props: FixedActivitySecondaryB
 
                   <button
                     onClick={() => navigateToActivity(nextActivity)}
-                    className={`flex items-center space-x-1 sm:space-x-2 py-1.5 px-1.5 sm:px-2 rounded-md transition-all duration-200 ${
-                      nextActivity 
-                        ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' 
-                        : 'text-gray-300 cursor-not-allowed'
-                    }`}
+                    className={`flex items-center space-x-1 sm:space-x-2 py-1.5 px-1.5 sm:px-2 rounded-md transition-all duration-200`}
                     disabled={!nextActivity}
                     title={nextActivity ? `Next: ${nextActivity.name}` : 'No next activity'}
                   >
