@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { getAPIUrl, getUriWithOrg } from '@services/config/config'
 import Canva from '@components/Objects/Activities/DynamicCanva/DynamicCanva'
 import VideoActivity from '@components/Objects/Activities/Video/Video'
-import { BookOpenCheck, Check, CheckCircle, ChevronDown, ChevronLeft, ChevronRight, FileText, Folder, List, Menu, MoreVertical, UserRoundPen, Video, Layers, ListFilter, ListTree, X, Edit2, EllipsisVertical } from 'lucide-react'
+import { BookOpenCheck, Check, CheckCircle, ChevronDown, ChevronLeft, ChevronRight, FileText, Folder, List, Menu, MoreVertical, UserRoundPen, Video, Layers, ListFilter, ListTree, X, Edit2, EllipsisVertical, Maximize2, Minimize2 } from 'lucide-react'
 import { markActivityAsComplete, unmarkActivityAsComplete } from '@services/courses/activity'
 import DocumentPdfActivity from '@components/Objects/Activities/DocumentPdf/DocumentPdf'
 import ActivityIndicators from '@components/Pages/Courses/ActivityIndicators'
@@ -16,7 +16,7 @@ import { CourseProvider } from '@components/Contexts/CourseContext'
 import AIActivityAsk from '@components/Objects/Activities/AI/AIActivityAsk'
 import AIChatBotProvider from '@components/Contexts/AI/AIChatBotContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import React, { useEffect } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { getAssignmentFromActivityUUID, getFinalGrade, submitAssignmentForGrading } from '@services/courses/assignments'
 import AssignmentStudentActivity from '@components/Objects/Activities/Assignment/AssignmentStudentActivity'
 import { AssignmentProvider } from '@components/Contexts/Assignments/AssignmentContext'
@@ -33,6 +33,7 @@ import ActivityNavigation from '@components/Pages/Activity/ActivityNavigation'
 import ActivityChapterDropdown from '@components/Pages/Activity/ActivityChapterDropdown'
 import FixedActivitySecondaryBar from '@components/Pages/Activity/FixedActivitySecondaryBar'
 import CourseEndView from '@components/Pages/Activity/CourseEndView'
+import { motion, AnimatePresence } from 'framer-motion'
 
 interface ActivityClientProps {
   activityid: string
@@ -42,7 +43,16 @@ interface ActivityClientProps {
   course: any
 }
 
-function ActivityActions({ activity, activityid, course, orgslug, assignment }: { activity: any, activityid: string, course: any, orgslug: string, assignment: any }) {
+interface ActivityActionsProps {
+  activity: any
+  activityid: string
+  course: any
+  orgslug: string
+  assignment: any
+  showNavigation?: boolean
+}
+
+function ActivityActions({ activity, activityid, course, orgslug, assignment, showNavigation = true }: ActivityActionsProps) {
   const session = useLHSession() as any;
   const { contributorStatus } = useContributorStatus(course.course_uuid);
 
@@ -73,6 +83,9 @@ function ActivityActions({ activity, activityid, course, orgslug, assignment }: 
               </AssignmentSubmissionProvider>
             </>
           )}
+          {showNavigation && (
+            <NextActivityButton course={course} currentActivityId={activity.id} orgslug={orgslug} />
+          )}
         </AuthenticatedClientElement>
       )}
     </div>
@@ -92,8 +105,65 @@ function ActivityClient(props: ActivityClientProps) {
   const [bgColor, setBgColor] = React.useState('bg-white')
   const [assignment, setAssignment] = React.useState(null) as any;
   const [markStatusButtonActive, setMarkStatusButtonActive] = React.useState(false);
+  const [isFocusMode, setIsFocusMode] = React.useState(false);
+  const isInitialRender = useRef(true);
   const { contributorStatus } = useContributorStatus(courseuuid);
- 
+  const router = useRouter();
+
+  // Function to find the current activity's position in the course
+  const findActivityPosition = () => {
+    let allActivities: any[] = [];
+    let currentIndex = -1;
+    
+    // Flatten all activities from all chapters
+    course.chapters.forEach((chapter: any) => {
+      chapter.activities.forEach((activity: any) => {
+        const cleanActivityUuid = activity.activity_uuid?.replace('activity_', '');
+        allActivities.push({
+          ...activity,
+          cleanUuid: cleanActivityUuid,
+          chapterName: chapter.name
+        });
+        
+        // Check if this is the current activity
+        if (cleanActivityUuid === activityid.replace('activity_', '')) {
+          currentIndex = allActivities.length - 1;
+        }
+      });
+    });
+    
+    return { allActivities, currentIndex };
+  };
+  
+  const { allActivities, currentIndex } = findActivityPosition();
+  
+  // Get previous and next activities
+  const prevActivity = currentIndex > 0 ? allActivities[currentIndex - 1] : null;
+  const nextActivity = currentIndex < allActivities.length - 1 ? allActivities[currentIndex + 1] : null;
+  
+  // Navigate to an activity
+  const navigateToActivity = (activity: any) => {
+    if (!activity) return;
+    
+    const cleanCourseUuid = course.course_uuid?.replace('course_', '');
+    router.push(getUriWithOrg(orgslug, '') + `/course/${cleanCourseUuid}/activity/${activity.cleanUuid}`);
+  };
+
+  // Initialize focus mode from localStorage
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('globalFocusMode');
+      setIsFocusMode(saved === 'true');
+    }
+  }, []);
+
+  // Save focus mode to localStorage
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('globalFocusMode', isFocusMode.toString());
+      isInitialRender.current = false;
+    }
+  }, [isFocusMode]);
 
   function getChapterNameByActivityId(course: any, activity_id: any) {
     for (let i = 0; i < course.chapters.length; i++) {
@@ -115,43 +185,72 @@ function ActivityClient(props: ActivityClientProps) {
 
   useEffect(() => {
     if (activity.activity_type == 'TYPE_DYNAMIC') {
-      setBgColor('bg-white nice-shadow');
+      setBgColor(isFocusMode ? 'bg-white' : 'bg-white nice-shadow');
     }
     else if (activity.activity_type == 'TYPE_ASSIGNMENT') {
       setMarkStatusButtonActive(false);
-      setBgColor('bg-white nice-shadow');
+      setBgColor(isFocusMode ? 'bg-white' : 'bg-white nice-shadow');
       getAssignmentUI();
     }
     else {
-      setBgColor('bg-zinc-950');
+      setBgColor(isFocusMode ? 'bg-zinc-950' : 'bg-zinc-950 nice-shadow');
     }
   }
-    , [activity, pathname])
+    , [activity, pathname, isFocusMode])
 
   return (
     <>
       <CourseProvider courseuuid={course?.course_uuid}>
         <AIChatBotProvider>
-          <GeneralWrapperStyled>
-            {activityid === 'end' ? (
-              <CourseEndView 
-                courseName={course.name}
-                orgslug={orgslug}
-                courseUuid={course.course_uuid}
-                thumbnailImage={course.thumbnail_image}
-              />
-            ) : (
-              <div className="space-y-4 pt-0">
-                <div className="pt-2">
-                  <div className="space-y-4 pb-4 activity-info-section">
-                    <div className="flex justify-between items-center">
-                      <div className="flex space-x-6">
+          {isFocusMode ? (
+            <AnimatePresence>
+              <motion.div 
+                initial={isInitialRender.current ? false : { opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="fixed inset-0 bg-white z-50"
+              >
+                {/* Focus Mode Top Bar */}
+                <motion.div 
+                  initial={isInitialRender.current ? false : { y: -100 }}
+                  animate={{ y: 0 }}
+                  exit={{ y: -100 }}
+                  transition={{ duration: 0.3 }}
+                  className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-b border-gray-100"
+                >
+                  <div className="container mx-auto px-4 py-2">
+                    <div className="flex items-center justify-between h-14">
+                      <div className="flex items-center space-x-2">
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => setIsFocusMode(false)}
+                          className="bg-white nice-shadow p-2 rounded-full cursor-pointer hover:bg-gray-50"
+                          title="Exit focus mode"
+                        >
+                          <Minimize2 size={16} className="text-gray-700" />
+                        </motion.button>
+                        <ActivityChapterDropdown 
+                          course={course}
+                          currentActivityId={activity.activity_uuid ? activity.activity_uuid.replace('activity_', '') : activityid.replace('activity_', '')}
+                          orgslug={orgslug}
+                        />
+                      </div>
+                      
+                      {/* Center Course Info */}
+                      <motion.div 
+                        initial={isInitialRender.current ? false : { opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 }}
+                        className="flex items-center space-x-4"
+                      >
                         <div className="flex">
                           <Link
                             href={getUriWithOrg(orgslug, '') + `/course/${courseuuid}`}
                           >
                             <img
-                              className="w-[100px] h-[57px] rounded-md drop-shadow-md"
+                              className="w-[60px] h-[34px] rounded-md drop-shadow-md"
                               src={`${getCourseThumbnailMediaDirectory(
                                 org?.org_uuid,
                                 course.course_uuid,
@@ -162,156 +261,363 @@ function ActivityClient(props: ActivityClientProps) {
                           </Link>
                         </div>
                         <div className="flex flex-col -space-y-1">
-                          <p className="font-bold text-gray-700 text-md">Course </p>
-                          <h1 className="font-bold text-gray-950 text-2xl first-letter:uppercase">
+                          <p className="font-bold text-gray-700 text-sm">Course </p>
+                          <h1 className="font-bold text-gray-950 text-lg first-letter:uppercase">
                             {course.name}
                           </h1>
                         </div>
-                      </div>
-                      {activity && activity.published == true && activity.content.paid_access != false && (
-                        <AuthenticatedClientElement checkMethod="authentication">
-                          { (
-                            <div className="flex space-x-2">
-                              <PreviousActivityButton 
-                                course={course} 
-                                currentActivityId={activity.id} 
-                                orgslug={orgslug} 
-                              />
-                              <NextActivityButton 
-                                course={course} 
-                                currentActivityId={activity.id} 
-                                orgslug={orgslug} 
-                              />
-                            </div>
-                          )}
-                        </AuthenticatedClientElement>
-                      )}
+                      </motion.div>
+
+                      {/* Progress Indicator */}
+                      <motion.div 
+                        initial={isInitialRender.current ? false : { opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="flex items-center space-x-2"
+                      >
+                        <div className="relative w-8 h-8">
+                          <svg className="w-full h-full transform -rotate-90">
+                            <circle
+                              cx="16"
+                              cy="16"
+                              r="14"
+                              stroke="#e5e7eb"
+                              strokeWidth="3"
+                              fill="none"
+                            />
+                            <circle
+                              cx="16"
+                              cy="16"
+                              r="14"
+                              stroke="#10b981"
+                              strokeWidth="3"
+                              fill="none"
+                              strokeLinecap="round"
+                              strokeDasharray={2 * Math.PI * 14}
+                              strokeDashoffset={2 * Math.PI * 14 * (1 - (course.trail?.runs?.find((run: any) => run.course_id === course.id)?.steps?.filter((step: any) => step.complete)?.length || 0) / (course.chapters?.reduce((acc: number, chapter: any) => acc + chapter.activities.length, 0) || 1))}
+                            />
+                          </svg>
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <span className="text-xs font-bold text-gray-800">
+                              {Math.round(((course.trail?.runs?.find((run: any) => run.course_id === course.id)?.steps?.filter((step: any) => step.complete)?.length || 0) / (course.chapters?.reduce((acc: number, chapter: any) => acc + chapter.activities.length, 0) || 1)) * 100)}%
+                            </span>
+                          </div>
+                        </div>
+                        <div className="text-xs text-gray-600">
+                          {course.trail?.runs?.find((run: any) => run.course_id === course.id)?.steps?.filter((step: any) => step.complete)?.length || 0} of {course.chapters?.reduce((acc: number, chapter: any) => acc + chapter.activities.length, 0) || 0}
+                        </div>
+                      </motion.div>
                     </div>
+                  </div>
+                </motion.div>
 
-                    <ActivityIndicators
-                      course_uuid={courseuuid}
-                      current_activity={activityid}
-                      orgslug={orgslug}
-                      course={course}
-                    />
+                {/* Focus Mode Content */}
+                <div className="pt-16 pb-20 h-full overflow-auto">
+                  <div className="container mx-auto px-4">
+                    {activity && activity.published == true && (
+                      <>
+                        {activity.content.paid_access == false ? (
+                          <PaidCourseActivityDisclaimer course={course} />
+                        ) : (
+                          <motion.div 
+                            initial={isInitialRender.current ? false : { scale: 0.95, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ delay: 0.3 }}
+                            className={`p-7 rounded-lg ${bgColor} mt-4`}
+                          >
+                            {/* Activity Types */}
+                            <div>
+                              {activity.activity_type == 'TYPE_DYNAMIC' && (
+                                <Canva content={activity.content} activity={activity} />
+                              )}
+                              {activity.activity_type == 'TYPE_VIDEO' && (
+                                <VideoActivity course={course} activity={activity} />
+                              )}
+                              {activity.activity_type == 'TYPE_DOCUMENT' && (
+                                <DocumentPdfActivity
+                                  course={course}
+                                  activity={activity}
+                                />
+                              )}
+                              {activity.activity_type == 'TYPE_ASSIGNMENT' && (
+                                <div>
+                                  {assignment ? (
+                                    <AssignmentProvider assignment_uuid={assignment?.assignment_uuid}>
+                                      <AssignmentsTaskProvider>
+                                        <AssignmentSubmissionProvider assignment_uuid={assignment?.assignment_uuid}>
+                                          <AssignmentStudentActivity />
+                                        </AssignmentSubmissionProvider>
+                                      </AssignmentsTaskProvider>
+                                    </AssignmentProvider>
+                                  ) : (
+                                    <div></div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </motion.div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
 
-                    <div className="flex justify-between items-center w-full">
-                      <div className="flex flex-1/3 items-center space-x-3">
-                        <ActivityChapterDropdown 
-                          course={course}
-                          currentActivityId={activity.activity_uuid ? activity.activity_uuid.replace('activity_', '') : activityid.replace('activity_', '')}
-                          orgslug={orgslug}
-                        />
-                        <div className="flex flex-col -space-y-1">
-                          <p className="font-bold text-gray-700 text-md">
-                            Chapter : {getChapterNameByActivityId(course, activity.id)}
-                          </p>
-                          <h1 className="font-bold text-gray-950 text-2xl first-letter:uppercase">
-                            {activity.name}
-                          </h1>
+                {/* Focus Mode Bottom Bar */}
+                {activity && activity.published == true && activity.content.paid_access != false && (
+                  <motion.div 
+                    initial={isInitialRender.current ? false : { y: 100 }}
+                    animate={{ y: 0 }}
+                    exit={{ y: 100 }}
+                    transition={{ duration: 0.3 }}
+                    className="fixed bottom-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-t border-gray-100"
+                  >
+                    <div className="container mx-auto px-4">
+                      <div className="flex items-center justify-between h-16">
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() => navigateToActivity(prevActivity)}
+                            className={`flex items-center space-x-1.5 p-2 rounded-md transition-all duration-200 cursor-pointer ${
+                              prevActivity 
+                                ? 'text-gray-700' 
+                                : 'opacity-50 text-gray-400 cursor-not-allowed'
+                            }`}
+                            disabled={!prevActivity}
+                            title={prevActivity ? `Previous: ${prevActivity.name}` : 'No previous activity'}
+                          >
+                            <ChevronLeft size={20} className="text-gray-800 shrink-0" />
+                            <div className="flex flex-col items-start">
+                              <span className="text-xs text-gray-500">Previous</span>
+                              <span className="text-sm capitalize font-semibold text-left">
+                                {prevActivity ? prevActivity.name : 'No previous activity'}
+                              </span>
+                            </div>
+                          </button>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <ActivityActions 
+                            activity={activity}
+                            activityid={activityid}
+                            course={course}
+                            orgslug={orgslug}
+                            assignment={assignment}
+                            showNavigation={false}
+                          />
+                          <button
+                            onClick={() => navigateToActivity(nextActivity)}
+                            className={`flex items-center space-x-1.5 p-2 rounded-md transition-all duration-200 cursor-pointer ${
+                              nextActivity 
+                                ? 'text-gray-700' 
+                                : 'opacity-50 text-gray-400 cursor-not-allowed'
+                            }`}
+                            disabled={!nextActivity}
+                            title={nextActivity ? `Next: ${nextActivity.name}` : 'No next activity'}
+                          >
+                            <div className="flex flex-col items-end">
+                              <span className="text-xs text-gray-500">Next</span>
+                              <span className="text-sm capitalize font-semibold text-right">
+                                {nextActivity ? nextActivity.name : 'No next activity'}
+                              </span>
+                            </div>
+                            <ChevronRight size={20} className="text-gray-800 shrink-0" />
+                          </button>
                         </div>
                       </div>
-                      <div className="flex  space-x-2 items-center">
+                    </div>
+                  </motion.div>
+                )}
+              </motion.div>
+            </AnimatePresence>
+          ) : (
+            <GeneralWrapperStyled>
+              {/* Original non-focus mode UI */}
+              {activityid === 'end' ? (
+                <CourseEndView 
+                  courseName={course.name}
+                  orgslug={orgslug}
+                  courseUuid={course.course_uuid}
+                  thumbnailImage={course.thumbnail_image}
+                />
+              ) : (
+                <div className="space-y-4 pt-0">
+                  <div className="pt-2">
+                    <div className="space-y-4 pb-4 activity-info-section">
+                      <div className="flex justify-between items-center">
+                        <div className="flex space-x-6">
+                          <div className="flex">
+                            <Link
+                              href={getUriWithOrg(orgslug, '') + `/course/${courseuuid}`}
+                            >
+                              <img
+                                className="w-[100px] h-[57px] rounded-md drop-shadow-md"
+                                src={`${getCourseThumbnailMediaDirectory(
+                                  org?.org_uuid,
+                                  course.course_uuid,
+                                  course.thumbnail_image
+                                )}`}
+                                alt=""
+                              />
+                            </Link>
+                          </div>
+                          <div className="flex flex-col -space-y-1">
+                            <p className="font-bold text-gray-700 text-md">Course </p>
+                            <h1 className="font-bold text-gray-950 text-2xl first-letter:uppercase">
+                              {course.name}
+                            </h1>
+                          </div>
+                        </div>
                         {activity && activity.published == true && activity.content.paid_access != false && (
                           <AuthenticatedClientElement checkMethod="authentication">
-                            {activity.activity_type != 'TYPE_ASSIGNMENT' && (
-                              <>
-                                <AIActivityAsk activity={activity} />
-                                {contributorStatus === 'ACTIVE' && activity.activity_type == 'TYPE_DYNAMIC' && (
-                                  <Link
-                                    href={getUriWithOrg(orgslug, '') + `/course/${courseuuid}/activity/${activityid}/edit`}
-                                    className="bg-emerald-600 rounded-full px-5 drop-shadow-md flex items-center space-x-2 p-2.5 text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out"
-                                  >
-                                    <Edit2 size={17} />
-                                    <span className="text-xs font-bold">Contribute</span>
-                                  </Link>
-                                )}
-                              </>
+                            { (
+                              <div className="flex space-x-2">
+                                <PreviousActivityButton 
+                                  course={course} 
+                                  currentActivityId={activity.id} 
+                                  orgslug={orgslug} 
+                                />
+                                <NextActivityButton 
+                                  course={course} 
+                                  currentActivityId={activity.id} 
+                                  orgslug={orgslug} 
+                                />
+                              </div>
                             )}
                           </AuthenticatedClientElement>
                         )}
                       </div>
-                    </div>
-                  </div>
-                  {activity && activity.published == false && (
-                    <div className="p-7 drop-shadow-xs rounded-lg bg-gray-800">
-                      <div className="text-white">
-                        <h1 className="font-bold text-2xl">
-                          This activity is not published yet
-                        </h1>
-                      </div>
-                    </div>
-                  )}
 
-                  {activity && activity.published == true && (
-                    <>
-                      {activity.content.paid_access == false ? (
-                        <PaidCourseActivityDisclaimer course={course} />
-                      ) : (
-                        <div className={`p-7 drop-shadow-xs rounded-lg ${bgColor}`}>
-                          {/* Activity Types */}
-                          <div>
-                            {activity.activity_type == 'TYPE_DYNAMIC' && (
-                              <Canva content={activity.content} activity={activity} />
-                            )}
-                            {activity.activity_type == 'TYPE_VIDEO' && (
-                              <VideoActivity course={course} activity={activity} />
-                            )}
-                            {activity.activity_type == 'TYPE_DOCUMENT' && (
-                              <DocumentPdfActivity
-                                course={course}
-                                activity={activity}
-                              />
-                            )}
-                            {activity.activity_type == 'TYPE_ASSIGNMENT' && (
-                              <div>
-                                {assignment ? (
-                                  <AssignmentProvider assignment_uuid={assignment?.assignment_uuid}>
-                                    <AssignmentsTaskProvider>
-                                      <AssignmentSubmissionProvider assignment_uuid={assignment?.assignment_uuid}>
-                                        <AssignmentStudentActivity />
-                                      </AssignmentSubmissionProvider>
-                                    </AssignmentsTaskProvider>
-                                  </AssignmentProvider>
-                                ) : (
-                                  <div></div>
-                                )}
-                              </div>
-                            )}
+                      <ActivityIndicators
+                        course_uuid={courseuuid}
+                        current_activity={activityid}
+                        orgslug={orgslug}
+                        course={course}
+                      />
+
+                      <div className="flex justify-between items-center w-full">
+                        <div className="flex flex-1/3 items-center space-x-3">
+                          <button
+                            onClick={() => setIsFocusMode(true)}
+                            className="bg-white nice-shadow p-2 rounded-full cursor-pointer hover:bg-gray-50 transition-all duration-200"
+                            title="Enter focus mode"
+                          >
+                            <Maximize2 size={16} className="text-gray-700" />
+                          </button>
+                          <ActivityChapterDropdown 
+                            course={course}
+                            currentActivityId={activity.activity_uuid ? activity.activity_uuid.replace('activity_', '') : activityid.replace('activity_', '')}
+                            orgslug={orgslug}
+                          />
+                          <div className="flex flex-col -space-y-1">
+                            <p className="font-bold text-gray-700 text-md">
+                              Chapter : {getChapterNameByActivityId(course, activity.id)}
+                            </p>
+                            <h1 className="font-bold text-gray-950 text-2xl first-letter:uppercase">
+                              {activity.name}
+                            </h1>
                           </div>
                         </div>
-                      )}
-                    </>
-                  )}
-
-                  {/* Activity Actions below the content box */}
-                  {activity && activity.published == true && activity.content.paid_access != false && (
-                    <div className="flex justify-end mt-4">
-                      <ActivityActions 
-                        activity={activity}
-                        activityid={activityid}
-                        course={course}
-                        orgslug={orgslug}
-                        assignment={assignment}
-                      />
+                        <div className="flex space-x-2 items-center">
+                          {activity && activity.published == true && activity.content.paid_access != false && (
+                            <AuthenticatedClientElement checkMethod="authentication">
+                              {activity.activity_type != 'TYPE_ASSIGNMENT' && (
+                                <>
+                                  <AIActivityAsk activity={activity} />
+                                  {contributorStatus === 'ACTIVE' && activity.activity_type == 'TYPE_DYNAMIC' && (
+                                    <Link
+                                      href={getUriWithOrg(orgslug, '') + `/course/${courseuuid}/activity/${activityid}/edit`}
+                                      className="bg-emerald-600 rounded-full px-5 drop-shadow-md flex items-center space-x-2 p-2.5 text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out"
+                                    >
+                                      <Edit2 size={17} />
+                                      <span className="text-xs font-bold">Contribute</span>
+                                    </Link>
+                                  )}
+                                </>
+                              )}
+                            </AuthenticatedClientElement>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  )}
 
-                  {/* Fixed Activity Secondary Bar */}
-                  {activity && activity.published == true && activity.content.paid_access != false && (
-                    <FixedActivitySecondaryBar
-                      course={course}
-                      currentActivityId={activityid}
-                      orgslug={orgslug}
-                      activity={activity}
-                    />
-                  )}
-                  
-                  <div style={{ height: '100px' }}></div>
+                    {activity && activity.published == false && (
+                      <div className="p-7 drop-shadow-xs rounded-lg bg-gray-800">
+                        <div className="text-white">
+                          <h1 className="font-bold text-2xl">
+                            This activity is not published yet
+                          </h1>
+                        </div>
+                      </div>
+                    )}
+
+                    {activity && activity.published == true && (
+                      <>
+                        {activity.content.paid_access == false ? (
+                          <PaidCourseActivityDisclaimer course={course} />
+                        ) : (
+                          <div className={`p-7 drop-shadow-xs rounded-lg ${bgColor}`}>
+                            {/* Activity Types */}
+                            <div>
+                              {activity.activity_type == 'TYPE_DYNAMIC' && (
+                                <Canva content={activity.content} activity={activity} />
+                              )}
+                              {activity.activity_type == 'TYPE_VIDEO' && (
+                                <VideoActivity course={course} activity={activity} />
+                              )}
+                              {activity.activity_type == 'TYPE_DOCUMENT' && (
+                                <DocumentPdfActivity
+                                  course={course}
+                                  activity={activity}
+                                />
+                              )}
+                              {activity.activity_type == 'TYPE_ASSIGNMENT' && (
+                                <div>
+                                  {assignment ? (
+                                    <AssignmentProvider assignment_uuid={assignment?.assignment_uuid}>
+                                      <AssignmentsTaskProvider>
+                                        <AssignmentSubmissionProvider assignment_uuid={assignment?.assignment_uuid}>
+                                          <AssignmentStudentActivity />
+                                        </AssignmentSubmissionProvider>
+                                      </AssignmentsTaskProvider>
+                                    </AssignmentProvider>
+                                  ) : (
+                                    <div></div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    )}
+
+                    {/* Activity Actions below the content box */}
+                    {activity && activity.published == true && activity.content.paid_access != false && (
+                      <div className="flex justify-end mt-4">
+                        <ActivityActions 
+                          activity={activity}
+                          activityid={activityid}
+                          course={course}
+                          orgslug={orgslug}
+                          assignment={assignment}
+                        />
+                      </div>
+                    )}
+
+                    {/* Fixed Activity Secondary Bar */}
+                    {activity && activity.published == true && activity.content.paid_access != false && (
+                      <FixedActivitySecondaryBar
+                        course={course}
+                        currentActivityId={activityid}
+                        orgslug={orgslug}
+                        activity={activity}
+                      />
+                    )}
+                    
+                    <div style={{ height: '100px' }}></div>
+                  </div>
                 </div>
-              </div>
-            )}
-          </GeneralWrapperStyled>
+              )}
+            </GeneralWrapperStyled>
+          )}
         </AIChatBotProvider>
       </CourseProvider>
     </>
@@ -461,7 +767,6 @@ export function MarkStatus(props: {
               status="warning"
             />
           </ToolTip>
-          <NextActivityButton course={props.course} currentActivityId={props.activity.id} orgslug={props.orgslug} />
         </div>
       ) : (
         <div className="flex items-center space-x-2">
@@ -483,7 +788,6 @@ export function MarkStatus(props: {
             )}{' '}
             {!isMobile && <i className="not-italic text-xs font-bold">{isLoading ? 'Marking...' : 'Mark as complete'}</i>}
           </div>
-          <NextActivityButton course={props.course} currentActivityId={props.activity.id} orgslug={props.orgslug} />
         </div>
       )}
     </>
