@@ -161,6 +161,10 @@ function ActivityClient(props: ActivityClientProps) {
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
       localStorage.setItem('globalFocusMode', isFocusMode.toString());
+      // Dispatch custom event for focus mode change
+      window.dispatchEvent(new CustomEvent('focusModeChange', { 
+        detail: { isFocusMode } 
+      }));
       isInitialRender.current = false;
     }
   }, [isFocusMode]);
