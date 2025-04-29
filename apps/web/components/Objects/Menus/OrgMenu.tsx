@@ -1,5 +1,5 @@
 'use client'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Search } from 'lucide-react'
 import { getUriWithOrg } from '@services/config/config'
@@ -9,6 +9,7 @@ import { getOrgLogoMediaDirectory } from '@services/media/media'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { SearchBar } from '@components/Objects/Search/SearchBar'
+import { usePathname } from 'next/navigation'
 
 export const OrgMenu = (props: any) => {
   const orgslug = props.orgslug
@@ -17,6 +18,41 @@ export const OrgMenu = (props: any) => {
   const [feedbackModal, setFeedbackModal] = React.useState(false)
   const org = useOrg() as any;
   const [isMenuOpen, setIsMenuOpen] = React.useState(false)
+  const [isFocusMode, setIsFocusMode] = useState(false)
+  const pathname = usePathname()
+
+  useEffect(() => {
+    // Only check focus mode if we're in an activity page
+    if (typeof window !== 'undefined' && pathname?.includes('/activity/')) {
+      const saved = localStorage.getItem('globalFocusMode');
+      setIsFocusMode(saved === 'true');
+    } else {
+      setIsFocusMode(false);
+    }
+
+    // Add storage event listener for cross-window changes
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'globalFocusMode' && pathname?.includes('/activity/')) {
+        setIsFocusMode(e.newValue === 'true');
+      }
+    };
+
+    // Add custom event listener for same-window changes
+    const handleFocusModeChange = (e: CustomEvent) => {
+      if (pathname?.includes('/activity/')) {
+        setIsFocusMode(e.detail.isFocusMode);
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('focusModeChange', handleFocusModeChange as EventListener);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('focusModeChange', handleFocusModeChange as EventListener);
+    };
+  }, [pathname]);
 
   function closeFeedbackModal() {
     setFeedbackModal(false)
@@ -24,6 +60,11 @@ export const OrgMenu = (props: any) => {
 
   function toggleMenu() {
     setIsMenuOpen(!isMenuOpen)
+  }
+
+  // Only hide menu if we're in an activity page and focus mode is enabled
+  if (pathname?.includes('/activity/') && isFocusMode) {
+    return null;
   }
 
   return (
