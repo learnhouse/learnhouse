@@ -5,6 +5,11 @@ import toast from 'react-hot-toast';
 
 export type ContributorStatus = 'NONE' | 'PENDING' | 'ACTIVE' | 'INACTIVE';
 
+interface Contributor {
+  user_id: string;
+  authorship_status: ContributorStatus;
+}
+
 export function useContributorStatus(courseUuid: string) {
   const session = useLHSession() as any;
   const [contributorStatus, setContributorStatus] = useState<ContributorStatus>('NONE');
@@ -22,9 +27,9 @@ export function useContributorStatus(courseUuid: string) {
         session.data?.tokens?.access_token
       );
       
-      if (response && response.data) {
+      if (response && response.data && Array.isArray(response.data)) {
         const currentUser = response.data.find(
-          (contributor: any) => contributor.user_id === session.data.user.id
+          (contributor: Contributor) => contributor.user_id === session.data.user.id
         );
         
         if (currentUser) {
@@ -32,10 +37,13 @@ export function useContributorStatus(courseUuid: string) {
         } else {
           setContributorStatus('NONE');
         }
+      } else {
+        setContributorStatus('NONE');
       }
     } catch (error) {
       console.error('Failed to check contributor status:', error);
       toast.error('Failed to check contributor status');
+      setContributorStatus('NONE');
     } finally {
       setIsLoading(false);
     }
