@@ -1,7 +1,7 @@
 import { NodeViewWrapper } from '@tiptap/react'
 import React, { useEffect } from 'react'
 import { Resizable } from 're-resizable'
-import { AlertTriangle, Image, Download } from 'lucide-react'
+import { AlertTriangle, Image, Download, AlignLeft, AlignCenter, AlignRight } from 'lucide-react'
 import { uploadNewImageFile } from '../../../../../services/blocks/Image/images'
 import { getActivityBlockMediaDirectory } from '@services/media/media'
 import { useOrg } from '@components/Contexts/OrgContext'
@@ -29,10 +29,12 @@ function ImageBlockComponent(props: any) {
   const [imageSize, setImageSize] = React.useState({
     width: props.node.attrs.size ? props.node.attrs.size.width : 300,
   })
+  const [alignment, setAlignment] = React.useState(props.node.attrs.alignment || 'center')
   
   const fileId = blockObject
     ? `${blockObject.content.file_id}.${blockObject.content.file_format}`
     : null
+
   const handleImageChange = (event: React.ChangeEvent<any>) => {
     setImage(event.target.files[0])
   }
@@ -49,6 +51,7 @@ function ImageBlockComponent(props: any) {
     props.updateAttributes({
       blockObject: object,
       size: imageSize,
+      alignment: alignment,
     })
   }
 
@@ -75,7 +78,25 @@ function ImageBlockComponent(props: any) {
     document.body.removeChild(link);
   };
 
+  const handleAlignmentChange = (newAlignment: string) => {
+    setAlignment(newAlignment);
+    props.updateAttributes({
+      alignment: newAlignment,
+    });
+  };
+
   useEffect(() => {}, [course, org])
+
+  const getAlignmentClass = () => {
+    switch (alignment) {
+      case 'left':
+        return 'justify-start';
+      case 'right':
+        return 'justify-end';
+      default:
+        return 'justify-center';
+    }
+  };
 
   return (
     <NodeViewWrapper className="block-image w-full">
@@ -85,7 +106,7 @@ function ImageBlockComponent(props: any) {
       </FileUploadBlock>
       
       {blockObject && isEditable && (
-        <div className="w-full flex justify-center">
+        <div className={`w-full flex ${getAlignmentClass()}`}>
           <Resizable
             defaultSize={{ width: imageSize.width, height: '100%' }}
             handleStyles={{
@@ -123,25 +144,50 @@ function ImageBlockComponent(props: any) {
               })
             }}
           >
-            <img
-              src={`${getActivityBlockMediaDirectory(
-                org?.org_uuid,
-                course?.courseStructure.course_uuid,
-                props.extension.options.activity.activity_uuid,
-                blockObject.block_uuid,
-                blockObject ? fileId : ' ',
-                'imageBlock'
-              )}`}
-              alt=""
-              className="rounded-lg shadow-sm max-w-full h-auto"
-              style={{ width: '100%' }}
-            />
+            <div className="relative">
+              <img
+                src={`${getActivityBlockMediaDirectory(
+                  org?.org_uuid,
+                  course?.courseStructure.course_uuid,
+                  props.extension.options.activity.activity_uuid,
+                  blockObject.block_uuid,
+                  blockObject ? fileId : ' ',
+                  'imageBlock'
+                )}`}
+                alt=""
+                className="rounded-lg shadow-sm max-w-full h-auto"
+                style={{ width: '100%' }}
+              />
+              <div className="absolute top-2 right-2 flex items-center gap-1.5 bg-white bg-opacity-90 backdrop-blur-xs rounded-lg p-1 shadow-xs transition-opacity opacity-70 hover:opacity-100">
+                <button
+                  onClick={() => handleAlignmentChange('left')}
+                  className={`p-1.5 rounded-md hover:bg-gray-100 text-gray-600 ${alignment === 'left' ? 'bg-gray-100' : ''}`}
+                  title="Align left"
+                >
+                  <AlignLeft size={16} />
+                </button>
+                <button
+                  onClick={() => handleAlignmentChange('center')}
+                  className={`p-1.5 rounded-md hover:bg-gray-100 text-gray-600 ${alignment === 'center' ? 'bg-gray-100' : ''}`}
+                  title="Center align"
+                >
+                  <AlignCenter size={16} />
+                </button>
+                <button
+                  onClick={() => handleAlignmentChange('right')}
+                  className={`p-1.5 rounded-md hover:bg-gray-100 text-gray-600 ${alignment === 'right' ? 'bg-gray-100' : ''}`}
+                  title="Align right"
+                >
+                  <AlignRight size={16} />
+                </button>
+              </div>
+            </div>
           </Resizable>
         </div>
       )}
 
       {blockObject && !isEditable && (
-        <div className="w-full flex justify-center">
+        <div className={`w-full flex ${getAlignmentClass()}`}>
           <div className="relative">
             <img
               src={`${getActivityBlockMediaDirectory(
