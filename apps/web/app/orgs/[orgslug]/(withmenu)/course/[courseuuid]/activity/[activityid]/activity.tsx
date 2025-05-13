@@ -34,6 +34,7 @@ import ActivityChapterDropdown from '@components/Pages/Activity/ActivityChapterD
 import FixedActivitySecondaryBar from '@components/Pages/Activity/FixedActivitySecondaryBar'
 import CourseEndView from '@components/Pages/Activity/CourseEndView'
 import { motion, AnimatePresence } from 'framer-motion'
+import ActivityBreadcrumbs from '@components/Pages/Activity/ActivityBreadcrumbs'
 
 interface ActivityClientProps {
   activityid: string
@@ -444,6 +445,11 @@ function ActivityClient(props: ActivityClientProps) {
               ) : (
                 <div className="space-y-4 pt-0">
                   <div className="pt-2">
+                    <ActivityBreadcrumbs 
+                      course={course}
+                      activity={activity}
+                      orgslug={orgslug}
+                    />
                     <div className="space-y-4 pb-4 activity-info-section">
                       <div className="flex justify-between items-center">
                         <div className="flex space-x-6">
