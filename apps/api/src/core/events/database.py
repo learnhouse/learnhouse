@@ -36,8 +36,8 @@ engine = create_engine(
     learnhouse_config.database_config.sql_connection_string,  # type: ignore
     echo=False, 
     pool_pre_ping=True,  # type: ignore
-    pool_size=10,  
-    max_overflow=20,
+    pool_size=5,  
+    max_overflow=0,
     pool_recycle=300,  # Recycle connections after 5 minutes
     pool_timeout=30
 )
