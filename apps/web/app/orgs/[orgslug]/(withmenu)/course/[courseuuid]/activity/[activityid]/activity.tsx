@@ -35,6 +35,8 @@ import FixedActivitySecondaryBar from '@components/Pages/Activity/FixedActivityS
 import CourseEndView from '@components/Pages/Activity/CourseEndView'
 import { motion, AnimatePresence } from 'framer-motion'
 import ActivityBreadcrumbs from '@components/Pages/Activity/ActivityBreadcrumbs'
+import MiniInfoTooltip from '@components/Objects/MiniInfoTooltip'
+
 
 interface ActivityClientProps {
   activityid: string
@@ -601,7 +603,12 @@ function ActivityClient(props: ActivityClientProps) {
 
                     {/* Activity Actions below the content box */}
                     {activity && activity.published == true && activity.content.paid_access != false && (
-                      <div className="flex justify-end mt-4">
+                      <div className="flex justify-between items-center mt-4">
+                        <PreviousActivityButton 
+                          course={course} 
+                          currentActivityId={activity.id} 
+                          orgslug={orgslug} 
+                        />
                         <ActivityActions 
                           activity={activity}
                           activityid={activityid}
@@ -644,6 +651,51 @@ export function MarkStatus(props: {
   const session = useLHSession() as any;
   const isMobile = useMediaQuery('(max-width: 768px)')
   const [isLoading, setIsLoading] = React.useState(false);
+  const [showMarkedTooltip, setShowMarkedTooltip] = React.useState(false);
+  const [showUnmarkedTooltip, setShowUnmarkedTooltip] = React.useState(false);
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const markedTooltipCount = localStorage.getItem('activity_marked_tooltip_count');
+      const unmarkedTooltipCount = localStorage.getItem('activity_unmarked_tooltip_count');
+      
+      if (!markedTooltipCount || parseInt(markedTooltipCount) < 3) {
+        setShowMarkedTooltip(true);
+      }
+      if (!unmarkedTooltipCount || parseInt(unmarkedTooltipCount) < 3) {
+        setShowUnmarkedTooltip(true);
+      }
+    }
+  }, []);
+
+  const handleMarkedTooltipClose = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('activity_marked_tooltip_count', '3');
+      setShowMarkedTooltip(false);
+    }
+  };
+
+  const handleUnmarkedTooltipClose = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('activity_unmarked_tooltip_count', '3');
+      setShowUnmarkedTooltip(false);
+    }
+  };
+
+  const infoIcon = (
+    <svg 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke="currentColor" 
+      strokeWidth="2" 
+      strokeLinecap="round" 
+      strokeLinejoin="round"
+    >
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 16v-4" />
+      <path d="M12 8h.01" />
+    </svg>
+  );
 
   const areAllActivitiesCompleted = () => {
     const run = props.course.trail.runs.find(
@@ -654,7 +706,6 @@ export function MarkStatus(props: {
     let totalActivities = 0;
     let completedActivities = 0;
 
-    // Count all activities and completed activities
     props.course.chapters.forEach((chapter: any) => {
       chapter.activities.forEach((activity: any) => {
         totalActivities++;
@@ -667,21 +718,12 @@ export function MarkStatus(props: {
       });
     });
 
-    console.log('Total activities:', totalActivities);
-    console.log('Completed activities:', completedActivities);
-    console.log('All completed?', completedActivities >= totalActivities - 1);
-
-    // We check for totalActivities - 1 because the current activity completion 
-    // hasn't been counted yet (it's in progress)
     return completedActivities >= totalActivities - 1;
   };
 
   async function markActivityAsCompleteFront() {
     try {
-      // Check if this will be the last activity to complete
       const willCompleteAll = areAllActivitiesCompleted();
-      console.log('Will complete all?', willCompleteAll);
-
       setIsLoading(true);
       await markActivityAsComplete(
         props.orgslug,
@@ -690,11 +732,9 @@ export function MarkStatus(props: {
         session.data?.tokens?.access_token
       );
       
-      // Mutate the course data
       await mutate(`${getAPIUrl()}courses/${props.course.course_uuid}/meta`);
       
       if (willCompleteAll) {
-        console.log('Redirecting to end page...');
         const cleanCourseUuid = props.course.course_uuid.replace('course_', '');
         router.push(getUriWithOrg(props.orgslug, '') + `/course/${cleanCourseUuid}/activity/end`);
       } else {
@@ -711,14 +751,13 @@ export function MarkStatus(props: {
   async function unmarkActivityAsCompleteFront() {
     try {
       setIsLoading(true);
-      const trail = await unmarkActivityAsComplete(
+      await unmarkActivityAsComplete(
         props.orgslug,
         props.course.course_uuid,
         props.activity.activity_uuid,
         session.data?.tokens?.access_token
       );
       
-      // Mutate the course data to trigger re-render
       await mutate(`${getAPIUrl()}courses/${props.course.course_uuid}/meta`);
       router.refresh();
     } catch (error) {
@@ -743,24 +782,13 @@ export function MarkStatus(props: {
     <>
       {isActivityCompleted() ? (
         <div className="flex items-center space-x-2">
-          <div className="bg-teal-600 rounded-full px-5 drop-shadow-md flex items-center space-x-2 p-2.5 text-white">
-            <i>
-              <Check size={17}></Check>
-            </i>{' '}
-            <i className="not-italic text-xs font-bold">Complete</i>
-          </div>
-          <ToolTip
-            content="Unmark as complete"
-            side="top"
-          >
+          <div className="relative">
             <ConfirmationModal
               confirmationButtonText="Unmark Activity"
               confirmationMessage="Are you sure you want to unmark this activity as complete? This will affect your course progress."
               dialogTitle="Unmark activity as complete"
               dialogTrigger={
-                <div
-                  className={`${isLoading ? 'opacity-75 cursor-not-allowed' : ''} bg-red-400 rounded-full p-2 drop-shadow-md flex items-center text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out`}
-                >
+                <div className="bg-teal-600 rounded-full px-5 drop-shadow-md flex items-center space-x-1 p-2.5 text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out">
                   {isLoading ? (
                     <div className="animate-spin">
                       <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -769,34 +797,78 @@ export function MarkStatus(props: {
                       </svg>
                     </div>
                   ) : (
-                    <X size={17} />
+                    <svg 
+                      width="17" 
+                      height="17" 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      strokeWidth="2" 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round"
+                    >
+                      <rect x="3" y="3" width="18" height="18" rx="2" />
+                      <path d="M7 12l3 3 7-7" />
+                    </svg>
                   )}
+                  <span className="text-xs font-bold">Complete</span>
                 </div>
               }
               functionToExecute={unmarkActivityAsCompleteFront}
               status="warning"
             />
-          </ToolTip>
+            {showMarkedTooltip && (
+              <MiniInfoTooltip
+                icon={infoIcon}
+                message="Click the checkbox to unmark as complete if needed"
+                onClose={handleMarkedTooltipClose}
+                iconColor="text-teal-600"
+                iconSize={24}
+                width="w-64"
+              />
+            )}
+          </div>
         </div>
       ) : (
         <div className="flex items-center space-x-2">
-          <div
-            className={`${isLoading ? 'opacity-75 cursor-not-allowed' : ''} bg-gray-800 rounded-full px-5 drop-shadow-md flex items-center space-x-2 p-2.5 text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out`}
-            onClick={!isLoading ? markActivityAsCompleteFront : undefined}
-          >
-            {isLoading ? (
-              <div className="animate-spin">
-                <svg className="w-4 h-4" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          <div className="relative">
+            <div
+              className={`${isLoading ? 'opacity-75 cursor-not-allowed' : ''} bg-gray-800 rounded-full px-5 drop-shadow-md flex items-center space-x-1 p-2.5 text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out`}
+              onClick={!isLoading ? markActivityAsCompleteFront : undefined}
+            >
+              {isLoading ? (
+                <div className="animate-spin">
+                  <svg className="w-4 h-4" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                </div>
+              ) : (
+                <svg 
+                  width="17" 
+                  height="17" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                >
+                  <rect x="3" y="3" width="18" height="18" rx="2" />
                 </svg>
-              </div>
-            ) : (
-              <i>
-                <Check size={17}></Check>
-              </i>
-            )}{' '}
-            {!isMobile && <i className="not-italic text-xs font-bold">{isLoading ? 'Marking...' : 'Mark as complete'}</i>}
+              )}
+              <span className="text-xs font-bold">{isLoading ? 'Marking...' : 'Mark as complete'}</span>
+            </div>
+            {showUnmarkedTooltip && (
+              <MiniInfoTooltip
+                icon={infoIcon}
+                message="Click the checkbox to mark this activity as complete"
+                onClose={handleUnmarkedTooltipClose}
+                iconColor="text-gray-600"
+                iconSize={24}
+                width="w-64"
+              />
+            )}
           </div>
         </div>
       )}
