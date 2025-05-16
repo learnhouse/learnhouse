@@ -1,15 +1,98 @@
+'use client'
+import { BookOpenCheck, Check, FileText, Layers, Video } from 'lucide-react'
+import React, { useMemo, memo } from 'react'
 import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
 import { getUriWithOrg } from '@services/config/config'
 import Link from 'next/link'
-import React from 'react'
-import { Video, FileText, Layers, BookOpenCheck, Check } from 'lucide-react'
 
 interface Props {
   course: any
   orgslug: string
   course_uuid: string
-  current_activity?: any
+  current_activity?: string
 }
+
+// Helper functions
+function getActivityTypeLabel(activityType: string): string {
+  switch (activityType) {
+    case 'TYPE_VIDEO':
+      return 'Video'
+    case 'TYPE_DOCUMENT':
+      return 'Document'
+    case 'TYPE_DYNAMIC':
+      return 'Interactive'
+    case 'TYPE_ASSIGNMENT':
+      return 'Assignment'
+    default:
+      return 'Unknown'
+  }
+}
+
+function getActivityTypeBadgeColor(activityType: string): string {
+  switch (activityType) {
+    case 'TYPE_VIDEO':
+      return 'bg-blue-100 text-blue-700'
+    case 'TYPE_DOCUMENT':
+      return 'bg-purple-100 text-purple-700'
+    case 'TYPE_DYNAMIC':
+      return 'bg-green-100 text-green-700'
+    case 'TYPE_ASSIGNMENT':
+      return 'bg-orange-100 text-orange-700'
+    default:
+      return 'bg-gray-100 text-gray-700'
+  }
+}
+
+// Memoized activity type icon component
+const ActivityTypeIcon = memo(({ activityType }: { activityType: string }) => {
+  switch (activityType) {
+    case 'TYPE_VIDEO':
+      return <Video size={16} className="text-gray-400" />
+    case 'TYPE_DOCUMENT':
+      return <FileText size={16} className="text-gray-400" />
+    case 'TYPE_DYNAMIC':
+      return <Layers size={16} className="text-gray-400" />
+    case 'TYPE_ASSIGNMENT':
+      return <BookOpenCheck size={16} className="text-gray-400" />
+    default:
+      return <FileText size={16} className="text-gray-400" />
+  }
+});
+
+ActivityTypeIcon.displayName = 'ActivityTypeIcon';
+
+// Memoized activity tooltip content
+const ActivityTooltipContent = memo(({ 
+  activity, 
+  isDone, 
+  isCurrent 
+}: { 
+  activity: any, 
+  isDone: boolean, 
+  isCurrent: boolean 
+}) => (
+  <div className="bg-white rounded-lg nice-shadow py-3 px-4 min-w-[200px] animate-in fade-in duration-200">
+    <div className="flex items-center gap-2">
+      <ActivityTypeIcon activityType={activity.activity_type} />
+      <span className="text-sm text-gray-700">{activity.name}</span>
+      {isDone && (
+        <span className="ml-auto text-gray-400">
+          <Check size={14} />
+        </span>
+      )}
+    </div>
+    <div className="flex items-center gap-2 mt-2">
+      <span className={`text-xs px-2 py-0.5 rounded-full ${getActivityTypeBadgeColor(activity.activity_type)}`}>
+        {getActivityTypeLabel(activity.activity_type)}
+      </span>
+      <span className="text-xs text-gray-400">
+        {isCurrent ? 'Current Activity' : isDone ? 'Completed' : 'Not Started'}
+      </span>
+    </div>
+  </div>
+));
+
+ActivityTooltipContent.displayName = 'ActivityTooltipContent';
 
 function ActivityIndicators(props: Props) {
   const course = props.course
@@ -22,26 +105,26 @@ function ActivityIndicators(props: Props) {
 
   const trail = props.course.trail
 
-  function isActivityDone(activity: any) {
+  // Memoize activity status checks
+  const isActivityDone = useMemo(() => (activity: any) => {
     let run = props.course.trail?.runs.find(
       (run: any) => run.course_id == props.course.id
     )
     if (run) {
       return run.steps.find((step: any) => step.activity_id == activity.id)
-    } else {
-      return false
     }
-  }
+    return false
+  }, [props.course]);
 
-  function isActivityCurrent(activity: any) {
+  const isActivityCurrent = useMemo(() => (activity: any) => {
     let activity_uuid = activity.activity_uuid.replace('activity_', '')
     if (props.current_activity && props.current_activity == activity_uuid) {
       return true
     }
     return false
-  }
+  }, [props.current_activity]);
 
-  function getActivityClass(activity: any) {
+  const getActivityClass = useMemo(() => (activity: any) => {
     if (isActivityDone(activity)) {
       return done_activity_style
     }
@@ -49,52 +132,7 @@ function ActivityIndicators(props: Props) {
       return current_activity_style
     }
     return black_activity_style
-  }
-
-  const getActivityTypeIcon = (activityType: string) => {
-    switch (activityType) {
-      case 'TYPE_VIDEO':
-        return <Video size={16} className="text-gray-400" />
-      case 'TYPE_DOCUMENT':
-        return <FileText size={16} className="text-gray-400" />
-      case 'TYPE_DYNAMIC':
-        return <Layers size={16} className="text-gray-400" />
-      case 'TYPE_ASSIGNMENT':
-        return <BookOpenCheck size={16} className="text-gray-400" />
-      default:
-        return <FileText size={16} className="text-gray-400" />
-    }
-  }
-
-  const getActivityTypeLabel = (activityType: string) => {
-    switch (activityType) {
-      case 'TYPE_VIDEO':
-        return 'Video'
-      case 'TYPE_DOCUMENT':
-        return 'Document'
-      case 'TYPE_DYNAMIC':
-        return 'Page'
-      case 'TYPE_ASSIGNMENT':
-        return 'Assignment'
-      default:
-        return 'Learning Material'
-    }
-  }
-
-  const getActivityTypeBadgeColor = (activityType: string) => {
-    switch (activityType) {
-      case 'TYPE_VIDEO':
-        return 'bg-gray-100 text-gray-700 font-bold'
-      case 'TYPE_DOCUMENT':
-        return 'bg-gray-100 text-gray-700 font-bold'
-      case 'TYPE_DYNAMIC':
-        return 'bg-gray-100 text-gray-700 font-bold'
-      case 'TYPE_ASSIGNMENT':
-        return 'bg-gray-100 text-gray-700 font-bold'
-      default:
-        return 'bg-gray-100 text-gray-700 font-bold'
-    }
-  }
+  }, [isActivityDone, isActivityCurrent]);
 
   return (
     <div className="grid grid-flow-col justify-stretch space-x-6">
@@ -110,25 +148,11 @@ function ActivityIndicators(props: Props) {
                     sideOffset={8}
                     unstyled
                     content={
-                      <div className="bg-white rounded-lg nice-shadow py-3 px-4 min-w-[200px] animate-in fade-in duration-200">
-                        <div className="flex items-center gap-2">
-                          {getActivityTypeIcon(activity.activity_type)}
-                          <span className="text-sm text-gray-700">{activity.name}</span>
-                          {isDone && (
-                            <span className="ml-auto text-gray-400">
-                              <Check size={14} />
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2 mt-2">
-                          <span className={`text-xs px-2 py-0.5 rounded-full ${getActivityTypeBadgeColor(activity.activity_type)}`}>
-                            {getActivityTypeLabel(activity.activity_type)}
-                          </span>
-                          <span className="text-xs text-gray-400">
-                            {isCurrent ? 'Current Activity' : isDone ? 'Completed' : 'Not Started'}
-                          </span>
-                        </div>
-                      </div>
+                      <ActivityTooltipContent 
+                        activity={activity}
+                        isDone={isDone}
+                        isCurrent={isCurrent}
+                      />
                     }
                     key={activity.activity_uuid}
                   >
@@ -143,9 +167,7 @@ function ActivityIndicators(props: Props) {
                       }
                     >
                       <div
-                        className={`h-[7px] w-auto ${getActivityClass(
-                          activity
-                        )} rounded-lg`}
+                        className={`h-[7px] w-auto ${getActivityClass(activity)} rounded-lg`}
                       ></div>
                     </Link>
                   </ToolTip>
@@ -159,4 +181,4 @@ function ActivityIndicators(props: Props) {
   )
 }
 
-export default ActivityIndicators
+export default memo(ActivityIndicators)
