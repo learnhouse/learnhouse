@@ -197,6 +197,7 @@ const CourseActionsMobile = ({ courseuuid, orgslug, course }: CourseActionsMobil
         
         if (firstActivity) {
           // Redirect to the first activity
+          await revalidateTags(['activities'], orgslug)
           router.push(
             getUriWithOrg(orgslug, '') +
             `/course/${courseuuid}/activity/${firstActivity.activity_uuid.replace('activity_', '')}`
@@ -209,6 +210,7 @@ const CourseActionsMobile = ({ courseuuid, orgslug, course }: CourseActionsMobil
       console.error('Failed to perform course action:', error)
     } finally {
       setIsActionLoading(false)
+      await revalidateTags(['courses'], orgslug)
     }
   }
 
