@@ -603,19 +603,29 @@ function ActivityClient(props: ActivityClientProps) {
 
                     {/* Activity Actions below the content box */}
                     {activity && activity.published == true && activity.content.paid_access != false && (
-                      <div className="flex justify-between items-center mt-4">
-                        <PreviousActivityButton 
-                          course={course} 
-                          currentActivityId={activity.id} 
-                          orgslug={orgslug} 
-                        />
-                        <ActivityActions 
-                          activity={activity}
-                          activityid={activityid}
-                          course={course}
-                          orgslug={orgslug}
-                          assignment={assignment}
-                        />
+                      <div className="flex justify-between items-center mt-4 w-full">
+                        <div>
+                          <PreviousActivityButton 
+                            course={course} 
+                            currentActivityId={activity.id} 
+                            orgslug={orgslug} 
+                          />
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <ActivityActions 
+                            activity={activity}
+                            activityid={activityid}
+                            course={course}
+                            orgslug={orgslug}
+                            assignment={assignment}
+                            showNavigation={false}
+                          />
+                          <NextActivityButton 
+                            course={course} 
+                            currentActivityId={activity.id} 
+                            orgslug={orgslug} 
+                          />
+                        </div>
                       </div>
                     )}
 
