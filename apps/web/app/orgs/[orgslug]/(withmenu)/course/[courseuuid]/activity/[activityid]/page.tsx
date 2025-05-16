@@ -78,7 +78,7 @@ const ActivityPage = async (params: any) => {
     fetchCourseMetadata(courseuuid, access_token),
     getActivityWithAuthHeader(
       activityid,
-      { revalidate: 0, tags: ['activities'] },
+      { revalidate: 60, tags: ['activities'] },
       access_token || null
     )
   ])
