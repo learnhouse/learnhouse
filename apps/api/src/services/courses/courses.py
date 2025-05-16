@@ -133,15 +133,25 @@ async def get_course_meta(
     # Avoid circular import
     from src.services.courses.chapters import get_course_chapters
 
-    # Get course with a single query
-    course_statement = select(Course).where(Course.course_uuid == course_uuid)
-    course = db_session.exec(course_statement).first()
+    # Get course with authors in a single query using joins
+    course_statement = (
+        select(Course, ResourceAuthor, User)
+        .outerjoin(ResourceAuthor, ResourceAuthor.resource_uuid == Course.course_uuid)  # type: ignore
+        .outerjoin(User, ResourceAuthor.user_id == User.id)  # type: ignore
+        .where(Course.course_uuid == course_uuid)
+        .order_by(ResourceAuthor.id.asc())  # type: ignore
+    )
+    results = db_session.exec(course_statement).all()
 
-    if not course:
+    if not results:
         raise HTTPException(
             status_code=404,
             detail="Course not found",
         )
+
+    # Extract course and authors from results
+    course = results[0][0]  # First result's Course
+    author_results = [(ra, u) for _, ra, u in results if ra is not None and u is not None]
 
     # RBAC check
     await rbac_check(request, course.course_uuid, current_user, "read", db_session)
@@ -149,26 +159,14 @@ async def get_course_meta(
     # Start async tasks concurrently
     tasks = []
     
-    # Task 1: Get course authors with their roles
-    async def get_authors():
-        authors_statement = (
-            select(ResourceAuthor, User)
-            .join(User, ResourceAuthor.user_id == User.id)  # type: ignore  
-            .where(ResourceAuthor.resource_uuid == course.course_uuid)
-            .order_by(
-                ResourceAuthor.id.asc()  # type: ignore
-            )
-        )
-        return db_session.exec(authors_statement).all()
-    
-    # Task 2: Get course chapters
+    # Task 1: Get course chapters
     async def get_chapters():
         # Ensure course.id is not None
         if course.id is None:
             return []
         return await get_course_chapters(request, course.id, db_session, current_user, with_unpublished_activities)
     
-    # Task 3: Get user trail (only for authenticated users)
+    # Task 2: Get user trail (only for authenticated users)
     async def get_trail():
         if isinstance(current_user, AnonymousUser):
             return None
@@ -177,12 +175,11 @@ async def get_course_meta(
         )
     
     # Add tasks to the list
-    tasks.append(get_authors())
     tasks.append(get_chapters())
     tasks.append(get_trail())
     
     # Run all tasks concurrently
-    author_results, chapters, trail = await asyncio.gather(*tasks)
+    chapters, trail = await asyncio.gather(*tasks)
     
     # Convert to AuthorWithRole objects
     authors = [
