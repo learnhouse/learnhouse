@@ -30,6 +30,7 @@ import ActivityBreadcrumbs from '@components/Pages/Activity/ActivityBreadcrumbs'
 import MiniInfoTooltip from '@components/Objects/MiniInfoTooltip'
 import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
 import ActivityIndicators from '@components/Pages/Courses/ActivityIndicators'
+import { revalidateTags } from '@services/utils/ts/requests'
 
 // Lazy load heavy components
 const Canva = lazy(() => import('@components/Objects/Activities/DynamicCanva/DynamicCanva'))
@@ -736,6 +737,9 @@ export function MarkStatus(props: {
     try {
       const willCompleteAll = areAllActivitiesCompleted();
       setIsLoading(true);
+      // refresh the page after marking the activity as complete
+      await revalidateTags(['courses'], props.orgslug);
+      router.refresh();
       await markActivityAsComplete(
         props.orgslug,
         props.course.course_uuid,
@@ -768,7 +772,7 @@ export function MarkStatus(props: {
         props.activity.activity_uuid,
         session.data?.tokens?.access_token
       );
-      
+      await revalidateTags(['courses'], props.orgslug);
       await mutate(`${getAPIUrl()}courses/${props.course.course_uuid}/meta`);
       router.refresh();
     } catch (error) {

@@ -24,7 +24,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
   // Get Org context information
   const course_meta = await getCourseMetadata(
     params.courseid,
-    { revalidate: 0, tags: ['courses'] },
+    { revalidate: 30, tags: ['courses'] },
     access_token ? access_token : null
   )
 
@@ -41,7 +41,7 @@ const EditActivity = async (params: any) => {
   const courseid = (await params.params).courseid
   const courseInfo = await getCourseMetadata(
     courseid,
-    { revalidate: 0, tags: ['courses'] },
+    { revalidate: 30, tags: ['courses'] },
     access_token ? access_token : null
   )
   const activity = await getActivityWithAuthHeader(
