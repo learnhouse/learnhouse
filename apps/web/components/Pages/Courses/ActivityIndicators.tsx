@@ -4,6 +4,7 @@ import React, { useMemo, memo, useState } from 'react'
 import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
 import { getUriWithOrg } from '@services/config/config'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 interface Props {
   course: any
@@ -100,6 +101,7 @@ function ActivityIndicators(props: Props) {
   const orgslug = props.orgslug
   const courseid = props.course_uuid.replace('course_', '')
   const enableNavigation = props.enableNavigation || false
+  const router = useRouter()
 
   const [currentIndex, setCurrentIndex] = useState(0)
 
@@ -161,7 +163,7 @@ function ActivityIndicators(props: Props) {
     if (currentActivityIndex > 0) {
       const prevActivity = allActivities[currentActivityIndex - 1]
       const activityId = prevActivity.activity_uuid.replace('activity_', '')
-      window.location.href = getUriWithOrg(orgslug, '') + `/course/${courseid}/activity/${activityId}`
+      router.push(getUriWithOrg(orgslug, '') + `/course/${courseid}/activity/${activityId}`)
     }
   }
 
@@ -169,7 +171,7 @@ function ActivityIndicators(props: Props) {
     if (currentActivityIndex < allActivities.length - 1) {
       const nextActivity = allActivities[currentActivityIndex + 1]
       const activityId = nextActivity.activity_uuid.replace('activity_', '')
-      window.location.href = getUriWithOrg(orgslug, '') + `/course/${courseid}/activity/${activityId}`
+      router.push(getUriWithOrg(orgslug, '') + `/course/${courseid}/activity/${activityId}`)
     }
   }
 

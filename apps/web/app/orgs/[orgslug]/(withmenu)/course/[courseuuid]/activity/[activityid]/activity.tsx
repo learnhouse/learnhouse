@@ -5,7 +5,7 @@ import { BookOpenCheck, Check, CheckCircle, ChevronDown, ChevronLeft, ChevronRig
 import { markActivityAsComplete, unmarkActivityAsComplete } from '@services/courses/activity'
 import { usePathname, useRouter } from 'next/navigation'
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
-import { getCourseThumbnailMediaDirectory } from '@services/media/media'
+import { getCourseThumbnailMediaDirectory, getUserAvatarMediaDirectory } from '@services/media/media'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { CourseProvider } from '@components/Contexts/CourseContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
@@ -31,6 +31,7 @@ import MiniInfoTooltip from '@components/Objects/MiniInfoTooltip'
 import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
 import ActivityIndicators from '@components/Pages/Courses/ActivityIndicators'
 import { revalidateTags } from '@services/utils/ts/requests'
+import UserAvatar from '@components/Objects/UserAvatar'
 
 // Lazy load heavy components
 const Canva = lazy(() => import('@components/Objects/Activities/DynamicCanva/DynamicCanva'))
@@ -130,6 +131,26 @@ function ActivityActions({ activity, activityid, course, orgslug, assignment, sh
       )}
     </div>
   );
+}
+
+function getRelativeTime(date: Date): string {
+  const now = new Date();
+  const diff = now.getTime() - date.getTime();
+  const seconds = Math.floor(diff / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+  const weeks = Math.floor(days / 7);
+  const months = Math.floor(days / 30);
+  const years = Math.floor(days / 365);
+
+  if (years > 0) return `${years} year${years > 1 ? 's' : ''} ago`;
+  if (months > 0) return `${months} month${months > 1 ? 's' : ''} ago`;
+  if (weeks > 0) return `${weeks} week${weeks > 1 ? 's' : ''} ago`;
+  if (days > 0) return `${days} day${days > 1 ? 's' : ''} ago`;
+  if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+  if (minutes > 0) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+  return 'just now';
 }
 
 function ActivityClient(props: ActivityClientProps) {
@@ -508,7 +529,7 @@ function ActivityClient(props: ActivityClientProps) {
                             </div>
                             <div className="flex flex-col -space-y-1">
                               <p className="font-bold text-gray-700 text-md">Course </p>
-                              <h1 className="font-bold text-gray-950 text-2xl first-letter:uppercase">
+                              <h1 className="font-bold text-gray-950 text-3xl first-letter:uppercase">
                                 {course.name}
                               </h1>
                             </div>
@@ -550,6 +571,80 @@ function ActivityClient(props: ActivityClientProps) {
                               <h1 className="font-bold text-gray-950 text-2xl first-letter:uppercase">
                                 {activity.name}
                               </h1>
+                              {/* Authors and Dates Section */}
+                              <div className="flex flex-wrap items-center gap-3 mt-2">
+                                {/* Avatars */}
+                                {course.authors && course.authors.length > 0 && (
+                                  <div className="flex -space-x-3">
+                                    {course.authors.filter((a: any) => a.authorship_status === 'ACTIVE').slice(0, 3).map((author: any, idx: number) => (
+                                      <div key={author.user.user_uuid} className="relative z-[${10-idx}]">
+                                        <UserAvatar
+                                          border="border-2"
+                                          rounded="rounded-full"
+                                          avatar_url={author.user.avatar_image ? getUserAvatarMediaDirectory(author.user.user_uuid, author.user.avatar_image) : ''}
+                                          predefined_avatar={author.user.avatar_image ? undefined : 'empty'}
+                                          width={26}
+                                          showProfilePopup={true}
+                                          userId={author.user.id}
+                                        />
+                                      </div>
+                                    ))}
+                                    {course.authors.filter((a: any) => a.authorship_status === 'ACTIVE').length > 3 && (
+                                      <div className="flex items-center justify-center bg-neutral-100 text-neutral-600 font-medium rounded-full border-2 border-white shadow-sm w-9 h-9 text-xs z-0">
+                                        +{course.authors.filter((a: any) => a.authorship_status === 'ACTIVE').length - 3}
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                                {/* Author names */}
+                                {course.authors && course.authors.length > 0 && (
+                                  <div className="text-xs text-gray-700 font-medium flex items-center gap-1">
+                                    {course.authors.filter((a: any) => a.authorship_status === 'ACTIVE').length > 1 && (
+                                      <span>Co-created by </span>
+                                    )}
+                                    {course.authors.filter((a: any) => a.authorship_status === 'ACTIVE').slice(0, 2).map((author: any, idx: number, arr: any[]) => (
+                                      <span key={author.user.user_uuid}>
+                                        {author.user.first_name && author.user.last_name
+                                          ? `${author.user.first_name} ${author.user.last_name}`
+                                          : `@${author.user.username}`}
+                                        {idx === 0 && arr.length > 1 ? ' & ' : ''}
+                                      </span>
+                                    ))}
+                                    {course.authors.filter((a: any) => a.authorship_status === 'ACTIVE').length > 2 && (
+                                      <ToolTip
+                                        content={
+                                          <div className="p-2">
+                                            {course.authors
+                                              .filter((a: any) => a.authorship_status === 'ACTIVE')
+                                              .slice(2)
+                                              .map((author: any) => (
+                                                <div key={author.user.user_uuid} className="text-white text-sm py-1">
+                                                  {author.user.first_name && author.user.last_name
+                                                    ? `${author.user.first_name} ${author.user.last_name}`
+                                                    : `@${author.user.username}`}
+                                                </div>
+                                              ))}
+                                          </div>
+                                        }
+                                      >
+                                        <div className="bg-gray-100 hover:bg-gray-200 text-gray-600 px-2 py-0.5 rounded-md cursor-pointer text-xs font-medium transition-colors duration-200">
+                                          +{course.authors.filter((a: any) => a.authorship_status === 'ACTIVE').length - 2}
+                                        </div>
+                                      </ToolTip>
+                                    )}
+                                  </div>
+                                )}
+                                {/* Dates */}
+                                <div className="flex items-center text-xs text-gray-500 gap-2">
+                                  <span>
+                                    Created on {new Date(course.creation_date).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
+                                  </span>
+                                  <span className="mx-1">•</span>
+                                  <span>
+                                    Last updated {getRelativeTime(new Date(course.updated_at || course.last_updated || course.creation_date))}
+                                  </span>
+                                </div>
+                              </div>
                             </div>
                           </div>
                           <div className="flex space-x-2 items-center">
@@ -598,7 +693,7 @@ function ActivityClient(props: ActivityClientProps) {
                             <div className={`p-7 drop-shadow-xs rounded-lg ${bgColor} relative`}>
                               <button
                                 onClick={() => setIsFocusMode(true)}
-                                className="absolute top-4 right-4 bg-white/80 hover:bg-white nice-shadow p-2 rounded-full cursor-pointer transition-all duration-200 group overflow-hidden"
+                                className="absolute top-4 right-4 bg-white/80 hover:bg-white nice-shadow p-2 rounded-full cursor-pointer transition-all duration-200 group overflow-hidden z-50 pointer-events-auto"
                                 title="Enter focus mode"
                               >
                                 <div className="flex items-center">
