@@ -1,6 +1,6 @@
 'use client'
-import { BookOpenCheck, Check, FileText, Layers, Video } from 'lucide-react'
-import React, { useMemo, memo } from 'react'
+import { BookOpenCheck, Check, FileText, Layers, Video, ChevronLeft, ChevronRight } from 'lucide-react'
+import React, { useMemo, memo, useState } from 'react'
 import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
 import { getUriWithOrg } from '@services/config/config'
 import Link from 'next/link'
@@ -10,6 +10,7 @@ interface Props {
   orgslug: string
   course_uuid: string
   current_activity?: string
+  enableNavigation?: boolean
 }
 
 // Helper functions
@@ -98,12 +99,33 @@ function ActivityIndicators(props: Props) {
   const course = props.course
   const orgslug = props.orgslug
   const courseid = props.course_uuid.replace('course_', '')
+  const enableNavigation = props.enableNavigation || false
+
+  const [currentIndex, setCurrentIndex] = useState(0)
 
   const done_activity_style = 'bg-teal-600 hover:bg-teal-700'
   const black_activity_style = 'bg-zinc-300 hover:bg-zinc-400'
   const current_activity_style = 'bg-gray-600 animate-pulse hover:bg-gray-700'
 
   const trail = props.course.trail
+
+  // Flatten all activities for navigation and rendering
+  const allActivities = useMemo(() => {
+    return course.chapters.flatMap((chapter: any) => 
+      chapter.activities.map((activity: any) => ({
+        ...activity,
+        chapterId: chapter.id
+      }))
+    )
+  }, [course.chapters])
+
+  // Find current activity index
+  const currentActivityIndex = useMemo(() => {
+    if (!props.current_activity) return -1
+    return allActivities.findIndex((activity: any) => 
+      activity.activity_uuid.replace('activity_', '') === props.current_activity
+    )
+  }, [allActivities, props.current_activity])
 
   // Memoize activity status checks
   const isActivityDone = useMemo(() => (activity: any) => {
@@ -125,58 +147,92 @@ function ActivityIndicators(props: Props) {
   }, [props.current_activity]);
 
   const getActivityClass = useMemo(() => (activity: any) => {
+    const isCurrent = isActivityCurrent(activity)
     if (isActivityDone(activity)) {
-      return done_activity_style
+      return `${done_activity_style}`
     }
-    if (isActivityCurrent(activity)) {
-      return current_activity_style
+    if (isCurrent) {
+      return `${current_activity_style} border-2 border-gray-800 animate-pulse`
     }
-    return black_activity_style
+    return `${black_activity_style}`
   }, [isActivityDone, isActivityCurrent]);
 
+  const navigateToPrevious = () => {
+    if (currentActivityIndex > 0) {
+      const prevActivity = allActivities[currentActivityIndex - 1]
+      const activityId = prevActivity.activity_uuid.replace('activity_', '')
+      window.location.href = getUriWithOrg(orgslug, '') + `/course/${courseid}/activity/${activityId}`
+    }
+  }
+
+  const navigateToNext = () => {
+    if (currentActivityIndex < allActivities.length - 1) {
+      const nextActivity = allActivities[currentActivityIndex + 1]
+      const activityId = nextActivity.activity_uuid.replace('activity_', '')
+      window.location.href = getUriWithOrg(orgslug, '') + `/course/${courseid}/activity/${activityId}`
+    }
+  }
+
   return (
-    <div className="grid grid-flow-col justify-stretch space-x-6">
-      {course.chapters.map((chapter: any) => {
-        return (
-          <React.Fragment key={chapter.id || `chapter-${chapter.name}`}>
-            <div className="grid grid-flow-col justify-stretch space-x-2">
-              {chapter.activities.map((activity: any) => {
-                const isDone = isActivityDone(activity)
-                const isCurrent = isActivityCurrent(activity)
-                return (
-                  <ToolTip
-                    sideOffset={8}
-                    unstyled
-                    content={
-                      <ActivityTooltipContent 
-                        activity={activity}
-                        isDone={isDone}
-                        isCurrent={isCurrent}
-                      />
-                    }
-                    key={activity.activity_uuid}
-                  >
-                    <Link
-                      prefetch={false}
-                      href={
-                        getUriWithOrg(orgslug, '') +
-                        `/course/${courseid}/activity/${activity.activity_uuid.replace(
-                          'activity_',
-                          ''
-                        )}`
-                      }
-                    >
-                      <div
-                        className={`h-[7px] w-auto ${getActivityClass(activity)} rounded-lg`}
-                      ></div>
-                    </Link>
-                  </ToolTip>
-                )
-              })}
-            </div>
-          </React.Fragment>
-        )
-      })}
+    <div className="flex items-center gap-4">
+      {enableNavigation && (
+        <button
+          onClick={navigateToPrevious}
+          disabled={currentActivityIndex <= 0}
+          className="p-1 rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+          aria-label="Previous activity"
+        >
+          <ChevronLeft size={20} className="text-gray-600" />
+        </button>
+      )}
+      
+      <div className="flex items-center w-full">
+        {allActivities.map((activity: any) => {
+          const isDone = isActivityDone(activity)
+          const isCurrent = isActivityCurrent(activity)
+          return (
+            <ToolTip
+              sideOffset={8}
+              unstyled
+              content={
+                <ActivityTooltipContent 
+                  activity={activity}
+                  isDone={isDone}
+                  isCurrent={isCurrent}
+                />
+              }
+              key={activity.activity_uuid}
+            >
+              <Link
+                prefetch={false}
+                href={
+                  getUriWithOrg(orgslug, '') +
+                  `/course/${courseid}/activity/${activity.activity_uuid.replace(
+                    'activity_',
+                    ''
+                  )}`
+                }
+                className={`${isCurrent ? 'flex-[2]' : 'flex-1'} mx-1`}
+              >
+                <div
+                  className={`h-[7px] ${getActivityClass(activity)} rounded-lg transition-all`}
+                ></div>
+              </Link>
+            </ToolTip>
+          )
+        })}
+      </div>
+
+      {enableNavigation && (
+        <button
+          onClick={navigateToNext}
+          disabled={currentActivityIndex >= allActivities.length - 1}
+          className="p-1 rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+          aria-label="Next activity"
+        >
+          <ChevronRight size={20} className="text-gray-600" />
+        </button>
+      )}
     </div>
   )
 }
