@@ -162,6 +162,15 @@ const ContentWrapper = styled.div`
   width: 100%;
   height: 100%;
 
+  > div:first-child {
+    width: 20%;
+    padding-right: 1rem;
+  }
+
+  > div:last-child {
+    width: 80%;
+  }
+
   .ProseMirror {
     flex: 1;
     padding: 1rem;

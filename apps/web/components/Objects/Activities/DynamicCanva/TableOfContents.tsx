@@ -73,7 +73,7 @@ const TableOfContents = ({ editor }: TableOfContentsProps) => {
 }
 
 const TOCCard = styled.div`
-  width: 20%;
+  width: 100%;
   background: none;
   border: none;
   box-shadow: none;
