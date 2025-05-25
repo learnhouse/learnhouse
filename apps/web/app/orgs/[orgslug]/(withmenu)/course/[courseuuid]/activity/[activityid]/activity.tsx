@@ -284,56 +284,9 @@ function ActivityClient(props: ActivityClientProps) {
                   >
                     <div className="container mx-auto px-4 py-2">
                       <div className="flex items-center justify-between h-14">
-                        <div className="flex items-center space-x-2">
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => setIsFocusMode(false)}
-                            className="bg-white nice-shadow p-2 rounded-full cursor-pointer hover:bg-gray-50"
-                            title="Exit focus mode"
-                          >
-                            <Minimize2 size={16} className="text-gray-700" />
-                          </motion.button>
-                          <ActivityChapterDropdown 
-                            course={course}
-                            currentActivityId={activity.activity_uuid ? activity.activity_uuid.replace('activity_', '') : activityid.replace('activity_', '')}
-                            orgslug={orgslug}
-                          />
-                        </div>
-                        
-                        {/* Center Course Info */}
+                        {/* Progress Indicator - Moved to left */}
                         <motion.div 
-                          initial={isInitialRender.current ? false : { opacity: 0, y: -20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.1 }}
-                          className="flex items-center space-x-4"
-                        >
-                          <div className="flex">
-                            <Link
-                              href={getUriWithOrg(orgslug, '') + `/course/${courseuuid}`}
-                            >
-                              <img
-                                className="w-[60px] h-[34px] rounded-md drop-shadow-md"
-                                src={`${getCourseThumbnailMediaDirectory(
-                                  org?.org_uuid,
-                                  course.course_uuid,
-                                  course.thumbnail_image
-                                )}`}
-                                alt=""
-                              />
-                            </Link>
-                          </div>
-                          <div className="flex flex-col -space-y-1">
-                            <p className="font-bold text-gray-700 text-sm">Course </p>
-                            <h1 className="font-bold text-gray-950 text-lg first-letter:uppercase">
-                              {course.name}
-                            </h1>
-                          </div>
-                        </motion.div>
-
-                        {/* Progress Indicator */}
-                        <motion.div 
-                          initial={isInitialRender.current ? false : { opacity: 0, x: 20 }}
+                          initial={isInitialRender.current ? false : { opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: 0.2 }}
                           className="flex items-center space-x-2"
@@ -369,6 +322,59 @@ function ActivityClient(props: ActivityClientProps) {
                           <div className="text-xs text-gray-600">
                             {course.trail?.runs?.find((run: any) => run.course_id === course.id)?.steps?.filter((step: any) => step.complete)?.length || 0} of {course.chapters?.reduce((acc: number, chapter: any) => acc + chapter.activities.length, 0) || 0}
                           </div>
+                        </motion.div>
+                        
+                        {/* Center Course Info */}
+                        <motion.div 
+                          initial={isInitialRender.current ? false : { opacity: 0, y: -20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.1 }}
+                          className="flex items-center space-x-4"
+                        >
+                          <div className="flex">
+                            <Link
+                              href={getUriWithOrg(orgslug, '') + `/course/${courseuuid}`}
+                            >
+                              <img
+                                className="w-[60px] h-[34px] rounded-md drop-shadow-md"
+                                src={`${getCourseThumbnailMediaDirectory(
+                                  org?.org_uuid,
+                                  course.course_uuid,
+                                  course.thumbnail_image
+                                )}`}
+                                alt=""
+                              />
+                            </Link>
+                          </div>
+                          <div className="flex flex-col -space-y-1">
+                            <p className="font-bold text-gray-700 text-sm">Course </p>
+                            <h1 className="font-bold text-gray-950 text-lg first-letter:uppercase">
+                              {course.name}
+                            </h1>
+                          </div>
+                        </motion.div>
+
+                        {/* Minimize and Chapters - Moved to right */}
+                        <motion.div 
+                          initial={isInitialRender.current ? false : { opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.2 }}
+                          className="flex items-center space-x-2"
+                        >
+                          <ActivityChapterDropdown 
+                            course={course}
+                            currentActivityId={activity.activity_uuid ? activity.activity_uuid.replace('activity_', '') : activityid.replace('activity_', '')}
+                            orgslug={orgslug}
+                          />
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => setIsFocusMode(false)}
+                            className="bg-white nice-shadow p-2 rounded-full cursor-pointer hover:bg-gray-50"
+                            title="Exit focus mode"
+                          >
+                            <Minimize2 size={16} className="text-gray-700" />
+                          </motion.button>
                         </motion.div>
                       </div>
                     </div>
@@ -537,18 +543,6 @@ function ActivityClient(props: ActivityClientProps) {
 
                         <div className="flex justify-between items-center w-full">
                           <div className="flex flex-1/3 items-center space-x-3">
-                            <button
-                              onClick={() => setIsFocusMode(true)}
-                              className="bg-white nice-shadow p-2 rounded-full cursor-pointer hover:bg-gray-50 transition-all duration-200"
-                              title="Enter focus mode"
-                            >
-                              <Maximize2 size={16} className="text-gray-700" />
-                            </button>
-                            <ActivityChapterDropdown 
-                              course={course}
-                              currentActivityId={activity.activity_uuid ? activity.activity_uuid.replace('activity_', '') : activityid.replace('activity_', '')}
-                              orgslug={orgslug}
-                            />
                             <div className="flex flex-col -space-y-1">
                               <p className="font-bold text-gray-700 text-md">
                                 Chapter : {getChapterNameByActivityId(course, activity.id)}
@@ -564,6 +558,11 @@ function ActivityClient(props: ActivityClientProps) {
                                 {activity.activity_type != 'TYPE_ASSIGNMENT' && (
                                   <>
                                     <AIActivityAsk activity={activity} />
+                                    <ActivityChapterDropdown 
+                                      course={course}
+                                      currentActivityId={activity.activity_uuid ? activity.activity_uuid.replace('activity_', '') : activityid.replace('activity_', '')}
+                                      orgslug={orgslug}
+                                    />
                                     {contributorStatus === 'ACTIVE' && activity.activity_type == 'TYPE_DYNAMIC' && (
                                       <Link
                                         href={getUriWithOrg(orgslug, '') + `/course/${courseuuid}/activity/${activityid}/edit`}
@@ -596,7 +595,19 @@ function ActivityClient(props: ActivityClientProps) {
                           {activity.content.paid_access == false ? (
                             <PaidCourseActivityDisclaimer course={course} />
                           ) : (
-                            <div className={`p-7 drop-shadow-xs rounded-lg ${bgColor}`}>
+                            <div className={`p-7 drop-shadow-xs rounded-lg ${bgColor} relative`}>
+                              <button
+                                onClick={() => setIsFocusMode(true)}
+                                className="absolute top-4 right-4 bg-white/80 hover:bg-white nice-shadow p-2 rounded-full cursor-pointer transition-all duration-200 group overflow-hidden"
+                                title="Enter focus mode"
+                              >
+                                <div className="flex items-center">
+                                  <Maximize2 size={16} className="text-gray-700" />
+                                  <span className="text-xs font-bold text-gray-700 opacity-0 group-hover:opacity-100 transition-all duration-200 w-0 group-hover:w-auto group-hover:ml-2 whitespace-nowrap">
+                                    Focus Mode
+                                  </span>
+                                </div>
+                              </button>
                               {activityContent}
                             </div>
                           )}
