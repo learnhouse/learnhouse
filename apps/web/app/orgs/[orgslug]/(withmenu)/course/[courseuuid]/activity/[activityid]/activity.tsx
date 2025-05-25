@@ -532,6 +532,7 @@ function ActivityClient(props: ActivityClientProps) {
                           current_activity={activityid}
                           orgslug={orgslug}
                           course={course}
+                          enableNavigation={true}
                         />
 
                         <div className="flex justify-between items-center w-full">
