@@ -1,6 +1,6 @@
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { NodeViewContent, NodeViewWrapper } from '@tiptap/react'
-import { AlertCircle, X } from 'lucide-react'
+import { AlertCircle, Info, X } from 'lucide-react'
 import React, { useState } from 'react'
 import styled from 'styled-components'
 
@@ -100,11 +100,11 @@ function InfoCalloutComponent(props: any) {
   const getVariantClasses = () => {
     switch(options.variant) {
       case 'filled':
-        return 'bg-blue-500 text-white';
+        return 'bg-gray-300 text-gray-700';
       case 'outlined':
-        return 'bg-transparent border-2 border-blue-500 text-blue-700';
+        return 'bg-transparent border-2 border-gray-300 text-gray-500';
       default:
-        return 'bg-blue-200 text-blue-900';
+        return 'bg-gray-100 text-gray-600';
     }
   }
   
@@ -119,12 +119,12 @@ function InfoCalloutComponent(props: any) {
   return (
     <NodeViewWrapper>
       <InfoCalloutWrapper
-        className={`flex items-center rounded-lg shadow-inner ${getVariantClasses()} ${getSizeClasses()}`}
+        className={`flex items-center rounded-xl shadow-inner ${getVariantClasses()} ${getSizeClasses()}`}
         contentEditable={isEditable}
         size={options.size}
       >
         <IconWrapper size={options.size}>
-          <AlertCircle />
+          <Info />
         </IconWrapper>
         <ContentWrapper className="grow">
           <NodeViewContent contentEditable={isEditable} className="content" />

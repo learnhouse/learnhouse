@@ -68,15 +68,16 @@ export default function ActivityChapterDropdown(props: ActivityChapterDropdownPr
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={toggleDropdown}
-        className="flex items-center justify-center bg-white nice-shadow p-2 rounded-full cursor-pointer"
+        className="bg-white rounded-full px-5 nice-shadow flex items-center space-x-2 p-2.5 text-gray-700 hover:bg-gray-50 transition delay-150 duration-300 ease-in-out"
         aria-label="View all activities"
         title="View all activities"
       >
-        <ListTree size={16} className="text-gray-700" />
+        <ListTree size={17} />
+        <span className="text-xs font-bold">Chapters</span>
       </button>
       
       {isOpen && (
-        <div className={`absolute z-50 mt-2 ${isMobile ? 'left-0 w-[90vw] sm:w-72' : 'left-0 w-72'} max-h-[70vh] cursor-pointer overflow-y-auto bg-white rounded-lg shadow-xl border border-gray-200 py-1 animate-in fade-in duration-200`}>
+        <div className={`absolute z-50 mt-2 ${isMobile ? 'right-0 w-[90vw] sm:w-72' : 'right-0 w-72'} max-h-[70vh] cursor-pointer overflow-y-auto bg-white rounded-lg shadow-xl border border-gray-200 py-1 animate-in fade-in duration-200`}>
           <div className="px-3 py-1.5 border-b border-gray-100 flex justify-between items-center">
             <h3 className="text-sm font-semibold text-gray-800">Course Content</h3>
             <button 

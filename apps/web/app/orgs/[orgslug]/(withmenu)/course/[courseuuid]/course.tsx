@@ -17,6 +17,7 @@ import { useMediaQuery } from 'usehooks-ts'
 import CoursesActions from '@components/Objects/Courses/CourseActions/CoursesActions'
 import CourseActionsMobile from '@components/Objects/Courses/CourseActions/CourseActionsMobile'
 import CourseAuthors from '@components/Objects/Courses/CourseAuthors/CourseAuthors'
+import CourseBreadcrumbs from '@components/Pages/Courses/CourseBreadcrumbs'
 
 const CourseClient = (props: any) => {
   const [learnings, setLearnings] = useState<any>([])
@@ -127,7 +128,11 @@ const CourseClient = (props: any) => {
       ) : (
         <>
           <GeneralWrapperStyled>
-            <div className="pb-2 pt-5 flex flex-col md:flex-row justify-between items-start md:items-center">
+            <CourseBreadcrumbs 
+              course={course}
+              orgslug={orgslug}
+            />
+            <div className="pb-2 pt-3 flex flex-col md:flex-row justify-between items-start md:items-center">
               <div>
                 <p className="text-md font-bold text-gray-400 pb-2">Course</p>
                 <h1 className="text-3xl md:text-3xl -mt-3 font-bold">{course.name}</h1>
