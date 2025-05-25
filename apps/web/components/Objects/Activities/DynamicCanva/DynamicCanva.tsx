@@ -33,11 +33,15 @@ import TableRow from '@tiptap/extension-table-row'
 import TableCell from '@tiptap/extension-table-cell'
 import UserBlock from '@components/Objects/Editor/Extensions/Users/UserBlock'
 import { getLinkExtension } from '@components/Objects/Editor/EditorConf'
+import TableOfContents from './TableOfContents'
+import { CustomHeading } from './CustomHeadingExtenstion'
 
 interface Editor {
   content: string
   activity: any
 }
+
+
 
 function Canva(props: Editor) {
   /**
@@ -59,6 +63,7 @@ function Canva(props: Editor) {
     editable: isEditable,
     extensions: [
       StarterKit.configure({
+        heading: false,
         bulletList: {
           HTMLAttributes: {
             class: 'bullet-list',
@@ -70,6 +75,7 @@ function Canva(props: Editor) {
           },
         },
       }),
+      CustomHeading,
       NoTextInput,
       // Custom Extensions
       InfoCallout.configure({
@@ -137,7 +143,10 @@ function Canva(props: Editor) {
     <EditorOptionsProvider options={{ isEditable: false }}>
       <CanvaWrapper>
         <AICanvaToolkit activity={props.activity} editor={editor} />
-        <EditorContent editor={editor} />
+        <ContentWrapper>
+          <TableOfContents editor={editor} />
+          <EditorContent editor={editor} />
+        </ContentWrapper>
       </CanvaWrapper>
     </EditorOptionsProvider>
   )
@@ -146,33 +155,17 @@ function Canva(props: Editor) {
 const CanvaWrapper = styled.div`
   width: 100%;
   margin: 0 auto;
+`
 
-  .bubble-menu {
-    display: flex;
-    background-color: #0d0d0d;
-    padding: 0.2rem;
-    border-radius: 0.5rem;
-
-    button {
-      border: none;
-      background: none;
-      color: #fff;
-      font-size: 0.85rem;
-      font-weight: 500;
-      padding: 0 0.2rem;
-      opacity: 0.6;
-
-      &:hover,
-      &.is-active {
-        opacity: 1;
-      }
-    }
-  }
-
-  // disable chrome outline
+const ContentWrapper = styled.div`
+  display: flex;
+  width: 100%;
+  height: 100%;
 
   .ProseMirror {
-    // Workaround to disable editor from being edited by the user.
+    flex: 1;
+    padding: 1rem;
+    // disable chrome outline
     caret-color: transparent;
 
     h1 {
