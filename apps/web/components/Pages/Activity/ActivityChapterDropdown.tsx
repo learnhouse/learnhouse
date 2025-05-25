@@ -77,7 +77,7 @@ export default function ActivityChapterDropdown(props: ActivityChapterDropdownPr
       </button>
       
       {isOpen && (
-        <div className={`absolute z-50 mt-2 ${isMobile ? 'left-0 w-[90vw] sm:w-72' : 'left-0 w-72'} max-h-[70vh] cursor-pointer overflow-y-auto bg-white rounded-lg shadow-xl border border-gray-200 py-1 animate-in fade-in duration-200`}>
+        <div className={`absolute z-50 mt-2 ${isMobile ? 'right-0 w-[90vw] sm:w-72' : 'right-0 w-72'} max-h-[70vh] cursor-pointer overflow-y-auto bg-white rounded-lg shadow-xl border border-gray-200 py-1 animate-in fade-in duration-200`}>
           <div className="px-3 py-1.5 border-b border-gray-100 flex justify-between items-center">
             <h3 className="text-sm font-semibold text-gray-800">Course Content</h3>
             <button 
