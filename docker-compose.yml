@@ -7,7 +7,7 @@ services:
     volumes:
       - .:/usr/learnhouse
     env_file:
-      - ./extra/example-learnhouse-conf.env
+      - ./extra/.env
     depends_on:
       db:
         condition: service_healthy

@@ -39,8 +39,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-logfire.configure(console=False, service_name=learnhouse_config.site_name,)
-logfire.instrument_fastapi(app)
+### Disable Logfire telemetry by default for local/dev use as it keeps the backend from starting. ###
+### In a production build, Logfire might be useful ###
+# logfire.configure(console=False, service_name=learnhouse_config.site_name,)
+# logfire.instrument_fastapi(app)
 
 # Gzip Middleware (will add brotli later)
 app.add_middleware(GZipMiddleware, minimum_size=1000)
