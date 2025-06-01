@@ -134,8 +134,7 @@ const CourseClient = (props: any) => {
             />
             <div className="pb-2 pt-3 flex flex-col md:flex-row justify-between items-start md:items-center">
               <div>
-                <p className="text-md font-bold text-gray-400 pb-2">Course</p>
-                <h1 className="text-3xl md:text-3xl -mt-3 font-bold">{course.name}</h1>
+                <h1 className="text-3xl md:text-3xl  font-bold">{course.name}</h1>
               </div>
             </div>
 
@@ -172,7 +171,7 @@ const CourseClient = (props: any) => {
 
                 <div className="course_metadata_left space-y-2">
                   <div className="">
-                    <p className="py-5 whitespace-pre-wrap">{course.about}</p>
+                    <p className="py-5 whitespace-pre-line break-words w-full leading-relaxed tracking-normal text-pretty hyphens-auto">{course.about}</p>
                   </div>
                 </div>
               </div>

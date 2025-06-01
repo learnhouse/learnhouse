@@ -185,7 +185,7 @@ function EditCourseGeneral(props: EditCourseStructureProps) {
                 <FormLabelAndMessage label="About" message={formik.errors.about} />
                 <Form.Control asChild>
                   <Textarea
-                    style={{ backgroundColor: 'white' }}
+                    style={{ backgroundColor: 'white', height: '200px', minHeight: '200px' }}
                     onChange={formik.handleChange}
                     value={formik.values.about}
                     required
