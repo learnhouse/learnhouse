@@ -39,7 +39,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
   const course_meta = await fetchCourseMetadata(params.courseuuid, access_token)
   const activity = await getActivityWithAuthHeader(
     params.activityid,
-    { revalidate: 1800, tags: ['activities'] },
+    { revalidate: 0, tags: ['activities'] },
     access_token || null
   )
 
@@ -78,7 +78,7 @@ const ActivityPage = async (params: any) => {
     fetchCourseMetadata(courseuuid, access_token),
     getActivityWithAuthHeader(
       activityid,
-      { revalidate: 60, tags: ['activities'] },
+      { revalidate: 0, tags: ['activities'] },
       access_token || null
     )
   ])

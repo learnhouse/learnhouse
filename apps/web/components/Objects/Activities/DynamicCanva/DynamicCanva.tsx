@@ -171,6 +171,26 @@ const ContentWrapper = styled.div`
     width: 80%;
   }
 
+  // Only apply flex layout when there are multiple children (table of contents present)
+  &:has(> div:first-child:not(:last-child)) {
+    > div:first-child {
+      width: 20%;
+      padding-right: 1rem;
+    }
+
+    > div:last-child {
+      width: 80%;
+    }
+  }
+
+  // When there's only one child (no table of contents), make it full width
+  &:has(> div:first-child:last-child) {
+    > div:first-child {
+      width: 100%;
+      padding-right: 0;
+    }
+  }
+
   .ProseMirror {
     flex: 1;
     padding: 1rem;
