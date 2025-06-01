@@ -205,7 +205,7 @@ const OrgEditGeneral: React.FC = () => {
                         value={values.about}
                         onChange={handleChange}
                         placeholder="Detailed description of your organization"
-                        className="min-h-[150px]"
+                        className="min-h-[250px]"
                         maxLength={400}
                       />
                       {touched.about && errors.about && (
