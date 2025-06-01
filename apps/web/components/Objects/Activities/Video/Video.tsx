@@ -2,6 +2,7 @@ import React from 'react'
 import YouTube from 'react-youtube'
 import { getActivityMediaDirectory } from '@services/media/media'
 import { useOrg } from '@components/Contexts/OrgContext'
+import LearnHousePlayer from './LearnHousePlayer'
 
 interface VideoDetails {
   startTime?: number
@@ -28,7 +29,6 @@ interface VideoActivityProps {
 function VideoActivity({ activity, course }: VideoActivityProps) {
   const org = useOrg() as any
   const [videoId, setVideoId] = React.useState('')
-  const videoRef = React.useRef<HTMLVideoElement>(null)
 
   React.useEffect(() => {
     if (activity?.content?.uri) {
@@ -48,41 +48,24 @@ function VideoActivity({ activity, course }: VideoActivityProps) {
     )
   }
 
-  // Handle native video time update
-  const handleTimeUpdate = () => {
-    const video = videoRef.current
-    if (video && activity.details?.endTime) {
-      if (video.currentTime >= activity.details.endTime) {
-        video.pause()
-      }
-    }
-  }
-
-  // Handle native video load
-  const handleVideoLoad = () => {
-    const video = videoRef.current
-    if (video && activity.details) {
-      video.currentTime = activity.details.startTime || 0
-      video.autoplay = activity.details.autoplay || false
-      video.muted = activity.details.muted || false
-    }
-  }
-
   return (
     <div className="w-full max-w-full px-2 sm:px-4">
       {activity && (
         <>
+          {console.log('Activity type:', activity.activity_sub_type)}
+          {console.log('Video source:', getVideoSrc())}
           {activity.activity_sub_type === 'SUBTYPE_VIDEO_HOSTED' && (
             <div className="my-3 md:my-5 w-full">
               <div className="relative w-full aspect-video rounded-lg overflow-hidden ring-1 ring-gray-300/30 dark:ring-gray-600/30 sm:ring-gray-200/10 sm:dark:ring-gray-700/20 shadow-xs sm:shadow-none">
-                <video
-                  ref={videoRef}
-                  className="w-full h-full object-cover"
-                  controls
-                  src={getVideoSrc()}
-                  onLoadedMetadata={handleVideoLoad}
-                  onTimeUpdate={handleTimeUpdate}
-                ></video>
+                {(() => {
+                  const src = getVideoSrc()
+                  return src ? (
+                    <LearnHousePlayer
+                      src={src}
+                      details={activity.details}
+                    />
+                  ) : null
+                })()}
               </div>
             </div>
           )}
@@ -98,10 +81,18 @@ function VideoActivity({ activity, course }: VideoActivityProps) {
                       autoplay: activity.details?.autoplay ? 1 : 0,
                       mute: activity.details?.muted ? 1 : 0,
                       start: activity.details?.startTime || 0,
-                      end: activity.details?.endTime || undefined
+                      end: activity.details?.endTime || undefined,
+                      controls: 1,
+                      modestbranding: 1,
+                      rel: 0
                     },
                   }}
                   videoId={videoId}
+                  onReady={(event) => {
+                    if (activity.details?.startTime) {
+                      event.target.seekTo(activity.details.startTime, true)
+                    }
+                  }}
                 />
               </div>
             </div>
