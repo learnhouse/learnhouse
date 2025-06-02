@@ -534,24 +534,6 @@ function ActivityClient(props: ActivityClientProps) {
                               </h1>
                             </div>
                           </div>
-                          {activity && activity.published == true && activity.content.paid_access != false && (
-                            <AuthenticatedClientElement checkMethod="authentication">
-                              { (
-                                <div className="flex space-x-2">
-                                  <PreviousActivityButton 
-                                    course={course} 
-                                    currentActivityId={activity.id} 
-                                    orgslug={orgslug} 
-                                  />
-                                  <NextActivityButton 
-                                    course={course} 
-                                    currentActivityId={activity.id} 
-                                    orgslug={orgslug} 
-                                  />
-                                </div>
-                              )}
-                            </AuthenticatedClientElement>
-                          )}
                         </div>
 
                         <ActivityIndicators
@@ -910,15 +892,9 @@ export function MarkStatus(props: {
               confirmationMessage="Are you sure you want to unmark this activity as complete? This will affect your course progress."
               dialogTitle="Unmark activity as complete"
               dialogTrigger={
-                <div className="bg-teal-600 rounded-full px-5 drop-shadow-md flex items-center space-x-1 p-2.5 text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out">
-                  {isLoading ? (
-                    <div className="animate-spin">
-                      <svg className="w-4 h-4" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                    </div>
-                  ) : (
+                <div className="bg-teal-600 rounded-md px-4 nice-shadow flex flex-col p-2.5 text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out">
+                  <span className="text-[10px] font-bold mb-1 uppercase">Status</span>
+                  <div className="flex items-center space-x-2">
                     <svg 
                       width="17" 
                       height="17" 
@@ -932,8 +908,8 @@ export function MarkStatus(props: {
                       <rect x="3" y="3" width="18" height="18" rx="2" />
                       <path d="M7 12l3 3 7-7" />
                     </svg>
-                  )}
-                  <span className="text-xs font-bold">Complete</span>
+                    <span className="text-xs font-bold">Complete</span>
+                  </div>
                 </div>
               }
               functionToExecute={unmarkActivityAsCompleteFront}
@@ -955,17 +931,11 @@ export function MarkStatus(props: {
         <div className="flex items-center space-x-2">
           <div className="relative">
             <div
-              className={`${isLoading ? 'opacity-75 cursor-not-allowed' : ''} bg-gray-800 rounded-full px-5 drop-shadow-md flex items-center space-x-1 p-2.5 text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out`}
+              className={`${isLoading ? 'opacity-75 cursor-not-allowed' : ''} bg-gray-800 rounded-md px-4 nice-shadow flex flex-col p-2.5 text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out`}
               onClick={!isLoading ? markActivityAsCompleteFront : undefined}
             >
-              {isLoading ? (
-                <div className="animate-spin">
-                  <svg className="w-4 h-4" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                </div>
-              ) : (
+              <span className="text-[10px] font-bold mb-1 uppercase">Status</span>
+              <div className="flex items-center space-x-2">
                 <svg 
                   width="17" 
                   height="17" 
@@ -978,8 +948,8 @@ export function MarkStatus(props: {
                 >
                   <rect x="3" y="3" width="18" height="18" rx="2" />
                 </svg>
-              )}
-              <span className="text-xs font-bold">{isLoading ? 'Marking...' : 'Mark as complete'}</span>
+                <span className="text-xs font-bold">{isLoading ? 'Marking...' : 'Mark as complete'}</span>
+              </div>
             </div>
             {showUnmarkedTooltip && (
               <MiniInfoTooltip
@@ -1039,12 +1009,13 @@ function NextActivityButton({ course, currentActivityId, orgslug }: { course: an
   return (
     <div
       onClick={navigateToActivity}
-      className="bg-white rounded-full px-5 nice-shadow flex items-center space-x-1 p-2.5 text-gray-600 hover:cursor-pointer transition delay-150 duration-300 ease-in-out"
+      className="bg-gray-200 rounded-md px-4 shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)] flex flex-col p-2.5 text-gray-600 hover:cursor-pointer transition delay-150 duration-300 ease-in-out hover:bg-gray-200"
     >
-      <span className="text-xs font-bold text-gray-500">Next</span>
-      <EllipsisVertical className='text-gray-400' size={13} />
-      <span className="text-sm font-semibold truncate max-w-[200px]">{nextActivity.name}</span>
-      <ChevronRight size={17} />
+      <span className="text-[10px] font-bold text-gray-500 mb-1 uppercase">Next</span>
+      <div className="flex items-center space-x-1">
+        <span className="text-sm font-semibold truncate max-w-[200px]">{nextActivity.name}</span>
+        <ChevronRight size={17} />
+      </div>
     </div>
   );
 }
@@ -1090,12 +1061,13 @@ function PreviousActivityButton({ course, currentActivityId, orgslug }: { course
   return (
     <div
       onClick={navigateToActivity}
-      className="bg-white rounded-full px-5 nice-shadow flex items-center space-x-1 p-2.5 text-gray-600 hover:cursor-pointer transition delay-150 duration-300 ease-in-out"
+      className="bg-white rounded-md px-4 nice-shadow flex flex-col p-2.5 text-gray-600 hover:cursor-pointer transition delay-150 duration-300 ease-in-out"
     >
-      <ChevronLeft size={17} />
-      <span className="text-xs font-bold text-gray-500">Previous</span>
-      <EllipsisVertical className='text-gray-400' size={13} />
-      <span className="text-sm font-semibold truncate max-w-[200px]">{previousActivity.name}</span>
+      <span className="text-[10px] font-bold text-gray-500 mb-1 uppercase">Previous</span>
+      <div className="flex items-center space-x-1">
+        <ChevronLeft size={17} />
+        <span className="text-sm font-semibold truncate max-w-[200px]">{previousActivity.name}</span>
+      </div>
     </div>
   );
 }
@@ -1183,9 +1155,12 @@ function AssignmentTools(props: {
         confirmationMessage="Are you sure you want to submit your assignment for grading? Once submitted, you will not be able to make any changes."
         dialogTitle="Submit your assignment for grading"
         dialogTrigger={
-          <div className="bg-cyan-800 rounded-full px-5 drop-shadow-md flex items-center space-x-2 p-2.5 text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out">
-            <BookOpenCheck size={17} />
-            <span className="text-xs font-bold">Submit for grading</span>
+          <div className="bg-cyan-800 rounded-md px-4 nice-shadow flex flex-col p-2.5 text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out">
+            <span className="text-[10px] font-bold mb-1 uppercase">Status</span>
+            <div className="flex items-center space-x-2">
+              <BookOpenCheck size={17} />
+              <span className="text-xs font-bold">Submit for grading</span>
+            </div>
           </div>
         }
         functionToExecute={submitForGradingUI}
@@ -1196,18 +1171,27 @@ function AssignmentTools(props: {
 
   if (submission[0].submission_status === 'SUBMITTED') {
     return (
-      <div className="bg-amber-800 rounded-full px-5 drop-shadow-md flex items-center space-x-2 p-2.5 text-white transition delay-150 duration-300 ease-in-out">
-        <UserRoundPen size={17} />
-        <span className="text-xs font-bold">Grading in progress</span>
+      <div className="bg-amber-800 rounded-md px-4 nice-shadow flex flex-col p-2.5 text-white transition delay-150 duration-300 ease-in-out">
+        <span className="text-[10px] font-bold mb-1 uppercase">Status</span>
+        <div className="flex items-center space-x-2">
+          <UserRoundPen size={17} />
+          <span className="text-xs font-bold">Grading in progress</span>
+        </div>
       </div>
     )
   }
 
   if (submission[0].submission_status === 'GRADED') {
     return (
-      <div className="bg-teal-600 rounded-full px-5 drop-shadow-md flex items-center space-x-2 p-2.5 text-white transition delay-150 duration-300 ease-in-out">
-        <CheckCircle size={17} />
-        <span className="text-xs flex space-x-2 font-bold items-center"><span>Graded </span> <span className='bg-white text-teal-800 px-1 py-0.5 rounded-md'>{finalGrade}</span></span>
+      <div className="bg-teal-600 rounded-md px-4 nice-shadow flex flex-col p-2.5 text-white transition delay-150 duration-300 ease-in-out">
+        <span className="text-[10px] font-bold mb-1 uppercase">Status</span>
+        <div className="flex items-center space-x-2">
+          <CheckCircle size={17} />
+          <span className="text-xs flex space-x-2 font-bold items-center">
+            <span>Graded </span>
+            <span className='bg-white text-teal-800 px-1 py-0.5 rounded-md'>{finalGrade}</span>
+          </span>
+        </div>
       </div>
     )
   }
