@@ -38,6 +38,7 @@ dependencies = [
     "stripe>=11.1.1",
     "python-jose>=3.3.0",
     "logfire[sqlalchemy]>=3.8.0",
+    "beautifulsoup4>=4.13.4",
 ]
 
 [tool.ruff]

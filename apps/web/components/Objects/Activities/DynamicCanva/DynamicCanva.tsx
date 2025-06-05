@@ -35,6 +35,7 @@ import UserBlock from '@components/Objects/Editor/Extensions/Users/UserBlock'
 import { getLinkExtension } from '@components/Objects/Editor/EditorConf'
 import TableOfContents from './TableOfContents'
 import { CustomHeading } from './CustomHeadingExtenstion'
+import WebPreview from '@components/Objects/Editor/Extensions/WebPreview/WebPreview'
 
 interface Editor {
   content: string
@@ -131,6 +132,10 @@ function Canva(props: Editor) {
         resizable: true,
       }),
       getLinkExtension(),
+      WebPreview.configure({
+        editable: true,
+        activity: props.activity,
+      }),
       TableRow,
       TableHeader,
       TableCell,
