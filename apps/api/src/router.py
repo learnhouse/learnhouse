@@ -10,6 +10,7 @@ from src.routers.ee import cloud_internal, payments
 from src.routers.install import install
 from src.services.dev.dev import isDevModeEnabledOrRaise
 from src.services.install.install import isInstallModeEnabled
+from src.routers.utils import router as utils_router
 
 
 v1_router = APIRouter(prefix="/api/v1")
@@ -61,3 +62,5 @@ v1_router.include_router(
     tags=["install"],
     dependencies=[Depends(isInstallModeEnabled)],
 )
+
+v1_router.include_router(utils_router, prefix="/utils", tags=["utils"])
