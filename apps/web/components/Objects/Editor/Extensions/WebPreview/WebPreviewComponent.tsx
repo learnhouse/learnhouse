@@ -4,6 +4,11 @@ import { Globe, Edit2, Save, X, AlignLeft, AlignCenter, AlignRight, Trash } from
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext';
 import { getUrlPreview } from '@services/courses/activities';
 
+interface EditorContext {
+  isEditable: boolean;
+  [key: string]: any;
+}
+
 interface WebPreviewProps {
   node: any;
   updateAttributes: (attrs: any) => void;
@@ -23,11 +28,8 @@ const WebPreviewComponent: React.FC<WebPreviewProps> = ({ node, updateAttributes
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState(!node.attrs.url);
   const inputRef = useRef<HTMLInputElement>(null);
-  const editorState = useEditorProvider && useEditorProvider();
-  let isEditable = true;
-  if (editorState) {
-    isEditable = (editorState as any).isEditable;
-  }
+  const editorContext = useEditorProvider() as EditorContext;
+  const isEditable = editorContext?.isEditable ?? true;
 
   const previewData = {
     title: node.attrs.title,
