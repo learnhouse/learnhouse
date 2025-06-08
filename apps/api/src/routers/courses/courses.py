@@ -36,6 +36,8 @@ from src.services.courses.contributors import (
     apply_course_contributor,
     update_course_contributor,
     get_course_contributors,
+    add_bulk_course_contributors,
+    remove_bulk_course_contributors,
 )
 from src.db.resource_authors import ResourceAuthorshipEnum, ResourceAuthorshipStatusEnum
 
@@ -315,6 +317,48 @@ async def api_update_course_contributor(
         contributor_user_id,
         authorship,
         authorship_status,
+        current_user,
+        db_session
+    )
+
+
+@router.post("/{course_uuid}/bulk-add-contributors")
+async def api_add_bulk_course_contributors(
+    request: Request,
+    course_uuid: str,
+    usernames: List[str],
+    db_session: Session = Depends(get_db_session),
+    current_user: PublicUser = Depends(get_current_user),
+):
+    """
+    Add multiple contributors to a course by their usernames
+    Only administrators can perform this action
+    """
+    return await add_bulk_course_contributors(
+        request,
+        course_uuid,
+        usernames,
+        current_user,
+        db_session
+    )
+
+
+@router.put("/{course_uuid}/bulk-remove-contributors")
+async def api_remove_bulk_course_contributors(
+    request: Request,
+    course_uuid: str,
+    usernames: List[str],
+    db_session: Session = Depends(get_db_session),
+    current_user: PublicUser = Depends(get_current_user),
+):
+    """
+    Remove multiple contributors from a course by their usernames
+    Only administrators can perform this action
+    """
+    return await remove_bulk_course_contributors(
+        request,
+        course_uuid,
+        usernames,
         current_user,
         db_session
     )
