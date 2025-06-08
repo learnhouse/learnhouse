@@ -12,6 +12,7 @@ class OrganizationBase(SQLModel):
     about: Optional[str]
     socials: Optional[dict] = Field(default={}, sa_column=Column(JSON))
     links: Optional[dict] = Field(default={}, sa_column=Column(JSON))
+    scripts: Optional[dict] = Field(default={}, sa_column=Column(JSON))
     logo_image: Optional[str]
     thumbnail_image: Optional[str]
     previews: Optional[dict] = Field(default={}, sa_column=Column(JSON))
@@ -38,6 +39,7 @@ class OrganizationUpdate(SQLModel):
     about: Optional[str] = None
     socials: Optional[dict] = None
     links: Optional[dict] = None
+    scripts: Optional[dict] = None
     logo_image: Optional[str] = None
     thumbnail_image: Optional[str] = None
     previews: Optional[dict] = None
