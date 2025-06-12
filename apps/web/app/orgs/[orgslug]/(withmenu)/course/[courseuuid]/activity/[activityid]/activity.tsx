@@ -274,7 +274,7 @@ function ActivityClient(props: ActivityClientProps) {
       for (let j = 0; j < chapter.activities.length; j++) {
         let activity = chapter.activities[j]
         if (activity.id === activity_id) {
-          return chapter.name
+          return `Chapter ${i + 1} : ${chapter.name}`
         }
       }
     }
@@ -570,7 +570,7 @@ function ActivityClient(props: ActivityClientProps) {
                           <div className="flex flex-1/3 items-center space-x-3">
                             <div className="flex flex-col -space-y-1">
                               <p className="font-bold text-gray-700 text-md">
-                                Chapter : {getChapterNameByActivityId(course, activity.id)}
+                                {getChapterNameByActivityId(course, activity.id)}
                               </p>
                               <h1 className="font-bold text-gray-950 text-2xl first-letter:uppercase">
                                 {activity.name}
