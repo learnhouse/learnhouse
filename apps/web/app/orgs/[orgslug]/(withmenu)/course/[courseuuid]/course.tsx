@@ -1,9 +1,9 @@
 'use client'
 import Link from 'next/link'
 import React, { useEffect, useState } from 'react'
-import { getUriWithOrg } from '@services/config/config'
+import { getUriWithOrg, getAPIUrl } from '@services/config/config'
 import PageLoading from '@components/Objects/Loaders/PageLoading'
-import { revalidateTags } from '@services/utils/ts/requests'
+import { revalidateTags, swrFetcher } from '@services/utils/ts/requests'
 import ActivityIndicators from '@components/Pages/Courses/ActivityIndicators'
 import { useRouter } from 'next/navigation'
 import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
@@ -18,6 +18,8 @@ import CoursesActions from '@components/Objects/Courses/CourseActions/CoursesAct
 import CourseActionsMobile from '@components/Objects/Courses/CourseActions/CourseActionsMobile'
 import CourseAuthors from '@components/Objects/Courses/CourseAuthors/CourseAuthors'
 import CourseBreadcrumbs from '@components/Pages/Courses/CourseBreadcrumbs'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
+import useSWR from 'swr'
 
 const CourseClient = (props: any) => {
   const [learnings, setLearnings] = useState<any>([])
@@ -28,6 +30,14 @@ const CourseClient = (props: any) => {
   const org = useOrg() as any
   const router = useRouter()
   const isMobile = useMediaQuery('(max-width: 768px)')
+  const session = useLHSession() as any;
+  const access_token = session?.data?.tokens?.access_token;
+
+  // Add SWR for trail data
+  const { data: trailData } = useSWR(
+    `${getAPIUrl()}trail/org/${org?.id}/trail`,
+    (url) => swrFetcher(url, access_token)
+  );
 
   console.log(course)
 
@@ -178,7 +188,7 @@ const CourseClient = (props: any) => {
 
               <div className='course_metadata_right w-full md:w-1/4 space-y-4'>
                 {/* Actions Box */}
-                <CoursesActions courseuuid={courseuuid} orgslug={orgslug} course={course} />
+                <CoursesActions courseuuid={courseuuid} orgslug={orgslug} course={course} trailData={trailData} />
                 
                 {/* Authors & Updates Box */}
                 <div className="bg-white shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40 rounded-lg overflow-hidden p-4">
@@ -329,10 +339,9 @@ const CourseClient = (props: any) => {
             </div>
           </GeneralWrapperStyled>
           
+          {/* Mobile Actions Box */}
           {isMobile && (
-            <div className="fixed bottom-0 left-0 right-0  p-4 z-50">
-              <CourseActionsMobile courseuuid={courseuuid} orgslug={orgslug} course={course} />
-            </div>
+            <CourseActionsMobile courseuuid={courseuuid} orgslug={orgslug} course={course} trailData={trailData} />
           )}
         </>
       )}

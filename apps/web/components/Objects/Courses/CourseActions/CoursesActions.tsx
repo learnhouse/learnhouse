@@ -3,7 +3,7 @@ import { removeCourse, startCourse } from '@services/courses/activity'
 import { revalidateTags } from '@services/utils/ts/requests'
 import { useRouter } from 'next/navigation'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { getUriWithOrg, getUriWithoutOrg } from '@services/config/config'
+import { getAPIUrl, getUriWithOrg, getUriWithoutOrg } from '@services/config/config'
 import { getProductsByCourse } from '@services/payments/products'
 import { LogIn, LogOut, ShoppingCart, AlertCircle, UserPen, ClockIcon, ArrowRight, Sparkles, BookOpen } from 'lucide-react'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
@@ -14,6 +14,8 @@ import toast from 'react-hot-toast'
 import { useContributorStatus } from '../../../../hooks/useContributorStatus'
 import CourseProgress from '../CourseProgress/CourseProgress'
 import UserAvatar from '@components/Objects/UserAvatar'
+import { useOrg } from '@components/Contexts/OrgContext'
+import { mutate } from 'swr'
 
 interface CourseRun {
   status: string
@@ -26,6 +28,7 @@ interface CourseRun {
 
 interface Course {
   id: string
+  course_uuid: string
   trail?: {
     runs: CourseRun[]
   }
@@ -46,9 +49,10 @@ interface CourseActionsProps {
   course: Course & {
     org_id: number
   }
+  trailData?: any
 }
 
-function CoursesActions({ courseuuid, orgslug, course }: CourseActionsProps) {
+function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseActionsProps) {
   const router = useRouter()
   const session = useLHSession() as any
   const [linkedProducts, setLinkedProducts] = useState<any[]>([])
@@ -59,10 +63,17 @@ function CoursesActions({ courseuuid, orgslug, course }: CourseActionsProps) {
   const [hasAccess, setHasAccess] = useState<boolean | null>(null)
   const { contributorStatus, refetch } = useContributorStatus(courseuuid)
   const [isProgressOpen, setIsProgressOpen] = useState(false)
+  const org = useOrg() as any
 
-  const isStarted = course.trail?.runs?.some(
-    (run) => run.status === 'STATUS_IN_PROGRESS' && run.course_id === course.id
-  ) ?? false
+  // Clean up course UUID by removing 'course_' prefix if it exists
+  const cleanCourseUuid = course.course_uuid?.replace('course_', '');
+
+  const isStarted = trailData?.runs?.find(
+    (run: any) => {
+      const cleanRunCourseUuid = run.course?.course_uuid?.replace('course_', '');
+      return cleanRunCourseUuid === cleanCourseUuid;
+    }
+  ) ?? false;
 
   useEffect(() => {
     const fetchLinkedProducts = async () => {
@@ -120,12 +131,11 @@ function CoursesActions({ courseuuid, orgslug, course }: CourseActionsProps) {
     try {
       if (isStarted) {
         await removeCourse('course_' + courseuuid, orgslug, session.data?.tokens?.access_token)
-        await revalidateTags(['courses'], orgslug)
+        mutate(`${getAPIUrl()}trail/org/${org?.id}/trail`)
         toast.success('Successfully left the course', { id: loadingToast })
-        router.refresh()
       } else {
         await startCourse('course_' + courseuuid, orgslug, session.data?.tokens?.access_token)
-        await revalidateTags(['courses'], orgslug)
+        mutate(`${getAPIUrl()}trail/org/${org?.id}/trail`)
         toast.success('Successfully started the course', { id: loadingToast })
         
         // Get the first activity from the first chapter
@@ -139,7 +149,7 @@ function CoursesActions({ courseuuid, orgslug, course }: CourseActionsProps) {
             `/course/${courseuuid}/activity/${firstActivity.activity_uuid.replace('activity_', '')}`
           )
         } else {
-          router.refresh()
+          mutate(`${getAPIUrl()}trail/org/${org?.id}/trail`)
         }
       }
     } catch (error) {
@@ -262,10 +272,16 @@ function CoursesActions({ courseuuid, orgslug, course }: CourseActionsProps) {
 
   const renderProgressSection = () => {
     const totalActivities = course.chapters?.reduce((acc: number, chapter: any) => acc + chapter.activities.length, 0) || 0;
-    const completedActivities = course.trail?.runs?.find(
-      (run: CourseRun) => run.course_id === course.id
-    )?.steps?.filter((step) => step.complete)?.length || 0;
     
+    // Find the correct run using the cleaned UUID
+    const run = trailData?.runs?.find(
+      (run: any) => {
+        const cleanRunCourseUuid = run.course?.course_uuid?.replace('course_', '');
+        return cleanRunCourseUuid === cleanCourseUuid;
+      }
+    );
+    
+    const completedActivities = run?.steps?.filter((step: any) => step.complete)?.length || 0;
     const progressPercentage = Math.round((completedActivities / totalActivities) * 100);
 
     if (!isStarted) {

@@ -31,6 +31,7 @@ interface CourseRun {
 
 interface Course {
   id: string
+  course_uuid: string
   authors: Author[]
   trail?: {
     runs: CourseRun[]
@@ -51,6 +52,7 @@ interface CourseActionsMobileProps {
   course: Course & {
     org_id: number
   }
+  trailData?: any
 }
 
 // Component for displaying multiple authors
@@ -122,7 +124,7 @@ const MultipleAuthors = ({ authors }: { authors: Author[] }) => {
   )
 }
 
-const CourseActionsMobile = ({ courseuuid, orgslug, course }: CourseActionsMobileProps) => {
+const CourseActionsMobile = ({ courseuuid, orgslug, course, trailData }: CourseActionsMobileProps) => {
   const router = useRouter()
   const session = useLHSession() as any
   const [linkedProducts, setLinkedProducts] = useState<any[]>([])
@@ -131,9 +133,15 @@ const CourseActionsMobile = ({ courseuuid, orgslug, course }: CourseActionsMobil
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [hasAccess, setHasAccess] = useState<boolean | null>(null)
 
-  const isStarted = course.trail?.runs?.some(
-    (run) => run.status === 'STATUS_IN_PROGRESS' && run.course_id === course.id
-  ) ?? false
+  // Clean up course UUID by removing 'course_' prefix if it exists
+  const cleanCourseUuid = course.course_uuid?.replace('course_', '');
+
+  const isStarted = trailData?.runs?.find(
+    (run: any) => {
+      const cleanRunCourseUuid = run.course?.course_uuid?.replace('course_', '');
+      return cleanRunCourseUuid === cleanCourseUuid;
+    }
+  ) ?? false;
 
   useEffect(() => {
     const fetchLinkedProducts = async () => {

@@ -24,7 +24,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
   })
   const course_meta = await getCourseMetadata(
     params.courseuuid,
-    { revalidate: 0, tags: ['courses'] },
+    { revalidate: 60, tags: ['courses'] },
     access_token ? access_token : null
   )
 
@@ -69,17 +69,20 @@ const CoursePage = async (params: any) => {
   const session = await getServerSession(nextAuthOptions)
   const access_token = session?.tokens?.access_token
 
+  // Await params before using them
+  const { courseuuid, orgslug } = await params.params
+
   // Fetch course metadata once
   const course_meta = await getCourseMetadata(
-    params.params.courseuuid,
+    courseuuid,
     { revalidate: 0, tags: ['courses'] },
     access_token ? access_token : null
   )
 
   return (
     <CourseClient
-      courseuuid={params.params.courseuuid}
-      orgslug={params.params.orgslug}
+      courseuuid={courseuuid}
+      orgslug={orgslug}
       course={course_meta}
       access_token={access_token}
     />

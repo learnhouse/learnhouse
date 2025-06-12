@@ -9,12 +9,16 @@ interface ActivityChapterDropdownProps {
   course: any
   currentActivityId: string
   orgslug: string
+  trailData?: any
 }
 
 export default function ActivityChapterDropdown(props: ActivityChapterDropdownProps): React.ReactNode {
   const [isOpen, setIsOpen] = React.useState(false);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
   const isMobile = useMediaQuery('(max-width: 768px)');
+
+  // Clean up course UUID by removing 'course_' prefix if it exists
+  const cleanCourseUuid = props.course.course_uuid?.replace('course_', '');
 
   // Close dropdown when clicking outside
   React.useEffect(() => {
@@ -100,8 +104,19 @@ export default function ActivityChapterDropdown(props: ActivityChapterDropdownPr
                 <div className="py-0.5">
                   {chapter.activities.map((activity: any) => {
                     const cleanActivityUuid = activity.activity_uuid?.replace('activity_', '');
-                    const cleanCourseUuid = props.course.course_uuid?.replace('course_', '');
                     const isCurrent = cleanActivityUuid === props.currentActivityId.replace('activity_', '');
+                    
+                    // Find the correct run and check if activity is complete
+                    const run = props.trailData?.runs?.find(
+                      (run: any) => {
+                        const cleanRunCourseUuid = run.course?.course_uuid?.replace('course_', '');
+                        return cleanRunCourseUuid === cleanCourseUuid;
+                      }
+                    );
+                    
+                    const isComplete = run?.steps?.find(
+                      (step: any) => step.activity_id === activity.id && step.complete === true
+                    );
                     
                     return (
                       <Link
@@ -117,11 +132,7 @@ export default function ActivityChapterDropdown(props: ActivityChapterDropdownPr
                         >
                           <div className="flex space-x-2 items-center">
                             <div className="flex items-center">
-                              {props.course.trail?.runs?.find(
-                                (run: any) => run.course_id === props.course.id
-                              )?.steps?.find(
-                                (step: any) => (step.activity_id === activity.id || step.activity_id === activity.activity_uuid) && step.complete === true
-                              ) ? (
+                              {isComplete ? (
                                 <div className="relative cursor-pointer">
                                   <Check size={14} className="stroke-[2.5] text-teal-600" />
                                 </div>
