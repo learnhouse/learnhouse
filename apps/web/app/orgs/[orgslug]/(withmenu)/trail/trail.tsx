@@ -12,6 +12,7 @@ import useSWR from 'swr'
 import { removeCourse } from '@services/courses/activity'
 import { revalidateTags } from '@services/utils/ts/requests'
 import { useRouter } from 'next/navigation'
+import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 
 function Trail(params: any) {
   let orgslug = params.orgslug
@@ -59,20 +60,28 @@ function Trail(params: any) {
       <div className="flex justify-between items-center mb-6">
         <TypeOfContentTitle title="Trail" type="tra" />
         {trail?.runs?.length > 0 && (
-          <button
-            onClick={handleQuitAllCourses}
-            disabled={isQuittingAll}
-            className={`px-4 py-2 rounded-lg font-medium text-sm transition-all
-              ${isQuittingAll 
-                ? 'bg-gray-100 text-gray-500 cursor-not-allowed' 
-                : 'bg-red-100 text-red-700 hover:bg-red-200'
-              }`}
-          >
-            {isQuittingAll 
-              ? `Quitting Courses (${quittingProgress}%)`
-              : 'Quit All Courses'
+          <ConfirmationModal
+            confirmationButtonText={isQuittingAll ? `Quitting Courses (${quittingProgress}%)` : "Quit All Courses"}
+            confirmationMessage="Are you sure you want to quit all courses? This action cannot be undone and you will lose all your progress."
+            dialogTitle="Quit All Courses?"
+            dialogTrigger={
+              <button
+                disabled={isQuittingAll}
+                className={`px-4 py-2 rounded-lg font-medium text-sm transition-all
+                  ${isQuittingAll 
+                    ? 'bg-gray-100 text-gray-500 cursor-not-allowed' 
+                    : 'bg-red-100 text-red-700 hover:bg-red-200'
+                  }`}
+              >
+                {isQuittingAll 
+                  ? `Quitting Courses (${quittingProgress}%)`
+                  : 'Quit All Courses'
+                }
+              </button>
             }
-          </button>
+            functionToExecute={handleQuitAllCourses}
+            status="warning"
+          />
         )}
       </div>
       {!trail ? (
