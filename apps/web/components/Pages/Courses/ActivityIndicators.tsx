@@ -12,6 +12,7 @@ interface Props {
   course_uuid: string
   current_activity?: string
   enableNavigation?: boolean
+  trailData?: any
 }
 
 // Helper functions
@@ -109,8 +110,6 @@ function ActivityIndicators(props: Props) {
   const black_activity_style = 'bg-zinc-300 hover:bg-zinc-400'
   const current_activity_style = 'bg-gray-600 animate-pulse hover:bg-gray-700'
 
-  const trail = props.course.trail
-
   // Flatten all activities for navigation and rendering
   const allActivities = useMemo(() => {
     return course.chapters.flatMap((chapter: any) => 
@@ -131,14 +130,23 @@ function ActivityIndicators(props: Props) {
 
   // Memoize activity status checks
   const isActivityDone = useMemo(() => (activity: any) => {
-    let run = props.course.trail?.runs.find(
-      (run: any) => run.course_id == props.course.id
-    )
+    // Clean up course UUID by removing 'course_' prefix if it exists
+    const cleanCourseUuid = course.course_uuid?.replace('course_', '');
+    
+    let run = props.trailData?.runs?.find(
+      (run: any) => {
+        const cleanRunCourseUuid = run.course?.course_uuid?.replace('course_', '');
+        return cleanRunCourseUuid === cleanCourseUuid;
+      }
+    );
+
     if (run) {
-      return run.steps.find((step: any) => step.activity_id == activity.id)
+      return run.steps.find(
+        (step: any) => step.activity_id === activity.id && step.complete === true
+      );
     }
-    return false
-  }, [props.course]);
+    return false;
+  }, [props.trailData, course.course_uuid]);
 
   const isActivityCurrent = useMemo(() => (activity: any) => {
     let activity_uuid = activity.activity_uuid.replace('activity_', '')
