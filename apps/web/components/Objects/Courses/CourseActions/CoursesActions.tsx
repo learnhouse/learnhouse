@@ -488,6 +488,7 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
           orgslug={orgslug}
           isOpen={isProgressOpen}
           onClose={() => setIsProgressOpen(false)}
+          trailData={trailData}
         />
       </div>
     </div>

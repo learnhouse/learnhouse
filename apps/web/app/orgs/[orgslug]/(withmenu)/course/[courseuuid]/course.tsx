@@ -114,9 +114,13 @@ const CourseClient = (props: any) => {
   }
 
   const isActivityDone = (activity: any) => {
-    const run = course?.trail?.runs?.find(
-      (run: any) => run.course_id == course.id
-    )
+    const cleanCourseUuid = course.course_uuid?.replace('course_', '');
+    const run = trailData?.runs?.find(
+      (run: any) => {
+        const cleanRunCourseUuid = run.course?.course_uuid?.replace('course_', '');
+        return cleanRunCourseUuid === cleanCourseUuid;
+      }
+    );
     if (run) {
       return run.steps.find((step: any) => step.activity_id == activity.id)
     }
@@ -171,7 +175,16 @@ const CourseClient = (props: any) => {
                   ></div>
                 )}
 
-                {course?.trail?.runs?.find((run: any) => run.course_id == course.id) && (
+                {(() => {
+                  const cleanCourseUuid = course.course_uuid?.replace('course_', '');
+                  const run = trailData?.runs?.find(
+                    (run: any) => {
+                      const cleanRunCourseUuid = run.course?.course_uuid?.replace('course_', '');
+                      return cleanRunCourseUuid === cleanCourseUuid;
+                    }
+                  );
+                  return run;
+                })() && (
                   <ActivityIndicators
                     course_uuid={props.course.course_uuid}
                     orgslug={orgslug}
