@@ -9,9 +9,10 @@ interface CourseProgressProps {
   orgslug: string
   isOpen: boolean
   onClose: () => void
+  trailData: any
 }
 
-const CourseProgress: React.FC<CourseProgressProps> = ({ course, orgslug, isOpen, onClose }) => {
+const CourseProgress: React.FC<CourseProgressProps> = ({ course, orgslug, isOpen, onClose, trailData }) => {
   const [completedActivities, setCompletedActivities] = useState(0)
   const [totalActivities, setTotalActivities] = useState(0)
 
@@ -33,9 +34,13 @@ const CourseProgress: React.FC<CourseProgressProps> = ({ course, orgslug, isOpen
   }, [course])
 
   const isActivityDone = (activity: any) => {
-    const run = course?.trail?.runs?.find(
-      (run: any) => run.course_id === course.id
-    )
+    const cleanCourseUuid = course.course_uuid?.replace('course_', '');
+    const run = trailData?.runs?.find(
+      (run: any) => {
+        const cleanRunCourseUuid = run.course?.course_uuid?.replace('course_', '');
+        return cleanRunCourseUuid === cleanCourseUuid;
+      }
+    );
     if (run) {
       return run.steps.find((step: any) => step.activity_id === activity.id)
     }
