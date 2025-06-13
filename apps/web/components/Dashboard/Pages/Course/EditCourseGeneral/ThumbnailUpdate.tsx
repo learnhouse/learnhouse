@@ -5,22 +5,24 @@ import { updateCourseThumbnail } from '@services/courses/courses'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import { ArrowBigUpDash, UploadCloud, Image as ImageIcon } from 'lucide-react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { mutate } from 'swr'
 import UnsplashImagePicker from './UnsplashImagePicker'
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_FILE_SIZE = 8_000_000; // 8MB
 const VALID_MIME_TYPES = ['image/jpeg', 'image/jpg', 'image/png'] as const;
 
 type ValidMimeType = typeof VALID_MIME_TYPES[number];
 
 function ThumbnailUpdate() {
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const course = useCourse() as any
   const session = useLHSession() as any;
   const org = useOrg() as any
   const [localThumbnail, setLocalThumbnail] = useState<{ file: File; url: string } | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string>('')
+  const [showError, setShowError] = useState(false)
   const [showUnsplashPicker, setShowUnsplashPicker] = useState(false)
   const withUnpublishedActivities = course ? course.withUnpublishedActivities : false
 
@@ -35,21 +37,31 @@ function ThumbnailUpdate() {
 
   const validateFile = (file: File): boolean => {
     if (!VALID_MIME_TYPES.includes(file.type as ValidMimeType)) {
-      setError('Please upload only PNG or JPG/JPEG images');
+      setError(`Invalid file type: ${file.type}. Please upload only PNG or JPG/JPEG images`);
+      setShowError(true);
       return false;
     }
 
     if (file.size > MAX_FILE_SIZE) {
-      setError('File size should be less than 5MB');
+      setError(`File size (${(file.size / 1024 / 1024).toFixed(2)}MB) exceeds the 8MB limit`);
+      setShowError(true);
       return false;
     }
 
+    setShowError(false);
     return true;
   }
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    setError('');
+    setShowError(false);
     const file = event.target.files?.[0];
-    if (!file) return;
+    
+    if (!file) {
+      setError('Please select a file');
+      setShowError(true);
+      return;
+    }
     
     if (!validateFile(file)) {
       event.target.value = '';
@@ -100,25 +112,27 @@ function ThumbnailUpdate() {
 
       if (res.success === false) {
         setError(res.HTTPmessage);
+        setShowError(true);
       } else {
         setError('');
+        setShowError(false);
       }
     } catch (err) {
       setError('Failed to update thumbnail');
+      setShowError(true);
     } finally {
       setIsLoading(false);
     }
   }
 
   return (
-    <div className="w-auto rounded-xl border border-gray-200 h-[250px] light-shadow bg-gray-50 transition-all duration-200">
+    <div className="w-auto rounded-xl border border-gray-200 h-[250px] light-shadow bg-gray-50 transition-all duration-200 relative">
+      {showError && error && (
+        <div className="absolute top-4 left-0 right-0 mx-auto w-[90%] z-50 bg-red-50 rounded-lg text-red-800 p-3 transition-all border border-red-200 shadow-lg">
+          <div className="text-sm font-medium text-center">{error}</div>
+        </div>
+      )}
       <div className="flex flex-col justify-center items-center h-full p-6 space-y-4">
-        {error && (
-          <div className="absolute top-4 flex justify-center bg-red-50 rounded-lg text-red-800 space-x-2 items-center p-3 transition-all">
-            <div className="text-sm font-medium">{error}</div>
-          </div>
-        )}
-        
         <div className="flex flex-col items-center space-y-4">
           {localThumbnail ? (
             <img
@@ -143,15 +157,16 @@ function ThumbnailUpdate() {
           {!isLoading && (
             <div className="flex space-x-2">
               <input
+                ref={fileInputRef}
                 type="file"
-                id="fileInput"
                 className="hidden"
                 accept=".jpg,.jpeg,.png"
                 onChange={handleFileChange}
               />
               <button
+                type="button"
                 className="bg-gray-50 text-gray-800 px-4 py-2 rounded-md text-sm font-medium flex items-center hover:bg-gray-100 transition-colors duration-200 border border-gray-200"
-                onClick={() => document.getElementById('fileInput')?.click()}
+                onClick={() => fileInputRef.current?.click()}
               >
                 <UploadCloud size={16} className="mr-2" />
                 Upload
