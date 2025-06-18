@@ -63,6 +63,7 @@ class CourseRead(CourseBase):
 
 class FullCourseRead(CourseBase):
     id: int
+    org_id: int
     course_uuid: Optional[str]
     creation_date: Optional[str]
     update_date: Optional[str]
