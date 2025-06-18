@@ -235,7 +235,13 @@ function ActivityIndicators(props: Props) {
         {course.chapters.map((chapter: any, chapterIndex: number) => {
           const completedActivities = getChapterProgress(chapter.activities);
           const isChapterComplete = completedActivities === chapter.activities.length;
-          
+          const firstActivity = chapter.activities[0];
+          const firstActivityId = firstActivity?.activity_uuid?.replace('activity_', '');
+          const chapterLinkHref =
+            firstActivityId
+              ? getUriWithOrg(orgslug, '') + `/course/${courseid}/activity/${firstActivityId}`
+              : undefined;
+
           return (
             <React.Fragment key={chapter.id}>
               <ToolTip
@@ -250,15 +256,27 @@ function ActivityIndicators(props: Props) {
                   />
                 }
               >
-                <div className="mx-2 h-[20px] flex items-center cursor-help">
-                  <div className={`w-[20px] h-[20px] rounded-full flex items-center justify-center text-xs font-medium transition-colors ${
-                    isChapterComplete 
-                      ? 'bg-teal-600 text-white' 
-                      : 'bg-gray-100 text-gray-600'
-                  }`}>
-                    {chapterIndex + 1}
+                {chapterLinkHref ? (
+                  <Link href={chapterLinkHref} prefetch={false} className="mx-2 h-[20px] flex items-center cursor-pointer focus:outline-none">
+                    <div className={`w-[20px] h-[20px] rounded-full flex items-center justify-center text-xs font-medium transition-colors ${
+                      isChapterComplete 
+                        ? 'bg-teal-600 text-white' 
+                        : 'bg-gray-100 text-gray-600'
+                    }`}>
+                      {chapterIndex + 1}
+                    </div>
+                  </Link>
+                ) : (
+                  <div className="mx-2 h-[20px] flex items-center cursor-not-allowed">
+                    <div className={`w-[20px] h-[20px] rounded-full flex items-center justify-center text-xs font-medium transition-colors ${
+                      isChapterComplete 
+                        ? 'bg-teal-600 text-white' 
+                        : 'bg-gray-100 text-gray-600'
+                    }`}>
+                      {chapterIndex + 1}
+                    </div>
                   </div>
-                </div>
+                )}
               </ToolTip>
               <div className="flex-1 flex items-center">
                 {chapter.activities.map((activity: any) => {
