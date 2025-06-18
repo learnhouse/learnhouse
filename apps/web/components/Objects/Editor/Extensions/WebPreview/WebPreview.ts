@@ -19,6 +19,7 @@ const WebPreview = Node.create({
       alignment: { default: 'left' },
       buttonLabel: { default: 'Visit Site' },
       showButton: { default: false },
+      openInPopup: { default: false },
     }
   },
 
