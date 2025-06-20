@@ -203,35 +203,33 @@ const ContentWrapper = styled.div`
     caret-color: transparent;
 
     h1 {
-      font-size: 30px;
+      font-size: 32px;
       font-weight: 600;
-      margin-bottom: 10px;
+      margin-bottom: 24px;
     }
 
     h2 {
-      font-size: 25px;
+      font-size: 28px;
       font-weight: 600;
-      margin-bottom: 10px;
+      margin-bottom: 24px;
     }
 
     h3 {
-      font-size: 20px;
+      font-size: 24px;
       font-weight: 600;
-      margin-bottom: 10px;
+      margin-bottom: 24px;
     }
 
     h4 {
-      font-size: 18px;
+      font-size: 20px;
       font-weight: 600;
-      margin-top: 10px;
-      margin-bottom: 10px;
+      margin-bottom: 24px;
     }
 
     h5 {
-      font-size: 16px;
+      font-size: 18px;
       font-weight: 600;
-      margin-top: 10px;
-      margin-bottom: 10px;
+      margin-bottom: 24px;
     }
 
     // Link styling
