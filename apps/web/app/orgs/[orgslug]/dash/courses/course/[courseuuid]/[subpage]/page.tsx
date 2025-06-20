@@ -110,13 +110,14 @@ function CourseOverviewPage(props: { params: Promise<CourseOverviewParams> }) {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.1, type: 'spring', stiffness: 80 }}
-          className="h-full overflow-y-auto"
+          className="h-full overflow-y-auto relative"
         >
-          {params.subpage == 'content' ? (<EditCourseStructure orgslug={params.orgslug} />) : ('')}
-          {params.subpage == 'general' ? (<EditCourseGeneral orgslug={params.orgslug} />) : ('')}
-          {params.subpage == 'access' ? (<EditCourseAccess orgslug={params.orgslug} />) : ('')}
-          {params.subpage == 'contributors' ? (<EditCourseContributors orgslug={params.orgslug} />) : ('')}
-
+          <div className="absolute inset-0">
+            {params.subpage == 'content' ? (<EditCourseStructure orgslug={params.orgslug} />) : ('')}
+            {params.subpage == 'general' ? (<EditCourseGeneral orgslug={params.orgslug} />) : ('')}
+            {params.subpage == 'access' ? (<EditCourseAccess orgslug={params.orgslug} />) : ('')}
+            {params.subpage == 'contributors' ? (<EditCourseContributors orgslug={params.orgslug} />) : ('')}
+          </div>
         </motion.div>
       </CourseProvider>
     </div>

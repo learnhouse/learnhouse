@@ -19,6 +19,7 @@ from src.db.courses.courses import (
     CourseUpdate,
     FullCourseRead,
     AuthorWithRole,
+    ThumbnailType,
 )
 from src.security.rbac.rbac import (
     authorization_verify_based_on_roles_and_authorship,
@@ -398,6 +399,7 @@ async def create_course(
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
     thumbnail_file: UploadFile | None = None,
+    thumbnail_type: ThumbnailType = ThumbnailType.IMAGE,
 ):
     course = Course.model_validate(course_object)
 
@@ -424,10 +426,16 @@ async def create_course(
         await upload_thumbnail(
             thumbnail_file, name_in_disk, org.org_uuid, course.course_uuid  # type: ignore
         )
-        course.thumbnail_image = name_in_disk
-
+        if thumbnail_type == ThumbnailType.IMAGE:
+            course.thumbnail_image = name_in_disk
+            course.thumbnail_type = ThumbnailType.IMAGE
+        elif thumbnail_type == ThumbnailType.VIDEO:
+            course.thumbnail_video = name_in_disk
+            course.thumbnail_type = ThumbnailType.VIDEO
     else:
         course.thumbnail_image = ""
+        course.thumbnail_video = ""
+        course.thumbnail_type = ThumbnailType.IMAGE
 
     # Insert course
     db_session.add(course)
@@ -486,6 +494,7 @@ async def update_course_thumbnail(
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
     thumbnail_file: UploadFile | None = None,
+    thumbnail_type: ThumbnailType = ThumbnailType.IMAGE,
 ):
     statement = select(Course).where(Course.course_uuid == course_uuid)
     course = db_session.exec(statement).first()
@@ -514,7 +523,12 @@ async def update_course_thumbnail(
 
     # Update course
     if name_in_disk:
-        course.thumbnail_image = name_in_disk
+        if thumbnail_type == ThumbnailType.IMAGE:
+            course.thumbnail_image = name_in_disk
+            course.thumbnail_type = ThumbnailType.IMAGE if not course.thumbnail_video else ThumbnailType.BOTH
+        elif thumbnail_type == ThumbnailType.VIDEO:
+            course.thumbnail_video = name_in_disk
+            course.thumbnail_type = ThumbnailType.VIDEO if not course.thumbnail_image else ThumbnailType.BOTH
     else:
         raise HTTPException(
             status_code=500,

@@ -80,12 +80,10 @@ export async function getCourseById(course_id: string, next: any, access_token:a
   return res
 }
 
-export async function updateCourseThumbnail(course_uuid: any, thumbnail: any, access_token:any) {
-  const formData = new FormData()
-  formData.append('thumbnail', thumbnail)
+export async function updateCourseThumbnail(course_uuid: any, formData: FormData, access_token:any) {
   const result: any = await fetch(
     `${getAPIUrl()}courses/${course_uuid}/thumbnail`,
-    RequestBodyFormWithAuthHeader('PUT', formData, null,access_token)
+    RequestBodyFormWithAuthHeader('PUT', formData, null, access_token)
   )
   const res = await getResponseMetadata(result)
   return res

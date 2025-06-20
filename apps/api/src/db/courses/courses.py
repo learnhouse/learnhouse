@@ -1,10 +1,17 @@
 from typing import List, Optional
 from sqlalchemy import Column, ForeignKey, Integer
 from sqlmodel import Field, SQLModel
+from enum import Enum
 from src.db.users import UserRead
 from src.db.trails import TrailRead
 from src.db.courses.chapters import ChapterRead
 from src.db.resource_authors import ResourceAuthorshipEnum, ResourceAuthorshipStatusEnum
+
+
+class ThumbnailType(str, Enum):
+    IMAGE = "image"
+    VIDEO = "video"
+    BOTH = "both"
 
 
 class AuthorWithRole(SQLModel):
@@ -21,7 +28,9 @@ class CourseBase(SQLModel):
     about: Optional[str]
     learnings: Optional[str]
     tags: Optional[str]
-    thumbnail_image: Optional[str]
+    thumbnail_type: Optional[ThumbnailType] = Field(default=ThumbnailType.IMAGE)
+    thumbnail_image: Optional[str] = Field(default="")
+    thumbnail_video: Optional[str] = Field(default="")
     public: bool
     open_to_contributors: bool
 
@@ -38,6 +47,9 @@ class Course(CourseBase, table=True):
 
 class CourseCreate(CourseBase):
     org_id: int = Field(default=None, foreign_key="organization.id")
+    thumbnail_type: Optional[ThumbnailType] = Field(default=ThumbnailType.IMAGE)
+    thumbnail_image: Optional[str] = Field(default="")
+    thumbnail_video: Optional[str] = Field(default="")
     pass
 
 
@@ -47,6 +59,9 @@ class CourseUpdate(CourseBase):
     about: Optional[str]
     learnings: Optional[str]
     tags: Optional[str]
+    thumbnail_type: Optional[ThumbnailType] = Field(default=ThumbnailType.IMAGE)
+    thumbnail_image: Optional[str] = Field(default="")
+    thumbnail_video: Optional[str] = Field(default="")
     public: Optional[bool]
     open_to_contributors: Optional[bool]
 
@@ -58,6 +73,9 @@ class CourseRead(CourseBase):
     course_uuid: str
     creation_date: str
     update_date: str
+    thumbnail_type: Optional[ThumbnailType] = Field(default=ThumbnailType.IMAGE)
+    thumbnail_image: Optional[str] = Field(default="")
+    thumbnail_video: Optional[str] = Field(default="")
     pass
 
 
@@ -67,6 +85,9 @@ class FullCourseRead(CourseBase):
     course_uuid: Optional[str]
     creation_date: Optional[str]
     update_date: Optional[str]
+    thumbnail_type: Optional[ThumbnailType] = Field(default=ThumbnailType.IMAGE)
+    thumbnail_image: Optional[str] = Field(default="")
+    thumbnail_video: Optional[str] = Field(default="")
     # Chapters, Activities
     chapters: List[ChapterRead]
     authors: List[AuthorWithRole]
