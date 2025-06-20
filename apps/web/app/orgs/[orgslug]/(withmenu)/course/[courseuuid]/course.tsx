@@ -10,7 +10,7 @@ import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/Ge
 import {
   getCourseThumbnailMediaDirectory,
 } from '@services/media/media'
-import { ArrowRight, Backpack, Check, File, Sparkles, StickyNote, Video, Square } from 'lucide-react'
+import { ArrowRight, Backpack, Check, File, Sparkles, StickyNote, Video, Square, Image as ImageIcon } from 'lucide-react'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { CourseProvider } from '@components/Contexts/CourseContext'
 import { useMediaQuery } from 'usehooks-ts'
@@ -24,6 +24,7 @@ import useSWR from 'swr'
 const CourseClient = (props: any) => {
   const [learnings, setLearnings] = useState<any>([])
   const [expandedChapters, setExpandedChapters] = useState<{[key: string]: boolean}>({})
+  const [activeThumbnailType, setActiveThumbnailType] = useState<'image' | 'video'>('image')
   const courseuuid = props.courseuuid
   const orgslug = props.orgslug
   const course = props.course
@@ -154,26 +155,109 @@ const CourseClient = (props: any) => {
 
             <div className="flex flex-col md:flex-row gap-8 pt-2">
               <div className="w-full md:w-3/4 space-y-4">
-                {props.course?.thumbnail_image && org ? (
-                  <div
-                    className="inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl relative w-full h-[200px] md:h-[400px] bg-cover bg-center"
-                    style={{
-                      backgroundImage: `url(${getCourseThumbnailMediaDirectory(
-                        org?.org_uuid,
-                        course?.course_uuid,
-                        course?.thumbnail_image
-                      )})`,
-                    }}
-                  ></div>
-                ) : (
-                  <div
-                    className="inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl relative w-full h-[400px] bg-cover bg-center"
-                    style={{
-                      backgroundImage: `url('../empty_thumbnail.png')`,
-                      backgroundSize: 'auto',
-                    }}
-                  ></div>
-                )}
+                {(() => {
+                  const showVideo = course.thumbnail_type === 'video' || (course.thumbnail_type === 'both' && activeThumbnailType === 'video');
+                  const showImage = course.thumbnail_type === 'image' || (course.thumbnail_type === 'both' && activeThumbnailType === 'image');
+
+                  if (showVideo && course.thumbnail_video) {
+                    return (
+                      <div className="relative inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl w-full h-[200px] md:h-[400px]">
+                        {course.thumbnail_type === 'both' && (
+                          <div className="absolute top-3 right-3 z-10">
+                            <div className="bg-black/20 backdrop-blur-sm rounded-lg p-1 flex space-x-1">
+                              <button
+                                onClick={() => setActiveThumbnailType('image')}
+                                className={`flex items-center px-2 py-1 rounded-md text-xs font-medium transition-colors ${
+                                  activeThumbnailType === 'image'
+                                    ? 'bg-white/90 text-gray-900 shadow-sm'
+                                    : 'text-white/80 hover:text-white hover:bg-white/10'
+                                }`}
+                              >
+                                <ImageIcon size={12} className="mr-1" />
+                                Image
+                              </button>
+                              <button
+                                onClick={() => setActiveThumbnailType('video')}
+                                className={`flex items-center px-2 py-1 rounded-md text-xs font-medium transition-colors ${
+                                  activeThumbnailType === 'video'
+                                    ? 'bg-white/90 text-gray-900 shadow-sm'
+                                    : 'text-white/80 hover:text-white hover:bg-white/10'
+                                }`}
+                              >
+                                <Video size={12} className="mr-1" />
+                                Video
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                        <div className="w-full h-full">
+                          <video
+                            src={getCourseThumbnailMediaDirectory(
+                              org?.org_uuid,
+                              course?.course_uuid,
+                              course?.thumbnail_video
+                            )}
+                            className="w-full h-full bg-black rounded-lg"
+                            controls
+                            preload="metadata"
+                            playsInline
+                          />
+                        </div>
+                      </div>
+                    );
+                  } else if (showImage && course.thumbnail_image) {
+                    return (
+                      <div className="relative inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl w-full h-[200px] md:h-[400px] bg-cover bg-center"
+                        style={{
+                          backgroundImage: `url(${getCourseThumbnailMediaDirectory(
+                            org?.org_uuid,
+                            course?.course_uuid,
+                            course?.thumbnail_image
+                          )})`,
+                        }}
+                      >
+                        {course.thumbnail_type === 'both' && (
+                          <div className="absolute top-3 right-3 z-10">
+                            <div className="bg-black/20 backdrop-blur-sm rounded-lg p-1 flex space-x-1">
+                              <button
+                                onClick={() => setActiveThumbnailType('image')}
+                                className={`flex items-center px-2 py-1 rounded-md text-xs font-medium transition-colors ${
+                                  activeThumbnailType === 'image'
+                                    ? 'bg-white/90 text-gray-900 shadow-sm'
+                                    : 'text-white/80 hover:text-white hover:bg-white/10'
+                                }`}
+                              >
+                                <ImageIcon size={12} className="mr-1" />
+                                Image
+                              </button>
+                              <button
+                                onClick={() => setActiveThumbnailType('video')}
+                                className={`flex items-center px-2 py-1 rounded-md text-xs font-medium transition-colors ${
+                                  activeThumbnailType === 'video'
+                                    ? 'bg-white/90 text-gray-900 shadow-sm'
+                                    : 'text-white/80 hover:text-white hover:bg-white/10'
+                                }`}
+                              >
+                                <Video size={12} className="mr-1" />
+                                Video
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  } else {
+                    return (
+                      <div
+                        className="inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl relative w-full h-[400px] bg-cover bg-center"
+                        style={{
+                          backgroundImage: `url('../empty_thumbnail.png')`,
+                          backgroundSize: 'auto',
+                        }}
+                      ></div>
+                    );
+                  }
+                })()}
 
                 {(() => {
                   const cleanCourseUuid = course.course_uuid?.replace('course_', '');

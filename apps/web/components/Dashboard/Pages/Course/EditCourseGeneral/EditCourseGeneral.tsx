@@ -12,6 +12,13 @@ import ThumbnailUpdate from './ThumbnailUpdate';
 import { useCourse, useCourseDispatch } from '@components/Contexts/CourseContext';
 import FormTagInput from '@components/Objects/StyledElements/Form/TagInput';
 import LearningItemsList from './LearningItemsList';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@components/ui/select";
 
 type EditCourseStructureProps = {
   orgslug: string
@@ -102,15 +109,22 @@ function EditCourseGeneral(props: EditCourseStructureProps) {
     }
   };
 
-  const formik = useFormik({
-    initialValues: {
+  // Create initial values object
+  const getInitialValues = () => {
+    const thumbnailType = courseStructure?.thumbnail_type || 'image';
+    return {
       name: courseStructure?.name || '',
       description: courseStructure?.description || '',
       about: courseStructure?.about || '',
       learnings: initializeLearnings(courseStructure?.learnings || ''),
       tags: courseStructure?.tags || '',
       public: courseStructure?.public || false,
-    },
+      thumbnail_type: thumbnailType,
+    };
+  };
+
+  const formik = useFormik({
+    initialValues: getInitialValues(),
     validate,
     onSubmit: async values => {
       try {
@@ -122,6 +136,14 @@ function EditCourseGeneral(props: EditCourseStructureProps) {
     },
     enableReinitialize: true,
   }) as any;
+
+  // Reset form when courseStructure changes
+  useEffect(() => {
+    if (courseStructure && !isLoading) {
+      const newValues = getInitialValues();
+      formik.resetForm({ values: newValues });
+    }
+  }, [courseStructure, isLoading]);
 
   useEffect(() => {
     if (!isLoading) {
@@ -142,19 +164,24 @@ function EditCourseGeneral(props: EditCourseStructureProps) {
     }
   }, [formik.values, isLoading]);
 
+  if (isLoading || !courseStructure) {
+    return <div>Loading...</div>;
+  }
+
   return (
-    <div>
-      <div className="h-6"></div>
-      <div className="ml-10 mr-10 mx-auto bg-white rounded-xl shadow-xs px-6 py-5">
-        {courseStructure && (
-          <div className="editcourse-form">
+    <div className="h-full">
+      <div className="h-6" />
+      <div className="px-10 pb-10">
+        <div className="bg-white rounded-xl shadow-xs">
+          <FormLayout onSubmit={formik.handleSubmit} className="p-6">
             {error && (
-              <div className="flex justify-center bg-red-200 rounded-md text-red-950 space-x-2 items-center p-4 transition-all shadow-xs">
+              <div className="flex justify-center bg-red-200 rounded-md text-red-950 space-x-2 items-center p-4 mb-6 transition-all shadow-xs">
                 <AlertTriangle size={18} />
                 <div className="font-bold text-sm">{error}</div>
               </div>
             )}
-            <FormLayout onSubmit={formik.handleSubmit}>
+
+            <div className="space-y-6">
               <FormField name="name">
                 <FormLabelAndMessage label="Name" message={formik.errors.name} />
                 <Form.Control asChild>
@@ -207,23 +234,49 @@ function EditCourseGeneral(props: EditCourseStructureProps) {
               <FormField name="tags">
                 <FormLabelAndMessage label="Tags" message={formik.errors.tags} />
                 <Form.Control asChild>
-									<FormTagInput
-										placeholder="Enter to add..."
-										onChange={(value) => formik.setFieldValue('tags', value)}
-										value={formik.values.tags}
-									/>
+                  <FormTagInput
+                    placeholder="Enter to add..."
+                    onChange={(value) => formik.setFieldValue('tags', value)}
+                    value={formik.values.tags}
+                  />
+                </Form.Control>
+              </FormField>
+
+              <FormField name="thumbnail_type">
+                <FormLabelAndMessage label="Thumbnail Type" />
+                <Form.Control asChild>
+                  <Select
+                    value={formik.values.thumbnail_type}
+                    onValueChange={(value) => {
+                      if (!value) return;
+                      formik.setFieldValue('thumbnail_type', value);
+                    }}
+                  >
+                    <SelectTrigger className="w-full bg-white">
+                      <SelectValue>
+                        {formik.values.thumbnail_type === 'image' ? 'Image' :
+                         formik.values.thumbnail_type === 'video' ? 'Video' :
+                         formik.values.thumbnail_type === 'both' ? 'Both' : 'Image'}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="image">Image</SelectItem>
+                      <SelectItem value="video">Video</SelectItem>
+                      <SelectItem value="both">Both</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </Form.Control>
               </FormField>
 
               <FormField name="thumbnail">
                 <FormLabelAndMessage label="Thumbnail" />
                 <Form.Control asChild>
-                  <ThumbnailUpdate />
+                  <ThumbnailUpdate thumbnailType={formik.values.thumbnail_type} />
                 </Form.Control>
               </FormField>
-            </FormLayout>
-          </div>
-        )}
+            </div>
+          </FormLayout>
+        </div>
       </div>
     </div>
   );

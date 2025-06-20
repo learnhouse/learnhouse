@@ -12,7 +12,9 @@ from src.db.courses.courses import (
     CourseCreate,
     CourseRead,
     CourseUpdate,
+    FullCourseRead,
     FullCourseReadWithTrail,
+    ThumbnailType,
 )
 from src.security.auth import get_current_user
 from src.services.courses.courses import (
@@ -55,6 +57,7 @@ async def api_create_course(
     learnings: str = Form(None),
     tags: str = Form(None),
     about: str = Form(),
+    thumbnail_type: ThumbnailType = Form(default=ThumbnailType.IMAGE),
     current_user: PublicUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
     thumbnail: UploadFile | None = None,
@@ -67,14 +70,16 @@ async def api_create_course(
         description=description,
         org_id=org_id,
         public=public,
+        thumbnail_type=thumbnail_type,
         thumbnail_image="",
+        thumbnail_video="",
         about=about,
         learnings=learnings,
         tags=tags,
         open_to_contributors=False,
     )
     return await create_course(
-        request, org_id, course, current_user, db_session, thumbnail
+        request, org_id, course, current_user, db_session, thumbnail, thumbnail_type
     )
 
 
@@ -82,15 +87,16 @@ async def api_create_course(
 async def api_create_course_thumbnail(
     request: Request,
     course_uuid: str,
+    thumbnail_type: ThumbnailType = Form(default=ThumbnailType.IMAGE),
     thumbnail: UploadFile | None = None,
     db_session: Session = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ) -> CourseRead:
     """
-    Update new Course Thumbnail
+    Update Course Thumbnail (Image or Video)
     """
     return await update_course_thumbnail(
-        request, course_uuid, current_user, db_session, thumbnail
+        request, course_uuid, current_user, db_session, thumbnail, thumbnail_type
     )
 
 
@@ -131,7 +137,7 @@ async def api_get_course_meta(
     with_unpublished_activities: bool = False,
     db_session: Session = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
-) -> FullCourseReadWithTrail:
+) -> FullCourseRead:
     """
     Get single Course Metadata (chapters, activities) by course_uuid
     """
