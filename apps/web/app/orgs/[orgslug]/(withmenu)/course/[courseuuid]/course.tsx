@@ -10,7 +10,7 @@ import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/Ge
 import {
   getCourseThumbnailMediaDirectory,
 } from '@services/media/media'
-import { ArrowRight, Backpack, Check, File, Sparkles, StickyNote, Video, Square, Image as ImageIcon } from 'lucide-react'
+import { ArrowRight, Backpack, Check, File, Sparkles, StickyNote, Video, Square, Image as ImageIcon, Layers } from 'lucide-react'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { CourseProvider } from '@components/Contexts/CourseContext'
 import { useMediaQuery } from 'usehooks-ts'
@@ -77,8 +77,9 @@ const CourseClient = (props: any) => {
     if (course?.chapters) {
       const totalActivities = course.chapters.reduce((sum: number, chapter: any) => sum + (chapter.activities?.length || 0), 0)
       const defaultExpanded: {[key: string]: boolean} = {}
-      course.chapters.forEach((chapter: any) => {
-        defaultExpanded[chapter.chapter_uuid] = totalActivities <= 5
+      course.chapters.forEach((chapter: any, idx: number) => {
+        // Always expand the first chapter
+        defaultExpanded[chapter.chapter_uuid] = idx === 0 ? true : totalActivities <= 5
       })
       setExpandedChapters(defaultExpanded)
     }
@@ -342,30 +343,41 @@ const CourseClient = (props: any) => {
             <div className="w-full my-5 mb-10">
               <h2 className="py-5 text-xl md:text-2xl font-bold">Course Lessons</h2>
               <div className="bg-white shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40 rounded-lg overflow-hidden">
-                {course.chapters.map((chapter: any) => {
-                  const isExpanded = expandedChapters[chapter.chapter_uuid] ?? true; // Default to expanded
+                {course.chapters.map((chapter: any, idx: number) => {
+                  const isExpanded = expandedChapters[chapter.chapter_uuid] ?? (idx === 0); // Default to expanded for first chapter
                   return (
                     <div key={chapter.chapter_uuid || `chapter-${chapter.name}`} className="">
                       <div 
-                        className="flex text-lg py-4 px-4 outline outline-1 outline-neutral-200/40 font-bold bg-neutral-50 text-neutral-600 items-center cursor-pointer hover:bg-neutral-100 transition-colors"
+                        className="flex items-start py-4 px-4 outline outline-1 outline-neutral-200/40 font-bold bg-neutral-50 text-neutral-600 cursor-pointer hover:bg-neutral-100 transition-colors"
                         onClick={() => setExpandedChapters(prev => ({
                           ...prev,
                           [chapter.chapter_uuid]: !isExpanded
                         }))}
                       >
-                        <h3 className="grow mr-3 break-words">{chapter.name}</h3>
-                        <div className="flex items-center space-x-3">
-                          <p className="text-sm font-normal text-neutral-400 px-3 py-[2px] outline-1 outline outline-neutral-200 rounded-full whitespace-nowrap shrink-0">
-                            {chapter.activities.length} Activities
-                          </p>
+                        {/* Chevron on the far left, vertically centered with the title */}
+                        <div className="flex flex-col justify-center mr-3 pt-1">
                           <svg 
-                            className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
+                            className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
                             fill="none" 
                             stroke="currentColor" 
                             viewBox="0 0 24 24"
                           >
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                           </svg>
+                        </div>
+                        {/* Title and badge column */}
+                        <div className="flex flex-col items-start w-full">
+                          <div className="flex items-center flex-wrap mb-1 w-full min-w-0">
+                            {/* Numbered badge */}
+                            <span className="flex items-center justify-center w-5 h-5 rounded-full bg-neutral-200 text-neutral-600 text-xs font-semibold mr-2 border border-neutral-300 flex-shrink-0">
+                              {idx + 1}
+                            </span>
+                            <h3 className="text-lg font-bold leading-tight truncate min-w-0 sm:text-base md:text-lg" style={{lineHeight: '1.2'}}>{chapter.name}</h3>
+                          </div>
+                          <div className="flex items-center space-x-1 text-sm text-neutral-400 font-normal">
+                            <Layers size={16} className="mr-1" />
+                            <span>{chapter.activities.length} Activities</span>
+                          </div>
                         </div>
                       </div>
                       <div className={`transition-all duration-200 ${isExpanded ? 'block' : 'hidden'}`}>
