@@ -8,6 +8,7 @@ import { Input } from '@components/ui/input';
 import { Label } from '@components/ui/label';
 import { Checkbox } from '@components/ui/checkbox';
 import { Button } from '@components/ui/button';
+import toast from 'react-hot-toast';
 
 interface EditorContext {
   isEditable: boolean;
@@ -62,6 +63,16 @@ const WebPreviewComponent: React.FC<WebPreviewProps> = ({ node, updateAttributes
       const res = await getUrlPreview(url);
       if (!res) throw new Error('Failed to fetch preview');
       const data = res;
+      
+      // Check if metadata is insufficient (only has basic fields like favicon/url but no title/description)
+      const hasMinimalMetadata = !data.title && !data.description && !data.og_image;
+      
+      if (hasMinimalMetadata) {
+        toast.error("Unable to get metadata from this website. The preview card may appear incomplete.", {
+          duration: 4000,
+        });
+      }
+      
       updateAttributes({ ...data, url });
       setEditing(false);
     } catch (err: any) {
