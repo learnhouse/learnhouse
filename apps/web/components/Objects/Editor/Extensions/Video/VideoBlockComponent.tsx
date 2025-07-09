@@ -3,7 +3,7 @@ import { Node } from '@tiptap/core'
 import { 
   Loader2, Video, Upload, X, HelpCircle, 
   Maximize2, Minimize2, ArrowLeftRight, 
-  CheckCircle2, AlertCircle, Download
+  CheckCircle2, AlertCircle, Download, Expand
 } from 'lucide-react'
 import React from 'react'
 import { uploadNewVideoFile } from '../../../../../services/blocks/Video/video'
@@ -16,6 +16,7 @@ import { constructAcceptValue } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
 import styled from 'styled-components'
+import Modal from '@components/Objects/StyledElements/Modal/Modal'
 
 const SUPPORTED_FILES = constructAcceptValue(['webm', 'mp4'])
 
@@ -189,6 +190,7 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
   const [uploadProgress, setUploadProgress] = React.useState(0)
   const [blockObject, setBlockObject] = React.useState<VideoBlockObject | null>(initialBlockObject)
   const [selectedSize, setSelectedSize] = React.useState<VideoSize>(initialBlockObject?.size || 'medium')
+  const [isModalOpen, setIsModalOpen] = React.useState(false)
 
   // Update block object when size changes
   React.useEffect(() => {
@@ -323,40 +325,73 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
     document.body.removeChild(link);
   };
 
+  const handleExpand = () => {
+    setIsModalOpen(true);
+  };
+
   // If we're in preview mode and have a video, show only the video player
   if (!isEditable && blockObject && videoUrl) {
     const width = VIDEO_SIZES[blockObject.size].width
     return (
-      <NodeViewWrapper className="block-video w-full">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
-          className="w-full flex justify-center relative"
-        >
-          <div
-            style={{ 
-              maxWidth: typeof width === 'number' ? width : '100%',
-              width: '100%'
-            }}
+      <>
+        <NodeViewWrapper className="block-video w-full">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+            className="w-full flex justify-center relative"
           >
-            <div className="relative">
+            <div
+              style={{ 
+                maxWidth: typeof width === 'number' ? width : '100%',
+                width: '100%'
+              }}
+            >
+              <div className="relative">
+                <video
+                  controls
+                  className="w-full aspect-video object-contain rounded-lg shadow-sm"
+                  src={videoUrl}
+                />
+                <div className="absolute top-2 right-2 flex gap-1">
+                  <button
+                    onClick={handleExpand}
+                    className="p-2 bg-black/50 hover:bg-black/70 rounded-full transition-colors"
+                    title="Expand video"
+                  >
+                    <Expand className="w-4 h-4 text-white" />
+                  </button>
+                  <button
+                    onClick={handleDownload}
+                    className="p-2 bg-black/50 hover:bg-black/70 rounded-full transition-colors"
+                    title="Download video"
+                  >
+                    <Download className="w-4 h-4 text-white" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </NodeViewWrapper>
+        
+        <Modal
+          isDialogOpen={isModalOpen}
+          onOpenChange={setIsModalOpen}
+          dialogTitle="Video Player"
+          minWidth="lg"
+          minHeight="lg"
+          dialogContent={
+            <div className="w-full">
               <video
                 controls
-                className="w-full aspect-video object-contain rounded-lg shadow-sm"
+                autoPlay
+                className="w-full aspect-video object-contain rounded-lg shadow-lg bg-black"
                 src={videoUrl}
               />
-              <button
-                onClick={handleDownload}
-                className="absolute top-2 right-2 p-2 bg-black/50 hover:bg-black/70 rounded-full transition-colors"
-                title="Download video"
-              >
-                <Download className="w-4 h-4 text-white" />
-              </button>
             </div>
-          </div>
-        </motion.div>
-      </NodeViewWrapper>
+          }
+        />
+      </>
     )
   }
 
@@ -524,12 +559,48 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
                       )}
                       src={videoUrl}
                     />
+                    <div className="absolute top-2 right-2 flex gap-1">
+                      <button
+                        onClick={handleExpand}
+                        className="p-2 bg-black/50 hover:bg-black/70 rounded-full transition-colors"
+                        title="Expand video"
+                      >
+                        <Expand className="w-4 h-4 text-white" />
+                      </button>
+                      <button
+                        onClick={handleDownload}
+                        className="p-2 bg-black/50 hover:bg-black/70 rounded-full transition-colors"
+                        title="Download video"
+                      >
+                        <Download className="w-4 h-4 text-white" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </VideoContainer>
             </motion.div>
           )}
         </VideoWrapper>
+        
+        {blockObject && videoUrl && (
+          <Modal
+            isDialogOpen={isModalOpen}
+            onOpenChange={setIsModalOpen}
+            dialogTitle="Video Player"
+            minWidth="lg"
+            minHeight="lg"
+            dialogContent={
+              <div className="w-full">
+                <video
+                  controls
+                  autoPlay
+                  className="w-full aspect-video object-contain rounded-lg shadow-lg bg-black"
+                  src={videoUrl}
+                />
+              </div>
+            }
+          />
+        )}
       </motion.div>
     </NodeViewWrapper>
   )
