@@ -13,12 +13,12 @@ import { useCourse, useCourseDispatch } from '@components/Contexts/CourseContext
 import FormTagInput from '@components/Objects/StyledElements/Form/TagInput';
 import LearningItemsList from './LearningItemsList';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@components/ui/select";
+  CustomSelect,
+  CustomSelectContent,
+  CustomSelectItem,
+  CustomSelectTrigger,
+  CustomSelectValue,
+} from "./CustomSelect";
 
 type EditCourseStructureProps = {
   orgslug: string
@@ -245,26 +245,26 @@ function EditCourseGeneral(props: EditCourseStructureProps) {
               <FormField name="thumbnail_type">
                 <FormLabelAndMessage label="Thumbnail Type" />
                 <Form.Control asChild>
-                  <Select
+                  <CustomSelect
                     value={formik.values.thumbnail_type}
                     onValueChange={(value) => {
                       if (!value) return;
                       formik.setFieldValue('thumbnail_type', value);
                     }}
                   >
-                    <SelectTrigger className="w-full bg-white">
-                      <SelectValue>
+                    <CustomSelectTrigger className="w-full bg-white">
+                      <CustomSelectValue>
                         {formik.values.thumbnail_type === 'image' ? 'Image' :
                          formik.values.thumbnail_type === 'video' ? 'Video' :
                          formik.values.thumbnail_type === 'both' ? 'Both' : 'Image'}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="image">Image</SelectItem>
-                      <SelectItem value="video">Video</SelectItem>
-                      <SelectItem value="both">Both</SelectItem>
-                    </SelectContent>
-                  </Select>
+                      </CustomSelectValue>
+                    </CustomSelectTrigger>
+                    <CustomSelectContent>
+                      <CustomSelectItem value="image">Image</CustomSelectItem>
+                      <CustomSelectItem value="video">Video</CustomSelectItem>
+                      <CustomSelectItem value="both">Both</CustomSelectItem>
+                    </CustomSelectContent>
+                  </CustomSelect>
                 </Form.Control>
               </FormField>
 
