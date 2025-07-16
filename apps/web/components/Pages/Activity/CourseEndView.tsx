@@ -1,11 +1,17 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import ReactConfetti from 'react-confetti';
-import { Trophy, ArrowLeft, BookOpen, Target } from 'lucide-react';
+import { Trophy, ArrowLeft, BookOpen, Target, Download } from 'lucide-react';
 import Link from 'next/link';
 import { getUriWithOrg } from '@services/config/config';
 import { getCourseThumbnailMediaDirectory } from '@services/media/media';
 import { useWindowSize } from 'usehooks-ts';
 import { useOrg } from '@components/Contexts/OrgContext';
+import { useLHSession } from '@components/Contexts/LHSessionContext';
+import { getUserCertificates } from '@services/courses/certifications';
+import CertificatePreview from '@components/Dashboard/Pages/Course/EditCourseCertification/CertificatePreview';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+import QRCode from 'qrcode';
 
 interface CourseEndViewProps {
   courseName: string;
@@ -26,6 +32,13 @@ const CourseEndView: React.FC<CourseEndViewProps> = ({
 }) => {
   const { width, height } = useWindowSize();
   const org = useOrg() as any;
+  const session = useLHSession() as any;
+  const [userCertificate, setUserCertificate] = useState<any>(null);
+  const [isLoadingCertificate, setIsLoadingCertificate] = useState(false);
+  const [certificateError, setCertificateError] = useState<string | null>(null);
+  const qrCodeLink = getUriWithOrg(orgslug, `/certificate/${userCertificate.user_certification_uuid}/verify`);
+
+
 
   // Check if course is actually completed
   const isCourseCompleted = useMemo(() => {
@@ -61,6 +74,296 @@ const CourseEndView: React.FC<CourseEndViewProps> = ({
     const completedActivities = allActivities.filter((activity: any) => isActivityDone(activity)).length;
     return totalActivities > 0 && completedActivities === totalActivities;
   }, [trailData, course]);
+
+  // Fetch user certificate when course is completed
+  useEffect(() => {
+    const fetchUserCertificate = async () => {
+      if (!isCourseCompleted) return;
+      
+      if (!session?.data?.tokens?.access_token) {
+        setCertificateError('Authentication required to view certificate');
+        return;
+      }
+      
+      setIsLoadingCertificate(true);
+      setCertificateError(null);
+      try {
+        const cleanCourseUuid = courseUuid.replace('course_', '');
+        const result = await getUserCertificates(
+          `course_${cleanCourseUuid}`,
+          session.data.tokens.access_token
+        );
+        
+        if (result.success && result.data && result.data.length > 0) {
+          setUserCertificate(result.data[0]);
+        } else {
+          setCertificateError('No certificate found for this course');
+        }
+      } catch (error) {
+        console.error('Error fetching user certificate:', error);
+        setCertificateError('Failed to load certificate. Please try again later.');
+      } finally {
+        setIsLoadingCertificate(false);
+      }
+    };
+
+    fetchUserCertificate();
+  }, [isCourseCompleted, courseUuid, session?.data?.tokens?.access_token]);
+
+  // Generate PDF using canvas
+  const downloadCertificate = async () => {
+    if (!userCertificate) return;
+
+    try {
+      // Create a temporary div for the certificate
+      const certificateDiv = document.createElement('div');
+      certificateDiv.style.position = 'absolute';
+      certificateDiv.style.left = '-9999px';
+      certificateDiv.style.top = '0';
+      certificateDiv.style.width = '800px';
+      certificateDiv.style.height = '600px';
+      certificateDiv.style.background = 'white';
+      certificateDiv.style.padding = '40px';
+      certificateDiv.style.fontFamily = 'Arial, sans-serif';
+      certificateDiv.style.textAlign = 'center';
+      certificateDiv.style.display = 'flex';
+      certificateDiv.style.flexDirection = 'column';
+      certificateDiv.style.justifyContent = 'center';
+      certificateDiv.style.alignItems = 'center';
+      certificateDiv.style.position = 'relative';
+      certificateDiv.style.overflow = 'hidden';
+
+      // Get theme colors based on pattern
+      const getPatternTheme = (pattern: string) => {
+        switch (pattern) {
+          case 'royal':
+            return { primary: '#b45309', secondary: '#d97706', icon: '#d97706' };
+          case 'tech':
+            return { primary: '#0e7490', secondary: '#0891b2', icon: '#0891b2' };
+          case 'nature':
+            return { primary: '#15803d', secondary: '#16a34a', icon: '#16a34a' };
+          case 'geometric':
+            return { primary: '#7c3aed', secondary: '#9333ea', icon: '#9333ea' };
+          case 'vintage':
+            return { primary: '#c2410c', secondary: '#ea580c', icon: '#ea580c' };
+          case 'waves':
+            return { primary: '#1d4ed8', secondary: '#2563eb', icon: '#2563eb' };
+          case 'minimal':
+            return { primary: '#374151', secondary: '#4b5563', icon: '#4b5563' };
+          case 'professional':
+            return { primary: '#334155', secondary: '#475569', icon: '#475569' };
+          case 'academic':
+            return { primary: '#3730a3', secondary: '#4338ca', icon: '#4338ca' };
+          case 'modern':
+            return { primary: '#1d4ed8', secondary: '#2563eb', icon: '#2563eb' };
+          default:
+            return { primary: '#374151', secondary: '#4b5563', icon: '#4b5563' };
+        }
+      };
+
+      const theme = getPatternTheme(userCertificate.certification.config.certificate_pattern);
+      const certificateId = userCertificate.certificate_user.user_certification_uuid;
+      const qrCodeData = qrCodeLink;
+
+      // Generate QR code
+      const qrCodeDataUrl = await QRCode.toDataURL(qrCodeData, {
+        width: 120,
+        margin: 2,
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF'
+        },
+        errorCorrectionLevel: 'M',
+        type: 'image/png'
+      });
+
+      // Create certificate content
+      certificateDiv.innerHTML = `
+        <div style="
+          position: absolute;
+          top: 20px;
+          left: 20px;
+          font-size: 12px;
+          color: ${theme.secondary};
+          font-weight: 500;
+        ">ID: ${certificateId}</div>
+        
+        <div style="
+          position: absolute;
+          top: 20px;
+          right: 20px;
+          width: 80px;
+          height: 80px;
+          border: 2px solid ${theme.secondary};
+          border-radius: 8px;
+          background: white;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        ">
+          <img src="${qrCodeDataUrl}" alt="QR Code" style="width: 100%; height: 100%; object-fit: contain;" />
+        </div>
+        
+        <div style="
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          margin-bottom: 30px;
+          font-size: 14px;
+          color: ${theme.secondary};
+          font-weight: 500;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+        ">
+          <div style="width: 24px; height: 1px; background: linear-gradient(90deg, transparent, ${theme.secondary}, transparent);"></div>
+          Certificate
+          <div style="width: 24px; height: 1px; background: linear-gradient(90deg, transparent, ${theme.secondary}, transparent);"></div>
+        </div>
+        
+        <div style="
+          width: 80px;
+          height: 80px;
+          background: linear-gradient(135deg, ${theme.icon}20 0%, ${theme.icon}40 100%);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin: 0 auto 30px;
+          font-size: 40px;
+          line-height: 1;
+        ">🏆</div>
+        
+        <div style="
+          font-size: 32px;
+          font-weight: bold;
+          color: ${theme.primary};
+          margin-bottom: 20px;
+          line-height: 1.2;
+          max-width: 600px;
+        ">${userCertificate.certification.config.certification_name}</div>
+        
+        <div style="
+          font-size: 18px;
+          color: #6b7280;
+          margin-bottom: 30px;
+          line-height: 1.5;
+          max-width: 500px;
+        ">${userCertificate.certification.config.certification_description || 'This is to certify that the course has been successfully completed.'}</div>
+        
+        <div style="
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 4px;
+          margin: 20px 0;
+        ">
+          <div style="width: 8px; height: 1px; background: ${theme.secondary}; opacity: 0.5;"></div>
+          <div style="width: 4px; height: 4px; background: ${theme.primary}; border-radius: 50%; opacity: 0.6;"></div>
+          <div style="width: 8px; height: 1px; background: ${theme.secondary}; opacity: 0.5;"></div>
+        </div>
+        
+        <div style="
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 16px;
+          color: ${theme.primary};
+          background: ${theme.icon}10;
+          padding: 12px 24px;
+          border-radius: 20px;
+          border: 1px solid ${theme.icon}20;
+          font-weight: 500;
+          margin-bottom: 30px;
+          white-space: nowrap;
+        ">
+          <span style="font-weight: bold; font-size: 18px;">✓</span>
+          <span>${userCertificate.certification.config.certification_type === 'completion' ? 'Course Completion' :
+            userCertificate.certification.config.certification_type === 'achievement' ? 'Achievement Based' :
+            userCertificate.certification.config.certification_type === 'assessment' ? 'Assessment Based' :
+            userCertificate.certification.config.certification_type === 'participation' ? 'Participation' :
+            userCertificate.certification.config.certification_type === 'mastery' ? 'Skill Mastery' :
+            userCertificate.certification.config.certification_type === 'professional' ? 'Professional Development' :
+            userCertificate.certification.config.certification_type === 'continuing' ? 'Continuing Education' :
+            userCertificate.certification.config.certification_type === 'workshop' ? 'Workshop Attendance' :
+            userCertificate.certification.config.certification_type === 'specialization' ? 'Specialization' : 'Course Completion'}</span>
+        </div>
+        
+        <div style="
+          margin-top: 30px;
+          padding: 24px;
+          background: #f8fafc;
+          border-radius: 8px;
+          border: 1px solid #e2e8f0;
+          max-width: 400px;
+        ">
+          <div style="margin: 8px 0; font-size: 14px; color: #374151;">
+            <strong style="color: ${theme.primary};">Certificate ID:</strong> ${certificateId}
+          </div>
+          <div style="margin: 8px 0; font-size: 14px; color: #374151;">
+            <strong style="color: ${theme.primary};">Awarded:</strong> ${new Date(userCertificate.certificate_user.created_at).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            })}
+          </div>
+          ${userCertificate.certification.config.certificate_instructor ? 
+            `<div style="margin: 8px 0; font-size: 14px; color: #374151;">
+              <strong style="color: ${theme.primary};">Instructor:</strong> ${userCertificate.certification.config.certificate_instructor}
+            </div>` : ''
+          }
+        </div>
+        
+        <div style="
+          margin-top: 20px;
+          font-size: 12px;
+          color: #6b7280;
+        ">
+          This certificate can be verified at ${qrCodeLink}
+        </div>
+      `;
+
+      // Add to document temporarily
+      document.body.appendChild(certificateDiv);
+
+      // Convert to canvas
+      const canvas = await html2canvas(certificateDiv, {
+        width: 800,
+        height: 600,
+        scale: 2, // Higher resolution
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff'
+      });
+
+      // Remove temporary div
+      document.body.removeChild(certificateDiv);
+
+      // Create PDF
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('landscape', 'mm', 'a4');
+      
+      // Calculate dimensions to center the certificate
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = 280; // mm
+      const imgHeight = 210; // mm
+      
+      // Center the image
+      const x = (pdfWidth - imgWidth) / 2;
+      const y = (pdfHeight - imgHeight) / 2;
+      
+      pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
+      
+      // Save the PDF
+      const fileName = `${userCertificate.certification.config.certification_name.replace(/[^a-zA-Z0-9]/g, '_')}_Certificate.pdf`;
+      pdf.save(fileName);
+
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Failed to generate PDF. Please try again.');
+    }
+  };
 
   // Calculate progress for incomplete courses
   const progressInfo = useMemo(() => {
@@ -115,7 +418,7 @@ const CourseEndView: React.FC<CourseEndViewProps> = ({
           />
         </div>
         
-        <div className="bg-white rounded-2xl p-8 nice-shadow max-w-2xl w-full space-y-6 relative z-10">
+        <div className="bg-white rounded-2xl p-8 nice-shadow max-w-4xl w-full space-y-6 relative z-10">
           <div className="flex flex-col items-center space-y-6">
             {thumbnailImage && (
               <img
@@ -147,9 +450,60 @@ const CourseEndView: React.FC<CourseEndViewProps> = ({
             Your dedication and hard work have paid off. You've mastered all the content in this course.
           </p>
 
+          {/* Certificate Display */}
+          {isLoadingCertificate ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <span className="ml-3 text-gray-600">Loading your certificate...</span>
+            </div>
+          ) : certificateError ? (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+              <p className="text-yellow-800">
+                {certificateError}
+              </p>
+            </div>
+          ) : userCertificate ? (
+            <div className="space-y-4">
+              <h2 className="text-2xl font-semibold text-gray-900">Your Certificate</h2>
+              <div className="max-w-2xl mx-auto" id="certificate-preview">
+                <div id="certificate-content">
+                  <CertificatePreview
+                    certificationName={userCertificate.certification.config.certification_name}
+                    certificationDescription={userCertificate.certification.config.certification_description}
+                    certificationType={userCertificate.certification.config.certification_type}
+                    certificatePattern={userCertificate.certification.config.certificate_pattern}
+                    certificateInstructor={userCertificate.certification.config.certificate_instructor}
+                    certificateId={userCertificate.certificate_user.user_certification_uuid}
+                    awardedDate={new Date(userCertificate.certificate_user.created_at).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                    qrCodeLink={qrCodeLink}
+                  />
+                </div>
+              </div>
+              <div className="flex justify-center space-x-4">
+                <button
+                  onClick={downloadCertificate}
+                  className="inline-flex items-center space-x-2 bg-green-600 text-white px-6 py-3 rounded-full hover:bg-green-700 transition duration-200"
+                >
+                  <Download className="w-5 h-5" />
+                  <span>Download Certificate PDF</span>
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-gray-50 rounded-lg p-6">
+              <p className="text-gray-600">
+                No certificate is available for this course. Contact your instructor for more information.
+              </p>
+            </div>
+          )}
+
           <div className="pt-6">
             <Link
-              href={getUriWithOrg(orgslug, '') + `/course/${courseUuid.replace('course_', '')}`}
+              href={getUriWithOrg(orgslug, `/course/${courseUuid.replace('course_', '')}`)}
               className="inline-flex items-center space-x-2 bg-gray-800 text-white px-6 py-3 rounded-full hover:bg-gray-700 transition duration-200"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -224,7 +578,7 @@ const CourseEndView: React.FC<CourseEndViewProps> = ({
 
           <div className="pt-6">
             <Link
-              href={getUriWithOrg(orgslug, '') + `/course/${courseUuid.replace('course_', '')}`}
+              href={getUriWithOrg(orgslug, `/course/${courseUuid.replace('course_', '')}`)}
               className="inline-flex items-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-full hover:bg-blue-700 transition duration-200"
             >
               <ArrowLeft className="w-5 h-5" />
