@@ -1,15 +1,21 @@
-import FormLayout, {
+import {
   FormField,
   FormLabelAndMessage,
   Input,
   Textarea,
 } from '@components/Objects/StyledElements/Form/Form';
 import { useFormik } from 'formik';
-import { AlertTriangle, Award, CheckCircle, FileText, Settings } from 'lucide-react';
+import { AlertTriangle, Award, FileText, Settings } from 'lucide-react';
 import CertificatePreview from './CertificatePreview';
 import * as Form from '@radix-ui/react-form';
 import React, { useEffect, useState } from 'react';
 import { useCourse, useCourseDispatch } from '@components/Contexts/CourseContext';
+import { useLHSession } from '@components/Contexts/LHSessionContext';
+import { 
+  createCertification, 
+  updateCertification, 
+  deleteCertification 
+} from '@services/courses/certifications';
 import {
   CustomSelect,
   CustomSelectContent,
@@ -17,6 +23,9 @@ import {
   CustomSelectTrigger,
   CustomSelectValue,
 } from "../EditCourseGeneral/CustomSelect";
+import useSWR, { mutate } from 'swr';
+import { getAPIUrl } from '@services/config/config';
+import toast from 'react-hot-toast';
 
 type EditCourseCertificationProps = {
   orgslug: string
@@ -43,9 +52,56 @@ const validate = (values: any) => {
 
 function EditCourseCertification(props: EditCourseCertificationProps) {
   const [error, setError] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
   const course = useCourse();
   const dispatchCourse = useCourseDispatch() as any;
   const { isLoading, courseStructure } = course as any;
+  const session = useLHSession() as any;
+  const access_token = session?.data?.tokens?.access_token;
+
+  // Fetch existing certifications
+  const { data: certifications, error: certificationsError, mutate: mutateCertifications } = useSWR(
+    courseStructure?.course_uuid && access_token ? 
+    `certifications/course/${courseStructure.course_uuid}` : null,
+    async () => {
+      if (!courseStructure?.course_uuid || !access_token) return null;
+      const result = await fetch(
+        `${getAPIUrl()}certifications/course/${courseStructure.course_uuid}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${access_token}`,
+          },
+          credentials: 'include',
+        }
+      );
+      const response = await result.json();
+      
+
+      
+      if (result.status === 200) {
+        return {
+          success: true,
+          data: response,
+          status: result.status,
+          HTTPmessage: result.statusText,
+        };
+      } else {
+        return {
+          success: false,
+          data: response,
+          status: result.status,
+          HTTPmessage: result.statusText,
+        };
+      }
+    }
+  );
+
+  const existingCertification = certifications?.data?.[0]; // Assuming one certification per course
+  const hasExistingCertification = !!existingCertification;
+
+
 
   // Create initial values object
   const getInitialValues = () => {
@@ -64,13 +120,16 @@ function EditCourseCertification(props: EditCourseCertificationProps) {
       return '';
     };
 
+    // Use existing certification data if available, otherwise fall back to course data
+    const config = existingCertification?.config || {};
+    
     return {
-      enable_certification: courseStructure?.enable_certification || false,
-      certification_name: courseStructure?.certification_name || courseStructure?.name || '',
-      certification_description: courseStructure?.certification_description || courseStructure?.description || '',
-      certification_type: courseStructure?.certification_type || 'completion',
-      certificate_pattern: courseStructure?.certificate_pattern || 'professional',
-      certificate_instructor: courseStructure?.certificate_instructor || getInstructorName(),
+      enable_certification: hasExistingCertification,
+      certification_name: config.certification_name || courseStructure?.name || '',
+      certification_description: config.certification_description || courseStructure?.description || '',
+      certification_type: config.certification_type || 'completion',
+      certificate_pattern: config.certificate_pattern || 'professional',
+      certificate_instructor: config.certificate_instructor || getInstructorName(),
     };
   };
 
@@ -78,26 +137,85 @@ function EditCourseCertification(props: EditCourseCertificationProps) {
     initialValues: getInitialValues(),
     validate,
     onSubmit: async values => {
-      try {
-        // Add your submission logic here
-        dispatchCourse({ type: 'setIsSaved' });
-      } catch (e) {
-        setError('Failed to save certification settings.');
-      }
+      // This is no longer used - saving is handled by the main Save button
     },
     enableReinitialize: true,
   }) as any;
 
-  // Reset form when courseStructure changes
+  // Handle enabling/disabling certification
+  const handleCertificationToggle = async (enabled: boolean) => {
+    if (enabled && !hasExistingCertification) {
+      // Create new certification
+      setIsCreating(true);
+      try {
+        const config = {
+          certification_name: formik.values.certification_name || courseStructure?.name || '',
+          certification_description: formik.values.certification_description || courseStructure?.description || '',
+          certification_type: formik.values.certification_type || 'completion',
+          certificate_pattern: formik.values.certificate_pattern || 'professional',
+          certificate_instructor: formik.values.certificate_instructor || '',
+        };
+
+        const result = await createCertification(
+          courseStructure.id,
+          config,
+          access_token
+        );
+
+
+
+        // createCertification uses errorHandling which returns JSON directly on success
+        if (result) {
+          toast.success('Certification created successfully');
+          mutateCertifications();
+          formik.setFieldValue('enable_certification', true);
+        } else {
+          throw new Error('Failed to create certification');
+        }
+      } catch (e) {
+        setError('Failed to create certification.');
+        toast.error('Failed to create certification');
+        formik.setFieldValue('enable_certification', false);
+      } finally {
+        setIsCreating(false);
+      }
+    } else if (!enabled && hasExistingCertification) {
+      // Delete existing certification
+      try {
+        const result = await deleteCertification(
+          existingCertification.certification_uuid,
+          access_token
+        );
+
+        // deleteCertification uses errorHandling which returns JSON directly on success
+        if (result) {
+          toast.success('Certification removed successfully');
+          mutateCertifications();
+          formik.setFieldValue('enable_certification', false);
+        } else {
+          throw new Error('Failed to delete certification');
+        }
+      } catch (e) {
+        setError('Failed to remove certification.');
+        toast.error('Failed to remove certification');
+        formik.setFieldValue('enable_certification', true);
+      }
+    } else {
+      formik.setFieldValue('enable_certification', enabled);
+    }
+  };
+
+  // Reset form when certifications data changes
   useEffect(() => {
-    if (courseStructure && !isLoading) {
+    if (certifications && !isLoading) {
       const newValues = getInitialValues();
       formik.resetForm({ values: newValues });
     }
-  }, [courseStructure, isLoading]);
+  }, [certifications, isLoading]);
 
+  // Handle form changes - update course context with certification data
   useEffect(() => {
-    if (!isLoading) {
+    if (!isLoading && hasExistingCertification) {
       const formikValues = formik.values as any;
       const initialValues = formik.initialValues as any;
       const valuesChanged = Object.keys(formikValues).some(
@@ -106,17 +224,33 @@ function EditCourseCertification(props: EditCourseCertificationProps) {
 
       if (valuesChanged) {
         dispatchCourse({ type: 'setIsNotSaved' });
+        
+        // Store certification data in course context so it gets saved with the main save button
         const updatedCourse = {
           ...courseStructure,
-          ...formikValues,
+          // Store certification data for the main save functionality
+          _certificationData: {
+            certification_uuid: existingCertification.certification_uuid,
+            config: {
+              certification_name: formikValues.certification_name,
+              certification_description: formikValues.certification_description,
+              certification_type: formikValues.certification_type,
+              certificate_pattern: formikValues.certificate_pattern,
+              certificate_instructor: formikValues.certificate_instructor,
+            }
+          }
         };
         dispatchCourse({ type: 'setCourseStructure', payload: updatedCourse });
       }
     }
-  }, [formik.values, isLoading]);
+  }, [formik.values, isLoading, hasExistingCertification, existingCertification]);
 
-  if (isLoading || !courseStructure) {
+  if (isLoading || !courseStructure || (courseStructure.course_uuid && access_token && certifications === undefined)) {
     return <div>Loading...</div>;
+  }
+
+  if (certificationsError) {
+    return <div>Error loading certifications</div>;
   }
 
   return (
@@ -139,10 +273,16 @@ function EditCourseCertification(props: EditCourseCertificationProps) {
                     type="checkbox"
                     className="sr-only peer"
                     checked={formik.values.enable_certification}
-                    onChange={(e) => formik.setFieldValue('enable_certification', e.target.checked)}
+                    onChange={(e) => handleCertificationToggle(e.target.checked)}
+                    disabled={isCreating}
                   />
                   <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                 </label>
+                {isCreating && (
+                  <div className="animate-spin">
+                    <Settings size={16} />
+                  </div>
+                )}
               </div>
             </div>
 
@@ -153,162 +293,160 @@ function EditCourseCertification(props: EditCourseCertificationProps) {
               </div>
             )}
 
-            {/* Certification Configuration */}
-            {formik.values.enable_certification && (
+            {/* Certification Configuration - Only show if enabled and has existing certification */}
+            {formik.values.enable_certification && hasExistingCertification && (
               <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
                 {/* Form Section */}
                 <div className="lg:col-span-3">
-                  <FormLayout onSubmit={formik.handleSubmit}>
-                    <div className="space-y-6">
-                      {/* Basic Information Section */}
-                      <div className="flex flex-col bg-gray-50 -space-y-1 px-3 sm:px-5 py-3 rounded-md mb-3">
-                        <h3 className="font-bold text-md text-gray-800 flex items-center gap-2">
-                          <FileText size={16} />
-                          Basic Information
-                        </h3>
-                        <p className="text-gray-500 text-xs sm:text-sm">
-                          Configure the basic details of your certification
-                        </p>
-                      </div>
+                  <Form.Root className="space-y-6">
+                    {/* Basic Information Section */}
+                    <div className="flex flex-col bg-gray-50 -space-y-1 px-3 sm:px-5 py-3 rounded-md mb-3">
+                      <h3 className="font-bold text-md text-gray-800 flex items-center gap-2">
+                        <FileText size={16} />
+                        Basic Information
+                      </h3>
+                      <p className="text-gray-500 text-xs sm:text-sm">
+                        Configure the basic details of your certification
+                      </p>
+                    </div>
 
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        {/* Certification Name */}
-                        <FormField name="certification_name">
-                          <FormLabelAndMessage 
-                            label="Certification Name" 
-                            message={formik.errors.certification_name} 
-                          />
-                          <Form.Control asChild>
-                            <Input
-                              style={{ backgroundColor: 'white' }}
-                              onChange={formik.handleChange}
-                              value={formik.values.certification_name}
-                              type="text"
-                              placeholder="e.g., Advanced JavaScript Certification"
-                              required
-                            />
-                          </Form.Control>
-                        </FormField>
-
-                        {/* Certification Type */}
-                        <FormField name="certification_type">
-                          <FormLabelAndMessage label="Certification Type" />
-                          <Form.Control asChild>
-                            <CustomSelect
-                              value={formik.values.certification_type}
-                              onValueChange={(value) => {
-                                if (!value) return;
-                                formik.setFieldValue('certification_type', value);
-                              }}
-                            >
-                              <CustomSelectTrigger className="w-full bg-white">
-                                <CustomSelectValue>
-                                  {formik.values.certification_type === 'completion' ? 'Course Completion' :
-                                   formik.values.certification_type === 'achievement' ? 'Achievement Based' :
-                                   formik.values.certification_type === 'assessment' ? 'Assessment Based' :
-                                   formik.values.certification_type === 'participation' ? 'Participation' :
-                                   formik.values.certification_type === 'mastery' ? 'Skill Mastery' :
-                                   formik.values.certification_type === 'professional' ? 'Professional Development' :
-                                   formik.values.certification_type === 'continuing' ? 'Continuing Education' :
-                                   formik.values.certification_type === 'workshop' ? 'Workshop Attendance' :
-                                   formik.values.certification_type === 'specialization' ? 'Specialization' : 'Course Completion'}
-                                </CustomSelectValue>
-                              </CustomSelectTrigger>
-                              <CustomSelectContent>
-                                <CustomSelectItem value="completion">Course Completion</CustomSelectItem>
-                                <CustomSelectItem value="achievement">Achievement Based</CustomSelectItem>
-                                <CustomSelectItem value="assessment">Assessment Based</CustomSelectItem>
-                                <CustomSelectItem value="participation">Participation</CustomSelectItem>
-                                <CustomSelectItem value="mastery">Skill Mastery</CustomSelectItem>
-                                <CustomSelectItem value="professional">Professional Development</CustomSelectItem>
-                                <CustomSelectItem value="continuing">Continuing Education</CustomSelectItem>
-                                <CustomSelectItem value="workshop">Workshop Attendance</CustomSelectItem>
-                                <CustomSelectItem value="specialization">Specialization</CustomSelectItem>
-                              </CustomSelectContent>
-                            </CustomSelect>
-                          </Form.Control>
-                        </FormField>
-                      </div>
-
-                      {/* Certification Description */}
-                      <FormField name="certification_description">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {/* Certification Name */}
+                      <FormField name="certification_name">
                         <FormLabelAndMessage 
-                          label="Certification Description" 
-                          message={formik.errors.certification_description} 
+                          label="Certification Name" 
+                          message={formik.errors.certification_name} 
                         />
                         <Form.Control asChild>
-                          <Textarea
-                            style={{ backgroundColor: 'white', height: '120px', minHeight: '120px' }}
+                          <Input
+                            style={{ backgroundColor: 'white' }}
                             onChange={formik.handleChange}
-                            value={formik.values.certification_description}
-                            placeholder="Describe what this certification represents and its value..."
+                            value={formik.values.certification_name}
+                            type="text"
+                            placeholder="e.g., Advanced JavaScript Certification"
                             required
                           />
                         </Form.Control>
                       </FormField>
 
-                      {/* Certificate Design Section */}
-                      <div className="flex flex-col bg-gray-50 -space-y-1 px-3 sm:px-5 py-3 rounded-md mb-3">
-                        <h3 className="font-bold text-md text-gray-800 flex items-center gap-2">
-                          <Award size={16} />
-                          Certificate Design
-                        </h3>
-                        <p className="text-gray-500 text-xs sm:text-sm">
-                          Choose a decorative pattern for your certificate
-                        </p>
-                      </div>
-
-                      {/* Pattern Selection */}
-                      <FormField name="certificate_pattern">
-                        <FormLabelAndMessage label="Certificate Pattern" />
+                      {/* Certification Type */}
+                      <FormField name="certification_type">
+                        <FormLabelAndMessage label="Certification Type" />
                         <Form.Control asChild>
-                          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-                            {[
-                              { value: 'royal', name: 'Royal', description: 'Ornate with crown motifs' },
-                              { value: 'tech', name: 'Tech', description: 'Circuit-inspired patterns' },
-                              { value: 'nature', name: 'Nature', description: 'Organic leaf patterns' },
-                              { value: 'geometric', name: 'Geometric', description: 'Abstract shapes & lines' },
-                              { value: 'vintage', name: 'Vintage', description: 'Art deco styling' },
-                              { value: 'waves', name: 'Waves', description: 'Flowing water patterns' },
-                              { value: 'minimal', name: 'Minimal', description: 'Clean and simple' },
-                              { value: 'professional', name: 'Professional', description: 'Business-ready design' },
-                              { value: 'academic', name: 'Academic', description: 'Traditional university style' },
-                              { value: 'modern', name: 'Modern', description: 'Contemporary clean lines' }
-                            ].map((pattern) => (
-                              <div
-                                key={pattern.value}
-                                className={`p-3 border-2 rounded-lg cursor-pointer transition-all ${
-                                  formik.values.certificate_pattern === pattern.value
-                                    ? 'border-blue-500 bg-blue-50'
-                                    : 'border-gray-200 hover:border-gray-300'
-                                }`}
-                                onClick={() => formik.setFieldValue('certificate_pattern', pattern.value)}
-                              >
-                                <div className="text-center">
-                                  <div className="text-sm font-medium text-gray-900">{pattern.name}</div>
-                                  <div className="text-xs text-gray-500 mt-1">{pattern.description}</div>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </Form.Control>
-                      </FormField>
-
-                      {/* Custom Instructor */}
-                      <FormField name="certificate_instructor">
-                        <FormLabelAndMessage label="Instructor Name (Optional)" />
-                        <Form.Control asChild>
-                          <Input
-                            style={{ backgroundColor: 'white' }}
-                            onChange={formik.handleChange}
-                            value={formik.values.certificate_instructor}
-                            type="text"
-                            placeholder="e.g., Dr. Jane Smith"
-                          />
+                          <CustomSelect
+                            value={formik.values.certification_type}
+                            onValueChange={(value) => {
+                              if (!value) return;
+                              formik.setFieldValue('certification_type', value);
+                            }}
+                          >
+                            <CustomSelectTrigger className="w-full bg-white">
+                              <CustomSelectValue>
+                                {formik.values.certification_type === 'completion' ? 'Course Completion' :
+                                 formik.values.certification_type === 'achievement' ? 'Achievement Based' :
+                                 formik.values.certification_type === 'assessment' ? 'Assessment Based' :
+                                 formik.values.certification_type === 'participation' ? 'Participation' :
+                                 formik.values.certification_type === 'mastery' ? 'Skill Mastery' :
+                                 formik.values.certification_type === 'professional' ? 'Professional Development' :
+                                 formik.values.certification_type === 'continuing' ? 'Continuing Education' :
+                                 formik.values.certification_type === 'workshop' ? 'Workshop Attendance' :
+                                 formik.values.certification_type === 'specialization' ? 'Specialization' : 'Course Completion'}
+                              </CustomSelectValue>
+                            </CustomSelectTrigger>
+                            <CustomSelectContent>
+                              <CustomSelectItem value="completion">Course Completion</CustomSelectItem>
+                              <CustomSelectItem value="achievement">Achievement Based</CustomSelectItem>
+                              <CustomSelectItem value="assessment">Assessment Based</CustomSelectItem>
+                              <CustomSelectItem value="participation">Participation</CustomSelectItem>
+                              <CustomSelectItem value="mastery">Skill Mastery</CustomSelectItem>
+                              <CustomSelectItem value="professional">Professional Development</CustomSelectItem>
+                              <CustomSelectItem value="continuing">Continuing Education</CustomSelectItem>
+                              <CustomSelectItem value="workshop">Workshop Attendance</CustomSelectItem>
+                              <CustomSelectItem value="specialization">Specialization</CustomSelectItem>
+                            </CustomSelectContent>
+                          </CustomSelect>
                         </Form.Control>
                       </FormField>
                     </div>
-                  </FormLayout>
+
+                    {/* Certification Description */}
+                    <FormField name="certification_description">
+                      <FormLabelAndMessage 
+                        label="Certification Description" 
+                        message={formik.errors.certification_description} 
+                      />
+                      <Form.Control asChild>
+                        <Textarea
+                          style={{ backgroundColor: 'white', height: '120px', minHeight: '120px' }}
+                          onChange={formik.handleChange}
+                          value={formik.values.certification_description}
+                          placeholder="Describe what this certification represents and its value..."
+                          required
+                        />
+                      </Form.Control>
+                    </FormField>
+
+                    {/* Certificate Design Section */}
+                    <div className="flex flex-col bg-gray-50 -space-y-1 px-3 sm:px-5 py-3 rounded-md mb-3">
+                      <h3 className="font-bold text-md text-gray-800 flex items-center gap-2">
+                        <Award size={16} />
+                        Certificate Design
+                      </h3>
+                      <p className="text-gray-500 text-xs sm:text-sm">
+                        Choose a decorative pattern for your certificate
+                      </p>
+                    </div>
+
+                    {/* Pattern Selection */}
+                    <FormField name="certificate_pattern">
+                      <FormLabelAndMessage label="Certificate Pattern" />
+                      <Form.Control asChild>
+                        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+                          {[
+                            { value: 'royal', name: 'Royal', description: 'Ornate with crown motifs' },
+                            { value: 'tech', name: 'Tech', description: 'Circuit-inspired patterns' },
+                            { value: 'nature', name: 'Nature', description: 'Organic leaf patterns' },
+                            { value: 'geometric', name: 'Geometric', description: 'Abstract shapes & lines' },
+                            { value: 'vintage', name: 'Vintage', description: 'Art deco styling' },
+                            { value: 'waves', name: 'Waves', description: 'Flowing water patterns' },
+                            { value: 'minimal', name: 'Minimal', description: 'Clean and simple' },
+                            { value: 'professional', name: 'Professional', description: 'Business-ready design' },
+                            { value: 'academic', name: 'Academic', description: 'Traditional university style' },
+                            { value: 'modern', name: 'Modern', description: 'Contemporary clean lines' }
+                          ].map((pattern) => (
+                            <div
+                              key={pattern.value}
+                              className={`p-3 border-2 rounded-lg cursor-pointer transition-all ${
+                                formik.values.certificate_pattern === pattern.value
+                                  ? 'border-blue-500 bg-blue-50'
+                                  : 'border-gray-200 hover:border-gray-300'
+                              }`}
+                              onClick={() => formik.setFieldValue('certificate_pattern', pattern.value)}
+                            >
+                              <div className="text-center">
+                                <div className="text-sm font-medium text-gray-900">{pattern.name}</div>
+                                <div className="text-xs text-gray-500 mt-1">{pattern.description}</div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </Form.Control>
+                    </FormField>
+
+                    {/* Custom Instructor */}
+                    <FormField name="certificate_instructor">
+                      <FormLabelAndMessage label="Instructor Name (Optional)" />
+                      <Form.Control asChild>
+                        <Input
+                          style={{ backgroundColor: 'white' }}
+                          onChange={formik.handleChange}
+                          value={formik.values.certificate_instructor}
+                          type="text"
+                          placeholder="e.g., Dr. Jane Smith"
+                        />
+                      </Form.Control>
+                    </FormField>
+                  </Form.Root>
                 </div>
 
                 {/* Preview Section */}
@@ -348,12 +486,26 @@ function EditCourseCertification(props: EditCourseCertificationProps) {
                 </p>
                 <button
                   type="button"
-                  onClick={() => formik.setFieldValue('enable_certification', true)}
-                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  onClick={() => handleCertificationToggle(true)}
+                  disabled={isCreating}
+                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Award size={16} />
-                  Enable Certification
+                  {isCreating ? 'Creating...' : 'Enable Certification'}
                 </button>
+              </div>
+            )}
+
+            {/* Creating State - when toggle is on but no certification exists yet */}
+            {formik.values.enable_certification && !hasExistingCertification && isCreating && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-8 text-center">
+                <div className="animate-spin mx-auto mb-4">
+                  <Settings className="w-16 h-16 text-blue-500" />
+                </div>
+                <h3 className="font-medium text-blue-700 mb-2">Creating Certification...</h3>
+                <p className="text-sm text-blue-600">
+                  Please wait while we set up your course certification.
+                </p>
               </div>
             )}
           </div>
