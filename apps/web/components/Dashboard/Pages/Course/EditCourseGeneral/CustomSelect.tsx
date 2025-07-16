@@ -6,6 +6,7 @@ interface CustomSelectProps {
   onValueChange: (value: string) => void;
   placeholder?: string;
   className?: string;
+  disabled?: boolean;
   children: React.ReactNode;
 }
 
@@ -18,6 +19,7 @@ interface CustomSelectItemProps {
 interface CustomSelectTriggerProps {
   children: React.ReactNode;
   className?: string;
+  disabled?: boolean;
 }
 
 interface CustomSelectContentProps {
@@ -31,6 +33,7 @@ const CustomSelectContext = React.createContext<{
   selectedValue: string;
   setSelectedValue: (value: string) => void;
   onValueChange: (value: string) => void;
+  disabled?: boolean;
 } | null>(null);
 
 export const CustomSelect: React.FC<CustomSelectProps> = ({
@@ -38,6 +41,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
   onValueChange,
   placeholder,
   className = '',
+  disabled = false,
   children
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -48,6 +52,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
   }, [value]);
 
   const handleValueChange = (newValue: string) => {
+    if (disabled) return;
     setSelectedValue(newValue);
     onValueChange(newValue);
     setIsOpen(false);
@@ -60,7 +65,8 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
         setIsOpen,
         selectedValue,
         setSelectedValue,
-        onValueChange: handleValueChange
+        onValueChange: handleValueChange,
+        disabled
       }}
     >
       <div className={`relative ${className}`}>
@@ -72,20 +78,23 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
 
 export const CustomSelectTrigger: React.FC<CustomSelectTriggerProps> = ({
   children,
-  className = ''
+  className = '',
+  disabled = false
 }) => {
   const context = React.useContext(CustomSelectContext);
   if (!context) {
     throw new Error('CustomSelectTrigger must be used within CustomSelect');
   }
 
-  const { isOpen, setIsOpen } = context;
+  const { isOpen, setIsOpen, disabled: contextDisabled } = context;
+  const isDisabled = disabled || contextDisabled;
 
   return (
     <button
       type="button"
+      disabled={isDisabled}
       className={`flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs ring-offset-background placeholder:text-muted-foreground focus:outline-hidden focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1 ${className}`}
-      onClick={() => setIsOpen(!isOpen)}
+      onClick={() => !isDisabled && setIsOpen(!isOpen)}
     >
       {children}
       <ChevronDown className={`h-4 w-4 opacity-50 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
@@ -102,9 +111,9 @@ export const CustomSelectContent: React.FC<CustomSelectContentProps> = ({
     throw new Error('CustomSelectContent must be used within CustomSelect');
   }
 
-  const { isOpen } = context;
+  const { isOpen, disabled } = context;
 
-  if (!isOpen) return null;
+  if (!isOpen || disabled) return null;
 
   return (
     <div className={`absolute z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 slide-in-from-top-2 ${className}`}>
@@ -125,12 +134,12 @@ export const CustomSelectItem: React.FC<CustomSelectItemProps> = ({
     throw new Error('CustomSelectItem must be used within CustomSelect');
   }
 
-  const { selectedValue, onValueChange } = context;
+  const { selectedValue, onValueChange, disabled } = context;
 
   return (
     <div
-      className={`relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-2 pr-8 text-sm outline-hidden focus:bg-accent focus:text-accent-foreground hover:bg-accent hover:text-accent-foreground ${className}`}
-      onClick={() => onValueChange(value)}
+      className={`relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-2 pr-8 text-sm outline-hidden focus:bg-accent focus:text-accent-foreground hover:bg-accent hover:text-accent-foreground ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
+      onClick={() => !disabled && onValueChange(value)}
     >
       {children}
       {selectedValue === value && (
