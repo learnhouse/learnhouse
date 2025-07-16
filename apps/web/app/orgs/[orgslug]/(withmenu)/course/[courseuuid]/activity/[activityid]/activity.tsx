@@ -521,6 +521,8 @@ function ActivityClient(props: ActivityClientProps) {
                     orgslug={orgslug}
                     courseUuid={course.course_uuid}
                     thumbnailImage={course.thumbnail_image}
+                    course={course}
+                    trailData={trailData}
                   />
                 ) : (
                   <div className="space-y-4 pt-0">
