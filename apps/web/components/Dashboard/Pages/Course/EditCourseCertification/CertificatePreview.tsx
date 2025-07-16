@@ -10,6 +10,9 @@ interface CertificatePreviewProps {
   certificationType: string;
   certificatePattern: string;
   certificateInstructor?: string;
+  certificateId?: string;
+  awardedDate?: string;
+  qrCodeLink?: string;
 }
 
 const CertificatePreview: React.FC<CertificatePreviewProps> = ({
@@ -17,7 +20,10 @@ const CertificatePreview: React.FC<CertificatePreviewProps> = ({
   certificationDescription,
   certificationType,
   certificatePattern,
-  certificateInstructor
+  certificateInstructor,
+  certificateId,
+  awardedDate,
+  qrCodeLink
 }) => {
   const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
   const org = useOrg() as any;
@@ -26,7 +32,7 @@ const CertificatePreview: React.FC<CertificatePreviewProps> = ({
   useEffect(() => {
     const generateQRCode = async () => {
       try {
-        const certificateData = `https://learnhouse.app/verify/LH-2024-001`;
+        const certificateData = qrCodeLink || `${certificateId}`;
         const qrUrl = await QRCode.toDataURL(certificateData, {
           width: 185,
           margin: 1,
@@ -44,7 +50,7 @@ const CertificatePreview: React.FC<CertificatePreviewProps> = ({
     };
 
     generateQRCode();
-  }, []);
+  }, [certificateId, qrCodeLink]);
   // Function to get theme colors for each pattern
   const getPatternTheme = (pattern: string) => {
     switch (pattern) {
@@ -433,7 +439,7 @@ const CertificatePreview: React.FC<CertificatePreviewProps> = ({
         <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-20">
           <div className="flex items-center space-x-1">
             <Hash className={`w-3 h-3 sm:w-4 sm:h-4 ${theme.icon}`} />
-            <span className={`text-xs sm:text-sm ${theme.secondary} font-medium`}>ID: LH-2024-001</span>
+            <span className={`text-xs sm:text-sm ${theme.secondary} font-medium`}>ID: {certificateId || 'LH-2024-001'}</span>
           </div>
         </div>
 
@@ -553,7 +559,7 @@ const CertificatePreview: React.FC<CertificatePreviewProps> = ({
                 <span className={`text-xs ${theme.secondary} font-medium`}>Awarded</span>
               </div>
               <div className={`text-xs ${theme.primary} font-semibold`}>
-                Dec 15, 2024
+                {awardedDate || 'Dec 15, 2024'}
               </div>
             </div>
           </div>

@@ -59,4 +59,16 @@ export async function deleteCertification(
   )
   const res = await errorHandling(result)
   return res
+}
+
+export async function getUserCertificates(
+  course_uuid: string,
+  access_token: string
+) {
+  const result = await fetch(
+    `${getAPIUrl()}certifications/user/course/${course_uuid}`,
+    RequestBodyWithAuthHeader('GET', null, null, access_token)
+  )
+  const res = await getResponseMetadata(result)
+  return res
 } 
