@@ -6,6 +6,7 @@ from src.db.courses.certifications import (
     CertificationCreate,
     CertificationRead,
     CertificationUpdate,
+    CertificateUserRead,
 )
 from src.db.users import PublicUser
 from src.security.auth import get_current_user
@@ -15,6 +16,7 @@ from src.services.courses.certifications import (
     get_certifications_by_course,
     update_certification,
     delete_certification,
+    get_user_certificates_for_course,
 )
 
 router = APIRouter()
@@ -93,4 +95,19 @@ async def api_delete_certification(
     """
     return await delete_certification(
         request, certification_uuid, current_user, db_session
+    )
+
+
+@router.get("/user/course/{course_uuid}")
+async def api_get_user_certificates_for_course(
+    request: Request,
+    course_uuid: str,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+) -> List[dict]:
+    """
+    Get all certificates for the current user in a specific course with certification details
+    """
+    return await get_user_certificates_for_course(
+        request, course_uuid, current_user, db_session
     ) 
