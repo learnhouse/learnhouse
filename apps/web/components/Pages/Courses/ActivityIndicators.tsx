@@ -1,5 +1,5 @@
 'use client'
-import { BookOpenCheck, Check, FileText, Layers, Video, ChevronLeft, ChevronRight } from 'lucide-react'
+import { BookOpenCheck, Check, FileText, Layers, Video, ChevronLeft, ChevronRight, Trophy } from 'lucide-react'
 import React, { useMemo, memo, useState } from 'react'
 import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
 import { getUriWithOrg } from '@services/config/config'
@@ -124,6 +124,58 @@ const ChapterTooltipContent = memo(({
 
 ChapterTooltipContent.displayName = 'ChapterTooltipContent';
 
+// Add certification badge component
+const CertificationBadge = memo(({ 
+  courseid,
+  orgslug,
+  isCompleted 
+}: { 
+  courseid: string,
+  orgslug: string,
+  isCompleted: boolean 
+}) => (
+  <ToolTip
+    sideOffset={8}
+    unstyled
+    content={
+      <div className="bg-white rounded-lg nice-shadow py-3 px-4 min-w-[200px] animate-in fade-in duration-200">
+        <div className="flex items-center gap-2">
+          <Trophy size={16} className="text-yellow-500" />
+          <span className="text-sm font-medium text-gray-900">
+            {isCompleted ? 'Course Completed!' : 'Course Completion'}
+          </span>
+        </div>
+        <div className="mt-1">
+          <span className="text-sm text-gray-700">
+            {isCompleted 
+              ? 'View your completion certificate' 
+              : 'Complete all activities to unlock your certificate'
+            }
+          </span>
+        </div>
+      </div>
+    }
+  >
+    <Link
+      href={`${getUriWithOrg(orgslug, '')}/course/${courseid}/activity/end`}
+      prefetch={false}
+      className={`mx-2 h-[20px] flex items-center cursor-pointer focus:outline-none transition-all ${
+        isCompleted ? 'opacity-100' : 'opacity-50 cursor-not-allowed'
+      }`}
+    >
+      <div className={`w-[20px] h-[20px] rounded-full flex items-center justify-center text-xs font-medium transition-colors ${
+        isCompleted 
+          ? 'bg-yellow-500 text-white hover:bg-yellow-600' 
+          : 'bg-gray-100 text-gray-400'
+      }`}>
+        <Trophy size={12} />
+      </div>
+    </Link>
+  </ToolTip>
+));
+
+CertificationBadge.displayName = 'CertificationBadge';
+
 function ActivityIndicators(props: Props) {
   const course = props.course
   const orgslug = props.orgslug
@@ -217,6 +269,13 @@ function ActivityIndicators(props: Props) {
       return acc + (isActivityDone(activity) ? 1 : 0)
     }, 0)
   }, [isActivityDone]);
+
+  // Check if all activities are completed
+  const isCourseCompleted = useMemo(() => {
+    const totalActivities = allActivities.length;
+    const completedActivities = allActivities.filter((activity: any) => isActivityDone(activity)).length;
+    return totalActivities > 0 && completedActivities === totalActivities;
+  }, [allActivities, isActivityDone]);
 
   return (
     <div className="flex items-center gap-4">
@@ -317,6 +376,13 @@ function ActivityIndicators(props: Props) {
             </React.Fragment>
           )
         })}
+        
+        {/* Certification Badge */}
+        <CertificationBadge 
+          courseid={courseid}
+          orgslug={orgslug}
+          isCompleted={isCourseCompleted}
+        />
       </div>
 
       {enableNavigation && (
