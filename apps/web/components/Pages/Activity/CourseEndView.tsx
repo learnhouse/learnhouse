@@ -36,7 +36,7 @@ const CourseEndView: React.FC<CourseEndViewProps> = ({
   const [userCertificate, setUserCertificate] = useState<any>(null);
   const [isLoadingCertificate, setIsLoadingCertificate] = useState(false);
   const [certificateError, setCertificateError] = useState<string | null>(null);
-  const qrCodeLink = getUriWithOrg(orgslug, `/certificate/${userCertificate.user_certification_uuid}/verify`);
+  const qrCodeLink = getUriWithOrg(orgslug, `/certificates/${userCertificate?.certificate_user.user_certification_uuid}/verify`);
 
 
 
