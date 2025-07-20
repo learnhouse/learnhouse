@@ -9,6 +9,7 @@ from src.db.trail_runs import TrailRun, TrailRunRead
 from src.db.trail_steps import TrailStep
 from src.db.trails import Trail, TrailCreate, TrailRead
 from src.db.users import AnonymousUser, PublicUser
+from src.services.courses.certifications import check_course_completion_and_create_certificate
 
 
 async def create_user_trail(
@@ -68,7 +69,7 @@ async def get_user_trails(
     for trail_run in trail_runs:
         statement = select(Course).where(Course.id == trail_run.course_id)
         course = db_session.exec(statement).first()
-        trail_run.course = course
+        trail_run.course = course.model_dump() if course else {}
 
         # Add number of activities (steps) in a course
         statement = select(ChapterActivity).where(
@@ -153,7 +154,7 @@ async def get_user_trail_with_orgid(
     for trail_run in trail_runs:
         statement = select(Course).where(Course.id == trail_run.course_id)
         course = db_session.exec(statement).first()
-        trail_run.course = course 
+        trail_run.course = course.model_dump() if course else {}
 
         # Add number of activities (steps) in a course
         statement = select(ChapterActivity).where(
@@ -254,6 +255,12 @@ async def add_activity_to_trail(
         db_session.add(trailstep)
         db_session.commit()
         db_session.refresh(trailstep)
+
+    # Check if all activities in the course are completed and create certificate if so
+    if course and course.id:
+        await check_course_completion_and_create_certificate(
+            request, user.id, course.id, db_session
+        )
 
     statement = select(TrailRun).where(TrailRun.trail_id == trail.id , TrailRun.user_id == user.id)
     trail_runs = db_session.exec(statement).all()

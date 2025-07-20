@@ -9,7 +9,6 @@ from src.security.features_utils.usage import (
     decrease_feature_usage,
     increase_feature_usage,
 )
-from src.services.trail.trail import get_user_trail_with_orgid
 from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum, ResourceAuthorshipStatusEnum
 from src.db.users import PublicUser, AnonymousUser, User, UserRead
 from src.db.courses.courses import (
@@ -29,7 +28,6 @@ from src.security.rbac.rbac import (
 from src.services.courses.thumbnails import upload_thumbnail
 from fastapi import HTTPException, Request, UploadFile
 from datetime import datetime
-import asyncio
 
 
 async def get_course(

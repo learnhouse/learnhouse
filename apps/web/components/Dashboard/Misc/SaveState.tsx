@@ -11,6 +11,7 @@ import { useRouter } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 import { mutate } from 'swr'
 import { updateCourse } from '@services/courses/courses'
+import { updateCertification } from '@services/courses/certifications'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 
 function SaveState(props: { orgslug: string }) {
@@ -32,6 +33,8 @@ function SaveState(props: { orgslug: string }) {
       // Course metadata
       await changeMetadataBackend()
       mutate(`${getAPIUrl()}courses/${course.courseStructure.course_uuid}/meta?with_unpublished_activities=${withUnpublishedActivities}`)
+      // Certification data (if present)
+      await saveCertificationData()
       await revalidateTags(['courses'], props.orgslug)
       dispatchCourse({ type: 'setIsSaved' })
     } finally {
@@ -64,6 +67,24 @@ function SaveState(props: { orgslug: string }) {
     await revalidateTags(['courses'], props.orgslug)
     router.refresh()
     dispatchCourse({ type: 'setIsSaved' })
+  }
+
+  // Certification data
+  const saveCertificationData = async () => {
+    if (course.courseStructure._certificationData) {
+      const certData = course.courseStructure._certificationData;
+      try {
+        await updateCertification(
+          certData.certification_uuid,
+          certData.config,
+          session.data?.tokens?.access_token
+        );
+        console.log('Certification data saved successfully');
+      } catch (error) {
+        console.error('Failed to save certification data:', error);
+        // Don't throw error to prevent breaking the main save flow
+      }
+    }
   }
 
   const handleCourseOrder = (course_structure: any) => {
