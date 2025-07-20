@@ -2,13 +2,14 @@ import CertificateVerificationPage from '@components/Pages/Certificate/Certifica
 import React from 'react';
 
 interface CertificateVerifyPageProps {
-  params: {
+  params: Promise<{
     uuid: string;
-  };
+  }>;
 }
 
-const CertificateVerifyPage: React.FC<CertificateVerifyPageProps> = ({ params }) => {
-  return <CertificateVerificationPage certificateUuid={params.uuid} />;
+const CertificateVerifyPage: React.FC<CertificateVerifyPageProps> = async ({ params }) => {
+  const { uuid } = await params;
+  return <CertificateVerificationPage certificateUuid={uuid} />;
 };
 
 export default CertificateVerifyPage; 
