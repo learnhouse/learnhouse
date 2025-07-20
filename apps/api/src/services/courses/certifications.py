@@ -425,7 +425,7 @@ async def get_certificate_by_user_certification_uuid(
             detail="Certification not found",
         )
 
-    # Get course for RBAC check
+    # Get course information
     statement = select(Course).where(Course.id == certification.course_id)
     course = db_session.exec(statement).first()
 
@@ -435,10 +435,7 @@ async def get_certificate_by_user_certification_uuid(
             detail="Course not found",
         )
 
-    # RBAC check - allow read access to the certificate owner or course owners/admins
-    if current_user.id != certificate_user.user_id:
-        # If not the certificate owner, check course access
-        await rbac_check(request, course.course_uuid, current_user, "read", db_session)
+    # No RBAC check - allow anyone to access certificates by UUID
 
     return {
         "certificate_user": CertificateUserRead(**certificate_user.model_dump()),
