@@ -454,6 +454,64 @@ async def get_certificate_by_user_certification_uuid(
     }
 
 
+async def get_all_user_certificates(
+    request: Request,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+) -> List[dict]:
+    """Get all certificates for the current user with complete linked information"""
+    
+    # Get all certificate users for this user
+    statement = select(CertificateUser).where(CertificateUser.user_id == current_user.id)
+    certificate_users = db_session.exec(statement).all()
+
+    if not certificate_users:
+        return []
+
+    result = []
+    for cert_user in certificate_users:
+        # Get the associated certification
+        statement = select(Certifications).where(Certifications.id == cert_user.certification_id)
+        certification = db_session.exec(statement).first()
+
+        if not certification:
+            continue
+
+        # Get course information
+        statement = select(Course).where(Course.id == certification.course_id)
+        course = db_session.exec(statement).first()
+
+        if not course:
+            continue
+
+        # Get user information
+        from src.db.users import User
+        statement = select(User).where(User.id == cert_user.user_id)
+        user = db_session.exec(statement).first()
+
+        result.append({
+            "certificate_user": CertificateUserRead(**cert_user.model_dump()),
+            "certification": CertificationRead(**certification.model_dump()),
+            "course": {
+                "id": course.id,
+                "course_uuid": course.course_uuid,
+                "name": course.name,
+                "description": course.description,
+                "thumbnail_image": course.thumbnail_image,
+            },
+            "user": {
+                "id": user.id if user else None,
+                "user_uuid": user.user_uuid if user else None,
+                "username": user.username if user else None,
+                "email": user.email if user else None,
+                "first_name": user.first_name if user else None,
+                "last_name": user.last_name if user else None,
+            } if user else None
+        })
+
+    return result
+
+
 ####################################################
 # RBAC Utils
 ####################################################

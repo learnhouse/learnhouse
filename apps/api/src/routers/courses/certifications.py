@@ -18,6 +18,7 @@ from src.services.courses.certifications import (
     delete_certification,
     get_user_certificates_for_course,
     get_certificate_by_user_certification_uuid,
+    get_all_user_certificates,
 )
 
 router = APIRouter()
@@ -126,4 +127,18 @@ async def api_get_certificate_by_user_certification_uuid(
     """
     return await get_certificate_by_user_certification_uuid(
         request, user_certification_uuid, current_user, db_session
+    )
+
+
+@router.get("/user/all")
+async def api_get_all_user_certificates(
+    request: Request,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+) -> List[dict]:
+    """
+    Get all certificates obtained by the current user with complete linked information
+    """
+    return await get_all_user_certificates(
+        request, current_user, db_session
     ) 
