@@ -6,7 +6,6 @@ from src.db.courses.certifications import (
     CertificationCreate,
     CertificationRead,
     CertificationUpdate,
-    CertificateUserRead,
 )
 from src.db.users import PublicUser
 from src.security.auth import get_current_user

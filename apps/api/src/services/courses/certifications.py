@@ -9,7 +9,6 @@ from src.db.courses.certifications import (
     CertificationRead,
     CertificationUpdate,
     CertificateUser,
-    CertificateUserCreate,
     CertificateUserRead,
 )
 from src.db.courses.courses import Course

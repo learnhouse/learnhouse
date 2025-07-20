@@ -13,7 +13,6 @@ from src.db.courses.courses import (
     CourseRead,
     CourseUpdate,
     FullCourseRead,
-    FullCourseReadWithTrail,
     ThumbnailType,
 )
 from src.security.auth import get_current_user

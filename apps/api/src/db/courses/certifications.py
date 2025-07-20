@@ -1,8 +1,6 @@
 from typing import Optional
 from sqlalchemy import JSON, Column, ForeignKey
 from sqlmodel import Field, SQLModel
-from enum import Enum
-from datetime import datetime
 
 class CertificationBase(SQLModel):
     course_id: int = Field(sa_column= Column("course_id", ForeignKey("course.id", ondelete="CASCADE")))
