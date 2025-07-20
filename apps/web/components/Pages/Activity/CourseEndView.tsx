@@ -1,6 +1,6 @@
 import React, { useMemo, useEffect, useState } from 'react';
 import ReactConfetti from 'react-confetti';
-import { Trophy, ArrowLeft, BookOpen, Target, Download } from 'lucide-react';
+import { Trophy, ArrowLeft, BookOpen, Target, Download, Shield } from 'lucide-react';
 import Link from 'next/link';
 import { getUriWithOrg } from '@services/config/config';
 import { getCourseThumbnailMediaDirectory } from '@services/media/media';
@@ -491,6 +491,15 @@ const CourseEndView: React.FC<CourseEndViewProps> = ({
                   <Download className="w-5 h-5" />
                   <span>Download Certificate PDF</span>
                 </button>
+                <Link
+                  href={getUriWithOrg(orgslug, `/certificates/${userCertificate.certificate_user.user_certification_uuid}/verify`)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-full hover:bg-blue-700 transition duration-200"
+                >
+                  <Shield className="w-5 h-5" />
+                  <span>Verify Certificate</span>
+                </Link>
               </div>
             </div>
           ) : (
