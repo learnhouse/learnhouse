@@ -52,7 +52,7 @@ const LinkItem = (props: any) => {
         {props.type == 'trail' && (
           <>
             <Signpost size={20} />{' '}
-            <span>Trail</span>
+            <span>Progress</span>
           </>
         )}
       </li>

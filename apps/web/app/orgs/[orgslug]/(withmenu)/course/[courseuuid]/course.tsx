@@ -276,6 +276,7 @@ const CourseClient = (props: any) => {
                     course_uuid={props.course.course_uuid}
                     orgslug={orgslug}
                     course={course}
+                    trailData={trailData}
                   />
                 )}
 

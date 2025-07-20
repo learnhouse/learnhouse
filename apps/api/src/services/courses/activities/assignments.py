@@ -44,6 +44,7 @@ from src.services.courses.activities.uploads.tasks_ref_files import (
     upload_reference_file,
 )
 from src.services.trail.trail import check_trail_presence
+from src.services.courses.certifications import check_course_completion_and_create_certificate
 
 ## > Assignments CRUD
 
@@ -1237,6 +1238,12 @@ async def create_assignment_submission(
         db_session.commit()
         db_session.refresh(trailstep)
 
+    # Check if all activities in the course are completed and create certificate if so
+    if course and course.id and user and user.id:
+        await check_course_completion_and_create_certificate(
+            request, user.id, course.id, db_session
+        )
+
     # return assignment user submission read
     return AssignmentUserSubmissionRead.model_validate(assignment_user_submission)
 
@@ -1657,6 +1664,12 @@ async def mark_activity_as_done_for_user(
     db_session.add(trailstep)
     db_session.commit()
     db_session.refresh(trailstep)
+
+    # Check if all activities in the course are completed and create certificate if so
+    if course and course.id:
+        await check_course_completion_and_create_certificate(
+            request, int(user_id), course.id, db_session
+        )
 
     # return OK
     return {"message": "Activity marked as done for user"}

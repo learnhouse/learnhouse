@@ -4,7 +4,7 @@ from src.routers import health
 from src.routers import usergroups
 from src.routers import dev, trail, users, auth, orgs, roles, search
 from src.routers.ai import ai
-from src.routers.courses import chapters, collections, courses, assignments
+from src.routers.courses import chapters, collections, courses, assignments, certifications
 from src.routers.courses.activities import activities, blocks
 from src.routers.ee import cloud_internal, payments
 from src.routers.install import install
@@ -32,6 +32,9 @@ v1_router.include_router(chapters.router, prefix="/chapters", tags=["chapters"])
 v1_router.include_router(activities.router, prefix="/activities", tags=["activities"])
 v1_router.include_router(
     collections.router, prefix="/collections", tags=["collections"]
+)
+v1_router.include_router(
+    certifications.router, prefix="/certifications", tags=["certifications"]
 )
 v1_router.include_router(trail.router, prefix="/trail", tags=["trail"])
 v1_router.include_router(ai.router, prefix="/ai", tags=["ai"])

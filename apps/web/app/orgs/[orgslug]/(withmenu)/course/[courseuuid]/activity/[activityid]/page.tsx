@@ -43,9 +43,13 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
     access_token || null
   )
 
+  // Check if this is the course end page
+  const isCourseEnd = params.activityid === 'end';
+  const pageTitle = isCourseEnd ? `Congratulations — ${course_meta.name} Course` : activity.name + ` — ${course_meta.name} Course`;
+
   // SEO
   return {
-    title: activity.name + ` — ${course_meta.name} Course`,
+    title: pageTitle,
     description: course_meta.description,
     keywords: course_meta.learnings,
     robots: {
@@ -59,7 +63,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
       },
     },
     openGraph: {
-      title: activity.name + ` — ${course_meta.name} Course`,
+      title: pageTitle,
       description: course_meta.description,
       publishedTime: course_meta.creation_date,
       tags: course_meta.learnings,

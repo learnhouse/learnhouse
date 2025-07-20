@@ -3,6 +3,7 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import PageLoading from '@components/Objects/Loaders/PageLoading'
 import TrailCourseElement from '@components/Pages/Trail/TrailCourseElement'
+import UserCertificates from '@components/Pages/Trail/UserCertificates'
 import TypeOfContentTitle from '@components/Objects/StyledElements/Titles/TypeOfContentTitle'
 import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
 import { getAPIUrl } from '@services/config/config'
@@ -13,6 +14,7 @@ import { removeCourse } from '@services/courses/activity'
 import { revalidateTags } from '@services/utils/ts/requests'
 import { useRouter } from 'next/navigation'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
+import { BookOpen } from 'lucide-react'
 
 function Trail(params: any) {
   let orgslug = params.orgslug
@@ -84,20 +86,45 @@ function Trail(params: any) {
           />
         )}
       </div>
-      {!trail ? (
-        <PageLoading></PageLoading>
-      ) : (
-        <div className="space-y-6">
-          {trail.runs.map((run: any) => (
-            <TrailCourseElement
-              key={run.course.course_uuid}
-              run={run}
-              course={run.course}
-              orgslug={orgslug}
-            />
-          ))}
+      
+      <div className="space-y-8">
+        {/* Progress Section */}
+        <div className="bg-white rounded-xl shadow-sm p-6">
+          <div className="flex items-center space-x-3 mb-6">
+            <BookOpen className="w-6 h-6 text-blue-500" />
+            <h2 className="text-xl font-semibold text-gray-900">My Progress</h2>
+            {trail?.runs && (
+              <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                {trail.runs.length}
+              </span>
+            )}
+          </div>
+          
+          {!trail ? (
+            <PageLoading></PageLoading>
+          ) : trail.runs.length === 0 ? (
+            <div className="text-center py-8">
+              <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+              <p className="text-gray-500">No courses in progress</p>
+              <p className="text-sm text-gray-400 mt-1">Start a course to see your progress here</p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {trail.runs.map((run: any) => (
+                <TrailCourseElement
+                  key={run.course.course_uuid}
+                  run={run}
+                  course={run.course}
+                  orgslug={orgslug}
+                />
+              ))}
+            </div>
+          )}
         </div>
-      )}
+        
+        {/* Certificates Section */}
+        <UserCertificates orgslug={orgslug} />
+      </div>
     </GeneralWrapperStyled>
   )
 }
