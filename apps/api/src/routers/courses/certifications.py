@@ -17,6 +17,7 @@ from src.services.courses.certifications import (
     update_certification,
     delete_certification,
     get_user_certificates_for_course,
+    get_certificate_by_user_certification_uuid,
 )
 
 router = APIRouter()
@@ -110,4 +111,19 @@ async def api_get_user_certificates_for_course(
     """
     return await get_user_certificates_for_course(
         request, course_uuid, current_user, db_session
+    )
+
+
+@router.get("/certificate/{user_certification_uuid}")
+async def api_get_certificate_by_user_certification_uuid(
+    request: Request,
+    user_certification_uuid: str,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+) -> dict:
+    """
+    Get a certificate by user_certification_uuid with certification and course details
+    """
+    return await get_certificate_by_user_certification_uuid(
+        request, user_certification_uuid, current_user, db_session
     ) 

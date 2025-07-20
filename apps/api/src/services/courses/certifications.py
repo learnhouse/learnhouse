@@ -396,6 +396,64 @@ async def check_course_completion_and_create_certificate(
     return False
 
 
+async def get_certificate_by_user_certification_uuid(
+    request: Request,
+    user_certification_uuid: str,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+) -> dict:
+    """Get a certificate by user_certification_uuid with certification details"""
+    
+    # Get certificate user by user_certification_uuid
+    statement = select(CertificateUser).where(
+        CertificateUser.user_certification_uuid == user_certification_uuid
+    )
+    certificate_user = db_session.exec(statement).first()
+
+    if not certificate_user:
+        raise HTTPException(
+            status_code=404,
+            detail="Certificate not found",
+        )
+
+    # Get the associated certification
+    statement = select(Certifications).where(Certifications.id == certificate_user.certification_id)
+    certification = db_session.exec(statement).first()
+
+    if not certification:
+        raise HTTPException(
+            status_code=404,
+            detail="Certification not found",
+        )
+
+    # Get course for RBAC check
+    statement = select(Course).where(Course.id == certification.course_id)
+    course = db_session.exec(statement).first()
+
+    if not course:
+        raise HTTPException(
+            status_code=404,
+            detail="Course not found",
+        )
+
+    # RBAC check - allow read access to the certificate owner or course owners/admins
+    if current_user.id != certificate_user.user_id:
+        # If not the certificate owner, check course access
+        await rbac_check(request, course.course_uuid, current_user, "read", db_session)
+
+    return {
+        "certificate_user": CertificateUserRead(**certificate_user.model_dump()),
+        "certification": CertificationRead(**certification.model_dump()),
+        "course": {
+            "id": course.id,
+            "course_uuid": course.course_uuid,
+            "name": course.name,
+            "description": course.description,
+            "thumbnail_image": course.thumbnail_image,
+        }
+    }
+
+
 ####################################################
 # RBAC Utils
 ####################################################
