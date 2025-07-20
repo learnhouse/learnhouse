@@ -5,10 +5,12 @@ import { removeCourse } from '@services/courses/activity'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import { revalidateTags } from '@services/utils/ts/requests'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { getUserCertificates } from '@services/courses/certifications'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { mutate } from 'swr'
+import { Award, ExternalLink } from 'lucide-react'
 
 interface TrailCourseElementProps {
   course: any
@@ -29,6 +31,9 @@ function TrailCourseElement(props: TrailCourseElementProps) {
   const course_progress = Math.round(
     (course_completed_steps / course_total_steps) * 100
   )
+  
+  const [courseCertificate, setCourseCertificate] = useState<any>(null)
+  const [isLoadingCertificate, setIsLoadingCertificate] = useState(false)
 
   async function quitCourse(course_uuid: string) {
     // Close activity
@@ -40,6 +45,31 @@ function TrailCourseElement(props: TrailCourseElementProps) {
     // Mutate
     mutate(`${getAPIUrl()}trail/org/${orgID}/trail`)
   }
+
+  // Fetch certificate for this course
+  useEffect(() => {
+    const fetchCourseCertificate = async () => {
+      if (!access_token || course_progress < 100) return;
+      
+      setIsLoadingCertificate(true);
+      try {
+        const result = await getUserCertificates(
+          props.course.course_uuid,
+          access_token
+        );
+        
+        if (result.success && result.data && result.data.length > 0) {
+          setCourseCertificate(result.data[0]);
+        }
+      } catch (error) {
+        console.error('Error fetching course certificate:', error);
+      } finally {
+        setIsLoadingCertificate(false);
+      }
+    };
+
+    fetchCourseCertificate();
+  }, [access_token, course_progress, props.course.course_uuid]);
 
   useEffect(() => {}, [props.course, org])
 
@@ -90,6 +120,41 @@ function TrailCourseElement(props: TrailCourseElementProps) {
             ></div>
           </div>
         </div>
+        
+        {/* Certificate Section */}
+        {course_progress === 100 && (
+          <div className="mt-2 pt-2 border-t border-gray-100">
+            {isLoadingCertificate ? (
+              <div className="flex items-center space-x-1 text-xs text-gray-500">
+                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-yellow-500"></div>
+                <span>Loading...</span>
+              </div>
+            ) : courseCertificate ? (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-1">
+                  <Award className="w-3 h-3 text-yellow-500" />
+                  <span className="text-xs font-medium text-gray-700">
+                    Certificate
+                  </span>
+                </div>
+                <Link
+                  href={getUriWithOrg(props.orgslug, `/certificates/${courseCertificate.certificate_user.user_certification_uuid}/verify`)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center space-x-1 text-blue-600 hover:text-blue-700 text-xs font-medium"
+                >
+                  <span>Verify</span>
+                  <ExternalLink className="w-3 h-3" />
+                </Link>
+              </div>
+            ) : (
+              <div className="flex items-center space-x-1 text-xs text-gray-500">
+                <Award className="w-3 h-3 text-gray-300" />
+                <span>No certificate</span>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )

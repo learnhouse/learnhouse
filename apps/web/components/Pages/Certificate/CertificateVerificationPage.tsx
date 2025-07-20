@@ -6,6 +6,7 @@ import CertificatePreview from '@components/Dashboard/Pages/Course/EditCourseCer
 import { Shield, CheckCircle, XCircle, AlertTriangle, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { getUriWithOrg } from '@services/config/config';
+import { getCourseThumbnailMediaDirectory } from '@services/media/media';
 import { useOrg } from '@components/Contexts/OrgContext';
 
 interface CertificateVerificationPageProps {
@@ -174,8 +175,9 @@ const CertificateVerificationPage: React.FC<CertificateVerificationPageProps> = 
 
         {/* Certificate Details */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Certificate Preview */}
-          <div className="lg:col-span-2">
+          {/* Certificate Preview and Course Info */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Certificate Preview */}
             <div className="bg-white rounded-2xl p-6 nice-shadow">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Certificate Preview</h2>
               <div className="max-w-2xl mx-auto" id="certificate-preview">
@@ -193,6 +195,81 @@ const CertificateVerificationPage: React.FC<CertificateVerificationPageProps> = 
                   })}
                   qrCodeLink={qrCodeLink}
                 />
+              </div>
+            </div>
+
+            {/* Course Information */}
+            <div className="bg-white shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40 rounded-lg overflow-hidden p-4">
+              <div className="flex items-start space-x-4">
+                {/* Course Thumbnail */}
+                <div className="flex-shrink-0">
+                  <div className="w-20 h-12 bg-gray-100 rounded-lg overflow-hidden ring-1 ring-inset ring-black/10">
+                    {certificateData.course.thumbnail_image ? (
+                      <img
+                        src={getCourseThumbnailMediaDirectory(
+                          org?.org_uuid,
+                          certificateData.course.course_uuid,
+                          certificateData.course.thumbnail_image
+                        )}
+                        alt={`${certificateData.course.name} thumbnail`}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                        <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Course Details */}
+                <div className="flex-1 min-w-0">
+                  <div className="space-y-1">
+                    <div>
+                      <h4 className="font-semibold text-gray-900 text-base leading-tight">{certificateData.course.name}</h4>
+                      {certificateData.course.description && (
+                        <p className="text-sm text-gray-600 line-clamp-2 mt-1">{certificateData.course.description}</p>
+                      )}
+                    </div>
+
+                    {certificateData.course.authors && certificateData.course.authors.length > 0 && (
+                      <div className="flex items-center space-x-1 text-sm text-neutral-400 font-normal">
+                        <span>By:</span>
+                        <div className="flex items-center space-x-1">
+                          {certificateData.course.authors
+                            .filter((author: any) => author.authorship_status === 'ACTIVE')
+                            .slice(0, 2)
+                            .map((author: any, index: number) => (
+                              <span key={author.user.user_uuid} className="text-neutral-600">
+                                {author.user.first_name} {author.user.last_name}
+                                {index < Math.min(2, certificateData.course.authors.filter((a: any) => a.authorship_status === 'ACTIVE').length - 1) && ', '}
+                              </span>
+                            ))}
+                          {certificateData.course.authors.filter((author: any) => author.authorship_status === 'ACTIVE').length > 2 && (
+                            <span className="text-neutral-400">
+                              +{certificateData.course.authors.filter((author: any) => author.authorship_status === 'ACTIVE').length - 2} more
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* View Course Link */}
+                <div className="flex-shrink-0">
+                  <Link
+                    href={getUriWithOrg(org?.org_slug || '', `/course/${certificateData.course.course_uuid.replace('course_', '')}`)}
+                    className="inline-flex items-center space-x-1 text-neutral-400 hover:text-neutral-600 transition-colors text-sm"
+                  >
+                    <span>View Course</span>
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
@@ -253,8 +330,6 @@ const CertificateVerificationPage: React.FC<CertificateVerificationPageProps> = 
                 )}
               </div>
             </div>
-
-
 
             <div className="bg-blue-50 border border-blue-200 rounded-2xl p-6">
               <div className="flex items-center space-x-3 mb-3">

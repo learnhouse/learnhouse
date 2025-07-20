@@ -87,4 +87,15 @@ export async function getCertificateByUuid(
   )
   const res = await getResponseMetadata(result)
   return res
+}
+
+export async function getAllUserCertificates(
+  access_token: string
+) {
+  const result = await fetch(
+    `${getAPIUrl()}certifications/user/all`,
+    RequestBodyWithAuthHeader('GET', null, null, access_token)
+  )
+  const res = await getResponseMetadata(result)
+  return res
 } 

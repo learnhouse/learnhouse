@@ -44,6 +44,5 @@ next.config.original.js
 # Sentry Config File
 .sentryclirc
 
-certificates
 # Sentry Config File
 .env.sentry-build-plugin
