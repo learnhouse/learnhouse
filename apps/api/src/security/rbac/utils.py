@@ -43,7 +43,7 @@ async def get_singular_form_of_element(element_uuid):
 async def get_id_identifier_of_element(element_uuid):
     singular_form_element = await get_singular_form_of_element(element_uuid)
 
-    if singular_form_element == "ogranizations":
+    if singular_form_element == "organization":
         return "org_id"
     else:
         return str(singular_form_element) + "_id"
