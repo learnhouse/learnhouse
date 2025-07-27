@@ -32,24 +32,40 @@ def import_all_models():
 import_all_models()
 
 learnhouse_config = get_learnhouse_config()
-engine = create_engine(
-    learnhouse_config.database_config.sql_connection_string,  # type: ignore
-    echo=False, 
-    pool_pre_ping=True,  # type: ignore
-    pool_size=5,  
-    max_overflow=0,
-    pool_recycle=300,  # Recycle connections after 5 minutes
-    pool_timeout=30
-)
 
-# Create all tables after importing all models
-SQLModel.metadata.create_all(engine)
-logfire.instrument_sqlalchemy(engine=engine)
+# Check if we're in test mode
+is_testing = os.getenv("TESTING", "false").lower() == "true"
+
+if is_testing:
+    # Use SQLite for tests
+    engine = create_engine(
+        "sqlite:///:memory:",
+        echo=False,
+        connect_args={"check_same_thread": False}
+    )
+else:
+    # Use configured database for production/development
+    engine = create_engine(
+        learnhouse_config.database_config.sql_connection_string,  # type: ignore
+        echo=False, 
+        pool_pre_ping=True,  # type: ignore
+        pool_size=5,  
+        max_overflow=0,
+        pool_recycle=300,  # Recycle connections after 5 minutes
+        pool_timeout=30
+    )
+
+# Only create tables if not in test mode (tests will handle this themselves)
+if not is_testing:
+    SQLModel.metadata.create_all(engine)
+    logfire.instrument_sqlalchemy(engine=engine)
 
 async def connect_to_db(app: FastAPI):
     app.db_engine = engine  # type: ignore
     logging.info("LearnHouse database has been started.")
-    SQLModel.metadata.create_all(engine)
+    # Only create tables if not in test mode
+    if not is_testing:
+        SQLModel.metadata.create_all(engine)
 
 def get_db_session():
     with Session(engine) as session:
