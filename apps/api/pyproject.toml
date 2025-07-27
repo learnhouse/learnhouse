@@ -21,6 +21,7 @@ dependencies = [
     "psycopg2-binary>=2.9.9",
     "pydantic[email]>=1.8.0,<2.0.0",
     "pytest>=8.2.2",
+    "pytest-cov>=4.1.0",
     "python-dotenv>=1.0.0",
     "python-multipart>=0.0.9",
     "pyyaml>=6.0.1",
@@ -39,7 +40,25 @@ dependencies = [
     "python-jose>=3.3.0",
     "logfire[sqlalchemy]>=3.8.0",
     "beautifulsoup4>=4.13.4",
+    "pytest-asyncio>=1.1.0",
 ]
 
 [tool.ruff]
 lint.ignore = ["E501", "E712"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+markers = [
+    "asyncio: mark test as async",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::UserWarning",
+    "ignore:.*crypt.*deprecated.*",
+    "ignore:.*utcnow.*deprecated.*",
+    "ignore:.*obj.dict.*deprecated.*",
+    "ignore:.*Instrumentation will have no effect.*",
+    "ignore:.*handler names should be lower-case.*",
+    "ignore:.*Importing tools from langchain is deprecated.*",
+]
