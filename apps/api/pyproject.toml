@@ -21,6 +21,7 @@ dependencies = [
     "psycopg2-binary>=2.9.9",
     "pydantic[email]>=1.8.0,<2.0.0",
     "pytest>=8.2.2",
+    "pytest-cov>=4.1.0",
     "python-dotenv>=1.0.0",
     "python-multipart>=0.0.9",
     "pyyaml>=6.0.1",
