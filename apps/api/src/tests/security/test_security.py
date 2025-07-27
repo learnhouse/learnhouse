@@ -1,4 +1,3 @@
-import pytest
 from src.security.security import (
     security_hash_password,
     security_verify_password,

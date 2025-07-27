@@ -1,5 +1,4 @@
 import pytest
-from unittest.mock import AsyncMock, patch
 from fastapi import HTTPException
 from src.security.rbac.utils import (
     check_element_type,

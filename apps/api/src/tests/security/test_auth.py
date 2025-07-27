@@ -11,7 +11,6 @@ from src.security.auth import (
     Token,
     TokenData,
     Settings,
-    get_config,
 )
 from src.db.users import User, AnonymousUser, PublicUser
 from datetime import datetime, timedelta, timezone

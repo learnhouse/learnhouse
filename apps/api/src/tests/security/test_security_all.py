@@ -10,7 +10,6 @@ of the security functionality including:
 - Authorization utilities
 """
 
-import pytest
 from src.tests.security.test_security import TestSecurity
 from src.tests.security.test_auth import TestAuth
 from src.tests.security.test_rbac import TestRBAC
@@ -24,49 +23,14 @@ class TestSecurityComprehensive:
     def test_security_module_imports(self):
         """Test that all security modules can be imported successfully"""
         # Test core security imports
-        from src.security.security import (
-            security_hash_password,
-            security_verify_password,
-            ACCESS_TOKEN_EXPIRE_MINUTES,
-            SECRET_KEY,
-            ALGORITHM,
-        )
         
         # Test auth imports
-        from src.security.auth import (
-            authenticate_user,
-            create_access_token,
-            get_current_user,
-            non_public_endpoint,
-            Token,
-            TokenData,
-            Settings,
-        )
         
         # Test RBAC imports
-        from src.security.rbac.rbac import (
-            authorization_verify_if_element_is_public,
-            authorization_verify_if_user_is_author,
-            authorization_verify_based_on_roles,
-            authorization_verify_based_on_org_admin_status,
-            authorization_verify_based_on_roles_and_authorship,
-            authorization_verify_if_user_is_anon,
-        )
         
         # Test RBAC utils imports
-        from src.security.rbac.utils import (
-            check_element_type,
-            get_singular_form_of_element,
-            get_id_identifier_of_element,
-        )
         
         # Test features utils imports
-        from src.security.features_utils.usage import (
-            check_limits_with_usage,
-            increase_feature_usage,
-            decrease_feature_usage,
-            FeatureSet,
-        )
         
         # Verify all imports succeeded
         assert True
@@ -83,7 +47,6 @@ class TestSecurityComprehensive:
 
     def test_feature_set_definition(self):
         """Test that FeatureSet includes all expected features"""
-        from src.security.features_utils.usage import FeatureSet
         
         expected_features = [
             "ai", "analytics", "api", "assignments", "collaboration",

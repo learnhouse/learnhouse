@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import Mock, AsyncMock, patch
 from fastapi import HTTPException, Request
-from sqlmodel import Session, select
+from sqlmodel import Session
 from src.security.rbac.rbac import (
     authorization_verify_if_element_is_public,
     authorization_verify_if_user_is_author,
@@ -14,7 +14,6 @@ from src.db.courses.courses import Course
 from src.db.collections import Collection
 from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum, ResourceAuthorshipStatusEnum
 from src.db.roles import Role
-from src.db.user_organizations import UserOrganization
 
 
 class TestRBAC:
