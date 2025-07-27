@@ -1,0 +1,31 @@
+name: API Tests
+on:
+  push:
+    branches:
+      - dev
+    paths:
+      - "apps/api/**"
+  pull_request:
+    paths:
+      - "apps/api/**"
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v1
+        with:
+          version: "latest"
+
+      - name: Install dependencies
+        run: |
+          cd apps/api
+          uv sync
+
+      - name: Run tests
+        run: |
+          cd apps/api
+          uv run pytest
