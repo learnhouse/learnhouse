@@ -57,7 +57,7 @@
     "clsx": "^2.1.1",
     "currency-codes": "^2.2.0",
     "dayjs": "^1.11.13",
-    "dompurify": "^3.2.5",
+    "dompurify": "^3.2.6",
     "emblor": "^1.4.8",
     "formik": "^2.4.6",
     "framer-motion": "^12.6.3",
