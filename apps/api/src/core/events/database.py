@@ -44,7 +44,8 @@ engine = create_engine(
 
 # Create all tables after importing all models
 SQLModel.metadata.create_all(engine)
-logfire.instrument_sqlalchemy(engine=engine)
+if learnhouse_config.general_config.isLogfireEnabled:
+    logfire.instrument_sqlalchemy(engine=engine)
 
 async def connect_to_db(app: FastAPI):
     app.db_engine = engine  # type: ignore
