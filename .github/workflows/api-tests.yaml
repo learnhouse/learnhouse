@@ -28,4 +28,4 @@ jobs:
       - name: Run tests
         run: |
           cd apps/api
-          uv run pytest
+          uv run pytest -v
