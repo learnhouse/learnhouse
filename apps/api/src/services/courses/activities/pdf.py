@@ -31,7 +31,7 @@ async def create_documentpdf_activity(
     pdf_file: UploadFile | None = None,
 ):
     # RBAC check
-    await rbac_check(request, "activity_x", current_user, "create", db_session)
+    await rbac_check(request, "course_uuid", current_user, "create", db_session)
 
     # get chapter_id
     statement = select(Chapter).where(Chapter.id == chapter_id)
@@ -94,9 +94,7 @@ async def create_documentpdf_activity(
         content={
             "filename": "documentpdf." + pdf_format,
             "activity_uuid": activity_uuid,
-        },
-        published_version=1,
-        version=1,
+            },  
         org_id=org_id if org_id else 0,
         course_id=coursechapter.course_id,
         activity_uuid=activity_uuid,

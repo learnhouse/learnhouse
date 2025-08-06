@@ -99,13 +99,11 @@ async def create_video_activity(
         activity_uuid=activity_uuid,
         org_id=coursechapter.org_id,
         course_id=coursechapter.course_id,
-        published_version=1,
         content={
             "filename": "video." + video_format,
             "activity_uuid": activity_uuid,
         },
         details=details,
-        version=1,
         creation_date=str(datetime.now()),
         update_date=str(datetime.now()),
     )
@@ -198,14 +196,12 @@ async def create_external_video_activity(
         activity_uuid=activity_uuid,
         course_id=coursechapter.course_id,
         org_id=coursechapter.org_id,
-        published_version=1,
         content={
             "uri": data.uri,
             "type": data.type,
             "activity_uuid": activity_uuid,
         },
         details=details,
-        version=1,
         creation_date=str(datetime.now()),
         update_date=str(datetime.now()),
     )

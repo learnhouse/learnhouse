@@ -11,8 +11,6 @@ from fastapi_jwt_auth.exceptions import AuthJWTException
 from fastapi.middleware.gzip import GZipMiddleware
 
 
-# from src.services.mocks.initial import create_initial_data
-
 ########################
 # Pre-Alpha Version 0.1.0
 # Author: @swve
