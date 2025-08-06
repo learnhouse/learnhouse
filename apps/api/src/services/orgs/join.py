@@ -80,7 +80,7 @@ async def join_org(
             user_organization = UserOrganization(
                 user_id=user.id,
                 org_id=org.id,
-                role_id=3,
+                role_id=4,
                 creation_date=str(datetime.now()),
                 update_date=str(datetime.now()),
             )
@@ -102,7 +102,7 @@ async def join_org(
             user_organization = UserOrganization(
                 user_id=user.id,
                 org_id=org.id,
-                role_id=3,
+                role_id=4,
                 creation_date=str(datetime.now()),
                 update_date=str(datetime.now()),
             )
