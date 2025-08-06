@@ -37,8 +37,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-logfire.configure(console=False, service_name=learnhouse_config.site_name,)
-logfire.instrument_fastapi(app)
+# Only enable logfire if explicitly configured
+if learnhouse_config.general_config.logfire_enabled:
+    logfire.configure(console=False, service_name=learnhouse_config.site_name,)
+    logfire.instrument_fastapi(app)
+    # Instrument database after logfire is configured
+    from src.core.events.database import engine
+    logfire.instrument_sqlalchemy(engine=engine)
 
 # Gzip Middleware (will add brotli later)
 app.add_middleware(GZipMiddleware, minimum_size=1000)
