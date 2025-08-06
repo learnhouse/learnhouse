@@ -1,5 +1,4 @@
 import logging
-import logfire
 import os
 import importlib
 from config.config import get_learnhouse_config
