@@ -12,6 +12,7 @@ class CookieConfig(BaseModel):
 class GeneralConfig(BaseModel):
     development_mode: bool
     install_mode: bool
+    logfire_enabled: bool
 
 
 class SecurityConfig(BaseModel):
@@ -116,6 +117,13 @@ def get_learnhouse_config() -> LearnHouseConfig:
         env_install_mode
         if env_install_mode is not None
         else yaml_config.get("general", {}).get("install_mode")
+    )
+
+    # Logfire config
+    env_logfire_enabled = os.environ.get("LEARNHOUSE_LOGFIRE_ENABLED", "None")
+    logfire_enabled = (
+        env_logfire_enabled.lower() == "true" if env_logfire_enabled != "None"
+        else yaml_config.get("general", {}).get("logfire_enabled", False)
     )
 
     # Security Config
@@ -295,7 +303,9 @@ def get_learnhouse_config() -> LearnHouseConfig:
         site_description=site_description,
         contact_email=contact_email,
         general_config=GeneralConfig(
-            development_mode=bool(development_mode), install_mode=bool(install_mode)
+            development_mode=bool(development_mode), 
+            install_mode=bool(install_mode),
+            logfire_enabled=bool(logfire_enabled)
         ),
         hosting_config=hosting_config,
         database_config=database_config,

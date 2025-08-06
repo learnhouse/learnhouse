@@ -7,6 +7,7 @@ contact_email: hi@learnhouse.app
 general:
   development_mode: true
   install_mode: true
+  logfire_enabled: false
 
 security:
   auth_jwt_secret_key: secret
