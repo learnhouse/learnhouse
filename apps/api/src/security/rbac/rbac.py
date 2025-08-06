@@ -7,7 +7,7 @@ from src.db.courses.courses import Course
 from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum, ResourceAuthorshipStatusEnum
 from src.db.roles import Role
 from src.db.user_organizations import UserOrganization
-from src.security.rbac.utils import check_element_type
+from src.security.rbac.utils import check_element_type, check_course_permissions_with_own
 
 
 # Tested and working
@@ -106,14 +106,30 @@ async def authorization_verify_based_on_roles(
 
     user_roles_in_organization_and_standard_roles = db_session.exec(statement).all()
 
+    
+    # Check if user is the author of the resource for "own" permissions
+    is_author = False
+    if action in ["update", "delete", "read"]:
+        is_author = await authorization_verify_if_user_is_author(
+            request, user_id, action, element_uuid, db_session
+        )
+
     # Check all roles until we find one that grants the permission
     for role in user_roles_in_organization_and_standard_roles:
         role = Role.model_validate(role)
         if role.rights:
             rights = role.rights
             element_rights = getattr(rights, element_type, None)
-            if element_rights and getattr(element_rights, f"action_{action}", False):
-                return True
+            if element_rights:
+                # Special handling for courses with PermissionsWithOwn
+                if element_type == "courses":
+                    if await check_course_permissions_with_own(element_rights, action, is_author):
+                        return True
+                else:
+                    # For non-course resources, only check general permissions
+                    # (regular Permission class no longer has "own" permissions)
+                    if getattr(element_rights, f"action_{action}", False):
+                        return True
     
     # If we get here, no role granted the permission
     return False
