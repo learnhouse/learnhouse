@@ -57,57 +57,69 @@ class TestRBAC:
     @pytest.fixture
     def mock_role(self):
         """Create a mock role object"""
-        from src.db.roles import RoleTypeEnum
+        from src.db.roles import RoleTypeEnum, Rights, PermissionsWithOwn, Permission, DashboardPermission
         role = Mock(spec=Role)
         role.id = 1
         role.org_id = 1
         role.name = "Test Role"
         role.description = "A test role."
-        # Rights should be a dictionary for validation
-        role.rights = {
-            "courses": {
-                "action_create": False,
-                "action_read": True,
-                "action_update": False,
-                "action_delete": False,
-            },
-            "users": {
-                "action_create": False,
-                "action_read": True,
-                "action_update": False,
-                "action_delete": False,
-            },
-            "usergroups": {
-                "action_create": False,
-                "action_read": True,
-                "action_update": False,
-                "action_delete": False,
-            },
-            "collections": {
-                "action_create": False,
-                "action_read": True,
-                "action_update": False,
-                "action_delete": False,
-            },
-            "organizations": {
-                "action_create": False,
-                "action_read": True,
-                "action_update": False,
-                "action_delete": False,
-            },
-            "coursechapters": {
-                "action_create": False,
-                "action_read": True,
-                "action_update": False,
-                "action_delete": False,
-            },
-            "activities": {
-                "action_create": False,
-                "action_read": True,
-                "action_update": False,
-                "action_delete": False,
-            }
-        }
+        # Rights should be a Rights object with proper Permission objects
+        role.rights = Rights(
+            courses=PermissionsWithOwn(
+                action_create=False,
+                action_read=True,
+                action_read_own=False,
+                action_update=False,
+                action_update_own=False,
+                action_delete=False,
+                action_delete_own=False,
+            ),
+            users=Permission(
+                action_create=False,
+                action_read=True,
+                action_update=False,
+                action_delete=False,
+            ),
+            usergroups=Permission(
+                action_create=False,
+                action_read=True,
+                action_update=False,
+                action_delete=False,
+            ),
+            collections=Permission(
+                action_create=False,
+                action_read=True,
+                action_update=False,
+                action_delete=False,
+            ),
+            organizations=Permission(
+                action_create=False,
+                action_read=True,
+                action_update=False,
+                action_delete=False,
+            ),
+            coursechapters=Permission(
+                action_create=False,
+                action_read=True,
+                action_update=False,
+                action_delete=False,
+            ),
+            activities=Permission(
+                action_create=False,
+                action_read=True,
+                action_update=False,
+                action_delete=False,
+            ),
+            roles=Permission(
+                action_create=False,
+                action_read=True,
+                action_update=False,
+                action_delete=False,
+            ),
+            dashboard=DashboardPermission(
+                action_access=True,
+            )
+        )
         role.role_type = RoleTypeEnum.TYPE_GLOBAL
         role.role_uuid = "role_test"
         role.creation_date = "2024-01-01T00:00:00"
@@ -277,7 +289,7 @@ class TestRBAC:
             mock_check_type.return_value = "courses"
             
             # Mock role without permission
-            mock_role.rights["courses"]["action_read"] = False
+            mock_role.rights.courses.action_read = False
             
             # Mock database query
             mock_db_session.exec.return_value.all.return_value = [mock_role]
