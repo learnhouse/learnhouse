@@ -1,11 +1,6 @@
-from typing import Literal
 from src.db.courses.courses import Course
 from src.db.organizations import Organization
 from sqlmodel import Session, select
-from src.security.rbac.rbac import (
-    authorization_verify_based_on_roles_and_authorship,
-    authorization_verify_if_user_is_anon,
-)
 from src.db.courses.chapters import Chapter
 from src.db.courses.activities import (
     Activity,

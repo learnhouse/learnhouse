@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Literal
 from uuid import uuid4
 from fastapi import HTTPException, Request, UploadFile
 from sqlmodel import Session, select
@@ -34,9 +33,6 @@ from src.security.features_utils.usage import (
     increase_feature_usage,
 )
 from src.security.rbac.rbac import (
-    authorization_verify_based_on_roles_and_authorship,
-    authorization_verify_if_element_is_public,
-    authorization_verify_if_user_is_anon,
     authorization_verify_based_on_roles,
 )
 from src.services.courses.activities.uploads.sub_file import upload_submission_file

@@ -43,7 +43,7 @@ export function useCourseRights(courseuuid: string) {
 
   const { data: rights, error, isLoading } = useSWR<CourseRights>(
     courseuuid ? `${getAPIUrl()}courses/${courseuuid}/rights` : null,
-    (url) => swrFetcher(url, access_token)
+    (url: string) => swrFetcher(url, access_token)
   )
 
   return {

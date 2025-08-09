@@ -1,4 +1,4 @@
-from typing import Literal, List
+from typing import List
 from uuid import uuid4
 from sqlmodel import Session, select, or_, and_, text
 from src.db.usergroup_resources import UserGroupResource
@@ -21,8 +21,6 @@ from src.db.courses.courses import (
     ThumbnailType,
 )
 from src.security.rbac.rbac import (
-    authorization_verify_based_on_roles_and_authorship,
-    authorization_verify_if_element_is_public,
     authorization_verify_if_user_is_anon,
     authorization_verify_based_on_org_admin_status,
 )
