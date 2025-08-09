@@ -5,10 +5,6 @@ from src.db.organizations import Organization
 
 from pydantic import BaseModel
 from sqlmodel import Session, select
-from src.security.rbac.rbac import (
-    authorization_verify_based_on_roles_and_authorship,
-    authorization_verify_if_user_is_anon,
-)
 from src.db.courses.chapters import Chapter
 from src.db.courses.activities import (
     Activity,
@@ -23,6 +19,7 @@ from src.services.courses.activities.uploads.videos import upload_video
 from fastapi import HTTPException, status, UploadFile, Request
 from uuid import uuid4
 from datetime import datetime
+from src.security.courses_security import courses_rbac_check_for_activities
 
 
 async def create_video_activity(
@@ -34,9 +31,6 @@ async def create_video_activity(
     video_file: UploadFile | None = None,
     details: str = "{}",
 ):
-    # RBAC check
-    await rbac_check(request, "activity_x", current_user, "create", db_session)
-
     # get chapter_id
     statement = select(Chapter).where(Chapter.id == chapter_id)
     chapter = db_session.exec(statement).first()
@@ -59,13 +53,22 @@ async def create_video_activity(
             detail="CourseChapter not found",
         )
 
+    # Get course_uuid for RBAC check
+    statement = select(Course).where(Course.id == coursechapter.course_id)
+    course = db_session.exec(statement).first()
+
+    if not course:
+        raise HTTPException(
+            status_code=404,
+            detail="Course not found",
+        )
+
+    # RBAC check
+    await courses_rbac_check_for_activities(request, course.course_uuid, current_user, "create", db_session)
+
     # Get org_uuid
     statement = select(Organization).where(Organization.id == coursechapter.org_id)
     organization = db_session.exec(statement).first()
-
-    # Get course_uuid
-    statement = select(Course).where(Course.id == coursechapter.course_id)
-    course = db_session.exec(statement).first()
 
     # generate activity_uuid
     activity_uuid = str(f"activity_{uuid4()}")
@@ -99,13 +102,11 @@ async def create_video_activity(
         activity_uuid=activity_uuid,
         org_id=coursechapter.org_id,
         course_id=coursechapter.course_id,
-        published_version=1,
         content={
             "filename": "video." + video_format,
             "activity_uuid": activity_uuid,
         },
-        details=details,
-        version=1,
+        details=details if isinstance(details, dict) else json.loads(details),
         creation_date=str(datetime.now()),
         update_date=str(datetime.now()),
     )
@@ -117,7 +118,7 @@ async def create_video_activity(
     db_session.refresh(activity)
 
     # upload video
-    if video_file:
+    if video_file and organization and course:
         # get videofile format
         await upload_video(
             video_file,
@@ -163,9 +164,6 @@ async def create_external_video_activity(
     data: ExternalVideo,
     db_session: Session,
 ):
-    # RBAC check
-    await rbac_check(request, "activity_x", current_user, "create", db_session)
-
     # get chapter_id
     statement = select(Chapter).where(Chapter.id == data.chapter_id)
     chapter = db_session.exec(statement).first()
@@ -185,6 +183,19 @@ async def create_external_video_activity(
             detail="CourseChapter not found",
         )
 
+    # Get course_uuid for RBAC check
+    statement = select(Course).where(Course.id == coursechapter.course_id)
+    course = db_session.exec(statement).first()
+
+    if not course:
+        raise HTTPException(
+            status_code=404,
+            detail="Course not found",
+        )
+
+    # RBAC check
+    await courses_rbac_check_for_activities(request, course.course_uuid, current_user, "create", db_session)
+
     # generate activity_uuid
     activity_uuid = str(f"activity_{uuid4()}")
 
@@ -198,14 +209,12 @@ async def create_external_video_activity(
         activity_uuid=activity_uuid,
         course_id=coursechapter.course_id,
         org_id=coursechapter.org_id,
-        published_version=1,
         content={
             "uri": data.uri,
             "type": data.type,
             "activity_uuid": activity_uuid,
         },
         details=details,
-        version=1,
         creation_date=str(datetime.now()),
         update_date=str(datetime.now()),
     )
@@ -232,24 +241,6 @@ async def create_external_video_activity(
     db_session.commit()
 
     return ActivityRead.model_validate(activity)
-
-
-async def rbac_check(
-    request: Request,
-    course_id: str,
-    current_user: PublicUser | AnonymousUser,
-    action: Literal["create", "read", "update", "delete"],
-    db_session: Session,
-):
-    await authorization_verify_if_user_is_anon(current_user.id)
-
-    await authorization_verify_based_on_roles_and_authorship(
-        request,
-        current_user.id,
-        action,
-        course_id,
-        db_session,
-    )
 
 
 ## 🔒 RBAC Utils ##

@@ -103,7 +103,7 @@ async def create_user(
     user_organization = UserOrganization(
         user_id=user.id if user.id else 0,
         org_id=int(org_id),
-        role_id=3,
+        role_id=4,
         creation_date=str(datetime.now()),
         update_date=str(datetime.now()),
     )

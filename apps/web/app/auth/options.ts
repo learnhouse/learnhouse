@@ -91,12 +91,12 @@ export const nextAuthOptions = {
         token.user = userFromOAuth.data;
       }
 
-      // Refresh token only if it's close to expiring (5 minutes before expiry)
+      // Refresh token only if it's close to expiring (1 minute before expiry)
       if (token?.user?.tokens) {
         const tokenExpiry = token.user.tokens.expiry || 0;
-        const fiveMinutes = 5 * 60 * 1000;
+        const oneMinute = 1 * 60 * 1000;
         
-        if (Date.now() + fiveMinutes >= tokenExpiry) {
+        if (Date.now() + oneMinute >= tokenExpiry) {
           const RefreshedToken = await getNewAccessTokenUsingRefreshTokenServer(
             token?.user?.tokens?.refresh_token
           );
@@ -118,11 +118,11 @@ export const nextAuthOptions = {
     async session({ session, token }: any) {
       // Include user information in the session
       if (token.user) {
-        // Cache the session for 5 minutes to avoid frequent API calls
+        // Cache the session for 1 minute to refresh every minute
         const cacheKey = `user_session_${token.user.tokens.access_token}`;
         let cachedSession = global.sessionCache?.[cacheKey];
         
-        if (cachedSession && Date.now() - cachedSession.timestamp < 5 * 60 * 1000) {
+        if (cachedSession && Date.now() - cachedSession.timestamp < 1 * 60 * 1000) {
           return cachedSession.data;
         }
 

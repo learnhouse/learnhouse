@@ -26,6 +26,7 @@ from src.services.courses.courses import (
     delete_course,
     update_course_thumbnail,
     search_courses,
+    get_course_user_rights,
 )
 from src.services.courses.updates import (
     create_update,
@@ -358,12 +359,94 @@ async def api_remove_bulk_course_contributors(
 ):
     """
     Remove multiple contributors from a course by their usernames
-    Only administrators can perform this action
     """
     return await remove_bulk_course_contributors(
-        request,
-        course_uuid,
-        usernames,
-        current_user,
-        db_session
+        request, course_uuid, usernames, current_user, db_session
     )
+
+
+@router.get("/{course_uuid}/rights")
+async def api_get_course_user_rights(
+    request: Request,
+    course_uuid: str,
+    db_session: Session = Depends(get_db_session),
+    current_user: PublicUser = Depends(get_current_user),
+) -> dict:
+    """
+    Get detailed user rights for a specific course.
+    
+    This endpoint returns comprehensive rights information that can be used
+    by the UI to enable/disable features based on user permissions.
+    
+    
+    
+    **Response Structure:**
+    ```json
+    {
+        "course_uuid": "course_123",
+        "user_id": 456,
+        "is_anonymous": false,
+        "permissions": {
+            "read": true,
+            "create": false,
+            "update": true,
+            "delete": false,
+            "create_content": true,
+            "update_content": true,
+            "delete_content": true,
+            "manage_contributors": true,
+            "manage_access": true,
+            "grade_assignments": true,
+            "mark_activities_done": true,
+            "create_certifications": true
+        },
+        "ownership": {
+            "is_owner": true,
+            "is_creator": true,
+            "is_maintainer": false,
+            "is_contributor": false,
+            "authorship_status": "ACTIVE"
+        },
+        "roles": {
+            "is_admin": false,
+            "is_maintainer_role": false,
+            "is_instructor": true,
+            "is_user": true
+        }
+    }
+    ```
+    
+    **Permissions Explained:**
+    - `read`: Can read the course content
+    - `create`: Can create new courses (instructor role or higher)
+    - `update`: Can update course settings (title, description, etc.)
+    - `delete`: Can delete the course
+    - `create_content`: Can create activities, assignments, chapters, etc.
+    - `update_content`: Can update course content
+    - `delete_content`: Can delete course content
+    - `manage_contributors`: Can add/remove contributors
+    - `manage_access`: Can change course access settings (public, open_to_contributors)
+    - `grade_assignments`: Can grade student assignments
+    - `mark_activities_done`: Can mark activities as done for other users
+    - `create_certifications`: Can create course certifications
+    
+    **Ownership Information:**
+    - `is_owner`: Is course owner (CREATOR, MAINTAINER, or CONTRIBUTOR)
+    - `is_creator`: Is course creator
+    - `is_maintainer`: Is course maintainer
+    - `is_contributor`: Is course contributor
+    - `authorship_status`: Current authorship status (ACTIVE, PENDING, INACTIVE)
+    
+    **Role Information:**
+    - `is_admin`: Has admin role (role 1)
+    - `is_maintainer_role`: Has maintainer role (role 2)
+    - `is_instructor`: Has instructor role (role 3)
+    - `is_user`: Has basic user role (role 4)
+    
+    **Security Notes:**
+    - Returns rights based on course ownership and user roles
+    - Safe to expose to UI as it only returns permission information
+    - Anonymous users can only read public courses
+    - All permissions are calculated based on current user context
+    """
+    return await get_course_user_rights(request, course_uuid, current_user, db_session)

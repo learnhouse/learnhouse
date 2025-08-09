@@ -161,11 +161,20 @@ export async function bulkAddContributors(course_uuid: string, data: any, access
   return res
 }
 
-export async function bulkRemoveContributors(course_uuid: string, data: any, access_token:string | null | undefined) {
+export async function bulkRemoveContributors(course_uuid: string, data: any, access_token: string | null | undefined) {
   const result: any = await fetch(
     `${getAPIUrl()}courses/${course_uuid}/bulk-remove-contributors`,
-    RequestBodyWithAuthHeader('PUT', data, null,access_token || undefined)
+    RequestBodyWithAuthHeader('PUT', data, null, access_token || undefined)
   )
-  const res = await getResponseMetadata(result)
+  const res = await errorHandling(result)
+  return res
+}
+
+export async function getCourseRights(course_uuid: string, access_token: string | null | undefined) {
+  const result: any = await fetch(
+    `${getAPIUrl()}courses/${course_uuid}/rights`,
+    RequestBodyWithAuthHeader('GET', null, null, access_token || undefined)
+  )
+  const res = await errorHandling(result)
   return res
 }
