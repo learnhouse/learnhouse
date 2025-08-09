@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { useMediaQuery } from 'usehooks-ts'
 import { getUriWithOrg } from '@services/config/config'
-import { Monitor, ScanEye, SquareUserRound, UserPlus, Users } from 'lucide-react'
+import { Monitor, ScanEye, SquareUserRound, UserPlus, Users, Shield } from 'lucide-react'
 import BreadCrumbs from '@components/Dashboard/Misc/BreadCrumbs'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
@@ -12,6 +12,7 @@ import OrgUsers from '@components/Dashboard/Pages/Users/OrgUsers/OrgUsers'
 import OrgAccess from '@components/Dashboard/Pages/Users/OrgAccess/OrgAccess'
 import OrgUsersAdd from '@components/Dashboard/Pages/Users/OrgUsersAdd/OrgUsersAdd'
 import OrgUserGroups from '@components/Dashboard/Pages/Users/OrgUserGroups/OrgUserGroups'
+import OrgRoles from '@components/Dashboard/Pages/Users/OrgRoles/OrgRoles'
 
 export type SettingsParams = {
   subpage: string
@@ -42,6 +43,10 @@ function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
     if (params.subpage == 'usergroups') {
       setH1Label('UserGroups')
       setH2Label('Create and manage user groups')
+    }
+    if (params.subpage == 'roles') {
+      setH1Label('Roles')
+      setH2Label('Create and manage roles with specific permissions')
     }
   }
 
@@ -114,6 +119,23 @@ function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
           </Link>
           <Link
             href={
+              getUriWithOrg(params.orgslug, '') + `/dash/users/settings/roles`
+            }
+          >
+            <div
+              className={`py-2 w-fit text-center border-black transition-all ease-linear ${params.subpage.toString() === 'roles'
+                  ? 'border-b-4'
+                  : 'opacity-50'
+                } cursor-pointer`}
+            >
+              <div className="flex items-center space-x-2.5 mx-2">
+                <Shield size={16} />
+                <div>Roles</div>
+              </div>
+            </div>
+          </Link>
+          <Link
+            href={
               getUriWithOrg(params.orgslug, '') + `/dash/users/settings/signups`
             }
           >
@@ -160,6 +182,7 @@ function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
         {params.subpage == 'signups' ? <OrgAccess /> : ''}
         {params.subpage == 'add' ? <OrgUsersAdd /> : ''}
         {params.subpage == 'usergroups' ? <OrgUserGroups /> : ''}
+        {params.subpage == 'roles' ? <OrgRoles /> : ''}
       </motion.div>
     </div>
   )

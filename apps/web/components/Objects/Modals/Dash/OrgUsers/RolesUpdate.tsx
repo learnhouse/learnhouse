@@ -11,10 +11,12 @@ import * as Form from '@radix-ui/react-form'
 import { FormMessage } from '@radix-ui/react-form'
 import { getAPIUrl } from '@services/config/config'
 import { updateUserRole } from '@services/organizations/orgs'
+import { swrFetcher } from '@services/utils/ts/requests'
 import React, { useEffect } from 'react'
 import toast from 'react-hot-toast'
 import { BarLoader } from 'react-spinners'
 import { mutate } from 'swr'
+import useSWR from 'swr'
 
 interface Props {
   user: any
@@ -25,12 +27,18 @@ interface Props {
 function RolesUpdate(props: Props) {
   const org = useOrg() as any
   const session = useLHSession() as any
-    const access_token = session?.data?.tokens?.access_token;
+  const access_token = session?.data?.tokens?.access_token;
   const [isSubmitting, setIsSubmitting] = React.useState(false)
   const [assignedRole, setAssignedRole] = React.useState(
     props.alreadyAssignedRole
   )
   const [error, setError] = React.useState(null) as any
+
+  // Fetch available roles for the organization
+  const { data: roles, error: rolesError } = useSWR(
+    org ? `${getAPIUrl()}roles/org/${org.id}` : null,
+    (url) => swrFetcher(url, access_token)
+  )
 
   const handleAssignedRole = (event: React.ChangeEvent<any>) => {
     setError(null)
@@ -80,10 +88,20 @@ function RolesUpdate(props: Props) {
               defaultValue={assignedRole}
               className="border border-gray-300 rounded-md p-2"
               required
+              disabled={!roles || rolesError}
             >
-              <option value="role_global_admin">Admin </option>
-              <option value="role_global_maintainer">Maintainer</option>
-              <option value="role_global_user">User</option>
+              {!roles || rolesError ? (
+                <option value="">Loading roles...</option>
+              ) : (
+                <>
+                  <option value="">Select a role</option>
+                  {roles.map((role: any) => (
+                    <option key={role.id} value={role.role_uuid || role.id}>
+                      {role.name}
+                    </option>
+                  ))}
+                </>
+              )}
             </select>
           </Form.Control>
         </FormField>

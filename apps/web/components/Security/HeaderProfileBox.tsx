@@ -27,6 +27,11 @@ interface RoleInfo {
   description: string;
 }
 
+interface CustomRoleInfo {
+  name: string;
+  description?: string;
+}
+
 export const HeaderProfileBox = () => {
   const session = useLHSession() as any
   const { isAdmin, loading, userRoles, rights } = useAdminStatus()
@@ -103,6 +108,31 @@ export const HeaderProfileBox = () => {
     return roleConfigs[roleKey] || roleConfigs['role_global_user'];
   }, [userRoles, org?.id]);
 
+  const customRoles = useMemo((): CustomRoleInfo[] => {
+    if (!userRoles || userRoles.length === 0) return [];
+
+    // Find roles for the current organization
+    const orgRoles = userRoles.filter((role: any) => role.org.id === org?.id);
+    
+    if (orgRoles.length === 0) return [];
+
+    // Filter for custom roles (not system roles)
+    const customRoles = orgRoles.filter((role: any) => {
+      // Check if it's a system role
+      const isSystemRole = 
+        role.role.role_uuid?.startsWith('role_global_') ||
+        [1, 2, 3, 4].includes(role.role.id) ||
+        ['Admin', 'Maintainer', 'Instructor', 'User'].includes(role.role.name);
+      
+      return !isSystemRole;
+    });
+
+    return customRoles.map((role: any) => ({
+      name: role.role.name || 'Custom Role',
+      description: role.role.description
+    }));
+  }, [userRoles, org?.id]);
+
   return (
     <ProfileArea>
       {session.status == 'unauthenticated' && (
@@ -140,6 +170,20 @@ export const HeaderProfileBox = () => {
                           </div>
                         </Tooltip>
                       )}
+                      {/* Custom roles */}
+                      {customRoles.map((customRole, index) => (
+                        <Tooltip 
+                          key={index}
+                          content={customRole.description || `Custom role: ${customRole.name}`}
+                          sideOffset={15}
+                          side="bottom"
+                        >
+                          <div className="text-[6px] bg-gray-500 text-white px-1 py-0.5 font-medium rounded-full flex items-center gap-0.5 w-fit">
+                            <Shield size={12} />
+                            {customRole.name}
+                          </div>
+                        </Tooltip>
+                      ))}
                     </div>
                     <p className='text-xs text-gray-500'>{session.data.user.email}</p>
                   </div>
