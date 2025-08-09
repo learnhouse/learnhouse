@@ -45,6 +45,7 @@ from src.services.courses.activities.uploads.tasks_ref_files import (
 )
 from src.services.trail.trail import check_trail_presence
 from src.services.courses.certifications import check_course_completion_and_create_certificate
+from src.security.courses_security import courses_rbac_check_for_assignments
 
 ## > Assignments CRUD
 
@@ -66,7 +67,7 @@ async def create_assignment(
         )
 
     # RBAC check
-    await rbac_check(request, course.course_uuid, current_user, "create", db_session)
+    await courses_rbac_check_for_assignments(request, course.course_uuid, current_user, "create", db_session)
 
     # Usage check
     check_limits_with_usage("assignments", course.org_id, db_session)
@@ -118,7 +119,7 @@ async def read_assignment(
         )
 
     # RBAC check
-    await rbac_check(request, course.course_uuid, current_user, "read", db_session)
+    await courses_rbac_check_for_assignments(request, course.course_uuid, current_user, "read", db_session)
 
     # return assignment read
     return AssignmentRead.model_validate(assignment)
@@ -161,7 +162,7 @@ async def read_assignment_from_activity_uuid(
         )
 
     # RBAC check
-    await rbac_check(request, course.course_uuid, current_user, "read", db_session)
+    await courses_rbac_check_for_assignments(request, course.course_uuid, current_user, "read", db_session)
 
     # return assignment read
     return AssignmentRead.model_validate(assignment)
@@ -195,7 +196,7 @@ async def update_assignment(
         )
 
     # RBAC check
-    await rbac_check(request, course.course_uuid, current_user, "update", db_session)
+    await courses_rbac_check_for_assignments(request, course.course_uuid, current_user, "update", db_session)
 
     # Update only the fields that were passed in
     for var, value in vars(assignment_object).items():
@@ -239,7 +240,7 @@ async def delete_assignment(
         )
 
     # RBAC check
-    await rbac_check(request, course.course_uuid, current_user, "delete", db_session)
+    await courses_rbac_check_for_assignments(request, course.course_uuid, current_user, "delete", db_session)
 
     # Feature usage
     decrease_feature_usage("assignments", course.org_id, db_session)
@@ -289,7 +290,7 @@ async def delete_assignment_from_activity_uuid(
         )
 
     # RBAC check
-    await rbac_check(request, course.course_uuid, current_user, "delete", db_session)
+    await courses_rbac_check_for_assignments(request, course.course_uuid, current_user, "delete", db_session)
 
      # Feature usage
     decrease_feature_usage("assignments", course.org_id, db_session)
@@ -333,7 +334,7 @@ async def create_assignment_task(
         )
 
     # RBAC check
-    await rbac_check(request, course.course_uuid, current_user, "create", db_session)
+    await courses_rbac_check_for_assignments(request, course.course_uuid, current_user, "create", db_session)
 
     # Create Assignment Task
     assignment_task = AssignmentTask(**assignment_task_object.model_dump())
@@ -388,7 +389,7 @@ async def read_assignment_tasks(
     )
 
     # RBAC check
-    await rbac_check(request, course.course_uuid, current_user, "read", db_session)
+    await courses_rbac_check_for_assignments(request, course.course_uuid, current_user, "read", db_session)
 
     # return assignment tasks read
     return [
@@ -436,7 +437,7 @@ async def read_assignment_task(
         )
 
     # RBAC check
-    await rbac_check(request, course.course_uuid, current_user, "read", db_session)
+    await courses_rbac_check_for_assignments(request, course.course_uuid, current_user, "read", db_session)
 
     # return assignment task read
     return AssignmentTaskRead.model_validate(assignmenttask)
@@ -490,7 +491,7 @@ async def put_assignment_task_reference_file(
     org = db_session.exec(org_statement).first()
 
     # RBAC check
-    await rbac_check(request, course.course_uuid, current_user, "update", db_session)
+    await courses_rbac_check_for_assignments(request, course.course_uuid, current_user, "update", db_session)
 
     # Upload reference file
     if reference_file and reference_file.filename and activity and org:
@@ -568,7 +569,7 @@ async def put_assignment_task_submission_file(
     org = db_session.exec(org_statement).first()
 
     # RBAC check - only need read permission to submit files
-    await rbac_check(request, course.course_uuid, current_user, "read", db_session)
+    await courses_rbac_check_for_assignments(request, course.course_uuid, current_user, "read", db_session)
 
     # Check if user is enrolled in the course
     if not await authorization_verify_based_on_roles(request, current_user.id, "read", course.course_uuid, db_session):
@@ -633,7 +634,7 @@ async def update_assignment_task(
         )
 
     # RBAC check
-    await rbac_check(request, course.course_uuid, current_user, "update", db_session)
+    await courses_rbac_check_for_assignments(request, course.course_uuid, current_user, "update", db_session)
 
     # Update only the fields that were passed in
     for var, value in vars(assignment_task_object).items():
@@ -689,7 +690,7 @@ async def delete_assignment_task(
         )
 
     # RBAC check
-    await rbac_check(request, course.course_uuid, current_user, "delete", db_session)
+    await courses_rbac_check_for_assignments(request, course.course_uuid, current_user, "delete", db_session)
 
     # Delete Assignment Task
     db_session.delete(assignment_task)
@@ -741,7 +742,7 @@ async def handle_assignment_task_submission(
             detail="Course not found",
         )
 
-    # Check if user has instructor/admin permissions
+    # SECURITY: Check if user has instructor/admin permissions for grading
     is_instructor = await authorization_verify_based_on_roles(request, current_user.id, "update", course.course_uuid, db_session)
 
     # For regular users, ensure they can only submit their own work
@@ -753,7 +754,7 @@ async def handle_assignment_task_submission(
                 detail="You must be enrolled in this course to submit assignments"
             )
         
-        # Regular users cannot update grades - only check if actual values are being set
+        # SECURITY: Regular users cannot update grades - only check if actual values are being set
         if (assignment_task_submission_object.grade is not None and assignment_task_submission_object.grade != 0) or \
            (assignment_task_submission_object.task_submission_grade_feedback is not None and assignment_task_submission_object.task_submission_grade_feedback != ""):
             raise HTTPException(
@@ -762,10 +763,10 @@ async def handle_assignment_task_submission(
             )
 
         # Only need read permission for submissions
-        await rbac_check(request, course.course_uuid, current_user, "read", db_session)
+        await courses_rbac_check_for_assignments(request, course.course_uuid, current_user, "read", db_session)
     else:
-        # Instructors/admins need update permission to grade
-        await rbac_check(request, course.course_uuid, current_user, "update", db_session)
+        # SECURITY: Instructors/admins need update permission to grade
+        await courses_rbac_check_for_assignments(request, course.course_uuid, current_user, "update", db_session)
 
     # Try to find existing submission if UUID is provided
     assignment_task_submission = None
@@ -777,7 +778,7 @@ async def handle_assignment_task_submission(
 
     # If submission exists, update it
     if assignment_task_submission:
-        # For regular users, ensure they can only update their own submissions
+        # SECURITY: For regular users, ensure they can only update their own submissions
         if not is_instructor and assignment_task_submission.user_id != current_user.id:
             raise HTTPException(
                 status_code=403,
@@ -880,7 +881,7 @@ async def read_user_assignment_task_submissions(
         )
 
     # RBAC check
-    await rbac_check(request, course.course_uuid, current_user, "read", db_session)
+    await courses_rbac_check_for_assignments(request, course.course_uuid, current_user, "read", db_session)
 
     # return assignment task submission read
     return AssignmentTaskSubmissionRead.model_validate(assignment_task_submission)
@@ -953,7 +954,7 @@ async def read_assignment_task_submissions(
         )
 
     # RBAC check
-    await rbac_check(request, course.course_uuid, current_user, "read", db_session)
+    await courses_rbac_check_for_assignments(request, course.course_uuid, current_user, "read", db_session)
 
     # return assignment task submission read
     return AssignmentTaskSubmissionRead.model_validate(assignment_task_submission)
@@ -1012,7 +1013,7 @@ async def update_assignment_task_submission(
         )
 
     # RBAC check
-    await rbac_check(request, course.course_uuid, current_user, "read", db_session)
+    await courses_rbac_check_for_assignments(request, course.course_uuid, current_user, "read", db_session)
 
     # Update only the fields that were passed in
     for var, value in vars(assignment_task_submission_object).items():
@@ -1081,7 +1082,7 @@ async def delete_assignment_task_submission(
         )
 
     # RBAC check
-    await rbac_check(request, course.course_uuid, current_user, "delete", db_session)
+    await courses_rbac_check_for_assignments(request, course.course_uuid, current_user, "delete", db_session)
 
     # Delete Assignment Task Submission
     db_session.delete(assignment_task_submission)
@@ -1147,7 +1148,7 @@ async def create_assignment_submission(
         )
 
     # RBAC check
-    await rbac_check(request, course.course_uuid, current_user, "read", db_session)
+    await courses_rbac_check_for_assignments(request, course.course_uuid, current_user, "read", db_session)
 
     # Create Assignment User Submission
     assignment_user_submission = AssignmentUserSubmission(
@@ -1280,7 +1281,7 @@ async def read_assignment_submissions(
     )
 
     # RBAC check
-    await rbac_check(request, course.course_uuid, current_user, "read", db_session)
+    await courses_rbac_check_for_assignments(request, course.course_uuid, current_user, "read", db_session)
 
     # return assignment tasks read
     return [
@@ -1323,7 +1324,7 @@ async def read_user_assignment_submissions(
     )
 
     # RBAC check
-    await rbac_check(request, course.course_uuid, current_user, "read", db_session)
+    await courses_rbac_check_for_assignments(request, course.course_uuid, current_user, "read", db_session)
 
     # return assignment tasks read
     return [
@@ -1389,7 +1390,7 @@ async def update_assignment_submission(
         )
 
     # RBAC check
-    await rbac_check(request, course.course_uuid, current_user, "read", db_session)
+    await courses_rbac_check_for_assignments(request, course.course_uuid, current_user, "read", db_session)
 
     # Update only the fields that were passed in
     for var, value in vars(assignment_user_submission_object).items():
@@ -1447,7 +1448,7 @@ async def delete_assignment_submission(
         )
 
     # RBAC check
-    await rbac_check(request, course.course_uuid, current_user, "delete", db_session)
+    await courses_rbac_check_for_assignments(request, course.course_uuid, current_user, "delete", db_session)
 
     # Delete Assignment User Submission
     db_session.delete(assignment_user_submission)
@@ -1464,7 +1465,7 @@ async def grade_assignment_submission(
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
-
+    # SECURITY: This function should only be accessible by course owners or instructors
     # Check if assignment exists
     statement = select(Assignment).where(Assignment.assignment_uuid == assignment_uuid)
     assignment = db_session.exec(statement).first()
@@ -1484,7 +1485,8 @@ async def grade_assignment_submission(
             detail="Course not found",
         )
 
-    await rbac_check(request, course.course_uuid, current_user, "update", db_session)
+    # SECURITY: Require course ownership or instructor role for grading
+    await courses_rbac_check_for_assignments(request, course.course_uuid, current_user, "update", db_session)
 
     # Check if assignment user submission exists
     statement = select(AssignmentUserSubmission).where(
@@ -1602,6 +1604,7 @@ async def mark_activity_as_done_for_user(
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
+    # SECURITY: This function should only be accessible by course owners or instructors
     # Get Assignment
     statement = select(Assignment).where(Assignment.assignment_uuid == assignment_uuid)
     assignment = db_session.exec(statement).first()
@@ -1625,7 +1628,8 @@ async def mark_activity_as_done_for_user(
             detail="Course not found",
         )
 
-    await rbac_check(request, course.course_uuid, current_user, "update", db_session)
+    # SECURITY: Require course ownership or instructor role for marking activities as done
+    await courses_rbac_check_for_assignments(request, course.course_uuid, current_user, "update", db_session)
 
     if not activity:
         raise HTTPException(
@@ -1704,46 +1708,7 @@ async def get_assignments_from_course(
             assignments.append(assignment)
 
     # RBAC check
-    await rbac_check(request, course.course_uuid, current_user, "read", db_session)
+    await courses_rbac_check_for_assignments(request, course.course_uuid, current_user, "read", db_session)
 
     # return assignments read
     return [AssignmentRead.model_validate(assignment) for assignment in assignments]
-
-
-## 🔒 RBAC Utils ##
-
-
-async def rbac_check(
-    request: Request,
-    course_uuid: str,
-    current_user: PublicUser | AnonymousUser,
-    action: Literal["create", "read", "update", "delete"],
-    db_session: Session,
-):
-
-    if action == "read":
-        if current_user.id == 0:  # Anonymous user
-            res = await authorization_verify_if_element_is_public(
-                request, course_uuid, action, db_session
-            )
-            return res
-        else:
-            res = (
-                await authorization_verify_based_on_roles_and_authorship(
-                    request, current_user.id, action, course_uuid, db_session
-                )
-            )
-            return res
-    else:
-        await authorization_verify_if_user_is_anon(current_user.id)
-
-        await authorization_verify_based_on_roles_and_authorship(
-            request,
-            current_user.id,
-            action,
-            course_uuid,
-            db_session,
-        )
-
-
-## 🔒 RBAC Utils ##

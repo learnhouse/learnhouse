@@ -12,7 +12,7 @@ from src.db.courses.course_updates import (
 from src.db.courses.courses import Course
 from src.db.organizations import Organization
 from src.db.users import AnonymousUser, PublicUser
-from src.services.courses.courses import rbac_check
+from src.security.courses_security import courses_rbac_check
 
 
 async def create_update(
@@ -41,7 +41,7 @@ async def create_update(
         )
 
     # RBAC check
-    await rbac_check(request, course.course_uuid, current_user, "update", db_session)
+    await courses_rbac_check(request, course.course_uuid, current_user, "update", db_session)
 
     # Generate UUID
     courseupdate_uuid = str(f"courseupdate_{uuid4()}")
@@ -81,7 +81,7 @@ async def update_update(
         )
 
     # RBAC check
-    await rbac_check(
+    await courses_rbac_check(
         request, update.courseupdate_uuid, current_user, "update", db_session
     )
 
@@ -115,7 +115,7 @@ async def delete_update(
         )
 
     # RBAC check
-    await rbac_check(
+    await courses_rbac_check(
         request, update.courseupdate_uuid, current_user, "delete", db_session
     )
 

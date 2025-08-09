@@ -20,6 +20,7 @@ from src.services.courses.activities.uploads.pdfs import upload_pdf
 from fastapi import HTTPException, status, UploadFile, Request
 from uuid import uuid4
 from datetime import datetime
+from src.security.courses_security import courses_rbac_check_for_activities
 
 
 async def create_documentpdf_activity(
@@ -30,9 +31,6 @@ async def create_documentpdf_activity(
     db_session: Session,
     pdf_file: UploadFile | None = None,
 ):
-    # RBAC check
-    await rbac_check(request, "course_uuid", current_user, "create", db_session)
-
     # get chapter_id
     statement = select(Chapter).where(Chapter.id == chapter_id)
     chapter = db_session.exec(statement).first()
@@ -52,16 +50,25 @@ async def create_documentpdf_activity(
             detail="CourseChapter not found",
         )
 
+    # Get course_uuid for RBAC check
+    statement = select(Course).where(Course.id == coursechapter.course_id)
+    course = db_session.exec(statement).first()
+
+    if not course:
+        raise HTTPException(
+            status_code=404,
+            detail="Course not found",
+        )
+
+    # RBAC check
+    await courses_rbac_check_for_activities(request, course.course_uuid, current_user, "create", db_session)
+
     # get org_id
     org_id = coursechapter.org_id
 
     # Get org_uuid
     statement = select(Organization).where(Organization.id == coursechapter.org_id)
     organization = db_session.exec(statement).first()
-
-    # Get course_uuid
-    statement = select(Course).where(Course.id == coursechapter.course_id)
-    course = db_session.exec(statement).first()
 
     # create activity uuid
     activity_uuid = f"activity_{uuid4()}"
@@ -119,7 +126,7 @@ async def create_documentpdf_activity(
     )
 
     # upload pdf
-    if pdf_file:
+    if pdf_file and organization and course:
         # get pdffile format
         await upload_pdf(
             pdf_file,
@@ -134,27 +141,3 @@ async def create_documentpdf_activity(
     db_session.refresh(activity_chapter)
 
     return ActivityRead.model_validate(activity)
-
-
-## 🔒 RBAC Utils ##
-
-
-async def rbac_check(
-    request: Request,
-    course_id: str,
-    current_user: PublicUser | AnonymousUser,
-    action: Literal["create", "read", "update", "delete"],
-    db_session: Session,
-):
-    await authorization_verify_if_user_is_anon(current_user.id)
-
-    await authorization_verify_based_on_roles_and_authorship(
-        request,
-        current_user.id,
-        action,
-        course_id,
-        db_session,
-    )
-
-
-## 🔒 RBAC Utils ##

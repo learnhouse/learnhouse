@@ -8,6 +8,10 @@ import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { useSearchParams } from 'next/navigation'
 import React from 'react'
 import useAdminStatus from '@components/Hooks/useAdminStatus'
+import { getUriWithOrg } from '@services/config/config'
+import { useOrg } from '@components/Contexts/OrgContext'
+import { BookOpen } from 'lucide-react'
+import Link from 'next/link'
 
 type CourseProps = {
   orgslug: string
@@ -22,6 +26,7 @@ function CoursesHome(params: CourseProps) {
   const orgslug = params.orgslug
   const courses = params.courses
   const isUserAdmin = useAdminStatus() as any
+  const org = useOrg() as any
 
   async function closeNewCourseModal() {
     setNewCourseModal(false)
@@ -32,7 +37,16 @@ function CoursesHome(params: CourseProps) {
       <div className="mb-6">
         <BreadCrumbs type="courses" />
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-4">
-          <h1 className="text-3xl font-bold mb-4 sm:mb-0">Courses</h1>
+          <div className="flex items-center space-x-4">
+            <h1 className="text-3xl font-bold mb-4 sm:mb-0">Courses</h1>
+            <Link
+              href={getUriWithOrg(org?.slug, '/dash/documentation/rights')}
+              className="rounded-lg bg-black hover:scale-105 transition-all duration-100 ease-linear antialiased p-2 px-5 font text-xs font-bold text-white drop-shadow-lg flex space-x-2 items-center"
+            >
+              <BookOpen className="w-4 h-4" />
+              <span>Rights Guide</span>
+            </Link>
+          </div>
           <AuthenticatedClientElement
             checkMethod="roles"
             action="create"

@@ -9,6 +9,7 @@ import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import Link from 'next/link'
 import Image from 'next/image'
 import EmptyThumbnailImage from '../../../public/empty_thumbnail.png'
+import { BookOpen } from 'lucide-react'
 
 export function CourseOverviewTop({
   params,
@@ -57,7 +58,14 @@ export function CourseOverviewTop({
             </div>
           </div>
         </div>
-        <div className="flex items-center">
+        <div className="flex items-center space-x-4">
+          <Link
+            href={getUriWithOrg(org?.slug, '/dash/documentation/rights')}
+            className="rounded-lg bg-black hover:scale-105 transition-all duration-100 ease-linear antialiased p-2 px-5 font text-xs font-bold text-white drop-shadow-lg flex space-x-2 items-center"
+          >
+            <BookOpen className="w-4 h-4" />
+            <span>Rights Guide</span>
+          </Link>
           <SaveState orgslug={params.orgslug} />
         </div>
       </div>
