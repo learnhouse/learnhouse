@@ -1,19 +1,10 @@
-from typing import Literal
 from sqlmodel import Session, select
 from src.db.courses.courses import Course
 from src.db.courses.chapters import Chapter
-from src.security.rbac.rbac import (
-    authorization_verify_based_on_roles_and_authorship,
-    authorization_verify_if_element_is_public,
-    authorization_verify_if_user_is_anon,
-    authorization_verify_based_on_org_admin_status,
-    authorization_verify_based_on_roles,
-)
 from src.db.courses.activities import ActivityCreate, Activity, ActivityRead, ActivityUpdate
 from src.db.courses.chapter_activities import ChapterActivity
 from src.db.users import AnonymousUser, PublicUser
-from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum, ResourceAuthorshipStatusEnum
-from fastapi import HTTPException, Request, status
+from fastapi import HTTPException, Request
 from uuid import uuid4
 from datetime import datetime
 
