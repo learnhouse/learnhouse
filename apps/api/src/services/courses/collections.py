@@ -1,13 +1,8 @@
 from datetime import datetime
-from typing import List, Literal
+from typing import List
 from uuid import uuid4
 from sqlmodel import Session, select
-from src.db.users import AnonymousUser
-from src.security.rbac.rbac import (
-    authorization_verify_based_on_roles_and_authorship,
-    authorization_verify_if_element_is_public,
-    authorization_verify_if_user_is_anon,
-)
+from src.db.users import AnonymousUser, PublicUser
 from src.db.collections import (
     Collection,
     CollectionCreate,
@@ -16,8 +11,8 @@ from src.db.collections import (
 )
 from src.db.collections_courses import CollectionCourse
 from src.db.courses.courses import Course
-from src.services.users.users import PublicUser
 from fastapi import HTTPException, status, Request
+from src.security.courses_security import courses_rbac_check_for_collections
 
 
 ####################################################
@@ -40,7 +35,7 @@ async def get_collection(
         )
 
     # RBAC check
-    await rbac_check(
+    await courses_rbac_check_for_collections(
         request, collection.collection_uuid, current_user, "read", db_session
     )
 
@@ -86,8 +81,10 @@ async def create_collection(
 ) -> CollectionRead:
     collection = Collection.model_validate(collection_object)
 
-    # RBAC check
-    await rbac_check(request, "collection_x", current_user, "create", db_session)
+    # SECURITY: Check if user has permission to create collections in this organization
+    # Since collections are organization-level resources, we need to check org permissions
+    # For now, we'll use the existing RBAC check but with proper organization context
+    await courses_rbac_check_for_collections(request, "collection_x", current_user, "create", db_session)
 
     # Complete the collection object
     collection.collection_uuid = f"collection_{uuid4()}"
@@ -99,18 +96,32 @@ async def create_collection(
     db_session.commit()
     db_session.refresh(collection)
 
-    # Link courses to collection
+    # SECURITY: Link courses to collection - ensure user has access to all courses being added
     if collection:
         for course_id in collection_object.courses:
-            collection_course = CollectionCourse(
-                collection_id=int(collection.id),  # type: ignore
-                course_id=course_id,
-                org_id=int(collection_object.org_id),
-                creation_date=str(datetime.now()),
-                update_date=str(datetime.now()),
-            )
-            # Add collection_course to database
-            db_session.add(collection_course)
+            # Check if user has access to this course
+            statement = select(Course).where(Course.id == course_id)
+            course = db_session.exec(statement).first()
+            
+            if course:
+                # Verify user has read access to the course before adding it to collection
+                try:
+                    await courses_rbac_check_for_collections(request, course.course_uuid, current_user, "read", db_session)
+                except HTTPException:
+                    raise HTTPException(
+                        status_code=403,
+                        detail=f"You don't have permission to add course {course.name} to this collection"
+                    )
+                
+                collection_course = CollectionCourse(
+                    collection_id=int(collection.id),  # type: ignore
+                    course_id=course_id,
+                    org_id=int(collection_object.org_id),
+                    creation_date=str(datetime.now()),
+                    update_date=str(datetime.now()),
+                )
+                # Add collection_course to database
+                db_session.add(collection_course)
 
     db_session.commit()
     db_session.refresh(collection)
@@ -145,7 +156,7 @@ async def update_collection(
         )
 
     # RBAC check
-    await rbac_check(
+    await courses_rbac_check_for_collections(
         request, collection.collection_uuid, current_user, "update", db_session
     )
 
@@ -219,7 +230,7 @@ async def delete_collection(
         )
 
     # RBAC check
-    await rbac_check(
+    await courses_rbac_check_for_collections(
         request, collection.collection_uuid, current_user, "delete", db_session
     )
 
@@ -248,7 +259,7 @@ async def get_collections(
         Collection.org_id == org_id, Collection.public == True
     )
     statement_all = (
-        select(Collection).where(Collection.org_id == org_id).distinct(Collection.id)
+        select(Collection).where(Collection.org_id == org_id).distinct(Collection.id) # type: ignore
     )
 
     if current_user.id == 0:
@@ -288,49 +299,7 @@ async def get_collections(
 
         courses = db_session.exec(statement).all()
 
-        collection = CollectionRead(**collection.model_dump(), courses=courses)
+        collection = CollectionRead(**collection.model_dump(), courses=list(courses))
         collections_with_courses.append(collection)
 
     return collections_with_courses
-
-
-## 🔒 RBAC Utils ##
-
-
-async def rbac_check(
-    request: Request,
-    collection_uuid: str,
-    current_user: PublicUser | AnonymousUser,
-    action: Literal["create", "read", "update", "delete"],
-    db_session: Session,
-):
-    if action == "read":
-        if current_user.id == 0:  # Anonymous user
-            res = await authorization_verify_if_element_is_public(
-                request, collection_uuid, action, db_session
-            )
-            if res == False:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="User rights : You are not allowed to read this collection",
-                )
-        else:
-            res = (
-                await authorization_verify_based_on_roles_and_authorship(
-                    request, current_user.id, action, collection_uuid, db_session
-                )
-            )
-            return res
-    else:
-        await authorization_verify_if_user_is_anon(current_user.id)
-
-        await authorization_verify_based_on_roles_and_authorship(
-            request,
-            current_user.id,
-            action,
-            collection_uuid,
-            db_session,
-        )
-
-
-## 🔒 RBAC Utils ##

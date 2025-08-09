@@ -1,5 +1,4 @@
 import logging
-import logfire
 import os
 import importlib
 from config.config import get_learnhouse_config
@@ -58,7 +57,7 @@ else:
 # Only create tables if not in test mode (tests will handle this themselves)
 if not is_testing:
     SQLModel.metadata.create_all(engine)
-    logfire.instrument_sqlalchemy(engine=engine)
+    # Note: logfire instrumentation will be handled in app.py after configuration
 
 async def connect_to_db(app: FastAPI):
     app.db_engine = engine  # type: ignore

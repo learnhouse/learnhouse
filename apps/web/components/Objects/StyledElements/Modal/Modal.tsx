@@ -47,12 +47,14 @@ const Modal = (params: ModalParams) => {
         <DialogTrigger asChild>{params.dialogTrigger}</DialogTrigger>
       )}
       <DialogContent className={cn(
-        "overflow-auto",
         "w-[95vw] max-w-[95vw]",
         "max-h-[90vh]",
-        "p-4",
-        // Tablet and up
-        "md:w-auto md:max-w-[90vw] md:p-6",
+        "p-3 sm:p-4 md:p-6",
+        // Mobile-first responsive design
+        "sm:w-[90vw] sm:max-w-[90vw]",
+        "md:w-auto md:max-w-[90vw]",
+        "lg:max-w-[85vw]",
+        "xl:max-w-[80vw]",
         getMinHeight(),
         getMinWidth(),
         params.customHeight,
@@ -60,15 +62,17 @@ const Modal = (params: ModalParams) => {
       )}>
         {params.dialogTitle && params.dialogDescription && (
           <DialogHeader className="text-center flex flex-col space-y-0.5 w-full">
-            <DialogTitle>{params.dialogTitle}</DialogTitle>
-            <DialogDescription>{params.dialogDescription}</DialogDescription>
+            <DialogTitle className="text-lg sm:text-xl md:text-2xl">{params.dialogTitle}</DialogTitle>
+            <DialogDescription className="text-sm sm:text-base">{params.dialogDescription}</DialogDescription>
           </DialogHeader>
         )}
-        <div className="overflow-auto">
-          {params.dialogContent}
+        <div className="overflow-y-auto max-h-[calc(90vh-120px)] scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent hover:scrollbar-thumb-gray-400">
+          <div className="pr-2">
+            {params.dialogContent}
+          </div>
         </div>
         {(params.dialogClose || params.addDefCloseButton) && (
-          <DialogFooter>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0">
             {params.dialogClose}
             {params.addDefCloseButton && (
               <ButtonBlack type="submit">

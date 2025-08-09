@@ -1,12 +1,6 @@
-from typing import Literal
 from sqlmodel import Session, select
 from src.db.courses.courses import Course
 from src.db.courses.chapters import Chapter
-from src.security.rbac.rbac import (
-    authorization_verify_based_on_roles_and_authorship,
-    authorization_verify_if_element_is_public,
-    authorization_verify_if_user_is_anon,
-)
 from src.db.courses.activities import ActivityCreate, Activity, ActivityRead, ActivityUpdate
 from src.db.courses.chapter_activities import ChapterActivity
 from src.db.users import AnonymousUser, PublicUser
@@ -15,6 +9,7 @@ from uuid import uuid4
 from datetime import datetime
 
 from src.services.payments.payments_access import check_activity_paid_access
+from src.security.courses_security import courses_rbac_check_for_activities
 
 
 ####################################################
@@ -49,7 +44,7 @@ async def create_activity(
             detail="Course not found",
         )
 
-    await rbac_check(request, course.course_uuid, current_user, "create", db_session)
+    await courses_rbac_check_for_activities(request, course.course_uuid, current_user, "create", db_session)
 
     # Create Activity
     activity = Activity(**activity_object.model_dump())
@@ -118,7 +113,7 @@ async def get_activity(
     activity, course = result
 
     # RBAC check
-    await rbac_check(request, course.course_uuid, current_user, "read", db_session)
+    await courses_rbac_check_for_activities(request, course.course_uuid, current_user, "read", db_session)
 
     # Paid access check
     has_paid_access = await check_activity_paid_access(
@@ -156,7 +151,7 @@ async def get_activityby_id(
     activity, course = result
 
     # RBAC check
-    await rbac_check(request, course.course_uuid, current_user, "read", db_session)
+    await courses_rbac_check_for_activities(request, course.course_uuid, current_user, "read", db_session)
 
     return ActivityRead.model_validate(activity)
 
@@ -187,7 +182,7 @@ async def update_activity(
             detail="Course not found",
         )
 
-    await rbac_check(request, course.course_uuid, current_user, "update", db_session)
+    await courses_rbac_check_for_activities(request, course.course_uuid, current_user, "update", db_session)
 
     # Update only the fields that were passed in
     for var, value in vars(activity_object).items():
@@ -228,7 +223,7 @@ async def delete_activity(
             detail="Course not found",
         )
 
-    await rbac_check(request, course.course_uuid, current_user, "delete", db_session)
+    await courses_rbac_check_for_activities(request, course.course_uuid, current_user, "delete", db_session)
 
     # Delete activity from chapter
     statement = select(ChapterActivity).where(
@@ -296,46 +291,8 @@ async def get_activities(
             detail="Course not found",
         )
 
-    await rbac_check(request, course.course_uuid, current_user, "read", db_session)
+    await courses_rbac_check_for_activities(request, course.course_uuid, current_user, "read", db_session)
 
     activities = [ActivityRead.model_validate(activity) for activity in activities]
 
     return activities
-
-
-## 🔒 RBAC Utils ##
-
-
-async def rbac_check(
-    request: Request,
-    element_uuid: str,
-    current_user: PublicUser | AnonymousUser,
-    action: Literal["create", "read", "update", "delete"],
-    db_session: Session,
-):
-    
-
-    if action == "read":
-        if current_user.id == 0:  # Anonymous user
-            res = await authorization_verify_if_element_is_public(
-                request, element_uuid, action, db_session
-            )
-            return res
-        else:
-            res = await authorization_verify_based_on_roles_and_authorship(
-                request, current_user.id, action, element_uuid, db_session
-            )
-            return res
-    else:
-        # For non-read actions, proceed with regular RBAC checks
-        await authorization_verify_if_user_is_anon(current_user.id)
-        await authorization_verify_based_on_roles_and_authorship(
-            request,
-            current_user.id,
-            action,
-            element_uuid,
-            db_session,
-        )
-
-
-## 🔒 RBAC Utils ##
