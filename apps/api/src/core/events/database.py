@@ -4,6 +4,7 @@ import importlib
 from config.config import get_learnhouse_config
 from fastapi import FastAPI
 from sqlmodel import SQLModel, Session, create_engine
+from sqlalchemy import event
 
 def import_all_models():
     base_dir = 'src/db'
@@ -48,11 +49,24 @@ else:
         learnhouse_config.database_config.sql_connection_string,  # type: ignore
         echo=False, 
         pool_pre_ping=True,  # type: ignore
-        pool_size=5,  
-        max_overflow=0,
+        pool_size=20,  # Increased from 5 to handle more concurrent requests
+        max_overflow=10,  # Allow 10 additional connections beyond pool_size
         pool_recycle=300,  # Recycle connections after 5 minutes
         pool_timeout=30
     )
+    
+    # Add connection pool monitoring for debugging
+    @event.listens_for(engine, "connect")
+    def receive_connect(dbapi_connection, connection_record):
+        logging.debug("Database connection established")
+    
+    @event.listens_for(engine, "checkout")
+    def receive_checkout(dbapi_connection, connection_record, connection_proxy):
+        logging.debug("Connection checked out from pool")
+    
+    @event.listens_for(engine, "checkin")
+    def receive_checkin(dbapi_connection, connection_record):
+        logging.debug("Connection returned to pool")
 
 # Only create tables if not in test mode (tests will handle this themselves)
 if not is_testing:

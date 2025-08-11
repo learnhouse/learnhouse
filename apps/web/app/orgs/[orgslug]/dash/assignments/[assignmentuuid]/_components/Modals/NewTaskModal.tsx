@@ -65,13 +65,13 @@ function NewTaskModal({ closeModal, assignment_uuid }: any) {
         <p className='text-sm text-gray-500 w-40'>Students can submit files for this task</p>
       </div>
       <div
-        onClick={() => toast.error('Forms are not yet supported')}
-        className='flex flex-col space-y-2 justify-center  text-center pt-10 opacity-25'>
+        onClick={() => createTask('FORM')}
+        className='flex flex-col space-y-2 justify-center  text-center pt-10'>
         <div className='px-5 py-5 rounded-full nice-shadow w-fit mx-auto bg-gray-100/50 text-gray-500 cursor-pointer hover:bg-gray-100 transition-all ease-linear'>
           <AArrowUp size={30} />
         </div>
         <p className='text-xl text-gray-700 font-semibold'>Form</p>
-        <p className='text-sm text-gray-500 w-40'>Forms for students to fill out</p>
+        <p className='text-sm text-gray-500 w-40'>Fill-in-the-blank forms for students</p>
       </div>
     </div>
   )

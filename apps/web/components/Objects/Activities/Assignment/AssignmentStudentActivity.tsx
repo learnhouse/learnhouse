@@ -4,6 +4,7 @@ import { useOrg } from '@components/Contexts/OrgContext';
 import { getTaskRefFileDir } from '@services/media/media';
 import TaskFileObject from 'app/orgs/[orgslug]/dash/assignments/[assignmentuuid]/_components/TaskEditor/Subs/TaskTypes/TaskFileObject';
 import TaskQuizObject from 'app/orgs/[orgslug]/dash/assignments/[assignmentuuid]/_components/TaskEditor/Subs/TaskTypes/TaskQuizObject'
+import TaskFormObject from 'app/orgs/[orgslug]/dash/assignments/[assignmentuuid]/_components/TaskEditor/Subs/TaskTypes/TaskFormObject'
 import { Backpack, Calendar, Download, EllipsisVertical, Info } from 'lucide-react';
 import Link from 'next/link';
 import React, { useEffect } from 'react'
@@ -99,6 +100,7 @@ function AssignmentStudentActivity() {
             <div className='w-full'>
               {task.assignment_type === 'QUIZ' && <TaskQuizObject key={task.assignment_task_uuid} view='student' assignmentTaskUUID={task.assignment_task_uuid} />}
               {task.assignment_type === 'FILE_SUBMISSION' && <TaskFileObject key={task.assignment_task_uuid} view='student' assignmentTaskUUID={task.assignment_task_uuid} />}
+              {task.assignment_type === 'FORM' && <TaskFormObject key={task.assignment_task_uuid} view='student' assignmentTaskUUID={task.assignment_task_uuid} />}
             </div>
           </div>
         )
