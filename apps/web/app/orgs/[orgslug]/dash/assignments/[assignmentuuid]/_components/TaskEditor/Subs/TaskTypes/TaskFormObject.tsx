@@ -162,8 +162,10 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id }: TaskFormObjectPro
             ...userSubmissions,
             submissions: updatedSubmissions,
         });
+    };
 
-        // Auto-focus next blank if current one is filled
+    const handleUserAnswerBlur = (questionUUID: string, blankUUID: string, answer: string) => {
+        // Auto-focus next blank only when user leaves the current input and it has content
         if (answer.trim() && view === 'student') {
             const allBlanks = questions.flatMap(q => q.blanks.map(b => ({ questionUUID: q.questionUUID, blankUUID: b.blankUUID })));
             const currentIndex = allBlanks.findIndex(b => b.questionUUID === questionUUID && b.blankUUID === blankUUID);
@@ -285,7 +287,14 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id }: TaskFormObjectPro
                 const res = await getAssignmentTask(assignmentTaskUUID, access_token);
                 if (res.success) {
                     setAssignmentTaskOutsideProvider(res.data);
-                    setQuestions(res.data.contents.questions);
+                    // Only set questions if they exist and we're not in teacher view, or if we're in teacher view and there are existing questions
+                    if (res.data.contents?.questions && res.data.contents.questions.length > 0) {
+                        setQuestions(res.data.contents.questions);
+                    } else if (view !== 'teacher') {
+                        // For non-teacher views, set empty array if no questions exist
+                        setQuestions([]);
+                    }
+                    // For teacher view, keep the initial state if no questions exist
                 }
             }
         };
@@ -339,7 +348,24 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id }: TaskFormObjectPro
         }
     }, [userSubmissions, initialUserSubmissions]);
 
-    if (questions && (questions.length > 0 || view === 'teacher')) {
+    // Ensure questions is always an array for teacher view
+    if (view === 'teacher' && (!questions || questions.length === 0)) {
+        setQuestions([
+            { 
+                questionText: '', 
+                questionUUID: 'question_' + uuidv4(), 
+                blanks: [{ 
+                    placeholder: 'Enter the correct answer', 
+                    correctAnswer: '', 
+                    hint: '',
+                    blankUUID: 'blank_' + uuidv4() 
+                }] 
+            },
+        ]);
+        return null; // Return null to prevent rendering while state updates
+    }
+
+    if (view === 'teacher' || (questions && questions.length > 0)) {
         return (
             <AssignmentBoxUI 
                 submitFC={submitFC} 
@@ -462,6 +488,7 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id }: TaskFormObjectPro
                                                             (submission) => submission.questionUUID === question.questionUUID && submission.blankUUID === blank.blankUUID
                                                         )?.answer || ''}
                                                         onChange={(e) => handleUserAnswerChange(question.questionUUID!, blank.blankUUID!, e.target.value)}
+                                                        onBlur={(e) => handleUserAnswerBlur(question.questionUUID!, blank.blankUUID!, e.target.value)}
                                                         placeholder={blank.placeholder}
                                                         data-blank-id={blank.blankUUID}
                                                         className="w-full mx-2 px-3 pr-6 text-neutral-600 bg-[#00008b00] border-2 border-gray-200 rounded-md focus:border-blue-400 focus:ring-2 focus:ring-blue-200 text-sm font-bold transition-all"
