@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request, UploadFile
+from fastapi import APIRouter, Depends, Request, UploadFile, HTTPException
 from src.db.courses.assignments import (
     AssignmentCreate,
     AssignmentRead,
@@ -295,9 +295,16 @@ async def api_read_user_assignment_task_submissions_me(
     """
     Read task submissions for an assignment from a user
     """
-    return await read_user_assignment_task_submissions_me(
+    result = await read_user_assignment_task_submissions_me(
         request, assignment_task_uuid, current_user, db_session
     )
+    if result is None:
+        # Return 404 if no submission exists (maintains current frontend behavior)
+        raise HTTPException(
+            status_code=404,
+            detail="Assignment Task Submission not found",
+        )
+    return result
 
 
 @router.get("/{assignment_uuid}/tasks/{assignment_task_uuid}/submissions")

@@ -187,6 +187,7 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id }: TaskFormObjectPro
         }
 
         const values = {
+            assignment_task_submission_uuid: userSubmissions.assignment_task_submission_uuid || null,
             task_submission: userSubmissions,
             grade: 0,
             task_submission_grade_feedback: '',
@@ -201,7 +202,13 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id }: TaskFormObjectPro
 
         if (res) {
             toast.success('Form submitted successfully!');
-            setInitialUserSubmissions(userSubmissions);
+            // Update userSubmissions with the returned UUID for future updates
+            const updatedUserSubmissions = {
+                ...userSubmissions,
+                assignment_task_submission_uuid: res.data?.assignment_task_submission_uuid || userSubmissions.assignment_task_submission_uuid
+            };
+            setUserSubmissions(updatedUserSubmissions);
+            setInitialUserSubmissions(updatedUserSubmissions);
             setShowSavingDisclaimer(false);
         } else {
             console.error('Submission error:', res);

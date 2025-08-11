@@ -764,9 +764,15 @@ async def handle_assignment_task_submission(
         # SECURITY: Instructors/admins need update permission to grade
         await courses_rbac_check_for_assignments(request, course.course_uuid, current_user, "update", db_session)
 
-    # Try to find existing submission if UUID is provided
-    assignment_task_submission = None
-    if assignment_task_submission_uuid:
+    # Try to find existing submission by user_id and assignment_task_id first (for save progress functionality)
+    statement = select(AssignmentTaskSubmission).where(
+        AssignmentTaskSubmission.assignment_task_id == assignment_task.id,
+        AssignmentTaskSubmission.user_id == current_user.id,
+    )
+    assignment_task_submission = db_session.exec(statement).first()
+    
+    # If no submission found by user+task, try to find by UUID if provided (for specific submission updates)
+    if not assignment_task_submission and assignment_task_submission_uuid:
         statement = select(AssignmentTaskSubmission).where(
             AssignmentTaskSubmission.assignment_task_submission_uuid == assignment_task_submission_uuid
         )
@@ -889,13 +895,54 @@ async def read_user_assignment_task_submissions_me(
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
-    return await read_user_assignment_task_submissions(
-        request,
-        assignment_task_uuid,
-        current_user.id,
-        current_user,
-        db_session,
+    # Check if assignment task exists
+    statement = select(AssignmentTask).where(
+        AssignmentTask.assignment_task_uuid == assignment_task_uuid
     )
+    assignment_task = db_session.exec(statement).first()
+
+    if not assignment_task:
+        raise HTTPException(
+            status_code=404,
+            detail="Assignment Task not found",
+        )
+
+    # Check if assignment task submission exists
+    statement = select(AssignmentTaskSubmission).where(
+        AssignmentTaskSubmission.assignment_task_id == assignment_task.id,
+        AssignmentTaskSubmission.user_id == current_user.id,
+    )
+    assignment_task_submission = db_session.exec(statement).first()
+
+    if not assignment_task_submission:
+        # Return None instead of raising an error for cases where no submission exists yet
+        return None
+
+    # Check if assignment exists
+    statement = select(Assignment).where(Assignment.id == assignment_task.assignment_id)
+    assignment = db_session.exec(statement).first()
+
+    if not assignment:
+        raise HTTPException(
+            status_code=404,
+            detail="Assignment not found",
+        )
+
+    # Check if course exists
+    statement = select(Course).where(Course.id == assignment.course_id)
+    course = db_session.exec(statement).first()
+
+    if not course:
+        raise HTTPException(
+            status_code=404,
+            detail="Course not found",
+        )
+
+    # RBAC check
+    await courses_rbac_check_for_assignments(request, course.course_uuid, current_user, "read", db_session)
+
+    # return assignment task submission read
+    return AssignmentTaskSubmissionRead.model_validate(assignment_task_submission)
 
 
 async def read_assignment_task_submissions(
