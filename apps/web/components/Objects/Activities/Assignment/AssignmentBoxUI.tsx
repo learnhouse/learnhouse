@@ -1,10 +1,10 @@
 import { useAssignmentSubmission } from '@components/Contexts/Assignments/AssignmentSubmissionContext'
-import { BookPlus, BookUser, EllipsisVertical, FileUp, Forward, InfoIcon, ListTodo, Save } from 'lucide-react'
+import { BookPlus, BookUser, EllipsisVertical, FileUp, Forward, InfoIcon, ListTodo, Save, Type } from 'lucide-react'
 import React, { useEffect } from 'react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 
 type AssignmentBoxProps = {
-    type: 'quiz' | 'file'
+    type: 'quiz' | 'file' | 'form'
     view?: 'teacher' | 'student' | 'grading' | 'custom-grading'
     maxPoints?: number
     currentPoints?: number
@@ -43,6 +43,11 @@ function AssignmentBoxUI({ type, view, currentPoints, maxPoints, saveFC, submitF
                             <div className='flex space-x-1.5 items-center'>
                                 <FileUp size={17} />
                                 <p>File Submission</p>
+                            </div>}
+                        {type === 'form' &&
+                            <div className='flex space-x-1.5 items-center'>
+                                <Type size={17} />
+                                <p>Form</p>
                             </div>}
                     </div>
 
