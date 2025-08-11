@@ -3,6 +3,7 @@ import { useLHSession } from '@components/Contexts/LHSessionContext';
 import React, { useEffect } from 'react'
 import TaskQuizObject from './TaskTypes/TaskQuizObject';
 import TaskFileObject from './TaskTypes/TaskFileObject';
+import TaskFormObject from './TaskTypes/TaskFormObject';
 
 function AssignmentTaskContentEdit() {
     const session = useLHSession() as any;
@@ -18,6 +19,7 @@ function AssignmentTaskContentEdit() {
         <div>
             {assignment_task?.assignmentTask.assignment_type === 'QUIZ' && <TaskQuizObject view='teacher' />}
             {assignment_task?.assignmentTask.assignment_type === 'FILE_SUBMISSION' && <TaskFileObject view='teacher' />}
+            {assignment_task?.assignmentTask.assignment_type === 'FORM' && <TaskFormObject view='teacher' assignmentTaskUUID={assignment_task?.assignmentTask.assignment_task_uuid} />}
         </div>
     )
 }

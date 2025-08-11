@@ -106,9 +106,9 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID }: Ta
             return;
         }
 
-        // Save the quiz to the server
+        // Save the file submission to the server
         const values = {
-            assignment_task_submission_uuid: userSubmissions.assignment_task_submission_uuid,
+            assignment_task_submission_uuid: userSubmissions.assignment_task_submission_uuid || null,
             task_submission: userSubmissions,
             grade: 0,
             task_submission_grade_feedback: '',
@@ -121,6 +121,13 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID }: Ta
                 });
                 toast.success('Task saved successfully');
                 setShowSavingDisclaimer(false);
+                // Update userSubmissions with the returned UUID for future updates
+                const updatedUserSubmissions = {
+                    ...userSubmissions,
+                    assignment_task_submission_uuid: res.data?.assignment_task_submission_uuid || userSubmissions.assignment_task_submission_uuid
+                };
+                setUserSubmissions(updatedUserSubmissions);
+                setInitialUserSubmissions(updatedUserSubmissions);
             } else {
                 toast.error('Error saving task, please retry later.');
             }
