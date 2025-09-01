@@ -32,7 +32,7 @@ dependencies = [
     "tiktoken>=0.7.0",
     "uvicorn==0.30.1",
     "typer>=0.12.5",
-    "chromadb==0.5.16",
+    "chromadb==1.0.20",
     "alembic>=1.13.2",
     "alembic-postgresql-enum>=1.2.0",
     "sqlalchemy-utils>=0.41.2",
