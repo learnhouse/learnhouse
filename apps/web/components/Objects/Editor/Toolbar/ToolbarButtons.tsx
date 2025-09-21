@@ -25,6 +25,7 @@ import {
   Lightbulb,
   Link2,
   MousePointerClick,
+  RotateCw,
   Sigma,
   Table,
   Tag,
@@ -428,6 +429,24 @@ export const ToolbarButtons = ({ editor, props }: any) => {
           }
         >
           <Globe size={15} />
+        </ToolBtn>
+      </ToolTip>
+      <ToolTip content={'Flipcard'}>
+        <ToolBtn
+          onClick={() =>
+            editor.chain().focus().insertContent({
+              type: 'flipcard',
+              attrs: {
+                question: 'Click to reveal the answer',
+                answer: 'This is the answer',
+                color: 'blue',
+                alignment: 'center',
+                size: 'medium'
+              }
+            }).run()
+          }
+        >
+          <RotateCw size={15} />
         </ToolBtn>
       </ToolTip>
     </ToolButtonsWrapper>

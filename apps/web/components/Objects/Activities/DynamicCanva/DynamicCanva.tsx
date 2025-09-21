@@ -27,6 +27,7 @@ import AICanvaToolkit from './AI/AICanvaToolkit'
 import EmbedObjects from '@components/Objects/Editor/Extensions/EmbedObjects/EmbedObjects'
 import Badges from '@components/Objects/Editor/Extensions/Badges/Badges'
 import Buttons from '@components/Objects/Editor/Extensions/Buttons/Buttons'
+import Flipcard from '@components/Objects/Editor/Extensions/Flipcard/Flipcard'
 import Table from '@tiptap/extension-table'
 import TableHeader from '@tiptap/extension-table-header'
 import TableRow from '@tiptap/extension-table-row'
@@ -134,6 +135,10 @@ function Canva(props: Editor) {
       getLinkExtension(),
       WebPreview.configure({
         editable: true,
+        activity: props.activity,
+      }),
+      Flipcard.configure({
+        editable: false,
         activity: props.activity,
       }),
       TableRow,
