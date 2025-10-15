@@ -84,6 +84,7 @@ function DashLeftMenu() {
           <AdminAuthorization authorizationMode="component">
             <ToolTip content={'Home'} slateBlack sideOffset={8} side="right">
               <Link
+                aria-label="Home"
                 className="bg-white/5 rounded-lg p-2 hover:bg-white/10 transition-all ease-linear"
                 href={`/dash`}
               >
@@ -92,6 +93,7 @@ function DashLeftMenu() {
             </ToolTip>
             <ToolTip content={'Courses'} slateBlack sideOffset={8} side="right">
               <Link
+                aria-label="Courses"
                 className="bg-white/5 rounded-lg p-2 hover:bg-white/10 transition-all ease-linear"
                 href={`/dash/courses`}
               >
@@ -100,6 +102,7 @@ function DashLeftMenu() {
             </ToolTip>
             <ToolTip content={'Assignments'} slateBlack sideOffset={8} side="right">
               <Link
+                aria-label="Assignments"
                 className="bg-white/5 rounded-lg p-2 hover:bg-white/10 transition-all ease-linear"
                 href={`/dash/assignments`}
               >
@@ -108,6 +111,7 @@ function DashLeftMenu() {
             </ToolTip>
             <ToolTip content={'Users'} slateBlack sideOffset={8} side="right">
               <Link
+                aria-label="Users"
                 className="bg-white/5 rounded-lg p-2 hover:bg-white/10 transition-all ease-linear"
                 href={`/dash/users/settings/users`}
               >
@@ -117,6 +121,7 @@ function DashLeftMenu() {
             {isPaymentsEnabled && (
               <ToolTip content={'Payments'} slateBlack sideOffset={8} side="right">
                 <Link
+                  aria-label="Payments"
                   className="bg-white/5 rounded-lg p-2 hover:bg-white/10 transition-all ease-linear"
                   href={`/dash/payments/customers`}
                 >
@@ -131,6 +136,7 @@ function DashLeftMenu() {
               side="right"
             >
               <Link
+                aria-label="Organization"
                 className="bg-white/5 rounded-lg p-2 hover:bg-white/10 transition-all ease-linear"
                 href={`/dash/org/settings/general`}
               >

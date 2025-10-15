@@ -150,34 +150,38 @@ export const ToolbarButtons = ({ editor, props }: any) => {
 
   return (
     <ToolButtonsWrapper>
-      <ToolBtn onClick={() => editor.chain().focus().undo().run()}>
+      <ToolBtn onClick={() => editor.chain().focus().undo().run()} aria-label="Undo last action">
         <ArrowLeftIcon />
       </ToolBtn>
-      <ToolBtn onClick={() => editor.chain().focus().redo().run()}>
+      <ToolBtn onClick={() => editor.chain().focus().redo().run()} aria-label="Redo last action">
         <ArrowRightIcon />
       </ToolBtn>
       <ToolBtn
         onClick={() => editor.chain().focus().toggleBold().run()}
         className={editor.isActive('bold') ? 'is-active' : ''}
+        aria-label="Toggle bold formatting"
       >
         <FontBoldIcon />
       </ToolBtn>
       <ToolBtn
         onClick={() => editor.chain().focus().toggleItalic().run()}
         className={editor.isActive('italic') ? 'is-active' : ''}
+        aria-label="Toggle italic formatting"
       >
         <FontItalicIcon />
       </ToolBtn>
       <ToolBtn
         onClick={() => editor.chain().focus().toggleStrike().run()}
         className={editor.isActive('strike') ? 'is-active' : ''}
+        aria-label="Toggle strikethrough formatting"
       >
         <StrikethroughIcon />
       </ToolBtn>
       <ListMenuWrapper>
-        <ToolBtn 
+        <ToolBtn
           onClick={() => setShowListMenu(!showListMenu)}
           className={showListMenu || editor.isActive('bulletList') || editor.isActive('orderedList') ? 'is-active' : ''}
+          aria-label="Insert list"
         >
           <ListBulletIcon />
           <ChevronDownIcon />
@@ -227,9 +231,10 @@ export const ToolbarButtons = ({ editor, props }: any) => {
         <option value="6">Heading 6</option>
       </ToolSelect>
       <TableMenuWrapper>
-        <ToolBtn 
+        <ToolBtn
           onClick={() => setShowTableMenu(!showTableMenu)}
           className={showTableMenu ? 'is-active' : ''}
+          aria-label="Insert table"
         >
           <TableIcon width={18} />
           <ChevronDownIcon  />
@@ -257,6 +262,7 @@ export const ToolbarButtons = ({ editor, props }: any) => {
       <ToolTip content={'Info Callout'}>
         <ToolBtn
           onClick={() => editor.chain().focus().toggleNode('calloutInfo').run()}
+          aria-label="Insert info callout"
         >
           <AlertCircle size={15} />
         </ToolBtn>
@@ -266,6 +272,7 @@ export const ToolbarButtons = ({ editor, props }: any) => {
           onClick={() =>
             editor.chain().focus().toggleNode('calloutWarning').run()
           }
+          aria-label="Insert warning callout"
         >
           <AlertTriangle size={15} />
         </ToolBtn>
@@ -276,6 +283,7 @@ export const ToolbarButtons = ({ editor, props }: any) => {
             ref={linkButtonRef}
             onClick={handleLinkClick}
             className={editor.isActive('link') ? 'is-active' : ''}
+            aria-label="Insert or edit link"
           >
             <Link2 size={15} />
           </ToolBtn>
@@ -299,6 +307,7 @@ export const ToolbarButtons = ({ editor, props }: any) => {
               })
               .run()
           }
+          aria-label="Insert image"
         >
           <ImagePlus size={15} />
         </ToolBtn>
@@ -314,12 +323,13 @@ export const ToolbarButtons = ({ editor, props }: any) => {
               })
               .run()
           }
+          aria-label="Insert video"
         >
           <Video size={15} />
         </ToolBtn>
       </ToolTip>
       <ToolTip content={'YouTube video'}>
-        <ToolBtn  onClick={() => editor.chain().focus().insertContent({ type: 'blockEmbed' }).run()}>
+        <ToolBtn onClick={() => editor.chain().focus().insertContent({ type: 'blockEmbed' }).run()} aria-label="Insert YouTube video">
           <SiYoutube size={15} />
         </ToolBtn>
       </ToolTip>
@@ -334,6 +344,7 @@ export const ToolbarButtons = ({ editor, props }: any) => {
               })
               .run()
           }
+          aria-label="Insert math equation (LaTeX)"
         >
           <Sigma size={15} />
         </ToolBtn>
@@ -349,6 +360,7 @@ export const ToolbarButtons = ({ editor, props }: any) => {
               })
               .run()
           }
+          aria-label="Insert PDF document"
         >
           <FileText size={15} />
         </ToolBtn>
@@ -364,6 +376,7 @@ export const ToolbarButtons = ({ editor, props }: any) => {
               })
               .run()
           }
+          aria-label="Insert interactive quiz"
         >
           <BadgeHelp size={15} />
         </ToolBtn>
@@ -372,6 +385,7 @@ export const ToolbarButtons = ({ editor, props }: any) => {
         <ToolBtn
           onClick={() => editor.chain().focus().toggleCodeBlock().run()}
           className={editor.isActive('codeBlock') ? 'is-active' : ''}
+          aria-label="Insert code block"
         >
           <Code size={15} />
         </ToolBtn>
@@ -379,6 +393,7 @@ export const ToolbarButtons = ({ editor, props }: any) => {
       <ToolTip content={'External Object (Embed)'}>
         <ToolBtn
           onClick={() => editor.chain().focus().insertContent({ type: 'blockEmbed' }).run()}
+          aria-label="Insert external object or embed"
         >
           <Cuboid size={15} />
         </ToolBtn>
@@ -394,6 +409,7 @@ export const ToolbarButtons = ({ editor, props }: any) => {
               }
             ]
           }).run()}
+          aria-label="Insert badge"
         >
           <Tags size={15} />
         </ToolBtn>
@@ -409,6 +425,7 @@ export const ToolbarButtons = ({ editor, props }: any) => {
               }
             ]
           }).run()}
+          aria-label="Insert button"
         >
           <MousePointerClick size={15} />
         </ToolBtn>
@@ -416,6 +433,7 @@ export const ToolbarButtons = ({ editor, props }: any) => {
       <ToolTip content={'User'}>
         <ToolBtn
           onClick={() => editor.chain().focus().insertContent({ type: 'blockUser' }).run()}
+          aria-label="Insert user reference"
         >
           <User size={15} />
         </ToolBtn>
@@ -427,6 +445,7 @@ export const ToolbarButtons = ({ editor, props }: any) => {
               type: 'blockWebPreview',
             }).run()
           }
+          aria-label="Insert web preview"
         >
           <Globe size={15} />
         </ToolBtn>
@@ -445,6 +464,7 @@ export const ToolbarButtons = ({ editor, props }: any) => {
               }
             }).run()
           }
+          aria-label="Insert flipcard"
         >
           <RotateCw size={15} />
         </ToolBtn>

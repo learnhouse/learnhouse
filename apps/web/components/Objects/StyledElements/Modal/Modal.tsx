@@ -75,7 +75,7 @@ const Modal = (params: ModalParams) => {
           <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0">
             {params.dialogClose}
             {params.addDefCloseButton && (
-              <ButtonBlack type="submit">
+              <ButtonBlack type="submit" aria-label="Close modal">
                 Close
               </ButtonBlack>
             )}
