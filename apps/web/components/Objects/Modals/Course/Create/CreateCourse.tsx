@@ -178,7 +178,7 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
                   id="fileInput"
                   style={{ display: 'none' }}
                   onChange={handleFileChange}
-                  accept="image/*"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
                 />
                 <button
                   type="button"
