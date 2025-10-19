@@ -2,15 +2,60 @@ from typing import Literal, Optional
 import boto3
 from botocore.exceptions import ClientError
 import os
-
-from fastapi import HTTPException
-
+from fastapi import HTTPException, UploadFile
 from config.config import get_learnhouse_config
+from src.security.file_validation import validate_upload
 
 
 def ensure_directory_exists(directory: str):
     if not os.path.exists(directory):
         os.makedirs(directory)
+
+
+async def upload_file(
+    file: UploadFile,
+    directory: str,
+    type_of_dir: Literal["orgs", "users"],
+    uuid: str,
+    allowed_types: list[str],
+    filename_prefix: str,
+    max_size: Optional[int] = None,
+) -> str:
+    """
+    Secure file upload with validation.
+    
+    Args:
+        file: The uploaded file
+        directory: Target directory (e.g., "logos", "avatars")
+        type_of_dir: "orgs" or "users"
+        uuid: Organization or user UUID
+        allowed_types: List of allowed file types ('image', 'video', 'document')
+        filename_prefix: Prefix for the generated filename
+        max_size: Maximum file size in bytes (optional)
+        
+    Returns:
+        The saved filename
+    """
+    from uuid import uuid4
+    from src.security.file_validation import validate_upload, get_safe_filename
+    
+    # Validate the file
+    _, content = validate_upload(file, allowed_types, max_size)
+    
+    # Generate safe filename
+    filename = get_safe_filename(file.filename, f"{uuid4()}_{filename_prefix}")
+    
+    # Save the file
+    await upload_content(
+        directory=directory,
+        type_of_dir=type_of_dir,
+        uuid=uuid,
+        file_binary=content,
+        file_and_format=filename,
+        allowed_formats=None,  # Already validated
+    )
+    
+    return filename
 
 
 async def upload_content(

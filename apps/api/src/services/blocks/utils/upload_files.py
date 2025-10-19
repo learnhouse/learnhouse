@@ -1,7 +1,7 @@
 import uuid
 from fastapi import HTTPException, Request, UploadFile, status
 from src.services.blocks.schemas.files import BlockFile
-from src.services.utils.upload_content import upload_content
+from src.services.utils.upload_content import upload_file
 
 
 async def upload_file_and_return_file_object(
@@ -14,46 +14,42 @@ async def upload_file_and_return_file_object(
     org_uuid: str,
     course_uuid: str,
 ):
-    # get file id
+    """Upload file for blocks."""
     file_id = str(uuid.uuid4())
+    
+    # Map legacy format list to type system
+    allowed_types = []
+    if any(fmt in ['jpg', 'jpeg', 'png', 'gif', 'webp'] for fmt in list_of_allowed_file_formats):
+        allowed_types.append('image')
+    if any(fmt in ['mp4', 'webm'] for fmt in list_of_allowed_file_formats):
+        allowed_types.append('video')
+    if any(fmt in ['pdf'] for fmt in list_of_allowed_file_formats):
+        allowed_types.append('document')
+    
+    if not allowed_types:
+        raise HTTPException(status_code=400, detail="No valid file types specified")
 
-    # get file format
-    file_format = file.filename.split(".")[-1]
-
-    # validate file format
-    if file_format not in list_of_allowed_file_formats:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="File format not supported"
-        )
-
-    # create file
-    file_binary = await file.read()
-
-    # get file size
-    file_size = len(await file.read())
-
-    # get file type
-    file_type = file.content_type
-
-    # get file name
-    file_name = file.filename
-
-    # create file object
-    uploadable_file = BlockFile(
-        file_id=file_id,
-        file_format=file_format,
-        file_name=file_name,
-        file_size=file_size,
-        file_type=file_type,
-        activity_uuid=activity_uuid,
-    )
-
-    await upload_content(
-        f"courses/{course_uuid}/activities/{activity_uuid}/dynamic/blocks/{type_of_block}/{block_id}",
+    # Upload file
+    filename = await upload_file(
+        file=file,
+        directory=f"courses/{course_uuid}/activities/{activity_uuid}/dynamic/blocks/{type_of_block}/{block_id}",
         type_of_dir='orgs',
         uuid=org_uuid,
-        file_binary=file_binary,
-        file_and_format=f"{file_id}.{file_format}",
+        allowed_types=allowed_types,
+        filename_prefix=f"block_{file_id}",
+        max_size=50 * 1024 * 1024  # 50MB
     )
 
-    return uploadable_file
+    # Get file metadata
+    file.file.seek(0)
+    content = await file.read()
+    ext = filename.split(".")[-1] if "." in filename else "bin"
+
+    return BlockFile(
+        file_id=file_id,
+        file_format=ext,
+        file_name=file.filename,
+        file_size=len(content),
+        file_type=file.content_type,
+        activity_uuid=activity_uuid,
+    )

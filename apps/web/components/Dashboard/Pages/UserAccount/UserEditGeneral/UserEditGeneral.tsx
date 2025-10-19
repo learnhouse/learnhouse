@@ -45,7 +45,7 @@ import { signOut } from 'next-auth/react'
 import { getUriWithoutOrg } from '@services/config/config';
 import { useDebounce } from '@/hooks/useDebounce';
 
-const SUPPORTED_FILES = constructAcceptValue(['image'])
+const SUPPORTED_FILES = constructAcceptValue(['jpg', 'png', 'webp', 'gif'])
 
 const AVAILABLE_ICONS = [
   { name: 'briefcase', label: 'Briefcase', component: Briefcase },

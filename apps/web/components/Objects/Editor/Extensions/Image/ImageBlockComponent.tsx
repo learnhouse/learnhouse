@@ -12,7 +12,7 @@ import { FileUploadBlock, FileUploadBlockButton, FileUploadBlockInput } from '..
 import { constructAcceptValue } from '@/lib/constants';
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 
-const SUPPORTED_FILES = constructAcceptValue(['image'])
+const SUPPORTED_FILES = constructAcceptValue(['jpg', 'png', 'webp', 'gif'])
 
 function ImageBlockComponent(props: any) {
   const org = useOrg() as any
