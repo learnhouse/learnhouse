@@ -226,6 +226,7 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
       return (
         <button
           onClick={() => router.push(getUriWithoutOrg(`/signup?orgslug=${orgslug}`))}
+          aria-label="Sign up to apply as course contributor"
           className="w-full bg-white text-neutral-700 border border-neutral-200 py-3 rounded-lg nice-shadow font-semibold hover:bg-neutral-50 transition-colors flex items-center justify-center gap-2 mt-3 cursor-pointer"
         >
           <UserPen className="w-5 h-5" />
@@ -256,6 +257,7 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
       <button
         onClick={handleApplyToContribute}
         disabled={isContributeLoading}
+        aria-label="Apply to become a course contributor"
         className="w-full bg-white text-neutral-700 py-3 rounded-lg nice-shadow font-semibold hover:bg-neutral-50 transition-colors flex items-center justify-center gap-2 mt-3 cursor-pointer disabled:cursor-not-allowed"
       >
         {isContributeLoading ? (
@@ -371,6 +373,7 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
                 </div>
                 <button
                   onClick={() => setIsProgressOpen(true)}
+                  aria-label={`View course progress: ${completedActivities} of ${totalActivities} activities completed`}
                   className="flex-1 text-left hover:bg-neutral-50/50 p-2 rounded-lg transition-colors"
                 >
                   <div className="text-sm font-medium text-gray-900">Course Progress</div>
@@ -408,6 +411,7 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
               <button
                 onClick={handleCourseAction}
                 disabled={isActionLoading}
+                aria-label={isStarted ? 'Leave this course' : 'Start this course'}
                 className={`w-full py-3 rounded-lg nice-shadow font-semibold transition-colors flex items-center justify-center gap-2 cursor-pointer ${
                   isStarted
                     ? 'bg-red-500 text-white hover:bg-red-600 disabled:bg-red-400'
@@ -444,6 +448,7 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
               <button
                 className="w-full bg-neutral-900 text-white py-3 rounded-lg nice-shadow font-semibold hover:bg-neutral-800 transition-colors flex items-center justify-center gap-2"
                 onClick={() => setIsModalOpen(true)}
+                aria-label="Purchase this course to gain access"
               >
                 <ShoppingCart className="w-5 h-5" />
                 Purchase Course
@@ -466,6 +471,7 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
         <button
           onClick={handleCourseAction}
           disabled={isActionLoading}
+          aria-label={isStarted ? 'Leave this course' : 'Start this course'}
           className={`w-full py-3 rounded-lg nice-shadow font-semibold transition-colors flex items-center justify-center gap-2 cursor-pointer ${
             isStarted
               ? 'bg-red-500 text-white hover:bg-red-600 disabled:bg-red-400'
