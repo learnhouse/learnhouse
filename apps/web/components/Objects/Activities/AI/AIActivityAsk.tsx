@@ -250,7 +250,7 @@ function ActivityChatMessageBox(props: ActivityChatMessageBoxProps) {
               ></div>
               {aiChatBotState.messages.length > 0 &&
                 !aiChatBotState.error.isError ? (
-                <div className="flex-col h-[237px] w-full  space-y-4 overflow-scroll scrollbar-w-2 scrollbar scrollbar-thumb-white/20 scrollbar-thumb-rounded-full scrollbar-track-rounded-full">
+                <div className="flex-col h-[237px] w-full space-y-4 overflow-scroll scrollbar-hide">
                   {aiChatBotState.messages.map(
                     (message: AIMessage, index: number) => {
                       return (
