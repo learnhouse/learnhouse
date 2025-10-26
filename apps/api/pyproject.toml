@@ -56,5 +56,4 @@ filterwarnings = [
     "ignore:.*obj.dict.*deprecated.*",
     "ignore:.*Instrumentation will have no effect.*",
     "ignore:.*handler names should be lower-case.*",
-    "ignore:.*Importing tools from langchain is deprecated.*",
 ]
