@@ -46,6 +46,5 @@ payments_config:
     stripe_client_id: ""
 
 ai_config:
-  chromadb_config:
-    isSeparateDatabaseEnabled: True
-    db_host: "localhost"
+  openai_api_key: ""
+  is_ai_enabled: false
