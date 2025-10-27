@@ -35,6 +35,7 @@ import {
   List,
   ListOrdered,
   Globe,
+  GitBranch,
 } from 'lucide-react'
 import { SiYoutube } from '@icons-pack/react-simple-icons'
 import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
@@ -467,6 +468,51 @@ export const ToolbarButtons = ({ editor, props }: any) => {
           aria-label="Insert flipcard"
         >
           <RotateCw size={15} />
+        </ToolBtn>
+      </ToolTip>
+      <ToolTip content={'Interactive Scenarios'}>
+        <ToolBtn
+          onClick={() =>
+            editor.chain().focus().insertContent({
+              type: 'scenarios',
+              attrs: {
+                title: 'Interactive Scenario',
+                scenarios: [
+                  {
+                    id: '1',
+                    text: 'Welcome to this interactive scenario. What would you like to do?',
+                    imageUrl: '',
+                    options: [
+                      { id: 'opt1', text: 'Continue exploring', nextScenarioId: '2' },
+                      { id: 'opt2', text: 'Learn more about the topic', nextScenarioId: '3' }
+                    ]
+                  },
+                  {
+                    id: '2',
+                    text: 'Great choice! You are now exploring further. What\'s your next step?',
+                    imageUrl: '',
+                    options: [
+                      { id: 'opt3', text: 'Go back to start', nextScenarioId: '1' },
+                      { id: 'opt4', text: 'Finish scenario', nextScenarioId: null }
+                    ]
+                  },
+                  {
+                    id: '3',
+                    text: 'Here\'s more information about the topic. This helps you understand better.',
+                    imageUrl: '',
+                    options: [
+                      { id: 'opt5', text: 'Go back to start', nextScenarioId: '1' },
+                      { id: 'opt6', text: 'Finish scenario', nextScenarioId: null }
+                    ]
+                  }
+                ],
+                currentScenarioId: '1'
+              }
+            }).run()
+          }
+          aria-label="Insert interactive scenarios"
+        >
+          <GitBranch size={15} />
         </ToolBtn>
       </ToolTip>
     </ToolButtonsWrapper>
