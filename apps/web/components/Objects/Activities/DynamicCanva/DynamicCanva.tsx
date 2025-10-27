@@ -28,6 +28,7 @@ import EmbedObjects from '@components/Objects/Editor/Extensions/EmbedObjects/Emb
 import Badges from '@components/Objects/Editor/Extensions/Badges/Badges'
 import Buttons from '@components/Objects/Editor/Extensions/Buttons/Buttons'
 import Flipcard from '@components/Objects/Editor/Extensions/Flipcard/Flipcard'
+import Scenarios from '@components/Objects/Editor/Extensions/Scenarios/Scenarios'
 import Table from '@tiptap/extension-table'
 import TableHeader from '@tiptap/extension-table-header'
 import TableRow from '@tiptap/extension-table-row'
@@ -138,6 +139,10 @@ function Canva(props: Editor) {
         activity: props.activity,
       }),
       Flipcard.configure({
+        editable: false,
+        activity: props.activity,
+      }),
+      Scenarios.configure({
         editable: false,
         activity: props.activity,
       }),
