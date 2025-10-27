@@ -54,6 +54,7 @@ import EmbedObjects from './Extensions/EmbedObjects/EmbedObjects'
 import Badges from './Extensions/Badges/Badges'
 import Buttons from './Extensions/Buttons/Buttons'
 import Flipcard from './Extensions/Flipcard/Flipcard'
+import Scenarios from './Extensions/Scenarios/Scenarios'
 import { useMediaQuery } from 'usehooks-ts'
 import UserAvatar from '../UserAvatar'
 import UserBlock from './Extensions/Users/UserBlock'
@@ -171,6 +172,10 @@ function Editor(props: Editor) {
         activity: props.activity,
       }),
       Flipcard.configure({
+        editable: true,
+        activity: props.activity,
+      }),
+      Scenarios.configure({
         editable: true,
         activity: props.activity,
       }),
