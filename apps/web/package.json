@@ -7,7 +7,7 @@
     "dev-https": "next dev --experimental-https -p 443",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "lint:fix": "eslint --fix ."
   },
   "dependencies": {
