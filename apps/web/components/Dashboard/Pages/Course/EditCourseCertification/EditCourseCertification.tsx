@@ -13,7 +13,6 @@ import { useCourse, useCourseDispatch } from '@components/Contexts/CourseContext
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import { 
   createCertification, 
-  updateCertification, 
   deleteCertification 
 } from '@services/courses/certifications';
 import {
@@ -23,7 +22,7 @@ import {
   CustomSelectTrigger,
   CustomSelectValue,
 } from "../EditCourseGeneral/CustomSelect";
-import useSWR, { mutate } from 'swr';
+import useSWR from 'swr';
 import { getAPIUrl } from '@services/config/config';
 import toast from 'react-hot-toast';
 

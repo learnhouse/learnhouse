@@ -1,6 +1,6 @@
 'use client'
 import { useMediaQuery } from 'usehooks-ts'
-import { BookOpenCheck, Check, FileText, Folder, Layers, ListTree, Video, X, StickyNote, Backpack, ArrowRight } from 'lucide-react'
+import { Check, FileText, ListTree, Video, X, StickyNote, Backpack, ArrowRight } from 'lucide-react'
 import { getUriWithOrg } from '@services/config/config'
 import Link from 'next/link'
 import React from 'react'

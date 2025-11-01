@@ -1,7 +1,7 @@
 'use client'
 import React from 'react'
-import { LandingObject, LandingSection, LandingHeroSection, LandingTextAndImageSection, LandingLogos, LandingPeople, LandingBackground, LandingButton, LandingHeading, LandingImage, LandingFeaturedCourses } from './landing_types'
-import { Plus, Eye, ArrowUpDown, Trash2, GripVertical, LayoutTemplate, ImageIcon, Users, Award, ArrowRight, Edit, Link, Upload, Save, BookOpen, TextIcon } from 'lucide-react'
+import { LandingObject, LandingSection, LandingHeroSection, LandingTextAndImageSection, LandingLogos, LandingPeople, LandingBackground, LandingButton, LandingImage, LandingFeaturedCourses } from './landing_types'
+import { Plus, Trash2, GripVertical, LayoutTemplate, ImageIcon, Users, Award, Edit, Link, Upload, Save, BookOpen, TextIcon } from 'lucide-react'
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
 import { Input } from "@components/ui/input"
 import { Textarea } from "@components/ui/textarea"
@@ -1569,7 +1569,7 @@ const FeaturedCoursesEditor: React.FC<{
                     <div className="flex items-center space-x-3">
                       <div className="w-12 h-12 bg-gray-100 rounded-md overflow-hidden">
                         {course.course_thumbnail && (
-                          // eslint-disable-next-line @next/next/no-img-element
+                           
                           <img 
                             src={course.course_thumbnail} 
                             alt={course.name}

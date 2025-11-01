@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Plus, X, Link as LinkIcon, Smile } from 'lucide-react';
+import { Plus, X, Link as LinkIcon } from 'lucide-react';
 import Picker from '@emoji-mart/react';
 import data from '@emoji-mart/data';
 import { Input } from '@components/ui/input';

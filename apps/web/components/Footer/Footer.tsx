@@ -3,7 +3,6 @@
 import React from 'react'
 import OrgScripts from '@/components/OrgScripts/OrgScripts'
 import { usePathname } from 'next/navigation'
-import { OrgProvider } from '@/components/Contexts/OrgContext'
 
 const Footer: React.FC = () => {
   const pathname = usePathname()

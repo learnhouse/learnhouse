@@ -1,11 +1,10 @@
 'use client'
-import { getUriWithOrg } from '@services/config/config'
 import React, { use, useEffect } from 'react';
 import { CourseProvider } from '../../../../../../../../components/Contexts/CourseContext'
 import Link from 'next/link'
 import { CourseOverviewTop } from '@components/Dashboard/Misc/CourseOverviewTop'
 import { motion } from 'framer-motion'
-import { GalleryVerticalEnd, Globe, Info, UserPen, UserRoundCog, Users, Award, Lock } from 'lucide-react'
+import { GalleryVerticalEnd, Globe, Info, UserPen, Award, Lock } from 'lucide-react'
 import EditCourseStructure from '@components/Dashboard/Pages/Course/EditCourseStructure/EditCourseStructure'
 import EditCourseGeneral from '@components/Dashboard/Pages/Course/EditCourseGeneral/EditCourseGeneral'
 import EditCourseAccess from '@components/Dashboard/Pages/Course/EditCourseAccess/EditCourseAccess'
@@ -14,6 +13,7 @@ import EditCourseCertification from '@components/Dashboard/Pages/Course/EditCour
 import { useCourseRights } from '@hooks/useCourseRights'
 import { useRouter } from 'next/navigation'
 import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
+import { getUriWithOrg } from '@services/config/config';
 
 export type CourseOverviewParams = {
   orgslug: string

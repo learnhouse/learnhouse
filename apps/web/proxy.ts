@@ -26,7 +26,7 @@ export const config = {
   ],
 }
 
-export default async function middleware(req: NextRequest) {
+export default async function proxy(req: NextRequest) {
   // Get initial data
   const hosting_mode = isMultiOrgModeEnabled() ? 'multi' : 'single'
   const default_org = getDefaultOrg()

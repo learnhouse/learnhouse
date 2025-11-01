@@ -11,7 +11,6 @@ import {
   Info,
   UploadCloud,
   AlertTriangle,
-  LogOut,
   Briefcase,
   GraduationCap,
   MapPin,

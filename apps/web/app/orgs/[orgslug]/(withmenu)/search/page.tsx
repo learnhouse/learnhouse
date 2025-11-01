@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { searchOrgContent } from '@services/search/search';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import { useOrg } from '@components/Contexts/OrgContext';
-import { Book, GraduationCap, Users, Search, Filter, X } from 'lucide-react';
+import { Book, GraduationCap, Users, Search } from 'lucide-react';
 import Link from 'next/link';
 import { getCourseThumbnailMediaDirectory, getUserAvatarMediaDirectory } from '@services/media/media';
 import { getUriWithOrg } from '@services/config/config';
