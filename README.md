@@ -80,7 +80,6 @@ LearnHouse uses a number of open source projects to work properly:
 - **YJS** - Shared data types for building collaborative software
 - **PostgreSQL** - SQL Database
 - **Redis** - In-Memory Database
-- **LangChain** - LangChain is a framework for developing applications powered by language models
 - **React** - duh
 
 ## LearnHouse University
