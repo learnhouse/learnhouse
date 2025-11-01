@@ -5,7 +5,6 @@ import {
   MoreVertical,
   Pencil,
   Save,
-  X,
   Trash2,
 } from 'lucide-react'
 import React from 'react'

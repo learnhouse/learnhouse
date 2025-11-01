@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { Editor } from '@tiptap/core'
 import learnhouseAI_icon from 'public/learnhouse_ai_simple.png'
 import Image from 'next/image'
-import { BookOpen, FormInput, Languages, MoreVertical, X } from 'lucide-react'
+import { BookOpen, FormInput, Languages, MoreVertical } from 'lucide-react'
 import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
 import {
   AIChatBotStateTypes,

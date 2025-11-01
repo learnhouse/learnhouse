@@ -14,7 +14,7 @@ import { getAPIUrl } from '@services/config/config'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useFormik } from 'formik'
 import toast from 'react-hot-toast'
-import { Shield, BookOpen, Users, UserCheck, FolderOpen, Building, FileText, Activity, Settings, Monitor, CheckSquare, Square } from 'lucide-react'
+import { Shield, BookOpen, Users, UserCheck, FolderOpen, Building, FileText, Activity, Monitor, CheckSquare, Square } from 'lucide-react'
 
 type AddRoleProps = {
     setCreateRoleModal: any

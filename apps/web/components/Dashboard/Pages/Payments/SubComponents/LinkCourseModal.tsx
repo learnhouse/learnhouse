@@ -3,16 +3,12 @@ import { useOrg } from '@components/Contexts/OrgContext';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import { linkCourseToProduct } from '@services/payments/products';
 import { Button } from "@components/ui/button";
-import { Input } from "@components/ui/input";
-import { Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { mutate } from 'swr';
 import useSWR from 'swr';
 import { getOrgCourses } from '@services/courses/courses';
 import { getCoursesLinkedToProduct } from '@services/payments/products';
-import Link from 'next/link';
 import { getCourseThumbnailMediaDirectory } from '@services/media/media';
-import { getUriWithOrg } from '@services/config/config';
 
 interface LinkCourseModalProps {
   productId: string;

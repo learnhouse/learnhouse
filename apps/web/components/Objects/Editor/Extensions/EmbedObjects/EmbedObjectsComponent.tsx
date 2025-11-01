@@ -1,8 +1,8 @@
 import { NodeViewWrapper } from '@tiptap/react'
 import React, { useState, useRef, useEffect, useMemo } from 'react'
-import { Upload, Link as LinkIcon, GripVertical, GripHorizontal, AlignCenter, Cuboid, Code } from 'lucide-react'
+import { Link as LinkIcon, GripVertical, GripHorizontal, AlignCenter, Code } from 'lucide-react'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
-import { SiGithub, SiReplit, SiSpotify, SiLoom, SiGooglemaps, SiCodepen, SiCanva, SiNotion, SiGoogledocs, SiGitlab, SiX, SiFigma, SiGiphy, SiYoutube } from '@icons-pack/react-simple-icons'
+import { SiGithub, SiReplit, SiSpotify, SiLoom, SiGooglemaps, SiCodepen, SiCanva, SiNotion, SiGoogledocs, SiX, SiFigma, SiGiphy, SiYoutube } from '@icons-pack/react-simple-icons'
 import { useRouter } from 'next/navigation'
 import DOMPurify from 'dompurify'
 

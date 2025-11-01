@@ -1,5 +1,5 @@
 import React from 'react'
-import { AlertCircle, ShoppingCart } from 'lucide-react'
+import { AlertCircle } from 'lucide-react'
 import CoursePaidOptions from './CoursePaidOptions'
 
 interface PaidCourseActivityProps {

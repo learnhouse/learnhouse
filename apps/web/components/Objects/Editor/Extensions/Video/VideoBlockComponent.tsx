@@ -1,8 +1,7 @@
 import { NodeViewProps, NodeViewWrapper } from '@tiptap/react'
 import { Node } from '@tiptap/core'
 import { 
-  Loader2, Video, Upload, X, HelpCircle, 
-  Maximize2, Minimize2, ArrowLeftRight, 
+  Loader2, Video, Upload, X, ArrowLeftRight, 
   CheckCircle2, AlertCircle, Download, Expand
 } from 'lucide-react'
 import React from 'react'

@@ -1,4 +1,4 @@
-import { NodeViewContent, NodeViewWrapper } from '@tiptap/react'
+import { NodeViewWrapper } from '@tiptap/react'
 import React, { useState, useRef, useEffect } from 'react'
 import { RotateCw, Edit, AlignLeft, AlignCenter, AlignRight, Palette, Maximize2, Minimize2, Square } from 'lucide-react'
 import { twMerge } from 'tailwind-merge'
