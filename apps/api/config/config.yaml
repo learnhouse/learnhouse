@@ -30,7 +30,7 @@ hosting_config:
 
 mailing_config:
   resend_api_key: ""
-  system_email_adress: ""
+  system_email_address: ""
 
 database_config:
   sql_connection_string: postgresql://learnhouse:learnhouse@localhost:5432/learnhouse
