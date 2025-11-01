@@ -13,6 +13,7 @@ import EditCourseCertification from '@components/Dashboard/Pages/Course/EditCour
 import { useCourseRights } from '@hooks/useCourseRights'
 import { useRouter } from 'next/navigation'
 import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
+import { getUriWithOrg } from '@services/config/config';
 
 export type CourseOverviewParams = {
   orgslug: string
@@ -82,7 +83,7 @@ function CourseOverviewPage(props: { params: Promise<CourseOverviewParams> }) {
   useEffect(() => {
     if (!rightsLoading && !hasAccessToCurrentPage && visibleTabs.length > 0) {
       const firstAvailableTab = visibleTabs[0]
-      router.replace(`/orgs/${params.orgslug}${firstAvailableTab.href}`)
+      router.replace(getUriWithOrg(params.orgslug, '') + firstAvailableTab.href)
     }
   }, [rightsLoading, hasAccessToCurrentPage, visibleTabs, router, params.orgslug])
 
@@ -146,7 +147,7 @@ function CourseOverviewPage(props: { params: Promise<CourseOverviewParams> }) {
               return (
                 <Link
                   key={tab.key}
-                  href={`/orgs/${params.orgslug}${tab.href}`}
+                  href={getUriWithOrg(params.orgslug, '') + tab.href}
                 >
                   <div
                     className={`flex space-x-4 py-2 w-fit text-center border-black transition-all ease-linear ${
