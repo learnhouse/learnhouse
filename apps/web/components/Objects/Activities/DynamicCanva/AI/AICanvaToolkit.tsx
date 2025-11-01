@@ -1,9 +1,9 @@
-import React from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { Editor } from '@tiptap/core'
 import learnhouseAI_icon from 'public/learnhouse_ai_simple.png'
 import Image from 'next/image'
-import { BookOpen, FormInput, Languages, MoreVertical } from 'lucide-react'
-import { BubbleMenu } from '@tiptap/react'
+import { BookOpen, FormInput, Languages, MoreVertical, X } from 'lucide-react'
 import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
 import {
   AIChatBotStateTypes,
@@ -24,68 +24,159 @@ type AICanvaToolkitProps = {
 
 function AICanvaToolkit(props: AICanvaToolkitProps) {
   const is_ai_feature_enabled = useGetAIFeatures({ feature: 'activity_ask' })
-  const [isBubbleMenuAvailable, setIsButtonAvailable] = React.useState(false)
+  const [bubbleState, setBubbleState] = useState({
+    visible: false,
+    top: 0,
+    left: 0,
+  })
 
-  React.useEffect(() => {
-    if (is_ai_feature_enabled) {
-      setIsButtonAvailable(true)
+  const updateBubblePosition = useCallback(() => {
+    if (!props.editor) return
+
+    const { selection } = props.editor.state
+    const { from, to } = selection
+
+    // Hide if no selection
+    if (from === to) {
+      setBubbleState(prev => ({ ...prev, visible: false }))
+      return
     }
-  }, [is_ai_feature_enabled])
 
-  return (
-    <>
-      {isBubbleMenuAvailable && (
-        <BubbleMenu
-          className="w-fit"
-          tippyOptions={{ duration: 100 }}
-          editor={props.editor}
-        >
-          <div
-            style={{
-              background:
-                'linear-gradient(0deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.2) 100%), radial-gradient(105.16% 105.16% at 50% -5.16%, rgba(255, 255, 255, 0.18) 0%, rgba(0, 0, 0, 0) 100%), rgba(2, 1, 25, 0.98)',
-            }}
-            className="py-1 h-10 px-2 w-max text-white rounded-xl shadow-md cursor-pointer flex items-center space-x-2 antialiased"
-          >
-            <div className="flex w-full space-x-2 font-bold text-white/80">
-              <Image
-                className="outline outline-1 outline-neutral-200/10 rounded-lg"
-                width={24}
-                src={learnhouseAI_icon}
-                alt=""
-              />{' '}
-              <div>AI</div>{' '}
-            </div>
-            <div>
-              <MoreVertical className="text-white/50" size={12} />
-            </div>
-            <div className="flex space-x-2">
-              <AIActionButton
-                editor={props.editor}
-                activity={props.activity}
-                label="Explain"
-              />
-              <AIActionButton
-                editor={props.editor}
-                activity={props.activity}
-                label="Summarize"
-              />
-              <AIActionButton
-                editor={props.editor}
-                activity={props.activity}
-                label="Translate"
-              />
-              <AIActionButton
-                editor={props.editor}
-                activity={props.activity}
-                label="Examples"
-              />
-            </div>
-          </div>
-        </BubbleMenu>
-      )}
-    </>
+    // Get selection bounds using native selection API
+    const nativeSelection = window.getSelection()
+    if (!nativeSelection || nativeSelection.rangeCount === 0) {
+      setBubbleState(prev => ({ ...prev, visible: false }))
+      return
+    }
+
+    const range = nativeSelection.getRangeAt(0)
+    const rect = range.getBoundingClientRect()
+
+    // Calculate position - always above the selection
+    const bubbleHeight = 50
+    const bubbleWidth = 350
+    
+    // Position above selection with margin
+    const top = rect.top + window.scrollY - bubbleHeight - 2
+    
+    // Center horizontally on selection
+    const centerX = rect.left + rect.width / 2
+    const left = centerX - bubbleWidth / 2
+
+    // Keep within viewport bounds
+    const adjustedLeft = Math.max(10, Math.min(left, window.innerWidth - bubbleWidth - 10))
+    const adjustedTop = Math.max(10, top)
+
+    setBubbleState({
+      visible: true,
+      top: adjustedTop,
+      left: adjustedLeft,
+    })
+  }, [props.editor])
+
+  useEffect(() => {
+    if (!props.editor || !is_ai_feature_enabled) return
+
+    const handleSelectionUpdate = () => {
+      // Small delay to ensure DOM is updated
+      requestAnimationFrame(() => {
+        updateBubblePosition()
+      })
+    }
+
+    const handleScroll = () => {
+      updateBubblePosition()
+    }
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element
+      const bubbleElement = document.getElementById('ai-bubble-portal')
+      const editorElement = props.editor.view.dom
+
+      if (
+        !editorElement.contains(target) &&
+        !bubbleElement?.contains(target)
+      ) {
+        setBubbleState(prev => ({ ...prev, visible: false }))
+      }
+    }
+
+    // Listen to editor events
+    props.editor.on('selectionUpdate', handleSelectionUpdate)
+    
+    // Listen to scroll and click events
+    window.addEventListener('scroll', handleScroll, true)
+    document.addEventListener('mousedown', handleClickOutside)
+
+    return () => {
+      props.editor.off('selectionUpdate', handleSelectionUpdate)
+      window.removeEventListener('scroll', handleScroll, true)
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [props.editor, is_ai_feature_enabled, updateBubblePosition])
+
+  if (!is_ai_feature_enabled || !bubbleState.visible) {
+    return null
+  }
+
+  const bubbleContent = (
+    <div
+      id="ai-bubble-portal"
+      style={{
+        position: 'fixed',
+        top: `${bubbleState.top}px`,
+        left: `${bubbleState.left}px`,
+        zIndex: 9999,
+        pointerEvents: 'auto',
+      }}
+    >
+      <div
+        style={{
+          background:
+            'linear-gradient(0deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.2) 100%), radial-gradient(105.16% 105.16% at 50% -5.16%, rgba(255, 255, 255, 0.18) 0%, rgba(0, 0, 0, 0) 100%), rgba(2, 1, 25, 0.98)',
+        }}
+        className="py-1 h-10 px-2 w-max text-white rounded-xl shadow-md cursor-pointer flex items-center space-x-2 antialiased animate-in fade-in-0 zoom-in-95 duration-200"
+      >
+        <div className="flex w-full space-x-2 font-bold text-white/80">
+          <Image
+            className="outline-1 outline-neutral-200/10 rounded-lg"
+            width={24}
+            src={learnhouseAI_icon}
+            alt=""
+          />
+          <div>AI</div>
+        </div>
+        <div>
+          <MoreVertical className="text-white/50" size={12} />
+        </div>
+        <div className="flex space-x-2">
+          <AIActionButton
+            editor={props.editor}
+            activity={props.activity}
+            label="Explain"
+          />
+          <AIActionButton
+            editor={props.editor}
+            activity={props.activity}
+            label="Summarize"
+          />
+          <AIActionButton
+            editor={props.editor}
+            activity={props.activity}
+            label="Translate"
+          />
+          <AIActionButton
+            editor={props.editor}
+            activity={props.activity}
+            label="Examples"
+          />
+        </div>
+      </div>
+    </div>
   )
+
+  // Render using portal to document.body
+  return typeof window !== 'undefined' ? createPortal(bubbleContent, document.body) : null
 }
 
 function AIActionButton(props: {
@@ -206,7 +297,7 @@ function AIActionButton(props: {
       <ToolTip sideOffset={10} slateBlack content={tooltipLabel}>
         <button
           onClick={() => handleAction(props.label)}
-          className="flex space-x-1.5 items-center bg-white/10 px-2 py-0.5 rounded-md outline outline-1 outline-neutral-200/20 text-sm font-semibold text-white/70 hover:bg-white/20 hover:outline-neutral-200/40 delay-75 ease-linear transition-all"
+          className="flex space-x-1.5 items-center bg-white/10 px-2 py-0.5 rounded-md outline-1 outline-neutral-200/20 text-sm font-semibold text-white/70 hover:bg-white/20 hover:outline-neutral-200/40 delay-75 ease-linear transition-all"
         >
           {props.label === 'Explain' && <BookOpen size={16} />}
           {props.label === 'Summarize' && <FormInput size={16} />}
