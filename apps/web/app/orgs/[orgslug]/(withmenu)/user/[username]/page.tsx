@@ -1,7 +1,5 @@
 import React from 'react'
 import { getUserByUsername } from '@services/users/users'
-import { getServerSession } from 'next-auth'
-import { nextAuthOptions } from 'app/auth/options'
 import { Metadata } from 'next'
 import UserProfileClient from './UserProfileClient'
 

@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo } from 'react'
 import styled from 'styled-components'
 import Link from 'next/link'
-import { Package2, Settings, Crown, Shield, User, Users, Building, LogOut, User as UserIcon, Home, ChevronDown } from 'lucide-react'
+import { Package2, Crown, Shield, User, Users, LogOut, User as UserIcon, ChevronDown } from 'lucide-react'
 import UserAvatar from '@components/Objects/UserAvatar'
 import useAdminStatus from '@components/Hooks/useAdminStatus'
 import { useLHSession } from '@components/Contexts/LHSessionContext'

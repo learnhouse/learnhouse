@@ -3,9 +3,9 @@ import React, { useState, useEffect } from 'react';
 import { useOrg } from '@components/Contexts/OrgContext';
 import { SiStripe } from '@icons-pack/react-simple-icons'
 import { useLHSession } from '@components/Contexts/LHSessionContext';
-import { getPaymentConfigs, initializePaymentConfig, updatePaymentConfig, deletePaymentConfig, updateStripeAccountID, getStripeOnboardingLink } from '@services/payments/payments';
-import FormLayout, { ButtonBlack, Input, Textarea, FormField, FormLabelAndMessage, Flex } from '@components/Objects/StyledElements/Form/Form';
-import { AlertTriangle, BarChart2, Check, Coins, CreditCard, Edit, ExternalLink, Info, Loader2, RefreshCcw, Trash2, UnplugIcon } from 'lucide-react';
+import { getPaymentConfigs, initializePaymentConfig, deletePaymentConfig, updateStripeAccountID, getStripeOnboardingLink } from '@services/payments/payments';
+import FormLayout, { ButtonBlack, Input, FormField, FormLabelAndMessage, Flex } from '@components/Objects/StyledElements/Form/Form';
+import { BarChart2, Coins, CreditCard, ExternalLink, Info, Loader2, RefreshCcw, Trash2, UnplugIcon } from 'lucide-react';
 import toast from 'react-hot-toast';
 import useSWR, { mutate } from 'swr';
 import Modal from '@components/Objects/StyledElements/Modal/Modal';

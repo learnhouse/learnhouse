@@ -3,8 +3,6 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { getUriWithOrg } from '@services/config/config'
 import { useRouter } from 'next/navigation'
 import React, { useEffect, useState, useRef, useMemo, memo } from 'react'
-import ActivityIndicators from '@components/Pages/Courses/ActivityIndicators'
-import ActivityChapterDropdown from './ActivityChapterDropdown'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import { useOrg } from '@components/Contexts/OrgContext'
 

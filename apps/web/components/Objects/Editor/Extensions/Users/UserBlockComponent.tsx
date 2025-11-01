@@ -23,7 +23,6 @@ import {
   Lightbulb
 } from 'lucide-react'
 import { Badge } from "@components/ui/badge"
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@components/ui/hover-card"
 import { useRouter } from 'next/navigation'
 import UserAvatar from '@components/Objects/UserAvatar'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'

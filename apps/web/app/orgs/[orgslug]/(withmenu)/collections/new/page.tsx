@@ -9,7 +9,6 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { Loader2, Image as ImageIcon } from 'lucide-react'
 import { toast } from 'react-hot-toast'
-import Image from 'next/image'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 
 function NewCollection(params: any) {

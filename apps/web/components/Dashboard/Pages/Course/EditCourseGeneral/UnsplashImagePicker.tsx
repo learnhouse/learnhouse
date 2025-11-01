@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { createApi } from 'unsplash-js';
-import { Search, X, Cpu, Briefcase, GraduationCap, Heart, Palette, Plane, Utensils, 
+import { Search, Cpu, Briefcase, GraduationCap, Heart, Palette, Plane, Utensils, 
   Dumbbell, Music, Shirt, Book, Building, Bike, Camera, Microscope, Coins, Coffee, Gamepad, 
   Flower} from 'lucide-react';
 import Modal from '@components/Objects/StyledElements/Modal/Modal';

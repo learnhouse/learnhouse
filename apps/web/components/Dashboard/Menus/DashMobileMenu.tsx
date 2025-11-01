@@ -1,12 +1,10 @@
 'use client'
 import { useOrg } from '@components/Contexts/OrgContext'
-import { signOut } from 'next-auth/react'
-import { Backpack, BadgeDollarSign, BookCopy, Home, LogOut, School, Settings, Users } from 'lucide-react'
+import { Backpack, BadgeDollarSign, BookCopy, Home, School, Settings, Users } from 'lucide-react'
 import Link from 'next/link'
 import React from 'react'
 import AdminAuthorization from '@components/Security/AdminAuthorization'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { getUriWithOrg, getUriWithoutOrg } from '@services/config/config'
 import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
 
 function DashMobileMenu() {

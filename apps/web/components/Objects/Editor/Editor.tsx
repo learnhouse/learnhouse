@@ -25,7 +25,7 @@ import { Eye, Monitor } from 'lucide-react'
 import MathEquationBlock from './Extensions/MathEquation/MathEquationBlock'
 import PDFBlock from './Extensions/PDF/PDFBlock'
 import QuizBlock from './Extensions/Quiz/QuizBlock'
-import Table from '@tiptap/extension-table'
+import { Table } from '@tiptap/extension-table'
 import TableCell from '@tiptap/extension-table-cell'
 import TableHeader from '@tiptap/extension-table-header'
 import TableRow from '@tiptap/extension-table-row'
@@ -33,7 +33,6 @@ import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
 import Link from 'next/link'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import { getLinkExtension } from './EditorConf'
-import { Link as LinkExtension } from '@tiptap/extension-link'
 import WebPreview from './Extensions/WebPreview/WebPreview'
 
 // Lowlight
@@ -65,7 +64,7 @@ interface Editor {
   course: any
   org: any
   session: any
-  setContent: (content: string) => void
+  setContent: (content: any) => void
 }
 
 function Editor(props: Editor) {
