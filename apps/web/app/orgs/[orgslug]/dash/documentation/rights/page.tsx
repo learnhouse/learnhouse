@@ -5,29 +5,12 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import { 
   Shield, 
   Users, 
-  BookOpen, 
-  UserCheck, 
-  Lock, 
-  Globe, 
-  Award, 
-  FileText, 
-  Settings, 
   Crown,
   User,
   UserCog,
   GraduationCap,
-  Eye,
-  Edit,
-  Trash2,
-  Plus,
   CheckCircle,
-  XCircle,
-  AlertCircle,
-  Info,
-  ArrowLeft,
-  AlertTriangle,
-  Key,
-  UserCheck as UserCheckIcon
+  ArrowLeft
 } from 'lucide-react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'

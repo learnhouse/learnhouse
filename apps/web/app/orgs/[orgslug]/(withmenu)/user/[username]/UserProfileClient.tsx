@@ -15,13 +15,11 @@ import {
   Users,
   Calendar,
   Lightbulb,
-  X,
-  ExternalLink
+  X
 } from 'lucide-react'
 import { getUserAvatarMediaDirectory } from '@services/media/media'
 import { getCoursesByUser } from '@services/users/users'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { Button } from "@components/ui/button"
 import CourseThumbnailLanding from '@components/Objects/Thumbnails/CourseThumbnailLanding'
 
 interface UserProfileClientProps {

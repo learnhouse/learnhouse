@@ -1,7 +1,6 @@
-import { NodeViewContent, NodeViewWrapper } from '@tiptap/react'
-import React, { useState, useRef, useEffect } from 'react'
-import { Edit, Plus, Trash2, Settings, Play, RotateCcw, ArrowRight, CheckCircle, GitBranch, RefreshCcw } from 'lucide-react'
-import { twMerge } from 'tailwind-merge'
+import { NodeViewWrapper } from '@tiptap/react'
+import React, { useState } from 'react'
+import { RotateCcw, ArrowRight, CheckCircle, GitBranch, RefreshCcw } from 'lucide-react'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import ScenariosModal from './ScenariosModal'
 

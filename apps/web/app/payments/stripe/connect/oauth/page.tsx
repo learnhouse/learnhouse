@@ -2,8 +2,6 @@
 import React, { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { useOrg } from '@components/Contexts/OrgContext'
-import { getUriWithOrg } from '@services/config/config'
 import { Check, Loader2, AlertTriangle } from 'lucide-react'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'

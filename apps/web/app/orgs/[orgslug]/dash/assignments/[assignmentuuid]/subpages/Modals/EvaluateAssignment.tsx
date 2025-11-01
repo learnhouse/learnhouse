@@ -9,7 +9,6 @@ import { useOrg } from '@components/Contexts/OrgContext';
 import { getTaskRefFileDir } from '@services/media/media';
 import { deleteUserSubmission, markActivityAsDoneForUser, putFinalGrade } from '@services/courses/assignments';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
-import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 
 function EvaluateAssignment({ user_id }: any) {

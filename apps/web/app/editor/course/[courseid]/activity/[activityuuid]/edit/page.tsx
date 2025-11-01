@@ -1,6 +1,5 @@
 
 import { default as React } from 'react'
-import dynamic from 'next/dynamic'
 import { getCourseMetadata } from '@services/courses/courses'
 import { Metadata } from 'next'
 import { getActivityWithAuthHeader } from '@services/courses/activities'

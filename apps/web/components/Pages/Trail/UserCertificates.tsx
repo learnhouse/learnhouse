@@ -3,7 +3,6 @@
 import React from 'react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
-import { getAllUserCertificates } from '@services/courses/certifications'
 import { getUriWithOrg } from '@services/config/config'
 import { Award, ExternalLink, Calendar, Hash, Building } from 'lucide-react'
 import Link from 'next/link'

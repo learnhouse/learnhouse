@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 import UserAvatar from '../../UserAvatar'
 import { getUserAvatarMediaDirectory } from '@services/media/media'
 import { useMediaQuery } from 'usehooks-ts'

@@ -1,6 +1,6 @@
 import React from 'react'
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
-import { Plus, Trash2, GripVertical, ImageIcon, Link as LinkIcon, Award, ArrowRight, Edit, TextIcon, Briefcase, GraduationCap, Upload, MapPin, BookOpen } from 'lucide-react'
+import { Plus, Trash2, GripVertical, ImageIcon, Link as LinkIcon, Award, Edit, TextIcon, Briefcase, GraduationCap, MapPin, BookOpen } from 'lucide-react'
 import { Input } from "@components/ui/input"
 import { Textarea } from "@components/ui/textarea"
 import { Label } from "@components/ui/label"
@@ -10,7 +10,6 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { updateProfile } from '@services/settings/profile'
 import { getUser } from '@services/users/users'
 import { toast } from 'react-hot-toast'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@components/ui/tabs"
 
 // Define section types and their configurations
 const SECTION_TYPES = {

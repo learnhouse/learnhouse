@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { NodeViewWrapper } from '@tiptap/react';
-import { Globe, Edit2, Save, X, AlignLeft, AlignCenter, AlignRight, Trash } from 'lucide-react';
+import { Edit2, Save, X, AlignLeft, AlignCenter, AlignRight, Trash } from 'lucide-react';
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext';
 import { getUrlPreview } from '@services/courses/activities';
 import Modal from '@components/Objects/StyledElements/Modal/Modal';

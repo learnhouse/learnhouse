@@ -1,6 +1,6 @@
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { NodeViewContent, NodeViewWrapper } from '@tiptap/react'
-import { AlertCircle, Info, X } from 'lucide-react'
+import { Info, X } from 'lucide-react'
 import React, { useState } from 'react'
 import styled from 'styled-components'
 

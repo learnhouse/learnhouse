@@ -1,7 +1,7 @@
 'use client'
 import BreadCrumbs from '@components/Dashboard/Misc/BreadCrumbs'
 import { getUriWithOrg } from '@services/config/config'
-import { ImageIcon, Info, LockIcon, SearchIcon, TextIcon, LucideIcon, Share2Icon, LayoutDashboardIcon, CodeIcon } from 'lucide-react'
+import { ImageIcon, TextIcon, LucideIcon, Share2Icon, LayoutDashboardIcon, CodeIcon } from 'lucide-react'
 import Link from 'next/link'
 import React, { useEffect, use } from 'react';
 import { motion } from 'framer-motion'
