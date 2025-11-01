@@ -1,11 +1,10 @@
 'use client'
-import { getUriWithOrg } from '@services/config/config'
 import React, { use, useEffect } from 'react';
 import { CourseProvider } from '../../../../../../../../components/Contexts/CourseContext'
 import Link from 'next/link'
 import { CourseOverviewTop } from '@components/Dashboard/Misc/CourseOverviewTop'
 import { motion } from 'framer-motion'
-import { GalleryVerticalEnd, Globe, Info, UserPen, UserRoundCog, Users, Award, Lock } from 'lucide-react'
+import { GalleryVerticalEnd, Globe, Info, UserPen, Award, Lock } from 'lucide-react'
 import EditCourseStructure from '@components/Dashboard/Pages/Course/EditCourseStructure/EditCourseStructure'
 import EditCourseGeneral from '@components/Dashboard/Pages/Course/EditCourseGeneral/EditCourseGeneral'
 import EditCourseAccess from '@components/Dashboard/Pages/Course/EditCourseAccess/EditCourseAccess'
@@ -83,7 +82,7 @@ function CourseOverviewPage(props: { params: Promise<CourseOverviewParams> }) {
   useEffect(() => {
     if (!rightsLoading && !hasAccessToCurrentPage && visibleTabs.length > 0) {
       const firstAvailableTab = visibleTabs[0]
-      router.replace(getUriWithOrg(params.orgslug, '') + firstAvailableTab.href)
+      router.replace(`/orgs/${params.orgslug}${firstAvailableTab.href}`)
     }
   }, [rightsLoading, hasAccessToCurrentPage, visibleTabs, router, params.orgslug])
 
@@ -147,7 +146,7 @@ function CourseOverviewPage(props: { params: Promise<CourseOverviewParams> }) {
               return (
                 <Link
                   key={tab.key}
-                  href={getUriWithOrg(params.orgslug, '') + tab.href}
+                  href={`/orgs/${params.orgslug}${tab.href}`}
                 >
                   <div
                     className={`flex space-x-4 py-2 w-fit text-center border-black transition-all ease-linear ${
