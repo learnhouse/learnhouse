@@ -147,7 +147,7 @@ jobs:
     name: Repository Dispatch
     needs: manifest
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/dev') || github.event_name == 'pull_request'
     permissions:
       contents: read
     steps:
@@ -160,4 +160,5 @@ jobs:
           client-payload: |
             {
               "ref": "${{ github.sha }}",
-              "branch": "${{ github.head_ref || github.ref_name }}"}
+              "branch": "${{ github.head_ref || github.ref_name }}"
+            }
