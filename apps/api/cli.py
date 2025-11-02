@@ -1,6 +1,4 @@
 import os
-import random
-import string
 from typing import Annotated
 from pydantic import EmailStr
 from sqlalchemy import create_engine
@@ -16,11 +14,6 @@ from src.services.install.install import (
 )
 
 cli = typer.Typer()
-
-def generate_password(length):
-    characters = string.ascii_uppercase + string.ascii_lowercase + string.digits
-    password = ''.join(random.choice(characters) for _ in range(length))
-    return password
 
 @cli.command()
 def install(
@@ -60,14 +53,13 @@ def install(
         print("Creating default organization user...")
         # Use email from environment variable if provided, otherwise default to "admin@school.dev"
         email = os.environ.get("LEARNHOUSE_INITIAL_ADMIN_EMAIL", "admin@school.dev")
-        # Use password from environment variable if provided, otherwise generate random password
-        initial_password = os.environ.get("LEARNHOUSE_INITIAL_ADMIN_PASSWORD")
-        if initial_password:
-            password = initial_password
-            print("Using password from LEARNHOUSE_INITIAL_ADMIN_PASSWORD environment variable")
-        else:
-            password = generate_password(8)
-            print("Generated random password (set LEARNHOUSE_INITIAL_ADMIN_PASSWORD to use a custom password)")
+        # Require password from environment variable
+        password = os.environ.get("LEARNHOUSE_INITIAL_ADMIN_PASSWORD")
+        if not password:
+            print("❌ Error: LEARNHOUSE_INITIAL_ADMIN_PASSWORD environment variable is required")
+            print("Please set LEARNHOUSE_INITIAL_ADMIN_PASSWORD environment variable before running installation.")
+            raise typer.Exit(code=1)
+        print("Using password from LEARNHOUSE_INITIAL_ADMIN_PASSWORD environment variable")
         if email != "admin@school.dev":
             print(f"Using email from LEARNHOUSE_INITIAL_ADMIN_EMAIL environment variable: {email}")
         user = UserCreate(
@@ -81,10 +73,7 @@ def install(
         print("")
         print("Login with the following credentials:")
         print("email: " + email)
-        if initial_password:
-            print("password: (the password you set in LEARNHOUSE_INITIAL_ADMIN_PASSWORD)")
-        else:
-            print("password: " + password)
+        print("password: (the password you set in LEARNHOUSE_INITIAL_ADMIN_PASSWORD)")
         print("⚠️ Remember to change the password after logging in ⚠️")
 
     else:

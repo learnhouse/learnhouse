@@ -13,5 +13,6 @@ export PORT="${PORT:-3000}"
 
 # Start the Next.js server using the wrapper script
 # The wrapper will inject NEXT_PUBLIC_* env vars before starting
-exec node server-wrapper.js
+# Using 'env' ensures all Kubernetes-injected environment variables are passed through
+exec env node server-wrapper.js
 
