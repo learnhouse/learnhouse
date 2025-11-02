@@ -48,7 +48,7 @@ function loadRuntimeConfig(): Record<string, string> {
 }
 
 // Helper function to get config value with fallback
-const getConfig = (key: string, defaultValue: string = ''): string => {
+export const getConfig = (key: string, defaultValue: string = ''): string => {
   const config = loadRuntimeConfig();
   return (config && config[key]) || process.env[key] || defaultValue;
 };
