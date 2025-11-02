@@ -4,7 +4,7 @@ import {
   loginAndGetToken,
   loginWithOAuthToken,
 } from '@services/auth/auth'
-import { LEARNHOUSE_TOP_DOMAIN, getUriWithOrg } from '@services/config/config'
+import { getLEARNHOUSE_TOP_DOMAIN_VAL, getUriWithOrg } from '@services/config/config'
 import { getResponseMetadata } from '@services/utils/ts/requests'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import GoogleProvider from 'next-auth/providers/google'
@@ -19,7 +19,7 @@ declare global {
   };
 }
 
-export const isDevEnv = LEARNHOUSE_TOP_DOMAIN == 'localhost' ? true : false
+export const isDevEnv = getLEARNHOUSE_TOP_DOMAIN_VAL() == 'localhost' ? true : false
 
 export const nextAuthOptions = {
   debug: true,
@@ -68,7 +68,7 @@ export const nextAuthOptions = {
         sameSite: 'lax',
         path: '/',
         // When working on localhost, the cookie domain must be omitted entirely (https://stackoverflow.com/a/1188145)
-        domain: `.${LEARNHOUSE_TOP_DOMAIN}`,
+        domain: `.${getLEARNHOUSE_TOP_DOMAIN_VAL()}`,
         secure: !isDevEnv,
       },
     },

@@ -1,7 +1,7 @@
 import { isInstallModeEnabled } from '@services/install/install'
 import {
-  LEARNHOUSE_DOMAIN,
-  LEARNHOUSE_TOP_DOMAIN,
+  getLEARNHOUSE_DOMAIN_VAL,
+  getLEARNHOUSE_TOP_DOMAIN_VAL,
   getDefaultOrg,
   getUriWithOrg,
   isMultiOrgModeEnabled,
@@ -33,9 +33,7 @@ export default async function proxy(req: NextRequest) {
   const { pathname, search } = req.nextUrl
   const fullhost = req.headers ? req.headers.get('host') : ''
   const cookie_orgslug = req.cookies.get('learnhouse_current_orgslug')?.value
-  const orgslug = fullhost
-    ? fullhost.replace(`.${LEARNHOUSE_DOMAIN}`, '')
-    : (default_org as string)
+  
 
   // Out of orgslug paths & rewrite
   const standard_paths = ['/home']
@@ -55,6 +53,7 @@ export default async function proxy(req: NextRequest) {
     const orgslug = searchParams.get('orgslug')
 
     if (orgslug) {
+      const LEARNHOUSE_TOP_DOMAIN = getLEARNHOUSE_TOP_DOMAIN_VAL()
       response.cookies.set({
         name: 'learnhouse_current_orgslug',
         value: orgslug,
@@ -130,6 +129,7 @@ export default async function proxy(req: NextRequest) {
   if (pathname.startsWith('/sitemap.xml')) {
     let orgslug: string;
     
+    const LEARNHOUSE_DOMAIN = getLEARNHOUSE_DOMAIN_VAL()
     if (hosting_mode === 'multi') {
       orgslug = fullhost
         ? fullhost.replace(`.${LEARNHOUSE_DOMAIN}`, '')
@@ -153,6 +153,8 @@ export default async function proxy(req: NextRequest) {
   // Multi Organization Mode
   if (hosting_mode === 'multi') {
     // Get the organization slug from the URL
+    const LEARNHOUSE_DOMAIN = getLEARNHOUSE_DOMAIN_VAL()
+    const LEARNHOUSE_TOP_DOMAIN = getLEARNHOUSE_TOP_DOMAIN_VAL()
     const orgslug = fullhost
       ? fullhost.replace(`.${LEARNHOUSE_DOMAIN}`, '')
       : (default_org as string)
@@ -174,6 +176,7 @@ export default async function proxy(req: NextRequest) {
   // Single Organization Mode
   if (hosting_mode === 'single') {
     // Get the default organization slug
+    const LEARNHOUSE_TOP_DOMAIN = getLEARNHOUSE_TOP_DOMAIN_VAL()
     const orgslug = default_org as string
     const response = NextResponse.rewrite(
       new URL(`/orgs/${orgslug}${pathname}`, req.url)

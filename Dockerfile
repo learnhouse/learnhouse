@@ -34,10 +34,7 @@ WORKDIR /app
 COPY --from=frontend-deps /app/node_modules ./node_modules
 COPY apps/web .
 
-# Set environment variables for the build
-ENV NEXT_PUBLIC_LEARNHOUSE_API_URL=http://localhost/api/v1/
-ENV NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL=http://localhost/
-ENV NEXT_PUBLIC_LEARNHOUSE_DOMAIN=localhost
+
 
 # Next.js collects completely anonymous telemetry data about general usage.
 # Learn more here: https://nextjs.org/telemetry
@@ -58,7 +55,7 @@ RUN \
 FROM frontend-base AS frontend-runner
 WORKDIR /app
 
-# Install curl 
+# Install curl for health checks
 RUN apk add --no-cache curl
 
 ENV NODE_ENV=production
@@ -79,6 +76,10 @@ RUN chown nextjs:nodejs .next
 COPY --from=frontend-builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=frontend-builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
+# Copy server wrapper for runtime environment variable injection
+COPY --chown=nextjs:nodejs apps/web/server-wrapper.js ./
+RUN chmod +x server-wrapper.js
+
 # Final image combining frontend and backend
 FROM base AS runner
 
@@ -94,10 +95,22 @@ RUN pip install --upgrade pip \
     && uv sync
 COPY ./apps/api ./
 
+# Install curl and netcat for health checks and service waiting
+RUN apt-get update && apt-get install -y curl netcat-openbsd && rm -rf /var/lib/apt/lists/*
+
 # Run the backend
 WORKDIR /app
 COPY ./extra/nginx.conf /etc/nginx/conf.d/default.conf
 ENV PORT=8000 LEARNHOUSE_PORT=9000 HOSTNAME=0.0.0.0
+
+# Copy entrypoint scripts
+COPY ./apps/api/docker-entrypoint.sh /app/api/docker-entrypoint.sh
+RUN chmod +x /app/api/docker-entrypoint.sh
+
 COPY ./extra/start.sh /app/start.sh
 RUN chmod +x /app/start.sh
+
+# Expose ports
+EXPOSE 80 9000
+
 CMD ["sh", "/app/start.sh"]
