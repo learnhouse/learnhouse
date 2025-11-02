@@ -39,7 +39,7 @@ RUN \
 FROM base AS runner
 WORKDIR /app
 
-# Install curl 
+# Install curl for health checks
 RUN apk add --no-cache curl
 
 ENV NODE_ENV production
@@ -60,12 +60,22 @@ RUN chown nextjs:nodejs .next
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
+# Copy server wrapper for runtime environment variable injection
+COPY --chown=nextjs:nodejs server-wrapper.js ./
+RUN chmod +x server-wrapper.js
+
+# Copy entrypoint script
+COPY --chown=nextjs:nodejs docker-entrypoint.sh ./
+RUN chmod +x docker-entrypoint.sh
+
+# Create runtime-config.json placeholder (will be generated at startup)
+RUN touch runtime-config.json && chown nextjs:nodejs runtime-config.json
+
 USER nextjs
 
 EXPOSE 3000
 
 ENV PORT 3000
 
-# server.js is created by next build from the standalone output
-# https://nextjs.org/docs/pages/api-reference/next-config-js/output
-CMD HOSTNAME="0.0.0.0" node server.js
+# Use entrypoint script which will start the server with runtime env vars
+ENTRYPOINT ["./docker-entrypoint.sh"]

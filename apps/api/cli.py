@@ -1,3 +1,4 @@
+import os
 import random
 import string
 from typing import Annotated
@@ -57,9 +58,18 @@ def install(
 
         # Create Organization User
         print("Creating default organization user...")
-        # Generate random 6 digit password
-        email = "admin@school.dev"
-        password = generate_password(8)
+        # Use email from environment variable if provided, otherwise default to "admin@school.dev"
+        email = os.environ.get("LEARNHOUSE_INITIAL_ADMIN_EMAIL", "admin@school.dev")
+        # Use password from environment variable if provided, otherwise generate random password
+        initial_password = os.environ.get("LEARNHOUSE_INITIAL_ADMIN_PASSWORD")
+        if initial_password:
+            password = initial_password
+            print("Using password from LEARNHOUSE_INITIAL_ADMIN_PASSWORD environment variable")
+        else:
+            password = generate_password(8)
+            print("Generated random password (set LEARNHOUSE_INITIAL_ADMIN_PASSWORD to use a custom password)")
+        if email != "admin@school.dev":
+            print(f"Using email from LEARNHOUSE_INITIAL_ADMIN_EMAIL environment variable: {email}")
         user = UserCreate(
             username="admin", email=EmailStr(email), password=password
         )
@@ -71,7 +81,10 @@ def install(
         print("")
         print("Login with the following credentials:")
         print("email: " + email)
-        print("password: " + password)
+        if initial_password:
+            print("password: (the password you set in LEARNHOUSE_INITIAL_ADMIN_PASSWORD)")
+        else:
+            print("password: " + password)
         print("⚠️ Remember to change the password after logging in ⚠️")
 
     else:
