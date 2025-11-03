@@ -1,10 +1,8 @@
 from datetime import datetime
 import json
 from uuid import uuid4
-from fastapi import HTTPException, Request
-from sqlalchemy import desc
+from fastapi import HTTPException
 from sqlmodel import Session, select
-from src.db.install import Install, InstallRead
 from src.db.organization_config import (
     AIOrgConfig,
     APIOrgConfig,
@@ -27,88 +25,7 @@ from src.db.organizations import Organization, OrganizationCreate
 from src.db.roles import DashboardPermission, Permission, PermissionsWithOwn, Rights, Role, RoleTypeEnum
 from src.db.user_organizations import UserOrganization
 from src.db.users import User, UserCreate, UserRead
-from config.config import get_learnhouse_config
 from src.security.security import security_hash_password
-
-
-async def isInstallModeEnabled():
-    config = get_learnhouse_config()
-
-    if config.general_config.install_mode:
-        return True
-    else:
-        raise HTTPException(
-            status_code=403,
-            detail="Install mode is not enabled",
-        )
-
-
-async def create_install_instance(request: Request, data: dict, db_session: Session):
-    install = Install.model_validate(data)
-
-    # complete install instance
-    install.install_uuid = str(f"install_{uuid4()}")
-    install.update_date = str(datetime.now())
-    install.creation_date = str(datetime.now())
-    install.step = 1
-    # insert install instance
-    db_session.add(install)
-
-    # commit changes
-    db_session.commit()
-
-    # refresh install instance
-    db_session.refresh(install)
-
-    install = InstallRead.model_validate(install)
-
-    return install
-
-
-async def get_latest_install_instance(request: Request, db_session: Session):
-    statement = select(Install).order_by(desc(Install.creation_date)).limit(1)
-    install = db_session.exec(statement).first()
-
-    if install is None:
-        raise HTTPException(
-            status_code=404,
-            detail="No install instance found",
-        )
-
-    install = InstallRead.model_validate(install)
-
-    return install
-
-
-async def update_install_instance(
-    request: Request, data: dict, step: int, db_session: Session
-):
-    statement = select(Install).order_by(desc(Install.creation_date)).limit(1)
-    install = db_session.exec(statement).first()
-
-    if install is None:
-        raise HTTPException(
-            status_code=404,
-            detail="No install instance found",
-        )
-
-    install.step = step
-    install.data = data
-
-    # commit changes
-    db_session.commit()
-
-    # refresh install instance
-    db_session.refresh(install)
-
-    install = InstallRead.model_validate(install)
-
-    return install
-
-
-############################################################################################################
-# Steps
-############################################################################################################
 
 
 # Install Default roles
@@ -555,3 +472,4 @@ def install_create_organization_user(
     user = UserRead.model_validate(user)
 
     return user
+

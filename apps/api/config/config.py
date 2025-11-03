@@ -11,7 +11,6 @@ class CookieConfig(BaseModel):
 
 class GeneralConfig(BaseModel):
     development_mode: bool
-    install_mode: bool
     logfire_enabled: bool
 
 
@@ -102,7 +101,7 @@ def get_learnhouse_config() -> LearnHouseConfig:
 
     # General Config
 
-    # Development Mode & Install Mode
+    # Development Mode
     env_development_mode_str = os.environ.get("LEARNHOUSE_DEVELOPMENT_MODE", "None")
     if env_development_mode_str != "None":
         env_development_mode = env_development_mode_str.lower() in ("true", "1", "yes")
@@ -112,17 +111,6 @@ def get_learnhouse_config() -> LearnHouseConfig:
         env_development_mode
         if env_development_mode is not None
         else yaml_config.get("general", {}).get("development_mode")
-    )
-
-    env_install_mode_str = os.environ.get("LEARNHOUSE_INSTALL_MODE", "None")
-    if env_install_mode_str != "None":
-        env_install_mode = env_install_mode_str.lower() in ("true", "1", "yes")
-    else:
-        env_install_mode = None
-    install_mode = (
-        env_install_mode
-        if env_install_mode is not None
-        else yaml_config.get("general", {}).get("install_mode")
     )
 
     # Logfire config
@@ -302,7 +290,6 @@ def get_learnhouse_config() -> LearnHouseConfig:
         contact_email=contact_email,
         general_config=GeneralConfig(
             development_mode=bool(development_mode), 
-            install_mode=bool(install_mode),
             logfire_enabled=bool(logfire_enabled)
         ),
         hosting_config=hosting_config,

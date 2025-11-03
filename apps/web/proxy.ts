@@ -1,4 +1,3 @@
-import { isInstallModeEnabled } from '@services/install/install'
 import {
   getLEARNHOUSE_DOMAIN_VAL,
   getLEARNHOUSE_TOP_DOMAIN_VAL,
@@ -64,16 +63,6 @@ export default async function proxy(req: NextRequest) {
     return response
   }
 
-  // Install Page (depreceated)
-  if (pathname.startsWith('/install')) {
-    // Check if install mode is enabled
-    const install_mode = await isInstallModeEnabled()
-    if (install_mode) {
-      return NextResponse.rewrite(new URL(pathname, req.url))
-    } else {
-      return NextResponse.redirect(new URL('/', req.url))
-    }
-  }
 
   // Dynamic Pages Editor
   if (pathname.match(/^\/course\/[^/]+\/activity\/[^/]+\/edit$/)) {

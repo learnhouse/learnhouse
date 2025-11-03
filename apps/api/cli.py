@@ -7,7 +7,7 @@ import typer
 from config.config import get_learnhouse_config
 from src.db.organizations import OrganizationCreate
 from src.db.users import UserCreate
-from src.services.install.install import (
+from src.services.setup.setup import (
     install_create_organization,
     install_create_organization_user,
     install_default_elements,
