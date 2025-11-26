@@ -1,11 +1,11 @@
-import { getBackendUrl } from '@services/config/config'
-const LEARNHOUSE_MEDIA_URL = process.env.NEXT_PUBLIC_LEARNHOUSE_MEDIA_URL
+import { getBackendUrl, getConfig } from '@services/config/config'
 
 function getMediaUrl() {
-  if (LEARNHOUSE_MEDIA_URL) {
-    return LEARNHOUSE_MEDIA_URL
+  const mediaUrl = getConfig('NEXT_PUBLIC_LEARNHOUSE_MEDIA_URL');
+  if (mediaUrl) {
+    return mediaUrl;
   } else {
-    return getBackendUrl()
+    return getBackendUrl();
   }
 }
 

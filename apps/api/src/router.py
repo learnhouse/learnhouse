@@ -7,9 +7,7 @@ from src.routers.ai import ai
 from src.routers.courses import chapters, collections, courses, assignments, certifications
 from src.routers.courses.activities import activities, blocks
 from src.routers.ee import cloud_internal, payments
-from src.routers.install import install
 from src.services.dev.dev import isDevModeEnabledOrRaise
-from src.services.install.install import isInstallModeEnabled
 from src.routers.utils import router as utils_router
 
 
@@ -56,14 +54,6 @@ v1_router.include_router(
     prefix="/dev",
     tags=["dev"],
     dependencies=[Depends(isDevModeEnabledOrRaise)],
-)
-
-# Install Routes
-v1_router.include_router(
-    install.router,
-    prefix="/install",
-    tags=["install"],
-    dependencies=[Depends(isInstallModeEnabled)],
 )
 
 v1_router.include_router(utils_router, prefix="/utils", tags=["utils"])

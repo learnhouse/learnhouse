@@ -11,7 +11,6 @@ class CookieConfig(BaseModel):
 
 class GeneralConfig(BaseModel):
     development_mode: bool
-    install_mode: bool
     logfire_enabled: bool
 
 
@@ -102,19 +101,16 @@ def get_learnhouse_config() -> LearnHouseConfig:
 
     # General Config
 
-    # Development Mode & Install Mode
-    env_development_mode = eval(os.environ.get("LEARNHOUSE_DEVELOPMENT_MODE", "None"))
+    # Development Mode
+    env_development_mode_str = os.environ.get("LEARNHOUSE_DEVELOPMENT_MODE", "None")
+    if env_development_mode_str != "None":
+        env_development_mode = env_development_mode_str.lower() in ("true", "1", "yes")
+    else:
+        env_development_mode = None
     development_mode = (
         env_development_mode
         if env_development_mode is not None
         else yaml_config.get("general", {}).get("development_mode")
-    )
-
-    env_install_mode = os.environ.get("LEARNHOUSE_INSTALL_MODE", "None")
-    install_mode = (
-        env_install_mode
-        if env_install_mode is not None
-        else yaml_config.get("general", {}).get("install_mode")
     )
 
     # Logfire config
@@ -210,14 +206,17 @@ def get_learnhouse_config() -> LearnHouseConfig:
 
     # AI Config
     env_openai_api_key = os.environ.get("LEARNHOUSE_OPENAI_API_KEY")
-    env_is_ai_enabled = os.environ.get("LEARNHOUSE_IS_AI_ENABLED")
-
+    env_is_ai_enabled_str = os.environ.get("LEARNHOUSE_IS_AI_ENABLED")
+    
     openai_api_key = env_openai_api_key or yaml_config.get("ai_config", {}).get(
         "openai_api_key"
     )
-    is_ai_enabled = env_is_ai_enabled or yaml_config.get("ai_config", {}).get(
-        "is_ai_enabled"
-    )
+    
+    # Parse is_ai_enabled from env or yaml
+    if env_is_ai_enabled_str:
+        is_ai_enabled = env_is_ai_enabled_str.lower() in ("true", "1", "yes")
+    else:
+        is_ai_enabled = yaml_config.get("ai_config", {}).get("is_ai_enabled", False)
 
     # Redis config
     env_redis_connection_string = os.environ.get("LEARNHOUSE_REDIS_CONNECTION_STRING")
@@ -291,7 +290,6 @@ def get_learnhouse_config() -> LearnHouseConfig:
         contact_email=contact_email,
         general_config=GeneralConfig(
             development_mode=bool(development_mode), 
-            install_mode=bool(install_mode),
             logfire_enabled=bool(logfire_enabled)
         ),
         hosting_config=hosting_config,

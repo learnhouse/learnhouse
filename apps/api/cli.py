@@ -1,5 +1,4 @@
-import random
-import string
+import os
 from typing import Annotated
 from pydantic import EmailStr
 from sqlalchemy import create_engine
@@ -8,18 +7,13 @@ import typer
 from config.config import get_learnhouse_config
 from src.db.organizations import OrganizationCreate
 from src.db.users import UserCreate
-from src.services.install.install import (
+from src.services.setup.setup import (
     install_create_organization,
     install_create_organization_user,
     install_default_elements,
 )
 
 cli = typer.Typer()
-
-def generate_password(length):
-    characters = string.ascii_uppercase + string.ascii_lowercase + string.digits
-    password = ''.join(random.choice(characters) for _ in range(length))
-    return password
 
 @cli.command()
 def install(
@@ -57,9 +51,17 @@ def install(
 
         # Create Organization User
         print("Creating default organization user...")
-        # Generate random 6 digit password
-        email = "admin@school.dev"
-        password = generate_password(8)
+        # Use email from environment variable if provided, otherwise default to "admin@school.dev"
+        email = os.environ.get("LEARNHOUSE_INITIAL_ADMIN_EMAIL", "admin@school.dev")
+        # Require password from environment variable
+        password = os.environ.get("LEARNHOUSE_INITIAL_ADMIN_PASSWORD")
+        if not password:
+            print("❌ Error: LEARNHOUSE_INITIAL_ADMIN_PASSWORD environment variable is required")
+            print("Please set LEARNHOUSE_INITIAL_ADMIN_PASSWORD environment variable before running installation.")
+            raise typer.Exit(code=1)
+        print("Using password from LEARNHOUSE_INITIAL_ADMIN_PASSWORD environment variable")
+        if email != "admin@school.dev":
+            print(f"Using email from LEARNHOUSE_INITIAL_ADMIN_EMAIL environment variable: {email}")
         user = UserCreate(
             username="admin", email=EmailStr(email), password=password
         )
@@ -71,7 +73,7 @@ def install(
         print("")
         print("Login with the following credentials:")
         print("email: " + email)
-        print("password: " + password)
+        print("password: (the password you set in LEARNHOUSE_INITIAL_ADMIN_PASSWORD)")
         print("⚠️ Remember to change the password after logging in ⚠️")
 
     else:

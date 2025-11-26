@@ -3,7 +3,7 @@ from pydantic import EmailStr
 from src.db.user_organizations import UserOrganization
 from src.db.organizations import OrganizationCreate
 from src.db.users import User, UserCreate
-from src.services.install.install import (
+from src.services.setup.setup import (
     install_create_organization,
     install_create_organization_user,
     install_default_elements,
