@@ -8,7 +8,7 @@ LearnHouse is an open source platform that makes it easy for anyone to provide w
 
 ## Progress
 
-🚧 LearnHouse is still on early development (alpha), as we reach stability we will release a stable version and add more features.
+🚧 LearnHouse is still on development (beta), as we reach stability we will release a stable version and add more features.
 
 ## Roadmap
 
