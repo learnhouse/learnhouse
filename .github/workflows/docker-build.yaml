@@ -8,14 +8,149 @@ on:
   pull_request:
     paths:
       - "**"
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: app
+
 jobs:
-  docker-build:
+  build:
+    name: Build ${{ matrix.platform }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - linux/amd64
+          - linux/arm64
     steps:
       - uses: actions/checkout@v3
-      - name: Build Docker Image
-        run: docker build -t learnhouse .
-        working-directory: .
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: |
+            image=moby/buildkit:latest
+            network=host
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get short SHA and branch
+        id: vars
+        run: |
+          SHORT=$(echo ${{ github.sha }} | cut -c1-7)
+          echo "short=$SHORT" >> $GITHUB_OUTPUT
+          if [ "${{ github.event_name }}" == "push" ] && [ "${{ github.ref }}" == "refs/heads/dev" ]; then
+            echo "branch=dev" >> $GITHUB_OUTPUT
+            echo "tag_prefix=dev" >> $GITHUB_OUTPUT
+          else
+            echo "branch=pr" >> $GITHUB_OUTPUT
+            echo "tag_prefix=pr-${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=${{ steps.vars.outputs.short }}-${{ matrix.platform == 'linux/amd64' && 'amd64' || 'arm64' }}
+            type=raw,value=${{ steps.vars.outputs.tag_prefix }}-${{ matrix.platform == 'linux/amd64' && 'amd64' || 'arm64' }}
+            type=raw,value=${{ steps.vars.outputs.tag_prefix }}-${{ steps.vars.outputs.short }}-${{ matrix.platform == 'linux/amd64' && 'amd64' || 'arm64' }}
+
+      - name: Build and push platform-specific image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: ${{ matrix.platform }}
+          cache-from: type=gha,scope=${{ matrix.platform }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.platform }}
+          build-args: |
+            BUILDKIT_INLINE_CACHE=1
+
+  manifest:
+    name: Create and push manifest
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get short SHA and branch
+        id: vars
+        run: |
+          echo "short=$(echo ${{ github.sha }} | cut -c1-7)" >> $GITHUB_OUTPUT
+          if [ "${{ github.event_name }}" == "push" ] && [ "${{ github.ref }}" == "refs/heads/dev" ]; then
+            echo "tag_prefix=dev" >> $GITHUB_OUTPUT
+          else
+            echo "tag_prefix=pr-${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Extract metadata for manifest
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=${{ steps.vars.outputs.short }}
+            type=raw,value=${{ steps.vars.outputs.tag_prefix }}
+            type=raw,value=${{ steps.vars.outputs.tag_prefix }}-${{ steps.vars.outputs.short }}
+            type=raw,value=latest,enable=${{ github.event_name == 'push' && github.ref == 'refs/heads/dev' }}
+
+      - name: Create and push manifest list
+        run: |
+          SHORT_SHA="${{ steps.vars.outputs.short }}"
+          TAG_PREFIX="${{ steps.vars.outputs.tag_prefix }}"
+          IMAGE="${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}"
+
+          # Create manifest list for each tag
+          for TAG in "$SHORT_SHA" "$TAG_PREFIX" "${TAG_PREFIX}-${SHORT_SHA}"; do
+            docker buildx imagetools create --tag "${IMAGE}:${TAG}" \
+              "${IMAGE}:${TAG}-amd64" \
+              "${IMAGE}:${TAG}-arm64"
+          done
+
+          # Create latest tag if on dev branch
+          if [ "${{ github.event_name }}" == "push" ] && [ "${{ github.ref }}" == "refs/heads/dev" ]; then
+            docker buildx imagetools create --tag "${IMAGE}:latest" \
+              "${IMAGE}:${SHORT_SHA}-amd64" \
+              "${IMAGE}:${SHORT_SHA}-arm64"
+          fi
+
+  dispatch:
+    name: Repository Dispatch
+    needs: manifest
+    runs-on: ubuntu-latest
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/dev') || github.event_name == 'pull_request'
+    permissions:
+      contents: read
+    steps:
       - name: Repository Dispatch
         uses: peter-evans/repository-dispatch@v2
         with:
