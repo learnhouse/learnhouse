@@ -154,7 +154,7 @@ jobs:
       - name: Repository Dispatch
         uses: peter-evans/repository-dispatch@v2
         with:
-          token: ${{ secrets.PAT_TOKEN }}
+          token: ${{ secrets.TRIGGER_PAT_TOKEN }}
           repository: learnhouse/images
           event-type: build-images
           client-payload: |
