@@ -4,9 +4,13 @@ on:
     branches:
       - dev
     paths:
+      - "**/Dockerfile*"
+      - ".dockerignore"
       - "**"
   pull_request:
     paths:
+      - "**/Dockerfile*"
+      - ".dockerignore"
       - "**"
 
 permissions:
