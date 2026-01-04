@@ -119,6 +119,7 @@ interface LegacyVideoBlockObject {
   content: {
     file_id: string
     file_format: string
+    activity_uuid?: string
   }
   size?: {
     width?: number | string
@@ -130,6 +131,7 @@ interface VideoBlockObject {
   content: {
     file_id: string
     file_format: string
+    activity_uuid?: string
   }
   size: VideoSize
 }
@@ -303,7 +305,7 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
   const videoUrl = blockObject && org?.org_uuid && course?.courseStructure.course_uuid ? getActivityBlockMediaDirectory(
     org.org_uuid,
     course.courseStructure.course_uuid,
-    extension.options.activity.activity_uuid,
+    blockObject.content.activity_uuid || extension.options.activity.activity_uuid,
     blockObject.block_uuid,
     fileId || '',
     'videoBlock'

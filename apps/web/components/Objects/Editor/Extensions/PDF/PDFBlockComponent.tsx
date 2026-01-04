@@ -55,7 +55,7 @@ function PDFBlockComponent(props: any) {
     const pdfUrl = getActivityBlockMediaDirectory(
       org?.org_uuid,
       course?.courseStructure.course_uuid,
-      props.extension.options.activity.activity_uuid,
+      blockObject.content.activity_uuid || props.extension.options.activity.activity_uuid,
       blockObject.block_uuid,
       fileId,
       'pdfBlock'
@@ -79,7 +79,7 @@ function PDFBlockComponent(props: any) {
   const pdfUrl = blockObject ? getActivityBlockMediaDirectory(
     org?.org_uuid,
     course?.courseStructure.course_uuid,
-    props.extension.options.activity.activity_uuid,
+    blockObject.content.activity_uuid || props.extension.options.activity.activity_uuid,
     blockObject.block_uuid,
     fileId || '',
     'pdfBlock'
