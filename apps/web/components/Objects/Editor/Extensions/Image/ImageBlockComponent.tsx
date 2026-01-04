@@ -63,7 +63,7 @@ function ImageBlockComponent(props: any) {
     const imageUrl = getActivityBlockMediaDirectory(
       org?.org_uuid,
       course?.courseStructure.course_uuid,
-      props.extension.options.activity.activity_uuid,
+      blockObject.content.activity_uuid || props.extension.options.activity.activity_uuid,
       blockObject.block_uuid,
       fileId,
       'imageBlock'
@@ -94,7 +94,7 @@ function ImageBlockComponent(props: any) {
   const imageUrl = blockObject ? getActivityBlockMediaDirectory(
     org?.org_uuid,
     course?.courseStructure.course_uuid,
-    props.extension.options.activity.activity_uuid,
+    blockObject.content.activity_uuid || props.extension.options.activity.activity_uuid,
     blockObject.block_uuid,
     fileId || '',
     'imageBlock'
