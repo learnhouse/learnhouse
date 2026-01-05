@@ -50,7 +50,32 @@ function loadRuntimeConfig(): Record<string, string> {
 // Helper function to get config value with fallback
 export const getConfig = (key: string, defaultValue: string = ''): string => {
   const config = loadRuntimeConfig();
-  return (config && config[key]) || process.env[key] || defaultValue;
+  if (config && config[key]) {
+    return config[key];
+  }
+
+  // Handle client-side environment variables in development
+  // Next.js requires literal process.env.NEXT_PUBLIC_* for client-side injection
+  if (typeof window !== 'undefined') {
+    switch (key) {
+      case 'NEXT_PUBLIC_LEARNHOUSE_API_URL':
+        return process.env.NEXT_PUBLIC_LEARNHOUSE_API_URL || defaultValue;
+      case 'NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL':
+        return process.env.NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL || defaultValue;
+      case 'NEXT_PUBLIC_LEARNHOUSE_DOMAIN':
+        return process.env.NEXT_PUBLIC_LEARNHOUSE_DOMAIN || defaultValue;
+      case 'NEXT_PUBLIC_LEARNHOUSE_TOP_DOMAIN':
+        return process.env.NEXT_PUBLIC_LEARNHOUSE_TOP_DOMAIN || defaultValue;
+      case 'NEXT_PUBLIC_LEARNHOUSE_MULTI_ORG':
+        return process.env.NEXT_PUBLIC_LEARNHOUSE_MULTI_ORG || defaultValue;
+      case 'NEXT_PUBLIC_LEARNHOUSE_DEFAULT_ORG':
+        return process.env.NEXT_PUBLIC_LEARNHOUSE_DEFAULT_ORG || defaultValue;
+      case 'NEXT_PUBLIC_LEARNHOUSE_HTTPS':
+        return process.env.NEXT_PUBLIC_LEARNHOUSE_HTTPS || defaultValue;
+    }
+  }
+
+  return process.env[key] || defaultValue;
 };
 
 // Dynamic config getters - these are functions to ensure runtime values are used
