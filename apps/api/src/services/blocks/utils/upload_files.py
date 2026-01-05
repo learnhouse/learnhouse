@@ -43,10 +43,14 @@ async def upload_file_and_return_file_object(
     # Get file metadata
     file.file.seek(0)
     content = await file.read()
-    ext = filename.split(".")[-1] if "." in filename else "bin"
+    
+    # Extract actual name on disk and extension
+    parts = filename.rsplit(".", 1)
+    name_on_disk = parts[0]
+    ext = parts[1] if len(parts) > 1 else "bin"
 
     return BlockFile(
-        file_id=file_id,
+        file_id=name_on_disk,
         file_format=ext,
         file_name=file.filename,
         file_size=len(content),
