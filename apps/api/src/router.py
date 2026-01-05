@@ -1,4 +1,3 @@
-import os
 from fastapi import APIRouter, Depends
 from src.routers import health
 from src.routers import usergroups
@@ -6,7 +5,7 @@ from src.routers import dev, trail, users, auth, orgs, roles, search
 from src.routers.ai import ai
 from src.routers.courses import chapters, collections, courses, assignments, certifications
 from src.routers.courses.activities import activities, blocks
-from src.routers.ee import cloud_internal, payments
+from src.core.ee_hooks import register_ee_routers
 from src.services.dev.dev import isDevModeEnabledOrRaise
 from src.routers.utils import router as utils_router
 
@@ -36,15 +35,9 @@ v1_router.include_router(
 )
 v1_router.include_router(trail.router, prefix="/trail", tags=["trail"])
 v1_router.include_router(ai.router, prefix="/ai", tags=["ai"])
-v1_router.include_router(payments.router, prefix="/payments", tags=["payments"])
 
-if os.environ.get("CLOUD_INTERNAL_KEY"):
-    v1_router.include_router(
-        cloud_internal.router,
-        prefix="/cloud_internal",
-        tags=["cloud_internal"],
-        dependencies=[Depends(cloud_internal.check_internal_cloud_key)],
-    )
+# Register EE Routers if available
+register_ee_routers(v1_router)
 
 v1_router.include_router(health.router, prefix="/health", tags=["health"])
 
