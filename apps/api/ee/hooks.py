@@ -8,6 +8,7 @@ from ee.services.audit import flush_audit_logs_to_db
 from ee.routers import cloud_internal
 from ee.routers import payments
 from ee.routers import info
+from ee.routers import audit_logs
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +39,13 @@ def register_routers(v1_router: APIRouter):
         info.router,
         prefix="/ee",
         tags=["ee"]
+    )
+
+    # Audit Logs
+    v1_router.include_router(
+        audit_logs.router,
+        prefix="/ee/audit_logs",
+        tags=["ee", "audit_logs"]
     )
     
     logger.info("EE Routers registered")
