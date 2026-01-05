@@ -30,9 +30,7 @@ We prioritize issues depending on the most requested features from our users, pl
 - 🍱 Course Collections
 - 👟 Course Progress
 - 🛜 Course Updates
-- 💬 Discussions
 - ✨ LearnHouse AI : The Teachers and Students copilot
-- 👪 Multiplayer Course edition
 - More to come
 
 ## Community
@@ -64,22 +62,9 @@ TLDR: Run `docker-compose up -d` and inspect the logs, should be ready to go in 
 
 ### Set-up a Development Environment 
 
-The project includes a development script to quickly spin up the infrastructure and start the applications.
 
-1.  **Run the start script:**
-    ```bash
-    ./dev/start.sh
-    ```
-2.  **What it does:**
-    - Starts PostgreSQL and Redis in Docker containers.
-    - Waits for the database to be healthy.
-    - Offers to run database migrations.
-    - Offers to start both the Python API and Next.js frontend in parallel.
 
-3.  **Manual Configuration:**
-    Ensure your `.env` (API) and `.env.local` (Web) files are configured to point to these local services. The script will output the recommended connection strings.
-
-- [Detailed Guide](https://docs.learnhouse.app/setup-dev-environment)
+For a detailed step-by-step guide on configuring the backend and frontend, please refer to the [Development Guide](/dev/DEVELOPMENT.md).
 
 ## Tech
 
@@ -90,7 +75,6 @@ LearnHouse uses a number of open source projects to work properly:
 - **Radix UI** - Accessible UI Components
 - **Tiptap** - An editor framework and headless wrapper around ProseMirror
 - **FastAPI** - A high performance, async API framework for Python
-- **YJS** - Shared data types for building collaborative software
 - **PostgreSQL** - SQL Database
 - **Redis** - In-Memory Database
 - **React** - duh
