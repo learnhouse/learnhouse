@@ -1,0 +1,42 @@
+version: "3.9"
+
+name: learnhouse-dev
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: learnhouse-db-dev
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=learnhouse
+      - POSTGRES_PASSWORD=learnhouse
+      - POSTGRES_DB=learnhouse
+    ports:
+      - "5432:5432"
+    volumes:
+      - learnhouse_db_dev_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U learnhouse"]
+      interval: 5s
+      timeout: 4s
+      retries: 5
+
+  redis:
+    image: redis:7.2.3-alpine
+    container_name: learnhouse-redis-dev
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - learnhouse_redis_dev_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 4s
+      retries: 5
+
+volumes:
+  learnhouse_db_dev_data:
+  learnhouse_redis_dev_data:
+
