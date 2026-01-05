@@ -7,6 +7,7 @@ from ee.middleware.audit import EEAuditLogMiddleware
 from ee.services.audit import flush_audit_logs_to_db
 from ee.routers import cloud_internal
 from ee.routers import payments
+from ee.routers import info
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +31,13 @@ def register_routers(v1_router: APIRouter):
         payments.router, 
         prefix="/payments", 
         tags=["payments"]
+    )
+    
+    # EE Info
+    v1_router.include_router(
+        info.router,
+        prefix="/ee",
+        tags=["ee"]
     )
     
     logger.info("EE Routers registered")
