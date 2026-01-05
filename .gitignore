@@ -46,3 +46,7 @@ __pycache__/
 # Flyio
 .flyio/
 fly.toml
+
+# Generated runtime config
+apps/web/public/runtime-config.js
+apps/web/runtime-config.json

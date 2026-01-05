@@ -64,6 +64,21 @@ TLDR: Run `docker-compose up -d` and inspect the logs, should be ready to go in 
 
 ### Set-up a Development Environment 
 
+The project includes a development script to quickly spin up the infrastructure and start the applications.
+
+1.  **Run the start script:**
+    ```bash
+    ./dev/start.sh
+    ```
+2.  **What it does:**
+    - Starts PostgreSQL and Redis in Docker containers.
+    - Waits for the database to be healthy.
+    - Offers to run database migrations.
+    - Offers to start both the Python API and Next.js frontend in parallel.
+
+3.  **Manual Configuration:**
+    Ensure your `.env` (API) and `.env.local` (Web) files are configured to point to these local services. The script will output the recommended connection strings.
+
 - [Detailed Guide](https://docs.learnhouse.app/setup-dev-environment)
 
 ## Tech

@@ -12,63 +12,13 @@ const path = require('path');
 // Read all NEXT_PUBLIC_* environment variables from the environment
 const env = process.env;
 
-// Collect all NEXT_PUBLIC_* variables
+// Collect all NEXT_PUBLIC_* variables from the environment
 const runtimeConfig = {};
 
-// List of all known NEXT_PUBLIC_* variables that might be set
-const knownPublicVars = [
-  'NEXT_PUBLIC_LEARNHOUSE_API_URL',
-  'NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL',
-  'NEXT_PUBLIC_LEARNHOUSE_DOMAIN',
-  'NEXT_PUBLIC_LEARNHOUSE_TOP_DOMAIN',
-  'NEXT_PUBLIC_LEARNHOUSE_MULTI_ORG',
-  'NEXT_PUBLIC_LEARNHOUSE_DEFAULT_ORG',
-  'NEXT_PUBLIC_LEARNHOUSE_HTTPS',
-  'NEXT_PUBLIC_LEARNHOUSE_MEDIA_URL',
-  'NEXT_PUBLIC_UNSPLASH_ACCESS_KEY',
-];
-
-// Collect all NEXT_PUBLIC_* variables
 Object.keys(env).forEach((key) => {
   if (key.startsWith('NEXT_PUBLIC_')) {
     runtimeConfig[key] = env[key];
     process.env[key] = env[key];
-  }
-});
-
-// Ensure known variables are set (with defaults if needed)
-knownPublicVars.forEach((key) => {
-  if (env[key]) {
-    runtimeConfig[key] = env[key];
-    process.env[key] = env[key];
-  } else if (!runtimeConfig[key]) {
-    // Set defaults for required variables
-    switch (key) {
-      case 'NEXT_PUBLIC_LEARNHOUSE_API_URL':
-        runtimeConfig[key] = 'http://localhost/api/v1/';
-        break;
-      case 'NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL':
-        runtimeConfig[key] = 'http://localhost/';
-        break;
-      case 'NEXT_PUBLIC_LEARNHOUSE_DOMAIN':
-        runtimeConfig[key] = 'localhost';
-        break;
-      case 'NEXT_PUBLIC_LEARNHOUSE_TOP_DOMAIN':
-        runtimeConfig[key] = 'localhost';
-        break;
-      case 'NEXT_PUBLIC_LEARNHOUSE_MULTI_ORG':
-        runtimeConfig[key] = 'false';
-        break;
-      case 'NEXT_PUBLIC_LEARNHOUSE_DEFAULT_ORG':
-        runtimeConfig[key] = 'default';
-        break;
-      case 'NEXT_PUBLIC_LEARNHOUSE_HTTPS':
-        runtimeConfig[key] = 'false';
-        break;
-    }
-    if (runtimeConfig[key]) {
-      process.env[key] = runtimeConfig[key];
-    }
   }
 });
 
