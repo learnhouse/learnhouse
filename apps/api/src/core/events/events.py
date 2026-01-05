@@ -5,6 +5,7 @@ from src.core.events.autoinstall import auto_install
 from src.core.events.content import check_content_directory
 from src.core.events.database import close_database, connect_to_db
 from src.core.events.logs import create_logs_dir
+from src.core.ee_hooks import run_ee_startup
 
 
 def startup_app(app: FastAPI) -> Callable:
@@ -24,6 +25,9 @@ def startup_app(app: FastAPI) -> Callable:
 
         # Check if auto-installation is needed
         auto_install()
+
+        # Start Enterprise Edition Startup tasks if available
+        run_ee_startup(app)
 
     return start_app
 
