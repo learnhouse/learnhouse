@@ -96,7 +96,9 @@ async def get_current_user(
         user = await security_get_user(request, db_session, email=token_data.username)  # type: ignore # treated as an email
         if user is None:
             raise credentials_exception
-        return PublicUser(**user.model_dump())
+        public_user = PublicUser(**user.model_dump())
+        request.state.user = public_user
+        return public_user
     else:
         return AnonymousUser()
 
