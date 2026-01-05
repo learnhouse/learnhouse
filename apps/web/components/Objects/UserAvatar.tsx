@@ -4,7 +4,7 @@ import { useParams } from 'next/navigation'
 import { getUserAvatarMediaDirectory } from '@services/media/media'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import UserProfilePopup from './UserProfilePopup'
-import { getUserByUsername } from '@services/users/users'
+import { getUserByUsername, getUser } from '@services/users/users'
 
 type UserAvatarProps = {
   width?: number
@@ -26,7 +26,7 @@ function UserAvatar(props: UserAvatarProps) {
   const [userData, setUserData] = useState<any>(null)
 
   useEffect(() => {
-    const fetchUserByUsername = async () => {
+    const fetchUserData = async () => {
       if (props.username) {
         try {
           const data = await getUserByUsername(props.username)
@@ -34,11 +34,18 @@ function UserAvatar(props: UserAvatarProps) {
         } catch (error) {
           console.error('Error fetching user by username:', error)
         }
+      } else if (props.userId) {
+        try {
+          const data = await getUser(props.userId)
+          setUserData(data)
+        } catch (error) {
+          console.error('Error fetching user by ID:', error)
+        }
       }
     }
 
-    fetchUserByUsername()
-  }, [props.username])
+    fetchUserData()
+  }, [props.username, props.userId])
 
   const isExternalUrl = (url: string): boolean => {
     return url.startsWith('http://') || url.startsWith('https://')

@@ -8,6 +8,10 @@ COPY --from=ghcr.io/astral-sh/uv:0.9.7 /uv /uvx /bin/
 # Copy the project into the image
 ADD . /app
 
+# Remove Enterprise Edition folder for public builds
+ARG LEARNHOUSE_PUBLIC=false
+RUN if [ "$LEARNHOUSE_PUBLIC" = "true" ]; then rm -rf /app/ee; fi
+
 # Sync the project into a new environment, using the frozen lockfile
 WORKDIR /app
 RUN uv sync --frozen
