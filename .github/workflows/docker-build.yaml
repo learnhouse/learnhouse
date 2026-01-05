@@ -86,6 +86,7 @@ jobs:
           cache-to: type=gha,mode=max,scope=${{ matrix.platform }}
           build-args: |
             BUILDKIT_INLINE_CACHE=1
+            LEARNHOUSE_PUBLIC=true
 
   manifest:
     name: Create and push manifest

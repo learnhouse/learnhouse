@@ -95,6 +95,10 @@ RUN pip install --upgrade pip \
     && uv sync
 COPY ./apps/api ./
 
+# Remove Enterprise Edition folder for public builds
+ARG LEARNHOUSE_PUBLIC=false
+RUN if [ "$LEARNHOUSE_PUBLIC" = "true" ]; then rm -rf /app/api/ee; fi
+
 # Install curl and netcat for health checks and service waiting
 RUN apt-get update && apt-get install -y curl netcat-openbsd && rm -rf /var/lib/apt/lists/*
 
