@@ -1,4 +1,4 @@
-from typing import Optional, Any, Dict
+from typing import Optional, Any, Dict, List
 from sqlmodel import SQLModel, Field, Column, Integer, ForeignKey, JSON
 from datetime import datetime
 
@@ -25,3 +25,11 @@ class AuditLog(AuditLogBase, table=True):
 
 class AuditLogRead(AuditLogBase):
     id: int
+    username: Optional[str] = None
+    avatar_url: Optional[str] = None
+
+class AuditLogPaginated(SQLModel):
+    items: List[AuditLogRead]
+    total: int
+    limit: int
+    offset: int

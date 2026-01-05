@@ -13,6 +13,9 @@ import OrgAccess from '@components/Dashboard/Pages/Users/OrgAccess/OrgAccess'
 import OrgUsersAdd from '@components/Dashboard/Pages/Users/OrgUsersAdd/OrgUsersAdd'
 import OrgUserGroups from '@components/Dashboard/Pages/Users/OrgUserGroups/OrgUserGroups'
 import OrgRoles from '@components/Dashboard/Pages/Users/OrgRoles/OrgRoles'
+import OrgAuditLogs from '@components/Dashboard/Pages/Org/OrgAuditLogs/OrgAuditLogs'
+import { useEEStatus } from '@components/Hooks/useEEStatus'
+import { ShieldAlert } from 'lucide-react'
 
 export type SettingsParams = {
   subpage: string
@@ -23,6 +26,7 @@ function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
   const params = use(props.params);
   const session = useLHSession() as any
   const org = useOrg() as any
+  const { isEE } = useEEStatus()
   const [H1Label, setH1Label] = React.useState('')
   const [H2Label, setH2Label] = React.useState('')
   const isMobile = useMediaQuery('(max-width: 767px)')
@@ -47,6 +51,10 @@ function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
     if (params.subpage == 'roles') {
       setH1Label('Roles')
       setH2Label('Create and manage roles with specific permissions')
+    }
+    if (params.subpage == 'audit-logs') {
+      setH1Label('Audit Logs')
+      setH2Label('Track and monitor all activities within your organization')
     }
   }
 
@@ -169,6 +177,26 @@ function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
             </div>
           </Link>
           
+          {isEE && (
+            <Link
+              href={
+                getUriWithOrg(params.orgslug, '') + `/dash/users/settings/audit-logs`
+              }
+            >
+              <div
+                className={`py-2 w-fit text-center border-black transition-all ease-linear ${params.subpage.toString() === 'audit-logs'
+                    ? 'border-b-4'
+                    : 'opacity-50'
+                  } cursor-pointer`}
+              >
+                <div className="flex items-center space-x-2.5 mx-2">
+                  <ShieldAlert size={16} />
+                  <div>Audit Logs</div>
+                </div>
+              </div>
+            </Link>
+          )}
+          
         </div>
       </div>
       <motion.div
@@ -183,6 +211,7 @@ function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
         {params.subpage == 'add' ? <OrgUsersAdd /> : ''}
         {params.subpage == 'usergroups' ? <OrgUserGroups /> : ''}
         {params.subpage == 'roles' ? <OrgRoles /> : ''}
+        {params.subpage == 'audit-logs' && isEE ? <OrgAuditLogs /> : ''}
       </motion.div>
     </div>
   )

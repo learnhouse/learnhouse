@@ -22,10 +22,11 @@ def get_ee_hooks():
         
         module = importlib.import_module("ee.hooks")
         return module
-    except ImportError:
+    except ImportError as e:
+        logger.error(f"Failed to import EE hooks: {e}")
         return None
     except Exception as e:
-        logger.error(f"Failed to load EE hooks: {e}")
+        logger.error(f"Unexpected error loading EE hooks: {e}")
         return None
 
 def register_ee_middlewares(app):
