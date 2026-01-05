@@ -28,6 +28,7 @@ const OrgAuditLogs = () => {
 
   const [offset, setOffset] = useState(0)
   const [searchField, setSearchField] = useState('action')
+  const [openModalId, setOpenModalId] = useState<string | null>(null)
   const [filters, setFilters] = useState({
     searchValue: '',
     action: '',
@@ -404,6 +405,8 @@ const OrgAuditLogs = () => {
                         dialogTitle="Event Payload"
                         dialogDescription={`Detailed data for action: ${log.action}`}
                         minHeight="no-min"
+                        isDialogOpen={openModalId === log.id}
+                        onOpenChange={(open) => setOpenModalId(open ? log.id : null)}
                         dialogContent={
                           <div className="bg-gray-900 rounded-lg p-4 mt-2 overflow-auto max-h-[400px]">
                             <pre className="text-xs text-green-400 font-mono">
