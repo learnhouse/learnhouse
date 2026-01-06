@@ -11,47 +11,49 @@ import { updateProfile } from '@services/settings/profile'
 import { getUser } from '@services/users/users'
 import { toast } from 'react-hot-toast'
 
+import { useTranslation } from 'react-i18next'
+
 // Define section types and their configurations
 const SECTION_TYPES = {
   'image-gallery': {
     icon: ImageIcon,
-    label: 'Image Gallery',
-    description: 'Add a collection of images'
+    labelKey: 'user.settings.profile_builder.section_types.image_gallery.label',
+    descriptionKey: 'user.settings.profile_builder.section_types.image_gallery.description'
   },
   'text': {
     icon: TextIcon,
-    label: 'Text',
-    description: 'Add formatted text content'
+    labelKey: 'user.settings.profile_builder.section_types.text.label',
+    descriptionKey: 'user.settings.profile_builder.section_types.text.description'
   },
   'links': {
     icon: LinkIcon,
-    label: 'Links',
-    description: 'Add social or professional links'
+    labelKey: 'user.settings.profile_builder.section_types.links.label',
+    descriptionKey: 'user.settings.profile_builder.section_types.links.description'
   },
   'skills': {
     icon: Award,
-    label: 'Skills',
-    description: 'Showcase your skills and expertise'
+    labelKey: 'user.settings.profile_builder.section_types.skills.label',
+    descriptionKey: 'user.settings.profile_builder.section_types.skills.description'
   },
   'experience': {
     icon: Briefcase,
-    label: 'Experience',
-    description: 'Add work or project experience'
+    labelKey: 'user.settings.profile_builder.section_types.experience.label',
+    descriptionKey: 'user.settings.profile_builder.section_types.experience.description'
   },
   'education': {
     icon: GraduationCap,
-    label: 'Education',
-    description: 'Add educational background'
+    labelKey: 'user.settings.profile_builder.section_types.education.label',
+    descriptionKey: 'user.settings.profile_builder.section_types.education.description'
   },
   'affiliation': {
     icon: MapPin,
-    label: 'Affiliation',
-    description: 'Add organizational affiliations'
+    labelKey: 'user.settings.profile_builder.section_types.affiliation.label',
+    descriptionKey: 'user.settings.profile_builder.section_types.affiliation.description'
   },
   'courses': {
     icon: BookOpen,
-    label: 'Courses',
-    description: 'Display authored courses'
+    labelKey: 'user.settings.profile_builder.section_types.courses.label',
+    descriptionKey: 'user.settings.profile_builder.section_types.courses.description'
   }
 } as const
 
@@ -175,6 +177,7 @@ const UserProfileBuilder = () => {
   const [selectedSection, setSelectedSection] = React.useState<number | null>(null)
   const [isSaving, setIsSaving] = React.useState(false)
   const [isLoading, setIsLoading] = React.useState(true)
+  const { t } = useTranslation()
 
   // Initialize profile data from user data
   React.useEffect(() => {
@@ -200,7 +203,7 @@ const UserProfileBuilder = () => {
           }
         } catch (error) {
           console.error('Error fetching user data:', error);
-          toast.error('Failed to load profile data');
+          toast.error(t('user.settings.profile_builder.toasts.loading_error'));
         } finally {
           setIsLoading(false)
         }
@@ -208,13 +211,13 @@ const UserProfileBuilder = () => {
     };
 
     fetchUserData();
-  }, [session?.data?.user?.id, access_token])
+  }, [session?.data?.user?.id, access_token, t])
 
   const createEmptySection = (type: keyof typeof SECTION_TYPES): ProfileSection => {
     const baseSection = {
       id: `section-${Date.now()}`,
       type,
-      title: `${SECTION_TYPES[type].label} Section`
+      title: `${t(SECTION_TYPES[type].labelKey)} Section`
     }
 
     switch (type) {
@@ -310,7 +313,7 @@ const UserProfileBuilder = () => {
 
   const handleSave = async () => {
     setIsSaving(true)
-    const loadingToast = toast.loading('Saving profile...')
+    const loadingToast = toast.loading(t('user.settings.profile_builder.saving'))
 
     try {
       // Get fresh user data before update
@@ -322,13 +325,13 @@ const UserProfileBuilder = () => {
       const res = await updateProfile(userData, userData.id, access_token)
 
       if (res.status === 200) {
-        toast.success('Profile updated successfully', { id: loadingToast })
+        toast.success(t('user.settings.profile_builder.toasts.save_success'), { id: loadingToast })
       } else {
         throw new Error('Failed to update profile')
       }
     } catch (error) {
       console.error('Error updating profile:', error)
-      toast.error('Error updating profile', { id: loadingToast })
+      toast.error(t('user.settings.profile_builder.toasts.save_error'), { id: loadingToast })
     } finally {
       setIsSaving(false)
     }
@@ -350,8 +353,8 @@ const UserProfileBuilder = () => {
         {/* Header */}
         <div className="flex items-center justify-between border-b pb-4">
           <div>
-            <h2 className="text-xl font-semibold flex items-center">Profile Builder <div className="text-xs ml-2 bg-gray-200 text-gray-700 px-2 py-1 rounded-full">BETA</div></h2>
-            <p className="text-gray-600">Customize your professional profile</p>
+            <h2 className="text-xl font-semibold flex items-center">{t('user.settings.profile_builder.title')} <div className="text-xs ml-2 bg-gray-200 text-gray-700 px-2 py-1 rounded-full">{t('user.settings.profile_builder.beta')}</div></h2>
+            <p className="text-gray-600">{t('user.settings.profile_builder.subtitle')}</p>
           </div>
           <Button 
             variant="default" 
@@ -359,7 +362,7 @@ const UserProfileBuilder = () => {
             disabled={isSaving}
             className="bg-black hover:bg-black/90"
           >
-            {isSaving ? 'Saving...' : 'Save Changes'}
+            {isSaving ? t('user.settings.profile_builder.saving') : t('user.settings.profile_builder.save_changes')}
           </Button>
         </div>
 
@@ -367,7 +370,7 @@ const UserProfileBuilder = () => {
         <div className="grid grid-cols-4 gap-6">
           {/* Sections Panel */}
           <div className="col-span-1 border-r pr-4">
-            <h3 className="font-medium mb-4">Sections</h3>
+            <h3 className="font-medium mb-4">{t('user.settings.profile_builder.sections')}</h3>
             <DragDropContext onDragEnd={onDragEnd}>
               <Droppable droppableId="sections">
                 {(provided) => (
@@ -467,20 +470,20 @@ const UserProfileBuilder = () => {
                   <div className="w-full">
                     <Button variant="default" className="w-full bg-black hover:bg-black/90 text-white">
                       <Plus className="h-4 w-4 mr-2" />
-                      Add Section
+                      {t('user.settings.profile_builder.add_section')}
                     </Button>
                   </div>
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.entries(SECTION_TYPES).map(([type, { icon: Icon, label, description }]) => (
+                  {Object.entries(SECTION_TYPES).map(([type, { icon: Icon, labelKey, descriptionKey }]) => (
                     <SelectItem key={type} value={type}>
                       <div className="flex items-center space-x-3 py-1">
                         <div className="p-1.5 bg-gray-50 rounded-md">
                           <Icon size={16} className="text-gray-600" />
                         </div>
                         <div className="flex-1">
-                          <div className="font-medium text-sm text-gray-700">{label}</div>
-                          <div className="text-xs text-gray-500">{description}</div>
+                          <div className="font-medium text-sm text-gray-700">{t(labelKey)}</div>
+                          <div className="text-xs text-gray-500">{t(descriptionKey)}</div>
                         </div>
                       </div>
                     </SelectItem>
@@ -499,7 +502,7 @@ const UserProfileBuilder = () => {
               />
             ) : (
               <div className="h-full flex items-center justify-center text-gray-500">
-                Select a section to edit or add a new one
+                {t('user.settings.profile_builder.select_section')}
               </div>
             )}
           </div>
@@ -515,6 +518,7 @@ interface SectionEditorProps {
 }
 
 const SectionEditor: React.FC<SectionEditorProps> = ({ section, onChange }) => {
+  const { t } = useTranslation()
   switch (section.type) {
     case 'image-gallery':
       return <ImageGalleryEditor section={section} onChange={onChange} />
@@ -533,7 +537,7 @@ const SectionEditor: React.FC<SectionEditorProps> = ({ section, onChange }) => {
     case 'courses':
       return <CoursesEditor section={section} onChange={onChange} />
     default:
-      return <div>Unknown section type</div>
+      return <div>{t('user.settings.profile_builder.unknown_section')}</div>
   }
 }
 
@@ -541,33 +545,34 @@ const ImageGalleryEditor: React.FC<{
   section: ImageGallerySection;
   onChange: (section: ImageGallerySection) => void;
 }> = ({ section, onChange }) => {
+  const { t } = useTranslation()
   return (
     <div className="space-y-6 p-6 bg-white rounded-lg nice-shadow">
       <div className="flex items-center space-x-2">
         <ImageIcon className="w-5 h-5 text-gray-500" />
-        <h3 className="font-medium text-lg">Image Gallery</h3>
+        <h3 className="font-medium text-lg">{t('user.settings.profile_builder.editors.image_gallery.title')}</h3>
       </div>
       
       <div className="space-y-4">
         {/* Title */}
         <div>
-          <Label htmlFor="title">Section Title</Label>
+          <Label htmlFor="title">{t('user.settings.profile_builder.editors.section_title')}</Label>
           <Input
             id="title"
             value={section.title}
             onChange={(e) => onChange({ ...section, title: e.target.value })}
-            placeholder="Enter section title"
+            placeholder={t('user.settings.profile_builder.editors.enter_section_title')}
           />
         </div>
 
         {/* Images */}
         <div>
-          <Label>Images</Label>
+          <Label>{t('user.settings.profile_builder.editors.image_gallery.images')}</Label>
           <div className="space-y-3 mt-2">
             {section.images.map((image, index) => (
               <div key={index} className="grid grid-cols-[2fr_1fr_auto] gap-4 p-4 border rounded-lg">
                 <div>
-                  <Label>Image URL</Label>
+                  <Label>{t('user.settings.profile_builder.editors.image_gallery.image_url')}</Label>
                   <Input
                     value={image.url}
                     onChange={(e) => {
@@ -575,11 +580,11 @@ const ImageGalleryEditor: React.FC<{
                       newImages[index] = { ...image, url: e.target.value }
                       onChange({ ...section, images: newImages })
                     }}
-                    placeholder="Enter image URL"
+                    placeholder={t('user.settings.profile_builder.editors.image_gallery.enter_image_url')}
                   />
                 </div>
                 <div>
-                  <Label>Caption</Label>
+                  <Label>{t('user.settings.profile_builder.editors.image_gallery.caption')}</Label>
                   <Input
                     value={image.caption || ''}
                     onChange={(e) => {
@@ -587,7 +592,7 @@ const ImageGalleryEditor: React.FC<{
                       newImages[index] = { ...image, caption: e.target.value }
                       onChange({ ...section, images: newImages })
                     }}
-                    placeholder="Image caption"
+                    placeholder={t('user.settings.profile_builder.editors.image_gallery.image_caption')}
                   />
                 </div>
                 <div className="flex flex-col justify-between">
@@ -630,7 +635,7 @@ const ImageGalleryEditor: React.FC<{
               className="w-full"
             >
               <Plus className="h-4 w-4 mr-2" />
-              Add Image
+              {t('user.settings.profile_builder.editors.image_gallery.add_image')}
             </Button>
           </div>
         </div>
@@ -643,33 +648,34 @@ const TextEditor: React.FC<{
   section: TextSection;
   onChange: (section: TextSection) => void;
 }> = ({ section, onChange }) => {
+  const { t } = useTranslation()
   return (
     <div className="space-y-6 p-6 bg-white rounded-lg nice-shadow">
       <div className="flex items-center space-x-2">
         <TextIcon className="w-5 h-5 text-gray-500" />
-        <h3 className="font-medium text-lg">Text Content</h3>
+        <h3 className="font-medium text-lg">{t('user.settings.profile_builder.editors.text.title')}</h3>
       </div>
       
       <div className="space-y-4">
         {/* Title */}
         <div>
-          <Label htmlFor="title">Section Title</Label>
+          <Label htmlFor="title">{t('user.settings.profile_builder.editors.section_title')}</Label>
           <Input
             id="title"
             value={section.title}
             onChange={(e) => onChange({ ...section, title: e.target.value })}
-            placeholder="Enter section title"
+            placeholder={t('user.settings.profile_builder.editors.enter_section_title')}
           />
         </div>
 
         {/* Content */}
         <div>
-          <Label htmlFor="content">Content</Label>
+          <Label htmlFor="content">{t('user.settings.profile_builder.editors.text.content')}</Label>
           <Textarea
             id="content"
             value={section.content}
             onChange={(e) => onChange({ ...section, content: e.target.value })}
-            placeholder="Enter your content here..."
+            placeholder={t('user.settings.profile_builder.editors.text.enter_content')}
             className="min-h-[200px]"
           />
         </div>
@@ -682,28 +688,29 @@ const LinksEditor: React.FC<{
   section: LinksSection;
   onChange: (section: LinksSection) => void;
 }> = ({ section, onChange }) => {
+  const { t } = useTranslation()
   return (
     <div className="space-y-6 p-6 bg-white rounded-lg nice-shadow">
       <div className="flex items-center space-x-2">
         <LinkIcon className="w-5 h-5 text-gray-500" />
-        <h3 className="font-medium text-lg">Links</h3>
+        <h3 className="font-medium text-lg">{t('user.settings.profile_builder.editors.links.title')}</h3>
       </div>
       
       <div className="space-y-4">
         {/* Title */}
         <div>
-          <Label htmlFor="title">Section Title</Label>
+          <Label htmlFor="title">{t('user.settings.profile_builder.editors.section_title')}</Label>
           <Input
             id="title"
             value={section.title}
             onChange={(e) => onChange({ ...section, title: e.target.value })}
-            placeholder="Enter section title"
+            placeholder={t('user.settings.profile_builder.editors.enter_section_title')}
           />
         </div>
 
         {/* Links */}
         <div>
-          <Label>Links</Label>
+          <Label>{t('user.settings.profile_builder.editors.links.links')}</Label>
           <div className="space-y-3 mt-2">
             {section.links.map((link, index) => (
               <div key={index} className="grid grid-cols-[1fr_1fr_auto] gap-2 p-4 border rounded-lg">
@@ -714,7 +721,7 @@ const LinksEditor: React.FC<{
                     newLinks[index] = { ...link, title: e.target.value }
                     onChange({ ...section, links: newLinks })
                   }}
-                  placeholder="Link title"
+                  placeholder={t('user.settings.profile_builder.editors.links.link_title')}
                 />
                 <Input
                   value={link.url}
@@ -723,7 +730,7 @@ const LinksEditor: React.FC<{
                     newLinks[index] = { ...link, url: e.target.value }
                     onChange({ ...section, links: newLinks })
                   }}
-                  placeholder="URL"
+                  placeholder={t('user.settings.profile_builder.editors.links.url')}
                 />
                 <Button
                   variant="ghost"
@@ -753,7 +760,7 @@ const LinksEditor: React.FC<{
               className="w-full"
             >
               <Plus className="h-4 w-4 mr-2" />
-              Add Link
+              {t('user.settings.profile_builder.editors.links.add_link')}
             </Button>
           </div>
         </div>
@@ -766,28 +773,29 @@ const SkillsEditor: React.FC<{
   section: SkillsSection;
   onChange: (section: SkillsSection) => void;
 }> = ({ section, onChange }) => {
+  const { t } = useTranslation()
   return (
     <div className="space-y-6 p-6 bg-white rounded-lg nice-shadow">
       <div className="flex items-center space-x-2">
         <Award className="w-5 h-5 text-gray-500" />
-        <h3 className="font-medium text-lg">Skills</h3>
+        <h3 className="font-medium text-lg">{t('user.settings.profile_builder.editors.skills.title')}</h3>
       </div>
       
       <div className="space-y-4">
         {/* Title */}
         <div>
-          <Label htmlFor="title">Section Title</Label>
+          <Label htmlFor="title">{t('user.settings.profile_builder.editors.section_title')}</Label>
           <Input
             id="title"
             value={section.title}
             onChange={(e) => onChange({ ...section, title: e.target.value })}
-            placeholder="Enter section title"
+            placeholder={t('user.settings.profile_builder.editors.enter_section_title')}
           />
         </div>
 
         {/* Skills */}
         <div>
-          <Label>Skills</Label>
+          <Label>{t('user.settings.profile_builder.editors.skills.skills')}</Label>
           <div className="space-y-3 mt-2">
             {section.skills.map((skill, index) => (
               <div key={index} className="grid grid-cols-[1fr_1fr_1fr_auto] gap-2 p-4 border rounded-lg">
@@ -798,7 +806,7 @@ const SkillsEditor: React.FC<{
                     newSkills[index] = { ...skill, name: e.target.value }
                     onChange({ ...section, skills: newSkills })
                   }}
-                  placeholder="Skill name"
+                  placeholder={t('user.settings.profile_builder.editors.skills.skill_name')}
                 />
                 <Select
                   value={skill.level || 'intermediate'}
@@ -809,13 +817,13 @@ const SkillsEditor: React.FC<{
                   }}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select level" />
+                    <SelectValue placeholder={t('user.settings.profile_builder.editors.skills.select_level')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="beginner">Beginner</SelectItem>
-                    <SelectItem value="intermediate">Intermediate</SelectItem>
-                    <SelectItem value="advanced">Advanced</SelectItem>
-                    <SelectItem value="expert">Expert</SelectItem>
+                    <SelectItem value="beginner">{t('user.settings.profile_builder.editors.skills.levels.beginner')}</SelectItem>
+                    <SelectItem value="intermediate">{t('user.settings.profile_builder.editors.skills.levels.intermediate')}</SelectItem>
+                    <SelectItem value="advanced">{t('user.settings.profile_builder.editors.skills.levels.advanced')}</SelectItem>
+                    <SelectItem value="expert">{t('user.settings.profile_builder.editors.skills.levels.expert')}</SelectItem>
                   </SelectContent>
                 </Select>
                 <Input
@@ -825,7 +833,7 @@ const SkillsEditor: React.FC<{
                     newSkills[index] = { ...skill, category: e.target.value }
                     onChange({ ...section, skills: newSkills })
                   }}
-                  placeholder="Category (optional)"
+                  placeholder={t('user.settings.profile_builder.editors.skills.category')}
                 />
                 <Button
                   variant="ghost"
@@ -855,7 +863,7 @@ const SkillsEditor: React.FC<{
               className="w-full"
             >
               <Plus className="h-4 w-4 mr-2" />
-              Add Skill
+              {t('user.settings.profile_builder.editors.skills.add_skill')}
             </Button>
           </div>
         </div>
@@ -868,34 +876,35 @@ const ExperienceEditor: React.FC<{
   section: ExperienceSection;
   onChange: (section: ExperienceSection) => void;
 }> = ({ section, onChange }) => {
+  const { t } = useTranslation()
   return (
     <div className="space-y-6 p-6 bg-white rounded-lg nice-shadow">
       <div className="flex items-center space-x-2">
         <Briefcase className="w-5 h-5 text-gray-500" />
-        <h3 className="font-medium text-lg">Experience</h3>
+        <h3 className="font-medium text-lg">{t('user.settings.profile_builder.editors.experience.title')}</h3>
       </div>
       
       <div className="space-y-4">
         {/* Title */}
         <div>
-          <Label htmlFor="title">Section Title</Label>
+          <Label htmlFor="title">{t('user.settings.profile_builder.editors.section_title')}</Label>
           <Input
             id="title"
             value={section.title}
             onChange={(e) => onChange({ ...section, title: e.target.value })}
-            placeholder="Enter section title"
+            placeholder={t('user.settings.profile_builder.editors.enter_section_title')}
           />
         </div>
 
         {/* Experiences */}
         <div>
-          <Label>Experience Items</Label>
+          <Label>{t('user.settings.profile_builder.editors.experience.items')}</Label>
           <div className="space-y-4 mt-2">
             {section.experiences.map((experience, index) => (
               <div key={index} className="space-y-4 p-4 border rounded-lg">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label>Title</Label>
+                    <Label>{t('user.settings.profile_builder.editors.experience.role_title')}</Label>
                     <Input
                       value={experience.title}
                       onChange={(e) => {
@@ -903,11 +912,11 @@ const ExperienceEditor: React.FC<{
                         newExperiences[index] = { ...experience, title: e.target.value }
                         onChange({ ...section, experiences: newExperiences })
                       }}
-                      placeholder="Position or role"
+                      placeholder={t('user.settings.profile_builder.editors.experience.role_placeholder')}
                     />
                   </div>
                   <div>
-                    <Label>Organization</Label>
+                    <Label>{t('user.settings.profile_builder.editors.experience.organization')}</Label>
                     <Input
                       value={experience.organization}
                       onChange={(e) => {
@@ -915,14 +924,14 @@ const ExperienceEditor: React.FC<{
                         newExperiences[index] = { ...experience, organization: e.target.value }
                         onChange({ ...section, experiences: newExperiences })
                       }}
-                      placeholder="Company or organization"
+                      placeholder={t('user.settings.profile_builder.editors.experience.organization_placeholder')}
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-[1fr_1fr_auto] gap-4">
                   <div>
-                    <Label>Start Date</Label>
+                    <Label>{t('user.settings.profile_builder.editors.experience.start_date')}</Label>
                     <Input
                       type="date"
                       value={experience.startDate}
@@ -934,7 +943,7 @@ const ExperienceEditor: React.FC<{
                     />
                   </div>
                   <div>
-                    <Label>End Date</Label>
+                    <Label>{t('user.settings.profile_builder.editors.experience.end_date')}</Label>
                     <Input
                       type="date"
                       value={experience.endDate || ''}
@@ -963,13 +972,13 @@ const ExperienceEditor: React.FC<{
                         }}
                         className="rounded border-gray-300"
                       />
-                      <Label htmlFor={`current-${index}`}>Current</Label>
+                      <Label htmlFor={`current-${index}`}>{t('user.settings.profile_builder.editors.experience.current')}</Label>
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <Label>Description</Label>
+                  <Label>{t('user.settings.profile_builder.editors.experience.description')}</Label>
                   <Textarea
                     value={experience.description}
                     onChange={(e) => {
@@ -977,7 +986,7 @@ const ExperienceEditor: React.FC<{
                       newExperiences[index] = { ...experience, description: e.target.value }
                       onChange({ ...section, experiences: newExperiences })
                     }}
-                    placeholder="Describe your role and achievements"
+                    placeholder={t('user.settings.profile_builder.editors.experience.description_placeholder')}
                     className="min-h-[100px]"
                   />
                 </div>
@@ -993,7 +1002,7 @@ const ExperienceEditor: React.FC<{
                     className="text-red-500 hover:text-red-600 hover:bg-red-50"
                   >
                     <Trash2 className="h-4 w-4 mr-2" />
-                    Remove
+                    {t('user.settings.general.remove')}
                   </Button>
                 </div>
               </div>
@@ -1016,7 +1025,7 @@ const ExperienceEditor: React.FC<{
               className="w-full"
             >
               <Plus className="h-4 w-4 mr-2" />
-              Add Experience
+              {t('user.settings.profile_builder.editors.experience.add_experience')}
             </Button>
           </div>
         </div>
@@ -1029,34 +1038,35 @@ const EducationEditor: React.FC<{
   section: EducationSection;
   onChange: (section: EducationSection) => void;
 }> = ({ section, onChange }) => {
+  const { t } = useTranslation()
   return (
     <div className="space-y-6 p-6 bg-white rounded-lg nice-shadow">
       <div className="flex items-center space-x-2">
         <GraduationCap className="w-5 h-5 text-gray-500" />
-        <h3 className="font-medium text-lg">Education</h3>
+        <h3 className="font-medium text-lg">{t('user.settings.profile_builder.editors.education.title')}</h3>
       </div>
       
       <div className="space-y-4">
         {/* Title */}
         <div>
-          <Label htmlFor="title">Section Title</Label>
+          <Label htmlFor="title">{t('user.settings.profile_builder.editors.section_title')}</Label>
           <Input
             id="title"
             value={section.title}
             onChange={(e) => onChange({ ...section, title: e.target.value })}
-            placeholder="Enter section title"
+            placeholder={t('user.settings.profile_builder.editors.enter_section_title')}
           />
         </div>
 
         {/* Education Items */}
         <div>
-          <Label>Education Items</Label>
+          <Label>{t('user.settings.profile_builder.editors.education.items')}</Label>
           <div className="space-y-4 mt-2">
             {section.education.map((edu, index) => (
               <div key={index} className="space-y-4 p-4 border rounded-lg">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label>Institution</Label>
+                    <Label>{t('user.settings.profile_builder.editors.education.institution')}</Label>
                     <Input
                       value={edu.institution}
                       onChange={(e) => {
@@ -1064,11 +1074,11 @@ const EducationEditor: React.FC<{
                         newEducation[index] = { ...edu, institution: e.target.value }
                         onChange({ ...section, education: newEducation })
                       }}
-                      placeholder="School or university"
+                      placeholder={t('user.settings.profile_builder.editors.education.institution_placeholder')}
                     />
                   </div>
                   <div>
-                    <Label>Degree</Label>
+                    <Label>{t('user.settings.profile_builder.editors.education.degree')}</Label>
                     <Input
                       value={edu.degree}
                       onChange={(e) => {
@@ -1076,13 +1086,13 @@ const EducationEditor: React.FC<{
                         newEducation[index] = { ...edu, degree: e.target.value }
                         onChange({ ...section, education: newEducation })
                       }}
-                      placeholder="Degree type"
+                      placeholder={t('user.settings.profile_builder.editors.education.degree_placeholder')}
                     />
                   </div>
                 </div>
 
                 <div>
-                  <Label>Field of Study</Label>
+                  <Label>{t('user.settings.profile_builder.editors.education.field')}</Label>
                   <Input
                     value={edu.field}
                     onChange={(e) => {
@@ -1090,13 +1100,13 @@ const EducationEditor: React.FC<{
                       newEducation[index] = { ...edu, field: e.target.value }
                       onChange({ ...section, education: newEducation })
                     }}
-                    placeholder="Major or concentration"
+                    placeholder={t('user.settings.profile_builder.editors.education.field_placeholder')}
                   />
                 </div>
 
                 <div className="grid grid-cols-[1fr_1fr_auto] gap-4">
                   <div>
-                    <Label>Start Date</Label>
+                    <Label>{t('user.settings.profile_builder.editors.education.start_date')}</Label>
                     <Input
                       type="date"
                       value={edu.startDate}
@@ -1108,7 +1118,7 @@ const EducationEditor: React.FC<{
                     />
                   </div>
                   <div>
-                    <Label>End Date</Label>
+                    <Label>{t('user.settings.profile_builder.editors.education.end_date')}</Label>
                     <Input
                       type="date"
                       value={edu.endDate || ''}
@@ -1137,13 +1147,13 @@ const EducationEditor: React.FC<{
                         }}
                         className="rounded border-gray-300"
                       />
-                      <Label htmlFor={`current-edu-${index}`}>Current</Label>
+                      <Label htmlFor={`current-edu-${index}`}>{t('user.settings.profile_builder.editors.education.current')}</Label>
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <Label>Description</Label>
+                  <Label>{t('user.settings.profile_builder.editors.education.description')}</Label>
                   <Textarea
                     value={edu.description || ''}
                     onChange={(e) => {
@@ -1151,8 +1161,8 @@ const EducationEditor: React.FC<{
                       newEducation[index] = { ...edu, description: e.target.value }
                       onChange({ ...section, education: newEducation })
                     }}
-                    placeholder="Additional details about your education"
-                    className="min-h-[100px]"
+                    placeholder={t('user.settings.profile_builder.editors.education.description_placeholder')}
+                    className="min-h-[150px]"
                   />
                 </div>
 
@@ -1167,7 +1177,7 @@ const EducationEditor: React.FC<{
                     className="text-red-500 hover:text-red-600 hover:bg-red-50"
                   >
                     <Trash2 className="h-4 w-4 mr-2" />
-                    Remove
+                    {t('user.settings.general.remove')}
                   </Button>
                 </div>
               </div>
@@ -1191,7 +1201,7 @@ const EducationEditor: React.FC<{
               className="w-full"
             >
               <Plus className="h-4 w-4 mr-2" />
-              Add Education
+              {t('user.settings.profile_builder.editors.education.add_education')}
             </Button>
           </div>
         </div>
@@ -1204,34 +1214,35 @@ const AffiliationEditor: React.FC<{
   section: AffiliationSection;
   onChange: (section: AffiliationSection) => void;
 }> = ({ section, onChange }) => {
+  const { t } = useTranslation()
   return (
     <div className="space-y-6 p-6 bg-white rounded-lg nice-shadow">
       <div className="flex items-center space-x-2">
         <MapPin className="w-5 h-5 text-gray-500" />
-        <h3 className="font-medium text-lg">Affiliation</h3>
+        <h3 className="font-medium text-lg">{t('user.settings.profile_builder.editors.affiliation.title')}</h3>
       </div>
       
       <div className="space-y-4">
         {/* Title */}
         <div>
-          <Label htmlFor="title">Section Title</Label>
+          <Label htmlFor="title">{t('user.settings.profile_builder.editors.section_title')}</Label>
           <Input
             id="title"
             value={section.title}
             onChange={(e) => onChange({ ...section, title: e.target.value })}
-            placeholder="Enter section title"
+            placeholder={t('user.settings.profile_builder.editors.enter_section_title')}
           />
         </div>
 
         {/* Affiliations */}
         <div>
-          <Label>Affiliations</Label>
+          <Label>{t('user.settings.profile_builder.editors.affiliation.affiliations')}</Label>
           <div className="space-y-3 mt-2">
             {section.affiliations.map((affiliation, index) => (
               <div key={index} className="space-y-4 p-4 border rounded-lg">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label>Name</Label>
+                    <Label>{t('user.settings.profile_builder.editors.affiliation.name')}</Label>
                     <Input
                       value={affiliation.name}
                       onChange={(e) => {
@@ -1239,11 +1250,11 @@ const AffiliationEditor: React.FC<{
                         newAffiliations[index] = { ...affiliation, name: e.target.value }
                         onChange({ ...section, affiliations: newAffiliations })
                       }}
-                      placeholder="Name of the organization"
+                      placeholder={t('user.settings.profile_builder.editors.affiliation.name_placeholder')}
                     />
                   </div>
                   <div>
-                    <Label>Logo URL</Label>
+                    <Label>{t('user.settings.profile_builder.editors.affiliation.logo_url')}</Label>
                     <Input
                       value={affiliation.logoUrl}
                       onChange={(e) => {
@@ -1251,13 +1262,13 @@ const AffiliationEditor: React.FC<{
                         newAffiliations[index] = { ...affiliation, logoUrl: e.target.value }
                         onChange({ ...section, affiliations: newAffiliations })
                       }}
-                      placeholder="URL to the organization's logo"
+                      placeholder={t('user.settings.profile_builder.editors.affiliation.logo_url_placeholder')}
                     />
                   </div>
                 </div>
 
                 <div>
-                  <Label>Description</Label>
+                  <Label>{t('user.settings.profile_builder.editors.affiliation.description')}</Label>
                   <Textarea
                     value={affiliation.description}
                     onChange={(e) => {
@@ -1265,7 +1276,7 @@ const AffiliationEditor: React.FC<{
                       newAffiliations[index] = { ...affiliation, description: e.target.value }
                       onChange({ ...section, affiliations: newAffiliations })
                     }}
-                    placeholder="Description of the organization"
+                    placeholder={t('user.settings.profile_builder.editors.affiliation.description_placeholder')}
                     className="min-h-[100px]"
                   />
                 </div>
@@ -1280,7 +1291,7 @@ const AffiliationEditor: React.FC<{
                     className="text-red-500 hover:text-red-600 hover:bg-red-50"
                   >
                     <Trash2 className="h-4 w-4 mr-2" />
-                    Remove
+                    {t('user.settings.general.remove')}
                   </Button>
                 </div>
               </div>
@@ -1301,7 +1312,7 @@ const AffiliationEditor: React.FC<{
               className="w-full"
             >
               <Plus className="h-4 w-4 mr-2" />
-              Add Affiliation
+              {t('user.settings.profile_builder.editors.affiliation.add_affiliation')}
             </Button>
           </div>
         </div>
@@ -1314,27 +1325,28 @@ const CoursesEditor: React.FC<{
   section: CoursesSection;
   onChange: (section: CoursesSection) => void;
 }> = ({ section, onChange }) => {
+  const { t } = useTranslation()
   return (
     <div className="space-y-6 p-6 bg-white rounded-lg nice-shadow">
       <div className="flex items-center space-x-2">
         <BookOpen className="w-5 h-5 text-gray-500" />
-        <h3 className="font-medium text-lg">Courses</h3>
+        <h3 className="font-medium text-lg">{t('user.settings.profile_builder.editors.courses.title')}</h3>
       </div>
       
       <div className="space-y-4">
         {/* Title */}
         <div>
-          <Label htmlFor="title">Section Title</Label>
+          <Label htmlFor="title">{t('user.settings.profile_builder.editors.section_title')}</Label>
           <Input
             id="title"
             value={section.title}
             onChange={(e) => onChange({ ...section, title: e.target.value })}
-            placeholder="Enter section title"
+            placeholder={t('user.settings.profile_builder.editors.enter_section_title')}
           />
         </div>
 
         <div className="text-sm text-gray-500 italic">
-          Your authored courses will be automatically displayed in this section.
+          {t('user.settings.profile_builder.editors.courses.info')}
         </div>
       </div>
     </div>

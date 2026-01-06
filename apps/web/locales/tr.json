@@ -393,6 +393,224 @@
   },
   "user": {
     "user_settings": "Kullanıcı Ayarları",
+    "settings": {
+      "title": "Hesap Ayarları",
+      "tabs": {
+        "general": "Genel",
+        "profile": "Profil",
+        "security": "Şifre"
+      },
+      "general": {
+        "title": "Hesap Ayarları",
+        "subtitle": "Kişisel bilgilerinizi ve tercihlerinizi yönetin",
+        "email": "E-posta",
+        "email_placeholder": "E-posta adresiniz",
+        "username": "Kullanıcı adı",
+        "username_placeholder": "Kullanıcı adınız",
+        "first_name": "Ad",
+        "first_name_placeholder": "Adınız",
+        "last_name": "Soyad",
+        "last_name_placeholder": "Soyadınız",
+        "bio": "Biyografi",
+        "bio_placeholder": "Bize kendinizden bahsedin",
+        "characters_left": "{{count}} karakter kaldı",
+        "additional_details": "Ek Detaylar",
+        "clear_all": "Tümünü Temizle",
+        "add_detail": "Detay Ekle",
+        "add_general": "Genel Ekle",
+        "add_academic": "Akademik Ekle",
+        "add_professional": "Profesyonel Ekle",
+        "profile_picture": "Profil Resmi",
+        "change_avatar": "Avatarı Değiştir",
+        "recommended_size": "Önerilen boyut 100x100",
+        "save_changes": "Değişiklikleri Kaydet",
+        "saving": "Kaydediliyor...",
+        "uploading": "Yükleniyor",
+        "avatar_updated": "Avatar Güncellendi",
+        "profile_updated": "Profil Başarıyla Güncellendi",
+        "relogin_message": "Lütfen yeni e-posta adresinizle tekrar giriş yapın: {{email}}",
+        "logout_warning": "E-posta adresinizi değiştirdikten sonra çıkış yapılacaksınız",
+        "detail_label_placeholder": "Etiket girin (örn: Başlık, Konum)",
+        "remove": "Kaldır",
+        "icon": "Simge",
+        "select_icon": "Simge seç",
+        "text": "Metin",
+        "text_placeholder": "Detay metnini girin",
+        "icons": {
+          "briefcase": "Çanta",
+          "education": "Eğitim",
+          "location": "Konum",
+          "organization": "Organizasyon",
+          "speciality": "Uzmanlık",
+          "website": "Web sitesi",
+          "tech": "Teknoloji",
+          "achievement": "Başarı",
+          "book": "Kitap",
+          "link": "Bağlantı",
+          "community": "Topluluk",
+          "calendar": "Takvim"
+        },
+        "labels": {
+          "title": "Başlık",
+          "affiliation": "Bağlılık",
+          "location": "Konum",
+          "website": "Web sitesi",
+          "linkedin": "LinkedIn",
+          "institution": "Kurum",
+          "department": "Bölüm",
+          "research": "Araştırma Alanı",
+          "academic_title": "Akademik Unvan",
+          "company": "Şirket",
+          "industry": "Endüstri",
+          "expertise": "Uzmanlık",
+          "community": "Topluluk"
+        }
+      },
+      "password": {
+        "title": "Şifre Değiştir",
+        "subtitle": "Hesabınızı güvende tutmak için şifrenizi güncelleyin",
+        "current_password": "Mevcut Şifre",
+        "new_password": "Yeni Şifre",
+        "update_password": "Şifreyi Güncelle",
+        "updating": "Güncelleniyor...",
+        "password_updated": "Şifre başarıyla güncellendi",
+        "relogin_message": "Lütfen yeni şifrenizle tekrar giriş yapın",
+        "logout_warning": "Şifrenizi değiştirdikten sonra çıkış yapılacaksınız"
+      },
+      "profile_builder": {
+        "title": "Profil Oluşturucu",
+        "subtitle": "Profesyonel profilinizi özelleştirin",
+        "sections": "Bölümler",
+        "add_section": "Bölüm Ekle",
+        "save_changes": "Değişiklikleri Kaydet",
+        "saving": "Kaydediliyor...",
+        "select_section": "Düzenlemek için bir bölüm seçin veya yeni bir tane ekleyin",
+        "beta": "BETA",
+        "section_types": {
+          "image_gallery": {
+            "label": "Resim Galerisi",
+            "description": "Bir resim koleksiyonu ekleyin"
+          },
+          "text": {
+            "label": "Metin",
+            "description": "Biçimlendirilmiş metin içeriği ekleyin"
+          },
+          "links": {
+            "label": "Bağlantılar",
+            "description": "Sosyal veya profesyonel bağlantılar ekleyin"
+          },
+          "skills": {
+            "label": "Yetenekler",
+            "description": "Yeteneklerinizi ve uzmanlığınızı sergileyin"
+          },
+          "experience": {
+            "label": "Deneyim",
+            "description": "İş veya proje deneyimi ekleyin"
+          },
+          "education": {
+            "label": "Eğitim",
+            "description": "Eğitim geçmişinizi ekleyin"
+          },
+          "affiliation": {
+            "label": "Bağlılık",
+            "description": "Organizasyonel bağlılıklar ekleyin"
+          },
+          "courses": {
+            "label": "Kurslar",
+            "description": "Oluşturduğunuz kursları gösterin"
+          }
+        },
+        "editors": {
+          "section_title": "Bölüm Başlığı",
+          "enter_section_title": "Bölüm başlığını girin",
+          "image_gallery": {
+            "title": "Resim Galerisi",
+            "images": "Resimler",
+            "image_url": "Resim URL'si",
+            "enter_image_url": "Resim URL'sini girin",
+            "caption": "Açıklama",
+            "image_caption": "Resim açıklaması",
+            "add_image": "Resim Ekle"
+          },
+          "text": {
+            "title": "Metin İçeriği",
+            "content": "İçerik",
+            "enter_content": "İçeriğinizi buraya girin..."
+          },
+          "links": {
+            "title": "Bağlantılar",
+            "links": "Bağlantılar",
+            "link_title": "Bağlantı başlığı",
+            "url": "URL",
+            "add_link": "Bağlantı Ekle"
+          },
+          "skills": {
+            "title": "Yetenekler",
+            "skills": "Yetenekler",
+            "skill_name": "Yetenek adı",
+            "select_level": "Seviye seç",
+            "category": "Kategori (isteğe bağlı)",
+            "add_skill": "Yetenek Ekle",
+            "levels": {
+              "beginner": "Başlangıç",
+              "intermediate": "Orta",
+              "advanced": "İleri",
+              "expert": "Uzman"
+            }
+          },
+          "experience": {
+            "title": "Deneyim",
+            "items": "Deneyim Öğeleri",
+            "role_title": "Başlık",
+            "role_placeholder": "Pozisyon veya rol",
+            "organization": "Organizasyon",
+            "organization_placeholder": "Şirket veya organizasyon",
+            "start_date": "Başlangıç Tarihi",
+            "end_date": "Bitiş Tarihi",
+            "current": "Mevcut",
+            "description": "Açıklama",
+            "description_placeholder": "Rolünüzü ve başarılarınızı açıklayın",
+            "add_experience": "Deneyim Ekle"
+          },
+          "education": {
+            "title": "Eğitim",
+            "items": "Eğitim Öğeleri",
+            "institution": "Kurum",
+            "institution_placeholder": "Okul veya üniversite",
+            "degree": "Derece",
+            "degree_placeholder": "Derece türü",
+            "field": "Çalışma Alanı",
+            "field_placeholder": "Ana dal veya konsantrasyon",
+            "start_date": "Başlangıç Tarihi",
+            "end_date": "Bitiş Tarihi",
+            "current": "Mevcut",
+            "description": "Açıklama",
+            "description_placeholder": "Eğitiminiz hakkında ek bilgiler",
+            "add_education": "Eğitim Ekle"
+          },
+          "affiliation": {
+            "title": "Bağlılık",
+            "affiliations": "Bağlılıklar",
+            "name": "Ad",
+            "name_placeholder": "Organizasyon adı",
+            "logo_url": "Logo URL'si",
+            "logo_url_placeholder": "Organizasyon logosunun URL'si",
+            "description": "Açıklama",
+            "description_placeholder": "Organizasyon açıklaması",
+            "add_affiliation": "Bağlılık Ekle"
+          },
+          "courses": {
+            "title": "Kurslar",
+            "info": "Oluşturduğunuz kurslar bu bölümde otomatik olarak görüntülenecektir."
+          }
+        },
+        "toasts": {
+          "loading_error": "Profil verileri yüklenemedi",
+          "save_success": "Profil başarıyla güncellendi",
+          "save_error": "Profil güncellenirken hata oluştu"
+        }
+      }
+    },
     "sign_out": "Çıkış Yap",
     "username": "Kullanıcı adı",
     "first_name": "Ad",

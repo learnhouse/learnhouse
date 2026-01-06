@@ -393,6 +393,224 @@
   },
   "user": {
     "user_settings": "ব্যবহারকারী সেটি้ง",
+    "settings": {
+      "title": "অ্যাকাউন্ট সেটিংস",
+      "tabs": {
+        "general": "সাধারণ",
+        "profile": "প্রোফাইল",
+        "security": "পাসওয়ার্ড"
+      },
+      "general": {
+        "title": "অ্যাকাউন্ট সেটিংস",
+        "subtitle": "আপনার ব্যক্তিগত তথ্য এবং পছন্দসমূহ পরিচালনা করুন",
+        "email": "ইমেইল",
+        "email_placeholder": "আপনার ইমেইল ঠিকানা",
+        "username": "ব্যবহারকারীর নাম",
+        "username_placeholder": "আপনার ব্যবহারকারীর নাম",
+        "first_name": "প্রথম নাম",
+        "first_name_placeholder": "আপনার প্রথম নাম",
+        "last_name": "শেষ নাম",
+        "last_name_placeholder": "আপনার শেষ নাম",
+        "bio": "জীবনী",
+        "bio_placeholder": "আমাদের আপনার সম্পর্কে বলুন",
+        "characters_left": "{{count}} অক্ষর বাকি",
+        "additional_details": "অতিরিক্ত বিবরণ",
+        "clear_all": "সব মুছুন",
+        "add_detail": "বিবরণ যোগ করুন",
+        "add_general": "সাধারণ যোগ করুন",
+        "add_academic": "শিক্ষাগত যোগ করুন",
+        "add_professional": "পেশাদার যোগ করুন",
+        "profile_picture": "প্রোফাইল ছবি",
+        "change_avatar": "অবতার পরিবর্তন করুন",
+        "recommended_size": "সুপারিশকৃত আকার 100x100",
+        "save_changes": "পরিবর্তনগুলি সংরক্ষণ করুন",
+        "saving": "সংরক্ষণ করা হচ্ছে...",
+        "uploading": "আপলোড করা হচ্ছে",
+        "avatar_updated": "অবতার আপডেট করা হয়েছে",
+        "profile_updated": "প্রোফাইল সফলভাবে আপডেট করা হয়েছে",
+        "relogin_message": "আপনার নতুন ইমেইল দিয়ে আবার লগইন করুন: {{email}}",
+        "logout_warning": "ইমেইল পরিবর্তন করার পর আপনাকে লগআউট করা হবে",
+        "detail_label_placeholder": "লেবেল লিখুন (যেমন: শিরোনাম, অবস্থান)",
+        "remove": "সরান",
+        "icon": "আইকন",
+        "select_icon": "আইকন নির্বাচন করুন",
+        "text": "টেক্সট",
+        "text_placeholder": "বিবরণ টেক্সট লিখুন",
+        "icons": {
+          "briefcase": "ব্রিফকেস",
+          "education": "শিক্ষা",
+          "location": "অবস্থান",
+          "organization": "সংস্থা",
+          "speciality": "বিশেষতা",
+          "website": "ওয়েবসাইট",
+          "tech": "প্রযুক্তি",
+          "achievement": "অর্জন",
+          "book": "বই",
+          "link": "লিঙ্ক",
+          "community": "সম্প্রদায়",
+          "calendar": "ক্যালেন্ডার"
+        },
+        "labels": {
+          "title": "শিরোনাম",
+          "affiliation": "সংযুক্তি",
+          "location": "অবস্থান",
+          "website": "ওয়েবসাইট",
+          "linkedin": "LinkedIn",
+          "institution": "প্রতিষ্ঠান",
+          "department": "বিভাগ",
+          "research": "গবেষণা ক্ষেত্র",
+          "academic_title": "শিক্ষাগত শিরোনাম",
+          "company": "কোম্পানি",
+          "industry": "শিল্প",
+          "expertise": "দক্ষতা",
+          "community": "সম্প্রদায়"
+        }
+      },
+      "password": {
+        "title": "পাসওয়ার্ড পরিবর্তন করুন",
+        "subtitle": "আপনার অ্যাকাউন্ট সুরক্ষিত রাখতে পাসওয়ার্ড আপডেট করুন",
+        "current_password": "বর্তমান পাসওয়ার্ড",
+        "new_password": "নতুন পাসওয়ার্ড",
+        "update_password": "পাসওয়ার্ড আপডেট করুন",
+        "updating": "আপডেট করা হচ্ছে...",
+        "password_updated": "পাসওয়ার্ড সফলভাবে আপডেট করা হয়েছে",
+        "relogin_message": "আপনার নতুন পাসওয়ার্ড দিয়ে আবার লগইন করুন",
+        "logout_warning": "পাসওয়ার্ড পরিবর্তন করার পর আপনাকে লগআউট করা হবে"
+      },
+      "profile_builder": {
+        "title": "প্রোফাইল বিল্ডার",
+        "subtitle": "আপনার পেশাদার প্রোফাইল কাস্টমাইজ করুন",
+        "sections": "বিভাগ",
+        "add_section": "বিভাগ যোগ করুন",
+        "save_changes": "পরিবর্তনগুলি সংরক্ষণ করুন",
+        "saving": "সংরক্ষণ করা হচ্ছে...",
+        "select_section": "সম্পাদনা করার জন্য একটি বিভাগ নির্বাচন করুন বা নতুন যোগ করুন",
+        "beta": "বিটা",
+        "section_types": {
+          "image_gallery": {
+            "label": "ছবির গ্যালারি",
+            "description": "ছবির সংগ্রহ যোগ করুন"
+          },
+          "text": {
+            "label": "টেক্সট",
+            "description": "ফরম্যাট করা টেক্সট সামগ্রী যোগ করুন"
+          },
+          "links": {
+            "label": "লিঙ্ক",
+            "description": "সামাজিক বা পেশাদার লিঙ্ক যোগ করুন"
+          },
+          "skills": {
+            "label": "দক্ষতা",
+            "description": "আপনার দক্ষতা এবং বিশেষজ্ঞতা প্রদর্শন করুন"
+          },
+          "experience": {
+            "label": "অভিজ্ঞতা",
+            "description": "কাজ বা প্রকল্পের অভিজ্ঞতা যোগ করুন"
+          },
+          "education": {
+            "label": "শিক্ষা",
+            "description": "আপনার শিক্ষাগত পটভূমি যোগ করুন"
+          },
+          "affiliation": {
+            "label": "সংযুক্তি",
+            "description": "সাংগঠনিক সংযুক্তি যোগ করুন"
+          },
+          "courses": {
+            "label": "কোর্স",
+            "description": "আপনার তৈরি করা কোর্সগুলি প্রদর্শন করুন"
+          }
+        },
+        "editors": {
+          "section_title": "বিভাগের শিরোনাম",
+          "enter_section_title": "বিভাগের শিরোনাম লিখুন",
+          "image_gallery": {
+            "title": "ছবির গ্যালারি",
+            "images": "ছবি",
+            "image_url": "ছবির URL",
+            "enter_image_url": "ছবির URL লিখুন",
+            "caption": "ক্যাপশন",
+            "image_caption": "ছবির ক্যাপশন",
+            "add_image": "ছবি যোগ করুন"
+          },
+          "text": {
+            "title": "টেক্সট সামগ্রী",
+            "content": "সামগ্রী",
+            "enter_content": "এখানে আপনার সামগ্রী লিখুন..."
+          },
+          "links": {
+            "title": "লিঙ্ক",
+            "links": "লিঙ্ক",
+            "link_title": "লিঙ্কের শিরোনাম",
+            "url": "URL",
+            "add_link": "লিঙ্ক যোগ করুন"
+          },
+          "skills": {
+            "title": "দক্ষতা",
+            "skills": "দক্ষতা",
+            "skill_name": "দক্ষতার নাম",
+            "select_level": "স্তর নির্বাচন করুন",
+            "category": "বিভাগ (ঐচ্ছিক)",
+            "add_skill": "দক্ষতা যোগ করুন",
+            "levels": {
+              "beginner": "শিক্ষানবিস",
+              "intermediate": "মধ্যম",
+              "advanced": "উন্নত",
+              "expert": "বিশেষজ্ঞ"
+            }
+          },
+          "experience": {
+            "title": "অভিজ্ঞতা",
+            "items": "অভিজ্ঞতার আইটেম",
+            "role_title": "শিরোনাম",
+            "role_placeholder": "পদ বা ভূমিকা",
+            "organization": "সংস্থা",
+            "organization_placeholder": "কোম্পানি বা সংস্থা",
+            "start_date": "শুরুর তারিখ",
+            "end_date": "শেষ তারিখ",
+            "current": "বর্তমান",
+            "description": "বিবরণ",
+            "description_placeholder": "আপনার ভূমিকা এবং অর্জন বর্ণনা করুন",
+            "add_experience": "অভিজ্ঞতা যোগ করুন"
+          },
+          "education": {
+            "title": "শিক্ষা",
+            "items": "শিক্ষার আইটেম",
+            "institution": "প্রতিষ্ঠান",
+            "institution_placeholder": "স্কুল বা বিশ্ববিদ্যালয়",
+            "degree": "ডিগ্রি",
+            "degree_placeholder": "ডিগ্রির ধরন",
+            "field": "অধ্যয়নের ক্ষেত্র",
+            "field_placeholder": "মেজর বা ঘনত্ব",
+            "start_date": "শুরুর তারিখ",
+            "end_date": "শেষ তারিখ",
+            "current": "বর্তমান",
+            "description": "বিবরণ",
+            "description_placeholder": "আপনার শিক্ষা সম্পর্কে অতিরিক্ত বিবরণ",
+            "add_education": "শিক্ষা যোগ করুন"
+          },
+          "affiliation": {
+            "title": "সংযুক্তি",
+            "affiliations": "সংযুক্তি",
+            "name": "নাম",
+            "name_placeholder": "সংস্থার নাম",
+            "logo_url": "লোগো URL",
+            "logo_url_placeholder": "সংস্থার লোগোর URL",
+            "description": "বিবরণ",
+            "description_placeholder": "সংস্থার বিবরণ",
+            "add_affiliation": "সংযুক্তি যোগ করুন"
+          },
+          "courses": {
+            "title": "কোর্স",
+            "info": "আপনার তৈরি করা কোর্সগুলি এই বিভাগে স্বয়ংক্রিয়ভাবে প্রদর্শিত হবে।"
+          }
+        },
+        "toasts": {
+          "loading_error": "প্রোফাইল ডেটা লোড করতে ব্যর্থ",
+          "save_success": "প্রোফাইল সফলভাবে আপডেট করা হয়েছে",
+          "save_error": "প্রোফাইল আপডেট করতে ত্রুটি"
+        }
+      }
+    },
     "sign_out": "সাইন আউট",
     "username": "ব্যবহারকারীর নাম",
     "first_name": "প্রথম নাম",

@@ -393,6 +393,224 @@
   },
   "user": {
     "user_settings": "Cài đặt người dùng",
+    "settings": {
+      "title": "Cài đặt tài khoản",
+      "tabs": {
+        "general": "Chung",
+        "profile": "Hồ sơ",
+        "security": "Mật khẩu"
+      },
+      "general": {
+        "title": "Cài đặt tài khoản",
+        "subtitle": "Quản lý thông tin cá nhân và tùy chọn của bạn",
+        "email": "Email",
+        "email_placeholder": "Địa chỉ email của bạn",
+        "username": "Tên người dùng",
+        "username_placeholder": "Tên người dùng của bạn",
+        "first_name": "Tên",
+        "first_name_placeholder": "Tên của bạn",
+        "last_name": "Họ",
+        "last_name_placeholder": "Họ của bạn",
+        "bio": "Tiểu sử",
+        "bio_placeholder": "Hãy cho chúng tôi biết về bạn",
+        "characters_left": "Còn lại {{count}} ký tự",
+        "additional_details": "Chi tiết bổ sung",
+        "clear_all": "Xóa tất cả",
+        "add_detail": "Thêm chi tiết",
+        "add_general": "Thêm Chung",
+        "add_academic": "Thêm Học thuật",
+        "add_professional": "Thêm Chuyên nghiệp",
+        "profile_picture": "Ảnh đại diện",
+        "change_avatar": "Đổi avatar",
+        "recommended_size": "Kích thước khuyến nghị 100x100",
+        "save_changes": "Lưu thay đổi",
+        "saving": "Đang lưu...",
+        "uploading": "Đang tải lên",
+        "avatar_updated": "Đã cập nhật avatar",
+        "profile_updated": "Cập nhật hồ sơ thành công",
+        "relogin_message": "Vui lòng đăng nhập lại bằng email mới của bạn: {{email}}",
+        "logout_warning": "Bạn sẽ bị đăng xuất sau khi thay đổi email",
+        "detail_label_placeholder": "Nhập nhãn (ví dụ: Chức danh, Vị trí)",
+        "remove": "Xóa",
+        "icon": "Biểu tượng",
+        "select_icon": "Chọn biểu tượng",
+        "text": "Văn bản",
+        "text_placeholder": "Nhập văn bản chi tiết",
+        "icons": {
+          "briefcase": "Cặp",
+          "education": "Giáo dục",
+          "location": "Vị trí",
+          "organization": "Tổ chức",
+          "speciality": "Chuyên môn",
+          "website": "Trang web",
+          "tech": "Công nghệ",
+          "achievement": "Thành tựu",
+          "book": "Sách",
+          "link": "Liên kết",
+          "community": "Cộng đồng",
+          "calendar": "Lịch"
+        },
+        "labels": {
+          "title": "Chức danh",
+          "affiliation": "Liên kết",
+          "location": "Vị trí",
+          "website": "Trang web",
+          "linkedin": "LinkedIn",
+          "institution": "Tổ chức",
+          "department": "Bộ phận",
+          "research": "Lĩnh vực nghiên cứu",
+          "academic_title": "Chức danh học thuật",
+          "company": "Công ty",
+          "industry": "Ngành",
+          "expertise": "Chuyên môn",
+          "community": "Cộng đồng"
+        }
+      },
+      "password": {
+        "title": "Đổi mật khẩu",
+        "subtitle": "Cập nhật mật khẩu để bảo mật tài khoản",
+        "current_password": "Mật khẩu hiện tại",
+        "new_password": "Mật khẩu mới",
+        "update_password": "Cập nhật mật khẩu",
+        "updating": "Đang cập nhật...",
+        "password_updated": "Cập nhật mật khẩu thành công",
+        "relogin_message": "Vui lòng đăng nhập lại bằng mật khẩu mới",
+        "logout_warning": "Bạn sẽ bị đăng xuất sau khi thay đổi mật khẩu"
+      },
+      "profile_builder": {
+        "title": "Trình tạo hồ sơ",
+        "subtitle": "Tùy chỉnh hồ sơ chuyên nghiệp của bạn",
+        "sections": "Phần",
+        "add_section": "Thêm phần",
+        "save_changes": "Lưu thay đổi",
+        "saving": "Đang lưu...",
+        "select_section": "Chọn một phần để chỉnh sửa hoặc thêm mới",
+        "beta": "BETA",
+        "section_types": {
+          "image_gallery": {
+            "label": "Thư viện ảnh",
+            "description": "Thêm bộ sưu tập ảnh"
+          },
+          "text": {
+            "label": "Văn bản",
+            "description": "Thêm nội dung văn bản có định dạng"
+          },
+          "links": {
+            "label": "Liên kết",
+            "description": "Thêm liên kết xã hội hoặc chuyên nghiệp"
+          },
+          "skills": {
+            "label": "Kỹ năng",
+            "description": "Giới thiệu kỹ năng và chuyên môn của bạn"
+          },
+          "experience": {
+            "label": "Kinh nghiệm",
+            "description": "Thêm kinh nghiệm làm việc hoặc dự án"
+          },
+          "education": {
+            "label": "Giáo dục",
+            "description": "Thêm nền tảng giáo dục của bạn"
+          },
+          "affiliation": {
+            "label": "Liên kết",
+            "description": "Thêm các liên kết tổ chức"
+          },
+          "courses": {
+            "label": "Khóa học",
+            "description": "Hiển thị các khóa học bạn đã tạo"
+          }
+        },
+        "editors": {
+          "section_title": "Tiêu đề phần",
+          "enter_section_title": "Nhập tiêu đề phần",
+          "image_gallery": {
+            "title": "Thư viện ảnh",
+            "images": "Ảnh",
+            "image_url": "URL ảnh",
+            "enter_image_url": "Nhập URL ảnh",
+            "caption": "Chú thích",
+            "image_caption": "Chú thích ảnh",
+            "add_image": "Thêm ảnh"
+          },
+          "text": {
+            "title": "Nội dung văn bản",
+            "content": "Nội dung",
+            "enter_content": "Nhập nội dung của bạn ở đây..."
+          },
+          "links": {
+            "title": "Liên kết",
+            "links": "Liên kết",
+            "link_title": "Tiêu đề liên kết",
+            "url": "URL",
+            "add_link": "Thêm liên kết"
+          },
+          "skills": {
+            "title": "Kỹ năng",
+            "skills": "Kỹ năng",
+            "skill_name": "Tên kỹ năng",
+            "select_level": "Chọn cấp độ",
+            "category": "Danh mục (tùy chọn)",
+            "add_skill": "Thêm kỹ năng",
+            "levels": {
+              "beginner": "Người mới bắt đầu",
+              "intermediate": "Trung cấp",
+              "advanced": "Nâng cao",
+              "expert": "Chuyên gia"
+            }
+          },
+          "experience": {
+            "title": "Kinh nghiệm",
+            "items": "Mục kinh nghiệm",
+            "role_title": "Chức danh",
+            "role_placeholder": "Vị trí hoặc vai trò",
+            "organization": "Tổ chức",
+            "organization_placeholder": "Công ty hoặc tổ chức",
+            "start_date": "Ngày bắt đầu",
+            "end_date": "Ngày kết thúc",
+            "current": "Hiện tại",
+            "description": "Mô tả",
+            "description_placeholder": "Mô tả vai trò và thành tựu của bạn",
+            "add_experience": "Thêm kinh nghiệm"
+          },
+          "education": {
+            "title": "Giáo dục",
+            "items": "Mục giáo dục",
+            "institution": "Tổ chức",
+            "institution_placeholder": "Trường học hoặc đại học",
+            "degree": "Bằng cấp",
+            "degree_placeholder": "Loại bằng cấp",
+            "field": "Lĩnh vực học tập",
+            "field_placeholder": "Chuyên ngành hoặc tập trung",
+            "start_date": "Ngày bắt đầu",
+            "end_date": "Ngày kết thúc",
+            "current": "Hiện tại",
+            "description": "Mô tả",
+            "description_placeholder": "Chi tiết bổ sung về giáo dục của bạn",
+            "add_education": "Thêm giáo dục"
+          },
+          "affiliation": {
+            "title": "Liên kết",
+            "affiliations": "Liên kết",
+            "name": "Tên",
+            "name_placeholder": "Tên tổ chức",
+            "logo_url": "URL logo",
+            "logo_url_placeholder": "URL logo của tổ chức",
+            "description": "Mô tả",
+            "description_placeholder": "Mô tả tổ chức",
+            "add_affiliation": "Thêm liên kết"
+          },
+          "courses": {
+            "title": "Khóa học",
+            "info": "Các khóa học bạn đã tạo sẽ tự động hiển thị trong phần này."
+          }
+        },
+        "toasts": {
+          "loading_error": "Không tải được dữ liệu hồ sơ",
+          "save_success": "Cập nhật hồ sơ thành công",
+          "save_error": "Lỗi khi cập nhật hồ sơ"
+        }
+      }
+    },
     "sign_out": "Đăng xuất",
     "username": "Tên người dùng",
     "first_name": "Tên",
