@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, memo, useCallback } from 'react';
 import { Plus, X, Link as LinkIcon } from 'lucide-react';
 import Picker from '@emoji-mart/react';
 import data from '@emoji-mart/data';
@@ -28,6 +28,8 @@ const LearningItemsList = ({ value, onChange, error }: LearningItemsListProps) =
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const linkInputFieldRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const previousValueRef = useRef<string>(value);
+  const isInternalUpdateRef = useRef(false);
 
   // Add a new empty item
   const addItem = () => {
@@ -38,7 +40,10 @@ const LearningItemsList = ({ value, onChange, error }: LearningItemsListProps) =
     };
     const newItems = [...items, newItem];
     setItems(newItems);
-    onChange(JSON.stringify(newItems));
+    const newValue = JSON.stringify(newItems);
+    isInternalUpdateRef.current = true;
+    previousValueRef.current = newValue;
+    onChange(newValue);
     
     // Focus the newly added item after render
     setTimeout(() => {
@@ -56,31 +61,48 @@ const LearningItemsList = ({ value, onChange, error }: LearningItemsListProps) =
 
   // Parse the JSON string to items array when the component mounts or value changes
   useEffect(() => {
+    // Skip if this update was triggered by our own onChange
+    if (isInternalUpdateRef.current) {
+      isInternalUpdateRef.current = false;
+      previousValueRef.current = value;
+      return;
+    }
+
+    // Skip if value hasn't actually changed
+    if (previousValueRef.current === value) {
+      return;
+    }
+
+    previousValueRef.current = value;
+
     try {
       if (value) {
         const parsedItems = JSON.parse(value);
         if (Array.isArray(parsedItems)) {
+          // Update items with parsed value
           setItems(parsedItems);
           initializedRef.current = true;
         } else if (!initializedRef.current) {
           // Initialize with one empty item if no valid array and not already initialized
           const newItem: LearningItem = {
-            id: Date.now().toString(),
+            id: 'default-1',
             text: '',
             emoji: '📝',
           };
           setItems([newItem]);
+          isInternalUpdateRef.current = true;
           onChange(JSON.stringify([newItem]));
           initializedRef.current = true;
         }
       } else if (!initializedRef.current) {
         // Initialize with one empty item if no value and not already initialized
         const newItem: LearningItem = {
-          id: Date.now().toString(),
+          id: 'default-1',
           text: '',
           emoji: '📝',
         };
         setItems([newItem]);
+        isInternalUpdateRef.current = true;
         onChange(JSON.stringify([newItem]));
         initializedRef.current = true;
       }
@@ -89,15 +111,17 @@ const LearningItemsList = ({ value, onChange, error }: LearningItemsListProps) =
       // Initialize with one empty item on error if not already initialized
       if (!initializedRef.current) {
         const newItem: LearningItem = {
-          id: Date.now().toString(),
+          id: 'default-1',
           text: '',
           emoji: '📝',
         };
         setItems([newItem]);
+        isInternalUpdateRef.current = true;
         onChange(JSON.stringify([newItem]));
         initializedRef.current = true;
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
 
   // Restore focus after re-render if an item was focused
@@ -149,28 +173,31 @@ const LearningItemsList = ({ value, onChange, error }: LearningItemsListProps) =
   }, []);
 
   // Update the parent component with the new JSON string when items change
-  const updateItems = (newItems: LearningItem[]) => {
+  const updateItems = useCallback((newItems: LearningItem[]) => {
     setItems(newItems);
-    onChange(JSON.stringify(newItems));
-  };
+    const newValue = JSON.stringify(newItems);
+    isInternalUpdateRef.current = true;
+    previousValueRef.current = newValue;
+    onChange(newValue);
+  }, [onChange]);
 
   // Remove an item
-  const removeItem = (id: string) => {
+  const removeItem = useCallback((id: string) => {
     if (focusedItemId === id) {
       setFocusedItemId(null);
     }
     updateItems(items.filter(item => item.id !== id));
-  };
+  }, [items, focusedItemId, updateItems]);
 
   // Update item text
-  const updateItemText = (id: string, text: string) => {
+  const updateItemText = useCallback((id: string, text: string) => {
     updateItems(
       items.map(item => (item.id === id ? { ...item, text } : item))
     );
-  };
+  }, [items, updateItems]);
 
   // Update item emoji
-  const updateItemEmoji = (id: string, emoji: string) => {
+  const updateItemEmoji = useCallback((id: string, emoji: string) => {
     updateItems(
       items.map(item => (item.id === id ? { ...item, emoji } : item))
     );
@@ -183,27 +210,27 @@ const LearningItemsList = ({ value, onChange, error }: LearningItemsListProps) =
         setFocusedItemId(id);
       }
     }, 0);
-  };
+  }, [items, updateItems]);
 
   // Update item link
-  const updateItemLink = (id: string, link: string) => {
+  const updateItemLink = useCallback((id: string, link: string) => {
     updateItems(
       items.map(item => (item.id === id ? { ...item, link } : item))
     );
-  };
+  }, [items, updateItems]);
 
   // Handle emoji selection
-  const handleEmojiSelect = (id: string, emojiData: any) => {
+  const handleEmojiSelect = useCallback((id: string, emojiData: any) => {
     updateItemEmoji(id, emojiData.native);
-  };
+  }, [updateItemEmoji]);
 
   // Handle focus on input
-  const handleInputFocus = (id: string) => {
+  const handleInputFocus = useCallback((id: string) => {
     setFocusedItemId(id);
-  };
+  }, []);
 
   // Handle blur on input
-  const handleInputBlur = () => {
+  const handleInputBlur = useCallback(() => {
     // Don't clear focusedItemId immediately as it might be needed for refocusing
     // We'll use a small delay to allow other focus events to occur first
     setTimeout(() => {
@@ -213,7 +240,7 @@ const LearningItemsList = ({ value, onChange, error }: LearningItemsListProps) =
         setFocusedItemId(null);
       }
     }, 100);
-  };
+  }, []);
 
   // Ref callback for text inputs
   const setInputRef = (id: string) => (el: HTMLInputElement | null) => {
@@ -228,6 +255,100 @@ const LearningItemsList = ({ value, onChange, error }: LearningItemsListProps) =
   // Determine if we need to make the list scrollable
   const isScrollable = items.length > 5;
 
+  const renderItem = useCallback((item: LearningItem) => (
+    <div key={item.id} id={`learning-item-${item.id}`} className="group relative">
+      <div className="flex items-center gap-2 py-2 px-3 bg-gray-50/70 hover:bg-gray-50 border border-gray-100 rounded-lg transition-colors">
+        <button
+          type="button"
+          onClick={() => {
+            setShowEmojiPicker(showEmojiPicker === item.id ? null : item.id);
+            setShowLinkInput(null);
+          }}
+          className="text-lg shrink-0"
+        >
+          <span>{item.emoji}</span>
+        </button>
+        
+        <Input
+          ref={setInputRef(item.id)}
+          value={item.text}
+          onChange={(e) => updateItemText(item.id, e.target.value)}
+          onFocus={() => handleInputFocus(item.id)}
+          onBlur={handleInputBlur}
+          placeholder="Enter learning item..."
+          className="grow border-0 bg-transparent focus-visible:ring-0 px-0 h-8 text-sm learning-item-input"
+        />
+        
+        {item.link && (
+          <div className="text-xs text-blue-500 flex items-center gap-1 bg-blue-50 px-2 py-0.5 rounded">
+            <LinkIcon size={12} />
+            <span className="truncate max-w-[100px]">{item.link}</span>
+          </div>
+        )}
+        
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => {
+              setShowLinkInput(showLinkInput === item.id ? null : item.id);
+              setShowEmojiPicker(null);
+              setFocusedItemId(item.id);
+              // Focus the link input after render
+              setTimeout(() => {
+                if (linkInputFieldRefs.current[item.id]) {
+                  linkInputFieldRefs.current[item.id]?.focus();
+                }
+              }, 0);
+            }}
+            className="text-gray-400 hover:text-blue-500 transition-colors"
+            title={item.link ? "Edit link" : "Add link"}
+          >
+            <LinkIcon size={15} />
+          </button>
+          
+          <button
+            type="button"
+            onClick={() => removeItem(item.id)}
+            className="text-gray-300 hover:text-gray-500 transition-colors"
+            aria-label="Remove item"
+            title="Remove item"
+          >
+            <X size={15} />
+          </button>
+        </div>
+      </div>
+      
+      {showEmojiPicker === item.id && (
+        <div ref={pickerRef} className="absolute z-10 mt-1 left-0">
+          <Picker
+            data={data}
+            onEmojiSelect={(emoji: any) => handleEmojiSelect(item.id, emoji)}
+            theme="light"
+            previewPosition="none"
+            searchPosition="top"
+            maxFrequentRows={0}
+            autoFocus={false}
+          />
+        </div>
+      )}
+      
+      {showLinkInput === item.id && (
+        <div ref={linkInputRef} className="mt-1 p-2 bg-white border border-gray-200 rounded-lg shadow-xs">
+          <Input
+            ref={setLinkInputRef(item.id)}
+            value={items.find(i => i.id === item.id)?.link || ''}
+            onChange={(e) => updateItemLink(item.id, e.target.value)}
+            onFocus={() => handleInputFocus(item.id)}
+            onBlur={handleInputBlur}
+            placeholder="Enter URL..."
+            className="w-full text-sm learning-item-input"
+            autoFocus
+          />
+        </div>
+      )}
+    </div>
+  ), [items, showEmojiPicker, showLinkInput, handleEmojiSelect, handleInputFocus, handleInputBlur, updateItemText, updateItemLink, removeItem]);
+
   return (
     <div className="space-y-2">
       {items.length === 0 && (
@@ -240,99 +361,7 @@ const LearningItemsList = ({ value, onChange, error }: LearningItemsListProps) =
         ref={scrollContainerRef}
         className={`space-y-2 ${isScrollable ? 'max-h-[350px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent' : ''}`}
       >
-        {items.map((item) => (
-          <div key={item.id} id={`learning-item-${item.id}`} className="group relative">
-            <div className="flex items-center gap-2 py-2 px-3 bg-gray-50/70 hover:bg-gray-50 border border-gray-100 rounded-lg transition-colors">
-              <button
-                type="button"
-                onClick={() => {
-                  setShowEmojiPicker(showEmojiPicker === item.id ? null : item.id);
-                  setShowLinkInput(null);
-                }}
-                className="text-lg shrink-0"
-              >
-                <span>{item.emoji}</span>
-              </button>
-              
-              <Input
-                ref={setInputRef(item.id)}
-                value={item.text}
-                onChange={(e) => updateItemText(item.id, e.target.value)}
-                onFocus={() => handleInputFocus(item.id)}
-                onBlur={handleInputBlur}
-                placeholder="Enter learning item..."
-                className="grow border-0 bg-transparent focus-visible:ring-0 px-0 h-8 text-sm learning-item-input"
-              />
-              
-              {item.link && (
-                <div className="text-xs text-blue-500 flex items-center gap-1 bg-blue-50 px-2 py-0.5 rounded">
-                  <LinkIcon size={12} />
-                  <span className="truncate max-w-[100px]">{item.link}</span>
-                </div>
-              )}
-              
-              <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowLinkInput(showLinkInput === item.id ? null : item.id);
-                    setShowEmojiPicker(null);
-                    setFocusedItemId(item.id);
-                    // Focus the link input after render
-                    setTimeout(() => {
-                      if (linkInputFieldRefs.current[item.id]) {
-                        linkInputFieldRefs.current[item.id]?.focus();
-                      }
-                    }, 0);
-                  }}
-                  className="text-gray-400 hover:text-blue-500 transition-colors"
-                  title={item.link ? "Edit link" : "Add link"}
-                >
-                  <LinkIcon size={15} />
-                </button>
-                
-                <button
-                  type="button"
-                  onClick={() => removeItem(item.id)}
-                  className="text-gray-300 hover:text-gray-500 transition-colors"
-                  aria-label="Remove item"
-                  title="Remove item"
-                >
-                  <X size={15} />
-                </button>
-              </div>
-            </div>
-            
-            {showEmojiPicker === item.id && (
-              <div ref={pickerRef} className="absolute z-10 mt-1 left-0">
-                <Picker
-                  data={data}
-                  onEmojiSelect={(emoji: any) => handleEmojiSelect(item.id, emoji)}
-                  theme="light"
-                  previewPosition="none"
-                  searchPosition="top"
-                  maxFrequentRows={0}
-                  autoFocus={false}
-                />
-              </div>
-            )}
-            
-            {showLinkInput === item.id && (
-              <div ref={linkInputRef} className="mt-1 p-2 bg-white border border-gray-200 rounded-lg shadow-xs">
-                <Input
-                  ref={setLinkInputRef(item.id)}
-                  value={items.find(i => i.id === item.id)?.link || ''}
-                  onChange={(e) => updateItemLink(item.id, e.target.value)}
-                  onFocus={() => handleInputFocus(item.id)}
-                  onBlur={handleInputBlur}
-                  placeholder="Enter URL..."
-                  className="w-full text-sm learning-item-input"
-                  autoFocus
-                />
-              </div>
-            )}
-          </div>
-        ))}
+        {items.map(renderItem)}
       </div>
       
       <button
@@ -347,4 +376,4 @@ const LearningItemsList = ({ value, onChange, error }: LearningItemsListProps) =
   );
 };
 
-export default LearningItemsList; 
+export default memo(LearningItemsList); 

@@ -16,34 +16,36 @@ import { getOrgCourses } from '@services/courses/courses'
 import toast from 'react-hot-toast'
 import useSWR from 'swr'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@components/ui/tabs"
+import { useTranslation } from 'react-i18next'
 
-const SECTION_TYPES = {
+// This will be created inside the component to access translations
+const getSectionTypes = (t: any) => ({
   hero: {
     icon: LayoutTemplate,
-    label: 'Hero',
-    description: 'Add a hero section with heading and call-to-action'
+    label: t('dashboard.organization.landing.section_types.hero.label'),
+    description: t('dashboard.organization.landing.section_types.hero.description')
   },
   'text-and-image': {
     icon: ImageIcon,
-    label: 'Text & Image',
-    description: 'Add a section with text and an image'
+    label: t('dashboard.organization.landing.section_types.text_and_image.label'),
+    description: t('dashboard.organization.landing.section_types.text_and_image.description')
   },
   logos: {
     icon: Award,
-    label: 'Logos',
-    description: 'Add a section to showcase logos'
+    label: t('dashboard.organization.landing.section_types.logos.label'),
+    description: t('dashboard.organization.landing.section_types.logos.description')
   },
   people: {
     icon: Users,
-    label: 'People',
-    description: 'Add a section to highlight team members'
+    label: t('dashboard.organization.landing.section_types.people.label'),
+    description: t('dashboard.organization.landing.section_types.people.description')
   },
   'featured-courses': {
     icon: BookOpen,
-    label: 'Courses',
-    description: 'Add a section to showcase selected courses'
+    label: t('dashboard.organization.landing.section_types.featured_courses.label'),
+    description: t('dashboard.organization.landing.section_types.featured_courses.description')
   }
-} as const
+}) as const
 
 const PREDEFINED_GRADIENTS = {
   'sunrise': {
@@ -119,14 +121,17 @@ const GRADIENT_DIRECTIONS = {
   '0deg': '➡️ Right'
 } as const
 
-const getSectionDisplayName = (section: LandingSection) => {
-  return SECTION_TYPES[section.type as keyof typeof SECTION_TYPES].label
-}
-
 const OrgEditLanding = () => {
+  const { t } = useTranslation()
   const org = useOrg() as any
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
+  const SECTION_TYPES = getSectionTypes(t)
+  
+  const getSectionDisplayName = (section: LandingSection) => {
+    return SECTION_TYPES[section.type as keyof typeof SECTION_TYPES].label
+  }
+  
   const [isLandingEnabled, setIsLandingEnabled] = React.useState(false)
   const [landingData, setLandingData] = React.useState<LandingObject>({
     sections: [],
@@ -160,18 +165,18 @@ const OrgEditLanding = () => {
       case 'hero':
         return {
           type: 'hero',
-          title: 'New Hero Section',
+          title: t('dashboard.organization.landing.hero_editor.section_title'),
           background: {
             type: 'solid',
             color: '#ffffff'
           },
           heading: {
-            text: 'Welcome',
+            text: t('dashboard.organization.landing.hero_editor.heading_placeholder'),
             color: '#000000',
             size: 'large'
           },
           subheading: {
-            text: 'Start your learning journey',
+            text: t('dashboard.organization.landing.hero_editor.subheading_placeholder'),
             color: '#666666',
             size: 'medium'
           },
@@ -182,8 +187,8 @@ const OrgEditLanding = () => {
       case 'text-and-image':
         return {
           type: 'text-and-image',
-          title: 'New Text & Image Section',
-          text: 'Add your content here',
+          title: t('dashboard.organization.landing.text_image_editor.title_placeholder'),
+          text: t('dashboard.organization.landing.text_image_editor.content_placeholder'),
           flow: 'left',
           image: {
             url: '',
@@ -194,19 +199,19 @@ const OrgEditLanding = () => {
       case 'logos':
         return {
           type: 'logos',
-          title: 'New Logos Section',
+          title: t('dashboard.organization.landing.logos_editor.title_placeholder'),
           logos: []
         }
       case 'people':
         return {
           type: 'people',
-          title: 'New People Section',
+          title: t('dashboard.organization.landing.people_editor.title_placeholder'),
           people: []
         }
       case 'featured-courses':
         return {
           type: 'featured-courses',
-          title: 'Courses',
+          title: t('dashboard.organization.landing.courses_editor.title_placeholder'),
           courses: []
         }
       default:
@@ -259,12 +264,12 @@ const OrgEditLanding = () => {
       }, access_token)
 
       if (res.status === 200) {
-        toast.success('Landing page saved successfully')
+        toast.success(t('dashboard.organization.landing.saved_success'))
       } else {
-        toast.error('Error saving landing page')
+        toast.error(t('dashboard.organization.landing.save_error'))
       }
     } catch (error) {
-      toast.error('Error saving landing page')
+      toast.error(t('dashboard.organization.landing.save_error'))
       console.error('Error saving landing page:', error)
     } finally {
       setIsSaving(false)
@@ -277,8 +282,8 @@ const OrgEditLanding = () => {
         {/* Enable/Disable Landing Page */}
         <div className="flex items-center justify-between border-b pb-4">
           <div>
-            <h2 className="text-xl font-semibold flex items-center">Landing Page <div className="text-xs ml-2 bg-gray-200 text-gray-700 px-2 py-1 rounded-full"> BETA </div></h2>
-            <p className="text-gray-600">Customize your organization's landing page</p>
+            <h2 className="text-xl font-semibold flex items-center">{t('dashboard.organization.landing.title')} <div className="text-xs ml-2 bg-gray-200 text-gray-700 px-2 py-1 rounded-full"> {t('dashboard.organization.landing.beta')} </div></h2>
+            <p className="text-gray-600">{t('dashboard.organization.landing.subtitle')}</p>
           </div>
           <div className="flex items-center space-x-4">
             <label className="relative inline-flex items-center cursor-pointer">
@@ -297,7 +302,7 @@ const OrgEditLanding = () => {
               className="bg-black hover:bg-black/90"
             >
               <Save className="h-4 w-4 mr-2" />
-              {isSaving ? 'Saving...' : 'Save Changes'}
+              {isSaving ? t('dashboard.organization.landing.saving') : t('dashboard.organization.landing.save_changes')}
             </Button>
           </div>
         </div>
@@ -308,7 +313,7 @@ const OrgEditLanding = () => {
             <div className="grid grid-cols-4 gap-6">
               {/* Sections Panel */}
               <div className="col-span-1 border-r pr-4">
-                <h3 className="font-medium mb-4">Sections</h3>
+                <h3 className="font-medium mb-4">{t('dashboard.organization.landing.sections')}</h3>
                 <DragDropContext onDragEnd={onDragEnd}>
                   <Droppable droppableId="sections">
                     {(provided) => (
@@ -408,7 +413,7 @@ const OrgEditLanding = () => {
                       <div className="w-full">
                         <Button variant="default" className="w-full bg-black hover:bg-black/90 text-white">
                           <Plus className="h-4 w-4 mr-2" />
-                          Add Section
+                          {t('dashboard.organization.landing.add_section')}
                         </Button>
                       </div>
                     </SelectTrigger>
@@ -440,7 +445,7 @@ const OrgEditLanding = () => {
                   />
                 ) : (
                   <div className="h-full flex items-center justify-center text-gray-500">
-                    Select a section to edit or add a new one
+                    {t('dashboard.organization.landing.select_section')}
                   </div>
                 )}
               </div>
@@ -478,6 +483,7 @@ const HeroSectionEditor: React.FC<{
   section: LandingHeroSection
   onChange: (section: LandingHeroSection) => void
 }> = ({ section, onChange }) => {
+  const { t } = useTranslation()
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
@@ -499,18 +505,18 @@ const HeroSectionEditor: React.FC<{
     <div className="space-y-6 p-6 bg-white rounded-lg nice-shadow">
       <div className="flex items-center space-x-2">
         <LayoutTemplate className="w-5 h-5 text-gray-500" />
-        <h3 className="font-medium text-lg">Hero Section</h3>
+        <h3 className="font-medium text-lg">{t('dashboard.organization.landing.hero_editor.title')}</h3>
       </div>
       
       <div className="space-y-4">
         {/* Title */}
         <div>
-          <Label htmlFor="title">Section Title</Label>
+          <Label htmlFor="title">{t('dashboard.organization.landing.hero_editor.section_title')}</Label>
           <Input
             id="title"
             value={section.title}
             onChange={(e) => onChange({ ...section, title: e.target.value })}
-            placeholder="Enter section title"
+            placeholder={t('dashboard.organization.landing.hero_editor.section_title_placeholder')}
           />
         </div>
 
@@ -518,19 +524,19 @@ const HeroSectionEditor: React.FC<{
           <TabsList className="grid w-full grid-cols-4 p-1 bg-gray-100 rounded-lg">
             <TabsTrigger value="content" className="flex items-center space-x-2">
               <TextIcon className="h-4 w-4" />
-              <span>Content</span>
+              <span>{t('dashboard.organization.landing.hero_editor.tabs.content')}</span>
             </TabsTrigger>
             <TabsTrigger value="background" className="flex items-center space-x-2">
               <LayoutTemplate className="h-4 w-4" />
-              <span>Background</span>
+              <span>{t('dashboard.organization.landing.hero_editor.tabs.background')}</span>
             </TabsTrigger>
             <TabsTrigger value="buttons" className="flex items-center space-x-2">
               <Button className="h-4 w-4" />
-              <span>Buttons</span>
+              <span>{t('dashboard.organization.landing.hero_editor.tabs.buttons')}</span>
             </TabsTrigger>
             <TabsTrigger value="illustration" className="flex items-center space-x-2">
               <ImageIcon className="h-4 w-4" />
-              <span>Illustration</span>
+              <span>{t('dashboard.organization.landing.hero_editor.tabs.illustration')}</span>
             </TabsTrigger>
           </TabsList>
 
@@ -538,7 +544,7 @@ const HeroSectionEditor: React.FC<{
             {/* Heading */}
             <div className="space-y-4">
               <div>
-                <Label htmlFor="heading">Heading</Label>
+                <Label htmlFor="heading">{t('dashboard.organization.landing.hero_editor.heading')}</Label>
                 <Input
                   id="heading"
                   value={section.heading.text}
@@ -546,11 +552,11 @@ const HeroSectionEditor: React.FC<{
                     ...section,
                     heading: { ...section.heading, text: e.target.value }
                   })}
-                  placeholder="Enter heading text"
+                  placeholder={t('dashboard.organization.landing.hero_editor.heading_placeholder')}
                 />
               </div>
               <div>
-                <Label htmlFor="headingColor">Heading Color</Label>
+                <Label htmlFor="headingColor">{t('dashboard.organization.landing.hero_editor.heading_color')}</Label>
                 <div className="flex items-center space-x-2">
                   <Input
                     id="headingColor"
@@ -578,7 +584,7 @@ const HeroSectionEditor: React.FC<{
             {/* Subheading */}
             <div className="space-y-4">
               <div>
-                <Label htmlFor="subheading">Subheading</Label>
+                <Label htmlFor="subheading">{t('dashboard.organization.landing.hero_editor.subheading')}</Label>
                 <Input
                   id="subheading"
                   value={section.subheading.text}
@@ -586,11 +592,11 @@ const HeroSectionEditor: React.FC<{
                     ...section,
                     subheading: { ...section.subheading, text: e.target.value }
                   })}
-                  placeholder="Enter subheading text"
+                  placeholder={t('dashboard.organization.landing.hero_editor.subheading_placeholder')}
                 />
               </div>
               <div>
-                <Label htmlFor="subheadingColor">Subheading Color</Label>
+                <Label htmlFor="subheadingColor">{t('dashboard.organization.landing.hero_editor.subheading_color')}</Label>
                 <div className="flex items-center space-x-2">
                   <Input
                     id="subheadingColor"
@@ -618,7 +624,7 @@ const HeroSectionEditor: React.FC<{
 
           <TabsContent value="background" className="space-y-4 mt-4">
             <div>
-              <Label htmlFor="background">Background Type</Label>
+              <Label htmlFor="background">{t('dashboard.organization.landing.hero_editor.background_type')}</Label>
               <Select
                 value={section.background.type}
                 onValueChange={(value) => {
@@ -634,19 +640,19 @@ const HeroSectionEditor: React.FC<{
                 }}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select background type" />
+                  <SelectValue placeholder={t('dashboard.organization.landing.hero_editor.background_type_placeholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="solid">Solid Color</SelectItem>
-                  <SelectItem value="gradient">Gradient</SelectItem>
-                  <SelectItem value="image">Image</SelectItem>
+                  <SelectItem value="solid">{t('dashboard.organization.landing.hero_editor.background_types.solid')}</SelectItem>
+                  <SelectItem value="gradient">{t('dashboard.organization.landing.hero_editor.background_types.gradient')}</SelectItem>
+                  <SelectItem value="image">{t('dashboard.organization.landing.hero_editor.background_types.image')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             {section.background.type === 'solid' && (
               <div>
-                <Label htmlFor="backgroundColor">Background Color</Label>
+                <Label htmlFor="backgroundColor">{t('dashboard.organization.landing.hero_editor.background_color')}</Label>
                 <div className="flex items-center space-x-2">
                   <Input
                     id="backgroundColor"
@@ -674,7 +680,7 @@ const HeroSectionEditor: React.FC<{
             {section.background.type === 'gradient' && (
               <div className="space-y-4">
                 <div>
-                  <Label>Gradient Type</Label>
+                  <Label>{t('dashboard.organization.landing.hero_editor.gradient_type')}</Label>
                   <Select
                     value={Object.values(PREDEFINED_GRADIENTS).some(
                       preset => preset.colors[0] === section.background.colors?.[0] && 
@@ -703,11 +709,11 @@ const HeroSectionEditor: React.FC<{
                     }}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select gradient type" />
+                      <SelectValue placeholder={t('dashboard.organization.landing.hero_editor.gradient_type_placeholder')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="preset">Preset Gradients</SelectItem>
-                      <SelectItem value="custom">Custom Gradient</SelectItem>
+                      <SelectItem value="preset">{t('dashboard.organization.landing.hero_editor.gradient_types.preset')}</SelectItem>
+                      <SelectItem value="custom">{t('dashboard.organization.landing.hero_editor.gradient_types.custom')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -718,7 +724,7 @@ const HeroSectionEditor: React.FC<{
                 ) ? (
                   <div className="space-y-4">
                     <div>
-                      <Label>Start Color</Label>
+                      <Label>{t('dashboard.organization.landing.hero_editor.start_color')}</Label>
                       <div className="flex items-center space-x-2">
                         <Input
                           type="color"
@@ -748,7 +754,7 @@ const HeroSectionEditor: React.FC<{
                     </div>
 
                     <div>
-                      <Label>End Color</Label>
+                      <Label>{t('dashboard.organization.landing.hero_editor.end_color')}</Label>
                       <div className="flex items-center space-x-2">
                         <Input
                           type="color"
@@ -779,7 +785,7 @@ const HeroSectionEditor: React.FC<{
                   </div>
                 ) : (
                   <div>
-                    <Label>Gradient Preset</Label>
+                    <Label>{t('dashboard.organization.landing.hero_editor.gradient_preset')}</Label>
                     <Select
                       value={Object.entries(PREDEFINED_GRADIENTS).find(
                         ([_, gradient]) => 
@@ -796,7 +802,7 @@ const HeroSectionEditor: React.FC<{
                       })}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select gradient preset" />
+                        <SelectValue placeholder={t('dashboard.organization.landing.hero_editor.gradient_preset_placeholder')} />
                       </SelectTrigger>
                       <SelectContent>
                         {Object.entries(PREDEFINED_GRADIENTS).map(([name]) => (
@@ -818,7 +824,7 @@ const HeroSectionEditor: React.FC<{
                 )}
 
                 <div>
-                  <Label>Gradient Direction</Label>
+                  <Label>{t('dashboard.organization.landing.hero_editor.gradient_direction')}</Label>
                   <Select
                     value={section.background.direction || '45deg'}
                     onValueChange={(value) => onChange({
@@ -827,7 +833,7 @@ const HeroSectionEditor: React.FC<{
                     })}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select gradient direction" />
+                      <SelectValue placeholder={t('dashboard.organization.landing.hero_editor.gradient_direction_placeholder')} />
                     </SelectTrigger>
                     <SelectContent>
                       {Object.entries(GRADIENT_DIRECTIONS).map(([value, label]) => (
@@ -853,7 +859,7 @@ const HeroSectionEditor: React.FC<{
             {section.background.type === 'image' && (
               <div className="space-y-4">
                 <div>
-                  <Label>Background Image</Label>
+                  <Label>{t('dashboard.organization.landing.hero_editor.background_image')}</Label>
                   <div className="mt-2 flex items-center space-x-4">
                     <Button
                       variant="outline"
@@ -861,7 +867,7 @@ const HeroSectionEditor: React.FC<{
                       className="w-full"
                     >
                       <Upload className="h-4 w-4 mr-2" />
-                      Upload Image
+                      {t('dashboard.organization.landing.hero_editor.upload_image')}
                     </Button>
                     <input
                       id="imageUpload"
@@ -890,7 +896,7 @@ const HeroSectionEditor: React.FC<{
               {section.buttons.map((button, index) => (
                 <div key={index} className="grid grid-cols-[1fr_1fr_auto] gap-2 p-4 border rounded-lg">
                   <div className="space-y-2">
-                    <Label>Button Text & Colors</Label>
+                    <Label>{t('dashboard.organization.landing.hero_editor.button_text_colors')}</Label>
                     <Input
                       value={button.text}
                       onChange={(e) => {
@@ -898,11 +904,11 @@ const HeroSectionEditor: React.FC<{
                         newButtons[index] = { ...button, text: e.target.value }
                         onChange({ ...section, buttons: newButtons })
                       }}
-                      placeholder="Button text"
+                      placeholder={t('dashboard.organization.landing.hero_editor.button_text')}
                     />
                     <div className="flex items-center space-x-2">
                       <div className="space-y-1">
-                        <Label className="text-xs">Text</Label>
+                        <Label className="text-xs">{t('dashboard.organization.landing.hero_editor.text_color')}</Label>
                         <Input
                           type="color"
                           value={button.color}
@@ -915,7 +921,7 @@ const HeroSectionEditor: React.FC<{
                         />
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-xs">Background</Label>
+                        <Label className="text-xs">{t('dashboard.organization.landing.hero_editor.background_color_label')}</Label>
                         <Input
                           type="color"
                           value={button.background}
@@ -930,7 +936,7 @@ const HeroSectionEditor: React.FC<{
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label>Button Link</Label>
+                    <Label>{t('dashboard.organization.landing.hero_editor.button_link')}</Label>
                     <div className="flex items-center space-x-2">
                       <Link className="h-4 w-4 text-gray-500" />
                       <Input
@@ -940,7 +946,7 @@ const HeroSectionEditor: React.FC<{
                           newButtons[index] = { ...button, link: e.target.value }
                           onChange({ ...section, buttons: newButtons })
                         }}
-                        placeholder="Button link"
+                        placeholder={t('dashboard.organization.landing.hero_editor.button_link_placeholder')}
                       />
                     </div>
                   </div>
@@ -962,7 +968,7 @@ const HeroSectionEditor: React.FC<{
                   variant="outline"
                   onClick={() => {
                     const newButton: LandingButton = {
-                      text: 'New Button',
+                      text: t('dashboard.organization.landing.hero_editor.button_text'),
                       link: '#',
                       color: '#ffffff',
                       background: '#000000'
@@ -975,7 +981,7 @@ const HeroSectionEditor: React.FC<{
                   className="w-full"
                 >
                   <Plus className="h-4 w-4 mr-2" />
-                  Add Button
+                  {t('dashboard.organization.landing.hero_editor.add_button')}
                 </Button>
               )}
             </div>
@@ -984,7 +990,7 @@ const HeroSectionEditor: React.FC<{
           <TabsContent value="illustration" className="space-y-4 mt-4">
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label>Illustration Image</Label>
+                <Label>{t('dashboard.organization.landing.hero_editor.illustration_image')}</Label>
                 <Input
                   value={section.illustration?.image.url || ''}
                   onChange={(e) => {
@@ -1000,7 +1006,7 @@ const HeroSectionEditor: React.FC<{
                       })
                     }
                   }}
-                  placeholder="Illustration URL"
+                  placeholder={t('dashboard.organization.landing.hero_editor.illustration_url')}
                 />
                 <Input
                   value={section.illustration?.image.alt || ''}
@@ -1015,7 +1021,7 @@ const HeroSectionEditor: React.FC<{
                       })
                     }
                   }}
-                  placeholder="Alt text"
+                  placeholder={t('dashboard.organization.landing.hero_editor.alt_text')}
                 />
                 <ImageUploader
                   id="hero-illustration"
@@ -1028,7 +1034,7 @@ const HeroSectionEditor: React.FC<{
                       size: 'medium'
                     }
                   })}
-                  buttonText="Upload Illustration"
+                  buttonText={t('dashboard.organization.landing.hero_editor.upload_illustration')}
                 />
                 {section.illustration?.image.url && (
                   <img
@@ -1041,7 +1047,7 @@ const HeroSectionEditor: React.FC<{
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Position</Label>
+                  <Label>{t('dashboard.organization.landing.hero_editor.position')}</Label>
                   <Select
                     value={section.illustration?.position || 'left'}
                     onValueChange={(value: 'left' | 'right') => onChange({
@@ -1056,17 +1062,17 @@ const HeroSectionEditor: React.FC<{
                     })}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select position" />
+                      <SelectValue placeholder={t('dashboard.organization.landing.hero_editor.position_placeholder')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="left">Left</SelectItem>
-                      <SelectItem value="right">Right</SelectItem>
+                      <SelectItem value="left">{t('dashboard.organization.landing.hero_editor.positions.left')}</SelectItem>
+                      <SelectItem value="right">{t('dashboard.organization.landing.hero_editor.positions.right')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Size</Label>
+                  <Label>{t('dashboard.organization.landing.hero_editor.size')}</Label>
                   <Select
                     value={section.illustration?.size || 'medium'}
                     onValueChange={(value: 'small' | 'medium' | 'large') => onChange({
@@ -1081,12 +1087,12 @@ const HeroSectionEditor: React.FC<{
                     })}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select size" />
+                      <SelectValue placeholder={t('dashboard.organization.landing.hero_editor.size_placeholder')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="small">Small</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="large">Large</SelectItem>
+                      <SelectItem value="small">{t('dashboard.organization.landing.hero_editor.sizes.small')}</SelectItem>
+                      <SelectItem value="medium">{t('dashboard.organization.landing.hero_editor.sizes.medium')}</SelectItem>
+                      <SelectItem value="large">{t('dashboard.organization.landing.hero_editor.sizes.large')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -1102,7 +1108,7 @@ const HeroSectionEditor: React.FC<{
                   className="text-red-500 hover:text-red-600 hover:bg-red-50 w-full"
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
-                  Remove Illustration
+                  {t('dashboard.organization.landing.hero_editor.remove_illustration')}
                 </Button>
               )}
             </div>
@@ -1121,6 +1127,7 @@ interface ImageUploaderProps {
 }
 
 const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUploaded, className, buttonText = "Upload Image", id }) => {
+  const { t } = useTranslation()
   const org = useOrg() as any
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
@@ -1147,13 +1154,13 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUploaded, classNam
       if (response.status === 200) {
         const imageUrl = getOrgLandingMediaDirectory(org.org_uuid, response.data.filename)
         onImageUploaded(imageUrl)
-        toast.success('Image uploaded successfully')
+        toast.success(t('dashboard.organization.images.toasts.logo_success'))
       } else {
-        toast.error('Failed to upload image')
+        toast.error(t('dashboard.organization.images.toasts.logo_error'))
       }
     } catch (error) {
       console.error('Error uploading image:', error)
-      toast.error('Failed to upload image')
+      toast.error(t('dashboard.organization.images.toasts.logo_error'))
     } finally {
       setIsUploading(false)
     }
@@ -1168,7 +1175,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUploaded, classNam
         className="w-full"
       >
         <Upload className="h-4 w-4 mr-2" />
-        {isUploading ? 'Uploading...' : buttonText}
+        {isUploading ? t('dashboard.organization.images.uploading') : buttonText}
       </Button>
       <input
         id={inputId}
@@ -1185,57 +1192,58 @@ const TextAndImageSectionEditor: React.FC<{
   section: LandingTextAndImageSection
   onChange: (section: LandingTextAndImageSection) => void
 }> = ({ section, onChange }) => {
+  const { t } = useTranslation()
   return (
     <div className="space-y-6 p-6 bg-white rounded-lg nice-shadow">
       <div className="flex items-center space-x-2">
         <ImageIcon className="w-5 h-5 text-gray-500" />
-        <h3 className="font-medium text-lg">Text & Image Section</h3>
+        <h3 className="font-medium text-lg">{t('dashboard.organization.landing.text_image_editor.title')}</h3>
       </div>
       
       <div className="space-y-4">
         {/* Title */}
         <div>
-          <Label htmlFor="title">Title</Label>
+          <Label htmlFor="title">{t('dashboard.organization.landing.text_image_editor.title_label')}</Label>
           <Input
             id="title"
             value={section.title}
             onChange={(e) => onChange({ ...section, title: e.target.value })}
-            placeholder="Enter section title"
+            placeholder={t('dashboard.organization.landing.text_image_editor.title_placeholder')}
           />
         </div>
 
         {/* Text */}
         <div>
-          <Label htmlFor="content">Content</Label>
+          <Label htmlFor="content">{t('dashboard.organization.landing.text_image_editor.content')}</Label>
           <Textarea
             id="content"
             value={section.text}
             onChange={(e) => onChange({ ...section, text: e.target.value })}
-            placeholder="Enter section content"
+            placeholder={t('dashboard.organization.landing.text_image_editor.content_placeholder')}
             className="min-h-[100px]"
           />
         </div>
 
         {/* Flow */}
         <div>
-          <Label htmlFor="flow">Image Position</Label>
+          <Label htmlFor="flow">{t('dashboard.organization.landing.text_image_editor.image_position')}</Label>
           <Select
             value={section.flow}
             onValueChange={(value) => onChange({ ...section, flow: value as 'left' | 'right' })}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select image position" />
+              <SelectValue placeholder={t('dashboard.organization.landing.text_image_editor.image_position_placeholder')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="left">Left</SelectItem>
-              <SelectItem value="right">Right</SelectItem>
+              <SelectItem value="left">{t('dashboard.organization.landing.text_image_editor.positions.left')}</SelectItem>
+              <SelectItem value="right">{t('dashboard.organization.landing.text_image_editor.positions.right')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         {/* Image */}
         <div>
-          <Label>Image</Label>
+          <Label>{t('dashboard.organization.landing.text_image_editor.image')}</Label>
           <div className="grid grid-cols-2 gap-4 mt-2">
             <div className="space-y-2">
               <Input
@@ -1244,7 +1252,7 @@ const TextAndImageSectionEditor: React.FC<{
                   ...section,
                   image: { ...section.image, url: e.target.value }
                 })}
-                placeholder="Image URL"
+                placeholder={t('dashboard.organization.landing.text_image_editor.image_url')}
               />
               <ImageUploader
                 id="text-image-section"
@@ -1252,7 +1260,7 @@ const TextAndImageSectionEditor: React.FC<{
                   ...section,
                   image: { ...section.image, url }
                 })}
-                buttonText="Upload New Image"
+                buttonText={t('dashboard.organization.landing.text_image_editor.upload_new_image')}
               />
             </div>
             <div>
@@ -1262,7 +1270,7 @@ const TextAndImageSectionEditor: React.FC<{
                   ...section,
                   image: { ...section.image, alt: e.target.value }
                 })}
-                placeholder="Alt text"
+                placeholder={t('dashboard.organization.landing.text_image_editor.alt_text')}
               />
             </div>
           </div>
@@ -1285,24 +1293,25 @@ const LogosSectionEditor: React.FC<{
   section: LandingLogos
   onChange: (section: LandingLogos) => void
 }> = ({ section, onChange }) => {
+  const { t } = useTranslation()
   return (
     <div className="space-y-6 p-6 bg-white rounded-lg nice-shadow">
       <div className="flex items-center space-x-2">
         <Award className="w-5 h-5 text-gray-500" />
-        <h3 className="font-medium text-lg">Logos Section</h3>
+        <h3 className="font-medium text-lg">{t('dashboard.organization.landing.logos_editor.title')}</h3>
       </div>
       
       <div>
-        <Label>Logos</Label>
+        <Label>{t('dashboard.organization.landing.logos_editor.logos')}</Label>
         <div className="space-y-3 mt-2">
           {/* Title */}
           <div>
-            <Label htmlFor="title">Title</Label>
+            <Label htmlFor="title">{t('dashboard.organization.landing.logos_editor.title_label')}</Label>
             <Input
               id="title"
               value={section.title}
               onChange={(e) => onChange({ ...section, title: e.target.value })}
-              placeholder="Enter section title"
+              placeholder={t('dashboard.organization.landing.logos_editor.title_placeholder')}
             />
           </div>
 
@@ -1316,7 +1325,7 @@ const LogosSectionEditor: React.FC<{
                     newLogos[index] = { ...logo, url: e.target.value }
                     onChange({ ...section, logos: newLogos })
                   }}
-                  placeholder="Logo URL"
+                  placeholder={t('dashboard.organization.landing.logos_editor.logo_url')}
                 />
                 <ImageUploader
                   id={`logo-${index}`}
@@ -1325,7 +1334,7 @@ const LogosSectionEditor: React.FC<{
                     newLogos[index] = { ...section.logos[index], url }
                     onChange({ ...section, logos: newLogos })
                   }}
-                  buttonText="Upload Logo"
+                  buttonText={t('dashboard.organization.landing.logos_editor.upload_logo')}
                 />
               </div>
               <div className="space-y-2">
@@ -1336,7 +1345,7 @@ const LogosSectionEditor: React.FC<{
                     newLogos[index] = { ...logo, alt: e.target.value }
                     onChange({ ...section, logos: newLogos })
                   }}
-                  placeholder="Alt text"
+                  placeholder={t('dashboard.organization.landing.logos_editor.alt_text')}
                 />
                 {logo.url && (
                   <img
@@ -1374,7 +1383,7 @@ const LogosSectionEditor: React.FC<{
             className="w-full"
           >
             <Plus className="h-4 w-4 mr-2" />
-            Add Logo
+            {t('dashboard.organization.landing.logos_editor.add_logo')}
           </Button>
         </div>
       </div>
@@ -1386,33 +1395,34 @@ const PeopleSectionEditor: React.FC<{
   section: LandingPeople
   onChange: (section: LandingPeople) => void
 }> = ({ section, onChange }) => {
+  const { t } = useTranslation()
   return (
     <div className="space-y-6 p-6 bg-white rounded-lg nice-shadow">
       <div className="flex items-center space-x-2">
         <Users className="w-5 h-5 text-gray-500" />
-        <h3 className="font-medium text-lg">People Section</h3>
+        <h3 className="font-medium text-lg">{t('dashboard.organization.landing.people_editor.title')}</h3>
       </div>
       
       <div className="space-y-4">
         {/* Title */}
         <div>
-          <Label htmlFor="title">Title</Label>
+          <Label htmlFor="title">{t('dashboard.organization.landing.people_editor.title_label')}</Label>
           <Input
             id="title"
             value={section.title}
             onChange={(e) => onChange({ ...section, title: e.target.value })}
-            placeholder="Enter section title"
+            placeholder={t('dashboard.organization.landing.people_editor.title_placeholder')}
           />
         </div>
 
         {/* People List */}
         <div>
-          <Label>People</Label>
+          <Label>{t('dashboard.organization.landing.people_editor.people')}</Label>
           <div className="space-y-4 mt-2">
             {section.people.map((person, index) => (
               <div key={index} className="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-4 p-4 border rounded-lg">
                 <div className="space-y-2">
-                  <Label>Name</Label>
+                  <Label>{t('dashboard.organization.landing.people_editor.name')}</Label>
                   <Input
                     value={person.name}
                     onChange={(e) => {
@@ -1420,12 +1430,12 @@ const PeopleSectionEditor: React.FC<{
                       newPeople[index] = { ...person, name: e.target.value }
                       onChange({ ...section, people: newPeople })
                     }}
-                    placeholder="Person's name"
+                    placeholder={t('dashboard.organization.landing.people_editor.name_placeholder')}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Username</Label>
+                  <Label>{t('dashboard.organization.landing.people_editor.username')}</Label>
                   <Input
                     value={person.username || ''}
                     onChange={(e) => {
@@ -1433,12 +1443,12 @@ const PeopleSectionEditor: React.FC<{
                       newPeople[index] = { ...person, username: e.target.value }
                       onChange({ ...section, people: newPeople })
                     }}
-                    placeholder="@username"
+                    placeholder={t('dashboard.organization.landing.people_editor.username_placeholder')}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Image</Label>
+                  <Label>{t('dashboard.organization.landing.people_editor.image')}</Label>
                   <div className="space-y-2">
                     <Input
                       value={person.image_url}
@@ -1447,7 +1457,7 @@ const PeopleSectionEditor: React.FC<{
                         newPeople[index] = { ...person, image_url: e.target.value }
                         onChange({ ...section, people: newPeople })
                       }}
-                      placeholder="Image URL"
+                      placeholder={t('dashboard.organization.landing.people_editor.image_url')}
                     />
                     <ImageUploader
                       id={`person-${index}`}
@@ -1456,7 +1466,7 @@ const PeopleSectionEditor: React.FC<{
                         newPeople[index] = { ...section.people[index], image_url: url }
                         onChange({ ...section, people: newPeople })
                       }}
-                      buttonText="Upload Avatar"
+                      buttonText={t('dashboard.organization.landing.people_editor.upload_avatar')}
                     />
                     {person.image_url && (
                       <img
@@ -1469,7 +1479,7 @@ const PeopleSectionEditor: React.FC<{
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Description</Label>
+                  <Label>{t('dashboard.organization.landing.people_editor.description')}</Label>
                   <Input
                     value={person.description}
                     onChange={(e) => {
@@ -1477,7 +1487,7 @@ const PeopleSectionEditor: React.FC<{
                       newPeople[index] = { ...person, description: e.target.value }
                       onChange({ ...section, people: newPeople })
                     }}
-                    placeholder="Description or role"
+                    placeholder={t('dashboard.organization.landing.people_editor.description_placeholder')}
                   />
                 </div>
 
@@ -1514,7 +1524,7 @@ const PeopleSectionEditor: React.FC<{
               className="w-full"
             >
               <Plus className="h-4 w-4 mr-2" />
-              Add Person
+              {t('dashboard.organization.landing.people_editor.add_person')}
             </Button>
           </div>
         </div>
@@ -1527,6 +1537,7 @@ const FeaturedCoursesEditor: React.FC<{
   section: LandingFeaturedCourses
   onChange: (section: LandingFeaturedCourses) => void
 }> = ({ section, onChange }) => {
+  const { t } = useTranslation()
   const org = useOrg() as any
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
@@ -1540,24 +1551,24 @@ const FeaturedCoursesEditor: React.FC<{
     <div className="space-y-6 p-6 bg-white rounded-lg nice-shadow">
       <div className="flex items-center space-x-2">
         <BookOpen className="w-5 h-5 text-gray-500" />
-        <h3 className="font-medium text-lg">Courses Section</h3>
+        <h3 className="font-medium text-lg">{t('dashboard.organization.landing.courses_editor.title')}</h3>
       </div>
       
       <div className="space-y-4">
         {/* Title */}
         <div>
-          <Label htmlFor="title">Title</Label>
+          <Label htmlFor="title">{t('dashboard.organization.landing.courses_editor.title_label')}</Label>
           <Input
             id="title"
             value={section.title}
             onChange={(e) => onChange({ ...section, title: e.target.value })}
-            placeholder="Enter section title"
+            placeholder={t('dashboard.organization.landing.courses_editor.title_placeholder')}
           />
         </div>
 
         {/* Course Selection */}
         <div>
-          <Label>Select Courses</Label>
+          <Label>{t('dashboard.organization.landing.courses_editor.select_courses')}</Label>
           <div className="space-y-4 mt-2">
             {courses ? (
               <div className="grid gap-4">
@@ -1592,14 +1603,14 @@ const FeaturedCoursesEditor: React.FC<{
                       }}
                       className={section.courses.includes(course.course_uuid) ? "bg-black hover:bg-black/90" : ""}
                     >
-                      {section.courses.includes(course.course_uuid) ? 'Selected' : 'Select'}
+                      {section.courses.includes(course.course_uuid) ? t('dashboard.organization.landing.courses_editor.selected') : t('dashboard.organization.landing.courses_editor.select')}
                     </Button>
                   </div>
                 ))}
               </div>
             ) : (
               <div className="text-center py-8 text-gray-500">
-                Loading courses...
+                {t('dashboard.organization.landing.courses_editor.loading_courses')}
               </div>
             )}
           </div>

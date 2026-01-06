@@ -34,6 +34,10 @@
     "loading": "लोड हो रहा है...",
     "search": "खोजें",
     "all": "सभी",
+    "help": "सहायता",
+    "plans": "योजनाएं",
+    "enterprise": "एंटरप्राइज",
+    "version": "संस्करण",
     "users": "उपयोगकर्ता",
     "save": "सहेजें",
     "cancel": "रद्द करें",
@@ -418,5 +422,1300 @@
     "days_ago": "{{count}} दिन पहले",
     "hours_ago": "{{count}} घंटे पहले",
     "minutes_ago": "{{count}} मिनट पहले"
+  },
+  "dashboard": {
+    "home": {
+      "cards": {
+        "courses": {
+          "title": "कोर्स",
+          "description": "कोर्स, अध्याय और गतिविधियां बनाएं और प्रबंधित करें"
+        },
+        "organization": {
+          "title": "संगठन",
+          "description": "अपने संगठन की सामान्य सेटिंग्स कॉन्फ़िगर करें"
+        },
+        "users": {
+          "title": "उपयोगकर्ता",
+          "description": "अपने संगठन के उपयोगकर्ताओं, भूमिकाओं को प्रबंधित करें"
+        },
+        "account_settings": {
+          "title": "खाता सेटिंग्स",
+          "description": "अपनी व्यक्तिगत सेटिंग्स, पासवर्ड, ईमेल कॉन्फ़िगर करें"
+        }
+      },
+      "learnhouse_university": "LearnHouse यूनिवर्सिटी"
+    },
+    "courses": {
+      "title": "कोर्स",
+      "rights_guide": "अधिकार मार्गदर्शिका",
+      "create_course": "कोर्स बनाएं",
+      "create_new_course": "एक नया कोर्स बनाएं",
+      "no_courses": "अभी तक कोई कोर्स नहीं",
+      "create_course_placeholder": "सामग्री जोड़ने के लिए कोर्स बनाएं",
+      "no_courses_available": "अभी तक कोई कोर्स उपलब्ध नहीं है"
+    },
+    "organization": {
+      "settings": {
+        "title": "संगठन सेटिंग्स",
+        "subtitle": "अपने संगठन की प्रोफ़ाइल और सेटिंग्स प्रबंधित करें",
+        "tabs": {
+          "general": "सामान्य",
+          "landing": "लैंडिंग पेज",
+          "previews": "छवियां और पूर्वावलोकन",
+          "socials": "सोशल",
+          "other": "अन्य"
+        },
+        "pages": {
+          "general": {
+            "title": "सामान्य",
+            "subtitle": "अपनी संगठन सेटिंग्स प्रबंधित करें"
+          },
+          "previews": {
+            "title": "पूर्वावलोकन",
+            "subtitle": "अपने संगठन के पूर्वावलोकन प्रबंधित करें"
+          },
+          "socials": {
+            "title": "सोशल",
+            "subtitle": "अपने संगठन के सोशल मीडिया लिंक प्रबंधित करें"
+          },
+          "landing": {
+            "title": "लैंडिंग पेज",
+            "subtitle": "अपने संगठन के लैंडिंग पेज को कस्टमाइज़ करें"
+          },
+          "other": {
+            "title": "अन्य",
+            "subtitle": "अतिरिक्त संगठन सेटिंग्स प्रबंधित करें"
+          }
+        },
+        "name": "संगठन का नाम",
+        "name_placeholder": "संगठन का नाम",
+        "short_description": "संक्षिप्त विवरण",
+        "short_description_placeholder": "आपके संगठन का संक्षिप्त विवरण",
+        "label": "संगठन लेबल",
+        "label_placeholder": "संगठन लेबल चुनें",
+        "about": "संगठन के बारे में",
+        "about_placeholder": "आपके संगठन का विस्तृत विवरण",
+        "showcase_explore": "LearnHouse Explore में दिखाएं",
+        "showcase_description": "अपने संगठन के कोर्स और सामग्री को LearnHouse समुदाय के साथ साझा करें। शिक्षार्थियों को आपके मूल्यवान शैक्षिक संसाधनों की खोज करने में मदद करने के लिए इसे सक्षम करें।",
+        "save_changes": "बदलाव सहेजें",
+        "saving": "सहेजा जा रहा है...",
+        "update_success": "संगठन अपडेट किया गया",
+        "update_error": "संगठन अपडेट करने में विफल",
+        "updating": "संगठन अपडेट किया जा रहा है..."
+      },
+      "images": {
+        "title": "छवियां और पूर्वावलोकन",
+        "subtitle": "अपने संगठन के लोगो, थंबनेल और पूर्वावलोकन छवियों को प्रबंधित करें",
+        "tabs": {
+          "logo": "लोगो",
+          "thumbnail": "थंबनेल",
+          "previews": "पूर्वावलोकन"
+        },
+        "upload_logo": "नया लोगो अपलोड करें",
+        "upload_thumbnail": "नया थंबनेल अपलोड करें",
+        "uploading": "अपलोड हो रहा है...",
+        "uploading_logo": "लोगो अपलोड हो रहा है...",
+        "uploading_thumbnail": "थंबनेल अपलोड हो रहा है...",
+        "uploading_previews": "{{count}} पूर्वावलोकन अपलोड किया जा रहा है...",
+        "uploading_previews_plural": "{{count}} पूर्वावलोकन अपलोड किए जा रहे हैं...",
+        "accepted_files": "PNG, JPG स्वीकार करता है (अधिकतम 5MB)",
+        "recommended_size": "अनुशंसित आकार: 200x100 पिक्सेल",
+        "add_preview": "पूर्वावलोकन जोड़ें",
+        "drag_to_reorder": "पुनः व्यवस्थित करने के लिए खींचें • अधिकतम 4 पूर्वावलोकन • छवियों और वीडियो का समर्थन करता है",
+        "video_modal": {
+          "title": "पूर्वावलोकन जोड़ें",
+          "images": "छवियां अपलोड करें",
+          "youtube": "YouTube",
+          "youtube_desc": "YouTube वीडियो जोड़ें",
+          "loom": "Loom",
+          "loom_desc": "Loom वीडियो जोड़ें",
+          "url_placeholder": "अपना {{service}} वीडियो URL पेस्ट करें",
+          "add_button": "वीडियो जोड़ें"
+        },
+        "toasts": {
+          "logo_success": "लोगो अपडेट किया गया",
+          "logo_error": "लोगो अपलोड करने में विफल",
+          "thumbnail_success": "थंबनेल अपडेट किया गया",
+          "thumbnail_error": "थंबनेल अपलोड करने में विफल",
+          "preview_added": "{{count}} पूर्वावलोकन जोड़ा गया",
+          "preview_added_plural": "{{count}} पूर्वावलोकन जोड़े गए",
+          "preview_error": "पूर्वावलोकन अपलोड करने में विफल",
+          "preview_removed": "पूर्वावलोकन हटा दिया गया",
+          "preview_remove_error": "पूर्वावलोकन हटाने में विफल",
+          "order_updated": "पूर्वावलोकन क्रम अपडेट किया गया",
+          "order_update_error": "पूर्वावलोकन क्रम अपडेट करने में विफल",
+          "max_previews": "आप केवल {{count}} और पूर्वावलोकन अपलोड कर सकते हैं",
+          "max_previews_plural": "आप केवल {{count}} और पूर्वावलोकन अपलोड कर सकते हैं",
+          "invalid_url": "अमान्य {{type}} URL",
+          "video_exists": "यह वीडियो पहले ही जोड़ा जा चुका है",
+          "adding_video": "वीडियो पूर्वावलोकन जोड़ा जा रहा है...",
+          "video_preview_added": "वीडियो पूर्वावलोकन जोड़ा गया",
+          "video_preview_error": "वीडियो पूर्वावलोकन जोड़ने में विफल",
+          "updating_order": "पूर्वावलोकन क्रम अपडेट किया जा रहा है..."
+        }
+      },
+      "socials": {
+        "title": "सोशल लिंक",
+        "subtitle": "अपने संगठन की सोशल मीडिया उपस्थिति प्रबंधित करें",
+        "labels": {
+          "social_links": "सोशल लिंक",
+          "custom_links": "कस्टम लिंक"
+        },
+        "placeholders": {
+          "twitter": "Twitter प्रोफाइल URL",
+          "facebook": "Facebook प्रोफाइल URL",
+          "instagram": "Instagram प्रोफाइल URL",
+          "youtube": "YouTube चैनल URL",
+          "label": "लेबल",
+          "url": "URL"
+        },
+        "add_link": "लिंक जोड़ें",
+        "custom_links_desc": "अधिकतम 3 कस्टम लिंक जोड़ें जो आपके संगठन की प्रोफ़ाइल पर दिखाई देंगे"
+      },
+      "scripts": {
+        "title": "स्क्रिप्ट",
+        "subtitle": "अपने संगठन में कस्टम JavaScript स्क्रिप्ट जोड़ें",
+        "warning": "अपने संगठन की सुरक्षा के लिए, कृपया सुनिश्चित करें कि आप जोड़ने से पहले किसी भी स्क्रिप्ट पर भरोसा करते हैं और उसे समझते हैं। स्क्रिप्ट आपके संगठन के पेजों के साथ इंटरैक्ट कर सकती हैं।",
+        "add_script": "स्क्रिप्ट जोड़ें",
+        "no_scripts": "अभी तक कोई स्क्रिप्ट नहीं जोड़ी गई",
+        "add_first_script": "शुरू करने के लिए अपनी पहली स्क्रिप्ट जोड़ें",
+        "script_name": "स्क्रिप्ट का नाम",
+        "script_content": "स्क्रिप्ट सामग्री",
+        "placeholders": {
+          "name": "स्क्रिप्ट नाम दर्ज करें",
+          "content": "JavaScript कोड दर्ज करें"
+        },
+        "save_script": "स्क्रिप्ट सहेजें",
+        "toasts": {
+          "save_success": "स्क्रिप्ट सफलतापूर्वक सहेजी गई",
+          "delete_success": "स्क्रिप्ट सफलतापूर्वक हटा दी गई"
+        }
+      },
+      "audit_logs": {
+        "title": "ऑडिट लॉग",
+        "subtitle": "अपने संगठन के भीतर सभी गतिविधियों को ट्रैक और मॉनिटर करें",
+        "refresh": "लॉग रिफ्रेश करें",
+        "export": "निर्यात करें",
+        "search_by": "खोजें",
+        "placeholders": {
+          "search": "खोजें..."
+        },
+        "filters": {
+          "resource": "संसाधन",
+          "status": "स्थिति",
+          "date": "तारीख"
+        },
+        "resources": {
+          "all": "सभी संसाधन",
+          "user": "उपयोगकर्ता",
+          "course": "कोर्स",
+          "org": "संगठन"
+        },
+        "date_ranges": {
+          "all": "सभी समय",
+          "today": "आज",
+          "7d": "पिछले 7 दिन",
+          "30d": "पिछले 30 दिन",
+          "custom": "कस्टम श्रेणी"
+        },
+        "table": {
+          "timestamp": "टाइमस्टैम्प",
+          "user": "उपयोगकर्ता",
+          "resource": "संसाधन",
+          "path_method": "पथ और विधि",
+          "ip_address": "IP पता",
+          "status": "स्थिति",
+          "payload": "पेलोड"
+        },
+        "loading": "गतिविधि लोड हो रही है...",
+        "no_logs": "कोई लॉग नहीं मिला",
+        "pagination": {
+          "showing": "{{total}} लॉग में से {{start}} से {{end}} दिखा रहा है"
+        },
+        "modals": {
+          "payload": {
+            "title": "इवेंट पेलोड",
+            "description": "कार्रवाई के लिए विस्तृत डेटा: {{action}}"
+          }
+        },
+        "export_toasts": {
+          "generating": "CSV जेनरेट किया जा रहा है...",
+          "success": "CSV सफलतापूर्वक निर्यात किया गया",
+          "error": "CSV निर्यात करने में विफल"
+        }
+      },
+      "landing": {
+        "title": "लैंडिंग पेज",
+        "subtitle": "अपने संगठन के लैंडिंग पेज को कस्टमाइज़ करें",
+        "beta": "बीटा",
+        "save_changes": "बदलाव सहेजें",
+        "saving": "सहेजा जा रहा है...",
+        "saved_success": "लैंडिंग पेज सफलतापूर्वक सहेजा गया",
+        "save_error": "लैंडिंग पेज सहेजने में त्रुटि",
+        "sections": "अनुभाग",
+        "select_section": "संपादित करने के लिए एक अनुभाग चुनें या नया जोड़ें",
+        "section_types": {
+          "hero": {
+            "label": "हीरो",
+            "description": "शीर्षक और कॉल-टू-एक्शन के साथ एक हीरो अनुभाग जोड़ें"
+          },
+          "text_and_image": {
+            "label": "टेक्स्ट और इमेज",
+            "description": "टेक्स्ट और इमेज के साथ एक अनुभाग जोड़ें"
+          },
+          "logos": {
+            "label": "लोगो",
+            "description": "लोगो दिखाने के लिए एक अनुभाग जोड़ें"
+          },
+          "people": {
+            "label": "लोग",
+            "description": "टीम के सदस्यों को उजागर करने के लिए एक अनुभाग जोड़ें"
+          },
+          "featured_courses": {
+            "label": "कोर्स",
+            "description": "चयनित कोर्स दिखाने के लिए एक अनुभाग जोड़ें"
+          }
+        },
+        "add_section": "अनुभाग जोड़ें",
+        "hero_editor": {
+          "title": "हीरो अनुभाग",
+          "section_title": "अनुभाग शीर्षक",
+          "section_title_placeholder": "अनुभाग शीर्षक दर्ज करें",
+          "tabs": {
+            "content": "सामग्री",
+            "background": "पृष्ठभूमि",
+            "buttons": "बटन",
+            "illustration": "चित्रण"
+          },
+          "heading": "शीर्षक",
+          "heading_placeholder": "शीर्षक टेक्स्ट दर्ज करें",
+          "heading_color": "शीर्षक रंग",
+          "subheading": "उपशीर्षक",
+          "subheading_placeholder": "उपशीर्षक टेक्स्ट दर्ज करें",
+          "subheading_color": "उपशीर्षक रंग",
+          "background_type": "पृष्ठभूमि प्रकार",
+          "background_type_placeholder": "पृष्ठभूमि प्रकार चुनें",
+          "background_types": {
+            "solid": "ठोस रंग",
+            "gradient": "ग्रेडिएंट",
+            "image": "छवि"
+          },
+          "background_color": "पृष्ठभूमि रंग",
+          "gradient_type": "ग्रेडिएंट प्रकार",
+          "gradient_type_placeholder": "ग्रेडिएंट प्रकार चुनें",
+          "gradient_types": {
+            "preset": "प्रीसेट ग्रेडिएंट",
+            "custom": "कस्टम ग्रेडिएंट"
+          },
+          "start_color": "प्रारंभिक रंग",
+          "end_color": "अंतिम रंग",
+          "gradient_direction": "ग्रेडिएंट दिशा",
+          "gradient_direction_placeholder": "ग्रेडिएंट दिशा चुनें",
+          "gradient_preset": "ग्रेडिएंट प्रीसेट",
+          "gradient_preset_placeholder": "ग्रेडिएंट प्रीसेट चुनें",
+          "background_image": "पृष्ठभूमि छवि",
+          "upload_image": "छवि अपलोड करें",
+          "button_text_colors": "बटन टेक्स्ट और रंग",
+          "button_text": "बटन टेक्स्ट",
+          "text_color": "टेक्स्ट",
+          "background_color_label": "पृष्ठभूमि",
+          "button_link": "बटन लिंक",
+          "button_link_placeholder": "बटन लिंक",
+          "add_button": "बटन जोड़ें",
+          "illustration_image": "चित्रण छवि",
+          "illustration_url": "चित्रण URL",
+          "alt_text": "Alt टेक्स्ट",
+          "upload_illustration": "चित्रण अपलोड करें",
+          "position": "स्थिति",
+          "position_placeholder": "स्थिति चुनें",
+          "positions": {
+            "left": "बाएं",
+            "right": "दाएं"
+          },
+          "size": "आकार",
+          "size_placeholder": "आकार चुनें",
+          "sizes": {
+            "small": "छोटा",
+            "medium": "मध्यम",
+            "large": "बड़ा"
+          },
+          "remove_illustration": "चित्रण हटाएं"
+        },
+        "text_image_editor": {
+          "title": "टेक्स्ट और इमेज अनुभाग",
+          "title_label": "शीर्षक",
+          "title_placeholder": "अनुभाग शीर्षक दर्ज करें",
+          "content": "सामग्री",
+          "content_placeholder": "अनुभाग सामग्री दर्ज करें",
+          "image_position": "इमेज स्थिति",
+          "image_position_placeholder": "इमेज स्थिति चुनें",
+          "positions": {
+            "left": "बाएं",
+            "right": "दाएं"
+          },
+          "image": "इमेज",
+          "image_url": "इमेज URL",
+          "alt_text": "Alt टेक्स्ट",
+          "upload_new_image": "नई इमेज अपलोड करें"
+        },
+        "logos_editor": {
+          "title": "लोगो अनुभाग",
+          "title_label": "शीर्षक",
+          "title_placeholder": "अनुभाग शीर्षक दर्ज करें",
+          "logos": "लोगो",
+          "logo_url": "लोगो URL",
+          "alt_text": "Alt टेक्स्ट",
+          "upload_logo": "लोगो अपलोड करें",
+          "add_logo": "लोगो जोड़ें"
+        },
+        "people_editor": {
+          "title": "लोग अनुभाग",
+          "title_label": "शीर्षक",
+          "title_placeholder": "अनुभाग शीर्षक दर्ज करें",
+          "people": "लोग",
+          "name": "नाम",
+          "name_placeholder": "व्यक्ति का नाम",
+          "username": "उपयोगकर्ता नाम",
+          "username_placeholder": "@username",
+          "image": "इमेज",
+          "image_url": "इमेज URL",
+          "upload_avatar": "अवतार अपलोड करें",
+          "description": "विवरण",
+          "description_placeholder": "विवरण या भूमिका",
+          "add_person": "व्यक्ति जोड़ें"
+        },
+        "courses_editor": {
+          "title": "कोर्स अनुभाग",
+          "title_label": "शीर्षक",
+          "title_placeholder": "अनुभाग शीर्षक दर्ज करें",
+          "select_courses": "कोर्स चुनें",
+          "loading_courses": "कोर्स लोड हो रहे हैं...",
+          "selected": "चयनित",
+          "select": "चुनें"
+        }
+      }
+    },
+    "users": {
+      "settings": {
+        "tabs": {
+          "users": "उपयोगकर्ता",
+          "usergroups": "उपयोगकर्ता समूह",
+          "roles": "भूमिकाएं",
+          "signups": "साइनअप और आमंत्रण कोड",
+          "add": "सदस्यों को आमंत्रित करें",
+          "audit_logs": "ऑडिट लॉग"
+        },
+        "pages": {
+          "users": {
+            "title": "उपयोगकर्ता",
+            "subtitle": "अपने संगठन के उपयोगकर्ताओं को प्रबंधित करें, भूमिकाएं और अनुमतियां असाइन करें"
+          },
+          "signups": {
+            "title": "साइनअप और आमंत्रण कोड",
+            "subtitle": "चुनें कि उपयोगकर्ता आपके संगठन में कहां से शामिल हो सकते हैं"
+          },
+          "add": {
+            "title": "सदस्यों को आमंत्रित करें",
+            "subtitle": "अपने संगठन में शामिल होने के लिए सदस्यों को आमंत्रित करें"
+          },
+          "usergroups": {
+            "title": "उपयोगकर्ता समूह",
+            "subtitle": "उपयोगकर्ता समूह बनाएं और प्रबंधित करें"
+          },
+          "roles": {
+            "title": "भूमिकाएं",
+            "subtitle": "विशिष्ट अनुमतियों के साथ भूमिकाएं बनाएं और प्रबंधित करें"
+          },
+          "audit_logs": {
+            "title": "ऑडिट लॉग",
+            "subtitle": "अपने संगठन के भीतर सभी गतिविधियों को ट्रैक और मॉनिटर करें"
+          }
+        },
+        "mobile": {
+          "title": "केवल डेस्कटॉप",
+          "message1": "यह पेज केवल डेस्कटॉप डिवाइस से एक्सेस किया जा सकता है।",
+          "message2": "उपयोगकर्ता सेटिंग्स देखने और प्रबंधित करने के लिए कृपया डेस्कटॉप पर स्विच करें।"
+        }
+      },
+      "active_users": {
+        "title": "सक्रिय उपयोगकर्ता",
+        "subtitle": "अपने संगठन के उपयोगकर्ताओं को प्रबंधित करें, भूमिकाएं और अनुमतियां असाइन करें",
+        "table": {
+          "user": "उपयोगकर्ता",
+          "role": "भूमिका",
+          "actions": "कार्रवाई"
+        },
+        "actions": {
+          "edit_role": "भूमिका संपादित करें",
+          "remove_from_org": "संगठन से हटाएं",
+          "removing": "हटाया जा रहा है...",
+          "remove_success": "संगठन से उपयोगकर्ता को हटा दिया गया",
+          "remove_error": "उपयोगकर्ता को हटाने में त्रुटि"
+        },
+        "modals": {
+          "update_role": {
+            "title": "भूमिका अपडेट करें",
+            "description": "@{{username}} की भूमिका अपडेट करें"
+          },
+          "remove_user": {
+            "title": "{{username}} हटाएं?",
+            "message": "क्या आप वाकई इस उपयोगकर्ता को संगठन से हटाना चाहते हैं?",
+            "button": "उपयोगकर्ता हटाएं"
+          }
+        }
+      },
+      "signups": {
+        "title": "शामिल होने की विधि",
+        "subtitle": "चुनें कि उपयोगकर्ता आपके संगठन में कैसे शामिल हो सकते हैं",
+        "open": {
+          "title": "खुला",
+          "description": "उपयोगकर्ता साइनअप पेज से स्वतंत्र रूप से शामिल हो सकते हैं",
+          "active": "सक्रिय",
+          "change_to": "खुला में बदलें",
+          "confirmation_message": "क्या आप वाकई साइनअप तंत्र को खुला में बदलना चाहते हैं? यह उपयोगकर्ताओं को आपके संगठन में स्वतंत्र रूप से शामिल होने की अनुमति देगा।",
+          "confirmation_title": "खुला में बदलें?"
+        },
+        "closed": {
+          "title": "बंद",
+          "description": "उपयोगकर्ता केवल आमंत्रण द्वारा शामिल हो सकते हैं",
+          "active": "सक्रिय",
+          "change_to": "बंद में बदलें",
+          "confirmation_message": "क्या आप वाकई साइनअप तंत्र को बंद में बदलना चाहते हैं? यह उपयोगकर्ताओं को केवल आमंत्रण द्वारा आपके संगठन में शामिल होने की अनुमति देगा।",
+          "confirmation_title": "बंद में बदलें?"
+        },
+        "invite_codes": {
+          "title": "आमंत्रण कोड",
+          "subtitle": "आमंत्रण कोड कॉपी किए जा सकते हैं और आपके संगठन में शामिल होने के लिए उपयोग किए जा सकते हैं",
+          "table": {
+            "code": "कोड",
+            "signup_link": "साइनअप लिंक",
+            "type": "प्रकार",
+            "expiration_date": "समाप्ति तिथि",
+            "actions": "कार्रवाई"
+          },
+          "types": {
+            "linked_to_usergroup": "एक उपयोगकर्ता समूह से जुड़ा हुआ",
+            "normal": "सामान्य"
+          },
+          "actions": {
+            "delete_code": "कोड हटाएं",
+            "delete_confirmation_title": "कोड हटाएं?",
+            "delete_confirmation_message": "क्या आप वाकई इस आमंत्रण कोड को हटाना चाहते हैं?",
+            "generate": "आमंत्रण कोड जेनरेट करें",
+            "generate_title": "आमंत्रण कोड जेनरेट करें",
+            "generate_description": "अपने संगठन के लिए एक नया आमंत्रण कोड जेनरेट करें"
+          },
+          "toasts": {
+            "deleting": "हटाया जा रहा है...",
+            "delete_success": "आमंत्रण कोड हटा दिया गया",
+            "delete_error": "हटाने में त्रुटि",
+            "changing_method": "शामिल होने की विधि बदली जा रही है...",
+            "change_success": "शामिल होने की विधि बदलकर {{method}} कर दी गई",
+            "change_error": "शामिल होने की विधि बदलने में त्रुटि"
+          }
+        },
+        "generate_modal": {
+          "linked_title": "उपयोगकर्ता समूह से जुड़ा आमंत्रण कोड",
+          "linked_description": "साइनअप पर, उपयोगकर्ता आपकी पसंद के उपयोगकर्ता समूह से स्वचालित रूप से जुड़ जाएंगे",
+          "normal_title": "सामान्य आमंत्रण कोड",
+          "normal_description": "साइनअप पर, उपयोगकर्ता किसी भी उपयोगकर्ता समूह से नहीं जुड़ा होगा",
+          "generate_button": "जेनरेट करें",
+          "no_usergroups": "कोई उपयोगकर्ता समूह उपलब्ध नहीं है",
+          "create_usergroup_link": "एक उपयोगकर्ता समूह बनाएं",
+          "toasts": {
+            "error": "त्रुटि {{status}}: {{detail}}"
+          }
+        }
+      },
+      "invite_members": {
+        "title": "अपने संगठन में उपयोगकर्ताओं को आमंत्रित करें",
+        "subtitle": "ईमेल के माध्यम से आमंत्रण भेजें, अल्पविराम द्वारा अलग किया गया",
+        "email_placeholder": "उदाहरण: spike.spiegel@bepop.space, michael.scott@dundermifflin.com",
+        "invite_code_label": "आमंत्रण कोड",
+        "invite_code_tooltip": "साइनअप एक्सेस पेज से आपके द्वारा जेनरेट किए गए आमंत्रण कोड में से एक का उपयोग करें",
+        "send_button": "ईमेल के माध्यम से आमंत्रण भेजें",
+        "invited_users": {
+          "title": "आमंत्रित उपयोगकर्ता",
+          "subtitle": "उपयोगकर्ता जिन्हें आपके संगठन में शामिल होने के लिए आमंत्रित किया गया है",
+          "table": {
+            "email": "ईमेल",
+            "signup_status": "साइनअप स्थिति",
+            "email_sent": "ईमेल भेजा गया"
+          },
+          "status": {
+            "pending": "लंबित",
+            "signed": "हस्ताक्षरित"
+          },
+          "email_status": {
+            "sent": "भेजा गया",
+            "no": "नहीं"
+          }
+        },
+        "toasts": {
+          "sending": "आमंत्रण भेजा जा रहा है...",
+          "success": "आमंत्रण भेजा गया",
+          "error": "आमंत्रण भेजने में त्रुटि"
+        }
+      },
+      "usergroups": {
+        "title": "उपयोगकर्ता समूह और उपयोगकर्ता प्रबंधित करें",
+        "subtitle": "उपयोगकर्ता समूह आपके संगठन में संसाधनों (कोर्स) तक उनकी पहुंच को प्रबंधित करने के लिए उपयोगकर्ताओं को एक साथ समूहबद्ध करने का एक तरीका है।",
+        "table": {
+          "usergroup": "उपयोगकर्ता समूह",
+          "description": "विवरण",
+          "manage_users": "उपयोगकर्ता प्रबंधित करें",
+          "actions": "कार्रवाई"
+        },
+        "actions": {
+          "manage_users": "उपयोगकर्ता प्रबंधित करें",
+          "edit": "संपादित करें",
+          "delete": "हटाएं",
+          "create": "एक उपयोगकर्ता समूह बनाएं"
+        },
+        "modals": {
+          "manage_users": {
+            "title": "उपयोगकर्ता समूह के उपयोगकर्ता प्रबंधित करें",
+            "description": "इस उपयोगकर्ता समूह के उपयोगकर्ताओं को प्रबंधित करें",
+            "table": {
+              "user": "उपयोगकर्ता",
+              "linked": "जुड़ा हुआ",
+              "actions": "कार्रवाई"
+            },
+            "status": {
+              "linked": "जुड़ा हुआ",
+              "not_linked": "नहीं जुड़ा हुआ"
+            },
+            "actions": {
+              "link": "लिंक करें",
+              "unlink": "अनलिंक करें"
+            },
+            "toasts": {
+              "link_success": "उपयोगकर्ता सफलतापूर्वक जुड़ गया",
+              "unlink_success": "उपयोगकर्ता सफलतापूर्वक हट गया",
+              "error": "त्रुटि {{status}}: {{detail}}"
+            }
+          },
+          "create": {
+            "title": "एक उपयोगकर्ता समूह बनाएं",
+            "description": "उपयोगकर्ताओं को प्रबंधित करने के लिए एक नया उपयोगकर्ता समूह बनाएं",
+            "form": {
+              "name": "नाम",
+              "name_required": "नाम आवश्यक है",
+              "description": "विवरण",
+              "submit": "एक उपयोगकर्ता समूह बनाएं",
+              "loading": "लोड हो रहा है..."
+            },
+            "toasts": {
+              "creating": "बनाया जा रहा है...",
+              "success": "नया उपयोगकर्ता समूह बनाया गया",
+              "error": "नया उपयोगकर्ता समूह नहीं बनाया जा सका"
+            }
+          },
+          "edit": {
+            "title": "उपयोगकर्ता समूह संपादित करें",
+            "form": {
+              "name": "नाम",
+              "name_required": "नाम आवश्यक है",
+              "description": "विवरण",
+              "submit": "उपयोगकर्ता समूह सहेजें",
+              "loading": "लोड हो रहा है..."
+            },
+            "toasts": {
+              "success": "उपयोगकर्ता समूह सफलतापूर्वक सहेजा गया",
+              "error": "उपयोगकर्ता समूह सहेजने में त्रुटि, कृपया बाद में पुनः प्रयास करें।"
+            }
+          },
+          "delete": {
+            "title": "उपयोगकर्ता समूह हटाएं?",
+            "message": "इस उपयोगकर्ता समूह के सभी उपयोगकर्ताओं के लिए सभी संसाधनों तक पहुंच हटा दी जाएगी। क्या आप वाकई इस उपयोगकर्ता समूह को हटाना चाहते हैं?",
+            "button": "उपयोगकर्ता समूह हटाएं"
+          }
+        },
+        "toasts": {
+          "deleting": "हटाया जा रहा है...",
+          "delete_success": "उपयोगकर्ता समूह हटा दिया गया",
+          "delete_error": "उपयोगकर्ता समूह हटाने में त्रुटि"
+        }
+      },
+      "roles": {
+        "title": "भूमिकाएं और अनुमतियां प्रबंधित करें",
+        "subtitle": "भूमिकाएं परिभाषित करती हैं कि उपयोगकर्ता आपके संगठन के भीतर क्या कर सकते हैं। विभिन्न उपयोगकर्ता प्रकारों के लिए विशिष्ट अनुमतियों के साथ कस्टम भूमिकाएं बनाएं।",
+        "table": {
+          "role_name": "भूमिका का नाम",
+          "description": "विवरण",
+          "permissions": "अनुमतियां",
+          "actions": "कार्रवाई"
+        },
+        "no_description": "कोई विवरण नहीं",
+        "no_permissions": "कोई अनुमति नहीं",
+        "permissions_count": "{{count}} अनुमतियां",
+        "system_wide": "पूरे सिस्टम में",
+        "actions": {
+          "edit": "संपादित करें",
+          "delete": "हटाएं",
+          "create": "एक भूमिका बनाएं"
+        },
+        "modals": {
+          "create": {
+            "title": "एक भूमिका बनाएं",
+            "description": "विशिष्ट अनुमतियों के साथ एक नई भूमिका बनाएं",
+            "form": {
+              "role_name": "भूमिका का नाम",
+              "role_name_placeholder": "उदा., कोर्स मैनेजर",
+              "description": "विवरण",
+              "description_placeholder": "बताएं कि यह भूमिका क्या कर सकती है...",
+              "permissions": "अनुमतियां",
+              "select_all": "सभी चुनें",
+              "deselect_all": "सभी को अचयनित करें",
+              "select": "चुनें",
+              "deselect": "अचयनित करें",
+              "submit": "भूमिका बनाएं",
+              "loading": "बनाया जा रहा है..."
+            },
+            "validation": {
+              "name_required": "आवश्यक",
+              "name_min_length": "नाम कम से कम 2 अक्षरों का होना चाहिए",
+              "description_required": "आवश्यक",
+              "description_min_length": "विवरण कम से कम 10 अक्षरों का होना चाहिए"
+            },
+            "toasts": {
+              "success": "नई भूमिका बनाई गई",
+              "error": "नई भूमिका नहीं बनाई जा सका"
+            },
+            "presets": {
+              "title": "पूर्वनिर्धारित अधिकार",
+              "admin": {
+                "name": "एडमिन",
+                "description": "सभी अनुमतियों के साथ पूर्ण प्लेटफ़ॉर्म नियंत्रण"
+              },
+              "maintainer": {
+                "name": "मेंटेनर",
+                "description": "कोर्स, अध्याय और गतिविधियों को प्रबंधित कर सकते हैं"
+              },
+              "instructor": {
+                "name": "प्रशिक्षक",
+                "description": "अपनी स्वयं की सामग्री बना और प्रबंधित कर सकते हैं"
+              },
+              "viewer": {
+                "name": "दर्शक",
+                "description": "कोर्स और सामग्री तक केवल पढ़ने की पहुंच"
+              },
+              "content_creator": {
+                "name": "सामग्री निर्माता",
+                "description": "सामग्री बना और संपादित कर सकते हैं लेकिन उपयोगकर्ताओं को प्रबंधित नहीं कर सकते"
+              },
+              "user_manager": {
+                "name": "उपयोगकर्ता प्रबंधक",
+                "description": "उपयोगकर्ताओं और उपयोगकर्ता समूहों को प्रबंधित कर सकते हैं"
+              },
+              "moderator": {
+                "name": "मध्यस्थ",
+                "description": "सामग्री को नियंत्रित कर सकते हैं और गतिविधियों को प्रबंधित कर सकते हैं"
+              },
+              "analyst": {
+                "name": "विश्लेषक",
+                "description": "एनालिटिक्स क्षमताओं के साथ केवल पढ़ने की पहुंच"
+              },
+              "guest": {
+                "name": "अतिथि",
+                "description": "बाहरी उपयोगकर्ताओं के लिए सीमित पहुंच"
+              }
+            },
+            "permissions": {
+              "title": "अनुमतियां",
+              "sections": {
+                "courses": "कोर्स",
+                "users": "उपयोगकर्ता",
+                "usergroups": "उपयोगकर्ता समूह",
+                "collections": "संग्रह",
+                "organizations": "संगठन",
+                "coursechapters": "कोर्स अध्याय",
+                "activities": "गतिविधियां",
+                "roles": "भूमिकाएं",
+                "dashboard": "डैशबोर्ड"
+              },
+              "actions": {
+                "create": "बनाएं",
+                "read": "पढ़ें",
+                "read_own": "स्वयं का पढ़ें",
+                "update": "अपडेट करें",
+                "update_own": "स्वयं का अपडेट करें",
+                "delete": "हटाएं",
+                "delete_own": "स्वयं का हटाएं",
+                "access": "एक्सेस"
+              },
+              "select_all": "सभी चुनें",
+              "deselect_all": "सभी को अचयनित करें",
+              "select": "चुनें",
+              "deselect": "अचयनित करें"
+            }
+          },
+          "edit": {
+            "title": "भूमिका संपादित करें",
+            "description": "भूमिका अनुमतियों और विवरणों को संपादित करें",
+            "form": {
+              "role_name": "भूमिका का नाम",
+              "description": "विवरण",
+              "permissions": "अनुमतियां",
+              "select_all": "सभी चुनें",
+              "deselect_all": "सभी को अचयनित करें",
+              "select": "चुनें",
+              "deselect": "अचयनित करें",
+              "submit": "भूमिका सहेजें",
+              "loading": "सहेजा जा रहा है..."
+            },
+            "validation": {
+              "name_required": "आवश्यक",
+              "name_min_length": "नाम कम से कम 2 अक्षरों का होना चाहिए",
+              "description_required": "आवश्यक",
+              "description_min_length": "विवरण कम से कम 10 अक्षरों का होना चाहिए"
+            },
+            "toasts": {
+              "success": "भूमिका सफलतापूर्वक सहेजी गई",
+              "error": "भूमिका सहेजने में त्रुटि, कृपया बाद में पुनः प्रयास करें।"
+            }
+          },
+          "delete": {
+            "title": "भूमिका हटाएं?",
+            "message": "यह कार्रवाई पूर्ववत नहीं की जा सकती। इस भूमिका वाले सभी उपयोगकर्ता अपनी अनुमतियां खो देंगे। क्या आप वाकई इस भूमिका को हटाना चाहते हैं?",
+            "button": "भूमिका हटाएं"
+          }
+        },
+        "toasts": {
+          "deleting": "हटाया जा रहा है...",
+          "delete_success": "भूमिका हटा दी गई",
+          "delete_error": "भूमिका हटाने में त्रुटि"
+        }
+      }
+    },
+    "assignments": {
+      "home": {
+        "title": "असाइनमेंट",
+        "course_label": "कोर्स",
+        "assignment_label": "असाइनमेंट",
+        "course_editor": "कोर्स एडिटर",
+        "editor": "एडिटर",
+        "submissions": "सबमिशन",
+        "no_assignments": "इस कोर्स के लिए कोई असाइनमेंट उपलब्ध नहीं है, कोर्स एडिटर से कोर्स असाइनमेंट बनाएं"
+      },
+      "detail": {
+        "title": "असाइनमेंट टूल्स",
+        "tabs": {
+          "editor": "एडिटर",
+          "submissions": "सबमिशन"
+        },
+        "mobile": {
+          "title": "केवल डेस्कटॉप",
+          "message1": "यह पेज केवल डेस्कटॉप डिवाइस से एक्सेस किया जा सकता है।",
+          "message2": "असाइनमेंट देखने और प्रबंधित करने के लिए कृपया डेस्कटॉप पर स्विच करें।"
+        },
+        "publishing": {
+          "published": "प्रकाशित",
+          "unpublished": "अप्रकाशित",
+          "edit_tooltip": "असाइनमेंट विवरण संपादित करें",
+          "preview_tooltip": "एक छात्र के रूप में असाइनमेंट का पूर्वावलोकन करें",
+          "unpublish_tooltip": "अपने असाइनमेंट को छात्रों के लिए अनुपलब्ध बनाएं",
+          "publish_tooltip": "अपने असाइनमेंट को सार्वजनिक और छात्रों के लिए उपलब्ध बनाएं",
+          "edit": "संपादित करें",
+          "preview": "पूर्वावलोकन",
+          "unpublish": "अप्रकाशित करें",
+          "publish": "प्रकाशित करें",
+          "toasts": {
+            "updating": "असाइनमेंट अपडेट किया जा रहा है...",
+            "update_success": "असाइनमेंट सफलतापूर्वक अपडेट किया गया है",
+            "update_error": "असाइनमेंट अपडेट करने में त्रुटि, कृपया बाद में पुनः प्रयास करें।"
+          }
+        }
+      },
+      "editor": {
+        "tasks_title": "कार्य",
+        "add_task": "कार्य जोड़ें",
+        "add_task_modal": {
+          "title": "एक असाइनमेंट कार्य जोड़ें",
+          "description": "इस असाइनमेंट के लिए एक नया कार्य बनाएं"
+        },
+        "task_types": {
+          "quiz": {
+            "title": "प्रश्नोत्तरी",
+            "description": "बहुविकल्पीय उत्तरों वाले प्रश्न"
+          },
+          "file_submission": {
+            "title": "फ़ाइल सबमिशन",
+            "description": "छात्र इस कार्य के लिए फ़ाइलें सबमिट कर सकते हैं"
+          },
+          "form": {
+            "title": "फॉर्म",
+            "description": "छात्रों के लिए खाली स्थान भरें फॉर्म"
+          }
+        },
+        "toasts": {
+          "task_created": "कार्य सफलतापूर्वक बनाया गया",
+          "task_saved": "कार्य सफलतापूर्वक सहेजा गया",
+          "task_save_error": "कार्य सहेजने में त्रुटि, कृपया बाद में पुनः प्रयास करें।",
+          "task_updated": "कार्य सफलतापूर्वक अपडेट किया गया",
+          "task_update_error": "कार्य अपडेट करने में त्रुटि, कृपया बाद में पुनः प्रयास करें।",
+          "reminder": "अपने कार्यों को संपादित/जोड़ते समय, छात्रों के साथ किसी भी समस्या से बचने के लिए अपने असाइनमेंट को अप्रकाशित करना सुनिश्चित करें, तैयार होने पर आप इसे फिर से प्रकाशित कर सकते हैं।"
+        },
+        "task_editor": {
+          "general": {
+            "title": "शीर्षक",
+            "description": "विवरण",
+            "hint": "संकेत",
+            "reference_file": "संदर्भ फ़ाइल",
+            "reference_file_info": "अनुमत प्रारूप: pdf, docx, mp4, jpg, jpeg, png, pptx, zip",
+            "max_grade_value": "अधिकतम ग्रेड मूल्य",
+            "max_grade_error": "मूल्य 20 और 100 के बीच होना चाहिए",
+            "submit": "सबमिट करें",
+            "download": "डाउनलोड करें",
+            "change_reference_file": "संदर्भ फ़ाइल बदलें",
+            "loading": "लोड हो रहा है",
+            "reference_file_updated": "संदर्भ फ़ाइल सफलतापूर्वक अपडेट की गई",
+            "allowed_formats": "अनुमत प्रारूप: pdf, docx, mp4, jpg, jpeg, png, pptx, zip",
+            "sign_in_required": "फ़ाइलें अपलोड करने के लिए कृपया साइन इन करें",
+            "auth_required": "प्रमाणीकरण आवश्यक है। फ़ाइलें अपलोड करने के लिए कृपया साइन इन करें।",
+            "auth_required_submit": "प्रमाणीकरण आवश्यक है। अपना कार्य सबमिट करने के लिए कृपया साइन इन करें।",
+            "hint_optional": "संकेत (वैकल्पिक)"
+          }
+        }
+      },
+      "submissions": {
+        "status": {
+          "late": "देर से",
+          "submitted": "सबमिट किया गया",
+          "graded": "ग्रेड दिया गया"
+        },
+        "submission_label": "सबमिशन",
+        "evaluate": "मूल्यांकन करें",
+        "evaluate_modal": {
+          "title": "@{{username}} का मूल्यांकन करें",
+          "description": "सबमिशन का मूल्यांकन करें"
+        },
+        "task_label": "कार्य {{number}} :",
+        "hint": "संकेत",
+        "reference_document": "संदर्भ दस्तावेज़",
+        "actions": {
+          "reject": "असाइनमेंट अस्वीकार करें",
+          "set_final_grade": "अंतिम ग्रेड सेट करें",
+          "mark_as_done": "उपयोगकर्ता के लिए गतिविधि को पूर्ण के रूप में चिह्नित करें"
+        },
+        "toasts": {
+          "reject_success": "असाइनमेंट सफलतापूर्वक अस्वीकार कर दिया गया"
+        }
+      },
+      "modals": {
+        "edit": {
+          "title": "असाइनमेंट संपादित करें",
+          "description": "असाइनमेंट विवरण अपडेट करें",
+          "form": {
+            "title_label": "असाइनमेंट शीर्षक",
+            "title_required": "कृपया अपने असाइनमेंट के लिए एक नाम प्रदान करें",
+            "description_label": "असाइनमेंट विवरण",
+            "description_required": "कृपया अपने असाइनमेंट के लिए एक विवरण प्रदान करें",
+            "due_date_label": "नियत तारीख",
+            "due_date_required": "कृपया अपने असाइनमेंट के लिए एक नियत तारीख प्रदान करें",
+            "grading_type_label": "ग्रेडिंग प्रकार",
+            "grading_type_required": "कृपया अपने असाइनमेंट के लिए ग्रेडिंग प्रकार प्रदान करें",
+            "grading_types": {
+              "alphabet": "वर्णमाला",
+              "numeric": "संख्यात्मक",
+              "percentage": "प्रतिशत"
+            },
+            "cancel": "रद्द करें",
+            "save": "बदलाव सहेजें",
+            "saving": "सहेजा जा रहा है..."
+          },
+          "toasts": {
+            "updating": "असाइनमेंट अपडेट किया जा रहा है...",
+            "success": "असाइनमेंट सफलतापूर्वक अपडेट किया गया",
+            "error": "असाइनमेंट अपडेट करने में विफल",
+            "error_detail": "असाइनमेंट अपडेट करते समय एक त्रुटि हुई"
+          }
+        },
+        "create": {
+          "form": {
+            "title_label": "असाइनमेंट शीर्षक",
+            "title_required": "कृपया अपने असाइनमेंट के लिए एक नाम प्रदान करें",
+            "description_label": "असाइनमेंट विवरण",
+            "description_required": "कृपया अपने असाइनमेंट के लिए एक विवरण प्रदान करें",
+            "due_date_label": "नियत तारीख",
+            "due_date_required": "कृपया अपने असाइनमेंट के लिए एक नियत तारीख प्रदान करें",
+            "grading_type_label": "ग्रेडिंग प्रकार",
+            "grading_type_required": "कृपया अपने असाइनमेंट के लिए ग्रेडिंग प्रकार प्रदान करें",
+            "grading_types": {
+              "alphabet": "वर्णमाला",
+              "numeric": "संख्यात्मक",
+              "percentage": "प्रतिशत"
+            },
+            "submit": "गतिविधि बनाएं"
+          },
+          "toasts": {
+            "creating": "असाइनमेंट बनाया जा रहा है...",
+            "success": "असाइनमेंट सफलतापूर्वक बनाया गया"
+          }
+        }
+      }
+    },
+    "courses": {
+      "title": "कोर्स",
+      "rights_guide": "अधिकार मार्गदर्शिका",
+      "create_course": "कोर्स बनाएं",
+      "create_new_course": "एक नया कोर्स बनाएं",
+      "no_courses": "अभी तक कोई कोर्स नहीं",
+      "create_course_placeholder": "सामग्री जोड़ने के लिए कोर्स बनाएं",
+      "no_courses_available": "अभी तक कोई कोर्स उपलब्ध नहीं है",
+      "overview_top": {
+        "course_label": "कोर्स",
+        "rights_guide_button": "अधिकार मार्गदर्शिका"
+      },
+      "settings": {
+        "tabs": {
+          "general": "सामान्य",
+          "content": "सामग्री",
+          "access": "एक्सेस",
+          "contributors": "योगदानकर्ता",
+          "certification": "प्रमाणन"
+        },
+        "access_denied": {
+          "title": "पहुंच अस्वीकृत",
+          "message": "आपके पास इस कोर्स तक पहुंचने की अनुमति नहीं है।"
+        },
+        "access_restricted": {
+          "title": "पहुंच प्रतिबंधित",
+          "message": "आपके पास {{tab}} तक पहुंचने की अनुमति नहीं है"
+        },
+        "loading": "लोड हो रहा है..."
+      },
+      "general": {
+        "form": {
+          "name_label": "नाम",
+          "name_required": "आवश्यक",
+          "name_max_length": "100 अक्षरों या उससे कम का होना चाहिए",
+          "description_label": "विवरण",
+          "description_required": "आवश्यक",
+          "description_max_length": "1000 अक्षरों या उससे कम का होना चाहिए",
+          "about_label": "के बारे में",
+          "learnings_label": "सीख",
+          "learnings_required": "आवश्यक",
+          "learnings_invalid_format": "अमान्य प्रारूप",
+          "learnings_min_items": "कम से कम एक सीखने की वस्तु आवश्यक है",
+          "learnings_empty_text": "सभी सीखने की वस्तुओं में टेक्स्ट होना चाहिए",
+          "learnings_invalid_json": "अमान्य JSON प्रारूप",
+          "tags_label": "टैग",
+          "tags_placeholder": "जोड़ने के लिए Enter दबाएं...",
+          "thumbnail_type_label": "थंबनेल प्रकार",
+          "thumbnail_type_image": "इमेज",
+          "thumbnail_type_video": "वीडियो",
+          "thumbnail_type_both": "दोनों",
+          "thumbnail_label": "थंबनेल",
+          "image_search_placeholder": "इमेज खोजें..."
+        },
+        "thumbnail": {
+          "upload_image": "इमेज अपलोड करें",
+          "upload_video": "वीडियो अपलोड करें",
+          "gallery": "गैलरी",
+          "tabs": {
+            "image": "इमेज",
+            "video": "वीडियो"
+          },
+          "supported_formats": {
+            "image": "अनुमत प्रारूप: PNG, JPG/JPEG (अधिकतम 8MB)",
+            "video": "अनुमत प्रारूप: MP4, WebM (अधिकतम 100MB)"
+          }
+        },
+        "errors": {
+          "save_failed": "कोर्स संरचना सहेजने में विफल।"
+        }
+      },
+      "access": {
+        "title": "कोर्स तक पहुंच",
+        "subtitle": "चुनें कि क्या आप चाहते हैं कि आपका कोर्स इंटरनेट पर सार्वजनिक रूप से उपलब्ध हो या केवल साइन इन किए हुए उपयोगकर्ताओं के लिए सुलभ हो",
+        "public": {
+          "title": "सार्वजनिक",
+          "description": "कोर्स इंटरनेट पर सार्वजनिक रूप से उपलब्ध है, इसे खोज इंजन द्वारा अनुक्रमित किया जाता है और कोई भी इसे एक्सेस कर सकता है",
+          "active": "सक्रिय",
+          "confirmation_title": "सार्वजनिक में बदलें?",
+          "confirmation_message": "क्या आप वाकई इस कोर्स को इंटरनेट पर सार्वजनिक रूप से उपलब्ध कराना चाहते हैं?",
+          "confirmation_button": "सार्वजनिक में बदलें"
+        },
+        "users_only": {
+          "title": "केवल उपयोगकर्ता",
+          "description": "कोर्स केवल साइन इन किए हुए उपयोगकर्ताओं के लिए सुलभ है, इसके अतिरिक्त आप चुन सकते हैं कि कौन से उपयोगकर्ता समूह इस कोर्स तक पहुंच सकते हैं",
+          "active": "सक्रिय",
+          "confirmation_title": "केवल उपयोगकर्ताओं के लिए बदलें?",
+          "confirmation_message": "क्या आप वाकई चाहते हैं कि यह कोर्स केवल साइन इन किए हुए उपयोगकर्ताओं के लिए सुलभ हो?",
+          "confirmation_button": "केवल उपयोगकर्ताओं के लिए बदलें"
+        },
+        "usergroups": {
+          "title": "उपयोगकर्ता समूह",
+          "subtitle": "आप इसे किसी उपयोगकर्ता समूह से जोड़कर केवल विशिष्ट उपयोगकर्ता समूहों को इस कोर्स तक पहुंच देना चुन सकते हैं",
+          "table": {
+            "name": "नाम",
+            "actions": "कार्रवाई"
+          },
+          "actions": {
+            "delete_link": "लिंक हटाएं",
+            "link_to_usergroup": "एक उपयोगकर्ता समूह से लिंक करें"
+          },
+          "modals": {
+            "link_title": "कोर्स को उपयोगकर्ता समूह से लिंक करें",
+            "link_description": "इस कोर्स को लिंक करने के लिए एक उपयोगकर्ता समूह चुनें। इस उपयोगकर्ता समूह के उपयोगकर्ताओं के पास इस कोर्स तक पहुंच होगी।",
+            "unlink_title": "उपयोगकर्ता समूह को अनलिंक करें?",
+            "unlink_message": "इस उपयोगकर्ता समूह के उपयोगकर्ताओं के पास अब इस कोर्स तक पहुंच नहीं होगी",
+            "unlink_button": "लिंक हटाएं",
+            "warning": "जो उपयोगकर्ता समूह का हिस्सा नहीं हैं, उनके पास अब इस कोर्स तक पहुंच नहीं होगी",
+            "usergroup_name": "उपयोगकर्ता समूह का नाम",
+            "no_usergroups": "कोई उपयोगकर्ता समूह उपलब्ध नहीं है",
+            "create_usergroup": "एक उपयोगकर्ता समूह बनाएं",
+            "link_button": "लिंक करें"
+          },
+          "toasts": {
+            "link_success": "सफलतापूर्वक उपयोगकर्ता समूह से लिंक किया गया",
+            "link_error": "त्रुटि {{status}}: {{detail}}",
+            "unlink_success": "सफलतापूर्वक उपयोगकर्ता समूह से अनलिंक किया गया",
+            "unlink_error": "उपयोगकर्ता समूह को अनलिंक करते समय एक त्रुटि हुई।"
+          }
+        }
+      },
+      "contributors": {
+        "title": "कोर्स योगदानकर्ता",
+        "subtitle": "योगदानकर्ताओं को प्रबंधित करें और अपने कोर्स में नए जोड़ें",
+        "open_to_contributors": {
+          "title": "योगदानकर्ताओं के लिए खुला",
+          "description": "कोर्स योगदानकर्ताओं के लिए खुला है। उपयोगकर्ता योगदानकर्ता बनने के लिए आवेदन कर सकते हैं और कोर्स सामग्री को बेहतर बनाने में मदद कर सकते।",
+          "active": "सक्रिय",
+          "confirmation_title": "योगदानकर्ताओं के लिए खोलें?",
+          "confirmation_message": "क्या आप वाकई इस कोर्स को योगदानकर्ताओं के लिए खोलना चाहते हैं?",
+          "confirmation_button": "योगदानकर्ताओं के लिए खोलें"
+        },
+        "closed_to_contributors": {
+          "title": "योगदानकर्ताओं के लिए बंद",
+          "description": "कोर्स योगदानकर्ताओं के लिए बंद है। केवल मौजूदा योगदानकर्ता ही कोर्स सामग्री को संशोधित कर सकते हैं।",
+          "active": "सक्रिय",
+          "confirmation_title": "योगदानकर्ताओं के लिए बंद करें?",
+          "confirmation_message": "क्या आप वाकई इस कोर्स को योगदानकर्ताओं के लिए बंद करना चाहते हैं?",
+          "confirmation_button": "योगदानकर्ताओं के लिए बंद करें"
+        },
+        "search": {
+          "placeholder": "योगदानकर्ता के रूप में जोड़ने के लिए नाम या उपयोगकर्ता नाम से उपयोगकर्ताओं को खोजें...",
+          "searching": "खोज रहा है...",
+          "no_results": "कोई उपयोगकर्ता नहीं मिला"
+        },
+        "table": {
+          "name": "नाम",
+          "username": "उपयोगकर्ता नाम",
+          "email": "ईमेल",
+          "role": "भूमिका",
+          "status": "स्थिति",
+          "added_on": "जोड़ा गया"
+        },
+        "roles": {
+          "creator": "निर्माता",
+          "contributor": "योगदानकर्ता",
+          "maintainer": "मेंटेनर",
+          "reporter": "रिपोर्टर"
+        },
+        "statuses": {
+          "active": "सक्रिय",
+          "inactive": "निष्क्रिय",
+          "pending": "लंबित"
+        },
+        "actions": {
+          "selected_users": "{{count}} उपयोगकर्ता चयनित",
+          "selected_users_plural": "{{count}} उपयोगकर्ता चयनित",
+          "clear": "साफ़ करें",
+          "add_selected": "चयनित जोड़ें",
+          "selected_contributors": "{{count}} योगदानकर्ता चयनित",
+          "selected_contributors_plural": "{{count}} योगदानकर्ता चयनित",
+          "remove_selected": "चयनित हटाएं",
+          "already_contributor": "पहले से ही एक योगदानकर्ता है"
+        },
+        "toasts": {
+          "add_success": "सफलतापूर्वक {{count}} योगदानकर्ता जोड़े गए",
+          "add_error": "{{username}} को जोड़ने में विफल: {{reason}}",
+          "add_failed": "योगदानकर्ताओं को जोड़ने में विफल",
+          "update_success": "सफलतापूर्वक योगदानकर्ता अपडेट किया गया",
+          "update_error": "त्रुटि: {{detail}}",
+          "update_failed": "योगदानकर्ता को अपडेट करते समय एक त्रुटि हुई।",
+          "remove_success": "सफलतापूर्वक {{count}} योगदानकर्ता हटा दिए गए",
+          "remove_failed": "योगदानकर्ताओं को हटाने में विफल",
+          "cannot_modify_creator": "निर्माता की भूमिका या स्थिति को संशोधित नहीं किया जा सकता"
+        }
+      },
+      "certification": {
+        "title": "कोर्स प्रमाणन",
+        "subtitle": "इस कोर्स को पूरा करने वाले छात्रों के लिए प्रमाणपत्र सक्षम और कॉन्फ़िगर करें",
+        "form": {
+          "certification_name_label": "प्रमाणन का नाम",
+          "certification_name_required": "प्रमाणन सक्षम होने पर आवश्यक",
+          "certification_name_max_length": "100 अक्षरों या उससे कम का होना चाहिए",
+          "certification_name_placeholder": "उदा., एडवांस जावास्क्रिप्ट प्रमाणन",
+          "certification_type_label": "प्रमाणन प्रकार",
+          "certification_description_label": "प्रमाणन विवरण",
+          "certification_description_required": "प्रमाणन सक्षम होने पर आवश्यक",
+          "certification_description_max_length": "500 अक्षरों या उससे कम का होना चाहिए",
+          "certification_description_placeholder": "बताएं कि यह प्रमाणन किसका प्रतिनिधित्व करता है और इसका मूल्य क्या है...",
+          "certificate_pattern_label": "प्रमाणपत्र पैटर्न",
+          "certificate_instructor_label": "प्रशिक्षक का नाम (वैकल्पिक)",
+          "certificate_instructor_placeholder": "उदा., डॉ. जेन स्मिथ"
+        },
+        "types": {
+          "completion": "कोर्स पूर्णता",
+          "achievement": "उपलब्धि आधारित",
+          "assessment": "मूल्यांकन आधारित",
+          "participation": "भागीदारी",
+          "mastery": "कौशल महारत",
+          "professional": "व्यावसायिक विकास",
+          "continuing": "सतत शिक्षा",
+          "workshop": "कार्यशाला उपस्थिति",
+          "specialization": "विशेषज्ञता"
+        },
+        "patterns": {
+          "royal": {
+            "name": "रॉयल",
+            "description": "क्राउन रूपांकनों के साथ अलंकृत"
+          },
+          "tech": {
+            "name": "टेक",
+            "description": "सर्किट-प्रेरित पैटर्न"
+          },
+          "nature": {
+            "name": "प्रकृति",
+            "description": "जैविक पत्ती पैटर्न"
+          },
+          "geometric": {
+            "name": "ज्यामितीय",
+            "description": "अमूर्त आकार और रेखाएं"
+          },
+          "vintage": {
+            "name": "विंटेज",
+            "description": "आर्ट डेको स्टाइलिंग"
+          },
+          "waves": {
+            "name": "लहरें",
+            "description": "बहते पानी के पैटर्न"
+          },
+          "minimal": {
+            "name": "मिनिमल",
+            "description": "स्वच्छ और सरल"
+          },
+          "professional": {
+            "name": "पेशेवर",
+            "description": "व्यवसाय के लिए तैयार डिज़ाइन"
+          },
+          "academic": {
+            "name": "अकादमिक",
+            "description": "पारंपरिक विश्वविद्यालय शैली"
+          },
+          "modern": {
+            "name": "आधुनिक",
+            "description": "समकालीन स्वच्छ रेखाएं"
+          }
+        },
+        "sections": {
+          "basic_info": {
+            "title": "मूल जानकारी",
+            "subtitle": "अपने प्रमाणन के मूल विवरण कॉन्फ़िगर करें"
+          },
+          "certificate_design": {
+            "title": "प्रमाणपत्र डिज़ाइन",
+            "subtitle": "अपने प्रमाणपत्र के लिए एक सजावटी पैटर्न चुनें"
+          },
+          "preview": {
+            "title": "प्रमाणपत्र पूर्वावलोकन",
+            "subtitle": "आपके प्रमाणपत्र का लाइव पूर्वावलोकन"
+          }
+        },
+        "states": {
+          "disabled": {
+            "title": "कोई प्रमाणन कॉन्फ़िगर नहीं",
+            "message": "कोर्स पूरा होने पर छात्रों को प्रमाणपत्र प्रदान करने के लिए प्रमाणन सक्षम करें।",
+            "button": "प्रमाणन सक्षम करें",
+            "creating": "बनाया जा रहा है..."
+          },
+          "creating": {
+            "title": "प्रमाणन बनाया जा रहा है...",
+            "message": "कृपया प्रतीक्षा करें जब तक हम आपके कोर्स प्रमाणन को सेट करते हैं।"
+          }
+        },
+        "errors": {
+          "loading": "प्रमाणन लोड करने में त्रुटि",
+          "create_failed": "प्रमाणन बनाने में विफल।",
+          "remove_failed": "प्रमाणन हटाने में विफल।"
+        },
+        "toasts": {
+          "create_success": "प्रमाणन सफलतापूर्वक बनाया गया",
+          "create_error": "प्रमाणन बनाने में विफल",
+          "remove_success": "प्रमाणन सफलतापूर्वक हटा दिया गया",
+          "remove_error": "प्रमाणन हटाने में विफल"
+        }
+      },
+      "structure": {
+        "loading": "लोड हो रहा है...",
+        "add_chapter_button": "अध्याय जोड़ें",
+        "modals": {
+          "new_chapter": {
+            "title": "अध्याय बनाएं",
+            "description": "कोर्स में एक नया अध्याय जोड़ें",
+            "form": {
+              "name_label": "अध्याय का नाम",
+              "name_required": "कृपया एक अध्याय का नाम प्रदान करें",
+              "description_label": "अध्याय का विवरण",
+              "description_required": "कृपया एक अध्याय का विवरण प्रदान करें",
+              "submit": "अध्याय बनाएं"
+            }
+          },
+          "delete_chapter": {
+            "title": "{{name}} हटाएं?",
+            "message": "क्या आप वाकई इस अध्याय को हटाना चाहते हैं?",
+            "button": "अध्याय हटाएं"
+          },
+          "new_activity": {
+            "title": "गतिविधि बनाएं",
+            "description": "कोर्स में जोड़ने के लिए गतिविधियों के प्रकारों में से चुनें"
+          },
+          "delete_activity": {
+            "title": "{{name}} हटाएं?",
+            "message": "क्या आप वाकई इस गतिविधि को हटाना चाहते हैं?",
+            "button": "गतिविधि हटाएं"
+          }
+        },
+        "actions": {
+          "add_chapter": "अध्याय जोड़ें",
+          "add_activity": "गतिविधि जोड़ें",
+          "publish": "प्रकाशित करें",
+          "unpublish": "अप्रकाशित करें",
+          "preview_activity": "गतिविधि पूर्वावलोकन",
+          "edit_page": "पेज संपादित करें",
+          "edit_assignment": "असाइनमेंट संपादित करें"
+        },
+        "chapter_element": {
+          "chapter_name_placeholder": "अध्याय का नाम"
+        },
+        "activity": {
+          "name_placeholder": "गतिविधि का नाम",
+          "types": {
+            "video": "वीडियो",
+            "document": "दस्तावेज़",
+            "assignment": "असाइनमेंट",
+            "assignments": "असाइनमेंट",
+            "dynamic": "डायनेमिक",
+            "dynamic_page": "डायनेमिक पेज"
+          },
+          "toasts": {
+            "deleting": "गतिविधि हटाई जा रही है...",
+            "delete_success": "गतिविधि सफलतापूर्वक हटा दी गई",
+            "updating": "असाइनमेंट अपडेट किया जा रहा है...",
+            "update_success": "गतिविधि सफलतापूर्वक अपडेट कर दी गई है",
+            "name_update_success": "गतिविधि का नाम सफलतापूर्वक अपडेट किया गया",
+            "name_update_error": "गतिविधि का नाम अपडेट करने में विफल",
+            "creating": "गतिविधि बनाई जा रही है...",
+            "create_success": "गतिविधि सफलतापूर्वक बनाई गई",
+            "uploading": "फ़ाइल अपलोड की जा रही है और गतिविधि बनाई जा रही है...",
+            "upload_success": "फ़ाइल सफलतापूर्वक अपलोड की गई",
+            "creating_uploading": "गतिविधि बनाई जा रही है और फ़ाइल अपलोड की जा रही है..."
+          }
+        }
+      }
+    }
   }
 }

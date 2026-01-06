@@ -16,6 +16,7 @@ import OrgRoles from '@components/Dashboard/Pages/Users/OrgRoles/OrgRoles'
 import OrgAuditLogs from '@components/Dashboard/Pages/Org/OrgAuditLogs/OrgAuditLogs'
 import { useEEStatus } from '@components/Hooks/useEEStatus'
 import { ShieldAlert } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 export type SettingsParams = {
   subpage: string
@@ -23,6 +24,7 @@ export type SettingsParams = {
 }
 
 function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
+  const { t } = useTranslation()
   const params = use(props.params);
   const session = useLHSession() as any
   const org = useOrg() as any
@@ -33,44 +35,44 @@ function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
 
   function handleLabels() {
     if (params.subpage == 'users') {
-      setH1Label('Users')
-      setH2Label('Manage your organization users, assign roles and permissions')
+      setH1Label(t('dashboard.users.settings.pages.users.title'))
+      setH2Label(t('dashboard.users.settings.pages.users.subtitle'))
     }
     if (params.subpage == 'signups') {
-      setH1Label('Signups & Invite Codes')
-      setH2Label('Choose from where users can join your organization')
+      setH1Label(t('dashboard.users.settings.pages.signups.title'))
+      setH2Label(t('dashboard.users.settings.pages.signups.subtitle'))
     }
     if (params.subpage == 'add') {
-      setH1Label('Invite Members')
-      setH2Label('Invite members to join your organization')
+      setH1Label(t('dashboard.users.settings.pages.add.title'))
+      setH2Label(t('dashboard.users.settings.pages.add.subtitle'))
     }
     if (params.subpage == 'usergroups') {
-      setH1Label('UserGroups')
-      setH2Label('Create and manage user groups')
+      setH1Label(t('dashboard.users.settings.pages.usergroups.title'))
+      setH2Label(t('dashboard.users.settings.pages.usergroups.subtitle'))
     }
     if (params.subpage == 'roles') {
-      setH1Label('Roles')
-      setH2Label('Create and manage roles with specific permissions')
+      setH1Label(t('dashboard.users.settings.pages.roles.title'))
+      setH2Label(t('dashboard.users.settings.pages.roles.subtitle'))
     }
     if (params.subpage == 'audit-logs') {
-      setH1Label('Audit Logs')
-      setH2Label('Track and monitor all activities within your organization')
+      setH1Label(t('dashboard.users.settings.pages.audit_logs.title'))
+      setH2Label(t('dashboard.users.settings.pages.audit_logs.subtitle'))
     }
   }
 
   useEffect(() => {
     handleLabels()
-  }, [session, org, params.subpage, params])
+  }, [session, org, params.subpage, params, t])
 
   if (isMobile) {
     // TODO: Work on a better mobile experience
     return (
       <div className="h-screen w-full bg-[#f8f8f8] flex items-center justify-center p-4">
         <div className="bg-white p-6 rounded-lg shadow-md text-center">
-          <h2 className="text-xl font-bold mb-4">Desktop Only</h2>
+          <h2 className="text-xl font-bold mb-4">{t('dashboard.users.settings.mobile.title')}</h2>
           <Monitor className='mx-auto my-5' size={60} />
-          <p>This page is only accessible from a desktop device.</p>
-          <p>Please switch to a desktop to view and manage user settings.</p>
+          <p>{t('dashboard.users.settings.mobile.message1')}</p>
+          <p>{t('dashboard.users.settings.mobile.message2')}</p>
         </div>
       </div>
     )
@@ -104,7 +106,7 @@ function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
             >
               <div className="flex items-center space-x-2.5 mx-2">
                 <Users size={16} />
-                <div>Users</div>
+                <div>{t('dashboard.users.settings.tabs.users')}</div>
               </div>
             </div>
           </Link>
@@ -121,7 +123,7 @@ function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
             >
               <div className="flex items-center space-x-2.5 mx-2">
                 <SquareUserRound size={16} />
-                <div>UserGroups</div>
+                <div>{t('dashboard.users.settings.tabs.usergroups')}</div>
               </div>
             </div>
           </Link>
@@ -138,7 +140,7 @@ function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
             >
               <div className="flex items-center space-x-2.5 mx-2">
                 <Shield size={16} />
-                <div>Roles</div>
+                <div>{t('dashboard.users.settings.tabs.roles')}</div>
               </div>
             </div>
           </Link>
@@ -155,7 +157,7 @@ function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
             >
               <div className="flex items-center space-x-2.5 mx-2">
                 <ScanEye size={16} />
-                <div>Signups & Invite Codes</div>
+                <div>{t('dashboard.users.settings.tabs.signups')}</div>
               </div>
             </div>
           </Link>
@@ -172,7 +174,7 @@ function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
             >
               <div className="flex items-center space-x-2.5 mx-2">
                 <UserPlus size={16} />
-                <div>Invite Members</div>
+                <div>{t('dashboard.users.settings.tabs.add')}</div>
               </div>
             </div>
           </Link>
@@ -191,7 +193,7 @@ function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
               >
                 <div className="flex items-center space-x-2.5 mx-2">
                   <ShieldAlert size={16} />
-                  <div>Audit Logs</div>
+                  <div>{t('dashboard.users.settings.tabs.audit_logs')}</div>
                 </div>
               </div>
             </Link>

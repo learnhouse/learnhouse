@@ -34,6 +34,10 @@
     "loading": "Laden...",
     "search": "Zoeken",
     "all": "Alle",
+    "help": "Hulp",
+    "plans": "Plannen",
+    "enterprise": "Enterprise",
+    "version": "Versie",
     "users": "Gebruikers",
     "save": "Opslaan",
     "cancel": "Annuleren",
@@ -418,5 +422,1300 @@
     "days_ago": "{{count}} dagen geleden",
     "hours_ago": "{{count}} uur geleden",
     "minutes_ago": "{{count}} minuten geleden"
+  },
+  "dashboard": {
+    "home": {
+      "cards": {
+        "courses": {
+          "title": "Cursussen",
+          "description": "Maak en beheer cursussen, hoofdstukken en activiteiten"
+        },
+        "organization": {
+          "title": "Organisatie",
+          "description": "Configureer de algemene instellingen van je organisatie"
+        },
+        "users": {
+          "title": "Gebruikers",
+          "description": "Beheer gebruikers en rollen binnen je organisatie"
+        },
+        "account_settings": {
+          "title": "Accountinstellingen",
+          "description": "Configureer je persoonlijke instellingen, wachtwoord en e-mail"
+        }
+      },
+      "learnhouse_university": "LearnHouse University"
+    },
+    "courses": {
+      "title": "Cursussen",
+      "rights_guide": "Gids voor rechten",
+      "create_course": "Cursus aanmaken",
+      "create_new_course": "Maak een nieuwe cursus aan",
+      "no_courses": "Nog geen cursussen",
+      "create_course_placeholder": "Maak een cursus aan om inhoud toe te voegen",
+      "no_courses_available": "Nog geen cursussen beschikbaar"
+    },
+    "organization": {
+      "settings": {
+        "title": "Organisatie-instellingen",
+        "subtitle": "Beheer het profiel en de instellingen van je organisatie",
+        "tabs": {
+          "general": "Algemeen",
+          "landing": "Landingspagina",
+          "previews": "Afbeeldingen & Previews",
+          "socials": "Socials",
+          "other": "Overig"
+        },
+        "pages": {
+          "general": {
+            "title": "Algemeen",
+            "subtitle": "Beheer organisatie-instellingen"
+          },
+          "previews": {
+            "title": "Previews",
+            "subtitle": "Beheer organisatie-previews"
+          },
+          "socials": {
+            "title": "Socials",
+            "subtitle": "Beheer social media links van de organisatie"
+          },
+          "landing": {
+            "title": "Landingspagina",
+            "subtitle": "Pas de landingspagina van je organisatie aan"
+          },
+          "other": {
+            "title": "Overig",
+            "subtitle": "Beheer aanvullende organisatie-instellingen"
+          }
+        },
+        "name": "Organisatienaam",
+        "name_placeholder": "Naam van de organisatie",
+        "short_description": "Korte beschrijving",
+        "short_description_placeholder": "Een korte beschrijving van je organisatie",
+        "label": "Organisatielabel",
+        "label_placeholder": "Selecteer een organisatielabel",
+        "about": "Over de organisatie",
+        "about_placeholder": "Gedetailleerde beschrijving van je organisatie",
+        "showcase_explore": "Weergeven op LearnHouse Explore",
+        "showcase_description": "Deel de cursussen en inhoud van je organisatie met de LearnHouse-gemeenschap. Schakel dit in om studenten te helpen waardevolle educatieve bronnen te vinden.",
+        "save_changes": "Wijzigingen opslaan",
+        "saving": "Opslaan...",
+        "update_success": "Organisatiegegevens bijgewerkt",
+        "update_error": "Bijwerken van organisatiegegevens mislukt",
+        "updating": "Organisatiegegevens bijwerken..."
+      },
+      "images": {
+        "title": "Afbeeldingen & Previews",
+        "subtitle": "Beheer de logo's, miniaturen en preview-afbeeldingen van je organisatie",
+        "tabs": {
+          "logo": "Logo",
+          "thumbnail": "Miniatuur",
+          "previews": "Previews"
+        },
+        "upload_logo": "Upload nieuw logo",
+        "upload_thumbnail": "Upload nieuwe miniatuur",
+        "uploading": "Uploaden...",
+        "uploading_logo": "Logo uploaden...",
+        "uploading_thumbnail": "Miniatuur uploaden...",
+        "uploading_previews": "{{count}} previews uploaden...",
+        "uploading_previews_plural": "{{count}} previews uploaden...",
+        "accepted_files": "Ondersteunt PNG, JPG (Max 5MB)",
+        "recommended_size": "Aanbevolen grootte: 200x100 pixels",
+        "add_preview": "Preview toevoegen",
+        "drag_to_reorder": "Sleep om de volgorde te wijzigen • Maximaal 4 previews • Ondersteunt afbeeldingen en video's",
+        "video_modal": {
+          "title": "Preview toevoegen",
+          "images": "Afbeeldingen uploaden",
+          "youtube": "YouTube",
+          "youtube_desc": "YouTube-video toevoegen",
+          "loom": "Loom",
+          "loom_desc": "Loom-video toevoegen",
+          "url_placeholder": "Plak de {{service}} video-URL",
+          "add_button": "Video toevoegen"
+        },
+        "toasts": {
+          "logo_success": "Logo succesvol bijgewerkt",
+          "logo_error": "Uploaden van logo mislukt",
+          "thumbnail_success": "Miniatuur succesvol bijgewerkt",
+          "thumbnail_error": "Uploaden van miniatuur mislukt",
+          "preview_added": "{{count}} preview toegevoegd",
+          "preview_added_plural": "{{count}} previews toegevoegd",
+          "preview_error": "Uploaden van preview mislukt",
+          "preview_removed": "Preview verwijderd",
+          "preview_remove_error": "Verwijderen van preview mislukt",
+          "order_updated": "Volgorde van previews bijgewerkt",
+          "order_update_error": "Bijwerken van volgorde van previews mislukt",
+          "max_previews": "Je kunt nog {{count}} preview uploaden",
+          "max_previews_plural": "Je kunt nog {{count}} previews uploaden",
+          "invalid_url": "Ongeldige {{type}} URL",
+          "video_exists": "Deze video is al toegevoegd",
+          "adding_video": "Video-preview toevoegen...",
+          "video_preview_added": "Video-preview toegevoegd",
+          "video_preview_error": "Toevoegen van video-preview mislukt",
+          "updating_order": "Volgorde van previews bijwerken..."
+        }
+      },
+      "socials": {
+        "title": "Sociale links",
+        "subtitle": "Beheer de social media aanwezigheid van je organisatie",
+        "labels": {
+          "social_links": "Sociale links",
+          "custom_links": "Aangepaste links"
+        },
+        "placeholders": {
+          "twitter": "Twitter profiel URL",
+          "facebook": "Facebook profiel URL",
+          "instagram": "Instagram profiel URL",
+          "youtube": "YouTube kanaal URL",
+          "label": "Label",
+          "url": "URL"
+        },
+        "add_link": "Link toevoegen",
+        "custom_links_desc": "Voeg tot 3 aangepaste links toe om op je organisatieprofiel weer te geven"
+      },
+      "scripts": {
+        "title": "Scripts",
+        "subtitle": "Voeg aangepaste JavaScript-scripts toe aan je organisatie",
+        "warning": "Zorg ervoor dat je de scripts vertrouwt en begrijpt voordat je ze toevoegt, voor de veiligheid van je organisatie. Scripts kunnen interactie hebben met de pagina's van je organisatie.",
+        "add_script": "Script toevoegen",
+        "no_scripts": "Nog geen scripts toegevoegd",
+        "add_first_script": "Voeg je eerste script toe om te beginnen",
+        "script_name": "Scriptnaam",
+        "script_content": "Script-inhoud",
+        "placeholders": {
+          "name": "Voer scriptnaam in",
+          "content": "Voer je JavaScript-code hier in"
+        },
+        "save_script": "Script opslaan",
+        "toasts": {
+          "save_success": "Script succesvol opgeslagen",
+          "delete_success": "Script succesvol verwijderd"
+        }
+      },
+      "audit_logs": {
+        "title": "Audit Logs",
+        "subtitle": "Volg en monitor alle activiteiten binnen je organisatie",
+        "refresh": "Logs vernieuwen",
+        "export": "Exporteren",
+        "search_by": "Zoeken op",
+        "placeholders": {
+          "search": "Zoeken..."
+        },
+        "filters": {
+          "resource": "Resource",
+          "status": "Status",
+          "date": "Datum"
+        },
+        "resources": {
+          "all": "Alle resources",
+          "user": "Gebruiker",
+          "course": "Cursus",
+          "org": "Organisatie"
+        },
+        "date_ranges": {
+          "all": "Altijd",
+          "today": "Vandaag",
+          "7d": "Afgelopen 7 dagen",
+          "30d": "Afgelopen 30 dagen",
+          "custom": "Aangepast bereik"
+        },
+        "table": {
+          "timestamp": "Tijdstip",
+          "user": "Gebruiker",
+          "resource": "Resource",
+          "path_method": "Pad & Methode",
+          "ip_address": "IP-adres",
+          "status": "Status",
+          "payload": "Payload"
+        },
+        "loading": "Activiteiten laden...",
+        "no_logs": "Geen logs gevonden",
+        "pagination": {
+          "showing": "Toon {{start}} tot {{end}} van {{total}} logs"
+        },
+        "modals": {
+          "payload": {
+            "title": "Event Payload",
+            "description": "Gedetailleerde gegevens voor actie: {{action}}"
+          }
+        },
+        "export_toasts": {
+          "generating": "CSV genereren...",
+          "success": "CSV succesvol geëxporteerd",
+          "error": "Exporteren van CSV mislukt"
+        }
+      },
+      "landing": {
+        "title": "Landingspagina",
+        "subtitle": "Pas de landingspagina van je organisatie aan",
+        "beta": "BETA",
+        "save_changes": "Wijzigingen opslaan",
+        "saving": "Opslaan...",
+        "saved_success": "Landingspagina succesvol opgeslagen",
+        "save_error": "Fout bij het opslaan van landingspagina",
+        "sections": "Secties",
+        "select_section": "Selecteer een sectie om te bewerken of voeg een nieuwe toe",
+        "section_types": {
+          "hero": {
+            "label": "Hero",
+            "description": "Voeg een hero-sectie toe met een titel en call-to-action"
+          },
+          "text_and_image": {
+            "label": "Tekst & Afbeelding",
+            "description": "Voeg een sectie toe met tekst en een bijbehorende afbeelding"
+          },
+          "logos": {
+            "label": "Logo's",
+            "description": "Voeg een sectie toe om partnerlogo's te tonen"
+          },
+          "people": {
+            "label": "Personen",
+            "description": "Voeg een sectie toe om teamleden uit te lichten"
+          },
+          "featured_courses": {
+            "label": "Cursussen",
+            "description": "Voeg een sectie toe om geselecteerde cursussen te tonen"
+          }
+        },
+        "add_section": "Sectie toevoegen",
+        "hero_editor": {
+          "title": "Hero Sectie",
+          "section_title": "Sectietitel",
+          "section_title_placeholder": "Voer sectietitel in",
+          "tabs": {
+            "content": "Inhoud",
+            "background": "Achtergrond",
+            "buttons": "Knoppen",
+            "illustration": "Illustratie"
+          },
+          "heading": "Kop",
+          "heading_placeholder": "Voer koptekst in",
+          "heading_color": "Kleur van kop",
+          "subheading": "Subkop",
+          "subheading_placeholder": "Voer subkoptekst in",
+          "subheading_color": "Kleur van subkop",
+          "background_type": "Achtergrondtype",
+          "background_type_placeholder": "Selecteer achtergrondtype",
+          "background_types": {
+            "solid": "Effen kleur",
+            "gradient": "Gradiënt",
+            "image": "Afbeelding"
+          },
+          "background_color": "Achtergrondkleur",
+          "gradient_type": "Gradiënttype",
+          "gradient_type_placeholder": "Selecteer gradiënttype",
+          "gradient_types": {
+            "preset": "Vooraf ingestelde gradiënt",
+            "custom": "Aangepaste gradiënt"
+          },
+          "start_color": "Startkleur",
+          "end_color": "Eindkleur",
+          "gradient_direction": "Gradiëntrichting",
+          "gradient_direction_placeholder": "Selecteer gradiëntrichting",
+          "gradient_preset": "Gradiënt Preset",
+          "gradient_preset_placeholder": "Selecteer gradiënt preset",
+          "background_image": "Achtergrondafbeelding",
+          "upload_image": "Afbeelding uploaden",
+          "button_text_colors": "Knoptekst & Kleuren",
+          "button_text": "Knoptekst",
+          "text_color": "Tekst",
+          "background_color_label": "Achtergrond",
+          "button_link": "Knoplink",
+          "button_link_placeholder": "Knoplink",
+          "add_button": "Knop toevoegen",
+          "illustration_image": "Illustratie afbeelding",
+          "illustration_url": "Illustratie URL",
+          "alt_text": "Alt-tekst",
+          "upload_illustration": "Illustratie uploaden",
+          "position": "Positie",
+          "position_placeholder": "Selecteer positie",
+          "positions": {
+            "left": "Links",
+            "right": "Rechts"
+          },
+          "size": "Grootte",
+          "size_placeholder": "Selecteer grootte",
+          "sizes": {
+            "small": "Klein",
+            "medium": "Gemiddeld",
+            "large": "Groot"
+          },
+          "remove_illustration": "Illustratie verwijderen"
+        },
+        "text_image_editor": {
+          "title": "Tekst & Afbeelding Sectie",
+          "title_label": "Titel",
+          "title_placeholder": "Voer sectietitel in",
+          "content": "Inhoud",
+          "content_placeholder": "Voer sectie-inhoud in",
+          "image_position": "Afbeeldingspositie",
+          "image_position_placeholder": "Selecteer afbeeldingspositie",
+          "positions": {
+            "left": "Links",
+            "right": "Rechts"
+          },
+          "image": "Afbeelding",
+          "image_url": "Afbeelding URL",
+          "alt_text": "Alt-tekst",
+          "upload_new_image": "Upload nieuwe afbeelding"
+        },
+        "logos_editor": {
+          "title": "Logo Sectie",
+          "title_label": "Titel",
+          "title_placeholder": "Voer sectietitel in",
+          "logos": "Logo's",
+          "logo_url": "Logo URL",
+          "alt_text": "Alt-tekst",
+          "upload_logo": "Logo uploaden",
+          "add_logo": "Logo toevoegen"
+        },
+        "people_editor": {
+          "title": "Personen Sectie",
+          "title_label": "Titel",
+          "title_placeholder": "Voer sectietitel in",
+          "people": "Personen",
+          "name": "Naam",
+          "name_placeholder": "Naam van persoon",
+          "username": "Gebruikersnaam",
+          "username_placeholder": "@gebruikersnaam",
+          "image": "Afbeelding",
+          "image_url": "Afbeelding URL",
+          "upload_avatar": "Avatar uploaden",
+          "description": "Beschrijving",
+          "description_placeholder": "Beschrijving of rol",
+          "add_person": "Persoon toevoegen"
+        },
+        "courses_editor": {
+          "title": "Cursus Sectie",
+          "title_label": "Titel",
+          "title_placeholder": "Voer sectietitel in",
+          "select_courses": "Selecteer Cursussen",
+          "loading_courses": "Cursussen laden...",
+          "selected": "Geselecteerd",
+          "select": "Selecteer"
+        }
+      }
+    },
+    "users": {
+      "settings": {
+        "tabs": {
+          "users": "Gebruikers",
+          "usergroups": "Gebruikersgroepen",
+          "roles": "Rollen",
+          "signups": "Aanmeldingen & Uitnodigingscodes",
+          "add": "Leden uitnodigen",
+          "audit_logs": "Audit Logs"
+        },
+        "pages": {
+          "users": {
+            "title": "Gebruikers",
+            "subtitle": "Beheer gebruikers van de organisatie en wijs rollen en machtigingen toe"
+          },
+          "signups": {
+            "title": "Aanmeldingen & Uitnodigingscodes",
+            "subtitle": "Kies hoe gebruikers lid kunnen worden van je organisatie"
+          },
+          "add": {
+            "title": "Leden uitnodigen",
+            "subtitle": "Nodig nieuwe leden uit om lid te worden van je organisatie"
+          },
+          "usergroups": {
+            "title": "Gebruikersgroepen",
+            "subtitle": "Maak en beheer gebruikersgroepen"
+          },
+          "roles": {
+            "title": "Rollen",
+            "subtitle": "Maak en beheer rollen met specifieke machtigingen"
+          },
+          "audit_logs": {
+            "title": "Audit Logs",
+            "subtitle": "Volg en monitor alle activiteiten binnen je organisatie"
+          }
+        },
+        "mobile": {
+          "title": "Alleen voor Desktop",
+          "message1": "Deze pagina is alleen toegankelijk op desktop-apparaten.",
+          "message2": "Schakel over naar een desktop om gebruikersinstellingen te bekijken en te beheren."
+        }
+      },
+      "active_users": {
+        "title": "Actieve Gebruikers",
+        "subtitle": "Beheer gebruikers van de organisatie en wijs rollen en machtigingen toe",
+        "table": {
+          "user": "Gebruiker",
+          "role": "Rol",
+          "actions": "Acties"
+        },
+        "actions": {
+          "edit_role": "Rol bewerken",
+          "remove_from_org": "Verwijderen uit organisatie",
+          "removing": "Verwijderen...",
+          "remove_success": "Gebruiker succesvol verwijderd uit organisatie",
+          "remove_error": "Fout bij het verwijderen van gebruiker"
+        },
+        "modals": {
+          "update_role": {
+            "title": "Rol bijwerken",
+            "description": "Werk de rol bij voor @{{username}}"
+          },
+          "remove_user": {
+            "title": "Verwijder {{username}}?",
+            "message": "Weet je zeker dat je deze gebruiker wilt verwijderen uit de organisatie?",
+            "button": "Gebruiker verwijderen"
+          }
+        }
+      },
+      "signups": {
+        "title": "Aanmeldingsmethode",
+        "subtitle": "Kies hoe gebruikers lid worden van je organisatie",
+        "open": {
+          "title": "Open",
+          "description": "Gebruikers kunnen zich vrij aanmelden via de aanmeldpagina",
+          "active": "Actief",
+          "change_to": "Wijzig naar Open",
+          "confirmation_message": "Weet je zeker dat je het aanmeldingsmechanisme wilt wijzigen naar open? Hierdoor kunnen gebruikers zich vrij aanmelden voor je organisatie.",
+          "confirmation_title": "Wijzigen naar Open?"
+        },
+        "closed": {
+          "title": "Gesloten",
+          "description": "Gebruikers kunnen alleen lid worden via een uitnodiging",
+          "active": "Actief",
+          "change_to": "Wijzig naar Gesloten",
+          "confirmation_message": "Weet je zeker dat je het aanmeldingsmechanisme wilt wijzigen naar gesloten? Hierdoor kunnen gebruikers alleen lid worden via een uitnodiging.",
+          "confirmation_title": "Wijzigen naar Gesloten?"
+        },
+        "invite_codes": {
+          "title": "Uitnodigingscodes",
+          "subtitle": "Je kunt de uitnodigingscodes kopiëren en gebruiken om lid te worden van de organisatie",
+          "table": {
+            "code": "Code",
+            "signup_link": "Aanmeldlink",
+            "type": "Type",
+            "expiration_date": "Vervaldatum",
+            "actions": "Acties"
+          },
+          "types": {
+            "linked_to_usergroup": "Gekoppeld aan gebruikersgroep",
+            "normal": "Normaal"
+          },
+          "actions": {
+            "delete_code": "Code verwijderen",
+            "delete_confirmation_title": "Code verwijderen?",
+            "delete_confirmation_message": "Weet je zeker dat je deze uitnodigingscode wilt verwijderen?",
+            "generate": "Genereer uitnodigingscode",
+            "generate_title": "Genereer uitnodigingscode",
+            "generate_description": "Genereer een nieuwe uitnodigingscode voor je organisatie"
+          },
+          "toasts": {
+            "deleting": "Verwijderen...",
+            "delete_success": "Uitnodigingscode succesvol verwijderd",
+            "delete_error": "Fout bij het verwijderen",
+            "changing_method": "Aanmeldingsmethode wijzigen...",
+            "change_success": "Aanmeldingsmethode gewijzigd naar {{method}}",
+            "change_error": "Fout bij het wijzigen van aanmeldingsmethode"
+          }
+        },
+        "generate_modal": {
+          "linked_title": "Uitnodigingscode gekoppeld aan gebruikersgroep",
+          "linked_description": "Bij aanmelding wordt de gebruiker automatisch gekoppeld aan de gekozen gebruikersgroep",
+          "normal_title": "Normale uitnodigingscode",
+          "normal_description": "Bij aanmelding wordt de gebruiker aan geen enkele gebruikersgroep gekoppeld",
+          "generate_button": "Genereren",
+          "no_usergroups": "Geen gebruikersgroepen beschikbaar",
+          "create_usergroup_link": "Maak een gebruikersgroep aan",
+          "toasts": {
+            "error": "Fout {{status}}: {{detail}}"
+          }
+        }
+      },
+      "invite_members": {
+        "title": "Gebruikers uitnodigen voor organisatie",
+        "subtitle": "Stuur uitnodigingen via e-mail (gescheiden door komma's)",
+        "email_placeholder": "bijv. spike.spiegel@bepop.space, michael.scott@dundermifflin.com",
+        "invite_code_label": "Uitnodigingscode",
+        "invite_code_tooltip": "Gebruik een van de uitnodigingscodes die je hebt gegenereerd op de pagina voor aanmeldingstoegang",
+        "send_button": "Stuur uitnodigingen via e-mail",
+        "invited_users": {
+          "title": "Uitgenodigde gebruikers",
+          "subtitle": "Gebruikers uitgenodigd om lid te worden van de organisatie",
+          "table": {
+            "email": "E-mail",
+            "signup_status": "Aanmeldstatus",
+            "email_sent": "E-mail verzonden"
+          },
+          "status": {
+            "pending": "In afwachting",
+            "signed": "Aangemeld"
+          },
+          "email_status": {
+            "sent": "Verzonden",
+            "no": "Nee"
+          }
+        },
+        "toasts": {
+          "sending": "Uitnodigingen verzenden...",
+          "success": "Uitnodigingen succesvol verzonden",
+          "error": "Fout bij het verzenden van uitnodigingen"
+        }
+      },
+      "usergroups": {
+        "title": "Beheer gebruikersgroepen & gebruikers",
+        "subtitle": "Gebruikersgroepen zijn een manier om je gebruikers te groeperen om toegang tot de middelen van je organisatie (cursussen) te beheren.",
+        "table": {
+          "usergroup": "Gebruikersgroep",
+          "description": "Beschrijving",
+          "manage_users": "Gebruikers beheren",
+          "actions": "Acties"
+        },
+        "actions": {
+          "manage_users": "Gebruikers beheren",
+          "edit": "Bewerken",
+          "delete": "Verwijderen",
+          "create": "Gebruikersgroep aanmaken"
+        },
+        "modals": {
+          "manage_users": {
+            "title": "Beheer gebruikers van gebruikersgroep",
+            "description": "Beheer the gebruikers in deze gebruikersgroep",
+            "table": {
+              "user": "Gebruiker",
+              "linked": "Gekoppeld",
+              "actions": "Acties"
+            },
+            "status": {
+              "linked": "Gekoppeld",
+              "not_linked": "Niet gekoppeld"
+            },
+            "actions": {
+              "link": "Koppelen",
+              "unlink": "Ontkoppelen"
+            },
+            "toasts": {
+              "link_success": "Gebruiker succesvol gekoppeld",
+              "unlink_success": "Gebruiker succesvol ontkoppeld",
+              "error": "Fout {{status}}: {{detail}}"
+            }
+          },
+          "create": {
+            "title": "Gebruikersgroep aanmaken",
+            "description": "Maak een nieuwe gebruikersgroep aan om je gebruikers te beheren",
+            "form": {
+              "name": "Naam",
+              "name_required": "Naam is verplicht",
+              "description": "Beschrijving",
+              "submit": "Gebruikersgroep aanmaken",
+              "loading": "Laden..."
+            },
+            "toasts": {
+              "creating": "Aanmaken...",
+              "success": "Nieuwe gebruikersgroep succesvol aangemaakt",
+              "error": "Kon nieuwe gebruikersgroep niet aanmaken"
+            }
+          },
+          "edit": {
+            "title": "Gebruikersgroep bewerken",
+            "form": {
+              "name": "Naam",
+              "name_required": "Naam is verplicht",
+              "description": "Beschrijving",
+              "submit": "Gebruikersgroep opslaan",
+              "loading": "Laden..."
+            },
+            "toasts": {
+              "success": "Gebruikersgroep succesvol opgeslagen",
+              "error": "Er is een fout opgetreden bij het opslaan van de gebruikersgroep. Probeer het later opnieuw."
+            }
+          },
+          "delete": {
+            "title": "Gebruikersgroep verwijderen?",
+            "message": "Toegang tot alle middelen voor alle gebruikers in deze gebruikersgroep wordt verwijderd. Weet je zeker dat je deze gebruikersgroep wilt verwijderen?",
+            "button": "Gebruikersgroep verwijderen"
+          }
+        },
+        "toasts": {
+          "deleting": "Verwijderen...",
+          "delete_success": "Gebruikersgroep succesvol verwijderd",
+          "delete_error": "Fout bij het verwijderen van gebruikersgroep"
+        }
+      },
+      "roles": {
+        "title": "Beheer rollen & machtigingen",
+        "subtitle": "Rollen bepalen wat gebruikers kunnen doen binnen je organisatie. Maak aangepaste rollen met specifieke machtigingen voor verschillende soorten gebruikers.",
+        "table": {
+          "role_name": "Rolnaam",
+          "description": "Beschrijving",
+          "permissions": "Machtigingen",
+          "actions": "Acties"
+        },
+        "no_description": "Geen beschrijving",
+        "no_permissions": "Geen machtigingen",
+        "permissions_count": "{{count}} machtigingen",
+        "system_wide": "Systeembreed",
+        "actions": {
+          "edit": "Bewerken",
+          "delete": "Verwijderen",
+          "create": "Rol aanmaken"
+        },
+        "modals": {
+          "create": {
+            "title": "Rol aanmaken",
+            "description": "Maak een nieuwe rol aan met specifieke machtigingen",
+            "form": {
+              "role_name": "Rolnaam",
+              "role_name_placeholder": "bijv. Cursusbeheerder",
+              "description": "Beschrijving",
+              "description_placeholder": "Beschrijf wat deze rol kan doen...",
+              "permissions": "Machtigingen",
+              "select_all": "Alles selecteren",
+              "deselect_all": "Alles deselecteren",
+              "select": "Selecteren",
+              "deselect": "Deselecteren",
+              "submit": "Rol aanmaken",
+              "loading": "Aanmaken..."
+            },
+            "validation": {
+              "name_required": "Naam is verplicht",
+              "name_min_length": "Naam moet minimaal 2 tekens zijn",
+              "description_required": "Beschrijving is verplicht",
+              "description_min_length": "Beschrijving moet minimaal 10 tekens zijn"
+            },
+            "toasts": {
+              "success": "Nieuwe rol succesvol aangemaakt",
+              "error": "Kon nieuwe rol niet aanmaken"
+            },
+            "presets": {
+              "title": "Vooraf ingestelde machtigingen",
+              "admin": {
+                "name": "Admin",
+                "description": "Volledige platformcontrole met alle machtigingen"
+              },
+              "maintainer": {
+                "name": "Beheerder",
+                "description": "Kan cursussen, hoofdstukken en activiteiten beheren"
+              },
+              "instructor": {
+                "name": "Instructeur",
+                "description": "Kan eigen cursussen maken en beheren"
+              },
+              "viewer": {
+                "name": "Kijker",
+                "description": "Alleen-lezen toegang tot cursussen en inhoud"
+              },
+              "content_creator": {
+                "name": "Inhoudmaker",
+                "description": "Kan inhoud maken en bewerken, maar geen gebruikers beheren"
+              },
+              "user_manager": {
+                "name": "Gebruikersbeheerder",
+                "description": "Kan gebruikers en gebruikersgroepen beheren"
+              },
+              "moderator": {
+                "name": "Moderator",
+                "description": "Kan inhoud modereren en activiteiten beheren"
+              },
+              "analyst": {
+                "name": "Analist",
+                "description": "Alleen-lezen toegang met analytische functies"
+              },
+              "guest": {
+                "name": "Gast",
+                "description": "Beperkte toegang voor externe gebruikers"
+              }
+            },
+            "permissions": {
+              "title": "Machtigingen",
+              "sections": {
+                "courses": "Cursussen",
+                "users": "Gebruikers",
+                "usergroups": "Gebruikersgroepen",
+                "collections": "Collecties",
+                "organizations": "Organisaties",
+                "coursechapters": "Cursushoofdstukken",
+                "activities": "Activiteiten",
+                "roles": "Rollen",
+                "dashboard": "Dashboard"
+              },
+              "actions": {
+                "create": "Aanmaken",
+                "read": "Lezen",
+                "read_own": "Eigen lezen",
+                "update": "Bijwerken",
+                "update_own": "Eigen bijwerken",
+                "delete": "Verwijderen",
+                "delete_own": "Eigen verwijderen",
+                "access": "Toegang"
+              },
+              "select_all": "Alles selecteren",
+              "deselect_all": "Alles deselecteren",
+              "select": "Selecteren",
+              "deselect": "Deselecteren"
+            }
+          },
+          "edit": {
+            "title": "Rol bewerken",
+            "description": "Bewerk de machtigingen en details van de rol",
+            "form": {
+              "role_name": "Rolnaam",
+              "description": "Beschrijving",
+              "permissions": "Machtigingen",
+              "select_all": "Alles selecteren",
+              "deselect_all": "Alles deselecteren",
+              "select": "Selecteren",
+              "deselect": "Deselecteren",
+              "submit": "Rol opslaan",
+              "loading": "Opslaan..."
+            },
+            "validation": {
+              "name_required": "Naam is verplicht",
+              "name_min_length": "Naam moet minimaal 2 tekens zijn",
+              "description_required": "Beschrijving is verplicht",
+              "description_min_length": "Beschrijving moet minimaal 10 tekens zijn"
+            },
+            "toasts": {
+              "success": "Rol succesvol opgeslagen",
+              "error": "Er is een fout opgetreden bij het opslaan van de rol. Probeer het later opnieuw."
+            }
+          },
+          "delete": {
+            "title": "Rol verwijderen?",
+            "message": "Deze actie kan niet ongedaan worden gemaakt. Alle gebruikers met deze rol verliezen hun machtigingen. Weet je zeker dat je deze rol wilt verwijderen?",
+            "button": "Rol verwijderen"
+          }
+        },
+        "toasts": {
+          "deleting": "Verwijderen...",
+          "delete_success": "Rol succesvol verwijderd",
+          "delete_error": "Fout bij het verwijderen van rol"
+        }
+      }
+    },
+    "assignments": {
+      "home": {
+        "title": "Opdrachten",
+        "course_label": "Cursus",
+        "assignment_label": "Opdracht",
+        "course_editor": "Cursus Editor",
+        "editor": "Editor",
+        "submissions": "Inzendingen",
+        "no_assignments": "Er zijn geen opdrachten voor deze cursus. Maak cursusopdrachten aan in de cursus editor"
+      },
+      "detail": {
+        "title": "Opdracht Tooling",
+        "tabs": {
+          "editor": "Editor",
+          "submissions": "Inzendingen"
+        },
+        "mobile": {
+          "title": "Alleen voor Desktop",
+          "message1": "Deze pagina is alleen toegankelijk op desktop-apparaten.",
+          "message2": "Schakel over naar een desktop om opdrachten te bekijken en te beheren."
+        },
+        "publishing": {
+          "published": "Gepubliceerd",
+          "unpublished": "Niet gepubliceerd",
+          "edit_tooltip": "Opdrachtdetails bewerken",
+          "preview_tooltip": "Voorbeeld van opdracht als student",
+          "unpublish_tooltip": "Maak de opdracht privé voor studenten",
+          "publish_tooltip": "Publiceer de opdracht om deze zichtbaar te maken voor studenten",
+          "edit": "Bewerken",
+          "preview": "Voorbeeld",
+          "unpublish": "Publicatie ongedaan maken",
+          "publish": "Publiceren",
+          "toasts": {
+            "updating": "Opdracht bijwerken...",
+            "update_success": "Opdracht succesvol bijgewerkt",
+            "update_error": "Er is een fout opgetreden bij het bijwerken van de opdracht. Probeer het later opnieuw."
+          }
+        }
+      },
+      "editor": {
+        "tasks_title": "Taken",
+        "add_task": "Taak toevoegen",
+        "add_task_modal": {
+          "title": "Voeg opdracht-taak toe",
+          "description": "Maak een nieuwe taak voor deze opdracht"
+        },
+        "task_types": {
+          "quiz": {
+            "title": "Quiz",
+            "description": "Vraag met meerkeuze-antwoorden"
+          },
+          "file_submission": {
+            "title": "Bestand indienen",
+            "description": "Studenten kunnen een bestand indienen voor deze taak"
+          },
+          "form": {
+            "title": "Formulier",
+            "description": "Een invulformulier voor studenten"
+          }
+        },
+        "toasts": {
+          "task_created": "Taak succesvol aangemaakt",
+          "task_saved": "Taak succesvol opgeslagen",
+          "task_save_error": "Er is een fout opgetreden bij het opslaan van de taak. Probeer het later opnieuw.",
+          "task_updated": "Taak succesvol bijgewerkt",
+          "task_update_error": "Er is een fout opgetreden bij het bijwerken van de taak. Probeer het later opnieuw.",
+          "reminder": "Vergeet niet de publicatie van de opdracht ongedaan te maken bij het bewerken of toevoegen van taken om problemen met studenten te voorkomen. Je kunt het opnieuw publiceren als je klaar bent."
+        },
+        "task_editor": {
+          "general": {
+            "title": "Titel",
+            "description": "Beschrijving",
+            "hint": "Tip",
+            "reference_file": "Referentiebestand",
+            "reference_file_info": "Toegestane formaten: pdf, docx, mp4, jpg, jpeg, png, pptx, zip",
+            "max_grade_value": "Maximale cijferwaarde",
+            "max_grade_error": "Waarde moet tussen 20 en 100 liggen",
+            "submit": "Verzenden",
+            "download": "Downloaden",
+            "change_reference_file": "Referentiebestand wijzigen",
+            "loading": "Laden",
+            "reference_file_updated": "Referentiebestand succesvol bijgewerkt",
+            "allowed_formats": "Toegestane formaten: pdf, docx, mp4, jpg, jpeg, png, pptx, zip",
+            "sign_in_required": "Log in om bestanden te uploaden",
+            "auth_required": "Authenticatie vereist. Log in om bestanden te uploaden.",
+            "auth_required_submit": "Authenticatie vereist. Log in om de taak in te dienen.",
+            "hint_optional": "Tip (optioneel)"
+          }
+        }
+      },
+      "submissions": {
+        "status": {
+          "late": "Te laat",
+          "submitted": "Ingediend",
+          "graded": "Beoordeeld"
+        },
+        "submission_label": "Inzending",
+        "evaluate": "Evalueren",
+        "evaluate_modal": {
+          "title": "Evalueer @{{username}}",
+          "description": "Evalueer de inzending"
+        },
+        "task_label": "Taak {{number}} :",
+        "hint": "Tip",
+        "reference_document": "Referentiedocument",
+        "actions": {
+          "reject": "Opdracht afwijzen",
+          "set_final_grade": "Eindcijfer instellen",
+          "mark_as_done": "Markeer gebruikersactiviteit als voltooid"
+        },
+        "toasts": {
+          "reject_success": "Opdracht succesvol afgewezen"
+        }
+      },
+      "modals": {
+        "edit": {
+          "title": "Opdracht bewerken",
+          "description": "Werk de opdrachtdetails bij",
+          "form": {
+            "title_label": "Opdracht titel",
+            "title_required": "Geef de opdracht een naam",
+            "description_label": "Opdracht beschrijving",
+            "description_required": "Geef een beschrijving van de opdracht",
+            "due_date_label": "Inleverdatum",
+            "due_date_required": "Stel een inleverdatum in voor de opdracht",
+            "grading_type_label": "Beoordelingstype",
+            "grading_type_required": "Selecteer een beoordelingstype voor de opdracht",
+            "grading_types": {
+              "alphabet": "Alfabet",
+              "numeric": "Numeriek",
+              "percentage": "Percentage"
+            },
+            "cancel": "Annuleren",
+            "save": "Wijzigingen opslaan",
+            "saving": "Opslaan..."
+          },
+          "toasts": {
+            "updating": "Opdracht bijwerken...",
+            "success": "Opdracht succesvol bijgewerkt",
+            "error": "Bijwerken van opdracht mislukt",
+            "error_detail": "Er is een fout opgetreden bij het bijwerken van de opdracht"
+          }
+        },
+        "create": {
+          "form": {
+            "title_label": "Opdracht titel",
+            "title_required": "Geef de opdracht een naam",
+            "description_label": "Opdracht beschrijving",
+            "description_required": "Geef een beschrijving van de opdracht",
+            "due_date_label": "Inleverdatum",
+            "due_date_required": "Stel een inleverdatum in voor de opdracht",
+            "grading_type_label": "Beoordelingstype",
+            "grading_type_required": "Selecteer een beoordelingstype voor de opdracht",
+            "grading_types": {
+              "alphabet": "Alfabet",
+              "numeric": "Numeriek",
+              "percentage": "Percentage"
+            },
+            "submit": "Activiteit aanmaken"
+          },
+          "toasts": {
+            "creating": "Opdracht aanmaken...",
+            "success": "Opdracht succesvol aangemaakt"
+          }
+        }
+      }
+    },
+    "courses": {
+      "title": "Cursussen",
+      "rights_guide": "Gids voor rechten",
+      "create_course": "Cursus aanmaken",
+      "create_new_course": "Maak een nieuwe cursus aan",
+      "no_courses": "Nog geen cursussen",
+      "create_course_placeholder": "Maak een cursus aan om inhoud toe te voegen",
+      "no_courses_available": "Nog geen cursussen beschikbaar",
+      "overview_top": {
+        "course_label": "Cursus",
+        "rights_guide_button": "Gids voor rechten"
+      },
+      "settings": {
+        "tabs": {
+          "general": "Algemeen",
+          "content": "Inhoud",
+          "access": "Toegang",
+          "contributors": "Bijdragers",
+          "certification": "Certificering"
+        },
+        "access_denied": {
+          "title": "Toegang geweigerd",
+          "message": "Je hebt geen rechten om deze cursus te bekijken."
+        },
+        "access_restricted": {
+          "title": "Toegang beperkt",
+          "message": "Je hebt geen rechten om {{tab}} te bekijken"
+        },
+        "loading": "Laden..."
+      },
+      "general": {
+        "form": {
+          "name_label": "Naam",
+          "name_required": "Naam is verplicht",
+          "name_max_length": "Naam mag niet langer zijn dan 100 tekens",
+          "description_label": "Beschrijving",
+          "description_required": "Beschrijving is verplicht",
+          "description_max_length": "Beschrijving mag niet langer zijn dan 1000 tekens",
+          "about_label": "Over",
+          "learnings_label": "Wat je leert",
+          "learnings_required": "Wat je leert is verplicht",
+          "learnings_invalid_format": "Ongeldig formaat voor wat je leert",
+          "learnings_min_items": "Voeg minimaal één leerdoel toe",
+          "learnings_empty_text": "Leerdoelen mogen niet leeg zijn",
+          "learnings_invalid_json": "Ongeldig JSON-formaat",
+          "tags_label": "Tags",
+          "tags_placeholder": "Druk op Enter om toe te voegen...",
+          "thumbnail_type_label": "Miniatuurtype",
+          "thumbnail_type_image": "Afbeelding",
+          "thumbnail_type_video": "Video",
+          "thumbnail_type_both": "Beide",
+          "thumbnail_label": "Miniatuur",
+          "image_search_placeholder": "Zoek afbeeldingen..."
+        },
+        "thumbnail": {
+          "upload_image": "Afbeelding uploaden",
+          "upload_video": "Video uploaden",
+          "gallery": "Galerij",
+          "tabs": {
+            "image": "Afbeelding",
+            "video": "Video"
+          },
+          "supported_formats": {
+            "image": "Ondersteunt PNG, JPG/JPEG (Max 8MB)",
+            "video": "Ondersteunt MP4, WebM (Max 100MB)"
+          }
+        },
+        "errors": {
+          "save_failed": "Opslaan van cursusstructuur mislukt."
+        }
+      },
+      "access": {
+        "title": "Toegang tot cursus",
+        "subtitle": "Kies of je cursus openbaar op internet moet zijn of alleen toegankelijk voor ingelogde gebruikers",
+        "public": {
+          "title": "Openbaar",
+          "description": "De cursus is openbaar beschikbaar op internet, wordt geïndexeerd door zoekmachines en is voor iedereen toegankelijk",
+          "active": "Actief",
+          "confirmation_title": "Wijzigen naar Openbaar?",
+          "confirmation_message": "Weet je zeker dat je deze cursus openbaar wilt maken op internet?",
+          "confirmation_button": "Wijzigen naar Openbaar"
+        },
+        "users_only": {
+          "title": "Alleen Gebruikers",
+          "description": "De cursus is alleen toegankelijk voor ingelogde gebruikers, en je kunt optioneel gebruikersgroepen selecteren die toegang hebben tot deze cursus",
+          "active": "Actief",
+          "confirmation_title": "Wijzigen naar Alleen Gebruikers?",
+          "confirmation_message": "Weet je zeker dat je deze cursus alleen toegankelijk wilt maken voor ingelogde gebruikers?",
+          "confirmation_button": "Wijzigen naar Alleen Gebruikers"
+        },
+        "usergroups": {
+          "title": "Gebruikersgroepen",
+          "subtitle": "Als je alleen bepaalde gebruikersgroepen toegang wilt geven tot deze cursus, kun je deze hier koppelen",
+          "table": {
+            "name": "Naam",
+            "actions": "Acties"
+          },
+          "actions": {
+            "delete_link": "Link verwijderen",
+            "link_to_usergroup": "Koppelen aan gebruikersgroep"
+          },
+          "modals": {
+            "link_title": "Koppel cursus aan gebruikersgroep",
+            "link_description": "Selecteer de gebruikersgroep waaraan je deze cursus wilt koppelen. Gebruikers in deze groep hebben toegang tot de cursus.",
+            "unlink_title": "Ontkoppelen van gebruikersgroep?",
+            "unlink_message": "Gebruikers in deze groep hebben geen toegang meer tot deze cursus",
+            "unlink_button": "Link verwijderen",
+            "warning": "Gebruikers die niet in de gebruikersgroep zitten, hebben geen toegang meer tot deze cursus",
+            "usergroup_name": "Naam gebruikersgroep",
+            "no_usergroups": "Geen gebruikersgroepen beschikbaar",
+            "create_usergroup": "Gebruikersgroep aanmaken",
+            "link_button": "Koppelen"
+          },
+          "toasts": {
+            "link_success": "Succesvol gekoppeld aan gebruikersgroep",
+            "link_error": "Fout {{status}}: {{detail}}",
+            "unlink_success": "Gebruikersgroep succesvol ontkoppeld",
+            "unlink_error": "Fout bij het ontkoppelen van gebruikersgroep."
+          }
+        }
+      },
+      "contributors": {
+        "title": "Cursus Bijdragers",
+        "subtitle": "Beheer bijdragers en voeg nieuwe bijdragers toe aan de cursus",
+        "open_to_contributors": {
+          "title": "Open voor bijdragers",
+          "description": "De cursus staat open voor bijdragers. Gebruikers kunnen zich aanmelden om bijdrager te worden en te helpen de cursusinhoud te verbeteren.",
+          "active": "Actief",
+          "confirmation_title": "Openen voor bijdragers?",
+          "confirmation_message": "Weet je zeker dat je deze cursus wilt openen voor bijdragers?",
+          "confirmation_button": "Openen voor bijdragers"
+        },
+        "closed_to_contributors": {
+          "title": "Gesloten voor bijdragers",
+          "description": "De cursus is gesloten voor bijdragers. Alleen bestaande bijdragers kunnen de cursusinhoud bewerken.",
+          "active": "Actief",
+          "confirmation_title": "Sluiten voor bijdragers?",
+          "confirmation_message": "Weet je zeker dat je deze cursus wilt sluiten voor bijdragers?",
+          "confirmation_button": "Sluiten voor bijdragers"
+        },
+        "search": {
+          "placeholder": "Zoek gebruikers om toe te voegen als bijdrager op naam of gebruikersnaam...",
+          "searching": "Zoeken...",
+          "no_results": "Geen gebruikers gevonden"
+        },
+        "table": {
+          "name": "Naam",
+          "username": "Gebruikersnaam",
+          "email": "E-mail",
+          "role": "Rol",
+          "status": "Status",
+          "added_on": "Toegevoegd op"
+        },
+        "roles": {
+          "creator": "Maker",
+          "contributor": "Bijdrager",
+          "maintainer": "Beheerder",
+          "reporter": "Reporter"
+        },
+        "statuses": {
+          "active": "Actief",
+          "inactive": "Inactief",
+          "pending": "In afwachting"
+        },
+        "actions": {
+          "selected_users": "{{count}} gebruiker geselecteerd",
+          "selected_users_plural": "{{count}} gebruikers geselecteerd",
+          "clear": "Wissen",
+          "add_selected": "Geselecteerde toevoegen",
+          "selected_contributors": "{{count}} bijdrager geselecteerd",
+          "selected_contributors_plural": "{{count}} bijdragers geselecteerd",
+          "remove_selected": "Geselecteerde verwijderen",
+          "already_contributor": "Al een bijdrager"
+        },
+        "toasts": {
+          "add_success": "{{count}} bijdrager(s) succesvol toegevoegd",
+          "add_error": "Toevoegen van {{username}} mislukt: {{reason}}",
+          "add_failed": "Toevoegen van bijdragers mislukt",
+          "update_success": "Bijdrager succesvol bijgewerkt",
+          "update_error": "Fout: {{detail}}",
+          "update_failed": "Er is een fout opgetreden bij het bijwerken van de bijdrager.",
+          "remove_success": "{{count}} bijdrager(s) succesvol verwijderd",
+          "remove_failed": "Verwijderen van bijdragers mislukt",
+          "cannot_modify_creator": "Je kunt de rol of status van de maker niet wijzigen"
+        }
+      },
+      "certification": {
+        "title": "Cursus Certificering",
+        "subtitle": "Activeer en configureer certificaten voor studenten die deze cursus voltooien",
+        "form": {
+          "certification_name_label": "Certificeringsnaam",
+          "certification_name_required": "Certificeringsnaam is verplicht indien ingeschakeld",
+          "certification_name_max_length": "Naam mag niet langer zijn dan 100 tekens",
+          "certification_name_placeholder": "bijv. Geavanceerde JavaScript Certificering",
+          "certification_type_label": "Certificeringstype",
+          "certification_description_label": "Certificeringsbeschrijving",
+          "certification_description_required": "Beschrijving is verplicht indien ingeschakeld",
+          "certification_description_max_length": "Beschrijving mag niet langer zijn dan 500 tekens",
+          "certification_description_placeholder": "Beschrijf wat deze certificering vertegenwoordigt en de waarde ervan...",
+          "certificate_pattern_label": "Certificaatpatroon",
+          "certificate_instructor_label": "Naam instructeur (optioneel)",
+          "certificate_instructor_placeholder": "bijv. Dr. Jane Smith"
+        },
+        "types": {
+          "completion": "Cursusvoltooiing",
+          "achievement": "Op basis van prestaties",
+          "assessment": "Op basis van beoordeling",
+          "participation": "Deelname",
+          "mastery": "Vaardigheidsbeheersing",
+          "professional": "Professionele ontwikkeling",
+          "continuing": "Permanente educatie",
+          "workshop": "Aanwezigheid bij workshop",
+          "specialization": "Specialisatie"
+        },
+        "patterns": {
+          "royal": {
+            "name": "Koninklijk",
+            "description": "Sierlijke stijl met kroonmotieven"
+          },
+          "tech": {
+            "name": "Tech",
+            "description": "Circuit-geïnspireerde patronen"
+          },
+          "nature": {
+            "name": "Natuur",
+            "description": "Organische bladpatronen"
+          },
+          "geometric": {
+            "name": "Geometrisch",
+            "description": "Abstracte vormen en lijnen"
+          },
+          "vintage": {
+            "name": "Vintage",
+            "description": "Art Deco styling"
+          },
+          "waves": {
+            "name": "Golven",
+            "description": "Vloeiende waterpatronen"
+          },
+          "minimal": {
+            "name": "Minimaal",
+            "description": "Schoon en eenvoudig"
+          },
+          "professional": {
+            "name": "Professioneel",
+            "description": "Zakelijk ontwerp"
+          },
+          "academic": {
+            "name": "Academisch",
+            "description": "Traditionele universiteitsstijl"
+          },
+          "modern": {
+            "name": "Modern",
+            "description": "Eigentijdse strakke lijnen"
+          }
+        },
+        "sections": {
+          "basic_info": {
+            "title": "Basis Informatie",
+            "subtitle": "Configureer de basisdetails van je certificering"
+          },
+          "certificate_design": {
+            "title": "Certificaat Ontwerp",
+            "subtitle": "Kies een decoratief patroon voor je certificaat"
+          },
+          "preview": {
+            "title": "Certificaat Voorbeeld",
+            "subtitle": "Real-time voorbeeld van hoe je certificaat eruit zal zien"
+          }
+        },
+        "states": {
+          "disabled": {
+            "title": "Certificering niet geconfigureerd",
+            "message": "Schakel certificering in om studenten een certificaat aan te bieden bij het voltooien van de cursus.",
+            "button": "Certificering inschakelen",
+            "creating": "Inschakelen..."
+          },
+          "creating": {
+            "title": "Certificering aanmaken...",
+            "message": "Even geduld terwijl we de cursuscertificering voor je instellen."
+          }
+        },
+        "errors": {
+          "loading": "Fout bij het laden van certificering",
+          "create_failed": "Aanmaken van certificering mislukt.",
+          "remove_failed": "Verwijderen van certificering mislukt."
+        },
+        "toasts": {
+          "create_success": "Certificering succesvol aangemaakt",
+          "create_error": "Aanmaken van certificering mislukt",
+          "remove_success": "Certificering succesvol verwijderd",
+          "remove_error": "Verwijderen van certificering mislukt"
+        }
+      },
+      "structure": {
+        "loading": "Laden...",
+        "add_chapter_button": "Hoofdstuk toevoegen",
+        "modals": {
+          "new_chapter": {
+            "title": "Hoofdstuk aanmaken",
+            "description": "Voeg een nieuw hoofdstuk toe aan je cursus",
+            "form": {
+              "name_label": "Hoofdstuknaam",
+              "name_required": "Geef het hoofdstuk een naam",
+              "description_label": "Hoofdstukbeschrijving",
+              "description_required": "Geef een beschrijving van het hoofdstuk",
+              "submit": "Hoofdstuk aanmaken"
+            }
+          },
+          "delete_chapter": {
+            "title": "Verwijder {{name}}?",
+            "message": "Weet je zeker dat je dit hoofdstuk wilt verwijderen?",
+            "button": "Hoofdstuk verwijderen"
+          },
+          "new_activity": {
+            "title": "Activiteit aanmaken",
+            "description": "Kies een van de activiteitstypen om aan je cursus toe te voegen"
+          },
+          "delete_activity": {
+            "title": "Verwijder {{name}}?",
+            "message": "Weet je zeker dat je deze activiteit wilt verwijderen?",
+            "button": "Activiteit verwijderen"
+          }
+        },
+        "actions": {
+          "add_chapter": "Hoofdstuk toevoegen",
+          "add_activity": "Activiteit toevoegen",
+          "publish": "Publiceren",
+          "unpublish": "Publicatie ongedaan maken",
+          "preview_activity": "Activiteit bekijken",
+          "edit_page": "Pagina bewerken",
+          "edit_assignment": "Opdracht bewerken"
+        },
+        "chapter_element": {
+          "chapter_name_placeholder": "Naam van het hoofdstuk"
+        },
+        "activity": {
+          "name_placeholder": "Naam van de activiteit",
+          "types": {
+            "video": "Video",
+            "document": "Document",
+            "assignment": "Opdracht",
+            "assignments": "Opdrachten",
+            "dynamic": "Dynamisch",
+            "dynamic_page": "Dynamische Pagina"
+          },
+          "toasts": {
+            "deleting": "Activiteit verwijderen...",
+            "delete_success": "Activiteit succesvol verwijderd",
+            "updating": "Opdracht bijwerken...",
+            "update_success": "Activiteit succesvol bijgewerkt",
+            "name_update_success": "Activiteitnaam succesvol bijgewerkt",
+            "name_update_error": "Bijwerken van activiteitnaam mislukt",
+            "creating": "Activiteit aanmaken...",
+            "create_success": "Activiteit succesvol aangemaakt",
+            "uploading": "Bestand uploaden & activiteit aanmaken...",
+            "upload_success": "Bestand succesvol geüpload",
+            "creating_uploading": "Activiteit aanmaken & bestand uploaden..."
+          }
+        }
+      }
+    }
   }
 }

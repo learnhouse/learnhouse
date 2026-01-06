@@ -34,6 +34,10 @@
     "loading": "Memuat...",
     "search": "Cari",
     "all": "Semua",
+    "help": "Bantuan",
+    "plans": "Paket",
+    "enterprise": "Enterprise",
+    "version": "Versi",
     "users": "Pengguna",
     "save": "Simpan",
     "cancel": "Batal",
@@ -418,5 +422,1300 @@
     "days_ago": "{{count}} hari yang lalu",
     "hours_ago": "{{count}} jam yang lalu",
     "minutes_ago": "{{count}} menit yang lalu"
+  },
+  "dashboard": {
+    "home": {
+      "cards": {
+        "courses": {
+          "title": "Kursus",
+          "description": "Buat dan kelola kursus, bab, dan aktivitas"
+        },
+        "organization": {
+          "title": "Organisasi",
+          "description": "Konfigurasikan pengaturan umum Organisasi Anda"
+        },
+        "users": {
+          "title": "Pengguna",
+          "description": "Kelola pengguna dan peran Organisasi Anda"
+        },
+        "account_settings": {
+          "title": "Pengaturan Akun",
+          "description": "Konfigurasikan pengaturan pribadi, kata sandi, email Anda"
+        }
+      },
+      "learnhouse_university": "Universitas LearnHouse"
+    },
+    "courses": {
+      "title": "Kursus",
+      "rights_guide": "Panduan Hak",
+      "create_course": "Buat Kursus",
+      "create_new_course": "Buat kursus baru",
+      "no_courses": "Belum ada kursus",
+      "create_course_placeholder": "Buat kursus untuk menambahkan konten",
+      "no_courses_available": "Belum ada kursus yang tersedia"
+    },
+    "organization": {
+      "settings": {
+        "title": "Pengaturan Organisasi",
+        "subtitle": "Kelola profil dan pengaturan organisasi Anda",
+        "tabs": {
+          "general": "Umum",
+          "landing": "Halaman Landas",
+          "previews": "Gambar & Pratinjau",
+          "socials": "Media Sosial",
+          "other": "Lainnya"
+        },
+        "pages": {
+          "general": {
+            "title": "Umum",
+            "subtitle": "Kelola pengaturan organisasi Anda"
+          },
+          "previews": {
+            "title": "Pratinjau",
+            "subtitle": "Kelola pratinjau organisasi Anda"
+          },
+          "socials": {
+            "title": "Media Sosial",
+            "subtitle": "Kelola tautan media sosial organisasi Anda"
+          },
+          "landing": {
+            "title": "Halaman Landas",
+            "subtitle": "Sesuaikan halaman landas organisasi Anda"
+          },
+          "other": {
+            "title": "Lainnya",
+            "subtitle": "Kelola pengaturan organisasi tambahan"
+          }
+        },
+        "name": "Nama Organisasi",
+        "name_placeholder": "Nama Organisasi",
+        "short_description": "Deskripsi Singkat",
+        "short_description_placeholder": "Deskripsi singkat organisasi Anda",
+        "label": "Label Organisasi",
+        "label_placeholder": "Pilih label organisasi",
+        "about": "Tentang Organisasi",
+        "about_placeholder": "Deskripsi terperinci tentang organisasi Anda",
+        "showcase_explore": "Tampilkan di LearnHouse Explore",
+        "showcase_description": "Bagikan kursus dan konten organisasi Anda dengan komunitas LearnHouse. Aktifkan ini untuk membantu pelajar menemukan sumber daya pendidikan berharga Anda.",
+        "save_changes": "Simpan Perubahan",
+        "saving": "Menyimpan...",
+        "update_success": "Organisasi Diperbarui",
+        "update_error": "Gagal memperbarui organisasi",
+        "updating": "Memperbarui organisasi..."
+      },
+      "images": {
+        "title": "Gambar & Pratinjau",
+        "subtitle": "Kelola logo, thumbnail, dan gambar pratinjau organisasi Anda",
+        "tabs": {
+          "logo": "Logo",
+          "thumbnail": "Thumbnail",
+          "previews": "Pratinjau"
+        },
+        "upload_logo": "Unggah Logo Baru",
+        "upload_thumbnail": "Unggah Thumbnail Baru",
+        "uploading": "Mengunggah...",
+        "uploading_logo": "Mengunggah logo...",
+        "uploading_thumbnail": "Mengunggah thumbnail...",
+        "uploading_previews": "Mengunggah {{count}} pratinjau...",
+        "uploading_previews_plural": "Mengunggah {{count}} pratinjau...",
+        "accepted_files": "Menerima PNG, JPG (maks 5MB)",
+        "recommended_size": "Ukuran yang disarankan: 200x100 piksel",
+        "add_preview": "Tambah Pratinjau",
+        "drag_to_reorder": "Tarik untuk menyusun ulang • Maksimum 4 pratinjau • Mendukung gambar & video",
+        "video_modal": {
+          "title": "Tambah Pratinjau",
+          "images": "Unggah Gambar",
+          "youtube": "YouTube",
+          "youtube_desc": "Tambah video YouTube",
+          "loom": "Loom",
+          "loom_desc": "Tambah video Loom",
+          "url_placeholder": "Tempel URL video {{service}} Anda",
+          "add_button": "Tambah Video"
+        },
+        "toasts": {
+          "logo_success": "Logo Diperbarui",
+          "logo_error": "Gagal mengunggah logo",
+          "thumbnail_success": "Thumbnail Diperbarui",
+          "thumbnail_error": "Gagal mengunggah thumbnail",
+          "preview_added": "{{count}} pratinjau ditambahkan",
+          "preview_added_plural": "{{count}} pratinjau ditambahkan",
+          "preview_error": "Gagal mengunggah pratinjau",
+          "preview_removed": "Pratinjau dihapus",
+          "preview_remove_error": "Gagal menghapus pratinjau",
+          "order_updated": "Urutan pratinjau diperbarui",
+          "order_update_error": "Gagal memperbarui urutan pratinjau",
+          "max_previews": "Anda hanya dapat mengunggah {{count}} pratinjau lagi",
+          "max_previews_plural": "Anda hanya dapat mengunggah {{count}} pratinjau lagi",
+          "invalid_url": "URL {{type}} tidak valid",
+          "video_exists": "Video ini telah ditambahkan",
+          "adding_video": "Menambahkan pratinjau video...",
+          "video_preview_added": "Pratinjau video ditambahkan",
+          "video_preview_error": "Gagal menambahkan pratinjau video",
+          "updating_order": "Memperbarui urutan pratinjau..."
+        }
+      },
+      "socials": {
+        "title": "Tautan Sosial",
+        "subtitle": "Kelola kehadiran media sosial organisasi Anda",
+        "labels": {
+          "social_links": "Tautan Sosial",
+          "custom_links": "Tautan Kustom"
+        },
+        "placeholders": {
+          "twitter": "URL profil Twitter",
+          "facebook": "URL profil Facebook",
+          "instagram": "URL profil Instagram",
+          "youtube": "URL saluran YouTube",
+          "label": "Label",
+          "url": "URL"
+        },
+        "add_link": "Tambah Tautan",
+        "custom_links_desc": "Tambah hingga 3 tautan kustom yang akan muncul di profil organisasi Anda"
+      },
+      "scripts": {
+        "title": "Skrip",
+        "subtitle": "Tambah skrip JavaScript kustom ke organisasi Anda",
+        "warning": "Demi keamanan organisasi Anda, pastikan Anda mempercayai dan memahami skrip apa pun sebelum menambahkannya. Skrip dapat berinteraksi dengan halaman organisasi Anda.",
+        "add_script": "Tambah Skrip",
+        "no_scripts": "Belum ada skrip yang ditambahkan",
+        "add_first_script": "Tambah skrip pertama Anda untuk memulai",
+        "script_name": "Nama Skrip",
+        "script_content": "Konten Skrip",
+        "placeholders": {
+          "name": "Masukkan nama skrip",
+          "content": "Masukkan kode JavaScript"
+        },
+        "save_script": "Simpan Skrip",
+        "toasts": {
+          "save_success": "Skrip berhasil disimpan",
+          "delete_success": "Skrip berhasil dihapus"
+        }
+      },
+      "audit_logs": {
+        "title": "Log Audit",
+        "subtitle": "Lacak dan pantau semua aktivitas dalam organisasi Anda",
+        "refresh": "Segarkan log",
+        "export": "Ekspor",
+        "search_by": "Cari berdasarkan",
+        "placeholders": {
+          "search": "Cari..."
+        },
+        "filters": {
+          "resource": "Sumber Daya",
+          "status": "Status",
+          "date": "Tanggal"
+        },
+        "resources": {
+          "all": "Semua Sumber Daya",
+          "user": "Pengguna",
+          "course": "Kursus",
+          "org": "Organisasi"
+        },
+        "date_ranges": {
+          "all": "Semua Waktu",
+          "today": "Hari Ini",
+          "7d": "7 Hari Terakhir",
+          "30d": "30 Hari Terakhir",
+          "custom": "Rentang Kustom"
+        },
+        "table": {
+          "timestamp": "Stempel Waktu",
+          "user": "Pengguna",
+          "resource": "Sumber Daya",
+          "path_method": "Jalur & Metode",
+          "ip_address": "Alamat IP",
+          "status": "Status",
+          "payload": "Payload"
+        },
+        "loading": "Memuat aktivitas...",
+        "no_logs": "Tidak ada log ditemukan",
+        "pagination": {
+          "showing": "Menampilkan {{start}} sampai {{end}} dari {{total}} log"
+        },
+        "modals": {
+          "payload": {
+            "title": "Payload Peristiwa",
+            "description": "Data terperinci untuk tindakan: {{action}}"
+          }
+        },
+        "export_toasts": {
+          "generating": "Menghasilkan CSV...",
+          "success": "CSV berhasil diekspor",
+          "error": "Gagal mengekspor CSV"
+        }
+      },
+      "landing": {
+        "title": "Halaman Landas",
+        "subtitle": "Sesuaikan halaman landas organisasi Anda",
+        "beta": "BETA",
+        "save_changes": "Simpan Perubahan",
+        "saving": "Menyimpan...",
+        "saved_success": "Halaman landas berhasil disimpan",
+        "save_error": "Kesalahan menyimpan halaman landas",
+        "sections": "Bagian",
+        "select_section": "Pilih bagian untuk diedit atau tambahkan yang baru",
+        "section_types": {
+          "hero": {
+            "label": "Hero",
+            "description": "Tambah bagian hero dengan judul dan ajakan bertindak"
+          },
+          "text_and_image": {
+            "label": "Teks & Gambar",
+            "description": "Tambah bagian dengan teks dan gambar"
+          },
+          "logos": {
+            "label": "Logo",
+            "description": "Tambah bagian untuk menampilkan logo"
+          },
+          "people": {
+            "label": "Orang",
+            "description": "Tambah bagian untuk menyoroti anggota tim"
+          },
+          "featured_courses": {
+            "label": "Kursus",
+            "description": "Tambah bagian untuk menampilkan kursus terpilih"
+          }
+        },
+        "add_section": "Tambah Bagian",
+        "hero_editor": {
+          "title": "Bagian Hero",
+          "section_title": "Judul Bagian",
+          "section_title_placeholder": "Masukkan judul bagian",
+          "tabs": {
+            "content": "Konten",
+            "background": "Latar Belakang",
+            "buttons": "Tombol",
+            "illustration": "Ilustrasi"
+          },
+          "heading": "Judul",
+          "heading_placeholder": "Masukkan teks judul",
+          "heading_color": "Warna Judul",
+          "subheading": "Subjudul",
+          "subheading_placeholder": "Masukkan teks subjudul",
+          "subheading_color": "Warna Subjudul",
+          "background_type": "Tipe Latar Belakang",
+          "background_type_placeholder": "Pilih tipe latar belakang",
+          "background_types": {
+            "solid": "Warna Solid",
+            "gradient": "Gradien",
+            "image": "Gambar"
+          },
+          "background_color": "Warna Latar Belakang",
+          "gradient_type": "Tipe Gradien",
+          "gradient_type_placeholder": "Pilih tipe gradien",
+          "gradient_types": {
+            "preset": "Gradien Prasetel",
+            "custom": "Gradien Kustom"
+          },
+          "start_color": "Warna Mulai",
+          "end_color": "Warna Selesai",
+          "gradient_direction": "Arah Gradien",
+          "gradient_direction_placeholder": "Pilih arah gradien",
+          "gradient_preset": "Prasetel Gradien",
+          "gradient_preset_placeholder": "Pilih prasetel gradien",
+          "background_image": "Gambar Latar Belakang",
+          "upload_image": "Unggah Gambar",
+          "button_text_colors": "Teks & Warna Tombol",
+          "button_text": "Teks tombol",
+          "text_color": "Teks",
+          "background_color_label": "Latar Belakang",
+          "button_link": "Tautan Tombol",
+          "button_link_placeholder": "Tautan tombol",
+          "add_button": "Tambah Tombol",
+          "illustration_image": "Gambar Ilustrasi",
+          "illustration_url": "URL Ilustrasi",
+          "alt_text": "Teks alternatif",
+          "upload_illustration": "Unggah Ilustrasi",
+          "position": "Posisi",
+          "position_placeholder": "Pilih posisi",
+          "positions": {
+            "left": "Kiri",
+            "right": "Kanan"
+          },
+          "size": "Ukuran",
+          "size_placeholder": "Pilih ukuran",
+          "sizes": {
+            "small": "Kecil",
+            "medium": "Sedang",
+            "large": "Besar"
+          },
+          "remove_illustration": "Hapus Ilustrasi"
+        },
+        "text_image_editor": {
+          "title": "Bagian Teks & Gambar",
+          "title_label": "Judul",
+          "title_placeholder": "Masukkan judul bagian",
+          "content": "Konten",
+          "content_placeholder": "Masukkan konten bagian",
+          "image_position": "Posisi Gambar",
+          "image_position_placeholder": "Pilih posisi gambar",
+          "positions": {
+            "left": "Kiri",
+            "right": "Kanan"
+          },
+          "image": "Gambar",
+          "image_url": "URL Gambar",
+          "alt_text": "Teks alternatif",
+          "upload_new_image": "Unggah Gambar Baru"
+        },
+        "logos_editor": {
+          "title": "Bagian Logo",
+          "title_label": "Judul",
+          "title_placeholder": "Masukkan judul bagian",
+          "logos": "Logo",
+          "logo_url": "URL Logo",
+          "alt_text": "Teks alternatif",
+          "upload_logo": "Unggah Logo",
+          "add_logo": "Tambah Logo"
+        },
+        "people_editor": {
+          "title": "Bagian Orang",
+          "title_label": "Judul",
+          "title_placeholder": "Masukkan judul bagian",
+          "people": "Orang",
+          "name": "Nama",
+          "name_placeholder": "Nama orang",
+          "username": "Nama pengguna",
+          "username_placeholder": "@username",
+          "image": "Gambar",
+          "image_url": "URL Gambar",
+          "upload_avatar": "Unggah Avatar",
+          "description": "Deskripsi",
+          "description_placeholder": "Deskripsi atau peran",
+          "add_person": "Tambah Orang"
+        },
+        "courses_editor": {
+          "title": "Bagian Kursus",
+          "title_label": "Judul",
+          "title_placeholder": "Masukkan judul bagian",
+          "select_courses": "Pilih Kursus",
+          "loading_courses": "Memuat kursus...",
+          "selected": "Terpilih",
+          "select": "Pilih"
+        }
+      }
+    },
+    "users": {
+      "settings": {
+        "tabs": {
+          "users": "Pengguna",
+          "usergroups": "Grup Pengguna",
+          "roles": "Peran",
+          "signups": "Pendaftaran & Kode Undangan",
+          "add": "Undang Anggota",
+          "audit_logs": "Log Audit"
+        },
+        "pages": {
+          "users": {
+            "title": "Pengguna",
+            "subtitle": "Kelola pengguna organisasi Anda, tetapkan peran dan izin"
+          },
+          "signups": {
+            "title": "Pendaftaran & Kode Undangan",
+            "subtitle": "Pilih dari mana pengguna dapat bergabung dengan organisasi Anda"
+          },
+          "add": {
+            "title": "Undang Anggota",
+            "subtitle": "Undang anggota untuk bergabung dengan organisasi Anda"
+          },
+          "usergroups": {
+            "title": "Grup Pengguna",
+            "subtitle": "Buat dan kelola grup pengguna"
+          },
+          "roles": {
+            "title": "Peran",
+            "subtitle": "Buat dan kelola peran dengan izin tertentu"
+          },
+          "audit_logs": {
+            "title": "Log Audit",
+            "subtitle": "Lacak dan pantau semua aktivitas dalam organisasi Anda"
+          }
+        },
+        "mobile": {
+          "title": "Hanya Desktop",
+          "message1": "Halaman ini hanya dapat diakses dari perangkat desktop.",
+          "message2": "Silakan beralih ke desktop untuk melihat dan mengelola pengaturan pengguna."
+        }
+      },
+      "active_users": {
+        "title": "Pengguna aktif",
+        "subtitle": "Kelola pengguna organisasi Anda, tetapkan peran dan izin",
+        "table": {
+          "user": "Pengguna",
+          "role": "Peran",
+          "actions": "Tindakan"
+        },
+        "actions": {
+          "edit_role": "Edit Peran",
+          "remove_from_org": "Hapus dari organisasi",
+          "removing": "Menghapus...",
+          "remove_success": "Berhasil menghapus pengguna dari organisasi",
+          "remove_error": "Kesalahan menghapus pengguna"
+        },
+        "modals": {
+          "update_role": {
+            "title": "Perbarui Peran",
+            "description": "Perbarui peran @{{username}}"
+          },
+          "remove_user": {
+            "title": "Hapus {{username}} ?",
+            "message": "Apakah Anda yakin ingin menghapus pengguna ini dari organisasi?",
+            "button": "Hapus Pengguna"
+          }
+        }
+      },
+      "signups": {
+        "title": "Metode bergabung",
+        "subtitle": "Pilih bagaimana pengguna dapat bergabung dengan organisasi Anda",
+        "open": {
+          "title": "Terbuka",
+          "description": "Pengguna dapat bergabung secara bebas dari halaman pendaftaran",
+          "active": "Aktif",
+          "change_to": "Ubah ke terbuka",
+          "confirmation_message": "Apakah Anda yakin ingin mengubah mekanisme pendaftaran menjadi terbuka? Ini akan memungkinkan pengguna bergabung dengan organisasi Anda secara bebas.",
+          "confirmation_title": "Ubah ke terbuka ?"
+        },
+        "closed": {
+          "title": "Tertutup",
+          "description": "Pengguna dapat bergabung hanya melalui undangan",
+          "active": "Aktif",
+          "change_to": "Ubah ke tertutup",
+          "confirmation_message": "Apakah Anda yakin ingin mengubah mekanisme pendaftaran menjadi tertutup? Ini akan memungkinkan pengguna bergabung dengan organisasi Anda hanya melalui undangan.",
+          "confirmation_title": "Ubah ke tertutup ?"
+        },
+        "invite_codes": {
+          "title": "Kode undangan",
+          "subtitle": "Kode undangan dapat disalin dan digunakan untuk bergabung dengan organisasi Anda",
+          "table": {
+            "code": "Kode",
+            "signup_link": "Tautan pendaftaran",
+            "type": "Tipe",
+            "expiration_date": "Tanggal kedaluwarsa",
+            "actions": "Tindakan"
+          },
+          "types": {
+            "linked_to_usergroup": "Terhubung ke Grup Pengguna",
+            "normal": "Normal"
+          },
+          "actions": {
+            "delete_code": "Hapus kode",
+            "delete_confirmation_title": "Hapus kode ?",
+            "delete_confirmation_message": "Apakah Anda yakin ingin menghapus kode undangan ini ?",
+            "generate": "Hasilkan kode undangan",
+            "generate_title": "Hasilkan Kode Undangan",
+            "generate_description": "Hasilkan kode undangan baru untuk organisasi Anda"
+          },
+          "toasts": {
+            "deleting": "Menghapus...",
+            "delete_success": "Kode undangan dihapus",
+            "delete_error": "Kesalahan menghapus",
+            "changing_method": "Mengubah metode bergabung...",
+            "change_success": "Berhasil mengubah metode bergabung ke {{method}}",
+            "change_error": "Kesalahan mengubah metode bergabung"
+          }
+        },
+        "generate_modal": {
+          "linked_title": "Kode Undangan terhubung ke Grup Pengguna",
+          "linked_description": "Saat Pendaftaran, Pengguna akan secara otomatis terhubung ke Grup Pengguna pilihan Anda",
+          "normal_title": "Kode Undangan Normal",
+          "normal_description": "Saat Pendaftaran, Pengguna tidak akan terhubung ke Grup Pengguna mana pun",
+          "generate_button": "Hasilkan",
+          "no_usergroups": "Tidak ada Grup Pengguna tersedia",
+          "create_usergroup_link": "Buat Grup Pengguna",
+          "toasts": {
+            "error": "Kesalahan {{status}}: {{detail}}"
+          }
+        }
+      },
+      "invite_members": {
+        "title": "Undang pengguna ke Organisasi Anda",
+        "subtitle": "Kirim undangan melalui email, dipisahkan dengan koma",
+        "email_placeholder": "Contoh: spike.spiegel@bepop.space, michael.scott@dundermifflin.com",
+        "invite_code_label": "Kode Undangan",
+        "invite_code_tooltip": "Gunakan salah satu kode undangan yang Anda hasilkan dari halaman akses pendaftaran",
+        "send_button": "Kirim undangan melalui email",
+        "invited_users": {
+          "title": "Pengguna yang Diundang",
+          "subtitle": "Pengguna yang telah diundang untuk bergabung dengan organisasi Anda",
+          "table": {
+            "email": "Email",
+            "signup_status": "Status Pendaftaran",
+            "email_sent": "Email terkirim"
+          },
+          "status": {
+            "pending": "Tertunda",
+            "signed": "Sudah daftar"
+          },
+          "email_status": {
+            "sent": "Terkirim",
+            "no": "Tidak"
+          }
+        },
+        "toasts": {
+          "sending": "Mengirim undangan...",
+          "success": "Undangan terkirim",
+          "error": "Kesalahan mengirim undangan"
+        }
+      },
+      "usergroups": {
+        "title": "Kelola Grup Pengguna & Pengguna",
+        "subtitle": "Grup Pengguna adalah cara untuk mengelompokkan pengguna bersama-sama untuk mengelola akses mereka ke sumber daya (Kursus) di organisasi Anda.",
+        "table": {
+          "usergroup": "Grup Pengguna",
+          "description": "Deskripsi",
+          "manage_users": "Kelola Pengguna",
+          "actions": "Tindakan"
+        },
+        "actions": {
+          "manage_users": "Kelola Pengguna",
+          "edit": "Edit",
+          "delete": "Hapus",
+          "create": "Buat Grup Pengguna"
+        },
+        "modals": {
+          "manage_users": {
+            "title": "Kelola Pengguna Grup Pengguna",
+            "description": "Kelola pengguna dalam Grup Pengguna ini",
+            "table": {
+              "user": "Pengguna",
+              "linked": "Terhubung",
+              "actions": "Tindakan"
+            },
+            "status": {
+              "linked": "Terhubung",
+              "not_linked": "Tidak terhubung"
+            },
+            "actions": {
+              "link": "Hubungkan",
+              "unlink": "Putuskan"
+            },
+            "toasts": {
+              "link_success": "Pengguna berhasil terhubung",
+              "unlink_success": "Pengguna berhasil diputuskan",
+              "error": "Kesalahan {{status}}: {{detail}}"
+            }
+          },
+          "create": {
+            "title": "Buat Grup Pengguna",
+            "description": "Buat grup pengguna baru untuk mengelola pengguna",
+            "form": {
+              "name": "Nama",
+              "name_required": "Nama Wajib Diisi",
+              "description": "Deskripsi",
+              "submit": "Buat Grup Pengguna",
+              "loading": "Memuat..."
+            },
+            "toasts": {
+              "creating": "Membuat...",
+              "success": "Grup pengguna baru dibuat",
+              "error": "Tidak dapat membuat grup pengguna baru"
+            }
+          },
+          "edit": {
+            "title": "Edit Grup Pengguna",
+            "form": {
+              "name": "Nama",
+              "name_required": "Nama Wajib Diisi",
+              "description": "Deskripsi",
+              "submit": "Simpan Grup Pengguna",
+              "loading": "Memuat..."
+            },
+            "toasts": {
+              "success": "Grup pengguna berhasil disimpan",
+              "error": "Kesalahan menyimpan Grup Pengguna, silakan coba lagi nanti."
+            }
+          },
+          "delete": {
+            "title": "Hapus Grup Pengguna ?",
+            "message": "Akses ke semua sumber daya akan dihapus untuk semua pengguna dalam Grup Pengguna ini. Apakah Anda yakin ingin menghapus Grup Pengguna ini ?",
+            "button": "Hapus Grup Pengguna"
+          }
+        },
+        "toasts": {
+          "deleting": "Menghapus...",
+          "delete_success": "Grup pengguna dihapus",
+          "delete_error": "Kesalahan menghapus grup pengguna"
+        }
+      },
+      "roles": {
+        "title": "Kelola Peran & Izin",
+        "subtitle": "Peran menentukan apa yang dapat dilakukan pengguna dalam organisasi Anda. Buat peran kustom dengan izin tertentu untuk tipe pengguna yang berbeda.",
+        "table": {
+          "role_name": "Nama Peran",
+          "description": "Deskripsi",
+          "permissions": "Izin",
+          "actions": "Tindakan"
+        },
+        "no_description": "Tidak ada deskripsi",
+        "no_permissions": "Tidak ada izin",
+        "permissions_count": "{{count}} izin",
+        "system_wide": "Seluruh sistem",
+        "actions": {
+          "edit": "Edit",
+          "delete": "Hapus",
+          "create": "Buat Peran"
+        },
+        "modals": {
+          "create": {
+            "title": "Buat Peran",
+            "description": "Buat peran baru dengan izin tertentu",
+            "form": {
+              "role_name": "Nama Peran",
+              "role_name_placeholder": "mis., Manajer Kursus",
+              "description": "Deskripsi",
+              "description_placeholder": "Jelaskan apa yang dapat dilakukan peran ini...",
+              "permissions": "Izin",
+              "select_all": "Pilih Semua",
+              "deselect_all": "Hapus Semua Pilihan",
+              "select": "Pilih",
+              "deselect": "Hapus Pilihan",
+              "submit": "Buat Peran",
+              "loading": "Membuat..."
+            },
+            "validation": {
+              "name_required": "Wajib isi",
+              "name_min_length": "Nama harus minimal 2 karakter",
+              "description_required": "Wajib isi",
+              "description_min_length": "Deskripsi harus minimal 10 karakter"
+            },
+            "toasts": {
+              "success": "Berhasil membuat peran baru",
+              "error": "Tidak dapat membuat peran baru"
+            },
+            "presets": {
+              "title": "Hak Pradefinisi",
+              "admin": {
+                "name": "Admin",
+                "description": "Kontrol platform penuh dengan semua izin"
+              },
+              "maintainer": {
+                "name": "Maintainer",
+                "description": "Dapat mengelola kursus, bab, dan aktivitas"
+              },
+              "instructor": {
+                "name": "Instruktur",
+                "description": "Dapat membuat dan mengelola kursus mereka sendiri"
+              },
+              "viewer": {
+                "name": "Viewer",
+                "description": "Akses baca-saja ke kursus dan konten"
+              },
+              "content_creator": {
+                "name": "Pembuat Konten",
+                "description": "Dapat membuat dan mengedit konten tetapi tidak dapat mengelola pengguna"
+              },
+              "user_manager": {
+                "name": "Manajer Pengguna",
+                "description": "Dapat mengelola pengguna dan grup pengguna"
+              },
+              "moderator": {
+                "name": "Moderator",
+                "description": "Dapat memoderasi konten dan mengelola aktivitas"
+              },
+              "analyst": {
+                "name": "Analis",
+                "description": "Akses baca-saja dengan kemampuan analitik"
+              },
+              "guest": {
+                "name": "Tamu",
+                "description": "Akses terbatas untuk pengguna eksternal"
+              }
+            },
+            "permissions": {
+              "title": "Izin",
+              "sections": {
+                "courses": "Kursus",
+                "users": "Pengguna",
+                "usergroups": "Grup Pengguna",
+                "collections": "Koleksi",
+                "organizations": "Organisasi",
+                "coursechapters": "Bab Kursus",
+                "activities": "Aktivitas",
+                "roles": "Peran",
+                "dashboard": "Dasbor"
+              },
+              "actions": {
+                "create": "buat",
+                "read": "baca",
+                "read_own": "baca milik sendiri",
+                "update": "perbarui",
+                "update_own": "perbarui milik sendiri",
+                "delete": "hapus",
+                "delete_own": "hapus milik sendiri",
+                "access": "akses"
+              },
+              "select_all": "Pilih Semua",
+              "deselect_all": "Hapus Semua Pilihan",
+              "select": "Pilih",
+              "deselect": "Hapus Pilihan"
+            }
+          },
+          "edit": {
+            "title": "Edit Peran",
+            "description": "Edit izin dan detail peran",
+            "form": {
+              "role_name": "Nama Peran",
+              "description": "Deskripsi",
+              "permissions": "Izin",
+              "select_all": "Pilih Semua",
+              "deselect_all": "Hapus Semua Pilihan",
+              "select": "Pilih",
+              "deselect": "Hapus Pilihan",
+              "submit": "Simpan Peran",
+              "loading": "Menyimpan..."
+            },
+            "validation": {
+              "name_required": "Wajib isi",
+              "name_min_length": "Nama harus minimal 2 karakter",
+              "description_required": "Wajib isi",
+              "description_min_length": "Deskripsi harus minimal 10 karakter"
+            },
+            "toasts": {
+              "success": "Peran berhasil disimpan",
+              "error": "Kesalahan menyimpan peran, silakan coba lagi nanti."
+            }
+          },
+          "delete": {
+            "title": "Hapus Peran ?",
+            "message": "Tindakan ini tidak dapat dibatalkan. Semua pengguna dengan peran ini akan kehilangan izin mereka. Apakah Anda yakin ingin menghapus peran ini?",
+            "button": "Hapus Peran"
+          }
+        },
+        "toasts": {
+          "deleting": "Menghapus...",
+          "delete_success": "Peran dihapus",
+          "delete_error": "Kesalahan menghapus peran"
+        }
+      }
+    },
+    "assignments": {
+      "home": {
+        "title": "Tugas",
+        "course_label": "Kursus",
+        "assignment_label": "Tugas",
+        "course_editor": "Editor Kursus",
+        "editor": "Editor",
+        "submissions": "Pengiriman",
+        "no_assignments": "Tidak ada tugas yang tersedia untuk kursus ini, buat tugas kursus dari editor kursus"
+      },
+      "detail": {
+        "title": "Alat Tugas",
+        "tabs": {
+          "editor": "Editor",
+          "submissions": "Pengiriman"
+        },
+        "mobile": {
+          "title": "Hanya Desktop",
+          "message1": "Halaman ini hanya dapat diakses dari perangkat desktop.",
+          "message2": "Silakan beralih ke desktop untuk melihat dan mengelola tugas."
+        },
+        "publishing": {
+          "published": "Diterbitkan",
+          "unpublished": "Tidak Diterbitkan",
+          "edit_tooltip": "Edit Detail Tugas",
+          "preview_tooltip": "Pratinjau Tugas sebagai siswa",
+          "unpublish_tooltip": "Jadikan Tugas Anda tidak tersedia bagi siswa",
+          "publish_tooltip": "Jadikan Tugas Anda publik dan tersedia bagi siswa",
+          "edit": "Edit",
+          "preview": "Pratinjau",
+          "unpublish": "Batalkan Terbit",
+          "publish": "Terbitkan",
+          "toasts": {
+            "updating": "Memperbarui tugas...",
+            "update_success": "Tugas telah berhasil diperbarui",
+            "update_error": "Kesalahan memperbarui tugas, silakan coba lagi nanti."
+          }
+        }
+      },
+      "editor": {
+        "tasks_title": "Tugas",
+        "add_task": "Tambah Tugas",
+        "add_task_modal": {
+          "title": "Tambah Tugas Mandiri",
+          "description": "Buat tugas baru untuk aktivitas ini"
+        },
+        "task_types": {
+          "quiz": {
+            "title": "Kuis",
+            "description": "Pertanyaan dengan pilihan jawaban ganda"
+          },
+          "file_submission": {
+            "title": "Pengiriman file",
+            "description": "Siswa dapat mengirimkan file untuk tugas ini"
+          },
+          "form": {
+            "title": "Formulir",
+            "description": "Isi formulir kosong untuk siswa"
+          }
+        },
+        "toasts": {
+          "task_created": "Tugas berhasil dibuat",
+          "task_saved": "Tugas berhasil disimpan",
+          "task_save_error": "Kesalahan menyimpan tugas, silakan coba lagi nanti.",
+          "task_updated": "Tugas berhasil diperbarui",
+          "task_update_error": "Kesalahan memperbarui tugas, silakan coba lagi nanti.",
+          "reminder": "Saat mengedit/menambah tugas Anda, pastikan untuk Membatalkan Terbit Tugas Anda untuk menghindari masalah dengan siswa, Anda dapat Menerbitkannya kembali setelah siap."
+        },
+        "task_editor": {
+          "general": {
+            "title": "Judul",
+            "description": "Deskripsi",
+            "hint": "Petunjuk",
+            "reference_file": "File referensi",
+            "reference_file_info": "Format yang diizinkan: pdf, docx, mp4, jpg, jpeg, png, pptx, zip",
+            "max_grade_value": "Nilai Maksimal",
+            "max_grade_error": "Nilai harus antara 20 dan 100",
+            "submit": "Kirim",
+            "download": "Unduh",
+            "change_reference_file": "Ubah File Referensi",
+            "loading": "Memuat",
+            "reference_file_updated": "File referensi berhasil diperbarui",
+            "allowed_formats": "Format yang diizinkan: pdf, docx, mp4, jpg, jpeg, png, pptx, zip",
+            "sign_in_required": "Silakan masuk untuk mengunggah file",
+            "auth_required": "Autentikasi diperlukan. Silakan masuk untuk mengunggah file.",
+            "auth_required_submit": "Autentikasi diperlukan. Silakan masuk untuk mengirimkan tugas Anda.",
+            "hint_optional": "Petunjuk (opsional)"
+          }
+        }
+      },
+      "submissions": {
+        "status": {
+          "late": "Terlambat",
+          "submitted": "Dikirim",
+          "graded": "Dinilai"
+        },
+        "submission_label": "Pengiriman",
+        "evaluate": "Evaluasi",
+        "evaluate_modal": {
+          "title": "Evaluasi @{{username}}",
+          "description": "Evaluasi pengiriman"
+        },
+        "task_label": "Tugas {{number}} :",
+        "hint": "Petunjuk",
+        "reference_document": "Dokumen Referensi",
+        "actions": {
+          "reject": "Tolak Tugas",
+          "set_final_grade": "Tetapkan nilai akhir",
+          "mark_as_done": "Tandai Aktivitas sebagai Selesai untuk Pengguna"
+        },
+        "toasts": {
+          "reject_success": "Tugas berhasil ditolak"
+        }
+      },
+      "modals": {
+        "edit": {
+          "title": "Edit Tugas",
+          "description": "Perbarui detail tugas",
+          "form": {
+            "title_label": "Judul Tugas",
+            "title_required": "Berikan nama untuk tugas Anda",
+            "description_label": "Deskripsi Tugas",
+            "description_required": "Berikan deskripsi untuk tugas Anda",
+            "due_date_label": "Tenggat Waktu",
+            "due_date_required": "Berikan tenggat waktu untuk tugas Anda",
+            "grading_type_label": "Tipe Penilaian",
+            "grading_type_required": "Berikan tipe penilaian untuk tugas Anda",
+            "grading_types": {
+              "alphabet": "Alfabet",
+              "numeric": "Numerik",
+              "percentage": "Persentase"
+            },
+            "cancel": "Batal",
+            "save": "Simpan Perubahan",
+            "saving": "Menyimpan..."
+          },
+          "toasts": {
+            "updating": "Memperbarui tugas...",
+            "success": "Tugas berhasil diperbarui",
+            "error": "Gagal memperbarui tugas",
+            "error_detail": "Terjadi kesalahan saat memperbarui tugas"
+          }
+        },
+        "create": {
+          "form": {
+            "title_label": "Judul Tugas",
+            "title_required": "Berikan nama untuk tugas Anda",
+            "description_label": "Deskripsi Tugas",
+            "description_required": "Berikan deskripsi untuk tugas Anda",
+            "due_date_label": "Tenggat Waktu",
+            "due_date_required": "Berikan tenggat waktu untuk tugas Anda",
+            "grading_type_label": "Tipe Penilaian",
+            "grading_type_required": "Berikan tipe penilaian untuk tugas Anda",
+            "grading_types": {
+              "alphabet": "Alfabet",
+              "numeric": "Numerik",
+              "percentage": "Persentase"
+            },
+            "submit": "Buat aktivitas"
+          },
+          "toasts": {
+            "creating": "Membuat tugas...",
+            "success": "Tugas berhasil dibuat"
+          }
+        }
+      }
+    },
+    "courses": {
+      "title": "Kursus",
+      "rights_guide": "Panduan Hak",
+      "create_course": "Buat Kursus",
+      "create_new_course": "Buat kursus baru",
+      "no_courses": "Belum ada kursus",
+      "create_course_placeholder": "Buat kursus untuk menambahkan konten",
+      "no_courses_available": "Belum ada kursus yang tersedia",
+      "overview_top": {
+        "course_label": "Kursus",
+        "rights_guide_button": "Panduan Hak"
+      },
+      "settings": {
+        "tabs": {
+          "general": "Umum",
+          "content": "Konten",
+          "access": "Akses",
+          "contributors": "Kontributor",
+          "certification": "Sertifikasi"
+        },
+        "access_denied": {
+          "title": "Akses Ditolak",
+          "message": "Anda tidak memiliki izin untuk mengakses kursus ini."
+        },
+        "access_restricted": {
+          "title": "Akses Dibatasi",
+          "message": "Anda tidak memiliki izin untuk mengakses {{tab}}"
+        },
+        "loading": "Memuat..."
+      },
+      "general": {
+        "form": {
+          "name_label": "Nama",
+          "name_required": "Wajib isi",
+          "name_max_length": "Harus 100 karakter atau kurang",
+          "description_label": "Deskripsi",
+          "description_required": "Wajib isi",
+          "description_max_length": "Harus 1000 karakter atau kurang",
+          "about_label": "Tentang",
+          "learnings_label": "Pembelajaran",
+          "learnings_required": "Wajib isi",
+          "learnings_invalid_format": "Format tidak valid",
+          "learnings_min_items": "Setidaknya satu item pembelajaran diperlukan",
+          "learnings_empty_text": "Semua item pembelajaran harus memiliki teks",
+          "learnings_invalid_json": "Format JSON tidak valid",
+          "tags_label": "Tag",
+          "tags_placeholder": "Tekan Enter untuk menambah...",
+          "thumbnail_type_label": "Tipe Thumbnail",
+          "thumbnail_type_image": "Gambar",
+          "thumbnail_type_video": "Video",
+          "thumbnail_type_both": "Keduanya",
+          "thumbnail_label": "Thumbnail",
+          "image_search_placeholder": "Cari gambar..."
+        },
+        "thumbnail": {
+          "upload_image": "Unggah Gambar",
+          "upload_video": "Unggah Video",
+          "gallery": "Galeri",
+          "tabs": {
+            "image": "Gambar",
+            "video": "Video"
+          },
+          "supported_formats": {
+            "image": "Format yang diizinkan: PNG, JPG/JPEG (maks 8MB)",
+            "video": "Format yang diizinkan: MP4, WebM (maks 100MB)"
+          }
+        },
+        "errors": {
+          "save_failed": "Gagal menyimpan struktur kursus."
+        }
+      },
+      "access": {
+        "title": "Akses ke kursus",
+        "subtitle": "Pilih apakah Anda ingin kursus Anda tersedia secara publik di internet atau hanya dapat diakses oleh pengguna yang sudah masuk",
+        "public": {
+          "title": "Publik",
+          "description": "Kursus tersedia secara publik di internet, diindeks oleh mesin pencari dan dapat diakses oleh siapa saja",
+          "active": "Aktif",
+          "confirmation_title": "Ubah ke Publik?",
+          "confirmation_message": "Apakah Anda yakin ingin kursus ini tersedia secara publik di internet?",
+          "confirmation_button": "Ubah ke Publik"
+        },
+        "users_only": {
+          "title": "Hanya Pengguna",
+          "description": "Kursus hanya dapat diakses oleh pengguna yang sudah masuk, selain itu Anda dapat memilih Grup Pengguna mana yang dapat mengakses kursus ini",
+          "active": "Aktif",
+          "confirmation_title": "Ubah ke Hanya Pengguna?",
+          "confirmation_message": "Apakah Anda yakin ingin kursus ini hanya dapat diakses oleh pengguna yang sudah masuk?",
+          "confirmation_button": "Ubah ke Hanya Pengguna"
+        },
+        "usergroups": {
+          "title": "Grup Pengguna",
+          "subtitle": "Anda dapat memilih untuk memberikan akses kursus ini ke grup pengguna tertentu saja dengan menghubungkannya ke Grup Pengguna",
+          "table": {
+            "name": "Nama",
+            "actions": "Tindakan"
+          },
+          "actions": {
+            "delete_link": "Hapus tautan",
+            "link_to_usergroup": "Hubungkan ke Grup Pengguna"
+          },
+          "modals": {
+            "link_title": "Hubungkan Kursus ke Grup Pengguna",
+            "link_description": "Pilih Grup Pengguna untuk dihubungkan dengan kursus ini. Pengguna dari Grup Pengguna ini akan memiliki akses ke kursus ini.",
+            "unlink_title": "Putuskan Grup Pengguna?",
+            "unlink_message": "Pengguna dari Grup Pengguna ini tidak akan lagi memiliki akses ke kursus ini",
+            "unlink_button": "Hapus Tautan",
+            "warning": "Pengguna yang bukan bagian dari Grup Pengguna tidak akan lagi memiliki akses ke kursus ini",
+            "usergroup_name": "Nama Grup Pengguna",
+            "no_usergroups": "Tidak ada Grup Pengguna tersedia",
+            "create_usergroup": "Buat Grup Pengguna",
+            "link_button": "Hubungkan"
+          },
+          "toasts": {
+            "link_success": "Berhasil terhubung ke grup pengguna",
+            "link_error": "Kesalahan {{status}}: {{detail}}",
+            "unlink_success": "Berhasil diputuskan dari grup pengguna",
+            "unlink_error": "Terjadi kesalahan saat memutuskan hubungan grup pengguna."
+          }
+        }
+      },
+      "contributors": {
+        "title": "Kontributor Kursus",
+        "subtitle": "Kelola kontributor dan tambahkan yang baru ke kursus Anda",
+        "open_to_contributors": {
+          "title": "Terbuka untuk Kontributor",
+          "description": "Kursus terbuka untuk kontributor. Pengguna dapat mendaftar untuk menjadi kontributor dan membantu meningkatkan konten kursus.",
+          "active": "Aktif",
+          "confirmation_title": "Buka untuk Kontributor?",
+          "confirmation_message": "Apakah Anda yakin ingin membuka kursus ini untuk kontributor?",
+          "confirmation_button": "Buka untuk Kontributor"
+        },
+        "closed_to_contributors": {
+          "title": "Tertutup untuk Kontributor",
+          "description": "Kursus tertutup untuk kontributor. Hanya kontributor yang ada yang dapat memodifikasi konten kursus.",
+          "active": "Aktif",
+          "confirmation_title": "Tutup untuk Kontributor?",
+          "confirmation_message": "Apakah Anda yakin ingin menutup kursus ini untuk kontributor?",
+          "confirmation_button": "Tutup untuk Kontributor"
+        },
+        "search": {
+          "placeholder": "Cari pengguna berdasarkan nama atau nama pengguna untuk ditambahkan sebagai kontributor...",
+          "searching": "Mencari...",
+          "no_results": "Tidak ada pengguna ditemukan"
+        },
+        "table": {
+          "name": "Nama",
+          "username": "Nama pengguna",
+          "email": "Email",
+          "role": "Peran",
+          "status": "Status",
+          "added_on": "Ditambahkan Pada"
+        },
+        "roles": {
+          "creator": "PEMBUAT",
+          "contributor": "KONTRIBUTOR",
+          "maintainer": "MAINTAINER",
+          "reporter": "REPORTER"
+        },
+        "statuses": {
+          "active": "AKTIF",
+          "inactive": "TIDAK AKTIF",
+          "pending": "TERTUNDA"
+        },
+        "actions": {
+          "selected_users": "{{count}} pengguna terpilih",
+          "selected_users_plural": "{{count}} pengguna terpilih",
+          "clear": "Bersihkan",
+          "add_selected": "Tambah yang Terpilih",
+          "selected_contributors": "{{count}} kontributor terpilih",
+          "selected_contributors_plural": "{{count}} kontributor terpilih",
+          "remove_selected": "Hapus yang Terpilih",
+          "already_contributor": "Sudah menjadi kontributor"
+        },
+        "toasts": {
+          "add_success": "Berhasil menambahkan {{count}} kontributor",
+          "add_error": "Gagal menambahkan {{username}}: {{reason}}",
+          "add_failed": "Gagal menambahkan kontributor",
+          "update_success": "Berhasil memperbarui kontributor",
+          "update_error": "Kesalahan: {{detail}}",
+          "update_failed": "Terjadi kesalahan saat memperbarui kontributor.",
+          "remove_success": "Berhasil menghapus {{count}} kontributor",
+          "remove_failed": "Gagal menghapus kontributor",
+          "cannot_modify_creator": "Tidak dapat memodifikasi peran atau status pembuat"
+        }
+      },
+      "certification": {
+        "title": "Sertifikasi Kursus",
+        "subtitle": "Aktifkan dan konfigurasikan sertifikat untuk siswa yang menyelesaikan kursus ini",
+        "form": {
+          "certification_name_label": "Nama Sertifikasi",
+          "certification_name_required": "Wajib saat sertifikasi diaktifkan",
+          "certification_name_max_length": "Harus 100 karakter atau kurang",
+          "certification_name_placeholder": "mis., Sertifikasi JavaScript Tingkat Lanjut",
+          "certification_type_label": "Tipe Sertifikasi",
+          "certification_description_label": "Deskripsi Sertifikasi",
+          "certification_description_required": "Wajib saat sertifikasi diaktifkan",
+          "certification_description_max_length": "Harus 500 karakter atau kurang",
+          "certification_description_placeholder": "Jelaskan apa yang direpresentasikan oleh sertifikasi ini dan nilainya...",
+          "certificate_pattern_label": "Pola Sertifikat",
+          "certificate_instructor_label": "Nama Instruktur (Opsional)",
+          "certificate_instructor_placeholder": "mis., Dr. Jane Smith"
+        },
+        "types": {
+          "completion": "Penyelesaian Kursus",
+          "achievement": "Berdasarkan Pencapaian",
+          "assessment": "Berdasarkan Penilaian",
+          "participation": "Partisipasi",
+          "mastery": "Penguasaan Keahlian",
+          "professional": "Pengembangan Profesional",
+          "continuing": "Pendidikan Berkelanjutan",
+          "workshop": "Kehadiran Workshop",
+          "specialization": "Spesialisasi"
+        },
+        "patterns": {
+          "royal": {
+            "name": "Royal",
+            "description": "Berhias dengan motif mahkota"
+          },
+          "tech": {
+            "name": "Tech",
+            "description": "Pola yang terinspirasi sirkuit"
+          },
+          "nature": {
+            "name": "Nature",
+            "description": "Pola daun organik"
+          },
+          "geometric": {
+            "name": "Geometric",
+            "description": "Bentuk & garis abstrak"
+          },
+          "vintage": {
+            "name": "Vintage",
+            "description": "Gaya art deco"
+          },
+          "waves": {
+            "name": "Waves",
+            "description": "Pola air mengalir"
+          },
+          "minimal": {
+            "name": "Minimal",
+            "description": "Bersih dan sederhana"
+          },
+          "professional": {
+            "name": "Professional",
+            "description": "Desain siap bisnis"
+          },
+          "academic": {
+            "name": "Academic",
+            "description": "Gaya universitas tradisional"
+          },
+          "modern": {
+            "name": "Modern",
+            "description": "Garis bersih kontemporer"
+          }
+        },
+        "sections": {
+          "basic_info": {
+            "title": "Informasi Dasar",
+            "subtitle": "Konfigurasikan detail dasar sertifikasi Anda"
+          },
+          "certificate_design": {
+            "title": "Desain Sertifikat",
+            "subtitle": "Pilih pola dekoratif untuk sertifikat Anda"
+          },
+          "preview": {
+            "title": "Pratinjau Sertifikat",
+            "subtitle": "Pratinjau langsung sertifikat Anda"
+          }
+        },
+        "states": {
+          "disabled": {
+            "title": "Sertifikasi Belum Dikonfigurasi",
+            "message": "Aktifkan sertifikasi untuk memberikan sertifikat kepada siswa setelah penyelesaian kursus.",
+            "button": "Aktifkan Sertifikasi",
+            "creating": "Membuat..."
+          },
+          "creating": {
+            "title": "Membuat Sertifikasi...",
+            "message": "Harap tunggu sementara kami menyiapkan sertifikasi kursus Anda."
+          }
+        },
+        "errors": {
+          "loading": "Kesalahan memuat sertifikasi",
+          "create_failed": "Gagal membuat sertifikasi.",
+          "remove_failed": "Gagal menghapus sertifikasi."
+        },
+        "toasts": {
+          "create_success": "Sertifikasi berhasil dibuat",
+          "create_error": "Gagal membuat sertifikasi",
+          "remove_success": "Sertifikasi berhasil dihapus",
+          "remove_error": "Gagal menghapus sertifikasi"
+        }
+      },
+      "structure": {
+        "loading": "Memuat...",
+        "add_chapter_button": "Tambah Bab",
+        "modals": {
+          "new_chapter": {
+            "title": "Buat bab",
+            "description": "Tambah bab baru ke kursus",
+            "form": {
+              "name_label": "Nama bab",
+              "name_required": "Harap berikan nama bab",
+              "description_label": "Deskripsi bab",
+              "description_required": "Harap berikan deskripsi bab",
+              "submit": "Buat Bab"
+            }
+          },
+          "delete_chapter": {
+            "title": "Hapus {{name}} ?",
+            "message": "Apakah Anda yakin ingin menghapus bab ini?",
+            "button": "Hapus Bab"
+          },
+          "new_activity": {
+            "title": "Buat Aktivitas",
+            "description": "Pilih di antara tipe aktivitas untuk ditambahkan ke kursus"
+          },
+          "delete_activity": {
+            "title": "Hapus {{name}} ?",
+            "message": "Apakah Anda yakin ingin menghapus aktivitas ini ?",
+            "button": "Hapus Aktivitas"
+          }
+        },
+        "actions": {
+          "add_chapter": "Tambah Bab",
+          "add_activity": "Tambah Aktivitas",
+          "publish": "Terbitkan",
+          "unpublish": "Batalkan Terbit",
+          "preview_activity": "Pratinjau Aktivitas",
+          "edit_page": "Edit Halaman",
+          "edit_assignment": "Edit Tugas"
+        },
+        "chapter_element": {
+          "chapter_name_placeholder": "Nama bab"
+        },
+        "activity": {
+          "name_placeholder": "Nama aktivitas",
+          "types": {
+            "video": "Video",
+            "document": "Dokumen",
+            "assignment": "Tugas",
+            "assignments": "Tugas",
+            "dynamic": "Dinamis",
+            "dynamic_page": "Halaman Dinamis"
+          },
+          "toasts": {
+            "deleting": "Menghapus aktivitas...",
+            "delete_success": "Aktivitas berhasil dihapus",
+            "updating": "Memperbarui tugas...",
+            "update_success": "Aktivitas telah berhasil diperbarui",
+            "name_update_success": "Nama aktivitas berhasil diperbarui",
+            "name_update_error": "Gagal memperbarui nama aktivitas",
+            "creating": "Membuat aktivitas...",
+            "create_success": "Aktivitas berhasil dibuat",
+            "uploading": "Mengunggah file dan membuat aktivitas...",
+            "upload_success": "File berhasil diunggah",
+            "creating_uploading": "Membuat aktivitas dan mengunggah file..."
+          }
+        }
+      }
+    }
   }
 }

@@ -14,10 +14,12 @@ import Link from 'next/link';
 import React, { useEffect } from 'react'
 import toast from 'react-hot-toast';
 import { constructAcceptValue } from '@/lib/constants';
+import { useTranslation } from 'react-i18next';
 
 const SUPPORTED_FILES = constructAcceptValue(['pdf', 'docx', 'mp4', 'jpg', 'png', 'pptx', 'zip'])
 
 export function AssignmentTaskGeneralEdit() {
+    const { t } = useTranslation()
     const session = useLHSession() as any;
     const access_token = session?.data?.tokens?.access_token;
     const assignmentTaskState = useAssignmentsTask() as any
@@ -27,7 +29,7 @@ export function AssignmentTaskGeneralEdit() {
     const validate = (values: any) => {
         const errors: any = {};
         if (values.max_grade_value < 20 || values.max_grade_value > 100) {
-            errors.max_grade_value = 'Value should be between 20 and 100';
+            errors.max_grade_value = t('dashboard.assignments.editor.task_editor.general.max_grade_error');
         }
         return errors;
     };
@@ -44,11 +46,11 @@ export function AssignmentTaskGeneralEdit() {
             const res = await updateAssignmentTask(values, assignmentTaskState.assignmentTask.assignment_task_uuid, assignment.assignment_object.assignment_uuid, access_token)
             if (res) {
                 assignmentTaskStateHook({ type: 'reload' })
-                toast.success('Task updated successfully')
+                toast.success(t('dashboard.assignments.editor.toasts.task_updated'))
             }
 
             else {
-                toast.error('Error updating task, please retry later.')
+                toast.error(t('dashboard.assignments.editor.toasts.task_update_error'))
             }
         },
         enableReinitialize: true,
@@ -57,7 +59,7 @@ export function AssignmentTaskGeneralEdit() {
     return (
         <FormLayout onSubmit={formik.handleSubmit}>
             <FormField name="title">
-                <FormLabelAndMessage label="Title" message={formik.errors.title} />
+                <FormLabelAndMessage label={t('dashboard.assignments.editor.task_editor.general.title')} message={formik.errors.title} />
                 <Form.Control asChild>
                     <Input
                         onChange={formik.handleChange}
@@ -68,7 +70,7 @@ export function AssignmentTaskGeneralEdit() {
             </FormField>
 
             <FormField name="description">
-                <FormLabelAndMessage label="Description" message={formik.errors.description} />
+                <FormLabelAndMessage label={t('dashboard.assignments.editor.task_editor.general.description')} message={formik.errors.description} />
                 <Form.Control asChild>
                     <Input
                         onChange={formik.handleChange}
@@ -79,7 +81,7 @@ export function AssignmentTaskGeneralEdit() {
             </FormField>
 
             <FormField name="hint">
-                <FormLabelAndMessage label="Hint" message={formik.errors.hint} />
+                <FormLabelAndMessage label={t('dashboard.assignments.editor.task_editor.general.hint')} message={formik.errors.hint} />
                 <Form.Control asChild>
                     <Textarea
                         onChange={formik.handleChange}
@@ -90,10 +92,10 @@ export function AssignmentTaskGeneralEdit() {
 
             <FormField name="hint">
                 <div className='flex space-x-3 justify-between items-center'>
-                    <FormLabelAndMessage label="Reference file" message={formik.errors.hint} />
+                    <FormLabelAndMessage label={t('dashboard.assignments.editor.task_editor.general.reference_file')} message={formik.errors.hint} />
                     <div className='flex space-x-1.5 text-xs items-center text-gray-500 '>
                         <Info size={16} />
-                        <p>Allowed formats : pdf, docx, mp4, jpg, jpeg, png, pptx, zip</p>
+                        <p>{t('dashboard.assignments.editor.task_editor.general.reference_file_info')}</p>
                     </div>
 
                 </div>
@@ -103,7 +105,7 @@ export function AssignmentTaskGeneralEdit() {
             </FormField>
 
             <FormField name="max_grade_value">
-                <FormLabelAndMessage label="Max Grade Value" message={formik.errors.max_grade_value} />
+                <FormLabelAndMessage label={t('dashboard.assignments.editor.task_editor.general.max_grade_value')} message={formik.errors.max_grade_value} />
                 <Form.Control asChild>
                     <Input
                         onChange={formik.handleChange}
@@ -119,7 +121,7 @@ export function AssignmentTaskGeneralEdit() {
                     type="submit"
                     className="flex items-center justify-center w-full px-4 py-2 mt-4 font-semibold text-white bg-green-500 rounded-md hover:bg-green-600"
                 >
-                    Submit
+                    {t('dashboard.assignments.editor.task_editor.general.submit')}
                 </button>
             </Form.Submit>
 
@@ -129,6 +131,7 @@ export function AssignmentTaskGeneralEdit() {
 }
 
 function UpdateTaskRef() {
+    const { t } = useTranslation()
     const session = useLHSession() as any;
     const org = useOrg() as any;
     const access_token = session?.data?.tokens?.access_token;
@@ -157,7 +160,7 @@ function UpdateTaskRef() {
             setError(res.data.detail)
             setIsLoading(false)
         } else {
-            toast.success('Reference file updated successfully')
+            toast.success(t('dashboard.assignments.editor.task_editor.general.reference_file_updated'))
             setIsLoading(false)
             setError('')
         }
@@ -234,7 +237,7 @@ function UpdateTaskRef() {
                                     href={getTaskRefDirUI()}
                                     download
                                     target='_blank'
-                                    className='bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-semibold'>Download</Link>
+                                    className='bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-semibold'>{t('dashboard.assignments.editor.task_editor.general.download')}</Link>
                                 {/** <button onClick={() => deleteReferenceFile()}
                                     className='bg-red-500 text-white px-3 py-1 rounded-full text-xs font-semibold'>Delete</button> */}
                             </div>
@@ -252,7 +255,7 @@ function UpdateTaskRef() {
                             />
                             <div className="font-bold  animate-pulse antialiased items-center bg-slate-200 text-gray text-sm rounded-md px-4 py-2 mt-4 flex">
                                 <Loader size={16} className="mr-2" />
-                                <span>Loading</span>
+                                <span>{t('dashboard.assignments.editor.task_editor.general.loading')}</span>
                             </div>
                         </div>
                     ) : (
@@ -269,7 +272,7 @@ function UpdateTaskRef() {
                                 onClick={() => document.getElementById('fileInput')?.click()}
                             >
                                 <UploadCloud size={16} className="mr-2" />
-                                <span>Change Reference File</span>
+                                <span>{t('dashboard.assignments.editor.task_editor.general.change_reference_file')}</span>
                             </button>
                         </div>
                     )}

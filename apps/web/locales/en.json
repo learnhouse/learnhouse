@@ -422,5 +422,1300 @@
     "days_ago": "{{count}} days ago",
     "hours_ago": "{{count}} hours ago",
     "minutes_ago": "{{count}} minutes ago"
+  },
+  "dashboard": {
+    "home": {
+      "cards": {
+        "courses": {
+          "title": "Courses",
+          "description": "Create and manage courses, chapters and activities"
+        },
+        "organization": {
+          "title": "Organization",
+          "description": "Configure your Organization general settings"
+        },
+        "users": {
+          "title": "Users",
+          "description": "Manage your Organization's users, roles"
+        },
+        "account_settings": {
+          "title": "Account Settings",
+          "description": "Configure your personal settings, passwords, email"
+        }
+      },
+      "learnhouse_university": "LearnHouse University"
+    },
+    "courses": {
+      "title": "Courses",
+      "rights_guide": "Rights Guide",
+      "create_course": "Create Course",
+      "create_new_course": "Create a new course",
+      "no_courses": "No courses yet",
+      "create_course_placeholder": "Create a course to add content",
+      "no_courses_available": "No courses available yet"
+    },
+    "organization": {
+      "settings": {
+        "title": "Organization Settings",
+        "subtitle": "Manage your organization's profile and settings",
+        "tabs": {
+          "general": "General",
+          "landing": "Landing Page",
+          "previews": "Images & Previews",
+          "socials": "Socials",
+          "other": "Other"
+        },
+        "pages": {
+          "general": {
+            "title": "General",
+            "subtitle": "Manage your organization settings"
+          },
+          "previews": {
+            "title": "Previews",
+            "subtitle": "Manage your organization previews"
+          },
+          "socials": {
+            "title": "Socials",
+            "subtitle": "Manage your organization social media links"
+          },
+          "landing": {
+            "title": "Landing Page",
+            "subtitle": "Customize your organization landing page"
+          },
+          "other": {
+            "title": "Other",
+            "subtitle": "Manage additional organization settings"
+          }
+        },
+        "name": "Organization Name",
+        "name_placeholder": "Organization Name",
+        "short_description": "Short Description",
+        "short_description_placeholder": "Brief description of your organization",
+        "label": "Organization Label",
+        "label_placeholder": "Select organization label",
+        "about": "About Organization",
+        "about_placeholder": "Detailed description of your organization",
+        "showcase_explore": "Showcase in LearnHouse Explore",
+        "showcase_description": "Share your organization's courses and content with the LearnHouse community. Enable this to help learners discover your valuable educational resources.",
+        "save_changes": "Save Changes",
+        "saving": "Saving...",
+        "update_success": "Organization Updated",
+        "update_error": "Failed to update organization",
+        "updating": "Updating organization..."
+      },
+      "images": {
+        "title": "Images & Previews",
+        "subtitle": "Manage your organization's logo, thumbnail, and preview images",
+        "tabs": {
+          "logo": "Logo",
+          "thumbnail": "Thumbnail",
+          "previews": "Previews"
+        },
+        "upload_logo": "Upload New Logo",
+        "upload_thumbnail": "Upload New Thumbnail",
+        "uploading": "Uploading...",
+        "uploading_logo": "Uploading logo...",
+        "uploading_thumbnail": "Uploading thumbnail...",
+        "uploading_previews": "Uploading {{count}} preview...",
+        "uploading_previews_plural": "Uploading {{count}} previews...",
+        "accepted_files": "Accepts PNG, JPG (max 5MB)",
+        "recommended_size": "Recommended size: 200x100 pixels",
+        "add_preview": "Add Preview",
+        "drag_to_reorder": "Drag to reorder • Maximum 4 previews • Supports images & videos",
+        "video_modal": {
+          "title": "Add Preview",
+          "images": "Upload Images",
+          "youtube": "YouTube",
+          "youtube_desc": "Add YouTube video",
+          "loom": "Loom",
+          "loom_desc": "Add Loom video",
+          "url_placeholder": "Paste your {{service}} video URL",
+          "add_button": "Add Video"
+        },
+        "toasts": {
+          "logo_success": "Logo Updated",
+          "logo_error": "Failed to upload logo",
+          "thumbnail_success": "Thumbnail Updated",
+          "thumbnail_error": "Failed to upload thumbnail",
+          "preview_added": "{{count}} preview added",
+          "preview_added_plural": "{{count}} previews added",
+          "preview_error": "Failed to upload previews",
+          "preview_removed": "Preview removed",
+          "preview_remove_error": "Failed to remove preview",
+          "order_updated": "Preview order updated",
+          "order_update_error": "Failed to update preview order",
+          "max_previews": "You can only upload {{count}} more preview",
+          "max_previews_plural": "You can only upload {{count}} more previews",
+          "invalid_url": "Invalid {{type}} URL",
+          "video_exists": "This video has already been added",
+          "adding_video": "Adding video preview...",
+          "video_preview_added": "Video preview added",
+          "video_preview_error": "Failed to add video preview",
+          "updating_order": "Updating preview order..."
+        }
+      },
+      "socials": {
+        "title": "Social Links",
+        "subtitle": "Manage your organization's social media presence",
+        "labels": {
+          "social_links": "Social Links",
+          "custom_links": "Custom Links"
+        },
+        "placeholders": {
+          "twitter": "Twitter profile URL",
+          "facebook": "Facebook profile URL",
+          "instagram": "Instagram profile URL",
+          "youtube": "YouTube channel URL",
+          "label": "Label",
+          "url": "URL"
+        },
+        "add_link": "Add Link",
+        "custom_links_desc": "Add up to 3 custom links that will appear on your organization's profile"
+      },
+      "scripts": {
+        "title": "Scripts",
+        "subtitle": "Add custom JavaScript scripts to your organization",
+        "warning": "For your organization's safety, please ensure you trust and understand any scripts before adding them. Scripts can interact with your organization's pages.",
+        "add_script": "Add Script",
+        "no_scripts": "No scripts added yet",
+        "add_first_script": "Add your first script to get started",
+        "script_name": "Script Name",
+        "script_content": "Script Content",
+        "placeholders": {
+          "name": "Enter script name",
+          "content": "Enter JavaScript code"
+        },
+        "save_script": "Save Script",
+        "toasts": {
+          "save_success": "Script saved successfully",
+          "delete_success": "Script deleted successfully"
+        }
+      },
+      "audit_logs": {
+        "title": "Audit Logs",
+        "subtitle": "Track and monitor all activities within your organization",
+        "refresh": "Refresh logs",
+        "export": "Export",
+        "search_by": "Search by",
+        "placeholders": {
+          "search": "Search..."
+        },
+        "filters": {
+          "resource": "Resource",
+          "status": "Status",
+          "date": "Date"
+        },
+        "resources": {
+          "all": "All Resources",
+          "user": "User",
+          "course": "Course",
+          "org": "Organization"
+        },
+        "date_ranges": {
+          "all": "All Time",
+          "today": "Today",
+          "7d": "Last 7 Days",
+          "30d": "Last 30 Days",
+          "custom": "Custom Range"
+        },
+        "table": {
+          "timestamp": "Timestamp",
+          "user": "User",
+          "resource": "Resource",
+          "path_method": "Path & Method",
+          "ip_address": "IP Address",
+          "status": "Status",
+          "payload": "Payload"
+        },
+        "loading": "Loading activity...",
+        "no_logs": "No logs found",
+        "pagination": {
+          "showing": "Showing {{start}} to {{end}} of {{total}} logs"
+        },
+        "modals": {
+          "payload": {
+            "title": "Event Payload",
+            "description": "Detailed data for action: {{action}}"
+          }
+        },
+        "export_toasts": {
+          "generating": "Generating CSV...",
+          "success": "CSV exported successfully",
+          "error": "Failed to export CSV"
+        }
+      },
+      "landing": {
+        "title": "Landing Page",
+        "subtitle": "Customize your organization's landing page",
+        "beta": "BETA",
+        "save_changes": "Save Changes",
+        "saving": "Saving...",
+        "saved_success": "Landing page saved successfully",
+        "save_error": "Error saving landing page",
+        "sections": "Sections",
+        "select_section": "Select a section to edit or add a new one",
+        "section_types": {
+          "hero": {
+            "label": "Hero",
+            "description": "Add a hero section with heading and call-to-action"
+          },
+          "text_and_image": {
+            "label": "Text & Image",
+            "description": "Add a section with text and an image"
+          },
+          "logos": {
+            "label": "Logos",
+            "description": "Add a section to showcase logos"
+          },
+          "people": {
+            "label": "People",
+            "description": "Add a section to highlight team members"
+          },
+          "featured_courses": {
+            "label": "Courses",
+            "description": "Add a section to showcase selected courses"
+          }
+        },
+        "add_section": "Add Section",
+        "hero_editor": {
+          "title": "Hero Section",
+          "section_title": "Section Title",
+          "section_title_placeholder": "Enter section title",
+          "tabs": {
+            "content": "Content",
+            "background": "Background",
+            "buttons": "Buttons",
+            "illustration": "Illustration"
+          },
+          "heading": "Heading",
+          "heading_placeholder": "Enter heading text",
+          "heading_color": "Heading Color",
+          "subheading": "Subheading",
+          "subheading_placeholder": "Enter subheading text",
+          "subheading_color": "Subheading Color",
+          "background_type": "Background Type",
+          "background_type_placeholder": "Select background type",
+          "background_types": {
+            "solid": "Solid Color",
+            "gradient": "Gradient",
+            "image": "Image"
+          },
+          "background_color": "Background Color",
+          "gradient_type": "Gradient Type",
+          "gradient_type_placeholder": "Select gradient type",
+          "gradient_types": {
+            "preset": "Preset Gradients",
+            "custom": "Custom Gradient"
+          },
+          "start_color": "Start Color",
+          "end_color": "End Color",
+          "gradient_direction": "Gradient Direction",
+          "gradient_direction_placeholder": "Select gradient direction",
+          "gradient_preset": "Gradient Preset",
+          "gradient_preset_placeholder": "Select gradient preset",
+          "background_image": "Background Image",
+          "upload_image": "Upload Image",
+          "button_text_colors": "Button Text & Colors",
+          "button_text": "Button text",
+          "text_color": "Text",
+          "background_color_label": "Background",
+          "button_link": "Button Link",
+          "button_link_placeholder": "Button link",
+          "add_button": "Add Button",
+          "illustration_image": "Illustration Image",
+          "illustration_url": "Illustration URL",
+          "alt_text": "Alt text",
+          "upload_illustration": "Upload Illustration",
+          "position": "Position",
+          "position_placeholder": "Select position",
+          "positions": {
+            "left": "Left",
+            "right": "Right"
+          },
+          "size": "Size",
+          "size_placeholder": "Select size",
+          "sizes": {
+            "small": "Small",
+            "medium": "Medium",
+            "large": "Large"
+          },
+          "remove_illustration": "Remove Illustration"
+        },
+        "text_image_editor": {
+          "title": "Text & Image Section",
+          "title_label": "Title",
+          "title_placeholder": "Enter section title",
+          "content": "Content",
+          "content_placeholder": "Enter section content",
+          "image_position": "Image Position",
+          "image_position_placeholder": "Select image position",
+          "positions": {
+            "left": "Left",
+            "right": "Right"
+          },
+          "image": "Image",
+          "image_url": "Image URL",
+          "alt_text": "Alt text",
+          "upload_new_image": "Upload New Image"
+        },
+        "logos_editor": {
+          "title": "Logos Section",
+          "title_label": "Title",
+          "title_placeholder": "Enter section title",
+          "logos": "Logos",
+          "logo_url": "Logo URL",
+          "alt_text": "Alt text",
+          "upload_logo": "Upload Logo",
+          "add_logo": "Add Logo"
+        },
+        "people_editor": {
+          "title": "People Section",
+          "title_label": "Title",
+          "title_placeholder": "Enter section title",
+          "people": "People",
+          "name": "Name",
+          "name_placeholder": "Person's name",
+          "username": "Username",
+          "username_placeholder": "@username",
+          "image": "Image",
+          "image_url": "Image URL",
+          "upload_avatar": "Upload Avatar",
+          "description": "Description",
+          "description_placeholder": "Description or role",
+          "add_person": "Add Person"
+        },
+        "courses_editor": {
+          "title": "Courses Section",
+          "title_label": "Title",
+          "title_placeholder": "Enter section title",
+          "select_courses": "Select Courses",
+          "loading_courses": "Loading courses...",
+          "selected": "Selected",
+          "select": "Select"
+        }
+      }
+    },
+    "users": {
+      "settings": {
+        "tabs": {
+          "users": "Users",
+          "usergroups": "UserGroups",
+          "roles": "Roles",
+          "signups": "Signups & Invite Codes",
+          "add": "Invite Members",
+          "audit_logs": "Audit Logs"
+        },
+        "pages": {
+          "users": {
+            "title": "Users",
+            "subtitle": "Manage your organization users, assign roles and permissions"
+          },
+          "signups": {
+            "title": "Signups & Invite Codes",
+            "subtitle": "Choose from where users can join your organization"
+          },
+          "add": {
+            "title": "Invite Members",
+            "subtitle": "Invite members to join your organization"
+          },
+          "usergroups": {
+            "title": "UserGroups",
+            "subtitle": "Create and manage user groups"
+          },
+          "roles": {
+            "title": "Roles",
+            "subtitle": "Create and manage roles with specific permissions"
+          },
+          "audit_logs": {
+            "title": "Audit Logs",
+            "subtitle": "Track and monitor all activities within your organization"
+          }
+        },
+        "mobile": {
+          "title": "Desktop Only",
+          "message1": "This page is only accessible from a desktop device.",
+          "message2": "Please switch to a desktop to view and manage user settings."
+        }
+      },
+      "active_users": {
+        "title": "Active users",
+        "subtitle": "Manage your organization users, assign roles and permissions",
+        "table": {
+          "user": "User",
+          "role": "Role",
+          "actions": "Actions"
+        },
+        "actions": {
+          "edit_role": "Edit Role",
+          "remove_from_org": "Remove from organization",
+          "removing": "Removing...",
+          "remove_success": "Removed user from org",
+          "remove_error": "Error removing user"
+        },
+        "modals": {
+          "update_role": {
+            "title": "Update Role",
+            "description": "Update @{{username}}'s role"
+          },
+          "remove_user": {
+            "title": "Delete {{username}} ?",
+            "message": "Are you sure you want remove this user from the organization?",
+            "button": "Remove User"
+          }
+        }
+      },
+      "signups": {
+        "title": "Join method",
+        "subtitle": "Choose how users can join your organization",
+        "open": {
+          "title": "Open",
+          "description": "Users can join freely from the signup page",
+          "active": "Active",
+          "change_to": "Change to open",
+          "confirmation_message": "Are you sure you want to change the signup mechanism to open ? This will allow users to join your organization freely.",
+          "confirmation_title": "Change to open ?"
+        },
+        "closed": {
+          "title": "Closed",
+          "description": "Users can join only by invitation",
+          "active": "Active",
+          "change_to": "Change to closed",
+          "confirmation_message": "Are you sure you want to change the signup mechanism to closed ? This will allow users to join your organization only by invitation.",
+          "confirmation_title": "Change to closed ?"
+        },
+        "invite_codes": {
+          "title": "Invite codes",
+          "subtitle": "Invite codes can be copied and used to join your organization",
+          "table": {
+            "code": "Code",
+            "signup_link": "Signup link",
+            "type": "Type",
+            "expiration_date": "Expiration date",
+            "actions": "Actions"
+          },
+          "types": {
+            "linked_to_usergroup": "Linked to a UserGroup",
+            "normal": "Normal"
+          },
+          "actions": {
+            "delete_code": "Delete code",
+            "delete_confirmation_title": "Delete code ?",
+            "delete_confirmation_message": "Are you sure you want remove this invite code ?",
+            "generate": "Generate invite code",
+            "generate_title": "Generate Invite Code",
+            "generate_description": "Generate a new invite code for your organization"
+          },
+          "toasts": {
+            "deleting": "Deleting...",
+            "delete_success": "Deleted invite code",
+            "delete_error": "Error deleting",
+            "changing_method": "Changing join method...",
+            "change_success": "Changed join method to {{method}}",
+            "change_error": "Error changing join method"
+          }
+        },
+        "generate_modal": {
+          "linked_title": "Invite Code linked to a UserGroup",
+          "linked_description": "On Signup, Users will be automatically linked to a UserGroup of your choice",
+          "normal_title": "Normal Invite Code",
+          "normal_description": "On Signup, User will not be linked to any UserGroup",
+          "generate_button": "Generate",
+          "no_usergroups": "No UserGroups available",
+          "create_usergroup_link": "Create a UserGroup",
+          "toasts": {
+            "error": "Error {{status}}: {{detail}}"
+          }
+        }
+      },
+      "invite_members": {
+        "title": "Invite users to your Organization",
+        "subtitle": "Send invite via email, separated by comma",
+        "email_placeholder": "Example : spike.spiegel@bepop.space, michael.scott@dundermifflin.com",
+        "invite_code_label": "Invite Code",
+        "invite_code_tooltip": "Use one of the invite codes that you generated from the signup access page",
+        "send_button": "Send invites via email",
+        "invited_users": {
+          "title": "Invited Users",
+          "subtitle": "Users who have been invited to join your organization",
+          "table": {
+            "email": "Email",
+            "signup_status": "Signup Status",
+            "email_sent": "Email sent"
+          },
+          "status": {
+            "pending": "Pending",
+            "signed": "Signed"
+          },
+          "email_status": {
+            "sent": "Sent",
+            "no": "No"
+          }
+        },
+        "toasts": {
+          "sending": "Sending invite...",
+          "success": "Invite sent",
+          "error": "Error sending invite"
+        }
+      },
+      "usergroups": {
+        "title": "Manage UserGroups & Users",
+        "subtitle": "UserGroups are a way to group users together to manage their access to the resources (Courses) in your organization.",
+        "table": {
+          "usergroup": "UserGroup",
+          "description": "Description",
+          "manage_users": "Manage Users",
+          "actions": "Actions"
+        },
+        "actions": {
+          "manage_users": "Manage Users",
+          "edit": "Edit",
+          "delete": "Delete",
+          "create": "Create a UserGroup"
+        },
+        "modals": {
+          "manage_users": {
+            "title": "Manage UserGroup Users",
+            "description": "Manage the users in this UserGroup",
+            "table": {
+              "user": "User",
+              "linked": "Linked",
+              "actions": "Actions"
+            },
+            "status": {
+              "linked": "Linked",
+              "not_linked": "Not linked"
+            },
+            "actions": {
+              "link": "Link",
+              "unlink": "Unlink"
+            },
+            "toasts": {
+              "link_success": "User linked successfully",
+              "unlink_success": "User unlinked successfully",
+              "error": "Error {{status}}: {{detail}}"
+            }
+          },
+          "create": {
+            "title": "Create a UserGroup",
+            "description": "Create a new UserGroup to manage users",
+            "form": {
+              "name": "Name",
+              "name_required": "Name is Required",
+              "description": "Description",
+              "submit": "Create a UserGroup",
+              "loading": "Loading..."
+            },
+            "toasts": {
+              "creating": "Creating...",
+              "success": "Created new usergroup",
+              "error": "Couldn't create new usergroup"
+            }
+          },
+          "edit": {
+            "title": "Edit UserGroup",
+            "form": {
+              "name": "Name",
+              "name_required": "Name is Required",
+              "description": "Description",
+              "submit": "Save UserGroup",
+              "loading": "Loading..."
+            },
+            "toasts": {
+              "success": "UserGroup saved successfully",
+              "error": "Error saving UserGroup, please retry later."
+            }
+          },
+          "delete": {
+            "title": "Delete UserGroup ?",
+            "message": "Access to all resources will be removed for all users in this UserGroup. Are you sure you want to delete this UserGroup ?",
+            "button": "Delete UserGroup"
+          }
+        },
+        "toasts": {
+          "deleting": "Deleting...",
+          "delete_success": "Deleted usergroup",
+          "delete_error": "Error deleting usergroup"
+        }
+      },
+      "roles": {
+        "title": "Manage Roles & Permissions",
+        "subtitle": "Roles define what users can do within your organization. Create custom roles with specific permissions for different user types.",
+        "table": {
+          "role_name": "Role Name",
+          "description": "Description",
+          "permissions": "Permissions",
+          "actions": "Actions"
+        },
+        "no_description": "No description",
+        "no_permissions": "No permissions",
+        "permissions_count": "{{count}} permissions",
+        "system_wide": "System-wide",
+        "actions": {
+          "edit": "Edit",
+          "delete": "Delete",
+          "create": "Create a Role"
+        },
+        "modals": {
+          "create": {
+            "title": "Create a Role",
+            "description": "Create a new role with specific permissions",
+            "form": {
+              "role_name": "Role Name",
+              "role_name_placeholder": "e.g., Course Manager",
+              "description": "Description",
+              "description_placeholder": "Describe what this role can do...",
+              "permissions": "Permissions",
+              "select_all": "Select All",
+              "deselect_all": "Deselect All",
+              "select": "Select",
+              "deselect": "Deselect",
+              "submit": "Create Role",
+              "loading": "Creating..."
+            },
+            "validation": {
+              "name_required": "Required",
+              "name_min_length": "Name must be at least 2 characters",
+              "description_required": "Required",
+              "description_min_length": "Description must be at least 10 characters"
+            },
+            "toasts": {
+              "success": "Created new role",
+              "error": "Couldn't create new role"
+            },
+            "presets": {
+              "title": "Predefined Rights",
+              "admin": {
+                "name": "Admin",
+                "description": "Full platform control with all permissions"
+              },
+              "maintainer": {
+                "name": "Maintainer",
+                "description": "Can manage courses, chapters, and activities"
+              },
+              "instructor": {
+                "name": "Instructor",
+                "description": "Can create and manage their own courses"
+              },
+              "viewer": {
+                "name": "Viewer",
+                "description": "Read-only access to courses and content"
+              },
+              "content_creator": {
+                "name": "Content Creator",
+                "description": "Can create and edit content but not manage users"
+              },
+              "user_manager": {
+                "name": "User Manager",
+                "description": "Can manage users and user groups"
+              },
+              "moderator": {
+                "name": "Moderator",
+                "description": "Can moderate content and manage activities"
+              },
+              "analyst": {
+                "name": "Analyst",
+                "description": "Read-only access with analytics capabilities"
+              },
+              "guest": {
+                "name": "Guest",
+                "description": "Limited access for external users"
+              }
+            },
+            "permissions": {
+              "title": "Permissions",
+              "sections": {
+                "courses": "Courses",
+                "users": "Users",
+                "usergroups": "User Groups",
+                "collections": "Collections",
+                "organizations": "Organizations",
+                "coursechapters": "Course Chapters",
+                "activities": "Activities",
+                "roles": "Roles",
+                "dashboard": "Dashboard"
+              },
+              "actions": {
+                "create": "create",
+                "read": "read",
+                "read_own": "read own",
+                "update": "update",
+                "update_own": "update own",
+                "delete": "delete",
+                "delete_own": "delete own",
+                "access": "access"
+              },
+              "select_all": "Select All",
+              "deselect_all": "Deselect All",
+              "select": "Select",
+              "deselect": "Deselect"
+            }
+          },
+          "edit": {
+            "title": "Edit Role",
+            "description": "Edit the role permissions and details",
+            "form": {
+              "role_name": "Role Name",
+              "description": "Description",
+              "permissions": "Permissions",
+              "select_all": "Select All",
+              "deselect_all": "Deselect All",
+              "select": "Select",
+              "deselect": "Deselect",
+              "submit": "Save Role",
+              "loading": "Saving..."
+            },
+            "validation": {
+              "name_required": "Required",
+              "name_min_length": "Name must be at least 2 characters",
+              "description_required": "Required",
+              "description_min_length": "Description must be at least 10 characters"
+            },
+            "toasts": {
+              "success": "Role saved successfully",
+              "error": "Error saving role, please retry later."
+            }
+          },
+          "delete": {
+            "title": "Delete Role ?",
+            "message": "This action cannot be undone. All users with this role will lose their permissions. Are you sure you want to delete this role?",
+            "button": "Delete Role"
+          }
+        },
+        "toasts": {
+          "deleting": "Deleting...",
+          "delete_success": "Deleted role",
+          "delete_error": "Error deleting role"
+        }
+      }
+    },
+    "assignments": {
+      "home": {
+        "title": "Assignments",
+        "course_label": "Course",
+        "assignment_label": "Assignment",
+        "course_editor": "Course Editor",
+        "editor": "Editor",
+        "submissions": "Submissions",
+        "no_assignments": "No assignments available for this course, create course assignments from the course editor"
+      },
+      "detail": {
+        "title": "Assignment Tools",
+        "tabs": {
+          "editor": "Editor",
+          "submissions": "Submissions"
+        },
+        "mobile": {
+          "title": "Desktop Only",
+          "message1": "This page is only accessible from a desktop device.",
+          "message2": "Please switch to a desktop to view and manage the assignment."
+        },
+        "publishing": {
+          "published": "Published",
+          "unpublished": "Unpublished",
+          "edit_tooltip": "Edit Assignment Details",
+          "preview_tooltip": "Preview the Assignment as a student",
+          "unpublish_tooltip": "Make your Assignment unavailable for students",
+          "publish_tooltip": "Make your Assignment public and available for students",
+          "edit": "Edit",
+          "preview": "Preview",
+          "unpublish": "Unpublish",
+          "publish": "Publish",
+          "toasts": {
+            "updating": "Updating assignment...",
+            "update_success": "The assignment has been updated successfully",
+            "update_error": "Error updating assignment, please retry later."
+          }
+        }
+      },
+      "editor": {
+        "tasks_title": "Tasks",
+        "add_task": "Add Task",
+        "add_task_modal": {
+          "title": "Add an Assignment Task",
+          "description": "Create a new task for this assignment"
+        },
+        "task_types": {
+          "quiz": {
+            "title": "Quiz",
+            "description": "Questions with multiple choice answers"
+          },
+          "file_submission": {
+            "title": "File submission",
+            "description": "Students can submit files for this task"
+          },
+          "form": {
+            "title": "Form",
+            "description": "Fill-in-the-blank forms for students"
+          }
+        },
+        "toasts": {
+          "task_created": "Task created successfully",
+          "task_saved": "Task saved successfully",
+          "task_save_error": "Error saving task, please retry later.",
+          "task_updated": "Task updated successfully",
+          "task_update_error": "Error updating task, please retry later.",
+          "reminder": "When editing/adding your tasks, make sure to Unpublish your Assignment to avoid any issues with students, you can Publish it again when you are ready."
+        },
+        "task_editor": {
+          "general": {
+            "title": "Title",
+            "description": "Description",
+            "hint": "Hint",
+            "reference_file": "Reference file",
+            "reference_file_info": "Allowed formats : pdf, docx, mp4, jpg, jpeg, png, pptx, zip",
+            "max_grade_value": "Max Grade Value",
+            "max_grade_error": "Value should be between 20 and 100",
+            "submit": "Submit",
+            "download": "Download",
+            "change_reference_file": "Change Reference File",
+            "loading": "Loading",
+            "reference_file_updated": "Reference file updated successfully",
+            "allowed_formats": "Allowed formats: pdf, docx, mp4, jpg, jpeg, png, pptx, zip",
+            "sign_in_required": "Please sign in to upload files",
+            "auth_required": "Authentication required. Please sign in to upload files.",
+            "auth_required_submit": "Authentication required. Please sign in to submit your task.",
+            "hint_optional": "Hint (optional)"
+          }
+        }
+      },
+      "submissions": {
+        "status": {
+          "late": "Late",
+          "submitted": "Submitted",
+          "graded": "Graded"
+        },
+        "submission_label": "Submission",
+        "evaluate": "Evaluate",
+        "evaluate_modal": {
+          "title": "Evaluate @{{username}}",
+          "description": "Evaluate the submission"
+        },
+        "task_label": "Task {{number}} :",
+        "hint": "Hint",
+        "reference_document": "Reference Document",
+        "actions": {
+          "reject": "Reject Assignment",
+          "set_final_grade": "Set final grade",
+          "mark_as_done": "Mark Activity as Done for User"
+        },
+        "toasts": {
+          "reject_success": "Assignment rejected successfully"
+        }
+      },
+      "modals": {
+        "edit": {
+          "title": "Edit Assignment",
+          "description": "Update assignment details",
+          "form": {
+            "title_label": "Assignment Title",
+            "title_required": "Please provide a name for your assignment",
+            "description_label": "Assignment Description",
+            "description_required": "Please provide a description for your assignment",
+            "due_date_label": "Due Date",
+            "due_date_required": "Please provide a due date for your assignment",
+            "grading_type_label": "Grading Type",
+            "grading_type_required": "Please provide a grading type for your assignment",
+            "grading_types": {
+              "alphabet": "Alphabet",
+              "numeric": "Numeric",
+              "percentage": "Percentage"
+            },
+            "cancel": "Cancel",
+            "save": "Save Changes",
+            "saving": "Saving..."
+          },
+          "toasts": {
+            "updating": "Updating assignment...",
+            "success": "Assignment updated successfully",
+            "error": "Failed to update assignment",
+            "error_detail": "An error occurred while updating the assignment"
+          }
+        },
+        "create": {
+          "form": {
+            "title_label": "Assignment Title",
+            "title_required": "Please provide a name for your assignment",
+            "description_label": "Assignment Description",
+            "description_required": "Please provide a description for your assignment",
+            "due_date_label": "Due Date",
+            "due_date_required": "Please provide a due date for your assignment",
+            "grading_type_label": "Grading Type",
+            "grading_type_required": "Please provide a grading type for your assignment",
+            "grading_types": {
+              "alphabet": "Alphabet",
+              "numeric": "Numeric",
+              "percentage": "Percentage"
+            },
+            "submit": "Create activity"
+          },
+          "toasts": {
+            "creating": "Creating assignment...",
+            "success": "Assignment created successfully"
+          }
+        }
+      }
+    },
+    "courses": {
+      "title": "Courses",
+      "rights_guide": "Rights Guide",
+      "create_course": "Create Course",
+      "create_new_course": "Create a new course",
+      "no_courses": "No courses yet",
+      "create_course_placeholder": "Create a course to add content",
+      "no_courses_available": "No courses available yet",
+      "overview_top": {
+        "course_label": "Course",
+        "rights_guide_button": "Rights Guide"
+      },
+      "settings": {
+        "tabs": {
+          "general": "General",
+          "content": "Content",
+          "access": "Access",
+          "contributors": "Contributors",
+          "certification": "Certification"
+        },
+        "access_denied": {
+          "title": "Access Denied",
+          "message": "You don't have permission to access this course."
+        },
+        "access_restricted": {
+          "title": "Access Restricted",
+          "message": "You don't have permission to access {{tab}}"
+        },
+        "loading": "Loading..."
+      },
+      "general": {
+        "form": {
+          "name_label": "Name",
+          "name_required": "Required",
+          "name_max_length": "Must be 100 characters or less",
+          "description_label": "Description",
+          "description_required": "Required",
+          "description_max_length": "Must be 1000 characters or less",
+          "about_label": "About",
+          "learnings_label": "Learnings",
+          "learnings_required": "Required",
+          "learnings_invalid_format": "Invalid format",
+          "learnings_min_items": "At least one learning item is required",
+          "learnings_empty_text": "All learning items must have text",
+          "learnings_invalid_json": "Invalid JSON format",
+          "tags_label": "Tags",
+          "tags_placeholder": "Enter to add...",
+          "thumbnail_type_label": "Thumbnail Type",
+          "thumbnail_type_image": "Image",
+          "thumbnail_type_video": "Video",
+          "thumbnail_type_both": "Both",
+          "thumbnail_label": "Thumbnail",
+          "image_search_placeholder": "Search for images..."
+        },
+        "thumbnail": {
+          "upload_image": "Upload Image",
+          "upload_video": "Upload Video",
+          "gallery": "Gallery",
+          "tabs": {
+            "image": "Image",
+            "video": "Video"
+          },
+          "supported_formats": {
+            "image": "Supported formats: PNG, JPG/JPEG (max 8MB)",
+            "video": "Supported formats: MP4, WebM (max 100MB)"
+          }
+        },
+        "errors": {
+          "save_failed": "Failed to save course structure."
+        }
+      },
+      "access": {
+        "title": "Access to the course",
+        "subtitle": "Choose if you want your course to be publicly available on the internet or only accessible to signed in users",
+        "public": {
+          "title": "Public",
+          "description": "The Course is publicly available on the internet, it is indexed by search engines and can be accessed by anyone",
+          "active": "Active",
+          "confirmation_title": "Change to Public?",
+          "confirmation_message": "Are you sure you want this course to be publicly available on the internet?",
+          "confirmation_button": "Change to Public"
+        },
+        "users_only": {
+          "title": "Users Only",
+          "description": "The Course is only accessible to signed in users, additionally you can choose which UserGroups can access this course",
+          "active": "Active",
+          "confirmation_title": "Change to Users Only?",
+          "confirmation_message": "Are you sure you want this course to be only accessible to signed in users?",
+          "confirmation_button": "Change to Users Only"
+        },
+        "usergroups": {
+          "title": "UserGroups",
+          "subtitle": "You can choose to give access to this course to specific groups of users only by linking it to a UserGroup",
+          "table": {
+            "name": "Name",
+            "actions": "Actions"
+          },
+          "actions": {
+            "delete_link": "Delete link",
+            "link_to_usergroup": "Link to a UserGroup"
+          },
+          "modals": {
+            "link_title": "Link Course to a UserGroup",
+            "link_description": "Choose a UserGroup to link this course to. Users from this UserGroup will have access to this course.",
+            "unlink_title": "Unlink UserGroup?",
+            "unlink_message": "Users from this UserGroup will no longer have access to this course",
+            "unlink_button": "Delete Link",
+            "warning": "Users that are not part of the UserGroup will no longer have access to this course",
+            "usergroup_name": "UserGroup Name",
+            "no_usergroups": "No UserGroups available",
+            "create_usergroup": "Create a UserGroup",
+            "link_button": "Link"
+          },
+          "toasts": {
+            "link_success": "Successfully linked to usergroup",
+            "link_error": "Error {{status}}: {{detail}}",
+            "unlink_success": "Successfully unlinked from usergroup",
+            "unlink_error": "An error occurred while unlinking the user group."
+          }
+        }
+      },
+      "contributors": {
+        "title": "Course Contributors",
+        "subtitle": "Manage contributors and add new ones to your course",
+        "open_to_contributors": {
+          "title": "Open to Contributors",
+          "description": "The course is open for contributors. Users can apply to become contributors and help improve the course content.",
+          "active": "Active",
+          "confirmation_title": "Open to Contributors?",
+          "confirmation_message": "Are you sure you want to open this course to contributors?",
+          "confirmation_button": "Open to Contributors"
+        },
+        "closed_to_contributors": {
+          "title": "Closed to Contributors",
+          "description": "The course is closed for contributors. Only existing contributors can modify the course content.",
+          "active": "Active",
+          "confirmation_title": "Close to Contributors?",
+          "confirmation_message": "Are you sure you want to close this course to contributors?",
+          "confirmation_button": "Close to Contributors"
+        },
+        "search": {
+          "placeholder": "Search users by name or username to add as contributors...",
+          "searching": "Searching...",
+          "no_results": "No users found"
+        },
+        "table": {
+          "name": "Name",
+          "username": "Username",
+          "email": "Email",
+          "role": "Role",
+          "status": "Status",
+          "added_on": "Added On"
+        },
+        "roles": {
+          "creator": "CREATOR",
+          "contributor": "CONTRIBUTOR",
+          "maintainer": "MAINTAINER",
+          "reporter": "REPORTER"
+        },
+        "statuses": {
+          "active": "ACTIVE",
+          "inactive": "INACTIVE",
+          "pending": "PENDING"
+        },
+        "actions": {
+          "selected_users": "{{count}} user selected",
+          "selected_users_plural": "{{count}} users selected",
+          "clear": "Clear",
+          "add_selected": "Add Selected",
+          "selected_contributors": "{{count}} contributor selected",
+          "selected_contributors_plural": "{{count}} contributors selected",
+          "remove_selected": "Remove Selected",
+          "already_contributor": "Already a contributor"
+        },
+        "toasts": {
+          "add_success": "Successfully added {{count}} contributor(s)",
+          "add_error": "Failed to add {{username}}: {{reason}}",
+          "add_failed": "Failed to add contributors",
+          "update_success": "Successfully updated contributor",
+          "update_error": "Error: {{detail}}",
+          "update_failed": "An error occurred while updating the contributor.",
+          "remove_success": "Successfully removed {{count}} contributor(s)",
+          "remove_failed": "Failed to remove contributors",
+          "cannot_modify_creator": "Cannot modify a creator's role or status"
+        }
+      },
+      "certification": {
+        "title": "Course Certification",
+        "subtitle": "Enable and configure certificates for students who complete this course",
+        "form": {
+          "certification_name_label": "Certification Name",
+          "certification_name_required": "Required when certification is enabled",
+          "certification_name_max_length": "Must be 100 characters or less",
+          "certification_name_placeholder": "e.g., Advanced JavaScript Certification",
+          "certification_type_label": "Certification Type",
+          "certification_description_label": "Certification Description",
+          "certification_description_required": "Required when certification is enabled",
+          "certification_description_max_length": "Must be 500 characters or less",
+          "certification_description_placeholder": "Describe what this certification represents and its value...",
+          "certificate_pattern_label": "Certificate Pattern",
+          "certificate_instructor_label": "Instructor Name (Optional)",
+          "certificate_instructor_placeholder": "e.g., Dr. Jane Smith"
+        },
+        "types": {
+          "completion": "Course Completion",
+          "achievement": "Achievement Based",
+          "assessment": "Assessment Based",
+          "participation": "Participation",
+          "mastery": "Skill Mastery",
+          "professional": "Professional Development",
+          "continuing": "Continuing Education",
+          "workshop": "Workshop Attendance",
+          "specialization": "Specialization"
+        },
+        "patterns": {
+          "royal": {
+            "name": "Royal",
+            "description": "Ornate with crown motifs"
+          },
+          "tech": {
+            "name": "Tech",
+            "description": "Circuit-inspired patterns"
+          },
+          "nature": {
+            "name": "Nature",
+            "description": "Organic leaf patterns"
+          },
+          "geometric": {
+            "name": "Geometric",
+            "description": "Abstract shapes & lines"
+          },
+          "vintage": {
+            "name": "Vintage",
+            "description": "Art deco styling"
+          },
+          "waves": {
+            "name": "Waves",
+            "description": "Flowing water patterns"
+          },
+          "minimal": {
+            "name": "Minimal",
+            "description": "Clean and simple"
+          },
+          "professional": {
+            "name": "Professional",
+            "description": "Business-ready design"
+          },
+          "academic": {
+            "name": "Academic",
+            "description": "Traditional university style"
+          },
+          "modern": {
+            "name": "Modern",
+            "description": "Contemporary clean lines"
+          }
+        },
+        "sections": {
+          "basic_info": {
+            "title": "Basic Information",
+            "subtitle": "Configure the basic details of your certification"
+          },
+          "certificate_design": {
+            "title": "Certificate Design",
+            "subtitle": "Choose a decorative pattern for your certificate"
+          },
+          "preview": {
+            "title": "Certificate Preview",
+            "subtitle": "Live preview of your certificate"
+          }
+        },
+        "states": {
+          "disabled": {
+            "title": "No Certification Configured",
+            "message": "Enable certification to provide students with certificates upon course completion.",
+            "button": "Enable Certification",
+            "creating": "Creating..."
+          },
+          "creating": {
+            "title": "Creating Certification...",
+            "message": "Please wait while we set up your course certification."
+          }
+        },
+        "errors": {
+          "loading": "Error loading certifications",
+          "create_failed": "Failed to create certification.",
+          "remove_failed": "Failed to remove certification."
+        },
+        "toasts": {
+          "create_success": "Certification created successfully",
+          "create_error": "Failed to create certification",
+          "remove_success": "Certification removed successfully",
+          "remove_error": "Failed to remove certification"
+        }
+      },
+      "structure": {
+        "loading": "Loading...",
+        "add_chapter_button": "Add Chapter",
+        "modals": {
+          "new_chapter": {
+            "title": "Create chapter",
+            "description": "Add a new chapter to the course",
+            "form": {
+              "name_label": "Chapter name",
+              "name_required": "Please provide a chapter name",
+              "description_label": "Chapter description",
+              "description_required": "Please provide a chapter description",
+              "submit": "Create Chapter"
+            }
+          },
+          "delete_chapter": {
+            "title": "Delete {{name}} ?",
+            "message": "Are you sure you want to delete this chapter?",
+            "button": "Delete Chapter"
+          },
+          "new_activity": {
+            "title": "Create Activity",
+            "description": "Choose between types of activities to add to the course"
+          },
+          "delete_activity": {
+            "title": "Delete {{name}} ?",
+            "message": "Are you sure you want to delete this activity ?",
+            "button": "Delete Activity"
+          }
+        },
+        "actions": {
+          "add_chapter": "Add Chapter",
+          "add_activity": "Add Activity",
+          "publish": "Publish",
+          "unpublish": "Unpublish",
+          "preview_activity": "Preview Activity",
+          "edit_page": "Edit Page",
+          "edit_assignment": "Edit Assignment"
+        },
+        "chapter_element": {
+          "chapter_name_placeholder": "Chapter name"
+        },
+        "activity": {
+          "name_placeholder": "Activity name",
+          "types": {
+            "video": "Video",
+            "document": "Document",
+            "assignment": "Assignment",
+            "assignments": "Assignments",
+            "dynamic": "Dynamic",
+            "dynamic_page": "Dynamic Page"
+          },
+          "toasts": {
+            "deleting": "Deleting activity...",
+            "delete_success": "Activity deleted successfully",
+            "updating": "Updating assignment...",
+            "update_success": "The activity has been updated successfully",
+            "name_update_success": "Activity name updated successfully",
+            "name_update_error": "Failed to update activity name",
+            "creating": "Creating activity...",
+            "create_success": "Activity created successfully",
+            "uploading": "Uploading file and creating activity...",
+            "upload_success": "File uploaded successfully",
+            "creating_uploading": "Creating activity and uploading file..."
+          }
+        }
+      }
+    }
   }
 }

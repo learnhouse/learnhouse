@@ -34,6 +34,10 @@
     "loading": "Đang tải...",
     "search": "Tìm kiếm",
     "all": "Tất cả",
+    "help": "Trợ giúp",
+    "plans": "Gói dịch vụ",
+    "enterprise": "Doanh nghiệp",
+    "version": "Phiên bản",
     "users": "Người dùng",
     "save": "Lưu",
     "cancel": "Hủy",
@@ -418,5 +422,1300 @@
     "days_ago": "{{count}} ngày trước",
     "hours_ago": "{{count}} giờ trước",
     "minutes_ago": "{{count}} phút trước"
+  },
+  "dashboard": {
+    "home": {
+      "cards": {
+        "courses": {
+          "title": "Khóa học",
+          "description": "Tạo và quản lý các khóa học, chương và hoạt động."
+        },
+        "organization": {
+          "title": "Tổ chức",
+          "description": "Cấu hình thông tin chung của tổ chức bạn."
+        },
+        "users": {
+          "title": "Người dùng",
+          "description": "Quản lý người dùng và vai trò trong tổ chức của bạn."
+        },
+        "account_settings": {
+          "title": "Cài đặt tài khoản",
+          "description": "Cấu hình thông tin cá nhân, mật khẩu và email của bạn."
+        }
+      },
+      "learnhouse_university": "LearnHouse University"
+    },
+    "courses": {
+      "title": "Khóa học",
+      "rights_guide": "Hướng dẫn về quyền hạn",
+      "create_course": "Tạo khóa học",
+      "create_new_course": "Tạo khóa học mới",
+      "no_courses": "Chưa có khóa học nào",
+      "create_course_placeholder": "Tạo khóa học để thêm nội dung",
+      "no_courses_available": "Hiện không có khóa học nào"
+    },
+    "organization": {
+      "settings": {
+        "title": "Cài đặt tổ chức",
+        "subtitle": "Quản lý hồ sơ và cấu hình tổ chức của bạn",
+        "tabs": {
+          "general": "Chung",
+          "landing": "Trang đích",
+          "previews": "Hình ảnh & Xem trước",
+          "socials": "Mạng xã hội",
+          "other": "Khác"
+        },
+        "pages": {
+          "general": {
+            "title": "Chung",
+            "subtitle": "Quản lý cấu hình tổ chức"
+          },
+          "previews": {
+            "title": "Xem trước",
+            "subtitle": "Quản lý ảnh xem trước của tổ chức"
+          },
+          "socials": {
+            "title": "Mạng xã hội",
+            "subtitle": "Quản lý liên kết mạng xã hội của tổ chức"
+          },
+          "landing": {
+            "title": "Trang đích",
+            "subtitle": "Tùy chỉnh trang đích của tổ chức bạn"
+          },
+          "other": {
+            "title": "Khác",
+            "subtitle": "Quản lý các cấu hình tổ chức khác"
+          }
+        },
+        "name": "Tên tổ chức",
+        "name_placeholder": "Tên tổ chức của bạn",
+        "short_description": "Mô tả ngắn",
+        "short_description_placeholder": "Mô tả ngắn về tổ chức của bạn",
+        "label": "Nhãn tổ chức",
+        "label_placeholder": "Chọn một nhãn tổ chức",
+        "about": "Giới thiệu tổ chức",
+        "about_placeholder": "Mô tả chi tiết về tổ chức của bạn",
+        "showcase_explore": "Hiển thị trong LearnHouse Explore",
+        "showcase_description": "Chia sẻ các khóa học và nội dung của tổ chức bạn với cộng đồng LearnHouse. Bật tính năng này để giúp người học khám phá các tài nguyên giáo dục giá trị.",
+        "save_changes": "Lưu thay đổi",
+        "saving": "Đang lưu...",
+        "update_success": "Thông tin tổ chức đã được cập nhật",
+        "update_error": "Cập nhật thông tin tổ chức thất bại",
+        "updating": "Đang cập nhật thông tin tổ chức..."
+      },
+      "images": {
+        "title": "Hình ảnh & Xem trước",
+        "subtitle": "Quản lý logo, ảnh đại diện và ảnh xem trước của tổ chức bạn",
+        "tabs": {
+          "logo": "Logo",
+          "thumbnail": "Ảnh đại diện",
+          "previews": "Xem trước"
+        },
+        "upload_logo": "Tải logo mới lên",
+        "upload_thumbnail": "Tải ảnh đại diện mới lên",
+        "uploading": "Đang tải lên...",
+        "uploading_logo": "Đang tải logo lên...",
+        "uploading_thumbnail": "Đang tải ảnh đại diện lên...",
+        "uploading_previews": "Đang tải lên {{count}} ảnh xem trước...",
+        "uploading_previews_plural": "Đang tải lên {{count}} ảnh xem trước...",
+        "accepted_files": "Chấp nhận PNG, JPG (tối đa 5MB)",
+        "recommended_size": "Kích thước khuyên dùng: 200x100px",
+        "add_preview": "Thêm xem trước",
+        "drag_to_reorder": "Kéo để sắp xếp lại • Tối đa 4 ảnh xem trước • Hỗ trợ cả hình ảnh và video",
+        "video_modal": {
+          "title": "Thêm xem trước",
+          "images": "Tải ảnh lên",
+          "youtube": "YouTube",
+          "youtube_desc": "Thêm video từ YouTube",
+          "loom": "Loom",
+          "loom_desc": "Thêm video từ Loom",
+          "url_placeholder": "Dán URL video từ {{service}}",
+          "add_button": "Thêm video"
+        },
+        "toasts": {
+          "logo_success": "Cập nhật logo thành công",
+          "logo_error": "Tải logo thất bại",
+          "thumbnail_success": "Cập nhật ảnh đại diện thành công",
+          "thumbnail_error": "Tải ảnh đại diện thất bại",
+          "preview_added": "Đã thêm {{count}} ảnh xem trước thành công",
+          "preview_added_plural": "Đã thêm {{count}} ảnh xem trước thành công",
+          "preview_error": "Tải ảnh xem trước thất bại",
+          "preview_removed": "Đã xóa ảnh xem trước thành công",
+          "preview_remove_error": "Xóa ảnh xem trước thất bại",
+          "order_updated": "Cập nhật thứ tự ảnh xem trước thành công",
+          "order_update_error": "Cập nhật thứ tự ảnh xem trước thất bại",
+          "max_previews": "Bạn chỉ có thể tải lên thêm {{count}} ảnh xem trước nữa",
+          "max_previews_plural": "Bạn chỉ có thể tải lên thêm {{count}} ảnh xem trước nữa",
+          "invalid_url": "URL {{type}} không hợp lệ",
+          "video_exists": "Video này đã được thêm",
+          "adding_video": "Đang thêm video xem trước...",
+          "video_preview_added": "Đã thêm video xem trước thành công",
+          "video_preview_error": "Thêm video xem trước thất bại",
+          "updating_order": "Đang cập nhật thứ tự xem trước..."
+        }
+      },
+      "socials": {
+        "title": "Liên kết mạng xã hội",
+        "subtitle": "Quản lý sự hiện diện trên mạng xã hội của tổ chức bạn",
+        "labels": {
+          "social_links": "Liên kết mạng xã hội",
+          "custom_links": "Liên kết tùy chỉnh"
+        },
+        "placeholders": {
+          "twitter": "URL hồ sơ Twitter",
+          "facebook": "URL hồ sơ Facebook",
+          "instagram": "URL hồ sơ Instagram",
+          "youtube": "URL kênh YouTube",
+          "label": "Nhãn",
+          "url": "URL"
+        },
+        "add_link": "Thêm liên kết",
+        "custom_links_desc": "Bạn có thể thêm tối đa 3 liên kết tùy chỉnh để hiển thị trên hồ sơ tổ chức của mình"
+      },
+      "scripts": {
+        "title": "Kịch bản (Scripts)",
+        "subtitle": "Thêm các kịch bản JavaScript tùy chỉnh vào tổ chức của bạn",
+        "warning": "Vui lòng đảm bảo bạn tin tưởng và hiểu rõ các kịch bản trước khi thêm để bảo mật cho tổ chức của bạn. Các kịch bản có thể tương tác với các trang của tổ chức.",
+        "add_script": "Thêm kịch bản",
+        "no_scripts": "Chưa có kịch bản nào được thêm",
+        "add_first_script": "Thêm kịch bản đầu tiên của bạn để bắt đầu",
+        "script_name": "Tên kịch bản",
+        "script_content": "Nội dung kịch bản",
+        "placeholders": {
+          "name": "Nhập tên kịch bản",
+          "content": "Dán mã JavaScript của bạn vào đây"
+        },
+        "save_script": "Lưu kịch bản",
+        "toasts": {
+          "save_success": "Lưu kịch bản thành công",
+          "delete_success": "Xóa kịch bản thành công"
+        }
+      },
+      "audit_logs": {
+        "title": "Nhật ký kiểm tra",
+        "subtitle": "Theo dõi và xem xét tất cả các hoạt động trong tổ chức của bạn",
+        "refresh": "Làm mới nhật ký",
+        "export": "Xuất dữ liệu",
+        "search_by": "Tìm kiếm theo",
+        "placeholders": {
+          "search": "Tìm kiếm..."
+        },
+        "filters": {
+          "resource": "Tài nguyên",
+          "status": "Trạng thái",
+          "date": "Ngày"
+        },
+        "resources": {
+          "all": "Tất cả tài nguyên",
+          "user": "Người dùng",
+          "course": "Khóa học",
+          "org": "Tổ chức"
+        },
+        "date_ranges": {
+          "all": "Tất cả thời gian",
+          "today": "Hôm nay",
+          "7d": "7 ngày qua",
+          "30d": "30 ngày qua",
+          "custom": "Phạm vi tùy chỉnh"
+        },
+        "table": {
+          "timestamp": "Dấu thời gian",
+          "user": "Người dùng",
+          "resource": "Tài nguyên",
+          "path_method": "Đường dẫn & Phương thức",
+          "ip_address": "Địa chỉ IP",
+          "status": "Trạng thái",
+          "payload": "Dữ liệu (Payload)"
+        },
+        "loading": "Đang tải hoạt động...",
+        "no_logs": "Không tìm thấy nhật ký",
+        "pagination": {
+          "showing": "Hiển thị từ {{start}} đến {{end}} trong tổng số {{total}} nhật ký"
+        },
+        "modals": {
+          "payload": {
+            "title": "Dữ liệu hoạt động",
+            "description": "Dữ liệu chi tiết cho hành động: {{action}}"
+          }
+        },
+        "export_toasts": {
+          "generating": "Đang tạo tệp CSV...",
+          "success": "Xuất tệp CSV thành công",
+          "error": "Xuất tệp CSV thất bại"
+        }
+      },
+      "landing": {
+        "title": "Trang đích",
+        "subtitle": "Tùy chỉnh trang đích của tổ chức bạn",
+        "beta": "BETA",
+        "save_changes": "Lưu thay đổi",
+        "saving": "Đang lưu...",
+        "saved_success": "Lưu trang đích thành công",
+        "save_error": "Đã xảy ra lỗi khi lưu trang đích",
+        "sections": "Các phần",
+        "select_section": "Chọn một phần để chỉnh sửa hoặc thêm phần mới",
+        "section_types": {
+          "hero": {
+            "label": "Hero",
+            "description": "Thêm phần Hero với tiêu đề và nút kêu gọi hành động"
+          },
+          "text_and_image": {
+            "label": "Văn bản & Hình ảnh",
+            "description": "Thêm phần có văn bản và hình ảnh cạnh nhau"
+          },
+          "logos": {
+            "label": "Logos",
+            "description": "Thêm phần để hiển thị logo các đối tác"
+          },
+          "people": {
+            "label": "Con người",
+            "description": "Thêm phần để giới thiệu các thành viên trong nhóm"
+          },
+          "featured_courses": {
+            "label": "Khóa học",
+            "description": "Thêm phần để làm nổi bật các khóa học đã chọn"
+          }
+        },
+        "add_section": "Thêm phần",
+        "hero_editor": {
+          "title": "Phần Hero",
+          "section_title": "Tiêu đề phần",
+          "section_title_placeholder": "Nhập tiêu đề phần",
+          "tabs": {
+            "content": "Nội dung",
+            "background": "Nền",
+            "buttons": "Các nút",
+            "illustration": "Minh họa"
+          },
+          "heading": "Tiêu đề chính",
+          "heading_placeholder": "Nhập nội dung tiêu đề chính",
+          "heading_color": "Màu tiêu đề chính",
+          "subheading": "Tiêu đề phụ",
+          "subheading_placeholder": "Nhập nội dung tiêu đề phụ",
+          "subheading_color": "Màu tiêu đề phụ",
+          "background_type": "Loại nền",
+          "background_type_placeholder": "Chọn loại nền",
+          "background_types": {
+            "solid": "Màu đơn",
+            "gradient": "Chuyển màu (Gradient)",
+            "image": "Hình ảnh"
+          },
+          "background_color": "Màu nền",
+          "gradient_type": "Loại chuyển màu",
+          "gradient_type_placeholder": "Chọn loại chuyển màu",
+          "gradient_types": {
+            "preset": "Có sẵn",
+            "custom": "Tùy chỉnh"
+          },
+          "start_color": "Màu bắt đầu",
+          "end_color": "Màu kết thúc",
+          "gradient_direction": "Hướng chuyển màu",
+          "gradient_direction_placeholder": "Chọn một hướng",
+          "gradient_preset": "Mẫu chuyển màu",
+          "gradient_preset_placeholder": "Chọn một mẫu",
+          "background_image": "Hình nền",
+          "upload_image": "Tải ảnh lên",
+          "button_text_colors": "Văn bản & Màu sắc nút",
+          "button_text": "Văn bản nút",
+          "text_color": "Văn bản",
+          "background_color_label": "Nền",
+          "button_link": "Liên kết nút",
+          "button_link_placeholder": "Nút sẽ dẫn đến đâu",
+          "add_button": "Thêm nút",
+          "illustration_image": "Hình minh họa",
+          "illustration_url": "URL hình minh họa",
+          "alt_text": "Văn bản thay thế",
+          "upload_illustration": "Tải hình minh họa lên",
+          "position": "Vị trí",
+          "position_placeholder": "Chọn một vị trí",
+          "positions": {
+            "left": "Trái",
+            "right": "Phải"
+          },
+          "size": "Kích thước",
+          "size_placeholder": "Chọn một kích thước",
+          "sizes": {
+            "small": "Nhỏ",
+            "medium": "Vừa",
+            "large": "Lớn"
+          },
+          "remove_illustration": "Xóa hình minh họa"
+        },
+        "text_image_editor": {
+          "title": "Phần Văn bản & Hình ảnh",
+          "title_label": "Tiêu đề",
+          "title_placeholder": "Nhập tiêu đề phần",
+          "content": "Nội dung",
+          "content_placeholder": "Nhập nội dung cho phần này",
+          "image_position": "Vị trí hình ảnh",
+          "image_position_placeholder": "Chọn một vị trí",
+          "positions": {
+            "left": "Trái",
+            "right": "Phải"
+          },
+          "image": "Hình ảnh",
+          "image_url": "URL hình ảnh",
+          "alt_text": "Văn bản thay thế",
+          "upload_new_image": "Tải ảnh mới lên"
+        },
+        "logos_editor": {
+          "title": "Phần Logos",
+          "title_label": "Tiêu đề",
+          "title_placeholder": "Nhập tiêu đề phần",
+          "logos": "Logos",
+          "logo_url": "URL logo",
+          "alt_text": "Văn bản thay thế",
+          "upload_logo": "Tải logo lên",
+          "add_logo": "Thêm logo"
+        },
+        "people_editor": {
+          "title": "Phần Con người",
+          "title_label": "Tiêu đề",
+          "title_placeholder": "Nhập tiêu đề phần",
+          "people": "Con người",
+          "name": "Tên",
+          "name_placeholder": "Tên người",
+          "username": "Tên người dùng",
+          "username_placeholder": "@tennguoidung",
+          "image": "Hình ảnh",
+          "image_url": "URL hình ảnh",
+          "upload_avatar": "Tải ảnh đại diện lên",
+          "description": "Mô tả",
+          "description_placeholder": "Nhập mô tả hoặc vai trò",
+          "add_person": "Thêm người"
+        },
+        "courses_editor": {
+          "title": "Phần Khóa học",
+          "title_label": "Tiêu đề",
+          "title_placeholder": "Nhập tiêu đề phần",
+          "select_courses": "Chọn khóa học",
+          "loading_courses": "Đang tải khóa học...",
+          "selected": "Đã chọn",
+          "select": "Chọn"
+        }
+      }
+    },
+    "users": {
+      "settings": {
+        "tabs": {
+          "users": "Người dùng",
+          "usergroups": "Nhóm người dùng",
+          "roles": "Vai trò",
+          "signups": "Đăng ký & Mã mời",
+          "add": "Mời thành viên",
+          "audit_logs": "Nhật ký kiểm tra"
+        },
+        "pages": {
+          "users": {
+            "title": "Người dùng",
+            "subtitle": "Quản lý người dùng trong tổ chức của bạn và gán vai trò cùng quyền hạn cho họ"
+          },
+          "signups": {
+            "title": "Đăng ký & Mã mời",
+            "subtitle": "Chọn cách người dùng sẽ tham gia tổ chức của bạn"
+          },
+          "add": {
+            "title": "Mời thành viên",
+            "subtitle": "Mời các thành viên mới tham gia tổ chức của bạn"
+          },
+          "usergroups": {
+            "title": "Nhóm người dùng",
+            "subtitle": "Tạo và quản lý các nhóm người dùng"
+          },
+          "roles": {
+            "title": "Vai trò",
+            "subtitle": "Tạo và quản lý vai trò với các quyền hạn cụ thể"
+          },
+          "audit_logs": {
+            "title": "Nhật ký kiểm tra",
+            "subtitle": "Theo dõi và xem xét tất cả các hoạt động trong tổ chức của bạn"
+          }
+        },
+        "mobile": {
+          "title": "Chỉ dành cho máy tính",
+          "message1": "Trang này chỉ có thể truy cập qua thiết bị máy tính.",
+          "message2": "Vui lòng chuyển sang máy tính để xem và quản lý cài đặt người dùng."
+        }
+      },
+      "active_users": {
+        "title": "Người dùng đang hoạt động",
+        "subtitle": "Quản lý người dùng trong tổ chức của bạn và gán vai trò cùng quyền hạn cho họ",
+        "table": {
+          "user": "Người dùng",
+          "role": "Vai trò",
+          "actions": "Hành động"
+        },
+        "actions": {
+          "edit_role": "Chỉnh sửa vai trò",
+          "remove_from_org": "Xóa khỏi tổ chức",
+          "removing": "Đang xóa...",
+          "remove_success": "Đã xóa người dùng khỏi tổ chức thành công",
+          "remove_error": "Đã xảy ra lỗi khi xóa người dùng"
+        },
+        "modals": {
+          "update_role": {
+            "title": "Cập nhật vai trò",
+            "description": "Cập nhật vai trò cho @{{username}}"
+          },
+          "remove_user": {
+            "title": "Xóa {{username}}?",
+            "message": "Bạn có chắc chắn muốn xóa người dùng này khỏi tổ chức của mình không?",
+            "button": "Xóa người dùng"
+          }
+        }
+      },
+      "signups": {
+        "title": "Phương thức đăng ký",
+        "subtitle": "Chọn cách người dùng sẽ tham gia tổ chức của bạn",
+        "open": {
+          "title": "Mở",
+          "description": "Người dùng có thể tự do đăng ký qua trang đăng ký.",
+          "active": "Đang hoạt động",
+          "change_to": "Chuyển sang đăng ký mở",
+          "confirmation_message": "Bạn có chắc chắn muốn đổi phương thức đăng ký thành Mở không? Điều này sẽ cho phép bất kỳ ai cũng có thể tự do tham gia tổ chức của bạn.",
+          "confirmation_title": "Chuyển sang đăng ký mở?"
+        },
+        "closed": {
+          "title": "Đóng (Chỉ mời)",
+          "description": "Người dùng chỉ có thể tham gia qua lời mời.",
+          "active": "Đang hoạt động",
+          "change_to": "Chuyển sang đăng ký đóng",
+          "confirmation_message": "Bạn có chắc chắn muốn đổi phương thức đăng ký thành Đóng không? Điều này sẽ chỉ cho phép người dùng tham gia khi có lời mời.",
+          "confirmation_title": "Chuyển sang đăng ký đóng?"
+        },
+        "invite_codes": {
+          "title": "Mã mời",
+          "subtitle": "Bạn có thể sao chép các mã mời và sử dụng chúng để tham gia tổ chức",
+          "table": {
+            "code": "Mã",
+            "signup_link": "Liên kết đăng ký",
+            "type": "Loại",
+            "expiration_date": "Ngày hết hạn",
+            "actions": "Hành động"
+          },
+          "types": {
+            "linked_to_usergroup": "Đã liên kết với nhóm",
+            "normal": "Bình thường"
+          },
+          "actions": {
+            "delete_code": "Xóa mã",
+            "delete_confirmation_title": "Xóa mã?",
+            "delete_confirmation_message": "Bạn có chắc chắn muốn xóa mã mời này không?",
+            "generate": "Tạo mã",
+            "generate_title": "Tạo mã mời",
+            "generate_description": "Tạo một mã mời mới cho tổ chức của bạn"
+          },
+          "toasts": {
+            "deleting": "Đang xóa...",
+            "delete_success": "Đã xóa mã mời thành công",
+            "delete_error": "Đã xảy ra lỗi khi xóa",
+            "changing_method": "Đang thay đổi phương thức đăng ký...",
+            "change_success": "Đã đổi phương thức đăng ký sang {{method}} thành công",
+            "change_error": "Đã xảy ra lỗi khi đổi phương thức đăng ký"
+          }
+        },
+        "generate_modal": {
+          "linked_title": "Mã mời liên kết với nhóm",
+          "linked_description": "Khi đăng ký, người dùng sẽ tự động được liên kết với nhóm người dùng đã chọn.",
+          "normal_title": "Mã mời bình thường",
+          "normal_description": "Khi đăng ký, người dùng sẽ không được liên kết với bất kỳ nhóm người dùng nào.",
+          "generate_button": "Tạo mã",
+          "no_usergroups": "Không có nhóm người dùng nào để chọn",
+          "create_usergroup_link": "Tạo nhóm người dùng",
+          "toasts": {
+            "error": "Lỗi {{status}}: {{detail}}"
+          }
+        }
+      },
+      "invite_members": {
+        "title": "Mời thành viên tham gia tổ chức",
+        "subtitle": "Gửi lời mời qua email (ngăn cách bởi dấu phẩy ,)",
+        "email_placeholder": "ví dụ: spike.spiegel@bepop.space, michael.scott@dundermifflin.com",
+        "invite_code_label": "Mã mời",
+        "invite_code_tooltip": "Sử dụng các mã mời bạn đã tạo trong trang quyền truy cập đăng ký",
+        "send_button": "Gửi lời mời qua email",
+        "invited_users": {
+          "title": "Người dùng đã được mời",
+          "subtitle": "Người dùng đã được mời tham gia tổ chức",
+          "table": {
+            "email": "Email",
+            "signup_status": "Trạng thái đăng ký",
+            "email_sent": "Đã gửi email"
+          },
+          "status": {
+            "pending": "Đang chờ",
+            "signed": "Đã đăng ký"
+          },
+          "email_status": {
+            "sent": "Đã gửi",
+            "no": "Chưa"
+          }
+        },
+        "toasts": {
+          "sending": "Đang gửi lời mời...",
+          "success": "Đã gửi lời mời thành công",
+          "error": "Đã xảy ra lỗi khi gửi lời mời"
+        }
+      },
+      "usergroups": {
+        "title": "Quản lý các nhóm người dùng và thành viên",
+        "subtitle": "Nhóm người dùng là một cách để nhóm các thành viên nhằm quản lý quyền truy cập vào các tài nguyên của tổ chức (khóa học).",
+        "table": {
+          "usergroup": "Nhóm người dùng",
+          "description": "Mô tả",
+          "manage_users": "Quản lý thành viên",
+          "actions": "Hành động"
+        },
+        "actions": {
+          "manage_users": "Quản lý thành viên",
+          "edit": "Chỉnh sửa",
+          "delete": "Xóa",
+          "create": "Tạo nhóm người dùng"
+        },
+        "modals": {
+          "manage_users": {
+            "title": "Quản lý thành viên nhóm",
+            "description": "Quản lý các thành viên là một phần của nhóm người dùng này",
+            "table": {
+              "user": "Người dùng",
+              "linked": "Đã liên kết",
+              "actions": "Hành động"
+            },
+            "status": {
+              "linked": "Đã liên kết",
+              "not_linked": "Chưa liên kết"
+            },
+            "actions": {
+              "link": "Liên kết",
+              "unlink": "Hủy liên kết"
+            },
+            "toasts": {
+              "link_success": "Đã liên kết người dùng thành công",
+              "unlink_success": "Đã hủy liên kết người dùng thành công",
+              "error": "Lỗi {{status}}: {{detail}}"
+            }
+          },
+          "create": {
+            "title": "Tạo nhóm người dùng",
+            "description": "Tạo một nhóm người dùng mới để quản lý các thành viên của bạn",
+            "form": {
+              "name": "Tên nhóm",
+              "name_required": "Tên nhóm là bắt buộc",
+              "description": "Mô tả",
+              "submit": "Tạo nhóm người dùng",
+              "loading": "Đang tải..."
+            },
+            "toasts": {
+              "creating": "Đang tạo...",
+              "success": "Đã tạo nhóm người dùng mới thành công",
+              "error": "Tạo nhóm người dùng thất bại"
+            }
+          },
+          "edit": {
+            "title": "Chỉnh sửa nhóm người dùng",
+            "form": {
+              "name": "Tên nhóm",
+              "name_required": "Tên nhóm là bắt buộc",
+              "description": "Mô tả",
+              "submit": "Lưu nhóm",
+              "loading": "Đang tải..."
+            },
+            "toasts": {
+              "success": "Đã lưu nhóm người dùng thành công",
+              "error": "Đã xảy ra lỗi khi lưu nhóm người dùng. Vui lòng thử lại sau."
+            }
+          },
+          "delete": {
+            "title": "Xóa nhóm người dùng?",
+            "message": "Tất cả các thành viên trong nhóm này sẽ bị thu hồi quyền truy cập vào các tài nguyên. Bạn có chắc chắn muốn xóa nhóm người dùng này không?",
+            "button": "Xóa nhóm"
+          }
+        },
+        "toasts": {
+          "deleting": "Đang xóa...",
+          "delete_success": "Đã xóa nhóm người dùng thành công",
+          "delete_error": "Đã xảy ra lỗi khi xóa nhóm người dùng"
+        }
+      },
+      "roles": {
+        "title": "Quản lý vai trò và quyền hạn",
+        "subtitle": "Vai trò xác định những gì người dùng có thể làm trong tổ chức của bạn. Tạo các vai trò tùy chỉnh với các quyền hạn cụ thể cho các loại người dùng khác nhau.",
+        "table": {
+          "role_name": "Tên vai trò",
+          "description": "Mô tả",
+          "permissions": "Quyền hạn",
+          "actions": "Hành động"
+        },
+        "no_description": "Không có mô tả",
+        "no_permissions": "Không có quyền hạn",
+        "permissions_count": "{{count}} quyền",
+        "system_wide": "Toàn hệ thống",
+        "actions": {
+          "edit": "Chỉnh sửa",
+          "delete": "Xóa",
+          "create": "Tạo vai trò"
+        },
+        "modals": {
+          "create": {
+            "title": "Tạo vai trò",
+            "description": "Tạo một vai trò mới với các quyền hạn cụ thể",
+            "form": {
+              "role_name": "Tên vai trò",
+              "role_name_placeholder": "ví dụ: Quản lý khóa học",
+              "description": "Mô tả",
+              "description_placeholder": "Mô tả vai trò này có thể làm gì...",
+              "permissions": "Quyền hạn",
+              "select_all": "Chọn tất cả",
+              "deselect_all": "Bỏ chọn tất cả",
+              "select": "Chọn",
+              "deselect": "Bỏ chọn",
+              "submit": "Tạo vai trò",
+              "loading": "Đang tạo..."
+            },
+            "validation": {
+              "name_required": "Tên là bắt buộc",
+              "name_min_length": "Tên phải có ít nhất 2 ký tự",
+              "description_required": "Mô tả là bắt buộc",
+              "description_min_length": "Mô tả phải có ít nhất 10 ký tự"
+            },
+            "toasts": {
+              "success": "Đã tạo vai trò mới thành công",
+              "error": "Tạo vai trò thất bại"
+            },
+            "presets": {
+              "title": "Mẫu quyền hạn",
+              "admin": {
+                "name": "Quản trị viên",
+                "description": "Kiểm soát toàn bộ nền tảng với tất cả quyền hạn"
+              },
+              "maintainer": {
+                "name": "Người duy trì",
+                "description": "Có thể quản lý các khóa học, chương và hoạt động"
+              },
+              "instructor": {
+                "name": "Giảng viên",
+                "description": "Có thể tạo và quản lý các khóa học của riêng mình"
+              },
+              "viewer": {
+                "name": "Người xem",
+                "description": "Quyền chỉ xem khóa học và nội dung"
+              },
+              "content_creator": {
+                "name": "Người tạo nội dung",
+                "description": "Có thể tạo và chỉnh sửa nội dung nhưng không thể quản lý người dùng"
+              },
+              "user_manager": {
+                "name": "Quản lý người dùng",
+                "description": "Có thể quản lý người dùng và nhóm người dùng"
+              },
+              "moderator": {
+                "name": "Người kiểm duyệt",
+                "description": "Có thể kiểm duyệt nội dung và quản lý các hoạt động"
+              },
+              "analyst": {
+                "name": "Nhà phân tích",
+                "description": "Quyền chỉ xem với các tính năng phân tích"
+              },
+              "guest": {
+                "name": "Khách",
+                "description": "Quyền truy cập hạn chế cho người dùng bên ngoài"
+              }
+            },
+            "permissions": {
+              "title": "Quyền hạn",
+              "sections": {
+                "courses": "Khóa học",
+                "users": "Người dùng",
+                "usergroups": "Nhóm người dùng",
+                "collections": "Bộ sưu tập",
+                "organizations": "Tổ chức",
+                "coursechapters": "Chương khóa học",
+                "activities": "Hoạt động",
+                "roles": "Vai trò",
+                "dashboard": "Bảng điều khiển"
+              },
+              "actions": {
+                "create": "Tạo",
+                "read": "Đọc",
+                "read_own": "Đọc của chính mình",
+                "update": "Cập nhật",
+                "update_own": "Cập nhật của chính mình",
+                "delete": "Xóa",
+                "delete_own": "Xóa của chính mình",
+                "access": "Truy cập"
+              },
+              "select_all": "Chọn tất cả",
+              "deselect_all": "Bỏ chọn tất cả",
+              "select": "Chọn",
+              "deselect": "Bỏ chọn"
+            }
+          },
+          "edit": {
+            "title": "Chỉnh sửa vai trò",
+            "description": "Cập nhật các quyền hạn và chi tiết của vai trò",
+            "form": {
+              "role_name": "Tên vai trò",
+              "description": "Mô tả",
+              "permissions": "Quyền hạn",
+              "select_all": "Chọn tất cả",
+              "deselect_all": "Bỏ chọn tất cả",
+              "select": "Chọn",
+              "deselect": "Bỏ chọn",
+              "submit": "Lưu vai trò",
+              "loading": "Đang lưu..."
+            },
+            "validation": {
+              "name_required": "Tên là bắt buộc",
+              "name_min_length": "Tên phải có ít nhất 2 ký tự",
+              "description_required": "Mô tả là bắt buộc",
+              "description_min_length": "Mô tả phải có ít nhất 10 ký tự"
+            },
+            "toasts": {
+              "success": "Đã lưu vai trò thành công",
+              "error": "Đã xảy ra lỗi khi lưu vai trò. Vui lòng thử lại sau."
+            }
+          },
+          "delete": {
+            "title": "Xóa vai trò?",
+            "message": "Hành động này không thể hoàn tác. Tất cả người dùng có vai trò này sẽ bị mất các quyền hạn của họ. Bạn có chắc chắn muốn xóa vai trò này không?",
+            "button": "Xóa vai trò"
+          }
+        },
+        "toasts": {
+          "deleting": "Đang xóa...",
+          "delete_success": "Đã xóa vai trò thành công",
+          "delete_error": "Đã xảy ra lỗi khi xóa vai trò"
+        }
+      }
+    },
+    "assignments": {
+      "home": {
+        "title": "Bài tập",
+        "course_label": "Khóa học",
+        "assignment_label": "Bài tập",
+        "course_editor": "Trình chỉnh sửa khóa học",
+        "editor": "Trình chỉnh sửa",
+        "submissions": "Bài nộp",
+        "no_assignments": "Chưa có bài tập nào cho khóa học này. Hãy tạo một bài tập trong trình chỉnh sửa khóa học."
+      },
+      "detail": {
+        "title": "Công cụ bài tập",
+        "tabs": {
+          "editor": "Trình chỉnh sửa",
+          "submissions": "Bài nộp"
+        },
+        "mobile": {
+          "title": "Chỉ dành cho máy tính",
+          "message1": "Trang này chỉ có thể truy cập qua thiết bị máy tính.",
+          "message2": "Vui lòng chuyển sang máy tính để xem và quản lý các bài tập."
+        },
+        "publishing": {
+          "published": "Đã công bố",
+          "unpublished": "Chưa công bố",
+          "edit_tooltip": "Chỉnh sửa chi tiết bài tập",
+          "preview_tooltip": "Xem trước bài tập trong giao diện người học",
+          "unpublish_tooltip": "Ẩn bài tập với người học",
+          "publish_tooltip": "Công bố bài tập để người học có thể thấy",
+          "edit": "Chỉnh sửa",
+          "preview": "Xem trước",
+          "unpublish": "Hủy công bố",
+          "publish": "Công bố",
+          "toasts": {
+            "updating": "Đang cập nhật bài tập...",
+            "update_success": "Đã cập nhật bài tập thành công",
+            "update_error": "Đã xảy ra lỗi khi cập nhật bài tập. Vui lòng thử lại sau."
+          }
+        }
+      },
+      "editor": {
+        "tasks_title": "Nhiệm vụ",
+        "add_task": "Thêm nhiệm vụ",
+        "add_task_modal": {
+          "title": "Thêm nhiệm vụ vào bài tập",
+          "description": "Tạo một nhiệm vụ mới cho bài tập này"
+        },
+        "task_types": {
+          "quiz": {
+            "title": "Trắc nghiệm",
+            "description": "Một bài trắc nghiệm với các câu hỏi và lựa chọn"
+          },
+          "file_submission": {
+            "title": "Nộp tệp",
+            "description": "Người học có thể tải tệp lên cho nhiệm vụ này"
+          },
+          "form": {
+            "title": "Biểu mẫu",
+            "description": "Một biểu mẫu để người học điền vào"
+          }
+        },
+        "toasts": {
+          "task_created": "Đã tạo nhiệm vụ thành công",
+          "task_saved": "Đã lưu nhiệm vụ thành công",
+          "task_save_error": "Đã xảy ra lỗi khi lưu nhiệm vụ. Vui lòng thử lại sau.",
+          "task_updated": "Đã cập nhật nhiệm vụ thành công",
+          "task_update_error": "Đã xảy ra lỗi khi cập nhật nhiệm vụ. Vui lòng thử lại sau.",
+          "reminder": "Đừng quên hủy công bố bài tập khi chỉnh sửa hoặc thêm các nhiệm vụ để tránh các vấn đề tiềm ẩn cho người học. Bạn có thể công bố lại khi sẵn sàng."
+        },
+        "task_editor": {
+          "general": {
+            "title": "Tiêu đề",
+            "description": "Mô tả",
+            "hint": "Gợi ý",
+            "reference_file": "Tệp tham khảo",
+            "reference_file_info": "Các định dạng được hỗ trợ: pdf, docx, mp4, jpg, jpeg, png, pptx, zip",
+            "max_grade_value": "Điểm tối đa",
+            "max_grade_error": "Điểm phải nằm trong khoảng từ 20 đến 100",
+            "submit": "Nộp",
+            "download": "Tải xuống",
+            "change_reference_file": "Thay đổi tệp tham khảo",
+            "loading": "Đang tải",
+            "reference_file_updated": "Đã cập nhật tệp tham khảo thành công",
+            "allowed_formats": "Các định dạng được hỗ trợ: pdf, docx, mp4, jpg, jpeg, png, pptx, zip",
+            "sign_in_required": "Vui lòng đăng nhập để tải tệp lên",
+            "auth_required": "Yêu cầu xác thực. Đăng nhập để tải tệp lên.",
+            "auth_required_submit": "Yêu cầu xác thực. Đăng nhập để nộp nhiệm vụ.",
+            "hint_optional": "Gợi ý (tùy chọn)"
+          }
+        }
+      },
+      "submissions": {
+        "status": {
+          "late": "Nộp muộn",
+          "submitted": "Đã nộp",
+          "graded": "Đã chấm điểm"
+        },
+        "submission_label": "Bài nộp",
+        "evaluate": "Đánh giá",
+        "evaluate_modal": {
+          "title": "Đánh giá @{{username}}",
+          "description": "Đánh giá bài nộp của bài tập"
+        },
+        "task_label": "Nhiệm vụ {{number}}:",
+        "hint": "Gợi ý",
+        "reference_document": "Tài liệu tham khảo",
+        "actions": {
+          "reject": "Từ chối bài nộp",
+          "set_final_grade": "Đặt điểm cuối cùng",
+          "mark_as_done": "Đánh dấu hoạt động người dùng là đã xong"
+        },
+        "toasts": {
+          "reject_success": "Đã từ chối bài nộp thành công"
+        }
+      },
+      "modals": {
+        "edit": {
+          "title": "Chỉnh sửa bài tập",
+          "description": "Cập nhật các chi tiết bài tập",
+          "form": {
+            "title_label": "Tiêu đề bài tập",
+            "title_required": "Vui lòng nhập tên cho bài tập",
+            "description_label": "Mô tả bài tập",
+            "description_required": "Vui lòng nhập mô tả cho bài tập",
+            "due_date_label": "Hạn nộp",
+            "due_date_required": "Vui lòng đặt một ngày hết hạn",
+            "grading_type_label": "Loại chấm điểm",
+            "grading_type_required": "Vui lòng chọn một loại chấm điểm cho bài tập này",
+            "grading_types": {
+              "alphabet": "Bảng chữ cái",
+              "numeric": "Số học",
+              "percentage": "Phần trăm"
+            },
+            "cancel": "Hủy",
+            "save": "Lưu thay đổi",
+            "saving": "Đang lưu..."
+          },
+          "toasts": {
+            "updating": "Đang cập nhật bài tập...",
+            "success": "Đã cập nhật bài tập thành công",
+            "error": "Cập nhật bài tập thất bại",
+            "error_detail": "Đã xảy ra lỗi khi cập nhật bài tập"
+          }
+        },
+        "create": {
+          "form": {
+            "title_label": "Tiêu đề bài tập",
+            "title_required": "Vui lòng nhập tên cho bài tập",
+            "description_label": "Mô tả bài tập",
+            "description_required": "Vui lòng nhập mô tả cho bài tập",
+            "due_date_label": "Hạn nộp",
+            "due_date_required": "Vui lòng đặt một ngày hết hạn",
+            "grading_type_label": "Loại chấm điểm",
+            "grading_type_required": "Vui lòng chọn một loại chấm điểm cho bài tập này",
+            "grading_types": {
+              "alphabet": "Bảng chữ cái",
+              "numeric": "Số học",
+              "percentage": "Phần trăm"
+            },
+            "submit": "Tạo hoạt động"
+          },
+          "toasts": {
+            "creating": "Đang tạo bài tập...",
+            "success": "Đã tạo bài tập thành công"
+          }
+        }
+      }
+    },
+    "courses": {
+      "title": "Khóa học",
+      "rights_guide": "Hướng dẫn về quyền hạn",
+      "create_course": "Tạo khóa học",
+      "create_new_course": "Tạo khóa học mới",
+      "no_courses": "Chưa có khóa học nào",
+      "create_course_placeholder": "Tạo khóa học để thêm nội dung",
+      "no_courses_available": "Hiện không có khóa học nào",
+      "overview_top": {
+        "course_label": "Khóa học",
+        "rights_guide_button": "Hướng dẫn về quyền hạn"
+      },
+      "settings": {
+        "tabs": {
+          "general": "Chung",
+          "content": "Nội dung",
+          "access": "Truy cập",
+          "contributors": "Người đóng góp",
+          "certification": "Chứng nhận"
+        },
+        "access_denied": {
+          "title": "Truy cập bị từ chối",
+          "message": "Bạn không có quyền truy cập vào khóa học này."
+        },
+        "access_restricted": {
+          "title": "Truy cập bị hạn chế",
+          "message": "Bạn không có quyền truy cập vào tab {{tab}}."
+        },
+        "loading": "Đang tải..."
+      },
+      "general": {
+        "form": {
+          "name_label": "Tên",
+          "name_required": "Trường này là bắt buộc",
+          "name_max_length": "Tên không được vượt quá 100 ký tự",
+          "description_label": "Mô tả",
+          "description_required": "Trường này là bắt buộc",
+          "description_max_length": "Mô tả không được vượt quá 1000 ký tự",
+          "about_label": "Giới thiệu",
+          "learnings_label": "Kiến thức đạt được",
+          "learnings_required": "Trường này là bắt buộc",
+          "learnings_invalid_format": "Định dạng không hợp lệ",
+          "learnings_min_items": "Yêu cầu ít nhất một mục",
+          "learnings_empty_text": "Tất cả các mục phải có nội dung văn bản",
+          "learnings_invalid_json": "Định dạng JSON không hợp lệ",
+          "tags_label": "Thẻ",
+          "tags_placeholder": "Nhấn Enter để thêm...",
+          "thumbnail_type_label": "Loại ảnh đại diện",
+          "thumbnail_type_image": "Hình ảnh",
+          "thumbnail_type_video": "Video",
+          "thumbnail_type_both": "Cả hai",
+          "thumbnail_label": "Ảnh đại diện",
+          "image_search_placeholder": "Tìm kiếm hình ảnh..."
+        },
+        "thumbnail": {
+          "upload_image": "Tải ảnh lên",
+          "upload_video": "Tải video lên",
+          "gallery": "Thư viện",
+          "tabs": {
+            "image": "Hình ảnh",
+            "video": "Video"
+          },
+          "supported_formats": {
+            "image": "Hỗ trợ PNG, JPG/JPEG (tối đa 8MB)",
+            "video": "Hỗ trợ MP4, WebM (tối đa 100MB)"
+          }
+        },
+        "errors": {
+          "save_failed": "Lưu cấu trúc khóa học thất bại"
+        }
+      },
+      "access": {
+        "title": "Truy cập khóa học",
+        "subtitle": "Chọn xem khóa học của bạn sẽ công khai trên internet hay chỉ giới hạn cho những người dùng đã đăng ký.",
+        "public": {
+          "title": "Công khai",
+          "description": "Khóa học sẽ có thể truy cập tự do trên internet, được lập chỉ mục bởi các công cụ tìm kiếm và bất kỳ ai cũng có thể tham gia.",
+          "active": "Đang hoạt động",
+          "confirmation_title": "Chuyển sang công khai?",
+          "confirmation_message": "Bạn có chắc chắn muốn công khai khóa học này trên internet không?",
+          "confirmation_button": "Chuyển sang công khai"
+        },
+        "users_only": {
+          "title": "Chỉ dành cho người dùng đã đăng ký",
+          "description": "Khóa học sẽ chỉ có thể truy cập được bởi những người dùng đã đăng ký và bạn có thể chọn thêm các nhóm người dùng nào có quyền truy cập.",
+          "active": "Đang hoạt động",
+          "confirmation_title": "Chuyển sang chỉ dành cho người dùng?",
+          "confirmation_message": "Bạn có chắc chắn muốn giới hạn khóa học này chỉ dành cho những người dùng đã đăng ký không?",
+          "confirmation_button": "Chuyển sang chỉ người dùng"
+        },
+        "usergroups": {
+          "title": "Nhóm người dùng",
+          "subtitle": "Nếu bạn muốn giới hạn khóa học chỉ cho một số nhóm người dùng nhất định, bạn có thể liên kết họ tại đây.",
+          "table": {
+            "name": "Tên",
+            "actions": "Hành động"
+          },
+          "actions": {
+            "delete_link": "Xóa liên kết",
+            "link_to_usergroup": "Liên kết với nhóm người dùng"
+          },
+          "modals": {
+            "link_title": "Liên kết khóa học với nhóm người dùng",
+            "link_description": "Chọn nhóm người dùng bạn muốn liên kết với khóa học này. Các thành viên của nhóm này sẽ có quyền truy cập vào khóa học.",
+            "unlink_title": "Xóa liên kết nhóm người dùng?",
+            "unlink_message": "Các thành viên của nhóm này sẽ không còn quyền truy cập vào khóa học này nữa.",
+            "unlink_button": "Xóa liên kết",
+            "warning": "Những người dùng không thuộc nhóm này sẽ không còn quyền truy cập vào khóa học này nữa.",
+            "usergroup_name": "Tên nhóm người dùng",
+            "no_usergroups": "Không có nhóm người dùng nào để liên kết",
+            "create_usergroup": "Tạo nhóm người dùng",
+            "link_button": "Liên kết"
+          },
+          "toasts": {
+            "link_success": "Đã liên kết với nhóm người dùng thành công",
+            "link_error": "Lỗi {{status}}: {{detail}}",
+            "unlink_success": "Đã xóa liên kết nhóm người dùng thành công",
+            "unlink_error": "Đã xảy ra lỗi khi xóa liên kết nhóm người dùng"
+          }
+        }
+      },
+      "contributors": {
+        "title": "Người đóng góp khóa học",
+        "subtitle": "Quản lý những người đóng góp và thêm thành viên mới vào khóa học.",
+        "open_to_contributors": {
+          "title": "Mở cho người đóng góp",
+          "description": "Khóa học mở cho những người đóng góp. Người dùng có thể đăng ký để giúp cải thiện nội dung khóa học.",
+          "active": "Đang hoạt động",
+          "confirmation_title": "Mở cho người đóng góp?",
+          "confirmation_message": "Bạn có chắc chắn muốn mở khóa học này cho những người đóng góp không?",
+          "confirmation_button": "Mở cho người đóng góp"
+        },
+        "closed_to_contributors": {
+          "title": "Đóng với người đóng góp",
+          "description": "Khóa học đóng với những người đóng góp. Chỉ các thành viên hiện tại mới có thể chỉnh sửa nội dung.",
+          "active": "Đang hoạt động",
+          "confirmation_title": "Đóng với người đóng góp?",
+          "confirmation_message": "Bạn có chắc chắn muốn đóng khóa học này với những người đóng góp không?",
+          "confirmation_button": "Đóng với người đóng góp"
+        },
+        "search": {
+          "placeholder": "Tìm kiếm người dùng để thêm làm người đóng góp theo tên hoặc tên người dùng...",
+          "searching": "Đang tìm kiếm...",
+          "no_results": "Không tìm thấy người dùng nào"
+        },
+        "table": {
+          "name": "Tên",
+          "username": "Tên người dùng",
+          "email": "Email",
+          "role": "Vai trò",
+          "status": "Trạng thái",
+          "added_on": "Đã thêm vào"
+        },
+        "roles": {
+          "creator": "Người tạo",
+          "contributor": "Người đóng góp",
+          "maintainer": "Người duy trì",
+          "reporter": "Người báo cáo"
+        },
+        "statuses": {
+          "active": "Hoạt động",
+          "inactive": "Không hoạt động",
+          "pending": "Đang chờ"
+        },
+        "actions": {
+          "selected_users": "Đã chọn {{count}} người dùng",
+          "selected_users_plural": "Đã chọn {{count}} người dùng",
+          "clear": "Xóa",
+          "add_selected": "Thêm các mục đã chọn",
+          "selected_contributors": "Đã chọn {{count}} người đóng góp",
+          "selected_contributors_plural": "Đã chọn {{count}} người đóng góp",
+          "remove_selected": "Xóa các mục đã chọn",
+          "already_contributor": "Đã là người đóng góp"
+        },
+        "toasts": {
+          "add_success": "Đã thêm {{count}} người đóng góp thành công",
+          "add_error": "Không thể thêm {{username}}: {{reason}}",
+          "add_failed": "Thêm người đóng góp thất bại",
+          "update_success": "Đã cập nhật người đóng góp thành công",
+          "update_error": "Lỗi: {{detail}}",
+          "update_failed": "Đã xảy ra lỗi khi cập nhật người đóng góp",
+          "remove_success": "Đã xóa {{count}} người đóng góp thành công",
+          "remove_failed": "Xóa người đóng góp thất bại",
+          "cannot_modify_creator": "Bạn không thể sửa đổi vai trò hoặc trạng thái của người tạo chính"
+        }
+      },
+      "certification": {
+        "title": "Chứng nhận khóa học",
+        "subtitle": "Kích hoạt và cấu hình chứng nhận cho những người học hoàn thành khóa học này.",
+        "form": {
+          "certification_name_label": "Tên chứng chỉ",
+          "certification_name_required": "Tên chứng chỉ là bắt buộc khi kích hoạt chứng nhận",
+          "certification_name_max_length": "Tên không được vượt quá 100 ký tự",
+          "certification_name_placeholder": "ví dụ: Chứng chỉ JavaScript nâng cao",
+          "certification_type_label": "Loại chứng chỉ",
+          "certification_description_label": "Mô tả chứng chỉ",
+          "certification_description_required": "Mô tả là bắt buộc khi kích hoạt chứng nhận",
+          "certification_description_max_length": "Mô tả không được vượt quá 500 ký tự",
+          "certification_description_placeholder": "Mô tả những gì chứng chỉ này đại diện cho và giá trị của nó...",
+          "certificate_pattern_label": "Họa tiết chứng chỉ",
+          "certificate_instructor_label": "Tên giảng viên (tùy chọn)",
+          "certificate_instructor_placeholder": "ví dụ: TS. Nguyễn Văn A"
+        },
+        "types": {
+          "completion": "Hoàn thành",
+          "achievement": "Thành tích",
+          "assessment": "Đánh giá",
+          "participation": "Tham gia",
+          "mastery": "Thông thạo",
+          "professional": "Chuyên nghiệp",
+          "continuing": "Tiếp nối",
+          "workshop": "Hội thảo",
+          "specialization": "Chuyên môn"
+        },
+        "patterns": {
+          "royal": {
+            "name": "Hoàng gia",
+            "description": "Phong cách trang trí công phu với họa tiết vương miện"
+          },
+          "tech": {
+            "name": "Công nghệ",
+            "description": "Họa tiết lấy cảm hứng từ bảng mạch"
+          },
+          "nature": {
+            "name": "Thiên nhiên",
+            "description": "Mô típ lá hữu cơ"
+          },
+          "geometric": {
+            "name": "Hình học",
+            "description": "Các hình khối và đường nét hiện đại"
+          },
+          "vintage": {
+            "name": "Cổ điển",
+            "description": "Phong cách Art Deco cổ điển"
+          },
+          "waves": {
+            "name": "Sóng",
+            "description": "Các họa tiết dạng nước chảy uyển chuyển"
+          },
+          "minimal": {
+            "name": "Tối giản",
+            "description": "Thiết kế sạch sẽ và đơn giản"
+          },
+          "professional": {
+            "name": "Chuyên nghiệp",
+            "description": "Thiết kế dành cho doanh nghiệp"
+          },
+          "academic": {
+            "name": "Hàn lâm",
+            "description": "Phong cách đại học truyền thống"
+          },
+          "modern": {
+            "name": "Hiện đại",
+            "description": "Các đường nét sắc sảo và đương đại"
+          }
+        },
+        "sections": {
+          "basic_info": {
+            "title": "Thông tin cơ bản",
+            "subtitle": "Cấu hình các chi tiết cơ bản của chứng chỉ"
+          },
+          "certificate_design": {
+            "title": "Thiết kế chứng chỉ",
+            "subtitle": "Chọn trang trí thị giác cho chứng chỉ của bạn"
+          },
+          "preview": {
+            "title": "Xem trước chứng chỉ",
+            "subtitle": "Xem trước thời gian thực về chứng chỉ của bạn sẽ trông như thế nào"
+          }
+        },
+        "states": {
+          "disabled": {
+            "title": "Chưa cấu hình chứng nhận",
+            "message": "Kích hoạt chứng nhận để cấp cho người học khi họ hoàn thành khóa học.",
+            "button": "Kích hoạt chứng nhận",
+            "creating": "Đang kích hoạt..."
+          },
+          "creating": {
+            "title": "Đang tạo chứng nhận...",
+            "message": "Vui lòng đợi trong khi chúng tôi thiết lập chứng nhận cho bạn."
+          }
+        },
+        "errors": {
+          "loading": "Đã xảy ra lỗi khi tải chứng nhận",
+          "create_failed": "Kích hoạt chứng nhận thất bại",
+          "remove_failed": "Xóa chứng nhận thất bại"
+        },
+        "toasts": {
+          "create_success": "Đã kích hoạt chứng nhận thành công",
+          "create_error": "Kích hoạt chứng nhận thất bại",
+          "remove_success": "Đã xóa chứng nhận thành công",
+          "remove_error": "Xóa chứng nhận thất bại"
+        }
+      },
+      "structure": {
+        "loading": "Đang tải...",
+        "add_chapter_button": "Thêm chương",
+        "modals": {
+          "new_chapter": {
+            "title": "Tạo chương",
+            "description": "Thêm một chương mới vào khóa học của bạn",
+            "form": {
+              "name_label": "Tên chương",
+              "name_required": "Vui lòng nhập tên cho chương",
+              "description_label": "Mô tả chương",
+              "description_required": "Vui lòng nhập mô tả cho chương này",
+              "submit": "Tạo chương"
+            }
+          },
+          "delete_chapter": {
+            "title": "Xóa {{name}}?",
+            "message": "Bạn có chắc chắn muốn xóa chương này không?",
+            "button": "Xóa chương"
+          },
+          "new_activity": {
+            "title": "Tạo hoạt động",
+            "description": "Chọn loại hoạt động bạn muốn thêm vào khóa học"
+          },
+          "delete_activity": {
+            "title": "Xóa {{name}}?",
+            "message": "Bạn có chắc chắn muốn xóa hoạt động này không?",
+            "button": "Xóa hoạt động"
+          }
+        },
+        "actions": {
+          "add_chapter": "Thêm chương",
+          "add_activity": "Thêm hoạt động",
+          "publish": "Công bố",
+          "unpublish": "Hủy công bố",
+          "preview_activity": "Xem trước hoạt động",
+          "edit_page": "Chỉnh sửa trang",
+          "edit_assignment": "Chỉnh sửa bài tập"
+        },
+        "chapter_element": {
+          "chapter_name_placeholder": "Tên chương"
+        },
+        "activity": {
+          "name_placeholder": "Tên hoạt động",
+          "types": {
+            "video": "Video",
+            "document": "Tài liệu",
+            "assignment": "Bài tập",
+            "assignments": "Bài tập",
+            "dynamic": "Động",
+            "dynamic_page": "Trang động"
+          },
+          "toasts": {
+            "deleting": "Đang xóa hoạt động...",
+            "delete_success": "Đã xóa hoạt động thành công",
+            "updating": "Đang cập nhật bài tập...",
+            "update_success": "Đã cập nhật hoạt động thành công",
+            "name_update_success": "Đã cập nhật tên hoạt động thành công",
+            "name_update_error": "Cập nhật tên hoạt động thất bại",
+            "creating": "Đang tạo hoạt động...",
+            "create_success": "Đã tạo hoạt động thành công",
+            "uploading": "Đang tải tệp lên và tạo hoạt động...",
+            "upload_success": "Đã tải tệp lên thành công",
+            "creating_uploading": "Đang tạo hoạt động và tải tệp lên..."
+          }
+        }
+      }
+    }
   }
 }

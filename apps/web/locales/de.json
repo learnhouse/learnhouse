@@ -11,7 +11,7 @@
     "organization": "Organisation",
     "dashboard": "Dashboard",
     "settings": "Einstellungen",
-    "language": "Sprache",
+    "language": "Sprreche",
     "english": "Englisch",
     "french": "Französisch",
     "german": "Deutsch",
@@ -34,27 +34,31 @@
     "loading": "Wird geladen...",
     "search": "Suchen",
     "all": "Alle",
+    "help": "Hilfe",
+    "plans": "Pläne",
+    "enterprise": "Unternehmen",
+    "version": "Version",
     "users": "Benutzer",
     "save": "Speichern",
     "cancel": "Abbrechen",
-    "submit": "Senden",
+    "submit": "Absenden",
     "delete": "Löschen",
     "previous": "Zurück",
     "next": "Weiter",
     "status": "Status",
-    "complete": "Abschließen",
+    "complete": "Vollständig",
     "completed": "Abgeschlossen",
     "created_at": "Erstellt am",
     "updated": "Aktualisiert",
     "or": "ODER",
     "just_now": "gerade eben",
     "unknown": "Unbekannt",
-    "hi": "Hallo",
+    "hi": "Hi",
     "about": "Über",
-    "present": "Anwesend",
+    "present": "Gegenwart",
     "made_with": "Erstellt mit",
-    "something_went_wrong": "Etwas ist schiefgelaufen",
-    "something_wrong_happened": "Ein Fehler ist aufgetreten",
+    "something_went_wrong": "Etwas ist schief gelaufen",
+    "something_wrong_happened": "Etwas ist schief gelaufen",
     "error_request": "Bei der Verarbeitung Ihrer Anfrage ist ein Fehler aufgetreten",
     "processing": "Wird verarbeitet...",
     "show_less": "Weniger anzeigen",
@@ -73,31 +77,31 @@
     "login_to": "Anmelden bei",
     "sign_up": "Registrieren",
     "sign_in_with_google": "Mit Google anmelden",
-    "wrong_email_password": "Falsche E-Mail oder falsches Passwort",
-    "invited_to_join": "Sie wurden eingeladen, beizutreten:",
+    "wrong_email_password": "Falsche E-Mail oder Passwort",
+    "invited_to_join": "Sie wurden eingeladen, beizutreten",
     "join": "Beitreten",
-    "invite_code_required": "Ein Einladungscode ist erforderlich",
+    "invite_code_required": "Ein Einladungscode ist zum Beitritt erforderlich",
     "enter_invite_code": "Bitte geben Sie einen Einladungscode ein",
-    "invite_code_valid": "Einladungscode ist gültig, Sie werden in Kürze zur Registrierung weitergeleitet",
-    "invite_code_invalid": "Einladungscode ist ungültig",
+    "invite_code_valid": "Der Einladungscode ist gültig, Sie werden in wenigen Sekunden zur Registrierungsseite weitergeleitet",
+    "invite_code_invalid": "Der Einladungscode ist ungültig",
     "forgot_password_title": "Passwort vergessen",
     "forgot_password_description": "Geben Sie Ihre E-Mail-Adresse ein und wir senden Ihnen einen Link zum Zurücksetzen Ihres Passworts",
     "send_reset_link": "Link zum Zurücksetzen senden",
     "check_email_message": "Bitte überprüfen Sie Ihre E-Mails",
     "reset_password_title": "Passwort zurücksetzen",
-    "reset_password_description": "Geben Sie Ihre E-Mail und den Code zum Zurücksetzen ein",
-    "reset_code": "Code zum Zurücksetzen",
+    "reset_password_description": "Geben Sie Ihre E-Mail und den Reset-Code ein, um Ihr Passwort zurückzusetzen",
+    "reset_code": "Reset-Code",
     "new_password": "Neues Passwort",
     "confirm_password": "Passwort bestätigen",
     "passwords_do_not_match": "Passwörter stimmen nicht überein",
     "change_password": "Passwort ändern",
-    "login_again_message": "Bitte melden Sie sich mit Ihrem neuen Passwort erneut an",
+    "login_again_message": "Bitte melden Sie sich erneut mit Ihrem neuen Passwort an",
     "signup_to": "Registrieren bei",
     "create_account": "Konto erstellen",
     "create_account_and_join": "Konto erstellen & Beitreten",
     "account_created_success": "Ihr Konto wurde erfolgreich erstellt",
-    "login_to_your_account": "In Ihr Konto einloggen",
-    "authenticate_to_contribute": "Anmelden, um beizutragen",
+    "login_to_your_account": "Melden Sie sich bei Ihrem Konto an",
+    "authenticate_to_contribute": "Authentifizieren, um beizutragen",
     "sign_up_to_contribute": "Registrieren, um beizutragen"
   },
   "validation": {
@@ -119,12 +123,12 @@
     "leave_course": "Kurs verlassen",
     "leave_course_success": "Kurs erfolgreich verlassen",
     "start_course_success": "Kurs erfolgreich gestartet",
-    "leave_course_error": "Kurs konnte nicht verlassen werden. Bitte versuchen Sie es später erneut.",
-    "start_course_error": "Kurs konnte nicht gestartet werden. Bitte versuchen Sie es später erneut.",
+    "leave_course_error": "Fehler beim Verlassen des Kurses. Bitte versuchen Sie es später erneut.",
+    "start_course_error": "Fehler beim Starten des Kurses. Bitte versuchen Sie es später erneut.",
     "you_own_this_course": "Sie besitzen diesen Kurs",
-    "you_own_this_course_description": "Sie haben diesen Kurs gekauft und vollen Zugriff auf alle Inhalte.",
+    "you_own_this_course_description": "Sie haben diesen Kurs gekauft und haben vollen Zugriff auf alle Inhalte.",
     "paid_course": "Kostenpflichtiger Kurs",
-    "paid_course_description": "Dieser Kurs erfordert einen Kauf, um auf die Inhalte zuzugreifen.",
+    "paid_course_description": "Dieser Kurs erfordert einen Kauf, um auf seine Inhalte zuzugreifen.",
     "purchase_course_title": "Kurs kaufen",
     "purchase_course_description": "Wählen Sie eine Zahlungsoption, um auf diesen Kurs zuzugreifen",
     "ready_to_begin": "Bereit zum Start?",
@@ -132,30 +136,30 @@
     "course_progress": "Kursfortschritt",
     "progress": "Fortschritt",
     "completed_of": "{{completed}} von {{total}} abgeschlossen",
-    "quit_all_courses": "Alle Kurse verlassen",
-    "quitting_courses": "Kurse werden verlassen ({{progress}}%)",
-    "quit_all_courses_confirm": "Sind Sie sicher, dass Sie alle Kurse verlassen möchten? Dies kann nicht rückgängig gemacht werden und Ihr Fortschritt geht verloren.",
-    "quit_all_courses_title": "Alle Kurse verlassen?",
+    "quit_all_courses": "Alle Kurse beenden",
+    "quitting_courses": "Kurse werden beendet ({{progress}}%)",
+    "quit_all_courses_confirm": "Sind Sie sicher, dass Sie alle Kurse beenden möchten? Diese Aktion kann nicht rückgängig gemacht werden und Sie verlieren Ihren gesamten Fortschritt.",
+    "quit_all_courses_title": "Alle Kurse beenden?",
     "no_courses_available": "Noch keine Kurse verfügbar",
     "new_course": "Neuer Kurs",
     "create_course": "Kurs erstellen",
-    "create_new_course": "Neuen Kurs erstellen",
+    "create_new_course": "Einen neuen Kurs erstellen",
     "course_name": "Kursname",
     "course_thumbnail": "Kurs-Vorschaubild",
-    "course_learnings": "Lernziele",
-    "course_learnings_desc": "Was werden Sie lehren? (Eingabetaste zum Hinzufügen)",
+    "course_learnings": "Kurs-Lernziele",
+    "course_learnings_desc": "Was werden Sie lehren? (Enter zum Hinzufügen)",
     "course_tags": "Kurs-Tags",
     "course_visibility": "Kurssichtbarkeit",
     "create_course_btn": "Kurs erstellen",
     "creating_course": "Kurs wird erstellt...",
     "course_created_success": "Kurs erfolgreich erstellt",
-    "failed_to_create_course": "Kurs konnte nicht erstellt werden",
+    "failed_to_create_course": "Fehler beim Erstellen des Kurses",
     "course_name_required": "Kursname ist erforderlich",
     "deleting_course": "Kurs wird gelöscht...",
     "course_deleted_success": "Kurs erfolgreich gelöscht",
-    "course_deleted_error": "Kurs konnte nicht gelöscht werden",
+    "course_deleted_error": "Fehler beim Löschen des Kurses",
     "delete_course": "Kurs löschen",
-    "failed_load_courses": "Kurse konnten nicht geladen werden",
+    "failed_load_courses": "Fehler beim Laden der Kurse",
     "start_learning": "Lernen starten",
     "edit_content": "Inhalt bearbeiten",
     "delete_course_confirm": "Sind Sie sicher, dass Sie diesen Kurs löschen möchten?",
@@ -166,12 +170,12 @@
     "course_updates": "Kurs-Updates",
     "no_updates_yet": "Noch keine Updates",
     "no_updates_desc": "Updates zu diesem Kurs werden hier angezeigt",
-    "quit_course": "Kurs verlassen",
+    "quit_course": "Kurs beenden",
     "course_content": "Kursinhalt",
     "course_completion": "Kursabschluss",
     "course_completed_exclamation": "Kurs abgeschlossen!",
     "what_you_will_learn": "Was Sie lernen werden",
-    "course_lessons": "Lektionen",
+    "course_lessons": "Kurslektionen",
     "unlock_certificate_message": "Schließen Sie alle Aktivitäten ab, um Ihr Zertifikat freizuschalten",
     "chapter": "Kapitel",
     "chapters": "Kapitel",
@@ -179,49 +183,48 @@
     "created_on": "Erstellt am",
     "last_updated": "Zuletzt aktualisiert",
     "public": "Öffentlich",
-    "public_desc": "Im Internet für jeden sichtbar",
+    "public_desc": "Im Internet sichtbar",
     "private": "Privat",
-    "private_desc": "Nur für Mitglieder sichtbar",
+    "private_desc": "Privat für Benutzer",
     "image": "Bild",
     "upload_image": "Bild hochladen",
     "choose_from_gallery": "Aus Galerie wählen",
-    "enter_to_add": "Eingabetaste zum Hinzufügen...",
+    "enter_to_add": "Enter zum Hinzufügen...",
     "select_visibility": "Sichtbarkeit wählen",
     "and_x_more": "& {{count}} weitere",
     "update": "Update",
     "updates": "Updates",
     "new_update": "Neues Update",
     "update_added_success": "Update erfolgreich hinzugefügt",
-    "failed_add_update": "Update konnte nicht hinzugefügt werden",
+    "failed_add_update": "Fehler beim Hinzufügen des Updates",
     "update_title": "Update-Titel",
     "update_title_placeholder": "Was gibt es Neues in diesem Update?",
     "update_content": "Update-Inhalt",
-    "update_content_placeholder": "Teilen Sie die Details Ihres Updates...",
+    "update_content_placeholder": "Teilen Sie die Details Ihres Updates mit...",
     "publish_update": "Update veröffentlichen",
     "deleting_update": "Update wird gelöscht...",
     "update_deleted_success": "Update erfolgreich gelöscht",
-    "failed_delete_update": "Update konnte nicht gelöscht werden",
-    "update_deleted_error": "Update konnte nicht gelöscht werden",
+    "failed_delete_update": "Fehler beim Löschen des Updates",
     "delete_update": "Update löschen",
     "delete_update_confirm": "Sind Sie sicher, dass Sie dieses Update löschen möchten?",
     "delete_update_title": "Update löschen?",
     "congratulations": "Herzlichen Glückwunsch! 🎉",
-    "successfully_completed": "Sie haben erfolgreich abgeschlossen:",
+    "successfully_completed": "Sie haben erfolgreich abgeschlossen",
     "keep_going": "Weiter so! 💪",
-    "keep_going_description": "Gute Arbeit! Schließen Sie die verbleibenden Aktivitäten ab, um Ihr Zertifikat freizuschalten.",
-    "making_great_progress": "Sie machen tolle Fortschritte in",
+    "keep_going_description": "Sie machen das großartig! Schließen Sie die verbleibenden Aktivitäten ab, um Ihr Kursabschlusszertifikat freizuschalten.",
+    "making_great_progress": "Sie machen große Fortschritte in",
     "continue_learning": "Lernen fortsetzen",
     "back_to_course": "Zurück zum Kurs",
     "view_course_progress": "Kursfortschritt anzeigen",
     "no_courses_found": "Keine Kurse gefunden",
     "add_new_course_update": "Neues Kurs-Update hinzufügen",
     "add_update": "Update hinzufügen",
-    "apply_to_contribute": "Als Mitwirkender bewerben",
+    "apply_to_contribute": "Bewerben, um beizutragen",
     "you_are_contributor": "Sie sind ein Mitwirkender",
     "contributor_application_pending": "Bewerbung als Mitwirkender ausstehend",
-    "submitting_contributor_application": "Bewerbung wird gesendet...",
+    "submitting_contributor_application": "Bewerbung als Mitwirkender wird eingereicht...",
     "contributor_application_success": "Ihre Bewerbung als Mitwirkender wurde erfolgreich eingereicht",
-    "contributor_application_error": "Bewerbung konnte nicht eingereicht werden. Bitte versuchen Sie es später erneut.",
+    "contributor_application_error": "Fehler beim Einreichen Ihrer Bewerbung. Bitte versuchen Sie es später erneut.",
     "contribute": "Mitwirken"
   },
   "collections": {
@@ -232,17 +235,17 @@
     "new_collection": "Neue Kollektion",
     "enter_collection_name": "Bitte geben Sie einen Kollektionsnamen ein",
     "collection_created_success": "Kollektion erfolgreich erstellt!",
-    "failed_to_create_collection": "Kollektion konnte nicht erstellt werden. Bitte versuchen Sie es erneut.",
+    "failed_to_create_collection": "Fehler beim Erstellen der Kollektion. Bitte versuchen Sie es erneut.",
     "create_new_collection": "Neue Kollektion erstellen",
     "create_collection_desc": "Gruppieren Sie Ihre Kurse in einer Kollektion, um sie einfacher zu finden und zu verwalten.",
     "collection_name": "Kollektionsname",
     "enter_collection_name_placeholder": "Kollektionsnamen eingeben",
-    "public_collection_desc": "Öffentliche Kollektion - Für jeden sichtbar",
-    "private_collection_desc": "Private Kollektion - Nur für Mitglieder sichtbar",
+    "public_collection_desc": "Öffentliche Kollektion - Sichtbar für alle",
+    "private_collection_desc": "Private Kollektion - Nur sichtbar für Organisationsmitglieder",
     "description": "Beschreibung",
     "enter_collection_description_placeholder": "Kollektionsbeschreibung eingeben",
     "select_courses": "Kurse auswählen",
-    "no_courses_available_desc": "Keine Kurse verfügbar. Erstellen Sie zuerst Kurse.",
+    "no_courses_available_desc": "Keine Kurse verfügbar. Erstellen Sie zuerst einige Kurse.",
     "selected_courses_count": "Ausgewählte Kurse: {{count}}",
     "create_collection_btn": "Kollektion erstellen",
     "delete_collection_confirm": "Sind Sie sicher, dass Sie diese Kollektion löschen möchten?",
@@ -261,7 +264,7 @@
     "learning_material": "Lernmaterial",
     "current": "Aktuell",
     "quiz": "Quiz",
-    "file_submission": "Dateiupload",
+    "file_submission": "Dateieinreichung",
     "form": "Formular",
     "interactive": "Interaktiv",
     "activities": "Aktivitäten",
@@ -271,44 +274,44 @@
     "no_previous_activity": "Keine vorherige Aktivität",
     "no_next_activity": "Keine nächste Aktivität",
     "mark_as_complete": "Als abgeschlossen markieren",
-    "unmark_activity": "Markierung aufheben",
+    "unmark_activity": "Aktivität entmarkieren",
     "unmark_activity_confirm": "Sind Sie sicher, dass Sie diese Aktivität als nicht abgeschlossen markieren möchten? Dies wirkt sich auf Ihren Kursfortschritt aus.",
-    "unmark_activity_title": "Aktivität als nicht abgeschlossen markieren",
-    "marking": "Markierung erfolgt...",
+    "unmark_activity_title": "Aktivität als abgeschlossen entmarkieren",
+    "marking": "Wird markiert...",
     "not_published_yet": "Diese Aktivität ist noch nicht veröffentlicht",
-    "focus_mode": "Fokus-Modus",
-    "exit_focus_mode": "Fokus-Modus verlassen",
+    "focus_mode": "Fokusmodus",
+    "exit_focus_mode": "Fokusmodus verlassen",
     "not_started": "Nicht gestartet",
     "teacher_view": "Lehreransicht",
     "dont_forget_to_save": "Vergessen Sie nicht, Ihren Fortschritt zu speichern",
-    "save_your_progress": "Fortschritt speichern",
-    "unmark_tooltip": "Klicken, um die Markierung als abgeschlossen aufzuheben",
-    "mark_tooltip": "Klicken, um diese Aktivität als abgeschlossen zu markieren",
-    "failed_mark_complete": "Aktivität konnte nicht als abgeschlossen markiert werden",
-    "failed_unmark_complete": "Markierung konnte nicht aufgehoben werden",
-    "click_to_flip": "Zum Wenden klicken",
-    "click_to_flip_back": "Zum Zurückwenden klicken",
-    "enter_question": "Frage eingeben...",
-    "enter_answer": "Antwort eingeben...",
+    "save_your_progress": "Speichern Sie Ihren Fortschritt",
+    "unmark_tooltip": "Klicken Sie auf das Kontrollkästchen, um die Markierung als abgeschlossen bei Bedarf aufzuheben",
+    "mark_tooltip": "Klicken Sie auf das Kontrollkästchen, um diese Aktivität als abgeschlossen zu markieren",
+    "failed_mark_complete": "Markieren der Aktivität als abgeschlossen fehlgeschlagen",
+    "failed_unmark_complete": "Entmarkieren der Aktivität als abgeschlossen fehlgeschlagen",
+    "click_to_flip": "Klicken zum Umdrehen",
+    "click_to_flip_back": "Klicken zum Zurückdrehen",
+    "enter_question": "Geben Sie Ihre Frage ein...",
+    "enter_answer": "Geben Sie Ihre Antwort ein...",
     "align_left": "Linksbündig",
     "align_center": "Zentriert",
     "align_right": "Rechtsbündig",
-    "size_small": "Klein",
-    "size_medium": "Mittel",
-    "size_large": "Groß",
+    "size_small": "Kleine Größe",
+    "size_medium": "Mittlere Größe",
+    "size_large": "Große Größe",
     "change_color": "Farbe ändern",
-    "preview_flip": "Vorschau Wenden",
+    "preview_flip": "Vorschau Umdrehen",
     "activities_count": "{{count}} Aktivitäten"
   },
   "assignments": {
-    "submit_assignment": "Aufgabe abgeben",
-    "submit_assignment_confirm": "Sind Sie sicher, dass Sie Ihre Aufgabe zur Bewertung abgeben möchten? Nach der Abgabe können keine Änderungen mehr vorgenommen werden.",
-    "submit_assignment_title": "Aufgabe zur Bewertung abgeben",
-    "submit_for_grading": "Zur Bewertung abgeben",
+    "submit_assignment": "Aufgabe einreichen",
+    "submit_assignment_confirm": "Sind Sie sicher, dass Sie Ihre Aufgabe zur Bewertung einreichen möchten? Nach der Einreichung können Sie keine Änderungen mehr vornehmen.",
+    "submit_assignment_title": "Reichen Sie Ihre Aufgabe zur Bewertung ein",
+    "submit_for_grading": "Zur Bewertung einreichen",
     "grading_in_progress": "Bewertung läuft",
     "graded": "Bewertet",
     "assignment_submitted_success": "Aufgabe zur Bewertung eingereicht",
-    "failed_submit_assignment": "Abgabe der Aufgabe fehlgeschlagen",
+    "failed_submit_assignment": "Einreichen der Aufgabe zur Bewertung fehlgeschlagen",
     "assignment_description": "Aufgabenbeschreibung",
     "task": "Aufgabe",
     "hint": "Hinweis",
@@ -321,18 +324,18 @@
   "certificate": {
     "certificate": "Zertifikat",
     "my_certificates": "Meine Zertifikate",
-    "failed_load_certificates": "Zertifikate konnten nicht geladen werden",
+    "failed_load_certificates": "Fehler beim Laden der Zertifikate",
     "no_certificates_earned": "Noch keine Zertifikate erworben",
-    "complete_courses_to_earn": "Schließen Sie Kurse ab, um Zertifikate zu erhalten",
-    "awarded": "Ausgestellt am",
+    "complete_courses_to_earn": "Schließen Sie Kurse ab, um Zertifikate zu erwerben",
+    "awarded": "Verliehen",
     "download_certificate": "Zertifikat als PDF herunterladen",
     "verify_certificate": "Zertifikat verifizieren",
     "loading_certificate": "Ihr Zertifikat wird geladen...",
     "your_certificate": "Ihr Zertifikat",
-    "view_certificate": "Abschlusszertifikat anzeigen",
+    "view_certificate": "Ihr Abschlusszertifikat anzeigen",
     "certificate_id": "Zertifikats-ID",
-    "certificate_verify_message": "Dieses Zertifikat kann verifiziert werden unter:",
-    "no_certificate_available": "Für diesen Kurs ist kein Zertifikat verfügbar. Kontaktieren Sie Ihren Dozenten für weitere Informationen.",
+    "certificate_verify_message": "Dieses Zertifikat kann verifiziert werden unter",
+    "no_certificate_available": "Für diesen Kurs ist kein Zertifikat verfügbar. Kontaktieren Sie Ihren Lehrer für weitere Informationen.",
     "verify": "Verifizieren",
     "no_certificate": "Kein Zertifikat",
     "achievement_based": "Leistungsbasiert",
@@ -343,15 +346,15 @@
     "continuing_education": "Fortbildung",
     "workshop_attendance": "Workshop-Teilnahme",
     "specialization": "Spezialisierung",
-    "dedication_message": "Ihr Einsatz hat sich ausgezahlt. Sie haben alle Inhalte dieses Kurses gemeistert."
+    "dedication_message": "Ihr Einsatz und Ihre harte Arbeit haben sich ausgezahlt. Sie haben alle Inhalte dieses Kurses gemeistert."
   },
   "search": {
-    "search_placeholder": "Suchen Sie nach Kursen, Benutzern, Kollektionen...",
+    "search_placeholder": "Suche nach Kursen, Benutzern, Kollektionen...",
     "no_results_found": "Keine Ergebnisse gefunden",
-    "no_results_description": "Wir konnten keine Treffer für \"{{query}}\" finden. Versuchen Sie es mit anderen Suchbegriffen.",
+    "no_results_description": "Wir konnten keine Übereinstimmungen für \"{{query}}\" finden. Passen Sie Ihre Suchbegriffe an oder durchsuchen Sie unsere hervorgehobenen Inhalte.",
     "found_results": "{{count}} Ergebnisse für \"{{query}}\" gefunden",
-    "discover_next_journey": "Entdecken Sie Ihr nächstes Lernziel",
-    "start_typing_to_search": "Tippen Sie, um die Inhalte zu durchsuchen",
+    "discover_next_journey": "Entdecken Sie Ihre nächste Lernreise",
+    "start_typing_to_search": "Beginnen Sie zu tippen, um die verfügbaren Inhalte zu durchsuchen",
     "search_suggestions": "Suchvorschläge",
     "quick_results": "Schnellergebnisse",
     "view_all_results": "Alle Ergebnisse anzeigen",
@@ -369,20 +372,20 @@
   },
   "payments": {
     "paid_content": "Kostenpflichtiger Inhalt",
-    "paid_content_description": "Dieser Inhalt erfordert den Kauf eines Kurses.",
-    "failed_load_products": "Produktoptionen konnten nicht geladen werden",
+    "paid_content_description": "Dieser Inhalt erfordert einen Kursbesitz für den Zugriff.",
+    "failed_load_products": "Fehler beim Laden der Produktoptionen",
     "one_time_payment": "Einmalzahlung",
     "per_month": "(pro Monat)",
-    "per_month_short": "/Mon.",
+    "per_month_short": "/Monat",
     "subscribe_now": "Jetzt abonnieren",
     "purchase_now": "Jetzt kaufen",
-    "failed_checkout": "Checkout-Prozess konnte nicht gestartet werden",
+    "failed_checkout": "Fehler beim Initiieren des Bezahlvorgangs",
     "stripe_success": "Erfolgreich mit Stripe verbunden!",
-    "stripe_failed": "Stripe-Verbindung konnte nicht abgeschlossen werden",
+    "stripe_failed": "Stripe-Verbindung fehlgeschlagen",
     "stripe_completing": "Stripe-Verbindung wird abgeschlossen",
-    "stripe_wait": "Bitte warten Sie, während wir die Stripe-Integration einrichten...",
+    "stripe_wait": "Bitte warten Sie, während wir Ihre Stripe-Integration einrichten...",
     "stripe_return": "Sie können nun zum Dashboard zurückkehren, um Zahlungen zu nutzen.",
-    "stripe_retry": "Bitte versuchen Sie es erneut oder kontaktieren Sie den Support.",
+    "stripe_retry": "Bitte versuchen Sie es erneut oder kontaktieren Sie den Support, wenn das Problem weiterhin besteht.",
     "subscription": "Abonnement",
     "benefits": "Vorteile:",
     "min_price": "Mindestpreis:",
@@ -397,20 +400,20 @@
     "bio": "Bio",
     "no_biography": "Keine Biografie angegeben",
     "my_progress": "Mein Fortschritt",
-    "no_courses_in_progress": "Keine laufenden Kurse",
-    "start_course_to_see_progress": "Starten Sie einen Kurs, um Ihren Fortschritt zu sehen"
+    "no_courses_in_progress": "Keine Kurse in Arbeit",
+    "start_course_to_see_progress": "Starten Sie einen Kurs, um Ihren Fortschritt hier zu sehen"
   },
   "roles": {
     "custom_role": "Benutzerdefinierte Rolle",
     "role_admin": "ADMIN",
-    "role_admin_desc": "Volle Plattformkontrolle mit allen Berechtigungen",
+    "role_admin_desc": "Vollständige Plattformkontrolle mit allen Berechtigungen",
     "role_maintainer": "VERWALTER",
     "role_maintainer_desc": "Mittleres Management mit weitreichenden Berechtigungen",
-    "role_instructor": "DOZENT",
+    "role_instructor": "LEHRER",
     "role_instructor_desc": "Kann eigene Inhalte verwalten",
     "role_user": "BENUTZER",
     "role_user_desc": "Lernender (nur Lesezugriff)",
-    "instructor": "Dozent"
+    "instructor": "Lehrer"
   },
   "time": {
     "years_ago": "vor {{count}} Jahren",
@@ -419,6 +422,1300 @@
     "days_ago": "vor {{count}} Tagen",
     "hours_ago": "vor {{count}} Stunden",
     "minutes_ago": "vor {{count}} Minuten"
+  },
+  "dashboard": {
+    "home": {
+      "cards": {
+        "courses": {
+          "title": "Kurse",
+          "description": "Erstellen und verwalten Sie Kurse, Kapitel und Aktivitäten"
+        },
+        "organization": {
+          "title": "Organisation",
+          "description": "Konfigurieren Sie die allgemeinen Einstellungen Ihrer Organisation"
+        },
+        "users": {
+          "title": "Benutzer",
+          "description": "Verwalten Sie die Benutzer und Rollen Ihrer Organisation"
+        },
+        "account_settings": {
+          "title": "Kontoeinstellungen",
+          "description": "Konfigurieren Sie Ihre persönlichen Einstellungen, Passwörter, E-Mail"
+        }
+      },
+      "learnhouse_university": "LearnHouse Universität"
+    },
+    "courses": {
+      "title": "Kurse",
+      "rights_guide": "Rechte-Leitfaden",
+      "create_course": "Kurs erstellen",
+      "create_new_course": "Einen neuen Kurs erstellen",
+      "no_courses": "Noch keine Kurse",
+      "create_course_placeholder": "Erstellen Sie einen Kurs, um Inhalte hinzuzufügen",
+      "no_courses_available": "Noch keine Kurse verfügbar"
+    },
+    "organization": {
+      "settings": {
+        "title": "Organisations-Einstellungen",
+        "subtitle": "Verwalten Sie das Profil und die Einstellungen Ihrer Organisation",
+        "tabs": {
+          "general": "Allgemein",
+          "landing": "Landingpage",
+          "previews": "Bilder & Vorschauen",
+          "socials": "Soziale Netzwerke",
+          "other": "Sonstiges"
+        },
+        "pages": {
+          "general": {
+            "title": "Allgemein",
+            "subtitle": "Verwalten Sie Ihre Organisations-Einstellungen"
+          },
+          "previews": {
+            "title": "Vorschauen",
+            "subtitle": "Verwalten Sie Ihre Organisations-Vorschauen"
+          },
+          "socials": {
+            "title": "Soziale Netzwerke",
+            "subtitle": "Verwalten Sie die Social-Media-Links Ihrer Organisation"
+          },
+          "landing": {
+            "title": "Landingpage",
+            "subtitle": "Passen Sie die Landingpage Ihrer Organisation an"
+          },
+          "other": {
+            "title": "Sonstiges",
+            "subtitle": "Verwalten Sie zusätzliche Organisations-Einstellungen"
+          }
+        },
+        "name": "Organisations-Name",
+        "name_placeholder": "Organisations-Name",
+        "short_description": "Kurzbeschreibung",
+        "short_description_placeholder": "Kurze Beschreibung Ihrer Organisation",
+        "label": "Organisations-Label",
+        "label_placeholder": "Organisations-Label auswählen",
+        "about": "Über die Organisation",
+        "about_placeholder": "Detaillierte Beschreibung Ihrer Organisation",
+        "showcase_explore": "In LearnHouse Explore anzeigen",
+        "showcase_description": "Teilen Sie die Kurse und Inhalte Ihrer Organisation mit der LearnHouse-Community. Aktivieren Sie dies, um Lernenden zu helfen, Ihre wertvollen Bildungsressourcen zu entdecken.",
+        "save_changes": "Änderungen speichern",
+        "saving": "Speichern...",
+        "update_success": "Organisation aktualisiert",
+        "update_error": "Fehler beim Aktualisieren der Organisation",
+        "updating": "Organisation wird aktualisiert..."
+      },
+      "images": {
+        "title": "Bilder & Vorschauen",
+        "subtitle": "Verwalten Sie das Logo, das Vorschaubild und die Vorschaubilder Ihrer Organisation",
+        "tabs": {
+          "logo": "Logo",
+          "thumbnail": "Vorschaubild",
+          "previews": "Vorschauen"
+        },
+        "upload_logo": "Neues Logo hochladen",
+        "upload_thumbnail": "Neues Vorschaubild hochladen",
+        "uploading": "Hochladen...",
+        "uploading_logo": "Logo wird hochgeladen...",
+        "uploading_thumbnail": "Vorschaubild wird hochgeladen...",
+        "uploading_previews": "{{count}} Vorschau wird hochgeladen...",
+        "uploading_previews_plural": "{{count}} Vorschauen werden hochgeladen...",
+        "accepted_files": "Akzeptiert PNG, JPG (max. 5MB)",
+        "recommended_size": "Empfohlene Größe: 200x100 Pixel",
+        "add_preview": "Vorschau hinzufügen",
+        "drag_to_reorder": "Zum Umordnen ziehen • Maximal 4 Vorschauen • Unterstützt Bilder & Videos",
+        "video_modal": {
+          "title": "Vorschau hinzufügen",
+          "images": "Bilder hochladen",
+          "youtube": "YouTube",
+          "youtube_desc": "YouTube-Video hinzufügen",
+          "loom": "Loom",
+          "loom_desc": "Loom-Video hinzufügen",
+          "url_placeholder": "Fügen Sie Ihre {{service}} Video-URL ein",
+          "add_button": "Video hinzufügen"
+        },
+        "toasts": {
+          "logo_success": "Logo aktualisiert",
+          "logo_error": "Fehler beim Hochladen des Logos",
+          "thumbnail_success": "Vorschaubild aktualisiert",
+          "thumbnail_error": "Fehler beim Hochladen des Vorschaubilds",
+          "preview_added": "{{count}} Vorschau hinzugefügt",
+          "preview_added_plural": "{{count}} Vorschauen hinzugefügt",
+          "preview_error": "Fehler beim Hochladen der Vorschauen",
+          "preview_removed": "Vorschau entfernt",
+          "preview_remove_error": "Fehler beim Entfernen der Vorschau",
+          "order_updated": "Vorschaureihenfolge aktualisiert",
+          "order_update_error": "Fehler beim Aktualisieren der Vorschaureihenfolge",
+          "max_previews": "Sie können nur noch {{count}} Vorschau hochladen",
+          "max_previews_plural": "Sie können nur noch {{count}} Vorschauen hochladen",
+          "invalid_url": "Ungültige {{type}} URL",
+          "video_exists": "Dieses Video wurde bereits hinzugefügt",
+          "adding_video": "Video-Vorschau wird hinzugefügt...",
+          "video_preview_added": "Video-Vorschau hinzugefügt",
+          "video_preview_error": "Fehler beim Hinzufügen der Video-Vorschau",
+          "updating_order": "Vorschaureihenfolge wird aktualisiert..."
+        }
+      },
+      "socials": {
+        "title": "Soziale Links",
+        "subtitle": "Verwalten Sie die Social-Media-Präsenz Ihrer Organisation",
+        "labels": {
+          "social_links": "Soziale Links",
+          "custom_links": "Benutzerdefinierte Links"
+        },
+        "placeholders": {
+          "twitter": "Twitter Profil-URL",
+          "facebook": "Facebook Profil-URL",
+          "instagram": "Instagram Profil-URL",
+          "youtube": "YouTube Kanal-URL",
+          "label": "Label",
+          "url": "URL"
+        },
+        "add_link": "Link hinzufügen",
+        "custom_links_desc": "Fügen Sie bis zu 3 benutzerdefinierte Links hinzu, die auf dem Profil Ihrer Organisation erscheinen"
+      },
+      "scripts": {
+        "title": "Skripte",
+        "subtitle": "Fügen Sie benutzerdefinierte JavaScript-Skripte zu Ihrer Organisation hinzu",
+        "warning": "Zur Sicherheit Ihrer Organisation stellen Sie bitte sicher, dass Sie allen Skripten vertrauen und diese verstehen, bevor Sie sie hinzufügen. Skripte können mit den Seiten Ihrer Organisation interagieren.",
+        "add_script": "Skript hinzufügen",
+        "no_scripts": "Noch keine Skripte hinzugefügt",
+        "add_first_script": "Fügen Sie Ihr erstes Skript hinzu, um loszulegen",
+        "script_name": "Skript-Name",
+        "script_content": "Skript-Inhalt",
+        "placeholders": {
+          "name": "Skript-Namen eingeben",
+          "content": "JavaScript-Code eingeben"
+        },
+        "save_script": "Skript speichern",
+        "toasts": {
+          "save_success": "Skript erfolgreich gespeichert",
+          "delete_success": "Skript erfolgreich gelöscht"
+        }
+      },
+      "audit_logs": {
+        "title": "Audit-Protokolle",
+        "subtitle": "Verfolgen und überwachen Sie alle Aktivitäten innerhalb Ihrer Organisation",
+        "refresh": "Protokolle aktualisieren",
+        "export": "Exportieren",
+        "search_by": "Suchen nach",
+        "placeholders": {
+          "search": "Suchen..."
+        },
+        "filters": {
+          "resource": "Ressource",
+          "status": "Status",
+          "date": "Datum"
+        },
+        "resources": {
+          "all": "Alle Ressourcen",
+          "user": "Benutzer",
+          "course": "Kurs",
+          "org": "Organisation"
+        },
+        "date_ranges": {
+          "all": "Gesamte Zeit",
+          "today": "Heute",
+          "7d": "Letzte 7 Tage",
+          "30d": "Letzte 30 Tage",
+          "custom": "Benutzerdefinierter Bereich"
+        },
+        "table": {
+          "timestamp": "Zeitstempel",
+          "user": "Benutzer",
+          "resource": "Ressource",
+          "path_method": "Pfad & Methode",
+          "ip_address": "IP-Adresse",
+          "status": "Status",
+          "payload": "Payload"
+        },
+        "loading": "Aktivität wird geladen...",
+        "no_logs": "Keine Protokolle gefunden",
+        "pagination": {
+          "showing": "Anzeige von {{start}} bis {{end}} von {{total}} Protokollen"
+        },
+        "modals": {
+          "payload": {
+            "title": "Ereignis-Payload",
+            "description": "Detaillierte Daten für Aktion: {{action}}"
+          }
+        },
+        "export_toasts": {
+          "generating": "CSV wird generiert...",
+          "success": "CSV erfolgreich exportiert",
+          "error": "Fehler beim Exportieren der CSV"
+        }
+      },
+      "landing": {
+        "title": "Landingpage",
+        "subtitle": "Passen Sie die Landingpage Ihrer Organisation an",
+        "beta": "BETA",
+        "save_changes": "Änderungen speichern",
+        "saving": "Speichern...",
+        "saved_success": "Landingpage erfolgreich gespeichert",
+        "save_error": "Fehler beim Speichern der Landingpage",
+        "sections": "Abschnitte",
+        "select_section": "Wählen Sie einen Abschnitt zum Bearbeiten aus oder fügen Sie einen neuen hinzu",
+        "section_types": {
+          "hero": {
+            "label": "Hero",
+            "description": "Fügen Sie einen Hero-Abschnitt mit Überschrift und Handlungsaufforderung hinzu"
+          },
+          "text_and_image": {
+            "label": "Text & Bild",
+            "description": "Fügen Sie einen Abschnitt mit Text und einem Bild hinzu"
+          },
+          "logos": {
+            "label": "Logos",
+            "description": "Fügen Sie einen Abschnitt hinzu, um Logos zu präsentieren"
+          },
+          "people": {
+            "label": "Personen",
+            "description": "Fügen Sie einen Abschnitt hinzu, um Teammitglieder hervorzuheben"
+          },
+          "featured_courses": {
+            "label": "Kurse",
+            "description": "Fügen Sie einen Abschnitt hinzu, um ausgewählte Kurse zu präsentieren"
+          }
+        },
+        "add_section": "Abschnitt hinzufügen",
+        "hero_editor": {
+          "title": "Hero-Abschnitt",
+          "section_title": "Abschnitts-Titel",
+          "section_title_placeholder": "Abschnitts-Titel eingeben",
+          "tabs": {
+            "content": "Inhalt",
+            "background": "Hintergrund",
+            "buttons": "Buttons",
+            "illustration": "Illustration"
+          },
+          "heading": "Überschrift",
+          "heading_placeholder": "Überschriftstext eingeben",
+          "heading_color": "Überschriftsfarbe",
+          "subheading": "Unterüberschrift",
+          "subheading_placeholder": "Unterüberschriftstext eingeben",
+          "subheading_color": "Unterüberschriftsfarbe",
+          "background_type": "Hintergrundtyp",
+          "background_type_placeholder": "Hintergrundtyp auswählen",
+          "background_types": {
+            "solid": "Einfarbig",
+            "gradient": "Verlauf",
+            "image": "Bild"
+          },
+          "background_color": "Hintergrundfarbe",
+          "gradient_type": "Verlaufstyp",
+          "gradient_type_placeholder": "Verlaufstyp auswählen",
+          "gradient_types": {
+            "preset": "Voreingestellte Verläufe",
+            "custom": "Benutzerdefinierter Verlauf"
+          },
+          "start_color": "Startfarbe",
+          "end_color": "Endfarbe",
+          "gradient_direction": "Verlaufsrichtung",
+          "gradient_direction_placeholder": "Verlaufsrichtung auswählen",
+          "gradient_preset": "Verlaufsvoreinstellung",
+          "gradient_preset_placeholder": "Verlaufsvoreinstellung auswählen",
+          "background_image": "Hintergrundbild",
+          "upload_image": "Bild hochladen",
+          "button_text_colors": "Button-Text & Farben",
+          "button_text": "Button-Text",
+          "text_color": "Text",
+          "background_color_label": "Hintergrund",
+          "button_link": "Button-Link",
+          "button_link_placeholder": "Button-Link",
+          "add_button": "Button hinzufügen",
+          "illustration_image": "Illustrationsbild",
+          "illustration_url": "Illustrations-URL",
+          "alt_text": "Alt-Text",
+          "upload_illustration": "Illustration hochladen",
+          "position": "Position",
+          "position_placeholder": "Position auswählen",
+          "positions": {
+            "left": "Links",
+            "right": "Rechts"
+          },
+          "size": "Größe",
+          "size_placeholder": "Größe auswählen",
+          "sizes": {
+            "small": "Klein",
+            "medium": "Mittel",
+            "large": "Groß"
+          },
+          "remove_illustration": "Illustration entfernen"
+        },
+        "text_image_editor": {
+          "title": "Text & Bild Abschnitt",
+          "title_label": "Titel",
+          "title_placeholder": "Abschnitts-Titel eingeben",
+          "content": "Inhalt",
+          "content_placeholder": "Abschnitts-Inhalt eingeben",
+          "image_position": "Bildposition",
+          "image_position_placeholder": "Bildposition auswählen",
+          "positions": {
+            "left": "Links",
+            "right": "Rechts"
+          },
+          "image": "Bild",
+          "image_url": "Bild-URL",
+          "alt_text": "Alt-Text",
+          "upload_new_image": "Neues Bild hochladen"
+        },
+        "logos_editor": {
+          "title": "Logos-Abschnitt",
+          "title_label": "Titel",
+          "title_placeholder": "Abschnitts-Titel eingeben",
+          "logos": "Logos",
+          "logo_url": "Logo-URL",
+          "alt_text": "Alt-Text",
+          "upload_logo": "Logo hochladen",
+          "add_logo": "Logo hinzufügen"
+        },
+        "people_editor": {
+          "title": "Personen-Abschnitt",
+          "title_label": "Titel",
+          "title_placeholder": "Abschnitts-Titel eingeben",
+          "people": "Personen",
+          "name": "Name",
+          "name_placeholder": "Name der Person",
+          "username": "Benutzername",
+          "username_placeholder": "@benutzername",
+          "image": "Bild",
+          "image_url": "Bild-URL",
+          "upload_avatar": "Avatar hochladen",
+          "description": "Beschreibung",
+          "description_placeholder": "Beschreibung oder Rolle",
+          "add_person": "Person hinzufügen"
+        },
+        "courses_editor": {
+          "title": "Kurse-Abschnitt",
+          "title_label": "Titel",
+          "title_placeholder": "Abschnitts-Titel eingeben",
+          "select_courses": "Kurse auswählen",
+          "loading_courses": "Kurse werden geladen...",
+          "selected": "Ausgewählt",
+          "select": "Auswählen"
+        }
+      }
+    },
+    "users": {
+      "settings": {
+        "tabs": {
+          "users": "Benutzer",
+          "usergroups": "Benutzergruppen",
+          "roles": "Rollen",
+          "signups": "Anmeldungen & Einladungscodes",
+          "add": "Mitglieder einladen",
+          "audit_logs": "Audit-Protokolle"
+        },
+        "pages": {
+          "users": {
+            "title": "Benutzer",
+            "subtitle": "Verwalten Sie Ihre Organisationsbenutzer, weisen Sie Rollen und Berechtigungen zu"
+          },
+          "signups": {
+            "title": "Anmeldungen & Einladungscodes",
+            "subtitle": "Wählen Sie aus, von wo aus Benutzer Ihrer Organisation beitreten können"
+          },
+          "add": {
+            "title": "Mitglieder einladen",
+            "subtitle": "Laden Sie Mitglieder ein, Ihrer Organisation beizutreten"
+          },
+          "usergroups": {
+            "title": "Benutzergruppen",
+            "subtitle": "Erstellen und verwalten Sie Benutzergruppen"
+          },
+          "roles": {
+            "title": "Rollen",
+            "subtitle": "Erstellen und verwalten Sie Rollen mit spezifischen Berechtigungen"
+          },
+          "audit_logs": {
+            "title": "Audit-Protokolle",
+            "subtitle": "Verfolgen und überwachen Sie alle Aktivitäten innerhalb Ihrer Organisation"
+          }
+        },
+        "mobile": {
+          "title": "Nur Desktop",
+          "message1": "Diese Seite ist nur von einem Desktop-Gerät aus zugänglich.",
+          "message2": "Bitte wechseln Sie zu einem Desktop, um die Benutzereinstellungen anzuzeigen und zu verwalten."
+        }
+      },
+      "active_users": {
+        "title": "Aktive Benutzer",
+        "subtitle": "Verwalten Sie Ihre Organisationsbenutzer, weisen Sie Rollen und Berechtigungen zu",
+        "table": {
+          "user": "Benutzer",
+          "role": "Rolle",
+          "actions": "Aktionen"
+        },
+        "actions": {
+          "edit_role": "Rolle bearbeiten",
+          "remove_from_org": "Aus Organisation entfernen",
+          "removing": "Wird entfernt...",
+          "remove_success": "Benutzer aus Organisation entfernt",
+          "remove_error": "Fehler beim Entfernen des Benutzers"
+        },
+        "modals": {
+          "update_role": {
+            "title": "Rolle aktualisieren",
+            "description": "Rolle von @{{username}} aktualisieren"
+          },
+          "remove_user": {
+            "title": "{{username}} löschen?",
+            "message": "Sind Sie sicher, dass Sie diesen Benutzer aus der Organisation entfernen möchten?",
+            "button": "Benutzer entfernen"
+          }
+        }
+      },
+      "signups": {
+        "title": "Beitrittsmethode",
+        "subtitle": "Wählen Sie aus, wie Benutzer Ihrer Organisation beitreten können",
+        "open": {
+          "title": "Offen",
+          "description": "Benutzer können sich frei über die Registrierungsseite anmelden",
+          "active": "Aktiv",
+          "change_to": "Zu offen wechseln",
+          "confirmation_message": "Sind Sie sicher, dass Sie den Registrierungsmechanismus auf offen umstellen möchten? Dies ermöglicht es Benutzern, Ihrer Organisation frei beizutreten.",
+          "confirmation_title": "Auf offen umstellen?"
+        },
+        "closed": {
+          "title": "Geschlossen",
+          "description": "Benutzer können nur auf Einladung beitreten",
+          "active": "Aktiv",
+          "change_to": "Zu geschlossen wechseln",
+          "confirmation_message": "Sind Sie sicher, dass Sie den Registrierungsmechanismus auf geschlossen umstellen möchten? Dies ermöglicht es Benutzern, Ihrer Organisation nur auf Einladung beizutreten.",
+          "confirmation_title": "Auf geschlossen umstellen?"
+        },
+        "invite_codes": {
+          "title": "Einladungscodes",
+          "subtitle": "Einladungscodes können kopiert und zum Beitritt zu Ihrer Organisation verwendet werden",
+          "table": {
+            "code": "Code",
+            "signup_link": "Registrierungslink",
+            "type": "Typ",
+            "expiration_date": "Ablaufdatum",
+            "actions": "Aktionen"
+          },
+          "types": {
+            "linked_to_usergroup": "Verknüpft mit einer Benutzergruppe",
+            "normal": "Normal"
+          },
+          "actions": {
+            "delete_code": "Code löschen",
+            "delete_confirmation_title": "Code löschen?",
+            "delete_confirmation_message": "Sind Sie sicher, dass Sie diesen Einladungscode entfernen möchten?",
+            "generate": "Einladungscode generieren",
+            "generate_title": "Einladungscode generieren",
+            "generate_description": "Generieren Sie einen neuen Einladungscode für Ihre Organisation"
+          },
+          "toasts": {
+            "deleting": "Wird gelöscht...",
+            "delete_success": "Einladungscode gelöscht",
+            "delete_error": "Fehler beim Löschen",
+            "changing_method": "Beitrittsmethode wird geändert...",
+            "change_success": "Beitrittsmethode in {{method}} geändert",
+            "change_error": "Fehler beim Ändern der Beitrittsmethode"
+          }
+        },
+        "generate_modal": {
+          "linked_title": "Einladungscode mit einer Benutzergruppe verknüpft",
+          "linked_description": "Bei der Registrierung werden Benutzer automatisch mit einer Benutzergruppe Ihrer Wahl verknüpft",
+          "normal_title": "Normaler Einladungscode",
+          "normal_description": "Bei der Registrierung wird der Benutzer mit keiner Benutzergruppe verknüpft",
+          "generate_button": "Generieren",
+          "no_usergroups": "Keine Benutzergruppen verfügbar",
+          "create_usergroup_link": "Eine Benutzergruppe erstellen",
+          "toasts": {
+            "error": "Fehler {{status}}: {{detail}}"
+          }
+        }
+      },
+      "invite_members": {
+        "title": "Benutzer zu Ihrer Organisation einladen",
+        "subtitle": "Einladung per E-Mail senden, getrennt durch Komma",
+        "email_placeholder": "Beispiel: spike.spiegel@bepop.space, michael.scott@dundermifflin.com",
+        "invite_code_label": "Einladungscode",
+        "invite_code_tooltip": "Verwenden Sie einen der Einladungscodes, die Sie auf der Seite für den Registrierungszugriff generiert haben",
+        "send_button": "Einladungen per E-Mail senden",
+        "invited_users": {
+          "title": "Eingeladene Benutzer",
+          "subtitle": "Benutzer, die eingeladen wurden, Ihrer Organisation beizutreten",
+          "table": {
+            "email": "E-Mail",
+            "signup_status": "Registrierungsstatus",
+            "email_sent": "E-Mail gesendet"
+          },
+          "status": {
+            "pending": "Ausstehend",
+            "signed": "Registriert"
+          },
+          "email_status": {
+            "sent": "Gesendet",
+            "no": "Nein"
+          }
+        },
+        "toasts": {
+          "sending": "Einladung wird gesendet...",
+          "success": "Einladung gesendet",
+          "error": "Fehler beim Senden der Einladung"
+        }
+      },
+      "usergroups": {
+        "title": "Benutzergruppen & Benutzer verwalten",
+        "subtitle": "Benutzergruppen sind eine Möglichkeit, Benutzer zusammenzufassen, um deren Zugriff auf die Ressourcen (Kurse) in Ihrer Organisation zu verwalten.",
+        "table": {
+          "usergroup": "Benutzergruppe",
+          "description": "Beschreibung",
+          "manage_users": "Benutzer verwalten",
+          "actions": "Aktionen"
+        },
+        "actions": {
+          "manage_users": "Benutzer verwalten",
+          "edit": "Bearbeiten",
+          "delete": "Löschen",
+          "create": "Eine Benutzergruppe erstellen"
+        },
+        "modals": {
+          "manage_users": {
+            "title": "Benutzergruppen-Benutzer verwalten",
+            "description": "Verwalten Sie die Benutzer in dieser Benutzergruppe",
+            "table": {
+              "user": "Benutzer",
+              "linked": "Verknüpft",
+              "actions": "Aktionen"
+            },
+            "status": {
+              "linked": "Verknüpft",
+              "not_linked": "Nicht verknüpft"
+            },
+            "actions": {
+              "link": "Verknüpfen",
+              "unlink": "Verknüpfung aufheben"
+            },
+            "toasts": {
+              "link_success": "Benutzer erfolgreich verknüpft",
+              "unlink_success": "Benutzerverknüpfung erfolgreich aufgehoben",
+              "error": "Fehler {{status}}: {{detail}}"
+            }
+          },
+          "create": {
+            "title": "Eine Benutzergruppe erstellen",
+            "description": "Erstellen Sie eine neue Benutzergruppe, um Benutzer zu verwalten",
+            "form": {
+              "name": "Name",
+              "name_required": "Name ist erforderlich",
+              "description": "Beschreibung",
+              "submit": "Eine Benutzergruppe erstellen",
+              "loading": "Wird geladen..."
+            },
+            "toasts": {
+              "creating": "Wird erstellt...",
+              "success": "Neue Benutzergruppe erstellt",
+              "error": "Neue Benutzergruppe konnte nicht erstellt werden"
+            }
+          },
+          "edit": {
+            "title": "Benutzergruppe bearbeiten",
+            "form": {
+              "name": "Name",
+              "name_required": "Name ist erforderlich",
+              "description": "Beschreibung",
+              "submit": "Benutzergruppe speichern",
+              "loading": "Wird geladen..."
+            },
+            "toasts": {
+              "success": "Benutzergruppe erfolgreich gespeichert",
+              "error": "Fehler beim Speichern der Benutzergruppe, bitte versuchen Sie es später erneut."
+            }
+          },
+          "delete": {
+            "title": "Benutzergruppe löschen?",
+            "message": "Der Zugriff auf alle Ressourcen wird für alle Benutzer in dieser Benutzergruppe entfernt. Sind Sie sicher, dass Sie diese Benutzergruppe löschen möchten?",
+            "button": "Benutzergruppe löschen"
+          }
+        },
+        "toasts": {
+          "deleting": "Wird gelöscht...",
+          "delete_success": "Benutzergruppe gelöscht",
+          "delete_error": "Fehler beim Löschen der Benutzergruppe"
+        }
+      },
+      "roles": {
+        "title": "Rollen & Berechtigungen verwalten",
+        "subtitle": "Rollen definieren, was Benutzer innerhalb Ihrer Organisation tun können. Erstellen Sie benutzerdefinierte Rollen mit spezifischen Berechtigungen für verschiedene Benutzertypen.",
+        "table": {
+          "role_name": "Rollenname",
+          "description": "Beschreibung",
+          "permissions": "Berechtigungen",
+          "actions": "Aktionen"
+        },
+        "no_description": "Keine Beschreibung",
+        "no_permissions": "Keine Berechtigungen",
+        "permissions_count": "{{count}} Berechtigungen",
+        "system_wide": "Systemweit",
+        "actions": {
+          "edit": "Bearbeiten",
+          "delete": "Löschen",
+          "create": "Eine Rolle erstellen"
+        },
+        "modals": {
+          "create": {
+            "title": "Eine Rolle erstellen",
+            "description": "Erstellen Sie eine neue Rolle mit spezifischen Berechtigungen",
+            "form": {
+              "role_name": "Rollenname",
+              "role_name_placeholder": "z.B. Kursmanager",
+              "description": "Beschreibung",
+              "description_placeholder": "Beschreiben Sie, was diese Rolle tun kann...",
+              "permissions": "Berechtigungen",
+              "select_all": "Alle auswählen",
+              "deselect_all": "Alle abwählen",
+              "select": "Auswählen",
+              "deselect": "Abwählen",
+              "submit": "Rolle erstellen",
+              "loading": "Wird erstellt..."
+            },
+            "validation": {
+              "name_required": "Erforderlich",
+              "name_min_length": "Name muss mindestens 2 Zeichen lang sein",
+              "description_required": "Erforderlich",
+              "description_min_length": "Beschreibung muss mindestens 10 Zeichen lang sein"
+            },
+            "toasts": {
+              "success": "Neue Rolle erstellt",
+              "error": "Neue Rolle konnte nicht erstellt werden"
+            },
+            "presets": {
+              "title": "Vordefinierte Rechte",
+              "admin": {
+                "name": "Admin",
+                "description": "Vollständige Plattformkontrolle mit allen Berechtigungen"
+              },
+              "maintainer": {
+                "name": "Verwalter",
+                "description": "Kann Kurse, Kapitel und Aktivitäten verwalten"
+              },
+              "instructor": {
+                "name": "Lehrer",
+                "description": "Kann eigene Kurse erstellen und verwalten"
+              },
+              "viewer": {
+                "name": "Betrachter",
+                "description": "Nur-Lese-Zugriff auf Kurse und Inhalte"
+              },
+              "content_creator": {
+                "name": "Inhaltsersteller",
+                "description": "Kann Inhalte erstellen und bearbeiten, aber keine Benutzer verwalten"
+              },
+              "user_manager": {
+                "name": "Benutzermanager",
+                "description": "Kann Benutzer und Benutzergruppen verwalten"
+              },
+              "moderator": {
+                "name": "Moderator",
+                "description": "Kann Inhalte moderieren und Aktivitäten verwalten"
+              },
+              "analyst": {
+                "name": "Analyst",
+                "description": "Nur-Lese-Zugriff mit Analysefunktionen"
+              },
+              "guest": {
+                "name": "Gast",
+                "description": "Eingeschränkter Zugriff für externe Benutzer"
+              }
+            },
+            "permissions": {
+              "title": "Berechtigungen",
+              "sections": {
+                "courses": "Kurse",
+                "users": "Benutzer",
+                "usergroups": "Benutzergruppen",
+                "collections": "Kollektionen",
+                "organizations": "Organisationen",
+                "coursechapters": "Kurskapitel",
+                "activities": "Aktivitäten",
+                "roles": "Rollen",
+                "dashboard": "Dashboard"
+              },
+              "actions": {
+                "create": "erstellen",
+                "read": "lesen",
+                "read_own": "eigene lesen",
+                "update": "aktualisieren",
+                "update_own": "eigene aktualisieren",
+                "delete": "löschen",
+                "delete_own": "eigene löschen",
+                "access": "zugreifen"
+              },
+              "select_all": "Alle auswählen",
+              "deselect_all": "Alle abwählen",
+              "select": "Auswählen",
+              "deselect": "Abwählen"
+            }
+          },
+          "edit": {
+            "title": "Rolle bearbeiten",
+            "description": "Bearbeiten Sie die Rollenberechtigungen und Details",
+            "form": {
+              "role_name": "Rollenname",
+              "description": "Beschreibung",
+              "permissions": "Berechtigungen",
+              "select_all": "Alle auswählen",
+              "deselect_all": "Alle abwählen",
+              "select": "Auswählen",
+              "deselect": "Abwählen",
+              "submit": "Rolle speichern",
+              "loading": "Wird gespeichert..."
+            },
+            "validation": {
+              "name_required": "Erforderlich",
+              "name_min_length": "Name muss mindestens 2 Zeichen lang sein",
+              "description_required": "Erforderlich",
+              "description_min_length": "Beschreibung muss mindestens 10 Zeichen lang sein"
+            },
+            "toasts": {
+              "success": "Rolle erfolgreich gespeichert",
+              "error": "Fehler beim Speichern der Rolle, bitte versuchen Sie es später erneut."
+            }
+          },
+          "delete": {
+            "title": "Rolle löschen?",
+            "message": "Diese Aktion kann nicht rückgängig gemacht werden. Alle Benutzer mit dieser Rolle verlieren ihre Berechtigungen. Sind Sie sicher, dass Sie diese Rolle löschen möchten?",
+            "button": "Rolle löschen"
+          }
+        },
+        "toasts": {
+          "deleting": "Wird gelöscht...",
+          "delete_success": "Rolle gelöscht",
+          "delete_error": "Fehler beim Löschen der Rolle"
+        }
+      }
+    },
+    "assignments": {
+      "home": {
+        "title": "Aufgaben",
+        "course_label": "Kurs",
+        "assignment_label": "Aufgabe",
+        "course_editor": "Kurs-Editor",
+        "editor": "Editor",
+        "submissions": "Einreichungen",
+        "no_assignments": "Keine Aufgaben für diesen Kurs verfügbar, erstellen Sie Kursaufgaben im Kurs-Editor"
+      },
+      "detail": {
+        "title": "Aufgaben-Tools",
+        "tabs": {
+          "editor": "Editor",
+          "submissions": "Einreichungen"
+        },
+        "mobile": {
+          "title": "Nur Desktop",
+          "message1": "Diese Seite ist nur von einem Desktop-Gerät aus zugänglich.",
+          "message2": "Bitte wechseln Sie zu einem Desktop, um die Aufgabe anzuzeigen und zu verwalten."
+        },
+        "publishing": {
+          "published": "Veröffentlicht",
+          "unpublished": "Nicht veröffentlicht",
+          "edit_tooltip": "Aufgabendetails bearbeiten",
+          "preview_tooltip": "Vorschau der Aufgabe als Schüler",
+          "unpublish_tooltip": "Machen Sie Ihre Aufgabe für Schüler unverfügbar",
+          "publish_tooltip": "Machen Sie Ihre Aufgabe öffentlich und für Schüler verfügbar",
+          "edit": "Bearbeiten",
+          "preview": "Vorschau",
+          "unpublish": "Nicht veröffentlichen",
+          "publish": "Veröffentlichen",
+          "toasts": {
+            "updating": "Aufgabe wird aktualisiert...",
+            "update_success": "Die Aufgabe wurde erfolgreich aktualisiert",
+            "update_error": "Fehler beim Aktualisieren der Aufgabe, bitte versuchen Sie es später erneut."
+          }
+        }
+      },
+      "editor": {
+        "tasks_title": "Aufgabenstellungen",
+        "add_task": "Aufgabenstellung hinzufügen",
+        "add_task_modal": {
+          "title": "Eine Aufgabenstellung hinzufügen",
+          "description": "Erstellen Sie eine neue Aufgabenstellung für diese Aufgabe"
+        },
+        "task_types": {
+          "quiz": {
+            "title": "Quiz",
+            "description": "Fragen mit Multiple-Choice-Antworten"
+          },
+          "file_submission": {
+            "title": "Dateieinreichung",
+            "description": "Schüler können Dateien für diese Aufgabenstellung einreichen"
+          },
+          "form": {
+            "title": "Formular",
+            "description": "Lückentext-Formulare für Schüler"
+          }
+        },
+        "toasts": {
+          "task_created": "Aufgabenstellung erfolgreich erstellt",
+          "task_saved": "Aufgabenstellung erfolgreich gespeichert",
+          "task_save_error": "Fehler beim Speichern der Aufgabenstellung, bitte versuchen Sie es später erneut.",
+          "task_updated": "Aufgabenstellung erfolgreich aktualisiert",
+          "task_update_error": "Fehler beim Aktualisieren der Aufgabenstellung, bitte versuchen Sie es später erneut.",
+          "reminder": "Wenn Sie Ihre Aufgabenstellungen bearbeiten/hinzufügen, stellen Sie sicher, dass Sie Ihre Aufgabe nicht veröffentlichen, um Probleme mit Schülern zu vermeiden. Sie können sie wieder veröffentlichen, wenn Sie bereit sind."
+        },
+        "task_editor": {
+          "general": {
+            "title": "Titel",
+            "description": "Beschreibung",
+            "hint": "Hinweis",
+            "reference_file": "Referenzdatei",
+            "reference_file_info": "Erlaubte Formate: pdf, docx, mp4, jpg, jpeg, png, pptx, zip",
+            "max_grade_value": "Maximaler Notenwert",
+            "max_grade_error": "Der Wert sollte zwischen 20 und 100 liegen",
+            "submit": "Absenden",
+            "download": "Herunterladen",
+            "change_reference_file": "Referenzdatei ändern",
+            "loading": "Wird geladen",
+            "reference_file_updated": "Referenzdatei erfolgreich aktualisiert",
+            "allowed_formats": "Erlaubte Formate: pdf, docx, mp4, jpg, jpeg, png, pptx, zip",
+            "sign_in_required": "Bitte melden Sie sich an, um Dateien hochzuladen",
+            "auth_required": "Authentifizierung erforderlich. Bitte melden Sie sich an, um Dateien hochzuladen.",
+            "auth_required_submit": "Authentifizierung erforderlich. Bitte melden Sie sich an, um Ihre Aufgabenstellung einzureichen.",
+            "hint_optional": "Hinweis (optional)"
+          }
+        }
+      },
+      "submissions": {
+        "status": {
+          "late": "Verspätet",
+          "submitted": "Eingereicht",
+          "graded": "Bewertet"
+        },
+        "submission_label": "Einreichung",
+        "evaluate": "Bewerten",
+        "evaluate_modal": {
+          "title": "Bewerten von @{{username}}",
+          "description": "Bewerten Sie die Einreichung"
+        },
+        "task_label": "Aufgabenstellung {{number}} :",
+        "hint": "Hinweis",
+        "reference_document": "Referenzdokument",
+        "actions": {
+          "reject": "Aufgabe ablehnen",
+          "set_final_grade": "Endnote festlegen",
+          "mark_as_done": "Aktivität für Benutzer als erledigt markieren"
+        },
+        "toasts": {
+          "reject_success": "Aufgabe erfolgreich abgelehnt"
+        }
+      },
+      "modals": {
+        "edit": {
+          "title": "Aufgabe bearbeiten",
+          "description": "Aufgabendetails aktualisieren",
+          "form": {
+            "title_label": "Aufgabentitel",
+            "title_required": "Bitte geben Sie einen Namen für Ihre Aufgabe an",
+            "description_label": "Aufgabenbeschreibung",
+            "description_required": "Bitte geben Sie eine Beschreibung für Ihre Aufgabe an",
+            "due_date_label": "Fälligkeitsdatum",
+            "due_date_required": "Bitte geben Sie ein Fälligkeitsdatum für Ihre Aufgabe an",
+            "grading_type_label": "Bewertungsart",
+            "grading_type_required": "Bitte geben Sie eine Bewertungsart für Ihre Aufgabe an",
+            "grading_types": {
+              "alphabet": "Alphabetisch",
+              "numeric": "Numerisch",
+              "percentage": "Prozentual"
+            },
+            "cancel": "Abbrechen",
+            "save": "Änderungen speichern",
+            "saving": "Wird gespeichert..."
+          },
+          "toasts": {
+            "updating": "Aufgabe wird aktualisiert...",
+            "success": "Aufgabe erfolgreich aktualisiert",
+            "error": "Fehler beim Aktualisieren der Aufgabe",
+            "error_detail": "Ein Fehler ist beim Aktualisieren der Aufgabe aufgetreten"
+          }
+        },
+        "create": {
+          "form": {
+            "title_label": "Aufgabentitel",
+            "title_required": "Bitte geben Sie einen Namen für Ihre Aufgabe an",
+            "description_label": "Aufgabenbeschreibung",
+            "description_required": "Bitte geben Sie eine Beschreibung für Ihre Aufgabe an",
+            "due_date_label": "Fälligkeitsdatum",
+            "due_date_required": "Bitte geben Sie ein Fälligkeitsdatum für Ihre Aufgabe an",
+            "grading_type_label": "Bewertungsart",
+            "grading_type_required": "Bitte geben Sie eine Bewertungsart für Ihre Aufgabe an",
+            "grading_types": {
+              "alphabet": "Alphabetisch",
+              "numeric": "Numerisch",
+              "percentage": "Prozentual"
+            },
+            "submit": "Aktivität erstellen"
+          },
+          "toasts": {
+            "creating": "Aufgabe wird erstellt...",
+            "success": "Aufgabe erfolgreich erstellt"
+          }
+        }
+      }
+    },
+    "courses": {
+      "title": "Kurse",
+      "rights_guide": "Rechte-Leitfaden",
+      "create_course": "Kurs erstellen",
+      "create_new_course": "Einen neuen Kurs erstellen",
+      "no_courses": "Noch keine Kurse",
+      "create_course_placeholder": "Erstellen Sie einen Kurs, um Inhalte hinzuzufügen",
+      "no_courses_available": "Noch keine Kurse verfügbar",
+      "overview_top": {
+        "course_label": "Kurs",
+        "rights_guide_button": "Rechte-Leitfaden"
+      },
+      "settings": {
+        "tabs": {
+          "general": "Allgemein",
+          "content": "Inhalt",
+          "access": "Zugriff",
+          "contributors": "Mitwirkende",
+          "certification": "Zertifizierung"
+        },
+        "access_denied": {
+          "title": "Zugriff verweigert",
+          "message": "Sie haben keine Berechtigung, auf diesen Kurs zuzugreifen."
+        },
+        "access_restricted": {
+          "title": "Zugriff eingeschränkt",
+          "message": "Sie haben keine Berechtigung, auf {{tab}} zuzugreifen"
+        },
+        "loading": "Wird geladen..."
+      },
+      "general": {
+        "form": {
+          "name_label": "Name",
+          "name_required": "Erforderlich",
+          "name_max_length": "Darf maximal 100 Zeichen lang sein",
+          "description_label": "Beschreibung",
+          "description_required": "Erforderlich",
+          "description_max_length": "Darf maximal 1000 Zeichen lang sein",
+          "about_label": "Über",
+          "learnings_label": "Lernziele",
+          "learnings_required": "Erforderlich",
+          "learnings_invalid_format": "Ungültiges Format",
+          "learnings_min_items": "Mindestens ein Lernziel ist erforderlich",
+          "learnings_empty_text": "Alle Lernziele müssen Text enthalten",
+          "learnings_invalid_json": "Ungültiges JSON-Format",
+          "tags_label": "Tags",
+          "tags_placeholder": "Enter zum Hinzufügen...",
+          "thumbnail_type_label": "Vorschaubild-Typ",
+          "thumbnail_type_image": "Bild",
+          "thumbnail_type_video": "Video",
+          "thumbnail_type_both": "Beides",
+          "thumbnail_label": "Vorschaubild",
+          "image_search_placeholder": "Nach Bildern suchen..."
+        },
+        "thumbnail": {
+          "upload_image": "Bild hochladen",
+          "upload_video": "Video hochladen",
+          "gallery": "Galerie",
+          "tabs": {
+            "image": "Bild",
+            "video": "Video"
+          },
+          "supported_formats": {
+            "image": "Unterstützte Formate: PNG, JPG/JPEG (max. 8MB)",
+            "video": "Unterstützte Formate: MP4, WebM (max. 100MB)"
+          }
+        },
+        "errors": {
+          "save_failed": "Kursstruktur konnte nicht gespeichert werden."
+        }
+      },
+      "access": {
+        "title": "Kurszugriff",
+        "subtitle": "Wählen Sie, ob Ihr Kurs öffentlich im Internet oder nur für angemeldete Benutzer zugänglich sein soll",
+        "public": {
+          "title": "Öffentlich",
+          "description": "Der Kurs ist öffentlich im Internet verfügbar, wird von Suchmaschinen indexiert und kann von jedem aufgerufen werden",
+          "active": "Aktiv",
+          "confirmation_title": "Zu Öffentlich wechseln?",
+          "confirmation_message": "Sind Sie sicher, dass dieser Kurs öffentlich im Internet verfügbar sein soll?",
+          "confirmation_button": "Zu Öffentlich wechseln"
+        },
+        "users_only": {
+          "title": "Nur Benutzer",
+          "description": "Der Kurs ist nur für angemeldete Benutzer zugänglich, zusätzlich können Sie wählen, welche Benutzergruppen auf diesen Kurs zugreifen können",
+          "active": "Aktiv",
+          "confirmation_title": "Zu Nur Benutzer wechseln?",
+          "confirmation_message": "Sind Sie sicher, dass dieser Kurs nur für angemeldete Benutzer zugänglich sein soll?",
+          "confirmation_button": "Zu Nur Benutzer wechseln"
+        },
+        "usergroups": {
+          "title": "Benutzergruppen",
+          "subtitle": "Sie können wählen, ob Sie den Zugriff auf diesen Kurs nur für bestimmte Benutzergruppen freigeben möchten, indem Sie ihn mit einer Benutzergruppe verknüpfen",
+          "table": {
+            "name": "Name",
+            "actions": "Aktionen"
+          },
+          "actions": {
+            "delete_link": "Verknüpfung löschen",
+            "link_to_usergroup": "Mit einer Benutzergruppe verknüpfen"
+          },
+          "modals": {
+            "link_title": "Kurs mit einer Benutzergruppe verknüpfen",
+            "link_description": "Wählen Sie eine Benutzergruppe aus, die Sie mit diesem Kurs verknüpfen möchten. Benutzer aus dieser Benutzergruppe haben Zugriff auf diesen Kurs.",
+            "unlink_title": "Benutzergruppen-Verknüpfung aufheben?",
+            "unlink_message": "Benutzer aus dieser Benutzergruppe haben keinen Zugriff mehr auf diesen Kurs",
+            "unlink_button": "Verknüpfung löschen",
+            "warning": "Benutzer, die nicht Teil der Benutzergruppe sind, haben keinen Zugriff mehr auf diesen Kurs",
+            "usergroup_name": "Name der Benutzergruppe",
+            "no_usergroups": "Keine Benutzergruppen verfügbar",
+            "create_usergroup": "Eine Benutzergruppe erstellen",
+            "link_button": "Verknüpfen"
+          },
+          "toasts": {
+            "link_success": "Erfolgreich mit Benutzergruppe verknüpft",
+            "link_error": "Fehler {{status}}: {{detail}}",
+            "unlink_success": "Verknüpfung mit Benutzergruppe erfolgreich aufgehoben",
+            "unlink_error": "Ein Fehler ist beim Aufheben der Benutzergruppen-Verknüpfung aufgetreten."
+          }
+        }
+      },
+      "contributors": {
+        "title": "Kurs-Mitwirkende",
+        "subtitle": "Verwalten Sie Mitwirkende und fügen Sie Ihrem Kurs neue hinzu",
+        "open_to_contributors": {
+          "title": "Offen für Mitwirkende",
+          "description": "Der Kurs ist offen für Mitwirkende. Benutzer können sich bewerben, um Mitwirkende zu werden und helfen, den Kursinhalt zu verbessern.",
+          "active": "Aktiv",
+          "confirmation_title": "Für Mitwirkende öffnen?",
+          "confirmation_message": "Sind Sie sicher, dass Sie diesen Kurs für Mitwirkende öffnen möchten?",
+          "confirmation_button": "Für Mitwirkende öffnen"
+        },
+        "closed_to_contributors": {
+          "title": "Geschlossen für Mitwirkende",
+          "description": "Der Kurs ist für Mitwirkende geschlossen. Nur bestehende Mitwirkende können den Kursinhalt ändern.",
+          "active": "Aktiv",
+          "confirmation_title": "Für Mitwirkende schließen?",
+          "confirmation_message": "Sind Sie sicher, dass Sie diesen Kurs für Mitwirkende schließen möchten?",
+          "confirmation_button": "Für Mitwirkende schließen"
+        },
+        "search": {
+          "placeholder": "Benutzer nach Namen oder Benutzernamen suchen, um sie als Mitwirkende hinzuzufügen...",
+          "searching": "Wird gesucht...",
+          "no_results": "Keine Benutzer gefunden"
+        },
+        "table": {
+          "name": "Name",
+          "username": "Benutzername",
+          "email": "E-Mail",
+          "role": "Rolle",
+          "status": "Status",
+          "added_on": "Hinzugefügt am"
+        },
+        "roles": {
+          "creator": "ERSTELLER",
+          "contributor": "MITWIRKENDER",
+          "maintainer": "VERWALTER",
+          "reporter": "REPORTER"
+        },
+        "statuses": {
+          "active": "AKTIV",
+          "inactive": "INAKTIV",
+          "pending": "AUSSTEHEND"
+        },
+        "actions": {
+          "selected_users": "{{count}} Benutzer ausgewählt",
+          "selected_users_plural": "{{count}} Benutzer ausgewählt",
+          "clear": "Leeren",
+          "add_selected": "Auswahl hinzufügen",
+          "selected_contributors": "{{count}} Mitwirkender ausgewählt",
+          "selected_contributors_plural": "{{count}} Mitwirkende ausgewählt",
+          "remove_selected": "Auswahl entfernen",
+          "already_contributor": "Bereits ein Mitwirkender"
+        },
+        "toasts": {
+          "add_success": "{{count}} Mitwirkende(r) erfolgreich hinzugefügt",
+          "add_error": "Fehler beim Hinzufügen von {{username}}: {{reason}}",
+          "add_failed": "Hinzufügen von Mitwirkenden fehlgeschlagen",
+          "update_success": "Mitwirkender erfolgreich aktualisiert",
+          "update_error": "Fehler: {{detail}}",
+          "update_failed": "Ein Fehler ist beim Aktualisieren des Mitwirkenden aufgetreten.",
+          "remove_success": "{{count}} Mitwirkende(r) erfolgreich entfernt",
+          "remove_failed": "Entfernen von Mitwirkenden fehlgeschlagen",
+          "cannot_modify_creator": "Die Rolle oder der Status eines Erstellers kann nicht geändert werden"
+        }
+      },
+      "certification": {
+        "title": "Kurs-Zertifizierung",
+        "subtitle": "Aktivieren und konfigurieren Sie Zertifikate für Schüler, die diesen Kurs abschließen",
+        "form": {
+          "certification_name_label": "Name der Zertifizierung",
+          "certification_name_required": "Erforderlich, wenn die Zertifizierung aktiviert ist",
+          "certification_name_max_length": "Darf maximal 100 Zeichen lang sein",
+          "certification_name_placeholder": "z.B. Advanced JavaScript Zertifizierung",
+          "certification_type_label": "Zertifizierungstyp",
+          "certification_description_label": "Beschreibung der Zertifizierung",
+          "certification_description_required": "Erforderlich, wenn die Zertifizierung aktiviert ist",
+          "certification_description_max_length": "Darf maximal 500 Zeichen lang sein",
+          "certification_description_placeholder": "Beschreiben Sie, was diese Zertifizierung darstellt und welchen Wert sie hat...",
+          "certificate_pattern_label": "Zertifikatsmuster",
+          "certificate_instructor_label": "Name des Lehrers (Optional)",
+          "certificate_instructor_placeholder": "z.B. Dr. Jane Smith"
+        },
+        "types": {
+          "completion": "Kursabschluss",
+          "achievement": "Leistungsbasiert",
+          "assessment": "Bewertungsbasiert",
+          "participation": "Teilnahme",
+          "mastery": "Kompetenznachweis",
+          "professional": "Berufliche Weiterbildung",
+          "continuing": "Fortbildung",
+          "workshop": "Workshop-Teilnahme",
+          "specialization": "Spezialisierung"
+        },
+        "patterns": {
+          "royal": {
+            "name": "Royal",
+            "description": "Verziert mit Kronenmotiven"
+          },
+          "tech": {
+            "name": "Tech",
+            "description": "Von Schaltkreisen inspirierte Muster"
+          },
+          "nature": {
+            "name": "Natur",
+            "description": "Organische Blattmuster"
+          },
+          "geometric": {
+            "name": "Geometrisch",
+            "description": "Abstrakte Formen & Linien"
+          },
+          "vintage": {
+            "name": "Vintage",
+            "description": "Art-Deco-Stil"
+          },
+          "waves": {
+            "name": "Wellen",
+            "description": "Fließende Wassermuster"
+          },
+          "minimal": {
+            "name": "Minimal",
+            "description": "Klar und einfach"
+          },
+          "professional": {
+            "name": "Professionell",
+            "description": "Business-taugliches Design"
+          },
+          "academic": {
+            "name": "Akademisch",
+            "description": "Traditioneller Universitätsstil"
+          },
+          "modern": {
+            "name": "Modern",
+            "description": "Zeitgenössische klare Linien"
+          }
+        },
+        "sections": {
+          "basic_info": {
+            "title": "Basis-Informationen",
+            "subtitle": "Konfigurieren Sie die Basisdetails Ihrer Zertifizierung"
+          },
+          "certificate_design": {
+            "title": "Zertifikats-Design",
+            "subtitle": "Wählen Sie ein dekoratives Muster für Ihr Zertifikat"
+          },
+          "preview": {
+            "title": "Zertifikats-Vorschau",
+            "subtitle": "Live-Vorschau Ihres Zertifikats"
+          }
+        },
+        "states": {
+          "disabled": {
+            "title": "Keine Zertifizierung konfiguriert",
+            "message": "Aktivieren Sie die Zertifizierung, um Schülern nach Kursabschluss Zertifikate auszustellen.",
+            "button": "Zertifizierung aktivieren",
+            "creating": "Wird erstellt..."
+          },
+          "creating": {
+            "title": "Zertifizierung wird erstellt...",
+            "message": "Bitte warten Sie, während wir Ihre Kurszertifizierung einrichten."
+          }
+        },
+        "errors": {
+          "loading": "Fehler beim Laden der Zertifizierungen",
+          "create_failed": "Zertifizierung konnte nicht erstellt werden.",
+          "remove_failed": "Zertifizierung konnte nicht entfernt werden."
+        },
+        "toasts": {
+          "create_success": "Zertifizierung erfolgreich erstellt",
+          "create_error": "Fehler beim Erstellen der Zertifizierung",
+          "remove_success": "Zertifizierung erfolgreich entfernt",
+          "remove_error": "Fehler beim Entfernen der Zertifizierung"
+        }
+      },
+      "structure": {
+        "loading": "Wird geladen...",
+        "add_chapter_button": "Kapitel hinzufügen",
+        "modals": {
+          "new_chapter": {
+            "title": "Kapitel erstellen",
+            "description": "Fügen Sie dem Kurs ein neues Kapitel hinzu",
+            "form": {
+              "name_label": "Kapitelname",
+              "name_required": "Bitte geben Sie einen Kapitelnamen an",
+              "description_label": "Kapitelbeschreibung",
+              "description_required": "Bitte geben Sie eine Kapitelbeschreibung an",
+              "submit": "Kapitel erstellen"
+            }
+          },
+          "delete_chapter": {
+            "title": "{{name}} löschen?",
+            "message": "Sind Sie sicher, dass Sie dieses Kapitel löschen möchten?",
+            "button": "Kapitel löschen"
+          },
+          "new_activity": {
+            "title": "Aktivität erstellen",
+            "description": "Wählen Sie zwischen verschiedenen Aktivitätstypen, um sie dem Kurs hinzuzufügen"
+          },
+          "delete_activity": {
+            "title": "{{name}} löschen?",
+            "message": "Sind Sie sicher, dass Sie diese Aktivität löschen möchten?",
+            "button": "Aktivität löschen"
+          }
+        },
+        "actions": {
+          "add_chapter": "Kapitel hinzufügen",
+          "add_activity": "Aktivität hinzufügen",
+          "publish": "Veröffentlichen",
+          "unpublish": "Nicht veröffentlichen",
+          "preview_activity": "Vorschau der Aktivität",
+          "edit_page": "Seite bearbeiten",
+          "edit_assignment": "Aufgabe bearbeiten"
+        },
+        "chapter_element": {
+          "chapter_name_placeholder": "Kapitelname"
+        },
+        "activity": {
+          "name_placeholder": "Aktivitätsname",
+          "types": {
+            "video": "Video",
+            "document": "Dokument",
+            "assignment": "Aufgabe",
+            "assignments": "Aufgaben",
+            "dynamic": "Dynamisch",
+            "dynamic_page": "Dynamische Seite"
+          },
+          "toasts": {
+            "deleting": "Aktivität wird gelöscht...",
+            "delete_success": "Aktivität erfolgreich gelöscht",
+            "updating": "Aufgabe wird aktualisiert...",
+            "update_success": "Die Aktivität wurde erfolgreich aktualisiert",
+            "name_update_success": "Aktivitätsname erfolgreich aktualisiert",
+            "name_update_error": "Aktivitätsname konnte nicht aktualisiert werden",
+            "creating": "Aktivität wird erstellt...",
+            "create_success": "Aktivität erfolgreich erstellt",
+            "uploading": "Datei wird hochgeladen und Aktivität erstellt...",
+            "upload_success": "Datei erfolgreich hochgeladen",
+            "creating_uploading": "Aktivität wird erstellt und Datei hochgeladen..."
+          }
+        }
+      }
+    }
   }
 }
-

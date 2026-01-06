@@ -12,8 +12,10 @@ import { Pencil, Shield, X, Globe } from 'lucide-react'
 import React from 'react'
 import toast from 'react-hot-toast'
 import useSWR, { mutate } from 'swr'
+import { useTranslation } from 'react-i18next'
 
 function OrgRoles() {
+    const { t } = useTranslation()
     const org = useOrg() as any
     const session = useLHSession() as any
     const access_token = session?.data?.tokens?.access_token;
@@ -27,14 +29,14 @@ function OrgRoles() {
     )
 
     const deleteRoleUI = async (role_id: any) => {
-        const toastId = toast.loading("Deleting...");
+        const toastId = toast.loading(t('dashboard.users.roles.toasts.deleting'));
         const res = await deleteRole(role_id, org.id, access_token)
         if (res.status === 200) {
             mutate(`${getAPIUrl()}roles/org/${org.id}`)
-            toast.success("Deleted role", {id:toastId})
+            toast.success(t('dashboard.users.roles.toasts.delete_success'), {id:toastId})
         }
         else {
-            toast.error('Error deleting role', {id:toastId})
+            toast.error(t('dashboard.users.roles.toasts.delete_error'), {id:toastId})
         }
     }
 
@@ -44,7 +46,7 @@ function OrgRoles() {
     }
 
     const getRightsSummary = (rights: any) => {
-        if (!rights) return 'No permissions'
+        if (!rights) return t('dashboard.users.roles.no_permissions')
         
         const totalPermissions = Object.keys(rights).reduce((acc, key) => {
             if (typeof rights[key] === 'object') {
@@ -53,7 +55,7 @@ function OrgRoles() {
             return acc
         }, 0)
         
-        return `${totalPermissions} permissions`
+        return t('dashboard.users.roles.permissions_count', { count: totalPermissions })
     }
 
     // Check if a role is system-wide (TYPE_GLOBAL or role_uuid starts with role_global_)
@@ -86,10 +88,10 @@ function OrgRoles() {
             <div className="h-6"></div>
             <div className="mx-4 sm:mx-6 lg:mx-10 bg-white rounded-xl nice-shadow px-3 sm:px-4 py-4">
                 <div className="flex flex-col bg-gray-50 -space-y-1 px-3 sm:px-5 py-3 rounded-md mb-3">
-                    <h1 className="font-bold text-lg sm:text-xl text-gray-800">Manage Roles & Permissions</h1>
+                    <h1 className="font-bold text-lg sm:text-xl text-gray-800">{t('dashboard.users.roles.title')}</h1>
                     <h2 className="text-gray-500 text-xs sm:text-sm">
                         {' '}
-                        Roles define what users can do within your organization. Create custom roles with specific permissions for different user types.{' '}
+                        {t('dashboard.users.roles.subtitle')}{' '}
                     </h2>
                 </div>
                 
@@ -106,7 +108,7 @@ function OrgRoles() {
                                         {isSystem && (
                                             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
                                                 <Globe className="w-3 h-3 mr-1" />
-                                                System-wide
+                                                {t('dashboard.users.roles.system_wide')}
                                             </span>
                                         )}
                                     </div>
@@ -114,7 +116,7 @@ function OrgRoles() {
                                         {getRightsSummary(role.rights)}
                                     </span>
                                 </div>
-                                <p className="text-gray-600 text-sm">{role.description || 'No description'}</p>
+                                <p className="text-gray-600 text-sm">{role.description || t('dashboard.users.roles.no_description')}</p>
                                 <div className="flex space-x-2">
                                     {!isSystem ? (
                                         <>
@@ -135,25 +137,23 @@ function OrgRoles() {
                                                         setEditRoleModal={setEditRoleModal}
                                                     />
                                                 }
-                                                dialogTitle="Edit Role"
-                                                dialogDescription={
-                                                    'Edit the role permissions and details'
-                                                }
+                                                dialogTitle={t('dashboard.users.roles.modals.edit.title')}
+                                                dialogDescription={t('dashboard.users.roles.modals.edit.description')}
                                                 dialogTrigger={
                                                     <button className="flex-1 flex justify-center space-x-2 hover:cursor-pointer p-2 bg-black rounded-md font-bold items-center text-sm text-white hover:bg-gray-800 transition-colors shadow-sm">
                                                         <Pencil className="w-4 h-4" />
-                                                        <span>Edit</span>
+                                                        <span>{t('dashboard.users.roles.actions.edit')}</span>
                                                     </button>
                                                 }
                                             />
                                             <ConfirmationModal
-                                                confirmationButtonText="Delete Role"
-                                                confirmationMessage="This action cannot be undone. All users with this role will lose their permissions. Are you sure you want to delete this role?"
-                                                dialogTitle={'Delete Role ?'}
+                                                confirmationButtonText={t('dashboard.users.roles.modals.delete.button')}
+                                                confirmationMessage={t('dashboard.users.roles.modals.delete.message')}
+                                                dialogTitle={t('dashboard.users.roles.modals.delete.title')}
                                                 dialogTrigger={
                                                     <button className="flex-1 flex justify-center space-x-2 hover:cursor-pointer p-2 bg-red-600 rounded-md font-bold items-center text-sm text-white hover:bg-red-700 transition-colors shadow-sm">
                                                         <X className="w-4 h-4" />
-                                                        <span>Delete</span>
+                                                        <span>{t('dashboard.users.roles.actions.delete')}</span>
                                                     </button>
                                                 }
                                                 functionToExecute={() => {
@@ -174,10 +174,10 @@ function OrgRoles() {
                     <table className="table-auto w-full text-left whitespace-nowrap rounded-md overflow-hidden">
                         <thead className="bg-gray-100 text-gray-500 rounded-xl uppercase">
                             <tr className="font-bolder text-sm">
-                                <th className="py-3 px-4">Role Name</th>
-                                <th className="py-3 px-4">Description</th>
-                                <th className="py-3 px-4">Permissions</th>
-                                <th className="py-3 px-4">Actions</th>
+                                <th className="py-3 px-4">{t('dashboard.users.roles.table.role_name')}</th>
+                                <th className="py-3 px-4">{t('dashboard.users.roles.table.description')}</th>
+                                <th className="py-3 px-4">{t('dashboard.users.roles.table.permissions')}</th>
+                                <th className="py-3 px-4">{t('dashboard.users.roles.table.actions')}</th>
                             </tr>
                         </thead>
                         <>
@@ -193,12 +193,12 @@ function OrgRoles() {
                                                     {isSystem && (
                                                         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
                                                             <Globe className="w-3 h-3 mr-1" />
-                                                            System-wide
+                                                            {t('dashboard.users.roles.system_wide')}
                                                         </span>
                                                     )}
                                                 </div>
                                             </td>
-                                            <td className="py-3 px-4 text-gray-600">{role.description || 'No description'}</td>
+                                            <td className="py-3 px-4 text-gray-600">{role.description || t('dashboard.users.roles.no_description')}</td>
                                             <td className="py-3 px-4">
                                                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                                     {getRightsSummary(role.rights)}
@@ -225,25 +225,23 @@ function OrgRoles() {
                                                                         setEditRoleModal={setEditRoleModal}
                                                                     />
                                                                 }
-                                                                dialogTitle="Edit Role"
-                                                                dialogDescription={
-                                                                    'Edit the role permissions and details'
-                                                                }
+                                                                dialogTitle={t('dashboard.users.roles.modals.edit.title')}
+                                                                dialogDescription={t('dashboard.users.roles.modals.edit.description')}
                                                                 dialogTrigger={
                                                                     <button className="flex space-x-2 hover:cursor-pointer p-1 px-3 bg-black rounded-md font-bold items-center text-sm text-white hover:bg-gray-800 transition-colors shadow-sm">
                                                                         <Pencil className="w-4 h-4" />
-                                                                        <span>Edit</span>
+                                                                        <span>{t('dashboard.users.roles.actions.edit')}</span>
                                                                     </button>
                                                                 }
                                                             />
                                                             <ConfirmationModal
-                                                                confirmationButtonText="Delete Role"
-                                                                confirmationMessage="This action cannot be undone. All users with this role will lose their permissions. Are you sure you want to delete this role?"
-                                                                dialogTitle={'Delete Role ?'}
+                                                                confirmationButtonText={t('dashboard.users.roles.modals.delete.button')}
+                                                                confirmationMessage={t('dashboard.users.roles.modals.delete.message')}
+                                                                dialogTitle={t('dashboard.users.roles.modals.delete.title')}
                                                                 dialogTrigger={
                                                                     <button className="flex space-x-2 hover:cursor-pointer p-1 px-3 bg-red-600 rounded-md font-bold items-center text-sm text-white hover:bg-red-700 transition-colors shadow-sm">
                                                                         <X className="w-4 h-4" />
-                                                                        <span>Delete</span>
+                                                                        <span>{t('dashboard.users.roles.actions.delete')}</span>
                                                                     </button>
                                                                 }
                                                                 functionToExecute={() => {
@@ -275,14 +273,12 @@ function OrgRoles() {
                                 setCreateRoleModal={setCreateRoleModal}
                             />
                         }
-                        dialogTitle="Create a Role"
-                        dialogDescription={
-                            'Create a new role with specific permissions'
-                        }
+                        dialogTitle={t('dashboard.users.roles.modals.create.title')}
+                        dialogDescription={t('dashboard.users.roles.modals.create.description')}
                         dialogTrigger={
                             <button className="flex space-x-2 hover:cursor-pointer p-2 sm:p-1 sm:px-3 bg-black rounded-md font-bold items-center text-sm text-white w-full sm:w-auto justify-center hover:bg-gray-800 transition-colors shadow-sm">
                                 <Shield className="w-4 h-4" />
-                                <span>Create a Role</span>
+                                <span>{t('dashboard.users.roles.actions.create')}</span>
                             </button>
                         }
                     />
