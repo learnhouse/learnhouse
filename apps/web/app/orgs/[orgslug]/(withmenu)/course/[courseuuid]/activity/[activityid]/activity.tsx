@@ -32,6 +32,7 @@ import MiniInfoTooltip from '@components/Objects/MiniInfoTooltip'
 import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
 import ActivityIndicators from '@components/Pages/Courses/ActivityIndicators'
 import UserAvatar from '@components/Objects/UserAvatar'
+import { useTranslation } from 'react-i18next'
 
 // Lazy load heavy components
 const Canva = lazy(() => import('@components/Objects/Activities/DynamicCanva/DynamicCanva'))
@@ -95,6 +96,7 @@ function useActivityPosition(course: any, activityId: string) {
 
 function ActivityActions({ activity, activityid, course, orgslug, assignment, showNavigation = true }: ActivityActionsProps) {
   
+  const { t } = useTranslation();
   const { contributorStatus } = useContributorStatus(course.course_uuid);
   const org = useOrg() as any;
   const session = useLHSession() as any;
@@ -144,28 +146,30 @@ function ActivityActions({ activity, activityid, course, orgslug, assignment, sh
   );
 }
 
-function getRelativeTime(date: Date): string {
-  const now = new Date();
-  const diff = now.getTime() - date.getTime();
-  const seconds = Math.floor(diff / 1000);
-  const minutes = Math.floor(seconds / 60);
-  const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
-  const weeks = Math.floor(days / 7);
-  const months = Math.floor(days / 30);
-  const years = Math.floor(days / 365);
-
-  if (years > 0) return `${years} year${years > 1 ? 's' : ''} ago`;
-  if (months > 0) return `${months} month${months > 1 ? 's' : ''} ago`;
-  if (weeks > 0) return `${weeks} week${weeks > 1 ? 's' : ''} ago`;
-  if (days > 0) return `${days} day${days > 1 ? 's' : ''} ago`;
-  if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
-  if (minutes > 0) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
-  return 'just now';
-}
-
 function ActivityClient(props: ActivityClientProps) {
+  const { t } = useTranslation()
   const activityid = props.activityid
+
+  function getRelativeTime(date: Date): string {
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+    const weeks = Math.floor(days / 7);
+    const months = Math.floor(days / 30);
+    const years = Math.floor(days / 365);
+  
+    if (years > 0) return t('time.years_ago', { count: years });
+    if (months > 0) return t('time.months_ago', { count: months });
+    if (weeks > 0) return t('time.weeks_ago', { count: weeks });
+    if (days > 0) return t('time.days_ago', { count: days });
+    if (hours > 0) return t('time.hours_ago', { count: hours });
+    if (minutes > 0) return t('time.minutes_ago', { count: minutes });
+    return t('common.just_now');
+  }
+
   const courseuuid = props.courseuuid
   const orgslug = props.orgslug
   const activity = props.activity
@@ -271,7 +275,7 @@ function ActivityClient(props: ActivityClientProps) {
       for (let j = 0; j < chapter.activities.length; j++) {
         let activity = chapter.activities[j]
         if (activity.id === activity_id) {
-          return `Chapter ${i + 1} : ${chapter.name}`
+          return `${t('courses.chapter')} ${i + 1} : ${chapter.name}`
         }
       }
     }
@@ -358,7 +362,7 @@ function ActivityClient(props: ActivityClientProps) {
                             </div>
                           </div>
                           <div className="text-xs text-gray-600">
-                            {trailData?.runs?.find((run: any) => run.course_uuid === course.course_uuid)?.steps?.filter((step: any) => step.complete)?.length || 0} of {course.chapters?.reduce((acc: number, chapter: any) => acc + chapter.activities.length, 0) || 0}
+                            {trailData?.runs?.find((run: any) => run.course_uuid === course.course_uuid)?.steps?.filter((step: any) => step.complete)?.length || 0} {t('common.of')} {course.chapters?.reduce((acc: number, chapter: any) => acc + chapter.activities.length, 0) || 0}
                           </div>
                         </motion.div>
                         
@@ -385,7 +389,7 @@ function ActivityClient(props: ActivityClientProps) {
                             </Link>
                           </div>
                           <div className="flex flex-col -space-y-1">
-                            <p className="font-bold text-gray-700 text-sm">Course </p>
+                            <p className="font-bold text-gray-700 text-sm">{t('search.course')} </p>
                             <h1 className="font-bold text-gray-950 text-lg first-letter:uppercase">
                               {course.name}
                             </h1>
@@ -410,7 +414,7 @@ function ActivityClient(props: ActivityClientProps) {
                             whileTap={{ scale: 0.95 }}
                             onClick={() => setIsFocusMode(false)}
                             className="bg-white nice-shadow p-2 rounded-full cursor-pointer hover:bg-gray-50"
-                            title="Exit focus mode"
+                            title={t('activities.exit_focus_mode')}
                           >
                             <Minimize2 size={16} className="text-gray-700" />
                           </motion.button>
@@ -464,13 +468,13 @@ function ActivityClient(props: ActivityClientProps) {
                                   : 'opacity-50 text-gray-400 cursor-not-allowed'
                               }`}
                               disabled={!prevActivity}
-                              title={prevActivity ? `Previous: ${prevActivity.name}` : 'No previous activity'}
+                              title={prevActivity ? `${t('common.previous')}: ${prevActivity.name}` : t('activities.no_previous_activity')}
                             >
                               <ChevronLeft size={20} className="text-gray-800 shrink-0" />
                               <div className="flex flex-col items-start">
-                                <span className="text-xs text-gray-500">Previous</span>
+                                <span className="text-xs text-gray-500">{t('common.previous')}</span>
                                 <span className="text-sm capitalize font-semibold text-left">
-                                  {prevActivity ? prevActivity.name : 'No previous activity'}
+                                  {prevActivity ? prevActivity.name : t('activities.no_previous_activity')}
                                 </span>
                               </div>
                             </button>
@@ -492,12 +496,12 @@ function ActivityClient(props: ActivityClientProps) {
                                   : 'opacity-50 text-gray-400 cursor-not-allowed'
                               }`}
                               disabled={!nextActivity}
-                              title={nextActivity ? `Next: ${nextActivity.name}` : 'No next activity'}
+                              title={nextActivity ? `${t('common.next')}: ${nextActivity.name}` : t('activities.no_next_activity')}
                             >
                               <div className="flex flex-col items-end">
-                                <span className="text-xs text-gray-500">Next</span>
+                                <span className="text-xs text-gray-500">{t('common.next')}</span>
                                 <span className="text-sm capitalize font-semibold text-right">
-                                  {nextActivity ? nextActivity.name : 'No next activity'}
+                                  {nextActivity ? nextActivity.name : t('activities.no_next_activity')}
                                 </span>
                               </div>
                               <ChevronRight size={20} className="text-gray-800 shrink-0" />
@@ -548,7 +552,7 @@ function ActivityClient(props: ActivityClientProps) {
                               </Link>
                             </div>
                             <div className="flex flex-col -space-y-1">
-                              <p className="font-bold text-gray-700 text-md">Course </p>
+                              <p className="font-bold text-gray-700 text-md">{t('search.course')} </p>
                               <h1 className="font-bold text-gray-950 text-3xl first-letter:uppercase">
                                 {course.name}
                               </h1>
@@ -603,7 +607,7 @@ function ActivityClient(props: ActivityClientProps) {
                                 {course.authors && course.authors.length > 0 && (
                                   <div className="text-xs text-gray-700 font-medium flex items-center gap-1">
                                     {course.authors.filter((a: any) => a.authorship_status === 'ACTIVE').length > 1 && (
-                                      <span>Co-created by </span>
+                                      <span>{t('courses.co_created_by')} </span>
                                     )}
                                     {course.authors.filter((a: any) => a.authorship_status === 'ACTIVE').slice(0, 2).map((author: any, idx: number, arr: any[]) => (
                                       <span key={author.user.user_uuid}>
@@ -640,11 +644,11 @@ function ActivityClient(props: ActivityClientProps) {
                                 {/* Dates */}
                                 <div className="flex items-center text-xs text-gray-500 gap-2">
                                   <span>
-                                    Created on {new Date(course.creation_date).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
+                                    {t('courses.created_on')} {new Date(course.creation_date).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
                                   </span>
                                   <span className="mx-1">•</span>
                                   <span>
-                                    Last updated {getRelativeTime(new Date(course.updated_at || course.last_updated || course.creation_date))}
+                                    {t('courses.last_updated')} {getRelativeTime(new Date(course.updated_at || course.last_updated || course.creation_date))}
                                   </span>
                                 </div>
                               </div>
@@ -668,7 +672,7 @@ function ActivityClient(props: ActivityClientProps) {
                                         className="bg-emerald-600 rounded-full px-5 drop-shadow-md flex items-center space-x-2 p-2.5 text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out"
                                       >
                                         <Edit2 size={17} />
-                                        <span className="text-xs font-bold">Contribute</span>
+                                        <span className="text-xs font-bold">{t('courses.contribute')}</span>
                                       </Link>
                                     )}
                                   </>
@@ -683,7 +687,7 @@ function ActivityClient(props: ActivityClientProps) {
                         <div className="p-7 drop-shadow-xs rounded-lg bg-gray-800">
                           <div className="text-white">
                             <h1 className="font-bold text-2xl">
-                              This activity is not published yet
+                              {t('activities.not_published_yet')}
                             </h1>
                           </div>
                         </div>
@@ -698,12 +702,12 @@ function ActivityClient(props: ActivityClientProps) {
                               <button
                                 onClick={() => setIsFocusMode(true)}
                                 className="absolute top-4 right-4 bg-white/80 hover:bg-white nice-shadow p-2 rounded-full cursor-pointer transition-all duration-200 group overflow-hidden z-50 pointer-events-auto"
-                                title="Enter focus mode"
+                                title={t('activities.focus_mode')}
                               >
                                 <div className="flex items-center">
                                   <Maximize2 size={16} className="text-gray-700" />
                                   <span className="text-xs font-bold text-gray-700 opacity-0 group-hover:opacity-100 transition-all duration-200 w-0 group-hover:w-auto group-hover:ml-2 whitespace-nowrap">
-                                    Focus Mode
+                                    {t('activities.focus_mode')}
                                   </span>
                                 </div>
                               </button>
@@ -771,6 +775,7 @@ export function MarkStatus(props: {
   orgslug: string,
   trailData: any
 }) {
+  const { t } = useTranslation()
   const router = useRouter()
   const session = useLHSession() as any;
   const org = useOrg() as any;
@@ -867,7 +872,7 @@ export function MarkStatus(props: {
       }
     } catch (error) {
       console.error('Error marking activity as complete:', error);
-      toast.error('Failed to mark activity as complete');
+      toast.error(t('activities.failed_mark_complete'));
     } finally {
       setIsLoading(false);
     }
@@ -886,7 +891,7 @@ export function MarkStatus(props: {
 
       await mutate(`${getAPIUrl()}trail/org/${org?.id}/trail`);
     } catch (error) {
-      toast.error('Failed to unmark activity as complete');
+      toast.error(t('activities.failed_unmark_complete'));
     } finally {
       setIsLoading(false);
     }
@@ -923,12 +928,12 @@ export function MarkStatus(props: {
         <div className="flex items-center space-x-2">
           <div className="relative">
             <ConfirmationModal
-              confirmationButtonText="Unmark Activity"
-              confirmationMessage="Are you sure you want to unmark this activity as complete? This will affect your course progress."
-              dialogTitle="Unmark activity as complete"
+              confirmationButtonText={t('activities.unmark_activity')}
+              confirmationMessage={t('activities.unmark_activity_confirm')}
+              dialogTitle={t('activities.unmark_activity_title')}
               dialogTrigger={
                 <div className="bg-teal-600 rounded-md px-4 nice-shadow flex flex-col p-2.5 text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out">
-                  <span className="text-[10px] font-bold mb-1 uppercase">Status</span>
+                  <span className="text-[10px] font-bold mb-1 uppercase">{t('common.status')}</span>
                   <div className="flex items-center space-x-2">
                     <svg 
                       width="17" 
@@ -943,7 +948,7 @@ export function MarkStatus(props: {
                       <rect x="3" y="3" width="18" height="18" rx="2" />
                       <path d="M7 12l3 3 7-7" />
                     </svg>
-                    <span className="text-xs font-bold">Complete</span>
+                    <span className="text-xs font-bold">{t('common.complete')}</span>
                   </div>
                 </div>
               }
@@ -953,7 +958,7 @@ export function MarkStatus(props: {
             {showMarkedTooltip && (
               <MiniInfoTooltip
                 icon={infoIcon}
-                message="Click the checkbox to unmark as complete if needed"
+                message={t('activities.unmark_tooltip')}
                 onClose={handleMarkedTooltipClose}
                 iconColor="text-teal-600"
                 iconSize={24}
@@ -969,7 +974,7 @@ export function MarkStatus(props: {
               className={`${isLoading ? 'opacity-90' : ''} bg-gray-800 rounded-md px-4 nice-shadow flex flex-col p-2.5 text-white hover:cursor-pointer transition-all duration-200 ${isLoading ? 'cursor-not-allowed' : 'hover:bg-gray-700'}`}
               onClick={!isLoading ? markActivityAsCompleteFront : undefined}
             >
-              <span className="text-[10px] font-bold mb-1 uppercase">Status</span>
+              <span className="text-[10px] font-bold mb-1 uppercase">{t('common.status')}</span>
               <div className="flex items-center space-x-2">
                 {isLoading ? (
                   <div className="animate-spin">
@@ -1000,13 +1005,13 @@ export function MarkStatus(props: {
                     <rect x="3" y="3" width="18" height="18" rx="2" />
                   </svg>
                 )}
-                <span className="text-xs font-bold min-w-[90px]">{isLoading ? 'Marking...' : 'Mark as complete'}</span>
+                <span className="text-xs font-bold min-w-[90px]">{isLoading ? t('activities.marking') : t('activities.mark_as_complete')}</span>
               </div>
             </div>
             {showUnmarkedTooltip && (
               <MiniInfoTooltip
                 icon={infoIcon}
-                message="Click the checkbox to mark this activity as complete"
+                message={t('activities.mark_tooltip')}
                 onClose={handleUnmarkedTooltipClose}
                 iconColor="text-gray-600"
                 iconSize={24}
@@ -1021,6 +1026,7 @@ export function MarkStatus(props: {
 }
 
 function NextActivityButton({ course, currentActivityId, orgslug }: { course: any, currentActivityId: string, orgslug: string }) {
+  const { t } = useTranslation();
   const router = useRouter();
   const isMobile = useMediaQuery('(max-width: 768px)');
 
@@ -1063,7 +1069,7 @@ function NextActivityButton({ course, currentActivityId, orgslug }: { course: an
       onClick={navigateToActivity}
       className="bg-gray-200 rounded-md px-4 shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)] flex flex-col p-2.5 text-gray-600 hover:cursor-pointer transition delay-150 duration-300 ease-in-out hover:bg-gray-200"
     >
-      <span className="text-[10px] font-bold text-gray-500 mb-1 uppercase">Next</span>
+      <span className="text-[10px] font-bold text-gray-500 mb-1 uppercase">{t('common.next')}</span>
       <div className="flex items-center space-x-1">
         <span className="text-sm font-semibold truncate max-w-[200px]">{nextActivity.name}</span>
         <ChevronRight size={17} />
@@ -1073,6 +1079,7 @@ function NextActivityButton({ course, currentActivityId, orgslug }: { course: an
 }
 
 function PreviousActivityButton({ course, currentActivityId, orgslug }: { course: any, currentActivityId: string, orgslug: string }) {
+  const { t } = useTranslation();
   const router = useRouter();
   const isMobile = useMediaQuery('(max-width: 768px)');
 
@@ -1115,7 +1122,7 @@ function PreviousActivityButton({ course, currentActivityId, orgslug }: { course
       onClick={navigateToActivity}
       className="bg-white rounded-md px-4 nice-shadow flex flex-col p-2.5 text-gray-600 hover:cursor-pointer transition delay-150 duration-300 ease-in-out"
     >
-      <span className="text-[10px] font-bold text-gray-500 mb-1 uppercase">Previous</span>
+      <span className="text-[10px] font-bold text-gray-500 mb-1 uppercase">{t('common.previous')}</span>
       <div className="flex items-center space-x-1">
         <ChevronLeft size={17} />
         <span className="text-sm font-semibold truncate max-w-[200px]">{previousActivity.name}</span>
@@ -1131,6 +1138,7 @@ function AssignmentTools(props: {
   orgslug: string
   assignment: any
 }) {
+  const { t } = useTranslation();
   const submission = useAssignmentSubmission() as any
   const session = useLHSession() as any;
   const [finalGrade, setFinalGrade] = React.useState(null) as any;
@@ -1142,11 +1150,11 @@ function AssignmentTools(props: {
         session.data?.tokens?.access_token
       )
       if (res.success) {
-        toast.success('Assignment submitted for grading')
+        toast.success(t('assignments.assignment_submitted_success'))
         mutate(`${getAPIUrl()}assignments/${props.assignment?.assignment_uuid}/submissions/me`,)
       }
       else {
-        toast.error('Failed to submit assignment for grading')
+        toast.error(t('assignments.failed_submit_assignment'))
       }
     }
   }
@@ -1203,15 +1211,15 @@ function AssignmentTools(props: {
   if (!submission || submission.length === 0) {
     return (
       <ConfirmationModal
-        confirmationButtonText="Submit Assignment"
-        confirmationMessage="Are you sure you want to submit your assignment for grading? Once submitted, you will not be able to make any changes."
-        dialogTitle="Submit your assignment for grading"
+        confirmationButtonText={t('assignments.submit_assignment')}
+        confirmationMessage={t('assignments.submit_assignment_confirm')}
+        dialogTitle={t('assignments.submit_assignment_title')}
         dialogTrigger={
           <div className="bg-cyan-800 rounded-md px-4 nice-shadow flex flex-col p-2.5 text-white hover:cursor-pointer transition delay-150 duration-300 ease-in-out">
-            <span className="text-[10px] font-bold mb-1 uppercase">Status</span>
+            <span className="text-[10px] font-bold mb-1 uppercase">{t('common.status')}</span>
             <div className="flex items-center space-x-2">
               <BookOpenCheck size={17} />
-              <span className="text-xs font-bold">Submit for grading</span>
+              <span className="text-xs font-bold">{t('assignments.submit_for_grading')}</span>
             </div>
           </div>
         }
@@ -1224,10 +1232,10 @@ function AssignmentTools(props: {
   if (submission[0].submission_status === 'SUBMITTED') {
     return (
       <div className="bg-amber-800 rounded-md px-4 nice-shadow flex flex-col p-2.5 text-white transition delay-150 duration-300 ease-in-out">
-        <span className="text-[10px] font-bold mb-1 uppercase">Status</span>
+        <span className="text-[10px] font-bold mb-1 uppercase">{t('common.status')}</span>
         <div className="flex items-center space-x-2">
           <UserRoundPen size={17} />
-          <span className="text-xs font-bold">Grading in progress</span>
+          <span className="text-xs font-bold">{t('assignments.grading_in_progress')}</span>
         </div>
       </div>
     )
@@ -1236,11 +1244,11 @@ function AssignmentTools(props: {
   if (submission[0].submission_status === 'GRADED') {
     return (
       <div className="bg-teal-600 rounded-md px-4 nice-shadow flex flex-col p-2.5 text-white transition delay-150 duration-300 ease-in-out">
-        <span className="text-[10px] font-bold mb-1 uppercase">Status</span>
+        <span className="text-[10px] font-bold mb-1 uppercase">{t('common.status')}</span>
         <div className="flex items-center space-x-2">
           <CheckCircle size={17} />
           <span className="text-xs flex space-x-2 font-bold items-center">
-            <span>Graded </span>
+            <span>{t('assignments.graded')} </span>
             <span className='bg-white text-teal-800 px-1 py-0.5 rounded-md'>{finalGrade}</span>
           </span>
         </div>

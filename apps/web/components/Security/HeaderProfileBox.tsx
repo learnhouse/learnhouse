@@ -16,8 +16,15 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+  DropdownMenuPortal,
 } from "@components/ui/dropdown-menu"
 import { signOut } from 'next-auth/react'
+import { useTranslation } from 'react-i18next'
+import { Languages, Check } from 'lucide-react'
+import { AVAILABLE_LANGUAGES } from '@/lib/languages'
 
 interface RoleInfo {
   name: string;
@@ -36,6 +43,11 @@ export const HeaderProfileBox = () => {
   const session = useLHSession() as any
   const { isAdmin, loading, userRoles, rights } = useAdminStatus()
   const org = useOrg() as any
+  const { t, i18n } = useTranslation()
+
+  const changeLanguage = (lng: string) => {
+    i18n.changeLanguage(lng)
+  }
 
   useEffect(() => { }
     , [session])
@@ -64,32 +76,32 @@ export const HeaderProfileBox = () => {
     // Define role configurations based on actual database roles
     const roleConfigs: { [key: string]: RoleInfo } = {
       'role_global_admin': {
-        name: 'ADMIN',
+        name: t('roles.role_admin'),
         icon: <Crown size={12} />,
         bgColor: 'bg-purple-600',
         textColor: 'text-white',
-        description: 'Full platform control with all permissions'
+        description: t('roles.role_admin_desc')
       },
       'role_global_maintainer': {
-        name: 'MAINTAINER',
+        name: t('roles.role_maintainer'),
         icon: <Shield size={12} />,
         bgColor: 'bg-blue-600',
         textColor: 'text-white',
-        description: 'Mid-level manager with wide permissions'
+        description: t('roles.role_maintainer_desc')
       },
       'role_global_instructor': {
-        name: 'INSTRUCTOR',
+        name: t('roles.role_instructor'),
         icon: <Users size={12} />,
         bgColor: 'bg-green-600',
         textColor: 'text-white',
-        description: 'Can manage their own content'
+        description: t('roles.role_instructor_desc')
       },
       'role_global_user': {
-        name: 'USER',
+        name: t('roles.role_user'),
         icon: <User size={12} />,
         bgColor: 'bg-gray-500',
         textColor: 'text-white',
-        description: 'Read-Only Learner'
+        description: t('roles.role_user_desc')
       }
     };
 
@@ -128,7 +140,7 @@ export const HeaderProfileBox = () => {
     });
 
     return customRoles.map((role: any) => ({
-      name: role.role.name || 'Custom Role',
+      name: role.role.name || t('roles.custom_role'),
       description: role.role.description
     }));
   }, [userRoles, org?.id]);
@@ -140,10 +152,10 @@ export const HeaderProfileBox = () => {
           <ul className="flex space-x-3 items-center">
             <li>
               <Link
-                href={{ pathname: getUriWithoutOrg('/login'), query: org ? { orgslug: org.slug } : null }} >Login</Link>
+                href={{ pathname: getUriWithoutOrg('/login'), query: org ? { orgslug: org.slug } : null }} >{t('auth.login')}</Link>
             </li>
             <li className="bg-black rounded-lg shadow-md p-2 px-3 text-white">
-              <Link href={{ pathname: getUriWithoutOrg('/signup'), query: org ? { orgslug: org.slug } : null }}>Sign up</Link>
+              <Link href={{ pathname: getUriWithoutOrg('/signup'), query: org ? { orgslug: org.slug } : null }}>{t('auth.sign_up')}</Link>
             </li>
           </ul>
         </UnidentifiedArea>
@@ -174,7 +186,7 @@ export const HeaderProfileBox = () => {
                       {customRoles.map((customRole, index) => (
                         <Tooltip 
                           key={index}
-                          content={customRole.description || `Custom role: ${customRole.name}`}
+                          content={customRole.description || `${t('roles.custom_role')}: ${customRole.name}`}
                           sideOffset={15}
                           side="bottom"
                         >
@@ -205,22 +217,43 @@ export const HeaderProfileBox = () => {
                   <DropdownMenuItem asChild>
                     <Link href="/dash" className="flex items-center space-x-2">
                       <Shield size={16} />
-                      <span>Dashboard</span>
+                      <span>{t('common.dashboard')}</span>
                     </Link>
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuItem asChild>
                   <Link href="/dash/user-account/settings/general" className="flex items-center space-x-2">
                     <UserIcon size={16} />
-                    <span>User Settings</span>
+                    <span>{t('user.user_settings')}</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/dash/user-account/owned" className="flex items-center space-x-2">
                     <Package2 size={16} />
-                    <span>My Courses</span>
+                    <span>{t('courses.my_courses')}</span>
                   </Link>
                 </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger className="flex items-center space-x-2">
+                    <Languages size={14} />
+                    <span>{t('common.language')}</span>
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuPortal>
+                    <DropdownMenuSubContent>
+                      {AVAILABLE_LANGUAGES.map((language) => (
+                        <DropdownMenuItem 
+                          key={language.code}
+                          onClick={() => changeLanguage(language.code)}
+                          className="flex items-center justify-between"
+                        >
+                          <span>{t(language.translationKey)} ({language.nativeName})</span>
+                          {i18n.language === language.code && <Check size={14} />}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuSubContent>
+                  </DropdownMenuPortal>
+                </DropdownMenuSub>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem 
                   onClick={() => signOut({ callbackUrl: '/' })}

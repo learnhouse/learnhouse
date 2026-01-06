@@ -6,8 +6,10 @@ import { AArrowUp, FileUp, ListTodo } from 'lucide-react'
 import React from 'react'
 import toast from 'react-hot-toast';
 import { mutate } from 'swr';
+import { useTranslation } from 'react-i18next';
 
 function NewTaskModal({ closeModal, assignment_uuid }: any) {
+  const { t } = useTranslation()
   const session = useLHSession() as any;
   const access_token = session?.data?.tokens?.access_token;
   const reminderShownRef = React.useRef(false);
@@ -17,7 +19,7 @@ function NewTaskModal({ closeModal, assignment_uuid }: any) {
     // Check if the reminder has already been shown using sessionStorage
     if (sessionStorage.getItem("TasksReminderShown") !== "true") {
       setTimeout(() => {
-        toast('When editing/adding your tasks, make sure to Unpublish your Assignment to avoid any issues with students, you can Publish it again when you are ready.',
+        toast(t('dashboard.assignments.editor.toasts.reminder'),
               { icon: '✋', duration: 10000, style: { minWidth: 600 }  });
         // Mark the reminder as shown in sessionStorage
         sessionStorage.setItem("TasksReminderShown", "true");
@@ -36,7 +38,7 @@ function NewTaskModal({ closeModal, assignment_uuid }: any) {
       max_grade_value: 100,
     }
     const res = await createAssignmentTask(task_object, assignment_uuid, access_token)
-    toast.success('Task created successfully')
+    toast.success(t('dashboard.assignments.editor.toasts.task_created'))
     showReminderToast()
     mutate(`${getAPIUrl()}assignments/${assignment_uuid}/tasks`)
     assignmentTaskStateHook({ type: 'setSelectedAssignmentTaskUUID', payload: res.data.assignment_task_uuid })
@@ -52,8 +54,8 @@ function NewTaskModal({ closeModal, assignment_uuid }: any) {
         <div className='px-5 py-5 rounded-full nice-shadow w-fit mx-auto bg-gray-100/50 text-gray-500 cursor-pointer hover:bg-gray-100 transition-all ease-linear'>
           <ListTodo size={30} />
         </div>
-        <p className='text-xl text-gray-700 font-semibold'>Quiz</p>
-        <p className='text-sm text-gray-500 w-40'>Questions with multiple choice answers</p>
+        <p className='text-xl text-gray-700 font-semibold'>{t('dashboard.assignments.editor.task_types.quiz.title')}</p>
+        <p className='text-sm text-gray-500 w-40'>{t('dashboard.assignments.editor.task_types.quiz.description')}</p>
       </div>
       <div
         onClick={() => createTask('FILE_SUBMISSION')}
@@ -61,8 +63,8 @@ function NewTaskModal({ closeModal, assignment_uuid }: any) {
         <div className='px-5 py-5 rounded-full nice-shadow w-fit mx-auto bg-gray-100/50 text-gray-500 cursor-pointer hover:bg-gray-100 transition-all ease-linear'>
           <FileUp size={30} />
         </div>
-        <p className='text-xl text-gray-700 font-semibold'>File submission</p>
-        <p className='text-sm text-gray-500 w-40'>Students can submit files for this task</p>
+        <p className='text-xl text-gray-700 font-semibold'>{t('dashboard.assignments.editor.task_types.file_submission.title')}</p>
+        <p className='text-sm text-gray-500 w-40'>{t('dashboard.assignments.editor.task_types.file_submission.description')}</p>
       </div>
       <div
         onClick={() => createTask('FORM')}
@@ -70,8 +72,8 @@ function NewTaskModal({ closeModal, assignment_uuid }: any) {
         <div className='px-5 py-5 rounded-full nice-shadow w-fit mx-auto bg-gray-100/50 text-gray-500 cursor-pointer hover:bg-gray-100 transition-all ease-linear'>
           <AArrowUp size={30} />
         </div>
-        <p className='text-xl text-gray-700 font-semibold'>Form</p>
-        <p className='text-sm text-gray-500 w-40'>Fill-in-the-blank forms for students</p>
+        <p className='text-xl text-gray-700 font-semibold'>{t('dashboard.assignments.editor.task_types.form.title')}</p>
+        <p className='text-sm text-gray-500 w-40'>{t('dashboard.assignments.editor.task_types.form.description')}</p>
       </div>
     </div>
   )

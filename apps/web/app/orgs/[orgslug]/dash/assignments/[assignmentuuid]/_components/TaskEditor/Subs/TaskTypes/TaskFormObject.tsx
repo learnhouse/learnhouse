@@ -7,6 +7,7 @@ import { Check, Info, Minus, Plus, PlusCircle, X, Type } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { v4 as uuidv4 } from 'uuid';
+import { useTranslation } from 'react-i18next';
 
 type FormSchema = {
     questionText: string;
@@ -36,6 +37,7 @@ type TaskFormObjectProps = {
 };
 
 function TaskFormObject({ view, assignmentTaskUUID, user_id }: TaskFormObjectProps) {
+    const { t } = useTranslation()
     const session = useLHSession() as any;
     const access_token = session?.data?.tokens?.access_token;
     const assignmentTaskState = useAssignmentsTask() as any;
@@ -122,10 +124,10 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id }: TaskFormObjectPro
             assignmentTaskStateHook({
                 type: 'reload',
             });
-            toast.success('Task saved successfully');
+            toast.success(t('dashboard.assignments.editor.toasts.task_saved'));
         } else {
             console.error('Save error:', res);
-            toast.error('Error saving task, please retry later.');
+            toast.error(t('dashboard.assignments.editor.toasts.task_save_error'));
         }
     };
 
@@ -459,7 +461,7 @@ function TaskFormObject({ view, assignmentTaskUUID, user_id }: TaskFormObjectPro
                                                     <input
                                                         value={blank.hint || ''}
                                                         onChange={(e) => handleBlankChange(qIndex, bIndex, 'hint', e.target.value)}
-                                                        placeholder="Hint (optional)"
+                                                        placeholder={t('dashboard.assignments.editor.task_editor.general.hint_optional')}
                                                         className="w-full mx-2 px-3 pr-6 text-neutral-600 bg-blue-50 border-2 border-blue-200 rounded-md border-dotted text-xs"
                                                     />
                                                 </div>

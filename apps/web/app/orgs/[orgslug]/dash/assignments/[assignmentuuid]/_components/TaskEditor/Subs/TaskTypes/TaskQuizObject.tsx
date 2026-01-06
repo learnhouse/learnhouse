@@ -7,6 +7,7 @@ import { Check, Info, Minus, Plus, PlusCircle, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { v4 as uuidv4 } from 'uuid';
+import { useTranslation } from 'react-i18next';
 
 type QuizSchema = {
     questionText: string;
@@ -43,6 +44,7 @@ type Submission = {
 };
 
 function TaskQuizObject({ view, assignmentTaskUUID, user_id }: TaskQuizObjectProps) {
+    const { t } = useTranslation()
     const session = useLHSession() as any;
     const access_token = session?.data?.tokens?.access_token;
     const assignmentTaskState = useAssignmentsTask() as any;
@@ -114,9 +116,9 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id }: TaskQuizObjectPro
             assignmentTaskStateHook({
                 type: 'reload',
             });
-            toast.success('Task saved successfully');
+            toast.success(t('dashboard.assignments.editor.toasts.task_saved'));
         } else {
-            toast.error('Error saving task, please retry later.');
+            toast.error(t('dashboard.assignments.editor.toasts.task_save_error'));
         }
     };
     /* TEACHER VIEW CODE */
@@ -233,7 +235,7 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id }: TaskQuizObjectPro
                 assignmentTaskStateHook({
                     type: 'reload',
                 });
-                toast.success('Task saved successfully');
+                toast.success(t('dashboard.assignments.editor.toasts.task_saved'));
                 setShowSavingDisclaimer(false);
                 // Update userSubmissions with the returned UUID for future updates
                 const updatedUserSubmissionsWithUUID = {
@@ -243,7 +245,7 @@ function TaskQuizObject({ view, assignmentTaskUUID, user_id }: TaskQuizObjectPro
                 setUserSubmissions(updatedUserSubmissionsWithUUID);
                 setInitialUserSubmissions(updatedUserSubmissionsWithUUID);
             } else {
-                toast.error('Error saving task, please retry later.');
+                toast.error(t('dashboard.assignments.editor.toasts.task_save_error'));
             }
         }
     };

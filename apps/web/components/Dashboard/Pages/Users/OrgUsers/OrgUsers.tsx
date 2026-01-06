@@ -1,3 +1,4 @@
+'use client'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import PageLoading from '@components/Objects/Loaders/PageLoading'
@@ -12,8 +13,10 @@ import { KeyRound, LogOut } from 'lucide-react'
 import React, { useEffect } from 'react'
 import toast from 'react-hot-toast'
 import useSWR, { mutate } from 'swr'
+import { useTranslation } from 'react-i18next'
 
 function OrgUsers() {
+  const { t } = useTranslation()
   const org = useOrg() as any
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token;
@@ -31,13 +34,13 @@ function OrgUsers() {
   }
 
   const handleRemoveUser = async (user_id: any) => {
-    const toastId = toast.loading("Removing...");
+    const toastId = toast.loading(t('dashboard.users.active_users.actions.removing'));
     const res = await removeUserFromOrg(org.id, user_id,access_token)
     if (res.status === 200) {
       await mutate(`${getAPIUrl()}orgs/${org.id}/users`)
-      toast.success("Removed user from org", {id:toastId});
+      toast.success(t('dashboard.users.active_users.actions.remove_success'), {id:toastId});
     } else {
-      toast.error('Error removing user', {id:toastId});
+      toast.error(t('dashboard.users.active_users.actions.remove_error'), {id:toastId});
     }
   }
 
@@ -59,18 +62,18 @@ function OrgUsers() {
           <div className="h-6"></div>
           <div className="ml-10 mr-10 mx-auto bg-white rounded-xl shadow-xs px-4 py-4  ">
             <div className="flex flex-col bg-gray-50 -space-y-1  px-5 py-3 rounded-md mb-3 ">
-              <h1 className="font-bold text-xl text-gray-800">Active users</h1>
+              <h1 className="font-bold text-xl text-gray-800">{t('dashboard.users.active_users.title')}</h1>
               <h2 className="text-gray-500  text-md">
                 {' '}
-                Manage your organization users, assign roles and permissions{' '}
+                {t('dashboard.users.active_users.subtitle')}{' '}
               </h2>
             </div>
             <table className="table-auto w-full text-left whitespace-nowrap rounded-md overflow-hidden">
               <thead className="bg-gray-100 text-gray-500 rounded-xl uppercase">
                 <tr className="font-bolder text-sm">
-                  <th className="py-3 px-4">User</th>
-                  <th className="py-3 px-4">Role</th>
-                  <th className="py-3 px-4">Actions</th>
+                  <th className="py-3 px-4">{t('dashboard.users.active_users.table.user')}</th>
+                  <th className="py-3 px-4">{t('dashboard.users.active_users.table.role')}</th>
+                  <th className="py-3 px-4">{t('dashboard.users.active_users.table.actions')}</th>
                 </tr>
               </thead>
               <>
@@ -105,26 +108,26 @@ function OrgUsers() {
                               user={user}
                             />
                           }
-                          dialogTitle="Update Role"
+                          dialogTitle={t('dashboard.users.active_users.modals.update_role.title')}
                           dialogDescription={
-                            'Update @' + user.user.username + "'s role"
+                            t('dashboard.users.active_users.modals.update_role.description', { username: user.user.username })
                           }
                           dialogTrigger={
                             <button className="flex space-x-2 hover:cursor-pointer p-1 px-3 bg-yellow-700 rounded-md font-bold items-center text-sm text-yellow-100">
                               <KeyRound className="w-4 h-4" />
-                              <span> Edit Role</span>
+                              <span> {t('dashboard.users.active_users.actions.edit_role')}</span>
                             </button>
                           }
                         />
 
                         <ConfirmationModal
-                          confirmationButtonText="Remove User"
-                          confirmationMessage="Are you sure you want remove this user from the organization?"
-                          dialogTitle={'Delete ' + user.user.username + ' ?'}
+                          confirmationButtonText={t('dashboard.users.active_users.modals.remove_user.button')}
+                          confirmationMessage={t('dashboard.users.active_users.modals.remove_user.message')}
+                          dialogTitle={t('dashboard.users.active_users.modals.remove_user.title', { username: user.user.username })}
                           dialogTrigger={
                             <button className="mr-2 flex space-x-2 hover:cursor-pointer p-1 px-3 bg-rose-700 rounded-md font-bold items-center text-sm text-rose-100">
                               <LogOut className="w-4 h-4" />
-                              <span> Remove from organization</span>
+                              <span> {t('dashboard.users.active_users.actions.remove_from_org')}</span>
                             </button>
                           }
                           functionToExecute={() => {

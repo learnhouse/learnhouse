@@ -16,6 +16,7 @@ import CourseProgress from '../CourseProgress/CourseProgress'
 import UserAvatar from '@components/Objects/UserAvatar'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { mutate } from 'swr'
+import { useTranslation } from 'react-i18next'
 
 interface CourseRun {
   status: string
@@ -53,6 +54,7 @@ interface CourseActionsProps {
 }
 
 function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseActionsProps) {
+  const { t } = useTranslation()
   const router = useRouter()
   const session = useLHSession() as any
   const [linkedProducts, setLinkedProducts] = useState<any[]>([])
@@ -125,18 +127,18 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
 
     setIsActionLoading(true)
     const loadingToast = toast.loading(
-      isStarted ? 'Leaving course...' : 'Starting course...'
+      isStarted ? t('courses.leave_course') + '...' : t('courses.start_course') + '...'
     )
     
     try {
       if (isStarted) {
         await removeCourse('course_' + courseuuid, orgslug, session.data?.tokens?.access_token)
         mutate(`${getAPIUrl()}trail/org/${org?.id}/trail`)
-        toast.success('Successfully left the course', { id: loadingToast })
+        toast.success(t('courses.leave_course_success'), { id: loadingToast })
       } else {
         await startCourse('course_' + courseuuid, orgslug, session.data?.tokens?.access_token)
         mutate(`${getAPIUrl()}trail/org/${org?.id}/trail`)
-        toast.success('Successfully started the course', { id: loadingToast })
+        toast.success(t('courses.start_course_success'), { id: loadingToast })
         
         // Get the first activity from the first chapter
         const firstChapter = course.chapters?.[0]
@@ -156,8 +158,8 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
       console.error('Failed to perform course action:', error)
       toast.error(
         isStarted
-          ? 'Failed to leave the course. Please try again later.'
-          : 'Failed to start the course. Please try again later.',
+          ? t('courses.leave_course_error')
+          : t('courses.start_course_error'),
         { id: loadingToast }
       )
     } finally {
@@ -172,7 +174,7 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
     }
 
     setIsContributeLoading(true)
-    const loadingToast = toast.loading('Submitting contributor application...')
+    const loadingToast = toast.loading(t('courses.submitting_contributor_application'))
     
     try {
       const data = {
@@ -182,10 +184,10 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
       await applyForContributor('course_' + courseuuid, data, session.data?.tokens?.access_token)
       await revalidateTags(['courses'], orgslug)
       await refetch()
-      toast.success('Your application to contribute has been submitted successfully', { id: loadingToast })
+      toast.success(t('courses.contributor_application_success'), { id: loadingToast })
     } catch (error) {
       console.error('Failed to apply as contributor:', error)
-      toast.error('Failed to submit your application. Please try again later.', { id: loadingToast })
+      toast.error(t('courses.contributor_application_error'), { id: loadingToast })
     } finally {
       setIsContributeLoading(false)
     }
@@ -196,7 +198,7 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
       return (
         <>
           <UserAvatar width={24} predefined_avatar="empty" rounded="rounded-full" border="border-2" borderColor="border-white" />
-          <span>{action === 'start' ? 'Start Course' : 'Leave Course'}</span>
+          <span>{action === 'start' ? t('courses.start_course') : t('courses.leave_course')}</span>
           <ArrowRight className="w-5 h-5" />
         </>
       );
@@ -211,7 +213,7 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
           border="border-2" 
           borderColor="border-white"
         />
-        <span>{action === 'start' ? 'Start Course' : 'Leave Course'}</span>
+        <span>{action === 'start' ? t('courses.start_course') : t('courses.leave_course')}</span>
         <ArrowRight className="w-5 h-5" />
       </>
     );
@@ -226,11 +228,11 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
       return (
         <button
           onClick={() => router.push(getUriWithoutOrg(`/signup?orgslug=${orgslug}`))}
-          aria-label="Sign up to apply as course contributor"
+          aria-label={t('auth.sign_up_to_contribute')}
           className="w-full bg-white text-neutral-700 border border-neutral-200 py-3 rounded-lg nice-shadow font-semibold hover:bg-neutral-50 transition-colors flex items-center justify-center gap-2 mt-3 cursor-pointer"
         >
           <UserPen className="w-5 h-5" />
-          Authenticate to contribute
+          {t('auth.authenticate_to_contribute')}
         </button>
       );
     }
@@ -239,7 +241,7 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
       return (
         <div className="w-full bg-green-50 text-green-700 border border-green-200 py-3 rounded-lg nice-shadow font-semibold flex items-center justify-center gap-2 mt-3">
           <UserPen className="w-5 h-5" />
-          You are a contributor
+          {t('courses.you_are_contributor')}
         </div>
       );
     }
@@ -248,7 +250,7 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
       return (
         <div className="w-full bg-amber-50 text-amber-700 border border-amber-200 py-3 rounded-lg nice-shadow font-semibold flex items-center justify-center gap-2 mt-3">
           <ClockIcon className="w-5 h-5" />
-          Contributor application pending
+          {t('courses.contributor_application_pending')}
         </div>
       );
     }
@@ -257,7 +259,7 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
       <button
         onClick={handleApplyToContribute}
         disabled={isContributeLoading}
-        aria-label="Apply to become a course contributor"
+        aria-label={t('courses.apply_to_contribute')}
         className="w-full bg-white text-neutral-700 py-3 rounded-lg nice-shadow font-semibold hover:bg-neutral-50 transition-colors flex items-center justify-center gap-2 mt-3 cursor-pointer disabled:cursor-not-allowed"
       >
         {isContributeLoading ? (
@@ -265,7 +267,7 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
         ) : (
           <>
             <UserPen className="w-5 h-5" />
-            Apply to contribute
+            {t('courses.apply_to_contribute')}
           </>
         )}
       </button>
@@ -316,9 +318,9 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
                     </div>
                   </div>
                   <div className="flex-1">
-                    <div className="text-sm font-medium text-gray-900">Ready to Begin?</div>
+                    <div className="text-sm font-medium text-gray-900">{t('courses.ready_to_begin')}</div>
                     <div className="text-sm text-gray-500">
-                      Start your learning journey with {totalActivities} exciting {totalActivities === 1 ? 'activity' : 'activities'}
+                      {t('courses.start_learning_journey', { count: totalActivities })}
                     </div>
                   </div>
                 </div>
@@ -373,12 +375,12 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
                 </div>
                 <button
                   onClick={() => setIsProgressOpen(true)}
-                  aria-label={`View course progress: ${completedActivities} of ${totalActivities} activities completed`}
+                  aria-label={t('courses.view_course_progress', { completed: completedActivities, total: totalActivities })}
                   className="flex-1 text-left hover:bg-neutral-50/50 p-2 rounded-lg transition-colors"
                 >
-                  <div className="text-sm font-medium text-gray-900">Course Progress</div>
+                  <div className="text-sm font-medium text-gray-900">{t('courses.course_progress')}</div>
                   <div className="text-sm text-gray-500">
-                    {completedActivities} of {totalActivities} completed
+                    {t('courses.completed_of', { completed: completedActivities, total: totalActivities })}
                   </div>
                 </button>
               </div>
@@ -402,16 +404,16 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
               <div className="p-4 bg-green-50 border border-green-200 rounded-lg nice-shadow">
                 <div className="flex items-center gap-3">
                   <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                  <h3 className="text-green-800 font-semibold">You Own This Course</h3>
+                  <h3 className="text-green-800 font-semibold">{t('courses.you_own_this_course')}</h3>
                 </div>
                 <p className="text-green-700 text-sm mt-1">
-                  You have purchased this course and have full access to all content.
+                  {t('courses.you_own_this_course_description')}
                 </p>
               </div>
               <button
                 onClick={handleCourseAction}
                 disabled={isActionLoading}
-                aria-label={isStarted ? 'Leave this course' : 'Start this course'}
+                aria-label={isStarted ? t('courses.leave_course') : t('courses.start_course')}
                 className={`w-full py-3 rounded-lg nice-shadow font-semibold transition-colors flex items-center justify-center gap-2 cursor-pointer ${
                   isStarted
                     ? 'bg-red-500 text-white hover:bg-red-600 disabled:bg-red-400'
@@ -431,27 +433,27 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
               <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg nice-shadow">
                 <div className="flex items-center gap-3">
                   <AlertCircle className="w-5 h-5 text-amber-800" />
-                  <h3 className="text-amber-800 font-semibold">Paid Course</h3>
+                  <h3 className="text-amber-800 font-semibold">{t('courses.paid_course')}</h3>
                 </div>
                 <p className="text-amber-700 text-sm mt-1">
-                  This course requires purchase to access its content.
+                  {t('courses.paid_course_description')}
                 </p>
               </div>
               <Modal
                 isDialogOpen={isModalOpen}
                 onOpenChange={setIsModalOpen}
                 dialogContent={<CoursePaidOptions course={course} />}
-                dialogTitle="Purchase Course"
-                dialogDescription="Select a payment option to access this course"
+                dialogTitle={t('courses.purchase_course_title')}
+                dialogDescription={t('courses.purchase_course_description')}
                 minWidth="sm"
               />
               <button
                 className="w-full bg-neutral-900 text-white py-3 rounded-lg nice-shadow font-semibold hover:bg-neutral-800 transition-colors flex items-center justify-center gap-2"
                 onClick={() => setIsModalOpen(true)}
-                aria-label="Purchase this course to gain access"
+                aria-label={t('courses.purchase_course_title')}
               >
                 <ShoppingCart className="w-5 h-5" />
-                Purchase Course
+                {t('courses.purchase_course_title')}
               </button>
               {renderContributorButton()}
             </>
@@ -471,7 +473,7 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
         <button
           onClick={handleCourseAction}
           disabled={isActionLoading}
-          aria-label={isStarted ? 'Leave this course' : 'Start this course'}
+          aria-label={isStarted ? t('courses.leave_course') : t('courses.start_course')}
           className={`w-full py-3 rounded-lg nice-shadow font-semibold transition-colors flex items-center justify-center gap-2 cursor-pointer ${
             isStarted
               ? 'bg-red-500 text-white hover:bg-red-600 disabled:bg-red-400'

@@ -21,6 +21,7 @@ import { getAPIUrl } from '@services/config/config'
 import Image from 'next/image'
 import learnhouseIcon from '@public/learnhouse_logo.png'
 import Link from 'next/link'
+import { useTranslation } from 'react-i18next'
 
 const ORG_LABELS = [
   { value: 'languages', label: '🌐 Languages' },
@@ -77,6 +78,7 @@ interface OrganizationValues {
 }
 
 const OrgEditGeneral: React.FC = () => {
+  const { t } = useTranslation()
   const router = useRouter()
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
@@ -91,14 +93,14 @@ const OrgEditGeneral: React.FC = () => {
   }
 
   const updateOrg = async (values: OrganizationValues) => {
-    const loadingToast = toast.loading('Updating organization...')
+    const loadingToast = toast.loading(t('dashboard.organization.settings.updating'))
     try {
       await updateOrganization(org.id, values, access_token)
       await revalidateTags(['organizations'], org.slug)
       mutate(`${getAPIUrl()}orgs/slug/${org.slug}`)
-      toast.success('Organization Updated', { id: loadingToast })
+      toast.success(t('dashboard.organization.settings.update_success'), { id: loadingToast })
     } catch (err) {
-      toast.error('Failed to update organization', { id: loadingToast })
+      toast.error(t('dashboard.organization.settings.update_error'), { id: loadingToast })
     }
   }
 
@@ -120,10 +122,10 @@ const OrgEditGeneral: React.FC = () => {
             <div className="flex flex-col gap-0">
               <div className="flex flex-col bg-gray-50 -space-y-1 px-5 py-3 mx-3 my-3 rounded-md">
                 <h1 className="font-bold text-xl text-gray-800">
-                  Organization Settings
+                  {t('dashboard.organization.settings.title')}
                 </h1>
                 <h2 className="text-gray-500 text-md">
-                  Manage your organization's profile and settings
+                  {t('dashboard.organization.settings.subtitle')}
                 </h2>
               </div>
 
@@ -132,7 +134,7 @@ const OrgEditGeneral: React.FC = () => {
                   <div className="space-y-4">
                     <div>
                       <Label htmlFor="name">
-                        Organization Name
+                        {t('dashboard.organization.settings.name')}
                         <span className="text-gray-500 text-sm ml-2">
                           ({60 - (values.name?.length || 0)} characters left)
                         </span>
@@ -142,7 +144,7 @@ const OrgEditGeneral: React.FC = () => {
                         name="name"
                         value={values.name}
                         onChange={handleChange}
-                        placeholder="Organization Name"
+                        placeholder={t('dashboard.organization.settings.name_placeholder')}
                         maxLength={60}
                       />
                       {touched.name && errors.name && (
@@ -152,7 +154,7 @@ const OrgEditGeneral: React.FC = () => {
 
                     <div>
                       <Label htmlFor="description">
-                        Short Description
+                        {t('dashboard.organization.settings.short_description')}
                         <span className="text-gray-500 text-sm ml-2">
                           ({100 - (values.description?.length || 0)} characters left)
                         </span>
@@ -162,7 +164,7 @@ const OrgEditGeneral: React.FC = () => {
                         name="description"
                         value={values.description}
                         onChange={handleChange}
-                        placeholder="Brief description of your organization"
+                        placeholder={t('dashboard.organization.settings.short_description_placeholder')}
                         maxLength={100}
                       />
                       {touched.description && errors.description && (
@@ -171,13 +173,13 @@ const OrgEditGeneral: React.FC = () => {
                     </div>
 
                     <div>
-                      <Label htmlFor="label">Organization Label</Label>
+                      <Label htmlFor="label">{t('dashboard.organization.settings.label')}</Label>
                       <Select
                         value={values.label}
                         onValueChange={(value) => setFieldValue('label', value)}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Select organization label" />
+                          <SelectValue placeholder={t('dashboard.organization.settings.label_placeholder')} />
                         </SelectTrigger>
                         <SelectContent>
                           {ORG_LABELS.map((type) => (
@@ -194,7 +196,7 @@ const OrgEditGeneral: React.FC = () => {
 
                     <div>
                       <Label htmlFor="about">
-                        About Organization
+                        {t('dashboard.organization.settings.about')}
                         <span className="text-gray-500 text-sm ml-2">
                           ({400 - (values.about?.length || 0)} characters left)
                         </span>
@@ -204,7 +206,7 @@ const OrgEditGeneral: React.FC = () => {
                         name="about"
                         value={values.about}
                         onChange={handleChange}
-                        placeholder="Detailed description of your organization"
+                        placeholder={t('dashboard.organization.settings.about_placeholder')}
                         className="min-h-[250px]"
                         maxLength={400}
                       />
@@ -230,10 +232,9 @@ const OrgEditGeneral: React.FC = () => {
                           </span>
                         </Link>
                         <div className="space-y-0.5">
-                          <Label className="text-base">Showcase in LearnHouse Explore</Label>
+                          <Label className="text-base">{t('dashboard.organization.settings.showcase_explore')}</Label>
                           <p className="text-sm text-gray-500">
-                            Share your organization's courses and content with the LearnHouse community. 
-                            Enable this to help learners discover your valuable educational resources.
+                            {t('dashboard.organization.settings.showcase_description')}
                           </p>
                         </div>
                       </div>
@@ -252,7 +253,7 @@ const OrgEditGeneral: React.FC = () => {
                   disabled={isSubmitting}
                   className="bg-black text-white hover:bg-black/90"
                 >
-                  {isSubmitting ? 'Saving...' : 'Save Changes'}
+                  {isSubmitting ? t('dashboard.organization.settings.saving') : t('dashboard.organization.settings.save_changes')}
                 </Button>
               </div>
             </div>

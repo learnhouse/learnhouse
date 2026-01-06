@@ -15,6 +15,7 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useFormik } from 'formik'
 import toast from 'react-hot-toast'
 import { Shield, BookOpen, Users, UserCheck, FolderOpen, Building, FileText, Activity, Monitor, CheckSquare, Square } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 type AddRoleProps = {
     setCreateRoleModal: any
@@ -77,19 +78,19 @@ interface Rights {
     };
 }
 
-const validate = (values: any) => {
+const getValidate = (t: any) => (values: any) => {
     const errors: any = {}
 
     if (!values.name) {
-        errors.name = 'Required'
+        errors.name = t('dashboard.users.roles.modals.create.validation.name_required')
     } else if (values.name.length < 2) {
-        errors.name = 'Name must be at least 2 characters'
+        errors.name = t('dashboard.users.roles.modals.create.validation.name_min_length')
     }
 
     if (!values.description) {
-        errors.description = 'Required'
+        errors.description = t('dashboard.users.roles.modals.create.validation.description_required')
     } else if (values.description.length < 10) {
-        errors.description = 'Description must be at least 10 characters'
+        errors.description = t('dashboard.users.roles.modals.create.validation.description_min_length')
     }
 
     return errors
@@ -291,6 +292,7 @@ const predefinedRoles = {
 }
 
 function AddRole(props: AddRoleProps) {
+    const { t } = useTranslation()
     const org = useOrg() as any;
     const session = useLHSession() as any
     const access_token = session?.data?.tokens?.access_token;
@@ -304,9 +306,9 @@ function AddRole(props: AddRoleProps) {
             org_id: org.id,
             rights: defaultRights
         },
-        validate,
+        validate: getValidate(t),
         onSubmit: async (values) => {
-            const toastID = toast.loading("Creating...")
+            const toastID = toast.loading(t('dashboard.users.roles.modals.create.form.loading'))
             setIsSubmitting(true)
             
             // Ensure rights object is properly structured
@@ -377,10 +379,10 @@ function AddRole(props: AddRoleProps) {
                 setIsSubmitting(false)
                 mutate(`${getAPIUrl()}roles/org/${org.id}`)
                 props.setCreateRoleModal(false)
-                toast.success("Created new role", {id:toastID})
+                toast.success(t('dashboard.users.roles.modals.create.toasts.success'), {id:toastID})
             } else {
                 setIsSubmitting(false)
-                toast.error("Couldn't create new role", {id:toastID})
+                toast.error(t('dashboard.users.roles.modals.create.toasts.error'), {id:toastID})
             }
         },
     })
@@ -432,8 +434,8 @@ function AddRole(props: AddRoleProps) {
                         className="flex items-center space-x-2 text-sm text-blue-600 hover:text-blue-700 font-medium self-start sm:self-auto transition-colors"
                     >
                         {allSelected ? <CheckSquare className="w-4 h-4" /> : someSelected ? <Square className="w-4 h-4" /> : <Square className="w-4 h-4" />}
-                        <span className="hidden sm:inline">{allSelected ? 'Deselect All' : 'Select All'}</span>
-                        <span className="sm:hidden">{allSelected ? 'Deselect' : 'Select'}</span>
+                        <span className="hidden sm:inline">{allSelected ? t('dashboard.users.roles.modals.create.permissions.deselect_all') : t('dashboard.users.roles.modals.create.permissions.select_all')}</span>
+                        <span className="sm:hidden">{allSelected ? t('dashboard.users.roles.modals.create.permissions.deselect') : t('dashboard.users.roles.modals.create.permissions.select')}</span>
                     </button>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -446,7 +448,7 @@ function AddRole(props: AddRoleProps) {
                                 className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-2"
                             />
                             <span className="text-sm text-gray-700 capitalize">
-                                {permission.replace('action_', '').replace('_', ' ')}
+                                {t(`dashboard.users.roles.modals.create.permissions.actions.${permission.replace('action_', '').replace(/_/g, '_')}`)}
                             </span>
                         </label>
                     ))}
@@ -461,34 +463,34 @@ function AddRole(props: AddRoleProps) {
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
                     <div className="space-y-4 sm:space-y-6">
                         <FormField name="name">
-                            <FormLabelAndMessage label="Role Name" message={formik.errors.name} />
+                            <FormLabelAndMessage label={t('dashboard.users.roles.modals.create.form.role_name')} message={formik.errors.name} />
                             <Form.Control asChild>
                                 <Input
                                     onChange={formik.handleChange}
                                     value={formik.values.name}
                                     type="text"
                                     required
-                                    placeholder="e.g., Course Manager"
+                                    placeholder={t('dashboard.users.roles.modals.create.form.role_name_placeholder')}
                                     className="w-full"
                                 />
                             </Form.Control>
                         </FormField>
 
                         <FormField name="description">
-                            <FormLabelAndMessage label="Description" message={formik.errors.description} />
+                            <FormLabelAndMessage label={t('dashboard.users.roles.modals.create.form.description')} message={formik.errors.description} />
                             <Form.Control asChild>
                                 <Textarea
                                     onChange={formik.handleChange}
                                     value={formik.values.description}
                                     required
-                                    placeholder="Describe what this role can do..."
+                                    placeholder={t('dashboard.users.roles.modals.create.form.description_placeholder')}
                                     className="w-full"
                                 />
                             </Form.Control>
                         </FormField>
 
                         <div className="mt-6">
-                            <h3 className="text-lg font-semibold text-gray-800 mb-4">Predefined Rights</h3>
+                            <h3 className="text-lg font-semibold text-gray-800 mb-4">{t('dashboard.users.roles.modals.create.presets.title')}</h3>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                                 {Object.keys(predefinedRoles).map((roleKey) => (
                                     <button
@@ -497,8 +499,8 @@ function AddRole(props: AddRoleProps) {
                                         onClick={() => handlePredefinedRole(roleKey)}
                                         className="p-3 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 text-left bg-white shadow-sm hover:shadow-md"
                                     >
-                                        <div className="font-medium text-gray-900 text-sm sm:text-base">{predefinedRoles[roleKey as keyof typeof predefinedRoles].name}</div>
-                                        <div className="text-xs sm:text-sm text-gray-500 mt-1">{predefinedRoles[roleKey as keyof typeof predefinedRoles].description}</div>
+                                        <div className="font-medium text-gray-900 text-sm sm:text-base">{t(`dashboard.users.roles.modals.create.presets.${roleKey === 'Course Manager' ? 'maintainer' : roleKey === 'Content Creator' ? 'content_creator' : roleKey === 'User Manager' ? 'user_manager' : roleKey.toLowerCase()}.name`)}</div>
+                                        <div className="text-xs sm:text-sm text-gray-500 mt-1">{t(`dashboard.users.roles.modals.create.presets.${roleKey === 'Course Manager' ? 'maintainer' : roleKey === 'Content Creator' ? 'content_creator' : roleKey === 'User Manager' ? 'user_manager' : roleKey.toLowerCase()}.description`)}</div>
                                     </button>
                                 ))}
                             </div>
@@ -506,66 +508,66 @@ function AddRole(props: AddRoleProps) {
                     </div>
 
                     <div className="space-y-4">
-                        <h3 className="text-lg font-semibold text-gray-800 mb-4">Permissions</h3>
+                        <h3 className="text-lg font-semibold text-gray-800 mb-4">{t('dashboard.users.roles.modals.create.permissions.title')}</h3>
                         
                         <PermissionSection
-                            title="Courses"
+                            title={t('dashboard.users.roles.modals.create.permissions.sections.courses')}
                             icon={BookOpen}
                             section="courses"
                             permissions={['action_create', 'action_read', 'action_read_own', 'action_update', 'action_update_own', 'action_delete', 'action_delete_own']}
                         />
                         
                         <PermissionSection
-                            title="Users"
+                            title={t('dashboard.users.roles.modals.create.permissions.sections.users')}
                             icon={Users}
                             section="users"
                             permissions={['action_create', 'action_read', 'action_update', 'action_delete']}
                         />
                         
                         <PermissionSection
-                            title="User Groups"
+                            title={t('dashboard.users.roles.modals.create.permissions.sections.usergroups')}
                             icon={UserCheck}
                             section="usergroups"
                             permissions={['action_create', 'action_read', 'action_update', 'action_delete']}
                         />
                         
                         <PermissionSection
-                            title="Collections"
+                            title={t('dashboard.users.roles.modals.create.permissions.sections.collections')}
                             icon={FolderOpen}
                             section="collections"
                             permissions={['action_create', 'action_read', 'action_update', 'action_delete']}
                         />
                         
                         <PermissionSection
-                            title="Organizations"
+                            title={t('dashboard.users.roles.modals.create.permissions.sections.organizations')}
                             icon={Building}
                             section="organizations"
                             permissions={['action_create', 'action_read', 'action_update', 'action_delete']}
                         />
                         
                         <PermissionSection
-                            title="Course Chapters"
+                            title={t('dashboard.users.roles.modals.create.permissions.sections.coursechapters')}
                             icon={FileText}
                             section="coursechapters"
                             permissions={['action_create', 'action_read', 'action_update', 'action_delete']}
                         />
                         
                         <PermissionSection
-                            title="Activities"
+                            title={t('dashboard.users.roles.modals.create.permissions.sections.activities')}
                             icon={Activity}
                             section="activities"
                             permissions={['action_create', 'action_read', 'action_update', 'action_delete']}
                         />
                         
                         <PermissionSection
-                            title="Roles"
+                            title={t('dashboard.users.roles.modals.create.permissions.sections.roles')}
                             icon={Shield}
                             section="roles"
                             permissions={['action_create', 'action_read', 'action_update', 'action_delete']}
                         />
                         
                         <PermissionSection
-                            title="Dashboard"
+                            title={t('dashboard.users.roles.modals.create.permissions.sections.dashboard')}
                             icon={Monitor}
                             section="dashboard"
                             permissions={['action_access']}
@@ -579,7 +581,7 @@ function AddRole(props: AddRoleProps) {
                         onClick={() => props.setCreateRoleModal(false)}
                         className="px-4 py-2 text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors w-full sm:w-auto font-medium"
                     >
-                        Cancel
+                        {t('common.cancel')}
                     </button>
                     <Form.Submit asChild>
                         <button
@@ -587,7 +589,7 @@ function AddRole(props: AddRoleProps) {
                             disabled={isSubmitting}
                             className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-colors disabled:opacity-50 w-full sm:w-auto font-medium shadow-sm"
                         >
-                            {isSubmitting ? 'Creating...' : 'Create Role'}
+                            {isSubmitting ? t('dashboard.users.roles.modals.create.form.loading') : t('dashboard.users.roles.modals.create.form.submit')}
                         </button>
                     </Form.Submit>
                 </div>

@@ -21,6 +21,7 @@ import { getUserAvatarMediaDirectory } from '@services/media/media'
 import { getCoursesByUser } from '@services/users/users'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import CourseThumbnailLanding from '@components/Objects/Thumbnails/CourseThumbnailLanding'
+import { useTranslation } from 'react-i18next'
 
 interface UserProfileClientProps {
   userData: any;
@@ -70,6 +71,7 @@ const ImageModal: React.FC<{
 };
 
 function UserProfileClient({ userData, profile }: UserProfileClientProps) {
+  const { t } = useTranslation()
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const [selectedImage, setSelectedImage] = React.useState<{ url: string; caption?: string } | null>(null);
@@ -169,11 +171,11 @@ function UserProfileClient({ userData, profile }: UserProfileClientProps) {
             {/* Right column with about and related content */}
             <div className="w-full md:w-4/6">
               <div className="mb-8">
-                <h2 className="text-xl font-semibold mb-4">About</h2>
+                <h2 className="text-xl font-semibold mb-4">{t('common.about')}</h2>
                 {userData.bio ? (
                   <p className="text-gray-700">{userData.bio}</p>
                 ) : (
-                  <p className="text-gray-500 italic">No biography provided</p>
+                  <p className="text-gray-500 italic">{t('user.no_biography')}</p>
                 )}
               </div>
               
@@ -250,7 +252,7 @@ function UserProfileClient({ userData, profile }: UserProfileClientProps) {
                               <h3 className="font-medium">{exp.title}</h3>
                               <p className="text-gray-600">{exp.organization}</p>
                               <p className="text-sm text-gray-500">
-                                {exp.startDate} - {exp.current ? 'Present' : exp.endDate}
+                                {exp.startDate} - {exp.current ? t('common.present') : exp.endDate}
                               </p>
                               {exp.description && (
                                 <p className="mt-2 text-gray-700">{exp.description}</p>
@@ -267,7 +269,7 @@ function UserProfileClient({ userData, profile }: UserProfileClientProps) {
                               <h3 className="font-medium">{edu.institution}</h3>
                               <p className="text-gray-600">{edu.degree} in {edu.field}</p>
                               <p className="text-sm text-gray-500">
-                                {edu.startDate} - {edu.current ? 'Present' : edu.endDate}
+                                {edu.startDate} - {edu.current ? t('common.present') : edu.endDate}
                               </p>
                               {edu.description && (
                                 <p className="mt-2 text-gray-700">{edu.description}</p>
@@ -320,7 +322,7 @@ function UserProfileClient({ userData, profile }: UserProfileClientProps) {
                             </div>
                           ) : (
                             <div className="text-center py-8 text-gray-500">
-                              No courses found
+                              {t('courses.no_courses_found')}
                             </div>
                           )}
                         </div>

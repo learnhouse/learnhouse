@@ -1,4 +1,4 @@
-/** @type {import('next').NextConfig} */
+/** @type {import('common.next').NextConfig} */
 const nextConfig = {
   async rewrites() {
     return [

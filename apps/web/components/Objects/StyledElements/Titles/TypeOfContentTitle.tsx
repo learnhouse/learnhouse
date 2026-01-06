@@ -1,25 +1,36 @@
-import Image from 'next/image'
-import CoursesLogo from 'public/svg/courses.svg'
-import CollectionsLogo from 'public/svg/collections.svg'
-import TrailLogo from 'public/svg/trail.svg'
+import React from 'react'
+import { BookCopy, SquareLibrary, Signpost } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
-function TypeOfContentTitle(props: { title: string; type: string }) {
-  function getLogo() {
-    if (props.type == 'col') {
-      return CollectionsLogo
-    } else if (props.type == 'cou') {
-      return CoursesLogo
-    } else if (props.type == 'tra') {
-      return TrailLogo
+interface TypeOfContentTitleProps {
+  title: string
+  type: 'col' | 'cou' | 'tra' | string
+}
+
+function TypeOfContentTitle({ title, type }: TypeOfContentTitleProps) {
+  const { t } = useTranslation()
+
+  const getIcon = () => {
+    switch (type) {
+      case 'col':
+        return <SquareLibrary className="w-4 h-4 text-black" />
+      case 'cou':
+        return <BookCopy className="w-4 h-4 text-black" />
+      case 'tra':
+        return <Signpost className="w-4 h-4 text-black" />
+      default:
+        return null
     }
   }
 
   return (
-    <div className="home_category_title flex my-5 items-center">
-      <div className="ml-2 rounded-full ring-1 ring-slate-900/5 shadow-inner p-2 my-auto mr-4">
-        <Image unoptimized className="" src={getLogo()} alt="Courses logo" />
+    <div className="flex items-center gap-2.5 my-4 group cursor-default">
+      <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gray-50 border border-gray-100 shadow-xs transition-all group-hover:bg-gray-100">
+        {getIcon()}
       </div>
-      <h1 className="font-bold text-2xl">{props.title}</h1>
+      <h1 className="text-xl font-bold text-gray-900 tracking-tight">
+        {title}
+      </h1>
     </div>
   )
 }

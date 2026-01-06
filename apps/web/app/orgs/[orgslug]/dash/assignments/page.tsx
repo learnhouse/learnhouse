@@ -10,8 +10,10 @@ import { EllipsisVertical, GalleryVerticalEnd, Info, Layers2, UserRoundPen } fro
 import Link from 'next/link';
 import React from 'react'
 import useSWR from 'swr';
+import { useTranslation } from 'react-i18next';
 
 function AssignmentsHome() {
+  const { t } = useTranslation()
   const session = useLHSession() as any;
   const access_token = session?.data?.tokens?.access_token;
   const org = useOrg() as any;
@@ -49,7 +51,7 @@ function AssignmentsHome() {
       <div className='pl-4 sm:pl-10 mr-4 sm:mr-10 tracking-tighter flex flex-col space-y-5 w-full'>
         <div className='flex flex-col space-y-2'>
           <BreadCrumbs type="assignments" />
-          <h1 className="pt-3 flex font-bold text-4xl">Assignments</h1>
+          <h1 className="pt-3 flex font-bold text-4xl">{t('dashboard.assignments.home.title')}</h1>
         </div>
         <div className='flex flex-col space-y-3 w-full'>
           {courseAssignments.map((assignments: any, index: number) => (
@@ -59,7 +61,7 @@ function AssignmentsHome() {
                   <div className='flex space-x-2 items-center'>
                     <MiniThumbnail course={courses[index]} />
                     <div className='flex flex-col font-bold text-lg'>
-                      <p className='bg-gray-200 text-gray-700 px-2 text-xs py-0.5 rounded-full w-fit'>Course</p>
+                      <p className='bg-gray-200 text-gray-700 px-2 text-xs py-0.5 rounded-full w-fit'>{t('dashboard.assignments.home.course_label')}</p>
                       <p>{courses[index].name}</p>
                     </div>
                   </div>
@@ -71,7 +73,7 @@ function AssignmentsHome() {
                     prefetch
                     className='bg-black font-semibold text-sm text-zinc-100 rounded-md flex space-x-1.5 nice-shadow items-center px-3 py-1'>
                     <GalleryVerticalEnd size={15} />
-                    <p>Course Editor</p>
+                    <p>{t('dashboard.assignments.home.course_editor')}</p>
                   </Link>
                 </div>
 
@@ -79,7 +81,7 @@ function AssignmentsHome() {
                   <div key={assignment.assignment_uuid} className='flex mt-3 p-2 sm:p-3 rounded flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 w-full light-shadow justify-between bg-gray-50 items-start sm:items-center'>
                     <div className='flex flex-col sm:flex-row items-start sm:items-center space-y-1 sm:space-y-0 sm:space-x-2'>
                       <div className='flex text-xs font-bold bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full h-fit'>
-                        <p>Assignment</p>
+                        <p>{t('dashboard.assignments.home.assignment_label')}</p>
                       </div>
                       <div className='flex font-semibold text-lg'>{assignment.title}</div>
                       <div className='flex font-semibold text-gray-600 px-2 py-0.5 rounded outline outline-gray-200/70'>{assignment.description}</div>
@@ -94,7 +96,7 @@ function AssignmentsHome() {
                         prefetch
                         className='bg-white rounded-full flex space-x-2 nice-shadow items-center px-3 py-0.5'>
                         <Layers2 size={15} />
-                        <p>Editor</p>
+                        <p>{t('dashboard.assignments.home.editor')}</p>
                       </Link>
                       <Link
                         href={{
@@ -104,7 +106,7 @@ function AssignmentsHome() {
                         prefetch
                         className='bg-white rounded-full flex space-x-2 nice-shadow items-center px-3 py-0.5'>
                         <UserRoundPen size={15} />
-                        <p>Submissions</p>
+                        <p>{t('dashboard.assignments.home.submissions')}</p>
                       </Link>
                     </div>
                   </div>
@@ -114,7 +116,7 @@ function AssignmentsHome() {
                   <>
                     <div className='flex mx-auto space-x-2 font-semibold mt-3 text-gray-600 items-center'>
                       <Info size={20} />
-                      <p>No assignments available for this course, create course assignments from the course editor</p>
+                      <p>{t('dashboard.assignments.home.no_assignments')}</p>
                     </div>
                   </>
                 )}

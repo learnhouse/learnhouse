@@ -12,14 +12,16 @@ import { getUriWithOrg } from '@services/config/config'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { BookOpen } from 'lucide-react'
 import Link from 'next/link'
+import { useTranslation } from 'react-i18next'
 
 type CourseProps = {
   orgslug: string
   courses: any
-  org_id: string
+  org_id: string | number
 }
 
 function CoursesHome(params: CourseProps) {
+  const { t } = useTranslation()
   const searchParams = useSearchParams()
   const isCreatingCourse = searchParams.get('new') ? true : false
   const [newCourseModal, setNewCourseModal] = React.useState(isCreatingCourse)
@@ -38,13 +40,13 @@ function CoursesHome(params: CourseProps) {
         <BreadCrumbs type="courses" />
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-4">
           <div className="flex items-center space-x-4">
-            <h1 className="text-3xl font-bold mb-4 sm:mb-0">Courses</h1>
+            <h1 className="text-3xl font-bold mb-4 sm:mb-0">{t('dashboard.courses.title')}</h1>
             <Link
               href={getUriWithOrg(org?.slug, '/dash/documentation/rights')}
               className="rounded-lg bg-black hover:scale-105 transition-all duration-100 ease-linear antialiased p-2 px-5 font text-xs font-bold text-white drop-shadow-lg flex space-x-2 items-center"
             >
-              <BookOpen className="w-4 h-4" />
-              <span>Rights Guide</span>
+              < BookOpen className="w-4 h-4" />
+              <span>{t('dashboard.courses.rights_guide')}</span>
             </Link>
           </div>
           <AuthenticatedClientElement
@@ -63,8 +65,8 @@ function CoursesHome(params: CourseProps) {
                   orgslug={orgslug}
                 />
               }
-              dialogTitle="Create Course"
-              dialogDescription="Create a new course"
+              dialogTitle={t('dashboard.courses.create_course')}
+              dialogDescription={t('dashboard.courses.create_new_course')}
               dialogTrigger={
                 <button>
                   <NewCourseButton />
@@ -97,13 +99,13 @@ function CoursesHome(params: CourseProps) {
                 </svg>
               </div>
               <h2 className="text-2xl font-bold text-gray-600 mb-2">
-                No courses yet
+                {t('dashboard.courses.no_courses')}
               </h2>
               <p className="text-lg text-gray-400">
                 {isUserAdmin ? (
-                  "Create a course to add content"
+                  t('dashboard.courses.create_course_placeholder')
                 ) : (
-                  "No courses available yet"
+                  t('dashboard.courses.no_courses_available')
                 )}
               </p>
               {isUserAdmin && (
@@ -124,8 +126,8 @@ function CoursesHome(params: CourseProps) {
                           orgslug={orgslug}
                         />
                       }
-                      dialogTitle="Create Course"
-                      dialogDescription="Create a new course"
+                      dialogTitle={t('dashboard.courses.create_course')}
+                      dialogDescription={t('dashboard.courses.create_new_course')}
                       dialogTrigger={
                         <button>
                           <NewCourseButton />

@@ -20,8 +20,10 @@ import CourseAuthors from '@components/Objects/Courses/CourseAuthors/CourseAutho
 import CourseBreadcrumbs from '@components/Pages/Courses/CourseBreadcrumbs'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import useSWR from 'swr'
+import { useTranslation } from 'react-i18next'
 
 const CourseClient = (props: any) => {
+  const { t } = useTranslation()
   const [learnings, setLearnings] = useState<any>([])
   const [expandedChapters, setExpandedChapters] = useState<{[key: string]: boolean}>({})
   const [activeThumbnailType, setActiveThumbnailType] = useState<'image' | 'video'>('image')
@@ -88,15 +90,15 @@ const CourseClient = (props: any) => {
   const getActivityTypeLabel = (activityType: string) => {
     switch (activityType) {
       case 'TYPE_VIDEO':
-        return 'Video'
+        return t('activities.video')
       case 'TYPE_DOCUMENT':
-        return 'Document'
+        return t('activities.document')
       case 'TYPE_DYNAMIC':
-        return 'Page'
+        return t('activities.page')
       case 'TYPE_ASSIGNMENT':
-        return 'Assignment'
+        return t('activities.assignment')
       default:
-        return 'Learning Material'
+        return t('activities.learning_material')
     }
   }
 
@@ -175,7 +177,7 @@ const CourseClient = (props: any) => {
                                 }`}
                               >
                                 <ImageIcon size={12} className="mr-1" />
-                                Image
+                                {t('courses.image')}
                               </button>
                               <button
                                 onClick={() => setActiveThumbnailType('video')}
@@ -186,7 +188,7 @@ const CourseClient = (props: any) => {
                                 }`}
                               >
                                 <Video size={12} className="mr-1" />
-                                Video
+                                {t('activities.video')}
                               </button>
                             </div>
                           </div>
@@ -231,7 +233,7 @@ const CourseClient = (props: any) => {
                                 }`}
                               >
                                 <ImageIcon size={12} className="mr-1" />
-                                Image
+                                {t('courses.image')}
                               </button>
                               <button
                                 onClick={() => setActiveThumbnailType('video')}
@@ -242,7 +244,7 @@ const CourseClient = (props: any) => {
                                 }`}
                               >
                                 <Video size={12} className="mr-1" />
-                                Video
+                                {t('activities.video')}
                               </button>
                             </div>
                           </div>
@@ -302,7 +304,7 @@ const CourseClient = (props: any) => {
 
             {learnings.length > 0 && learnings[0]?.text !== 'null' && (
               <div className="w-full">
-                <h2 className="py-5 text-xl md:text-2xl font-bold">What you will learn</h2>
+                <h2 className="py-5 text-xl md:text-2xl font-bold">{t('courses.what_you_will_learn')}</h2>
                 <div className="bg-white shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40 rounded-lg overflow-hidden px-5 py-5 space-y-2">
                   {learnings.map((learning: any) => {
                     // Handle both new format (object with text and emoji) and legacy format (string)
@@ -344,7 +346,7 @@ const CourseClient = (props: any) => {
             )}
 
             <div className="w-full my-5 mb-10">
-              <h2 className="py-5 text-xl md:text-2xl font-bold">Course Lessons</h2>
+              <h2 className="py-5 text-xl md:text-2xl font-bold">{t('courses.course_lessons')}</h2>
               <div className="bg-white shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40 rounded-lg overflow-hidden">
                 {course.chapters.map((chapter: any, idx: number) => {
                   const isExpanded = expandedChapters[chapter.chapter_uuid] ?? (idx === 0); // Default to expanded for first chapter
@@ -379,7 +381,7 @@ const CourseClient = (props: any) => {
                           </div>
                           <div className="flex items-center space-x-1 text-sm text-neutral-400 font-normal">
                             <Layers size={16} className="mr-1" />
-                            <span>{chapter.activities.length} Activities</span>
+                            <span>{chapter.activities.length} {t('activities.activities')}</span>
                           </div>
                         </div>
                       </div>
@@ -415,7 +417,7 @@ const CourseClient = (props: any) => {
                                       <p className="font-semibold text-neutral-600 group-hover:text-neutral-800 transition-colors">{activity.name}</p>
                                       {isActivityCurrent(activity) && (
                                         <div className="flex items-center space-x-1 text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full text-xs font-semibold animate-pulse">
-                                          <span>Current</span>
+                                          <span>{t('activities.current')}</span>
                                         </div>
                                       )}
                                     </div>

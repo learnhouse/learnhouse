@@ -9,6 +9,7 @@ import { Info, Lock, LucideIcon, User } from 'lucide-react'
 import BreadCrumbs from '@components/Dashboard/Misc/BreadCrumbs'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import UserProfile from '@components/Dashboard/Pages/UserAccount/UserProfile/UserProfile';
+import { useTranslation } from 'react-i18next';
 
 interface User {
   username: string;
@@ -27,7 +28,7 @@ export type SettingsParams = {
 
 type NavigationItem = {
   id: string
-  label: string
+  labelKey: string
   icon: LucideIcon
   component: React.ComponentType
 }
@@ -35,19 +36,19 @@ type NavigationItem = {
 const navigationItems: NavigationItem[] = [
   {
     id: 'general',
-    label: 'General',
+    labelKey: 'user.settings.tabs.general',
     icon: Info,
     component: UserEditGeneral
   },
   {
     id: 'profile',
-    label: 'Profile',
+    labelKey: 'user.settings.tabs.profile',
     icon: User,
     component: UserProfile
   },
   {
     id: 'security',
-    label: 'Password',
+    labelKey: 'user.settings.tabs.security',
     icon: Lock,
     component: UserEditPassword
   },
@@ -61,31 +62,35 @@ const SettingsNavigation = ({
   items: NavigationItem[]
   currentPage: string
   orgslug: string 
-}) => (
-  <div className="flex space-x-5 font-black text-sm">
-    {items.map((item) => (
-      <Link
-        key={item.id}
-        href={getUriWithOrg(orgslug, `/dash/user-account/settings/${item.id}`)}
-      >
-        <div
-          className={`py-2 w-fit text-center border-black transition-all ease-linear ${
-            currentPage === item.id ? 'border-b-4' : 'opacity-50'
-          } cursor-pointer`}
+}) => {
+  const { t } = useTranslation();
+  return (
+    <div className="flex space-x-5 font-black text-sm">
+      {items.map((item) => (
+        <Link
+          key={item.id}
+          href={getUriWithOrg(orgslug, `/dash/user-account/settings/${item.id}`)}
         >
-          <div className="flex items-center space-x-2.5 mx-2">
-            <item.icon size={16} />
-            <div>{item.label}</div>
+          <div
+            className={`py-2 w-fit text-center border-black transition-all ease-linear ${
+              currentPage === item.id ? 'border-b-4' : 'opacity-50'
+            } cursor-pointer`}
+          >
+            <div className="flex items-center space-x-2.5 mx-2">
+              <item.icon size={16} />
+              <div>{t(item.labelKey)}</div>
+            </div>
           </div>
-        </div>
-      </Link>
-    ))}
-  </div>
-)
+        </Link>
+      ))}
+    </div>
+  );
+}
 
 function SettingsPage({ params }: { params: Promise<SettingsParams> }) {
   const { subpage, orgslug } = use(params);
   const session = useLHSession() as Session;
+  const { t } = useTranslation();
 
   useEffect(() => {}, [session])
 
@@ -100,7 +105,7 @@ function SettingsPage({ params }: { params: Promise<SettingsParams> }) {
         />
         <div className="my-2 tracking-tighter">
           <div className="w-100 flex justify-between">
-            <div className="pt-3 flex font-bold text-4xl">Account Settings</div>
+            <div className="pt-3 flex font-bold text-4xl">{t('user.settings.title')}</div>
           </div>
         </div>
         <SettingsNavigation 
