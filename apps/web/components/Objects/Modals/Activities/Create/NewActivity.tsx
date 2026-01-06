@@ -9,6 +9,7 @@ import VideoModal from './NewActivityModal/VideoActivityModal'
 import Image from 'next/image'
 import DocumentPdfModal from './NewActivityModal/DocumentActivityModal'
 import Assignment from './NewActivityModal/AssignmentActivityModal'
+import { useTranslation } from 'react-i18next'
 
 function NewActivityModal({
   closeModal,
@@ -18,6 +19,7 @@ function NewActivityModal({
   chapterId,
   course,
 }: any) {
+  const { t } = useTranslation()
   const [selectedView, setSelectedView] = useState('home')
 
   return (
@@ -33,7 +35,7 @@ function NewActivityModal({
               <Image unoptimized quality={100} alt="Dynamic Page" src={DynamicPageActivityImage}></Image>
             </div>
             <div className="flex text-sm h-5 font-medium text-gray-500 items-center justify-center text-center">
-              Dynamic Page
+              {t('dashboard.courses.structure.activity.types.dynamic_page')}
             </div>
           </ActivityOption>
           <ActivityOption
@@ -45,7 +47,7 @@ function NewActivityModal({
               <Image unoptimized quality={100} alt="Video Page" src={VideoPageActivityImage}></Image>
             </div>
             <div className="flex text-sm h-5 font-medium text-gray-500 items-center justify-center text-center">
-              Video
+              {t('dashboard.courses.structure.activity.types.video')}
             </div>
           </ActivityOption>
           <ActivityOption
@@ -57,7 +59,7 @@ function NewActivityModal({
               <Image unoptimized quality={100} alt="Document PDF Page" src={DocumentPdfPageActivityImage}></Image>
             </div>
             <div className="flex text-sm h-5 font-medium text-gray-500 items-center justify-center text-center">
-              Document
+              {t('dashboard.courses.structure.activity.types.document')}
             </div>
           </ActivityOption>
           <ActivityOption
@@ -69,7 +71,7 @@ function NewActivityModal({
               <Image unoptimized quality={100} alt="Assignment Page" src={AssignmentActivityImage}></Image>
             </div>
             <div className="flex text-sm h-5 font-medium text-gray-500 items-center justify-center text-center">
-              Assignments
+              {t('dashboard.courses.structure.activity.types.assignments')}
             </div>
           </ActivityOption>
         </div>

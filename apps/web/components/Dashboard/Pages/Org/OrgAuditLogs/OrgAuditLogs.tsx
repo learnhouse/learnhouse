@@ -18,10 +18,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@components/ui/select'
+import { useTranslation } from 'react-i18next'
 
 const ITEMS_PER_PAGE = 20
 
 const OrgAuditLogs = () => {
+  const { t } = useTranslation()
   const org = useOrg() as any
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
@@ -94,7 +96,7 @@ const OrgAuditLogs = () => {
   }
 
   const handleExport = async () => {
-    const toastId = toast.loading('Generating CSV...')
+    const toastId = toast.loading(t('dashboard.organization.audit_logs.export_toasts.generating'))
     try {
       const params = new URLSearchParams()
       if (filters.searchValue) {
@@ -136,10 +138,10 @@ const OrgAuditLogs = () => {
       document.body.appendChild(a)
       a.click()
       a.remove()
-      toast.success('CSV exported successfully', { id: toastId })
+      toast.success(t('dashboard.organization.audit_logs.export_toasts.success'), { id: toastId })
     } catch (error) {
       console.error('Export error:', error)
-      toast.error('Failed to export CSV', { id: toastId })
+      toast.error(t('dashboard.organization.audit_logs.export_toasts.error'), { id: toastId })
     }
   }
 
@@ -163,17 +165,17 @@ const OrgAuditLogs = () => {
             <div>
               <h1 className="font-bold text-xl text-gray-800 flex items-center gap-2">
                 <ShieldCheck className="w-5 h-5 text-indigo-600" />
-                Audit Logs
+                {t('dashboard.organization.audit_logs.title')}
               </h1>
               <h2 className="text-gray-500 text-md">
-                Track and monitor all activities within your organization
+                {t('dashboard.organization.audit_logs.subtitle')}
               </h2>
             </div>
             <div className="flex gap-2 items-center">
                <button 
                 onClick={handleRefresh}
                 className={`p-2 rounded-md hover:bg-gray-200 transition-colors ${isValidating ? 'animate-spin' : ''}`}
-                title="Refresh logs"
+                title={t('dashboard.organization.audit_logs.refresh')}
                >
                 <RefreshCw className="w-4 h-4 text-gray-600" />
                </button>
@@ -181,10 +183,10 @@ const OrgAuditLogs = () => {
                <button 
                 onClick={handleExport}
                 className="p-2 rounded-md hover:bg-gray-200 transition-colors flex items-center gap-2 text-sm text-gray-600"
-                title="Export CSV"
+                title={t('dashboard.organization.audit_logs.export')}
                >
                 <Download className="w-4 h-4" />
-                <span className="hidden md:inline font-medium">Export</span>
+                <span className="hidden md:inline font-medium">{t('dashboard.organization.audit_logs.export')}</span>
                </button>
 
                <div className="flex items-center gap-0 border border-gray-200 rounded-md overflow-hidden bg-white">
@@ -193,21 +195,21 @@ const OrgAuditLogs = () => {
                   onValueChange={(val) => setSearchField(val)}
                 >
                   <SelectTrigger className="w-[110px] h-9 text-[10px] border-none bg-gray-50 rounded-none focus:ring-0">
-                    <SelectValue placeholder="Search by" />
+                    <SelectValue placeholder={t('dashboard.organization.audit_logs.search_by')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="action">Action</SelectItem>
-                    <SelectItem value="resource">Resource</SelectItem>
-                    <SelectItem value="username">Username</SelectItem>
-                    <SelectItem value="name">Name</SelectItem>
-                    <SelectItem value="user_id">User ID</SelectItem>
-                    <SelectItem value="ip_address">IP Address</SelectItem>
+                    <SelectItem value="action">{t('dashboard.organization.audit_logs.table.path_method')}</SelectItem>
+                    <SelectItem value="resource">{t('dashboard.organization.audit_logs.filters.resource')}</SelectItem>
+                    <SelectItem value="username">{t('dashboard.organization.audit_logs.table.user')}</SelectItem>
+                    <SelectItem value="name">{t('dashboard.organization.audit_logs.table.user')}</SelectItem>
+                    <SelectItem value="user_id">{t('dashboard.organization.audit_logs.table.user')}</SelectItem>
+                    <SelectItem value="ip_address">{t('dashboard.organization.audit_logs.table.ip_address')}</SelectItem>
                   </SelectContent>
                 </Select>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
                   <Input
-                    placeholder="Search..."
+                    placeholder={t('dashboard.organization.audit_logs.placeholders.search')}
                     className="pl-9 w-[180px] h-9 text-xs border-none focus-visible:ring-0 rounded-none"
                     value={filters.searchValue}
                     onChange={(e) => {
@@ -226,13 +228,13 @@ const OrgAuditLogs = () => {
                 }}
               >
                 <SelectTrigger className="w-[120px] h-9 text-sm">
-                  <SelectValue placeholder="Resource" />
+                  <SelectValue placeholder={t('dashboard.organization.audit_logs.filters.resource')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Resources</SelectItem>
-                  <SelectItem value="user">User</SelectItem>
-                  <SelectItem value="course">Course</SelectItem>
-                  <SelectItem value="org">Organization</SelectItem>
+                  <SelectItem value="all">{t('dashboard.organization.audit_logs.resources.all')}</SelectItem>
+                  <SelectItem value="user">{t('dashboard.organization.audit_logs.resources.user')}</SelectItem>
+                  <SelectItem value="course">{t('dashboard.organization.audit_logs.resources.course')}</SelectItem>
+                  <SelectItem value="org">{t('dashboard.organization.audit_logs.resources.org')}</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -244,10 +246,10 @@ const OrgAuditLogs = () => {
                 }}
               >
                 <SelectTrigger className="w-[100px] h-9 text-sm">
-                  <SelectValue placeholder="Status" />
+                  <SelectValue placeholder={t('dashboard.organization.audit_logs.filters.status')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="all">{t('common.all')}</SelectItem>
                   <SelectItem value="200">200 OK</SelectItem>
                   <SelectItem value="403">403</SelectItem>
                   <SelectItem value="404">404</SelectItem>
@@ -265,15 +267,15 @@ const OrgAuditLogs = () => {
                 <SelectTrigger className="w-[130px] h-9 text-sm">
                   <div className="flex items-center gap-2">
                     <Calendar className="w-3.5 h-3.5 text-gray-400" />
-                    <SelectValue placeholder="Date" />
+                    <SelectValue placeholder={t('dashboard.organization.audit_logs.filters.date')} />
                   </div>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Time</SelectItem>
-                  <SelectItem value="today">Today</SelectItem>
-                  <SelectItem value="7d">Last 7 Days</SelectItem>
-                  <SelectItem value="30d">Last 30 Days</SelectItem>
-                  <SelectItem value="custom">Custom Range</SelectItem>
+                  <SelectItem value="all">{t('dashboard.organization.audit_logs.date_ranges.all')}</SelectItem>
+                  <SelectItem value="today">{t('dashboard.organization.audit_logs.date_ranges.today')}</SelectItem>
+                  <SelectItem value="7d">{t('dashboard.organization.audit_logs.date_ranges.7d')}</SelectItem>
+                  <SelectItem value="30d">{t('dashboard.organization.audit_logs.date_ranges.30d')}</SelectItem>
+                  <SelectItem value="custom">{t('dashboard.organization.audit_logs.date_ranges.custom')}</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -309,13 +311,13 @@ const OrgAuditLogs = () => {
         <table className="table-auto w-full text-left whitespace-nowrap rounded-md overflow-hidden">
           <thead className="bg-gray-100 text-gray-500 rounded-xl uppercase">
             <tr className="font-bolder text-[10px] tracking-wider">
-              <th className="py-3 px-4">Timestamp</th>
-              <th className="py-3 px-4">User</th>
-              <th className="py-3 px-4">Resource</th>
-              <th className="py-3 px-4">Path & Method</th>
-              <th className="py-3 px-4">IP Address</th>
-              <th className="py-3 px-4 text-right">Status</th>
-              <th className="py-3 px-4 text-right">Payload</th>
+              <th className="py-3 px-4">{t('dashboard.organization.audit_logs.table.timestamp')}</th>
+              <th className="py-3 px-4">{t('dashboard.organization.audit_logs.table.user')}</th>
+              <th className="py-3 px-4">{t('dashboard.organization.audit_logs.table.resource')}</th>
+              <th className="py-3 px-4">{t('dashboard.organization.audit_logs.table.path_method')}</th>
+              <th className="py-3 px-4">{t('dashboard.organization.audit_logs.table.ip_address')}</th>
+              <th className="py-3 px-4 text-right">{t('dashboard.organization.audit_logs.table.status')}</th>
+              <th className="py-3 px-4 text-right">{t('dashboard.organization.audit_logs.table.payload')}</th>
             </tr>
           </thead>
           <tbody className="bg-white relative">
@@ -324,14 +326,14 @@ const OrgAuditLogs = () => {
                 <td colSpan={7} className="py-20 text-center text-gray-400">
                   <div className="flex flex-col items-center gap-2">
                       <RefreshCw className="w-8 h-8 text-indigo-600 animate-spin opacity-20" />
-                      <span className="text-sm font-medium">Loading activity...</span>
+                      <span className="text-sm font-medium">{t('dashboard.organization.audit_logs.loading')}</span>
                   </div>
                 </td>
               </tr>
             ) : logs.length === 0 ? (
               <tr>
                 <td colSpan={7} className="py-10 text-center text-gray-400">
-                  No logs found
+                  {t('dashboard.organization.audit_logs.no_logs')}
                 </td>
               </tr>
             ) : (
@@ -400,10 +402,10 @@ const OrgAuditLogs = () => {
                     </span>
                   </td>
                   <td className="py-3 px-4 text-right">
-                    {log.payload && Object.keys(log.payload).length > 0 ? (
+                      {log.payload && Object.keys(log.payload).length > 0 ? (
                       <Modal
-                        dialogTitle="Event Payload"
-                        dialogDescription={`Detailed data for action: ${log.action}`}
+                        dialogTitle={t('dashboard.organization.audit_logs.modals.payload.title')}
+                        dialogDescription={t('dashboard.organization.audit_logs.modals.payload.description', { action: log.action })}
                         minHeight="no-min"
                         isDialogOpen={openModalId === log.id}
                         onOpenChange={(open) => setOpenModalId(open ? log.id : null)}
@@ -434,7 +436,11 @@ const OrgAuditLogs = () => {
         {total > ITEMS_PER_PAGE && (
           <div className="mt-4 flex items-center justify-between px-2">
             <div className="text-xs text-gray-500">
-              Showing {offset + 1} to {Math.min(offset + ITEMS_PER_PAGE, total)} of {total} logs
+              {t('dashboard.organization.audit_logs.pagination.showing', { 
+                start: offset + 1, 
+                end: Math.min(offset + ITEMS_PER_PAGE, total), 
+                total 
+              })}
             </div>
             <div className="flex items-center gap-2">
               <button

@@ -11,8 +11,10 @@ import EvaluateAssignment from './Modals/EvaluateAssignment';
 import { AssignmentProvider } from '@components/Contexts/Assignments/AssignmentContext';
 import { AssignmentsTaskProvider } from '@components/Contexts/Assignments/AssignmentsTaskContext';
 import AssignmentSubmissionProvider from '@components/Contexts/Assignments/AssignmentSubmissionContext';
+import { useTranslation } from 'react-i18next';
 
 function AssignmentSubmissionsSubPage({ assignment_uuid }: { assignment_uuid: string }) {
+    const { t } = useTranslation()
     const session = useLHSession() as any;
     const access_token = session?.data?.tokens?.access_token;
 
@@ -39,7 +41,7 @@ function AssignmentSubmissionsSubPage({ assignment_uuid }: { assignment_uuid: st
                 <div className='flex-1'>
                     <div className='flex w-fit mx-auto px-3.5 py-1 bg-rose-600/80 space-x-2 my-5 items-center text-sm font-bold text-white rounded-full'>
                         <X size={18} />
-                        <h3>Late</h3>
+                        <h3>{t('dashboard.assignments.submissions.status.late')}</h3>
                     </div>
                     <div className='flex flex-col gap-4'>
                         {renderSubmissions('LATE')}
@@ -48,7 +50,7 @@ function AssignmentSubmissionsSubPage({ assignment_uuid }: { assignment_uuid: st
                 <div className='flex-1'>
                     <div className='flex w-fit mx-auto px-3.5 py-1 bg-amber-600/80 space-x-2 my-5 items-center text-sm font-bold text-white rounded-full'>
                         <SendHorizonal size={18} />
-                        <h3>Submitted</h3>
+                        <h3>{t('dashboard.assignments.submissions.status.submitted')}</h3>
                     </div>
                     <div className='flex flex-col gap-4'>
                         {renderSubmissions('SUBMITTED')}
@@ -57,7 +59,7 @@ function AssignmentSubmissionsSubPage({ assignment_uuid }: { assignment_uuid: st
                 <div className='flex-1'>
                     <div className='flex w-fit mx-auto px-3.5 py-1 bg-emerald-600/80 space-x-2 my-5 items-center text-sm font-bold text-white rounded-full'>
                         <UserCheck size={18} />
-                        <h3>Graded</h3>
+                        <h3>{t('dashboard.assignments.submissions.status.graded')}</h3>
                     </div>
                     <div className='flex flex-col gap-4'>
                         {renderSubmissions('GRADED')}
@@ -70,6 +72,7 @@ function AssignmentSubmissionsSubPage({ assignment_uuid }: { assignment_uuid: st
 }
 
 function SubmissionBox({ assignment_uuid, user_id, submission }: any) {
+    const { t } = useTranslation()
     const session = useLHSession() as any;
     const access_token = session?.data?.tokens?.access_token;
     const [gradeSudmissionModal, setGradeSubmissionModal] = React.useState({
@@ -88,10 +91,10 @@ function SubmissionBox({ assignment_uuid, user_id, submission }: any) {
         , [session, user]);
 
     return (
-        <div className='flex flex-row bg-white shadow-[0px_4px_16px_rgba(0,0,0,0.06)] nice-shadow rounded-lg p-4 w-[350px] mx-auto'>
+            <div className='flex flex-row bg-white shadow-[0px_4px_16px_rgba(0,0,0,0.06)] nice-shadow rounded-lg p-4 w-[350px] mx-auto'>
             <div className='flex flex-col space-y-2 w-full'>
                 <div className='flex justify-between w-full'>
-                    <h2 className='uppercase text-slate-400 text-xs tracking-tight font-semibold'>Submission</h2>
+                    <h2 className='uppercase text-slate-400 text-xs tracking-tight font-semibold'>{t('dashboard.assignments.submissions.submission_label')}</h2>
                     <p className='uppercase text-xs tracking-tight font-semibold'>
                         {new Date(submission.creation_date).toLocaleDateString('en-UK', {
                             year: 'numeric',
@@ -129,11 +132,11 @@ function SubmissionBox({ assignment_uuid, user_id, submission }: any) {
                                     </AssignmentsTaskProvider>
                                 </AssignmentProvider>
                             }
-                            dialogTitle={`Evaluate @${user?.username}`}
-                            dialogDescription="Evaluate the submission"
+                            dialogTitle={t('dashboard.assignments.submissions.evaluate_modal.title', { username: user?.username })}
+                            dialogDescription={t('dashboard.assignments.submissions.evaluate_modal.description')}
                             dialogTrigger={
                                 <div className='bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded text-xs cursor-pointer'>
-                                    Evaluate
+                                    {t('dashboard.assignments.submissions.evaluate')}
                                 </div>
                             }
                         />

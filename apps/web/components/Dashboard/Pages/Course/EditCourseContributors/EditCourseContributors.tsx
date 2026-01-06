@@ -10,6 +10,7 @@ import { Check, ChevronDown, Search, UserPen, Users } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import useSWR, { mutate } from 'swr'
+import { useTranslation } from 'react-i18next'
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -84,6 +85,7 @@ const formatDate = (dateString: string) => {
 };
 
 function EditCourseContributors(props: EditCourseContributorsProps) {
+    const { t } = useTranslation()
     const session = useLHSession() as any;
     const access_token = session?.data?.tokens?.access_token;
     const course = useCourse() as any;
@@ -193,12 +195,12 @@ function EditCourseContributors(props: EditCourseContributorsProps) {
                 
                 // Show success message for successful adds
                 if (result.successful.length > 0) {
-                    toast.success(`Successfully added ${result.successful.length} contributor(s)`);
+                    toast.success(t('dashboard.courses.contributors.toasts.add_success', { count: result.successful.length }));
                 }
                 
                 // Show error messages for failed adds
                 result.failed.forEach(failure => {
-                    toast.error(`Failed to add ${failure.username}: ${failure.reason}`);
+                    toast.error(t('dashboard.courses.contributors.toasts.add_error', { username: failure.username, reason: failure.reason }));
                 });
 
                 // Refresh contributors list
@@ -209,7 +211,7 @@ function EditCourseContributors(props: EditCourseContributorsProps) {
             }
         } catch (error) {
             console.error('Error adding contributors:', error);
-            toast.error('Failed to add contributors');
+            toast.error(t('dashboard.courses.contributors.toasts.add_failed'));
         }
     };
 
@@ -221,7 +223,7 @@ function EditCourseContributors(props: EditCourseContributorsProps) {
 
             // Don't allow editing if the user is a CREATOR
             if (currentContributor.authorship === 'CREATOR') {
-                toast.error('Cannot modify a creator\'s role or status');
+                toast.error(t('dashboard.courses.contributors.toasts.cannot_modify_creator'));
                 return;
             }
 
@@ -233,13 +235,13 @@ function EditCourseContributors(props: EditCourseContributorsProps) {
 
             const res = await editContributor(courseStructure.course_uuid, contributorId, updatedData.authorship, updatedData.authorship_status, access_token);
             if (res.status === 200 && res.data?.status === 'success') {
-                toast.success(res.data.detail || 'Successfully updated contributor');
+                toast.success(res.data.detail || t('dashboard.courses.contributors.toasts.update_success'));
                 mutate(`${getAPIUrl()}courses/${courseStructure.course_uuid}/contributors`);
             } else {
-                toast.error(`Error: ${res.data?.detail || 'Failed to update contributor'}`);
+                toast.error(t('dashboard.courses.contributors.toasts.update_error', { detail: res.data?.detail || t('dashboard.courses.contributors.toasts.update_failed') }));
             }
         } catch (error) {
-            toast.error('An error occurred while updating the contributor.');
+            toast.error(t('dashboard.courses.contributors.toasts.update_failed'));
         }
     };
 
@@ -251,7 +253,7 @@ function EditCourseContributors(props: EditCourseContributorsProps) {
                     className="w-[200px] justify-between"
                     disabled={contributor.authorship === 'CREATOR'}
                 >
-                    {contributor.authorship}
+                    {t(`dashboard.courses.contributors.roles.${contributor.authorship.toLowerCase()}`)}
                     <ChevronDown className="ml-2 h-4 w-4 text-muted-foreground" />
                 </Button>
             </DropdownMenuTrigger>
@@ -262,7 +264,7 @@ function EditCourseContributors(props: EditCourseContributorsProps) {
                         onClick={() => updateContributor(contributor.user_id, { authorship: role as ContributorRole })}
                         className="justify-between"
                     >
-                        {role}
+                        {t(`dashboard.courses.contributors.roles.${role.toLowerCase()}`)}
                         {contributor.authorship === role && <Check className="ml-2 h-4 w-4" />}
                     </DropdownMenuItem>
                 ))}
@@ -278,7 +280,7 @@ function EditCourseContributors(props: EditCourseContributorsProps) {
                     className={`w-[200px] justify-between ${getStatusStyle(contributor.authorship_status)}`}
                     disabled={contributor.authorship === 'CREATOR'}
                 >
-                    {contributor.authorship_status}
+                    {t(`dashboard.courses.contributors.statuses.${contributor.authorship_status.toLowerCase()}`)}
                     <ChevronDown className="ml-2 h-4 w-4" />
                 </Button>
             </DropdownMenuTrigger>
@@ -289,7 +291,7 @@ function EditCourseContributors(props: EditCourseContributorsProps) {
                         onClick={() => updateContributor(contributor.user_id, { authorship_status: status as ContributorStatus })}
                         className="justify-between"
                     >
-                        {status}
+                        {t(`dashboard.courses.contributors.statuses.${status.toLowerCase()}`)}
                         {contributor.authorship_status === status && <Check className="ml-2 h-4 w-4" />}
                     </DropdownMenuItem>
                 ))}
@@ -348,7 +350,7 @@ function EditCourseContributors(props: EditCourseContributorsProps) {
             );
             
             if (response.status === 200) {
-                toast.success(`Successfully removed ${selectedContributors.length} contributor(s)`);
+                toast.success(t('dashboard.courses.contributors.toasts.remove_success', { count: selectedContributors.length }));
                 // Refresh contributors list
                 mutate(`${getAPIUrl()}courses/${courseStructure.course_uuid}/contributors`);
                 // Clear selection
@@ -356,7 +358,7 @@ function EditCourseContributors(props: EditCourseContributorsProps) {
             }
         } catch (error) {
             console.error('Error removing contributors:', error);
-            toast.error('Failed to remove contributors');
+            toast.error(t('dashboard.courses.contributors.toasts.remove_failed'));
         }
     };
 
@@ -367,30 +369,30 @@ function EditCourseContributors(props: EditCourseContributorsProps) {
                     <div className="h-6"></div>
                     <div className="mx-4 sm:mx-10 bg-white rounded-xl shadow-xs px-4 py-4">
                         <div className="flex flex-col bg-gray-50 -space-y-1 px-3 sm:px-5 py-3 rounded-md mb-3">
-                            <h1 className="font-bold text-lg sm:text-xl text-gray-800">Course Contributors</h1>
+                            <h1 className="font-bold text-lg sm:text-xl text-gray-800">{t('dashboard.courses.contributors.title')}</h1>
                             <h2 className="text-gray-500 text-xs sm:text-sm">
-                                Manage contributors and add new ones to your course
+                                {t('dashboard.courses.contributors.subtitle')}
                             </h2>
                         </div>
                         <div className="flex flex-col sm:flex-row sm:space-x-2 space-y-2 sm:space-y-0 mx-auto mb-3">
                             <ConfirmationModal
-                                confirmationButtonText="Open to Contributors"
-                                confirmationMessage="Are you sure you want to open this course to contributors?"
-                                dialogTitle="Open to Contributors?"
+                                confirmationButtonText={t('dashboard.courses.contributors.open_to_contributors.confirmation_button')}
+                                confirmationMessage={t('dashboard.courses.contributors.open_to_contributors.confirmation_message')}
+                                dialogTitle={t('dashboard.courses.contributors.open_to_contributors.confirmation_title')}
                                 dialogTrigger={
                                     <div className="w-full h-[200px] bg-slate-100 rounded-lg cursor-pointer hover:bg-slate-200 transition-all">
                                         {isOpenToContributors && (
                                             <div className="bg-green-200 text-green-600 font-bold w-fit my-3 mx-3 absolute text-sm px-3 py-1 rounded-lg">
-                                                Active
+                                                {t('dashboard.courses.contributors.open_to_contributors.active')}
                                             </div>
                                         )}
                                         <div className="flex flex-col space-y-1 justify-center items-center h-full p-2 sm:p-4">
                                             <UserPen className="text-slate-400" size={32} />
                                             <div className="text-xl sm:text-2xl text-slate-700 font-bold">
-                                                Open to Contributors
+                                                {t('dashboard.courses.contributors.open_to_contributors.title')}
                                             </div>
                                             <div className="text-gray-400 text-sm sm:text-md tracking-tight w-full sm:w-[500px] leading-5 text-center">
-                                                The course is open for contributors. Users can apply to become contributors and help improve the course content.
+                                                {t('dashboard.courses.contributors.open_to_contributors.description')}
                                             </div>
                                         </div>
                                     </div>
@@ -399,23 +401,23 @@ function EditCourseContributors(props: EditCourseContributorsProps) {
                                 status="info"
                             />
                             <ConfirmationModal
-                                confirmationButtonText="Close to Contributors"
-                                confirmationMessage="Are you sure you want to close this course to contributors?"
-                                dialogTitle="Close to Contributors?"
+                                confirmationButtonText={t('dashboard.courses.contributors.closed_to_contributors.confirmation_button')}
+                                confirmationMessage={t('dashboard.courses.contributors.closed_to_contributors.confirmation_message')}
+                                dialogTitle={t('dashboard.courses.contributors.closed_to_contributors.confirmation_title')}
                                 dialogTrigger={
                                     <div className="w-full h-[200px] bg-slate-100 rounded-lg cursor-pointer hover:bg-slate-200 transition-all">
                                         {!isOpenToContributors && (
                                             <div className="bg-green-200 text-green-600 font-bold w-fit my-3 mx-3 absolute text-sm px-3 py-1 rounded-lg">
-                                                Active
+                                                {t('dashboard.courses.contributors.closed_to_contributors.active')}
                                             </div>
                                         )}
                                         <div className="flex flex-col space-y-1 justify-center items-center h-full p-2 sm:p-4">
                                             <Users className="text-slate-400" size={32} />
                                             <div className="text-xl sm:text-2xl text-slate-700 font-bold">
-                                                Closed to Contributors
+                                                {t('dashboard.courses.contributors.closed_to_contributors.title')}
                                             </div>
                                             <div className="text-gray-400 text-sm sm:text-md tracking-tight w-full sm:w-[500px] leading-5 text-center">
-                                                The course is closed for contributors. Only existing contributors can modify the course content.
+                                                {t('dashboard.courses.contributors.closed_to_contributors.description')}
                                             </div>
                                         </div>
                                     </div>
@@ -428,7 +430,7 @@ function EditCourseContributors(props: EditCourseContributorsProps) {
                             <div className="relative">
                                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                                 <Input
-                                    placeholder="Search users by name or username to add as contributors..."
+                                    placeholder={t('dashboard.courses.contributors.search.placeholder')}
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     className="pl-8"
@@ -438,7 +440,7 @@ function EditCourseContributors(props: EditCourseContributorsProps) {
                                 <div className="bg-white rounded-xl nice-shadow divide-y">
                                     {isSearching ? (
                                         <div className="p-4 text-center text-sm text-gray-500">
-                                            Searching...
+                                            {t('dashboard.courses.contributors.search.searching')}
                                         </div>
                                     ) : searchResults && searchResults.length > 0 ? (
                                         <>
@@ -446,7 +448,9 @@ function EditCourseContributors(props: EditCourseContributorsProps) {
                                                 <div className="p-3 bg-gray-100">
                                                     <div className="flex items-center justify-between">
                                                         <span className="text-sm text-gray-700">
-                                                            {selectedUsers.length} user{selectedUsers.length > 1 ? 's' : ''} selected
+                                                            {selectedUsers.length === 1 
+                                                                ? t('dashboard.courses.contributors.actions.selected_users', { count: selectedUsers.length })
+                                                                : t('dashboard.courses.contributors.actions.selected_users_plural', { count: selectedUsers.length })}
                                                         </span>
                                                         <div className="flex gap-2">
                                                             <Button
@@ -454,13 +458,13 @@ function EditCourseContributors(props: EditCourseContributorsProps) {
                                                                 variant="outline"
                                                                 className="text-sm"
                                                             >
-                                                                Clear
+                                                                {t('dashboard.courses.contributors.actions.clear')}
                                                             </Button>
                                                             <Button
                                                                 onClick={handleAddContributors}
                                                                 className="bg-gray-900 text-white hover:bg-gray-800 text-sm"
                                                             >
-                                                                Add Selected
+                                                                {t('dashboard.courses.contributors.actions.add_selected')}
                                                             </Button>
                                                         </div>
                                                     </div>
@@ -518,7 +522,7 @@ function EditCourseContributors(props: EditCourseContributorsProps) {
                                                         </div>
                                                         {isExistingContributor && (
                                                             <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
-                                                                Already a contributor
+                                                                {t('dashboard.courses.contributors.actions.already_contributor')}
                                                             </span>
                                                         )}
                                                     </div>
@@ -527,7 +531,7 @@ function EditCourseContributors(props: EditCourseContributorsProps) {
                                         </>
                                     ) : (
                                         <div className="p-4 text-center text-sm text-gray-500">
-                                            No users found
+                                            {t('dashboard.courses.contributors.search.no_results')}
                                         </div>
                                     )}
                                 </div>
@@ -537,7 +541,9 @@ function EditCourseContributors(props: EditCourseContributorsProps) {
                                     <div className="p-3 bg-gray-100 rounded-t-xl border-b">
                                         <div className="flex items-center justify-between">
                                             <span className="text-sm text-gray-700">
-                                                {selectedContributors.length} contributor{selectedContributors.length > 1 ? 's' : ''} selected
+                                                {selectedContributors.length === 1
+                                                    ? t('dashboard.courses.contributors.actions.selected_contributors', { count: selectedContributors.length })
+                                                    : t('dashboard.courses.contributors.actions.selected_contributors_plural', { count: selectedContributors.length })}
                                             </span>
                                             <div className="flex gap-2">
                                                 <Button
@@ -545,13 +551,13 @@ function EditCourseContributors(props: EditCourseContributorsProps) {
                                                     variant="outline"
                                                     className="text-sm"
                                                 >
-                                                    Clear
+                                                    {t('dashboard.courses.contributors.actions.clear')}
                                                 </Button>
                                                 <Button
                                                     onClick={handleBulkRemove}
                                                     className="bg-red-600 text-white hover:bg-red-700 text-sm"
                                                 >
-                                                    Remove Selected
+                                                    {t('dashboard.courses.contributors.actions.remove_selected')}
                                                 </Button>
                                             </div>
                                         </div>
@@ -583,12 +589,12 @@ function EditCourseContributors(props: EditCourseContributorsProps) {
                                                     />
                                                 </TableHead>
                                                 <TableHead className="w-[50px]"></TableHead>
-                                                <TableHead>Name</TableHead>
-                                                <TableHead>Username</TableHead>
-                                                <TableHead>Email</TableHead>
-                                                <TableHead>Role</TableHead>
-                                                <TableHead>Status</TableHead>
-                                                <TableHead>Added On</TableHead>
+                                                <TableHead>{t('dashboard.courses.contributors.table.name')}</TableHead>
+                                                <TableHead>{t('dashboard.courses.contributors.table.username')}</TableHead>
+                                                <TableHead>{t('dashboard.courses.contributors.table.email')}</TableHead>
+                                                <TableHead>{t('dashboard.courses.contributors.table.role')}</TableHead>
+                                                <TableHead>{t('dashboard.courses.contributors.table.status')}</TableHead>
+                                                <TableHead>{t('dashboard.courses.contributors.table.added_on')}</TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>

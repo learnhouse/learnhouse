@@ -15,6 +15,7 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useFormik } from 'formik'
 import toast from 'react-hot-toast'
 import { Shield, BookOpen, Users, UserCheck, FolderOpen, Building, FileText, Activity, Monitor, CheckSquare, Square } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 type EditRoleProps = {
     role: {
@@ -83,19 +84,19 @@ interface Rights {
     };
 }
 
-const validate = (values: any) => {
+const getValidate = (t: any) => (values: any) => {
     const errors: any = {}
 
     if (!values.name) {
-        errors.name = 'Required'
+        errors.name = t('dashboard.users.roles.modals.edit.validation.name_required')
     } else if (values.name.length < 2) {
-        errors.name = 'Name must be at least 2 characters'
+        errors.name = t('dashboard.users.roles.modals.edit.validation.name_min_length')
     }
 
     if (!values.description) {
-        errors.description = 'Required'
+        errors.description = t('dashboard.users.roles.modals.edit.validation.description_required')
     } else if (values.description.length < 10) {
-        errors.description = 'Description must be at least 10 characters'
+        errors.description = t('dashboard.users.roles.modals.edit.validation.description_min_length')
     }
 
     return errors
@@ -240,6 +241,7 @@ const predefinedRoles = {
 }
 
 function EditRole(props: EditRoleProps) {
+    const { t } = useTranslation()
     const org = useOrg() as any;
     const session = useLHSession() as any
     const access_token = session?.data?.tokens?.access_token;
@@ -253,9 +255,9 @@ function EditRole(props: EditRoleProps) {
             org_id: org.id,
             rights: props.role.rights || {}
         },
-        validate,
+        validate: getValidate(t),
         onSubmit: async (values) => {
-            const toastID = toast.loading("Updating...")
+            const toastID = toast.loading(t('dashboard.users.roles.modals.edit.form.loading'))
             setIsSubmitting(true)
             
             // Ensure rights object is properly structured
@@ -326,10 +328,10 @@ function EditRole(props: EditRoleProps) {
                 setIsSubmitting(false)
                 mutate(`${getAPIUrl()}roles/org/${org.id}`)
                 props.setEditRoleModal(false)
-                toast.success("Updated role", {id:toastID})
+                toast.success(t('dashboard.users.roles.modals.edit.toasts.success'), {id:toastID})
             } else {
                 setIsSubmitting(false)
-                toast.error("Couldn't update role", {id:toastID})
+                toast.error(t('dashboard.users.roles.modals.edit.toasts.error'), {id:toastID})
             }
         },
     })
@@ -381,8 +383,8 @@ function EditRole(props: EditRoleProps) {
                         className="flex items-center space-x-2 text-sm text-blue-600 hover:text-blue-700 font-medium self-start sm:self-auto transition-colors"
                     >
                         {allSelected ? <CheckSquare className="w-4 h-4" /> : someSelected ? <Square className="w-4 h-4" /> : <Square className="w-4 h-4" />}
-                        <span className="hidden sm:inline">{allSelected ? 'Deselect All' : 'Select All'}</span>
-                        <span className="sm:hidden">{allSelected ? 'Deselect' : 'Select'}</span>
+                        <span className="hidden sm:inline">{allSelected ? t('dashboard.users.roles.modals.edit.permissions.deselect_all') : t('dashboard.users.roles.modals.edit.permissions.select_all')}</span>
+                        <span className="sm:hidden">{allSelected ? t('dashboard.users.roles.modals.edit.permissions.deselect') : t('dashboard.users.roles.modals.edit.permissions.select')}</span>
                     </button>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -395,7 +397,7 @@ function EditRole(props: EditRoleProps) {
                                 className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-2"
                             />
                             <span className="text-sm text-gray-700 capitalize">
-                                {permission.replace('action_', '').replace('_', ' ')}
+                                {t(`dashboard.users.roles.modals.edit.permissions.actions.${permission.replace('action_', '').replace(/_/g, '_')}`)}
                             </span>
                         </label>
                     ))}
@@ -410,27 +412,27 @@ function EditRole(props: EditRoleProps) {
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
                     <div className="space-y-4 sm:space-y-6">
                         <FormField name="name">
-                            <FormLabelAndMessage label="Role Name" message={formik.errors.name} />
+                            <FormLabelAndMessage label={t('dashboard.users.roles.modals.edit.form.role_name')} message={formik.errors.name} />
                             <Form.Control asChild>
                                 <Input
                                     onChange={formik.handleChange}
                                     value={formik.values.name}
                                     type="text"
                                     required
-                                    placeholder="e.g., Course Manager"
+                                    placeholder={t('dashboard.users.roles.modals.create.form.role_name_placeholder')}
                                     className="w-full"
                                 />
                             </Form.Control>
                         </FormField>
 
                         <FormField name="description">
-                            <FormLabelAndMessage label="Description" message={formik.errors.description} />
+                            <FormLabelAndMessage label={t('dashboard.users.roles.modals.edit.form.description')} message={formik.errors.description} />
                             <Form.Control asChild>
                                 <Textarea
                                     onChange={formik.handleChange}
                                     value={formik.values.description}
                                     required
-                                    placeholder="Describe what this role can do..."
+                                    placeholder={t('dashboard.users.roles.modals.create.form.description_placeholder')}
                                     className="w-full"
                                 />
                             </Form.Control>
@@ -455,66 +457,66 @@ function EditRole(props: EditRoleProps) {
                     </div>
 
                     <div className="space-y-4">
-                        <h3 className="text-lg font-semibold text-gray-800 mb-4">Permissions</h3>
+                        <h3 className="text-lg font-semibold text-gray-800 mb-4">{t('dashboard.users.roles.modals.edit.permissions.title')}</h3>
                         
                         <PermissionSection
-                            title="Courses"
+                            title={t('dashboard.users.roles.modals.edit.permissions.sections.courses')}
                             icon={BookOpen}
                             section="courses"
                             permissions={['action_create', 'action_read', 'action_read_own', 'action_update', 'action_update_own', 'action_delete', 'action_delete_own']}
                         />
                         
                         <PermissionSection
-                            title="Users"
+                            title={t('dashboard.users.roles.modals.edit.permissions.sections.users')}
                             icon={Users}
                             section="users"
                             permissions={['action_create', 'action_read', 'action_update', 'action_delete']}
                         />
                         
                         <PermissionSection
-                            title="User Groups"
+                            title={t('dashboard.users.roles.modals.edit.permissions.sections.usergroups')}
                             icon={UserCheck}
                             section="usergroups"
                             permissions={['action_create', 'action_read', 'action_update', 'action_delete']}
                         />
                         
                         <PermissionSection
-                            title="Collections"
+                            title={t('dashboard.users.roles.modals.edit.permissions.sections.collections')}
                             icon={FolderOpen}
                             section="collections"
                             permissions={['action_create', 'action_read', 'action_update', 'action_delete']}
                         />
                         
                         <PermissionSection
-                            title="Organizations"
+                            title={t('dashboard.users.roles.modals.edit.permissions.sections.organizations')}
                             icon={Building}
                             section="organizations"
                             permissions={['action_create', 'action_read', 'action_update', 'action_delete']}
                         />
                         
                         <PermissionSection
-                            title="Course Chapters"
+                            title={t('dashboard.users.roles.modals.edit.permissions.sections.coursechapters')}
                             icon={FileText}
                             section="coursechapters"
                             permissions={['action_create', 'action_read', 'action_update', 'action_delete']}
                         />
                         
                         <PermissionSection
-                            title="Activities"
+                            title={t('dashboard.users.roles.modals.edit.permissions.sections.activities')}
                             icon={Activity}
                             section="activities"
                             permissions={['action_create', 'action_read', 'action_update', 'action_delete']}
                         />
                         
                         <PermissionSection
-                            title="Roles"
+                            title={t('dashboard.users.roles.modals.edit.permissions.sections.roles')}
                             icon={Shield}
                             section="roles"
                             permissions={['action_create', 'action_read', 'action_update', 'action_delete']}
                         />
                         
                         <PermissionSection
-                            title="Dashboard"
+                            title={t('dashboard.users.roles.modals.edit.permissions.sections.dashboard')}
                             icon={Monitor}
                             section="dashboard"
                             permissions={['action_access']}
@@ -528,7 +530,7 @@ function EditRole(props: EditRoleProps) {
                         onClick={() => props.setEditRoleModal(false)}
                         className="px-4 py-2 text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors w-full sm:w-auto font-medium"
                     >
-                        Cancel
+                        {t('common.cancel')}
                     </button>
                     <Form.Submit asChild>
                         <button
@@ -536,7 +538,7 @@ function EditRole(props: EditRoleProps) {
                             disabled={isSubmitting}
                             className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-colors disabled:opacity-50 w-full sm:w-auto font-medium shadow-sm"
                         >
-                            {isSubmitting ? 'Updating...' : 'Update Role'}
+                            {isSubmitting ? t('dashboard.users.roles.modals.edit.form.loading') : t('dashboard.users.roles.modals.edit.form.submit')}
                         </button>
                     </Form.Submit>
                 </div>

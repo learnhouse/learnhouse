@@ -16,6 +16,7 @@ import { Hexagon } from 'lucide-react'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import NewChapterModal from '@components/Objects/Modals/Chapters/NewChapter'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { useTranslation } from 'react-i18next'
 
 type EditCourseStructureProps = {
   orgslug: string
@@ -38,6 +39,7 @@ export type OrderPayload =
   | undefined
 
 const EditCourseStructure = (props: EditCourseStructureProps) => {
+  const { t } = useTranslation()
   const router = useRouter()
   const session = useLHSession() as any;
   const access_token = session?.data?.tokens?.access_token;
@@ -153,8 +155,8 @@ const EditCourseStructure = (props: EditCourseStructureProps) => {
                 submitChapter={submitChapter}
               ></NewChapterModal>
             }
-            dialogTitle="Create chapter"
-            dialogDescription="Add a new chapter to the course"
+            dialogTitle={t('dashboard.courses.structure.modals.new_chapter.title')}
+            dialogDescription={t('dashboard.courses.structure.modals.new_chapter.description')}
             dialogTrigger={
               <div className="w-44 my-16 py-5 max-w-(--breakpoint-2xl) mx-auto bg-cyan-800 text-white rounded-xl shadow-xs px-6 items-center flex flex-row h-10">
                 <div className="mx-auto flex space-x-2 items-center hover:cursor-pointer">
@@ -163,7 +165,7 @@ const EditCourseStructure = (props: EditCourseStructureProps) => {
                     size={16}
                     className="text-white text-sm "
                   />
-                  <div className="font-bold text-sm">Add Chapter</div>
+                  <div className="font-bold text-sm">{t('dashboard.courses.structure.actions.add_chapter')}</div>
                 </div>
               </div>
             }

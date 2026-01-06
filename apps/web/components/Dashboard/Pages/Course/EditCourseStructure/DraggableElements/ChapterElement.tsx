@@ -18,6 +18,7 @@ import { getAPIUrl } from '@services/config/config'
 import { mutate } from 'swr'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useCourse } from '@components/Contexts/CourseContext'
+import { useTranslation } from 'react-i18next'
 
 type ChapterElementProps = {
   chapter: any
@@ -32,6 +33,7 @@ interface ModifiedChapterInterface {
 }
 
 function ChapterElement(props: ChapterElementProps) {
+  const { t } = useTranslation()
   const activities = props.chapter.activities || []
   const session = useLHSession() as any;
   const access_token = session?.data?.tokens?.access_token;
@@ -97,7 +99,7 @@ function ChapterElement(props: ChapterElementProps) {
                     <input
                       type="text"
                       className="bg-transparent outline-hidden text-sm text-neutral-700 w-full max-w-[150px] sm:max-w-none"
-                      placeholder="Chapter name"
+                      placeholder={t('dashboard.courses.structure.chapter_element.chapter_name_placeholder')}
                       value={
                         modifiedChapter
                           ? modifiedChapter?.chapterName
@@ -132,9 +134,9 @@ function ChapterElement(props: ChapterElementProps) {
             <div className="flex items-center space-x-2">
               <MoreVertical size={15} className="text-gray-300" />
               <ConfirmationModal
-                confirmationButtonText="Delete Chapter"
-                confirmationMessage="Are you sure you want to delete this chapter?"
-                dialogTitle={'Delete ' + props.chapter.name + ' ?'}
+                confirmationButtonText={t('dashboard.courses.structure.modals.delete_chapter.button')}
+                confirmationMessage={t('dashboard.courses.structure.modals.delete_chapter.message')}
+                dialogTitle={t('dashboard.courses.structure.modals.delete_chapter.title', { name: props.chapter.name })}
                 dialogTrigger={
                   <button
                     className="hover:cursor-pointer p-1 px-2 sm:px-3 bg-red-600 rounded-md shadow-sm flex items-center text-rose-100 text-sm"

@@ -1,3 +1,4 @@
+'use client'
 import { useCourse } from '@components/Contexts/CourseContext'
 import { useEffect } from 'react'
 import BreadCrumbs from './BreadCrumbs'
@@ -10,12 +11,14 @@ import Link from 'next/link'
 import Image from 'next/image'
 import EmptyThumbnailImage from '../../../public/empty_thumbnail.png'
 import { BookOpen } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 export function CourseOverviewTop({
   params,
 }: {
   params: CourseOverviewParams
 }) {
+  const { t } = useTranslation()
   const course = useCourse() as any
   const org = useOrg() as any
 
@@ -52,7 +55,7 @@ export function CourseOverviewTop({
             )}
           </Link>
           <div className="flex flex-col course_metadata justify-center pl-5">
-            <div className="text-gray-400 font-semibold text-sm">Course</div>
+            <div className="text-gray-400 font-semibold text-sm">{t('dashboard.courses.overview_top.course_label')}</div>
             <div className="text-black font-bold text-xl -mt-1 first-letter:uppercase">
               {course.courseStructure.name}
             </div>
@@ -64,7 +67,7 @@ export function CourseOverviewTop({
             className="rounded-lg bg-black hover:scale-105 transition-all duration-100 ease-linear antialiased p-2 px-5 font text-xs font-bold text-white drop-shadow-lg flex space-x-2 items-center"
           >
             <BookOpen className="w-4 h-4" />
-            <span>Rights Guide</span>
+            <span>{t('dashboard.courses.overview_top.rights_guide_button')}</span>
           </Link>
           <SaveState orgslug={params.orgslug} />
         </div>

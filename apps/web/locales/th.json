@@ -34,6 +34,10 @@
     "loading": "กำลังโหลด...",
     "search": "ค้นหา",
     "all": "ทั้งหมด",
+    "help": "ความช่วยเหลือ",
+    "plans": "แผน",
+    "enterprise": "เอ็นเตอร์ไพรส์",
+    "version": "เวอร์ชัน",
     "users": "ผู้ใช้งาน",
     "save": "บันทึก",
     "cancel": "ยกเลิก",
@@ -418,5 +422,1300 @@
     "days_ago": "{{count}} วันที่แล้ว",
     "hours_ago": "{{count}} ชั่วโมงที่แล้ว",
     "minutes_ago": "{{count}} นาทีที่แล้ว"
+  },
+  "dashboard": {
+    "home": {
+      "cards": {
+        "courses": {
+          "title": "คอร์สเรียน",
+          "description": "สร้างและจัดการคอร์สเรียน บท และกิจกรรมต่างๆ"
+        },
+        "organization": {
+          "title": "องค์กร",
+          "description": "ตั้งค่าข้อมูลทั่วไปขององค์กรคุณ"
+        },
+        "users": {
+          "title": "ผู้ใช้งาน",
+          "description": "จัดการผู้ใช้งานและบทบาทภายในองค์กร"
+        },
+        "account_settings": {
+          "title": "ตั้งค่าบัญชี",
+          "description": "ตั้งค่าข้อมูลส่วนตัว รหัสผ่าน และอีเมลของคุณ"
+        }
+      },
+      "learnhouse_university": "LearnHouse University"
+    },
+    "courses": {
+      "title": "คอร์สเรียน",
+      "rights_guide": "คู่มือการใช้งานสิทธิ์",
+      "create_course": "สร้างคอร์ส",
+      "create_new_course": "สร้างคอร์สใหม่",
+      "no_courses": "ยังไม่มีคอร์สเรียน",
+      "create_course_placeholder": "สร้างคอร์สเพื่อเพิ่มเนื้อหา",
+      "no_courses_available": "ยังไม่มีคอร์สเรียนในขณะนี้"
+    },
+    "organization": {
+      "settings": {
+        "title": "ตั้งค่าองค์กร",
+        "subtitle": "จัดการโปรไฟล์และข้อมูลการตั้งค่าขององค์กรคุณ",
+        "tabs": {
+          "general": "ทั่วไป",
+          "landing": "หน้าแลนดิ้ง",
+          "previews": "รูปภาพและตัวอย่าง",
+          "socials": "โซเชียล",
+          "other": "อื่นๆ"
+        },
+        "pages": {
+          "general": {
+            "title": "ทั่วไป",
+            "subtitle": "จัดการข้อมูลการตั้งค่าองค์กร"
+          },
+          "previews": {
+            "title": "ตัวอย่าง",
+            "subtitle": "จัดการรูปภาพตัวอย่างขององค์กร"
+          },
+          "socials": {
+            "title": "โซเชียล",
+            "subtitle": "จัดการลิงก์โซเชียลมีเดียขององค์กร"
+          },
+          "landing": {
+            "title": "หน้าแลนดิ้ง",
+            "subtitle": "ปรับแต่งหน้าแลนดิ้งขององค์กรคุณ"
+          },
+          "other": {
+            "title": "อื่นๆ",
+            "subtitle": "จัดการข้อมูลการตั้งค่าองค์กรเพิ่มเติม"
+          }
+        },
+        "name": "ชื่อองค์กร",
+        "name_placeholder": "ชื่อองค์กรของคุณ",
+        "short_description": "คำอธิบายสั้นๆ",
+        "short_description_placeholder": "คำอธิบายสั้นๆ เกี่ยวกับองค์กรของคุณ",
+        "label": "ป้ายกำกับองค์กร",
+        "label_placeholder": "เลือกป้ายกำกับองค์กร",
+        "about": "เกี่ยวกับองค์กร",
+        "about_placeholder": "คำอธิบายรายละเอียดเกี่ยวกับองค์กรของคุณ",
+        "showcase_explore": "แสดงใน LearnHouse Explore",
+        "showcase_description": "แบ่งปันคอร์สและเนื้อหาขององค์กรคุณกับชุมชน LearnHouse เปิดใช้งานสิ่งนี้เพื่อช่วยให้ผู้เรียนค้นพบแหล่งทรัพยากรทางการศึกษาที่มีค่า",
+        "save_changes": "บันทึกการเปลี่ยนแปลง",
+        "saving": "กำลังบันทึก...",
+        "update_success": "ข้อมูลองค์กรได้รับการอัปเดตแล้ว",
+        "update_error": "อัปเดตข้อมูลองค์กรล้มเหลว",
+        "updating": "กำลังอัปเดตข้อมูลองค์กร..."
+      },
+      "images": {
+        "title": "รูปภาพและตัวอย่าง",
+        "subtitle": "จัดการโลโก้ ภาพหน้าปก และรูปภาพตัวอย่างขององค์กรคุณ",
+        "tabs": {
+          "logo": "โลโก้",
+          "thumbnail": "ภาพหน้าปก",
+          "previews": "ตัวอย่าง"
+        },
+        "upload_logo": "อัปโหลดโลโก้ใหม่",
+        "upload_thumbnail": "อัปโหลดภาพหน้าปกใหม่",
+        "uploading": "กำลังอัปโหลด...",
+        "uploading_logo": "กำลังอัปโหลดโลโก้...",
+        "uploading_thumbnail": "กำลังอัปโหลดภาพหน้าปก...",
+        "uploading_previews": "กำลังอัปโหลดตัวอย่าง {{count}} รายการ...",
+        "uploading_previews_plural": "กำลังอัปโหลดตัวอย่าง {{count}} รายการ...",
+        "accepted_files": "รองรับไฟล์ PNG, JPG (สูงสุด 5MB)",
+        "recommended_size": "ขนาดที่แนะนำ: 200x100 พิกเซล",
+        "add_preview": "เพิ่มตัวอย่าง",
+        "drag_to_reorder": "ลากเพื่อเปลี่ยนลำดับ • สูงสุด 4 ตัวอย่าง • รองรับทั้งรูปภาพและวิดีโอ",
+        "video_modal": {
+          "title": "เพิ่มตัวอย่าง",
+          "images": "อัปโหลดรูปภาพ",
+          "youtube": "YouTube",
+          "youtube_desc": "เพิ่มวิดีโอจาก YouTube",
+          "loom": "Loom",
+          "loom_desc": "เพิ่มวิดีโอจาก Loom",
+          "url_placeholder": "วาง URL วิดีโอจาก {{service}}",
+          "add_button": "เพิ่มวิดีโอ"
+        },
+        "toasts": {
+          "logo_success": "อัปเดตโลโก้สำเร็จแล้ว",
+          "logo_error": "อัปโหลดโลโก้ล้มเหลว",
+          "thumbnail_success": "อัปเดตภาพหน้าปกสำเร็จแล้ว",
+          "thumbnail_error": "อัปโหลดภาพหน้าปกล้มเหลว",
+          "preview_added": "เพิ่มตัวอย่างแล้ว {{count}} รายการ",
+          "preview_added_plural": "เพิ่มตัวอย่างแล้ว {{count}} รายการ",
+          "preview_error": "อัปโหลดรูปภาพตัวอย่างล้มเหลว",
+          "preview_removed": "ลบตัวอย่างสำเร็จแล้ว",
+          "preview_remove_error": "ลบตัวอย่างล้มเหลว",
+          "order_updated": "อัปเดตลำดับรูปภาพตัวอย่างสำเร็จแล้ว",
+          "order_update_error": "อัปเดตลำดับรูปภาพตัวอย่างล้มเหลว",
+          "max_previews": "คุณสามารถอัปโหลดตัวอย่างเพิ่มได้อีก {{count}} รายการ",
+          "max_previews_plural": "คุณสามารถอัปโหลดตัวอย่างเพิ่มได้อีก {{count}} รายการ",
+          "invalid_url": "URL ของ {{type}} ไม่ถูกต้อง",
+          "video_exists": "วิดีโอนี้ถูกเพิ่มไปแล้ว",
+          "adding_video": "กำลังเพิ่มวิดีโอตัวอย่าง...",
+          "video_preview_added": "เพิ่มวิดีโอตัวอย่างสำเร็จแล้ว",
+          "video_preview_error": "เพิ่มวิดีโอตัวอย่างล้มเหลว",
+          "updating_order": "กำลังอัปเดตลำดับรูปภาพตัวอย่าง..."
+        }
+      },
+      "socials": {
+        "title": "ลิงก์โซเชียล",
+        "subtitle": "จัดการช่องทางการติดต่อโซเชียลมีเดียขององค์กรคุณ",
+        "labels": {
+          "social_links": "ลิงก์โซเชียล",
+          "custom_links": "ลิงก์ที่กำหนดเอง"
+        },
+        "placeholders": {
+          "twitter": "URL โปรไฟล์ Twitter",
+          "facebook": "URL โปรไฟล์ Facebook",
+          "instagram": "URL โปรไฟล์ Instagram",
+          "youtube": "URL ช่อง YouTube",
+          "label": "ป้ายกำกับ",
+          "url": "URL"
+        },
+        "add_link": "เพิ่มลิงก์",
+        "custom_links_desc": "คุณสามารถเพิ่มลิงก์ที่กำหนดเองได้สูงสุด 3 ลิงก์เพื่อแสดงในโปรไฟล์องค์กรของคุณ"
+      },
+      "scripts": {
+        "title": "สคริปต์",
+        "subtitle": "เพิ่มสคริปต์ JavaScript ที่กำหนดเองให้กับองค์กรของคุณ",
+        "warning": "โปรดตรวจสอบให้แน่ใจว่าคุณเชื่อถือและเข้าใจสคริปต์ก่อนเพิ่ม เพื่อความปลอดภัยขององค์กรคุณ สคริปต์สามารถโต้ตอบกับหน้าต่างๆ ขององค์กรได้",
+        "add_script": "เพิ่มสคริปต์",
+        "no_scripts": "ยังไม่มีสคริปต์ที่เพิ่มไว้",
+        "add_first_script": "เพิ่มสคริปต์แรกของคุณเพื่อเริ่มต้น",
+        "script_name": "ชื่อสคริปต์",
+        "script_content": "เนื้อหาสคริปต์",
+        "placeholders": {
+          "name": "ระบุชื่อสคริปต์",
+          "content": "วางรหัส JavaScript ของคุณที่นี่"
+        },
+        "save_script": "บันทึกสคริปต์",
+        "toasts": {
+          "save_success": "บันทึกสคริปต์สำเร็จแล้ว",
+          "delete_success": "ลบสคริปต์สำเร็จแล้ว"
+        }
+      },
+      "audit_logs": {
+        "title": "บันทึกการตรวจสอบ",
+        "subtitle": "ติดตามและตรวจสอบกิจกรรมทั้งหมดภายในองค์กรของคุณ",
+        "refresh": "รีเฟรชบันทึก",
+        "export": "ส่งออก",
+        "search_by": "ค้นหาโดย",
+        "placeholders": {
+          "search": "ค้นหา..."
+        },
+        "filters": {
+          "resource": "ทรัพยากร",
+          "status": "สถานะ",
+          "date": "วันที่"
+        },
+        "resources": {
+          "all": "ทรัพยากรทั้งหมด",
+          "user": "ผู้ใช้งาน",
+          "course": "คอร์สเรียน",
+          "org": "องค์กร"
+        },
+        "date_ranges": {
+          "all": "ตลอดเวลา",
+          "today": "วันนี้",
+          "7d": "7 วันล่าสุด",
+          "30d": "30 วันล่าสุด",
+          "custom": "กำหนดช่วงวันที่เอง"
+        },
+        "table": {
+          "timestamp": "วันเวลา",
+          "user": "ผู้ใช้งาน",
+          "resource": "ทรัพยากร",
+          "path_method": "เส้นทางและวิธีการ",
+          "ip_address": "ที่อยู่ IP",
+          "status": "สถานะ",
+          "payload": "ข้อมูลที่ส่ง (Payload)"
+        },
+        "loading": "กำลังโหลดกิจกรรม...",
+        "no_logs": "ไม่พบข้อมูลบันทึก",
+        "pagination": {
+          "showing": "แสดงรายการที่ {{start}} ถึง {{end}} จากทั้งหมด {{total}} รายการ"
+        },
+        "modals": {
+          "payload": {
+            "title": "ข้อมูลกิจกรรม",
+            "description": "ข้อมูลรายละเอียดสำหรับการดำเนินการ: {{action}}"
+          }
+        },
+        "export_toasts": {
+          "generating": "กำลังสร้างไฟล์ CSV...",
+          "success": "ส่งออกไฟล์ CSV สำเร็จแล้ว",
+          "error": "ส่งออกไฟล์ CSV ล้มเหลว"
+        }
+      },
+      "landing": {
+        "title": "หน้าแลนดิ้ง",
+        "subtitle": "ปรับแต่งหน้าแลนดิ้งขององค์กรคุณ",
+        "beta": "รุ่นทดสอบ",
+        "save_changes": "บันทึกการเปลี่ยนแปลง",
+        "saving": "กำลังบันทึก...",
+        "saved_success": "บันทึกหน้าแลนดิ้งสำเร็จแล้ว",
+        "save_error": "เกิดข้อผิดพลาดในการบันทึกหน้าแลนดิ้ง",
+        "sections": "ส่วนต่างๆ",
+        "select_section": "เลือกส่วนที่ต้องการแก้ไขหรือเพิ่มส่วนใหม่",
+        "section_types": {
+          "hero": {
+            "label": "ฮีโร่",
+            "description": "เพิ่มส่วนฮีโร่พร้อมหัวข้อและปุ่มเชิญชวน"
+          },
+          "text_and_image": {
+            "label": "ข้อความและรูปภาพ",
+            "description": "เพิ่มส่วนที่มีข้อความและรูปภาพประกอบ"
+          },
+          "logos": {
+            "label": "โลโก้",
+            "description": "เพิ่มส่วนแสดงโลโก้พันธมิตร"
+          },
+          "people": {
+            "label": "บุคลากร",
+            "description": "เพิ่มส่วนแนะนำสมาชิกในทีม"
+          },
+          "featured_courses": {
+            "label": "คอร์สเรียน",
+            "description": "เพิ่มส่วนแสดงคอร์สเรียนที่เลือกไว้"
+          }
+        },
+        "add_section": "เพิ่มส่วนใหม่",
+        "hero_editor": {
+          "title": "ส่วนฮีโร่",
+          "section_title": "หัวข้อส่วน",
+          "section_title_placeholder": "ระบุหัวข้อส่วน",
+          "tabs": {
+            "content": "เนื้อหา",
+            "background": "พื้นหลัง",
+            "buttons": "ปุ่ม",
+            "illustration": "ภาพประกอบ"
+          },
+          "heading": "หัวข้อหลัก",
+          "heading_placeholder": "ระบุข้อความหัวข้อหลัก",
+          "heading_color": "สีหัวข้อหลัก",
+          "subheading": "หัวข้อรอง",
+          "subheading_placeholder": "ระบุข้อความหัวข้อรอง",
+          "subheading_color": "สีหัวข้อรอง",
+          "background_type": "ประเภทพื้นหลัง",
+          "background_type_placeholder": "เลือกประเภทพื้นหลัง",
+          "background_types": {
+            "solid": "สีพื้น",
+            "gradient": "สีไล่ระดับ",
+            "image": "รูปภาพ"
+          },
+          "background_color": "สีพื้นหลัง",
+          "gradient_type": "ประเภทสีไล่ระดับ",
+          "gradient_type_placeholder": "เลือกประเภทสีไล่ระดับ",
+          "gradient_types": {
+            "preset": "สีไล่ระดับที่กำหนดไว้",
+            "custom": "กำหนดสีไล่ระดับเอง"
+          },
+          "start_color": "สีเริ่มต้น",
+          "end_color": "สีสิ้นสุด",
+          "gradient_direction": "ทิศทางการไล่ระดับ",
+          "gradient_direction_placeholder": "เลือกทิศทางการไล่ระดับ",
+          "gradient_preset": "ชุดสีไล่ระดับ",
+          "gradient_preset_placeholder": "เลือกชุดสีไล่ระดับ",
+          "background_image": "รูปภาพพื้นหลัง",
+          "upload_image": "อัปโหลดรูปภาพ",
+          "button_text_colors": "ข้อความและสีปุ่ม",
+          "button_text": "ข้อความบนปุ่ม",
+          "text_color": "ข้อความ",
+          "background_color_label": "พื้นหลัง",
+          "button_link": "ลิงก์ของปุ่ม",
+          "button_link_placeholder": "ลิงก์ของปุ่ม",
+          "add_button": "เพิ่มปุ่ม",
+          "illustration_image": "ภาพประกอบ",
+          "illustration_url": "URL ภาพประกอบ",
+          "alt_text": "คำอธิบายรูปภาพ",
+          "upload_illustration": "อัปโหลดภาพประกอบ",
+          "position": "ตำแหน่ง",
+          "position_placeholder": "เลือกตำแหน่ง",
+          "positions": {
+            "left": "ซ้าย",
+            "right": "ขวา"
+          },
+          "size": "ขนาด",
+          "size_placeholder": "เลือกขนาด",
+          "sizes": {
+            "small": "เล็ก",
+            "medium": "กลาง",
+            "large": "ใหญ่"
+          },
+          "remove_illustration": "ลบภาพประกอบ"
+        },
+        "text_image_editor": {
+          "title": "ส่วนข้อความและรูปภาพ",
+          "title_label": "หัวข้อ",
+          "title_placeholder": "ระบุหัวข้อส่วน",
+          "content": "เนื้อหา",
+          "content_placeholder": "ระบุเนื้อหาในส่วนนี้",
+          "image_position": "ตำแหน่งรูปภาพ",
+          "image_position_placeholder": "เลือกตำแหน่งรูปภาพ",
+          "positions": {
+            "left": "ซ้าย",
+            "right": "ขวา"
+          },
+          "image": "รูปภาพ",
+          "image_url": "URL รูปภาพ",
+          "alt_text": "คำอธิบายรูปภาพ",
+          "upload_new_image": "อัปโหลดรูปภาพใหม่"
+        },
+        "logos_editor": {
+          "title": "ส่วนแสดงโลโก้",
+          "title_label": "หัวข้อ",
+          "title_placeholder": "ระบุหัวข้อส่วน",
+          "logos": "โลโก้",
+          "logo_url": "URL โลโก้",
+          "alt_text": "คำอธิบายรูปภาพ",
+          "upload_logo": "อัปโหลดโลโก้",
+          "add_logo": "เพิ่มโลโก้"
+        },
+        "people_editor": {
+          "title": "ส่วนแนะนำบุคลากร",
+          "title_label": "หัวข้อ",
+          "title_placeholder": "ระบุหัวข้อส่วน",
+          "people": "บุคลากร",
+          "name": "ชื่อ",
+          "name_placeholder": "ชื่อ-นามสกุล",
+          "username": "ชื่อผู้ใช้",
+          "username_placeholder": "@username",
+          "image": "รูปภาพ",
+          "image_url": "URL รูปภาพ",
+          "upload_avatar": "อัปโหลดรูปโปรไฟล์",
+          "description": "คำอธิบาย",
+          "description_placeholder": "คำอธิบายหรือบทบาท",
+          "add_person": "เพิ่มบุคคล"
+        },
+        "courses_editor": {
+          "title": "ส่วนคอร์สเรียน",
+          "title_label": "หัวข้อ",
+          "title_placeholder": "ระบุหัวข้อส่วน",
+          "select_courses": "เลือกคอร์สเรียน",
+          "loading_courses": "กำลังโหลดคอร์สเรียน...",
+          "selected": "เลือกแล้ว",
+          "select": "เลือก"
+        }
+      }
+    },
+    "users": {
+      "settings": {
+        "tabs": {
+          "users": "ผู้ใช้งาน",
+          "usergroups": "กลุ่มผู้ใช้งาน",
+          "roles": "บทบาท",
+          "signups": "การลงทะเบียนและรหัสเชิญ",
+          "add": "เชิญสมาชิก",
+          "audit_logs": "บันทึกการตรวจสอบ"
+        },
+        "pages": {
+          "users": {
+            "title": "ผู้ใช้งาน",
+            "subtitle": "จัดการผู้ใช้งานในองค์กรและกำหนดบทบาทและสิทธิ์การใช้งาน"
+          },
+          "signups": {
+            "title": "การลงทะเบียนและรหัสเชิญ",
+            "subtitle": "เลือกวิธีที่ผู้ใช้งานจะเข้าร่วมองค์กรของคุณ"
+          },
+          "add": {
+            "title": "เชิญสมาชิก",
+            "subtitle": "เชิญสมาชิกใหม่เข้าร่วมองค์กรของคุณ"
+          },
+          "usergroups": {
+            "title": "กลุ่มผู้ใช้งาน",
+            "subtitle": "สร้างและจัดการกลุ่มผู้ใช้งาน"
+          },
+          "roles": {
+            "title": "บทบาท",
+            "subtitle": "สร้างและจัดการบทบาทพร้อมสิทธิ์การใช้งานที่เฉพาะเจาะจง"
+          },
+          "audit_logs": {
+            "title": "บันทึกการตรวจสอบ",
+            "subtitle": "ติดตามและตรวจสอบกิจกรรมทั้งหมดภายในองค์กรของคุณ"
+          }
+        },
+        "mobile": {
+          "title": "สำหรับเดสก์ท็อปเท่านั้น",
+          "message1": "หน้านี้สามารถเข้าถึงได้ผ่านอุปกรณ์เดสก์ท็อปเท่านั้น",
+          "message2": "โปรดเปลี่ยนไปใช้เดสก์ท็อปเพื่อดูและจัดการการตั้งค่าผู้ใช้งาน"
+        }
+      },
+      "active_users": {
+        "title": "ผู้ใช้งานที่ใช้งานอยู่",
+        "subtitle": "จัดการผู้ใช้งานในองค์กรและกำหนดบทบาทและสิทธิ์การใช้งาน",
+        "table": {
+          "user": "ผู้ใช้งาน",
+          "role": "บทบาท",
+          "actions": "การดำเนินการ"
+        },
+        "actions": {
+          "edit_role": "แก้ไขบทบาท",
+          "remove_from_org": "ลบออกจากองค์กร",
+          "removing": "กำลังลบ...",
+          "remove_success": "ลบผู้ใช้งานออกจากองค์กรสำเร็จแล้ว",
+          "remove_error": "เกิดข้อผิดพลาดในการลบผู้ใช้งาน"
+        },
+        "modals": {
+          "update_role": {
+            "title": "อัปเดตบทบาท",
+            "description": "อัปเดตบทบาทสำหรับ @{{username}}"
+          },
+          "remove_user": {
+            "title": "ลบ {{username}} หรือไม่?",
+            "message": "คุณแน่ใจหรือไม่ว่าต้องการลบผู้ใช้งานรายนี้ออกจากองค์กร?",
+            "button": "ลบผู้ใช้งาน"
+          }
+        }
+      },
+      "signups": {
+        "title": "วิธีการลงทะเบียน",
+        "subtitle": "เลือกวิธีที่ผู้ใช้งานจะเข้าร่วมองค์กรของคุณ",
+        "open": {
+          "title": "เปิดสาธารณะ",
+          "description": "ผู้ใช้งานสามารถลงทะเบียนผ่านหน้าลงทะเบียนได้อย่างอิสระ",
+          "active": "ใช้งานอยู่",
+          "change_to": "เปลี่ยนเป็นแบบเปิดสาธารณะ",
+          "confirmation_message": "คุณแน่ใจหรือไม่ว่าต้องการเปลี่ยนรูปแบบการลงทะเบียนเป็นแบบเปิดสาธารณะ? ซึ่งจะทำให้ผู้ใช้งานสามารถเข้าร่วมองค์กรของคุณได้อย่างอิสระ",
+          "confirmation_title": "เปลี่ยนเป็นแบบเปิดสาธารณะหรือไม่?"
+        },
+        "closed": {
+          "title": "ปิดรับ (ผ่านการเชิญเท่านั้น)",
+          "description": "ผู้ใช้งานสามารถเข้าร่วมได้ผ่านการเชิญเท่านั้น",
+          "active": "ใช้งานอยู่",
+          "change_to": "เปลี่ยนเป็นแบบปิดรับ",
+          "confirmation_message": "คุณแน่ใจหรือไม่ว่าต้องการเปลี่ยนรูปแบบการลงทะเบียนเป็นแบบปิดรับ? ซึ่งจะทำให้ผู้ใช้งานสามารถเข้าร่วมได้ผ่านการเชิญเท่านั้น",
+          "confirmation_title": "เปลี่ยนเป็นแบบปิดรับหรือไม่?"
+        },
+        "invite_codes": {
+          "title": "รหัสเชิญ",
+          "subtitle": "คุณสามารถคัดลอกรหัสเชิญและใช้เพื่อเข้าร่วมองค์กรได้",
+          "table": {
+            "code": "รหัส",
+            "signup_link": "ลิงก์ลงทะเบียน",
+            "type": "ประเภท",
+            "expiration_date": "วันหมดอายุ",
+            "actions": "การดำเนินการ"
+          },
+          "types": {
+            "linked_to_usergroup": "เชื่อมโยงกับกลุ่มผู้ใช้งาน",
+            "normal": "ทั่วไป"
+          },
+          "actions": {
+            "delete_code": "ลบรหัส",
+            "delete_confirmation_title": "ลบรหัสหรือไม่?",
+            "delete_confirmation_message": "คุณแน่ใจหรือไม่ว่าต้องการลบรหัสเชิญนี้?",
+            "generate": "สร้างรหัสเชิญ",
+            "generate_title": "สร้างรหัสเชิญ",
+            "generate_description": "สร้างรหัสเชิญใหม่สำหรับองค์กรของคุณ"
+          },
+          "toasts": {
+            "deleting": "กำลังลบ...",
+            "delete_success": "ลบรหัสเชิญสำเร็จแล้ว",
+            "delete_error": "เกิดข้อผิดพลาดในการลบ",
+            "changing_method": "กำลังเปลี่ยนวิธีการลงทะเบียน...",
+            "change_success": "เปลี่ยนวิธีการลงทะเบียนเป็น {{method}} สำเร็จแล้ว",
+            "change_error": "เกิดข้อผิดพลาดในการเปลี่ยนวิธีการลงทะเบียน"
+          }
+        },
+        "generate_modal": {
+          "linked_title": "รหัสเชิญที่เชื่อมโยงกับกลุ่มผู้ใช้งาน",
+          "linked_description": "เมื่อลงทะเบียน ผู้ใช้งานจะถูกเชื่อมโยงเข้ากับกลุ่มผู้ใช้งานที่เลือกโดยอัตโนมัติ",
+          "normal_title": "รหัสเชิญทั่วไป",
+          "normal_description": "เมื่อลงทะเบียน ผู้ใช้งานจะไม่ถูกเชื่อมโยงเข้ากับกลุ่มผู้ใช้งานใดๆ",
+          "generate_button": "สร้างรหัส",
+          "no_usergroups": "ไม่มีกลุ่มผู้ใช้งานให้เลือก",
+          "create_usergroup_link": "สร้างกลุ่มผู้ใช้งาน",
+          "toasts": {
+            "error": "ข้อผิดพลาด {{status}}: {{detail}}"
+          }
+        }
+      },
+      "invite_members": {
+        "title": "เชิญผู้ใช้งานเข้าร่วมองค์กร",
+        "subtitle": "ส่งคำเชิญผ่านอีเมล (แยกด้วยเครื่องหมายจุลภาค ,)",
+        "email_placeholder": "เช่น spike.spiegel@bepop.space, michael.scott@dundermifflin.com",
+        "invite_code_label": "รหัสเชิญ",
+        "invite_code_tooltip": "ใช้รหัสเชิญที่คุณสร้างขึ้นในหน้าการเข้าถึงการลงทะเบียน",
+        "send_button": "ส่งคำเชิญทางอีเมล",
+        "invited_users": {
+          "title": "ผู้ใช้งานที่ได้รับคำเชิญ",
+          "subtitle": "ผู้ใช้งานที่ได้รับคำเชิญเข้าร่วมองค์กร",
+          "table": {
+            "email": "อีเมล",
+            "signup_status": "สถานะการลงทะเบียน",
+            "email_sent": "ส่งอีเมลแล้ว"
+          },
+          "status": {
+            "pending": "รอดำเนินการ",
+            "signed": "ลงทะเบียนแล้ว"
+          },
+          "email_status": {
+            "sent": "ส่งแล้ว",
+            "no": "ยังไม่ส่ง"
+          }
+        },
+        "toasts": {
+          "sending": "กำลังส่งคำเชิญ...",
+          "success": "ส่งคำเชิญสำเร็จแล้ว",
+          "error": "เกิดข้อผิดพลาดในการส่งคำเชิญ"
+        }
+      },
+      "usergroups": {
+        "title": "จัดการกลุ่มผู้ใช้งานและสมาชิก",
+        "subtitle": "กลุ่มผู้ใช้งานเป็นวิธีจัดกลุ่มสมาชิกเพื่อจัดการการเข้าถึงทรัพยากร (คอร์สเรียน) ขององค์กร",
+        "table": {
+          "usergroup": "กลุ่มผู้ใช้งาน",
+          "description": "คำอธิบาย",
+          "manage_users": "จัดการสมาชิก",
+          "actions": "การดำเนินการ"
+        },
+        "actions": {
+          "manage_users": "จัดการสมาชิก",
+          "edit": "แก้ไข",
+          "delete": "ลบ",
+          "create": "สร้างกลุ่มผู้ใช้งาน"
+        },
+        "modals": {
+          "manage_users": {
+            "title": "จัดการสมาชิกในกลุ่ม",
+            "description": "จัดการสมาชิกที่อยู่ในกลุ่มผู้ใช้งานนี้",
+            "table": {
+              "user": "ผู้ใช้งาน",
+              "linked": "เชื่อมโยงแล้ว",
+              "actions": "การดำเนินการ"
+            },
+            "status": {
+              "linked": "เชื่อมโยงแล้ว",
+              "not_linked": "ยังไม่เชื่อมโยง"
+            },
+            "actions": {
+              "link": "เชื่อมโยง",
+              "unlink": "ยกเลิกการเชื่อมโยง"
+            },
+            "toasts": {
+              "link_success": "เชื่อมโยงผู้ใช้งานสำเร็จแล้ว",
+              "unlink_success": "ยกเลิกการเชื่อมโยงผู้ใช้งานสำเร็จแล้ว",
+              "error": "ข้อผิดพลาด {{status}}: {{detail}}"
+            }
+          },
+          "create": {
+            "title": "สร้างกลุ่มผู้ใช้งาน",
+            "description": "สร้างกลุ่มผู้ใช้งานใหม่เพื่อจัดการสมาชิกของคุณ",
+            "form": {
+              "name": "ชื่อกลุ่ม",
+              "name_required": "จำเป็นต้องระบุชื่อกลุ่ม",
+              "description": "คำอธิบาย",
+              "submit": "สร้างกลุ่มผู้ใช้งาน",
+              "loading": "กำลังโหลด..."
+            },
+            "toasts": {
+              "creating": "กำลังสร้าง...",
+              "success": "สร้างกลุ่มผู้ใช้งานใหม่สำเร็จแล้ว",
+              "error": "สร้างกลุ่มผู้ใช้งานใหม่ล้มเหลว"
+            }
+          },
+          "edit": {
+            "title": "แก้ไขกลุ่มผู้ใช้งาน",
+            "form": {
+              "name": "ชื่อกลุ่ม",
+              "name_required": "จำเป็นต้องระบุชื่อกลุ่ม",
+              "description": "คำอธิบาย",
+              "submit": "บันทึกกลุ่มผู้ใช้งาน",
+              "loading": "กำลังโหลด..."
+            },
+            "toasts": {
+              "success": "บันทึกกลุ่มผู้ใช้งานสำเร็จแล้ว",
+              "error": "เกิดข้อผิดพลาดในการบันทึกกลุ่มผู้ใช้งาน โปรดลองอีกครั้งในภายหลัง"
+            }
+          },
+          "delete": {
+            "title": "ลบกลุ่มผู้ใช้งานหรือไม่?",
+            "message": "สิทธิ์การเข้าถึงทรัพยากรทั้งหมดของสมาชิกทุกคน in กลุ่มนี้จะถูกยกเลิก คุณแน่ใจหรือไม่ว่าต้องการลบกลุ่มผู้ใช้งานนี้?",
+            "button": "ลบกลุ่มผู้ใช้งาน"
+          }
+        },
+        "toasts": {
+          "deleting": "กำลังลบ...",
+          "delete_success": "ลบกลุ่มผู้ใช้งานสำเร็จแล้ว",
+          "delete_error": "เกิดข้อผิดพลาดในการลบกลุ่มผู้ใช้งาน"
+        }
+      },
+      "roles": {
+        "title": "จัดการบทบาทและสิทธิ์การใช้งาน",
+        "subtitle": "บทบาทเป็นตัวกำหนดว่าผู้ใช้งานสามารถทำอะไรได้บ้างภายในองค์กรของคุณ สร้างบทบาทที่กำหนดเองพร้อมสิทธิ์การใช้งานที่เฉพาะเจาะจงสำหรับประเภทผู้ใช้งานที่แตกต่างกัน",
+        "table": {
+          "role_name": "ชื่อบทบาท",
+          "description": "คำอธิบาย",
+          "permissions": "สิทธิ์การใช้งาน",
+          "actions": "การดำเนินการ"
+        },
+        "no_description": "ไม่มีคำอธิบาย",
+        "no_permissions": "ไม่มีสิทธิ์การใช้งาน",
+        "permissions_count": "{{count}} สิทธิ์",
+        "system_wide": "ทั่วทั้งระบบ",
+        "actions": {
+          "edit": "แก้ไข",
+          "delete": "ลบ",
+          "create": "สร้างบทบาท"
+        },
+        "modals": {
+          "create": {
+            "title": "สร้างบทบาท",
+            "description": "สร้างบทบาทใหม่พร้อมสิทธิ์การใช้งานที่เฉพาะเจาะจง",
+            "form": {
+              "role_name": "ชื่อบทบาท",
+              "role_name_placeholder": "เช่น ผู้จัดการคอร์สเรียน",
+              "description": "คำอธิบาย",
+              "description_placeholder": "อธิบายว่าบทบาทนี้สามารถทำอะไรได้บ้าง...",
+              "permissions": "สิทธิ์การใช้งาน",
+              "select_all": "เลือกทั้งหมด",
+              "deselect_all": "ยกเลิกการเลือกทั้งหมด",
+              "select": "เลือก",
+              "deselect": "ยกเลิก",
+              "submit": "สร้างบทบาท",
+              "loading": "กำลังสร้าง..."
+            },
+            "validation": {
+              "name_required": "จำเป็นต้องระบุชื่อ",
+              "name_min_length": "ชื่อต้องมีความยาวอย่างน้อย 2 ตัวอักษร",
+              "description_required": "จำเป็นต้องระบุคำอธิบาย",
+              "description_min_length": "คำอธิบายต้องมีความยาวอย่างน้อย 10 ตัวอักษร"
+            },
+            "toasts": {
+              "success": "สร้างบทบาทใหม่สำเร็จแล้ว",
+              "error": "สร้างบทบาทใหม่ล้มเหลว"
+            },
+            "presets": {
+              "title": "สิทธิ์การใช้งานที่กำหนดไว้ล่วงหน้า",
+              "admin": {
+                "name": "ผู้ดูแลระบบ",
+                "description": "ควบคุมแพลตฟอร์มทั้งหมดด้วยสิทธิ์ทุกอย่าง"
+              },
+              "maintainer": {
+                "name": "ผู้ดูแล",
+                "description": "สามารถจัดการคอร์สเรียน บท และกิจกรรมต่างๆ ได้"
+              },
+              "instructor": {
+                "name": "ผู้สอน",
+                "description": "สามารถสร้างและจัดการคอร์สเรียนของตัวเองได้"
+              },
+              "viewer": {
+                "name": "ผู้เข้าชม",
+                "description": "สิทธิ์การอ่านคอร์สเรียนและเนื้อหาเท่านั้น"
+              },
+              "content_creator": {
+                "name": "ผู้สร้างเนื้อหา",
+                "description": "สามารถสร้างและแก้ไขเนื้อหาได้ แต่ไม่สามารถจัดการผู้ใช้งานได้"
+              },
+              "user_manager": {
+                "name": "ผู้จัดการผู้ใช้งาน",
+                "description": "สามารถจัดการผู้ใช้งานและกลุ่มผู้ใช้งานได้"
+              },
+              "moderator": {
+                "name": "ผู้ควบคุม",
+                "description": "สามารถควบคุมเนื้อหาและจัดการกิจกรรมต่างๆ ได้"
+              },
+              "analyst": {
+                "name": "นักวิเคราะห์",
+                "description": "สิทธิ์การอ่านพร้อมฟีเจอร์การวิเคราะห์"
+              },
+              "guest": {
+                "name": "แขก",
+                "description": "สิทธิ์การเข้าถึงที่จำกัดสำหรับผู้ใช้งานภายนอก"
+              }
+            },
+            "permissions": {
+              "title": "สิทธิ์การใช้งาน",
+              "sections": {
+                "courses": "คอร์สเรียน",
+                "users": "ผู้ใช้งาน",
+                "usergroups": "กลุ่มผู้ใช้งาน",
+                "collections": "คอลเลกชัน",
+                "organizations": "องค์กร",
+                "coursechapters": "บทในคอร์สเรียน",
+                "activities": "กิจกรรม",
+                "roles": "บทบาท",
+                "dashboard": "แดชบอร์ด"
+              },
+              "actions": {
+                "create": "สร้าง",
+                "read": "อ่าน",
+                "read_own": "อ่านของตัวเอง",
+                "update": "อัปเดต",
+                "update_own": "อัปเดตของตัวเอง",
+                "delete": "ลบ",
+                "delete_own": "ลบของตัวเอง",
+                "access": "เข้าถึง"
+              },
+              "select_all": "เลือกทั้งหมด",
+              "deselect_all": "ยกเลิกการเลือกทั้งหมด",
+              "select": "เลือก",
+              "deselect": "ยกเลิก"
+            }
+          },
+          "edit": {
+            "title": "แก้ไขบทบาท",
+            "description": "แก้ไขสิทธิ์การใช้งานและรายละเอียดของบทบาท",
+            "form": {
+              "role_name": "ชื่อบทบาท",
+              "description": "คำอธิบาย",
+              "permissions": "สิทธิ์การใช้งาน",
+              "select_all": "เลือกทั้งหมด",
+              "deselect_all": "ยกเลิกการเลือกทั้งหมด",
+              "select": "เลือก",
+              "deselect": "ยกเลิก",
+              "submit": "บันทึกบทบาท",
+              "loading": "กำลังบันทึก..."
+            },
+            "validation": {
+              "name_required": "จำเป็นต้องระบุชื่อ",
+              "name_min_length": "ชื่อต้องมีความยาวอย่างน้อย 2 ตัวอักษร",
+              "description_required": "จำเป็นต้องระบุคำอธิบาย",
+              "description_min_length": "คำอธิบายต้องมีความยาวอย่างน้อย 10 ตัวอักษร"
+            },
+            "toasts": {
+              "success": "บันทึกบทบาทสำเร็จแล้ว",
+              "error": "เกิดข้อผิดพลาดในการบันทึกบทบาท โปรดลองอีกครั้งในภายหลัง"
+            }
+          },
+          "delete": {
+            "title": "ลบบทบาทหรือไม่?",
+            "message": "การดำเนินการนี้ไม่สามารถย้อนคืนได้ ผู้ใช้งานทุกคนที่มีบทบาทนี้จะเสียสิทธิ์การใช้งาน คุณแน่ใจหรือไม่ว่าต้องการลบบทบาทนี้?",
+            "button": "ลบบทบาท"
+          }
+        },
+        "toasts": {
+          "deleting": "กำลังลบ...",
+          "delete_success": "ลบบทบาทสำเร็จแล้ว",
+          "delete_error": "เกิดข้อผิดพลาดในการลบบทบาท"
+        }
+      }
+    },
+    "assignments": {
+      "home": {
+        "title": "งานที่มอบหมาย",
+        "course_label": "คอร์สเรียน",
+        "assignment_label": "งานที่มอบหมาย",
+        "course_editor": "เครื่องมือแก้ไขคอร์ส",
+        "editor": "เครื่องมือแก้ไข",
+        "submissions": "การส่งงาน",
+        "no_assignments": "ยังไม่มีงานที่มอบหมายสำหรับคอร์สนี้ สร้างงานในเครื่องมือแก้ไขคอร์ส"
+      },
+      "detail": {
+        "title": "เครื่องมืองานที่มอบหมาย",
+        "tabs": {
+          "editor": "เครื่องมือแก้ไข",
+          "submissions": "การส่งงาน"
+        },
+        "mobile": {
+          "title": "สำหรับเดสก์ท็อปเท่านั้น",
+          "message1": "หน้านี้สามารถเข้าถึงได้ผ่านอุปกรณ์เดสก์ท็อปเท่านั้น",
+          "message2": "โปรดเปลี่ยนไปใช้เดสก์ท็อปเพื่อดูและจัดการงานที่มอบหมาย"
+        },
+        "publishing": {
+          "published": "เผยแพร่แล้ว",
+          "unpublished": "ยังไม่เผยแพร่",
+          "edit_tooltip": "แก้ไขรายละเอียดงาน",
+          "preview_tooltip": "ดูตัวอย่างงานในมุมมองผู้เรียน",
+          "unpublish_tooltip": "ทำให้งานเป็นแบบส่วนตัวสำหรับผู้เรียน",
+          "publish_tooltip": "เผยแพร่งานเพื่อให้ผู้เรียนมองเห็นได้",
+          "edit": "แก้ไข",
+          "preview": "ตัวอย่าง",
+          "unpublish": "ยกเลิกการเผยแพร่",
+          "publish": "เผยแพร่",
+          "toasts": {
+            "updating": "กำลังอัปเดตงาน...",
+            "update_success": "อัปเดตงานสำเร็จแล้ว",
+            "update_error": "เกิดข้อผิดพลาดในการอัปเดตงาน โปรดลองอีกครั้งในภายหลัง"
+          }
+        }
+      },
+      "editor": {
+        "tasks_title": "ภารกิจ",
+        "add_task": "เพิ่มภารกิจ",
+        "add_task_modal": {
+          "title": "เพิ่มภารกิจในงานที่มอบหมาย",
+          "description": "สร้างภารกิจใหม่สำหรับงานที่มอบหมายนี้"
+        },
+        "task_types": {
+          "quiz": {
+            "title": "ควิซ",
+            "description": "คำถามพร้อมตัวเลือกคำตอบ"
+          },
+          "file_submission": {
+            "title": "การส่งไฟล์",
+            "description": "ผู้เรียนสามารถส่งไฟล์สำหรับภารกิจนี้ได้"
+          },
+          "form": {
+            "title": "แบบฟอร์ม",
+            "description": "แบบฟอร์มสำหรับให้ผู้เรียนกรอกข้อมูล"
+          }
+        },
+        "toasts": {
+          "task_created": "สร้างภารกิจสำเร็จแล้ว",
+          "task_saved": "บันทึกภารกิจสำเร็จแล้ว",
+          "task_save_error": "เกิดข้อผิดพลาดในการบันทึกภารกิจ โปรดลองอีกครั้งในภายหลัง",
+          "task_updated": "อัปเดตภารกิจสำเร็จแล้ว",
+          "task_update_error": "เกิดข้อผิดพลาดในการอัปเดตภารกิจ โปรดลองอีกครั้งในภายหลัง",
+          "reminder": "อย่าลืมยกเลิกการเผยแพร่งานเมื่อแก้ไขหรือเพิ่มภารกิจ เพื่อหลีกเลี่ยงปัญหาที่อาจเกิดขึ้นกับผู้เรียน คุณสามารถเผยแพร่ใหม่ได้เมื่อพร้อม"
+        },
+        "task_editor": {
+          "general": {
+            "title": "หัวข้อ",
+            "description": "คำอธิบาย",
+            "hint": "คำใบ้",
+            "reference_file": "ไฟล์อ้างอิง",
+            "reference_file_info": "รูปแบบที่รองรับ: pdf, docx, mp4, jpg, jpeg, png, pptx, zip",
+            "max_grade_value": "คะแนนสูงสุด",
+            "max_grade_error": "คะแนนต้องอยู่ระหว่าง 20 ถึง 100",
+            "submit": "ส่ง",
+            "download": "ดาวน์โหลด",
+            "change_reference_file": "เปลี่ยนไฟล์อ้างอิง",
+            "loading": "กำลังโหลด",
+            "reference_file_updated": "อัปเดตไฟล์อ้างอิงสำเร็จแล้ว",
+            "allowed_formats": "รูปแบบที่รองรับ: pdf, docx, mp4, jpg, jpeg, png, pptx, zip",
+            "sign_in_required": "โปรดเข้าสู่ระบบเพื่ออัปโหลดไฟล์",
+            "auth_required": "จำเป็นต้องยืนยันตัวตน โปรดเข้าสู่ระบบเพื่ออัปโหลดไฟล์",
+            "auth_required_submit": "จำเป็นต้องยืนยันตัวตน โปรดเข้าสู่ระบบเพื่อส่งภารกิจ",
+            "hint_optional": "คำใบ้ (ระบุหรือไม่ก็ได้)"
+          }
+        }
+      },
+      "submissions": {
+        "status": {
+          "late": "ส่งช้า",
+          "submitted": "ส่งแล้ว",
+          "graded": "ตรวจแล้ว"
+        },
+        "submission_label": "การส่งงาน",
+        "evaluate": "ประเมิน",
+        "evaluate_modal": {
+          "title": "ประเมิน @{{username}}",
+          "description": "ประเมินงานที่ส่งมา"
+        },
+        "task_label": "ภารกิจที่ {{number}} :",
+        "hint": "คำใบ้",
+        "reference_document": "เอกสารอ้างอิง",
+        "actions": {
+          "reject": "ตีกลับงาน",
+          "set_final_grade": "ตั้งคะแนนสุดท้าย",
+          "mark_as_done": "ทำเครื่องหมายกิจกรรมของผู้ใช้ว่าเสร็จสิ้น"
+        },
+        "toasts": {
+          "reject_success": "ตีกลับงานสำเร็จแล้ว"
+        }
+      },
+      "modals": {
+        "edit": {
+          "title": "แก้ไขงาน",
+          "description": "อัปเดตรายละเอียดงานที่มอบหมาย",
+          "form": {
+            "title_label": "หัวข้องาน",
+            "title_required": "โปรดระบุชื่อของงาน",
+            "description_label": "คำอธิบายงาน",
+            "description_required": "โปรดระบุคำอธิบายของงาน",
+            "due_date_label": "กำหนดส่ง",
+            "due_date_required": "โปรดกำหนดวันส่งงาน",
+            "grading_type_label": "ประเภทการให้คะแนน",
+            "grading_type_required": "โปรดเลือกประเภทการให้คะแนนสำหรับงานนี้",
+            "grading_types": {
+              "alphabet": "ตัวอักษร",
+              "numeric": "ตัวเลข",
+              "percentage": "เปอร์เซ็นต์"
+            },
+            "cancel": "ยกเลิก",
+            "save": "บันทึกการเปลี่ยนแปลง",
+            "saving": "กำลังบันทึก..."
+          },
+          "toasts": {
+            "updating": "กำลังอัปเดตงาน...",
+            "success": "อัปเดตงานสำเร็จแล้ว",
+            "error": "อัปเดตงานล้มเหลว",
+            "error_detail": "เกิดข้อผิดพลาดในการอัปเดตงาน"
+          }
+        },
+        "create": {
+          "form": {
+            "title_label": "หัวข้องาน",
+            "title_required": "โปรดระบุชื่อของงาน",
+            "description_label": "คำอธิบายงาน",
+            "description_required": "โปรดระบุคำอธิบายของงาน",
+            "due_date_label": "กำหนดส่ง",
+            "due_date_required": "โปรดกำหนดวันส่งงาน",
+            "grading_type_label": "ประเภทการให้คะแนน",
+            "grading_type_required": "โปรดเลือกประเภทการให้คะแนนสำหรับงานนี้",
+            "grading_types": {
+              "alphabet": "ตัวอักษร",
+              "numeric": "ตัวเลข",
+              "percentage": "เปอร์เซ็นต์"
+            },
+            "submit": "สร้างกิจกรรม"
+          },
+          "toasts": {
+            "creating": "กำลังสร้างงาน...",
+            "success": "สร้างงานสำเร็จแล้ว"
+          }
+        }
+      }
+    },
+    "courses": {
+      "title": "คอร์สเรียน",
+      "rights_guide": "คู่มือการใช้งานสิทธิ์",
+      "create_course": "สร้างคอร์ส",
+      "create_new_course": "สร้างคอร์สใหม่",
+      "no_courses": "ยังไม่มีคอร์สเรียน",
+      "create_course_placeholder": "สร้างคอร์สเพื่อเพิ่มเนื้อหา",
+      "no_courses_available": "ยังไม่มีคอร์สเรียนในขณะนี้",
+      "overview_top": {
+        "course_label": "คอร์สเรียน",
+        "rights_guide_button": "คู่มือการใช้งานสิทธิ์"
+      },
+      "settings": {
+        "tabs": {
+          "general": "ทั่วไป",
+          "content": "เนื้อหา",
+          "access": "การเข้าถึง",
+          "contributors": "ผู้ร่วมสร้างเนื้อหา",
+          "certification": "ใบประกาศนียบัตร"
+        },
+        "access_denied": {
+          "title": "การเข้าถึงถูกปฏิเสธ",
+          "message": "คุณไม่มีสิทธิ์ในการเข้าถึงคอร์สเรียนนี้"
+        },
+        "access_restricted": {
+          "title": "จำกัดการเข้าถึง",
+          "message": "คุณไม่มีสิทธิ์ในการเข้าถึงส่วน {{tab}}"
+        },
+        "loading": "กำลังโหลด..."
+      },
+      "general": {
+        "form": {
+          "name_label": "ชื่อ",
+          "name_required": "จำเป็นต้องระบุฟิลด์นี้",
+          "name_max_length": "ชื่อต้องมีความยาวไม่เกิน 100 ตัวอักษร",
+          "description_label": "คำอธิบาย",
+          "description_required": "จำเป็นต้องระบุฟิลด์นี้",
+          "description_max_length": "คำอธิบายต้องมีความยาวไม่เกิน 1000 ตัวอักษร",
+          "about_label": "เกี่ยวกับ",
+          "learnings_label": "สิ่งที่จะได้เรียนรู้",
+          "learnings_required": "จำเป็นต้องระบุฟิลด์นี้",
+          "learnings_invalid_format": "รูปแบบไม่ถูกต้อง",
+          "learnings_min_items": "จำเป็นต้องมีอย่างน้อยหนึ่งรายการ",
+          "learnings_empty_text": "ทุกรายการต้องมีข้อความ",
+          "learnings_invalid_json": "รูปแบบ JSON ไม่ถูกต้อง",
+          "tags_label": "แท็ก",
+          "tags_placeholder": "กด Enter เพื่อเพิ่ม...",
+          "thumbnail_type_label": "ประเภทภาพหน้าปก",
+          "thumbnail_type_image": "รูปภาพ",
+          "thumbnail_type_video": "วิดีโอ",
+          "thumbnail_type_both": "ทั้งคู่",
+          "thumbnail_label": "ภาพหน้าปก",
+          "image_search_placeholder": "ค้นหารูปภาพ..."
+        },
+        "thumbnail": {
+          "upload_image": "อัปโหลดรูปภาพ",
+          "upload_video": "อัปโหลดวิดีโอ",
+          "gallery": "คลังภาพ",
+          "tabs": {
+            "image": "รูปภาพ",
+            "video": "วิดีโอ"
+          },
+          "supported_formats": {
+            "image": "รองรับไฟล์ PNG, JPG/JPEG (สูงสุด 8MB)",
+            "video": "รองรับไฟล์ MP4, WebM (สูงสุด 100MB)"
+          }
+        },
+        "errors": {
+          "save_failed": "บันทึกโครงสร้างคอร์สเรียนล้มเหลว"
+        }
+      },
+      "access": {
+        "title": "การเข้าถึงคอร์สเรียน",
+        "subtitle": "เลือกว่าคอร์สเรียนของคุณจะเป็นสาธารณะบนอินเทอร์เน็ต หรือเข้าถึงได้เฉพาะผู้ใช้ที่ลงทะเบียนเท่านั้น",
+        "public": {
+          "title": "สาธารณะ",
+          "description": "คอร์สเรียนจะเปิดให้เข้าถึงได้อย่างอิสระบนอินเทอร์เน็ต ถูกเก็บข้อมูลโดยเครื่องมือค้นหา และทุกคนสามารถเข้าเรียนได้",
+          "active": "ใช้งานอยู่",
+          "confirmation_title": "เปลี่ยนเป็นแบบสาธารณะหรือไม่?",
+          "confirmation_message": "คุณแน่ใจหรือไม่ว่าต้องการเปิดคอร์สเรียนนี้ให้เป็นสาธารณะบนอินเทอร์เน็ต?",
+          "confirmation_button": "เปลี่ยนเป็นแบบสาธารณะ"
+        },
+        "users_only": {
+          "title": "เฉพาะผู้ใช้ที่ลงทะเบียน",
+          "description": "คอร์สเรียนจะเข้าถึงได้เฉพาะผู้ใช้ที่ลงทะเบียนแล้วเท่านั้น และคุณสามารถเลือกกลุ่มผู้ใช้งานที่มีสิทธิ์เข้าถึงคอร์สนี้เพิ่มเติมได้",
+          "active": "ใช้งานอยู่",
+          "confirmation_title": "เปลี่ยนเป็นแบบเฉพาะผู้ใช้เท่านั้นหรือไม่?",
+          "confirmation_message": "คุณแน่ใจหรือไม่ว่าต้องการให้คอร์สเรียนนี้เข้าถึงได้เฉพาะผู้ใช้ที่ลงทะเบียนแล้วเท่านั้น?",
+          "confirmation_button": "เปลี่ยนเป็นแบบเฉพาะผู้ใช้เท่านั้น"
+        },
+        "usergroups": {
+          "title": "กลุ่มผู้ใช้งาน",
+          "subtitle": "หากคุณต้องการให้เฉพาะบางกลุ่มผู้ใช้งานเข้าถึงคอร์สนี้ได้ คุณสามารถเชื่อมโยงกลุ่มเหล่านั้นได้ที่นี่",
+          "table": {
+            "name": "ชื่อ",
+            "actions": "การดำเนินการ"
+          },
+          "actions": {
+            "delete_link": "ลบการเชื่อมโยง",
+            "link_to_usergroup": "เชื่อมโยงกับกลุ่มผู้ใช้งาน"
+          },
+          "modals": {
+            "link_title": "เชื่อมโยงคอร์สเรียนกับกลุ่มผู้ใช้งาน",
+            "link_description": "เลือกกลุ่มผู้ใช้งานที่คุณต้องการเชื่อมโยงกับคอร์สนี้ สมาชิกในกลุ่มนี้จะสามารถเข้าถึงคอร์สเรียนได้",
+            "unlink_title": "ยกเลิกการเชื่อมโยงกับกลุ่มผู้ใช้งานหรือไม่?",
+            "unlink_message": "สมาชิกในกลุ่มนี้จะไม่สามารถเข้าถึงคอร์สเรียนนี้ได้อีกต่อไป",
+            "unlink_button": "ลบการเชื่อมโยง",
+            "warning": "ผู้ใช้ที่ไม่ได้อยู่ในกลุ่มนี้จะไม่สามารถเข้าถึงคอร์สเรียนนี้ได้อีกต่อไป",
+            "usergroup_name": "ชื่อกลุ่มผู้ใช้งาน",
+            "no_usergroups": "ไม่มีกลุ่มผู้ใช้งานให้เลือก",
+            "create_usergroup": "สร้างกลุ่มผู้ใช้งาน",
+            "link_button": "เชื่อมโยง"
+          },
+          "toasts": {
+            "link_success": "เชื่อมโยงกับกลุ่มผู้ใช้งานสำเร็จแล้ว",
+            "link_error": "ข้อผิดพลาด {{status}}: {{detail}}",
+            "unlink_success": "ยกเลิกการเชื่อมโยงกลุ่มผู้ใช้งานสำเร็จแล้ว",
+            "unlink_error": "เกิดข้อผิดพลาดในการยกเลิกการเชื่อมโยงกลุ่มผู้ใช้งาน"
+          }
+        }
+      },
+      "contributors": {
+        "title": "ผู้ร่วมสร้างเนื้อหาคอร์สเรียน",
+        "subtitle": "จัดการสมาชิกที่ร่วมสร้างเนื้อหาและเพิ่มสมาชิกใหม่เข้าสู่คอร์สเรียน",
+        "open_to_contributors": {
+          "title": "เปิดรับผู้ร่วมสร้างเนื้อหา",
+          "description": "คอร์สเรียนเปิดรับผู้ร่วมสร้างเนื้อหา ผู้ใช้งานสามารถสมัครเพื่อช่วยพัฒนาเนื้อหาคอร์สเรียนให้ดียิ่งขึ้น",
+          "active": "ใช้งานอยู่",
+          "confirmation_title": "เปิดรับผู้ร่วมสร้างเนื้อหาหรือไม่?",
+          "confirmation_message": "คุณแน่ใจหรือไม่ว่าต้องการเปิดคอร์สเรียนนี้ให้ผู้ร่วมสร้างเนื้อหาเข้ามาช่วยได้?",
+          "confirmation_button": "เปิดรับผู้ร่วมสร้างเนื้อหา"
+        },
+        "closed_to_contributors": {
+          "title": "ปิดรับผู้ร่วมสร้างเนื้อหา",
+          "description": "คอร์สเรียนปิดรับผู้ร่วมสร้างเนื้อหา เฉพาะสมาชิกปัจจุบันเท่านั้นที่สามารถแก้ไขเนื้อหาได้",
+          "active": "ใช้งานอยู่",
+          "confirmation_title": "ปิดรับผู้ร่วมสร้างเนื้อหาหรือไม่?",
+          "confirmation_message": "คุณแน่ใจหรือไม่ว่าต้องการปิดรับผู้ร่วมสร้างเนื้อหาสำหรับคอร์สนี้?",
+          "confirmation_button": "ปิดรับผู้ร่วมสร้างเนื้อหา"
+        },
+        "search": {
+          "placeholder": "ค้นหาผู้ใช้ที่ต้องการเพิ่มเป็นผู้ร่วมสร้างเนื้อหาด้วยชื่อหรือชื่อผู้ใช้...",
+          "searching": "กำลังค้นหา...",
+          "no_results": "ไม่พบผู้ใช้ที่ค้นหา"
+        },
+        "table": {
+          "name": "ชื่อ",
+          "username": "ชื่อผู้ใช้",
+          "email": "อีเมล",
+          "role": "บทบาท",
+          "status": "สถานะ",
+          "added_on": "เพิ่มเมื่อ"
+        },
+        "roles": {
+          "creator": "ผู้สร้าง",
+          "contributor": "ผู้ร่วมสร้าง",
+          "maintainer": "ผู้ดูแล",
+          "reporter": "ผู้รายงาน"
+        },
+        "statuses": {
+          "active": "ใช้งานอยู่",
+          "inactive": "ไม่ได้ใช้งาน",
+          "pending": "รอดำเนินการ"
+        },
+        "actions": {
+          "selected_users": "เลือกผู้ใช้ {{count}} ราย",
+          "selected_users_plural": "เลือกผู้ใช้ {{count}} ราย",
+          "clear": "ล้างค่า",
+          "add_selected": "เพิ่มรายการที่เลือก",
+          "selected_contributors": "เลือกผู้ร่วมสร้าง {{count}} ราย",
+          "selected_contributors_plural": "เลือกผู้ร่วมสร้าง {{count}} ราย",
+          "remove_selected": "ลบรายการที่เลือก",
+          "already_contributor": "เป็นผู้ร่วมสร้างอยู่แล้ว"
+        },
+        "toasts": {
+          "add_success": "เพิ่มผู้ร่วมสร้าง {{count}} รายสำเร็จแล้ว",
+          "add_error": "เพิ่มผู้ใช้ {{username}} ล้มเหลว: {{reason}}",
+          "add_failed": "เพิ่มผู้ร่วมสร้างเนื้อหาล้มเหลว",
+          "update_success": "อัปเดตผู้ร่วมสร้างเนื้อหาสำเร็จแล้ว",
+          "update_error": "ข้อผิดพลาด: {{detail}}",
+          "update_failed": "เกิดข้อผิดพลาดในการอัปเดตผู้ร่วมสร้างเนื้อหา",
+          "remove_success": "ลบผู้ร่วมสร้าง {{count}} รายสำเร็จแล้ว",
+          "remove_failed": "ลบผู้ร่วมสร้างเนื้อหาล้มเหลว",
+          "cannot_modify_creator": "คุณไม่สามารถแก้ไขบทบาทหรือสถานะของผู้สร้างหลักได้"
+        }
+      },
+      "certification": {
+        "title": "ใบประกาศนียบัตรคอร์สเรียน",
+        "subtitle": "เปิดใช้งานและตั้งค่าใบประกาศนียบัตรสำหรับผู้เรียนที่จบหลักสูตรนี้",
+        "form": {
+          "certification_name_label": "ชื่อใบประกาศนียบัตร",
+          "certification_name_required": "จำเป็นต้องระบุชื่อใบประกาศเมื่อเปิดใช้งาน",
+          "certification_name_max_length": "ชื่อต้องมีความยาวไม่เกิน 100 ตัวอักษร",
+          "certification_name_placeholder": "เช่น ใบประกาศนียบัตร JavaScript ขั้นสูง",
+          "certification_type_label": "ประเภทใบประกาศนียบัตร",
+          "certification_description_label": "คำอธิบายใบประกาศนียบัตร",
+          "certification_description_required": "จำเป็นต้องระบุคำอธิบายเมื่อเปิดใช้งาน",
+          "certification_description_max_length": "คำอธิบายต้องมีความยาวไม่เกิน 500 ตัวอักษร",
+          "certification_description_placeholder": "อธิบายว่าใบประกาศนี้แสดงถึงอะไรและมีคุณค่าอย่างไร...",
+          "certificate_pattern_label": "ลวดลายใบประกาศ",
+          "certificate_instructor_label": "ชื่อผู้สอน (ระบุหรือไม่ก็ได้)",
+          "certificate_instructor_placeholder": "เช่น ดร. สมชาย ใจดี"
+        },
+        "types": {
+          "completion": "จบหลักสูตร",
+          "achievement": "ตามความสำเร็จ",
+          "assessment": "ตามการประเมิน",
+          "participation": "การเข้าร่วม",
+          "mastery": "ความเชี่ยวชาญ",
+          "professional": "การพัฒนาวิชาชีพ",
+          "continuing": "การศึกษาต่อเนื่อง",
+          "workshop": "การเข้าร่วมเวิร์กชอป",
+          "specialization": "ความเชี่ยวชาญเฉพาะด้าน"
+        },
+        "patterns": {
+          "royal": {
+            "name": "หรูหรา",
+            "description": "สไตล์วิจิตรบรรจงพร้อมลวดลายมงกุฎ"
+          },
+          "tech": {
+            "name": "เทคโนโลยี",
+            "description": "ลวดลายที่ได้รับแรงบันดาลใจจากแผงวงจร"
+          },
+          "nature": {
+            "name": "ธรรมชาติ",
+            "description": "ลวดลายใบไม้ที่เป็นธรรมชาติ"
+          },
+          "geometric": {
+            "name": "เรขาคณิต",
+            "description": "รูปทรงและเส้นสายที่ทันสมัย"
+          },
+          "vintage": {
+            "name": "วินเทจ",
+            "description": "สไตล์อาร์ตเดโค"
+          },
+          "waves": {
+            "name": "คลื่น",
+            "description": "ลวดลายสายน้ำที่ไหลลื่น"
+          },
+          "minimal": {
+            "name": "มินิมอล",
+            "description": "สะอาดตาและเรียบง่าย"
+          },
+          "professional": {
+            "name": "มืออาชีพ",
+            "description": "การออกแบบสำหรับธุรกิจ"
+          },
+          "academic": {
+            "name": "วิชาการ",
+            "description": "สไตล์มหาวิทยาลัยแบบดั้งเดิม"
+          },
+          "modern": {
+            "name": "โมเดิร์น",
+            "description": "เส้นสายที่เฉียบคมและทันสมัย"
+          }
+        },
+        "sections": {
+          "basic_info": {
+            "title": "ข้อมูลพื้นฐาน",
+            "subtitle": "ตั้งค่ารายละเอียดพื้นฐานของใบประกาศนียบัตร"
+          },
+          "certificate_design": {
+            "title": "การออกแบบใบประกาศ",
+            "subtitle": "เลือกลวดลายตกแต่งสำหรับใบประกาศนียบัตรของคุณ"
+          },
+          "preview": {
+            "title": "ตัวอย่างใบประกาศ",
+            "subtitle": "ตัวอย่างใบประกาศนียบัตรแบบเรียลไทม์"
+          }
+        },
+        "states": {
+          "disabled": {
+            "title": "ยังไม่ได้ตั้งค่าใบประกาศนียบัตร",
+            "message": "เปิดใช้งานใบประกาศนียบัตรเพื่อมอบให้กับผู้เรียนเมื่อจบหลักสูตร",
+            "button": "เปิดใช้งานใบประกาศนียบัตร",
+            "creating": "กำลังเปิดใช้งาน..."
+          },
+          "creating": {
+            "title": "กำลังสร้างใบประกาศนียบัตร...",
+            "message": "โปรดรอสักครู่ขณะที่เรากำลังตั้งค่าใบประกาศนียบัตรให้คุณ"
+          }
+        },
+        "errors": {
+          "loading": "เกิดข้อผิดพลาดในการโหลดใบประกาศนียบัตร",
+          "create_failed": "สร้างใบประกาศนียบัตรล้มเหลว",
+          "remove_failed": "ลบใบประกาศนียบัตรล้มเหลว"
+        },
+        "toasts": {
+          "create_success": "สร้างใบประกาศนียบัตรสำเร็จแล้ว",
+          "create_error": "สร้างใบประกาศนียบัตรล้มเหลว",
+          "remove_success": "ลบใบประกาศนียบัตรสำเร็จแล้ว",
+          "remove_error": "ลบใบประกาศนียบัตรล้มเหลว"
+        }
+      },
+      "structure": {
+        "loading": "กำลังโหลด...",
+        "add_chapter_button": "เพิ่มบท",
+        "modals": {
+          "new_chapter": {
+            "title": "สร้างบท",
+            "description": "เพิ่มบทใหม่ให้กับคอร์สเรียนของคุณ",
+            "form": {
+              "name_label": "ชื่อบท",
+              "name_required": "โปรดระบุชื่อบท",
+              "description_label": "คำอธิบายบท",
+              "description_required": "โปรดระบุคำอธิบายของบทนี้",
+              "submit": "สร้างบท"
+            }
+          },
+          "delete_chapter": {
+            "title": "ลบ {{name}} หรือไม่?",
+            "message": "คุณแน่ใจหรือไม่ว่าต้องการลบบทนี้?",
+            "button": "ลบบท"
+          },
+          "new_activity": {
+            "title": "สร้างกิจกรรม",
+            "description": "เลือกประเภทกิจกรรมที่ต้องการเพิ่มเข้าสู่คอร์สเรียน"
+          },
+          "delete_activity": {
+            "title": "ลบ {{name}} หรือไม่?",
+            "message": "คุณแน่ใจหรือไม่ว่าต้องการลบกิจกรรมนี้?",
+            "button": "ลบกิจกรรม"
+          }
+        },
+        "actions": {
+          "add_chapter": "เพิ่มบท",
+          "add_activity": "เพิ่มกิจกรรม",
+          "publish": "เผยแพร่",
+          "unpublish": "ยกเลิกการเผยแพร่",
+          "preview_activity": "ตัวอย่างกิจกรรม",
+          "edit_page": "แก้ไขหน้า",
+          "edit_assignment": "แก้ไขงาน"
+        },
+        "chapter_element": {
+          "chapter_name_placeholder": "ชื่อบท"
+        },
+        "activity": {
+          "name_placeholder": "ชื่อกิจกรรม",
+          "types": {
+            "video": "วิดีโอ",
+            "document": "เอกสาร",
+            "assignment": "งานที่มอบหมาย",
+            "assignments": "งานที่มอบหมาย",
+            "dynamic": "ไดนามิก",
+            "dynamic_page": "หน้าไดนามิก"
+          },
+          "toasts": {
+            "deleting": "กำลังลบกิจกรรม...",
+            "delete_success": "ลบกิจกรรมสำเร็จแล้ว",
+            "updating": "กำลังอัปเดตงาน...",
+            "update_success": "อัปเดตกิจกรรมสำเร็จแล้ว",
+            "name_update_success": "อัปเดตชื่อกิจกรรมสำเร็จแล้ว",
+            "name_update_error": "อัปเดตชื่อกิจกรรมล้มเหลว",
+            "creating": "กำลังสร้างกิจกรรม...",
+            "create_success": "สร้างกิจกรรมสำเร็จแล้ว",
+            "uploading": "กำลังอัปโหลดไฟล์และสร้างกิจกรรม...",
+            "upload_success": "อัปโหลดไฟล์สำเร็จแล้ว",
+            "creating_uploading": "กำลังสร้างกิจกรรมและอัปโหลดไฟล์..."
+          }
+        }
+      }
+    }
   }
 }
