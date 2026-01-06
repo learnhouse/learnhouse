@@ -44,21 +44,23 @@ import { signOut } from 'next-auth/react'
 import { getUriWithoutOrg } from '@services/config/config';
 import { useDebounce } from '@/hooks/useDebounce';
 
+import { useTranslation } from 'react-i18next';
+
 const SUPPORTED_FILES = constructAcceptValue(['jpg', 'png', 'webp', 'gif'])
 
 const AVAILABLE_ICONS = [
-  { name: 'briefcase', label: 'Briefcase', component: Briefcase },
-  { name: 'graduation-cap', label: 'Education', component: GraduationCap },
-  { name: 'map-pin', label: 'Location', component: MapPin },
-  { name: 'building-2', label: 'Organization', component: Building2 },
-  { name: 'speciality', label: 'Speciality', component: Lightbulb },
-  { name: 'globe', label: 'Website', component: Globe },
-  { name: 'laptop-2', label: 'Tech', component: Laptop2 },
-  { name: 'award', label: 'Achievement', component: Award },
-  { name: 'book-open', label: 'Book', component: BookOpen },
-  { name: 'link', label: 'Link', component: Link },
-  { name: 'users', label: 'Community', component: Users },
-  { name: 'calendar', label: 'Calendar', component: Calendar },
+  { name: 'briefcase', labelKey: 'user.settings.general.icons.briefcase', component: Briefcase },
+  { name: 'graduation-cap', labelKey: 'user.settings.general.icons.education', component: GraduationCap },
+  { name: 'map-pin', labelKey: 'user.settings.general.icons.location', component: MapPin },
+  { name: 'building-2', labelKey: 'user.settings.general.icons.organization', component: Building2 },
+  { name: 'speciality', labelKey: 'user.settings.general.icons.speciality', component: Lightbulb },
+  { name: 'globe', labelKey: 'user.settings.general.icons.website', component: Globe },
+  { name: 'laptop-2', labelKey: 'user.settings.general.icons.tech', component: Laptop2 },
+  { name: 'award', labelKey: 'user.settings.general.icons.achievement', component: Award },
+  { name: 'book-open', labelKey: 'user.settings.general.icons.book', component: BookOpen },
+  { name: 'link', labelKey: 'user.settings.general.icons.link', component: Link },
+  { name: 'users', labelKey: 'user.settings.general.icons.community', component: Users },
+  { name: 'calendar', labelKey: 'user.settings.general.icons.calendar', component: Calendar },
 ] as const;
 
 const IconComponent = ({ iconName }: { iconName: string }) => {
@@ -131,6 +133,7 @@ const DetailCard = React.memo(({
   onRemove: (id: string) => void;
   onLabelChange: (id: string, newLabel: string) => void;
 }) => {
+  const { t } = useTranslation();
   // Add local state for label input
   const [localLabel, setLocalLabel] = useState(detail.label);
   
@@ -171,7 +174,7 @@ const DetailCard = React.memo(({
         <Input
           value={localLabel}
           onChange={handleLabelChange}
-          placeholder="Enter label (e.g., Title, Location)"
+          placeholder={t('user.settings.general.detail_label_placeholder')}
           className="max-w-[200px]"
         />
         <Button
@@ -181,24 +184,24 @@ const DetailCard = React.memo(({
           className="text-red-500 hover:text-red-700"
           onClick={handleRemove}
         >
-          Remove
+          {t('user.settings.general.remove')}
         </Button>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <Label>Icon</Label>
+          <Label>{t('user.settings.general.icon')}</Label>
           <Select
             value={detail.icon}
             onValueChange={handleIconChange}
           >
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select icon">
+              <SelectValue placeholder={t('user.settings.general.select_icon')}>
                 {detail.icon && (
                   <div className="flex items-center gap-2">
                     <IconComponent iconName={detail.icon} />
                     <span>
-                      {AVAILABLE_ICONS.find(i => i.name === detail.icon)?.label}
+                      {t(AVAILABLE_ICONS.find(i => i.name === detail.icon)?.labelKey || '')}
                     </span>
                   </div>
                 )}
@@ -209,7 +212,7 @@ const DetailCard = React.memo(({
                 <SelectItem key={icon.name} value={icon.name}>
                   <div className="flex items-center gap-2">
                     <icon.component className="w-4 h-4" />
-                    <span>{icon.label}</span>
+                    <span>{t(icon.labelKey)}</span>
                   </div>
                 </SelectItem>
               ))}
@@ -217,11 +220,11 @@ const DetailCard = React.memo(({
           </Select>
         </div>
         <div>
-          <Label>Text</Label>
+          <Label>{t('user.settings.general.text')}</Label>
           <Input
             value={detail.text}
             onChange={handleTextChange}
-            placeholder="Enter detail text"
+            placeholder={t('user.settings.general.text_placeholder')}
           />
         </div>
       </div>
@@ -255,6 +258,8 @@ const UserEditForm = ({
     handleFileChange: (event: any) => Promise<void>;
   };
 }) => {
+  const { t } = useTranslation();
+
   // Memoize template handlers
   const templateHandlers = useMemo(() => 
     Object.entries(DETAIL_TEMPLATES).reduce((acc, [key, template]) => ({
@@ -265,14 +270,17 @@ const UserEditForm = ({
         
         template.forEach((item) => {
           if (!currentIds.has(item.id)) {
-            newDetails[item.id] = { ...item };
+            newDetails[item.id] = { 
+              ...item, 
+              label: t(`user.settings.general.labels.${item.id.replace('-', '_')}`, { defaultValue: item.label }) 
+            };
           }
         });
         
         setFieldValue('details', newDetails);
       }
     }), {} as Record<string, () => void>)
-  , [values.details, setFieldValue]);
+  , [values.details, setFieldValue, t]);
 
   // Memoize detail handlers
   const detailHandlers = useMemo(() => ({
@@ -293,10 +301,10 @@ const UserEditForm = ({
       <div className="flex flex-col gap-0">
         <div className="flex flex-col bg-gray-50 -space-y-1 px-5 py-3 mx-3 my-3 rounded-md">
           <h1 className="font-bold text-xl text-gray-800">
-            Account Settings
+            {t('user.settings.general.title')}
           </h1>
           <h2 className="text-gray-500 text-md">
-            Manage your personal information and preferences
+            {t('user.settings.general.subtitle')}
           </h2>
         </div>
 
@@ -304,14 +312,14 @@ const UserEditForm = ({
           {/* Profile Information Section */}
           <div className="flex-1 min-w-0 space-y-4">
             <div>
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t('user.settings.general.email')}</Label>
               <Input
                 id="email"
                 name="email"
                 type="email"
                 value={values.email}
                 onChange={handleChange}
-                placeholder="Your email address"
+                placeholder={t('user.settings.general.email_placeholder')}
               />
               {touched.email && errors.email && (
                 <p className="text-red-500 text-sm mt-1">{errors.email}</p>
@@ -319,19 +327,19 @@ const UserEditForm = ({
               {values.email !== values.email && (
                 <div className="flex items-center space-x-2 mt-2 text-amber-600 bg-amber-50 p-2 rounded-md">
                   <AlertTriangle size={16} />
-                  <span className="text-sm">You will be logged out after changing your email</span>
+                  <span className="text-sm">{t('user.settings.general.logout_warning')}</span>
                 </div>
               )}
             </div>
 
             <div>
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="username">{t('user.settings.general.username')}</Label>
               <Input
                 id="username"
                 name="username"
                 value={values.username}
                 onChange={handleChange}
-                placeholder="Your username"
+                placeholder={t('user.settings.general.username_placeholder')}
               />
               {touched.username && errors.username && (
                 <p className="text-red-500 text-sm mt-1">{errors.username}</p>
@@ -339,13 +347,13 @@ const UserEditForm = ({
             </div>
 
             <div>
-              <Label htmlFor="first_name">First Name</Label>
+              <Label htmlFor="first_name">{t('user.settings.general.first_name')}</Label>
               <Input
                 id="first_name"
                 name="first_name"
                 value={values.first_name}
                 onChange={handleChange}
-                placeholder="Your first name"
+                placeholder={t('user.settings.general.first_name_placeholder')}
               />
               {touched.first_name && errors.first_name && (
                 <p className="text-red-500 text-sm mt-1">{errors.first_name}</p>
@@ -353,13 +361,13 @@ const UserEditForm = ({
             </div>
 
             <div>
-              <Label htmlFor="last_name">Last Name</Label>
+              <Label htmlFor="last_name">{t('user.settings.general.last_name')}</Label>
               <Input
                 id="last_name"
                 name="last_name"
                 value={values.last_name}
                 onChange={handleChange}
-                placeholder="Your last name"
+                placeholder={t('user.settings.general.last_name_placeholder')}
               />
               {touched.last_name && errors.last_name && (
                 <p className="text-red-500 text-sm mt-1">{errors.last_name}</p>
@@ -368,9 +376,9 @@ const UserEditForm = ({
 
             <div>
               <Label htmlFor="bio">
-                Bio
+                {t('user.settings.general.bio')}
                 <span className="text-gray-500 text-sm ml-2">
-                  ({400 - (values.bio?.length || 0)} characters left)
+                  ({t('user.settings.general.characters_left', { count: 400 - (values.bio?.length || 0) })})
                 </span>
               </Label>
               <Textarea
@@ -378,7 +386,7 @@ const UserEditForm = ({
                 name="bio"
                 value={values.bio}
                 onChange={handleChange}
-                placeholder="Tell us about yourself"
+                placeholder={t('user.settings.general.bio_placeholder')}
                 className="min-h-[150px]"
                 maxLength={400}
               />
@@ -390,7 +398,7 @@ const UserEditForm = ({
             <div className="space-y-4">
               <div className="flex flex-col gap-3">
                 <div className="flex justify-between items-center">
-                  <Label>Additional Details</Label>
+                  <Label>{t('user.settings.general.additional_details')}</Label>
                   <div className="flex gap-2">
                     <Button
                       type="button"
@@ -401,7 +409,7 @@ const UserEditForm = ({
                         setFieldValue('details', {});
                       }}
                     >
-                      Clear All
+                      {t('user.settings.general.clear_all')}
                     </Button>
                     <Button
                       type="button"
@@ -419,7 +427,7 @@ const UserEditForm = ({
                         setFieldValue('details', newDetails);
                       }}
                     >
-                      Add Detail
+                      {t('user.settings.general.add_detail')}
                     </Button>
                   </div>
                 </div>
@@ -438,7 +446,10 @@ const UserEditForm = ({
                         
                         template.forEach((item) => {
                           if (!currentIds.has(item.id)) {
-                            newDetails[item.id] = { ...item };
+                            newDetails[item.id] = { 
+                              ...item,
+                              label: t(`user.settings.general.labels.${item.id.replace('-', '_')}`, { defaultValue: item.label })
+                            };
                           }
                         });
                         
@@ -448,7 +459,7 @@ const UserEditForm = ({
                       {key === 'general' && <Briefcase className="w-4 h-4" />}
                       {key === 'academic' && <GraduationCap className="w-4 h-4" />}
                       {key === 'professional' && <Building2 className="w-4 h-4" />}
-                      Add {key.charAt(0).toUpperCase() + key.slice(1)}
+                      {t(`user.settings.general.add_${key}`)}
                     </Button>
                   ))}
                 </div>
@@ -485,7 +496,7 @@ const UserEditForm = ({
           <div className="lg:w-80 w-full">
             <div className="bg-gray-50/50 p-6 rounded-lg nice-shadow h-full">
               <div className="flex flex-col items-center space-y-6">
-                <Label className="font-bold">Profile Picture</Label>
+                <Label className="font-bold">{t('user.settings.general.profile_picture')}</Label>
                 {profilePicture.error && (
                   <div className="flex items-center bg-red-200 rounded-md text-red-950 px-4 py-2 text-sm">
                     <FileWarning size={16} className="mr-2" />
@@ -510,7 +521,7 @@ const UserEditForm = ({
                 {profilePicture.isLoading ? (
                   <div className="font-bold animate-pulse antialiased bg-green-200 text-gray text-sm rounded-md px-4 py-2 flex items-center">
                     <ArrowBigUpDash size={16} className="mr-2" />
-                    <span>Uploading</span>
+                    <span>{t('user.settings.general.uploading')}</span>
                   </div>
                 ) : (
                   <>
@@ -528,13 +539,15 @@ const UserEditForm = ({
                       className="w-full"
                     >
                       <UploadCloud size={16} className="mr-2" />
-                      Change Avatar
+                      {t('user.settings.general.change_avatar')}
                     </Button>
                   </>
                 )}
                 <div className="flex items-center text-xs text-gray-500">
-                  <Info size={13} className="mr-2" />
-                  <p>Recommended size 100x100</p>
+                  <span className="flex items-center">
+                    <Info size={13} className="mr-2" />
+                    <p>{t('user.settings.general.recommended_size')}</p>
+                  </span>
                 </div>
               </div>
             </div>
@@ -547,7 +560,7 @@ const UserEditForm = ({
             disabled={isSubmitting}
             className="bg-black text-white hover:bg-black/90"
           >
-            {isSubmitting ? 'Saving...' : 'Save Changes'}
+            {isSubmitting ? t('user.settings.general.saving') : t('user.settings.general.save_changes')}
           </Button>
         </div>
       </div>
@@ -563,6 +576,7 @@ function UserEditGeneral() {
   const [error, setError] = React.useState() as any
   const [success, setSuccess] = React.useState('') as any
   const [userData, setUserData] = useState<any>(null);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -592,17 +606,17 @@ function UserEditGeneral() {
     } else {
       setIsLoading(false)
       setError('')
-      setSuccess('Avatar Updated')
+      setSuccess(t('user.settings.general.avatar_updated'))
     }
   }
 
   const handleEmailChange = async (newEmail: string) => {
-    toast.success('Profile Updated Successfully', { duration: 4000 })
+    toast.success(t('user.settings.general.profile_updated'), { duration: 4000 })
     
     // Show message about logging in with new email
-    toast((t: any) => (
+    toast((t_toast: any) => (
       <div className="flex items-center gap-2">
-        <span>Please login again with your new email: {newEmail}</span>
+        <span>{t('user.settings.general.relogin_message', { email: newEmail })}</span>
       </div>
     ), { 
       duration: 4000,
@@ -639,7 +653,7 @@ function UserEditGeneral() {
         validationSchema={validationSchema}
         onSubmit={(values, { setSubmitting }) => {
           const isEmailChanged = values.email !== userData.email
-          const loadingToast = toast.loading('Updating profile...')
+          const loadingToast = toast.loading(t('user.settings.general.saving'))
           
           setTimeout(() => {
             setSubmitting(false)
@@ -649,7 +663,7 @@ function UserEditGeneral() {
                 if (isEmailChanged) {
                   handleEmailChange(values.email)
                 } else {
-                  toast.success('Profile Updated Successfully')
+                  toast.success(t('user.settings.general.profile_updated'))
                 }
                 // Refresh user data after successful update
                 getUser(userData.id, access_token).then(setUserData);

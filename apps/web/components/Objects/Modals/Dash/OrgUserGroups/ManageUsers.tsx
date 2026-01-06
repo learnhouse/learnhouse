@@ -7,6 +7,7 @@ import { Check, Plus, X } from 'lucide-react'
 import React from 'react'
 import toast from 'react-hot-toast'
 import useSWR, { mutate } from 'swr'
+import { useTranslation } from 'react-i18next'
 
 
 type ManageUsersProps = {
@@ -14,6 +15,7 @@ type ManageUsersProps = {
 }
 
 function ManageUsers(props: ManageUsersProps) {
+  const { t } = useTranslation()
   const org = useOrg() as any
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token;
@@ -36,20 +38,20 @@ function ManageUsers(props: ManageUsersProps) {
   const handleLinkUser = async (user_id: any) => {
     const res = await linkUserToUserGroup(props.usergroup_id, user_id, access_token)
     if (res.status === 200) {
-      toast.success('User linked successfully')
+      toast.success(t('dashboard.users.usergroups.modals.manage_users.toasts.link_success'))
       mutate(`${getAPIUrl()}usergroups/${props.usergroup_id}/users`)
     } else {
-      toast.error('Error ' + res.status + ': ' + res.data.detail)
+      toast.error(t('dashboard.users.usergroups.modals.manage_users.toasts.error', { status: res.status, detail: res.data.detail }))
     }
   }
 
   const handleUnlinkUser = async (user_id: any) => {
     const res = await unLinkUserToUserGroup(props.usergroup_id, user_id, access_token)
     if (res.status === 200) {
-      toast.success('User unlinked successfully')
+      toast.success(t('dashboard.users.usergroups.modals.manage_users.toasts.unlink_success'))
       mutate(`${getAPIUrl()}usergroups/${props.usergroup_id}/users`)
     } else {
-      toast.error('Error ' + res.status + ': ' + res.data.detail)
+      toast.error(t('dashboard.users.usergroups.modals.manage_users.toasts.error', { status: res.status, detail: res.data.detail }))
     }
   }
 
@@ -58,9 +60,9 @@ function ManageUsers(props: ManageUsersProps) {
       <table className="table-auto w-full text-left whitespace-nowrap rounded-md overflow-hidden">
         <thead className="bg-gray-100 text-gray-500 rounded-xl uppercase">
           <tr className="font-bolder text-sm">
-            <th className="py-3 px-4">User</th>
-            <th className="py-3 px-4">Linked</th>
-            <th className="py-3 px-4">Actions</th>
+            <th className="py-3 px-4">{t('dashboard.users.usergroups.modals.manage_users.table.user')}</th>
+            <th className="py-3 px-4">{t('dashboard.users.usergroups.modals.manage_users.table.linked')}</th>
+            <th className="py-3 px-4">{t('dashboard.users.usergroups.modals.manage_users.table.actions')}</th>
           </tr>
         </thead>
         <>
@@ -82,12 +84,12 @@ function ManageUsers(props: ManageUsersProps) {
                   {isUserPartOfGroup(user.user.id) ?
                     <div className="space-x-1 flex w-fit px-4 py-1 bg-cyan-100 rounded-full items-center text-cyan-800">
                       <Check size={16} />
-                      <span>Linked</span>
+                      <span>{t('dashboard.users.usergroups.modals.manage_users.status.linked')}</span>
                     </div>
                     :
                     <div className="space-x-1 flex w-fit px-4 py-1 bg-gray-100 rounded-full items-center text-gray-800">
                       <X size={16} />
-                      <span>Not linked</span>
+                      <span>{t('dashboard.users.usergroups.modals.manage_users.status.not_linked')}</span>
                     </div>
                   }
                 </td>
@@ -96,13 +98,13 @@ function ManageUsers(props: ManageUsersProps) {
                     onClick={() => handleLinkUser(user.user.id)}
                     className="flex space-x-2 hover:cursor-pointer p-1 px-3 bg-cyan-700 rounded-md font-bold items-center text-sm text-cyan-100">
                     <Plus className="w-4 h-4" />
-                    <span> Link</span>
+                    <span> {t('dashboard.users.usergroups.modals.manage_users.actions.link')}</span>
                   </button>
                   <button
                     onClick={() => handleUnlinkUser(user.user.id)}
                     className="flex space-x-2 hover:cursor-pointer p-1 px-3 bg-gray-700 rounded-md font-bold items-center text-sm text-gray-100">
                     <X className="w-4 h-4" />
-                    <span> Unlink</span>
+                    <span> {t('dashboard.users.usergroups.modals.manage_users.actions.unlink')}</span>
                   </button>
 
                 </td>

@@ -8,8 +8,10 @@ import toast from 'react-hot-toast'
 import { verifyStripeConnection } from '@services/payments/payments'
 import Image from 'next/image'
 import learnhouseIcon from 'public/learnhouse_bigicon_1.png'
+import { useTranslation } from 'react-i18next'
 
 function StripeConnectCallback() {
+  const { t } = useTranslation()
   const router = useRouter()
   const searchParams = useSearchParams()
   const session = useLHSession() as any
@@ -37,7 +39,7 @@ function StripeConnectCallback() {
         await new Promise(resolve => setTimeout(resolve, 1000))
         
         setStatus('success')
-        setMessage('Successfully connected to Stripe!')
+        setMessage(t('payments.stripe_success'))
         
         // Close the window after 2 seconds of showing success
         setTimeout(() => {
@@ -47,8 +49,8 @@ function StripeConnectCallback() {
       } catch (error) {
         console.error('Error verifying Stripe connection:', error)
         setStatus('error')
-        setMessage('Failed to complete Stripe connection')
-        toast.error('Failed to connect to Stripe')
+        setMessage(t('payments.stripe_failed'))
+        toast.error(t('payments.stripe_failed'))
       }
     }
 
@@ -81,10 +83,10 @@ function StripeConnectCallback() {
               <>
                 <Loader2 className="h-12 w-12 text-blue-500 animate-spin" />
                 <h2 className="text-xl font-semibold text-gray-800">
-                  Completing Stripe Connection
+                  {t('payments.stripe_completing')}
                 </h2>
                 <p className="text-gray-500">
-                  Please wait while we finish setting up your Stripe integration...
+                  {t('payments.stripe_wait')}
                 </p>
               </>
             )}
@@ -96,7 +98,7 @@ function StripeConnectCallback() {
                 </div>
                 <h2 className="text-xl font-semibold text-gray-800">{message}</h2>
                 <p className="text-gray-500">
-                  You can now return to the dashboard to start using payments.
+                  {t('payments.stripe_return')}
                 </p>
               </>
             )}
@@ -108,7 +110,7 @@ function StripeConnectCallback() {
                 </div>
                 <h2 className="text-xl font-semibold text-gray-800">{message}</h2>
                 <p className="text-gray-500">
-                  Please try again or contact support if the problem persists.
+                  {t('payments.stripe_retry')}
                 </p>
               </>
             )}

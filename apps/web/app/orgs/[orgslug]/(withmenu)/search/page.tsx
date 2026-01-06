@@ -5,12 +5,13 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { searchOrgContent } from '@services/search/search';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import { useOrg } from '@components/Contexts/OrgContext';
-import { Book, GraduationCap, Users, Search } from 'lucide-react';
+import { BookCopy, SquareLibrary, Users, Search } from 'lucide-react';
 import Link from 'next/link';
 import { getCourseThumbnailMediaDirectory, getUserAvatarMediaDirectory } from '@services/media/media';
 import { getUriWithOrg } from '@services/config/config';
 import { removeCoursePrefix } from '@components/Objects/Thumbnails/CourseThumbnail';
 import UserAvatar from '@components/Objects/UserAvatar';
+import { useTranslation } from 'react-i18next';
 
 // Types from SearchBar component
 interface User {
@@ -74,6 +75,7 @@ interface SearchResults {
 type ContentType = 'all' | 'courses' | 'collections' | 'users';
 
 function SearchPage() {
+  const { t } = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
   const session = useLHSession() as any;
@@ -93,7 +95,7 @@ function SearchPage() {
   
   // URL parameters
   const query = searchParams.get('q') || '';
-  const page = parseInt(searchParams.get('page') || '1');
+  const page = parseInt(searchParams.get('activities.page') || '1');
   const type = (searchParams.get('type') as ContentType) || 'all';
   const perPage = 9;
 
@@ -195,7 +197,7 @@ function SearchPage() {
       }`}
     >
       <Icon size={16} />
-      <span>{type.charAt(0).toUpperCase() + type.slice(1)}</span>
+      <span>{t(type)}</span>
       <span className="text-black/40">({count})</span>
     </button>
   );
@@ -241,9 +243,9 @@ function SearchPage() {
       <div className="mb-4 p-4 bg-black/5 rounded-full">
         <Search className="w-8 h-8 text-black/40" />
       </div>
-      <h3 className="text-lg font-medium text-black/80 mb-2">No results found</h3>
+      <h3 className="text-lg font-medium text-black/80 mb-2">{t('search.no_results_found')}</h3>
       <p className="text-sm text-black/50 max-w-md">
-        We couldn't find any matches for "{query}". Try adjusting your search terms or browse our featured content.
+        {t('search.no_results_description', { query })}
       </p>
     </div>
   );
@@ -254,7 +256,7 @@ function SearchPage() {
       <div className="bg-white border-b border-black/5">
         <div className="container mx-auto px-4 py-6">
           <div className="max-w-2xl mx-auto">
-            <h1 className="text-2xl font-semibold  text-black/80 mb-6">Search</h1>
+            <h1 className="text-2xl font-semibold  text-black/80 mb-6">{t('common.search')}</h1>
             
             {/* Search Input */}
             <form onSubmit={handleSearch} className="relative group mb-6">
@@ -262,7 +264,7 @@ function SearchPage() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search courses, users, collections..."
+                placeholder={t('search.search_placeholder')}
                 className="w-full h-12 pl-12 pr-4 rounded-xl nice-shadow bg-white 
                          focus:outline-none focus:ring-1 focus:ring-black/5 focus:border-black/20 
                          text-sm placeholder:text-black/40 transition-all"
@@ -274,15 +276,15 @@ function SearchPage() {
                 type="submit"
                 className="absolute inset-y-0 right-0 px-4 flex items-center text-sm text-black/60 hover:text-black/80"
               >
-                Search
+                {t('common.search')}
               </button>
             </form>
             
             {/* Filters */}
             <div className="flex items-center gap-2 overflow-x-auto pb-2">
               <FilterButton type="all" count={totalResults} icon={Search} />
-              <FilterButton type="courses" count={searchResults.total_courses} icon={GraduationCap} />
-              <FilterButton type="collections" count={searchResults.total_collections} icon={Book} />
+              <FilterButton type="courses" count={searchResults.total_courses} icon={BookCopy} />
+              <FilterButton type="collections" count={searchResults.total_collections} icon={SquareLibrary} />
               <FilterButton type="users" count={searchResults.total_users} icon={Users} />
             </div>
           </div>
@@ -294,7 +296,7 @@ function SearchPage() {
         <div className="max-w-7xl mx-auto">
           {query && (
             <div className="text-sm text-black/60 mb-6">
-              Found {totalResults} results for "{query}"
+              {t('search.found_results', { count: totalResults, query })}
             </div>
           )}
 
@@ -308,8 +310,8 @@ function SearchPage() {
               {(selectedType === 'all' || selectedType === 'courses') && searchResults.courses.length > 0 && (
                 <div>
                   <h2 className="text-lg font-medium text-black/80 mb-4 flex items-center gap-2">
-                    <GraduationCap size={20} className="text-black/60" />
-                    Courses ({searchResults.courses.length})
+                    <BookCopy size={20} className="text-black/60" />
+                    {t('courses.courses')} ({searchResults.courses.length})
                   </h2>
                   <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                     {searchResults.courses.map((course) => (
@@ -327,7 +329,7 @@ function SearchPage() {
                             />
                           ) : (
                             <div className="w-full h-full bg-black/5 flex items-center justify-center">
-                              <GraduationCap size={32} className="text-black/40" />
+                              <BookCopy size={32} className="text-black/40" />
                             </div>
                           )}
                         </div>
@@ -361,8 +363,8 @@ function SearchPage() {
               {(selectedType === 'all' || selectedType === 'collections') && searchResults.collections.length > 0 && (
                 <div>
                   <h2 className="text-lg font-medium text-black/80 mb-4 flex items-center gap-2">
-                    <Book size={20} className="text-black/60" />
-                    Collections ({searchResults.collections.length})
+                    <SquareLibrary size={20} className="text-black/60" />
+                    {t('collections.collections')} ({searchResults.collections.length})
                   </h2>
                   <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                     {searchResults.collections.map((collection) => (
@@ -372,7 +374,7 @@ function SearchPage() {
                         className="flex items-start gap-4 p-4 bg-white rounded-xl nice-shadow hover:shadow-md transition-all"
                       >
                         <div className="w-12 h-12 bg-black/5 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <Book size={24} className="text-black/40" />
+                          <SquareLibrary size={24} className="text-black/40" />
                         </div>
                         <div>
                           <h3 className="text-sm font-medium text-black/80 mb-1">{collection.name}</h3>
@@ -389,7 +391,7 @@ function SearchPage() {
                 <div>
                   <h2 className="text-lg font-medium text-black/80 mb-4 flex items-center gap-2">
                     <Users size={20} className="text-black/60" />
-                    Users ({searchResults.users.length})
+                    {t('common.users')} ({searchResults.users.length})
                   </h2>
                   <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                     {searchResults.users.map((user) => (

@@ -19,6 +19,7 @@ import { Plus, X as XIcon } from "lucide-react"
 import { useRouter } from 'next/navigation'
 import { mutate } from 'swr'
 import { getAPIUrl } from '@services/config/config'
+import { useTranslation } from 'react-i18next'
 
 interface OrganizationValues {
   socials: {
@@ -34,6 +35,7 @@ interface OrganizationValues {
 }
 
 export default function OrgEditSocials() {
+  const { t } = useTranslation()
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const org = useOrg() as any
@@ -44,15 +46,15 @@ export default function OrgEditSocials() {
   }
 
   const updateOrg = async (values: OrganizationValues) => {
-    const loadingToast = toast.loading('Updating organization...')
+    const loadingToast = toast.loading(t('dashboard.organization.settings.updating'))
     try {
       await updateOrganization(org.id, values, access_token)
       await revalidateTags(['organizations'], org.slug)
 
       mutate(`${getAPIUrl()}orgs/slug/${org.slug}`)
-      toast.success('Organization Updated', { id: loadingToast })
+      toast.success(t('dashboard.organization.settings.update_success'), { id: loadingToast })
     } catch (err) {
-      toast.error('Failed to update organization', { id: loadingToast })
+      toast.error(t('dashboard.organization.settings.update_error'), { id: loadingToast })
     }
   }
 
@@ -73,17 +75,17 @@ export default function OrgEditSocials() {
             <div className="flex flex-col gap-0">
               <div className="flex flex-col bg-gray-50 -space-y-1 px-5 py-3 mx-3 my-3 rounded-md">
                 <h1 className="font-bold text-xl text-gray-800">
-                  Social Links
+                  {t('dashboard.organization.socials.title')}
                 </h1>
                 <h2 className="text-gray-500 text-md">
-                  Manage your organization's social media presence
+                  {t('dashboard.organization.socials.subtitle')}
                 </h2>
               </div>
 
               <div className="flex flex-col lg:flex-row lg:space-x-8 mt-0 mx-5 my-5">
                 <div className="w-full space-y-6">
                   <div>
-                    <Label className="text-lg font-semibold">Social Links</Label>
+                    <Label className="text-lg font-semibold">{t('dashboard.organization.socials.labels.social_links')}</Label>
                     <div className="space-y-3 bg-gray-50/50 p-4 rounded-lg nice-shadow mt-2">
                       <div className="grid gap-3">
                         <div className="flex items-center space-x-3">
@@ -95,7 +97,7 @@ export default function OrgEditSocials() {
                             name="socials.twitter"
                             value={values.socials.twitter || ''}
                             onChange={handleChange}
-                            placeholder="Twitter profile URL"
+                            placeholder={t('dashboard.organization.socials.placeholders.twitter')}
                             className="h-9 bg-white"
                           />
                         </div>
@@ -109,7 +111,7 @@ export default function OrgEditSocials() {
                             name="socials.facebook"
                             value={values.socials.facebook || ''}
                             onChange={handleChange}
-                            placeholder="Facebook profile URL"
+                            placeholder={t('dashboard.organization.socials.placeholders.facebook')}
                             className="h-9 bg-white"
                           />
                         </div>
@@ -123,7 +125,7 @@ export default function OrgEditSocials() {
                             name="socials.instagram"
                             value={values.socials.instagram || ''}
                             onChange={handleChange}
-                            placeholder="Instagram profile URL"
+                            placeholder={t('dashboard.organization.socials.placeholders.instagram')}
                             className="h-9 bg-white"
                           />
                         </div>
@@ -137,7 +139,7 @@ export default function OrgEditSocials() {
                             name="socials.youtube"
                             value={values.socials.youtube || ''}
                             onChange={handleChange}
-                            placeholder="YouTube channel URL"
+                            placeholder={t('dashboard.organization.socials.placeholders.youtube')}
                             className="h-9 bg-white"
                           />
                         </div>
@@ -148,7 +150,7 @@ export default function OrgEditSocials() {
 
                 <div className="w-full space-y-6">
                   <div>
-                    <Label className="text-lg font-semibold">Custom Links</Label>
+                    <Label className="text-lg font-semibold">{t('dashboard.organization.socials.labels.custom_links')}</Label>
                     <div className="space-y-3 bg-gray-50/50 p-4 rounded-lg nice-shadow mt-2">
                       {Object.entries(values.links).map(([linkKey, linkValue], index) => (
                         <div key={index} className="flex gap-3 items-center">
@@ -157,7 +159,7 @@ export default function OrgEditSocials() {
                           </div>
                           <div className="flex-1 flex gap-2">
                             <Input
-                              placeholder="Label"
+                              placeholder={t('dashboard.organization.socials.placeholders.label')}
                               value={linkKey}
                               className="h-9 w-1/3 bg-white"
                               onChange={(e) => {
@@ -168,7 +170,7 @@ export default function OrgEditSocials() {
                               }}
                             />
                             <Input
-                              placeholder="URL"
+                              placeholder={t('dashboard.organization.socials.placeholders.url')}
                               value={linkValue}
                               className="h-9 flex-1 bg-white"
                               onChange={(e) => {
@@ -206,12 +208,12 @@ export default function OrgEditSocials() {
                           }}
                         >
                           <Plus className="h-4 w-4 mr-2" />
-                          Add Link
+                          {t('dashboard.organization.socials.add_link')}
                         </Button>
                       )}
                       
                       <p className="text-xs text-gray-500 mt-2">
-                        Add up to 3 custom links that will appear on your organization's profile
+                        {t('dashboard.organization.socials.custom_links_desc')}
                       </p>
                     </div>
                   </div>
@@ -224,7 +226,7 @@ export default function OrgEditSocials() {
                   disabled={isSubmitting}
                   className="bg-black text-white hover:bg-black/90"
                 >
-                  {isSubmitting ? 'Saving...' : 'Save Changes'}
+                  {isSubmitting ? t('dashboard.organization.settings.saving') : t('dashboard.organization.settings.save_changes')}
                 </Button>
               </div>
             </div>

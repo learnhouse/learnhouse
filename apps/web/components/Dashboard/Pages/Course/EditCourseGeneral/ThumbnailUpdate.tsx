@@ -9,6 +9,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { mutate } from 'swr'
 import UnsplashImagePicker from './UnsplashImagePicker'
 import toast from 'react-hot-toast'
+import { useTranslation } from 'react-i18next'
 
 const MAX_FILE_SIZE = 8_000_000; // 8MB for images
 const MAX_VIDEO_FILE_SIZE = 100_000_000; // 100MB for videos
@@ -25,6 +26,7 @@ type ThumbnailUpdateProps = {
 type TabType = 'image' | 'video';
 
 function ThumbnailUpdate({ thumbnailType }: ThumbnailUpdateProps) {
+  const { t } = useTranslation()
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const course = useCourse() as any
@@ -261,7 +263,7 @@ function ThumbnailUpdate({ thumbnailType }: ThumbnailUpdateProps) {
             onClick={() => imageInputRef.current?.click()}
           >
             <UploadCloud size={16} />
-            Upload Image
+            {t('dashboard.courses.general.thumbnail.upload_image')}
           </button>
           <button
             type="button"
@@ -269,7 +271,7 @@ function ThumbnailUpdate({ thumbnailType }: ThumbnailUpdateProps) {
             onClick={() => setShowUnsplashPicker(true)}
           >
             <ImageIcon size={16} />
-            Gallery
+            {t('dashboard.courses.general.thumbnail.gallery')}
           </button>
         </div>
       );
@@ -290,7 +292,7 @@ function ThumbnailUpdate({ thumbnailType }: ThumbnailUpdateProps) {
           onClick={() => videoInputRef.current?.click()}
         >
           <Video size={16} />
-          Upload Video
+          {t('dashboard.courses.general.thumbnail.upload_video')}
         </button>
       </div>
     );
@@ -310,7 +312,7 @@ function ThumbnailUpdate({ thumbnailType }: ThumbnailUpdateProps) {
             onClick={() => setActiveTab('image')}
           >
             <ImageIcon size={16} />
-            Image
+            {t('dashboard.courses.general.thumbnail.tabs.image')}
           </button>
           <button
             className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors ${
@@ -321,7 +323,7 @@ function ThumbnailUpdate({ thumbnailType }: ThumbnailUpdateProps) {
             onClick={() => setActiveTab('video')}
           >
             <Video size={16} />
-            Video
+            {t('dashboard.courses.general.thumbnail.tabs.video')}
           </button>
         </div>
       )}
@@ -332,8 +334,8 @@ function ThumbnailUpdate({ thumbnailType }: ThumbnailUpdateProps) {
           {renderTabContent()}
           
           <p className="text-sm text-gray-500">
-            {activeTab === 'image' && 'Supported formats: PNG, JPG/JPEG (max 8MB)'}
-            {activeTab === 'video' && 'Supported formats: MP4, WebM (max 100MB)'}
+            {activeTab === 'image' && t('dashboard.courses.general.thumbnail.supported_formats.image')}
+            {activeTab === 'video' && t('dashboard.courses.general.thumbnail.supported_formats.video')}
           </p>
         </div>
       </div>

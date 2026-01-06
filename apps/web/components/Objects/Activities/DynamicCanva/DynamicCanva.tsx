@@ -63,6 +63,7 @@ function Canva(props: Editor) {
   lowlight.register('java', java)
 
   const editor: any = useEditor({
+    immediatelyRender: false,
     editable: isEditable,
     extensions: [
       StarterKit.configure({

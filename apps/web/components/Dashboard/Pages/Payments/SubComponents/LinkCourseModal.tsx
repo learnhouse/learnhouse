@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useOrg } from '@components/Contexts/OrgContext';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import { linkCourseToProduct } from '@services/payments/products';
@@ -23,12 +23,11 @@ interface CoursePreviewProps {
     thumbnail_image: string;
     course_uuid: string;
   };
-  orgslug: string;
   onLink: (courseId: string) => void;
   isLinked: boolean;
 }
 
-const CoursePreview = ({ course, orgslug, onLink, isLinked }: CoursePreviewProps) => {
+const CoursePreview = ({ course, onLink, isLinked }: CoursePreviewProps) => {
   const org = useOrg() as any;
   
   const thumbnailImage = course.thumbnail_image
@@ -78,18 +77,17 @@ const CoursePreview = ({ course, orgslug, onLink, isLinked }: CoursePreviewProps
 };
 
 export default function LinkCourseModal({ productId, onSuccess }: LinkCourseModalProps) {
-  const [searchTerm, setSearchTerm] = useState('');
   const org = useOrg() as any;
   const session = useLHSession() as any;
 
   const { data: courses } = useSWR(
-    () => org && session ? [org.slug, searchTerm, session.data?.tokens?.access_token] : null,
-    ([orgSlug, search, token]) => getOrgCourses(orgSlug, null, token)
+    () => org && session ? [org.slug, session.data?.tokens?.access_token] : null,
+    ([orgSlug, token]) => getOrgCourses(orgSlug, null, token)
   );
 
   const { data: linkedCourses } = useSWR(
     () => org && session ? [`/payments/${org.id}/products/${productId}/courses`, session.data?.tokens?.access_token] : null,
-    ([_, token]) => getCoursesLinkedToProduct(org.id, productId, token)
+    ([, token]) => getCoursesLinkedToProduct(org.id, productId, token)
   );
 
   const handleLinkCourse = async (courseId: string) => {
@@ -102,7 +100,7 @@ export default function LinkCourseModal({ productId, onSuccess }: LinkCourseModa
       } else {
         toast.error(response.data?.detail || 'Failed to link course');
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to link course');
     }
   };
@@ -121,7 +119,6 @@ export default function LinkCourseModal({ productId, onSuccess }: LinkCourseModa
           <CoursePreview 
             key={course.course_uuid}
             course={course}
-            orgslug={org.slug}
             onLink={handleLinkCourse}
             isLinked={isLinked(course.id)}
           />

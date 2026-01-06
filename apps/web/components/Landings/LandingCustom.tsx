@@ -7,6 +7,7 @@ import { getOrgCourses } from '@services/courses/courses'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import CourseThumbnailLanding from '@components/Objects/Thumbnails/CourseThumbnailLanding'
 import UserAvatar from '@components/Objects/UserAvatar'
+import { useTranslation } from 'react-i18next'
 
 interface LandingCustomProps {
   landing: {
@@ -17,6 +18,7 @@ interface LandingCustomProps {
 }
 
 function LandingCustom({ landing, orgslug }: LandingCustomProps) {
+  const { t } = useTranslation()
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
 
@@ -214,7 +216,7 @@ function LandingCustom({ landing, orgslug }: LandingCustomProps) {
               className="py-16 mx-2 sm:mx-4 lg:mx-16 w-full"
             >
               <h2 className="text-2xl md:text-3xl font-bold text-left mb-6 text-gray-900">{section.title}</h2>
-              <div className="text-center py-6 text-gray-500">Loading courses...</div>
+              <div className="text-center py-6 text-gray-500">{t('courses.loading_courses')}</div>
             </div>
           )
         }
@@ -240,7 +242,7 @@ function LandingCustom({ landing, orgslug }: LandingCustomProps) {
               ))}
               {featuredCourses.length === 0 && (
                 <div className="col-span-full text-center py-6 text-gray-500">
-                  No featured courses selected
+                  {t('courses.no_featured_courses')}
                 </div>
               )}
             </div>

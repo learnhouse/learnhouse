@@ -14,6 +14,7 @@ import { useCourseRights } from '@hooks/useCourseRights'
 import { useRouter } from 'next/navigation'
 import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
 import { getUriWithOrg } from '@services/config/config';
+import { useTranslation } from 'react-i18next';
 
 export type CourseOverviewParams = {
   orgslug: string
@@ -22,6 +23,7 @@ export type CourseOverviewParams = {
 }
 
 function CourseOverviewPage(props: { params: Promise<CourseOverviewParams> }) {
+  const { t } = useTranslation()
   const params = use(props.params);
   const router = useRouter();
   
@@ -37,35 +39,35 @@ function CourseOverviewPage(props: { params: Promise<CourseOverviewParams> }) {
   const tabs = [
     {
       key: 'general',
-      label: 'General',
+      label: t('dashboard.courses.settings.tabs.general'),
       icon: Info,
       href: `/dash/courses/course/${params.courseuuid}/general`,
       requiredPermission: 'update' as const
     },
     {
       key: 'content',
-      label: 'Content',
+      label: t('dashboard.courses.settings.tabs.content'),
       icon: GalleryVerticalEnd,
       href: `/dash/courses/course/${params.courseuuid}/content`,
       requiredPermission: 'update_content' as const
     },
     {
       key: 'access',
-      label: 'Access',
+      label: t('dashboard.courses.settings.tabs.access'),
       icon: Globe,
       href: `/dash/courses/course/${params.courseuuid}/access`,
       requiredPermission: 'manage_access' as const
     },
     {
       key: 'contributors',
-      label: 'Contributors',
+      label: t('dashboard.courses.settings.tabs.contributors'),
       icon: UserPen,
       href: `/dash/courses/course/${params.courseuuid}/contributors`,
       requiredPermission: 'manage_contributors' as const
     },
     {
       key: 'certification',
-      label: 'Certification',
+      label: t('dashboard.courses.settings.tabs.certification'),
       icon: Award,
       href: `/dash/courses/course/${params.courseuuid}/certification`,
       requiredPermission: 'create_certifications' as const
@@ -102,8 +104,8 @@ function CourseOverviewPage(props: { params: Promise<CourseOverviewParams> }) {
       <div className="h-screen w-full bg-[#f8f8f8] flex items-center justify-center">
         <div className="text-center">
           <Lock className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Access Denied</h3>
-          <p className="text-gray-500">You don't have permission to access this course.</p>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">{t('dashboard.courses.settings.access_denied.title')}</h3>
+          <p className="text-gray-500">{t('dashboard.courses.settings.access_denied.message')}</p>
         </div>
       </div>
     )
@@ -127,9 +129,9 @@ function CourseOverviewPage(props: { params: Promise<CourseOverviewParams> }) {
                     key={tab.key}
                     content={
                       <div className="text-center">
-                        <div className="font-medium text-gray-900">Access Restricted</div>
+                        <div className="font-medium text-gray-900">{t('dashboard.courses.settings.access_restricted.title')}</div>
                         <div className="text-sm text-gray-600">
-                          You don't have permission to access {tab.label}
+                          {t('dashboard.courses.settings.access_restricted.message', { tab: tab.label })}
                         </div>
                       </div>
                     }

@@ -19,13 +19,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@components/ui/dropdown-menu"
+import { useTranslation } from 'react-i18next'
 
 type Course = {
   course_uuid: string
   name: string
   description: string
   thumbnail_image: string
-  org_id: string
+  org_id: string | number
   update_date: string
   authors?: Array<{
     user: {
@@ -56,6 +57,7 @@ interface AdminEditOptionsProps {
 export const removeCoursePrefix = (course_uuid: string) => course_uuid.replace('course_', '')
 
 const AdminEditOptions: React.FC<AdminEditOptionsProps> = ({ course, orgslug, deleteCourse }) => {
+  const { t } = useTranslation()
   return (
     <AuthenticatedClientElement
       action="update"
@@ -73,22 +75,22 @@ const AdminEditOptions: React.FC<AdminEditOptionsProps> = ({ course, orgslug, de
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuItem asChild>
               <Link prefetch href={getUriWithOrg(orgslug, `/dash/courses/course/${removeCoursePrefix(course.course_uuid)}/content`)}>
-                <FilePenLine className="mr-2 h-4 w-4" /> Edit Content
+                <FilePenLine className="mr-2 h-4 w-4" /> {t('courses.edit_content')}
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link prefetch href={getUriWithOrg(orgslug, `/dash/courses/course/${removeCoursePrefix(course.course_uuid)}/general`)}>
-                <Settings2 className="mr-2 h-4 w-4" /> Settings
+                <Settings2 className="mr-2 h-4 w-4" /> {t('common.settings')}
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <ConfirmationModal
-                confirmationButtonText="Delete Course"
-                confirmationMessage="Are you sure you want to delete this course?"
-                dialogTitle={`Delete ${course.name}?`}
+                confirmationButtonText={t('courses.delete_course')}
+                confirmationMessage={t('courses.delete_course_confirm')}
+                dialogTitle={t('courses.delete_course_title', { name: course.name })}
                 dialogTrigger={
                   <button className="w-full text-left flex items-center px-2 py-1 rounded-md text-sm bg-rose-500/10 hover:bg-rose-500/20 transition-colors text-red-600">
-                    <BookMinus className="mr-4 h-4 w-4" /> Delete Course
+                    <BookMinus className="mr-4 h-4 w-4" /> {t('courses.delete_course')}
                   </button>
                 }
                 functionToExecute={deleteCourse}
@@ -103,6 +105,7 @@ const AdminEditOptions: React.FC<AdminEditOptionsProps> = ({ course, orgslug, de
 }
 
 const CourseThumbnailLanding: React.FC<PropsType> = ({ course, orgslug, customLink }) => {
+  const { t, i18n } = useTranslation()
   const router = useRouter() 
   const org = useOrg() as any
   const session = useLHSession() as any
@@ -113,14 +116,14 @@ const CourseThumbnailLanding: React.FC<PropsType> = ({ course, orgslug, customLi
   const remainingAuthorsCount = activeAuthors.length - 3
 
   const deleteCourse = async () => {
-    const toastId = toast.loading('Deleting course...')
+    const toastId = toast.loading(t('courses.deleting_course'))
     try {
       await deleteCourseFromBackend(course.course_uuid, session.data?.tokens?.access_token)
       await revalidateTags(['courses'], orgslug)
-      toast.success('Course deleted successfully')
+      toast.success(t('courses.course_deleted_success'))
       router.refresh()
     } catch (error) {
-      toast.error('Failed to delete course')
+      toast.error(t('courses.course_deleted_error'))
     } finally {
       toast.dismiss(toastId)
     }
@@ -153,7 +156,7 @@ const CourseThumbnailLanding: React.FC<PropsType> = ({ course, orgslug, customLi
           {course.update_date && (
             <div className="inline-flex h-5 min-w-[140px] items-center justify-center px-2 rounded-md bg-gray-100/80 border border-gray-200">
               <span className="text-[10px] font-medium text-gray-600 truncate">
-                Updated {new Date(course.update_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                {t('common.updated')} {new Date(course.update_date).toLocaleDateString(i18n.language === 'fr' ? 'fr-FR' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
               </span>
             </div>
           )}
@@ -196,7 +199,7 @@ const CourseThumbnailLanding: React.FC<PropsType> = ({ course, orgslug, customLi
           href={customLink ? customLink : getUriWithOrg(orgslug, `/course/${removeCoursePrefix(course.course_uuid)}`)}
           className="inline-flex items-center justify-center w-full px-3 py-1.5 bg-black text-white text-xs font-medium rounded-lg hover:bg-gray-800 transition-colors"
         >
-          Start Learning
+          {t('courses.start_learning')}
         </Link>
       </div>
     </div>
