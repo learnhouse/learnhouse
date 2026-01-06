@@ -14,32 +14,33 @@ import Link from 'next/link'
 import { signUpWithInviteCode } from '@services/auth/auth'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { signIn } from 'next-auth/react'
+import { useTranslation } from 'react-i18next'
 
-const validate = (values: any) => {
+const validate = (values: any, t: any) => {
   const errors: any = {}
 
   if (!values.email) {
-    errors.email = 'Required'
+    errors.email = t('validation.required')
   } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email)) {
-    errors.email = 'Invalid email address'
+    errors.email = t('validation.invalid_email')
   }
 
   if (!values.password) {
-    errors.password = 'Required'
+    errors.password = t('validation.required')
   } else if (values.password.length < 8) {
-    errors.password = 'Password must be at least 8 characters'
+    errors.password = t('validation.password_min_length')
   }
 
   if (!values.username) {
-    errors.username = 'Required'
+    errors.username = t('validation.required')
   }
 
   if (!values.username || values.username.length < 4) {
-    errors.username = 'Username must be at least 4 characters'
+    errors.username = t('validation.username_min_length')
   }
 
   if (!values.bio) {
-    errors.bio = 'Required'
+    errors.bio = t('validation.required')
   }
 
   return errors
@@ -50,6 +51,7 @@ interface InviteOnlySignUpProps {
 }
 
 function InviteOnlySignUpComponent(props: InviteOnlySignUpProps) {
+  const { t } = useTranslation()
   const [isSubmitting, setIsSubmitting] = React.useState(false)
   const org = useOrg() as any
   const router = useRouter()
@@ -66,7 +68,7 @@ function InviteOnlySignUpComponent(props: InviteOnlySignUpProps) {
       first_name: '',
       last_name: '',
     },
-    validate,
+    validate: (values) => validate(values, t),
     enableReinitialize: true,
     onSubmit: async (values) => {
       setError('')
@@ -76,7 +78,7 @@ function InviteOnlySignUpComponent(props: InviteOnlySignUpProps) {
       let message = await res.json()
       if (res.status == 200) {
         //router.push(`/login`);
-        setMessage('Your account was successfully created')
+        setMessage(t('auth.account_created_success'))
         setIsSubmitting(false)
       } else if (
         res.status == 401 ||
@@ -87,7 +89,7 @@ function InviteOnlySignUpComponent(props: InviteOnlySignUpProps) {
         setError(message.detail)
         setIsSubmitting(false)
       } else {
-        setError('Something went wrong')
+        setError(t('common.something_went_wrong'))
         setIsSubmitting(false)
       }
     },
@@ -113,13 +115,13 @@ function InviteOnlySignUpComponent(props: InviteOnlySignUpProps) {
           <Link className="flex space-x-2 items-center" href={
             `/login?orgslug=${org?.slug}`
           } >
-            <User size={14} /> <div>Login to your account</div>
+            <User size={14} /> <div>{t('auth.login_to_your_account')}</div>
           </Link>
         </div>
       )}
       <FormLayout onSubmit={formik.handleSubmit}>
         <FormField name="email">
-          <FormLabelAndMessage label="Email" message={formik.errors.email} />
+          <FormLabelAndMessage label={t('auth.email')} message={formik.errors.email} />
           <Form.Control asChild>
             <Input
               onChange={formik.handleChange}
@@ -129,10 +131,34 @@ function InviteOnlySignUpComponent(props: InviteOnlySignUpProps) {
             />
           </Form.Control>
         </FormField>
+        <div className="flex flex-row space-x-2">
+          <FormField name="first_name">
+            <FormLabelAndMessage label={t('user.first_name')} message={formik.errors.first_name} />
+            <Form.Control asChild>
+              <Input
+                onChange={formik.handleChange}
+                value={formik.values.first_name}
+                type="text"
+                required
+              />
+            </Form.Control>
+          </FormField>
+          <FormField name="last_name">
+            <FormLabelAndMessage label={t('user.last_name')} message={formik.errors.last_name} />
+            <Form.Control asChild>
+              <Input
+                onChange={formik.handleChange}
+                value={formik.values.last_name}
+                type="text"
+                required
+              />
+            </Form.Control>
+          </FormField>
+        </div>
         {/* for password  */}
         <FormField name="password">
           <FormLabelAndMessage
-            label="Password"
+            label={t('auth.password')}
             message={formik.errors.password}
           />
 
@@ -148,7 +174,7 @@ function InviteOnlySignUpComponent(props: InviteOnlySignUpProps) {
         {/* for username  */}
         <FormField name="username">
           <FormLabelAndMessage
-            label="Username"
+            label={t('user.username')}
             message={formik.errors.username}
           />
 
@@ -164,7 +190,7 @@ function InviteOnlySignUpComponent(props: InviteOnlySignUpProps) {
 
         {/* for bio  */}
         <FormField name="bio">
-          <FormLabelAndMessage label="Bio" message={formik.errors.bio} />
+          <FormLabelAndMessage label={t('user.bio')} message={formik.errors.bio} />
 
           <Form.Control asChild>
             <Textarea
@@ -178,7 +204,7 @@ function InviteOnlySignUpComponent(props: InviteOnlySignUpProps) {
         <div className="flex  py-4">
           <Form.Submit asChild>
             <button className="w-full bg-black text-white font-bold text-center p-2 rounded-md shadow-md hover:cursor-pointer">
-              {isSubmitting ? 'Loading...' : 'Create an account & Join'}
+              {isSubmitting ? t('common.loading') : t('auth.create_account_and_join')}
             </button>
           </Form.Submit>
         </div>
@@ -187,7 +213,7 @@ function InviteOnlySignUpComponent(props: InviteOnlySignUpProps) {
         <div className='flex h-0.5 rounded-2xl bg-slate-100 mt-5 mb-5 mx-10'></div>
         <button onClick={() => signIn('google')} className="flex justify-center py-3 text-md w-full bg-white text-slate-600 space-x-3 font-semibold text-center p-2 rounded-md shadow-sm hover:cursor-pointer">
           <img src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg" alt="" />
-          <span>Sign in with Google</span>
+          <span>{t('auth.sign_in_with_google')}</span>
         </button>
       </div>
     </div>

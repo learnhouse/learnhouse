@@ -11,6 +11,7 @@ import { getCourseThumbnailMediaDirectory, getUserAvatarMediaDirectory } from '@
 import { getUriWithOrg } from '@services/config/config';
 import { removeCoursePrefix } from '@components/Objects/Thumbnails/CourseThumbnail';
 import UserAvatar from '@components/Objects/UserAvatar';
+import { useTranslation } from 'react-i18next';
 
 // Types from SearchBar component
 interface User {
@@ -74,6 +75,7 @@ interface SearchResults {
 type ContentType = 'all' | 'courses' | 'collections' | 'users';
 
 function SearchPage() {
+  const { t } = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
   const session = useLHSession() as any;
@@ -93,7 +95,7 @@ function SearchPage() {
   
   // URL parameters
   const query = searchParams.get('q') || '';
-  const page = parseInt(searchParams.get('page') || '1');
+  const page = parseInt(searchParams.get('activities.page') || '1');
   const type = (searchParams.get('type') as ContentType) || 'all';
   const perPage = 9;
 
@@ -195,7 +197,7 @@ function SearchPage() {
       }`}
     >
       <Icon size={16} />
-      <span>{type.charAt(0).toUpperCase() + type.slice(1)}</span>
+      <span>{t(type)}</span>
       <span className="text-black/40">({count})</span>
     </button>
   );
@@ -241,9 +243,9 @@ function SearchPage() {
       <div className="mb-4 p-4 bg-black/5 rounded-full">
         <Search className="w-8 h-8 text-black/40" />
       </div>
-      <h3 className="text-lg font-medium text-black/80 mb-2">No results found</h3>
+      <h3 className="text-lg font-medium text-black/80 mb-2">{t('search.no_results_found')}</h3>
       <p className="text-sm text-black/50 max-w-md">
-        We couldn't find any matches for "{query}". Try adjusting your search terms or browse our featured content.
+        {t('search.no_results_description', { query })}
       </p>
     </div>
   );
@@ -254,7 +256,7 @@ function SearchPage() {
       <div className="bg-white border-b border-black/5">
         <div className="container mx-auto px-4 py-6">
           <div className="max-w-2xl mx-auto">
-            <h1 className="text-2xl font-semibold  text-black/80 mb-6">Search</h1>
+            <h1 className="text-2xl font-semibold  text-black/80 mb-6">{t('common.search')}</h1>
             
             {/* Search Input */}
             <form onSubmit={handleSearch} className="relative group mb-6">
@@ -262,7 +264,7 @@ function SearchPage() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search courses, users, collections..."
+                placeholder={t('search.search_placeholder')}
                 className="w-full h-12 pl-12 pr-4 rounded-xl nice-shadow bg-white 
                          focus:outline-none focus:ring-1 focus:ring-black/5 focus:border-black/20 
                          text-sm placeholder:text-black/40 transition-all"
@@ -274,7 +276,7 @@ function SearchPage() {
                 type="submit"
                 className="absolute inset-y-0 right-0 px-4 flex items-center text-sm text-black/60 hover:text-black/80"
               >
-                Search
+                {t('common.search')}
               </button>
             </form>
             
@@ -294,7 +296,7 @@ function SearchPage() {
         <div className="max-w-7xl mx-auto">
           {query && (
             <div className="text-sm text-black/60 mb-6">
-              Found {totalResults} results for "{query}"
+              {t('search.found_results', { count: totalResults, query })}
             </div>
           )}
 
@@ -309,7 +311,7 @@ function SearchPage() {
                 <div>
                   <h2 className="text-lg font-medium text-black/80 mb-4 flex items-center gap-2">
                     <GraduationCap size={20} className="text-black/60" />
-                    Courses ({searchResults.courses.length})
+                    {t('courses.courses')} ({searchResults.courses.length})
                   </h2>
                   <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                     {searchResults.courses.map((course) => (
@@ -362,7 +364,7 @@ function SearchPage() {
                 <div>
                   <h2 className="text-lg font-medium text-black/80 mb-4 flex items-center gap-2">
                     <Book size={20} className="text-black/60" />
-                    Collections ({searchResults.collections.length})
+                    {t('collections.collections')} ({searchResults.collections.length})
                   </h2>
                   <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                     {searchResults.collections.map((collection) => (
@@ -389,7 +391,7 @@ function SearchPage() {
                 <div>
                   <h2 className="text-lg font-medium text-black/80 mb-4 flex items-center gap-2">
                     <Users size={20} className="text-black/60" />
-                    Users ({searchResults.users.length})
+                    {t('common.users')} ({searchResults.users.length})
                   </h2>
                   <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                     {searchResults.users.map((user) => (

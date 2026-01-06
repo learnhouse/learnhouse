@@ -17,12 +17,14 @@ import {
 } from '@components/Contexts/AI/AIChatBotContext'
 import useGetAIFeatures from '../../../Hooks/useGetAIFeatures'
 import UserAvatar from '@components/Objects/UserAvatar'
+import { useTranslation } from 'react-i18next'
 
 type AIActivityAskProps = {
   activity: any
 }
 
 function AIActivityAsk(props: AIActivityAskProps) {
+  const { t } = useTranslation()
   const is_ai_feature_enabled = useGetAIFeatures({ feature: 'activity_ask' })
   const [isButtonAvailable, setIsButtonAvailable] = React.useState(false)
   const dispatchAIChatBot = useAIChatBotDispatch() as any
@@ -55,7 +57,7 @@ function AIActivityAsk(props: AIActivityAskProps) {
                 alt=""
               />
             </i>{' '}
-            <i className="not-italic text-xs font-bold">Ask AI</i>
+            <i className="not-italic text-xs font-bold">{t('ai.ask_ai')}</i>
           </div>
         </div>
       )}
@@ -74,6 +76,7 @@ type ActivityChatMessageBoxProps = {
 }
 
 function ActivityChatMessageBox(props: ActivityChatMessageBoxProps) {
+  const { t } = useTranslation()
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token;
   const aiChatBotState = useAIChatBot() as AIChatBotStateTypes
@@ -240,7 +243,7 @@ function ActivityChatMessageBox(props: ActivityChatMessageBoxProps) {
                 <div className="bg-white/5 text-white/40 py-0.5 px-3 flex space-x-1 rounded-full items-center">
                   <FlaskConical size={14} />
                   <span className="text-xs font-semibold antialiased ">
-                    Experimental
+                    {t('ai.experimental')}
                   </span>
                 </div>
               </div>
@@ -276,7 +279,7 @@ function ActivityChatMessageBox(props: ActivityChatMessageBoxProps) {
                     <AlertTriangle size={20} className="text-red-500" />
                     <div className="flex flex-col">
                       <h3 className="font-semibold text-red-200">
-                        Something wrong happened
+                        {t('common.something_wrong_happened')}
                       </h3>
                       <span className="text-red-100 text-sm ">
                         {aiChatBotState.error.error_message}
@@ -299,7 +302,7 @@ function ActivityChatMessageBox(props: ActivityChatMessageBoxProps) {
                     onChange={handleChange}
                     disabled={aiChatBotState.isWaitingForResponse}
                     value={aiChatBotState.chatInputValue}
-                    placeholder="Ask AI About this Lecture"
+                    placeholder={t('ai.ask_ai_placeholder')}
                     type="text"
                     className={inputClass}
                     name=""
@@ -383,6 +386,7 @@ const AIMessagePlaceHolder = (props: {
   const aiChatBotState = useAIChatBot() as AIChatBotStateTypes
 
   if (!aiChatBotState.error.isError) {
+    const { t } = useTranslation()
     return (
       <div className="flex-col h-[237px] w-full">
         <div className="flex flex-col text-center justify-center pt-12">
@@ -406,12 +410,12 @@ const AIMessagePlaceHolder = (props: {
               alt=""
             />
             <p className="pt-3 text-2xl font-semibold text-white/70 flex justify-center space-x-2 items-center">
-              <span className="items-center">Hello</span>
+              <span className="items-center">{t('common.hello')}</span>
               <span className="capitalize flex space-x-2 items-center">
                 <UserAvatar rounded="rounded-lg" border="border-2" width={35} />
                 <span>{session.data.user.username},</span>
               </span>
-              <span>how can we help today ?</span>
+              <span>{t('ai.how_can_we_help')}</span>
             </p>
           </motion.div>
           <motion.div
@@ -451,13 +455,14 @@ const AIChatPredefinedQuestion = (props: {
   sendMessage: any
   label: string
 }) => {
+  const { t } = useTranslation()
   function getQuestion(label: string) {
     if (label === 'about') {
-      return `What is this Activity about ?`
+      return t('ai.about_question')
     } else if (label === 'flashcards') {
-      return `Generate flashcards about this Activity`
+      return t('ai.flashcards_question')
     } else if (label === 'examples') {
-      return `Explain this Activity in practical examples`
+      return t('ai.examples_question')
     }
   }
 

@@ -16,7 +16,7 @@ import Link from 'next/link'
 type CourseProps = {
   orgslug: string
   courses: any
-  org_id: string
+  org_id: string | number
 }
 
 function CoursesHome(params: CourseProps) {

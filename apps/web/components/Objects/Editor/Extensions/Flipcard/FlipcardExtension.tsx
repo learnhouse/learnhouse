@@ -3,8 +3,10 @@ import React, { useState, useRef, useEffect } from 'react'
 import { RotateCw, Edit, AlignLeft, AlignCenter, AlignRight, Palette, Maximize2, Minimize2, Square } from 'lucide-react'
 import { twMerge } from 'tailwind-merge'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
+import { useTranslation } from 'react-i18next'
 
 const FlipcardExtension: React.FC = (props: any) => {
+  const { t } = useTranslation()
   const [isFlipped, setIsFlipped] = useState(false)
   const [question, setQuestion] = useState(props.node.attrs.question)
   const [answer, setAnswer] = useState(props.node.attrs.answer)
@@ -175,7 +177,7 @@ const FlipcardExtension: React.FC = (props: any) => {
                   onChange={handleQuestionChange}
                   onBlur={handleQuestionBlur}
                   className="bg-white/20 backdrop-blur-sm text-white placeholder-white/70 p-2 rounded-lg w-full h-20 resize-none border-none outline-none text-center"
-                  placeholder="Enter your question..."
+                  placeholder={t('activities.enter_question')}
                 />
               ) : (
                 <div className={`text-center font-medium ${getFontSizeClass()} leading-relaxed flex items-center justify-center select-none`}>
@@ -195,7 +197,7 @@ const FlipcardExtension: React.FC = (props: any) => {
               )}
             </div>
             {!isEditingQuestion && (
-              <div className="text-xs opacity-70 mt-3 select-none pointer-events-none">Click to flip</div>
+              <div className="text-xs opacity-70 mt-3 select-none pointer-events-none">{t('activities.click_to_flip')}</div>
             )}
           </div>
 
@@ -217,7 +219,7 @@ const FlipcardExtension: React.FC = (props: any) => {
                   onChange={handleAnswerChange}
                   onBlur={handleAnswerBlur}
                   className="bg-white/20 backdrop-blur-sm text-white placeholder-white/70 p-2 rounded-lg w-full h-20 resize-none border-none outline-none text-center"
-                  placeholder="Enter your answer..."
+                  placeholder={t('activities.enter_answer')}
                 />
               ) : (
                 <div className={`text-center font-medium ${getFontSizeClass()} leading-relaxed flex items-center justify-center select-none`}>
@@ -237,7 +239,7 @@ const FlipcardExtension: React.FC = (props: any) => {
               )}
             </div>
             {!isEditingAnswer && (
-              <div className="text-xs opacity-70 mt-3">Click to flip back</div>
+              <div className="text-xs opacity-70 mt-3">{t('activities.click_to_flip_back')}</div>
             )}
           </div>
         </div>
@@ -251,7 +253,7 @@ const FlipcardExtension: React.FC = (props: any) => {
                 handleAlignmentChange('left')
               }} 
               className={`p-1.5 rounded-md transition-colors text-xs ${alignment === 'left' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 hover:bg-gray-200 text-gray-600'}`}
-              title="Align Left"
+              title={t('activities.align_left')}
             >
               <AlignLeft size={12} />
             </button>
@@ -261,7 +263,7 @@ const FlipcardExtension: React.FC = (props: any) => {
                 handleAlignmentChange('center')
               }} 
               className={`p-1.5 rounded-md transition-colors text-xs ${alignment === 'center' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 hover:bg-gray-200 text-gray-600'}`}
-              title="Align Center"
+              title={t('activities.align_center')}
             >
               <AlignCenter size={12} />
             </button>
@@ -271,7 +273,7 @@ const FlipcardExtension: React.FC = (props: any) => {
                 handleAlignmentChange('right')
               }} 
               className={`p-1.5 rounded-md transition-colors text-xs ${alignment === 'right' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 hover:bg-gray-200 text-gray-600'}`}
-              title="Align Right"
+              title={t('activities.align_right')}
             >
               <AlignRight size={12} />
             </button>
@@ -285,7 +287,7 @@ const FlipcardExtension: React.FC = (props: any) => {
                 handleSizeChange('small')
               }} 
               className={`p-1.5 rounded-md transition-colors text-xs ${size === 'small' ? 'bg-green-100 text-green-600' : 'bg-gray-100 hover:bg-gray-200 text-gray-600'}`}
-              title="Small Size"
+              title={t('activities.size_small')}
             >
               <Minimize2 size={12} />
             </button>
@@ -295,7 +297,7 @@ const FlipcardExtension: React.FC = (props: any) => {
                 handleSizeChange('medium')
               }} 
               className={`p-1.5 rounded-md transition-colors text-xs ${size === 'medium' ? 'bg-green-100 text-green-600' : 'bg-gray-100 hover:bg-gray-200 text-gray-600'}`}
-              title="Medium Size"
+              title={t('activities.size_medium')}
             >
               <Square size={12} />
             </button>
@@ -305,7 +307,7 @@ const FlipcardExtension: React.FC = (props: any) => {
                 handleSizeChange('large')
               }} 
               className={`p-1.5 rounded-md transition-colors text-xs ${size === 'large' ? 'bg-green-100 text-green-600' : 'bg-gray-100 hover:bg-gray-200 text-gray-600'}`}
-              title="Large Size"
+              title={t('activities.size_large')}
             >
               <Maximize2 size={12} />
             </button>
@@ -318,7 +320,7 @@ const FlipcardExtension: React.FC = (props: any) => {
                 setShowColorPicker(!showColorPicker)
               }} 
               className="p-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-md transition-colors text-xs"
-              title="Change Color"
+              title={t('activities.change_color')}
             >
               <Palette size={12} />
             </button>
@@ -328,7 +330,7 @@ const FlipcardExtension: React.FC = (props: any) => {
                 setIsFlipped(!isFlipped)
               }}
               className="p-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-md transition-colors text-xs"
-              title="Preview Flip"
+              title={t('activities.preview_flip')}
             >
               <RotateCw size={12} />
             </button>

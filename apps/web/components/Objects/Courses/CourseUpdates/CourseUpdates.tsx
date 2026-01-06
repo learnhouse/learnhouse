@@ -21,10 +21,12 @@ import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationMo
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { useTranslation } from 'react-i18next'
 
 dayjs.extend(relativeTime);
 
 function CourseUpdates() {
+  const { t } = useTranslation();
   const course = useCourse() as any;
   const session = useLHSession() as any;
   const access_token = session?.data?.tokens?.access_token;
@@ -51,7 +53,7 @@ function CourseUpdates() {
       <div onClick={handleModelOpen} className='flex items-center space-x-2 font-normal hover:cursor-pointer text-gray-600'>
         <div><Rss size={16} /> </div>
         <div className='flex space-x-2 items-center'>
-          <span>Updates</span>
+          <span>{t('courses.updates')}</span>
           {updates && <span className='text-xs px-2 font-bold py-0.5 rounded-full bg-rose-100 text-rose-900'>{updates.length}</span>}
         </div>
       </div>
@@ -72,6 +74,7 @@ function CourseUpdates() {
 }
 
 const UpdatesSection = () => {
+  const { t } = useTranslation()
   const [selectedView, setSelectedView] = React.useState('list')
   const adminStatus = useAdminStatus() ;
   return (
@@ -79,14 +82,14 @@ const UpdatesSection = () => {
       <div className='bg-gray-50/70 flex justify-between outline outline-1 rounded-lg outline-neutral-200/40'>
         <div className='py-2 px-4 font-bold text-gray-500 flex space-x-2 items-center'>
           <Rss size={16} />
-          <span>Updates</span>
+          <span>{t('courses.updates')}</span>
 
         </div>
         {adminStatus.isAdmin && <div
           onClick={() => setSelectedView('new')}
           className='py-2 px-4 space-x-2 items-center flex cursor-pointer text-xs font-medium hover:bg-gray-200 bg-gray-100 outline outline-1  outline-neutral-200/40'>
           <PencilLine size={14} />
-          <span>New Update</span>
+          <span>{t('courses.new_update')}</span>
         </div>}
       </div>
       <div className=''>
@@ -98,6 +101,7 @@ const UpdatesSection = () => {
 }
 
 const NewUpdateForm = ({ setSelectedView }: any) => {
+  const { t } = useTranslation()
   const org = useOrg() as any;
   const course = useCourse() as any;
   const session = useLHSession() as any;
@@ -106,10 +110,10 @@ const NewUpdateForm = ({ setSelectedView }: any) => {
     const errors: any = {}
 
     if (!values.title) {
-      errors.title = 'Title is required'
+      errors.title = t('validation.title_required')
     }
     if (!values.content) {
-      errors.content = 'Content is required'
+      errors.content = t('validation.content_required')
     }
 
     return errors
@@ -129,12 +133,12 @@ const NewUpdateForm = ({ setSelectedView }: any) => {
       }
       const res = await createCourseUpdate(body, session.data?.tokens?.access_token)
       if (res.status === 200) {
-        toast.success('Update added successfully')
+        toast.success(t('courses.update_added_success'))
         setSelectedView('list')
         mutate(`${getAPIUrl()}courses/${course?.courseStructure.course_uuid}/updates`)
       }
       else {
-        toast.error('Failed to add update')
+        toast.error(t('courses.failed_add_update'))
       }
     },
     enableReinitialize: true,
@@ -149,14 +153,14 @@ const NewUpdateForm = ({ setSelectedView }: any) => {
   return (
     <div className='bg-white/95 backdrop-blur-md nice-shadow rounded-lg w-[700px] overflow-hidden flex flex-col -space-y-2'>
       <div className='flex flex-col -space-y-2 px-4 pt-4'>
-        <div className='text-gray-500 px-3 py-0.5 rounded-full font-semibold text-xs'>Test Course </div>
-        <div className='text-black px-3 py-0.5 rounded-full text-lg font-bold'>Add new Course Update</div>
+        <div className='text-gray-500 px-3 py-0.5 rounded-full font-semibold text-xs'>{course?.courseStructure.name} </div>
+        <div className='text-black px-3 py-0.5 rounded-full text-lg font-bold'>{t('courses.add_new_course_update')}</div>
       </div>
       <div className='px-5 -py-2'>
         <FormLayout onSubmit={formik.handleSubmit}>
           <FormField name="title">
             <FormLabelAndMessage
-              label="Title"
+              label={t('courses.update_title')}
               message={formik.errors.title}
             />
             <Form.Control asChild>
@@ -171,7 +175,7 @@ const NewUpdateForm = ({ setSelectedView }: any) => {
           </FormField>
           <FormField name="content">
             <FormLabelAndMessage
-              label="Content"
+              label={t('courses.update_content')}
               message={formik.errors.content}
             />
             <Form.Control asChild>
@@ -184,8 +188,8 @@ const NewUpdateForm = ({ setSelectedView }: any) => {
             </Form.Control>
           </FormField>
           <div className='flex justify-end py-2'>
-            <button onClick={() => setSelectedView('list')} className='text-gray-500 px-4 py-2 rounded-md text-sm font-bold antialiased'>Cancel</button>
-            <button className='bg-black  text-white px-4 py-2 rounded-md text-sm font-bold antialiased'>Add Update</button>
+            <button onClick={() => setSelectedView('list')} className='text-gray-500 px-4 py-2 rounded-md text-sm font-bold antialiased'>{t('common.cancel')}</button>
+            <button className='bg-black  text-white px-4 py-2 rounded-md text-sm font-bold antialiased'>{t('courses.add_update')}</button>
           </div>
         </FormLayout>
       </div>
@@ -194,6 +198,7 @@ const NewUpdateForm = ({ setSelectedView }: any) => {
 }
 
 const UpdatesListView = () => {
+  const { t } = useTranslation()
   const course = useCourse() as any;
   const adminStatus = useAdminStatus() ;
   const session = useLHSession() as any;
@@ -208,7 +213,7 @@ const UpdatesListView = () => {
             <div className='flex space-x-2 items-center'>
               <span> {update.title}</span>
               <span
-                title={"Created at " + dayjs(update.creation_date).format('MMMM D, YYYY')}
+                title={t('common.created_at') + " " + dayjs(update.creation_date).format('MMMM D, YYYY')}
                 className='text-xs font-semibold text-gray-300'>
                 {dayjs(update.creation_date).fromNow()}
               </span>
@@ -220,7 +225,7 @@ const UpdatesListView = () => {
       {(!updates || updates.length === 0) &&
         <div className='text-gray-500 text-center my-10 py-2 flex flex-col space-y-2'>
           <TentTree className='mx-auto' size={40} />
-          <p>No updates yet</p>
+          <p>{t('courses.no_updates_yet')}</p>
         </div>
       }
     </div>
@@ -228,32 +233,33 @@ const UpdatesListView = () => {
 }
 
 const DeleteUpdateButton = ({ update }: any) => {
+  const { t } = useTranslation()
   const session = useLHSession() as any;
   const course = useCourse() as any;
   const org = useOrg() as any;
 
   const handleDelete = async () => {
     const res = await deleteCourseUpdate(course.courseStructure.course_uuid, update.courseupdate_uuid, session.data?.tokens?.access_token)
-    const toast_loading = toast.loading('Deleting update...')
+    const toast_loading = toast.loading(t('courses.deleting_update'))
     if (res.status === 200) {
       toast.dismiss(toast_loading)
-      toast.success('Update deleted successfully')
+      toast.success(t('courses.update_deleted_success'))
       mutate(`${getAPIUrl()}courses/${course?.courseStructure.course_uuid}/updates`)
     }
     else {
-      toast.error('Failed to delete update')
+      toast.error(t('courses.failed_delete_update'))
     }
   }
 
   return (
     <ConfirmationModal
-      confirmationButtonText="Delete Update"
-      confirmationMessage="Are you sure you want to delete this update?"
-      dialogTitle={'Delete Update ?'}
+      confirmationButtonText={t('courses.delete_update')}
+      confirmationMessage={t('courses.delete_update_confirm')}
+      dialogTitle={t('courses.delete_update_title')}
       buttonid='delete-update-button'
       dialogTrigger={
         <div id='delete-update-button' className='text-rose-600 text-xs bg-rose-100 rounded-full px-2 py-0.5 hover:cursor-pointer'>
-          Delete
+          {t('common.delete')}
         </div>
       }
       functionToExecute={() => {

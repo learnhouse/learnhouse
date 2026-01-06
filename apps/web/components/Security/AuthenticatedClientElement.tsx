@@ -6,7 +6,7 @@ import { useOrg } from '@components/Contexts/OrgContext'
 interface AuthenticatedClientElementProps {
   children: React.ReactNode
   checkMethod: 'authentication' | 'roles'
-  orgId?: string
+  orgId?: string | number
   ressourceType?:
   | 'collections'
   | 'courses'

@@ -11,6 +11,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { mutate } from 'swr'
 import { Award, ExternalLink } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 interface TrailCourseElementProps {
   course: any
@@ -19,6 +20,7 @@ interface TrailCourseElementProps {
 }
 
 function TrailCourseElement(props: TrailCourseElementProps) {
+  const { t } = useTranslation()
   const org = useOrg() as any
   const session = useLHSession() as any;
   const access_token = session?.data?.tokens?.access_token;
@@ -95,7 +97,7 @@ function TrailCourseElement(props: TrailCourseElementProps) {
         <div className="course_top">
           <div className="course_info flex">
             <div className="course_basic flex flex-col flex-end -space-y-2">
-              <p className="p-0 font-bold text-sm text-gray-700">Course</p>
+              <p className="p-0 font-bold text-sm text-gray-700">{t('search.course')}</p>
               <div className="course_progress flex items-center space-x-2">
                 <h2 className="font-bold text-xl">{course.name}</h2>
                 <div className="bg-slate-300 rounded-full w-[10px] h-[5px]"></div>
@@ -107,7 +109,7 @@ function TrailCourseElement(props: TrailCourseElementProps) {
                 onClick={() => quitCourse(course.course_uuid)}
                 className="bg-red-200 text-red-700 hover:bg-red-300  rounded-full text-xs h-5 px-2 font-bold"
               >
-                Quit Course
+                {t('courses.quit_course')}
               </button>
             </div>
           </div>
@@ -127,14 +129,14 @@ function TrailCourseElement(props: TrailCourseElementProps) {
             {isLoadingCertificate ? (
               <div className="flex items-center space-x-1 text-xs text-gray-500">
                 <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-yellow-500"></div>
-                <span>Loading...</span>
+                <span>{t('common.loading')}</span>
               </div>
             ) : courseCertificate ? (
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-1">
                   <Award className="w-3 h-3 text-yellow-500" />
                   <span className="text-xs font-medium text-gray-700">
-                    Certificate
+                    {t('certificate.certificate')}
                   </span>
                 </div>
                 <Link
@@ -143,14 +145,14 @@ function TrailCourseElement(props: TrailCourseElementProps) {
                   rel="noopener noreferrer"
                   className="inline-flex items-center space-x-1 text-blue-600 hover:text-blue-700 text-xs font-medium"
                 >
-                  <span>Verify</span>
+                  <span>{t('certificate.verify')}</span>
                   <ExternalLink className="w-3 h-3" />
                 </Link>
               </div>
             ) : (
               <div className="flex items-center space-x-1 text-xs text-gray-500">
                 <Award className="w-3 h-3 text-gray-300" />
-                <span>No certificate</span>
+                <span>{t('certificate.no_certificate')}</span>
               </div>
             )}
           </div>
