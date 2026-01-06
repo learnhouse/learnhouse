@@ -393,6 +393,224 @@
   },
   "user": {
     "user_settings": "Configurações do Usuário",
+    "settings": {
+      "title": "Configurações da Conta",
+      "tabs": {
+        "general": "Geral",
+        "profile": "Perfil",
+        "security": "Senha"
+      },
+      "general": {
+        "title": "Configurações da Conta",
+        "subtitle": "Gerencie suas informações pessoais e preferências",
+        "email": "E-mail",
+        "email_placeholder": "Seu endereço de e-mail",
+        "username": "Nome de usuário",
+        "username_placeholder": "Seu nome de usuário",
+        "first_name": "Nome",
+        "first_name_placeholder": "Seu nome",
+        "last_name": "Sobrenome",
+        "last_name_placeholder": "Seu sobrenome",
+        "bio": "Biografia",
+        "bio_placeholder": "Conte-nos sobre você",
+        "characters_left": "{{count}} caracteres restantes",
+        "additional_details": "Detalhes Adicionais",
+        "clear_all": "Limpar Tudo",
+        "add_detail": "Adicionar Detalhe",
+        "add_general": "Adicionar Geral",
+        "add_academic": "Adicionar Acadêmico",
+        "add_professional": "Adicionar Profissional",
+        "profile_picture": "Foto do Perfil",
+        "change_avatar": "Alterar Avatar",
+        "recommended_size": "Tamanho recomendado 100x100",
+        "save_changes": "Salvar Alterações",
+        "saving": "Salvando...",
+        "uploading": "Enviando",
+        "avatar_updated": "Avatar Atualizado",
+        "profile_updated": "Perfil Atualizado com Sucesso",
+        "relogin_message": "Por favor, faça login novamente com seu novo e-mail: {{email}}",
+        "logout_warning": "Você será desconectado após alterar seu e-mail",
+        "detail_label_placeholder": "Digite o rótulo (ex: Título, Localização)",
+        "remove": "Remover",
+        "icon": "Ícone",
+        "select_icon": "Selecionar ícone",
+        "text": "Texto",
+        "text_placeholder": "Digite o texto do detalhe",
+        "icons": {
+          "briefcase": "Pasta",
+          "education": "Educação",
+          "location": "Localização",
+          "organization": "Organização",
+          "speciality": "Especialidade",
+          "website": "Site",
+          "tech": "Tecnologia",
+          "achievement": "Conquista",
+          "book": "Livro",
+          "link": "Link",
+          "community": "Comunidade",
+          "calendar": "Calendário"
+        },
+        "labels": {
+          "title": "Título",
+          "affiliation": "Afiliação",
+          "location": "Localização",
+          "website": "Site",
+          "linkedin": "LinkedIn",
+          "institution": "Instituição",
+          "department": "Departamento",
+          "research": "Área de Pesquisa",
+          "academic_title": "Título Acadêmico",
+          "company": "Empresa",
+          "industry": "Indústria",
+          "expertise": "Especialização",
+          "community": "Comunidade"
+        }
+      },
+      "password": {
+        "title": "Alterar Senha",
+        "subtitle": "Atualize sua senha para manter sua conta segura",
+        "current_password": "Senha Atual",
+        "new_password": "Nova Senha",
+        "update_password": "Atualizar Senha",
+        "updating": "Atualizando...",
+        "password_updated": "Senha atualizada com sucesso",
+        "relogin_message": "Por favor, faça login novamente com sua nova senha",
+        "logout_warning": "Você será desconectado após alterar sua senha"
+      },
+      "profile_builder": {
+        "title": "Construtor de Perfil",
+        "subtitle": "Personalize seu perfil profissional",
+        "sections": "Seções",
+        "add_section": "Adicionar Seção",
+        "save_changes": "Salvar Alterações",
+        "saving": "Salvando...",
+        "select_section": "Selecione uma seção para editar ou adicione uma nova",
+        "beta": "BETA",
+        "section_types": {
+          "image_gallery": {
+            "label": "Galeria de Imagens",
+            "description": "Adicione uma coleção de imagens"
+          },
+          "text": {
+            "label": "Texto",
+            "description": "Adicione conteúdo de texto formatado"
+          },
+          "links": {
+            "label": "Links",
+            "description": "Adicione links sociais ou profissionais"
+          },
+          "skills": {
+            "label": "Habilidades",
+            "description": "Mostre suas habilidades e experiência"
+          },
+          "experience": {
+            "label": "Experiência",
+            "description": "Adicione experiência de trabalho ou projeto"
+          },
+          "education": {
+            "label": "Educação",
+            "description": "Adicione seu histórico educacional"
+          },
+          "affiliation": {
+            "label": "Afiliação",
+            "description": "Adicione afiliações organizacionais"
+          },
+          "courses": {
+            "label": "Cursos",
+            "description": "Exiba cursos criados por você"
+          }
+        },
+        "editors": {
+          "section_title": "Título da Seção",
+          "enter_section_title": "Digite o título da seção",
+          "image_gallery": {
+            "title": "Galeria de Imagens",
+            "images": "Imagens",
+            "image_url": "URL da Imagem",
+            "enter_image_url": "Digite a URL da imagem",
+            "caption": "Legenda",
+            "image_caption": "Legenda da imagem",
+            "add_image": "Adicionar Imagem"
+          },
+          "text": {
+            "title": "Conteúdo de Texto",
+            "content": "Conteúdo",
+            "enter_content": "Digite seu conteúdo aqui..."
+          },
+          "links": {
+            "title": "Links",
+            "links": "Links",
+            "link_title": "Título do link",
+            "url": "URL",
+            "add_link": "Adicionar Link"
+          },
+          "skills": {
+            "title": "Habilidades",
+            "skills": "Habilidades",
+            "skill_name": "Nome da habilidade",
+            "select_level": "Selecionar nível",
+            "category": "Categoria (opcional)",
+            "add_skill": "Adicionar Habilidade",
+            "levels": {
+              "beginner": "Iniciante",
+              "intermediate": "Intermediário",
+              "advanced": "Avançado",
+              "expert": "Especialista"
+            }
+          },
+          "experience": {
+            "title": "Experiência",
+            "items": "Itens de Experiência",
+            "role_title": "Título",
+            "role_placeholder": "Cargo ou função",
+            "organization": "Organização",
+            "organization_placeholder": "Empresa ou organização",
+            "start_date": "Data de Início",
+            "end_date": "Data de Término",
+            "current": "Atual",
+            "description": "Descrição",
+            "description_placeholder": "Descreva seu cargo e conquistas",
+            "add_experience": "Adicionar Experiência"
+          },
+          "education": {
+            "title": "Educação",
+            "items": "Itens de Educação",
+            "institution": "Instituição",
+            "institution_placeholder": "Escola ou universidade",
+            "degree": "Grau",
+            "degree_placeholder": "Tipo de grau",
+            "field": "Área de Estudo",
+            "field_placeholder": "Especialização ou concentração",
+            "start_date": "Data de Início",
+            "end_date": "Data de Término",
+            "current": "Atual",
+            "description": "Descrição",
+            "description_placeholder": "Detalhes adicionais sobre sua educação",
+            "add_education": "Adicionar Educação"
+          },
+          "affiliation": {
+            "title": "Afiliação",
+            "affiliations": "Afiliações",
+            "name": "Nome",
+            "name_placeholder": "Nome da organização",
+            "logo_url": "URL do Logo",
+            "logo_url_placeholder": "URL do logo da organização",
+            "description": "Descrição",
+            "description_placeholder": "Descrição da organização",
+            "add_affiliation": "Adicionar Afiliação"
+          },
+          "courses": {
+            "title": "Cursos",
+            "info": "Seus cursos criados serão exibidos automaticamente nesta seção."
+          }
+        },
+        "toasts": {
+          "loading_error": "Falha ao carregar dados do perfil",
+          "save_success": "Perfil atualizado com sucesso",
+          "save_error": "Erro ao atualizar o perfil"
+        }
+      }
+    },
     "sign_out": "Sair",
     "username": "Nome de usuário",
     "first_name": "Nome",

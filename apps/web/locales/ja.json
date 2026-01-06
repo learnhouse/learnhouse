@@ -393,6 +393,224 @@
   },
   "user": {
     "user_settings": "ユーザー設定",
+    "settings": {
+      "title": "アカウント設定",
+      "tabs": {
+        "general": "一般",
+        "profile": "プロフィール",
+        "security": "パスワード"
+      },
+      "general": {
+        "title": "アカウント設定",
+        "subtitle": "個人情報と設定を管理",
+        "email": "メールアドレス",
+        "email_placeholder": "メールアドレス",
+        "username": "ユーザー名",
+        "username_placeholder": "ユーザー名",
+        "first_name": "名",
+        "first_name_placeholder": "名",
+        "last_name": "姓",
+        "last_name_placeholder": "姓",
+        "bio": "自己紹介",
+        "bio_placeholder": "自己紹介を入力してください",
+        "characters_left": "残り {{count}} 文字",
+        "additional_details": "追加情報",
+        "clear_all": "すべてクリア",
+        "add_detail": "詳細を追加",
+        "add_general": "一般を追加",
+        "add_academic": "学術を追加",
+        "add_professional": "専門を追加",
+        "profile_picture": "プロフィール写真",
+        "change_avatar": "アバターを変更",
+        "recommended_size": "推奨サイズ 100x100",
+        "save_changes": "変更を保存",
+        "saving": "保存中...",
+        "uploading": "アップロード中",
+        "avatar_updated": "アバターを更新しました",
+        "profile_updated": "プロフィールを正常に更新しました",
+        "relogin_message": "新しいメールアドレスで再度ログインしてください：{{email}}",
+        "logout_warning": "メールアドレスを変更するとログアウトされます",
+        "detail_label_placeholder": "ラベルを入力（例：タイトル、場所）",
+        "remove": "削除",
+        "icon": "アイコン",
+        "select_icon": "アイコンを選択",
+        "text": "テキスト",
+        "text_placeholder": "詳細テキストを入力",
+        "icons": {
+          "briefcase": "ブリーフケース",
+          "education": "教育",
+          "location": "場所",
+          "organization": "組織",
+          "speciality": "専門",
+          "website": "ウェブサイト",
+          "tech": "技術",
+          "achievement": "実績",
+          "book": "本",
+          "link": "リンク",
+          "community": "コミュニティ",
+          "calendar": "カレンダー"
+        },
+        "labels": {
+          "title": "タイトル",
+          "affiliation": "所属",
+          "location": "場所",
+          "website": "ウェブサイト",
+          "linkedin": "LinkedIn",
+          "institution": "機関",
+          "department": "部門",
+          "research": "研究分野",
+          "academic_title": "学術的タイトル",
+          "company": "会社",
+          "industry": "業界",
+          "expertise": "専門知識",
+          "community": "コミュニティ"
+        }
+      },
+      "password": {
+        "title": "パスワードを変更",
+        "subtitle": "アカウントを保護するためにパスワードを更新",
+        "current_password": "現在のパスワード",
+        "new_password": "新しいパスワード",
+        "update_password": "パスワードを更新",
+        "updating": "更新中...",
+        "password_updated": "パスワードを正常に更新しました",
+        "relogin_message": "新しいパスワードで再度ログインしてください",
+        "logout_warning": "パスワードを変更するとログアウトされます"
+      },
+      "profile_builder": {
+        "title": "プロフィールビルダー",
+        "subtitle": "プロフェッショナルなプロフィールをカスタマイズ",
+        "sections": "セクション",
+        "add_section": "セクションを追加",
+        "save_changes": "変更を保存",
+        "saving": "保存中...",
+        "select_section": "編集するセクションを選択するか、新しいセクションを追加",
+        "beta": "ベータ版",
+        "section_types": {
+          "image_gallery": {
+            "label": "画像ギャラリー",
+            "description": "画像のコレクションを追加"
+          },
+          "text": {
+            "label": "テキスト",
+            "description": "フォーマットされたテキストコンテンツを追加"
+          },
+          "links": {
+            "label": "リンク",
+            "description": "ソーシャルまたはプロフェッショナルなリンクを追加"
+          },
+          "skills": {
+            "label": "スキル",
+            "description": "スキルと専門知識を紹介"
+          },
+          "experience": {
+            "label": "経験",
+            "description": "仕事やプロジェクトの経験を追加"
+          },
+          "education": {
+            "label": "教育",
+            "description": "教育背景を追加"
+          },
+          "affiliation": {
+            "label": "所属",
+            "description": "組織の所属を追加"
+          },
+          "courses": {
+            "label": "コース",
+            "description": "作成したコースを表示"
+          }
+        },
+        "editors": {
+          "section_title": "セクションタイトル",
+          "enter_section_title": "セクションタイトルを入力",
+          "image_gallery": {
+            "title": "画像ギャラリー",
+            "images": "画像",
+            "image_url": "画像URL",
+            "enter_image_url": "画像URLを入力",
+            "caption": "キャプション",
+            "image_caption": "画像キャプション",
+            "add_image": "画像を追加"
+          },
+          "text": {
+            "title": "テキストコンテンツ",
+            "content": "コンテンツ",
+            "enter_content": "ここにコンテンツを入力..."
+          },
+          "links": {
+            "title": "リンク",
+            "links": "リンク",
+            "link_title": "リンクタイトル",
+            "url": "URL",
+            "add_link": "リンクを追加"
+          },
+          "skills": {
+            "title": "スキル",
+            "skills": "スキル",
+            "skill_name": "スキル名",
+            "select_level": "レベルを選択",
+            "category": "カテゴリー（オプション）",
+            "add_skill": "スキルを追加",
+            "levels": {
+              "beginner": "初級",
+              "intermediate": "中級",
+              "advanced": "上級",
+              "expert": "エキスパート"
+            }
+          },
+          "experience": {
+            "title": "経験",
+            "items": "経験項目",
+            "role_title": "タイトル",
+            "role_placeholder": "役職または役割",
+            "organization": "組織",
+            "organization_placeholder": "会社または組織",
+            "start_date": "開始日",
+            "end_date": "終了日",
+            "current": "現在",
+            "description": "説明",
+            "description_placeholder": "役割と成果を説明",
+            "add_experience": "経験を追加"
+          },
+          "education": {
+            "title": "教育",
+            "items": "教育項目",
+            "institution": "機関",
+            "institution_placeholder": "学校または大学",
+            "degree": "学位",
+            "degree_placeholder": "学位の種類",
+            "field": "専攻分野",
+            "field_placeholder": "専攻または集中分野",
+            "start_date": "開始日",
+            "end_date": "終了日",
+            "current": "現在",
+            "description": "説明",
+            "description_placeholder": "教育に関する追加情報",
+            "add_education": "教育を追加"
+          },
+          "affiliation": {
+            "title": "所属",
+            "affiliations": "所属",
+            "name": "名前",
+            "name_placeholder": "組織名",
+            "logo_url": "ロゴURL",
+            "logo_url_placeholder": "組織のロゴURL",
+            "description": "説明",
+            "description_placeholder": "組織の説明",
+            "add_affiliation": "所属を追加"
+          },
+          "courses": {
+            "title": "コース",
+            "info": "作成したコースはこのセクションに自動的に表示されます。"
+          }
+        },
+        "toasts": {
+          "loading_error": "プロフィールデータの読み込みに失敗しました",
+          "save_success": "プロフィールを正常に更新しました",
+          "save_error": "プロフィールの更新中にエラーが発生しました"
+        }
+      }
+    },
     "sign_out": "ログアウト",
     "username": "ユーザー名",
     "first_name": "名",

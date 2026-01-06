@@ -393,6 +393,224 @@
   },
   "user": {
     "user_settings": "User Settings",
+    "settings": {
+      "title": "Account Settings",
+      "tabs": {
+        "general": "General",
+        "profile": "Profile",
+        "security": "Password"
+      },
+      "general": {
+        "title": "Account Settings",
+        "subtitle": "Manage your personal information and preferences",
+        "email": "Email",
+        "email_placeholder": "Your email address",
+        "username": "Username",
+        "username_placeholder": "Your username",
+        "first_name": "First Name",
+        "first_name_placeholder": "Your first name",
+        "last_name": "Last Name",
+        "last_name_placeholder": "Your last name",
+        "bio": "Bio",
+        "bio_placeholder": "Tell us about yourself",
+        "characters_left": "{{count}} characters left",
+        "additional_details": "Additional Details",
+        "clear_all": "Clear All",
+        "add_detail": "Add Detail",
+        "add_general": "Add General",
+        "add_academic": "Add Academic",
+        "add_professional": "Add Professional",
+        "profile_picture": "Profile Picture",
+        "change_avatar": "Change Avatar",
+        "recommended_size": "Recommended size 100x100",
+        "save_changes": "Save Changes",
+        "saving": "Saving...",
+        "uploading": "Uploading",
+        "avatar_updated": "Avatar Updated",
+        "profile_updated": "Profile Updated Successfully",
+        "relogin_message": "Please login again with your new email: {{email}}",
+        "logout_warning": "You will be logged out after changing your email",
+        "detail_label_placeholder": "Enter label (e.g., Title, Location)",
+        "remove": "Remove",
+        "icon": "Icon",
+        "select_icon": "Select icon",
+        "text": "Text",
+        "text_placeholder": "Enter detail text",
+        "icons": {
+          "briefcase": "Briefcase",
+          "education": "Education",
+          "location": "Location",
+          "organization": "Organization",
+          "speciality": "Speciality",
+          "website": "Website",
+          "tech": "Tech",
+          "achievement": "Achievement",
+          "book": "Book",
+          "link": "Link",
+          "community": "Community",
+          "calendar": "Calendar"
+        },
+        "labels": {
+          "title": "Title",
+          "affiliation": "Affiliation",
+          "location": "Location",
+          "website": "Website",
+          "linkedin": "LinkedIn",
+          "institution": "Institution",
+          "department": "Department",
+          "research": "Research Area",
+          "academic_title": "Academic Title",
+          "company": "Company",
+          "industry": "Industry",
+          "expertise": "Expertise",
+          "community": "Community"
+        }
+      },
+      "password": {
+        "title": "Change Password",
+        "subtitle": "Update your password to keep your account secure",
+        "current_password": "Current Password",
+        "new_password": "New Password",
+        "update_password": "Update Password",
+        "updating": "Updating...",
+        "password_updated": "Password updated successfully",
+        "relogin_message": "Please login again with your new password",
+        "logout_warning": "You will be logged out after changing your password"
+      },
+      "profile_builder": {
+        "title": "Profile Builder",
+        "subtitle": "Customize your professional profile",
+        "sections": "Sections",
+        "add_section": "Add Section",
+        "save_changes": "Save Changes",
+        "saving": "Saving...",
+        "select_section": "Select a section to edit or add a new one",
+        "beta": "BETA",
+        "section_types": {
+          "image_gallery": {
+            "label": "Image Gallery",
+            "description": "Add a collection of images"
+          },
+          "text": {
+            "label": "Text",
+            "description": "Add formatted text content"
+          },
+          "links": {
+            "label": "Links",
+            "description": "Add social or professional links"
+          },
+          "skills": {
+            "label": "Skills",
+            "description": "Showcase your skills and expertise"
+          },
+          "experience": {
+            "label": "Experience",
+            "description": "Add work or project experience"
+          },
+          "education": {
+            "label": "Education",
+            "description": "Add educational background"
+          },
+          "affiliation": {
+            "label": "Affiliation",
+            "description": "Add organizational affiliations"
+          },
+          "courses": {
+            "label": "Courses",
+            "description": "Display authored courses"
+          }
+        },
+        "editors": {
+          "section_title": "Section Title",
+          "enter_section_title": "Enter section title",
+          "image_gallery": {
+            "title": "Image Gallery",
+            "images": "Images",
+            "image_url": "Image URL",
+            "enter_image_url": "Enter image URL",
+            "caption": "Caption",
+            "image_caption": "Image caption",
+            "add_image": "Add Image"
+          },
+          "text": {
+            "title": "Text Content",
+            "content": "Content",
+            "enter_content": "Enter your content here..."
+          },
+          "links": {
+            "title": "Links",
+            "links": "Links",
+            "link_title": "Link title",
+            "url": "URL",
+            "add_link": "Add Link"
+          },
+          "skills": {
+            "title": "Skills",
+            "skills": "Skills",
+            "skill_name": "Skill name",
+            "select_level": "Select level",
+            "category": "Category (optional)",
+            "add_skill": "Add Skill",
+            "levels": {
+              "beginner": "Beginner",
+              "intermediate": "Intermediate",
+              "advanced": "Advanced",
+              "expert": "Expert"
+            }
+          },
+          "experience": {
+            "title": "Experience",
+            "items": "Experience Items",
+            "role_title": "Title",
+            "role_placeholder": "Position or role",
+            "organization": "Organization",
+            "organization_placeholder": "Company or organization",
+            "start_date": "Start Date",
+            "end_date": "End Date",
+            "current": "Current",
+            "description": "Description",
+            "description_placeholder": "Describe your role and achievements",
+            "add_experience": "Add Experience"
+          },
+          "education": {
+            "title": "Education",
+            "items": "Education Items",
+            "institution": "Institution",
+            "institution_placeholder": "School or university",
+            "degree": "Degree",
+            "degree_placeholder": "Degree type",
+            "field": "Field of Study",
+            "field_placeholder": "Major or concentration",
+            "start_date": "Start Date",
+            "end_date": "End Date",
+            "current": "Current",
+            "description": "Description",
+            "description_placeholder": "Additional details about your education",
+            "add_education": "Add Education"
+          },
+          "affiliation": {
+            "title": "Affiliation",
+            "affiliations": "Affiliations",
+            "name": "Name",
+            "name_placeholder": "Name of the organization",
+            "logo_url": "Logo URL",
+            "logo_url_placeholder": "URL to the organization's logo",
+            "description": "Description",
+            "description_placeholder": "Description of the organization",
+            "add_affiliation": "Add Affiliation"
+          },
+          "courses": {
+            "title": "Courses",
+            "info": "Your authored courses will be automatically displayed in this section."
+          }
+        },
+        "toasts": {
+          "loading_error": "Failed to load profile data",
+          "save_success": "Profile updated successfully",
+          "save_error": "Error updating profile"
+        }
+      }
+    },
     "sign_out": "Sign out",
     "username": "Username",
     "first_name": "First Name",

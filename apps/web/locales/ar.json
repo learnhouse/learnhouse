@@ -393,6 +393,224 @@
   },
   "user": {
     "user_settings": "إعدادات المستخدم",
+    "settings": {
+      "title": "إعدادات الحساب",
+      "tabs": {
+        "general": "عام",
+        "profile": "الملف الشخصي",
+        "security": "كلمة المرور"
+      },
+      "general": {
+        "title": "إعدادات الحساب",
+        "subtitle": "إدارة معلوماتك الشخصية والتفضيلات",
+        "email": "البريد الإلكتروني",
+        "email_placeholder": "عنوان بريدك الإلكتروني",
+        "username": "اسم المستخدم",
+        "username_placeholder": "اسم المستخدم الخاص بك",
+        "first_name": "الاسم الأول",
+        "first_name_placeholder": "اسمك الأول",
+        "last_name": "الاسم الأخير",
+        "last_name_placeholder": "اسمك الأخير",
+        "bio": "السيرة الذاتية",
+        "bio_placeholder": "أخبرنا عن نفسك",
+        "characters_left": "{{count}} حرف متبقي",
+        "additional_details": "تفاصيل إضافية",
+        "clear_all": "مسح الكل",
+        "add_detail": "إضافة تفصيل",
+        "add_general": "إضافة عام",
+        "add_academic": "إضافة أكاديمي",
+        "add_professional": "إضافة مهني",
+        "profile_picture": "صورة الملف الشخصي",
+        "change_avatar": "تغيير الصورة الرمزية",
+        "recommended_size": "الحجم الموصى به 100x100",
+        "save_changes": "حفظ التغييرات",
+        "saving": "جاري الحفظ...",
+        "uploading": "جاري الرفع",
+        "avatar_updated": "تم تحديث الصورة الرمزية",
+        "profile_updated": "تم تحديث الملف الشخصي بنجاح",
+        "relogin_message": "يرجى تسجيل الدخول مرة أخرى باستخدام بريدك الإلكتروني الجديد: {{email}}",
+        "logout_warning": "سيتم تسجيل خروجك بعد تغيير بريدك الإلكتروني",
+        "detail_label_placeholder": "أدخل التسمية (مثل: العنوان، الموقع)",
+        "remove": "إزالة",
+        "icon": "الأيقونة",
+        "select_icon": "اختر الأيقونة",
+        "text": "النص",
+        "text_placeholder": "أدخل نص التفصيل",
+        "icons": {
+          "briefcase": "حقيبة",
+          "education": "التعليم",
+          "location": "الموقع",
+          "organization": "المنظمة",
+          "speciality": "التخصص",
+          "website": "الموقع الإلكتروني",
+          "tech": "التكنولوجيا",
+          "achievement": "الإنجاز",
+          "book": "الكتاب",
+          "link": "الرابط",
+          "community": "المجتمع",
+          "calendar": "التقويم"
+        },
+        "labels": {
+          "title": "العنوان",
+          "affiliation": "الانتماء",
+          "location": "الموقع",
+          "website": "الموقع الإلكتروني",
+          "linkedin": "LinkedIn",
+          "institution": "المؤسسة",
+          "department": "القسم",
+          "research": "مجال البحث",
+          "academic_title": "اللقب الأكاديمي",
+          "company": "الشركة",
+          "industry": "الصناعة",
+          "expertise": "الخبرة",
+          "community": "المجتمع"
+        }
+      },
+      "password": {
+        "title": "تغيير كلمة المرور",
+        "subtitle": "قم بتحديث كلمة المرور للحفاظ على أمان حسابك",
+        "current_password": "كلمة المرور الحالية",
+        "new_password": "كلمة المرور الجديدة",
+        "update_password": "تحديث كلمة المرور",
+        "updating": "جاري التحديث...",
+        "password_updated": "تم تحديث كلمة المرور بنجاح",
+        "relogin_message": "يرجى تسجيل الدخول مرة أخرى باستخدام كلمة المرور الجديدة",
+        "logout_warning": "سيتم تسجيل خروجك بعد تغيير كلمة المرور"
+      },
+      "profile_builder": {
+        "title": "منشئ الملف الشخصي",
+        "subtitle": "قم بتخصيص ملفك الشخصي المهني",
+        "sections": "الأقسام",
+        "add_section": "إضافة قسم",
+        "save_changes": "حفظ التغييرات",
+        "saving": "جاري الحفظ...",
+        "select_section": "اختر قسمًا للتحرير أو أضف قسمًا جديدًا",
+        "beta": "تجريبي",
+        "section_types": {
+          "image_gallery": {
+            "label": "معرض الصور",
+            "description": "إضافة مجموعة من الصور"
+          },
+          "text": {
+            "label": "النص",
+            "description": "إضافة محتوى نصي منسق"
+          },
+          "links": {
+            "label": "الروابط",
+            "description": "إضافة روابط اجتماعية أو مهنية"
+          },
+          "skills": {
+            "label": "المهارات",
+            "description": "اعرض مهاراتك وخبرتك"
+          },
+          "experience": {
+            "label": "الخبرة",
+            "description": "إضافة خبرة عمل أو مشروع"
+          },
+          "education": {
+            "label": "التعليم",
+            "description": "إضافة خلفيتك التعليمية"
+          },
+          "affiliation": {
+            "label": "الانتماء",
+            "description": "إضافة الانتماءات التنظيمية"
+          },
+          "courses": {
+            "label": "الدورات",
+            "description": "عرض الدورات التي أنشأتها"
+          }
+        },
+        "editors": {
+          "section_title": "عنوان القسم",
+          "enter_section_title": "أدخل عنوان القسم",
+          "image_gallery": {
+            "title": "معرض الصور",
+            "images": "الصور",
+            "image_url": "رابط الصورة",
+            "enter_image_url": "أدخل رابط الصورة",
+            "caption": "التسمية التوضيحية",
+            "image_caption": "تسمية الصورة",
+            "add_image": "إضافة صورة"
+          },
+          "text": {
+            "title": "المحتوى النصي",
+            "content": "المحتوى",
+            "enter_content": "أدخل محتواك هنا..."
+          },
+          "links": {
+            "title": "الروابط",
+            "links": "الروابط",
+            "link_title": "عنوان الرابط",
+            "url": "الرابط",
+            "add_link": "إضافة رابط"
+          },
+          "skills": {
+            "title": "المهارات",
+            "skills": "المهارات",
+            "skill_name": "اسم المهارة",
+            "select_level": "اختر المستوى",
+            "category": "الفئة (اختياري)",
+            "add_skill": "إضافة مهارة",
+            "levels": {
+              "beginner": "مبتدئ",
+              "intermediate": "متوسط",
+              "advanced": "متقدم",
+              "expert": "خبير"
+            }
+          },
+          "experience": {
+            "title": "الخبرة",
+            "items": "عناصر الخبرة",
+            "role_title": "العنوان",
+            "role_placeholder": "المنصب أو الدور",
+            "organization": "المنظمة",
+            "organization_placeholder": "الشركة أو المنظمة",
+            "start_date": "تاريخ البدء",
+            "end_date": "تاريخ الانتهاء",
+            "current": "الحالي",
+            "description": "الوصف",
+            "description_placeholder": "اوصف دورك وإنجازاتك",
+            "add_experience": "إضافة خبرة"
+          },
+          "education": {
+            "title": "التعليم",
+            "items": "عناصر التعليم",
+            "institution": "المؤسسة",
+            "institution_placeholder": "المدرسة أو الجامعة",
+            "degree": "الدرجة",
+            "degree_placeholder": "نوع الدرجة",
+            "field": "مجال الدراسة",
+            "field_placeholder": "التخصص أو التركيز",
+            "start_date": "تاريخ البدء",
+            "end_date": "تاريخ الانتهاء",
+            "current": "الحالي",
+            "description": "الوصف",
+            "description_placeholder": "تفاصيل إضافية حول تعليمك",
+            "add_education": "إضافة تعليم"
+          },
+          "affiliation": {
+            "title": "الانتماء",
+            "affiliations": "الانتماءات",
+            "name": "الاسم",
+            "name_placeholder": "اسم المنظمة",
+            "logo_url": "رابط الشعار",
+            "logo_url_placeholder": "رابط شعار المنظمة",
+            "description": "الوصف",
+            "description_placeholder": "وصف المنظمة",
+            "add_affiliation": "إضافة انتماء"
+          },
+          "courses": {
+            "title": "الدورات",
+            "info": "ستظهر الدورات التي أنشأتها تلقائيًا في هذا القسم."
+          }
+        },
+        "toasts": {
+          "loading_error": "فشل تحميل بيانات الملف الشخصي",
+          "save_success": "تم تحديث الملف الشخصي بنجاح",
+          "save_error": "خطأ في تحديث الملف الشخصي"
+        }
+      }
+    },
     "sign_out": "تسجيل الخروج",
     "username": "اسم المستخدم",
     "first_name": "الاسم الأول",

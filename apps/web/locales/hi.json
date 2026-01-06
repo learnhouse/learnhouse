@@ -393,6 +393,224 @@
   },
   "user": {
     "user_settings": "उपयोगकर्ता सेटिंग्स",
+    "settings": {
+      "title": "खाता सेटिंग्स",
+      "tabs": {
+        "general": "सामान्य",
+        "profile": "प्रोफ़ाइल",
+        "security": "पासवर्ड"
+      },
+      "general": {
+        "title": "खाता सेटिंग्स",
+        "subtitle": "अपनी व्यक्तिगत जानकारी और प्राथमिकताएं प्रबंधित करें",
+        "email": "ईमेल",
+        "email_placeholder": "आपका ईमेल पता",
+        "username": "उपयोगकर्ता नाम",
+        "username_placeholder": "आपका उपयोगकर्ता नाम",
+        "first_name": "पहला नाम",
+        "first_name_placeholder": "आपका पहला नाम",
+        "last_name": "अंतिम नाम",
+        "last_name_placeholder": "आपका अंतिम नाम",
+        "bio": "बायो",
+        "bio_placeholder": "हमें अपने बारे में बताएं",
+        "characters_left": "{{count}} वर्ण शेष",
+        "additional_details": "अतिरिक्त विवरण",
+        "clear_all": "सभी साफ करें",
+        "add_detail": "विवरण जोड़ें",
+        "add_general": "सामान्य जोड़ें",
+        "add_academic": "शैक्षणिक जोड़ें",
+        "add_professional": "पेशेवर जोड़ें",
+        "profile_picture": "प्रोफ़ाइल चित्र",
+        "change_avatar": "अवतार बदलें",
+        "recommended_size": "अनुशंसित आकार 100x100",
+        "save_changes": "परिवर्तन सहेजें",
+        "saving": "सहेजा जा रहा है...",
+        "uploading": "अपलोड हो रहा है",
+        "avatar_updated": "अवतार अपडेट किया गया",
+        "profile_updated": "प्रोफ़ाइल सफलतापूर्वक अपडेट किया गया",
+        "relogin_message": "कृपया अपने नए ईमेल से फिर से लॉगिन करें: {{email}}",
+        "logout_warning": "ईमेल बदलने के बाद आपको लॉग आउट कर दिया जाएगा",
+        "detail_label_placeholder": "लेबल दर्ज करें (उदा: शीर्षक, स्थान)",
+        "remove": "हटाएं",
+        "icon": "आइकन",
+        "select_icon": "आइकन चुनें",
+        "text": "पाठ",
+        "text_placeholder": "विवरण पाठ दर्ज करें",
+        "icons": {
+          "briefcase": "ब्रीफकेस",
+          "education": "शिक्षा",
+          "location": "स्थान",
+          "organization": "संगठन",
+          "speciality": "विशेषता",
+          "website": "वेबसाइट",
+          "tech": "तकनीक",
+          "achievement": "उपलब्धि",
+          "book": "पुस्तक",
+          "link": "लिंक",
+          "community": "समुदाय",
+          "calendar": "कैलेंडर"
+        },
+        "labels": {
+          "title": "शीर्षक",
+          "affiliation": "संबद्धता",
+          "location": "स्थान",
+          "website": "वेबसाइट",
+          "linkedin": "LinkedIn",
+          "institution": "संस्थान",
+          "department": "विभाग",
+          "research": "अनुसंधान क्षेत्र",
+          "academic_title": "शैक्षणिक शीर्षक",
+          "company": "कंपनी",
+          "industry": "उद्योग",
+          "expertise": "विशेषज्ञता",
+          "community": "समुदाय"
+        }
+      },
+      "password": {
+        "title": "पासवर्ड बदलें",
+        "subtitle": "अपने खाते को सुरक्षित रखने के लिए पासवर्ड अपडेट करें",
+        "current_password": "वर्तमान पासवर्ड",
+        "new_password": "नया पासवर्ड",
+        "update_password": "पासवर्ड अपडेट करें",
+        "updating": "अपडेट हो रहा है...",
+        "password_updated": "पासवर्ड सफलतापूर्वक अपडेट किया गया",
+        "relogin_message": "कृपया अपने नए पासवर्ड से फिर से लॉगिन करें",
+        "logout_warning": "पासवर्ड बदलने के बाद आपको लॉग आउट कर दिया जाएगा"
+      },
+      "profile_builder": {
+        "title": "प्रोफ़ाइल बिल्डर",
+        "subtitle": "अपनी पेशेवर प्रोफ़ाइल अनुकूलित करें",
+        "sections": "अनुभाग",
+        "add_section": "अनुभाग जोड़ें",
+        "save_changes": "परिवर्तन सहेजें",
+        "saving": "सहेजा जा रहा है...",
+        "select_section": "संपादित करने के लिए एक अनुभाग चुनें या नया जोड़ें",
+        "beta": "बीटा",
+        "section_types": {
+          "image_gallery": {
+            "label": "छवि गैलरी",
+            "description": "छवियों का संग्रह जोड़ें"
+          },
+          "text": {
+            "label": "पाठ",
+            "description": "स्वरूपित पाठ सामग्री जोड़ें"
+          },
+          "links": {
+            "label": "लिंक",
+            "description": "सामाजिक या पेशेवर लिंक जोड़ें"
+          },
+          "skills": {
+            "label": "कौशल",
+            "description": "अपने कौशल और विशेषज्ञता प्रदर्शित करें"
+          },
+          "experience": {
+            "label": "अनुभव",
+            "description": "काम या परियोजना अनुभव जोड़ें"
+          },
+          "education": {
+            "label": "शिक्षा",
+            "description": "अपनी शैक्षणिक पृष्ठभूमि जोड़ें"
+          },
+          "affiliation": {
+            "label": "संबद्धता",
+            "description": "संगठनात्मक संबद्धताएं जोड़ें"
+          },
+          "courses": {
+            "label": "कोर्स",
+            "description": "आपके द्वारा बनाए गए कोर्स प्रदर्शित करें"
+          }
+        },
+        "editors": {
+          "section_title": "अनुभाग शीर्षक",
+          "enter_section_title": "अनुभाग शीर्षक दर्ज करें",
+          "image_gallery": {
+            "title": "छवि गैलरी",
+            "images": "छवियां",
+            "image_url": "छवि URL",
+            "enter_image_url": "छवि URL दर्ज करें",
+            "caption": "कैप्शन",
+            "image_caption": "छवि कैप्शन",
+            "add_image": "छवि जोड़ें"
+          },
+          "text": {
+            "title": "पाठ सामग्री",
+            "content": "सामग्री",
+            "enter_content": "अपनी सामग्री यहां दर्ज करें..."
+          },
+          "links": {
+            "title": "लिंक",
+            "links": "लिंक",
+            "link_title": "लिंक शीर्षक",
+            "url": "URL",
+            "add_link": "लिंक जोड़ें"
+          },
+          "skills": {
+            "title": "कौशल",
+            "skills": "कौशल",
+            "skill_name": "कौशल नाम",
+            "select_level": "स्तर चुनें",
+            "category": "श्रेणी (वैकल्पिक)",
+            "add_skill": "कौशल जोड़ें",
+            "levels": {
+              "beginner": "शुरुआती",
+              "intermediate": "मध्यम",
+              "advanced": "उन्नत",
+              "expert": "विशेषज्ञ"
+            }
+          },
+          "experience": {
+            "title": "अनुभव",
+            "items": "अनुभव आइटम",
+            "role_title": "शीर्षक",
+            "role_placeholder": "पद या भूमिका",
+            "organization": "संगठन",
+            "organization_placeholder": "कंपनी या संगठन",
+            "start_date": "शुरुआती तारीख",
+            "end_date": "समाप्ति तारीख",
+            "current": "वर्तमान",
+            "description": "विवरण",
+            "description_placeholder": "अपनी भूमिका और उपलब्धियों का वर्णन करें",
+            "add_experience": "अनुभव जोड़ें"
+          },
+          "education": {
+            "title": "शिक्षा",
+            "items": "शिक्षा आइटम",
+            "institution": "संस्थान",
+            "institution_placeholder": "स्कूल या विश्वविद्यालय",
+            "degree": "डिग्री",
+            "degree_placeholder": "डिग्री प्रकार",
+            "field": "अध्ययन क्षेत्र",
+            "field_placeholder": "मुख्य या एकाग्रता",
+            "start_date": "शुरुआती तारीख",
+            "end_date": "समाप्ति तारीख",
+            "current": "वर्तमान",
+            "description": "विवरण",
+            "description_placeholder": "आपकी शिक्षा के बारे में अतिरिक्त विवरण",
+            "add_education": "शिक्षा जोड़ें"
+          },
+          "affiliation": {
+            "title": "संबद्धता",
+            "affiliations": "संबद्धताएं",
+            "name": "नाम",
+            "name_placeholder": "संगठन का नाम",
+            "logo_url": "लोगो URL",
+            "logo_url_placeholder": "संगठन के लोगो का URL",
+            "description": "विवरण",
+            "description_placeholder": "संगठन का विवरण",
+            "add_affiliation": "संबद्धता जोड़ें"
+          },
+          "courses": {
+            "title": "कोर्स",
+            "info": "आपके द्वारा बनाए गए कोर्स इस अनुभाग में स्वचालित रूप से प्रदर्शित होंगे।"
+          }
+        },
+        "toasts": {
+          "loading_error": "प्रोफ़ाइल डेटा लोड करने में विफल",
+          "save_success": "प्रोफ़ाइल सफलतापूर्वक अपडेट किया गया",
+          "save_error": "प्रोफ़ाइल अपडेट करने में त्रुटि"
+        }
+      }
+    },
     "sign_out": "साइन आउट",
     "username": "उपयोगकर्ता नाम",
     "first_name": "पहला नाम",

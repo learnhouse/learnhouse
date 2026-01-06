@@ -393,6 +393,224 @@
   },
   "user": {
     "user_settings": "Gebruikersinstellingen",
+    "settings": {
+      "title": "Accountinstellingen",
+      "tabs": {
+        "general": "Algemeen",
+        "profile": "Profiel",
+        "security": "Wachtwoord"
+      },
+      "general": {
+        "title": "Accountinstellingen",
+        "subtitle": "Beheer uw persoonlijke informatie en voorkeuren",
+        "email": "E-mail",
+        "email_placeholder": "Uw e-mailadres",
+        "username": "Gebruikersnaam",
+        "username_placeholder": "Uw gebruikersnaam",
+        "first_name": "Voornaam",
+        "first_name_placeholder": "Uw voornaam",
+        "last_name": "Achternaam",
+        "last_name_placeholder": "Uw achternaam",
+        "bio": "Biografie",
+        "bio_placeholder": "Vertel ons over uzelf",
+        "characters_left": "{{count}} tekens over",
+        "additional_details": "Aanvullende details",
+        "clear_all": "Alles wissen",
+        "add_detail": "Detail toevoegen",
+        "add_general": "Algemeen toevoegen",
+        "add_academic": "Academisch toevoegen",
+        "add_professional": "Professioneel toevoegen",
+        "profile_picture": "Profielfoto",
+        "change_avatar": "Avatar wijzigen",
+        "recommended_size": "Aanbevolen grootte 100x100",
+        "save_changes": "Wijzigingen opslaan",
+        "saving": "Opslaan...",
+        "uploading": "Uploaden",
+        "avatar_updated": "Avatar bijgewerkt",
+        "profile_updated": "Profiel succesvol bijgewerkt",
+        "relogin_message": "Log opnieuw in met uw nieuwe e-mail: {{email}}",
+        "logout_warning": "U wordt uitgelogd na het wijzigen van uw e-mail",
+        "detail_label_placeholder": "Voer label in (bijv. Titel, Locatie)",
+        "remove": "Verwijderen",
+        "icon": "Pictogram",
+        "select_icon": "Pictogram selecteren",
+        "text": "Tekst",
+        "text_placeholder": "Voer detailtekst in",
+        "icons": {
+          "briefcase": "Aktetas",
+          "education": "Onderwijs",
+          "location": "Locatie",
+          "organization": "Organisatie",
+          "speciality": "Specialiteit",
+          "website": "Website",
+          "tech": "Technologie",
+          "achievement": "Prestatie",
+          "book": "Boek",
+          "link": "Link",
+          "community": "Gemeenschap",
+          "calendar": "Kalender"
+        },
+        "labels": {
+          "title": "Titel",
+          "affiliation": "Affiliatie",
+          "location": "Locatie",
+          "website": "Website",
+          "linkedin": "LinkedIn",
+          "institution": "Instelling",
+          "department": "Afdeling",
+          "research": "Onderzoeksgebied",
+          "academic_title": "Academische titel",
+          "company": "Bedrijf",
+          "industry": "Industrie",
+          "expertise": "Expertise",
+          "community": "Gemeenschap"
+        }
+      },
+      "password": {
+        "title": "Wachtwoord wijzigen",
+        "subtitle": "Werk uw wachtwoord bij om uw account veilig te houden",
+        "current_password": "Huidig wachtwoord",
+        "new_password": "Nieuw wachtwoord",
+        "update_password": "Wachtwoord bijwerken",
+        "updating": "Bijwerken...",
+        "password_updated": "Wachtwoord succesvol bijgewerkt",
+        "relogin_message": "Log opnieuw in met uw nieuwe wachtwoord",
+        "logout_warning": "U wordt uitgelogd na het wijzigen van uw wachtwoord"
+      },
+      "profile_builder": {
+        "title": "Profielbouwer",
+        "subtitle": "Pas uw professionele profiel aan",
+        "sections": "Secties",
+        "add_section": "Sectie toevoegen",
+        "save_changes": "Wijzigingen opslaan",
+        "saving": "Opslaan...",
+        "select_section": "Selecteer een sectie om te bewerken of voeg een nieuwe toe",
+        "beta": "BETA",
+        "section_types": {
+          "image_gallery": {
+            "label": "Afbeeldingengalerij",
+            "description": "Voeg een verzameling afbeeldingen toe"
+          },
+          "text": {
+            "label": "Tekst",
+            "description": "Voeg opgemaakte tekstinhoud toe"
+          },
+          "links": {
+            "label": "Links",
+            "description": "Voeg sociale of professionele links toe"
+          },
+          "skills": {
+            "label": "Vaardigheden",
+            "description": "Toon uw vaardigheden en expertise"
+          },
+          "experience": {
+            "label": "Ervaring",
+            "description": "Voeg werk- of projectervaring toe"
+          },
+          "education": {
+            "label": "Onderwijs",
+            "description": "Voeg uw onderwijsachtergrond toe"
+          },
+          "affiliation": {
+            "label": "Affiliatie",
+            "description": "Voeg organisatorische affiliaties toe"
+          },
+          "courses": {
+            "label": "Cursussen",
+            "description": "Toon door u gemaakte cursussen"
+          }
+        },
+        "editors": {
+          "section_title": "Sectietitel",
+          "enter_section_title": "Voer sectietitel in",
+          "image_gallery": {
+            "title": "Afbeeldingengalerij",
+            "images": "Afbeeldingen",
+            "image_url": "Afbeelding-URL",
+            "enter_image_url": "Voer afbeelding-URL in",
+            "caption": "Bijschrift",
+            "image_caption": "Afbeeldingbijschrift",
+            "add_image": "Afbeelding toevoegen"
+          },
+          "text": {
+            "title": "Tekstinhoud",
+            "content": "Inhoud",
+            "enter_content": "Voer hier uw inhoud in..."
+          },
+          "links": {
+            "title": "Links",
+            "links": "Links",
+            "link_title": "Linktitel",
+            "url": "URL",
+            "add_link": "Link toevoegen"
+          },
+          "skills": {
+            "title": "Vaardigheden",
+            "skills": "Vaardigheden",
+            "skill_name": "Vaardigheidsnaam",
+            "select_level": "Selecteer niveau",
+            "category": "Categorie (optioneel)",
+            "add_skill": "Vaardigheid toevoegen",
+            "levels": {
+              "beginner": "Beginner",
+              "intermediate": "Gemiddeld",
+              "advanced": "Gevorderd",
+              "expert": "Expert"
+            }
+          },
+          "experience": {
+            "title": "Ervaring",
+            "items": "Ervaringsitems",
+            "role_title": "Titel",
+            "role_placeholder": "Functie of rol",
+            "organization": "Organisatie",
+            "organization_placeholder": "Bedrijf of organisatie",
+            "start_date": "Startdatum",
+            "end_date": "Einddatum",
+            "current": "Huidig",
+            "description": "Beschrijving",
+            "description_placeholder": "Beschrijf uw rol en prestaties",
+            "add_experience": "Ervaring toevoegen"
+          },
+          "education": {
+            "title": "Onderwijs",
+            "items": "Onderwijsitems",
+            "institution": "Instelling",
+            "institution_placeholder": "School of universiteit",
+            "degree": "Graad",
+            "degree_placeholder": "Graadtype",
+            "field": "Studiegebied",
+            "field_placeholder": "Hoofdvak of concentratie",
+            "start_date": "Startdatum",
+            "end_date": "Einddatum",
+            "current": "Huidig",
+            "description": "Beschrijving",
+            "description_placeholder": "Aanvullende details over uw onderwijs",
+            "add_education": "Onderwijs toevoegen"
+          },
+          "affiliation": {
+            "title": "Affiliatie",
+            "affiliations": "Affiliaties",
+            "name": "Naam",
+            "name_placeholder": "Naam van de organisatie",
+            "logo_url": "Logo-URL",
+            "logo_url_placeholder": "URL van het logo van de organisatie",
+            "description": "Beschrijving",
+            "description_placeholder": "Beschrijving van de organisatie",
+            "add_affiliation": "Affiliatie toevoegen"
+          },
+          "courses": {
+            "title": "Cursussen",
+            "info": "Uw door u gemaakte cursussen worden automatisch in deze sectie weergegeven."
+          }
+        },
+        "toasts": {
+          "loading_error": "Fout bij het laden van profielgegevens",
+          "save_success": "Profiel succesvol bijgewerkt",
+          "save_error": "Fout bij het bijwerken van profiel"
+        }
+      }
+    },
     "sign_out": "Uitloggen",
     "username": "Gebruikersnaam",
     "first_name": "Voornaam",

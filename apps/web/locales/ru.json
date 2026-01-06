@@ -393,6 +393,224 @@
   },
   "user": {
     "user_settings": "Настройки пользователя",
+    "settings": {
+      "title": "Настройки аккаунта",
+      "tabs": {
+        "general": "Общие",
+        "profile": "Профиль",
+        "security": "Пароль"
+      },
+      "general": {
+        "title": "Настройки аккаунта",
+        "subtitle": "Управляйте своей личной информацией и настройками",
+        "email": "Электронная почта",
+        "email_placeholder": "Ваш адрес электронной почты",
+        "username": "Имя пользователя",
+        "username_placeholder": "Ваше имя пользователя",
+        "first_name": "Имя",
+        "first_name_placeholder": "Ваше имя",
+        "last_name": "Фамилия",
+        "last_name_placeholder": "Ваша фамилия",
+        "bio": "Биография",
+        "bio_placeholder": "Расскажите о себе",
+        "characters_left": "Осталось {{count}} символов",
+        "additional_details": "Дополнительные детали",
+        "clear_all": "Очистить всё",
+        "add_detail": "Добавить деталь",
+        "add_general": "Добавить Общее",
+        "add_academic": "Добавить Академическое",
+        "add_professional": "Добавить Профессиональное",
+        "profile_picture": "Фото профиля",
+        "change_avatar": "Изменить аватар",
+        "recommended_size": "Рекомендуемый размер 100x100",
+        "save_changes": "Сохранить изменения",
+        "saving": "Сохранение...",
+        "uploading": "Загрузка",
+        "avatar_updated": "Аватар обновлён",
+        "profile_updated": "Профиль успешно обновлён",
+        "relogin_message": "Пожалуйста, войдите снова с вашим новым email: {{email}}",
+        "logout_warning": "Вы будете выйдены после изменения вашего email",
+        "detail_label_placeholder": "Введите метку (например, Должность, Местоположение)",
+        "remove": "Удалить",
+        "icon": "Иконка",
+        "select_icon": "Выбрать иконку",
+        "text": "Текст",
+        "text_placeholder": "Введите текст детали",
+        "icons": {
+          "briefcase": "Портфель",
+          "education": "Образование",
+          "location": "Местоположение",
+          "organization": "Организация",
+          "speciality": "Специальность",
+          "website": "Веб-сайт",
+          "tech": "Технологии",
+          "achievement": "Достижение",
+          "book": "Книга",
+          "link": "Ссылка",
+          "community": "Сообщество",
+          "calendar": "Календарь"
+        },
+        "labels": {
+          "title": "Должность",
+          "affiliation": "Принадлежность",
+          "location": "Местоположение",
+          "website": "Веб-сайт",
+          "linkedin": "LinkedIn",
+          "institution": "Учреждение",
+          "department": "Отдел",
+          "research": "Область исследований",
+          "academic_title": "Академическое звание",
+          "company": "Компания",
+          "industry": "Отрасль",
+          "expertise": "Экспертиза",
+          "community": "Сообщество"
+        }
+      },
+      "password": {
+        "title": "Изменить пароль",
+        "subtitle": "Обновите свой пароль для безопасности аккаунта",
+        "current_password": "Текущий пароль",
+        "new_password": "Новый пароль",
+        "update_password": "Обновить пароль",
+        "updating": "Обновление...",
+        "password_updated": "Пароль успешно обновлён",
+        "relogin_message": "Пожалуйста, войдите снова с вашим новым паролем",
+        "logout_warning": "Вы будете выйдены после изменения вашего пароля"
+      },
+      "profile_builder": {
+        "title": "Конструктор профиля",
+        "subtitle": "Настройте свой профессиональный профиль",
+        "sections": "Разделы",
+        "add_section": "Добавить раздел",
+        "save_changes": "Сохранить изменения",
+        "saving": "Сохранение...",
+        "select_section": "Выберите раздел для редактирования или добавьте новый",
+        "beta": "БЕТА",
+        "section_types": {
+          "image_gallery": {
+            "label": "Галерея изображений",
+            "description": "Добавьте коллекцию изображений"
+          },
+          "text": {
+            "label": "Текст",
+            "description": "Добавьте форматированный текстовый контент"
+          },
+          "links": {
+            "label": "Ссылки",
+            "description": "Добавьте социальные или профессиональные ссылки"
+          },
+          "skills": {
+            "label": "Навыки",
+            "description": "Покажите свои навыки и опыт"
+          },
+          "experience": {
+            "label": "Опыт",
+            "description": "Добавьте опыт работы или проектов"
+          },
+          "education": {
+            "label": "Образование",
+            "description": "Добавьте свой образовательный фон"
+          },
+          "affiliation": {
+            "label": "Принадлежность",
+            "description": "Добавьте организационные принадлежности"
+          },
+          "courses": {
+            "label": "Курсы",
+            "description": "Отобразите созданные вами курсы"
+          }
+        },
+        "editors": {
+          "section_title": "Название раздела",
+          "enter_section_title": "Введите название раздела",
+          "image_gallery": {
+            "title": "Галерея изображений",
+            "images": "Изображения",
+            "image_url": "URL изображения",
+            "enter_image_url": "Введите URL изображения",
+            "caption": "Подпись",
+            "image_caption": "Подпись к изображению",
+            "add_image": "Добавить изображение"
+          },
+          "text": {
+            "title": "Текстовый контент",
+            "content": "Контент",
+            "enter_content": "Введите ваш контент здесь..."
+          },
+          "links": {
+            "title": "Ссылки",
+            "links": "Ссылки",
+            "link_title": "Название ссылки",
+            "url": "URL",
+            "add_link": "Добавить ссылку"
+          },
+          "skills": {
+            "title": "Навыки",
+            "skills": "Навыки",
+            "skill_name": "Название навыка",
+            "select_level": "Выбрать уровень",
+            "category": "Категория (необязательно)",
+            "add_skill": "Добавить навык",
+            "levels": {
+              "beginner": "Начинающий",
+              "intermediate": "Средний",
+              "advanced": "Продвинутый",
+              "expert": "Эксперт"
+            }
+          },
+          "experience": {
+            "title": "Опыт",
+            "items": "Элементы опыта",
+            "role_title": "Должность",
+            "role_placeholder": "Позиция или роль",
+            "organization": "Организация",
+            "organization_placeholder": "Компания или организация",
+            "start_date": "Дата начала",
+            "end_date": "Дата окончания",
+            "current": "Текущий",
+            "description": "Описание",
+            "description_placeholder": "Опишите свою роль и достижения",
+            "add_experience": "Добавить опыт"
+          },
+          "education": {
+            "title": "Образование",
+            "items": "Элементы образования",
+            "institution": "Учреждение",
+            "institution_placeholder": "Школа или университет",
+            "degree": "Степень",
+            "degree_placeholder": "Тип степени",
+            "field": "Область обучения",
+            "field_placeholder": "Специализация или концентрация",
+            "start_date": "Дата начала",
+            "end_date": "Дата окончания",
+            "current": "Текущий",
+            "description": "Описание",
+            "description_placeholder": "Дополнительные детали о вашем образовании",
+            "add_education": "Добавить образование"
+          },
+          "affiliation": {
+            "title": "Принадлежность",
+            "affiliations": "Принадлежности",
+            "name": "Название",
+            "name_placeholder": "Название организации",
+            "logo_url": "URL логотипа",
+            "logo_url_placeholder": "URL логотипа организации",
+            "description": "Описание",
+            "description_placeholder": "Описание организации",
+            "add_affiliation": "Добавить принадлежность"
+          },
+          "courses": {
+            "title": "Курсы",
+            "info": "Ваши созданные курсы будут автоматически отображаться в этом разделе."
+          }
+        },
+        "toasts": {
+          "loading_error": "Ошибка загрузки данных профиля",
+          "save_success": "Профиль успешно обновлён",
+          "save_error": "Ошибка обновления профиля"
+        }
+      }
+    },
     "sign_out": "Выйти",
     "username": "Имя пользователя",
     "first_name": "Имя",

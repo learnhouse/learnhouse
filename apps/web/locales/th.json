@@ -393,6 +393,224 @@
   },
   "user": {
     "user_settings": "การตั้งค่าผู้ใช้",
+    "settings": {
+      "title": "การตั้งค่าบัญชี",
+      "tabs": {
+        "general": "ทั่วไป",
+        "profile": "โปรไฟล์",
+        "security": "รหัสผ่าน"
+      },
+      "general": {
+        "title": "การตั้งค่าบัญชี",
+        "subtitle": "จัดการข้อมูลส่วนตัวและการตั้งค่าของคุณ",
+        "email": "อีเมล",
+        "email_placeholder": "ที่อยู่อีเมลของคุณ",
+        "username": "ชื่อผู้ใช้",
+        "username_placeholder": "ชื่อผู้ใช้ของคุณ",
+        "first_name": "ชื่อ",
+        "first_name_placeholder": "ชื่อของคุณ",
+        "last_name": "นามสกุล",
+        "last_name_placeholder": "นามสกุลของคุณ",
+        "bio": "ประวัติส่วนตัว",
+        "bio_placeholder": "บอกเราเกี่ยวกับตัวคุณ",
+        "characters_left": "เหลือ {{count}} ตัวอักษร",
+        "additional_details": "รายละเอียดเพิ่มเติม",
+        "clear_all": "ล้างทั้งหมด",
+        "add_detail": "เพิ่มรายละเอียด",
+        "add_general": "เพิ่มทั่วไป",
+        "add_academic": "เพิ่มวิชาการ",
+        "add_professional": "เพิ่มมืออาชีพ",
+        "profile_picture": "รูปโปรไฟล์",
+        "change_avatar": "เปลี่ยนอวตาร",
+        "recommended_size": "ขนาดที่แนะนำ 100x100",
+        "save_changes": "บันทึกการเปลี่ยนแปลง",
+        "saving": "กำลังบันทึก...",
+        "uploading": "กำลังอัปโหลด",
+        "avatar_updated": "อัปเดตอวตารแล้ว",
+        "profile_updated": "อัปเดตโปรไฟล์สำเร็จ",
+        "relogin_message": "กรุณาเข้าสู่ระบบอีกครั้งด้วยอีเมลใหม่ของคุณ: {{email}}",
+        "logout_warning": "คุณจะถูกออกจากระบบหลังจากเปลี่ยนอีเมล",
+        "detail_label_placeholder": "ใส่ป้ายกำกับ (เช่น: ตำแหน่ง, สถานที่)",
+        "remove": "ลบ",
+        "icon": "ไอคอน",
+        "select_icon": "เลือกไอคอน",
+        "text": "ข้อความ",
+        "text_placeholder": "ใส่ข้อความรายละเอียด",
+        "icons": {
+          "briefcase": "กระเป๋าเอกสาร",
+          "education": "การศึกษา",
+          "location": "สถานที่",
+          "organization": "องค์กร",
+          "speciality": "ความเชี่ยวชาญ",
+          "website": "เว็บไซต์",
+          "tech": "เทคโนโลยี",
+          "achievement": "ความสำเร็จ",
+          "book": "หนังสือ",
+          "link": "ลิงก์",
+          "community": "ชุมชน",
+          "calendar": "ปฏิทิน"
+        },
+        "labels": {
+          "title": "ตำแหน่ง",
+          "affiliation": "การเป็นสมาชิก",
+          "location": "สถานที่",
+          "website": "เว็บไซต์",
+          "linkedin": "LinkedIn",
+          "institution": "สถาบัน",
+          "department": "แผนก",
+          "research": "สาขาวิจัย",
+          "academic_title": "ตำแหน่งทางวิชาการ",
+          "company": "บริษัท",
+          "industry": "อุตสาหกรรม",
+          "expertise": "ความเชี่ยวชาญ",
+          "community": "ชุมชน"
+        }
+      },
+      "password": {
+        "title": "เปลี่ยนรหัสผ่าน",
+        "subtitle": "อัปเดตรหัสผ่านของคุณเพื่อรักษาความปลอดภัยของบัญชี",
+        "current_password": "รหัสผ่านปัจจุบัน",
+        "new_password": "รหัสผ่านใหม่",
+        "update_password": "อัปเดตรหัสผ่าน",
+        "updating": "กำลังอัปเดต...",
+        "password_updated": "อัปเดตรหัสผ่านสำเร็จ",
+        "relogin_message": "กรุณาเข้าสู่ระบบอีกครั้งด้วยรหัสผ่านใหม่",
+        "logout_warning": "คุณจะถูกออกจากระบบหลังจากเปลี่ยนรหัสผ่าน"
+      },
+      "profile_builder": {
+        "title": "ตัวสร้างโปรไฟล์",
+        "subtitle": "ปรับแต่งโปรไฟล์มืออาชีพของคุณ",
+        "sections": "ส่วน",
+        "add_section": "เพิ่มส่วน",
+        "save_changes": "บันทึกการเปลี่ยนแปลง",
+        "saving": "กำลังบันทึก...",
+        "select_section": "เลือกส่วนเพื่อแก้ไขหรือเพิ่มใหม่",
+        "beta": "เบต้า",
+        "section_types": {
+          "image_gallery": {
+            "label": "แกลเลอรีรูปภาพ",
+            "description": "เพิ่มคอลเลกชันรูปภาพ"
+          },
+          "text": {
+            "label": "ข้อความ",
+            "description": "เพิ่มเนื้อหาข้อความที่จัดรูปแบบ"
+          },
+          "links": {
+            "label": "ลิงก์",
+            "description": "เพิ่มลิงก์โซเชียลหรือมืออาชีพ"
+          },
+          "skills": {
+            "label": "ทักษะ",
+            "description": "แสดงทักษะและความเชี่ยวชาญของคุณ"
+          },
+          "experience": {
+            "label": "ประสบการณ์",
+            "description": "เพิ่มประสบการณ์การทำงานหรือโครงการ"
+          },
+          "education": {
+            "label": "การศึกษา",
+            "description": "เพิ่มภูมิหลังทางการศึกษาของคุณ"
+          },
+          "affiliation": {
+            "label": "การเป็นสมาชิก",
+            "description": "เพิ่มการเป็นสมาชิกองค์กร"
+          },
+          "courses": {
+            "label": "คอร์ส",
+            "description": "แสดงคอร์สที่คุณสร้าง"
+          }
+        },
+        "editors": {
+          "section_title": "ชื่อส่วน",
+          "enter_section_title": "ใส่ชื่อส่วน",
+          "image_gallery": {
+            "title": "แกลเลอรีรูปภาพ",
+            "images": "รูปภาพ",
+            "image_url": "URL รูปภาพ",
+            "enter_image_url": "ใส่ URL รูปภาพ",
+            "caption": "คำอธิบาย",
+            "image_caption": "คำอธิบายรูปภาพ",
+            "add_image": "เพิ่มรูปภาพ"
+          },
+          "text": {
+            "title": "เนื้อหาข้อความ",
+            "content": "เนื้อหา",
+            "enter_content": "ใส่เนื้อหาของคุณที่นี่..."
+          },
+          "links": {
+            "title": "ลิงก์",
+            "links": "ลิงก์",
+            "link_title": "ชื่อลิงก์",
+            "url": "URL",
+            "add_link": "เพิ่มลิงก์"
+          },
+          "skills": {
+            "title": "ทักษะ",
+            "skills": "ทักษะ",
+            "skill_name": "ชื่อทักษะ",
+            "select_level": "เลือกระดับ",
+            "category": "หมวดหมู่ (ไม่บังคับ)",
+            "add_skill": "เพิ่มทักษะ",
+            "levels": {
+              "beginner": "เริ่มต้น",
+              "intermediate": "ปานกลาง",
+              "advanced": "ขั้นสูง",
+              "expert": "ผู้เชี่ยวชาญ"
+            }
+          },
+          "experience": {
+            "title": "ประสบการณ์",
+            "items": "รายการประสบการณ์",
+            "role_title": "ตำแหน่ง",
+            "role_placeholder": "ตำแหน่งหรือบทบาท",
+            "organization": "องค์กร",
+            "organization_placeholder": "บริษัทหรือองค์กร",
+            "start_date": "วันที่เริ่มต้น",
+            "end_date": "วันที่สิ้นสุด",
+            "current": "ปัจจุบัน",
+            "description": "คำอธิบาย",
+            "description_placeholder": "อธิบายบทบาทและความสำเร็จของคุณ",
+            "add_experience": "เพิ่มประสบการณ์"
+          },
+          "education": {
+            "title": "การศึกษา",
+            "items": "รายการการศึกษา",
+            "institution": "สถาบัน",
+            "institution_placeholder": "โรงเรียนหรือมหาวิทยาลัย",
+            "degree": "ปริญญา",
+            "degree_placeholder": "ประเภทปริญญา",
+            "field": "สาขาวิชา",
+            "field_placeholder": "สาขาหลักหรือความเชี่ยวชาญ",
+            "start_date": "วันที่เริ่มต้น",
+            "end_date": "วันที่สิ้นสุด",
+            "current": "ปัจจุบัน",
+            "description": "คำอธิบาย",
+            "description_placeholder": "รายละเอียดเพิ่มเติมเกี่ยวกับการศึกษาของคุณ",
+            "add_education": "เพิ่มการศึกษา"
+          },
+          "affiliation": {
+            "title": "การเป็นสมาชิก",
+            "affiliations": "การเป็นสมาชิก",
+            "name": "ชื่อ",
+            "name_placeholder": "ชื่อองค์กร",
+            "logo_url": "URL โลโก้",
+            "logo_url_placeholder": "URL โลโก้องค์กร",
+            "description": "คำอธิบาย",
+            "description_placeholder": "คำอธิบายองค์กร",
+            "add_affiliation": "เพิ่มการเป็นสมาชิก"
+          },
+          "courses": {
+            "title": "คอร์ส",
+            "info": "คอร์สที่คุณสร้างจะแสดงอัตโนมัติในส่วนนี้"
+          }
+        },
+        "toasts": {
+          "loading_error": "โหลดข้อมูลโปรไฟล์ล้มเหลว",
+          "save_success": "อัปเดตโปรไฟล์สำเร็จ",
+          "save_error": "เกิดข้อผิดพลาดในการอัปเดตโปรไฟล์"
+        }
+      }
+    },
     "sign_out": "ออกจากระบบ",
     "username": "ชื่อผู้ใช้",
     "first_name": "ชื่อ",

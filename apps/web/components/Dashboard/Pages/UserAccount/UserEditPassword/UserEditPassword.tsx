@@ -10,20 +10,22 @@ import { toast } from 'react-hot-toast'
 import { signOut } from 'next-auth/react'
 import { getUriWithoutOrg } from '@services/config/config'
 import * as Yup from 'yup'
+import { useTranslation } from 'react-i18next'
 
 const validationSchema = Yup.object().shape({
-  old_password: Yup.string().required('Current password is required'),
+  old_password: Yup.string().required('validation.required'),
   new_password: Yup.string()
-    .required('New password is required')
-    .min(8, 'Password must be at least 8 characters'),
+    .required('validation.required')
+    .min(8, 'validation.password_min_length'),
 })
 
 function UserEditPassword() {
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token;
+  const { t } = useTranslation();
 
   const updatePasswordUI = async (values: any) => {
-    const loadingToast = toast.loading('Updating password...')
+    const loadingToast = toast.loading(t('user.settings.password.updating'))
     try {
       let user_id = session.data.user.id
       const response = await updatePassword(user_id, values, access_token)
@@ -32,10 +34,10 @@ function UserEditPassword() {
         toast.dismiss(loadingToast)
         
         // Show success message and notify about logout
-        toast.success('Password updated successfully', { duration: 4000 })
-        toast((t: any) => (
+        toast.success(t('user.settings.password.password_updated'), { duration: 4000 })
+        toast((t_toast: any) => (
           <div className="flex items-center gap-2">
-            <span>Please login again with your new password</span>
+            <span>{t('user.settings.password.relogin_message')}</span>
           </div>
         ), { 
           duration: 4000,
@@ -62,10 +64,10 @@ function UserEditPassword() {
       <div className="flex flex-col">
         <div className="flex flex-col bg-gray-50 -space-y-1 px-5 py-3 mx-3 my-3 rounded-md">
           <h1 className="font-bold text-xl text-gray-800">
-            Change Password
+            {t('user.settings.password.title')}
           </h1>
           <h2 className="text-gray-500 text-md">
-            Update your password to keep your account secure
+            {t('user.settings.password.subtitle')}
           </h2>
         </div>
 
@@ -83,7 +85,7 @@ function UserEditPassword() {
             {({ isSubmitting, handleChange, errors, touched }) => (
               <Form className="w-full max-w-2xl mx-auto space-y-6">
                 <div>
-                  <Label htmlFor="old_password">Current Password</Label>
+                  <Label htmlFor="old_password">{t('user.settings.password.current_password')}</Label>
                   <Input
                     type="password"
                     id="old_password"
@@ -92,12 +94,12 @@ function UserEditPassword() {
                     className="mt-1"
                   />
                   {touched.old_password && errors.old_password && (
-                    <p className="text-red-500 text-sm mt-1">{errors.old_password}</p>
+                    <p className="text-red-500 text-sm mt-1">{t(errors.old_password as string)}</p>
                   )}
                 </div>
 
                 <div>
-                  <Label htmlFor="new_password">New Password</Label>
+                  <Label htmlFor="new_password">{t('user.settings.password.new_password')}</Label>
                   <Input
                     type="password"
                     id="new_password"
@@ -106,13 +108,13 @@ function UserEditPassword() {
                     className="mt-1"
                   />
                   {touched.new_password && errors.new_password && (
-                    <p className="text-red-500 text-sm mt-1">{errors.new_password}</p>
+                    <p className="text-red-500 text-sm mt-1">{t(errors.new_password as string)}</p>
                   )}
                 </div>
 
                 <div className="flex items-center space-x-2 text-amber-600 bg-amber-50 p-3 rounded-md">
                   <AlertTriangle size={16} />
-                  <span className="text-sm">You will be logged out after changing your password</span>
+                  <span className="text-sm">{t('user.settings.password.logout_warning')}</span>
                 </div>
 
                 <div className="flex justify-end pt-2">
@@ -121,7 +123,7 @@ function UserEditPassword() {
                     disabled={isSubmitting}
                     className="bg-black text-white hover:bg-black/90"
                   >
-                    {isSubmitting ? 'Updating...' : 'Update Password'}
+                    {isSubmitting ? t('user.settings.password.updating') : t('user.settings.password.update_password')}
                   </Button>
                 </div>
               </Form>

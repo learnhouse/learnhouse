@@ -393,6 +393,224 @@
   },
   "user": {
     "user_settings": "用户设置",
+    "settings": {
+      "title": "账户设置",
+      "tabs": {
+        "general": "常规",
+        "profile": "个人资料",
+        "security": "密码"
+      },
+      "general": {
+        "title": "账户设置",
+        "subtitle": "管理您的个人信息和偏好设置",
+        "email": "电子邮件",
+        "email_placeholder": "您的电子邮件地址",
+        "username": "用户名",
+        "username_placeholder": "您的用户名",
+        "first_name": "名字",
+        "first_name_placeholder": "您的名字",
+        "last_name": "姓氏",
+        "last_name_placeholder": "您的姓氏",
+        "bio": "个人简介",
+        "bio_placeholder": "告诉我们关于您自己",
+        "characters_left": "还剩 {{count}} 个字符",
+        "additional_details": "附加详情",
+        "clear_all": "清除全部",
+        "add_detail": "添加详情",
+        "add_general": "添加常规",
+        "add_academic": "添加学术",
+        "add_professional": "添加专业",
+        "profile_picture": "个人资料照片",
+        "change_avatar": "更改头像",
+        "recommended_size": "推荐尺寸 100x100",
+        "save_changes": "保存更改",
+        "saving": "保存中...",
+        "uploading": "上传中",
+        "avatar_updated": "头像已更新",
+        "profile_updated": "个人资料更新成功",
+        "relogin_message": "请使用您的新电子邮件重新登录：{{email}}",
+        "logout_warning": "更改电子邮件后您将被登出",
+        "detail_label_placeholder": "输入标签（例如：职位、位置）",
+        "remove": "删除",
+        "icon": "图标",
+        "select_icon": "选择图标",
+        "text": "文本",
+        "text_placeholder": "输入详情文本",
+        "icons": {
+          "briefcase": "公文包",
+          "education": "教育",
+          "location": "位置",
+          "organization": "组织",
+          "speciality": "专业",
+          "website": "网站",
+          "tech": "技术",
+          "achievement": "成就",
+          "book": "书籍",
+          "link": "链接",
+          "community": "社区",
+          "calendar": "日历"
+        },
+        "labels": {
+          "title": "职位",
+          "affiliation": "隶属关系",
+          "location": "位置",
+          "website": "网站",
+          "linkedin": "LinkedIn",
+          "institution": "机构",
+          "department": "部门",
+          "research": "研究领域",
+          "academic_title": "学术头衔",
+          "company": "公司",
+          "industry": "行业",
+          "expertise": "专业知识",
+          "community": "社区"
+        }
+      },
+      "password": {
+        "title": "更改密码",
+        "subtitle": "更新您的密码以保护账户安全",
+        "current_password": "当前密码",
+        "new_password": "新密码",
+        "update_password": "更新密码",
+        "updating": "更新中...",
+        "password_updated": "密码更新成功",
+        "relogin_message": "请使用您的新密码重新登录",
+        "logout_warning": "更改密码后您将被登出"
+      },
+      "profile_builder": {
+        "title": "个人资料构建器",
+        "subtitle": "自定义您的专业个人资料",
+        "sections": "部分",
+        "add_section": "添加部分",
+        "save_changes": "保存更改",
+        "saving": "保存中...",
+        "select_section": "选择一个部分进行编辑或添加新部分",
+        "beta": "测试版",
+        "section_types": {
+          "image_gallery": {
+            "label": "图片库",
+            "description": "添加图片集合"
+          },
+          "text": {
+            "label": "文本",
+            "description": "添加格式化的文本内容"
+          },
+          "links": {
+            "label": "链接",
+            "description": "添加社交或专业链接"
+          },
+          "skills": {
+            "label": "技能",
+            "description": "展示您的技能和专业知识"
+          },
+          "experience": {
+            "label": "经验",
+            "description": "添加工作或项目经验"
+          },
+          "education": {
+            "label": "教育",
+            "description": "添加教育背景"
+          },
+          "affiliation": {
+            "label": "隶属关系",
+            "description": "添加组织隶属关系"
+          },
+          "courses": {
+            "label": "课程",
+            "description": "显示您创建的课程"
+          }
+        },
+        "editors": {
+          "section_title": "部分标题",
+          "enter_section_title": "输入部分标题",
+          "image_gallery": {
+            "title": "图片库",
+            "images": "图片",
+            "image_url": "图片网址",
+            "enter_image_url": "输入图片网址",
+            "caption": "标题",
+            "image_caption": "图片标题",
+            "add_image": "添加图片"
+          },
+          "text": {
+            "title": "文本内容",
+            "content": "内容",
+            "enter_content": "在此输入您的内容..."
+          },
+          "links": {
+            "title": "链接",
+            "links": "链接",
+            "link_title": "链接标题",
+            "url": "网址",
+            "add_link": "添加链接"
+          },
+          "skills": {
+            "title": "技能",
+            "skills": "技能",
+            "skill_name": "技能名称",
+            "select_level": "选择级别",
+            "category": "类别（可选）",
+            "add_skill": "添加技能",
+            "levels": {
+              "beginner": "初级",
+              "intermediate": "中级",
+              "advanced": "高级",
+              "expert": "专家"
+            }
+          },
+          "experience": {
+            "title": "经验",
+            "items": "经验项目",
+            "role_title": "职位",
+            "role_placeholder": "职位或角色",
+            "organization": "组织",
+            "organization_placeholder": "公司或组织",
+            "start_date": "开始日期",
+            "end_date": "结束日期",
+            "current": "当前",
+            "description": "描述",
+            "description_placeholder": "描述您的角色和成就",
+            "add_experience": "添加经验"
+          },
+          "education": {
+            "title": "教育",
+            "items": "教育项目",
+            "institution": "机构",
+            "institution_placeholder": "学校或大学",
+            "degree": "学位",
+            "degree_placeholder": "学位类型",
+            "field": "研究领域",
+            "field_placeholder": "专业或方向",
+            "start_date": "开始日期",
+            "end_date": "结束日期",
+            "current": "当前",
+            "description": "描述",
+            "description_placeholder": "关于您教育的其他详情",
+            "add_education": "添加教育"
+          },
+          "affiliation": {
+            "title": "隶属关系",
+            "affiliations": "隶属关系",
+            "name": "名称",
+            "name_placeholder": "组织名称",
+            "logo_url": "标志网址",
+            "logo_url_placeholder": "组织标志的网址",
+            "description": "描述",
+            "description_placeholder": "组织描述",
+            "add_affiliation": "添加隶属关系"
+          },
+          "courses": {
+            "title": "课程",
+            "info": "您创建的课程将自动显示在此部分。"
+          }
+        },
+        "toasts": {
+          "loading_error": "加载个人资料数据失败",
+          "save_success": "个人资料更新成功",
+          "save_error": "更新个人资料时出错"
+        }
+      }
+    },
     "sign_out": "退出登录",
     "username": "用户名",
     "first_name": "名字",

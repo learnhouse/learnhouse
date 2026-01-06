@@ -393,6 +393,224 @@
   },
   "user": {
     "user_settings": "Pengaturan Pengguna",
+    "settings": {
+      "title": "Pengaturan Akun",
+      "tabs": {
+        "general": "Umum",
+        "profile": "Profil",
+        "security": "Kata Sandi"
+      },
+      "general": {
+        "title": "Pengaturan Akun",
+        "subtitle": "Kelola informasi pribadi dan preferensi Anda",
+        "email": "Email",
+        "email_placeholder": "Alamat email Anda",
+        "username": "Nama pengguna",
+        "username_placeholder": "Nama pengguna Anda",
+        "first_name": "Nama depan",
+        "first_name_placeholder": "Nama depan Anda",
+        "last_name": "Nama belakang",
+        "last_name_placeholder": "Nama belakang Anda",
+        "bio": "Biografi",
+        "bio_placeholder": "Ceritakan tentang diri Anda",
+        "characters_left": "{{count}} karakter tersisa",
+        "additional_details": "Detail Tambahan",
+        "clear_all": "Hapus Semua",
+        "add_detail": "Tambah Detail",
+        "add_general": "Tambah Umum",
+        "add_academic": "Tambah Akademik",
+        "add_professional": "Tambah Profesional",
+        "profile_picture": "Foto Profil",
+        "change_avatar": "Ubah Avatar",
+        "recommended_size": "Ukuran yang direkomendasikan 100x100",
+        "save_changes": "Simpan Perubahan",
+        "saving": "Menyimpan...",
+        "uploading": "Mengunggah",
+        "avatar_updated": "Avatar Diperbarui",
+        "profile_updated": "Profil Berhasil Diperbarui",
+        "relogin_message": "Silakan masuk lagi dengan email baru Anda: {{email}}",
+        "logout_warning": "Anda akan keluar setelah mengubah email",
+        "detail_label_placeholder": "Masukkan label (mis: Judul, Lokasi)",
+        "remove": "Hapus",
+        "icon": "Ikon",
+        "select_icon": "Pilih ikon",
+        "text": "Teks",
+        "text_placeholder": "Masukkan teks detail",
+        "icons": {
+          "briefcase": "Tas",
+          "education": "Pendidikan",
+          "location": "Lokasi",
+          "organization": "Organisasi",
+          "speciality": "Spesialisasi",
+          "website": "Situs web",
+          "tech": "Teknologi",
+          "achievement": "Pencapaian",
+          "book": "Buku",
+          "link": "Tautan",
+          "community": "Komunitas",
+          "calendar": "Kalender"
+        },
+        "labels": {
+          "title": "Judul",
+          "affiliation": "Afiliasi",
+          "location": "Lokasi",
+          "website": "Situs web",
+          "linkedin": "LinkedIn",
+          "institution": "Lembaga",
+          "department": "Departemen",
+          "research": "Bidang Penelitian",
+          "academic_title": "Gelar Akademik",
+          "company": "Perusahaan",
+          "industry": "Industri",
+          "expertise": "Keahlian",
+          "community": "Komunitas"
+        }
+      },
+      "password": {
+        "title": "Ubah Kata Sandi",
+        "subtitle": "Perbarui kata sandi Anda untuk menjaga keamanan akun",
+        "current_password": "Kata Sandi Saat Ini",
+        "new_password": "Kata Sandi Baru",
+        "update_password": "Perbarui Kata Sandi",
+        "updating": "Memperbarui...",
+        "password_updated": "Kata sandi berhasil diperbarui",
+        "relogin_message": "Silakan masuk lagi dengan kata sandi baru Anda",
+        "logout_warning": "Anda akan keluar setelah mengubah kata sandi"
+      },
+      "profile_builder": {
+        "title": "Pembangun Profil",
+        "subtitle": "Sesuaikan profil profesional Anda",
+        "sections": "Bagian",
+        "add_section": "Tambah Bagian",
+        "save_changes": "Simpan Perubahan",
+        "saving": "Menyimpan...",
+        "select_section": "Pilih bagian untuk diedit atau tambahkan yang baru",
+        "beta": "BETA",
+        "section_types": {
+          "image_gallery": {
+            "label": "Galeri Gambar",
+            "description": "Tambahkan koleksi gambar"
+          },
+          "text": {
+            "label": "Teks",
+            "description": "Tambahkan konten teks yang diformat"
+          },
+          "links": {
+            "label": "Tautan",
+            "description": "Tambahkan tautan sosial atau profesional"
+          },
+          "skills": {
+            "label": "Keterampilan",
+            "description": "Tampilkan keterampilan dan keahlian Anda"
+          },
+          "experience": {
+            "label": "Pengalaman",
+            "description": "Tambahkan pengalaman kerja atau proyek"
+          },
+          "education": {
+            "label": "Pendidikan",
+            "description": "Tambahkan latar belakang pendidikan Anda"
+          },
+          "affiliation": {
+            "label": "Afiliasi",
+            "description": "Tambahkan afiliasi organisasi"
+          },
+          "courses": {
+            "label": "Kursus",
+            "description": "Tampilkan kursus yang Anda buat"
+          }
+        },
+        "editors": {
+          "section_title": "Judul Bagian",
+          "enter_section_title": "Masukkan judul bagian",
+          "image_gallery": {
+            "title": "Galeri Gambar",
+            "images": "Gambar",
+            "image_url": "URL Gambar",
+            "enter_image_url": "Masukkan URL gambar",
+            "caption": "Keterangan",
+            "image_caption": "Keterangan gambar",
+            "add_image": "Tambah Gambar"
+          },
+          "text": {
+            "title": "Konten Teks",
+            "content": "Konten",
+            "enter_content": "Masukkan konten Anda di sini..."
+          },
+          "links": {
+            "title": "Tautan",
+            "links": "Tautan",
+            "link_title": "Judul tautan",
+            "url": "URL",
+            "add_link": "Tambah Tautan"
+          },
+          "skills": {
+            "title": "Keterampilan",
+            "skills": "Keterampilan",
+            "skill_name": "Nama keterampilan",
+            "select_level": "Pilih tingkat",
+            "category": "Kategori (opsional)",
+            "add_skill": "Tambah Keterampilan",
+            "levels": {
+              "beginner": "Pemula",
+              "intermediate": "Menengah",
+              "advanced": "Lanjutan",
+              "expert": "Ahli"
+            }
+          },
+          "experience": {
+            "title": "Pengalaman",
+            "items": "Item Pengalaman",
+            "role_title": "Judul",
+            "role_placeholder": "Posisi atau peran",
+            "organization": "Organisasi",
+            "organization_placeholder": "Perusahaan atau organisasi",
+            "start_date": "Tanggal Mulai",
+            "end_date": "Tanggal Berakhir",
+            "current": "Saat Ini",
+            "description": "Deskripsi",
+            "description_placeholder": "Jelaskan peran dan pencapaian Anda",
+            "add_experience": "Tambah Pengalaman"
+          },
+          "education": {
+            "title": "Pendidikan",
+            "items": "Item Pendidikan",
+            "institution": "Lembaga",
+            "institution_placeholder": "Sekolah atau universitas",
+            "degree": "Gelar",
+            "degree_placeholder": "Jenis gelar",
+            "field": "Bidang Studi",
+            "field_placeholder": "Jurusan atau konsentrasi",
+            "start_date": "Tanggal Mulai",
+            "end_date": "Tanggal Berakhir",
+            "current": "Saat Ini",
+            "description": "Deskripsi",
+            "description_placeholder": "Detail tambahan tentang pendidikan Anda",
+            "add_education": "Tambah Pendidikan"
+          },
+          "affiliation": {
+            "title": "Afiliasi",
+            "affiliations": "Afiliasi",
+            "name": "Nama",
+            "name_placeholder": "Nama organisasi",
+            "logo_url": "URL Logo",
+            "logo_url_placeholder": "URL logo organisasi",
+            "description": "Deskripsi",
+            "description_placeholder": "Deskripsi organisasi",
+            "add_affiliation": "Tambah Afiliasi"
+          },
+          "courses": {
+            "title": "Kursus",
+            "info": "Kursus yang Anda buat akan otomatis ditampilkan di bagian ini."
+          }
+        },
+        "toasts": {
+          "loading_error": "Gagal memuat data profil",
+          "save_success": "Profil berhasil diperbarui",
+          "save_error": "Kesalahan memperbarui profil"
+        }
+      }
+    },
     "sign_out": "Keluar",
     "username": "Nama pengguna",
     "first_name": "Nama depan",
