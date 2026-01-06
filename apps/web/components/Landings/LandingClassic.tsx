@@ -12,6 +12,7 @@ import ContentPlaceHolderIfUserIsNotAdmin from '@components/Objects/ContentPlace
 import Link from 'next/link'
 import { getUriWithOrg } from '@services/config/config'
 import { useTranslation } from 'react-i18next'
+import { BookCopy, SquareLibrary } from 'lucide-react'
 
 interface LandingClassicProps {
   courses: any[]
@@ -27,7 +28,7 @@ function LandingClassic({ courses, collections, orgslug, org_id }: LandingClassi
     <div className="w-full">
       <GeneralWrapperStyled>
         {/* Collections */}
-        <div className="flex flex-col space-y-4 mb-8">
+        <div className="flex flex-col space-y-2 mb-6">
           <div className="flex items-center justify-between">
             <TypeOfContentTitle title={t('collections.collections')} type="col" />
             <AuthenticatedClientElement
@@ -43,7 +44,7 @@ function LandingClassic({ courses, collections, orgslug, org_id }: LandingClassi
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {collections.map((collection: any) => (
-              <div key={collection.collection_id} className="flex flex-col p-3">
+              <div key={collection.collection_id} className="flex flex-col">
                 <CollectionThumbnail
                   collection={collection}
                   orgslug={orgslug}
@@ -52,51 +53,25 @@ function LandingClassic({ courses, collections, orgslug, org_id }: LandingClassi
               </div>
             ))}
             {collections.length === 0 && (
-              <div className="col-span-full flex justify-center items-center py-8">
-                <div className="text-center">
-                  <div className="mb-4">
-                    <svg
-                      width="50"
-                      height="50"
-                      viewBox="0 0 295 295"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="mx-auto"
-                    >
-                      <rect
-                        opacity="0.51"
-                        x="10"
-                        y="10"
-                        width="275"
-                        height="275"
-                        rx="75"
-                        stroke="#4B5564"
-                        strokeOpacity="0.15"
-                        strokeWidth="20"
-                      />
-                      <path
-                        d="M135.8 200.8V130L122.2 114.6L135.8 110.4V102.8L122.2 87.4L159.8 76V200.8L174.6 218H121L135.8 200.8Z"
-                        fill="#4B5564"
-                        fillOpacity="0.08"
-                      />
-                    </svg>
-                  </div>
-                  <h1 className="text-xl font-bold text-gray-600 mb-2">
-                    {t('collections.no_collections')}
-                  </h1>
-                  <p className="text-md text-gray-400">
-                    <ContentPlaceHolderIfUserIsNotAdmin
-                      text={t('collections.create_collections_placeholder')}
-                    />
-                  </p>
+              <div className="col-span-full flex flex-col justify-center items-center py-12 px-4 border-2 border-dashed border-gray-100 rounded-2xl bg-gray-50/30">
+                <div className="p-4 bg-white rounded-full nice-shadow mb-4">
+                  <SquareLibrary className="w-8 h-8 text-gray-300" strokeWidth={1.5} />
                 </div>
+                <h3 className="text-lg font-bold text-gray-600 mb-1">
+                  {t('collections.no_collections')}
+                </h3>
+                <p className="text-sm text-gray-400 max-w-xs text-center">
+                  <ContentPlaceHolderIfUserIsNotAdmin
+                    text={t('collections.create_collections_placeholder')}
+                  />
+                </p>
               </div>
             )}
           </div>
         </div>
 
         {/* Courses */}
-        <div className="flex flex-col space-y-4">
+        <div className="flex flex-col space-y-2">
           <div className="flex items-center justify-between">
             <TypeOfContentTitle title={t('courses.courses')} type="cou" />
             <AuthenticatedClientElement
@@ -112,47 +87,21 @@ function LandingClassic({ courses, collections, orgslug, org_id }: LandingClassi
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {courses.map((course: any) => (
-              <div key={course.course_uuid} className="p-3">
+              <div key={course.course_uuid} className="flex">
                 <CourseThumbnail course={course} orgslug={orgslug} />
               </div>
             ))}
             {courses.length === 0 && (
-              <div className="col-span-full flex justify-center items-center py-8">
-                <div className="text-center">
-                  <div className="mb-4 ">
-                    <svg
-                      width="50"
-                      height="50"
-                      className="mx-auto"
-                      viewBox="0 0 295 295"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <rect
-                        opacity="0.51"
-                        x="10"
-                        y="10"
-                        width="275"
-                        height="275"
-                        rx="75"
-                        stroke="#4B5564"
-                        strokeOpacity="0.15"
-                        strokeWidth="20"
-                      />
-                      <path
-                        d="M135.8 200.8V130L122.2 114.6L135.8 110.4V102.8L122.2 87.4L159.8 76V200.8L174.6 218H121L135.8 200.8Z"
-                        fill="#4B5564"
-                        fillOpacity="0.08"
-                      />
-                    </svg>
-                  </div>
-                  <h1 className="text-xl font-bold text-gray-600 mb-2">
-                    {t('courses.no_courses')}
-                  </h1>
-                  <p className="text-md text-gray-400">
-                    <ContentPlaceHolderIfUserIsNotAdmin text={t('courses.create_courses_placeholder')} />
-                  </p>
+              <div className="col-span-full flex flex-col justify-center items-center py-12 px-4 border-2 border-dashed border-gray-100 rounded-2xl bg-gray-50/30">
+                <div className="p-4 bg-white rounded-full nice-shadow mb-4">
+                  <BookCopy className="w-8 h-8 text-gray-300" strokeWidth={1.5} />
                 </div>
+                <h1 className="text-xl font-bold text-gray-600 mb-2">
+                  {t('courses.no_courses')}
+                </h1>
+                <p className="text-md text-gray-400 mb-6 text-center max-w-xs">
+                  <ContentPlaceHolderIfUserIsNotAdmin text={t('courses.create_courses_placeholder')} />
+                </p>
               </div>
             )}
           </div>

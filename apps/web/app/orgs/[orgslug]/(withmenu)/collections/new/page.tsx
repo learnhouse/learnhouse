@@ -2,6 +2,7 @@
 import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
 import { createCollection } from '@services/courses/collections'
+import { getOrgCourses } from '@services/courses/courses'
 import useSWR from 'swr'
 import { getAPIUrl, getUriWithOrg } from '@services/config/config'
 import { revalidateTags, swrFetcher } from '@services/utils/ts/requests'
@@ -12,20 +13,21 @@ import { toast } from 'react-hot-toast'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import { useTranslation } from 'react-i18next'
 
-function NewCollection(params: any) {
+function NewCollection(props: any) {
   const { t } = useTranslation()
+  const params = React.use(props.params) as any
   const org = useOrg() as any
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
-  const orgslug = params.params.orgslug
+  const orgslug = params.orgslug
   const [name, setName] = React.useState('')
   const [description, setDescription] = React.useState('')
   const [selectedCourses, setSelectedCourses] = React.useState([]) as any
   const [isSubmitting, setIsSubmitting] = useState(false)
   const router = useRouter()
   const { data: courses, error: error, isLoading } = useSWR(
-    `${getAPIUrl()}courses/org_slug/${orgslug}/page/1/limit/10`,
-    (url) => swrFetcher(url, access_token)
+    orgslug && access_token ? [`courses/org_slug/${orgslug}`, access_token] : null,
+    ([, token]) => getOrgCourses(orgslug, null, token)
   )
   const [isPublic, setIsPublic] = useState('true')
 

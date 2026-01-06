@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { searchOrgContent } from '@services/search/search';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import { useOrg } from '@components/Contexts/OrgContext';
-import { Book, GraduationCap, Users, Search } from 'lucide-react';
+import { BookCopy, SquareLibrary, Users, Search } from 'lucide-react';
 import Link from 'next/link';
 import { getCourseThumbnailMediaDirectory, getUserAvatarMediaDirectory } from '@services/media/media';
 import { getUriWithOrg } from '@services/config/config';
@@ -283,8 +283,8 @@ function SearchPage() {
             {/* Filters */}
             <div className="flex items-center gap-2 overflow-x-auto pb-2">
               <FilterButton type="all" count={totalResults} icon={Search} />
-              <FilterButton type="courses" count={searchResults.total_courses} icon={GraduationCap} />
-              <FilterButton type="collections" count={searchResults.total_collections} icon={Book} />
+              <FilterButton type="courses" count={searchResults.total_courses} icon={BookCopy} />
+              <FilterButton type="collections" count={searchResults.total_collections} icon={SquareLibrary} />
               <FilterButton type="users" count={searchResults.total_users} icon={Users} />
             </div>
           </div>
@@ -310,7 +310,7 @@ function SearchPage() {
               {(selectedType === 'all' || selectedType === 'courses') && searchResults.courses.length > 0 && (
                 <div>
                   <h2 className="text-lg font-medium text-black/80 mb-4 flex items-center gap-2">
-                    <GraduationCap size={20} className="text-black/60" />
+                    <BookCopy size={20} className="text-black/60" />
                     {t('courses.courses')} ({searchResults.courses.length})
                   </h2>
                   <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -329,7 +329,7 @@ function SearchPage() {
                             />
                           ) : (
                             <div className="w-full h-full bg-black/5 flex items-center justify-center">
-                              <GraduationCap size={32} className="text-black/40" />
+                              <BookCopy size={32} className="text-black/40" />
                             </div>
                           )}
                         </div>
@@ -363,7 +363,7 @@ function SearchPage() {
               {(selectedType === 'all' || selectedType === 'collections') && searchResults.collections.length > 0 && (
                 <div>
                   <h2 className="text-lg font-medium text-black/80 mb-4 flex items-center gap-2">
-                    <Book size={20} className="text-black/60" />
+                    <SquareLibrary size={20} className="text-black/60" />
                     {t('collections.collections')} ({searchResults.collections.length})
                   </h2>
                   <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -374,7 +374,7 @@ function SearchPage() {
                         className="flex items-start gap-4 p-4 bg-white rounded-xl nice-shadow hover:shadow-md transition-all"
                       >
                         <div className="w-12 h-12 bg-black/5 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <Book size={24} className="text-black/40" />
+                          <SquareLibrary size={24} className="text-black/40" />
                         </div>
                         <div>
                           <h3 className="text-sm font-medium text-black/80 mb-1">{collection.name}</h3>

@@ -24,6 +24,7 @@ import {
 import { signOut } from 'next-auth/react'
 import { useTranslation } from 'react-i18next'
 import { Languages, Check } from 'lucide-react'
+import { AVAILABLE_LANGUAGES } from '@/lib/languages'
 
 interface RoleInfo {
   name: string;
@@ -240,20 +241,16 @@ export const HeaderProfileBox = () => {
                   </DropdownMenuSubTrigger>
                   <DropdownMenuPortal>
                     <DropdownMenuSubContent>
-                      <DropdownMenuItem 
-                        onClick={() => changeLanguage('en')}
-                        className="flex items-center justify-between"
-                      >
-                        <span>{t('common.english')}</span>
-                        {i18n.language === 'en' && <Check size={14} />}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={() => changeLanguage('fr')}
-                        className="flex items-center justify-between"
-                      >
-                        <span>{t('common.french')}</span>
-                        {i18n.language === 'fr' && <Check size={14} />}
-                      </DropdownMenuItem>
+                      {AVAILABLE_LANGUAGES.map((language) => (
+                        <DropdownMenuItem 
+                          key={language.code}
+                          onClick={() => changeLanguage(language.code)}
+                          className="flex items-center justify-between"
+                        >
+                          <span>{t(language.translationKey)} ({language.nativeName})</span>
+                          {i18n.language === language.code && <Check size={14} />}
+                        </DropdownMenuItem>
+                      ))}
                     </DropdownMenuSubContent>
                   </DropdownMenuPortal>
                 </DropdownMenuSub>
