@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { Search, ArrowRight, Sparkles, Book, GraduationCap, ArrowUpRight, TextSearch, ScanSearch, Users } from 'lucide-react';
+import { Search, ArrowRight, Sparkles, BookCopy, SquareLibrary, ArrowUpRight, TextSearch, ScanSearch, Users } from 'lucide-react';
 import { searchOrgContent } from '@services/search/search';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import Link from 'next/link';
@@ -84,7 +84,7 @@ const CourseResultsSkeleton = () => (
         <div className="w-10 h-10 bg-black/5 rounded-lg animate-pulse" />
         <div className="flex-1">
           <div className="w-48 h-4 bg-black/5 rounded animate-pulse mb-2" />
-          <div className="w-32 h-3 bg-black/5 rounded animate-pulse" />
+          <div className="w-32 h-4 bg-black/5 rounded animate-pulse" />
         </div>
       </div>
     ))}
@@ -193,8 +193,8 @@ export const SearchBar: React.FC<SearchBarProps> = ({
 
   const searchTerms = useMemo(() => [
     { term: searchQuery, type: 'exact', icon: <Search size={14} className="text-black/40" /> },
-    { term: `${searchQuery} courses`, type: 'courses', icon: <GraduationCap size={14} className="text-black/40" /> },
-    { term: `${searchQuery} collections`, type: 'collections', icon: <Book size={14} className="text-black/40" /> },
+    { term: `${searchQuery} courses`, type: 'courses', icon: <BookCopy size={14} className="text-black/40" /> },
+    { term: `${searchQuery} collections`, type: 'collections', icon: <SquareLibrary size={14} className="text-black/40" /> },
   ], [searchQuery]);
 
   const MemoizedSearchSuggestions = useMemo(() => {
@@ -244,7 +244,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         {searchResults.courses.length > 0 && (
           <div className="mb-2">
             <div className="flex items-center gap-2 px-2 py-1 text-xs text-black/40">
-              <GraduationCap size={12} />
+              <BookCopy size={12} />
               <span>{t('courses.courses')}</span>
             </div>
             {searchResults.courses.map((course) => (
@@ -262,11 +262,11 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                     />
                   ) : (
                     <div className="w-10 h-10 bg-black/5 rounded-lg flex items-center justify-center">
-                      <Book size={20} className="text-black/40" />
+                      <BookCopy size={20} className="text-black/40" />
                     </div>
                   )}
                   <div className="absolute -bottom-1 -right-1 bg-white shadow-sm p-1 rounded-full">
-                    <GraduationCap size={11} className="text-black/60" />
+                    <BookCopy size={11} className="text-black/60" />
                   </div>
                 </div>
                 <div className="flex-1 min-w-0">
@@ -285,7 +285,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         {searchResults.collections.length > 0 && (
           <div className="mb-2">
             <div className="flex items-center gap-2 px-2 py-1 text-xs text-black/40">
-              <Book size={12} />
+              <SquareLibrary size={12} />
               <span>{t('collections.collections')}</span>
             </div>
             {searchResults.collections.map((collection) => (
@@ -295,7 +295,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                 className="flex items-center gap-3 p-2 hover:bg-black/[0.02] rounded-lg transition-colors"
               >
                 <div className="w-10 h-10 bg-black/5 rounded-lg flex items-center justify-center">
-                  <Book size={20} className="text-black/40" />
+                  <SquareLibrary size={20} className="text-black/40" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">

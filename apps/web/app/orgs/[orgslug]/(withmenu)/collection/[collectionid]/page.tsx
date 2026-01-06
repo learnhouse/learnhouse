@@ -27,8 +27,8 @@ const CollectionPage = (props: any) => {
   const org = useOrg() as any
 
   const { data: col, error } = useSWR(
-    collectionid ? [`${getAPIUrl()}courses/collections/${collectionid}`, access_token] : null,
-    ([url, token]) => swrFetcher(url, token)
+    collectionid && access_token ? [`collections/collection_${collectionid}`, access_token] : null,
+    ([, token]) => swrFetcher(`${getAPIUrl()}collections/collection_${collectionid}`, token)
   )
 
   const removeCoursePrefix = (courseid: string) => {

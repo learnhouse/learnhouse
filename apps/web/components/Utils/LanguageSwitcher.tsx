@@ -4,6 +4,7 @@ import React from 'react'
 import { useTranslation } from 'react-i18next'
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import { Languages, ChevronDown } from 'lucide-react'
+import { AVAILABLE_LANGUAGES, getCurrentLanguageNativeName } from '@/lib/languages'
 
 const LanguageSwitcher = () => {
   const { i18n, t } = useTranslation()
@@ -12,7 +13,7 @@ const LanguageSwitcher = () => {
     i18n.changeLanguage(lng)
   }
 
-  const currentLanguage = i18n.language === 'fr' ? 'Français' : 'English'
+  const currentLanguage = getCurrentLanguageNativeName(i18n.language)
 
   return (
     <DropdownMenu.Root>
@@ -29,18 +30,15 @@ const LanguageSwitcher = () => {
           className="min-w-[150px] bg-white rounded-md p-1 shadow-lg border border-gray-200 z-[100]"
           sideOffset={5}
         >
-          <DropdownMenu.Item
-            className="flex items-center px-2 py-2 text-sm text-gray-700 rounded-sm cursor-pointer hover:bg-gray-100 outline-none"
-            onClick={() => changeLanguage('en')}
-          >
-            English
-          </DropdownMenu.Item>
-          <DropdownMenu.Item
-            className="flex items-center px-2 py-2 text-sm text-gray-700 rounded-sm cursor-pointer hover:bg-gray-100 outline-none"
-            onClick={() => changeLanguage('fr')}
-          >
-            Français
-          </DropdownMenu.Item>
+          {AVAILABLE_LANGUAGES.map((language) => (
+            <DropdownMenu.Item
+              key={language.code}
+              className="flex items-center px-2 py-2 text-sm text-gray-700 rounded-sm cursor-pointer hover:bg-gray-100 outline-none"
+              onClick={() => changeLanguage(language.code)}
+            >
+              {t(language.translationKey)} ({language.nativeName})
+            </DropdownMenu.Item>
+          ))}
         </DropdownMenu.Content>
       </DropdownMenu.Portal>
     </DropdownMenu.Root>
