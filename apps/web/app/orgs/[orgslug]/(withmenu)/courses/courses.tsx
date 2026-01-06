@@ -9,14 +9,16 @@ import AuthenticatedClientElement from '@components/Security/AuthenticatedClient
 import CourseThumbnail from '@components/Objects/Thumbnails/CourseThumbnail'
 import NewCourseButton from '@components/Objects/StyledElements/Buttons/NewCourseButton'
 import useAdminStatus from '@components/Hooks/useAdminStatus'
+import { useTranslation } from 'react-i18next'
 
 interface CourseProps {
   orgslug: string
   courses: any
-  org_id: string
+  org_id: string | number
 }
 
 function Courses(props: CourseProps) {
+  const { t } = useTranslation()
   const orgslug = props.orgslug
   const courses = props.courses
   const searchParams = useSearchParams()
@@ -33,7 +35,7 @@ function Courses(props: CourseProps) {
       <GeneralWrapperStyled>
         <div className="flex flex-col space-y-2 mb-2">
           <div className="flex items-center justify-between">
-            <TypeOfContentTitle title="Courses" type="cou" />
+            <TypeOfContentTitle title={t('courses.courses')} type="cou" />
             <AuthenticatedClientElement
               checkMethod="roles"
               action="create"
@@ -50,8 +52,8 @@ function Courses(props: CourseProps) {
                     orgslug={orgslug}
                   />
                 }
-                dialogTitle="Create Course"
-                dialogDescription="Create a new course"
+                dialogTitle={t('courses.create_course')}
+                dialogDescription={t('courses.create_new_course')}
                 dialogTrigger={
                   <button>
                     <NewCourseButton />
@@ -83,13 +85,13 @@ function Courses(props: CourseProps) {
                     </svg>
                   </div>
                   <h1 className="text-xl font-bold text-gray-600 mb-2">
-                    No courses yet
+                    {t('courses.no_courses')}
                   </h1>
                   <p className="text-md text-gray-400">
                     {isUserAdmin ? (
-                      "Create a course to add content"
+                      t('courses.create_courses_placeholder')
                     ) : (
-                      "No courses available yet"
+                      t('courses.no_courses_available')
                     )}
                   </p>
                   {isUserAdmin && (
@@ -110,8 +112,8 @@ function Courses(props: CourseProps) {
                               orgslug={orgslug}
                             />
                           }
-                          dialogTitle="Create Course"
-                          dialogDescription="Create a new course"
+                          dialogTitle={t('courses.create_course')}
+                          dialogDescription={t('courses.create_new_course')}
                           dialogTrigger={
                             <button>
                               <NewCourseButton />

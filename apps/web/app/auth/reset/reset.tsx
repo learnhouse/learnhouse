@@ -16,40 +16,43 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useFormik } from 'formik'
 import { resetPassword } from '@services/auth/auth'
+import { useTranslation } from 'react-i18next'
+import LanguageSwitcher from '@components/Utils/LanguageSwitcher'
 
-const validate = (values: any) => {
+const validate = (values: any, t: any) => {
     const errors: any = {}
 
     if (!values.email) {
-        errors.email = 'Required'
+        errors.email = t('validation.required')
     } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email)) {
-        errors.email = 'Invalid email address'
+        errors.email = t('validation.invalid_email')
     }
 
     if (!values.new_password) {
-        errors.new_password = 'Required'
+        errors.new_password = t('validation.required')
     }
 
     if (!values.confirm_password) {
-        errors.confirm_password = 'Required'
+        errors.confirm_password = t('validation.required')
     }
 
     if (values.new_password !== values.confirm_password) {
-        errors.confirm_password = 'Passwords do not match'
+        errors.confirm_password = t('auth.passwords_do_not_match')
     }
 
     if (!values.reset_code) {
-        errors.reset_code = 'Required'
+        errors.reset_code = t('validation.required')
     }
     return errors
 }
 
 function ResetPasswordClient() {
+    const { t } = useTranslation();
     const org = useOrg() as any;
     const [isSubmitting, setIsSubmitting] = React.useState(false)
     const searchParams = useSearchParams()
     const reset_code = searchParams.get('resetCode') || ''
-    const email = searchParams.get('email') || ''
+    const email = searchParams.get('auth.email') || ''
     const router = useRouter()
     const [error, setError] = React.useState('')
     const [message, setMessage] = React.useState('')
@@ -61,13 +64,13 @@ function ResetPasswordClient() {
             confirm_password: '',
             reset_code: reset_code
         },
-        validate,
+        validate: (values) => validate(values, t),
         enableReinitialize: true,
         onSubmit: async (values) => {
             setIsSubmitting(true)
             let res = await resetPassword(values.email, values.new_password, org?.id, values.reset_code)
             if (res.status == 200) {
-                setMessage(res.data + ', please login')
+                setMessage(res.data + ', ' + t('auth.login_again_message'))
                 setIsSubmitting(false)
             } else {
                 setError(res.data.detail)
@@ -79,6 +82,9 @@ function ResetPasswordClient() {
     return (
 
         <div className="grid grid-flow-col justify-stretch h-screen">
+            <div className="absolute top-4 right-4 z-50">
+                <LanguageSwitcher />
+            </div>
             <div
                 className="right-login-part"
                 style={{
@@ -127,9 +133,9 @@ function ResetPasswordClient() {
             </div>
             <div className="left-login-part bg-white flex flex-row">
                 <div className="login-form m-auto w-72">
-                    <h1 className="text-2xl font-bold mb-4">Reset Password</h1>
+                    <h1 className="text-2xl font-bold mb-4">{t('auth.reset_password_title')}</h1>
                     <p className="text-sm mb-4">
-                        Enter your email and reset code to reset your password
+                        {t('auth.reset_password_description')}
                     </p>
 
                     {error && (
@@ -145,14 +151,14 @@ function ResetPasswordClient() {
                                 <div className="font-bold text-sm">{message}</div>
                             </div>
                             <Link href={getUriWithoutOrg('/login?orgslug=' + org.slug)} className="text-center text-sm text-blue-600 hover:text-blue-800">
-                                Please login again with your new password
+                                {t('auth.login_again_message')}
                             </Link>
                         </div>
                     )}
                     <FormLayout onSubmit={formik.handleSubmit}>
                         <FormField name="email">
                             <FormLabelAndMessage
-                                label="Email"
+                                label={t('auth.email')}
                                 message={formik.errors.email}
                             />
                             <Form.Control asChild>
@@ -166,7 +172,7 @@ function ResetPasswordClient() {
 
                         <FormField name="reset_code">
                             <FormLabelAndMessage
-                                label="Reset Code"
+                                label={t('auth.reset_code')}
                                 message={formik.errors.reset_code}
                             />
                             <Form.Control asChild>
@@ -180,7 +186,7 @@ function ResetPasswordClient() {
 
                         <FormField name="new_password">
                             <FormLabelAndMessage
-                                label="New Password"
+                                label={t('auth.new_password')}
                                 message={formik.errors.new_password}
                             />
                             <Form.Control asChild>
@@ -194,7 +200,7 @@ function ResetPasswordClient() {
 
                         <FormField name="confirm_password">
                             <FormLabelAndMessage
-                                label="Confirm Password"
+                                label={t('auth.confirm_password')}
                                 message={formik.errors.confirm_password}
                             />
                             <Form.Control asChild>
@@ -210,7 +216,7 @@ function ResetPasswordClient() {
                         <div className="flex  py-4">
                             <Form.Submit asChild>
                                 <button className="w-full bg-black text-white font-bold text-center p-2 rounded-md shadow-md hover:cursor-pointer">
-                                    {isSubmitting ? 'Loading...' : 'Change Password'}
+                                    {isSubmitting ? t('common.loading') : t('auth.change_password')}
                                 </button>
                             </Form.Submit>
                         </div>

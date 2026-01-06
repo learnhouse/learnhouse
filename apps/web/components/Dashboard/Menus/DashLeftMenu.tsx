@@ -12,11 +12,30 @@ import AdminAuthorization from '@components/Security/AdminAuthorization'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { getUriWithOrg, getUriWithoutOrg } from '@services/config/config'
 import useFeatureFlag from '@components/Hooks/useFeatureFlag'
+import { useTranslation } from 'react-i18next'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+  DropdownMenuPortal,
+} from "@components/ui/dropdown-menu"
+import { Check, Languages } from 'lucide-react'
 
 function DashLeftMenu() {
   const org = useOrg() as any
   const session = useLHSession() as any
+  const { t, i18n } = useTranslation()
   const [loading, setLoading] = React.useState(true)
+
+  const changeLanguage = (lng: string) => {
+    i18n.changeLanguage(lng)
+  }
   const isPaymentsEnabled = useFeatureFlag({ path: ['features', 'payments', 'enabled'], defaultValue: false })
 
   function waitForEverythingToLoad() {
@@ -54,7 +73,7 @@ function DashLeftMenu() {
             href={'/'}
           >
             <ToolTip
-              content={'Back to Home'}
+              content={t('common.back_to_home')}
               slateBlack
               sideOffset={8}
               side="right"
@@ -66,7 +85,7 @@ function DashLeftMenu() {
               />
             </ToolTip>
             <ToolTip
-              content={'Your Organization'}
+              content={t('common.your_organization')}
               slateBlack
               sideOffset={8}
               side="right"
@@ -82,7 +101,7 @@ function DashLeftMenu() {
                         <Link className='bg-white text-black hover:text-white rounded-lg p-2 hover:bg-white/10 transition-all ease-linear' href={`/`} ><ArrowLeft className='hover:text-white' size={18} /></Link>
                     </ToolTip> */}
           <AdminAuthorization authorizationMode="component">
-            <ToolTip content={'Home'} slateBlack sideOffset={8} side="right">
+            <ToolTip content={t('common.home')} slateBlack sideOffset={8} side="right">
               <Link
                 aria-label="Home"
                 className="bg-white/5 rounded-lg p-2 hover:bg-white/10 transition-all ease-linear"
@@ -91,7 +110,7 @@ function DashLeftMenu() {
                 <Home size={18} />
               </Link>
             </ToolTip>
-            <ToolTip content={'Courses'} slateBlack sideOffset={8} side="right">
+            <ToolTip content={t('courses.courses')} slateBlack sideOffset={8} side="right">
               <Link
                 aria-label="Courses"
                 className="bg-white/5 rounded-lg p-2 hover:bg-white/10 transition-all ease-linear"
@@ -100,7 +119,7 @@ function DashLeftMenu() {
                 <BookCopy size={18} />
               </Link>
             </ToolTip>
-            <ToolTip content={'Assignments'} slateBlack sideOffset={8} side="right">
+            <ToolTip content={t('common.assignments')} slateBlack sideOffset={8} side="right">
               <Link
                 aria-label="Assignments"
                 className="bg-white/5 rounded-lg p-2 hover:bg-white/10 transition-all ease-linear"
@@ -109,7 +128,7 @@ function DashLeftMenu() {
                 <Backpack size={18} />
               </Link>
             </ToolTip>
-            <ToolTip content={'Users'} slateBlack sideOffset={8} side="right">
+            <ToolTip content={t('common.users')} slateBlack sideOffset={8} side="right">
               <Link
                 aria-label="Users"
                 className="bg-white/5 rounded-lg p-2 hover:bg-white/10 transition-all ease-linear"
@@ -119,7 +138,7 @@ function DashLeftMenu() {
               </Link>
             </ToolTip>
             {isPaymentsEnabled && (
-              <ToolTip content={'Payments'} slateBlack sideOffset={8} side="right">
+              <ToolTip content={t('common.payments')} slateBlack sideOffset={8} side="right">
                 <Link
                   aria-label="Payments"
                   className="bg-white/5 rounded-lg p-2 hover:bg-white/10 transition-all ease-linear"
@@ -130,7 +149,7 @@ function DashLeftMenu() {
               </ToolTip>
             )}
             <ToolTip
-              content={'Organization'}
+              content={t('common.organization')}
               slateBlack
               sideOffset={8}
               side="right"
@@ -147,64 +166,61 @@ function DashLeftMenu() {
         </div>
         <div className="flex flex-col mx-auto pb-7 space-y-2">
           <div className="flex items-center flex-col space-y-2">
-            <ToolTip
-              content={'@' + session.data.user.username}
-              slateBlack
-              sideOffset={8}
-              side="right"
-            >
-              <div className="mx-auto">
-                <UserAvatar border="border-4" width={35} />
-              </div>
-            </ToolTip>
-            <div className="flex items-center flex-col space-y-3">
-              <div className="flex flex-col space-y-1 py-1">
-                <ToolTip
-                  content={session.data.user.username + "'s Owned Courses"}
-                slateBlack
-                sideOffset={8}
-                side="right"
-              >
-                <Link
-                    href={'/dash/user-account/owned'}
-                    className="py-1"
-                >
-                  <Package2
-                    className="mx-auto text-neutral-400 cursor-pointer"
-                    size={18}
-                  />
-                </Link>
-              </ToolTip>
-                <ToolTip
-                  content={session.data.user.username + "'s Settings"}
-                slateBlack
-                sideOffset={8}
-                side="right"
-              >
-                <Link
-                  href={'/dash/user-account/settings/general'}
-                  className="py-1"
-                >
-                  <Settings
-                    className="mx-auto text-neutral-400 cursor-pointer"
-                    size={18}
-                  />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <div className="mx-auto cursor-pointer transition-transform hover:scale-110">
+                  <UserAvatar border="border-4" width={35} />
+                </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent side="right" align="end" className="w-56 ml-2">
+                <DropdownMenuLabel>
+                  <div className="flex flex-col">
+                    <p className="text-sm font-medium">{session.data.user.username}</p>
+                    <p className="text-xs text-gray-500">{session.data.user.email}</p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger className="flex items-center space-x-2">
+                    <Languages size={14} />
+                    <span>{t('common.language')}</span>
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuPortal>
+                    <DropdownMenuSubContent>
+                      <DropdownMenuItem onClick={() => changeLanguage('en')} className="flex items-center justify-between">
+                        <span>{t('common.english')}</span>
+                        {i18n.language === 'en' && <Check size={14} />}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => changeLanguage('fr')} className="flex items-center justify-between">
+                        <span>{t('common.french')}</span>
+                        {i18n.language === 'fr' && <Check size={14} />}
+                      </DropdownMenuItem>
+                    </DropdownMenuSubContent>
+                  </DropdownMenuPortal>
+                </DropdownMenuSub>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/dash/user-account/settings/general" className="flex items-center space-x-2 w-full">
+                    <Settings size={16} />
+                    <span>{t('common.settings')}</span>
                   </Link>
-                </ToolTip>
-              </div>
-              <ToolTip
-                content={'Logout'}
-                slateBlack
-                sideOffset={8}
-                side="right"
-              >
-                <LogOut
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/dash/user-account/owned" className="flex items-center space-x-2 w-full">
+                    <Package2 size={16} />
+                    <span>{t('courses.my_courses')}</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem 
                   onClick={() => logOutUI()}
-                  className="mx-auto text-neutral-400 cursor-pointer"
-                  size={14}
-                />
-              </ToolTip>
-            </div>
+                  className="flex items-center space-x-2 text-red-600 focus:text-red-600"
+                >
+                  <LogOut size={16} />
+                  <span>{t('user.sign_out')}</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>

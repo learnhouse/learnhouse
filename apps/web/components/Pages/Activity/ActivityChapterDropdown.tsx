@@ -4,6 +4,7 @@ import { Check, FileText, ListTree, Video, X, StickyNote, Backpack, ArrowRight }
 import { getUriWithOrg } from '@services/config/config'
 import Link from 'next/link'
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 
 interface ActivityChapterDropdownProps {
   course: any
@@ -13,6 +14,7 @@ interface ActivityChapterDropdownProps {
 }
 
 export default function ActivityChapterDropdown(props: ActivityChapterDropdownProps): React.ReactNode {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = React.useState(false);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
   const isMobile = useMediaQuery('(max-width: 768px)');
@@ -56,15 +58,15 @@ export default function ActivityChapterDropdown(props: ActivityChapterDropdownPr
   const getActivityTypeLabel = (activityType: string) => {
     switch (activityType) {
       case 'TYPE_VIDEO':
-        return 'Video';
+        return t('activities.video');
       case 'TYPE_DOCUMENT':
-        return 'Document';
+        return t('activities.document');
       case 'TYPE_DYNAMIC':
-        return 'Page';
+        return t('activities.page');
       case 'TYPE_ASSIGNMENT':
-        return 'Assignment';
+        return t('activities.assignment');
       default:
-        return 'Learning Material';
+        return t('activities.learning_material');
     }
   };
 
@@ -77,13 +79,13 @@ export default function ActivityChapterDropdown(props: ActivityChapterDropdownPr
         title="View all activities"
       >
         <ListTree size={17} />
-        <span className="text-xs font-bold">Chapters</span>
+        <span className="text-xs font-bold">{t('courses.chapters')}</span>
       </button>
       
       {isOpen && (
         <div className={`absolute z-50 mt-2 ${isMobile ? 'right-0 w-[90vw] sm:w-72' : 'right-0 w-72'} max-h-[70vh] cursor-pointer overflow-y-auto bg-white rounded-lg shadow-xl border border-gray-200 py-1 animate-in fade-in duration-200`}>
           <div className="px-3 py-1.5 border-b border-gray-100 flex justify-between items-center">
-            <h3 className="text-sm font-semibold text-gray-800">Course Content</h3>
+            <h3 className="text-sm font-semibold text-gray-800">{t('courses.course_content')}</h3>
             <button 
               onClick={() => setIsOpen(false)}
               className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100 cursor-pointer"
@@ -151,7 +153,7 @@ export default function ActivityChapterDropdown(props: ActivityChapterDropdownPr
                                 </p>
                                 {isCurrent && (
                                   <div className="flex items-center space-x-1 text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-full text-[10px] font-medium animate-pulse">
-                                    <span>Current</span>
+                                    <span>{t('activities.current')}</span>
                                   </div>
                                 )}
                               </div>

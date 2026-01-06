@@ -9,6 +9,7 @@ import { useOrg } from '@components/Contexts/OrgContext';
 import { getUriWithOrg } from '@services/config/config';
 import { removeCoursePrefix } from '../Thumbnails/CourseThumbnail';
 import UserAvatar from '../UserAvatar';
+import { useTranslation } from 'react-i18next';
 
 interface User {
   username: string;
@@ -96,6 +97,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   isMobile = false,
   showSearchSuggestions = false,
 }) => {
+  const { t } = useTranslation();
   const org = useOrg() as any;
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResults>({
@@ -177,17 +179,17 @@ export const SearchBar: React.FC<SearchBarProps> = ({
               <Sparkles className="w-6 h-6 text-black/70" />
             </div>
             <h3 className="text-sm font-medium text-black/80 mb-1">
-              Discover Your Next Learning Journey
+              {t('search.discover_next_journey')}
             </h3>
             <p className="text-xs text-black/50 max-w-[240px]">
-              Start typing to search through available content
+              {t('search.start_typing_to_search')}
             </p>
           </div>
         </div>
       );
     }
     return null;
-  }, [searchQuery]);
+  }, [searchQuery, t]);
 
   const searchTerms = useMemo(() => [
     { term: searchQuery, type: 'exact', icon: <Search size={14} className="text-black/40" /> },
@@ -201,7 +203,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         <div className="p-2">
           <div className="flex items-center gap-2 px-2 py-2 text-sm text-black/50">
             <ScanSearch size={16} />
-            <span className="font-medium">Search suggestions</span>
+            <span className="font-medium">{t('search.search_suggestions')}</span>
           </div>
           <div className="space-y-1">
             {searchTerms.map(({ term, type, icon }) => (
@@ -222,7 +224,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
       );
     }
     return null;
-  }, [searchQuery, searchTerms, orgslug]);
+  }, [searchQuery, searchTerms, orgslug, t]);
 
   const MemoizedQuickResults = useMemo(() => {
     const hasResults = searchResults.courses.length > 0 || 
@@ -235,7 +237,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
       <div className="p-2">
         <div className="flex items-center gap-2 px-2 py-2 text-sm text-black/50">
           <TextSearch size={16} />
-          <span className="font-medium">Quick Results</span>
+          <span className="font-medium">{t('search.quick_results')}</span>
         </div>
 
         {/* Courses Section */}
@@ -243,7 +245,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           <div className="mb-2">
             <div className="flex items-center gap-2 px-2 py-1 text-xs text-black/40">
               <GraduationCap size={12} />
-              <span>Courses</span>
+              <span>{t('courses.courses')}</span>
             </div>
             {searchResults.courses.map((course) => (
               <Link
@@ -270,7 +272,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <h3 className="text-sm font-medium text-black/80 truncate">{course.name}</h3>
-                    <span className="text-[10px] font-medium text-black/40 uppercase tracking-wide whitespace-nowrap">Course</span>
+                    <span className="text-[10px] font-medium text-black/40 uppercase tracking-wide whitespace-nowrap">{t('search.course')}</span>
                   </div>
                   <p className="text-xs text-black/50 truncate">{course.description}</p>
                 </div>
@@ -284,7 +286,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           <div className="mb-2">
             <div className="flex items-center gap-2 px-2 py-1 text-xs text-black/40">
               <Book size={12} />
-              <span>Collections</span>
+              <span>{t('collections.collections')}</span>
             </div>
             {searchResults.collections.map((collection) => (
               <Link
@@ -298,7 +300,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <h3 className="text-sm font-medium text-black/80 truncate">{collection.name}</h3>
-                    <span className="text-[10px] font-medium text-black/40 uppercase tracking-wide whitespace-nowrap">Collection</span>
+                    <span className="text-[10px] font-medium text-black/40 uppercase tracking-wide whitespace-nowrap">{t('collections.collection')}</span>
                   </div>
                   <p className="text-xs text-black/50 truncate">{collection.description}</p>
                 </div>
@@ -312,7 +314,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           <div className="mb-2">
             <div className="flex items-center gap-2 px-2 py-1 text-xs text-black/40">
               <Users size={12} />
-              <span>Users</span>
+              <span>{t('common.users')}</span>
             </div>
             {searchResults.users.map((user) => (
               <Link
@@ -334,7 +336,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                     <h3 className="text-sm font-medium text-black/80 truncate">
                       {user.first_name} {user.last_name}
                     </h3>
-                    <span className="text-[10px] font-medium text-black/40 uppercase tracking-wide whitespace-nowrap">User</span>
+                    <span className="text-[10px] font-medium text-black/40 uppercase tracking-wide whitespace-nowrap">{t('search.user')}</span>
                   </div>
                   <p className="text-xs text-black/50 truncate">@{user.username}</p>
                 </div>
@@ -344,7 +346,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         )}
       </div>
     );
-  }, [searchResults, orgslug, org?.org_uuid]);
+  }, [searchResults, orgslug, org?.org_uuid, t]);
 
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
@@ -359,7 +361,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           value={searchQuery}
           onChange={handleSearchChange}
           onFocus={() => setShowResults(true)}
-          placeholder="Search courses, users, collections..."
+          placeholder={t('search.search_placeholder')}
           className="w-full h-9 pl-11 pr-4 rounded-xl nice-shadow bg-white 
                      focus:outline-none focus:ring-1 focus:ring-black/5 focus:border-black/20 
                      text-sm placeholder:text-black/40 transition-all"
@@ -394,7 +396,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                     href={getUriWithOrg(orgslug, `/search?q=${encodeURIComponent(searchQuery)}`)}
                     className="flex items-center justify-between px-4 py-2.5 text-xs text-black/50 hover:text-black/70 hover:bg-black/[0.02] transition-colors"
                   >
-                    <span>View all results</span>
+                    <span>{t('search.view_all_results')}</span>
                     <ArrowRight size={14} />
                   </Link>
                 )}
@@ -405,4 +407,4 @@ export const SearchBar: React.FC<SearchBarProps> = ({
       </div>
     </div>
   );
-}; 
+};

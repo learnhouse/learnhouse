@@ -1,10 +1,11 @@
 'use client'
 import { BookOpenCheck, Check, FileText, Layers, Video, ChevronLeft, ChevronRight, Trophy } from 'lucide-react'
-import React, { useMemo, memo, useState } from 'react'
+import React, { useMemo, memo } from 'react'
 import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
 import { getUriWithOrg } from '@services/config/config'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useTranslation } from 'react-i18next'
 
 interface Props {
   course: any
@@ -16,18 +17,18 @@ interface Props {
 }
 
 // Helper functions
-function getActivityTypeLabel(activityType: string): string {
+function getActivityTypeLabel(activityType: string, t: any): string {
   switch (activityType) {
     case 'TYPE_VIDEO':
-      return 'Video'
+      return t('activities.video')
     case 'TYPE_DOCUMENT':
-      return 'Document'
+      return t('activities.document')
     case 'TYPE_DYNAMIC':
-      return 'Interactive'
+      return t('activities.interactive')
     case 'TYPE_ASSIGNMENT':
-      return 'Assignment'
+      return t('activities.assignment')
     default:
-      return 'Unknown'
+      return t('common.unknown')
   }
 }
 
@@ -73,7 +74,9 @@ const ActivityTooltipContent = memo(({
   activity: any, 
   isDone: boolean, 
   isCurrent: boolean 
-}) => (
+}) => {
+  const { t } = useTranslation();
+  return (
   <div className="bg-white rounded-lg nice-shadow py-3 px-4 min-w-[200px] animate-in fade-in duration-200">
     <div className="flex items-center gap-2">
       <ActivityTypeIcon activityType={activity.activity_type} />
@@ -86,14 +89,15 @@ const ActivityTooltipContent = memo(({
     </div>
     <div className="flex items-center gap-2 mt-2">
       <span className={`text-xs px-2 py-0.5 rounded-full ${getActivityTypeBadgeColor(activity.activity_type)}`}>
-        {getActivityTypeLabel(activity.activity_type)}
+        {getActivityTypeLabel(activity.activity_type, t)}
       </span>
       <span className="text-xs text-gray-400">
-        {isCurrent ? 'Current Activity' : isDone ? 'Completed' : 'Not Started'}
+        {isCurrent ? t('activities.current_activity') : isDone ? t('common.completed') : t('activities.not_started')}
       </span>
     </div>
   </div>
-));
+  );
+});
 
 ActivityTooltipContent.displayName = 'ActivityTooltipContent';
 
@@ -108,19 +112,22 @@ const ChapterTooltipContent = memo(({
   chapterNumber: number,
   totalActivities: number,
   completedActivities: number
-}) => (
+}) => {
+  const { t } = useTranslation();
+  return (
   <div className="bg-white rounded-lg nice-shadow py-3 px-4 min-w-[200px] animate-in fade-in duration-200">
     <div className="flex items-center gap-2">
-      <span className="text-sm font-medium text-gray-900">Chapter {chapterNumber}</span>
+      <span className="text-sm font-medium text-gray-900">{t('courses.chapter')} {chapterNumber}</span>
       <span className="text-xs bg-gray-100 px-2 py-0.5 rounded-full text-gray-600">
-        {completedActivities}/{totalActivities} completed
+        {completedActivities}/{totalActivities} {t('common.completed')}
       </span>
     </div>
     <div className="mt-1">
       <span className="text-sm text-gray-700">{chapter.name}</span>
     </div>
   </div>
-));
+  );
+});
 
 ChapterTooltipContent.displayName = 'ChapterTooltipContent';
 
@@ -133,7 +140,9 @@ const CertificationBadge = memo(({
   courseid: string,
   orgslug: string,
   isCompleted: boolean 
-}) => (
+}) => {
+  const { t } = useTranslation();
+  return (
   <ToolTip
     sideOffset={8}
     unstyled
@@ -142,14 +151,14 @@ const CertificationBadge = memo(({
         <div className="flex items-center gap-2">
           <Trophy size={16} className="text-yellow-500" />
           <span className="text-sm font-medium text-gray-900">
-            {isCompleted ? 'Course Completed!' : 'Course Completion'}
+            {isCompleted ? t('courses.course_completed_exclamation') : t('courses.course_completion')}
           </span>
         </div>
         <div className="mt-1">
           <span className="text-sm text-gray-700">
             {isCompleted 
-              ? 'View your completion certificate' 
-              : 'Complete all activities to unlock your certificate'
+              ? t('certificate.view_certificate')
+              : t('courses.unlock_certificate_message')
             }
           </span>
         </div>
@@ -172,18 +181,17 @@ const CertificationBadge = memo(({
       </div>
     </Link>
   </ToolTip>
-));
+)});
 
 CertificationBadge.displayName = 'CertificationBadge';
 
 function ActivityIndicators(props: Props) {
+  const { t } = useTranslation();
   const course = props.course
   const orgslug = props.orgslug
   const courseid = props.course_uuid.replace('course_', '')
   const enableNavigation = props.enableNavigation || false
   const router = useRouter()
-
-  const [currentIndex, setCurrentIndex] = useState(0)
 
   const done_activity_style = 'bg-teal-600 hover:bg-teal-700'
   const black_activity_style = 'bg-zinc-300 hover:bg-zinc-400'
@@ -283,8 +291,8 @@ function ActivityIndicators(props: Props) {
         <button
           onClick={navigateToPrevious}
           disabled={currentActivityIndex <= 0}
-          className="p-1 rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
-          aria-label="Previous activity"
+          className="p-1 rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shrink-0"
+          aria-label={t('activities.previous_activity')}
         >
           <ChevronLeft size={20} className="text-gray-600" />
         </button>
@@ -363,7 +371,7 @@ function ActivityIndicators(props: Props) {
                             ''
                           )}`
                         }
-                        className={`${isCurrent ? 'flex-[2]' : 'flex-1'} mx-1`}
+                        className={`${isCurrent ? 'flex-2' : 'flex-1'} mx-1`}
                       >
                         <div
                           className={`h-[7px] ${getActivityClass(activity)} rounded-lg transition-all`}
@@ -389,8 +397,8 @@ function ActivityIndicators(props: Props) {
         <button
           onClick={navigateToNext}
           disabled={currentActivityIndex >= allActivities.length - 1}
-          className="p-1 rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
-          aria-label="Next activity"
+          className="p-1 rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shrink-0"
+          aria-label={t('activities.next_activity')}
         >
           <ChevronRight size={20} className="text-gray-600" />
         </button>
