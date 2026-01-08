@@ -26,6 +26,10 @@ export const config = {
 }
 
 export default async function proxy(req: NextRequest) {
+  // #region agent log
+  fetch('http://127.0.0.1:7246/ingest/b5809cb2-007a-4cd7-a186-acec190776fc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'middleware.ts:28',message:'Middleware entry',data:{pathname:req.nextUrl.pathname,search:req.nextUrl.search,host:req.headers.get('host')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+  // #endregion
+
   // Get initial data
   const hosting_mode = isMultiOrgModeEnabled() ? 'multi' : 'single'
   const default_org = getDefaultOrg()
@@ -33,16 +37,28 @@ export default async function proxy(req: NextRequest) {
   const fullhost = req.headers ? req.headers.get('host') : ''
   const cookie_orgslug = req.cookies.get('learnhouse_current_orgslug')?.value
   
+  // #region agent log
+  fetch('http://127.0.0.1:7246/ingest/b5809cb2-007a-4cd7-a186-acec190776fc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'middleware.ts:36',message:'Path parsed',data:{pathname,search,hosting_mode,default_org},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+  // #endregion
 
   // Out of orgslug paths & rewrite
   const standard_paths = ['/home']
   const auth_paths = ['/login', '/signup', '/reset', '/forgot']
+  
+  // #region agent log
+  fetch('http://127.0.0.1:7246/ingest/b5809cb2-007a-4cd7-a186-acec190776fc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'middleware.ts:42',message:'Checking auth paths',data:{pathname,isAuthPath:auth_paths.includes(pathname)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+  // #endregion
+
   if (standard_paths.includes(pathname)) {
     // Redirect to the same pathname with the original search params
     return NextResponse.rewrite(new URL(`${pathname}${search}`, req.url))
   }
 
   if (auth_paths.includes(pathname)) {
+    // #region agent log
+    fetch('http://127.0.0.1:7246/ingest/b5809cb2-007a-4cd7-a186-acec190776fc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'middleware.ts:48',message:'Auth path matched, rewriting',data:{pathname,rewriteTo:`/auth${pathname}${search}`},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
+
     const response = NextResponse.rewrite(
       new URL(`/auth${pathname}${search}`, req.url)
     )
@@ -182,3 +198,4 @@ export default async function proxy(req: NextRequest) {
     return response
   }
 }
+
