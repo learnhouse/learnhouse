@@ -1,0 +1,21 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/api-${_INDUSTRY}', '.']
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/api-${_INDUSTRY}']
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'api-${_INDUSTRY}'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/api-${_INDUSTRY}'
+      - '--region'
+      - 'us-central1'
+      - '--platform'
+      - 'managed'
+      - '--set-env-vars'
+      - 'LEARNHOUSE_INDUSTRY=${_INDUSTRY}'
+substitutions:
+  _INDUSTRY: petcare

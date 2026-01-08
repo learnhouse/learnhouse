@@ -37,6 +37,7 @@ dependencies = [
     "logfire[sqlalchemy]>=3.8.0",
     "beautifulsoup4>=4.13.4",
     "pytest-asyncio>=1.1.0",
+    "grpcio>=1.76.0",
 ]
 
 [tool.ruff]

@@ -1,0 +1,8 @@
+{
+  "buildCommand": "cd apps/web && pnpm build",
+  "outputDirectory": "apps/web/.next",
+  "framework": "nextjs",
+  "env": {
+    "NEXT_PUBLIC_API_URL": "https://api-INDUSTRY_PLACEHOLDER-xxx.run.app/api/v1"
+  }
+}
