@@ -22,7 +22,7 @@ declare global {
 export const isDevEnv = getLEARNHOUSE_TOP_DOMAIN_VAL() == 'localhost' ? true : false
 
 export const nextAuthOptions = {
-  debug: true,
+  debug: isDevEnv,
   providers: [
     CredentialsProvider({
       // The name to display on the sign in form (e.g. 'Sign in with...')
@@ -120,9 +120,23 @@ export const nextAuthOptions = {
       if (token.user) {
         // Cache the session for 1 minute to refresh every minute
         const cacheKey = `user_session_${token.user.tokens.access_token}`;
-        let cachedSession = global.sessionCache?.[cacheKey];
         
-        if (cachedSession && Date.now() - cachedSession.timestamp < 1 * 60 * 1000) {
+        // Initialize cache if it doesn't exist
+        if (!global.sessionCache) {
+          global.sessionCache = {};
+        }
+
+        // Prevent memory leak: clear cache if it grows too large
+        // With refetchInterval={60000}, one entry per user per hour is added
+        // 1000 entries is plenty for a single pod
+        if (Object.keys(global.sessionCache).length > 1000) {
+          global.sessionCache = {};
+        }
+
+        let cachedSession = global.sessionCache[cacheKey];
+        const now = Date.now();
+        
+        if (cachedSession && now - cachedSession.timestamp < 1 * 60 * 1000) {
           return cachedSession.data;
         }
 
@@ -135,21 +149,23 @@ export const nextAuthOptions = {
             session.tokens = token.user.tokens;
 
             // Cache the session
-            if (!global.sessionCache) {
-              global.sessionCache = {};
-            }
             global.sessionCache[cacheKey] = {
               data: session,
-              timestamp: Date.now()
+              timestamp: now
             };
           } else {
             // If API session fetch fails, fall back to what we have in token
+            if (token.user?.user) {
+              session.user = token.user.user;
+            }
             session.tokens = token.user.tokens;
-            // Potentially add some minimal user info if available in token
           }
         } catch (error) {
           console.error("Error in session callback:", error);
           // Fall back to token data if API fails
+          if (token.user?.user) {
+            session.user = token.user.user;
+          }
           session.tokens = token.user.tokens;
         }
       }
