@@ -2,6 +2,7 @@
 
 import '../styles/globals.css'
 import { AlertTriangle, RefreshCcw } from 'lucide-react'
+import { useEffect } from 'react'
 
 export default function GlobalError({
   error,
@@ -10,6 +11,15 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  useEffect(() => {
+    // Check if it's a Server Action version mismatch error
+    if (error.message.includes('Failed to find Server Action') || 
+        error.message.includes('older or newer deployment')) {
+      console.log('Version mismatch detected, reloading page...')
+      window.location.reload()
+    }
+  }, [error])
+
   return (
     <html lang="en">
       <body className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-4">

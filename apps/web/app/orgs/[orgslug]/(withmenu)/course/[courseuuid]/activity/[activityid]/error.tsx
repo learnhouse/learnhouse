@@ -13,6 +13,12 @@ export default function Error({
   useEffect(() => {
     // Log the error to an error reporting service
     console.error(error)
+
+    // Check if it's a Server Action version mismatch error
+    if (error.message.includes('Failed to find Server Action') || 
+        error.message.includes('older or newer deployment')) {
+      window.location.reload()
+    }
   }, [error])
 
   return (
