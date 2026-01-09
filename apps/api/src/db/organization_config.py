@@ -85,7 +85,7 @@ class OrgGeneralConfig(BaseModel):
 
 # Cloud
 class OrgCloudConfig(BaseModel):
-    plan: Literal["free", "standard", "pro"] = "free"
+    plan: Literal["free", "standard", "pro", "enterprise"] = "free"
     custom_domain: bool = False
 
 

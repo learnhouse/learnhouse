@@ -7,6 +7,10 @@ class AuditLogBase(SQLModel):
         default=None, 
         sa_column=Column(Integer, ForeignKey("user.id", ondelete="SET NULL"))
     )
+    org_id: Optional[int] = Field(
+        default=None,
+        sa_column=Column(Integer, ForeignKey("organization.id", ondelete="SET NULL"))
+    )
     action: str
     resource: str
     resource_id: Optional[str] = None
