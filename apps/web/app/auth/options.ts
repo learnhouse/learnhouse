@@ -126,19 +126,32 @@ export const nextAuthOptions = {
           return cachedSession.data;
         }
 
-        let api_SESSION = await getUserSession(token.user.tokens.access_token);
-        session.user = api_SESSION.user;
-        session.roles = api_SESSION.roles;
-        session.tokens = token.user.tokens;
+        try {
+          let api_SESSION = await getUserSession(token.user.tokens.access_token);
+          
+          if (api_SESSION && api_SESSION.user) {
+            session.user = api_SESSION.user;
+            session.roles = api_SESSION.roles;
+            session.tokens = token.user.tokens;
 
-        // Cache the session
-        if (!global.sessionCache) {
-          global.sessionCache = {};
+            // Cache the session
+            if (!global.sessionCache) {
+              global.sessionCache = {};
+            }
+            global.sessionCache[cacheKey] = {
+              data: session,
+              timestamp: Date.now()
+            };
+          } else {
+            // If API session fetch fails, fall back to what we have in token
+            session.tokens = token.user.tokens;
+            // Potentially add some minimal user info if available in token
+          }
+        } catch (error) {
+          console.error("Error in session callback:", error);
+          // Fall back to token data if API fails
+          session.tokens = token.user.tokens;
         }
-        global.sessionCache[cacheKey] = {
-          data: session,
-          timestamp: Date.now()
-        };
       }
       return session;
     },
