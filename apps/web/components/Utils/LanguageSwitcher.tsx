@@ -2,9 +2,14 @@
 
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
-import { Languages, ChevronDown } from 'lucide-react'
-import { AVAILABLE_LANGUAGES, getCurrentLanguageNativeName } from '@/lib/languages'
+import { Languages, ChevronDown, Check } from 'lucide-react'
+import { AVAILABLE_LANGUAGES } from '@/lib/languages'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@components/ui/dropdown-menu"
 
 const LanguageSwitcher = () => {
   const { i18n, t } = useTranslation()
@@ -13,35 +18,37 @@ const LanguageSwitcher = () => {
     i18n.changeLanguage(lng)
   }
 
-  const currentLanguage = getCurrentLanguageNativeName(i18n.language)
+  const currentLangCode = i18n.language.split('-')[0].toUpperCase()
 
   return (
-    <DropdownMenu.Root>
-      <DropdownMenu.Trigger asChild>
-        <button className="flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-gray-100 transition-colors text-sm font-medium outline-none">
-          <Languages size={18} />
-          <span>{currentLanguage}</span>
-          <ChevronDown size={14} />
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button className="flex items-center space-x-1.5 px-2.5 py-2 rounded-lg hover:bg-gray-100 transition-colors text-sm font-bold outline-none text-gray-600">
+          <Languages size={16} strokeWidth={2.5} />
+          <span>{currentLangCode}</span>
+          <ChevronDown size={12} className="opacity-50" />
         </button>
-      </DropdownMenu.Trigger>
+      </DropdownMenuTrigger>
 
-      <DropdownMenu.Portal>
-        <DropdownMenu.Content
-          className="min-w-[150px] bg-white rounded-md p-1 shadow-lg border border-gray-200 z-[100]"
-          sideOffset={5}
-        >
-          {AVAILABLE_LANGUAGES.map((language) => (
-            <DropdownMenu.Item
-              key={language.code}
-              className="flex items-center px-2 py-2 text-sm text-gray-700 rounded-sm cursor-pointer hover:bg-gray-100 outline-none"
-              onClick={() => changeLanguage(language.code)}
-            >
-              {t(language.translationKey)} ({language.nativeName})
-            </DropdownMenu.Item>
-          ))}
-        </DropdownMenu.Content>
-      </DropdownMenu.Portal>
-    </DropdownMenu.Root>
+      <DropdownMenuContent
+        className="min-w-[180px] z-[100]"
+        align="end"
+      >
+        {AVAILABLE_LANGUAGES.map((language) => (
+          <DropdownMenuItem
+            key={language.code}
+            className="flex items-center justify-between cursor-pointer"
+            onClick={() => changeLanguage(language.code)}
+          >
+            <span className="flex items-center space-x-2">
+              <span className="text-xs font-mono text-gray-400 w-5">{language.code.toUpperCase()}</span>
+              <span>{language.nativeName}</span>
+            </span>
+            {i18n.language === language.code && <Check size={14} className="text-black" />}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
 
