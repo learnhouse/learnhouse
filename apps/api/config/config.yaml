@@ -32,6 +32,16 @@ mailing_config:
   system_email_address: ""
 
 database_config:
+  # Database connection string
+  # For local development (Docker PostgreSQL):
+  #   postgresql://learnhouse:learnhouse@localhost:5432/learnhouse
+  # For production (Neon PostgreSQL):
+  #   postgresql://user:password@ep-xxx-xxx.region.aws.neon.tech/dbname?sslmode=require
+  # The system auto-detects database type from connection string:
+  #   - Neon: *.neon.tech domains
+  #   - Docker: localhost or 127.0.0.1
+  #   - Other: Generic PostgreSQL
+  # Can be overridden via LEARNHOUSE_SQL_CONNECTION_STRING environment variable
   sql_connection_string: postgresql://learnhouse:learnhouse@localhost:5432/learnhouse
 
 redis_config:

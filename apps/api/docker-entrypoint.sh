@@ -30,16 +30,24 @@ wait_for_service() {
 
 # Extract host and port from connection strings if provided
 if [ -n "$LEARNHOUSE_SQL_CONNECTION_STRING" ]; then
-    # Extract host and port from postgresql://user:pass@host:port/db
-    DB_HOST=$(echo "$LEARNHOUSE_SQL_CONNECTION_STRING" | sed -n 's/.*@\([^:]*\):\([0-9]*\)\/.*/\1/p')
-    DB_PORT=$(echo "$LEARNHOUSE_SQL_CONNECTION_STRING" | sed -n 's/.*@\([^:]*\):\([0-9]*\)\/.*/\2/p')
-    
-    if [ -z "$DB_PORT" ]; then
-        DB_PORT=5432
-    fi
-    
-    if [ -n "$DB_HOST" ]; then
-        wait_for_service "$DB_HOST" "$DB_PORT" "PostgreSQL"
+    # Check if this is a Neon database (serverless, no need to wait)
+    if echo "$LEARNHOUSE_SQL_CONNECTION_STRING" | grep -q "neon.tech"; then
+        echo "Detected Neon PostgreSQL (serverless) - skipping connection wait"
+    else
+        # Extract host and port from postgresql://user:pass@host:port/db
+        # Handle both formats: host:port and host (default port 5432)
+        DB_HOST=$(echo "$LEARNHOUSE_SQL_CONNECTION_STRING" | sed -n 's/.*@\([^:/]*\).*/\1/p')
+        DB_PORT=$(echo "$LEARNHOUSE_SQL_CONNECTION_STRING" | sed -n 's/.*@[^:]*:\([0-9]*\).*/\1/p')
+        
+        if [ -z "$DB_PORT" ]; then
+            DB_PORT=5432
+        fi
+        
+        if [ -n "$DB_HOST" ] && [ "$DB_HOST" != "localhost" ] && [ "$DB_HOST" != "127.0.0.1" ]; then
+            wait_for_service "$DB_HOST" "$DB_PORT" "PostgreSQL"
+        else
+            echo "Using local PostgreSQL - connection will be checked by application"
+        fi
     fi
 fi
 

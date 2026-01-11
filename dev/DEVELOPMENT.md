@@ -48,6 +48,47 @@ LEARNHOUSE_INITIAL_ADMIN_PASSWORD=change_this_password
 LEARNHOUSE_IS_AI_ENABLED=false
 ```
 
+### Database Options
+
+#### Docker PostgreSQL (Development - Recommended)
+
+For local development, use Docker PostgreSQL as configured in `dev/docker-compose.yml`:
+
+```env
+LEARNHOUSE_SQL_CONNECTION_STRING=postgresql://learnhouse:learnhouse@localhost:5433/learnhouse
+```
+
+**Advantages:**
+- Fast local development
+- No external dependencies
+- Easy to reset and test migrations
+- Works offline
+
+#### Neon PostgreSQL (Production)
+
+For production deployments, use Neon PostgreSQL (serverless):
+
+```env
+LEARNHOUSE_SQL_CONNECTION_STRING=postgresql://user:password@ep-xxx-xxx.region.aws.neon.tech/dbname?sslmode=require
+```
+
+**Advantages:**
+- Serverless auto-scaling
+- Pay-per-use pricing
+- Built-in backups
+- Production-ready
+
+**Configuration:**
+- LearnHouse automatically detects Neon databases (by `*.neon.tech` domain)
+- Optimized connection pooling is applied automatically
+- SSL is automatically enforced
+
+See [NEON_SETUP.md](../../NEON_SETUP.md) for detailed setup instructions.
+
+**When to Use:**
+- **Docker PostgreSQL**: Local development, testing, CI/CD
+- **Neon PostgreSQL**: Production deployments, staging environments
+
 ### Frontend (`apps/web/.env.local`)
 
 | Variable | Description | Default (Dev) |

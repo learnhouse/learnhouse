@@ -5,6 +5,7 @@ from config.config import get_learnhouse_config
 from fastapi import FastAPI
 from sqlmodel import SQLModel, Session, create_engine
 from sqlalchemy import event
+from urllib.parse import urlparse
 
 def import_all_models():
     # List of directories to scan for models
@@ -46,6 +47,60 @@ import_all_models()
 
 learnhouse_config = get_learnhouse_config()
 
+def detect_database_type(connection_string: str) -> str:
+    """Detect database type from connection string"""
+    if 'neon.tech' in connection_string:
+        return 'neon'
+    elif 'localhost' in connection_string or '127.0.0.1' in connection_string:
+        return 'docker'
+    else:
+        return 'postgresql'  # Generic PostgreSQL
+
+def get_engine_config(connection_string: str, db_type: str):
+    """Get engine configuration based on database type"""
+    base_config = {
+        'echo': False,
+        'pool_pre_ping': True,
+    }
+    
+    if db_type == 'neon':
+        # Neon (serverless) optimized configuration
+        # Neon handles scaling, so we use smaller pools
+        # Connections timeout faster, so shorter recycle time
+        base_config.update({
+            'pool_size': 5,
+            'max_overflow': 5,
+            'pool_recycle': 180,  # 3 minutes - Neon connections timeout faster
+            'pool_timeout': 30,
+        })
+        # Parse connection string to ensure SSL is required
+        parsed = urlparse(connection_string)
+        if 'sslmode' not in parsed.query:
+            # Add sslmode=require if not present
+            separator = '&' if parsed.query else '?'
+            connection_string = f"{connection_string}{separator}sslmode=require"
+        logging.info("Using Neon PostgreSQL (serverless) configuration")
+    elif db_type == 'docker':
+        # Docker/standard PostgreSQL configuration
+        base_config.update({
+            'pool_size': 20,
+            'max_overflow': 10,
+            'pool_recycle': 300,  # 5 minutes
+            'pool_timeout': 30,
+        })
+        logging.info("Using Docker PostgreSQL configuration")
+    else:
+        # Generic PostgreSQL configuration (default)
+        base_config.update({
+            'pool_size': 20,
+            'max_overflow': 10,
+            'pool_recycle': 300,
+            'pool_timeout': 30,
+        })
+        logging.info("Using standard PostgreSQL configuration")
+    
+    return connection_string, base_config
+
 # Check if we're in test mode
 is_testing = os.getenv("TESTING", "false").lower() == "true"
 
@@ -58,14 +113,13 @@ if is_testing:
     )
 else:
     # Use configured database for production/development
+    connection_string = learnhouse_config.database_config.sql_connection_string  # type: ignore
+    db_type = detect_database_type(connection_string)
+    connection_string, engine_config = get_engine_config(connection_string, db_type)
+    
     engine = create_engine(
-        learnhouse_config.database_config.sql_connection_string,  # type: ignore
-        echo=False, 
-        pool_pre_ping=True,  # type: ignore
-        pool_size=20,  # Increased from 5 to handle more concurrent requests
-        max_overflow=10,  # Allow 10 additional connections beyond pool_size
-        pool_recycle=300,  # Recycle connections after 5 minutes
-        pool_timeout=30
+        connection_string,
+        **engine_config
     )
     
     # Add connection pool monitoring for debugging
