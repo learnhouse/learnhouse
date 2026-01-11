@@ -21,8 +21,29 @@ declare global {
 
 export const isDevEnv = getLEARNHOUSE_TOP_DOMAIN_VAL() == 'localhost' ? true : false
 
+// Get NEXTAUTH_URL from environment or construct from current domain
+const getNextAuthUrl = () => {
+  if (process.env.NEXTAUTH_URL) {
+    return process.env.NEXTAUTH_URL
+  }
+  // In development, use localhost:3000
+  if (isDevEnv) {
+    return 'http://localhost:3000'
+  }
+  // In production, construct from domain
+  const protocol = process.env.NEXT_PUBLIC_LEARNHOUSE_HTTPS === 'true' ? 'https' : 'http'
+  const domain = getLEARNHOUSE_TOP_DOMAIN_VAL()
+  return `${protocol}://${domain}`
+}
+
 export const nextAuthOptions = {
   debug: true,
+  secret: process.env.NEXTAUTH_SECRET || (isDevEnv ? 'dev-secret-change-in-production' : undefined),
+  pages: {
+    signIn: getUriWithOrg('auth', '/'),
+    verifyRequest: getUriWithOrg('auth', '/'),
+    error: getUriWithOrg('auth', '/'), // Error code passed in query string as ?error=
+  },
   providers: [
     CredentialsProvider({
       // The name to display on the sign in form (e.g. 'Sign in with...')
@@ -50,16 +71,16 @@ export const nextAuthOptions = {
         }
       },
     }),
-    GoogleProvider({
-      clientId: process.env.LEARNHOUSE_GOOGLE_CLIENT_ID || '',
-      clientSecret: process.env.LEARNHOUSE_GOOGLE_CLIENT_SECRET || '',
-    }),
+    // Only add Google provider if credentials are configured
+    ...(process.env.LEARNHOUSE_GOOGLE_CLIENT_ID && process.env.LEARNHOUSE_GOOGLE_CLIENT_SECRET
+      ? [
+          GoogleProvider({
+            clientId: process.env.LEARNHOUSE_GOOGLE_CLIENT_ID,
+            clientSecret: process.env.LEARNHOUSE_GOOGLE_CLIENT_SECRET,
+          }),
+        ]
+      : []),
   ],
-  pages: {
-    signIn: getUriWithOrg('auth', '/'),
-    verifyRequest: getUriWithOrg('auth', '/'),
-    error: getUriWithOrg('auth', '/'), // Error code passed in query string as ?error=
-  },
   cookies: {
     sessionToken: {
       name: `${!isDevEnv ? '__Secure-' : ''}next-auth.session-token`,

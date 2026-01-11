@@ -97,7 +97,9 @@ git subtree pull --prefix=apps/api \
 - Run the command from the **repo root**, not from `apps/api/`
 - The `--squash` flag combines all upstream commits into one clean commit
 
-For detailed documentation, see [Updating Backend Guide](learnhouse-industry-template/docs/updating-backend.md)
+For detailed documentation, see:
+- [Updating Backend Guide](learnhouse-industry-template/docs/updating-backend.md)
+- [Selective Updates Guide](SELECTIVE_UPDATES_GUIDE.md) - How to update specific commits without breaking your frontend
 
 ## Tech
 
