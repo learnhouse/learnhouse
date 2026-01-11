@@ -850,6 +850,10 @@
         "pagination": {
           "showing": "Showing {{start}} to {{end}} of {{total}} logs"
         },
+        "enterprise_only": "Audit logs are only available on the Enterprise plan",
+        "enterprise_feature": "Enterprise Feature",
+        "enterprise_description": "Audit logs are a premium feature available only to organizations on our Enterprise plan. Upgrade to gain full visibility into your organization's activities.",
+        "upgrade_button": "Upgrade to Enterprise",
         "modals": {
           "payload": {
             "title": "Event Payload",
