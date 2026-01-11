@@ -43,6 +43,7 @@ const OrgAuditLogs = () => {
 
   const buildQuery = () => {
     const params = new URLSearchParams()
+    if (org?.id) params.append('org_id', org.id.toString())
     params.append('limit', ITEMS_PER_PAGE.toString())
     params.append('offset', offset.toString())
     
@@ -90,15 +91,21 @@ const OrgAuditLogs = () => {
 
   const logs = data?.items || []
   const total = data?.total || 0
+  const isEnterprise = org?.config?.config?.cloud?.plan === 'enterprise'
 
   const handleRefresh = () => {
     mutate(logsUrl)
   }
 
   const handleExport = async () => {
+    if (!isEnterprise) {
+      toast.error(t('dashboard.organization.audit_logs.enterprise_only'))
+      return
+    }
     const toastId = toast.loading(t('dashboard.organization.audit_logs.export_toasts.generating'))
     try {
       const params = new URLSearchParams()
+      if (org?.id) params.append('org_id', org.id.toString())
       if (filters.searchValue) {
         if (searchField === 'user_id') params.append('user_id', filters.searchValue)
         else if (searchField === 'username') params.append('username', filters.searchValue)
@@ -154,6 +161,23 @@ const OrgAuditLogs = () => {
     if (code >= 400 && code < 500) return 'bg-orange-100 text-orange-700'
     if (code >= 500) return 'bg-red-100 text-red-700'
     return 'bg-gray-100 text-gray-700'
+  }
+
+  if (!isEnterprise) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 px-4 text-center space-y-4">
+        <div className="bg-indigo-50 p-4 rounded-full">
+          <ShieldCheck className="w-12 h-12 text-indigo-600" />
+        </div>
+        <h1 className="text-2xl font-bold text-gray-800">{t('dashboard.organization.audit_logs.enterprise_feature')}</h1>
+        <p className="text-gray-500 max-w-md mx-auto">
+          {t('dashboard.organization.audit_logs.enterprise_description')}
+        </p>
+        <button className="bg-indigo-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-indigo-700 transition-colors">
+          {t('dashboard.organization.audit_logs.upgrade_button')}
+        </button>
+      </div>
+    )
   }
 
   return (

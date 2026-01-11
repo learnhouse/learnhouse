@@ -3,6 +3,7 @@ import { swrFetcher } from "../utils/ts/requests";
 
 export const getAuditLogs = async (orgId: number, accessToken: string, filters: any = {}) => {
   const queryParams = new URLSearchParams();
+  queryParams.append("org_id", orgId.toString());
   if (filters.offset) queryParams.append("offset", filters.offset.toString());
   if (filters.limit) queryParams.append("limit", filters.limit.toString());
   if (filters.user_id) queryParams.append("user_id", filters.user_id.toString());

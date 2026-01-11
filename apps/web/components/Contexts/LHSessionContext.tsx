@@ -12,13 +12,11 @@ function LHSessionProvider({ children }: { children: React.ReactNode }) {
         return <PageLoading />
     }
 
-    else if (session) {
-        return (
-            <SessionContext.Provider value={session}>
-                {children}
-            </SessionContext.Provider>
-        )
-    }
+    return (
+        <SessionContext.Provider value={session}>
+            {children}
+        </SessionContext.Provider>
+    )
 }
 
 export function useLHSession() {
