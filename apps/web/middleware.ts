@@ -117,10 +117,8 @@ export default async function proxy(req: NextRequest) {
       const searchParams = req.nextUrl.searchParams
       const queryString = searchParams.toString()
       const redirectPathname = '/'
-      const redirectUrl = new URL(
-        getUriWithOrg(cookie_orgslug, redirectPathname),
-        req.url
-      )
+      // Use req.url as base to preserve port (e.g., localhost:3000)
+      const redirectUrl = new URL(redirectPathname, req.url)
 
       if (queryString) {
         redirectUrl.search = queryString

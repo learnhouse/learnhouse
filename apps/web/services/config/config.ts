@@ -90,24 +90,48 @@ export const getBackendUrl = () => getLEARNHOUSE_BACKEND_URL()
 export const isMultiOrgModeEnabled = () =>
   getConfig('NEXT_PUBLIC_LEARNHOUSE_MULTI_ORG') === 'true' ? true : false
 
+// Get the port for the current environment
+const getPort = (): string => {
+  // Client-side: use window.location.port
+  if (typeof window !== 'undefined') {
+    const port = window.location.port
+    // Only include port if it's not the default (80 for http, 443 for https)
+    if (port && port !== '80' && port !== '443') {
+      return `:${port}`
+    }
+    return ''
+  }
+  
+  // Server-side: check for PORT env var or default to 3000 in dev
+  const port = process.env.PORT || (process.env.NODE_ENV === 'development' ? '3000' : '')
+  if (port && port !== '80' && port !== '443') {
+    return `:${port}`
+  }
+  return ''
+}
+
 export const getUriWithOrg = (orgslug: string, path: string) => {
   const multi_org = isMultiOrgModeEnabled()
   const protocol = getLEARNHOUSE_HTTP_PROTOCOL()
   const domain = getLEARNHOUSE_DOMAIN()
+  const port = getPort()
+  
   if (multi_org) {
-    return `${protocol}${orgslug}.${domain}${path}`
+    return `${protocol}${orgslug}.${domain}${port}${path}`
   }
-  return `${protocol}${domain}${path}`
+  return `${protocol}${domain}${port}${path}`
 }
 
 export const getUriWithoutOrg = (path: string) => {
   const multi_org = isMultiOrgModeEnabled()
   const protocol = getLEARNHOUSE_HTTP_PROTOCOL()
   const domain = getLEARNHOUSE_DOMAIN()
+  const port = getPort()
+  
   if (multi_org) {
-    return `${protocol}${domain}${path}`
+    return `${protocol}${domain}${port}${path}`
   }
-  return `${protocol}${domain}${path}`
+  return `${protocol}${domain}${port}${path}`
 }
 
 export const getOrgFromUri = () => {
