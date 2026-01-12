@@ -47,10 +47,24 @@ class EEAuditLogMiddleware(BaseHTTPMiddleware):
                     except json.JSONDecodeError:
                         pass
             elif "multipart/form-data" in content_type or "application/x-www-form-urlencoded" in content_type:
-                form_data = await request.form()
-                payload = dict(form_data)
-                # Filter out UploadFile objects for logging
-                payload = {k: v for k, v in payload.items() if not hasattr(v, "filename")}
+                # Read and parse the form data
+                body = await request.body()
+                if body:
+                    # Parse form data manually to avoid consuming the stream
+                    from urllib.parse import parse_qs
+                    if "application/x-www-form-urlencoded" in content_type:
+                        body_str = body.decode('utf-8')
+                        parsed = parse_qs(body_str)
+                        # Convert lists to single values for logging
+                        payload = {k: v[0] if len(v) == 1 else v for k, v in parsed.items()}
+                    else:
+                        # For multipart, just note that it was multipart data
+                        payload = {"_type": "multipart/form-data"}
+                    
+                    # Reset request body so subsequent handlers can read it
+                    async def receive():
+                        return {"type": "http.request", "body": body, "more_body": False}
+                    request._receive = receive
             
             # Scrub sensitive data from payload
             if isinstance(payload, dict):

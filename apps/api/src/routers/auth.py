@@ -1,6 +1,6 @@
 from datetime import timedelta
 from typing import Literal, Optional
-from fastapi import Depends, APIRouter, HTTPException, Response, status, Request
+from fastapi import Depends, APIRouter, HTTPException, Response, status, Request, Form
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel, EmailStr
 from sqlmodel import Session
@@ -41,12 +41,13 @@ def refresh(response: Response, Authorize: AuthJWT = Depends()):
 async def login(
     request: Request,
     response: Response,
+    username: str = Form(...),
+    password: str = Form(...),
     Authorize: AuthJWT = Depends(),
-    form_data: OAuth2PasswordRequestForm = Depends(),
     db_session: Session = Depends(get_db_session),
 ):
     user = await authenticate_user(
-        request, form_data.username, form_data.password, db_session
+        request, username, password, db_session
     )
     if not user:
         raise HTTPException(
@@ -55,8 +56,8 @@ async def login(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    access_token = Authorize.create_access_token(subject=form_data.username)
-    refresh_token = Authorize.create_refresh_token(subject=form_data.username)
+    access_token = Authorize.create_access_token(subject=username)
+    refresh_token = Authorize.create_refresh_token(subject=username)
     Authorize.set_refresh_cookies(refresh_token)
 
     # set cookies using fastapi
