@@ -62,7 +62,7 @@ const CoursesPage = async (params: any) => {
 
   const courses = await getOrgCourses(
     orgslug,
-    { revalidate: 0, tags: ['courses'] },
+    { revalidate: 60, tags: ['courses'] },
     access_token ? access_token : null
   )
 

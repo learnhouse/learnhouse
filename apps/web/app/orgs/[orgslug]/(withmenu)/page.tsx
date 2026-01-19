@@ -58,7 +58,7 @@ const OrgHomePage = async (params: any) => {
   const access_token = session?.tokens?.access_token
   const courses = await getOrgCourses(
     orgslug,
-    { revalidate: 0, tags: ['courses'] },
+    { revalidate: 60, tags: ['courses'] },
     access_token ? access_token : null
   )
   const org = await getOrganizationContextInfo(orgslug, {
@@ -69,7 +69,7 @@ const OrgHomePage = async (params: any) => {
   const collections = await getOrgCollections(
     org.id,
     access_token ? access_token : null,
-    { revalidate: 0, tags: ['courses'] }
+    { revalidate: 60, tags: ['courses'] }
   )
 
   // Check if custom landing is enabled
