@@ -88,6 +88,12 @@ COPY --from=frontend-runner /app /app/web
 
 # Backend Build
 WORKDIR /app/api
+
+# Install PostgreSQL client libraries (required for psycopg2-binary)
+RUN apt-get update && apt-get install -y \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY ./apps/api/uv.lock ./
 COPY ./apps/api/pyproject.toml ./
 RUN pip install --upgrade pip \
@@ -99,8 +105,8 @@ COPY ./apps/api ./
 ARG LEARNHOUSE_PUBLIC=false
 RUN if [ "$LEARNHOUSE_PUBLIC" = "true" ]; then rm -rf /app/api/ee; fi
 
-# Install curl and netcat for health checks and service waiting
-RUN apt-get update && apt-get install -y curl netcat-openbsd && rm -rf /var/lib/apt/lists/*
+# Install curl, wget, and netcat for health checks and service waiting
+RUN apt-get update && apt-get install -y curl wget netcat-openbsd && rm -rf /var/lib/apt/lists/*
 
 # Run the backend
 WORKDIR /app

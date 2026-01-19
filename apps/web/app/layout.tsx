@@ -21,9 +21,9 @@ export default function RootLayout({
   }
 
   return (
-    <html className="" lang="en">
+    <html className="" lang="en" suppressHydrationWarning>
       <head />
-      <body>
+      <body suppressHydrationWarning>
         {/* Inject runtime configuration for client-side access */}
         <Script src="/runtime-config.js" strategy="beforeInteractive" />
         {isDevEnv ? '' : <Script data-website-id="a1af6d7a-9286-4a1f-8385-ddad2a29fcbb" src="/umami/script.js" />}

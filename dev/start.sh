@@ -38,21 +38,31 @@ echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo -e "${BLUE}Starting servers... (Press Ctrl+C to stop)${NC}"
     
+    # Load nvm if available (for Node.js version management)
+    export NVM_DIR="$HOME/.nvm"
+    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+    [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+    
+    # Use Node.js 20 if nvm is available
+    if command -v nvm &> /dev/null; then
+        nvm use 20 > /dev/null 2>&1 || true
+    fi
+    
     # Cleanup background processes on exit
     trap 'kill $(jobs -p) 2>/dev/null' EXIT
 
     # Start API
     (cd apps/api && uv run python app.py) &
     
-    # Start Web
-    (cd apps/web && pnpm dev) &
+    # Start Web (with nvm loaded in subshell)
+    (export NVM_DIR="$HOME/.nvm" && [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" && nvm use 20 > /dev/null 2>&1; cd apps/web && pnpm dev) &
 
     # Wait for both to finish
     wait
 else
     echo -e "\n${BLUE}Manual server start instructions:${NC}"
     echo -e "1. ${GREEN}Backend:${NC} cd apps/api && uv run python app.py"
-    echo -e "2. ${GREEN}Frontend:${NC} cd apps/web && pnpm dev"
+    echo -e "2. ${GREEN}Frontend:${NC} source ~/.bashrc && cd apps/web && pnpm dev"
 fi
 
 echo -e "\n${GREEN}Happy coding! 🚀${NC}"
