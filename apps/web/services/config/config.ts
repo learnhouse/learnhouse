@@ -1,6 +1,16 @@
 // Runtime configuration cache
 let runtimeConfig: Record<string, string> | null = null;
 
+// Type declarations for Node.js globals (only available server-side)
+declare const process: {
+  env: Record<string, string | undefined>;
+  cwd(): string;
+} | undefined;
+
+declare const __dirname: string | undefined;
+
+declare function require(module: string): any;
+
 // Lazy load runtime configuration
 function loadRuntimeConfig(): Record<string, string> {
   if (runtimeConfig !== null) {
@@ -18,25 +28,36 @@ function loadRuntimeConfig(): Record<string, string> {
     // Server-side: try to read from runtime-config.json
     // Try multiple possible paths for standalone mode
     try {
-      const fs = require('fs');
-      const path = require('path');
-      
-      // In standalone mode, runtime-config.json is in the same directory as server.js
-      // Try common possible locations relative to the current working directory and module
-      const possiblePaths = [
-        path.join(process.cwd(), 'runtime-config.json'),
-        path.join(__dirname || process.cwd(), 'runtime-config.json'),
-        path.join(__dirname || process.cwd(), '..', 'runtime-config.json'),
-      ];
-      
-      for (const configPath of possiblePaths) {
-        try {
-          if (fs.existsSync(configPath)) {
-            runtimeConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-            break;
+      // Only use Node.js APIs if we're in a Node.js environment
+      if (typeof process !== 'undefined' && typeof require !== 'undefined') {
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const fs = require('fs') as {
+          existsSync: (path: string) => boolean;
+          readFileSync: (path: string, encoding: string) => string;
+        };
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const path = require('path') as {
+          join: (...paths: string[]) => string;
+        };
+        
+        // In standalone mode, runtime-config.json is in the same directory as server.js
+        // Try common possible locations relative to the current working directory and module
+        const currentDir = typeof __dirname !== 'undefined' ? __dirname : process.cwd();
+        const possiblePaths = [
+          path.join(process.cwd(), 'runtime-config.json'),
+          path.join(currentDir, 'runtime-config.json'),
+          path.join(currentDir, '..', 'runtime-config.json'),
+        ];
+        
+        for (const configPath of possiblePaths) {
+          try {
+            if (fs.existsSync(configPath)) {
+              runtimeConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+              break;
+            }
+          } catch {
+            // Continue to next path
           }
-        } catch {
-          // Continue to next path
         }
       }
     } catch {
@@ -57,14 +78,46 @@ export const getConfig = (key: string, defaultValue: string = ''): string => {
   }
 
   // 2. Fallback to process.env (Server-side only)
-  return process.env[key] || defaultValue;
+  if (typeof process !== 'undefined' && process.env) {
+    return process.env[key] || defaultValue;
+  }
+  return defaultValue;
+};
+
+// Helper function to normalize API URL - ensures it ends with /api/v1/
+const normalizeApiUrl = (url: string): string => {
+  if (!url) return url;
+  // Remove trailing slash
+  url = url.replace(/\/+$/, '');
+  // Add /api/v1/ if not already present
+  if (!url.endsWith('/api/v1')) {
+    url = url.endsWith('/api') ? url + '/v1' : url + '/api/v1';
+  }
+  return url + '/';
 };
 
 // Dynamic config getters - these are functions to ensure runtime values are used
 const getLEARNHOUSE_HTTP_PROTOCOL = () =>
   (getConfig('NEXT_PUBLIC_LEARNHOUSE_HTTPS') === 'true') ? 'https://' : 'http://'
-const getLEARNHOUSE_API_URL = () => getConfig('NEXT_PUBLIC_LEARNHOUSE_API_URL', 'http://localhost/api/v1/')
-const getLEARNHOUSE_BACKEND_URL = () => getConfig('NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL', 'http://localhost/')
+const getLEARNHOUSE_API_URL = () => {
+  // Check for NEXT_PUBLIC_LEARNHOUSE_API_URL first, then fallback to NEXT_PUBLIC_API_URL for backward compatibility
+  const learnhouseApiUrl = getConfig('NEXT_PUBLIC_LEARNHOUSE_API_URL');
+  const apiUrl = learnhouseApiUrl || getConfig('NEXT_PUBLIC_API_URL');
+  if (apiUrl && apiUrl.trim()) {
+    return normalizeApiUrl(apiUrl);
+  }
+  return 'http://localhost/api/v1/';
+}
+const getLEARNHOUSE_BACKEND_URL = () => {
+  // Check for NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL first, then fallback to NEXT_PUBLIC_API_URL (without /api/v1/)
+  const learnhouseBackendUrl = getConfig('NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL');
+  const backendUrl = learnhouseBackendUrl || getConfig('NEXT_PUBLIC_API_URL');
+  if (backendUrl && backendUrl.trim()) {
+    // Remove /api/v1/ if present to get base URL
+    return backendUrl.replace(/\/api\/v1\/?$/, '').replace(/\/+$/, '') + '/';
+  }
+  return 'http://localhost/';
+}
 const getLEARNHOUSE_DOMAIN = () => getConfig('NEXT_PUBLIC_LEARNHOUSE_DOMAIN', 'localhost')
 const getLEARNHOUSE_TOP_DOMAIN = () => getConfig('NEXT_PUBLIC_LEARNHOUSE_TOP_DOMAIN', 'localhost')
 
@@ -127,7 +180,6 @@ export const getOrgFromUri = () => {
 export const getDefaultOrg = () => {
   return getConfig('NEXT_PUBLIC_LEARNHOUSE_DEFAULT_ORG', 'default')
 }
-
 
 
 
