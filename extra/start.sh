@@ -16,7 +16,9 @@ fi
 
 # Start the services
 # Use server-wrapper.js for runtime environment variable injection
-pm2 start server-wrapper.js --cwd /app/web --name learnhouse-web > /dev/null 2>&1
+# Explicitly set PORT=8000 for frontend (Nginx proxies to this port, not 80)
+# This overrides any PORT environment variable that Coolify might set
+pm2 start server-wrapper.js --cwd /app/web --name learnhouse-web --update-env --env PORT=8000 > /dev/null 2>&1
 pm2 start uv --cwd /app/api --name learnhouse-api -- run app.py
 
 # Check if the services are running and log the status
