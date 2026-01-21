@@ -1,4 +1,5 @@
 name: App Build
+
 on:
   push:
     branches:
@@ -9,9 +10,10 @@ on:
     paths:
       - "**"
 
+# Default permissions
 permissions:
-  contents: read
-  packages: write
+  contents: read  # PRs and workflow can read repo contents
+  # packages write only enabled in jobs that require it
 
 env:
   REGISTRY: ghcr.io
@@ -21,9 +23,6 @@ jobs:
   build:
     name: Build ${{ matrix.platform }}
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
     strategy:
       fail-fast: false
       matrix:
@@ -43,14 +42,16 @@ jobs:
             image=moby/buildkit:latest
             network=host
 
-      - name: Log in to GitHub Container Registry
+      # Conditional login: only push if this is a dev branch push
+      - name: Log in to GitHub Container Registry (push only on dev)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Get short SHA and branch
+      - name: Get short SHA and branch info
         id: vars
         run: |
           SHORT=$(echo ${{ github.sha }} | cut -c1-7)
@@ -61,7 +62,6 @@ jobs:
           else
             echo "branch=pr" >> $GITHUB_OUTPUT
             echo "tag_prefix=pr-${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
-          fi
 
       - name: Extract metadata
         id: meta
@@ -73,12 +73,12 @@ jobs:
             type=raw,value=${{ steps.vars.outputs.tag_prefix }}-${{ matrix.platform == 'linux/amd64' && 'amd64' || 'arm64' }}
             type=raw,value=${{ steps.vars.outputs.tag_prefix }}-${{ steps.vars.outputs.short }}-${{ matrix.platform == 'linux/amd64' && 'amd64' || 'arm64' }}
 
-      - name: Build and push platform-specific image
+      - name: Build Docker image (push only on dev)
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./Dockerfile
-          push: true
+          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/dev' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: ${{ matrix.platform }}
@@ -92,6 +92,7 @@ jobs:
     name: Create and push manifest
     runs-on: ubuntu-latest
     needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
     permissions:
       contents: read
       packages: write
@@ -106,15 +107,11 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Get short SHA and branch
+      - name: Get short SHA and branch info
         id: vars
         run: |
           echo "short=$(echo ${{ github.sha }} | cut -c1-7)" >> $GITHUB_OUTPUT
-          if [ "${{ github.event_name }}" == "push" ] && [ "${{ github.ref }}" == "refs/heads/dev" ]; then
-            echo "tag_prefix=dev" >> $GITHUB_OUTPUT
-          else
-            echo "tag_prefix=pr-${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
-          fi
+          echo "tag_prefix=dev" >> $GITHUB_OUTPUT
 
       - name: Extract metadata for manifest
         id: meta
@@ -125,7 +122,7 @@ jobs:
             type=raw,value=${{ steps.vars.outputs.short }}
             type=raw,value=${{ steps.vars.outputs.tag_prefix }}
             type=raw,value=${{ steps.vars.outputs.tag_prefix }}-${{ steps.vars.outputs.short }}
-            type=raw,value=latest,enable=${{ github.event_name == 'push' && github.ref == 'refs/heads/dev' }}
+            type=raw,value=latest
 
       - name: Create and push manifest list
         run: |
@@ -141,17 +138,15 @@ jobs:
           done
 
           # Create latest tag if on dev branch
-          if [ "${{ github.event_name }}" == "push" ] && [ "${{ github.ref }}" == "refs/heads/dev" ]; then
-            docker buildx imagetools create --tag "${IMAGE}:latest" \
-              "${IMAGE}:${SHORT_SHA}-amd64" \
-              "${IMAGE}:${SHORT_SHA}-arm64"
-          fi
+          docker buildx imagetools create --tag "${IMAGE}:latest" \
+            "${IMAGE}:${SHORT_SHA}-amd64" \
+            "${IMAGE}:${SHORT_SHA}-arm64"
 
   dispatch:
     name: Repository Dispatch
     needs: manifest
     runs-on: ubuntu-latest
-    if: (github.event_name == 'push' && github.ref == 'refs/heads/dev') || github.event_name == 'pull_request'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
     permissions:
       contents: read
     steps:
@@ -164,5 +159,5 @@ jobs:
           client-payload: |
             {
               "ref": "${{ github.sha }}",
-              "branch": "${{ github.head_ref || github.ref_name }}"
+              "branch": "${{ github.ref_name }}"
             }
