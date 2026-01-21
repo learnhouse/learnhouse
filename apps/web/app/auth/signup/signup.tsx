@@ -19,7 +19,6 @@ import toast from 'react-hot-toast'
 import { BarLoader } from 'react-spinners'
 import { joinOrg } from '@services/organizations/orgs'
 import { useTranslation } from 'react-i18next'
-import LanguageSwitcher from '@components/Utils/LanguageSwitcher'
 
 interface SignUpClientProps {
   org: any
