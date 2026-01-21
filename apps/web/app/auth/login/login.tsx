@@ -86,11 +86,9 @@ const LoginClient = (props: LoginClientProps) => {
 
   return (
     <div className="grid grid-flow-col justify-stretch h-screen">
-      <div className="absolute top-4 right-4 z-50">
-        <LanguageSwitcher />
-      </div>
+    
       <div
-        className="right-login-part"
+        className="right-login-part md:flex hidden"
         style={{
           background:
             'linear-gradient(041.61deg, #202020 7.15%, #000000 90.96%)',
@@ -135,15 +133,35 @@ const LoginClient = (props: LoginClientProps) => {
           </div>
         </div>
       </div>
-      <div className="left-login-part bg-white flex flex-row">
-        <div className="login-form m-auto w-72">
+      <div className="left-login-part bg-white flex flex-col h-screen overflow-y-auto">
+        <div className="login-form flex flex-col m-auto w-72 p-5 ">
+             <div className="absolute top-4 right-4 z-50">
+                <LanguageSwitcher />
+              </div>
+                {/* Header */}
+                <div className="text-center space-y-1 flex flex-col   items-center">
+                       <Image
+                          quality={100}
+                          width={50}
+                          height={50}
+                          src={learnhouseIcon}
+                          alt="learnhouseicon"
+                         />
+                  <h1 className="text-3xl font-bold tracking-tight">
+                    Login To your Account
+                  </h1>
+                
+                  <p className="text-sm text-slate-600">
+                    Welcome Back
+                  </p>
+                </div>
           {error && (
             <div className="flex justify-center bg-red-200 rounded-md text-red-950 space-x-2 items-center p-4 transition-all shadow-xs">
               <AlertTriangle size={18} />
               <div className="font-bold text-sm">{error}</div>
             </div>
           )}
-          <FormLayout onSubmit={formik.handleSubmit}>
+          <FormLayout onSubmit={formik.handleSubmit} className='border-2 border-gray-100 rounded-2xl p-5 mt-5'>
             <FormField name="email">
               <FormLabelAndMessage
                 label={t('auth.email')}
