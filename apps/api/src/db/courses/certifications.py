@@ -4,19 +4,19 @@ from sqlmodel import Field, SQLModel
 
 class CertificationBase(SQLModel):
     course_id: int = Field(sa_column= Column("course_id", ForeignKey("course.id", ondelete="CASCADE")))
-    config: dict = Field(default={}, sa_column= Column("config", JSON))
+    config: dict = Field(default_factory=dict, sa_column= Column("config", JSON))
 
 class Certifications(CertificationBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     certification_uuid: str = Field(unique=True)
     course_id: int = Field(sa_column= Column("course_id", ForeignKey("course.id", ondelete="CASCADE")))
-    config: dict = Field(default={}, sa_column= Column("config", JSON))
+    config: dict = Field(default_factory=dict, sa_column= Column("config", JSON))
     creation_date: str = ""
     update_date: str = ""
 
 class CertificationCreate(SQLModel):
     course_id: int
-    config: dict = Field(default={})
+    config: dict = Field(default_factory=dict)
 
 class CertificationUpdate(SQLModel):
     config: Optional[dict] = None

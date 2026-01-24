@@ -27,8 +27,8 @@ class PaymentsProduct(PaymentsProductBase, table=True):
     )
     payments_config_id: int = Field(sa_column=Column(BigInteger, ForeignKey("paymentsconfig.id", ondelete="CASCADE")))
     provider_product_id: str = Field(sa_column=Column(String))
-    creation_date: datetime = Field(default=datetime.now())
-    update_date: datetime = Field(default=datetime.now())
+    creation_date: datetime = Field(default_factory=datetime.now)
+    update_date: datetime = Field(default_factory=datetime.now)
 
 class PaymentsProductCreate(PaymentsProductBase):
     pass

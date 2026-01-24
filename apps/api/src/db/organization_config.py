@@ -95,7 +95,7 @@ class OrganizationConfigBase(BaseModel):
     general: OrgGeneralConfig
     features: OrgFeatureConfig
     cloud: OrgCloudConfig
-    landing: dict = {}
+    landing: dict = Field(default_factory=dict)
 
 
 class OrganizationConfig(SQLModel, table=True):
@@ -103,6 +103,6 @@ class OrganizationConfig(SQLModel, table=True):
     org_id: int = Field(
         sa_column=Column(BigInteger, ForeignKey("organization.id", ondelete="CASCADE"))
     )
-    config: dict = Field(default={}, sa_column=Column(JSON))
-    creation_date: Optional[str]
-    update_date: Optional[str]
+    config: dict = Field(default_factory=dict, sa_column=Column(JSON))
+    creation_date: Optional[str] = None
+    update_date: Optional[str] = None

@@ -19,7 +19,7 @@ class ProviderSpecificData(BaseModel):
 
 class PaymentsUserBase(SQLModel):
     status: PaymentStatusEnum = PaymentStatusEnum.PENDING
-    provider_specific_data: dict = Field(default={}, sa_column=Column(JSON))
+    provider_specific_data: dict = Field(default_factory=dict, sa_column=Column(JSON))
 
 class PaymentsUser(PaymentsUserBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -32,6 +32,6 @@ class PaymentsUser(PaymentsUserBase, table=True):
     payment_product_id: int = Field(
         sa_column=Column(BigInteger, ForeignKey("paymentsproduct.id", ondelete="CASCADE"))
     )
-    creation_date: datetime = Field(default=datetime.now())
-    update_date: datetime = Field(default=datetime.now())
+    creation_date: datetime = Field(default_factory=datetime.now)
+    update_date: datetime = Field(default_factory=datetime.now)
 

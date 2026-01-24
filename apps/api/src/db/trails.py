@@ -1,5 +1,5 @@
 from typing import Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from sqlalchemy import Column, ForeignKey, Integer
 from sqlmodel import Field, SQLModel
 from src.db.trail_runs import TrailRunRead
@@ -33,17 +33,12 @@ class TrailCreate(TrailBase):
 
 # TODO: This is a hacky way to get around the list[TrailRun] issue, find a better way to do this
 class TrailRead(BaseModel):
-    id: Optional[int] = Field(default=None, primary_key=True)
-    trail_uuid: Optional[str]
-    org_id: int = Field(
-        sa_column=Column(Integer, ForeignKey("organization.id", ondelete="CASCADE"))
-    )
-    user_id: int = Field(
-        sa_column=Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))
-    )
-    creation_date: Optional[str]
-    update_date: Optional[str]
-    runs: list[TrailRunRead]
+    model_config = ConfigDict(from_attributes=True)
 
-    class Config:
-        orm_mode = True
+    id: Optional[int] = None
+    trail_uuid: Optional[str] = None
+    org_id: int
+    user_id: int
+    creation_date: Optional[str] = None
+    update_date: Optional[str] = None
+    runs: list[TrailRunRead]
