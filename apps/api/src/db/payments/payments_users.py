@@ -1,4 +1,4 @@
-from openai import BaseModel
+from pydantic import BaseModel
 from sqlmodel import SQLModel, Field, Column, BigInteger, ForeignKey, JSON
 from typing import Optional
 from datetime import datetime
