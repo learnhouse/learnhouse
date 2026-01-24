@@ -286,7 +286,7 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
     );
     
     const completedActivities = run?.steps?.filter((step: any) => step.complete)?.length || 0;
-    const progressPercentage = Math.round((completedActivities / totalActivities) * 100);
+    const progressPercentage = totalActivities > 0 ? Math.round((completedActivities / totalActivities) * 100) : 0;
 
     if (!isStarted) {
       return (
@@ -363,7 +363,7 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
                       fill="none"
                       strokeLinecap="round"
                       strokeDasharray={2 * Math.PI * 28}
-                      strokeDashoffset={2 * Math.PI * 28 * (1 - completedActivities / totalActivities)}
+                      strokeDashoffset={2 * Math.PI * 28 * (1 - (totalActivities > 0 ? completedActivities / totalActivities : 0))}
                       className="transition-all duration-500 ease-out"
                     />
                   </svg>
