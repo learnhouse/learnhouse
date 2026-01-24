@@ -9,6 +9,37 @@ function getMediaUrl() {
   }
 }
 
+function getApiUrl() {
+  return getBackendUrl();
+}
+
+/**
+ * Get the streaming URL for an activity video.
+ * Uses the optimized streaming endpoint with proper Range request support.
+ */
+export function getActivityVideoStreamUrl(
+  orgUUID: string,
+  courseUUID: string,
+  activityUUID: string,
+  filename: string
+) {
+  return `${getApiUrl()}api/v1/stream/video/${orgUUID}/${courseUUID}/${activityUUID}/${filename}`
+}
+
+/**
+ * Get the streaming URL for a video block.
+ * Uses the optimized streaming endpoint with proper Range request support.
+ */
+export function getVideoBlockStreamUrl(
+  orgUUID: string,
+  courseUUID: string,
+  activityUUID: string,
+  blockUUID: string,
+  filename: string
+) {
+  return `${getApiUrl()}api/v1/stream/block/${orgUUID}/${courseUUID}/${activityUUID}/${blockUUID}/${filename}`
+}
+
 export function getCourseThumbnailMediaDirectory(
   orgUUID: string,
   courseUUID: string,
