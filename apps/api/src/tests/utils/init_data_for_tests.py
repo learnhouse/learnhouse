@@ -1,5 +1,4 @@
 from sqlmodel import Session, select
-from pydantic import EmailStr
 from src.db.user_organizations import UserOrganization
 from src.db.organizations import OrganizationCreate
 from src.db.users import User, UserCreate
@@ -34,14 +33,14 @@ async def create_initial_data_for_tests(db_session: Session):
             username="batman",
             first_name="Bruce",
             last_name="Wayne",
-            email=EmailStr("bruce@wayne.com"),
+            email="bruce@wayne.com",
             password="imbatman",
         ),
         UserCreate(
             username="robin",
             first_name="Richard John",
             last_name="Grayson",
-            email=EmailStr("robin@wayne.com"),
+            email="robin@wayne.com",
             password="secret",
         ),
     ]

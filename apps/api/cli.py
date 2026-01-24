@@ -1,6 +1,5 @@
 import os
 from typing import Annotated
-from pydantic import EmailStr
 from sqlalchemy import create_engine
 from sqlmodel import SQLModel, Session
 import typer
@@ -63,7 +62,7 @@ def install(
         if email != "admin@school.dev":
             print(f"Using email from LEARNHOUSE_INITIAL_ADMIN_EMAIL environment variable: {email}")
         user = UserCreate(
-            username="admin", email=EmailStr(email), password=password
+            username="admin", email=email, password=password
         )
         install_create_organization_user(user, "default", db_session)
         print("Default organization user created ✅")
@@ -106,7 +105,7 @@ def install(
         username = typer.prompt("What's the username for the user?")
         email = typer.prompt("What's the email for the user?")
         password = typer.prompt("What's the password for the user?", hide_input=True)
-        user = UserCreate(username=username, email=EmailStr(email), password=password)
+        user = UserCreate(username=username, email=email, password=password)
         install_create_organization_user(user, slug, db_session)
         print(username + " user created ✅")
 

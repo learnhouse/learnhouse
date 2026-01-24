@@ -27,9 +27,9 @@ class CollectionCreate(CollectionBase):
 
 
 class CollectionUpdate(CollectionBase):
-    courses: Optional[list]
-    name: Optional[str]
-    public: Optional[bool]
+    courses: Optional[list] = None
+    name: Optional[str] = None
+    public: Optional[bool] = None
     description: Optional[str] = ""
 
 
