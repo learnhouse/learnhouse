@@ -6,7 +6,7 @@ import {
 } from 'lucide-react'
 import React from 'react'
 import { uploadNewVideoFile } from '../../../../../services/blocks/Video/video'
-import { getActivityBlockMediaDirectory } from '@services/media/media'
+import { getVideoBlockStreamUrl } from '@services/media/media'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useCourse } from '@components/Contexts/CourseContext'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
@@ -302,13 +302,12 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
     setSelectedSize(size)
   }
 
-  const videoUrl = blockObject && org?.org_uuid && course?.courseStructure.course_uuid ? getActivityBlockMediaDirectory(
+  const videoUrl = blockObject && org?.org_uuid && course?.courseStructure.course_uuid ? getVideoBlockStreamUrl(
     org.org_uuid,
     course.courseStructure.course_uuid,
     blockObject.content.activity_uuid || extension.options.activity.activity_uuid,
     blockObject.block_uuid,
-    fileId || '',
-    'videoBlock'
+    fileId || ''
   ) : null
 
   const handleDownload = () => {
@@ -351,6 +350,7 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
               <div className="relative">
                 <video
                   controls
+                  preload="metadata"
                   className="w-full aspect-video object-contain rounded-lg shadow-sm"
                   src={videoUrl}
                 />
@@ -386,6 +386,7 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
               <video
                 controls
                 autoPlay
+                preload="metadata"
                 className="w-full aspect-video object-contain rounded-lg shadow-lg bg-black"
                 src={videoUrl}
               />
@@ -554,6 +555,7 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
                     )}
                     <video
                       controls
+                      preload="metadata"
                       className={cn(
                         "w-full aspect-video object-contain bg-black/95 shadow-sm transition-all duration-200",
                         isLoading && "opacity-50 blur-sm"
@@ -595,6 +597,7 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
                 <video
                   controls
                   autoPlay
+                  preload="metadata"
                   className="w-full aspect-video object-contain rounded-lg shadow-lg bg-black"
                   src={videoUrl}
                 />
