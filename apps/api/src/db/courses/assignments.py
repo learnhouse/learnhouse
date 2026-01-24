@@ -37,32 +37,32 @@ class AssignmentRead(AssignmentBase):
 
     id: int
     assignment_uuid: str
-    creation_date: Optional[str]
-    update_date: Optional[str]
+    creation_date: Optional[str] = None
+    update_date: Optional[str] = None
 
 
 class AssignmentUpdate(SQLModel):
     """Model for updating an assignment."""
 
-    title: Optional[str]
-    description: Optional[str]
-    due_date: Optional[str]
-    published: Optional[bool]
-    grading_type: Optional[GradingTypeEnum]
-    org_id: Optional[int]
-    course_id: Optional[int]
-    chapter_id: Optional[int]
-    activity_id: Optional[int]
-    update_date: Optional[str]
+    title: Optional[str] = None
+    description: Optional[str] = None
+    due_date: Optional[str] = None
+    published: Optional[bool] = None
+    grading_type: Optional[GradingTypeEnum] = None
+    org_id: Optional[int] = None
+    course_id: Optional[int] = None
+    chapter_id: Optional[int] = None
+    activity_id: Optional[int] = None
+    update_date: Optional[str] = None
 
 
 class Assignment(AssignmentBase, table=True):
     """Represents an assignment with relevant details and foreign keys."""
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    creation_date: Optional[str]
-    update_date: Optional[str]
-    assignment_uuid: str
+    creation_date: Optional[str] = None
+    update_date: Optional[str] = None
+    assignment_uuid: str = ""
 
     org_id: int = Field(
         sa_column=Column("org_id", ForeignKey("organization.id", ondelete="CASCADE"))
@@ -96,9 +96,9 @@ class AssignmentTaskBase(SQLModel):
     title: str
     description: str
     hint: str
-    reference_file: Optional[str]
+    reference_file: Optional[str] = None
     assignment_type: AssignmentTaskTypeEnum
-    contents: Dict = Field(default={}, sa_column=Column(JSON))
+    contents: Dict = Field(default_factory=dict, sa_column=Column(JSON))
     max_grade_value: int = 0  # Value is always between 0-100
 
 
@@ -118,12 +118,12 @@ class AssignmentTaskRead(AssignmentTaskBase):
 class AssignmentTaskUpdate(SQLModel):
     """Model for updating an assignment task."""
 
-    title: Optional[str]
-    description: Optional[str]
-    hint: Optional[str]
-    assignment_type: Optional[AssignmentTaskTypeEnum]
+    title: Optional[str] = None
+    description: Optional[str] = None
+    hint: Optional[str] = None
+    assignment_type: Optional[AssignmentTaskTypeEnum] = None
     contents: Optional[Dict] = Field(default=None, sa_column=Column(JSON))
-    max_grade_value: Optional[int]
+    max_grade_value: Optional[int] = None
 
 
 class AssignmentTask(AssignmentTaskBase, table=True):
@@ -163,7 +163,7 @@ class AssignmentTask(AssignmentTaskBase, table=True):
 class AssignmentTaskSubmissionBase(SQLModel):
     """Represents the common fields for an assignment task submission."""
     assignment_task_submission_uuid: str
-    task_submission: Dict = Field(default={}, sa_column=Column(JSON))
+    task_submission: Dict = Field(default_factory=dict, sa_column=Column(JSON))
     grade: int = 0  # Value is always between 0-100
     task_submission_grade_feedback: str
     assignment_type: AssignmentTaskTypeEnum
@@ -192,12 +192,12 @@ class AssignmentTaskSubmissionRead(AssignmentTaskSubmissionBase):
 class AssignmentTaskSubmissionUpdate(SQLModel):
     """Model for updating an assignment task submission."""
 
-    assignment_task_id: Optional[int]
-    assignment_task_submission_uuid: Optional[str]
+    assignment_task_id: Optional[int] = None
+    assignment_task_submission_uuid: Optional[str] = None
     task_submission: Optional[Dict] = Field(default=None, sa_column=Column(JSON))
-    grade: Optional[int]
-    task_submission_grade_feedback: Optional[str]
-    assignment_type: Optional[AssignmentTaskTypeEnum]
+    grade: Optional[int] = None
+    task_submission_grade_feedback: Optional[str] = None
+    assignment_type: Optional[AssignmentTaskTypeEnum] = None
 
 
 class AssignmentTaskSubmission(AssignmentTaskSubmissionBase, table=True):
@@ -205,7 +205,7 @@ class AssignmentTaskSubmission(AssignmentTaskSubmissionBase, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     assignment_task_submission_uuid: str
-    task_submission: Dict = Field(default={}, sa_column=Column(JSON))
+    task_submission: Dict = Field(default_factory=dict, sa_column=Column(JSON))
     grade: int = 0  # Value is always between 0-100
     task_submission_grade_feedback: str
     assignment_type: AssignmentTaskTypeEnum
@@ -280,10 +280,10 @@ class AssignmentUserSubmissionRead(AssignmentUserSubmissionBase):
 class AssignmentUserSubmissionUpdate(SQLModel):
     """Model for updating an assignment user submission."""
 
-    submission_status: Optional[AssignmentUserSubmissionStatus]
-    grade: Optional[str]
-    user_id: Optional[int]
-    assignment_id: Optional[int]
+    submission_status: Optional[AssignmentUserSubmissionStatus] = None
+    grade: Optional[str] = None
+    user_id: Optional[int] = None
+    assignment_id: Optional[int] = None
 
 
 class AssignmentUserSubmission(AssignmentUserSubmissionBase, table=True):

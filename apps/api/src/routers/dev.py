@@ -12,7 +12,7 @@ router = APIRouter()
 @router.get("/config")
 async def config():
     config = get_learnhouse_config()
-    return config.dict()
+    return config.model_dump()
 
 
 @router.post("/migrate_orgconfig_v0_to_v1")

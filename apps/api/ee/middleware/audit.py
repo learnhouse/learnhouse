@@ -7,7 +7,6 @@ from ee.services.audit import queue_audit_log, resolve_org_id, is_enterprise_pla
 from src.db.users import PublicUser
 from src.core.events.database import engine
 from sqlmodel import Session
-from typing import Optional, Dict, Any
 
 logger = logging.getLogger(__name__)
 

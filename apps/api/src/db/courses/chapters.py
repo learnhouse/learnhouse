@@ -31,11 +31,11 @@ class ChapterCreate(ChapterBase):
 
 
 class ChapterUpdate(ChapterBase):
-    name: Optional[str]
+    name: Optional[str] = None
     description: Optional[str] = ""
     thumbnail_image: Optional[str] = ""
-    course_id: Optional[int]
-    org_id: Optional[int] # type: ignore
+    course_id: Optional[int] = None
+    org_id: Optional[int] = None  # type: ignore
 
 
 class ChapterRead(ChapterBase):
