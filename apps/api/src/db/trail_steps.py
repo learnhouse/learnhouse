@@ -15,7 +15,7 @@ class TrailStep(SQLModel, table=True):
     complete: bool
     teacher_verified: bool
     grade: str
-    data: dict = Field(default={}, sa_column=Column(JSON))
+    data: dict = Field(default_factory=dict, sa_column=Column(JSON))
     # foreign keys
     trailrun_id: int = Field(
         sa_column=Column(Integer, ForeignKey("trailrun.id", ondelete="CASCADE"))

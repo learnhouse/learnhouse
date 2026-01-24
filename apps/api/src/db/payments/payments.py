@@ -13,7 +13,7 @@ class PaymentsConfigBase(SQLModel):
     active: bool = False
     provider: PaymentProviderEnum = PaymentProviderEnum.STRIPE
     provider_specific_id: str | None = None
-    provider_config: dict = Field(default={}, sa_column=Column(JSON))
+    provider_config: dict = Field(default_factory=dict, sa_column=Column(JSON))
 
 
 class PaymentsConfig(PaymentsConfigBase, table=True):
@@ -21,8 +21,8 @@ class PaymentsConfig(PaymentsConfigBase, table=True):
     org_id: int = Field(
         sa_column=Column(BigInteger, ForeignKey("organization.id", ondelete="CASCADE"))
     )
-    creation_date: datetime = Field(default=datetime.now())
-    update_date: datetime = Field(default=datetime.now())
+    creation_date: datetime = Field(default_factory=datetime.now)
+    update_date: datetime = Field(default_factory=datetime.now)
 
 
 class PaymentsConfigCreate(PaymentsConfigBase):
