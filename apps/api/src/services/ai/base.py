@@ -2,70 +2,70 @@ from typing import Optional, Dict, Any
 from uuid import uuid4
 import redis
 import json
-from openai import OpenAI
+from google import genai
 
 from config.config import get_learnhouse_config
 
 LH_CONFIG = get_learnhouse_config()
 
-def get_openai_client() -> OpenAI:
-    """Get OpenAI client instance"""
-    api_key = getattr(LH_CONFIG.ai_config, 'openai_api_key', None)
+def get_gemini_client():
+    """Get Gemini client instance"""
+    api_key = getattr(LH_CONFIG.ai_config, 'gemini_api_key', None)
     if not api_key:
-        raise Exception("OpenAI API key not configured")
-    return OpenAI(api_key=api_key)
+        raise Exception("Gemini API key not configured")
+    return genai.Client(api_key=api_key)
 
 def ask_ai(
     question: str,
     message_history: Any,
     text_reference: str,
     message_for_the_prompt: str,
-    openai_model_name: str,
+    gemini_model_name: str,
 ) -> Dict[str, Any]:
     """
-    Process an AI query using OpenAI SDK directly with course content as context
+    Process an AI query using Google Gen AI SDK with course content as context
     """
     try:
-        client = get_openai_client()
-        
-        # Build conversation history
-        messages = []
-        
-        # Add system message with context
-        system_content = f"{message_for_the_prompt}\n\nCourse Content Context:\n{text_reference}"
-        messages.append({"role": "system", "content": system_content})
-        
+        # Use Gemini 2.0 Flash as default if no model specified or if OpenAI model
+        if not gemini_model_name or gemini_model_name.startswith("gpt-"):
+            gemini_model_name = "gemini-2.5-flash"
+
+        client = get_gemini_client()
+
+        # Build conversation contents
+        contents = []
+
+        # Add system instruction as the first message
+        system_instruction = f"{message_for_the_prompt}\n\nCourse Content Context:\n{text_reference}"
+        contents.append({"role": "user", "parts": [{"text": system_instruction}]})
+        contents.append({"role": "model", "parts": [{"text": "I understand. I'm ready to help with questions about this course content."}]})
+
         # Add message history if available
         if hasattr(message_history, 'messages'):
             for msg in message_history.messages:
                 if hasattr(msg, 'type') and hasattr(msg, 'content'):
-                    role = "user" if msg.type == "human" else "assistant"
-                    messages.append({"role": role, "content": msg.content})
+                    role = "user" if msg.type == "human" else "model"
+                    contents.append({"role": role, "parts": [{"text": msg.content}]})
         elif isinstance(message_history, list):
             # Handle simple list format
-            for i, msg in enumerate(message_history):
-                role = "user" if i % 2 == 0 else "assistant"
-                if isinstance(msg, dict) and 'content' in msg:
-                    messages.append({"role": role, "content": msg['content']})
-                elif isinstance(msg, str):
-                    messages.append({"role": role, "content": msg})
-        
+            for msg in message_history:
+                if isinstance(msg, dict) and 'role' in msg and 'content' in msg:
+                    contents.append({"role": msg['role'], "parts": [{"text": msg['content']}]})
+
         # Add current question
-        messages.append({"role": "user", "content": question})
-        
-        # Make API call to OpenAI
-        response = client.chat.completions.create(
-            model=openai_model_name,
-            messages=messages,
-            temperature=0.7,
-            max_tokens=1000
+        contents.append({"role": "user", "parts": [{"text": question}]})
+
+        # Generate response
+        response = client.models.generate_content(
+            model=gemini_model_name,
+            contents=contents
         )
-        
+
         return {
-            "output": response.choices[0].message.content,
+            "output": response.text,
             "intermediate_steps": []
         }
-        
+
     except Exception as e:
         raise Exception(f"Error processing AI request: {str(e)}")
 
@@ -127,7 +127,7 @@ def save_message_to_history(aichat_uuid: str, user_message: str, ai_response: st
         
         # Add new messages
         history.append({"role": "user", "content": user_message})
-        history.append({"role": "assistant", "content": ai_response})
+        history.append({"role": "model", "content": ai_response})
         
         # Keep only last 20 messages to prevent unlimited growth
         if len(history) > 20:
