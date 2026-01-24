@@ -90,7 +90,7 @@ async def create_user(
         )
 
     # Exclude unset values
-    user_data = user.dict(exclude_unset=True)
+    user_data = user.model_dump(exclude_unset=True)
     for key, value in user_data.items():
         setattr(user, key, value)
 
@@ -209,7 +209,7 @@ async def create_user_without_org(
         )
 
     # Exclude unset values
-    user_data = user.dict(exclude_unset=True)
+    user_data = user.model_dump(exclude_unset=True)
     for key, value in user_data.items():
         setattr(user, key, value)
 
@@ -276,7 +276,7 @@ async def update_user(
             )
 
     # Update user
-    user_data = user_object.dict(exclude_unset=True)
+    user_data = user_object.model_dump(exclude_unset=True)
     for key, value in user_data.items():
         setattr(user, key, value)
 

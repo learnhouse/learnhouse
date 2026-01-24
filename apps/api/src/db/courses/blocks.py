@@ -15,12 +15,12 @@ class BlockTypeEnum(str, Enum):
 class BlockBase(SQLModel):
     id: Optional[int] = Field(default=None, primary_key=True)
     block_type: BlockTypeEnum = BlockTypeEnum.BLOCK_CUSTOM
-    content: dict = Field(default={}, sa_column=Column(JSON))
+    content: dict = Field(default_factory=dict, sa_column=Column(JSON))
 
 
 class Block(BlockBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    content: dict = Field(default={}, sa_column=Column(JSON))
+    content: dict = Field(default_factory=dict, sa_column=Column(JSON))
     org_id: int = Field(sa_column= Column("org_id", ForeignKey("organization.id", ondelete="CASCADE")))
     course_id: int = Field(sa_column= Column("course_id", ForeignKey("course.id", ondelete="CASCADE")))
     chapter_id: int = Field(sa_column= Column("chapter_id", ForeignKey("chapter.id", ondelete="CASCADE")))
