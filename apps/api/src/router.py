@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 from src.routers import health
 from src.routers import usergroups
 from src.routers import dev, trail, users, auth, orgs, roles, search
+from src.routers import stream
 from src.routers.ai import ai
 from src.routers.courses import chapters, collections, courses, assignments, certifications
 from src.routers.courses.activities import activities, blocks
@@ -50,3 +51,6 @@ v1_router.include_router(
 )
 
 v1_router.include_router(utils_router, prefix="/utils", tags=["utils"])
+
+# Video Streaming Routes
+v1_router.include_router(stream.router, prefix="/stream", tags=["stream"])
