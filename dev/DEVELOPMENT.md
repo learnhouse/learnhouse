@@ -31,7 +31,7 @@ Before starting the application, you need to configure the environment variables
 | `LEARNHOUSE_INITIAL_ADMIN_EMAIL` | Default admin email for installation | `admin@school.dev` |
 | `LEARNHOUSE_INITIAL_ADMIN_PASSWORD` | Default admin password (Required for install) | - |
 | `LEARNHOUSE_IS_AI_ENABLED` | Enable AI features | `false` |
-| `LEARNHOUSE_OPENAI_API_KEY` | OpenAI API key (if AI enabled) | - |
+| `LEARNHOUSE_GEMINI_API_KEY` | Gemini API key (if AI enabled) | - |
 
 #### Example `apps/api/.env`
 ```env

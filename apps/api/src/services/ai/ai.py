@@ -129,6 +129,10 @@ def ai_start_activity_chat_session(
     org_config = OrganizationConfig.model_validate(org_config)
     ai_model = org_config.config["features"]["ai"]["model"]
 
+    # Use Gemini 2.0 Flash as default if no model specified or if OpenAI model
+    if not ai_model or ai_model.startswith("gpt-"):
+        ai_model = "gemini-2.5-flash"
+
     chat_session = get_chat_session_history()
 
     message = "You are a helpful Education Assistant, and you are helping a student with the associated Course. "
@@ -256,6 +260,10 @@ def ai_send_activity_chat_message(
 
     org_config = OrganizationConfig.model_validate(org_config)
     ai_model = org_config.config["features"]["ai"]["model"]
+
+    # Use Gemini 2.0 Flash as default if no model specified or if OpenAI model
+    if not ai_model or ai_model.startswith("gpt-"):
+        ai_model = "gemini-2.5-flash"
 
     chat_session = get_chat_session_history(chat_session_object.aichat_uuid)
 
