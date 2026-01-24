@@ -1,8 +1,11 @@
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 from pydantic import BaseModel, EmailStr
 from sqlmodel import Field, SQLModel
 from sqlalchemy import JSON, Column
 from src.db.roles import RoleRead
+
+if TYPE_CHECKING:
+    from src.db.organizations import OrganizationRead
 
 
 
@@ -13,8 +16,8 @@ class UserBase(SQLModel):
     email: EmailStr
     avatar_image: Optional[str] = ""
     bio: Optional[str] = ""
-    details: Optional[dict] = Field(default={}, sa_column=Column(JSON))
-    profile: Optional[dict] = Field(default={}, sa_column=Column(JSON))
+    details: Optional[dict] = Field(default_factory=dict, sa_column=Column(JSON))
+    profile: Optional[dict] = Field(default_factory=dict, sa_column=Column(JSON))
 
 class UserCreate(UserBase):
     first_name: str = ""
@@ -24,13 +27,13 @@ class UserCreate(UserBase):
 
 class UserUpdate(UserBase):
     username: str
-    first_name: Optional[str]
-    last_name: Optional[str]
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
     email: str
     avatar_image: Optional[str] = ""
     bio: Optional[str] = ""
-    details: Optional[dict] = {}
-    profile: Optional[dict] = {}
+    details: Optional[dict] = Field(default_factory=dict)
+    profile: Optional[dict] = Field(default_factory=dict)
 
 
 class UserUpdatePassword(SQLModel):
@@ -48,9 +51,8 @@ class PublicUser(UserRead):
 
 
 class UserRoleWithOrg(BaseModel):
-    from src.db.organizations import OrganizationRead
     role: RoleRead
-    org: OrganizationRead
+    org: "OrganizationRead"
 
 
 class UserSession(BaseModel):
@@ -70,9 +72,19 @@ class InternalUser(SQLModel):
 
 
 class User(UserBase, table=True):
+    __table_args__ = {"extend_existing": True}
     id: Optional[int] = Field(default=None, primary_key=True)
     password: str = ""
     user_uuid: str = ""
     email_verified: bool = False
     creation_date: str = ""
     update_date: str = ""
+
+
+# Rebuild models to resolve forward references after all classes are defined
+def rebuild_models():
+    from src.db.organizations import OrganizationRead  # noqa: F401
+    UserRoleWithOrg.model_rebuild()
+    UserSession.model_rebuild()
+
+rebuild_models()

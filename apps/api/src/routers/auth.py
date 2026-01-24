@@ -1,7 +1,6 @@
 from datetime import timedelta
 from typing import Literal, Optional
 from fastapi import Depends, APIRouter, HTTPException, Response, status, Request, Form
-from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel, EmailStr
 from sqlmodel import Session
 from src.db.users import AnonymousUser, UserRead

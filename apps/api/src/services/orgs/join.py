@@ -17,7 +17,7 @@ from src.services.orgs.orgs import get_org_join_mechanism
 class JoinOrg(BaseModel):
     org_id: int
     user_id: str
-    invite_code: Optional[str]
+    invite_code: Optional[str] = None
 
 
 async def join_org(
