@@ -364,7 +364,7 @@ def install_create_organization(org_object: OrganizationCreate, db_session: Sess
             ),
             usergroups=UserGroupOrgConfig(enabled=True, limit=0),
             storage=StorageOrgConfig(enabled=True, limit=0),
-            ai=AIOrgConfig(enabled=True, limit=0, model="gpt-4o-mini"),
+            ai=AIOrgConfig(enabled=True, limit=0, model=""),
             assignments=AssignmentOrgConfig(enabled=True, limit=0),
             payments=PaymentOrgConfig(enabled=False),
             discussions=DiscussionOrgConfig(enabled=True, limit=0),

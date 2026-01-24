@@ -52,7 +52,7 @@ def migrate_v0_to_v1(v0_config):
                     if v0_config["AIConfig"]["limits"]["limits_enabled"]
                     else 10
                 ),
-                "model": 'gpt-4o-mini',
+                "model": '',
             },
             "assignments": {"enabled": True, "limit": 5},
             "payments": {"enabled": False, "stripe_key": ""},
