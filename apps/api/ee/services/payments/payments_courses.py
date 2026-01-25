@@ -1,7 +1,7 @@
 from fastapi import HTTPException, Request
 from sqlmodel import Session, select
-from src.db.payments.payments_courses import PaymentsCourse
-from src.db.payments.payments_products import PaymentsProduct
+from ee.db.payments.payments_courses import PaymentsCourse
+from ee.db.payments.payments_products import PaymentsProduct
 from src.db.courses.courses import Course
 from src.db.users import PublicUser, AnonymousUser
 from src.security.courses_security import courses_rbac_check

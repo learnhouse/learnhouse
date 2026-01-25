@@ -258,33 +258,33 @@ export const ToolbarButtons = ({ editor, props }: any) => {
         style={{ marginTop: 'auto', marginBottom: 'auto', color: 'grey' }}
       />
       <ToolTip content={'Info Callout'}>
-        <ToolBtn
+        <ToolBtnInfo
           onClick={() => editor.chain().focus().toggleNode('calloutInfo').run()}
           aria-label="Insert info callout"
         >
           <AlertCircle size={15} />
-        </ToolBtn>
+        </ToolBtnInfo>
       </ToolTip>
       <ToolTip content={'Warning Callout'}>
-        <ToolBtn
+        <ToolBtnWarning
           onClick={() =>
             editor.chain().focus().toggleNode('calloutWarning').run()
           }
           aria-label="Insert warning callout"
         >
           <AlertTriangle size={15} />
-        </ToolBtn>
+        </ToolBtnWarning>
       </ToolTip>
       <ToolTip content={'Link'}>
         <div style={{ position: 'relative' }}>
-          <ToolBtn
+          <ToolBtnLink
             ref={linkButtonRef}
             onClick={handleLinkClick}
             className={editor.isActive('link') ? 'is-active' : ''}
             aria-label="Insert or edit link"
           >
             <Link2 size={15} />
-          </ToolBtn>
+          </ToolBtnLink>
           {showLinkInput && (
             <LinkInputTooltip
               onSave={handleLinkSave}
@@ -295,7 +295,7 @@ export const ToolbarButtons = ({ editor, props }: any) => {
         </div>
       </ToolTip>
       <ToolTip content={'Image'}>
-        <ToolBtn
+        <ToolBtnMedia
           onClick={() =>
             editor
               .chain()
@@ -308,10 +308,10 @@ export const ToolbarButtons = ({ editor, props }: any) => {
           aria-label="Insert image"
         >
           <ImagePlus size={15} />
-        </ToolBtn>
+        </ToolBtnMedia>
       </ToolTip>
       <ToolTip content={'Video'}>
-        <ToolBtn
+        <ToolBtnMedia
           onClick={() =>
             editor
               .chain()
@@ -324,15 +324,15 @@ export const ToolbarButtons = ({ editor, props }: any) => {
           aria-label="Insert video"
         >
           <Video size={15} />
-        </ToolBtn>
+        </ToolBtnMedia>
       </ToolTip>
       <ToolTip content={'YouTube video'}>
-        <ToolBtn onClick={() => editor.chain().focus().insertContent({ type: 'blockEmbed' }).run()} aria-label="Insert YouTube video">
+        <ToolBtnMedia onClick={() => editor.chain().focus().insertContent({ type: 'blockEmbed' }).run()} aria-label="Insert YouTube video">
           <SiYoutube size={15} />
-        </ToolBtn>
+        </ToolBtnMedia>
       </ToolTip>
       <ToolTip content={'Math Equation (LaTeX)'}>
-        <ToolBtn
+        <ToolBtnMath
           onClick={() =>
             editor
               .chain()
@@ -345,10 +345,10 @@ export const ToolbarButtons = ({ editor, props }: any) => {
           aria-label="Insert math equation (LaTeX)"
         >
           <Sigma size={15} />
-        </ToolBtn>
+        </ToolBtnMath>
       </ToolTip>
       <ToolTip content={'PDF Document'}>
-        <ToolBtn
+        <ToolBtnDocument
           onClick={() =>
             editor
               .chain()
@@ -361,10 +361,10 @@ export const ToolbarButtons = ({ editor, props }: any) => {
           aria-label="Insert PDF document"
         >
           <FileText size={15} />
-        </ToolBtn>
+        </ToolBtnDocument>
       </ToolTip>
       <ToolTip content={'Interactive Quiz'}>
-        <ToolBtn
+        <ToolBtnInteractive
           onClick={() =>
             editor
               .chain()
@@ -377,27 +377,27 @@ export const ToolbarButtons = ({ editor, props }: any) => {
           aria-label="Insert interactive quiz"
         >
           <BadgeHelp size={15} />
-        </ToolBtn>
+        </ToolBtnInteractive>
       </ToolTip>
       <ToolTip content={'Code Block'}>
-        <ToolBtn
+        <ToolBtnCode
           onClick={() => editor.chain().focus().toggleCodeBlock().run()}
           className={editor.isActive('codeBlock') ? 'is-active' : ''}
           aria-label="Insert code block"
         >
           <Code size={15} />
-        </ToolBtn>
+        </ToolBtnCode>
       </ToolTip>
       <ToolTip content={'External Object (Embed)'}>
-        <ToolBtn
+        <ToolBtnEmbed
           onClick={() => editor.chain().focus().insertContent({ type: 'blockEmbed' }).run()}
           aria-label="Insert external object or embed"
         >
           <Cuboid size={15} />
-        </ToolBtn>
+        </ToolBtnEmbed>
       </ToolTip>
       <ToolTip content={'Badges'}>
-        <ToolBtn
+        <ToolBtnBadge
           onClick={() => editor.chain().focus().insertContent({
             type: 'badge',
             content: [
@@ -410,10 +410,10 @@ export const ToolbarButtons = ({ editor, props }: any) => {
           aria-label="Insert badge"
         >
           <Tags size={15} />
-        </ToolBtn>
+        </ToolBtnBadge>
       </ToolTip>
       <ToolTip content={'Button'}>
-        <ToolBtn
+        <ToolBtnInteractive
           onClick={() => editor.chain().focus().insertContent({
             type: 'button',
             content: [
@@ -426,18 +426,18 @@ export const ToolbarButtons = ({ editor, props }: any) => {
           aria-label="Insert button"
         >
           <MousePointerClick size={15} />
-        </ToolBtn>
+        </ToolBtnInteractive>
       </ToolTip>
       <ToolTip content={'User'}>
-        <ToolBtn
+        <ToolBtnUser
           onClick={() => editor.chain().focus().insertContent({ type: 'blockUser' }).run()}
           aria-label="Insert user reference"
         >
           <User size={15} />
-        </ToolBtn>
+        </ToolBtnUser>
       </ToolTip>
       <ToolTip content={'Web Preview'}>
-        <ToolBtn
+        <ToolBtnWeb
           onClick={() =>
             editor.chain().focus().insertContent({
               type: 'blockWebPreview',
@@ -446,10 +446,10 @@ export const ToolbarButtons = ({ editor, props }: any) => {
           aria-label="Insert web preview"
         >
           <Globe size={15} />
-        </ToolBtn>
+        </ToolBtnWeb>
       </ToolTip>
       <ToolTip content={'Flipcard'}>
-        <ToolBtn
+        <ToolBtnInteractive
           onClick={() =>
             editor.chain().focus().insertContent({
               type: 'flipcard',
@@ -465,10 +465,10 @@ export const ToolbarButtons = ({ editor, props }: any) => {
           aria-label="Insert flipcard"
         >
           <RotateCw size={15} />
-        </ToolBtn>
+        </ToolBtnInteractive>
       </ToolTip>
       <ToolTip content={'Interactive Scenarios'}>
-        <ToolBtn
+        <ToolBtnInteractive
           onClick={() =>
             editor.chain().focus().insertContent({
               type: 'scenarios',
@@ -510,7 +510,7 @@ export const ToolbarButtons = ({ editor, props }: any) => {
           aria-label="Insert interactive scenarios"
         >
           <GitBranch size={15} />
-        </ToolBtn>
+        </ToolBtnInteractive>
       </ToolTip>
     </ToolButtonsWrapper>
   )
@@ -519,42 +519,213 @@ export const ToolbarButtons = ({ editor, props }: any) => {
 const ToolButtonsWrapper = styled.div`
   display: flex;
   flex-direction: row;
-  align-items: left;
-  justify-content: left;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 7px;
+
+  @media (max-width: 1200px) {
+    gap: 5px;
+  }
 `
 
 const ToolBtn = styled.div`
   display: flex;
-  background: rgba(217, 217, 217, 0.24);
+  align-items: center;
+  justify-content: center;
+  background: white;
   border-radius: 6px;
   min-width: 25px;
   height: 25px;
   padding: 5px;
-  margin-right: 5px;
   transition: all 0.2s ease-in-out;
+  flex-shrink: 0;
+  color: #6b7280;
+  box-shadow: 0 4px 6px -1px rgba(209, 213, 219, 0.25), 0 2px 4px -2px rgba(209, 213, 219, 0.25);
+  outline: 1px solid rgba(229, 231, 235, 0.4);
 
   svg {
     padding: 1px;
   }
 
   &.is-active {
-    background: rgba(176, 176, 176, 0.5);
+    background: #f3f4f6;
+    color: #1f2937;
+    outline: 1px solid rgba(107, 114, 128, 0.3);
 
     &:hover {
-      background: rgba(139, 139, 139, 0.5);
+      background: #e5e7eb;
       cursor: pointer;
     }
   }
 
   &:hover {
-    background: rgba(217, 217, 217, 0.48);
+    background: #f9fafb;
     cursor: pointer;
+  }
+
+  @media (max-width: 1200px) {
+    min-width: 24px;
+    height: 24px;
+    padding: 4px;
+  }
+`
+
+// Info Callout button - blue tint
+const ToolBtnInfo = styled(ToolBtn)`
+  background: rgba(59, 130, 246, 0.06);
+  color: rgb(59, 130, 246);
+  outline: 1px solid rgba(59, 130, 246, 0.1);
+
+  &:hover {
+    background: rgba(59, 130, 246, 0.12);
+  }
+`
+
+// Warning Callout button - amber tint
+const ToolBtnWarning = styled(ToolBtn)`
+  background: rgba(245, 158, 11, 0.06);
+  color: rgb(217, 119, 6);
+  outline: 1px solid rgba(245, 158, 11, 0.12);
+
+  &:hover {
+    background: rgba(245, 158, 11, 0.12);
+  }
+`
+
+// Link button - blue tint
+const ToolBtnLink = styled(ToolBtn)`
+  background: rgba(59, 130, 246, 0.06);
+  color: rgb(59, 130, 246);
+  outline: 1px solid rgba(59, 130, 246, 0.1);
+
+  &.is-active {
+    background: rgba(59, 130, 246, 0.18);
+    color: rgb(37, 99, 235);
+    outline: 1px solid rgba(59, 130, 246, 0.25);
+
+    &:hover {
+      background: rgba(59, 130, 246, 0.24);
+    }
+  }
+
+  &:hover {
+    background: rgba(59, 130, 246, 0.12);
+  }
+`
+
+// Media buttons (Image, Video, YouTube) - purple/violet tint
+const ToolBtnMedia = styled(ToolBtn)`
+  background: rgba(139, 92, 246, 0.06);
+  color: rgb(124, 58, 237);
+  outline: 1px solid rgba(139, 92, 246, 0.1);
+
+  &:hover {
+    background: rgba(139, 92, 246, 0.12);
+  }
+`
+
+// Math Equation button - amber/orange tint
+const ToolBtnMath = styled(ToolBtn)`
+  background: rgba(251, 146, 60, 0.06);
+  color: rgb(234, 88, 12);
+  outline: 1px solid rgba(251, 146, 60, 0.12);
+
+  &:hover {
+    background: rgba(251, 146, 60, 0.12);
+  }
+`
+
+// PDF/Document button - rose tint
+const ToolBtnDocument = styled(ToolBtn)`
+  background: rgba(244, 63, 94, 0.06);
+  color: rgb(244, 63, 94);
+  outline: 1px solid rgba(244, 63, 94, 0.1);
+
+  &:hover {
+    background: rgba(244, 63, 94, 0.12);
+  }
+`
+
+// Interactive buttons (Quiz, Flipcard, Scenarios, Button) - green tint
+const ToolBtnInteractive = styled(ToolBtn)`
+  background: rgba(34, 197, 94, 0.06);
+  color: rgb(22, 163, 74);
+  outline: 1px solid rgba(34, 197, 94, 0.1);
+
+  &:hover {
+    background: rgba(34, 197, 94, 0.12);
+  }
+`
+
+// Code button - slate tint
+const ToolBtnCode = styled(ToolBtn)`
+  background: rgba(100, 116, 139, 0.06);
+  color: rgb(71, 85, 105);
+  outline: 1px solid rgba(100, 116, 139, 0.1);
+
+  &.is-active {
+    background: rgba(100, 116, 139, 0.18);
+    color: rgb(51, 65, 85);
+    outline: 1px solid rgba(100, 116, 139, 0.25);
+
+    &:hover {
+      background: rgba(100, 116, 139, 0.24);
+    }
+  }
+
+  &:hover {
+    background: rgba(100, 116, 139, 0.12);
+  }
+`
+
+// Embed/External button - cyan/teal tint
+const ToolBtnEmbed = styled(ToolBtn)`
+  background: rgba(20, 184, 166, 0.06);
+  color: rgb(13, 148, 136);
+  outline: 1px solid rgba(20, 184, 166, 0.1);
+
+  &:hover {
+    background: rgba(20, 184, 166, 0.12);
+  }
+`
+
+// Badges button - pink tint
+const ToolBtnBadge = styled(ToolBtn)`
+  background: rgba(236, 72, 153, 0.06);
+  color: rgb(219, 39, 119);
+  outline: 1px solid rgba(236, 72, 153, 0.1);
+
+  &:hover {
+    background: rgba(236, 72, 153, 0.12);
+  }
+`
+
+// User button - indigo tint
+const ToolBtnUser = styled(ToolBtn)`
+  background: rgba(99, 102, 241, 0.06);
+  color: rgb(79, 70, 229);
+  outline: 1px solid rgba(99, 102, 241, 0.1);
+
+  &:hover {
+    background: rgba(99, 102, 241, 0.12);
+  }
+`
+
+// Web Preview button - sky blue tint
+const ToolBtnWeb = styled(ToolBtn)`
+  background: rgba(14, 165, 233, 0.06);
+  color: rgb(2, 132, 199);
+  outline: 1px solid rgba(14, 165, 233, 0.1);
+
+  &:hover {
+    background: rgba(14, 165, 233, 0.12);
   }
 `
 
 const ToolSelect = styled.select`
   display: flex;
-  background: rgba(217, 217, 217, 0.185);
+  background-color: white;
   border-radius: 6px;
   width: 120px;
   border: none;
@@ -562,30 +733,40 @@ const ToolSelect = styled.select`
   padding: 2px 5px;
   font-size: 11px;
   font-family: 'DM Sans';
-  margin-right: 5px;
   cursor: pointer;
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  color: #6b7280;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
   background-repeat: no-repeat;
   background-position: right 5px center;
   background-size: 12px;
   padding-right: 20px;
+  flex-shrink: 0;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 4px 6px -1px rgba(209, 213, 219, 0.25), 0 2px 4px -2px rgba(209, 213, 219, 0.25);
+  outline: 1px solid rgba(229, 231, 235, 0.4);
 
   &:hover {
-    background-color: rgba(217, 217, 217, 0.3);
+    background-color: #f9fafb;
   }
 
   &:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(217, 217, 217, 0.5);
+    outline: 1px solid rgba(107, 114, 128, 0.3);
+  }
+
+  @media (max-width: 1200px) {
+    width: 100px;
+    height: 24px;
+    font-size: 10px;
   }
 `
 
 const TableMenuWrapper = styled.div`
   position: relative;
   display: inline-block;
+  flex-shrink: 0;
 `
 
 const TableDropdown = styled.div`
@@ -593,12 +774,13 @@ const TableDropdown = styled.div`
   top: 100%;
   left: 0;
   background: white;
-  border: 1px solid rgba(217, 217, 217, 0.5);
   border-radius: 6px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   z-index: 1000;
   min-width: 180px;
   margin-top: 4px;
+  padding: 4px;
+  box-shadow: 0 4px 6px -1px rgba(209, 213, 219, 0.25), 0 2px 4px -2px rgba(209, 213, 219, 0.25);
+  outline: 1px solid rgba(229, 231, 235, 0.4);
 `
 
 const TableMenuItem = styled.div`
@@ -607,15 +789,18 @@ const TableMenuItem = styled.div`
   padding: 8px 12px;
   cursor: pointer;
   transition: background 0.2s;
+  border-radius: 4px;
+  color: #4b5563;
 
   &:hover {
-    background: rgba(217, 217, 217, 0.24);
+    background: rgba(243, 244, 246, 1);
   }
 
   .icon {
     margin-right: 8px;
     display: flex;
     align-items: center;
+    color: #6b7280;
   }
 
   .label {
@@ -627,6 +812,7 @@ const TableMenuItem = styled.div`
 const ListMenuWrapper = styled.div`
   position: relative;
   display: inline-block;
+  flex-shrink: 0;
 `
 
 const ListDropdown = styled.div`
@@ -634,12 +820,13 @@ const ListDropdown = styled.div`
   top: 100%;
   left: 0;
   background: white;
-  border: 1px solid rgba(217, 217, 217, 0.5);
   border-radius: 6px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   z-index: 1000;
   min-width: 180px;
   margin-top: 4px;
+  padding: 4px;
+  box-shadow: 0 4px 6px -1px rgba(209, 213, 219, 0.25), 0 2px 4px -2px rgba(209, 213, 219, 0.25);
+  outline: 1px solid rgba(229, 231, 235, 0.4);
 `
 
 const ListMenuItem = styled.div`
@@ -648,19 +835,28 @@ const ListMenuItem = styled.div`
   padding: 8px 12px;
   cursor: pointer;
   transition: background 0.2s;
+  border-radius: 4px;
+  color: #4b5563;
 
   &:hover {
-    background: rgba(217, 217, 217, 0.24);
+    background: rgba(243, 244, 246, 1);
   }
 
   &.is-active {
-    background: rgba(176, 176, 176, 0.5);
+    background: rgba(243, 244, 246, 1);
+    color: #111827;
+    font-weight: 500;
   }
 
   .icon {
     margin-right: 8px;
     display: flex;
     align-items: center;
+    color: #6b7280;
+  }
+
+  &.is-active .icon {
+    color: #374151;
   }
 
   .label {

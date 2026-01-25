@@ -47,3 +47,14 @@ def run_ee_startup(app):
     if hooks and hasattr(hooks, "on_startup"):
         hooks.on_startup(app)
 
+async def check_ee_activity_paid_access(request, activity_id, user, db_session) -> bool:
+    """
+    Check if a user has paid access to an activity via EE.
+    Returns True if EE is not available (free access fallback).
+    """
+    hooks = get_ee_hooks()
+    if hooks and hasattr(hooks, "check_activity_paid_access"):
+        return await hooks.check_activity_paid_access(request, activity_id, user, db_session)
+    # If EE is not available, grant access (free tier behavior)
+    return True
+

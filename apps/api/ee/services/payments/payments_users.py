@@ -2,9 +2,9 @@ from fastapi import HTTPException, Request
 from sqlmodel import Session, select
 from typing import Any
 from src.db.courses.courses import Course, CourseRead, AuthorWithRole
-from src.db.payments.payments_courses import PaymentsCourse
-from src.db.payments.payments_users import PaymentsUser, PaymentStatusEnum, ProviderSpecificData
-from src.db.payments.payments_products import PaymentsProduct
+from ee.db.payments.payments_courses import PaymentsCourse
+from ee.db.payments.payments_users import PaymentsUser, PaymentStatusEnum, ProviderSpecificData
+from ee.db.payments.payments_products import PaymentsProduct
 from src.db.resource_authors import ResourceAuthor
 from src.db.users import InternalUser, PublicUser, AnonymousUser, User, UserRead
 from src.db.organizations import Organization
@@ -38,7 +38,7 @@ async def create_payment_user(
     product = db_session.exec(statement).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
-    
+
     provider_specific_data = ProviderSpecificData(
         stripe_customer=provider_data if provider_data else None,
     )
@@ -256,4 +256,3 @@ async def get_owned_courses(
         course_reads.append(course_read)
 
     return course_reads
-

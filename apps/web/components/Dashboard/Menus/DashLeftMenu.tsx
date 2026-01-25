@@ -1,7 +1,9 @@
 'use client'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { signOut } from 'next-auth/react'
+import LearnHouseDashboardLogo from '@public/dashLogo.png'
 import { Backpack, BadgeDollarSign, BookCopy, ChevronLeft, ChevronRight, HelpCircle, Home, LogOut, Package2, School, Settings, Users } from 'lucide-react'
+import Image from 'next/image'
 import Link from 'next/link'
 import React, { useEffect, useState } from 'react'
 import UserAvatar from '../../Objects/UserAvatar'
@@ -25,6 +27,7 @@ import {
 import { Check, Languages } from 'lucide-react'
 import { AVAILABLE_LANGUAGES } from '@/lib/languages'
 import { cn } from '@/lib/utils'
+import { getOrgLogoMediaDirectory } from '@services/media/media'
 import { useEEStatus } from '@components/Hooks/useEEStatus'
 import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
 
@@ -92,6 +95,26 @@ function DashLeftMenu() {
             className="flex items-center space-x-4 transition-all hover:opacity-80 group"
             href={'/'}
           >
+            <div className="relative flex items-center shrink-0">
+              {org?.logo_image ? (
+                <img
+                  src={getOrgLogoMediaDirectory(org.org_uuid, org.logo_image)}
+                  alt={org?.name}
+                  className={cn(
+                    "transition-all object-contain rounded-lg",
+                    isCollapsed ? "h-10 w-10" : "h-11 w-auto"
+                  )}
+                />
+              ) : (
+                <Image
+                  alt="Learnhouse logo"
+                  width={isCollapsed ? 32 : 34}
+                  height={isCollapsed ? 32 : 34}
+                  src={LearnHouseDashboardLogo}
+                  className="transition-all rounded-lg"
+                />
+              )}
+            </div>
             {!isCollapsed && (
               <div className="flex flex-col animate-in fade-in slide-in-from-left-2 duration-500 min-w-0 pr-2 overflow-visible">
                 <div className="mb-1.5">

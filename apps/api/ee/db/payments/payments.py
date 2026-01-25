@@ -4,10 +4,10 @@ from typing import  Optional
 from sqlalchemy import JSON
 from sqlmodel import Field, SQLModel, Column, BigInteger, ForeignKey
 
-# PaymentsConfig 
+# PaymentsConfig
 class PaymentProviderEnum(str, Enum):
     STRIPE = "stripe"
-    
+
 class PaymentsConfigBase(SQLModel):
     enabled: bool = True
     active: bool = False
@@ -17,6 +17,7 @@ class PaymentsConfigBase(SQLModel):
 
 
 class PaymentsConfig(PaymentsConfigBase, table=True):
+    __table_args__ = {'extend_existing': True}
     id: Optional[int] = Field(default=None, primary_key=True)
     org_id: int = Field(
         sa_column=Column(BigInteger, ForeignKey("organization.id", ondelete="CASCADE"))

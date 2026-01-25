@@ -6,6 +6,8 @@ import EmbedObjectsComponent from './EmbedObjectsComponent'
 export default Node.create({
   name: 'blockEmbed',
   group: 'block',
+  draggable: true,
+  atom: true,
 
   addAttributes() {
     return {

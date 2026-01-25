@@ -5,6 +5,7 @@ import WebPreviewComponent from './WebPreviewComponent'
 const WebPreview = Node.create({
   name: 'blockWebPreview',
   group: 'block',
+  draggable: true,
   atom: true,
 
   addAttributes() {

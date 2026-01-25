@@ -1,7 +1,7 @@
 from typing import Literal
 from fastapi import HTTPException, Request
 from sqlmodel import Session, select
-from src.db.payments.payments import (
+from ee.db.payments.payments import (
     PaymentProviderEnum,
     PaymentsConfig,
     PaymentsConfigUpdate,
@@ -33,7 +33,7 @@ async def init_payments_config(
     existing_config = db_session.exec(
         select(PaymentsConfig).where(PaymentsConfig.org_id == org_id)
     ).first()
-    
+
     if existing_config:
         raise HTTPException(
             status_code=409,

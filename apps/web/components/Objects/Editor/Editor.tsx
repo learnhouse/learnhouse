@@ -57,6 +57,8 @@ import Scenarios from './Extensions/Scenarios/Scenarios'
 import { useMediaQuery } from 'usehooks-ts'
 import UserAvatar from '../UserAvatar'
 import UserBlock from './Extensions/Users/UserBlock'
+import DragHandle from './Extensions/DragHandle/DragHandle'
+import { SlashCommands } from './Extensions/SlashCommands'
 
 interface Editor {
   content: string
@@ -72,6 +74,7 @@ function Editor(props: Editor) {
   const aiEditorState = useAIEditor() as AIEditorStateTypes
   const is_ai_feature_enabled = useGetAIFeatures({ feature: 'editor' })
   const [isButtonAvailable, setIsButtonAvailable] = React.useState(false)
+  const [editorReady, setEditorReady] = React.useState(false)
 
 
   React.useEffect(() => {
@@ -178,11 +181,13 @@ function Editor(props: Editor) {
         editable: true,
         activity: props.activity,
       }),
+      DragHandle,
+      SlashCommands,
     ],
     content: props.content,
     immediatelyRender: false,
+    onCreate: () => setEditorReady(true),
   })
-
 
   const isMobile = useMediaQuery('(max-width: 767px)')
   if (isMobile) {
@@ -214,7 +219,7 @@ function Editor(props: Editor) {
           }}
           exit={{ opacity: 0 }}
         >
-          <EditorTop className="fixed bg-white bg-opacity-95 backdrop-blur-sm backdrop-brightness-125">
+          <EditorTop>
             <EditorDocSection>
               <EditorInfoWrapper>
                 <Link href="/">
@@ -353,6 +358,14 @@ const Page = styled.div`
   background-size: 50px 50px;
   background-attachment: fixed;
   background-repeat: repeat;
+
+  @media (max-width: 1200px) {
+    padding-top: 20px;
+  }
+
+  @media (max-width: 900px) {
+    padding-top: 15px;
+  }
 `
 
 const EditorTop = styled.div`
@@ -360,26 +373,55 @@ const EditorTop = styled.div`
   margin: 40px;
   margin-top: 0px;
   margin-bottom: 20px;
-  padding: 10px;
+  padding: 12px;
   display: flex;
   justify-content: space-between;
-  box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.03);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 4px 6px -1px rgba(209, 213, 219, 0.25), 0 2px 4px -2px rgba(209, 213, 219, 0.25);
+  outline: 1px solid rgba(229, 231, 235, 0.5);
   position: fixed;
   z-index: 303;
   width: -webkit-fill-available;
   width: -moz-available;
+  gap: 10px;
+
+  @media (max-width: 1200px) {
+    margin: 20px;
+    margin-top: 0px;
+    margin-bottom: 15px;
+    padding: 10px;
+  }
+
+  @media (max-width: 900px) {
+    margin: 15px;
+    margin-top: 0px;
+    margin-bottom: 10px;
+    flex-direction: column;
+    align-items: stretch;
+  }
 `
 
 // Inside EditorTop
 const EditorDocSection = styled.div`
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  flex: 1;
 `
 const EditorUsersSection = styled.div`
   display: flex;
   flex-direction: row;
   justify-content: center;
   align-items: center;
+  flex-shrink: 0;
+
+  @media (max-width: 900px) {
+    justify-content: flex-end;
+    padding-top: 8px;
+    border-top: 1px solid rgba(217, 217, 217, 0.5);
+  }
 `
 
 const EditorLeftOptionsSection = styled.div`
@@ -393,9 +435,13 @@ const EditorLeftOptionsSection = styled.div`
 const EditorInfoWrapper = styled.div`
   display: flex;
   flex-direction: row;
-  margin-bottom: 5px;
+  margin-bottom: 8px;
+  align-items: center;
+  min-width: 0;
 `
-const EditorButtonsWrapper = styled.div``
+const EditorButtonsWrapper = styled.div`
+  overflow: visible;
+`
 
 // Inside EditorUsersSection
 const EditorUserProfileWrapper = styled.div`
@@ -406,10 +452,8 @@ const EditorUserProfileWrapper = styled.div`
 `
 
 // Inside EditorInfoWrapper
-//..todo
 const EditorInfoLearnHouseLogo = styled(Image)`
   border-radius: 6px;
-  margin-right: 0px;
 `
 const EditorInfoDocName = styled.div`
   font-size: 16px;
@@ -418,12 +462,35 @@ const EditorInfoDocName = styled.div`
   display: flex;
   margin-left: 10px;
   color: #494949;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  b {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+
+    @media (max-width: 1200px) {
+      max-width: 150px;
+    }
+
+    @media (max-width: 900px) {
+      max-width: 120px;
+    }
+  }
 
   svg {
     margin-left: 4px;
     margin-right: 4px;
     padding: 3px;
     color: #353535;
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 1200px) {
+    font-size: 14px;
   }
 `
 
@@ -433,7 +500,7 @@ const EditorInfoThumbnail = styled.img`
   object-fit: cover;
   object-position: top;
   border-radius: 7px;
-  margin-left: 5px;
+  margin-left: 7px;
 
   &:hover {
     cursor: pointer;
@@ -442,11 +509,22 @@ const EditorInfoThumbnail = styled.img`
 
 export const EditorContentWrapper = styled.div`
   margin: 40px;
-  margin-top: 90px;
+  margin-top: 97px;
   background-color: white;
   border-radius: 10px;
   z-index: 300;
-  box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 4px 6px -1px rgba(209, 213, 219, 0.25), 0 2px 4px -2px rgba(209, 213, 219, 0.25);
+  outline: 1px solid rgba(229, 231, 235, 0.4);
+
+  @media (max-width: 1200px) {
+    margin: 20px;
+    margin-top: 91px;
+  }
+
+  @media (max-width: 900px) {
+    margin: 15px;
+    margin-top: 157px;
+  }
 
   // disable chrome outline
 
@@ -653,6 +731,23 @@ export const EditorContentWrapper = styled.div`
       right: -2px;
       top: 0;
       width: 4px;
+    }
+  }
+
+  // Remove selection outline from blocks
+  .ProseMirror-selectednode {
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  [data-node-view-wrapper] {
+    outline: none !important;
+
+    &:focus,
+    &:focus-within,
+    &:focus-visible {
+      outline: none !important;
+      box-shadow: none !important;
     }
   }
 `

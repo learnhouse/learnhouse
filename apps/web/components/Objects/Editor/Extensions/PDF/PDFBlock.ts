@@ -6,7 +6,7 @@ import PDFBlockComponent from './PDFBlockComponent'
 export default Node.create({
   name: 'blockPDF',
   group: 'block',
-
+  draggable: true,
   atom: true,
 
   addAttributes() {

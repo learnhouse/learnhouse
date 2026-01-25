@@ -127,6 +127,16 @@ async def create_video_activity(
             course.course_uuid,
         )
 
+    # Find the last activity order in the chapter
+    statement = (
+        select(ChapterActivity)
+        .where(ChapterActivity.chapter_id == chapter.id)
+        .order_by(ChapterActivity.order)  # type: ignore
+    )
+    chapter_activities = db_session.exec(statement).all()
+    last_order = chapter_activities[-1].order if chapter_activities else 0
+    to_be_used_order = last_order + 1
+
     # update chapter
     chapter_activity_object = ChapterActivity(
         chapter_id=chapter.id,  # type: ignore
@@ -135,7 +145,7 @@ async def create_video_activity(
         org_id=coursechapter.org_id,
         creation_date=str(datetime.now()),
         update_date=str(datetime.now()),
-        order=1,
+        order=to_be_used_order,
     )
 
     # Insert ChapterActivity link in DB
@@ -225,6 +235,16 @@ async def create_external_video_activity(
     db_session.commit()
     db_session.refresh(activity)
 
+    # Find the last activity order in the chapter
+    statement = (
+        select(ChapterActivity)
+        .where(ChapterActivity.chapter_id == coursechapter.chapter_id)
+        .order_by(ChapterActivity.order)  # type: ignore
+    )
+    chapter_activities = db_session.exec(statement).all()
+    last_order = chapter_activities[-1].order if chapter_activities else 0
+    to_be_used_order = last_order + 1
+
     # update chapter
     chapter_activity_object = ChapterActivity(
         chapter_id=coursechapter.chapter_id,  # type: ignore
@@ -233,7 +253,7 @@ async def create_external_video_activity(
         org_id=coursechapter.org_id,
         creation_date=str(datetime.now()),
         update_date=str(datetime.now()),
-        order=1,
+        order=to_be_used_order,
     )
 
     # Insert ChapterActivity link in DB
