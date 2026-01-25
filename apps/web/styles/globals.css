@@ -312,3 +312,95 @@ layer(base);
   position: fixed !important;
   transform: none !important;
 }
+
+/* Editor Drag Handle */
+.editor-drag-handle {
+  position: fixed;
+  width: 22px;
+  height: 26px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  background: white;
+  border: 1px solid #e5e7eb;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 150ms, visibility 150ms, background 150ms, transform 150ms;
+  z-index: 9999;
+  color: #9ca3af;
+  pointer-events: none;
+  user-select: none;
+}
+
+.editor-drag-handle.visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.editor-drag-handle:hover {
+  background: #f3f4f6;
+  color: #6b7280;
+  transform: scale(1.05);
+}
+
+.editor-drag-handle:active,
+.editor-drag-handle.is-dragging {
+  cursor: grabbing;
+  background: #e5e7eb;
+  color: #374151;
+}
+
+/* Editor Drop Indicator */
+.editor-drop-indicator {
+  position: fixed;
+  height: 2px;
+  background: #3b82f6;
+  border-radius: 1px;
+  opacity: 0;
+  visibility: hidden;
+  z-index: 9999;
+  pointer-events: none;
+  transition: opacity 100ms;
+}
+
+.editor-drop-indicator::before,
+.editor-drop-indicator::after {
+  content: '';
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: #3b82f6;
+  border-radius: 50%;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.editor-drop-indicator::before {
+  left: -3px;
+}
+
+.editor-drop-indicator::after {
+  right: -3px;
+}
+
+.editor-drop-indicator.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Block being dragged */
+.ProseMirror .is-dragging {
+  opacity: 0.4;
+  background: #f3f4f6;
+  border-radius: 4px;
+}
+
+/* Selected node style (when dragging) */
+.ProseMirror-selectednode {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  border-radius: 4px;
+}

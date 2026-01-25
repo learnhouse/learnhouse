@@ -57,6 +57,7 @@ import Scenarios from './Extensions/Scenarios/Scenarios'
 import { useMediaQuery } from 'usehooks-ts'
 import UserAvatar from '../UserAvatar'
 import UserBlock from './Extensions/Users/UserBlock'
+import DragHandle from './Extensions/DragHandle/DragHandle'
 
 interface Editor {
   content: string
@@ -178,6 +179,7 @@ function Editor(props: Editor) {
         editable: true,
         activity: props.activity,
       }),
+      DragHandle,
     ],
     content: props.content,
     immediatelyRender: false,

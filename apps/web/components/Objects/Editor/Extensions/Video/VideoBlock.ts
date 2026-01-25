@@ -6,6 +6,7 @@ import VideoBlockComponent from './VideoBlockComponent'
 export default Node.create({
   name: 'blockVideo',
   group: 'block',
+  draggable: true,
   atom: true,
 
   addAttributes() {

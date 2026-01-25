@@ -6,6 +6,7 @@ import QuizBlockComponent from './QuizBlockComponent'
 export default Node.create({
   name: 'blockQuiz',
   group: 'block',
+  draggable: true,
   atom: true,
 
   addAttributes() {
