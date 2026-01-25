@@ -56,7 +56,7 @@ async function CoursesPage(params: any) {
     access_token ? access_token : null
   )
 
-  return <CoursesHome org_id={org.org_id} orgslug={orgslug} courses={courses} />
+  return <CoursesHome org_id={org.id} orgslug={orgslug} courses={courses} />
 }
 
 export default CoursesPage

@@ -137,3 +137,18 @@ export function getOrgPreviewMediaDirectory(orgUUID: string, fileId: string) {
   let uri = `${getMediaUrl()}content/orgs/${orgUUID}/previews/${fileId}`
   return uri
 }
+
+/**
+ * Get the URL for SCORM content files
+ * Routes through a local proxy to ensure same-origin for SCORM API injection
+ */
+export function getScormContentUrl(
+  orgUUID: string,
+  courseUUID: string,
+  activityUUID: string,
+  filePath: string
+): string {
+  // Use local proxy route to serve SCORM content from same origin
+  // This is required for the SCORM API to work properly in iframes
+  return `/api/scorm/${activityUUID}/content/${filePath}`
+}

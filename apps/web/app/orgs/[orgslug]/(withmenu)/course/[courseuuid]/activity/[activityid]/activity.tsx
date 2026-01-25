@@ -41,6 +41,7 @@ const DocumentPdfActivity = lazy(() => import('@components/Objects/Activities/Do
 const AssignmentStudentActivity = lazy(() => import('@components/Objects/Activities/Assignment/AssignmentStudentActivity'))
 const AIActivityAsk = lazy(() => import('@components/Objects/Activities/AI/AIActivityAsk'))
 const AIChatBotProvider = lazy(() => import('@components/Contexts/AI/AIChatBotContext'))
+const ScormActivity = lazy(() => import('../../../../../../../../ee/components/Activities/ScormActivity'))
 
 // Loading fallback component
 const LoadingFallback = () => (
@@ -236,6 +237,12 @@ function ActivityClient(props: ActivityClientProps) {
             </AssignmentProvider>
           </Suspense>
         ) : null;
+      case 'TYPE_SCORM':
+        return (
+          <Suspense fallback={<LoadingFallback />}>
+            <ScormActivity course={course} activity={activity} />
+          </Suspense>
+        );
       default:
         return null;
     }
@@ -288,7 +295,7 @@ function ActivityClient(props: ActivityClientProps) {
   }
 
   useEffect(() => {
-    if (activity.activity_type == 'TYPE_DYNAMIC') {
+    if (activity.activity_type == 'TYPE_DYNAMIC' || activity.activity_type == 'TYPE_SCORM') {
       setBgColor(isFocusMode ? 'bg-white' : 'bg-white nice-shadow');
     }
     else if (activity.activity_type == 'TYPE_ASSIGNMENT') {
@@ -379,11 +386,14 @@ function ActivityClient(props: ActivityClientProps) {
                             >
                               <img
                                 className="w-[60px] h-[34px] rounded-md drop-shadow-md"
-                                src={`${getCourseThumbnailMediaDirectory(
-                                  org?.org_uuid,
-                                  course.course_uuid,
-                                  course.thumbnail_image
-                                )}`}
+                                src={course.thumbnail_image
+                                  ? getCourseThumbnailMediaDirectory(
+                                      org?.org_uuid,
+                                      course.course_uuid,
+                                      course.thumbnail_image
+                                    )
+                                  : '/empty_thumbnail.png'
+                                }
                                 alt=""
                               />
                             </Link>
@@ -431,14 +441,14 @@ function ActivityClient(props: ActivityClientProps) {
                           {activity.content.paid_access == false ? (
                             <PaidCourseActivityDisclaimer course={course} />
                           ) : (
-                            <motion.div 
+                            <motion.div
                               initial={isInitialRender.current ? false : { scale: 0.95, opacity: 0 }}
                               animate={{ scale: 1, opacity: 1 }}
                               transition={{ delay: 0.3 }}
-                              className={`p-7 rounded-lg ${bgColor} mt-4`}
+                              className={`${activity.activity_type === 'TYPE_SCORM' ? 'rounded-xl overflow-hidden' : 'p-7 rounded-lg'} ${bgColor} mt-4`}
                             >
                               {/* Activity Types */}
-                              <div>
+                              <div className={activity.activity_type === 'TYPE_SCORM' ? 'overflow-hidden' : ''}>
                                 {activityContent}
                               </div>
                             </motion.div>
@@ -463,8 +473,8 @@ function ActivityClient(props: ActivityClientProps) {
                             <button
                               onClick={() => navigateToActivity(prevActivity)}
                               className={`flex items-center space-x-1.5 p-2 rounded-md transition-all duration-200 cursor-pointer ${
-                                prevActivity 
-                                  ? 'text-gray-700' 
+                                prevActivity
+                                  ? 'text-gray-700'
                                   : 'opacity-50 text-gray-400 cursor-not-allowed'
                               }`}
                               disabled={!prevActivity}
@@ -480,7 +490,7 @@ function ActivityClient(props: ActivityClientProps) {
                             </button>
                           </div>
                           <div className="flex items-center space-x-2">
-                            <ActivityActions 
+                            <ActivityActions
                               activity={activity}
                               activityid={activityid}
                               course={course}
@@ -491,8 +501,8 @@ function ActivityClient(props: ActivityClientProps) {
                             <button
                               onClick={() => navigateToActivity(nextActivity)}
                               className={`flex items-center space-x-1.5 p-2 rounded-md transition-all duration-200 cursor-pointer ${
-                                nextActivity 
-                                  ? 'text-gray-700' 
+                                nextActivity
+                                  ? 'text-gray-700'
                                   : 'opacity-50 text-gray-400 cursor-not-allowed'
                               }`}
                               disabled={!nextActivity}
@@ -542,11 +552,14 @@ function ActivityClient(props: ActivityClientProps) {
                               >
                                 <img
                                   className="w-[100px] h-[57px] rounded-md drop-shadow-md"
-                                  src={`${getCourseThumbnailMediaDirectory(
-                                    org?.org_uuid,
-                                    course.course_uuid,
-                                    course.thumbnail_image
-                                  )}`}
+                                  src={course.thumbnail_image
+                                    ? getCourseThumbnailMediaDirectory(
+                                        org?.org_uuid,
+                                        course.course_uuid,
+                                        course.thumbnail_image
+                                      )
+                                    : '/empty_thumbnail.png'
+                                  }
                                   alt=""
                                 />
                               </Link>
@@ -698,10 +711,10 @@ function ActivityClient(props: ActivityClientProps) {
                           {activity.content.paid_access == false ? (
                             <PaidCourseActivityDisclaimer course={course} />
                           ) : (
-                            <div className={`p-7 drop-shadow-xs rounded-lg ${bgColor} relative`}>
+                            <div className={`${activity.activity_type === 'TYPE_SCORM' ? 'rounded-xl overflow-hidden' : 'p-7 drop-shadow-xs rounded-lg'} ${bgColor} relative`}>
                               <button
                                 onClick={() => setIsFocusMode(true)}
-                                className="absolute top-4 right-4 bg-white/80 hover:bg-white nice-shadow p-2 rounded-full cursor-pointer transition-all duration-200 group overflow-hidden z-50 pointer-events-auto"
+                                className={`absolute ${activity.activity_type === 'TYPE_SCORM' ? 'top-2 right-2' : 'top-4 right-4'} bg-white/80 hover:bg-white nice-shadow p-2 rounded-full cursor-pointer transition-all duration-200 group overflow-hidden z-50 pointer-events-auto`}
                                 title={t('activities.focus_mode')}
                               >
                                 <div className="flex items-center">
@@ -1033,7 +1046,7 @@ function NextActivityButton({ course, currentActivityId, orgslug }: { course: an
   const findNextActivity = () => {
     let allActivities: any[] = [];
     let currentIndex = -1;
-    
+
     // Flatten all activities from all chapters
     course.chapters.forEach((chapter: any) => {
       chapter.activities.forEach((activity: any) => {
@@ -1043,14 +1056,14 @@ function NextActivityButton({ course, currentActivityId, orgslug }: { course: an
           cleanUuid: cleanActivityUuid,
           chapterName: chapter.name
         });
-        
+
         // Check if this is the current activity
         if (activity.id === currentActivityId) {
           currentIndex = allActivities.length - 1;
         }
       });
     });
-    
+
     // Get next activity
     return currentIndex < allActivities.length - 1 ? allActivities[currentIndex + 1] : null;
   };
@@ -1086,7 +1099,7 @@ function PreviousActivityButton({ course, currentActivityId, orgslug }: { course
   const findPreviousActivity = () => {
     let allActivities: any[] = [];
     let currentIndex = -1;
-    
+
     // Flatten all activities from all chapters
     course.chapters.forEach((chapter: any) => {
       chapter.activities.forEach((activity: any) => {
@@ -1096,14 +1109,14 @@ function PreviousActivityButton({ course, currentActivityId, orgslug }: { course
           cleanUuid: cleanActivityUuid,
           chapterName: chapter.name
         });
-        
+
         // Check if this is the current activity
         if (activity.id === currentActivityId) {
           currentIndex = allActivities.length - 1;
         }
       });
     });
-    
+
     // Get previous activity
     return currentIndex > 0 ? allActivities[currentIndex - 1] : null;
   };

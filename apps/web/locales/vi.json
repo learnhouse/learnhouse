@@ -668,6 +668,8 @@
       "rights_guide": "Hướng dẫn về quyền hạn",
       "create_course": "Tạo khóa học",
       "create_new_course": "Tạo khóa học mới",
+      "import_course": "Nhập khóa học",
+      "import_scorm_description": "Nhập gói SCORM để tạo khóa học mới",
       "no_courses": "Chưa có khóa học nào",
       "create_course_placeholder": "Tạo khóa học để thêm nội dung",
       "no_courses_available": "Hiện không có khóa học nào"
@@ -1578,6 +1580,8 @@
       "rights_guide": "Hướng dẫn về quyền hạn",
       "create_course": "Tạo khóa học",
       "create_new_course": "Tạo khóa học mới",
+      "import_course": "Nhập khóa học",
+      "import_scorm_description": "Nhập gói SCORM để tạo khóa học mới",
       "no_courses": "Chưa có khóa học nào",
       "create_course_placeholder": "Tạo khóa học để thêm nội dung",
       "no_courses_available": "Hiện không có khóa học nào",
@@ -1917,7 +1921,8 @@
             "assignment": "Bài tập",
             "assignments": "Bài tập",
             "dynamic": "Động",
-            "dynamic_page": "Trang động"
+            "dynamic_page": "Trang động",
+            "scorm": "Scorm"
           },
           "toasts": {
             "deleting": "Đang xóa hoạt động...",

@@ -668,6 +668,8 @@
       "rights_guide": "अधिकार मार्गदर्शिका",
       "create_course": "कोर्स बनाएं",
       "create_new_course": "एक नया कोर्स बनाएं",
+      "import_course": "कोर्स आयात करें",
+      "import_scorm_description": "नया कोर्स बनाने के लिए SCORM पैकेज आयात करें",
       "no_courses": "अभी तक कोई कोर्स नहीं",
       "create_course_placeholder": "सामग्री जोड़ने के लिए कोर्स बनाएं",
       "no_courses_available": "अभी तक कोई कोर्स उपलब्ध नहीं है"
@@ -1578,6 +1580,8 @@
       "rights_guide": "अधिकार मार्गदर्शिका",
       "create_course": "कोर्स बनाएं",
       "create_new_course": "एक नया कोर्स बनाएं",
+      "import_course": "कोर्स आयात करें",
+      "import_scorm_description": "नया कोर्स बनाने के लिए SCORM पैकेज आयात करें",
       "no_courses": "अभी तक कोई कोर्स नहीं",
       "create_course_placeholder": "सामग्री जोड़ने के लिए कोर्स बनाएं",
       "no_courses_available": "अभी तक कोई कोर्स उपलब्ध नहीं है",
@@ -1917,7 +1921,8 @@
             "assignment": "असाइनमेंट",
             "assignments": "असाइनमेंट",
             "dynamic": "डायनेमिक",
-            "dynamic_page": "डायनेमिक पेज"
+            "dynamic_page": "डायनेमिक पेज",
+            "scorm": "Scorm"
           },
           "toasts": {
             "deleting": "गतिविधि हटाई जा रही है...",
