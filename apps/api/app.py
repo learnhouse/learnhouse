@@ -7,8 +7,9 @@ from src.router import v1_router
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi_jwt_auth.exceptions import AuthJWTException
+from fastapi_jwt_auth2.exceptions import AuthJWTException
 from fastapi.middleware.gzip import GZipMiddleware
+from src.core.ee_hooks import register_ee_middlewares
 
 
 ########################
@@ -47,6 +48,9 @@ if learnhouse_config.general_config.logfire_enabled:
 
 # Gzip Middleware (will add brotli later)
 app.add_middleware(GZipMiddleware, minimum_size=1000)
+
+# Register EE Middlewares if available
+register_ee_middlewares(app)
 
 
 # Events

@@ -133,19 +133,8 @@ async def create_role(
             # It's already a dict
             rights_dict = role.rights
         else:
-            # It's likely a Pydantic model, try to convert to dict
-            try:
-                # Try dict() method first (for Pydantic v1)
-                rights_dict = role.rights.dict()
-            except AttributeError:
-                try:
-                    # Try model_dump() method (for Pydantic v2)
-                    rights_dict = role.rights.model_dump()  # type: ignore
-                except AttributeError:
-                    raise HTTPException(
-                        status_code=400,
-                        detail="Rights must be provided as a JSON object",
-                    )
+            # It's a Pydantic model, convert to dict
+            rights_dict = role.rights.model_dump()
         
         # Validate rights structure - check for required top-level keys
         required_rights = [
@@ -474,16 +463,7 @@ async def update_role(
     del role_object.role_id
 
     # Update only the fields that were passed in
-    # Use model_dump() to get the data as a dictionary
-    try:
-        update_data = role_object.model_dump(exclude_unset=True)
-    except AttributeError:
-        # Fallback to dict() method for older Pydantic versions
-        try:
-            update_data = role_object.dict(exclude_unset=True)
-        except AttributeError:
-            # Fallback to vars() for SQLModel
-            update_data = {k: v for k, v in vars(role_object).items() if v is not None}
+    update_data = role_object.model_dump(exclude_unset=True)
     
     # Update the role with the new data
     for key, value in update_data.items():
@@ -499,19 +479,8 @@ async def update_role(
             # It's already a dict
             rights_dict = role.rights
         else:
-            # It's likely a Pydantic model, try to convert to dict
-            try:
-                # Try dict() method first (for Pydantic v1)
-                rights_dict = role.rights.dict()
-            except AttributeError:
-                try:
-                    # Try model_dump() method (for Pydantic v2)
-                    rights_dict = role.rights.model_dump()  # type: ignore
-                except AttributeError:
-                    raise HTTPException(
-                        status_code=400,
-                        detail="Rights must be provided as a JSON object",
-                    )
+            # It's a Pydantic model, convert to dict
+            rights_dict = role.rights.model_dump()
         
         # Validate rights structure - check for required top-level keys
         required_rights = [

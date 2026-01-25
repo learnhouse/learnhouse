@@ -24,10 +24,10 @@ class AuthorWithRole(SQLModel):
 
 class CourseBase(SQLModel):
     name: str
-    description: Optional[str]
-    about: Optional[str]
-    learnings: Optional[str]
-    tags: Optional[str]
+    description: Optional[str] = None
+    about: Optional[str] = None
+    learnings: Optional[str] = None
+    tags: Optional[str] = None
     thumbnail_type: Optional[ThumbnailType] = Field(default=ThumbnailType.IMAGE)
     thumbnail_image: Optional[str] = Field(default="")
     thumbnail_video: Optional[str] = Field(default="")
@@ -55,15 +55,15 @@ class CourseCreate(CourseBase):
 
 class CourseUpdate(CourseBase):
     name: str
-    description: Optional[str]
-    about: Optional[str]
-    learnings: Optional[str]
-    tags: Optional[str]
+    description: Optional[str] = None
+    about: Optional[str] = None
+    learnings: Optional[str] = None
+    tags: Optional[str] = None
     thumbnail_type: Optional[ThumbnailType] = Field(default=ThumbnailType.IMAGE)
     thumbnail_image: Optional[str] = Field(default="")
     thumbnail_video: Optional[str] = Field(default="")
-    public: Optional[bool]
-    open_to_contributors: Optional[bool]
+    public: Optional[bool] = None
+    open_to_contributors: Optional[bool] = None
 
 
 class CourseRead(CourseBase):
@@ -82,9 +82,9 @@ class CourseRead(CourseBase):
 class FullCourseRead(CourseBase):
     id: int
     org_id: int
-    course_uuid: Optional[str]
-    creation_date: Optional[str]
-    update_date: Optional[str]
+    course_uuid: Optional[str] = None
+    creation_date: Optional[str] = None
+    update_date: Optional[str] = None
     thumbnail_type: Optional[ThumbnailType] = Field(default=ThumbnailType.IMAGE)
     thumbnail_image: Optional[str] = Field(default="")
     thumbnail_video: Optional[str] = Field(default="")
@@ -96,13 +96,13 @@ class FullCourseRead(CourseBase):
 
 class FullCourseReadWithTrail(CourseBase):
     id: int
-    course_uuid: Optional[str]
-    creation_date: Optional[str]
-    update_date: Optional[str]
+    course_uuid: Optional[str] = None
+    creation_date: Optional[str] = None
+    update_date: Optional[str] = None
     org_id: int = Field(default=None, foreign_key="organization.id")
     authors: List[AuthorWithRole]
     # Chapters, Activities
     chapters: List[ChapterRead]
     # Trail
-    trail: TrailRead | None
+    trail: TrailRead | None = None
     pass

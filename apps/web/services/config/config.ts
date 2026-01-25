@@ -50,7 +50,14 @@ function loadRuntimeConfig(): Record<string, string> {
 // Helper function to get config value with fallback
 export const getConfig = (key: string, defaultValue: string = ''): string => {
   const config = loadRuntimeConfig();
-  return (config && config[key]) || process.env[key] || defaultValue;
+  
+  // 1. Check runtime config (from runtime-config.json or the generated runtime-config.js)
+  if (config && config[key]) {
+    return config[key];
+  }
+
+  // 2. Fallback to process.env (Server-side only)
+  return process.env[key] || defaultValue;
 };
 
 // Dynamic config getters - these are functions to ensure runtime values are used

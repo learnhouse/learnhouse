@@ -23,7 +23,6 @@ import python from 'highlight.js/lib/languages/python'
 import java from 'highlight.js/lib/languages/java'
 import { NoTextInput } from '@components/Objects/Editor/Extensions/NoTextInput/NoTextInput'
 import EditorOptionsProvider from '@components/Contexts/Editor/EditorContext'
-import AICanvaToolkit from './AI/AICanvaToolkit'
 import EmbedObjects from '@components/Objects/Editor/Extensions/EmbedObjects/EmbedObjects'
 import Badges from '@components/Objects/Editor/Extensions/Badges/Badges'
 import Buttons from '@components/Objects/Editor/Extensions/Buttons/Buttons'
@@ -38,6 +37,7 @@ import { getLinkExtension } from '@components/Objects/Editor/EditorConf'
 import TableOfContents from './TableOfContents'
 import { CustomHeading } from './CustomHeadingExtenstion'
 import WebPreview from '@components/Objects/Editor/Extensions/WebPreview/WebPreview'
+import AICanvaToolkit from './AI/AICanvaToolkit'
 
 interface Editor {
   content: string
@@ -63,6 +63,7 @@ function Canva(props: Editor) {
   lowlight.register('java', java)
 
   const editor: any = useEditor({
+    immediatelyRender: false,
     editable: isEditable,
     extensions: [
       StarterKit.configure({

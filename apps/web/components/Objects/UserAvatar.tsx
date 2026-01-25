@@ -4,7 +4,7 @@ import { useParams } from 'next/navigation'
 import { getUserAvatarMediaDirectory } from '@services/media/media'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import UserProfilePopup from './UserProfilePopup'
-import { getUserByUsername } from '@services/users/users'
+import { getUserByUsername, getUser } from '@services/users/users'
 
 type UserAvatarProps = {
   width?: number
@@ -18,6 +18,7 @@ type UserAvatarProps = {
   showProfilePopup?: boolean
   userId?: string
   username?: string
+  shadow?: string
 }
 
 function UserAvatar(props: UserAvatarProps) {
@@ -26,7 +27,7 @@ function UserAvatar(props: UserAvatarProps) {
   const [userData, setUserData] = useState<any>(null)
 
   useEffect(() => {
-    const fetchUserByUsername = async () => {
+    const fetchUserData = async () => {
       if (props.username) {
         try {
           const data = await getUserByUsername(props.username)
@@ -34,11 +35,18 @@ function UserAvatar(props: UserAvatarProps) {
         } catch (error) {
           console.error('Error fetching user by username:', error)
         }
+      } else if (props.userId) {
+        try {
+          const data = await getUser(props.userId)
+          setUserData(data)
+        } catch (error) {
+          console.error('Error fetching user by ID:', error)
+        }
       }
     }
 
-    fetchUserByUsername()
-  }, [props.username])
+    fetchUserData()
+  }, [props.username, props.userId])
 
   const isExternalUrl = (url: string): boolean => {
     return url.startsWith('http://') || url.startsWith('https://')
@@ -112,7 +120,7 @@ function UserAvatar(props: UserAvatarProps) {
         ${props.border ? `border ${props.border}` : ''}
         ${props.borderColor ?? 'border-white'}
         ${props.backgroundColor ?? 'bg-gray-100'}
-        shadow-md shadow-gray-300/45
+        ${props.shadow ?? 'shadow-md shadow-gray-300/45'}
         aspect-square
         w-[${props.width ?? 50}px]
         h-[${props.width ?? 50}px]

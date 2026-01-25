@@ -16,14 +16,16 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import { useRouter } from 'next/navigation'
 import { useFormik } from 'formik'
 import { sendResetLink } from '@services/auth/auth'
+import { useTranslation } from 'react-i18next'
+import LanguageSwitcher from '@components/Utils/LanguageSwitcher'
 
-const validate = (values: any) => {
+const validate = (values: any, t: any) => {
     const errors: any = {}
 
     if (!values.email) {
-        errors.email = 'Required'
+        errors.email = t('validation.required')
     } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email)) {
-        errors.email = 'Invalid email address'
+        errors.email = t('validation.invalid_email')
     }
 
 
@@ -31,6 +33,7 @@ const validate = (values: any) => {
 }
 
 function ForgotPasswordClient() {
+    const { t } = useTranslation();
     const org = useOrg() as any;
     const [isSubmitting, setIsSubmitting] = React.useState(false)
     const router = useRouter()
@@ -41,13 +44,13 @@ function ForgotPasswordClient() {
         initialValues: {
             email: ''
         },
-        validate,
+        validate: (values) => validate(values, t),
         validateOnBlur: true,
         onSubmit: async (values) => {
             setIsSubmitting(true)
             let res = await sendResetLink(values.email, org?.id)
             if (res.status == 200) {
-                setMessage(res.data + ', please check your email')
+                setMessage(res.data + ', ' + t('auth.check_email_message'))
                 setIsSubmitting(false)
             } else {
                 setError(res.data.detail)
@@ -58,6 +61,9 @@ function ForgotPasswordClient() {
     return (
 
         <div className="grid grid-flow-col justify-stretch h-screen">
+            <div className="absolute top-4 right-4 z-50">
+                <LanguageSwitcher />
+            </div>
             <div
                 className="right-login-part"
                 style={{
@@ -106,10 +112,9 @@ function ForgotPasswordClient() {
             </div>
             <div className="left-login-part bg-white flex flex-row">
                 <div className="login-form m-auto w-72">
-                    <h1 className="text-2xl font-bold mb-4">Forgot Password</h1>
+                    <h1 className="text-2xl font-bold mb-4">{t('auth.forgot_password_title')}</h1>
                     <p className="text-sm mb-4">
-                        Enter your email address and we will send you a link to reset your
-                        password
+                        {t('auth.forgot_password_description')}
                     </p>
 
                     {error && (
@@ -127,7 +132,7 @@ function ForgotPasswordClient() {
                     <FormLayout onSubmit={formik.handleSubmit}>
                         <FormField name="email">
                             <FormLabelAndMessage
-                                label="Email"
+                                label={t('auth.email')}
                                 message={formik.errors.email}
                             />
                             <Form.Control asChild>
@@ -142,7 +147,7 @@ function ForgotPasswordClient() {
                         <div className="flex  py-4">
                             <Form.Submit asChild>
                                 <button className="w-full bg-black text-white font-bold text-center p-2 rounded-md shadow-md hover:cursor-pointer">
-                                    {isSubmitting ? 'Loading...' : 'Send Reset Link'}
+                                    {isSubmitting ? t('common.loading') : t('auth.send_reset_link')}
                                 </button>
                             </Form.Submit>
                         </div>

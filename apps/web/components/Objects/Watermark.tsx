@@ -3,8 +3,10 @@ import Link from 'next/link'
 import blacklogo from '@public/black_logo.png'
 import React, { useEffect } from 'react'
 import { useOrg } from '../Contexts/OrgContext'
+import { useTranslation } from 'react-i18next'
 
 function Watermark() {
+    const { t } = useTranslation()
     const org = useOrg() as any
 
     useEffect(() => {
@@ -15,7 +17,7 @@ function Watermark() {
         return (
             <div className='fixed bottom-8 right-8'>
                 <Link href={`https://www.learnhouse.app/?source=in-app`} className="flex items-center cursor-pointer bg-white/80 backdrop-blur-lg text-gray-700 rounded-2xl p-2 light-shadow text-xs px-5 font-semibold space-x-2">
-                    <p>Made with</p>
+                    <p>{t('common.made_with')}</p>
                     <Image unoptimized src={blacklogo} alt="logo" quality={100} width={85} />
                 </Link>
             </div>

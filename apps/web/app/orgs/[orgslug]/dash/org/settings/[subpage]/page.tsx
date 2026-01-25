@@ -10,6 +10,7 @@ import OrgEditImages from '@components/Dashboard/Pages/Org/OrgEditImages/OrgEdit
 import OrgEditSocials from '@components/Dashboard/Pages/Org/OrgEditSocials/OrgEditSocials'
 import OrgEditLanding from '@components/Dashboard/Pages/Org/OrgEditLanding/OrgEditLanding'
 import OrgEditOther from '@components/Dashboard/Pages/Org/OrgEditOther/OrgEditOther'
+import { useTranslation } from 'react-i18next'
 
 export type OrgParams = {
   subpage: string
@@ -22,12 +23,12 @@ interface TabItem {
   icon: LucideIcon
 }
 
-const SETTING_TABS: TabItem[] = [
-  { id: 'general', label: 'General', icon: TextIcon },
-  { id: 'landing', label: 'Landing Page', icon: LayoutDashboardIcon },
-  { id: 'previews', label: 'Images & Previews', icon: ImageIcon },
-  { id: 'socials', label: 'Socials', icon: Share2Icon },
-  { id: 'other', label: 'Other', icon: CodeIcon },
+const getSettingTabs = (t: any): TabItem[] => [
+  { id: 'general', label: t('dashboard.organization.settings.tabs.general'), icon: TextIcon },
+  { id: 'landing', label: t('dashboard.organization.settings.tabs.landing'), icon: LayoutDashboardIcon },
+  { id: 'previews', label: t('dashboard.organization.settings.tabs.previews'), icon: ImageIcon },
+  { id: 'socials', label: t('dashboard.organization.settings.tabs.socials'), icon: Share2Icon },
+  { id: 'other', label: t('dashboard.organization.settings.tabs.other'), icon: CodeIcon },
 ]
 
 function TabLink({ tab, isActive, orgslug }: { 
@@ -52,32 +53,34 @@ function TabLink({ tab, isActive, orgslug }: {
 }
 
 function OrgPage(props: { params: Promise<OrgParams> }) {
+  const { t } = useTranslation()
   const params = use(props.params);
   const [H1Label, setH1Label] = React.useState('')
   const [H2Label, setH2Label] = React.useState('')
+  const SETTING_TABS = getSettingTabs(t)
 
   function handleLabels() {
     if (params.subpage == 'general') {
-      setH1Label('General')
-      setH2Label('Manage your organization settings')
+      setH1Label(t('dashboard.organization.settings.pages.general.title'))
+      setH2Label(t('dashboard.organization.settings.pages.general.subtitle'))
     } else if (params.subpage == 'previews') {
-      setH1Label('Previews')
-      setH2Label('Manage your organization previews')
+      setH1Label(t('dashboard.organization.settings.pages.previews.title'))
+      setH2Label(t('dashboard.organization.settings.pages.previews.subtitle'))
     } else if (params.subpage == 'socials') {
-      setH1Label('Socials')
-      setH2Label('Manage your organization social media links')
+      setH1Label(t('dashboard.organization.settings.pages.socials.title'))
+      setH2Label(t('dashboard.organization.settings.pages.socials.subtitle'))
     } else if (params.subpage == 'landing') {
-      setH1Label('Landing Page')
-      setH2Label('Customize your organization landing page')
+      setH1Label(t('dashboard.organization.settings.pages.landing.title'))
+      setH2Label(t('dashboard.organization.settings.pages.landing.subtitle'))
     } else if (params.subpage == 'other') {
-      setH1Label('Other')
-      setH2Label('Manage additional organization settings')
+      setH1Label(t('dashboard.organization.settings.pages.other.title'))
+      setH2Label(t('dashboard.organization.settings.pages.other.subtitle'))
     }
   }
 
   useEffect(() => {
     handleLabels()
-  }, [params.subpage, params])
+  }, [params.subpage, params, t])
 
   return (
     <div className="h-full w-full bg-[#f8f8f8] flex flex-col">

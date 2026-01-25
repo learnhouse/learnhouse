@@ -1,3 +1,4 @@
+'use client'
 import FormLayout, {
   FormField,
   FormLabelAndMessage,
@@ -7,7 +8,7 @@ import FormLayout, {
 import { useFormik } from 'formik';
 import { AlertTriangle } from 'lucide-react';
 import * as Form from '@radix-ui/react-form';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import ThumbnailUpdate from './ThumbnailUpdate';
 import { useCourse, useCourseDispatch } from '@components/Contexts/CourseContext';
 import FormTagInput from '@components/Objects/StyledElements/Form/TagInput';
@@ -19,45 +20,46 @@ import {
   CustomSelectTrigger,
   CustomSelectValue,
 } from "./CustomSelect";
+import { useTranslation } from 'react-i18next';
 
 type EditCourseStructureProps = {
   orgslug: string
   course_uuid?: string
 }
 
-const validate = (values: any) => {
+const validate = (values: any, t: any) => {
   const errors = {} as any;
 
   if (!values.name) {
-    errors.name = 'Required';
+    errors.name = t('dashboard.courses.general.form.name_required');
   } else if (values.name.length > 100) {
-    errors.name = 'Must be 100 characters or less';
+    errors.name = t('dashboard.courses.general.form.name_max_length');
   }
 
   if (!values.description) {
-    errors.description = 'Required';
+    errors.description = t('dashboard.courses.general.form.description_required');
   } else if (values.description.length > 1000) {
-    errors.description = 'Must be 1000 characters or less';
+    errors.description = t('dashboard.courses.general.form.description_max_length');
   }
 
   if (!values.learnings) {
-    errors.learnings = 'Required';
+    errors.learnings = t('dashboard.courses.general.form.learnings_required');
   } else {
     try {
       const learningItems = JSON.parse(values.learnings);
       if (!Array.isArray(learningItems)) {
-        errors.learnings = 'Invalid format';
+        errors.learnings = t('dashboard.courses.general.form.learnings_invalid_format');
       } else if (learningItems.length === 0) {
-        errors.learnings = 'At least one learning item is required';
+        errors.learnings = t('dashboard.courses.general.form.learnings_min_items');
       } else {
         // Check if any item has empty text
         const hasEmptyText = learningItems.some(item => !item.text || item.text.trim() === '');
         if (hasEmptyText) {
-          errors.learnings = 'All learning items must have text';
+          errors.learnings = t('dashboard.courses.general.form.learnings_empty_text');
         }
       }
     } catch (e) {
-      errors.learnings = 'Invalid JSON format';
+      errors.learnings = t('dashboard.courses.general.form.learnings_invalid_json');
     }
   }
 
@@ -65,6 +67,7 @@ const validate = (values: any) => {
 };
 
 function EditCourseGeneral(props: EditCourseStructureProps) {
+  const { t } = useTranslation()
   const [error, setError] = useState('');
   const course = useCourse();
   const dispatchCourse = useCourseDispatch() as any;
@@ -73,7 +76,7 @@ function EditCourseGeneral(props: EditCourseStructureProps) {
   // Initialize learnings as a JSON array if it's not already
   const initializeLearnings = (learnings: any) => {
     if (!learnings) {
-      return JSON.stringify([{ id: Date.now().toString(), text: '', emoji: '📝' }]);
+      return JSON.stringify([{ id: 'default-1', text: '', emoji: '📝' }]);
     }
     
     try {
@@ -86,26 +89,26 @@ function EditCourseGeneral(props: EditCourseStructureProps) {
       // If it's a string but not a JSON array, convert it to a learning item
       if (typeof learnings === 'string') {
         return JSON.stringify([{ 
-          id: Date.now().toString(), 
+          id: 'default-1', 
           text: learnings, 
           emoji: '📝' 
         }]);
       }
       
       // Default empty array
-      return JSON.stringify([{ id: Date.now().toString(), text: '', emoji: '📝' }]);
+      return JSON.stringify([{ id: 'default-1', text: '', emoji: '📝' }]);
     } catch (e) {
       // If it's not valid JSON, convert the string to a learning item
       if (typeof learnings === 'string') {
         return JSON.stringify([{ 
-          id: Date.now().toString(), 
+          id: 'default-1', 
           text: learnings, 
           emoji: '📝' 
         }]);
       }
       
       // Default empty array
-      return JSON.stringify([{ id: Date.now().toString(), text: '', emoji: '📝' }]);
+      return JSON.stringify([{ id: 'default-1', text: '', emoji: '📝' }]);
     }
   };
 
@@ -125,47 +128,61 @@ function EditCourseGeneral(props: EditCourseStructureProps) {
 
   const formik = useFormik({
     initialValues: getInitialValues(),
-    validate,
+    validate: (values) => validate(values, t),
     onSubmit: async values => {
       try {
         // Add your submission logic here
         dispatchCourse({ type: 'setIsSaved' });
       } catch (e) {
-        setError('Failed to save course structure.');
+        setError(t('dashboard.courses.general.errors.save_failed'));
       }
     },
     enableReinitialize: true,
   }) as any;
 
-  // Reset form when courseStructure changes
-  useEffect(() => {
-    if (courseStructure && !isLoading) {
-      const newValues = getInitialValues();
-      formik.resetForm({ values: newValues });
-    }
-  }, [courseStructure, isLoading]);
+  // Debounce timer ref
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Sync to context with debounce to avoid re-rendering the whole tree on every keystroke
   useEffect(() => {
-    if (!isLoading) {
+    if (!isLoading && courseStructure) {
       const formikValues = formik.values as any;
       const initialValues = formik.initialValues as any;
+      
       const valuesChanged = Object.keys(formikValues).some(
         key => formikValues[key] !== initialValues[key]
       );
 
       if (valuesChanged) {
-        dispatchCourse({ type: 'setIsNotSaved' });
-        const updatedCourse = {
-          ...courseStructure,
-          ...formikValues,
-        };
-        dispatchCourse({ type: 'setCourseStructure', payload: updatedCourse });
+        // Clear existing timer
+        if (debounceTimerRef.current) {
+          clearTimeout(debounceTimerRef.current);
+        }
+
+        // Set new timer
+        debounceTimerRef.current = setTimeout(() => {
+          dispatchCourse({ type: 'setIsNotSaved' });
+          const updatedCourse = {
+            ...courseStructure,
+            ...formikValues,
+          };
+          dispatchCourse({ type: 'setCourseStructure', payload: updatedCourse });
+        }, 500);
       }
     }
-  }, [formik.values, isLoading]);
+
+    // Cleanup on unmount
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [formik.values, isLoading, courseStructure, dispatchCourse]);
+
+  // Reset form when courseStructure changes (initial load)
 
   if (isLoading || !courseStructure) {
-    return <div>Loading...</div>;
+    return <div>{t('dashboard.courses.settings.loading')}</div>;
   }
 
   return (
@@ -183,7 +200,7 @@ function EditCourseGeneral(props: EditCourseStructureProps) {
 
             <div className="space-y-6">
               <FormField name="name">
-                <FormLabelAndMessage label="Name" message={formik.errors.name} />
+                <FormLabelAndMessage label={t('dashboard.courses.general.form.name_label')} message={formik.errors.name} />
                 <Form.Control asChild>
                   <Input
                     style={{ backgroundColor: 'white' }}
@@ -196,7 +213,7 @@ function EditCourseGeneral(props: EditCourseStructureProps) {
               </FormField>
 
               <FormField name="description">
-                <FormLabelAndMessage label="Description" message={formik.errors.description} />
+                <FormLabelAndMessage label={t('dashboard.courses.general.form.description_label')} message={formik.errors.description} />
                 <Form.Control asChild>
                   <Input
                     style={{ backgroundColor: 'white' }}
@@ -209,7 +226,7 @@ function EditCourseGeneral(props: EditCourseStructureProps) {
               </FormField>
 
               <FormField name="about">
-                <FormLabelAndMessage label="About" message={formik.errors.about} />
+                <FormLabelAndMessage label={t('dashboard.courses.general.form.about_label')} message={formik.errors.about} />
                 <Form.Control asChild>
                   <Textarea
                     style={{ backgroundColor: 'white', height: '200px', minHeight: '200px' }}
@@ -221,7 +238,7 @@ function EditCourseGeneral(props: EditCourseStructureProps) {
               </FormField>
 
               <FormField name="learnings">
-                <FormLabelAndMessage label="Learnings" message={formik.errors.learnings} />
+                <FormLabelAndMessage label={t('dashboard.courses.general.form.learnings_label')} message={formik.errors.learnings} />
                 <Form.Control asChild>
                   <LearningItemsList
                     value={formik.values.learnings}
@@ -232,10 +249,10 @@ function EditCourseGeneral(props: EditCourseStructureProps) {
               </FormField>
 
               <FormField name="tags">
-                <FormLabelAndMessage label="Tags" message={formik.errors.tags} />
+                <FormLabelAndMessage label={t('dashboard.courses.general.form.tags_label')} message={formik.errors.tags} />
                 <Form.Control asChild>
                   <FormTagInput
-                    placeholder="Enter to add..."
+                    placeholder={t('dashboard.courses.general.form.tags_placeholder')}
                     onChange={(value) => formik.setFieldValue('tags', value)}
                     value={formik.values.tags}
                   />
@@ -243,7 +260,7 @@ function EditCourseGeneral(props: EditCourseStructureProps) {
               </FormField>
 
               <FormField name="thumbnail_type">
-                <FormLabelAndMessage label="Thumbnail Type" />
+                <FormLabelAndMessage label={t('dashboard.courses.general.form.thumbnail_type_label')} />
                 <Form.Control asChild>
                   <CustomSelect
                     value={formik.values.thumbnail_type}
@@ -254,22 +271,22 @@ function EditCourseGeneral(props: EditCourseStructureProps) {
                   >
                     <CustomSelectTrigger className="w-full bg-white">
                       <CustomSelectValue>
-                        {formik.values.thumbnail_type === 'image' ? 'Image' :
-                         formik.values.thumbnail_type === 'video' ? 'Video' :
-                         formik.values.thumbnail_type === 'both' ? 'Both' : 'Image'}
+                        {formik.values.thumbnail_type === 'image' ? t('dashboard.courses.general.form.thumbnail_type_image') :
+                         formik.values.thumbnail_type === 'video' ? t('dashboard.courses.general.form.thumbnail_type_video') :
+                         formik.values.thumbnail_type === 'both' ? t('dashboard.courses.general.form.thumbnail_type_both') : t('dashboard.courses.general.form.thumbnail_type_image')}
                       </CustomSelectValue>
                     </CustomSelectTrigger>
                     <CustomSelectContent>
-                      <CustomSelectItem value="image">Image</CustomSelectItem>
-                      <CustomSelectItem value="video">Video</CustomSelectItem>
-                      <CustomSelectItem value="both">Both</CustomSelectItem>
+                      <CustomSelectItem value="image">{t('dashboard.courses.general.form.thumbnail_type_image')}</CustomSelectItem>
+                      <CustomSelectItem value="video">{t('dashboard.courses.general.form.thumbnail_type_video')}</CustomSelectItem>
+                      <CustomSelectItem value="both">{t('dashboard.courses.general.form.thumbnail_type_both')}</CustomSelectItem>
                     </CustomSelectContent>
                   </CustomSelect>
                 </Form.Control>
               </FormField>
 
               <FormField name="thumbnail">
-                <FormLabelAndMessage label="Thumbnail" />
+                <FormLabelAndMessage label={t('dashboard.courses.general.form.thumbnail_label')} />
                 <Form.Control asChild>
                   <ThumbnailUpdate thumbnailType={formik.values.thumbnail_type} />
                 </Form.Control>
@@ -283,3 +300,4 @@ function EditCourseGeneral(props: EditCourseStructureProps) {
 }
 
 export default EditCourseGeneral;
+

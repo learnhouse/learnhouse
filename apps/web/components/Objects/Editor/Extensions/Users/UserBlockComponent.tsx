@@ -4,10 +4,9 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { getUserByUsername, getUser } from '@services/users/users'
 import { Input } from "@components/ui/input"
 import { Button } from "@components/ui/button"
-import { Label } from "@components/ui/label"
-import { 
-  Loader2, 
-  User, 
+import {
+  Loader2,
+  User,
   ExternalLink,
   Briefcase,
   GraduationCap,
@@ -63,8 +62,8 @@ const AVAILABLE_ICONS = {
 
 const IconComponent = ({ iconName }: { iconName: string }) => {
   const IconElement = AVAILABLE_ICONS[iconName as keyof typeof AVAILABLE_ICONS]
-  if (!IconElement) return <User className="w-4 h-4 text-gray-600" />
-  return <IconElement className="w-4 h-4 text-gray-600" />
+  if (!IconElement) return <User className="w-4 h-4 text-neutral-500" />
+  return <IconElement className="w-4 h-4 text-neutral-500" />
 }
 
 function UserBlockComponent(props: any) {
@@ -98,7 +97,6 @@ function UserBlockComponent(props: any) {
     } catch (err: any) {
       console.error('Error fetching user by ID:', err)
       setError(err.detail || 'User not found')
-      // Clear the invalid user_id from the node attributes
       props.updateAttributes({
         user_id: null
       })
@@ -133,22 +131,30 @@ function UserBlockComponent(props: any) {
     await fetchUserByUsername(username)
   }
 
+  // Edit mode - no user selected
   if (isEditable && !userData) {
     return (
       <NodeViewWrapper className="block-user">
-        <div className="bg-gray-50 rounded-lg p-6 border border-dashed border-gray-200">
-          <form onSubmit={handleUsernameSubmit} className="space-y-4">
-            <div>
-              <Label htmlFor="username">Username</Label>
-              <div className="flex gap-2 mt-2">
+        <div className="bg-neutral-50 rounded-xl px-5 py-4 nice-shadow transition-all ease-linear">
+          {/* Header */}
+          <div className="flex items-center gap-2 mb-3">
+            <User className="text-neutral-400" size={16} />
+            <span className="uppercase tracking-widest text-xs font-bold text-neutral-400">
+              User Profile
+            </span>
+          </div>
+
+          {/* Username Input */}
+          <div className="bg-white rounded-lg p-4 nice-shadow">
+            <form onSubmit={handleUsernameSubmit} className="space-y-3">
+              <div className="flex gap-2">
                 <Input
-                  id="username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="Enter username"
-                  className="flex-1"
+                  className="flex-1 border-neutral-200 focus:border-neutral-300"
                 />
-                <Button type="submit" disabled={isLoading}>
+                <Button type="submit" disabled={isLoading} className="bg-neutral-700 hover:bg-neutral-800">
                   {isLoading ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
@@ -157,82 +163,85 @@ function UserBlockComponent(props: any) {
                 </Button>
               </div>
               {error && (
-                <p className="text-sm text-red-500 mt-2">{error}</p>
+                <p className="text-sm text-red-500">{error}</p>
               )}
-            </div>
-          </form>
-        </div>
-      </NodeViewWrapper>
-    )
-  }
-
-  if (isLoading) {
-    return (
-      <NodeViewWrapper className="block-user">
-        <div className="flex items-center justify-center py-8">
-          <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-        </div>
-      </NodeViewWrapper>
-    )
-  }
-
-  if (error) {
-    return (
-      <NodeViewWrapper className="block-user">
-        <div className="bg-red-50 text-red-500 p-4 rounded-lg">
-          {error}
-        </div>
-      </NodeViewWrapper>
-    )
-  }
-
-  if (!userData) {
-    return (
-      <NodeViewWrapper className="block-user">
-        <div className="bg-gray-50 rounded-lg p-6 border border-dashed border-gray-200">
-          <div className="flex items-center gap-2 text-gray-500">
-            <User className="w-5 h-5" />
-            <span>No user selected</span>
+            </form>
           </div>
         </div>
       </NodeViewWrapper>
     )
   }
 
-  return (
-    <NodeViewWrapper className="block-user">
-      <div className="bg-white rounded-lg nice-shadow overflow-hidden">
-        {/* Header with Avatar and Name */}
-        <div className="relative">
-          {/* Background gradient */}
-          <div className="absolute inset-0 bg-gradient-to-b from-gray-100/30 to-transparent h-28 rounded-t-lg" />
-          
-          {/* Content */}
-          <div className="relative px-5 pt-5 pb-4">
+  // Loading state
+  if (isLoading) {
+    return (
+      <NodeViewWrapper className="block-user">
+        <div className="bg-neutral-50 rounded-xl px-5 py-4 nice-shadow">
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="w-6 h-6 animate-spin text-neutral-400" />
+          </div>
+        </div>
+      </NodeViewWrapper>
+    )
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <NodeViewWrapper className="block-user">
+        <div className="bg-neutral-50 rounded-xl px-5 py-4 nice-shadow">
+          <div className="bg-red-50 text-red-500 p-4 rounded-lg text-sm">
+            {error}
+          </div>
+        </div>
+      </NodeViewWrapper>
+    )
+  }
+
+  // No user selected (view mode)
+  if (!userData) {
+    if (!isEditable) return null
+    return (
+      <NodeViewWrapper className="block-user">
+        <div className="bg-neutral-50 rounded-xl px-5 py-4 nice-shadow">
+          <div className="flex items-center justify-center gap-3 py-8 bg-white rounded-lg nice-shadow">
+            <User className="text-neutral-300" size={32} />
+            <span className="text-neutral-500">No user selected</span>
+          </div>
+        </div>
+      </NodeViewWrapper>
+    )
+  }
+
+  // Activity view mode - show only the user card with subtle styling
+  if (!isEditable) {
+    return (
+      <NodeViewWrapper className="block-user">
+        <div className="bg-neutral-50 rounded-xl nice-shadow overflow-hidden">
+          {/* User Info */}
+          <div className="p-5">
             <div className="flex items-start gap-4">
               {/* Avatar */}
               <div className="flex-shrink-0">
-                <div className="rounded-full">
-                  <UserAvatar
-                    width={80}
-                    avatar_url={userData.avatar_image ? getUserAvatarMediaDirectory(userData.user_uuid, userData.avatar_image) : ''}
-                    predefined_avatar={userData.avatar_image ? undefined : 'empty'}
-                    userId={userData.id}
-                    showProfilePopup
-                    rounded="rounded-full"
-                  />
-                </div>
+                <UserAvatar
+                  width={72}
+                  avatar_url={userData.avatar_image ? getUserAvatarMediaDirectory(userData.user_uuid, userData.avatar_image) : ''}
+                  predefined_avatar={userData.avatar_image ? undefined : 'empty'}
+                  userId={userData.id}
+                  showProfilePopup
+                  rounded="rounded-full"
+                />
               </div>
 
-              {/* Name, Bio, and Button */}
+              {/* Name and Bio */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2 min-w-0">
-                    <h4 className="font-semibold text-gray-900 truncate">
+                    <h4 className="font-semibold text-neutral-900 truncate">
                       {userData.first_name} {userData.last_name}
                     </h4>
                     {userData.username && (
-                      <Badge variant="outline" className="text-xs font-normal text-gray-500 px-2 truncate">
+                      <Badge variant="outline" className="text-xs font-normal text-neutral-500 px-2 truncate border-neutral-200">
                         @{userData.username}
                       </Badge>
                     )}
@@ -240,36 +249,115 @@ function UserBlockComponent(props: any) {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-6 w-6 text-gray-600 hover:text-gray-900 flex-shrink-0"
+                    className="h-7 w-7 text-neutral-500 hover:text-neutral-700 flex-shrink-0"
                     onClick={() => userData.username && router.push(`/user/${userData.username}`)}
                   >
                     <ExternalLink className="w-4 h-4" />
                   </Button>
                 </div>
                 {userData.bio && (
-                  <p className="text-sm text-gray-500 mt-1.5 line-clamp-4 leading-normal">
+                  <p className="text-sm text-neutral-600 mt-2 line-clamp-3 leading-relaxed">
                     {userData.bio}
                   </p>
                 )}
               </div>
             </div>
           </div>
+
+          {/* Details */}
+          {userData.details && Object.values(userData.details).length > 0 && (
+            <div className="px-5 pb-4 pt-3 border-t border-neutral-100 space-y-2.5">
+              {Object.values(userData.details).map((detail) => (
+                <div key={detail.id} className="flex items-center gap-2.5">
+                  <IconComponent iconName={detail.icon} />
+                  <div className="flex flex-col">
+                    <span className="text-xs text-neutral-500">{detail.label}</span>
+                    <span className="text-sm text-neutral-700">{detail.text}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </NodeViewWrapper>
+    )
+  }
+
+  // Editor mode - User display with block wrapper
+  return (
+    <NodeViewWrapper className="block-user">
+      <div className="bg-neutral-50 rounded-xl px-5 py-4 nice-shadow transition-all ease-linear">
+        {/* Header */}
+        <div className="flex items-center gap-2 mb-3">
+          <User className="text-neutral-400" size={16} />
+          <span className="uppercase tracking-widest text-xs font-bold text-neutral-400">
+            User Profile
+          </span>
         </div>
 
-        {/* Details */}
-        {userData.details && Object.values(userData.details).length > 0 && (
-          <div className="px-5 pb-4 space-y-2.5 border-t border-gray-100 pt-3.5">
-            {Object.values(userData.details).map((detail) => (
-              <div key={detail.id} className="flex items-center gap-2.5">
-                <IconComponent iconName={detail.icon} />
-                <div className="flex flex-col">
-                  <span className="text-xs text-gray-500">{detail.label}</span>
-                  <span className="text-sm text-gray-700">{detail.text}</span>
-                </div>
+        {/* User Card */}
+        <div className="bg-white rounded-lg nice-shadow overflow-hidden">
+          {/* User Info */}
+          <div className="p-5">
+            <div className="flex items-start gap-4">
+              {/* Avatar */}
+              <div className="flex-shrink-0">
+                <UserAvatar
+                  width={72}
+                  avatar_url={userData.avatar_image ? getUserAvatarMediaDirectory(userData.user_uuid, userData.avatar_image) : ''}
+                  predefined_avatar={userData.avatar_image ? undefined : 'empty'}
+                  userId={userData.id}
+                  showProfilePopup
+                  rounded="rounded-full"
+                />
               </div>
-            ))}
+
+              {/* Name and Bio */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <h4 className="font-semibold text-neutral-900 truncate">
+                      {userData.first_name} {userData.last_name}
+                    </h4>
+                    {userData.username && (
+                      <Badge variant="outline" className="text-xs font-normal text-neutral-500 px-2 truncate border-neutral-200">
+                        @{userData.username}
+                      </Badge>
+                    )}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 text-neutral-500 hover:text-neutral-700 flex-shrink-0"
+                    onClick={() => userData.username && router.push(`/user/${userData.username}`)}
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                  </Button>
+                </div>
+                {userData.bio && (
+                  <p className="text-sm text-neutral-600 mt-2 line-clamp-3 leading-relaxed">
+                    {userData.bio}
+                  </p>
+                )}
+              </div>
+            </div>
           </div>
-        )}
+
+          {/* Details */}
+          {userData.details && Object.values(userData.details).length > 0 && (
+            <div className="px-5 pb-4 pt-3 border-t border-neutral-100 space-y-2.5">
+              {Object.values(userData.details).map((detail) => (
+                <div key={detail.id} className="flex items-center gap-2.5">
+                  <IconComponent iconName={detail.icon} />
+                  <div className="flex flex-col">
+                    <span className="text-xs text-neutral-500">{detail.label}</span>
+                    <span className="text-sm text-neutral-700">{detail.text}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </NodeViewWrapper>
   )

@@ -19,7 +19,7 @@ class SecurityConfig(BaseModel):
 
 
 class AIConfig(BaseModel):
-    openai_api_key: str | None
+    gemini_api_key: str | None
     is_ai_enabled: bool | None
 
 
@@ -205,11 +205,11 @@ def get_learnhouse_config() -> LearnHouseConfig:
     ).get("sql_connection_string")
 
     # AI Config
-    env_openai_api_key = os.environ.get("LEARNHOUSE_OPENAI_API_KEY")
+    env_gemini_api_key = os.environ.get("LEARNHOUSE_GEMINI_API_KEY")
     env_is_ai_enabled_str = os.environ.get("LEARNHOUSE_IS_AI_ENABLED")
-    
-    openai_api_key = env_openai_api_key or yaml_config.get("ai_config", {}).get(
-        "openai_api_key"
+
+    gemini_api_key = env_gemini_api_key or yaml_config.get("ai_config", {}).get(
+        "gemini_api_key"
     )
     
     # Parse is_ai_enabled from env or yaml
@@ -279,7 +279,7 @@ def get_learnhouse_config() -> LearnHouseConfig:
 
     # AI Config
     ai_config = AIConfig(
-        openai_api_key=openai_api_key,
+        gemini_api_key=gemini_api_key,
         is_ai_enabled=bool(is_ai_enabled),
     )
 

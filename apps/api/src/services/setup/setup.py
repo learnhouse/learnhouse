@@ -316,10 +316,10 @@ def install_default_elements(db_session: Session):
     )
 
     # Serialize rights to JSON
-    role_global_admin.rights = role_global_admin.rights.dict()  # type: ignore
-    role_global_maintainer.rights = role_global_maintainer.rights.dict()  # type: ignore
-    role_global_instructor.rights = role_global_instructor.rights.dict()  # type: ignore
-    role_global_user.rights = role_global_user.rights.dict()  # type: ignore
+    role_global_admin.rights = role_global_admin.rights.model_dump()  # type: ignore
+    role_global_maintainer.rights = role_global_maintainer.rights.model_dump()  # type: ignore
+    role_global_instructor.rights = role_global_instructor.rights.model_dump()  # type: ignore
+    role_global_user.rights = role_global_user.rights.model_dump()  # type: ignore
 
     # Insert roles in DB
     db_session.add(role_global_admin)
@@ -364,7 +364,7 @@ def install_create_organization(org_object: OrganizationCreate, db_session: Sess
             ),
             usergroups=UserGroupOrgConfig(enabled=True, limit=0),
             storage=StorageOrgConfig(enabled=True, limit=0),
-            ai=AIOrgConfig(enabled=True, limit=0, model="gpt-4o-mini"),
+            ai=AIOrgConfig(enabled=True, limit=0, model=""),
             assignments=AssignmentOrgConfig(enabled=True, limit=0),
             payments=PaymentOrgConfig(enabled=False),
             discussions=DiscussionOrgConfig(enabled=True, limit=0),
@@ -379,7 +379,7 @@ def install_create_organization(org_object: OrganizationCreate, db_session: Sess
         landing={}
     )
 
-    org_config = json.loads(org_config.json())
+    org_config = json.loads(org_config.model_dump_json())
 
     # OrgSettings
     org_settings = OrganizationConfig(
@@ -441,7 +441,7 @@ def install_create_organization_user(
         )
 
     # Exclude unset values
-    user_data = user.dict(exclude_unset=True)
+    user_data = user.model_dump(exclude_unset=True)
     for key, value in user_data.items():
         setattr(user, key, value)
 

@@ -28,6 +28,7 @@ import { useCourse } from '@components/Contexts/CourseContext'
 import toast from 'react-hot-toast'
 import { useMediaQuery } from 'usehooks-ts'
 import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
+import { useTranslation } from 'react-i18next'
 
 type ActivitiyElementProps = {
   orgslug: string
@@ -42,6 +43,7 @@ interface ModifiedActivityInterface {
 }
 
 function ActivityElement(props: ActivitiyElementProps) {
+  const { t } = useTranslation()
   const router = useRouter()
   const session = useLHSession() as any;
   const access_token = session?.data?.tokens?.access_token;
@@ -58,7 +60,7 @@ function ActivityElement(props: ActivitiyElementProps) {
   const withUnpublishedActivities = course ? course.withUnpublishedActivities : false
 
   async function deleteActivityUI() {
-    const toast_loading = toast.loading('Deleting activity...')
+    const toast_loading = toast.loading(t('dashboard.courses.structure.activity.toasts.deleting'))
     // Assignments 
     if (props.activity.activity_type === 'TYPE_ASSIGNMENT') {
       await deleteAssignmentUsingActivityUUID(props.activity.activity_uuid, access_token)
@@ -68,12 +70,12 @@ function ActivityElement(props: ActivitiyElementProps) {
     mutate(`${getAPIUrl()}courses/${props.course_uuid}/meta?with_unpublished_activities=${withUnpublishedActivities}`)
     await revalidateTags(['courses'], props.orgslug)
     toast.dismiss(toast_loading)
-    toast.success('Activity deleted successfully')
+    toast.success(t('dashboard.courses.structure.activity.toasts.delete_success'))
     router.refresh()
   }
 
   async function changePublicStatus() {
-    const toast_loading = toast.loading('Updating assignment...')
+    const toast_loading = toast.loading(t('dashboard.courses.structure.activity.toasts.updating'))
     await updateActivity(
       {
         ...props.activity,
@@ -84,7 +86,7 @@ function ActivityElement(props: ActivitiyElementProps) {
     )
     mutate(`${getAPIUrl()}courses/${props.course_uuid}/meta?with_unpublished_activities=${withUnpublishedActivities}`)
     toast.dismiss(toast_loading)
-    toast.success('The activity has been updated successfully')
+    toast.success(t('dashboard.courses.structure.activity.toasts.update_success'))
     await revalidateTags(['courses'], props.orgslug)
     router.refresh()
   }
@@ -105,10 +107,10 @@ function ActivityElement(props: ActivitiyElementProps) {
         await updateActivity(modifiedActivityCopy, activityUUID, access_token)
         mutate(`${getAPIUrl()}courses/${props.course_uuid}/meta?with_unpublished_activities=${withUnpublishedActivities}`)
         await revalidateTags(['courses'], props.orgslug)
-        toast.success('Activity name updated successfully')
+        toast.success(t('dashboard.courses.structure.activity.toasts.name_update_success'))
         router.refresh()
       } catch (error) {
-        toast.error('Failed to update activity name')
+        toast.error(t('dashboard.courses.structure.activity.toasts.name_update_error'))
         console.error('Error updating activity name:', error)
       } finally {
         setIsUpdatingName(false)
@@ -151,7 +153,7 @@ function ActivityElement(props: ActivitiyElementProps) {
                 <input
                   type="text"
                   className="bg-transparent outline-hidden text-xs text-gray-500"
-                  placeholder="Activity name"
+                  placeholder={t('dashboard.courses.structure.activity.name_placeholder')}
                   value={
                     modifiedActivity
                       ? modifiedActivity?.activityName
@@ -203,10 +205,10 @@ function ActivityElement(props: ActivitiyElementProps) {
               ) : (
                 <Lock strokeWidth={2} size={12} className="text-gray-600" />
               )}
-              <span>{!props.activity.published ? 'Publish' : 'Unpublish'}</span>
+              <span>{!props.activity.published ? t('dashboard.courses.structure.actions.publish') : t('dashboard.courses.structure.actions.unpublish')}</span>
             </button>
             <div className="w-px h-3 bg-gray-300 mx-1 self-center rounded-full hidden sm:block" />
-            <ToolTip content="Preview Activity" sideOffset={8}>
+            <ToolTip content={t('dashboard.courses.structure.actions.preview_activity')} sideOffset={8}>
               <Link
                 href={
                   getUriWithOrg(props.orgslug, '') +
@@ -226,9 +228,9 @@ function ActivityElement(props: ActivitiyElementProps) {
             </ToolTip>
             {/*   Delete Button  */}
             <ConfirmationModal
-              confirmationMessage="Are you sure you want to delete this activity ?"
-              confirmationButtonText="Delete Activity"
-              dialogTitle={'Delete ' + props.activity.name + ' ?'}
+              confirmationMessage={t('dashboard.courses.structure.modals.delete_activity.message')}
+              confirmationButtonText={t('dashboard.courses.structure.modals.delete_activity.button')}
+              dialogTitle={t('dashboard.courses.structure.modals.delete_activity.title', { name: props.activity.name })}
               dialogTrigger={
                 <button
                   className="p-1 px-2 sm:px-3 bg-red-600 rounded-md flex items-center space-x-1 shadow-md transition-colors duration-200 hover:bg-red-700"
@@ -249,32 +251,33 @@ function ActivityElement(props: ActivitiyElementProps) {
 
 const ACTIVITIES = {
   'TYPE_VIDEO': {
-    displayName: 'Video',
+    displayNameKey: 'video',
     Icon: Video
   },
   'TYPE_DOCUMENT': {
-    displayName: 'Document',
+    displayNameKey: 'document',
     Icon: File
   },
   'TYPE_ASSIGNMENT': {
-    displayName: 'Assignment',
+    displayNameKey: 'assignment',
     Icon: Backpack
   },
   'TYPE_DYNAMIC': {
-    displayName: 'Dynamic',
+    displayNameKey: 'dynamic',
     Icon: Sparkles
   }
 }
 
 const ActivityTypeIndicator = ({activityType, isMobile} : { activityType: keyof typeof ACTIVITIES, isMobile: boolean}) => {
-  const {displayName, Icon} = ACTIVITIES[activityType]
+  const { t } = useTranslation()
+  const {displayNameKey, Icon} = ACTIVITIES[activityType]
 
   return (
     <div className={`text-gray-300 space-x-1 w-28 flex ${isMobile ? 'flex-col' : ''}`}>
       <div className="flex space-x-2 items-center">
             <Icon className="size-4" />{' '}
             <div className="text-xs bg-gray-200 text-gray-400 font-bold px-2 py-1 rounded-full mx-auto justify-center align-middle">
-              {displayName}
+              {t(`dashboard.courses.structure.activity.types.${displayNameKey}`)}
             </div>{' '}
           </div>
     </div>
@@ -282,6 +285,7 @@ const ActivityTypeIndicator = ({activityType, isMobile} : { activityType: keyof 
 }
 
 const ActivityElementOptions = ({ activity, isMobile }: { activity: any; isMobile: boolean }) => {
+  const { t } = useTranslation()
   const [assignmentUUID, setAssignmentUUID] = useState('');
   const org = useOrg() as any;
   const course = useCourse() as any;
@@ -326,7 +330,7 @@ const ActivityElementOptions = ({ activity, isMobile }: { activity: any; isMobil
             target='_blank'
           >
             <div className="text-sky-100 font-bold text-xs flex items-center space-x-1">
-              <FilePenLine size={12} />  <span>Edit Page</span>
+              <FilePenLine size={12} />  <span>{t('dashboard.courses.structure.actions.edit_page')}</span>
             </div>
           </Link>
         </>
@@ -341,7 +345,7 @@ const ActivityElementOptions = ({ activity, isMobile }: { activity: any; isMobil
             className={`hover:cursor-pointer p-1 ${isMobile ? 'px-2' : 'px-3'} bg-teal-700 rounded-md items-center`}
           >
             <div className="text-sky-100 font-bold text-xs flex items-center space-x-1">
-              <FilePenLine size={12} /> {!isMobile && <span>Edit Assignment</span>}
+              <FilePenLine size={12} /> {!isMobile && <span>{t('dashboard.courses.structure.actions.edit_assignment')}</span>}
             </div>
           </Link>
         </>

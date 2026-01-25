@@ -10,8 +10,10 @@ import { getTaskRefFileDir } from '@services/media/media';
 import { deleteUserSubmission, markActivityAsDoneForUser, putFinalGrade } from '@services/courses/assignments';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 function EvaluateAssignment({ user_id }: any) {
+    const { t } = useTranslation()
     const assignments = useAssignments() as any;
     const session = useLHSession() as any;
     const org = useOrg() as any;
@@ -38,7 +40,7 @@ function EvaluateAssignment({ user_id }: any) {
 
     async function rejectAssignment() {
         const res = await deleteUserSubmission(user_id, assignments?.assignment_object.assignment_uuid, session.data?.tokens?.access_token)
-        toast.success('Assignment rejected successfully')
+        toast.success(t('dashboard.assignments.submissions.toasts.reject_success'))
         window.location.reload()
     }
 
@@ -49,7 +51,7 @@ function EvaluateAssignment({ user_id }: any) {
                     <div className='flex flex-col space-y-2' key={task.assignment_task_uuid}>
                         <div className='flex justify-between py-2'>
                             <div className='flex space-x-2 font-semibold text-slate-800'>
-                                <p>Task {index + 1} : </p>
+                                <p>{t('dashboard.assignments.submissions.task_label', { number: index + 1 })} </p>
                                 <p className='text-slate-500'>{task.description}</p>
                             </div>
                             <div className='flex space-x-2'>
@@ -57,7 +59,7 @@ function EvaluateAssignment({ user_id }: any) {
                                     onClick={() => alert(task.hint)}
                                     className='px-3 py-1 flex items-center nice-shadow bg-amber-50/40 text-amber-900 rounded-full space-x-2 cursor-pointer'>
                                     <Info size={13} />
-                                    <p className='text-xs font-semibold'>Hint</p>
+                                    <p className='text-xs font-semibold'>{t('dashboard.assignments.submissions.hint')}</p>
                                 </div>
                                 <Link
                                     href={getTaskRefFileDir(
@@ -78,7 +80,7 @@ function EvaluateAssignment({ user_id }: any) {
                                                 <span className='absolute right-0 top-0 block h-2 w-2 rounded-full ring-2 ring-white bg-green-400'></span>
                                             </span>
                                         )}
-                                        <p className='text-xs font-semibold'>Reference Document</p>
+                                        <p className='text-xs font-semibold'>{t('dashboard.assignments.submissions.reference_document')}</p>
                                     </div>
                                 </Link>
                             </div>
@@ -94,17 +96,17 @@ function EvaluateAssignment({ user_id }: any) {
             <div className='flex  space-x-4 font-semibold items-center justify-between'>
                 <button onClick={rejectAssignment} className='flex space-x-2 px-4 py-2 text-sm bg-rose-600/80 text-white rounded-lg nice-shadow items-center cursor-pointer'>
                     <X size={18} />
-                    <span>Reject Assignment</span>
+                    <span>{t('dashboard.assignments.submissions.actions.reject')}</span>
                 </button>
                 <div className='flex space-x-3 items-center'>
                     <button onClick={gradeAssignment} className='flex space-x-2 px-4 py-2 text-sm bg-violet-600/80 text-white rounded-lg nice-shadow items-center cursor-pointer'>
                         <BookOpenCheck size={18} />
-                        <span>Set final grade</span>
+                        <span>{t('dashboard.assignments.submissions.actions.set_final_grade')}</span>
                     </button>
                     <MoveRight className='text-gray-400' size={18} />
                     <button onClick={markActivityAsDone} className='flex space-x-2 px-4 py-2 text-sm bg-teal-600/80 text-white rounded-lg nice-shadow items-center cursor-pointer'>
                         <Check size={18} />
-                        <span>Mark Activity as Done for User</span>
+                        <span>{t('dashboard.assignments.submissions.actions.mark_as_done')}</span>
                     </button>
                 </div>
             </div>

@@ -7,6 +7,7 @@ layer(base);
 
 @import 'tailwindcss';
 
+
 @custom-variant dark (&:is(.dark *));
 
 @theme {
@@ -101,7 +102,7 @@ layer(base);
   body {
     padding: 0;
     margin: 0;
-    transition: all 0.2s ease;
+    scrollbar-gutter: stable;
     font-family:
       'DM Sans',
       -apple-system,
@@ -311,4 +312,441 @@ layer(base);
 .ProseMirror .tippy-box {
   position: fixed !important;
   transform: none !important;
+}
+
+/* Editor Drag Handle */
+.editor-drag-handle {
+  position: fixed;
+  height: 26px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: white;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 150ms, visibility 150ms, padding 150ms;
+  z-index: 9999;
+  pointer-events: none;
+  user-select: none;
+  overflow: hidden;
+  padding: 0;
+}
+
+.editor-drag-handle.visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.editor-drag-handle:hover {
+  padding: 0 1px 0 0;
+}
+
+.editor-drag-handle .drag-grip {
+  width: 22px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  color: #9ca3af;
+  transition: background 150ms, color 150ms;
+  border-radius: 6px 0 0 6px;
+  flex-shrink: 0;
+}
+
+.editor-drag-handle .drag-grip:hover {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.editor-drag-handle .drag-grip:active,
+.editor-drag-handle.is-dragging .drag-grip {
+  cursor: grabbing;
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.editor-drag-handle .action-btn {
+  width: 0;
+  height: 26px;
+  padding: 0;
+  border: none;
+  background: white;
+  color: #6b7280;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: width 150ms, opacity 150ms, visibility 150ms, background 150ms, color 150ms;
+  overflow: visible;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.editor-drag-handle:hover .action-btn {
+  width: 28px;
+  opacity: 1;
+  visibility: visible;
+}
+
+.editor-drag-handle .action-btn svg {
+  flex-shrink: 0;
+}
+
+.editor-drag-handle .action-btn:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.editor-drag-handle .action-btn:active {
+  background: #e5e7eb;
+}
+
+.editor-drag-handle .clear-btn:hover {
+  background: #fef3c7;
+  color: #f59e0b;
+}
+
+.editor-drag-handle .clear-btn:active {
+  background: #fde68a;
+  color: #f59e0b;
+}
+
+.editor-drag-handle .delete-btn:hover {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.editor-drag-handle .delete-btn:active {
+  background: #fecaca;
+  color: #dc2626;
+}
+
+/* Tooltips for action buttons */
+.editor-drag-handle .tooltip-text {
+  position: fixed;
+  background: rgba(255, 255, 255, 0.95);
+  color: #4b5563;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 200ms cubic-bezier(0.16, 1, 0.3, 1),
+              visibility 200ms;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+  outline: 1px solid rgba(0, 0, 0, 0.06);
+  z-index: 10001;
+  transform: translateX(-50%);
+}
+
+.editor-drag-handle .action-btn:hover .tooltip-text {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Editor Drop Indicator */
+.editor-drop-indicator {
+  position: fixed;
+  height: 2px;
+  background: #3b82f6;
+  border-radius: 1px;
+  opacity: 0;
+  visibility: hidden;
+  z-index: 9999;
+  pointer-events: none;
+  transition: opacity 100ms;
+}
+
+.editor-drop-indicator::before,
+.editor-drop-indicator::after {
+  content: '';
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: #3b82f6;
+  border-radius: 50%;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.editor-drop-indicator::before {
+  left: -3px;
+}
+
+.editor-drop-indicator::after {
+  right: -3px;
+}
+
+.editor-drop-indicator.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Block being dragged */
+.ProseMirror .is-dragging {
+  opacity: 0.4;
+  background: #f3f4f6;
+  border-radius: 4px;
+}
+
+/* Remove all selection outlines from editor blocks */
+.ProseMirror-selectednode {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.ProseMirror [data-node-view-wrapper] {
+  outline: none !important;
+}
+
+.ProseMirror [data-node-view-wrapper]:focus,
+.ProseMirror [data-node-view-wrapper]:focus-within,
+.ProseMirror [data-node-view-wrapper]:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.ProseMirror .node-view-wrapper:focus,
+.ProseMirror .node-view-wrapper:focus-within {
+  outline: none !important;
+}
+
+/* Remove outline from all block types */
+.ProseMirror [class^="block-"]:focus,
+.ProseMirror [class^="block-"]:focus-within,
+.ProseMirror [class*=" block-"]:focus,
+.ProseMirror [class*=" block-"]:focus-within {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Tippy.js base styles */
+.tippy-box {
+  position: relative;
+  background-color: #333;
+  color: #fff;
+  border-radius: 4px;
+  font-size: 14px;
+  line-height: 1.4;
+  white-space: normal;
+  outline: 0;
+  transition-property: transform, visibility, opacity;
+}
+
+.tippy-box[data-placement^='top'] > .tippy-arrow {
+  bottom: 0;
+}
+
+.tippy-box[data-placement^='bottom'] > .tippy-arrow {
+  top: 0;
+}
+
+.tippy-box[data-placement^='left'] > .tippy-arrow {
+  right: 0;
+}
+
+.tippy-box[data-placement^='right'] > .tippy-arrow {
+  left: 0;
+}
+
+.tippy-arrow {
+  width: 16px;
+  height: 16px;
+  color: #333;
+}
+
+.tippy-arrow::before {
+  content: '';
+  position: absolute;
+  border-color: transparent;
+  border-style: solid;
+}
+
+.tippy-content {
+  position: relative;
+  padding: 5px 9px;
+  z-index: 1;
+}
+
+/* Tippy shift-away animation */
+.tippy-box[data-animation='shift-away'][data-state='hidden'] {
+  opacity: 0;
+}
+
+.tippy-box[data-animation='shift-away'][data-state='hidden'][data-placement^='top'] {
+  transform: translateY(10px);
+}
+
+.tippy-box[data-animation='shift-away'][data-state='hidden'][data-placement^='bottom'] {
+  transform: translateY(-10px);
+}
+
+.tippy-box[data-animation='shift-away'][data-state='hidden'][data-placement^='left'] {
+  transform: translateX(10px);
+}
+
+.tippy-box[data-animation='shift-away'][data-state='hidden'][data-placement^='right'] {
+  transform: translateX(-10px);
+}
+
+/* Tippy theme for slash commands */
+.tippy-box[data-theme~='slash-commands'] {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+}
+
+.tippy-box[data-theme~='slash-commands'] > .tippy-content {
+  padding: 0;
+}
+
+.tippy-box[data-theme~='slash-commands'] > .tippy-arrow {
+  display: none;
+}
+
+/* Slash Commands Menu */
+.slash-commands-menu {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  max-height: 320px;
+  overflow-y: auto;
+  width: 280px;
+  padding: 6px;
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.slash-commands-menu::-webkit-scrollbar {
+  width: 6px;
+}
+
+.slash-commands-menu::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.slash-commands-menu::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+.slash-commands-menu::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+.slash-commands-category {
+  margin-bottom: 6px;
+}
+
+.slash-commands-category:last-child {
+  margin-bottom: 0;
+}
+
+.slash-commands-category-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 6px 10px 4px;
+}
+
+.slash-commands-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease;
+}
+
+.slash-commands-item:hover,
+.slash-commands-item.is-selected {
+  background: #f3f4f6;
+}
+
+.slash-commands-item.is-selected {
+  background: #e5e7eb;
+}
+
+.slash-commands-item-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  margin-right: 10px;
+  color: #374151;
+  flex-shrink: 0;
+}
+
+.slash-commands-item.is-selected .slash-commands-item-icon {
+  background: white;
+}
+
+.slash-commands-item-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.slash-commands-item-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: #111827;
+  line-height: 1.3;
+}
+
+.slash-commands-item-description {
+  font-size: 11px;
+  color: #6b7280;
+  line-height: 1.3;
+  margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.slash-commands-empty {
+  padding: 16px;
+  text-align: center;
+  color: #6b7280;
+  font-size: 13px;
+}
+
+/* Tippy animation for slash commands */
+.tippy-box[data-animation='shift-away'][data-state='hidden'] {
+  opacity: 0;
+}
+
+.tippy-box[data-animation='shift-away'][data-state='hidden'][data-placement^='top'] {
+  transform: translateY(5px);
+}
+
+.tippy-box[data-animation='shift-away'][data-state='hidden'][data-placement^='bottom'] {
+  transform: translateY(-5px);
+}
+
+.tippy-box[data-animation='shift-away'][data-state='hidden'][data-placement^='left'] {
+  transform: translateX(5px);
+}
+
+.tippy-box[data-animation='shift-away'][data-state='hidden'][data-placement^='right'] {
+  transform: translateX(-5px);
 }

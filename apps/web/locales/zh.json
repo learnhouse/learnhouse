@@ -1,0 +1,1939 @@
+{
+  "common": {
+    "hello": "你好",
+    "home": "首页",
+    "back_to_home": "返回首页",
+    "your_organization": "您的组织",
+    "your_organizations": "您的组织",
+    "no_orgs_message": "您似乎还不是任何组织的成员。加入一个组织以在此处查看。",
+    "assignments": "作业",
+    "payments": "支付",
+    "organization": "组织",
+    "dashboard": "仪表板",
+    "settings": "设置",
+    "language": "语言",
+    "english": "英语",
+    "french": "法语",
+    "german": "德语",
+    "spanish": "西班牙语",
+    "arabic": "阿拉伯语",
+    "japanese": "日语",
+    "portuguese": "葡萄牙语",
+    "russian": "俄语",
+    "chinese": "中文（简体）",
+    "hindi": "印地语",
+    "korean": "韩语",
+    "italian": "意大利语",
+    "turkish": "土耳其语",
+    "vietnamese": "越南语",
+    "indonesian": "印度尼西亚语",
+    "polish": "波兰语",
+    "dutch": "荷兰语",
+    "thai": "泰语",
+    "bengali": "孟加拉语",
+    "loading": "加载中...",
+    "search": "搜索",
+    "all": "全部",
+    "help": "帮助",
+    "plans": "方案",
+    "enterprise": "企业",
+    "version": "版本",
+    "users": "用户",
+    "save": "保存",
+    "cancel": "取消",
+    "submit": "提交",
+    "delete": "删除",
+    "previous": "上一个",
+    "next": "下一个",
+    "status": "状态",
+    "complete": "完成",
+    "completed": "已完成",
+    "created_at": "创建于",
+    "updated": "已更新",
+    "or": "或",
+    "just_now": "刚刚",
+    "unknown": "未知",
+    "hi": "嗨",
+    "about": "关于",
+    "present": "现在",
+    "made_with": "制作于",
+    "something_went_wrong": "出错了",
+    "something_wrong_happened": "发生了错误",
+    "error_request": "处理您的请求时出错",
+    "processing": "处理中...",
+    "show_less": "收起",
+    "show_more": "展开",
+    "price": "价格：",
+    "back": "返回",
+    "of": "属于",
+    "creating": "创建中...",
+    "view_details": "查看详情"
+  },
+  "auth": {
+    "login": "登录",
+    "email": "电子邮件",
+    "password": "密码",
+    "forgot_password": "忘记密码？",
+    "login_to": "登录到",
+    "sign_up": "注册",
+    "sign_in_with_google": "使用 Google 登录",
+    "wrong_email_password": "电子邮件或密码错误",
+    "invited_to_join": "您受邀加入",
+    "join": "加入",
+    "invite_code_required": "登录需要邀请码",
+    "enter_invite_code": "输入邀请码",
+    "invite_code_valid": "邀请码有效，几秒钟后将跳转至注册页面",
+    "invite_code_invalid": "邀请码无效",
+    "forgot_password_title": "忘记密码",
+    "forgot_password_description": "输入您的电子邮件地址，我们将向您发送重置密码的链接",
+    "send_reset_link": "发送重置链接",
+    "check_email_message": "请检查您的电子邮件",
+    "reset_password_title": "重置密码",
+    "reset_password_description": "输入您的电子邮件和重置码以更改密码",
+    "reset_code": "重置码",
+    "new_password": "新密码",
+    "confirm_password": "确认密码",
+    "passwords_do_not_match": "密码不匹配",
+    "change_password": "更改密码",
+    "login_again_message": "请使用新密码重新登录",
+    "signup_to": "注册到",
+    "create_account": "创建账户",
+    "create_account_and_join": "创建账户并加入",
+    "account_created_success": "您的账户已成功创建",
+    "login_to_your_account": "登录您的账户",
+    "authenticate_to_contribute": "请登录以参与贡献",
+    "sign_up_to_contribute": "请注册以参与贡献"
+  },
+  "validation": {
+    "required": "必填",
+    "invalid_email": "电子邮件无效",
+    "password_min_length": "密码必须至少包含 8 个字符",
+    "username_min_length": "用户名必须至少包含 4 个字符",
+    "title_required": "标题必填",
+    "content_required": "内容必填"
+  },
+  "courses": {
+    "my_courses": "我的课程",
+    "courses": "课程",
+    "no_courses": "尚无课程",
+    "create_courses_placeholder": "创建课程以添加内容",
+    "loading_courses": "正在加载课程...",
+    "no_featured_courses": "未选择推荐课程",
+    "start_course": "开始课程",
+    "leave_course": "退出课程",
+    "leave_course_success": "您已成功退出课程",
+    "start_course_success": "课程开始成功",
+    "leave_course_error": "退出课程失败，请稍后重试。",
+    "start_course_error": "开始课程失败，请稍后重试。",
+    "you_own_this_course": "您拥有此课程",
+    "you_own_this_course_description": "您已购买此课程，可以完全访问所有内容。",
+    "paid_course": "付费课程",
+    "paid_course_description": "访问此课程内容需要购买。",
+    "purchase_course_title": "购买课程",
+    "purchase_course_description": "选择支付选项以访问此课程",
+    "ready_to_begin": "准备好开始了吗？",
+    "start_learning_journey": "通过 {{count}} 个精彩活动开始您的学习之旅",
+    "course_progress": "课程进度",
+    "progress": "进度",
+    "completed_of": "已完成 {{completed}} / {{total}}",
+    "quit_all_courses": "退出所有课程",
+    "quitting_courses": "正在退出课程 ({{progress}}%)",
+    "quit_all_courses_confirm": "您确定要退出所有课程吗？此操作无法撤销，您将失去所有进度。",
+    "quit_all_courses_title": "退出所有课程？",
+    "no_courses_available": "尚无可用课程",
+    "new_course": "新课程",
+    "create_course": "创建课程",
+    "create_new_course": "创建新课程",
+    "course_name": "课程名称",
+    "course_thumbnail": "课程缩略图",
+    "course_learnings": "您将学到什么",
+    "course_learnings_desc": "您将教授什么？（按 Enter 键添加）",
+    "course_tags": "课程标签",
+    "course_visibility": "课程可见性",
+    "create_course_btn": "创建课程",
+    "creating_course": "正在创建课程...",
+    "course_created_success": "课程创建成功",
+    "failed_to_create_course": "创建课程失败",
+    "course_name_required": "课程名称必填",
+    "deleting_course": "正在删除课程...",
+    "course_deleted_success": "课程已成功删除",
+    "course_deleted_error": "删除课程失败",
+    "delete_course": "删除课程",
+    "failed_load_courses": "加载课程失败",
+    "start_learning": "开始学习",
+    "edit_content": "编辑内容",
+    "delete_course_confirm": "您确定要删除此课程吗？",
+    "delete_course_title": "删除 {{name}}？",
+    "course_count": "{{count}} 个课程",
+    "course_count_plural": "{{count}} 个课程",
+    "authors_and_updates": "作者与更新",
+    "course_updates": "课程更新",
+    "no_updates_yet": "尚无更新",
+    "no_updates_desc": "此课程的更新将显示在此处",
+    "quit_course": "退出课程",
+    "course_content": "课程内容",
+    "course_completion": "课程完成",
+    "course_completed_exclamation": "课程已完成！",
+    "what_you_will_learn": "您将学到什么",
+    "course_lessons": "课程课时",
+    "unlock_certificate_message": "完成所有活动以获得证书",
+    "chapter": "章",
+    "chapters": "章",
+    "co_created_by": "共同创建者：",
+    "created_on": "创建于",
+    "last_updated": "最后更新",
+    "public": "公开",
+    "public_desc": "互联网上的任何人都可以访问",
+    "private": "私有",
+    "private_desc": "仅用户可见",
+    "image": "图像",
+    "upload_image": "上传图像",
+    "choose_from_gallery": "从图库中选择",
+    "enter_to_add": "按 Enter 键添加...",
+    "select_visibility": "选择可见性",
+    "and_x_more": "以及另外 {{count}} 个",
+    "update": "更新",
+    "updates": "个更新",
+    "new_update": "新更新",
+    "update_added_success": "更新添加成功",
+    "failed_add_update": "添加更新失败",
+    "update_title": "更新标题",
+    "update_title_placeholder": "此更新有哪些新内容？",
+    "update_content": "更新内容",
+    "update_content_placeholder": "分享您更新的详情...",
+    "publish_update": "发布更新",
+    "deleting_update": "正在删除更新...",
+    "update_deleted_success": "更新已成功删除",
+    "failed_delete_update": "删除更新失败",
+    "delete_update": "删除更新",
+    "delete_update_confirm": "您确定要删除此更新吗？",
+    "delete_update_title": "删除更新？",
+    "congratulations": "恭喜！ 🎉",
+    "successfully_completed": "您已成功完成",
+    "keep_going": "继续加油！ 💪",
+    "keep_going_description": "您做得很好！完成剩余的活动以获得结业证书。",
+    "making_great_progress": "您在以下方面取得了巨大进步",
+    "continue_learning": "继续学习",
+    "back_to_course": "返回课程",
+    "view_course_progress": "查看课程进度",
+    "no_courses_found": "未找到课程",
+    "add_new_course_update": "添加新课程更新",
+    "add_update": "添加更新",
+    "apply_to_contribute": "申请贡献",
+    "you_are_contributor": "您是贡献者",
+    "contributor_application_pending": "贡献者申请审核中",
+    "submitting_contributor_application": "正在提交申请...",
+    "contributor_application_success": "您的贡献者申请已成功提交",
+    "contributor_application_error": "提交申请失败，请稍后重试。",
+    "contribute": "贡献"
+  },
+  "collections": {
+    "collections": "合集",
+    "no_collections": "尚无合集",
+    "create_collections_placeholder": "创建合集以对课程进行分组",
+    "collection": "合集",
+    "new_collection": "新合集",
+    "enter_collection_name": "请输入合集名称",
+    "collection_created_success": "合集创建成功！",
+    "failed_to_create_collection": "创建合集失败，请重试。",
+    "create_new_collection": "创建新合集",
+    "create_collection_desc": "将您的课程分组到合集中，以便更轻松地查找和管理。",
+    "collection_name": "合集名称",
+    "enter_collection_name_placeholder": "输入合集名称",
+    "public_collection_desc": "公开合集 - 对所有人可见",
+    "private_collection_desc": "私有合集 - 仅组织成员可见",
+    "description": "描述",
+    "enter_collection_description_placeholder": "输入合集描述",
+    "select_courses": "选择课程",
+    "no_courses_available_desc": "未找到课程，请先创建一些课程。",
+    "selected_courses_count": "已选课程：{{count}}",
+    "create_collection_btn": "创建合集",
+    "delete_collection_confirm": "您确定要删除此合集吗？",
+    "delete_collection_title": "删除 {{name}}？",
+    "delete_collection": "删除合集",
+    "enter_description": "请输入描述",
+    "select_at_least_one_course": "请至少选择一门课程",
+    "visibility": "可见性",
+    "empty_collection": "空合集"
+  },
+  "activities": {
+    "video": "视频",
+    "document": "文档",
+    "page": "页面",
+    "assignment": "作业",
+    "learning_material": "学习材料",
+    "current": "当前",
+    "quiz": "测验",
+    "file_submission": "文件提交",
+    "form": "表单",
+    "interactive": "互动",
+    "activities": "活动",
+    "current_activity": "当前活动",
+    "previous_activity": "上一个活动",
+    "next_activity": "下一个活动",
+    "no_previous_activity": "没有上一个活动",
+    "no_next_activity": "没有下一个活动",
+    "mark_as_complete": "标记为完成",
+    "unmark_activity": "取消标记活动",
+    "unmark_activity_confirm": "您确定要取消此活动的完成标记吗？这将影响您的课程进度。",
+    "unmark_activity_title": "取消完成标记",
+    "marking": "标记中...",
+    "not_published_yet": "此活动尚未发布",
+    "focus_mode": "专注模式",
+    "exit_focus_mode": "退出专注模式",
+    "not_started": "未开始",
+    "teacher_view": "教师视图",
+    "dont_forget_to_save": "别忘了保存您的进度",
+    "save_your_progress": "保存您的进度",
+    "unmark_tooltip": "如果需要，点击以取消完成标记",
+    "mark_tooltip": "点击以将此活动标记为完成",
+    "failed_mark_complete": "标记完成失败",
+    "failed_unmark_complete": "取消标记失败",
+    "click_to_flip": "点击翻转",
+    "click_to_flip_back": "点击翻回",
+    "enter_question": "输入您的问题...",
+    "enter_answer": "输入您的答案...",
+    "align_left": "左对齐",
+    "align_center": "居中对齐",
+    "align_right": "右对齐",
+    "size_small": "小号",
+    "size_medium": "中号",
+    "size_large": "大号",
+    "change_color": "更改颜色",
+    "preview_flip": "翻转预览",
+    "activities_count": "{{count}} 个活动"
+  },
+  "assignments": {
+    "submit_assignment": "提交作业",
+    "submit_assignment_confirm": "您确定要提交作业以供评分吗？提交后您将无法进行更改。",
+    "submit_assignment_title": "提交作业以供评分",
+    "submit_for_grading": "提交评分",
+    "grading_in_progress": "评分中",
+    "graded": "已评分",
+    "assignment_submitted_success": "作业已提交评分",
+    "failed_submit_assignment": "作业提交评分失败",
+    "assignment_description": "作业描述",
+    "task": "任务",
+    "hint": "提示",
+    "reference_document": "参考文档",
+    "points": "分",
+    "current_points": "当前分数：{{points}}",
+    "grade": "成绩",
+    "due_date": "截止日期"
+  },
+  "certificate": {
+    "certificate": "证书",
+    "my_certificates": "我的证书",
+    "failed_load_certificates": "加载证书失败",
+    "no_certificates_earned": "尚无已获得的证书",
+    "complete_courses_to_earn": "完成课程以获得证书",
+    "awarded": "授予日期",
+    "download_certificate": "下载证书 (PDF)",
+    "verify_certificate": "验证证书",
+    "loading_certificate": "正在加载证书...",
+    "your_certificate": "您的证书",
+    "view_certificate": "查看结业证书",
+    "certificate_id": "证书 ID",
+    "certificate_verify_message": "此证书可以在以下网址验证：",
+    "no_certificate_available": "此课程未提供证书。请联系您的讲师以获取更多信息。",
+    "verify": "验证",
+    "no_certificate": "无证书",
+    "achievement_based": "基于成就",
+    "assessment_based": "基于考核",
+    "participation": "参与证明",
+    "skill_mastery": "技能掌握",
+    "professional_development": "职业发展",
+    "continuing_education": "继续教育",
+    "workshop_attendance": "工作坊参与",
+    "specialization": "专业化",
+    "dedication_message": "您的奉献和努力得到了回报。您已掌握本课程的所有材料。"
+  },
+  "search": {
+    "search_placeholder": "搜索课程、用户、合集...",
+    "no_results_found": "未找到结果",
+    "no_results_description": "我们找不到与“{{query}}”匹配的结果。请尝试更改您的搜索词或浏览我们的精选内容。",
+    "found_results": "找到 {{count}} 个关于“{{query}}”的结果",
+    "discover_next_journey": "开启您的下一次学习之旅",
+    "start_typing_to_search": "开始输入以搜索可用内容",
+    "search_suggestions": "搜索建议",
+    "quick_results": "快捷结果",
+    "view_all_results": "查看所有结果",
+    "course": "课程",
+    "user": "用户"
+  },
+  "ai": {
+    "ask_ai": "咨询 AI",
+    "ask_ai_placeholder": "咨询 AI 有关此讲座的内容",
+    "experimental": "实验性功能",
+    "how_can_we_help": "今天有什么可以帮您的？",
+    "about_question": "这个活动是关于什么的？",
+    "flashcards_question": "为此活动创建抽认卡",
+    "examples_question": "用实际例子解释这个活动"
+  },
+  "payments": {
+    "paid_content": "付费内容",
+    "paid_content_description": "访问此内容需要购买课程。",
+    "failed_load_products": "加载产品选项失败",
+    "one_time_payment": "一次性支付",
+    "per_month": "（每月）",
+    "per_month_short": "/月",
+    "subscribe_now": "立即订阅",
+    "purchase_now": "立即购买",
+    "failed_checkout": "开始结账过程失败",
+    "stripe_success": "成功连接 Stripe！",
+    "stripe_failed": "无法完成 Stripe 连接",
+    "stripe_completing": "正在完成 Stripe 连接",
+    "stripe_wait": "请稍候，我们正在完成 Stripe 集成设置...",
+    "stripe_return": "您现在可以返回仪表板开始使用支付功能。",
+    "stripe_retry": "请重试，如果问题仍然存在，请联系支持人员。",
+    "subscription": "订阅",
+    "benefits": "权益：",
+    "min_price": "最低价格：",
+    "choose_price": "选择您的价格"
+  },
+  "user": {
+    "user_settings": "用户设置",
+    "settings": {
+      "title": "账户设置",
+      "tabs": {
+        "general": "常规",
+        "profile": "个人资料",
+        "security": "密码"
+      },
+      "general": {
+        "title": "账户设置",
+        "subtitle": "管理您的个人信息和偏好设置",
+        "email": "电子邮件",
+        "email_placeholder": "您的电子邮件地址",
+        "username": "用户名",
+        "username_placeholder": "您的用户名",
+        "first_name": "名字",
+        "first_name_placeholder": "您的名字",
+        "last_name": "姓氏",
+        "last_name_placeholder": "您的姓氏",
+        "bio": "个人简介",
+        "bio_placeholder": "告诉我们关于您自己",
+        "characters_left": "还剩 {{count}} 个字符",
+        "additional_details": "附加详情",
+        "clear_all": "清除全部",
+        "add_detail": "添加详情",
+        "add_general": "添加常规",
+        "add_academic": "添加学术",
+        "add_professional": "添加专业",
+        "profile_picture": "个人资料照片",
+        "change_avatar": "更改头像",
+        "recommended_size": "推荐尺寸 100x100",
+        "save_changes": "保存更改",
+        "saving": "保存中...",
+        "uploading": "上传中",
+        "avatar_updated": "头像已更新",
+        "profile_updated": "个人资料更新成功",
+        "relogin_message": "请使用您的新电子邮件重新登录：{{email}}",
+        "logout_warning": "更改电子邮件后您将被登出",
+        "detail_label_placeholder": "输入标签（例如：职位、位置）",
+        "remove": "删除",
+        "icon": "图标",
+        "select_icon": "选择图标",
+        "text": "文本",
+        "text_placeholder": "输入详情文本",
+        "icons": {
+          "briefcase": "公文包",
+          "education": "教育",
+          "location": "位置",
+          "organization": "组织",
+          "speciality": "专业",
+          "website": "网站",
+          "tech": "技术",
+          "achievement": "成就",
+          "book": "书籍",
+          "link": "链接",
+          "community": "社区",
+          "calendar": "日历"
+        },
+        "labels": {
+          "title": "职位",
+          "affiliation": "隶属关系",
+          "location": "位置",
+          "website": "网站",
+          "linkedin": "LinkedIn",
+          "institution": "机构",
+          "department": "部门",
+          "research": "研究领域",
+          "academic_title": "学术头衔",
+          "company": "公司",
+          "industry": "行业",
+          "expertise": "专业知识",
+          "community": "社区"
+        }
+      },
+      "password": {
+        "title": "更改密码",
+        "subtitle": "更新您的密码以保护账户安全",
+        "current_password": "当前密码",
+        "new_password": "新密码",
+        "update_password": "更新密码",
+        "updating": "更新中...",
+        "password_updated": "密码更新成功",
+        "relogin_message": "请使用您的新密码重新登录",
+        "logout_warning": "更改密码后您将被登出"
+      },
+      "profile_builder": {
+        "title": "个人资料构建器",
+        "subtitle": "自定义您的专业个人资料",
+        "sections": "部分",
+        "add_section": "添加部分",
+        "save_changes": "保存更改",
+        "saving": "保存中...",
+        "select_section": "选择一个部分进行编辑或添加新部分",
+        "beta": "测试版",
+        "section_types": {
+          "image_gallery": {
+            "label": "图片库",
+            "description": "添加图片集合"
+          },
+          "text": {
+            "label": "文本",
+            "description": "添加格式化的文本内容"
+          },
+          "links": {
+            "label": "链接",
+            "description": "添加社交或专业链接"
+          },
+          "skills": {
+            "label": "技能",
+            "description": "展示您的技能和专业知识"
+          },
+          "experience": {
+            "label": "经验",
+            "description": "添加工作或项目经验"
+          },
+          "education": {
+            "label": "教育",
+            "description": "添加教育背景"
+          },
+          "affiliation": {
+            "label": "隶属关系",
+            "description": "添加组织隶属关系"
+          },
+          "courses": {
+            "label": "课程",
+            "description": "显示您创建的课程"
+          }
+        },
+        "editors": {
+          "section_title": "部分标题",
+          "enter_section_title": "输入部分标题",
+          "image_gallery": {
+            "title": "图片库",
+            "images": "图片",
+            "image_url": "图片网址",
+            "enter_image_url": "输入图片网址",
+            "caption": "标题",
+            "image_caption": "图片标题",
+            "add_image": "添加图片"
+          },
+          "text": {
+            "title": "文本内容",
+            "content": "内容",
+            "enter_content": "在此输入您的内容..."
+          },
+          "links": {
+            "title": "链接",
+            "links": "链接",
+            "link_title": "链接标题",
+            "url": "网址",
+            "add_link": "添加链接"
+          },
+          "skills": {
+            "title": "技能",
+            "skills": "技能",
+            "skill_name": "技能名称",
+            "select_level": "选择级别",
+            "category": "类别（可选）",
+            "add_skill": "添加技能",
+            "levels": {
+              "beginner": "初级",
+              "intermediate": "中级",
+              "advanced": "高级",
+              "expert": "专家"
+            }
+          },
+          "experience": {
+            "title": "经验",
+            "items": "经验项目",
+            "role_title": "职位",
+            "role_placeholder": "职位或角色",
+            "organization": "组织",
+            "organization_placeholder": "公司或组织",
+            "start_date": "开始日期",
+            "end_date": "结束日期",
+            "current": "当前",
+            "description": "描述",
+            "description_placeholder": "描述您的角色和成就",
+            "add_experience": "添加经验"
+          },
+          "education": {
+            "title": "教育",
+            "items": "教育项目",
+            "institution": "机构",
+            "institution_placeholder": "学校或大学",
+            "degree": "学位",
+            "degree_placeholder": "学位类型",
+            "field": "研究领域",
+            "field_placeholder": "专业或方向",
+            "start_date": "开始日期",
+            "end_date": "结束日期",
+            "current": "当前",
+            "description": "描述",
+            "description_placeholder": "关于您教育的其他详情",
+            "add_education": "添加教育"
+          },
+          "affiliation": {
+            "title": "隶属关系",
+            "affiliations": "隶属关系",
+            "name": "名称",
+            "name_placeholder": "组织名称",
+            "logo_url": "标志网址",
+            "logo_url_placeholder": "组织标志的网址",
+            "description": "描述",
+            "description_placeholder": "组织描述",
+            "add_affiliation": "添加隶属关系"
+          },
+          "courses": {
+            "title": "课程",
+            "info": "您创建的课程将自动显示在此部分。"
+          }
+        },
+        "toasts": {
+          "loading_error": "加载个人资料数据失败",
+          "save_success": "个人资料更新成功",
+          "save_error": "更新个人资料时出错"
+        }
+      }
+    },
+    "sign_out": "退出登录",
+    "username": "用户名",
+    "first_name": "名字",
+    "last_name": "姓氏",
+    "bio": "个人简介",
+    "no_biography": "未提供个人简介",
+    "my_progress": "我的进度",
+    "no_courses_in_progress": "尚无进行中的课程",
+    "start_course_to_see_progress": "开始一门课程以在此处查看进度"
+  },
+  "roles": {
+    "custom_role": "自定义角色",
+    "role_admin": "管理员",
+    "role_admin_desc": "拥有所有权限，全面控制平台",
+    "role_maintainer": "维护者",
+    "role_maintainer_desc": "拥有广泛权力的中层管理者",
+    "role_instructor": "讲师",
+    "role_instructor_desc": "可以管理其拥有的内容",
+    "role_user": "用户",
+    "role_user_desc": "学习者（仅限阅读）",
+    "instructor": "讲师"
+  },
+  "time": {
+    "years_ago": "{{count}} 年前",
+    "months_ago": "{{count}} 个月前",
+    "weeks_ago": "{{count}} 周前",
+    "days_ago": "{{count}} 天前",
+    "hours_ago": "{{count}} 小时前",
+    "minutes_ago": "{{count}} 分钟前"
+  },
+  "dashboard": {
+    "home": {
+      "cards": {
+        "courses": {
+          "title": "课程",
+          "description": "创建并管理您的课程、章节和活动"
+        },
+        "organization": {
+          "title": "组织",
+          "description": "配置组织的常规设置"
+        },
+        "users": {
+          "title": "用户",
+          "description": "管理组织的成员和角色"
+        },
+        "account_settings": {
+          "title": "账户设置",
+          "description": "管理您的个人信息、密码、电子邮件"
+        }
+      },
+      "learnhouse_university": "LearnHouse 大学"
+    },
+    "courses": {
+      "title": "课程",
+      "rights_guide": "权利指南",
+      "create_course": "创建课程",
+      "create_new_course": "创建新课程",
+      "no_courses": "尚无课程",
+      "create_course_placeholder": "创建课程以添加内容",
+      "no_courses_available": "尚无可用课程"
+    },
+    "organization": {
+      "settings": {
+        "title": "组织设置",
+        "subtitle": "管理您的组织简介和配置",
+        "tabs": {
+          "general": "常规",
+          "landing": "落地页",
+          "previews": "预览图像",
+          "socials": "社交媒体",
+          "other": "其他"
+        },
+        "pages": {
+          "general": {
+            "title": "常规",
+            "subtitle": "管理组织的常规设置"
+          },
+          "previews": {
+            "title": "预览",
+            "subtitle": "管理组织的预览图"
+          },
+          "socials": {
+            "title": "社交媒体",
+            "subtitle": "管理组织的社交媒体链接"
+          },
+          "landing": {
+            "title": "落地页",
+            "subtitle": "配置您的组织落地页"
+          },
+          "other": {
+            "title": "其他",
+            "subtitle": "管理组织的其他设置"
+          }
+        },
+        "name": "组织名称",
+        "name_placeholder": "组织名称",
+        "short_description": "简短描述",
+        "short_description_placeholder": "关于您组织的简短描述",
+        "label": "组织标签",
+        "label_placeholder": "选择组织标签",
+        "about": "关于组织",
+        "about_placeholder": "关于您组织的详细描述",
+        "showcase_explore": "在 LearnHouse Explore 中展示",
+        "showcase_description": "与 LearnHouse 社区分享您组织的课程和内容。开启此项以帮助学习者发现您的宝贵教育资源。",
+        "save_changes": "保存更改",
+        "saving": "保存中...",
+        "update_success": "组织已更新",
+        "update_error": "更新组织失败",
+        "updating": "正在更新组织..."
+      },
+      "images": {
+        "title": "图像与预览",
+        "subtitle": "管理组织的标志、缩略图和预览图",
+        "tabs": {
+          "logo": "标志",
+          "thumbnail": "缩略图",
+          "previews": "预览"
+        },
+        "upload_logo": "上传新标志",
+        "upload_thumbnail": "上传新缩略图",
+        "uploading": "上传中...",
+        "uploading_logo": "正在上传标志...",
+        "uploading_thumbnail": "正在上传缩略图...",
+        "uploading_previews": "正在上传 {{count}} 个预览图...",
+        "uploading_previews_plural": "正在上传 {{count}} 个预览图...",
+        "accepted_files": "接受 PNG, JPG（最大 5MB）",
+        "recommended_size": "建议大小：200x100 像素",
+        "add_preview": "添加预览图",
+        "drag_to_reorder": "拖拽以重新排序 • 最多 4 个预览图 • 支持图像和视频",
+        "video_modal": {
+          "title": "添加预览图",
+          "images": "上传图像",
+          "youtube": "YouTube",
+          "youtube_desc": "添加 YouTube 视频",
+          "loom": "Loom",
+          "loom_desc": "添加 Loom 视频",
+          "url_placeholder": "粘贴您的 {{service}} 视频链接",
+          "add_button": "添加视频"
+        },
+        "toasts": {
+          "logo_success": "标志已更新",
+          "logo_error": "上传标志失败",
+          "thumbnail_success": "缩略图已更新",
+          "thumbnail_error": "上传缩略图失败",
+          "preview_added": "已添加 {{count}} 个预览图",
+          "preview_added_plural": "已添加 {{count}} 个预览图",
+          "preview_error": "上传预览图失败",
+          "preview_removed": "预览图已移除",
+          "preview_remove_error": "移除预览图失败",
+          "order_updated": "预览图顺序已更新",
+          "order_update_error": "更新预览图顺序失败",
+          "max_previews": "您只能再上传 {{count}} 个预览图",
+          "max_previews_plural": "您只能再上传 {{count}} 个预览图",
+          "invalid_url": "无效的 {{type}} 链接",
+          "video_exists": "此视频已添加",
+          "adding_video": "正在添加视频预览...",
+          "video_preview_added": "视频预览已添加",
+          "video_preview_error": "添加视频预览失败",
+          "updating_order": "正在更新预览图顺序..."
+        }
+      },
+      "socials": {
+        "title": "社交媒体链接",
+        "subtitle": "管理组织的社交媒体形象",
+        "labels": {
+          "social_links": "社交媒体链接",
+          "custom_links": "自定义链接"
+        },
+        "placeholders": {
+          "twitter": "Twitter 个人资料链接",
+          "facebook": "Facebook 个人资料链接",
+          "instagram": "Instagram 个人资料链接",
+          "youtube": "YouTube 频道链接",
+          "label": "标签",
+          "url": "网址"
+        },
+        "add_link": "添加链接",
+        "custom_links_desc": "添加最多 3 个自定义链接，这些链接将显示在您的组织简介中"
+      },
+      "scripts": {
+        "title": "脚本",
+        "subtitle": "向您的组织添加自定义 JavaScript 脚本",
+        "warning": "为了组织的安全性，请确保您在添加任何脚本之前都已信任并理解它们。脚本可以与您的组织页面交互。",
+        "add_script": "添加脚本",
+        "no_scripts": "尚未添加脚本",
+        "add_first_script": "添加您的第一个脚本以开始",
+        "script_name": "脚本名称",
+        "script_content": "脚本内容",
+        "placeholders": {
+          "name": "输入脚本名称",
+          "content": "输入 JavaScript 代码"
+        },
+        "save_script": "保存脚本",
+        "toasts": {
+          "save_success": "脚本保存成功",
+          "delete_success": "脚本删除成功"
+        }
+      },
+      "audit_logs": {
+        "title": "审计日志",
+        "subtitle": "跟踪和监控您组织内的所有活动",
+        "refresh": "刷新日志",
+        "export": "导出",
+        "search_by": "搜索依据",
+        "placeholders": {
+          "search": "搜索..."
+        },
+        "filters": {
+          "resource": "资源",
+          "status": "状态",
+          "date": "日期"
+        },
+        "resources": {
+          "all": "所有资源",
+          "user": "用户",
+          "course": "课程",
+          "org": "组织"
+        },
+        "date_ranges": {
+          "all": "全部时间",
+          "today": "今天",
+          "7d": "最近 7 天",
+          "30d": "最近 30 天",
+          "custom": "自定义范围"
+        },
+        "table": {
+          "timestamp": "时间戳",
+          "user": "用户",
+          "resource": "资源",
+          "path_method": "路径和方法",
+          "ip_address": "IP 地址",
+          "status": "状态",
+          "payload": "载荷"
+        },
+        "loading": "正在加载活动...",
+        "no_logs": "未找到日志",
+        "pagination": {
+          "showing": "显示第 {{start}} 到 {{end}} 条日志，共 {{total}} 条"
+        },
+        "modals": {
+          "payload": {
+            "title": "事件载荷",
+            "description": "操作：{{action}} 的详细载荷数据"
+          }
+        },
+        "export_toasts": {
+          "generating": "正在生成 CSV...",
+          "success": "CSV 导出成功",
+          "error": "导出 CSV 失败"
+        }
+      },
+      "landing": {
+        "title": "落地页",
+        "subtitle": "配置您的组织落地页",
+        "beta": "测试版",
+        "save_changes": "保存更改",
+        "saving": "保存中...",
+        "saved_success": "落地页保存成功",
+        "save_error": "保存落地页出错",
+        "sections": "区块",
+        "select_section": "选择要编辑的区块或添加新区块",
+        "section_types": {
+          "hero": {
+            "label": "Hero 区块",
+            "description": "添加一个带有标题和行动号召的 Hero 区块"
+          },
+          "text_and_image": {
+            "label": "文字和图像",
+            "description": "添加一个包含文字和图像的区块"
+          },
+          "logos": {
+            "label": "标志",
+            "description": "添加一个展示标志的区块"
+          },
+          "people": {
+            "label": "人员",
+            "description": "添加一个突出显示团队成员的区块"
+          },
+          "featured_courses": {
+            "label": "课程",
+            "description": "添加一个展示精选课程的区块"
+          }
+        },
+        "add_section": "添加区块",
+        "hero_editor": {
+          "title": "Hero 区块设置",
+          "section_title": "区块标题",
+          "section_title_placeholder": "输入区块标题",
+          "tabs": {
+            "content": "内容",
+            "background": "背景",
+            "buttons": "按钮",
+            "illustration": "插图"
+          },
+          "heading": "标题",
+          "heading_placeholder": "输入标题文字",
+          "heading_color": "标题颜色",
+          "subheading": "副标题",
+          "subheading_placeholder": "输入副标题文字",
+          "subheading_color": "副标题颜色",
+          "background_type": "背景类型",
+          "background_type_placeholder": "选择背景类型",
+          "background_types": {
+            "solid": "纯色",
+            "gradient": "渐变色",
+            "image": "图像"
+          },
+          "background_color": "背景颜色",
+          "gradient_type": "渐变类型",
+          "gradient_type_placeholder": "选择渐变类型",
+          "gradient_types": {
+            "preset": "预设渐变",
+            "custom": "自定义渐变"
+          },
+          "start_color": "起始颜色",
+          "end_color": "结束颜色",
+          "gradient_direction": "渐变方向",
+          "gradient_direction_placeholder": "选择渐变方向",
+          "gradient_preset": "预设渐变",
+          "gradient_preset_placeholder": "选择预设渐变",
+          "background_image": "背景图像",
+          "upload_image": "上传图像",
+          "button_text_colors": "按钮文字与颜色",
+          "button_text": "按钮文字",
+          "text_color": "文字",
+          "background_color_label": "背景",
+          "button_link": "按钮链接",
+          "button_link_placeholder": "按钮链接",
+          "add_button": "添加按钮",
+          "illustration_image": "插图图像",
+          "illustration_url": "插图网址",
+          "alt_text": "替代文本",
+          "upload_illustration": "上传插图",
+          "position": "位置",
+          "position_placeholder": "选择位置",
+          "positions": {
+            "left": "左侧",
+            "right": "右侧"
+          },
+          "size": "大小",
+          "size_placeholder": "选择大小",
+          "sizes": {
+            "small": "小",
+            "medium": "中",
+            "large": "大"
+          },
+          "remove_illustration": "移除插图"
+        },
+        "text_image_editor": {
+          "title": "文字与图像区块设置",
+          "title_label": "标题",
+          "title_placeholder": "输入区块标题",
+          "content": "内容",
+          "content_placeholder": "输入区块内容",
+          "image_position": "图像位置",
+          "image_position_placeholder": "选择图像位置",
+          "positions": {
+            "left": "左侧",
+            "right": "右侧"
+          },
+          "image": "图像",
+          "image_url": "图像网址",
+          "alt_text": "替代文本",
+          "upload_new_image": "上传新图像"
+        },
+        "logos_editor": {
+          "title": "标志区块设置",
+          "title_label": "标题",
+          "title_placeholder": "输入区块标题",
+          "logos": "标志",
+          "logo_url": "标志网址",
+          "alt_text": "替代文本",
+          "upload_logo": "上传标志",
+          "add_logo": "添加标志"
+        },
+        "people_editor": {
+          "title": "人员区块设置",
+          "title_label": "标题",
+          "title_placeholder": "输入区块标题",
+          "people": "人员",
+          "name": "姓名",
+          "name_placeholder": "人员姓名",
+          "username": "用户名",
+          "username_placeholder": "@用户名",
+          "image": "图像",
+          "image_url": "图像网址",
+          "upload_avatar": "上传头像",
+          "description": "描述",
+          "description_placeholder": "描述或角色",
+          "add_person": "添加人员"
+        },
+        "courses_editor": {
+          "title": "课程区块设置",
+          "title_label": "标题",
+          "title_placeholder": "输入区块标题",
+          "select_courses": "选择课程",
+          "loading_courses": "正在加载课程...",
+          "selected": "已选择",
+          "select": "选择"
+        }
+      }
+    },
+    "users": {
+      "settings": {
+        "tabs": {
+          "users": "用户",
+          "usergroups": "用户组",
+          "roles": "角色",
+          "signups": "注册与邀请码",
+          "add": "邀请成员",
+          "audit_logs": "审计日志"
+        },
+        "pages": {
+          "users": {
+            "title": "用户",
+            "subtitle": "管理组织的用户，分配角色和权限"
+          },
+          "signups": {
+            "title": "注册与邀请码",
+            "subtitle": "管理用户加入组织的方式"
+          },
+          "add": {
+            "title": "邀请成员",
+            "subtitle": "邀请成员加入您的组织"
+          },
+          "usergroups": {
+            "title": "用户组",
+            "subtitle": "创建和管理用户组"
+          },
+          "roles": {
+            "title": "角色",
+            "subtitle": "创建和管理具有特定权限的角色"
+          },
+          "audit_logs": {
+            "title": "审计日志",
+            "subtitle": "跟踪和监控您组织内的所有活动"
+          }
+        },
+        "mobile": {
+          "title": "仅限桌面设备",
+          "message1": "此页面仅在桌面设备上可用。",
+          "message2": "请切换到桌面设备以查看和管理用户设置。"
+        }
+      },
+      "active_users": {
+        "title": "活跃用户",
+        "subtitle": "管理组织的用户，分配角色和权限",
+        "table": {
+          "user": "用户",
+          "role": "角色",
+          "actions": "操作"
+        },
+        "actions": {
+          "edit_role": "编辑角色",
+          "remove_from_org": "从组织中移除",
+          "removing": "正在移除...",
+          "remove_success": "用户已从组织中移除",
+          "remove_error": "移除用户失败"
+        },
+        "modals": {
+          "update_role": {
+            "title": "更新角色",
+            "description": "更新用户 @{{username}} 的角色"
+          },
+          "remove_user": {
+            "title": "移除 {{username}}？",
+            "message": "您确定要将此用户从组织中移除吗？",
+            "button": "移除用户"
+          }
+        }
+      },
+      "signups": {
+        "title": "加入方式",
+        "subtitle": "选择用户加入组织的方式",
+        "open": {
+          "title": "开放",
+          "description": "用户可以从注册页面自由注册",
+          "active": "激活中",
+          "change_to": "切换到开放",
+          "confirmation_message": "您确定要将注册机制更改为开放吗？这将允许用户自由加入您的组织。",
+          "confirmation_title": "切换到开放？"
+        },
+        "closed": {
+          "title": "关闭",
+          "description": "用户只能通过邀请加入",
+          "active": "激活中",
+          "change_to": "切换到关闭",
+          "confirmation_message": "您确定要将注册机制更改为关闭吗？这将允许用户仅通过邀请加入您的组织。",
+          "confirmation_title": "切换到关闭？"
+        },
+        "invite_codes": {
+          "title": "邀请码",
+          "subtitle": "邀请码可以被复制并用于加入您的组织",
+          "table": {
+            "code": "邀请码",
+            "signup_link": "注册链接",
+            "type": "类型",
+            "expiration_date": "过期日期",
+            "actions": "操作"
+          },
+          "types": {
+            "linked_to_usergroup": "已关联用户组",
+            "normal": "常规"
+          },
+          "actions": {
+            "delete_code": "删除邀请码",
+            "delete_confirmation_title": "删除邀请码？",
+            "delete_confirmation_message": "您确定要删除此邀请码吗？",
+            "generate": "生成邀请码",
+            "generate_title": "生成邀请码",
+            "generate_description": "为您的组织生成一个新的邀请码"
+          },
+          "toasts": {
+            "deleting": "正在删除...",
+            "delete_success": "邀请码已删除",
+            "delete_error": "删除失败",
+            "changing_method": "正在更改加入方式...",
+            "change_success": "加入方式已更改为 {{method}}",
+            "change_error": "更改加入方式失败"
+          }
+        },
+        "generate_modal": {
+          "linked_title": "已关联用户组的邀请码",
+          "linked_description": "注册时，用户将自动添加到您选择的用户组中",
+          "normal_title": "常规邀请码",
+          "normal_description": "注册时，用户不会被添加到任何组中",
+          "generate_button": "生成",
+          "no_usergroups": "没有可用的用户组",
+          "create_usergroup_link": "创建一个用户组",
+          "toasts": {
+            "error": "错误 {{status}}: {{detail}}"
+          }
+        }
+      },
+      "invite_members": {
+        "title": "邀请用户加入您的组织",
+        "subtitle": "发送电子邮件邀请，多个地址请用逗号分隔",
+        "email_placeholder": "例如：spike.spiegel@bepop.space, michael.scott@dundermifflin.com",
+        "invite_code_label": "邀请码",
+        "invite_code_tooltip": "使用您在访问页面中创建的邀请码之一",
+        "send_button": "通过电子邮件发送邀请",
+        "invited_users": {
+          "title": "已邀请用户",
+          "subtitle": "已被邀请加入您组织的用户",
+          "table": {
+            "email": "电子邮件",
+            "signup_status": "注册状态",
+            "email_sent": "邮件已发送"
+          },
+          "status": {
+            "pending": "处理中",
+            "signed": "已注册"
+          },
+          "email_status": {
+            "sent": "已发送",
+            "no": "未发送"
+          }
+        },
+        "toasts": {
+          "sending": "正在发送邀请...",
+          "success": "邀请已发送",
+          "error": "发送邀请失败"
+        }
+      },
+      "usergroups": {
+        "title": "管理用户组和用户",
+        "subtitle": "用户组是组织内对用户进行分组的一种方式，用于管理他们对组织内资源（如课程）的访问。",
+        "table": {
+          "usergroup": "用户组",
+          "description": "描述",
+          "manage_users": "管理用户",
+          "actions": "操作"
+        },
+        "actions": {
+          "manage_users": "管理用户",
+          "edit": "编辑",
+          "delete": "删除",
+          "create": "创建用户组"
+        },
+        "modals": {
+          "manage_users": {
+            "title": "管理组内成员",
+            "description": "管理此组内的用户",
+            "table": {
+              "user": "用户",
+              "linked": "已关联",
+              "actions": "操作"
+            },
+            "status": {
+              "linked": "已关联",
+              "not_linked": "未关联"
+            },
+            "actions": {
+              "link": "关联",
+              "unlink": "取消关联"
+            },
+            "toasts": {
+              "link_success": "用户关联成功",
+              "unlink_success": "用户取消关联成功",
+              "error": "错误 {{status}}: {{detail}}"
+            }
+          },
+          "create": {
+            "title": "创建用户组",
+            "description": "创建一个新组来管理您的用户",
+            "form": {
+              "name": "名称",
+              "name_required": "名称必填",
+              "description": "描述",
+              "submit": "创建用户组",
+              "loading": "正在加载..."
+            },
+            "toasts": {
+              "creating": "正在创建...",
+              "success": "新用户组已创建",
+              "error": "创建新用户组失败"
+            }
+          },
+          "edit": {
+            "title": "编辑用户组",
+            "form": {
+              "name": "名称",
+              "name_required": "名称必填",
+              "description": "描述",
+              "submit": "保存用户组",
+              "loading": "正在加载..."
+            },
+            "toasts": {
+              "success": "用户组保存成功",
+              "error": "保存用户组出错，请稍后重试。"
+            }
+          },
+          "delete": {
+            "title": "删除用户组？",
+            "message": "此组内的所有用户将失去对所有资源的访问权限。您确定要删除此用户组吗？",
+            "button": "删除用户组"
+          }
+        },
+        "toasts": {
+          "deleting": "正在删除...",
+          "delete_success": "用户组已删除",
+          "delete_error": "删除用户组失败"
+        }
+      },
+      "roles": {
+        "title": "管理角色与权限",
+        "subtitle": "角色定义了用户在组织内可以进行的操作。为不同类型的用户创建具有特定权限的自定义角色。",
+        "table": {
+          "role_name": "角色名称",
+          "description": "描述",
+          "permissions": "权限",
+          "actions": "操作"
+        },
+        "no_description": "无描述",
+        "no_permissions": "无权限",
+        "permissions_count": "{{count}} 个权限",
+        "system_wide": "系统范围",
+        "actions": {
+          "edit": "编辑",
+          "delete": "删除",
+          "create": "创建角色"
+        },
+        "modals": {
+          "create": {
+            "title": "创建角色",
+            "description": "创建一个具有特定权限的新角色",
+            "form": {
+              "role_name": "角色名称",
+              "role_name_placeholder": "例如：课程管理员",
+              "description": "描述",
+              "description_placeholder": "描述此角色可以进行的操作...",
+              "permissions": "权限",
+              "select_all": "全选",
+              "deselect_all": "取消全选",
+              "select": "选择",
+              "deselect": "取消选择",
+              "submit": "创建角色",
+              "loading": "正在创建..."
+            },
+            "validation": {
+              "name_required": "必填",
+              "name_min_length": "名称至少包含 2 个字符",
+              "description_required": "必填",
+              "description_min_length": "描述至少包含 10 个字符"
+            },
+            "toasts": {
+              "success": "新角色已创建",
+              "error": "创建新角色失败"
+            },
+            "presets": {
+              "title": "权限预设",
+              "admin": {
+                "name": "管理员",
+                "description": "拥有所有权限，全面控制平台"
+              },
+              "maintainer": {
+                "name": "维护者",
+                "description": "可以管理课程、章节和活动"
+              },
+              "instructor": {
+                "name": "讲师",
+                "description": "可以创建和管理自己的课程"
+              },
+              "viewer": {
+                "name": "查看者",
+                "description": "对课程和内容具有只读访问权限"
+              },
+              "content_creator": {
+                "name": "内容创作者",
+                "description": "可以创建和编辑内容，但不能管理用户"
+              },
+              "user_manager": {
+                "name": "用户管理员",
+                "description": "可以管理用户和用户组"
+              },
+              "moderator": {
+                "name": "版主",
+                "description": "可以审核内容并管理活动"
+              },
+              "analyst": {
+                "name": "分析师",
+                "description": "具有分析功能的只读访问权限"
+              },
+              "guest": {
+                "name": "访客",
+                "description": "外部用户的受限访问"
+              }
+            },
+            "permissions": {
+              "title": "权限",
+              "sections": {
+                "courses": "课程",
+                "users": "用户",
+                "usergroups": "用户组",
+                "collections": "合集",
+                "organizations": "组织",
+                "coursechapters": "课程章节",
+                "activities": "活动",
+                "roles": "角色",
+                "dashboard": "仪表板"
+              },
+              "actions": {
+                "create": "创建",
+                "read": "读取",
+                "read_own": "读取自己的",
+                "update": "更新",
+                "update_own": "更新自己的",
+                "delete": "删除",
+                "delete_own": "删除自己的",
+                "access": "访问"
+              },
+              "select_all": "全选",
+              "deselect_all": "取消全选",
+              "select": "选择",
+              "deselect": "取消选择"
+            }
+          },
+          "edit": {
+            "title": "编辑角色",
+            "description": "编辑角色权限和详情",
+            "form": {
+              "role_name": "角色名称",
+              "description": "描述",
+              "permissions": "权限",
+              "select_all": "全选",
+              "deselect_all": "取消全选",
+              "select": "选择",
+              "deselect": "取消选择",
+              "submit": "保存角色",
+              "loading": "正在保存..."
+            },
+            "validation": {
+              "name_required": "必填",
+              "name_min_length": "名称至少包含 2 个字符",
+              "description_required": "必填",
+              "description_min_length": "描述至少包含 10 个字符"
+            },
+            "toasts": {
+              "success": "角色已成功保存",
+              "error": "保存角色出错，请稍后重试。"
+            }
+          },
+          "delete": {
+            "title": "删除角色？",
+            "message": "此操作无法撤销。分配到此角色的所有用户将失去其权限。您确定要删除此角色吗？",
+            "button": "删除角色"
+          }
+        },
+        "toasts": {
+          "deleting": "正在删除...",
+          "delete_success": "角色已删除",
+          "delete_error": "删除角色失败"
+        }
+      }
+    },
+    "assignments": {
+      "home": {
+        "title": "作业",
+        "course_label": "课程",
+        "assignment_label": "作业",
+        "course_editor": "课程编辑器",
+        "editor": "编辑器",
+        "submissions": "提交内容",
+        "no_assignments": "此课程尚无作业，请在课程编辑器中创建作业"
+      },
+      "detail": {
+        "title": "作业工具",
+        "tabs": {
+          "editor": "编辑器",
+          "submissions": "提交内容"
+        },
+        "mobile": {
+          "title": "仅限桌面设备",
+          "message1": "此页面仅在桌面设备上可用。",
+          "message2": "请切换到桌面设备以查看和管理作业。"
+        },
+        "publishing": {
+          "published": "已发布",
+          "unpublished": "草稿",
+          "edit_tooltip": "编辑作业详情",
+          "preview_tooltip": "以学生身份预览作业",
+          "unpublish_tooltip": "取消发布作业",
+          "publish_tooltip": "向学生发布作业",
+          "edit": "编辑",
+          "preview": "预览",
+          "unpublish": "取消发布",
+          "publish": "发布",
+          "toasts": {
+            "updating": "正在更新作业...",
+            "update_success": "作业更新成功",
+            "update_error": "更新作业出错，请稍后重试。"
+          }
+        }
+      },
+      "editor": {
+        "tasks_title": "任务",
+        "add_task": "添加任务",
+        "add_task_modal": {
+          "title": "向作业添加任务",
+          "description": "为此作业创建一个新任务"
+        },
+        "task_types": {
+          "quiz": {
+            "title": "测验",
+            "description": "多项选择题"
+          },
+          "file_submission": {
+            "title": "文件提交",
+            "description": "学生可以为此任务上传文件"
+          },
+          "form": {
+            "title": "表单",
+            "description": "供学生填写的问卷"
+          }
+        },
+        "toasts": {
+          "task_created": "任务创建成功",
+          "task_saved": "任务保存成功",
+          "task_save_error": "保存任务出错，请稍后重试。",
+          "task_updated": "任务更新成功",
+          "task_update_error": "更新任务出错，请稍后重试。",
+          "reminder": "在编辑/添加任务时，请记得取消发布作业，以避免学生遇到问题。准备就绪后，您可以再次发布它。"
+        },
+        "task_editor": {
+          "general": {
+            "title": "标题",
+            "description": "描述",
+            "hint": "提示",
+            "reference_file": "参考文件",
+            "reference_file_info": "允许的格式：pdf, docx, mp4, jpg, jpeg, png, pptx, zip",
+            "max_grade_value": "最大分值",
+            "max_grade_error": "分值必须在 20 到 100 之间",
+            "submit": "提交",
+            "download": "下载",
+            "change_reference_file": "更改参考文件",
+            "loading": "加载中",
+            "reference_file_updated": "参考文件更新成功",
+            "allowed_formats": "允许的格式：pdf, docx, mp4, jpg, jpeg, png, pptx, zip",
+            "sign_in_required": "请登录以上传文件",
+            "auth_required": "需要身份验证。请登录以上传文件。",
+            "auth_required_submit": "需要身份验证。请登录以提交任务。",
+            "hint_optional": "提示（可选）"
+          }
+        }
+      },
+      "submissions": {
+        "status": {
+          "late": "迟交",
+          "submitted": "已提交",
+          "graded": "已评分"
+        },
+        "submission_label": "提交内容",
+        "evaluate": "评估",
+        "evaluate_modal": {
+          "title": "评估 @{{username}}",
+          "description": "评估已提交的作业"
+        },
+        "task_label": "任务 {{number}}：",
+        "hint": "提示",
+        "reference_document": "参考文档",
+        "actions": {
+          "reject": "拒绝作业",
+          "set_final_grade": "设置最终成绩",
+          "mark_as_done": "将此活动标记为用户已完成"
+        },
+        "toasts": {
+          "reject_success": "作业拒绝成功"
+        }
+      },
+      "modals": {
+        "edit": {
+          "title": "编辑作业",
+          "description": "更新作业详情",
+          "form": {
+            "title_label": "作业标题",
+            "title_required": "请提供您的作业标题",
+            "description_label": "作业描述",
+            "description_required": "请提供您的作业描述",
+            "due_date_label": "截止日期",
+            "due_date_required": "请提供您的作业截止日期",
+            "grading_type_label": "评分类型",
+            "grading_type_required": "请提供您的作业评分类型",
+            "grading_types": {
+              "alphabet": "字母等级",
+              "numeric": "数值等级",
+              "percentage": "百分比"
+            },
+            "cancel": "取消",
+            "save": "保存更改",
+            "saving": "保存中..."
+          },
+          "toasts": {
+            "updating": "正在更新作业...",
+            "success": "作业更新成功",
+            "error": "更新作业失败",
+            "error_detail": "更新作业时发生了错误"
+          }
+        },
+        "create": {
+          "form": {
+            "title_label": "作业标题",
+            "title_required": "请提供您的作业标题",
+            "description_label": "作业描述",
+            "description_required": "请提供您的作业描述",
+            "due_date_label": "截止日期",
+            "due_date_required": "请提供您的作业截止日期",
+            "grading_type_label": "评分类型",
+            "grading_type_required": "请提供您的作业评分类型",
+            "grading_types": {
+              "alphabet": "字母等级",
+              "numeric": "数值等级",
+              "percentage": "百分比"
+            },
+            "submit": "创建活动"
+          },
+          "toasts": {
+            "creating": "正在创建作业...",
+            "success": "作业创建成功"
+          }
+        }
+      }
+    },
+    "courses": {
+      "title": "课程",
+      "rights_guide": "权利指南",
+      "create_course": "创建课程",
+      "create_new_course": "创建新课程",
+      "no_courses": "尚无课程",
+      "create_course_placeholder": "创建课程以添加内容",
+      "no_courses_available": "尚无可用课程",
+      "overview_top": {
+        "course_label": "课程",
+        "rights_guide_button": "权利指南"
+      },
+      "settings": {
+        "tabs": {
+          "general": "常规",
+          "content": "内容",
+          "access": "访问",
+          "contributors": "贡献者",
+          "certification": "认证"
+        },
+        "access_denied": {
+          "title": "拒绝访问",
+          "message": "您没有权限访问此课程。"
+        },
+        "access_restricted": {
+          "title": "访问受限",
+          "message": "您没有权限访问 {{tab}} 选项卡。"
+        },
+        "loading": "加载中..."
+      },
+      "general": {
+        "form": {
+          "name_label": "名称",
+          "name_required": "必填",
+          "name_max_length": "最多 100 个字符",
+          "description_label": "描述",
+          "description_required": "必填",
+          "description_max_length": "最多 1000 个字符",
+          "about_label": "关于",
+          "learnings_label": "学习成果",
+          "learnings_required": "必填",
+          "learnings_invalid_format": "格式无效",
+          "learnings_min_items": "至少需要一个学习项",
+          "learnings_empty_text": "所有学习项必须包含文字",
+          "learnings_invalid_json": "JSON 格式无效",
+          "tags_label": "标签",
+          "tags_placeholder": "按 Enter 键添加...",
+          "thumbnail_type_label": "缩略图类型",
+          "thumbnail_type_image": "图像",
+          "thumbnail_type_video": "视频",
+          "thumbnail_type_both": "两者",
+          "thumbnail_label": "缩略图",
+          "image_search_placeholder": "搜索图像..."
+        },
+        "thumbnail": {
+          "upload_image": "上传图像",
+          "upload_video": "上传视频",
+          "gallery": "图库",
+          "tabs": {
+            "image": "图像",
+            "video": "视频"
+          },
+          "supported_formats": {
+            "image": "支持的格式：PNG, JPG/JPEG（最大 8MB）",
+            "video": "支持的格式：MP4, WebM（最大 100MB）"
+          }
+        },
+        "errors": {
+          "save_failed": "保存课程结构失败。"
+        }
+      },
+      "access": {
+        "title": "课程访问",
+        "subtitle": "选择您的课程是向互联网上的所有人开放，还是仅向注册用户开放",
+        "public": {
+          "title": "公开",
+          "description": "课程对互联网上的所有人可见，并被搜索引擎索引",
+          "active": "激活中",
+          "confirmation_title": "设为公开？",
+          "confirmation_message": "您确定要将此课程设为向互联网上的所有人开放吗？",
+          "confirmation_button": "设为公开"
+        },
+        "users_only": {
+          "title": "仅限用户",
+          "description": "课程仅对注册用户可见，您还可以选择特定的用户组",
+          "active": "激活中",
+          "confirmation_title": "设为仅限用户？",
+          "confirmation_message": "您确定要将此课程设为仅对注册用户开放吗？",
+          "confirmation_button": "仅限用户"
+        },
+        "usergroups": {
+          "title": "用户组",
+          "subtitle": "您可以通过将课程关联到特定的用户组，仅向这些用户授予访问权限",
+          "table": {
+            "name": "名称",
+            "actions": "操作"
+          },
+          "actions": {
+            "delete_link": "删除关联",
+            "link_to_usergroup": "关联用户组"
+          },
+          "modals": {
+            "link_title": "将课程关联到用户组",
+            "link_description": "选择要与此课程关联的用户组。该组的成员将获得访问权限。",
+            "unlink_title": "取消关联用户组？",
+            "unlink_message": "该组的成员将不再能访问此课程",
+            "unlink_button": "取消关联",
+            "warning": "不属于此组的用户将失去对此课程的访问权限",
+            "usergroup_name": "用户组名称",
+            "no_usergroups": "没有可用的用户组",
+            "create_usergroup": "创建一个用户组",
+            "link_button": "关联"
+          },
+          "toasts": {
+            "link_success": "用户组关联成功",
+            "link_error": "错误 {{status}}: {{detail}}",
+            "unlink_success": "用户组取消关联成功",
+            "unlink_error": "取消关联用户组时发生了错误。"
+          }
+        }
+      },
+      "contributors": {
+        "title": "课程贡献者",
+        "subtitle": "管理并向您的课程添加新的贡献者",
+        "open_to_contributors": {
+          "title": "开放贡献",
+          "description": "课程向贡献者开放。用户可以申请帮助改进课程内容。",
+          "active": "激活中",
+          "confirmation_title": "开放贡献？",
+          "confirmation_message": "您确定要向贡献者开放此课程吗？",
+          "confirmation_button": "开放贡献"
+        },
+        "closed_to_contributors": {
+          "title": "关闭贡献",
+          "description": "课程不向贡献者开放。只有现有的贡献者可以修改课程内容。",
+          "active": "激活中",
+          "confirmation_title": "关闭贡献？",
+          "confirmation_message": "您确定要向贡献者关闭此课程吗？",
+          "confirmation_button": "关闭贡献"
+        },
+        "search": {
+          "placeholder": "通过姓名或用户名搜索并添加用户...",
+          "searching": "正在搜索...",
+          "no_results": "未找到用户"
+        },
+        "table": {
+          "name": "姓名",
+          "username": "用户名",
+          "email": "电子邮件",
+          "role": "角色",
+          "status": "状态",
+          "added_on": "添加日期"
+        },
+        "roles": {
+          "creator": "创建者",
+          "contributor": "贡献者",
+          "maintainer": "维护者",
+          "reporter": "报告者"
+        },
+        "statuses": {
+          "active": "激活",
+          "inactive": "未激活",
+          "pending": "处理中"
+        },
+        "actions": {
+          "selected_users": "已选择 {{count}} 个用户",
+          "selected_users_plural": "已选择 {{count}} 个用户",
+          "clear": "清除",
+          "add_selected": "添加已选",
+          "selected_contributors": "已选择 {{count}} 个贡献者",
+          "selected_contributors_plural": "已选择 {{count}} 个贡献者",
+          "remove_selected": "移除已选",
+          "already_contributor": "已经是贡献者"
+        },
+        "toasts": {
+          "add_success": "成功添加 {{count}} 个贡献者",
+          "add_error": "添加 {{username}} 失败：{{reason}}",
+          "add_failed": "添加贡献者失败",
+          "update_success": "贡献者更新成功",
+          "update_error": "错误：{{detail}}",
+          "update_failed": "更新贡献者时发生了错误。",
+          "remove_success": "成功移除 {{count}} 个贡献者",
+          "remove_failed": "移除贡献者失败",
+          "cannot_modify_creator": "无法修改创建者的角色或状态"
+        }
+      },
+      "certification": {
+        "title": "课程认证",
+        "subtitle": "启用并配置学生完成此课程后可获得的证书",
+        "form": {
+          "certification_name_label": "认证名称",
+          "certification_name_required": "启用认证时，名称必填",
+          "certification_name_max_length": "最多 100 个字符",
+          "certification_name_placeholder": "例如：高级 JavaScript 认证",
+          "certification_type_label": "认证类型",
+          "certification_description_label": "认证描述",
+          "certification_description_required": "启用认证时，描述必填",
+          "certification_description_max_length": "最多 500 个字符",
+          "certification_description_placeholder": "描述此认证确认的内容及其价值...",
+          "certificate_pattern_label": "证书花纹",
+          "certificate_instructor_label": "讲师姓名（可选）",
+          "certificate_instructor_placeholder": "例如：张三教授"
+        },
+        "types": {
+          "completion": "结业证书",
+          "achievement": "成就证明",
+          "assessment": "评估证书",
+          "participation": "参与证明",
+          "mastery": "掌握证明",
+          "professional": "专业发展",
+          "continuing": "继续教育",
+          "workshop": "工作坊证明",
+          "specialization": "专业化证明"
+        },
+        "patterns": {
+          "royal": {
+            "name": "皇家",
+            "description": "带有王冠装饰图案"
+          },
+          "tech": {
+            "name": "科技",
+            "description": "电路板风格图案"
+          },
+          "nature": {
+            "name": "自然",
+            "description": "有机植物图案"
+          },
+          "geometric": {
+            "name": "几何",
+            "description": "抽象形状与线条"
+          },
+          "vintage": {
+            "name": "复古",
+            "description": "装饰艺术风格花纹"
+          },
+          "waves": {
+            "name": "波浪",
+            "description": "流动的水波图案"
+          },
+          "minimal": {
+            "name": "极简",
+            "description": "简洁大方"
+          },
+          "professional": {
+            "name": "专业",
+            "description": "正式商务设计"
+          },
+          "academic": {
+            "name": "学术",
+            "description": "传统大学风格"
+          },
+          "modern": {
+            "name": "现代",
+            "description": "当代简洁线条"
+          }
+        },
+        "sections": {
+          "basic_info": {
+            "title": "基本信息",
+            "subtitle": "配置您认证的基本详情"
+          },
+          "certificate_design": {
+            "title": "证书设计",
+            "subtitle": "为您的证书选择装饰花纹"
+          },
+          "preview": {
+            "title": "证书预览",
+            "subtitle": "实时预览您的证书"
+          }
+        },
+        "states": {
+          "disabled": {
+            "title": "认证未配置",
+            "message": "启用认证以在学生完成课程后向其发放证书。",
+            "button": "启用认证",
+            "creating": "正在创建..."
+          },
+          "creating": {
+            "title": "正在创建认证...",
+            "message": "请稍候，我们正在设置课程认证。"
+          }
+        },
+        "errors": {
+          "loading": "加载认证时出错",
+          "create_failed": "创建认证失败。",
+          "remove_failed": "移除认证失败。"
+        },
+        "toasts": {
+          "create_success": "认证创建成功",
+          "create_error": "创建认证失败",
+          "remove_success": "认证已成功移除",
+          "remove_error": "移除认证失败"
+        }
+      },
+      "structure": {
+        "loading": "加载中...",
+        "add_chapter_button": "添加章节",
+        "modals": {
+          "new_chapter": {
+            "title": "创建章节",
+            "description": "向课程添加新章节",
+            "form": {
+              "name_label": "章节名称",
+              "name_required": "请提供您的章节标题",
+              "description_label": "章节描述",
+              "description_required": "请提供您的章节描述",
+              "submit": "创建章节"
+            }
+          },
+          "delete_chapter": {
+            "title": "删除 {{name}}？",
+            "message": "您确定要删除此章节吗？",
+            "button": "删除章节"
+          },
+          "new_activity": {
+            "title": "创建活动",
+            "description": "选择要添加到课程中的活动类型"
+          },
+          "delete_activity": {
+            "title": "删除 {{name}}？",
+            "message": "您确定要删除此活动吗？",
+            "button": "删除活动"
+          }
+        },
+        "actions": {
+          "add_chapter": "添加章节",
+          "add_activity": "添加活动",
+          "publish": "发布",
+          "unpublish": "取消发布",
+          "preview_activity": "预览活动",
+          "edit_page": "编辑页面",
+          "edit_assignment": "编辑作业"
+        },
+        "chapter_element": {
+          "chapter_name_placeholder": "章节名称"
+        },
+        "activity": {
+          "name_placeholder": "活动名称",
+          "types": {
+            "video": "视频",
+            "document": "文档",
+            "assignment": "作业",
+            "assignments": "作业合集",
+            "dynamic": "动态内容",
+            "dynamic_page": "动态页面"
+          },
+          "toasts": {
+            "deleting": "正在删除活动...",
+            "delete_success": "活动删除成功",
+            "updating": "正在更新活动...",
+            "update_success": "活动更新成功",
+            "name_update_success": "活动名称更新成功",
+            "name_update_error": "更新活动名称失败",
+            "creating": "正在创建活动...",
+            "create_success": "活动创建成功",
+            "uploading": "正在上传文件并创建活动...",
+            "upload_success": "文件上传成功",
+            "creating_uploading": "正在创建活动并上传文件..."
+          }
+        }
+      }
+    }
+  }
+}

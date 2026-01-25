@@ -11,7 +11,7 @@ from datetime import datetime, timedelta, timezone
 from src.services.dev.dev import isDevModeEnabled
 from src.services.users.users import security_verify_password
 from src.security.security import ALGORITHM, SECRET_KEY
-from fastapi_jwt_auth import AuthJWT
+from fastapi_jwt_auth2 import AuthJWT
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
@@ -19,14 +19,14 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 #### JWT Auth ####################################################
 class Settings(BaseModel):
     authjwt_secret_key: str = "secret" if isDevModeEnabled() else SECRET_KEY
-    authjwt_token_location = {"cookies", "headers"}
-    authjwt_cookie_csrf_protect = False
-    authjwt_access_token_expires = (
+    authjwt_token_location: set[str] = {"cookies", "headers"}
+    authjwt_cookie_csrf_protect: bool = False
+    authjwt_access_token_expires: bool | float = (
         False if isDevModeEnabled() else timedelta(hours=8).total_seconds()
     )
-    authjwt_cookie_samesite = "lax"
-    authjwt_cookie_secure = True
-    authjwt_cookie_domain = get_learnhouse_config().hosting_config.cookie_config.domain
+    authjwt_cookie_samesite: str = "lax"
+    authjwt_cookie_secure: bool = True
+    authjwt_cookie_domain: str = get_learnhouse_config().hosting_config.cookie_config.domain
 
 
 @AuthJWT.load_config  # type: ignore
@@ -96,7 +96,9 @@ async def get_current_user(
         user = await security_get_user(request, db_session, email=token_data.username)  # type: ignore # treated as an email
         if user is None:
             raise credentials_exception
-        return PublicUser(**user.model_dump())
+        public_user = PublicUser(**user.model_dump())
+        request.state.user = public_user
+        return public_user
     else:
         return AnonymousUser()
 

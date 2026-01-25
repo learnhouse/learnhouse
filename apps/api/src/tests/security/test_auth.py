@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import Mock, AsyncMock, patch
 from fastapi import HTTPException, Request
-from fastapi_jwt_auth import AuthJWT
+from fastapi_jwt_auth2 import AuthJWT
 from sqlmodel import Session
 from src.security.auth import (
     authenticate_user,

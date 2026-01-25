@@ -4,6 +4,7 @@ import { Search, Cpu, Briefcase, GraduationCap, Heart, Palette, Plane, Utensils,
   Dumbbell, Music, Shirt, Book, Building, Bike, Camera, Microscope, Coins, Coffee, Gamepad, 
   Flower} from 'lucide-react';
 import Modal from '@components/Objects/StyledElements/Modal/Modal';
+import { useTranslation } from 'react-i18next';
 
 const unsplash = createApi({
   accessKey: process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY as string,
@@ -41,6 +42,7 @@ interface UnsplashImagePickerProps {
 }
 
 const UnsplashImagePicker: React.FC<UnsplashImagePickerProps> = ({ onSelect, onClose, isOpen = true }) => {
+  const { t } = useTranslation()
   const [query, setQuery] = useState('');
   const [images, setImages] = useState<any[]>([]);
   const [page, setPage] = useState(1);
@@ -105,7 +107,7 @@ const UnsplashImagePicker: React.FC<UnsplashImagePickerProps> = ({ onSelect, onC
             type="text"
             value={query}
             onChange={handleSearch}
-            placeholder="Search for images..."
+            placeholder={t('dashboard.courses.general.form.image_search_placeholder')}
             className="w-full p-2 pl-10 border rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
           />
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />

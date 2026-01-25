@@ -9,6 +9,7 @@ import { Cloud, Download, File, Info, Loader, UploadCloud } from 'lucide-react'
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 type FileSchema = {
     fileUUID: string;
@@ -22,6 +23,7 @@ type TaskFileObjectProps = {
 };
 
 export default function TaskFileObject({ view, user_id, assignmentTaskUUID }: TaskFileObjectProps) {
+    const { t } = useTranslation()
     const session = useLHSession() as any;
     const org = useOrg() as any;
     const access_token = session?.data?.tokens?.access_token;
@@ -47,7 +49,7 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID }: Ta
     const handleFileChange = async (event: any) => {
         // Check if user is authenticated
         if (!access_token) {
-            setError('Authentication required. Please sign in to upload files.');
+            setError(t('dashboard.assignments.editor.task_editor.general.auth_required'));
             return;
         }
 
@@ -102,7 +104,7 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID }: Ta
     const submitFC = async () => {
         // Check if user is authenticated
         if (!access_token) {
-            toast.error('Authentication required. Please sign in to submit your task.');
+            toast.error(t('dashboard.assignments.editor.task_editor.general.auth_required_submit'));
             return;
         }
 
@@ -119,7 +121,7 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID }: Ta
                 assignmentTaskStateHook({
                     type: 'reload',
                 });
-                toast.success('Task saved successfully');
+                toast.success(t('dashboard.assignments.editor.toasts.task_saved'));
                 setShowSavingDisclaimer(false);
                 // Update userSubmissions with the returned UUID for future updates
                 const updatedUserSubmissions = {
@@ -129,7 +131,7 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID }: Ta
                 setUserSubmissions(updatedUserSubmissions);
                 setInitialUserSubmissions(updatedUserSubmissions);
             } else {
-                toast.error('Error saving task, please retry later.');
+                toast.error(t('dashboard.assignments.editor.toasts.task_save_error'));
             }
         }
     };
@@ -305,13 +307,13 @@ export default function TaskFileObject({ view, user_id, assignmentTaskUUID }: Ta
                                 )}
                                 <div className='flex flex-col sm:flex-row pt-5 font-medium space-y-1 sm:space-y-0 sm:space-x-2 text-xs items-center text-slate-500 text-center sm:text-left bg-slate-50 rounded-lg px-3 py-2 mt-5 border border-slate-100 w-full sm:w-auto'>
                                     <Info size={15} className="mx-auto sm:mx-0 text-slate-400" />
-                                    <p>Allowed formats: pdf, docx, mp4, jpg, jpeg, png, pptx, zip</p>
+                                    <p>{t('dashboard.assignments.editor.task_editor.general.allowed_formats')}</p>
                                 </div>
                                 {!access_token ? (
                                     <div className="flex justify-center items-center w-full mt-5">
                                         <div className="flex justify-center bg-amber-50 border border-amber-100 rounded-md text-amber-600 space-x-2 items-center p-3 transition-all shadow-xs w-full sm:w-auto">
                                             <Info size={15} className="text-amber-500" />
-                                            <div className="text-xs sm:text-sm font-medium">Please sign in to upload files</div>
+                                            <div className="text-xs sm:text-sm font-medium">{t('dashboard.assignments.editor.task_editor.general.sign_in_required')}</div>
                                         </div>
                                     </div>
                                 ) : isLoading ? (

@@ -7,26 +7,39 @@ from sqlmodel import SQLModel, Session, create_engine
 from sqlalchemy import event
 
 def import_all_models():
-    base_dir = 'src/db'
-    base_module_path = 'src.db'
+    # List of directories to scan for models
+    model_configs = [
+        {'base_dir': 'src/db', 'base_module_path': 'src.db'},
+        {'base_dir': 'ee/db', 'base_module_path': 'ee.db'}
+    ]
     
-    # Recursively walk through the base directory
-    for root, dirs, files in os.walk(base_dir):
-        # Filter out __init__.py and non-Python files
-        module_files = [f for f in files if f.endswith('.py') and f != '__init__.py']
+    for config in model_configs:
+        base_dir = config['base_dir']
+        base_module_path = config['base_module_path']
         
-        # Calculate the module's base path from its directory structure
-        path_diff = os.path.relpath(root, base_dir)
-        if path_diff == '.':
-            current_module_base = base_module_path
-        else:
-            current_module_base = f"{base_module_path}.{path_diff.replace(os.sep, '.')}"
-        
-        # Dynamically import each module
-        for file_name in module_files:
-            module_name = file_name[:-3]  # Remove the '.py' extension
-            full_module_path = f"{current_module_base}.{module_name}"
-            importlib.import_module(full_module_path)
+        if not os.path.exists(base_dir):
+            continue
+
+        # Recursively walk through the base directory
+        for root, dirs, files in os.walk(base_dir):
+            # Filter out __init__.py and non-Python files
+            module_files = [f for f in files if f.endswith('.py') and f != '__init__.py']
+            
+            # Calculate the module's base path from its directory structure
+            path_diff = os.path.relpath(root, base_dir)
+            if path_diff == '.':
+                current_module_base = base_module_path
+            else:
+                current_module_base = f"{base_module_path}.{path_diff.replace(os.sep, '.')}"
+            
+            # Dynamically import each module
+            for file_name in module_files:
+                module_name = file_name[:-3]  # Remove the '.py' extension
+                full_module_path = f"{current_module_base}.{module_name}"
+                try:
+                    importlib.import_module(full_module_path)
+                except Exception as e:
+                    logging.error(f"Failed to import model {full_module_path}: {e}")
 
 # Import all models before creating engine
 import_all_models()

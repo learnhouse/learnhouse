@@ -109,6 +109,16 @@ async def create_documentpdf_activity(
     db_session.commit()
     db_session.refresh(activity)
 
+    # Find the last activity order in the chapter
+    statement = (
+        select(ChapterActivity)
+        .where(ChapterActivity.chapter_id == int(chapter_id))
+        .order_by(ChapterActivity.order)  # type: ignore
+    )
+    chapter_activities = db_session.exec(statement).all()
+    last_order = chapter_activities[-1].order if chapter_activities else 0
+    to_be_used_order = last_order + 1
+
     # Add activity to chapter
     activity_chapter = ChapterActivity(
         chapter_id=(int(chapter_id)),
@@ -117,7 +127,7 @@ async def create_documentpdf_activity(
         org_id=coursechapter.org_id,
         creation_date=str(datetime.now()),
         update_date=str(datetime.now()),
-        order=1,
+        order=to_be_used_order,
     )
 
     # upload pdf
