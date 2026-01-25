@@ -54,11 +54,14 @@ const CollectionPage = (props: any) => {
               <div
                 className="inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl relative w-[249px] h-[131px] bg-cover"
                 style={{
-                  backgroundImage: `url(${getCourseThumbnailMediaDirectory(
-                    org.org_uuid,
-                    course.course_uuid,
-                    course.thumbnail_image
-                  )})`,
+                  backgroundImage: `url(${course.thumbnail_image
+                    ? getCourseThumbnailMediaDirectory(
+                        org.org_uuid,
+                        course.course_uuid,
+                        course.thumbnail_image
+                      )
+                    : '/empty_thumbnail.png'
+                  })`,
                 }}
               ></div>
             </Link>

@@ -312,6 +312,7 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
           dialogContent={
             <div className="w-full">
               <video
+                key={isModalOpen ? videoUrl : undefined}
                 controls
                 autoPlay
                 preload="metadata"
@@ -503,6 +504,7 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
           dialogContent={
             <div className="w-full">
               <video
+                key={isModalOpen ? videoUrl : undefined}
                 controls
                 autoPlay
                 preload="metadata"

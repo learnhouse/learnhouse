@@ -668,6 +668,8 @@
       "rights_guide": "Руководство по правам",
       "create_course": "Создать курс",
       "create_new_course": "Создать новый курс",
+      "import_course": "Импортировать курс",
+      "import_scorm_description": "Импортировать пакет SCORM для создания нового курса",
       "no_courses": "Курсов пока нет",
       "create_course_placeholder": "Создайте курс, чтобы добавить контент",
       "no_courses_available": "Доступных курсов пока нет"
@@ -1578,6 +1580,8 @@
       "rights_guide": "Руководство по правам",
       "create_course": "Создать курс",
       "create_new_course": "Создать новый курс",
+      "import_course": "Импортировать курс",
+      "import_scorm_description": "Импортировать пакет SCORM для создания нового курса",
       "no_courses": "Курсов пока нет",
       "create_course_placeholder": "Создайте курс, чтобы добавить контент",
       "no_courses_available": "Доступных курсов пока нет",
@@ -1917,7 +1921,8 @@
             "assignment": "Задание",
             "assignments": "Задания",
             "dynamic": "Динамическое",
-            "dynamic_page": "Динамическая страница"
+            "dynamic_page": "Динамическая страница",
+            "scorm": "Scorm"
           },
           "toasts": {
             "deleting": "Удаление занятия...",

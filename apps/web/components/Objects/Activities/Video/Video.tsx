@@ -58,6 +58,7 @@ function VideoActivity({ activity, course }: VideoActivityProps) {
                   const src = getVideoSrc()
                   return src ? (
                     <LearnHousePlayer
+                      key={activity.activity_uuid}
                       src={src}
                       details={activity.details}
                     />

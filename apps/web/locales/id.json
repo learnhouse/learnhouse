@@ -668,6 +668,8 @@
       "rights_guide": "Panduan Hak",
       "create_course": "Buat Kursus",
       "create_new_course": "Buat kursus baru",
+      "import_course": "Impor kursus",
+      "import_scorm_description": "Impor paket SCORM untuk membuat kursus baru",
       "no_courses": "Belum ada kursus",
       "create_course_placeholder": "Buat kursus untuk menambahkan konten",
       "no_courses_available": "Belum ada kursus yang tersedia"
@@ -1578,6 +1580,8 @@
       "rights_guide": "Panduan Hak",
       "create_course": "Buat Kursus",
       "create_new_course": "Buat kursus baru",
+      "import_course": "Impor kursus",
+      "import_scorm_description": "Impor paket SCORM untuk membuat kursus baru",
       "no_courses": "Belum ada kursus",
       "create_course_placeholder": "Buat kursus untuk menambahkan konten",
       "no_courses_available": "Belum ada kursus yang tersedia",
@@ -1917,7 +1921,8 @@
             "assignment": "Tugas",
             "assignments": "Tugas",
             "dynamic": "Dinamis",
-            "dynamic_page": "Halaman Dinamis"
+            "dynamic_page": "Halaman Dinamis",
+            "scorm": "Scorm"
           },
           "toasts": {
             "deleting": "Menghapus aktivitas...",
