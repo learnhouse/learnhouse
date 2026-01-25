@@ -3,9 +3,9 @@ from sqlmodel import Session, select
 import stripe
 import logging
 
-from src.db.payments.payments_products import PaymentsProduct
+from ee.db.payments.payments_products import PaymentsProduct
 from src.db.users import User
-from src.db.payments.payments import PaymentsConfig
+from ee.db.payments.payments import PaymentsConfig
 
 logger = logging.getLogger(__name__)
 

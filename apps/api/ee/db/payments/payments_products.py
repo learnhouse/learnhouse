@@ -10,7 +10,7 @@ class PaymentProductTypeEnum(str, Enum):
 class PaymentPriceTypeEnum(str, Enum):
     CUSTOMER_CHOICE = "customer_choice"
     FIXED_PRICE = "fixed_price"
-    
+
 class PaymentsProductBase(SQLModel):
     name: str = ""
     description: Optional[str] = ""
@@ -21,6 +21,7 @@ class PaymentsProductBase(SQLModel):
     currency: str = "USD"
 
 class PaymentsProduct(PaymentsProductBase, table=True):
+    __table_args__ = {'extend_existing': True}
     id: Optional[int] = Field(default=None, primary_key=True)
     org_id: int = Field(
         sa_column=Column(BigInteger, ForeignKey("organization.id", ondelete="CASCADE"))

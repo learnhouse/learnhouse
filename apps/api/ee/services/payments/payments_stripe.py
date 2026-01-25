@@ -4,21 +4,21 @@ from fastapi import HTTPException, Request
 from sqlmodel import Session
 import stripe
 from config.config import  get_learnhouse_config
-from src.db.payments.payments import PaymentsConfigUpdate, PaymentsConfig
-from src.db.payments.payments_products import (
+from ee.db.payments.payments import PaymentsConfigUpdate, PaymentsConfig
+from ee.db.payments.payments_products import (
     PaymentPriceTypeEnum,
     PaymentProductTypeEnum,
     PaymentsProduct,
 )
-from src.db.payments.payments_users import PaymentStatusEnum
+from ee.db.payments.payments_users import PaymentStatusEnum
 from src.db.users import AnonymousUser, InternalUser, PublicUser
-from src.services.payments.payments_config import (
+from ee.services.payments.payments_config import (
     get_payments_config,
     update_payments_config,
 )
 from sqlmodel import select
 
-from src.services.payments.payments_users import (
+from ee.services.payments.payments_users import (
     create_payment_user,
     delete_payment_user,
 )
@@ -333,16 +333,16 @@ async def generate_stripe_connect_link(
     # Get credentials
     creds = await get_stripe_internal_credentials()
     stripe.api_key = creds.get("stripe_secret_key")
-    
+
     # Get learnhouse config for client_id
     learnhouse_config = get_learnhouse_config()
     client_id = learnhouse_config.payments_config.stripe.stripe_client_id
-    
+
     if not client_id:
         raise HTTPException(status_code=400, detail="Stripe client ID not configured")
 
     state = f"org_id={org_id}"
-    
+
     # Generate OAuth link for existing accounts
     oauth_link = f"https://connect.stripe.com/oauth/authorize?response_type=code&client_id={client_id}&scope=read_write&redirect_uri={redirect_uri}&state={state}"
 
@@ -449,7 +449,7 @@ async def handle_stripe_oauth_callback(
             grant_type='authorization_code',
             code=code,
         )
-        
+
         connected_account_id = response.stripe_user_id
         if not connected_account_id:
             raise HTTPException(status_code=400, detail="No account ID received from Stripe")

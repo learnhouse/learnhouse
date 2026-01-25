@@ -2,27 +2,27 @@ from typing import Literal
 from fastapi import APIRouter, Depends, Request
 from sqlmodel import Session
 from src.core.events.database import get_db_session
-from src.db.payments.payments import PaymentsConfig, PaymentsConfigRead
+from ee.db.payments.payments import PaymentsConfig, PaymentsConfigRead
 from src.db.users import PublicUser
 from src.security.auth import get_current_user
-from src.services.payments.payments_config import (
+from ee.services.payments.payments_config import (
     init_payments_config,
     get_payments_config,
     delete_payments_config,
 )
-from src.db.payments.payments_products import PaymentsProductCreate, PaymentsProductRead, PaymentsProductUpdate
-from src.services.payments.payments_products import create_payments_product, delete_payments_product, get_payments_product, get_products_by_course, list_payments_products, update_payments_product
-from src.services.payments.payments_courses import (
+from ee.db.payments.payments_products import PaymentsProductCreate, PaymentsProductRead, PaymentsProductUpdate
+from ee.services.payments.payments_products import create_payments_product, delete_payments_product, get_payments_product, get_products_by_course, list_payments_products, update_payments_product
+from ee.services.payments.payments_courses import (
     link_course_to_product,
     unlink_course_from_product,
     get_courses_by_product,
 )
-from src.services.payments.payments_users import get_owned_courses
-from src.services.payments.payments_stripe import create_checkout_session, handle_stripe_oauth_callback, update_stripe_account_id
-from src.services.payments.payments_access import check_course_paid_access
-from src.services.payments.payments_customers import get_customers
-from src.services.payments.payments_stripe import generate_stripe_connect_link
-from src.services.payments.webhooks.payments_webhooks import handle_stripe_webhook
+from ee.services.payments.payments_users import get_owned_courses
+from ee.services.payments.payments_stripe import create_checkout_session, handle_stripe_oauth_callback, update_stripe_account_id
+from ee.services.payments.payments_access import check_course_paid_access
+from ee.services.payments.payments_customers import get_customers
+from ee.services.payments.payments_stripe import generate_stripe_connect_link
+from ee.services.payments.webhooks.payments_webhooks import handle_stripe_webhook
 
 
 router = APIRouter()

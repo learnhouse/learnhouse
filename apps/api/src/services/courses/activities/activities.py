@@ -8,7 +8,7 @@ from fastapi import HTTPException, Request
 from uuid import uuid4
 from datetime import datetime
 
-from src.services.payments.payments_access import check_activity_paid_access
+from src.core.ee_hooks import check_ee_activity_paid_access
 from src.security.courses_security import courses_rbac_check_for_activities
 
 
@@ -115,8 +115,8 @@ async def get_activity(
     # RBAC check
     await courses_rbac_check_for_activities(request, course.course_uuid, current_user, "read", db_session)
 
-    # Paid access check
-    has_paid_access = await check_activity_paid_access(
+    # Paid access check (via EE hook with fallback to True if EE not available)
+    has_paid_access = await check_ee_activity_paid_access(
         request=request,
         activity_id=activity.id if activity.id else 0,
         user=current_user,

@@ -22,6 +22,7 @@ class PaymentsUserBase(SQLModel):
     provider_specific_data: dict = Field(default_factory=dict, sa_column=Column(JSON))
 
 class PaymentsUser(PaymentsUserBase, table=True):
+    __table_args__ = {'extend_existing': True}
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(
         sa_column=Column(BigInteger, ForeignKey("user.id", ondelete="CASCADE"))
@@ -34,4 +35,3 @@ class PaymentsUser(PaymentsUserBase, table=True):
     )
     creation_date: datetime = Field(default_factory=datetime.now)
     update_date: datetime = Field(default_factory=datetime.now)
-
