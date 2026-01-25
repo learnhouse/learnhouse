@@ -701,6 +701,7 @@
           "landing": "Landing Page",
           "previews": "Images & Previews",
           "socials": "Socials",
+          "api": "API Access",
           "other": "Other"
         },
         "pages": {
@@ -723,6 +724,10 @@
           "other": {
             "title": "Other",
             "subtitle": "Manage additional organization settings"
+          },
+          "api": {
+            "title": "API Access",
+            "subtitle": "Manage API tokens and programmatic access"
           }
         },
         "name": "Organization Name",

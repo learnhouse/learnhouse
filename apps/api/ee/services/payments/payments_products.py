@@ -10,7 +10,7 @@ from ee.db.payments.payments_products import (
     PaymentsProductRead,
 )
 from ee.db.payments.payments_users import PaymentStatusEnum, PaymentsUser
-from src.db.users import PublicUser, AnonymousUser
+from src.db.users import PublicUser, AnonymousUser, APITokenUser
 from src.db.organizations import Organization
 from src.services.orgs.orgs import rbac_check
 from datetime import datetime
@@ -21,7 +21,7 @@ async def create_payments_product(
     request: Request,
     org_id: int,
     payments_product: PaymentsProductCreate,
-    current_user: PublicUser | AnonymousUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: Session,
 ) -> PaymentsProductRead:
     # Check if organization exists
@@ -62,7 +62,7 @@ async def get_payments_product(
     request: Request,
     org_id: int,
     product_id: int,
-    current_user: PublicUser | AnonymousUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: Session,
 ) -> PaymentsProductRead:
     # Check if organization exists
@@ -87,7 +87,7 @@ async def update_payments_product(
     org_id: int,
     product_id: int,
     payments_product: PaymentsProductUpdate,
-    current_user: PublicUser | AnonymousUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: Session,
 ) -> PaymentsProductRead:
     # Check if organization exists
@@ -124,7 +124,7 @@ async def delete_payments_product(
     request: Request,
     org_id: int,
     product_id: int,
-    current_user: PublicUser | AnonymousUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: Session,
 ) -> None:
     # Check if organization exists
@@ -164,7 +164,7 @@ async def delete_payments_product(
 async def list_payments_products(
     request: Request,
     org_id: int,
-    current_user: PublicUser | AnonymousUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: Session,
 ) -> list[PaymentsProductRead]:
     # Check if organization exists
@@ -186,7 +186,7 @@ async def get_products_by_course(
     request: Request,
     org_id: int,
     course_id: int,
-    current_user: PublicUser | AnonymousUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: Session,
 ) -> list[PaymentsProductRead]:
     # Check if course exists and user has permission
