@@ -89,10 +89,10 @@ CRITICAL SECURITY FIXES:
 - Fixed: Instructors could create content in courses they don't own (now they can only create courses)
 """
 
-from typing import Literal
+from typing import Literal, Union
 from fastapi import HTTPException, Request, status
 from sqlmodel import Session, select
-from src.db.users import AnonymousUser, PublicUser
+from src.db.users import AnonymousUser, PublicUser, APITokenUser
 from src.db.courses.courses import Course
 from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum, ResourceAuthorshipStatusEnum
 from src.security.rbac.rbac import (
@@ -100,20 +100,114 @@ from src.security.rbac.rbac import (
     authorization_verify_if_element_is_public,
     authorization_verify_if_user_is_anon,
     authorization_verify_based_on_org_admin_status,
+    authorization_verify_api_token_permissions,
 )
+
+
+async def _check_api_token_courses_permission(
+    request: Request,
+    course_uuid: str,
+    api_token_user: APITokenUser,
+    action: Literal["create", "read", "update", "delete"],
+    db_session: Session,
+) -> bool:
+    """
+    Check API token permissions for course operations.
+
+    SECURITY NOTES:
+    - Enforces organization boundary - token can only access courses in its org
+    - Uses token's rights directly for permission checks
+    - For course creation (course_x), only checks courses.action_create permission
+
+    Args:
+        request: FastAPI request object
+        course_uuid: UUID of the course (or "course_x" for course creation)
+        api_token_user: The authenticated API token user
+        action: Action to perform
+        db_session: Database session
+
+    Returns:
+        bool: True if authorized
+
+    Raises:
+        HTTPException: 403 Forbidden if permission denied
+    """
+    # For course creation, we don't have a real course yet
+    if course_uuid == "course_x" and action == "create":
+        # Check if token has courses.action_create permission
+        if not api_token_user.rights:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="API token has no permissions configured",
+            )
+
+        rights = api_token_user.rights
+        if isinstance(rights, dict):
+            courses_rights = rights.get("courses", {})
+            has_permission = courses_rights.get("action_create", False)
+        else:
+            courses_rights = getattr(rights, "courses", None)
+            has_permission = getattr(courses_rights, "action_create", False) if courses_rights else False
+
+        if not has_permission:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="API token does not have permission to create courses",
+            )
+        return True
+
+    # For existing courses, verify org boundary
+    statement = select(Course).where(Course.course_uuid == course_uuid)
+    course = db_session.exec(statement).first()
+
+    if not course:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Course not found",
+        )
+
+    # CRITICAL: Verify course belongs to token's organization
+    if course.org_id != api_token_user.org_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="API token cannot access courses outside its organization",
+        )
+
+    # Check token's rights for this action
+    if not api_token_user.rights:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="API token has no permissions configured",
+        )
+
+    rights = api_token_user.rights
+    if isinstance(rights, dict):
+        courses_rights = rights.get("courses", {})
+        has_permission = courses_rights.get(f"action_{action}", False)
+    else:
+        courses_rights = getattr(rights, "courses", None)
+        has_permission = getattr(courses_rights, f"action_{action}", False) if courses_rights else False
+
+    if not has_permission:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"API token does not have '{action}' permission for courses",
+        )
+
+    return True
 
 
 async def courses_rbac_check(
     request: Request,
     course_uuid: str,
-    current_user: PublicUser | AnonymousUser,
+    current_user: Union[PublicUser, AnonymousUser, APITokenUser],
     action: Literal["create", "read", "update", "delete"],
     db_session: Session,
     require_course_ownership: bool = False,
 ) -> bool:
     """
     Unified RBAC check for courses-related operations.
-    
+
     SECURITY NOTES:
     - READ operations: Allow if user has read access to the course (public courses or user has permissions)
     - COURSE CREATION: Allow if user has instructor role (3) or higher
@@ -121,23 +215,30 @@ async def courses_rbac_check(
     - UPDATE/DELETE operations: Require course ownership (CREATOR, MAINTAINER, CONTRIBUTOR) or admin/maintainer role
     - Course ownership is determined by ResourceAuthor table with ACTIVE status
     - Admin/maintainer roles are checked via authorization_verify_based_on_org_admin_status
-    
+    - API tokens: Use token's rights directly, enforcing org boundary
+
     Args:
         request: FastAPI request object
         course_uuid: UUID of the course (or "course_x" for course creation)
-        current_user: Current user (PublicUser or AnonymousUser)
+        current_user: Current user (PublicUser, AnonymousUser, or APITokenUser)
         action: Action to perform (create, read, update, delete)
         db_session: Database session
         require_course_ownership: If True, requires course ownership for non-read actions
-    
+
     Returns:
         bool: True if authorized, raises HTTPException otherwise
-    
+
     Raises:
         HTTPException: 403 Forbidden if user lacks required permissions
         HTTPException: 401 Unauthorized if user is anonymous for non-read actions
     """
-    
+
+    # Handle API Token users
+    if isinstance(current_user, APITokenUser):
+        return await _check_api_token_courses_permission(
+            request, course_uuid, current_user, action, db_session
+        )
+
     if action == "read":
         if current_user.id == 0:  # Anonymous user
             return await authorization_verify_if_element_is_public(
@@ -266,7 +367,7 @@ async def courses_rbac_check_with_course_lookup(
 async def courses_rbac_check_for_activities(
     request: Request,
     course_uuid: str,
-    current_user: PublicUser | AnonymousUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
     action: Literal["create", "read", "update", "delete"],
     db_session: Session,
 ) -> bool:
@@ -289,21 +390,28 @@ async def courses_rbac_check_for_activities(
 async def courses_rbac_check_for_assignments(
     request: Request,
     course_uuid: str,
-    current_user: PublicUser | AnonymousUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
     action: Literal["create", "read", "update", "delete"],
     db_session: Session,
 ) -> bool:
     """
     Specialized RBAC check for assignments that requires course ownership for non-read actions.
-    
+
     SECURITY NOTES:
     - Assignments are course content and require strict ownership controls
     - READ: Allow if user has read access to the course
     - CREATE/UPDATE/DELETE: Require course ownership (CREATOR, MAINTAINER, CONTRIBUTOR) or admin/maintainer role
     - This prevents unauthorized users from creating/modifying course assignments
     - Instructors can create courses but cannot create assignments in courses they don't own
+    - API tokens cannot access assignments (not in allowed resource list)
     """
-    
+    # API tokens cannot access assignments
+    if isinstance(current_user, APITokenUser):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="API tokens cannot access assignments. Only user authentication is allowed.",
+        )
+
     return await courses_rbac_check(
         request, course_uuid, current_user, action, db_session, require_course_ownership=True
     )
@@ -312,7 +420,7 @@ async def courses_rbac_check_for_assignments(
 async def courses_rbac_check_for_chapters(
     request: Request,
     course_uuid: str,
-    current_user: PublicUser | AnonymousUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
     action: Literal["create", "read", "update", "delete"],
     db_session: Session,
 ) -> bool:
@@ -335,7 +443,7 @@ async def courses_rbac_check_for_chapters(
 async def courses_rbac_check_for_certifications(
     request: Request,
     course_uuid: str,
-    current_user: PublicUser | AnonymousUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
     action: Literal["create", "read", "update", "delete"],
     db_session: Session,
 ) -> bool:
@@ -359,30 +467,37 @@ async def courses_rbac_check_for_certifications(
 async def courses_rbac_check_for_collections(
     request: Request,
     collection_uuid: str,
-    current_user: PublicUser | AnonymousUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
     action: Literal["create", "read", "update", "delete"],
     db_session: Session,
 ) -> bool:
     """
     Specialized RBAC check for collections.
-    
+
     SECURITY NOTES:
     - Collections are course groupings and require appropriate access controls
     - READ: Allow if collection is public or user has read access
     - CREATE/UPDATE/DELETE: Require appropriate permissions based on collection ownership
     - Collections may have different ownership models than courses
-    
+    - API tokens: Use token's rights directly, enforcing org boundary
+
     Args:
         request: FastAPI request object
         collection_uuid: UUID of the collection
-        current_user: Current user (PublicUser or AnonymousUser)
+        current_user: Current user (PublicUser, AnonymousUser, or APITokenUser)
         action: Action to perform (create, read, update, delete)
         db_session: Database session
-    
+
     Returns:
         bool: True if authorized, raises HTTPException otherwise
     """
-    
+
+    # Handle API Token users
+    if isinstance(current_user, APITokenUser):
+        return await authorization_verify_api_token_permissions(
+            request, current_user, action, collection_uuid, db_session
+        )
+
     if action == "read":
         if current_user.id == 0:  # Anonymous user
             res = await authorization_verify_if_element_is_public(
@@ -400,7 +515,7 @@ async def courses_rbac_check_for_collections(
             )
     else:
         await authorization_verify_if_user_is_anon(current_user.id)
-        
+
         return await authorization_verify_based_on_roles_and_authorship(
             request,
             current_user.id,

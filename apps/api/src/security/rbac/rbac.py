@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Literal, Union
 from fastapi import HTTPException, status, Request
 from sqlalchemy import null
 from sqlmodel import Session, select
@@ -7,7 +7,12 @@ from src.db.courses.courses import Course
 from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum, ResourceAuthorshipStatusEnum
 from src.db.roles import Role
 from src.db.user_organizations import UserOrganization
-from src.security.rbac.utils import check_element_type, check_course_permissions_with_own
+from src.db.users import APITokenUser
+from src.security.rbac.utils import (
+    check_element_type,
+    check_course_permissions_with_own,
+    get_element_organization_id,
+)
 
 
 # Tested and working
@@ -194,3 +199,132 @@ async def authorization_verify_if_user_is_anon(user_id: int):
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You should be logged in to perform this action",
         )
+
+
+async def authorization_verify_api_token_permissions(
+    request: Request,
+    api_token_user: APITokenUser,
+    action: Literal["read", "update", "delete", "create"],
+    element_uuid: str,
+    db_session: Session,
+) -> bool:
+    """
+    Verify API token permissions for an action on an element.
+
+    CRITICAL: This function enforces organization boundary - tokens can ONLY
+    access resources within their organization.
+
+    API tokens are restricted to these resources:
+    - courses, activities, coursechapters, collections, certifications,
+    - usergroups, payments, search
+
+    Args:
+        request: FastAPI request object
+        api_token_user: The authenticated API token user
+        action: The action being performed
+        element_uuid: The UUID of the element being accessed
+        db_session: Database session
+
+    Returns:
+        bool: True if permission granted
+
+    Raises:
+        HTTPException: If permission denied or org boundary violated
+    """
+    element_type = await check_element_type(element_uuid)
+
+    # API tokens are restricted to specific resource types
+    allowed_resource_types = [
+        'courses', 'activities', 'coursechapters', 'collections',
+        'certifications', 'usergroups', 'payments', 'search'
+    ]
+
+    if element_type not in allowed_resource_types:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"API tokens cannot access '{element_type}' resources",
+        )
+
+    # CRITICAL: Verify element belongs to token's organization
+    element_org_id = await get_element_organization_id(element_uuid, db_session)
+
+    if element_org_id is not None and element_org_id != api_token_user.org_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="API token cannot access resources outside its organization",
+        )
+
+    # Check token's rights for this action
+    if not api_token_user.rights:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="API token has no permissions configured",
+        )
+
+    # Get the rights for this element type
+    rights = api_token_user.rights
+    if isinstance(rights, dict):
+        element_rights = rights.get(element_type, {})
+    else:
+        element_rights = getattr(rights, element_type, None)
+
+    if not element_rights:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"API token does not have permissions for {element_type}",
+        )
+
+    # Check the specific action permission
+    if element_type == "search":
+        # Search only allows read action
+        if action != "read":
+            has_permission = False
+        elif isinstance(element_rights, dict):
+            has_permission = element_rights.get("action_read", False)
+        else:
+            has_permission = getattr(element_rights, "action_read", False)
+    elif element_type == "courses":
+        # For courses, check standard permission (no "own" for API tokens)
+        if isinstance(element_rights, dict):
+            has_permission = element_rights.get(f"action_{action}", False)
+        else:
+            has_permission = getattr(element_rights, f"action_{action}", False)
+    else:
+        # Standard permission check
+        if isinstance(element_rights, dict):
+            has_permission = element_rights.get(f"action_{action}", False)
+        else:
+            has_permission = getattr(element_rights, f"action_{action}", False)
+
+    if not has_permission:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"API token does not have '{action}' permission for {element_type}",
+        )
+
+    return True
+
+
+async def authorization_verify_based_on_roles_and_authorship_or_api_token(
+    request: Request,
+    current_user: Union[APITokenUser, any],
+    action: Literal["read", "update", "delete", "create"],
+    element_uuid: str,
+    db_session: Session,
+):
+    """
+    Combined authorization check that handles both regular users and API tokens.
+
+    For API tokens: Verifies org boundary and token permissions
+    For regular users: Falls back to existing role/authorship verification
+    """
+    # Check if this is an API token request
+    if isinstance(current_user, APITokenUser):
+        return await authorization_verify_api_token_permissions(
+            request, current_user, action, element_uuid, db_session
+        )
+
+    # Regular user path: use existing logic
+    return await authorization_verify_based_on_roles_and_authorship(
+        request, current_user.id, action, element_uuid, db_session
+    )

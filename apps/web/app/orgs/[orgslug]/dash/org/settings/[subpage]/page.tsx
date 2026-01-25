@@ -1,7 +1,7 @@
 'use client'
 import BreadCrumbs from '@components/Dashboard/Misc/BreadCrumbs'
 import { getUriWithOrg } from '@services/config/config'
-import { ImageIcon, TextIcon, LucideIcon, Share2Icon, LayoutDashboardIcon, CodeIcon } from 'lucide-react'
+import { ImageIcon, TextIcon, LucideIcon, Share2Icon, LayoutDashboardIcon, CodeIcon, KeyIcon } from 'lucide-react'
 import Link from 'next/link'
 import React, { useEffect, use } from 'react';
 import { motion } from 'framer-motion'
@@ -10,6 +10,7 @@ import OrgEditImages from '@components/Dashboard/Pages/Org/OrgEditImages/OrgEdit
 import OrgEditSocials from '@components/Dashboard/Pages/Org/OrgEditSocials/OrgEditSocials'
 import OrgEditLanding from '@components/Dashboard/Pages/Org/OrgEditLanding/OrgEditLanding'
 import OrgEditOther from '@components/Dashboard/Pages/Org/OrgEditOther/OrgEditOther'
+import OrgEditAPIAccess from '@components/Dashboard/Pages/Org/OrgEditAPIAccess/OrgEditAPIAccess'
 import { useTranslation } from 'react-i18next'
 
 export type OrgParams = {
@@ -28,6 +29,7 @@ const getSettingTabs = (t: any): TabItem[] => [
   { id: 'landing', label: t('dashboard.organization.settings.tabs.landing'), icon: LayoutDashboardIcon },
   { id: 'previews', label: t('dashboard.organization.settings.tabs.previews'), icon: ImageIcon },
   { id: 'socials', label: t('dashboard.organization.settings.tabs.socials'), icon: Share2Icon },
+  { id: 'api', label: t('dashboard.organization.settings.tabs.api') || 'API Access', icon: KeyIcon },
   { id: 'other', label: t('dashboard.organization.settings.tabs.other'), icon: CodeIcon },
 ]
 
@@ -72,6 +74,9 @@ function OrgPage(props: { params: Promise<OrgParams> }) {
     } else if (params.subpage == 'landing') {
       setH1Label(t('dashboard.organization.settings.pages.landing.title'))
       setH2Label(t('dashboard.organization.settings.pages.landing.subtitle'))
+    } else if (params.subpage == 'api') {
+      setH1Label(t('dashboard.organization.settings.pages.api.title') || 'API Access')
+      setH2Label(t('dashboard.organization.settings.pages.api.subtitle') || 'Manage API tokens and access')
     } else if (params.subpage == 'other') {
       setH1Label(t('dashboard.organization.settings.pages.other.title'))
       setH2Label(t('dashboard.organization.settings.pages.other.subtitle'))
@@ -119,6 +124,7 @@ function OrgPage(props: { params: Promise<OrgParams> }) {
         {params.subpage == 'previews' ? <OrgEditImages /> : ''}
         {params.subpage == 'socials' ? <OrgEditSocials /> : ''}
         {params.subpage == 'landing' ? <OrgEditLanding /> : ''}
+        {params.subpage == 'api' ? <OrgEditAPIAccess /> : ''}
         {params.subpage == 'other' ? <OrgEditOther /> : ''}
       </motion.div>
     </div>

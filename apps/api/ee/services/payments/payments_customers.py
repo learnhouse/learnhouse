@@ -1,7 +1,7 @@
 from fastapi import HTTPException, Request
 from sqlmodel import Session, select
 from src.db.organizations import Organization
-from src.db.users import PublicUser, AnonymousUser
+from src.db.users import PublicUser, AnonymousUser, APITokenUser
 from ee.db.payments.payments_users import PaymentsUser
 from src.services.orgs.orgs import rbac_check
 from ee.services.payments.payments_products import get_payments_product
@@ -10,7 +10,7 @@ from src.services.users.users import read_user_by_id
 async def get_customers(
     request: Request,
     org_id: int,
-    current_user: PublicUser | AnonymousUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: Session,
 ):
     # Check if organization exists
