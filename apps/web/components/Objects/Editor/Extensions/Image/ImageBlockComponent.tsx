@@ -143,19 +143,74 @@ function ImageBlockComponent(props: any) {
     }
   };
 
+  // Activity view mode - show only the image without block wrapper
+  if (!isEditable && blockObject && imageUrl) {
+    return (
+      <>
+        <NodeViewWrapper className="block-image w-full">
+          <div className={`w-full flex ${getAlignmentClass()}`}>
+            <div className="relative group">
+              <img
+                src={imageUrl}
+                alt=""
+                className="rounded-lg max-w-full h-auto"
+                style={{ width: imageSize.width, maxWidth: '100%' }}
+              />
+              <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button
+                  onClick={handleExpand}
+                  className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
+                  title="Expand image"
+                >
+                  <Expand className="w-4 h-4 text-white" />
+                </button>
+                <button
+                  onClick={handleDownload}
+                  className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
+                  title="Download image"
+                >
+                  <Download className="w-4 h-4 text-white" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </NodeViewWrapper>
+
+        <Modal
+          isDialogOpen={isModalOpen}
+          onOpenChange={setIsModalOpen}
+          dialogTitle="Image Viewer"
+          minWidth="lg"
+          minHeight="lg"
+          dialogContent={
+            <div className="w-full flex items-center justify-center">
+              <img
+                src={imageUrl}
+                alt=""
+                className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-lg"
+              />
+            </div>
+          }
+        />
+      </>
+    )
+  }
+
+  // Activity view mode - no image available
+  if (!isEditable && !blockObject) {
+    return null
+  }
+
   return (
     <>
       <NodeViewWrapper className="block-image w-full">
-        <div className="rounded-xl px-3 sm:px-5 py-4 bg-slate-100 transition-all ease-linear">
+        <div className="bg-neutral-50 rounded-xl px-5 py-4 nice-shadow transition-all ease-linear">
           {/* Header */}
-          <div className="flex flex-wrap gap-2 items-center text-sm mb-3">
-            <div className="flex space-x-2 items-center">
-              <Image className="text-slate-400" size={15} />
-              <p className="uppercase tracking-widest text-xs font-bold text-slate-400">
-                Image
-              </p>
-            </div>
-            <div className="grow"></div>
+          <div className="flex items-center gap-2 mb-3">
+            <Image className="text-neutral-400" size={16} />
+            <span className="uppercase tracking-widest text-xs font-bold text-neutral-400">
+              Image
+            </span>
           </div>
 
           {/* Upload Zone - shown when no image */}
@@ -168,7 +223,7 @@ function ImageBlockComponent(props: any) {
               onDrop={handleDrop}
               className={`
                 border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all
-                ${isDragging ? 'border-blue-400 bg-blue-50' : 'border-slate-300 bg-white hover:border-blue-400 hover:bg-blue-50/50'}
+                ${isDragging ? 'border-neutral-400 bg-neutral-100' : 'border-neutral-200 bg-white hover:border-neutral-400 hover:bg-neutral-50'}
               `}
             >
               <input
@@ -180,30 +235,22 @@ function ImageBlockComponent(props: any) {
               />
               {isLoading ? (
                 <div className="space-y-3">
-                  <Loader2 className="w-8 h-8 animate-spin mx-auto text-blue-500" />
-                  <p className="text-sm text-slate-600">Uploading image...</p>
+                  <Loader2 className="w-8 h-8 animate-spin mx-auto text-neutral-500" />
+                  <p className="text-sm text-neutral-600">Uploading image...</p>
                 </div>
               ) : (
                 <div className="space-y-3">
-                  <Upload className="w-8 h-8 mx-auto text-slate-400" />
+                  <Upload className="w-8 h-8 mx-auto text-neutral-400" />
                   <div>
-                    <p className="text-sm font-medium text-slate-700">
+                    <p className="text-sm font-medium text-neutral-700">
                       Drop your image here or click to browse
                     </p>
-                    <p className="text-xs text-slate-500 mt-1">
+                    <p className="text-xs text-neutral-500 mt-1">
                       Supports JPG, PNG, WebP, and GIF
                     </p>
                   </div>
                 </div>
               )}
-            </div>
-          )}
-
-          {/* Empty state for non-editable */}
-          {!blockObject && !isEditable && (
-            <div className="flex items-center justify-center gap-3 py-8 bg-white rounded-lg">
-              <Image className="text-slate-300" size={32} />
-              <p className="text-slate-500">No image available</p>
             </div>
           )}
 
@@ -250,35 +297,35 @@ function ImageBlockComponent(props: any) {
                   <img
                     src={imageUrl || ''}
                     alt=""
-                    className="rounded-lg shadow-sm max-w-full h-auto"
+                    className="rounded-lg nice-shadow max-w-full h-auto"
                     style={{ width: '100%' }}
                   />
-                  <div className="absolute top-2 right-2 flex items-center gap-1 bg-white/90 backdrop-blur-sm rounded-lg p-1 shadow-sm opacity-80 hover:opacity-100 transition-opacity">
+                  <div className="absolute top-2 right-2 flex items-center gap-1 bg-white/90 backdrop-blur-sm rounded-lg p-1 opacity-80 hover:opacity-100 transition-opacity">
                     <button
                       onClick={() => handleAlignmentChange('left')}
-                      className={`p-1.5 rounded-md transition-colors ${alignment === 'left' ? 'bg-slate-200 text-slate-700' : 'hover:bg-slate-100 text-slate-500'}`}
+                      className={`p-1.5 rounded-md transition-colors outline-none ${alignment === 'left' ? 'bg-neutral-200 text-neutral-700' : 'hover:bg-neutral-100 text-neutral-500'}`}
                       title="Align left"
                     >
                       <AlignLeft size={14} />
                     </button>
                     <button
                       onClick={() => handleAlignmentChange('center')}
-                      className={`p-1.5 rounded-md transition-colors ${alignment === 'center' ? 'bg-slate-200 text-slate-700' : 'hover:bg-slate-100 text-slate-500'}`}
+                      className={`p-1.5 rounded-md transition-colors outline-none ${alignment === 'center' ? 'bg-neutral-200 text-neutral-700' : 'hover:bg-neutral-100 text-neutral-500'}`}
                       title="Center align"
                     >
                       <AlignCenter size={14} />
                     </button>
                     <button
                       onClick={() => handleAlignmentChange('right')}
-                      className={`p-1.5 rounded-md transition-colors ${alignment === 'right' ? 'bg-slate-200 text-slate-700' : 'hover:bg-slate-100 text-slate-500'}`}
+                      className={`p-1.5 rounded-md transition-colors outline-none ${alignment === 'right' ? 'bg-neutral-200 text-neutral-700' : 'hover:bg-neutral-100 text-neutral-500'}`}
                       title="Align right"
                     >
                       <AlignRight size={14} />
                     </button>
-                    <div className="w-px h-4 bg-slate-200 mx-0.5"></div>
+                    <div className="w-px h-4 bg-neutral-200 mx-0.5"></div>
                     <button
                       onClick={handleExpand}
-                      className="p-1.5 rounded-md hover:bg-slate-100 text-slate-500 transition-colors"
+                      className="p-1.5 rounded-md hover:bg-neutral-100 text-neutral-500 transition-colors outline-none"
                       title="Expand image"
                     >
                       <Expand size={14} />
@@ -289,35 +336,6 @@ function ImageBlockComponent(props: any) {
             </div>
           )}
 
-          {/* Image display - view mode */}
-          {blockObject && !isEditable && (
-            <div className={`w-full flex ${getAlignmentClass()}`}>
-              <div className="relative group">
-                <img
-                  src={imageUrl || ''}
-                  alt=""
-                  className="rounded-lg shadow-sm max-w-full h-auto"
-                  style={{ width: imageSize.width, maxWidth: '100%' }}
-                />
-                <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button
-                    onClick={handleExpand}
-                    className="p-2 bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
-                    title="Expand image"
-                  >
-                    <Expand className="w-4 h-4 text-white" />
-                  </button>
-                  <button
-                    onClick={handleDownload}
-                    className="p-2 bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
-                    title="Download image"
-                  >
-                    <Download className="w-4 h-4 text-white" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </NodeViewWrapper>
 

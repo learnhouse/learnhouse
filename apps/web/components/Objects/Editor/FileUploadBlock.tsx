@@ -1,5 +1,4 @@
-import { Loader } from 'lucide-react'
-import { UploadIcon } from '@radix-ui/react-icons'
+import { Loader2, Upload } from 'lucide-react'
 import React, {
   ButtonHTMLAttributes,
   HTMLAttributes,
@@ -15,7 +14,7 @@ const FileUploadBlockInput: React.FC<InputHTMLAttributes<HTMLInputElement>> = ({
   return (
     <input
       className={cn(
-        'p-3 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 hover:file:cursor-pointer file:file:bg-gray-200 cursor-pointer file:text-gray-500',
+        'p-3 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 hover:file:cursor-pointer file:bg-slate-200 cursor-pointer file:text-slate-600 text-sm',
         className
       )}
       onChange={onChange}
@@ -32,14 +31,14 @@ const FileUploadBlockButton: React.FC<
   return (
     <button
       className={cn(
-        'p-2 px-3 bg-gray-200 rounded-lg text-gray-500 enabled:hover:bg-gray-300 transition space-x-2 items-center flex disabled:opacity-50 disabled:cursor-not-allowed',
+        'p-2 px-4 bg-slate-700 hover:bg-slate-800 rounded-lg text-white enabled:hover:bg-slate-800 transition-colors gap-2 items-center flex disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium',
         className
       )}
       onClick={onClick}
       {...props}
     >
-      <UploadIcon />
-      <p>Submit</p>
+      <Upload size={16} />
+      <span>Upload</span>
     </button>
   )
 }
@@ -60,20 +59,24 @@ function FileUploadBlock({
   children,
 }: UploadBlockComponentProps) {
   if (isLoading)
-    return <Loader className="animate-spin text-gray-200" size={50} />
+    return (
+      <div className="flex items-center justify-center py-8">
+        <Loader2 className="animate-spin text-slate-400" size={32} />
+      </div>
+    )
 
   if (!isEditable && isEmpty)
     return (
-      <div className="flex items-center gap-5">
-        {<Icon className="text-gray-200" size={50} />}
-        <p>No file available for preview.</p>
+      <div className="flex items-center justify-center gap-3 py-8 bg-white rounded-lg nice-shadow">
+        {<Icon className="text-slate-300" size={32} />}
+        <p className="text-slate-500">No file available for preview.</p>
       </div>
     )
 
   return (
     <>
-      {<Icon className="text-gray-200" size={50} />}
-        {children}
+      {<Icon className="text-slate-300" size={40} />}
+      {children}
     </>
   )
 }
@@ -85,9 +88,9 @@ function FileUploadBlockWrapper({
 }: UploadBlockComponentProps) {
   return (
     isEmpty && (
-    <div className="flex items-center justify-center space-x-3 py-7 bg-gray-50 rounded-xl text-gray-900 px-3 border-dashed border-gray-150 border-2 text-sm" contentEditable={false}>
-      <FileUploadBlock isEmpty {...props}>{children}</FileUploadBlock>
-    </div>
+      <div className="flex items-center justify-center gap-4 py-8 bg-white rounded-lg text-slate-700 px-4 border-2 border-dashed border-slate-200 text-sm" contentEditable={false}>
+        <FileUploadBlock isEmpty {...props}>{children}</FileUploadBlock>
+      </div>
     )
   )
 }

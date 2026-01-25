@@ -74,6 +74,7 @@ function Editor(props: Editor) {
   const aiEditorState = useAIEditor() as AIEditorStateTypes
   const is_ai_feature_enabled = useGetAIFeatures({ feature: 'editor' })
   const [isButtonAvailable, setIsButtonAvailable] = React.useState(false)
+  const [editorReady, setEditorReady] = React.useState(false)
 
 
   React.useEffect(() => {
@@ -185,8 +186,8 @@ function Editor(props: Editor) {
     ],
     content: props.content,
     immediatelyRender: false,
+    onCreate: () => setEditorReady(true),
   })
-
 
   const isMobile = useMediaQuery('(max-width: 767px)')
   if (isMobile) {
@@ -218,7 +219,7 @@ function Editor(props: Editor) {
           }}
           exit={{ opacity: 0 }}
         >
-          <EditorTop className="fixed bg-white bg-opacity-95 backdrop-blur-sm backdrop-brightness-125">
+          <EditorTop>
             <EditorDocSection>
               <EditorInfoWrapper>
                 <Link href="/">
@@ -372,10 +373,14 @@ const EditorTop = styled.div`
   margin: 40px;
   margin-top: 0px;
   margin-bottom: 20px;
-  padding: 10px;
+  padding: 12px;
   display: flex;
   justify-content: space-between;
-  box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.03);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 4px 6px -1px rgba(209, 213, 219, 0.25), 0 2px 4px -2px rgba(209, 213, 219, 0.25);
+  outline: 1px solid rgba(229, 231, 235, 0.5);
   position: fixed;
   z-index: 303;
   width: -webkit-fill-available;
@@ -386,7 +391,7 @@ const EditorTop = styled.div`
     margin: 20px;
     margin-top: 0px;
     margin-bottom: 15px;
-    padding: 8px;
+    padding: 10px;
   }
 
   @media (max-width: 900px) {
@@ -430,27 +435,12 @@ const EditorLeftOptionsSection = styled.div`
 const EditorInfoWrapper = styled.div`
   display: flex;
   flex-direction: row;
-  margin-bottom: 5px;
+  margin-bottom: 8px;
   align-items: center;
   min-width: 0;
 `
 const EditorButtonsWrapper = styled.div`
-  overflow-x: auto;
-  overflow-y: hidden;
-  padding-bottom: 2px;
-
-  &::-webkit-scrollbar {
-    height: 4px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: rgba(217, 217, 217, 0.5);
-    border-radius: 2px;
-  }
+  overflow: visible;
 `
 
 // Inside EditorUsersSection
@@ -462,10 +452,8 @@ const EditorUserProfileWrapper = styled.div`
 `
 
 // Inside EditorInfoWrapper
-//..todo
 const EditorInfoLearnHouseLogo = styled(Image)`
   border-radius: 6px;
-  margin-right: 0px;
 `
 const EditorInfoDocName = styled.div`
   font-size: 16px;
@@ -512,7 +500,7 @@ const EditorInfoThumbnail = styled.img`
   object-fit: cover;
   object-position: top;
   border-radius: 7px;
-  margin-left: 5px;
+  margin-left: 7px;
 
   &:hover {
     cursor: pointer;
@@ -521,20 +509,21 @@ const EditorInfoThumbnail = styled.img`
 
 export const EditorContentWrapper = styled.div`
   margin: 40px;
-  margin-top: 90px;
+  margin-top: 97px;
   background-color: white;
   border-radius: 10px;
   z-index: 300;
-  box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 4px 6px -1px rgba(209, 213, 219, 0.25), 0 2px 4px -2px rgba(209, 213, 219, 0.25);
+  outline: 1px solid rgba(229, 231, 235, 0.4);
 
   @media (max-width: 1200px) {
     margin: 20px;
-    margin-top: 85px;
+    margin-top: 91px;
   }
 
   @media (max-width: 900px) {
     margin: 15px;
-    margin-top: 150px;
+    margin-top: 157px;
   }
 
   // disable chrome outline
@@ -742,6 +731,23 @@ export const EditorContentWrapper = styled.div`
       right: -2px;
       top: 0;
       width: 4px;
+    }
+  }
+
+  // Remove selection outline from blocks
+  .ProseMirror-selectednode {
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  [data-node-view-wrapper] {
+    outline: none !important;
+
+    &:focus,
+    &:focus-within,
+    &:focus-visible {
+      outline: none !important;
+      box-shadow: none !important;
     }
   }
 `

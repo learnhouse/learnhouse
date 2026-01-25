@@ -317,22 +317,20 @@ layer(base);
 /* Editor Drag Handle */
 .editor-drag-handle {
   position: fixed;
-  width: 22px;
   height: 26px;
-  border-radius: 4px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  cursor: grab;
+  gap: 2px;
   background: white;
-  border: 1px solid #e5e7eb;
   opacity: 0;
   visibility: hidden;
-  transition: opacity 150ms, visibility 150ms, background 150ms, transform 150ms;
+  transition: opacity 150ms, visibility 150ms, padding 150ms;
   z-index: 9999;
-  color: #9ca3af;
   pointer-events: none;
   user-select: none;
+  overflow: hidden;
+  padding: 0;
 }
 
 .editor-drag-handle.visible {
@@ -342,16 +340,117 @@ layer(base);
 }
 
 .editor-drag-handle:hover {
-  background: #f3f4f6;
-  color: #6b7280;
-  transform: scale(1.05);
+  padding: 0 1px 0 0;
 }
 
-.editor-drag-handle:active,
-.editor-drag-handle.is-dragging {
+.editor-drag-handle .drag-grip {
+  width: 22px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  color: #9ca3af;
+  transition: background 150ms, color 150ms;
+  border-radius: 6px 0 0 6px;
+  flex-shrink: 0;
+}
+
+.editor-drag-handle .drag-grip:hover {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.editor-drag-handle .drag-grip:active,
+.editor-drag-handle.is-dragging .drag-grip {
   cursor: grabbing;
   background: #e5e7eb;
   color: #374151;
+}
+
+.editor-drag-handle .action-btn {
+  width: 0;
+  height: 26px;
+  padding: 0;
+  border: none;
+  background: white;
+  color: #6b7280;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: width 150ms, opacity 150ms, visibility 150ms, background 150ms, color 150ms;
+  overflow: visible;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.editor-drag-handle:hover .action-btn {
+  width: 28px;
+  opacity: 1;
+  visibility: visible;
+}
+
+.editor-drag-handle .action-btn svg {
+  flex-shrink: 0;
+}
+
+.editor-drag-handle .action-btn:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.editor-drag-handle .action-btn:active {
+  background: #e5e7eb;
+}
+
+.editor-drag-handle .clear-btn:hover {
+  background: #fef3c7;
+  color: #f59e0b;
+}
+
+.editor-drag-handle .clear-btn:active {
+  background: #fde68a;
+  color: #f59e0b;
+}
+
+.editor-drag-handle .delete-btn:hover {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.editor-drag-handle .delete-btn:active {
+  background: #fecaca;
+  color: #dc2626;
+}
+
+/* Tooltips for action buttons */
+.editor-drag-handle .tooltip-text {
+  position: fixed;
+  background: rgba(255, 255, 255, 0.95);
+  color: #4b5563;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 200ms cubic-bezier(0.16, 1, 0.3, 1),
+              visibility 200ms;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+  outline: 1px solid rgba(0, 0, 0, 0.06);
+  z-index: 10001;
+  transform: translateX(-50%);
+}
+
+.editor-drag-handle .action-btn:hover .tooltip-text {
+  opacity: 1;
+  visibility: visible;
 }
 
 /* Editor Drop Indicator */
@@ -399,11 +498,35 @@ layer(base);
   border-radius: 4px;
 }
 
-/* Selected node style (when dragging) */
+/* Remove all selection outlines from editor blocks */
 .ProseMirror-selectednode {
-  outline: 2px solid #3b82f6;
-  outline-offset: 2px;
-  border-radius: 4px;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.ProseMirror [data-node-view-wrapper] {
+  outline: none !important;
+}
+
+.ProseMirror [data-node-view-wrapper]:focus,
+.ProseMirror [data-node-view-wrapper]:focus-within,
+.ProseMirror [data-node-view-wrapper]:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.ProseMirror .node-view-wrapper:focus,
+.ProseMirror .node-view-wrapper:focus-within {
+  outline: none !important;
+}
+
+/* Remove outline from all block types */
+.ProseMirror [class^="block-"]:focus,
+.ProseMirror [class^="block-"]:focus-within,
+.ProseMirror [class*=" block-"]:focus,
+.ProseMirror [class*=" block-"]:focus-within {
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 /* Tippy.js base styles */

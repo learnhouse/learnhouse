@@ -16,17 +16,42 @@ function createDragHandlePlugin() {
   function init(view: EditorView) {
     // Create drag handle
     dragHandle = document.createElement('div')
-    dragHandle.className = 'editor-drag-handle'
-    dragHandle.draggable = true
+    dragHandle.className = 'editor-drag-handle nice-shadow'
     dragHandle.innerHTML = `
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-        <circle cx="9" cy="5" r="2"/>
-        <circle cx="9" cy="12" r="2"/>
-        <circle cx="9" cy="19" r="2"/>
-        <circle cx="15" cy="5" r="2"/>
-        <circle cx="15" cy="12" r="2"/>
-        <circle cx="15" cy="19" r="2"/>
-      </svg>
+      <div class="drag-grip" draggable="true">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+          <circle cx="9" cy="5" r="2"/>
+          <circle cx="9" cy="12" r="2"/>
+          <circle cx="9" cy="19" r="2"/>
+          <circle cx="15" cy="5" r="2"/>
+          <circle cx="15" cy="12" r="2"/>
+          <circle cx="15" cy="19" r="2"/>
+        </svg>
+      </div>
+      <button class="action-btn clear-btn" data-action="clear">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+          <path d="M3 3v5h5"/>
+        </svg>
+        <span class="tooltip-text">Clear</span>
+      </button>
+      <button class="action-btn duplicate-btn" data-action="duplicate">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
+          <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+        </svg>
+        <span class="tooltip-text">Duplicate</span>
+      </button>
+      <button class="action-btn delete-btn" data-action="delete">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 6h18"/>
+          <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+          <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+          <line x1="10" x2="10" y1="11" y2="17"/>
+          <line x1="14" x2="14" y1="11" y2="17"/>
+        </svg>
+        <span class="tooltip-text">Delete</span>
+      </button>
     `
     document.body.appendChild(dragHandle)
 
@@ -40,10 +65,20 @@ function createDragHandlePlugin() {
     view.dom.addEventListener('mouseleave', handleMouseLeave)
 
     // Event listeners on drag handle
+    const dragGrip = dragHandle.querySelector('.drag-grip') as HTMLElement
+    const actionButtons = dragHandle.querySelectorAll('.action-btn') as NodeListOf<HTMLElement>
+
     dragHandle.addEventListener('mouseenter', handleHandleEnter)
     dragHandle.addEventListener('mouseleave', handleHandleLeave)
-    dragHandle.addEventListener('dragstart', handleDragStart)
-    dragHandle.addEventListener('dragend', handleDragEnd)
+    dragHandle.addEventListener('click', handleActionClick)
+    dragGrip.addEventListener('dragstart', handleDragStart)
+    dragGrip.addEventListener('dragend', handleDragEnd)
+
+    // Add tooltip positioning for each button
+    actionButtons.forEach(button => {
+      button.addEventListener('mouseenter', handleButtonHover)
+      button.addEventListener('mouseleave', handleButtonLeave)
+    })
 
     // Global drag events for drop positioning
     document.addEventListener('dragover', handleDragOver)
@@ -74,6 +109,60 @@ function createDragHandlePlugin() {
       if (draggedBlockPos === null) {
         scheduleHide()
       }
+    }
+
+    function handleButtonHover(event: MouseEvent) {
+      const button = event.currentTarget as HTMLElement
+      const tooltip = button.querySelector('.tooltip-text') as HTMLElement
+      if (tooltip) {
+        const buttonRect = button.getBoundingClientRect()
+        tooltip.style.left = `${buttonRect.left + buttonRect.width / 2}px`
+        tooltip.style.top = `${buttonRect.top - 32}px`
+      }
+    }
+
+    function handleButtonLeave() {
+      // Tooltip hiding is handled by CSS
+    }
+
+    function handleActionClick(event: MouseEvent) {
+      const target = event.target as HTMLElement
+      const button = target.closest('button[data-action]') as HTMLElement
+
+      if (!button) return
+
+      event.preventDefault()
+      event.stopPropagation()
+
+      const action = button.dataset.action
+
+      if (!hoveredBlock) return
+
+      const nodePos = getNodePos(hoveredBlock, view)
+      if (nodePos === null) return
+
+      const node = view.state.doc.nodeAt(nodePos)
+      if (!node) return
+
+      if (action === 'delete') {
+        const tr = view.state.tr.delete(nodePos, nodePos + node.nodeSize)
+        view.dispatch(tr)
+      } else if (action === 'duplicate') {
+        const slice = new Slice(Fragment.from(node), 0, 0)
+        const tr = view.state.tr.insert(nodePos + node.nodeSize, slice.content)
+        view.dispatch(tr)
+      } else if (action === 'clear') {
+        // Create an empty version of the same node type
+        const emptyNode = view.state.schema.nodes[node.type.name].create(
+          node.attrs,
+          null,
+          node.marks
+        )
+        const tr = view.state.tr.replaceWith(nodePos, nodePos + node.nodeSize, emptyNode)
+        view.dispatch(tr)
+      }
+
+      hideHandle()
     }
 
     function handleDragStart(event: DragEvent) {
@@ -344,12 +433,22 @@ function createDragHandlePlugin() {
 
     return {
       destroy() {
+        const dragGrip = dragHandle?.querySelector('.drag-grip') as HTMLElement
+        const actionButtons = dragHandle?.querySelectorAll('.action-btn') as NodeListOf<HTMLElement>
+
         view.dom.removeEventListener('mousemove', handleMouseMove)
         view.dom.removeEventListener('mouseleave', handleMouseLeave)
         dragHandle?.removeEventListener('mouseenter', handleHandleEnter)
         dragHandle?.removeEventListener('mouseleave', handleHandleLeave)
-        dragHandle?.removeEventListener('dragstart', handleDragStart)
-        dragHandle?.removeEventListener('dragend', handleDragEnd)
+        dragHandle?.removeEventListener('click', handleActionClick)
+        dragGrip?.removeEventListener('dragstart', handleDragStart)
+        dragGrip?.removeEventListener('dragend', handleDragEnd)
+
+        actionButtons?.forEach(button => {
+          button.removeEventListener('mouseenter', handleButtonHover)
+          button.removeEventListener('mouseleave', handleButtonLeave)
+        })
+
         document.removeEventListener('dragover', handleDragOver)
         document.removeEventListener('drop', handleDrop)
         clearHideTimeout()

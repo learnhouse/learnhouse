@@ -21,8 +21,8 @@ const ToolTip = (props: TooltipProps) => {
           <TooltipContent
             slateBlack={props.slateBlack}
             unstyled={props.unstyled}
-            side={props.side ? props.side : 'bottom'}
-            sideOffset={props.sideOffset}
+            side={props.side ? props.side : 'top'}
+            sideOffset={props.sideOffset ?? 6}
           >
             {props.content}
           </TooltipContent>
@@ -74,21 +74,23 @@ const TooltipContent = styled(Tooltip.Content, {
         fontSize: 'inherit',
         lineHeight: 'inherit',
         color: 'inherit',
+        outline: 'none',
       },
     },
   },
 
-  borderRadius: 4,
+  borderRadius: 6,
   padding: '5px 10px',
-  fontSize: 12,
+  fontSize: 11,
+  fontWeight: 500,
   lineHeight: 1,
-  color: 'black',
-  backgroundColor: 'rgba(217, 217, 217, 0.50)',
+  color: '#4b5563',
+  backgroundColor: 'rgba(255, 255, 255, 0.95)',
   zIndex: 500,
-  boxShadow:
-    'hsl(206 22% 7% / 35%) 0px 10px 38px -10px, hsl(206 22% 7% / 20%) 0px 10px 20px -15px',
+  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.05)',
+  outline: '1px solid rgba(0, 0, 0, 0.06)',
   userSelect: 'none',
-  animationDuration: '400ms',
+  animationDuration: '200ms',
   animationTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
   willChange: 'transform, opacity',
   '&[data-state="delayed-open"]': {

@@ -297,7 +297,7 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-slate-900 placeholder-slate-400 transition-all"
+              className="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:border-neutral-400 bg-white text-slate-900 placeholder-slate-400 transition-all"
               placeholder="Enter your scenario title..."
             />
           </div>
@@ -407,7 +407,7 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
                     <textarea
                       value={scenario.text}
                       onChange={(e) => updateScenario(scenario.id, { text: e.target.value })}
-                      className="w-full p-3 border border-slate-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-slate-900 placeholder-slate-400 transition-all"
+                      className="w-full p-3 border border-slate-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:border-neutral-400 bg-white text-slate-900 placeholder-slate-400 transition-all"
                       rows={2}
                       placeholder="Describe what happens in this scenario..."
                     />
@@ -423,7 +423,7 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
                         type="url"
                         value={scenario.imageUrl || ''}
                         onChange={(e) => updateScenario(scenario.id, { imageUrl: e.target.value })}
-                        className="w-full p-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-slate-900 placeholder-slate-400 transition-all"
+                        className="w-full p-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:border-neutral-400 bg-white text-slate-900 placeholder-slate-400 transition-all"
                         placeholder="https://example.com/image.jpg"
                       />
                       {scenario.imageUrl && (
@@ -472,7 +472,7 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
                                 type="text"
                                 value={option.text}
                                 onChange={(e) => updateOption(scenario.id, option.id, { text: e.target.value })}
-                                className="w-full px-2 py-2 border border-slate-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white placeholder-slate-400 transition-all"
+                                className="w-full px-2 py-2 border border-slate-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:border-neutral-400 bg-white placeholder-slate-400 transition-all"
                                 placeholder="Enter response option..."
                               />
                               <div className="flex items-center gap-2">
@@ -482,7 +482,7 @@ const ScenariosModal: React.FC<ScenariosModalProps> = ({
                                   onChange={(e) => updateOption(scenario.id, option.id, { 
                                     nextScenarioId: e.target.value || null 
                                   })}
-                                  className="flex-1 px-2 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-all"
+                                  className="flex-1 px-2 py-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:border-neutral-400 bg-white transition-all"
                                 >
                                   <option value="">End scenario</option>
                                   {scenarios.map((s) => (
