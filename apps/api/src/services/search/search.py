@@ -3,7 +3,7 @@ from fastapi import Request
 from sqlmodel import Session, select, or_, text, and_
 from sqlalchemy import true as sa_true
 from pydantic import BaseModel, ConfigDict
-from src.db.users import PublicUser, AnonymousUser, UserRead, User
+from src.db.users import PublicUser, AnonymousUser, UserRead, User, APITokenUser
 from src.db.courses.courses import Course, CourseRead
 from src.db.collections import Collection, CollectionRead
 from src.db.collections_courses import CollectionCourse
@@ -22,7 +22,7 @@ class SearchResult(BaseModel):
 
 async def search_across_org(
     request: Request,
-    current_user: PublicUser | AnonymousUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
     org_slug: str,
     search_query: str,
     db_session: Session,
@@ -32,14 +32,39 @@ async def search_across_org(
     """
     Search across courses, collections and users within an organization
     """
+    from fastapi import HTTPException, status
+
     offset = (page - 1) * limit
 
     # Get organization
     org_statement = select(Organization).where(Organization.slug == org_slug)
     org = db_session.exec(org_statement).first()
-    
+
     if not org:
         return SearchResult(courses=[], collections=[], users=[])
+
+    # API Token validation: verify token belongs to this organization
+    if isinstance(current_user, APITokenUser):
+        if org.id != current_user.org_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="API token cannot search in organizations outside its scope",
+            )
+        # Check if token has read permission for search
+        if current_user.rights:
+            rights = current_user.rights
+            if isinstance(rights, dict):
+                search_rights = rights.get("search", {})
+                has_permission = search_rights.get("action_read", False)
+            else:
+                search_rights = getattr(rights, "search", None)
+                has_permission = getattr(search_rights, "action_read", False) if search_rights else False
+
+            if not has_permission:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="API token does not have search permission",
+                )
 
     # Search courses using existing search_courses function
     courses = await search_courses(request, current_user, org_slug, search_query, db_session, page, limit)
