@@ -1,7 +1,7 @@
 import { NodeViewProps, NodeViewWrapper } from '@tiptap/react'
 import { Node } from '@tiptap/core'
-import { 
-  Loader2, Video, Upload, X, ArrowLeftRight, 
+import {
+  Loader2, Video, Upload, X, ArrowLeftRight,
   CheckCircle2, AlertCircle, Download, Expand
 } from 'lucide-react'
 import React from 'react'
@@ -13,8 +13,6 @@ import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { constructAcceptValue } from '@/lib/constants'
 import { cn } from '@/lib/utils'
-import { motion, AnimatePresence } from 'framer-motion'
-import styled from 'styled-components'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 
 const SUPPORTED_FILES = constructAcceptValue(['webm', 'mp4'])
@@ -32,64 +30,14 @@ type VideoSize = keyof typeof VIDEO_SIZES
 const getVideoSizeFromWidth = (width: number | string | undefined): VideoSize => {
   if (!width) return 'medium'
   if (width === '100%') return 'full'
-  
+
   const numWidth = typeof width === 'string' ? parseInt(width) : width
-  
+
   if (numWidth <= VIDEO_SIZES.small.width) return 'small'
   if (numWidth <= VIDEO_SIZES.medium.width) return 'medium'
   if (numWidth <= VIDEO_SIZES.large.width) return 'large'
   return 'full'
 }
-
-const VideoWrapper = styled.div`
-  transition: all 0.2s ease;
-  background-color: #f9f9f9;
-  border: 1px solid #eaeaea;
-`
-
-const VideoContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-`
-
-const UploadZone = styled(motion.div)<{ isDragging: boolean }>`
-  border: 2px dashed ${props => props.isDragging ? '#3b82f6' : '#e5e7eb'};
-  background: ${props => props.isDragging ? 'rgba(59, 130, 246, 0.05)' : '#ffffff'};
-  transition: all 0.2s ease;
-  border-radius: 0.75rem;
-  padding: 2rem;
-  text-align: center;
-  cursor: pointer;
-
-  &:hover {
-    border-color: #3b82f6;
-    background: rgba(59, 130, 246, 0.05);
-  }
-`
-
-const SizeButton = styled(motion.button)<{ isActive: boolean }>`
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
-  color: ${props => props.isActive ? '#ffffff' : '#4b5563'};
-  background: ${props => props.isActive ? '#3b82f6' : 'transparent'};
-  border: 1px solid ${props => props.isActive ? '#3b82f6' : '#e5e7eb'};
-  transition: all 0.2s ease;
-
-  &:hover {
-    background: ${props => props.isActive ? '#2563eb' : '#f9fafb'};
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-`
 
 interface Organization {
   org_uuid: string
@@ -136,18 +84,6 @@ interface VideoBlockObject {
   size: VideoSize
 }
 
-interface VideoBlockAttrs {
-  blockObject: VideoBlockObject | LegacyVideoBlockObject | null
-}
-
-interface VideoBlockExtension {
-  options: {
-    activity: {
-      activity_uuid: string
-    }
-  }
-}
-
 interface ExtendedNodeViewProps extends Omit<NodeViewProps, 'extension'> {
   extension: Node & {
     options: {
@@ -166,7 +102,7 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
   const session = useLHSession() as Session
   const fileInputRef = React.useRef<HTMLInputElement>(null)
   const uploadZoneRef = React.useRef<HTMLDivElement>(null)
-  
+
   // Convert legacy block object to new format
   const convertLegacyBlock = React.useCallback((block: LegacyVideoBlockObject): VideoBlockObject => {
     const videoSize = getVideoSizeFromWidth(block.size?.width)
@@ -239,7 +175,7 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
 
     const file = e.dataTransfer.files[0]
     const fileExtension = file?.name.split('.').pop()?.toLowerCase()
-    
+
     if (file && fileExtension && ['mp4', 'webm'].includes(fileExtension)) {
       setVideo(file)
       setError(null)
@@ -257,7 +193,6 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
       setError(null)
       setUploadProgress(0)
 
-      // Simulate upload progress
       const progressInterval = setInterval(() => {
         setUploadProgress(prev => Math.min(prev + 10, 90))
       }, 200)
@@ -279,7 +214,6 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
       updateAttributes({ blockObject: newBlockObject })
       setVideo(null)
 
-      // Reset progress after a delay
       setTimeout(() => {
         setUploadProgress(0)
       }, 1000)
@@ -312,8 +246,7 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
 
   const handleDownload = () => {
     if (!videoUrl) return;
-    
-    // Create a temporary link element
+
     const link = document.createElement('a');
     link.href = videoUrl;
     link.download = `video-${blockObject?.block_uuid || 'download'}.${blockObject?.content.file_format || 'mp4'}`;
@@ -335,36 +268,31 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
     return (
       <>
         <NodeViewWrapper className="block-video w-full">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
-            className="w-full flex justify-center relative"
-          >
+          <div className="w-full flex justify-center relative">
             <div
-              style={{ 
+              style={{
                 maxWidth: typeof width === 'number' ? width : '100%',
                 width: '100%'
               }}
             >
-              <div className="relative">
+              <div className="relative group">
                 <video
                   controls
                   preload="metadata"
-                  className="w-full aspect-video object-contain rounded-lg shadow-sm"
+                  className="w-full aspect-video object-contain rounded-lg"
                   src={videoUrl}
                 />
-                <div className="absolute top-2 right-2 flex gap-1">
+                <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
                     onClick={handleExpand}
-                    className="p-2 bg-black/50 hover:bg-black/70 rounded-full transition-colors"
+                    className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
                     title="Expand video"
                   >
                     <Expand className="w-4 h-4 text-white" />
                   </button>
                   <button
                     onClick={handleDownload}
-                    className="p-2 bg-black/50 hover:bg-black/70 rounded-full transition-colors"
+                    className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
                     title="Download video"
                   >
                     <Download className="w-4 h-4 text-white" />
@@ -372,9 +300,9 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
                 </div>
               </div>
             </div>
-          </motion.div>
+          </div>
         </NodeViewWrapper>
-        
+
         <Modal
           isDialogOpen={isModalOpen}
           onOpenChange={setIsModalOpen}
@@ -405,207 +333,186 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
   // Show the full editor UI when in edit mode
   return (
     <NodeViewWrapper className="block-video w-full">
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-      >
-        <VideoWrapper className="flex flex-col space-y-4 rounded-lg py-6 px-5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2 text-sm text-zinc-500">
-              <Video size={16} />
-              <span className="font-medium">Video Block</span>
-            </div>
-            {blockObject && (
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={handleRemove}
-                className="text-zinc-400 hover:text-red-500 transition-colors"
-              >
-                <X size={16} />
-              </motion.button>
-            )}
+      <div className="bg-neutral-50 rounded-xl px-5 py-4 nice-shadow transition-all ease-linear">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Video className="text-neutral-400" size={16} />
+            <span className="uppercase tracking-widest text-xs font-bold text-neutral-400">
+              Video
+            </span>
           </div>
-
-          {(!blockObject || !videoUrl) && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              transition={{ duration: 0.2 }}
-              className="space-y-4"
+          {blockObject && (
+            <button
+              onClick={handleRemove}
+              className="text-neutral-400 hover:text-red-500 transition-colors"
             >
-              <input
-                ref={fileInputRef}
-                type="file"
-                onChange={handleVideoChange}
-                accept={SUPPORTED_FILES}
-                className="hidden"
-              />
-
-              <UploadZone
-                ref={uploadZoneRef}
-                isDragging={isDragging}
-                onDragEnter={handleDragEnter}
-                onDragOver={handleDragEnter}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                onClick={() => fileInputRef.current?.click()}
-                className="relative"
-              >
-                <AnimatePresence>
-                  {isLoading ? (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="space-y-3"
-                    >
-                      <Loader2 className="w-8 h-8 animate-spin mx-auto text-blue-500" />
-                      <div className="text-sm text-zinc-600">Uploading video... {uploadProgress}%</div>
-                      <div className="w-48 h-1 bg-gray-200 rounded-full mx-auto overflow-hidden">
-                        <motion.div
-                          className="h-full bg-blue-500 rounded-full"
-                          initial={{ width: 0 }}
-                          animate={{ width: `${uploadProgress}%` }}
-                          transition={{ duration: 0.2 }}
-                        />
-                      </div>
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="space-y-3"
-                    >
-                      <Upload className="w-8 h-8 mx-auto text-blue-500" />
-                      <div>
-                        <div className="text-sm font-medium text-zinc-700">
-                          Drop your video here or click to browse
-                        </div>
-                        <div className="text-xs text-zinc-500 mt-1">
-                          Supports MP4 and WebM formats
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </UploadZone>
-
-              {error && (
-                <div className="flex items-center gap-2 text-sm text-red-500 font-medium bg-red-50 rounded-lg p-3">
-                  <AlertCircle size={16} />
-                  {error}
-                </div>
-              )}
-            </motion.div>
+              <X size={16} />
+            </button>
           )}
+        </div>
 
-          {blockObject && videoUrl && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.3 }}
-              className="space-y-4"
+        {/* Upload Zone */}
+        {(!blockObject || !videoUrl) && (
+          <div className="space-y-4">
+            <input
+              ref={fileInputRef}
+              type="file"
+              onChange={handleVideoChange}
+              accept={SUPPORTED_FILES}
+              className="hidden"
+            />
+
+            <div
+              ref={uploadZoneRef}
+              onClick={() => fileInputRef.current?.click()}
+              onDragEnter={handleDragEnter}
+              onDragOver={handleDragEnter}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              className={cn(
+                "border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all",
+                isDragging
+                  ? "border-blue-400 bg-blue-50"
+                  : "border-neutral-200 bg-white hover:border-blue-400 hover:bg-blue-50/50"
+              )}
             >
-              <div className="flex items-center gap-2 flex-wrap">
-                <div className="text-sm text-zinc-500 font-medium flex items-center gap-1">
-                  <ArrowLeftRight size={14} />
-                  Video Size:
-                </div>
-                {(Object.keys(VIDEO_SIZES) as VideoSize[]).map((size) => (
-                  <SizeButton
-                    key={size}
-                    isActive={selectedSize === size}
-                    onClick={() => handleSizeChange(size)}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    {size === selectedSize && <CheckCircle2 size={14} />}
-                    {VIDEO_SIZES[size].label}
-                  </SizeButton>
-                ))}
-                <SizeButton
-                  isActive={false}
-                  onClick={handleDownload}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="ml-auto"
-                >
-                  <Download size={14} />
-                  Download
-                </SizeButton>
-              </div>
-
-              <VideoContainer>
-                <div
-                  style={{ 
-                    maxWidth: typeof VIDEO_SIZES[selectedSize].width === 'number' 
-                      ? VIDEO_SIZES[selectedSize].width 
-                      : '100%',
-                    width: '100%'
-                  }}
-                >
-                  <div className="relative rounded-lg overflow-hidden bg-black/5">
-                    {isLoading && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/10 backdrop-blur-sm">
-                        <Loader2 className="w-8 h-8 animate-spin text-white" />
-                      </div>
-                    )}
-                    <video
-                      controls
-                      preload="metadata"
-                      className={cn(
-                        "w-full aspect-video object-contain bg-black/95 shadow-sm transition-all duration-200",
-                        isLoading && "opacity-50 blur-sm"
-                      )}
-                      src={videoUrl}
+              {isLoading ? (
+                <div className="space-y-3">
+                  <Loader2 className="w-8 h-8 animate-spin mx-auto text-blue-500" />
+                  <p className="text-sm text-neutral-600">Uploading video... {uploadProgress}%</p>
+                  <div className="w-48 h-1 bg-neutral-200 rounded-full mx-auto overflow-hidden">
+                    <div
+                      className="h-full bg-blue-500 rounded-full transition-all duration-200"
+                      style={{ width: `${uploadProgress}%` }}
                     />
-                    <div className="absolute top-2 right-2 flex gap-1">
-                      <button
-                        onClick={handleExpand}
-                        className="p-2 bg-black/50 hover:bg-black/70 rounded-full transition-colors"
-                        title="Expand video"
-                      >
-                        <Expand className="w-4 h-4 text-white" />
-                      </button>
-                      <button
-                        onClick={handleDownload}
-                        className="p-2 bg-black/50 hover:bg-black/70 rounded-full transition-colors"
-                        title="Download video"
-                      >
-                        <Download className="w-4 h-4 text-white" />
-                      </button>
-                    </div>
                   </div>
                 </div>
-              </VideoContainer>
-            </motion.div>
-          )}
-        </VideoWrapper>
-        
-        {blockObject && videoUrl && (
-          <Modal
-            isDialogOpen={isModalOpen}
-            onOpenChange={setIsModalOpen}
-            dialogTitle="Video Player"
-            minWidth="lg"
-            minHeight="lg"
-            dialogContent={
-              <div className="w-full">
-                <video
-                  controls
-                  autoPlay
-                  preload="metadata"
-                  className="w-full aspect-video object-contain rounded-lg shadow-lg bg-black"
-                  src={videoUrl}
-                />
+              ) : (
+                <div className="space-y-3">
+                  <Upload className="w-8 h-8 mx-auto text-neutral-400" />
+                  <div>
+                    <p className="text-sm font-medium text-neutral-700">
+                      Drop your video here or click to browse
+                    </p>
+                    <p className="text-xs text-neutral-500 mt-1">
+                      Supports MP4 and WebM formats
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {error && (
+              <div className="flex items-center gap-2 text-sm text-red-500 font-medium bg-red-50 rounded-lg p-3">
+                <AlertCircle size={16} />
+                {error}
               </div>
-            }
-          />
+            )}
+          </div>
         )}
-      </motion.div>
+
+        {/* Video Preview with Controls */}
+        {blockObject && videoUrl && (
+          <div className="space-y-4">
+            {/* Size Controls */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="text-sm text-neutral-500 font-medium flex items-center gap-1">
+                <ArrowLeftRight size={14} />
+                Size:
+              </div>
+              {(Object.keys(VIDEO_SIZES) as VideoSize[]).map((size) => (
+                <button
+                  key={size}
+                  onClick={() => handleSizeChange(size)}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors outline-none",
+                    selectedSize === size
+                      ? "bg-neutral-700 text-white"
+                      : "bg-neutral-200 text-neutral-700 hover:bg-neutral-300"
+                  )}
+                >
+                  {size === selectedSize && <CheckCircle2 size={14} />}
+                  {VIDEO_SIZES[size].label}
+                </button>
+              ))}
+              <button
+                onClick={handleDownload}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-200 hover:bg-neutral-300 text-neutral-700 rounded-lg text-sm transition-colors ml-auto"
+              >
+                <Download size={14} />
+                Download
+              </button>
+            </div>
+
+            {/* Video Player */}
+            <div className="flex justify-center">
+              <div
+                style={{
+                  maxWidth: typeof VIDEO_SIZES[selectedSize].width === 'number'
+                    ? VIDEO_SIZES[selectedSize].width
+                    : '100%',
+                  width: '100%'
+                }}
+              >
+                <div className="relative rounded-lg overflow-hidden bg-black/5 nice-shadow">
+                  {isLoading && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/10 backdrop-blur-sm">
+                      <Loader2 className="w-8 h-8 animate-spin text-white" />
+                    </div>
+                  )}
+                  <video
+                    controls
+                    preload="metadata"
+                    className={cn(
+                      "w-full aspect-video object-contain bg-black/95 transition-all duration-200",
+                      isLoading && "opacity-50 blur-sm"
+                    )}
+                    src={videoUrl}
+                  />
+                  <div className="absolute top-2 right-2 flex gap-1">
+                    <button
+                      onClick={handleExpand}
+                      className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
+                      title="Expand video"
+                    >
+                      <Expand className="w-4 h-4 text-white" />
+                    </button>
+                    <button
+                      onClick={handleDownload}
+                      className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
+                      title="Download video"
+                    >
+                      <Download className="w-4 h-4 text-white" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {blockObject && videoUrl && (
+        <Modal
+          isDialogOpen={isModalOpen}
+          onOpenChange={setIsModalOpen}
+          dialogTitle="Video Player"
+          minWidth="lg"
+          minHeight="lg"
+          dialogContent={
+            <div className="w-full">
+              <video
+                controls
+                autoPlay
+                preload="metadata"
+                className="w-full aspect-video object-contain rounded-lg shadow-lg bg-black"
+                src={videoUrl}
+              />
+            </div>
+          }
+        />
+      )}
     </NodeViewWrapper>
   )
 }

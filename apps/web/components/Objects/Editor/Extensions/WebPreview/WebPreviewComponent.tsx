@@ -369,7 +369,7 @@ const WebPreviewComponent: React.FC<WebPreviewProps> = ({ node, updateAttributes
                         onClick={() => handleAlignmentChange(opt.value)}
                         title={`Align ${opt.value}`}
                         type="button"
-                        className={`flex items-center justify-center border transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-300 p-1.5 rounded-full text-gray-600
+                        className={`flex items-center justify-center border transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-neutral-300 p-1.5 rounded-full text-gray-600
                           ${alignment === opt.value
                             ? 'bg-gray-600 text-white border-gray-600 hover:bg-gray-700'
                             : 'bg-white border-gray-200 hover:bg-gray-100'}
