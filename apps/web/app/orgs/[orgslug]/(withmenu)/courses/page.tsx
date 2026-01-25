@@ -68,7 +68,7 @@ const CoursesPage = async (params: any) => {
 
   return (
     <div>
-      <Courses org_id={org.org_id} orgslug={orgslug} courses={courses} />
+      <Courses org_id={org.id} orgslug={orgslug} courses={courses} />
     </div>
   )
 }

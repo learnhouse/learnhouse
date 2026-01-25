@@ -668,6 +668,8 @@
       "rights_guide": "权利指南",
       "create_course": "创建课程",
       "create_new_course": "创建新课程",
+      "import_course": "导入课程",
+      "import_scorm_description": "导入 SCORM 包以创建新课程",
       "no_courses": "尚无课程",
       "create_course_placeholder": "创建课程以添加内容",
       "no_courses_available": "尚无可用课程"
@@ -1578,6 +1580,8 @@
       "rights_guide": "权利指南",
       "create_course": "创建课程",
       "create_new_course": "创建新课程",
+      "import_course": "导入课程",
+      "import_scorm_description": "导入 SCORM 包以创建新课程",
       "no_courses": "尚无课程",
       "create_course_placeholder": "创建课程以添加内容",
       "no_courses_available": "尚无可用课程",
@@ -1917,7 +1921,8 @@
             "assignment": "作业",
             "assignments": "作业合集",
             "dynamic": "动态内容",
-            "dynamic_page": "动态页面"
+            "dynamic_page": "动态页面",
+            "scorm": "Scorm"
           },
           "toasts": {
             "deleting": "正在删除活动...",

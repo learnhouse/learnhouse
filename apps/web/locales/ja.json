@@ -668,6 +668,8 @@
       "rights_guide": "権利ガイド",
       "create_course": "コースを作成",
       "create_new_course": "新しいコースを作成",
+      "import_course": "コースをインポート",
+      "import_scorm_description": "SCORMパッケージをインポートして新しいコースを作成",
       "no_courses": "コースがまだありません",
       "create_course_placeholder": "コースを作成してコンテンツを追加しましょう",
       "no_courses_available": "利用可能なコースがまだありません"
@@ -1578,6 +1580,8 @@
       "rights_guide": "権利ガイド",
       "create_course": "コースを作成",
       "create_new_course": "新しいコースを作成",
+      "import_course": "コースをインポート",
+      "import_scorm_description": "SCORMパッケージをインポートして新しいコースを作成",
       "no_courses": "コースがまだありません",
       "create_course_placeholder": "コースを作成してコンテンツを追加しましょう",
       "no_courses_available": "利用可能なコースがまだありません",
@@ -1917,7 +1921,8 @@
             "assignment": "課題",
             "assignments": "課題",
             "dynamic": "ダイナミック",
-            "dynamic_page": "ダイナミックページ"
+            "dynamic_page": "ダイナミックページ",
+            "scorm": "Scorm"
           },
           "toasts": {
             "deleting": "アクティビティを削除中...",

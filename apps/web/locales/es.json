@@ -668,6 +668,8 @@
       "rights_guide": "Guía de derechos",
       "create_course": "Crear curso",
       "create_new_course": "Crear un nuevo curso",
+      "import_course": "Importar curso",
+      "import_scorm_description": "Importar un paquete SCORM para crear un nuevo curso",
       "no_courses": "Aún no hay cursos",
       "create_course_placeholder": "Crea un curso para añadir contenido",
       "no_courses_available": "Aún no hay cursos disponibles"
@@ -1578,6 +1580,8 @@
       "rights_guide": "Guía de derechos",
       "create_course": "Crear curso",
       "create_new_course": "Crear un nuevo curso",
+      "import_course": "Importar curso",
+      "import_scorm_description": "Importar un paquete SCORM para crear un nuevo curso",
       "no_courses": "Aún no hay cursos",
       "create_course_placeholder": "Crea un curso para añadir contenido",
       "no_courses_available": "Aún no hay cursos disponibles",
@@ -1917,7 +1921,8 @@
             "assignment": "Tarea",
             "assignments": "Tareas",
             "dynamic": "Dinámico",
-            "dynamic_page": "Página dinámica"
+            "dynamic_page": "Página dinámica",
+            "scorm": "Scorm"
           },
           "toasts": {
             "deleting": "Eliminando actividad...",

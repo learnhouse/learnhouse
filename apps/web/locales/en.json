@@ -225,7 +225,25 @@
     "submitting_contributor_application": "Submitting contributor application...",
     "contributor_application_success": "Your application to contribute has been submitted successfully",
     "contributor_application_error": "Failed to submit your application. Please try again later.",
-    "contribute": "Contribute"
+    "contribute": "Contribute",
+    "scorm": {
+      "upload_package": "Upload SCORM Package",
+      "package_file": "Package File (.zip)",
+      "click_to_upload": "Click to upload or drag and drop",
+      "supported_versions": "SCORM 1.2 or SCORM 2004 package",
+      "import_info": "Upload your SCORM package to analyze its contents. You'll be able to configure the course and assign activities to chapters.",
+      "analyze_package": "Analyze Package",
+      "package_analyzed": "Package Analyzed Successfully",
+      "assign_scos": "Assign Activities to Chapters",
+      "activity_name": "Activity",
+      "chapter_name": "Chapter",
+      "upload_different": "Upload different package",
+      "selected": "selected",
+      "create_course": "Create Course",
+      "configure": "Configure",
+      "ready_to_analyze": "Ready to analyze",
+      "course_details": "Course Details"
+    }
   },
   "collections": {
     "collections": "Collections",
@@ -668,6 +686,8 @@
       "rights_guide": "Rights Guide",
       "create_course": "Create Course",
       "create_new_course": "Create a new course",
+      "import_course": "Import Course",
+      "import_scorm_description": "Import a SCORM package to create a new course",
       "no_courses": "No courses yet",
       "create_course_placeholder": "Create a course to add content",
       "no_courses_available": "No courses available yet"
@@ -1592,6 +1612,8 @@
       "rights_guide": "Rights Guide",
       "create_course": "Create Course",
       "create_new_course": "Create a new course",
+      "import_course": "Import Course",
+      "import_scorm_description": "Import a SCORM package to create a new course",
       "no_courses": "No courses yet",
       "create_course_placeholder": "Create a course to add content",
       "no_courses_available": "No courses available yet",
@@ -1931,7 +1953,8 @@
             "assignment": "Assignment",
             "assignments": "Assignments",
             "dynamic": "Dynamic",
-            "dynamic_page": "Dynamic Page"
+            "dynamic_page": "Dynamic Page",
+            "scorm": "Scorm"
           },
           "toasts": {
             "deleting": "Deleting activity...",

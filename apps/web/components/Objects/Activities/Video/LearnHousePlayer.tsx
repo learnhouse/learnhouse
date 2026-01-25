@@ -87,6 +87,25 @@ const LearnHousePlayer: React.FC<LearnHousePlayerProps> = ({
     }
   }, [])
 
+  // Reset player state and reload video when src changes
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+
+    // Reset all player state
+    setIsReady(false)
+    setIsPlaying(false)
+    setCurrentTime(0)
+    setDuration(0)
+    setBuffered(0)
+    setIsBuffering(true)
+    setPlaybackRate(1)
+    setShowSettings(false)
+
+    // Force the video element to reload with the new source
+    video.load()
+  }, [src])
+
   // Handle fullscreen changes
   useEffect(() => {
     const handleFullscreenChange = () => {

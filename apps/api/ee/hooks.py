@@ -9,6 +9,7 @@ from ee.routers import cloud_internal
 from ee.routers import payments
 from ee.routers import info
 from ee.routers import audit_logs
+from ee.routers import scorm
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +48,14 @@ def register_routers(v1_router: APIRouter):
         prefix="/ee/audit_logs",
         tags=["ee", "audit_logs"]
     )
-    
+
+    # SCORM
+    v1_router.include_router(
+        scorm.router,
+        prefix="/scorm",
+        tags=["scorm"]
+    )
+
     logger.info("EE Routers registered")
 
 def on_startup(app: FastAPI):

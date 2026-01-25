@@ -668,6 +668,8 @@
       "rights_guide": "دليل الحقوق",
       "create_course": "إنشاء دورة",
       "create_new_course": "إنشاء دورة جديدة",
+      "import_course": "استيراد دورة",
+      "import_scorm_description": "استيراد حزمة SCORM لإنشاء دورة جديدة",
       "no_courses": "لا توجد دورات بعد",
       "create_course_placeholder": "أنشئ دورة لإضافة محتوى",
       "no_courses_available": "لا توجد دورات متاحة بعد"
@@ -1578,6 +1580,8 @@
       "rights_guide": "دليل الحقوق",
       "create_course": "إنشاء دورة",
       "create_new_course": "إنشاء دورة جديدة",
+      "import_course": "استيراد دورة",
+      "import_scorm_description": "استيراد حزمة SCORM لإنشاء دورة جديدة",
       "no_courses": "لا توجد دورات بعد",
       "create_course_placeholder": "أنشئ دورة لإضافة محتوى",
       "no_courses_available": "لا توجد دورات متاحة بعد",
@@ -1917,7 +1921,8 @@
             "assignment": "واجب",
             "assignments": "واجبات",
             "dynamic": "ديناميكي",
-            "dynamic_page": "صفحة ديناميكية"
+            "dynamic_page": "صفحة ديناميكية",
+            "scorm": "Scorm"
           },
           "toasts": {
             "deleting": "جاري حذف النشاط...",
