@@ -353,6 +353,14 @@ const Page = styled.div`
   background-size: 50px 50px;
   background-attachment: fixed;
   background-repeat: repeat;
+
+  @media (max-width: 1200px) {
+    padding-top: 20px;
+  }
+
+  @media (max-width: 900px) {
+    padding-top: 15px;
+  }
 `
 
 const EditorTop = styled.div`
@@ -368,18 +376,43 @@ const EditorTop = styled.div`
   z-index: 303;
   width: -webkit-fill-available;
   width: -moz-available;
+  gap: 10px;
+
+  @media (max-width: 1200px) {
+    margin: 20px;
+    margin-top: 0px;
+    margin-bottom: 15px;
+    padding: 8px;
+  }
+
+  @media (max-width: 900px) {
+    margin: 15px;
+    margin-top: 0px;
+    margin-bottom: 10px;
+    flex-direction: column;
+    align-items: stretch;
+  }
 `
 
 // Inside EditorTop
 const EditorDocSection = styled.div`
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  flex: 1;
 `
 const EditorUsersSection = styled.div`
   display: flex;
   flex-direction: row;
   justify-content: center;
   align-items: center;
+  flex-shrink: 0;
+
+  @media (max-width: 900px) {
+    justify-content: flex-end;
+    padding-top: 8px;
+    border-top: 1px solid rgba(217, 217, 217, 0.5);
+  }
 `
 
 const EditorLeftOptionsSection = styled.div`
@@ -394,8 +427,27 @@ const EditorInfoWrapper = styled.div`
   display: flex;
   flex-direction: row;
   margin-bottom: 5px;
+  align-items: center;
+  min-width: 0;
 `
-const EditorButtonsWrapper = styled.div``
+const EditorButtonsWrapper = styled.div`
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 2px;
+
+  &::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(217, 217, 217, 0.5);
+    border-radius: 2px;
+  }
+`
 
 // Inside EditorUsersSection
 const EditorUserProfileWrapper = styled.div`
@@ -418,12 +470,35 @@ const EditorInfoDocName = styled.div`
   display: flex;
   margin-left: 10px;
   color: #494949;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  b {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+
+    @media (max-width: 1200px) {
+      max-width: 150px;
+    }
+
+    @media (max-width: 900px) {
+      max-width: 120px;
+    }
+  }
 
   svg {
     margin-left: 4px;
     margin-right: 4px;
     padding: 3px;
     color: #353535;
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 1200px) {
+    font-size: 14px;
   }
 `
 
@@ -447,6 +522,16 @@ export const EditorContentWrapper = styled.div`
   border-radius: 10px;
   z-index: 300;
   box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.03);
+
+  @media (max-width: 1200px) {
+    margin: 20px;
+    margin-top: 85px;
+  }
+
+  @media (max-width: 900px) {
+    margin: 15px;
+    margin-top: 150px;
+  }
 
   // disable chrome outline
 
