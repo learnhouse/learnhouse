@@ -10,6 +10,7 @@ import {
   Globe,
   Loader2,
   Lock,
+  Package,
   Pencil,
   Save,
   Sparkles,
@@ -265,6 +266,10 @@ const ACTIVITIES = {
   'TYPE_DYNAMIC': {
     displayNameKey: 'dynamic',
     Icon: Sparkles
+  },
+  'TYPE_SCORM': {
+    displayNameKey: 'scorm',
+    Icon: Package
   }
 }
 

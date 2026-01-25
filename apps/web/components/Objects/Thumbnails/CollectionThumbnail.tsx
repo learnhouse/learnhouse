@@ -59,11 +59,14 @@ function CollectionThumbnail(props: PropsType) {
                   key={course.course_uuid}
                   className="relative h-20 w-32 overflow-hidden rounded-lg border-2 border-white shadow-lg transition-all duration-300 shrink-0"
                   style={{
-                    backgroundImage: `url(${getCourseThumbnailMediaDirectory(
-                      org?.org_uuid,
-                      course.course_uuid,
-                      course.thumbnail_image
-                    )})`,
+                    backgroundImage: `url(${course.thumbnail_image
+                      ? getCourseThumbnailMediaDirectory(
+                          org?.org_uuid,
+                          course.course_uuid,
+                          course.thumbnail_image
+                        )
+                      : '/empty_thumbnail.png'
+                    })`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                     zIndex: 3 - index,

@@ -668,6 +668,8 @@
       "rights_guide": "Haklar Rehberi",
       "create_course": "Kurs Oluştur",
       "create_new_course": "Yeni Kurs Oluştur",
+      "import_course": "Kurs içe aktar",
+      "import_scorm_description": "Yeni bir kurs oluşturmak için bir SCORM paketi içe aktarın",
       "no_courses": "Henüz kurs yok",
       "create_course_placeholder": "İçerik eklemek için bir kurs oluşturun",
       "no_courses_available": "Şu anda mevcut kurs bulunmamaktadır"
@@ -1578,6 +1580,8 @@
       "rights_guide": "Haklar Rehberi",
       "create_course": "Kurs Oluştur",
       "create_new_course": "Yeni Kurs Oluştur",
+      "import_course": "Kurs içe aktar",
+      "import_scorm_description": "Yeni bir kurs oluşturmak için bir SCORM paketi içe aktarın",
       "no_courses": "Henüz kurs yok",
       "create_course_placeholder": "İçerik eklemek için bir kurs oluşturun",
       "no_courses_available": "Şu anda mevcut kurs bulunmamaktadır",
@@ -1917,7 +1921,8 @@
             "assignment": "Ödev",
             "assignments": "Ödevler",
             "dynamic": "Dinamik",
-            "dynamic_page": "Dinamik Sayfa"
+            "dynamic_page": "Dinamik Sayfa",
+            "scorm": "Scorm"
           },
           "toasts": {
             "deleting": "Aktivite siliniyor...",

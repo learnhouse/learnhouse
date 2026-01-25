@@ -668,6 +668,8 @@
       "rights_guide": "권한 가이드",
       "create_course": "코스 생성",
       "create_new_course": "새 코스 생성",
+      "import_course": "코스 가져오기",
+      "import_scorm_description": "SCORM 패키지를 가져와 새 코스 만들기",
       "no_courses": "아직 코스가 없습니다",
       "create_course_placeholder": "코스를 생성하여 콘텐츠를 추가해 보세요",
       "no_courses_available": "이용 가능한 코스가 아직 없습니다"
@@ -1578,6 +1580,8 @@
       "rights_guide": "권한 가이드",
       "create_course": "코스 생성",
       "create_new_course": "새 코스 생성",
+      "import_course": "코스 가져오기",
+      "import_scorm_description": "SCORM 패키지를 가져와 새 코스 만들기",
       "no_courses": "아직 코스가 없습니다",
       "create_course_placeholder": "코스를 생성하여 콘텐츠를 추가해 보세요",
       "no_courses_available": "이용 가능한 코스가 아직 없습니다",
@@ -1917,7 +1921,8 @@
             "assignment": "과제",
             "assignments": "과제",
             "dynamic": "동적",
-            "dynamic_page": "동적 페이지"
+            "dynamic_page": "동적 페이지",
+            "scorm": "Scorm"
           },
           "toasts": {
             "deleting": "활동 삭제 중...",

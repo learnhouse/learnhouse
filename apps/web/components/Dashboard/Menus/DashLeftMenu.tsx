@@ -68,7 +68,7 @@ function DashLeftMenu() {
 
   if (!org || !session) return null
 
-  const plan = org?.config?.cloud?.plan || 'free'
+  const plan = org?.config?.config?.cloud?.plan || 'free'
 
   return (
     <div
@@ -92,7 +92,7 @@ function DashLeftMenu() {
 
         <div className={cn("flex h-24 items-center transition-all duration-500", isCollapsed ? "justify-center" : "px-3")}>
           <Link
-            className="flex items-center space-x-4 transition-all hover:opacity-80 group"
+            className="flex items-center space-x-3 transition-all hover:opacity-80 group"
             href={'/'}
           >
             <div className="relative flex items-center shrink-0">
@@ -108,30 +108,27 @@ function DashLeftMenu() {
               ) : (
                 <Image
                   alt="Learnhouse logo"
-                  width={isCollapsed ? 32 : 34}
-                  height={isCollapsed ? 32 : 34}
+                  width={isCollapsed ? 32 : 38}
+                  height={isCollapsed ? 32 : 38}
                   src={LearnHouseDashboardLogo}
                   className="transition-all rounded-lg"
                 />
               )}
             </div>
             {!isCollapsed && (
-              <div className="flex flex-col animate-in fade-in slide-in-from-left-2 duration-500 min-w-0 pr-2 overflow-visible">
-                <div className="mb-1.5">
-                  <span className={cn(
-                    "px-1.5 py-0.5 rounded-[3px] text-[7px] font-black uppercase tracking-widest border transition-colors inline-block",
-                    plan === 'pro' ? "bg-purple-500/20 text-purple-300 border-purple-500/20" :
-                    plan === 'standard' ? "bg-blue-500/20 text-blue-300 border-blue-500/20" :
-                    "bg-white/10 text-white/60 border-white/10"
-                  )}>
-                    {plan} PLAN
-                  </span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <span className="font-bold text-sm leading-[1.2] text-white whitespace-normal wrap-break-word">
-                    {org?.name}
-                  </span>
-                </div>
+              <div className="flex flex-col animate-in fade-in slide-in-from-left-2 duration-500 min-w-0 pr-2">
+                <span className="font-semibold text-[13px] text-white/90 truncate">
+                  {org?.name}
+                </span>
+                <span className={cn(
+                  "text-[10px] font-medium px-1.5 py-0.5 border rounded w-fit mt-1",
+                  plan === 'enterprise' ? "text-amber-400/70 border-amber-400/20" :
+                  plan === 'pro' ? "text-purple-400/70 border-purple-400/20" :
+                  plan === 'standard' ? "text-blue-400/70 border-blue-400/20" :
+                  "text-white/30 border-white/10"
+                )}>
+                  {plan.charAt(0).toUpperCase() + plan.slice(1)}
+                </span>
               </div>
             )}
           </Link>
@@ -190,102 +187,97 @@ function DashLeftMenu() {
           </AdminAuthorization>
         </div>
 
-        <div className="flex flex-col pb-6 pt-2 mt-auto">
+        <div className="flex flex-col pb-5 pt-2 mt-auto">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <div className={cn(
-                "flex items-center space-x-3 cursor-pointer rounded-xl hover:bg-white/5 transition-all group duration-300 mx-2",
-                isCollapsed ? "justify-center px-0 py-2" : "px-3 py-2.5"
+                "flex items-center space-x-3 cursor-pointer rounded-lg hover:bg-white/5 transition-all group",
+                isCollapsed ? "justify-center p-2" : "px-3 py-2"
               )}>
-                <UserAvatar 
-                  width={isCollapsed ? 32 : 28} 
-                  rounded="rounded-full"
-                  shadow="shadow-[0_10px_40px_rgba(0,0,0,1)]"
-                />
+                <div className="shrink-0">
+                  <UserAvatar
+                    width={isCollapsed ? 32 : 26}
+                    rounded="rounded-full"
+                    shadow="shadow-none"
+                  />
+                </div>
                 {!isCollapsed && (
                   <div className="flex flex-col flex-1 min-w-0 animate-in fade-in duration-500">
-                    <span className="text-sm font-bold truncate text-white/90 group-hover:text-white transition-colors">
-                      {session?.data?.user?.username?.toUpperCase()}
+                    <span className="text-[13px] font-semibold truncate text-white/90">
+                      {session?.data?.user?.username}
                     </span>
-                    <span className="text-[10px] text-white/20 truncate group-hover:text-white/40 transition-colors font-black tracking-tighter">
-                      {session?.data?.user?.email?.toUpperCase()}
+                    <span className="text-[10px] text-white/30 truncate font-medium">
+                      {session?.data?.user?.email}
                     </span>
                   </div>
                 )}
               </div>
             </DropdownMenuTrigger>
             <DropdownMenuContent side="right" align="end" className="w-56 ml-2">
-                <DropdownMenuLabel>
-                  <div className="flex flex-col">
-                    <p className="text-sm font-medium">{session?.data?.user?.username}</p>
-                    <p className="text-xs text-gray-500">{session?.data?.user?.email}</p>
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuSub>
-                  <DropdownMenuSubTrigger className="flex items-center space-x-2">
-                    <Languages size={14} />
-                    <span>{t('common.language')}</span>
-                  </DropdownMenuSubTrigger>
-                  <DropdownMenuPortal>
-                    <DropdownMenuSubContent>
-                      {AVAILABLE_LANGUAGES.map((language) => (
-                        <DropdownMenuItem 
-                          key={language.code}
-                          onClick={() => changeLanguage(language.code)} 
-                          className="flex items-center justify-between"
-                        >
-                          <span>{t(language.translationKey)} ({language.nativeName})</span>
-                          {i18n.language === language.code && <Check size={14} />}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuSubContent>
-                  </DropdownMenuPortal>
-                </DropdownMenuSub>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/dash/user-account/settings/general" className="flex items-center space-x-2 w-full">
-                    <Settings size={16} />
-                    <span>{t('common.settings')}</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/dash/user-account/owned" className="flex items-center space-x-2 w-full">
-                    <Package2 size={16} />
-                    <span>{t('courses.my_courses')}</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem 
-                  onClick={() => logOutUI()}
-                  className="flex items-center space-x-2 text-red-600 focus:text-red-600"
-                >
-                  <LogOut size={16} />
-                  <span>{t('user.sign_out')}</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+              <DropdownMenuLabel>
+                <div className="flex flex-col">
+                  <p className="text-sm font-medium">{session?.data?.user?.username}</p>
+                  <p className="text-xs text-gray-500">{session?.data?.user?.email}</p>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger className="flex items-center space-x-2">
+                  <Languages size={14} />
+                  <span>{t('common.language')}</span>
+                </DropdownMenuSubTrigger>
+                <DropdownMenuPortal>
+                  <DropdownMenuSubContent>
+                    {AVAILABLE_LANGUAGES.map((language) => (
+                      <DropdownMenuItem
+                        key={language.code}
+                        onClick={() => changeLanguage(language.code)}
+                        className="flex items-center justify-between"
+                      >
+                        <span>{t(language.translationKey)} ({language.nativeName})</span>
+                        {i18n.language === language.code && <Check size={14} />}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuSubContent>
+                </DropdownMenuPortal>
+              </DropdownMenuSub>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link href="/dash/user-account/settings/general" className="flex items-center space-x-2 w-full">
+                  <Settings size={16} />
+                  <span>{t('common.settings')}</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/dash/user-account/owned" className="flex items-center space-x-2 w-full">
+                  <Package2 size={16} />
+                  <span>{t('courses.my_courses')}</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => logOutUI()}
+                className="flex items-center space-x-2 text-red-500 focus:text-red-500"
+              >
+                <LogOut size={16} />
+                <span>{t('user.sign_out')}</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           {!isCollapsed && (
-            <div className="flex flex-col mt-2">
-              <div className="h-px bg-white/5 -mx-4 my-2" />
-              
-              <div className="px-4 mt-1.5 animate-in fade-in duration-1000">
-                <div className="flex items-center space-x-2 text-white/10 font-black tracking-widest text-[8px]">
-                  <div className="flex items-center space-x-1.5">
-                    <span>LEARNHOUSE</span>
-                    {isEE ? (
-                      <ToolTip content="ENTERPRISE EDITION" side="top" slateBlack sideOffset={10}>
-                        <span className="bg-purple-500/10 text-purple-400/40 px-1 py-0.5 rounded-[3px] border border-purple-500/10 cursor-help transition-colors hover:text-purple-300">EE</span>
-                      </ToolTip>
-                    ) : (
-                      <span className="border border-white/5 px-1 py-0.5 rounded-[3px]">CE</span>
-                    )}
-                  </div>
-                  <span>V0.1.0</span>
-                </div>
+            <>
+              <div className="h-px bg-white/5 -mx-4 mt-3" />
+              <div className="px-5 mt-3 flex items-center space-x-2 animate-in fade-in duration-500">
+                <span className="text-[10px] font-medium text-white/20">
+                  {isEE ? 'Enterprise' : 'Community'}
+                </span>
+                <span className="text-white/10">·</span>
+                <span className="text-[10px] font-medium text-white/20 px-1.5 py-0.5 border border-white/10 rounded">
+                  v0.1.0
+                </span>
               </div>
-            </div>
+            </>
           )}
         </div>
       </div>
