@@ -58,6 +58,7 @@ import { useMediaQuery } from 'usehooks-ts'
 import UserAvatar from '../UserAvatar'
 import UserBlock from './Extensions/Users/UserBlock'
 import DragHandle from './Extensions/DragHandle/DragHandle'
+import { SlashCommands } from './Extensions/SlashCommands'
 
 interface Editor {
   content: string
@@ -180,6 +181,7 @@ function Editor(props: Editor) {
         activity: props.activity,
       }),
       DragHandle,
+      SlashCommands,
     ],
     content: props.content,
     immediatelyRender: false,
