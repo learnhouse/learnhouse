@@ -1062,6 +1062,9 @@
       "active_users": {
         "title": "Active users",
         "subtitle": "Manage your organization users, assign roles and permissions",
+        "search_placeholder": "Search users...",
+        "no_results": "No users found matching your search",
+        "no_users": "No users in this organization yet",
         "table": {
           "user": "User",
           "role": "Role",
@@ -1072,7 +1075,14 @@
           "remove_from_org": "Remove from organization",
           "removing": "Removing...",
           "remove_success": "Removed user from org",
-          "remove_error": "Error removing user"
+          "remove_error": "Error removing user",
+          "updating_role": "Updating role...",
+          "role_update_success": "Role updated successfully",
+          "role_update_error": "Error updating role"
+        },
+        "pagination": {
+          "showing": "Showing {{start}}-{{end}} of {{total}}",
+          "page": "Page {{current}} of {{total}}"
         },
         "modals": {
           "update_role": {

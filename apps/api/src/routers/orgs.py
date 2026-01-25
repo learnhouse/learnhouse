@@ -23,7 +23,6 @@ from src.db.organizations import (
     OrganizationCreate,
     OrganizationRead,
     OrganizationUpdate,
-    OrganizationUser,
 )
 from src.core.events.database import get_db_session
 from src.security.auth import get_current_user
@@ -95,13 +94,18 @@ async def api_get_org(
 async def api_get_org_users(
     request: Request,
     org_id: str,
+    page: int = 1,
+    limit: int = 20,
+    search: str = "",
     current_user: PublicUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
-) -> list[OrganizationUser]:
+):
     """
-    Get single Org by ID
+    Get organization users with pagination and search
     """
-    return await get_organization_users(request, org_id, db_session, current_user)
+    return await get_organization_users(
+        request, org_id, db_session, current_user, page, limit, search
+    )
 
 
 @router.post("/join")
