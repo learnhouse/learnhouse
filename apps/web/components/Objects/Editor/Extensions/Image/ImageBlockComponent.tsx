@@ -1,14 +1,13 @@
 import { NodeViewWrapper } from '@tiptap/react'
 import React, { useEffect } from 'react'
 import { Resizable } from 're-resizable'
-import { AlertTriangle, Image, Download, AlignLeft, AlignCenter, AlignRight, Expand } from 'lucide-react'
+import { Image, Download, AlignLeft, AlignCenter, AlignRight, Expand, Upload, Loader2 } from 'lucide-react'
 import { uploadNewImageFile } from '../../../../../services/blocks/Image/images'
 import { getActivityBlockMediaDirectory } from '@services/media/media'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useCourse } from '@components/Contexts/CourseContext'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { FileUploadBlock, FileUploadBlockButton, FileUploadBlockInput } from '../../FileUploadBlock'
 import { constructAcceptValue } from '@/lib/constants';
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 
@@ -20,10 +19,12 @@ function ImageBlockComponent(props: any) {
   const editorState = useEditorProvider() as any
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token;
+  const fileInputRef = React.useRef<HTMLInputElement>(null)
 
   const isEditable = editorState.isEditable
-  const [image, setImage] = React.useState(null)
+  const [image, setImage] = React.useState<File | null>(null)
   const [isLoading, setIsLoading] = React.useState(false)
+  const [isDragging, setIsDragging] = React.useState(false)
   const [blockObject, setblockObject] = React.useState(
     props.node.attrs.blockObject
   )
@@ -32,21 +33,26 @@ function ImageBlockComponent(props: any) {
   })
   const [alignment, setAlignment] = React.useState(props.node.attrs.alignment || 'center')
   const [isModalOpen, setIsModalOpen] = React.useState(false)
-  
+
   const fileId = blockObject
     ? `${blockObject.content.file_id}.${blockObject.content.file_format}`
     : null
 
-  const handleImageChange = (event: React.ChangeEvent<any>) => {
-    setImage(event.target.files[0])
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      setImage(file)
+      handleUpload(file)
+    }
   }
 
-  const handleSubmit = async (e: any) => {
-    e.preventDefault()
+  const handleUpload = async (file: File) => {
+    if (!access_token) return
     setIsLoading(true)
     let object = await uploadNewImageFile(
-      image,
-      props.extension.options.activity.activity_uuid,access_token
+      file,
+      props.extension.options.activity.activity_uuid,
+      access_token
     )
     setIsLoading(false)
     setblockObject(object)
@@ -55,11 +61,35 @@ function ImageBlockComponent(props: any) {
       size: imageSize,
       alignment: alignment,
     })
+    setImage(null)
+  }
+
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+    const file = e.dataTransfer.files[0]
+    if (file && ['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type)) {
+      setImage(file)
+      handleUpload(file)
+    }
   }
 
   const handleDownload = () => {
     if (!fileId) return;
-    
+
     const imageUrl = getActivityBlockMediaDirectory(
       org?.org_uuid,
       course?.courseStructure.course_uuid,
@@ -68,7 +98,7 @@ function ImageBlockComponent(props: any) {
       fileId,
       'imageBlock'
     );
-    
+
     const link = document.createElement('a');
     link.href = imageUrl || '';
     link.download = `image-${blockObject?.block_uuid || 'download'}.${blockObject?.content.file_format || 'jpg'}`;
@@ -113,116 +143,30 @@ function ImageBlockComponent(props: any) {
     }
   };
 
-  return (
-    <>
-      <NodeViewWrapper className="block-image w-full">
-       <FileUploadBlock isEditable={isEditable} isLoading={isLoading} isEmpty={!blockObject} Icon={Image}>
-          <FileUploadBlockInput onChange={handleImageChange} accept={SUPPORTED_FILES} />
-          <FileUploadBlockButton onClick={handleSubmit} disabled={!image}/>
-        </FileUploadBlock>
-        
-        {blockObject && isEditable && (
+  // Activity view mode - show only the image without block wrapper
+  if (!isEditable && blockObject && imageUrl) {
+    return (
+      <>
+        <NodeViewWrapper className="block-image w-full">
           <div className={`w-full flex ${getAlignmentClass()}`}>
-            <Resizable
-              defaultSize={{ width: imageSize.width, height: '100%' }}
-              handleStyles={{
-                right: {
-                  position: 'unset',
-                  width: 7,
-                  height: 30,
-                  borderRadius: 20,
-                  cursor: 'col-resize',
-                  backgroundColor: 'black',
-                  opacity: '0.3',
-                  margin: 'auto',
-                  marginLeft: 5,
-                },
-              }}
-              style={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                height: '100%',
-                maxWidth: '100%',
-              }}
-              maxWidth="100%"
-              minWidth={200}
-              enable={{ right: true }}
-              onResizeStop={(e, direction, ref, d) => {
-                const newWidth = Math.min(imageSize.width + d.width, ref.parentElement?.clientWidth || 1000);
-                props.updateAttributes({
-                  size: {
-                    width: newWidth,
-                  },
-                })
-                setImageSize({
-                  width: newWidth,
-                })
-              }}
-            >
-              <div className="relative">
-                <img
-                  src={imageUrl || ''}
-                  alt=""
-                  className="rounded-lg shadow-sm max-w-full h-auto"
-                  style={{ width: '100%' }}
-                />
-                <div className="absolute top-2 right-2 flex items-center gap-1.5 bg-white bg-opacity-90 backdrop-blur-xs rounded-lg p-1 shadow-xs transition-opacity opacity-70 hover:opacity-100">
-                  <button
-                    onClick={() => handleAlignmentChange('left')}
-                    className={`p-1.5 rounded-md hover:bg-gray-100 text-gray-600 ${alignment === 'left' ? 'bg-gray-100' : ''}`}
-                    title="Align left"
-                  >
-                    <AlignLeft size={16} />
-                  </button>
-                  <button
-                    onClick={() => handleAlignmentChange('center')}
-                    className={`p-1.5 rounded-md hover:bg-gray-100 text-gray-600 ${alignment === 'center' ? 'bg-gray-100' : ''}`}
-                    title="Center align"
-                  >
-                    <AlignCenter size={16} />
-                  </button>
-                  <button
-                    onClick={() => handleAlignmentChange('right')}
-                    className={`p-1.5 rounded-md hover:bg-gray-100 text-gray-600 ${alignment === 'right' ? 'bg-gray-100' : ''}`}
-                    title="Align right"
-                  >
-                    <AlignRight size={16} />
-                  </button>
-                  <div className="w-px h-4 bg-gray-300"></div>
-                  <button
-                    onClick={handleExpand}
-                    className="p-1.5 rounded-md hover:bg-gray-100 text-gray-600"
-                    title="Expand image"
-                  >
-                    <Expand size={16} />
-                  </button>
-                </div>
-              </div>
-            </Resizable>
-          </div>
-        )}
-
-        {blockObject && !isEditable && (
-          <div className={`w-full flex ${getAlignmentClass()}`}>
-            <div className="relative">
+            <div className="relative group">
               <img
-                src={imageUrl || ''}
+                src={imageUrl}
                 alt=""
-                className="rounded-lg shadow-sm max-w-full h-auto"
+                className="rounded-lg max-w-full h-auto"
                 style={{ width: imageSize.width, maxWidth: '100%' }}
               />
-              <div className="absolute top-2 right-2 flex gap-1">
+              <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
                   onClick={handleExpand}
-                  className="p-2 bg-black/50 hover:bg-black/70 rounded-full transition-colors"
+                  className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
                   title="Expand image"
                 >
                   <Expand className="w-4 h-4 text-white" />
                 </button>
                 <button
                   onClick={handleDownload}
-                  className="p-2 bg-black/50 hover:bg-black/70 rounded-full transition-colors"
+                  className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
                   title="Download image"
                 >
                   <Download className="w-4 h-4 text-white" />
@@ -230,15 +174,171 @@ function ImageBlockComponent(props: any) {
               </div>
             </div>
           </div>
-        )}
+        </NodeViewWrapper>
 
-        {isLoading && (
-          <div>
-            <AlertTriangle color="#e1e0e0" size={50} />
+        <Modal
+          isDialogOpen={isModalOpen}
+          onOpenChange={setIsModalOpen}
+          dialogTitle="Image Viewer"
+          minWidth="lg"
+          minHeight="lg"
+          dialogContent={
+            <div className="w-full flex items-center justify-center">
+              <img
+                src={imageUrl}
+                alt=""
+                className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-lg"
+              />
+            </div>
+          }
+        />
+      </>
+    )
+  }
+
+  // Activity view mode - no image available
+  if (!isEditable && !blockObject) {
+    return null
+  }
+
+  return (
+    <>
+      <NodeViewWrapper className="block-image w-full">
+        <div className="bg-neutral-50 rounded-xl px-5 py-4 nice-shadow transition-all ease-linear">
+          {/* Header */}
+          <div className="flex items-center gap-2 mb-3">
+            <Image className="text-neutral-400" size={16} />
+            <span className="uppercase tracking-widest text-xs font-bold text-neutral-400">
+              Image
+            </span>
           </div>
-        )}
+
+          {/* Upload Zone - shown when no image */}
+          {!blockObject && isEditable && (
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              onDragEnter={handleDragEnter}
+              onDragOver={handleDragEnter}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              className={`
+                border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all
+                ${isDragging ? 'border-neutral-400 bg-neutral-100' : 'border-neutral-200 bg-white hover:border-neutral-400 hover:bg-neutral-50'}
+              `}
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                onChange={handleImageChange}
+                accept={SUPPORTED_FILES}
+                className="hidden"
+              />
+              {isLoading ? (
+                <div className="space-y-3">
+                  <Loader2 className="w-8 h-8 animate-spin mx-auto text-neutral-500" />
+                  <p className="text-sm text-neutral-600">Uploading image...</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <Upload className="w-8 h-8 mx-auto text-neutral-400" />
+                  <div>
+                    <p className="text-sm font-medium text-neutral-700">
+                      Drop your image here or click to browse
+                    </p>
+                    <p className="text-xs text-neutral-500 mt-1">
+                      Supports JPG, PNG, WebP, and GIF
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Image display - edit mode */}
+          {blockObject && isEditable && (
+            <div className={`w-full flex ${getAlignmentClass()}`}>
+              <Resizable
+                defaultSize={{ width: imageSize.width, height: '100%' }}
+                handleStyles={{
+                  right: {
+                    position: 'unset',
+                    width: 7,
+                    height: 30,
+                    borderRadius: 20,
+                    cursor: 'col-resize',
+                    backgroundColor: '#94a3b8',
+                    margin: 'auto',
+                    marginLeft: 5,
+                  },
+                }}
+                style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  height: '100%',
+                  maxWidth: '100%',
+                }}
+                maxWidth="100%"
+                minWidth={200}
+                enable={{ right: true }}
+                onResizeStop={(e, direction, ref, d) => {
+                  const newWidth = Math.min(imageSize.width + d.width, ref.parentElement?.clientWidth || 1000);
+                  props.updateAttributes({
+                    size: {
+                      width: newWidth,
+                    },
+                  })
+                  setImageSize({
+                    width: newWidth,
+                  })
+                }}
+              >
+                <div className="relative">
+                  <img
+                    src={imageUrl || ''}
+                    alt=""
+                    className="rounded-lg nice-shadow max-w-full h-auto"
+                    style={{ width: '100%' }}
+                  />
+                  <div className="absolute top-2 right-2 flex items-center gap-1 bg-white/90 backdrop-blur-sm rounded-lg p-1 opacity-80 hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={() => handleAlignmentChange('left')}
+                      className={`p-1.5 rounded-md transition-colors outline-none ${alignment === 'left' ? 'bg-neutral-200 text-neutral-700' : 'hover:bg-neutral-100 text-neutral-500'}`}
+                      title="Align left"
+                    >
+                      <AlignLeft size={14} />
+                    </button>
+                    <button
+                      onClick={() => handleAlignmentChange('center')}
+                      className={`p-1.5 rounded-md transition-colors outline-none ${alignment === 'center' ? 'bg-neutral-200 text-neutral-700' : 'hover:bg-neutral-100 text-neutral-500'}`}
+                      title="Center align"
+                    >
+                      <AlignCenter size={14} />
+                    </button>
+                    <button
+                      onClick={() => handleAlignmentChange('right')}
+                      className={`p-1.5 rounded-md transition-colors outline-none ${alignment === 'right' ? 'bg-neutral-200 text-neutral-700' : 'hover:bg-neutral-100 text-neutral-500'}`}
+                      title="Align right"
+                    >
+                      <AlignRight size={14} />
+                    </button>
+                    <div className="w-px h-4 bg-neutral-200 mx-0.5"></div>
+                    <button
+                      onClick={handleExpand}
+                      className="p-1.5 rounded-md hover:bg-neutral-100 text-neutral-500 transition-colors outline-none"
+                      title="Expand image"
+                    >
+                      <Expand size={14} />
+                    </button>
+                  </div>
+                </div>
+              </Resizable>
+            </div>
+          )}
+
+        </div>
       </NodeViewWrapper>
-      
+
       {blockObject && imageUrl && (
         <Modal
           isDialogOpen={isModalOpen}

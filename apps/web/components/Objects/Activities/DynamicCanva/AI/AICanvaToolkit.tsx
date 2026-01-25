@@ -42,9 +42,16 @@ function AICanvaToolkit(props: AICanvaToolkitProps) {
       return
     }
 
+    // Check if actual text is selected (not just a node/block selection)
+    const selectedText = props.editor.state.doc.textBetween(from, to, ' ')
+    if (!selectedText || selectedText.trim().length === 0) {
+      setBubbleState(prev => ({ ...prev, visible: false }))
+      return
+    }
+
     // Get selection bounds using native selection API
     const nativeSelection = window.getSelection()
-    if (!nativeSelection || nativeSelection.rangeCount === 0) {
+    if (!nativeSelection || nativeSelection.rangeCount === 0 || nativeSelection.toString().trim().length === 0) {
       setBubbleState(prev => ({ ...prev, visible: false }))
       return
     }

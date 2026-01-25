@@ -6,7 +6,7 @@ import MathEquationBlockComponent from './MathEquationBlockComponent'
 export default Node.create({
   name: 'blockMathEquation',
   group: 'block',
-
+  draggable: true,
   atom: true,
 
   addAttributes() {

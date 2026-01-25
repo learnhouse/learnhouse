@@ -3,13 +3,13 @@ from fastapi import HTTPException, Request
 from sqlmodel import Session, select
 import stripe
 import logging
-from src.db.payments.payments_users import PaymentStatusEnum
+from ee.db.payments.payments_users import PaymentStatusEnum
 from src.db.users import InternalUser
-from src.services.payments.payments_users import update_payment_user_status
-from src.services.payments.payments_stripe import get_stripe_internal_credentials
-from src.db.payments.payments import PaymentsConfig, PaymentsConfigUpdate
-from src.services.payments.payments_config import update_payments_config
-from src.services.payments.utils.stripe_utils import get_org_id_from_stripe_account
+from ee.services.payments.payments_users import update_payment_user_status
+from ee.services.payments.payments_stripe import get_stripe_internal_credentials
+from ee.db.payments.payments import PaymentsConfig, PaymentsConfigUpdate
+from ee.services.payments.payments_config import update_payments_config
+from ee.services.payments.utils.stripe_utils import get_org_id_from_stripe_account
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +23,7 @@ async def handle_stripe_webhook(
     creds = await get_stripe_internal_credentials()
     webhook_secret = creds.get(f'stripe_webhook_{webhook_type}_secret')
     stripe.api_key = creds.get("stripe_secret_key")
-    
+
     if not webhook_secret:
         logger.error("Stripe webhook secret not configured")
         raise HTTPException(status_code=400, detail="Stripe webhook secret not configured")
@@ -51,14 +51,14 @@ async def handle_stripe_webhook(
         if not stripe_account_id:
             logger.error("Stripe account ID not found")
             raise HTTPException(status_code=400, detail="Stripe account ID not found")
-        
+
         org_id = await get_org_id_from_stripe_account(stripe_account_id, db_session)
 
         # Handle internal account events
         if event_type == 'account.application.authorized':
             statement = select(PaymentsConfig).where(PaymentsConfig.org_id == org_id)
             config = db_session.exec(statement).first()
-            
+
             if not config:
                 logger.error("No payments configuration found for this organization")
                 raise HTTPException(
@@ -89,7 +89,7 @@ async def handle_stripe_webhook(
         elif event_type == 'account.application.deauthorized':
             statement = select(PaymentsConfig).where(PaymentsConfig.org_id == org_id)
             config = db_session.exec(statement).first()
-            
+
             if not config:
                 raise HTTPException(
                     status_code=404,
@@ -176,4 +176,4 @@ async def handle_stripe_webhook(
 
     except Exception as e:
         logger.error(f"Error processing webhook: {str(e)}")
-        raise HTTPException(status_code=400, detail=f"Error processing webhook: {str(e)}") 
+        raise HTTPException(status_code=400, detail=f"Error processing webhook: {str(e)}")
