@@ -6,7 +6,7 @@ import UserBlockComponent from './UserBlockComponent'
 export default Node.create({
   name: 'blockUser',
   group: 'block',
-
+  draggable: true,
   atom: true,
 
   addAttributes() {
