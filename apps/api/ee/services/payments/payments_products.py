@@ -1,21 +1,21 @@
 from fastapi import HTTPException, Request
 from sqlmodel import Session, select
 from src.db.courses.courses import Course
-from src.db.payments.payments import PaymentsConfig
-from src.db.payments.payments_courses import PaymentsCourse
-from src.db.payments.payments_products import (
+from ee.db.payments.payments import PaymentsConfig
+from ee.db.payments.payments_courses import PaymentsCourse
+from ee.db.payments.payments_products import (
     PaymentsProduct,
     PaymentsProductCreate,
     PaymentsProductUpdate,
     PaymentsProductRead,
 )
-from src.db.payments.payments_users import PaymentStatusEnum, PaymentsUser
+from ee.db.payments.payments_users import PaymentStatusEnum, PaymentsUser
 from src.db.users import PublicUser, AnonymousUser
 from src.db.organizations import Organization
 from src.services.orgs.orgs import rbac_check
 from datetime import datetime
 
-from src.services.payments.payments_stripe import archive_stripe_product, create_stripe_product, update_stripe_product
+from ee.services.payments.payments_stripe import archive_stripe_product, create_stripe_product, update_stripe_product
 
 async def create_payments_product(
     request: Request,
@@ -54,7 +54,7 @@ async def create_payments_product(
     # Save to DB
     db_session.add(new_product)
     db_session.commit()
-    db_session.refresh(new_product)    
+    db_session.refresh(new_product)
 
     return PaymentsProductRead.model_validate(new_product)
 
@@ -108,7 +108,7 @@ async def update_payments_product(
     # Update product
     for key, value in payments_product.model_dump().items():
         setattr(product, key, value)
-    
+
     product.update_date = datetime.now()
 
     db_session.add(product)
@@ -141,7 +141,7 @@ async def delete_payments_product(
     product = db_session.exec(statement).first()
     if not product:
         raise HTTPException(status_code=404, detail="Payments product not found")
-    
+
     # Check if there are any payment users linked to this product
     statement = select(PaymentsUser).where(
         PaymentsUser.payment_product_id == product_id,
@@ -150,7 +150,7 @@ async def delete_payments_product(
     payment_users = db_session.exec(statement).all()
     if payment_users:
         raise HTTPException(
-            status_code=400, 
+            status_code=400,
             detail="Cannot delete product because users have paid access to it."
         )
 
@@ -212,5 +212,3 @@ async def get_products_by_course(
     products = db_session.exec(statement).all()
 
     return [PaymentsProductRead.model_validate(product) for product in products]
-
-
