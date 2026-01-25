@@ -668,6 +668,8 @@
       "rights_guide": "অধিকার নির্দেশিকা",
       "create_course": "কোর্স তৈরি করুন",
       "create_new_course": "একটি নতুন কোর্স তৈরি করুন",
+      "import_course": "কোর্স আমদানি করুন",
+      "import_scorm_description": "নতুন কোর্স তৈরি করতে SCORM প্যাকেজ আমদানি করুন",
       "no_courses": "এখনও কোনো কোর্স নেই",
       "create_course_placeholder": "কন্টেন্ট যোগ করতে কোর্স তৈরি করুন",
       "no_courses_available": "এখনও কোনো কোর্স উপলব্ধ নেই"
@@ -1578,6 +1580,8 @@
       "rights_guide": "অধিকার নির্দেশিকা",
       "create_course": "কোর্স তৈরি করুন",
       "create_new_course": "একটি নতুন কোর্স তৈরি করুন",
+      "import_course": "কোর্স আমদানি করুন",
+      "import_scorm_description": "নতুন কোর্স তৈরি করতে SCORM প্যাকেজ আমদানি করুন",
       "no_courses": "এখনও কোনো কোর্স নেই",
       "create_course_placeholder": "কন্টেন্ট যোগ করতে কোর্স তৈরি করুন",
       "no_courses_available": "এখনও কোনো কোর্স উপলব্ধ নেই",
@@ -1917,7 +1921,8 @@
             "assignment": "অ্যাসাইনমেন্ট",
             "assignments": "অ্যাসাইনমেন্টসমূহ",
             "dynamic": "ডায়নামিক",
-            "dynamic_page": "ডায়নামিক পেজ"
+            "dynamic_page": "ডায়নামিক পেজ",
+            "scorm": "Scorm"
           },
           "toasts": {
             "deleting": "কার্যক্রম মোছা হচ্ছে...",

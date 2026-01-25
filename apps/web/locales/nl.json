@@ -668,6 +668,8 @@
       "rights_guide": "Gids voor rechten",
       "create_course": "Cursus aanmaken",
       "create_new_course": "Maak een nieuwe cursus aan",
+      "import_course": "Cursus importeren",
+      "import_scorm_description": "Importeer een SCORM-pakket om een nieuwe cursus te maken",
       "no_courses": "Nog geen cursussen",
       "create_course_placeholder": "Maak een cursus aan om inhoud toe te voegen",
       "no_courses_available": "Nog geen cursussen beschikbaar"
@@ -1578,6 +1580,8 @@
       "rights_guide": "Gids voor rechten",
       "create_course": "Cursus aanmaken",
       "create_new_course": "Maak een nieuwe cursus aan",
+      "import_course": "Cursus importeren",
+      "import_scorm_description": "Importeer een SCORM-pakket om een nieuwe cursus te maken",
       "no_courses": "Nog geen cursussen",
       "create_course_placeholder": "Maak een cursus aan om inhoud toe te voegen",
       "no_courses_available": "Nog geen cursussen beschikbaar",
@@ -1917,7 +1921,8 @@
             "assignment": "Opdracht",
             "assignments": "Opdrachten",
             "dynamic": "Dynamisch",
-            "dynamic_page": "Dynamische Pagina"
+            "dynamic_page": "Dynamische Pagina",
+            "scorm": "Scorm"
           },
           "toasts": {
             "deleting": "Activiteit verwijderen...",

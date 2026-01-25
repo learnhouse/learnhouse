@@ -40,19 +40,28 @@ def validate_video_content(content: bytes) -> bool:
     """Validate video content using magic bytes."""
     if len(content) < 12:
         return False
-    
+
     magic_bytes = content[:12]
-    
+
     # MP4: starts with specific ftyp box signatures
-    if (magic_bytes[4:8] == b'ftyp' and 
+    if (magic_bytes[4:8] == b'ftyp' and
         (b'mp4' in magic_bytes[8:12] or b'M4V' in magic_bytes[8:12] or b'isom' in magic_bytes[8:12])):
         return True
-    
+
     # WebM: EBML header
     if magic_bytes.startswith(b'\x1a\x45\xdf\xa3'):
         return True
-    
+
     return False
+
+
+def validate_zip_content(content: bytes) -> bool:
+    """Validate ZIP file content using magic bytes."""
+    if len(content) < 4:
+        return False
+
+    # ZIP magic bytes: PK\x03\x04 (local file header) or PK\x05\x06 (empty archive)
+    return content[:4] == b'PK\x03\x04' or content[:4] == b'PK\x05\x06'
 
 
 # File type configurations
@@ -74,6 +83,12 @@ FILE_TYPES = {
         'mime_types': ['application/pdf'],
         'max_size': 50 * 1024 * 1024,  # 50MB
         'validator': lambda content: content.startswith(b'%PDF-')
+    },
+    'scorm': {
+        'extensions': ['.zip'],
+        'mime_types': ['application/zip', 'application/x-zip-compressed'],
+        'max_size': 200 * 1024 * 1024,  # 200MB for SCORM packages
+        'validator': validate_zip_content
     }
 }
 

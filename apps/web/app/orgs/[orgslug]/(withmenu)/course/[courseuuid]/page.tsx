@@ -48,11 +48,13 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
       description: course_meta.description ? course_meta.description : '',
       images: [
         {
-          url: getCourseThumbnailMediaDirectory(
-            org?.org_uuid,
-            course_meta?.course_uuid,
-            course_meta?.thumbnail_image
-          ),
+          url: course_meta?.thumbnail_image
+            ? getCourseThumbnailMediaDirectory(
+                org?.org_uuid,
+                course_meta?.course_uuid,
+                course_meta?.thumbnail_image
+              )
+            : '/empty_thumbnail.png',
           width: 800,
           height: 600,
           alt: course_meta.name,

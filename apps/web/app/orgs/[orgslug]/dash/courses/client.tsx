@@ -1,6 +1,7 @@
 'use client'
 import BreadCrumbs from '@components/Dashboard/Misc/BreadCrumbs'
 import CreateCourseModal from '@components/Objects/Modals/Course/Create/CreateCourse'
+import ScormCourseImport from '../../../../../ee/components/Modals/ScormCourseImport'
 import CourseThumbnail, { removeCoursePrefix } from '@components/Objects/Thumbnails/CourseThumbnail'
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
 import NewCourseButton from '@components/Objects/StyledElements/Buttons/NewCourseButton'
@@ -8,9 +9,10 @@ import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import { useSearchParams } from 'next/navigation'
 import React from 'react'
 import useAdminStatus from '@components/Hooks/useAdminStatus'
+import useEnterprisePlan from '@components/Hooks/useEnterprisePlan'
 import { getUriWithOrg } from '@services/config/config'
 import { useOrg } from '@components/Contexts/OrgContext'
-import { BookOpen } from 'lucide-react'
+import { BookOpen, Download } from 'lucide-react'
 import Link from 'next/link'
 import { useTranslation } from 'react-i18next'
 
@@ -25,13 +27,19 @@ function CoursesHome(params: CourseProps) {
   const searchParams = useSearchParams()
   const isCreatingCourse = searchParams.get('new') ? true : false
   const [newCourseModal, setNewCourseModal] = React.useState(isCreatingCourse)
+  const [importCourseModal, setImportCourseModal] = React.useState(false)
   const orgslug = params.orgslug
   const courses = params.courses
   const isUserAdmin = useAdminStatus() as any
   const org = useOrg() as any
+  const { isEnterprise } = useEnterprisePlan()
 
   async function closeNewCourseModal() {
     setNewCourseModal(false)
+  }
+
+  async function closeImportCourseModal() {
+    setImportCourseModal(false)
   }
 
   return (
@@ -55,24 +63,48 @@ function CoursesHome(params: CourseProps) {
             ressourceType="courses"
             orgId={params.org_id}
           >
-            <Modal
-              isDialogOpen={newCourseModal}
-              onOpenChange={setNewCourseModal}
-              minHeight="md"
-              dialogContent={
-                <CreateCourseModal
-                  closeModal={closeNewCourseModal}
-                  orgslug={orgslug}
+            <div className="flex items-center space-x-2">
+              {isEnterprise && (
+                <Modal
+                  isDialogOpen={importCourseModal}
+                  onOpenChange={setImportCourseModal}
+                  minHeight="no-min"
+                  dialogTitle={t('dashboard.courses.import_course')}
+                  dialogDescription={t('dashboard.courses.import_scorm_description')}
+                  dialogContent={
+                    <ScormCourseImport
+                      orgId={Number(params.org_id)}
+                      orgslug={orgslug}
+                      closeModal={closeImportCourseModal}
+                    />
+                  }
+                  dialogTrigger={
+                    <button className="rounded-lg bg-black hover:scale-105 transition-all duration-100 ease-linear antialiased p-2 px-5 my-auto font text-xs font-bold text-white nice-shadow flex space-x-2 items-center">
+                      <Download className="w-4 h-4" />
+                      <span>{t('dashboard.courses.import_course')}</span>
+                    </button>
+                  }
                 />
-              }
-              dialogTitle={t('dashboard.courses.create_course')}
-              dialogDescription={t('dashboard.courses.create_new_course')}
-              dialogTrigger={
-                <button>
-                  <NewCourseButton />
-                </button>
-              }
-            />
+              )}
+              <Modal
+                isDialogOpen={newCourseModal}
+                onOpenChange={setNewCourseModal}
+                minHeight="md"
+                dialogContent={
+                  <CreateCourseModal
+                    closeModal={closeNewCourseModal}
+                    orgslug={orgslug}
+                  />
+                }
+                dialogTitle={t('dashboard.courses.create_course')}
+                dialogDescription={t('dashboard.courses.create_new_course')}
+                dialogTrigger={
+                  <button>
+                    <NewCourseButton />
+                  </button>
+                }
+              />
+            </div>
           </AuthenticatedClientElement>
         </div>
       </div>
