@@ -74,6 +74,8 @@ export const getLEARNHOUSE_BACKEND_URL_VAL = getLEARNHOUSE_BACKEND_URL
 export const getLEARNHOUSE_DOMAIN_VAL = getLEARNHOUSE_DOMAIN
 export const getLEARNHOUSE_TOP_DOMAIN_VAL = getLEARNHOUSE_TOP_DOMAIN
 
+export const getLEARNHOUSE_TELEMETRY_DISABLED = () => getConfig("NEXT_TELEMETRY_DISABLED", "true").toLowerCase();
+
 // Export constants for backward compatibility
 // These are computed once at module load, but getConfig uses runtime values
 // For middleware/proxy (where runtime is critical), use the getter functions instead
