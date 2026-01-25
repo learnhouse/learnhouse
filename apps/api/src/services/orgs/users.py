@@ -24,7 +24,10 @@ async def get_organization_users(
     org_id: str,
     db_session: Session,
     current_user: PublicUser | AnonymousUser,
-) -> list[OrganizationUser]:
+    page: int = 1,
+    limit: int = 20,
+    search: str = "",
+):
     statement = select(Organization).where(Organization.id == org_id)
     result = db_session.exec(statement)
 
@@ -39,14 +42,33 @@ async def get_organization_users(
     # RBAC check
     await rbac_check(request, org.org_uuid, current_user, "read", db_session)
 
-    statement = (
+    # Base query for users in the organization
+    base_statement = (
         select(User)
         .join(UserOrganization)
         .join(Organization)
         .where(Organization.id == org_id)
     )
-    users = db_session.exec(statement)
-    users = users.all()
+
+    # Apply search filter if provided
+    if search:
+        search_pattern = f"%{search}%"
+        base_statement = base_statement.where(
+            (User.first_name.ilike(search_pattern))
+            | (User.last_name.ilike(search_pattern))
+            | (User.username.ilike(search_pattern))
+            | (User.email.ilike(search_pattern))
+        )
+
+    # Get total count
+    count_statement = base_statement
+    all_users = db_session.exec(count_statement).all()
+    total = len(all_users)
+
+    # Apply pagination
+    offset = (page - 1) * limit
+    paginated_statement = base_statement.offset(offset).limit(limit)
+    users = db_session.exec(paginated_statement).all()
 
     org_users_list = []
 
@@ -95,7 +117,12 @@ async def get_organization_users(
 
         org_users_list.append(org_user)
 
-    return org_users_list
+    return {
+        "items": org_users_list,
+        "total": total,
+        "page": page,
+        "limit": limit,
+    }
 
 
 async def remove_user_from_org(
