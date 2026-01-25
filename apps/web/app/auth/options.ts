@@ -4,7 +4,7 @@ import {
   loginAndGetToken,
   loginWithOAuthToken,
 } from '@services/auth/auth'
-import { getLEARNHOUSE_TOP_DOMAIN_VAL, getUriWithOrg } from '@services/config/config'
+import { getLEARNHOUSE_TELEMETRY_DISABLED, getLEARNHOUSE_TOP_DOMAIN_VAL, getUriWithOrg } from '@services/config/config'
 import { getResponseMetadata } from '@services/utils/ts/requests'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import GoogleProvider from 'next-auth/providers/google'
@@ -20,6 +20,7 @@ declare global {
 }
 
 export const isDevEnv = getLEARNHOUSE_TOP_DOMAIN_VAL() == 'localhost' ? true : false
+export const isTelemetryDisabled = getLEARNHOUSE_TELEMETRY_DISABLED() === "true"
 
 export const nextAuthOptions = {
   debug: isDevEnv,
