@@ -66,3 +66,9 @@ def on_startup(app: FastAPI):
     asyncio.create_task(audit_log_flusher())
     logger.info("EE Startup tasks initiated")
 
+# Payments hooks
+async def check_activity_paid_access(request, activity_id, user, db_session) -> bool:
+    """Check if a user has paid access to an activity."""
+    from ee.services.payments.payments_access import check_activity_paid_access as ee_check_activity_paid_access
+    return await ee_check_activity_paid_access(request, activity_id, user, db_session)
+

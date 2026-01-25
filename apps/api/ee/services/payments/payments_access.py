@@ -1,8 +1,8 @@
 from sqlmodel import Session, select
 from src.security.rbac.rbac import authorization_verify_if_user_is_author
-from src.db.payments.payments_users import PaymentStatusEnum, PaymentsUser
+from ee.db.payments.payments_users import PaymentStatusEnum, PaymentsUser
 from src.db.users import PublicUser, AnonymousUser
-from src.db.payments.payments_courses import PaymentsCourse
+from ee.db.payments.payments_courses import PaymentsCourse
 from src.db.courses.activities import Activity
 from src.db.courses.courses import Course
 from fastapi import HTTPException, Request
@@ -35,7 +35,7 @@ async def check_activity_paid_access(
 
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
-    
+
     # Check if user is author of the course
     is_course_author = await authorization_verify_if_user_is_author(request, user.id, "update", course.course_uuid, db_session)
 
@@ -49,11 +49,11 @@ async def check_activity_paid_access(
     # If course is not linked to any product, it's free
     if not course_payment:
         return True
-    
+
     # Anonymous users have no access to paid activities
     if isinstance(user, AnonymousUser):
         return False
-    
+
     # Check if user has a valid subscription or payment
     statement = select(PaymentsUser).where(
         PaymentsUser.user_id == user.id,
