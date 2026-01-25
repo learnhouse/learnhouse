@@ -519,19 +519,29 @@ export const ToolbarButtons = ({ editor, props }: any) => {
 const ToolButtonsWrapper = styled.div`
   display: flex;
   flex-direction: row;
-  align-items: left;
-  justify-content: left;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 2px;
+
+  @media (max-width: 1200px) {
+    gap: 1px;
+  }
 `
 
 const ToolBtn = styled.div`
   display: flex;
+  align-items: center;
+  justify-content: center;
   background: rgba(217, 217, 217, 0.24);
   border-radius: 6px;
   min-width: 25px;
   height: 25px;
   padding: 5px;
-  margin-right: 5px;
+  margin-right: 3px;
+  margin-bottom: 2px;
   transition: all 0.2s ease-in-out;
+  flex-shrink: 0;
 
   svg {
     padding: 1px;
@@ -550,6 +560,13 @@ const ToolBtn = styled.div`
     background: rgba(217, 217, 217, 0.48);
     cursor: pointer;
   }
+
+  @media (max-width: 1200px) {
+    min-width: 24px;
+    height: 24px;
+    padding: 4px;
+    margin-right: 2px;
+  }
 `
 
 const ToolSelect = styled.select`
@@ -562,7 +579,8 @@ const ToolSelect = styled.select`
   padding: 2px 5px;
   font-size: 11px;
   font-family: 'DM Sans';
-  margin-right: 5px;
+  margin-right: 3px;
+  margin-bottom: 2px;
   cursor: pointer;
   appearance: none;
   -webkit-appearance: none;
@@ -572,6 +590,7 @@ const ToolSelect = styled.select`
   background-position: right 5px center;
   background-size: 12px;
   padding-right: 20px;
+  flex-shrink: 0;
 
   &:hover {
     background-color: rgba(217, 217, 217, 0.3);
@@ -581,11 +600,19 @@ const ToolSelect = styled.select`
     outline: none;
     box-shadow: 0 0 0 2px rgba(217, 217, 217, 0.5);
   }
+
+  @media (max-width: 1200px) {
+    width: 100px;
+    height: 24px;
+    font-size: 10px;
+  }
 `
 
 const TableMenuWrapper = styled.div`
   position: relative;
   display: inline-block;
+  flex-shrink: 0;
+  margin-bottom: 2px;
 `
 
 const TableDropdown = styled.div`
@@ -627,6 +654,8 @@ const TableMenuItem = styled.div`
 const ListMenuWrapper = styled.div`
   position: relative;
   display: inline-block;
+  flex-shrink: 0;
+  margin-bottom: 2px;
 `
 
 const ListDropdown = styled.div`
