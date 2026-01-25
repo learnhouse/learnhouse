@@ -131,7 +131,7 @@ const CourseThumbnailLanding: React.FC<PropsType> = ({ course, orgslug, customLi
 
   const thumbnailImage = course.thumbnail_image
     ? getCourseThumbnailMediaDirectory(org?.org_uuid, course.course_uuid, course.thumbnail_image)
-    : '../empty_thumbnail.png'
+    : '/empty_thumbnail.png'
 
   return (
     <div className="relative flex flex-col bg-white rounded-xl nice-shadow overflow-hidden min-w-[280px] w-full max-w-sm shrink-0 m-2">

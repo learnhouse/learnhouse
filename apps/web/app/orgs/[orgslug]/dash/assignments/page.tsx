@@ -159,7 +159,7 @@ const MiniThumbnail = (props: { course: any }) => {
         <div
           className="inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl w-[70px] h-[40px] bg-cover"
           style={{
-            backgroundImage: `url('../empty_thumbnail.png')`,
+            backgroundImage: `url('/empty_thumbnail.png')`,
             backgroundSize: 'contain',
           }}
         />

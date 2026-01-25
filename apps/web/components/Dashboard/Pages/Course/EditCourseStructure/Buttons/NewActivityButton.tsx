@@ -46,7 +46,7 @@ function NewActivityButton(props: NewActivityButtonProps) {
       { revalidate: 1800 }
     )
     const toast_loading = toast.loading(t('dashboard.courses.structure.activity.toasts.creating'))
-    await createActivity(activity, props.chapterId, org.org_id, access_token)
+    await createActivity(activity, props.chapterId, org.id, access_token)
     mutate(`${getAPIUrl()}courses/${course.courseStructure.course_uuid}/meta?with_unpublished_activities=${withUnpublishedActivities}`)
     toast.dismiss(toast_loading)
     toast.success(t('dashboard.courses.structure.activity.toasts.create_success'))

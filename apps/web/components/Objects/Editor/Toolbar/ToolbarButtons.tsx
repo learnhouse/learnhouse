@@ -732,7 +732,7 @@ const ToolSelect = styled.select`
   height: 25px;
   padding: 2px 5px;
   font-size: 11px;
-  font-family: 'DM Sans';
+  font-family: inherit;
   cursor: pointer;
   appearance: none;
   -webkit-appearance: none;
@@ -805,7 +805,7 @@ const TableMenuItem = styled.div`
 
   .label {
     font-size: 12px;
-    font-family: 'DM Sans';
+    font-family: inherit;
   }
 `
 
@@ -861,6 +861,6 @@ const ListMenuItem = styled.div`
 
   .label {
     font-size: 12px;
-    font-family: 'DM Sans';
+    font-family: inherit;
   }
 `
