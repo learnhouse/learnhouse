@@ -117,7 +117,7 @@ export const CustomSelectContent: React.FC<CustomSelectContentProps> = ({
   if (!isOpen || disabled) return null;
 
   return (
-    <div className={`absolute z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 slide-in-from-top-2 ${className}`}>
+    <div className={`absolute z-dropdown max-h-96 min-w-[8rem] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 slide-in-from-top-2 ${className}`}>
       <div className="p-1">
         {children}
       </div>

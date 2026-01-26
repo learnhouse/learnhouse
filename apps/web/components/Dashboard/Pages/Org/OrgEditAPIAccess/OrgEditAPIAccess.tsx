@@ -7,6 +7,7 @@ import { Button } from '@components/ui/button'
 import { getAPIUrl } from '@services/config/config'
 import useSWR, { mutate } from 'swr'
 import { swrFetcher } from '@services/utils/ts/requests'
+import { useTranslation } from 'react-i18next'
 import {
   Table,
   TableBody,
@@ -55,12 +56,17 @@ import {
 } from '@services/api_tokens/api_tokens'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@components/ui/tabs'
 import APIDocumentation from './APIDocumentation'
+import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/PlanRestrictedFeature'
+import { PlanLevel } from '@services/plans/plans'
 
 const OrgEditAPIAccess: React.FC = () => {
+  const { t } = useTranslation()
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const org = useOrg() as any
+  const currentPlan: PlanLevel = org?.config?.config?.cloud?.plan || 'free'
 
+  const [activeTab, setActiveTab] = useState('tokens')
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
   const [isRevokeDialogOpen, setIsRevokeDialogOpen] = useState(false)
@@ -193,8 +199,28 @@ const OrgEditAPIAccess: React.FC = () => {
   }
 
   return (
-    <div className="sm:mx-10 mx-0">
-      <Tabs defaultValue="tokens" className="w-full">
+    <PlanRestrictedFeature
+      currentPlan={currentPlan}
+      requiredPlan="pro"
+      icon={Key}
+      titleKey="common.plans.feature_restricted.api_access.title"
+      descriptionKey="common.plans.feature_restricted.api_access.description"
+    >
+    <>
+    <div className="sm:mx-10 mx-0 bg-white rounded-xl nice-shadow pt-3">
+      <div className="flex flex-col gap-0">
+        <div className="flex flex-col bg-gray-50 -space-y-1 px-5 py-3 mx-3 mb-3 rounded-md">
+          <h1 className="font-bold text-xl text-gray-800">
+            {activeTab === 'tokens' ? 'API Access' : 'API Documentation & Playground'}
+          </h1>
+          <h2 className="text-gray-500 text-md">
+            {activeTab === 'tokens'
+              ? 'Manage API tokens and programmatic access to your organization'
+              : 'Explore and test API endpoints using your API tokens'}
+          </h2>
+        </div>
+
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full px-5">
         <TabsList className="mb-6">
           <TabsTrigger value="tokens" className="flex items-center gap-2">
             <Key size={16} />
@@ -207,137 +233,130 @@ const OrgEditAPIAccess: React.FC = () => {
         </TabsList>
 
         <TabsContent value="tokens">
-          <div className="bg-white rounded-xl nice-shadow">
-            <div className="flex flex-col bg-gray-50 -space-y-1 px-5 py-3 mx-3 my-3 rounded-md">
-              <h1 className="font-bold text-xl text-gray-800">API Tokens</h1>
-              <h2 className="text-gray-500 text-md">
-                Create and manage API tokens for programmatic access to your organization
-              </h2>
+          <div className="pb-4">
+            <div className="flex justify-between items-center mb-4">
+              <p className="text-sm text-gray-600">
+                API tokens allow external applications to access your organization&apos;s data securely.
+              </p>
+              <Button
+                onClick={() => setIsCreateDialogOpen(true)}
+                className="bg-black text-white hover:bg-black/90"
+              >
+                <Plus size={16} className="mr-2" />
+                Create Token
+              </Button>
             </div>
 
-            <div className="px-5 py-4">
-              <div className="flex justify-between items-center mb-4">
-                <p className="text-sm text-gray-600">
-                  API tokens allow external applications to access your organization&apos;s data securely.
-                </p>
-                <Button
-                  onClick={() => setIsCreateDialogOpen(true)}
-                  className="bg-black text-white hover:bg-black/90"
-                >
-                  <Plus size={16} className="mr-2" />
-                  Create Token
-                </Button>
+            {isLoading ? (
+              <div className="flex justify-center py-8">
+                <RefreshCw className="animate-spin text-gray-400" size={24} />
               </div>
-
-              {isLoading ? (
-                <div className="flex justify-center py-8">
-                  <RefreshCw className="animate-spin text-gray-400" size={24} />
-                </div>
-              ) : tokens && tokens.length > 0 ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Token Prefix</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Last Used</TableHead>
-                      <TableHead>Expires</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {tokens.map((token) => (
-                      <TableRow key={token.token_uuid}>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">{token.name}</div>
-                            {token.description && (
-                              <div className="text-sm text-gray-500 truncate max-w-[200px]">
-                                {token.description}
-                              </div>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <code className="bg-gray-100 px-2 py-1 rounded text-sm">
-                            {token.token_prefix}...
-                          </code>
-                        </TableCell>
-                        <TableCell>
-                          {token.is_active ? (
-                            <Badge variant="default" className="bg-green-100 text-green-800">
-                              Active
-                            </Badge>
-                          ) : (
-                            <Badge variant="secondary" className="bg-red-100 text-red-800">
-                              Revoked
-                            </Badge>
+            ) : tokens && tokens.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Token Prefix</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Last Used</TableHead>
+                    <TableHead>Expires</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {tokens.map((token) => (
+                    <TableRow key={token.token_uuid}>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">{token.name}</div>
+                          {token.description && (
+                            <div className="text-sm text-gray-500 truncate max-w-[200px]">
+                              {token.description}
+                            </div>
                           )}
-                        </TableCell>
-                        <TableCell className="text-sm text-gray-600">
-                          {token.last_used_at ? formatDate(token.last_used_at) : 'Never'}
-                        </TableCell>
-                        <TableCell className="text-sm text-gray-600">
-                          {token.expires_at ? formatDate(token.expires_at) : 'Never'}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedToken(token)
-                                setIsViewDialogOpen(true)
-                              }}
-                            >
-                              <Eye size={16} />
-                            </Button>
-                            {token.is_active && (
-                              <>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => {
-                                    setSelectedToken(token)
-                                    setIsRegenerateDialogOpen(true)
-                                  }}
-                                >
-                                  <RefreshCw size={16} />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="text-red-600 hover:text-red-700"
-                                  onClick={() => {
-                                    setSelectedToken(token)
-                                    setIsRevokeDialogOpen(true)
-                                  }}
-                                >
-                                  <Trash2 size={16} />
-                                </Button>
-                              </>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              ) : (
-                <div className="text-center py-12 text-gray-500">
-                  <Key size={48} className="mx-auto mb-4 opacity-50" />
-                  <p>No API tokens yet</p>
-                  <p className="text-sm">Create your first token to get started</p>
-                </div>
-              )}
-            </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <code className="bg-gray-100 px-2 py-1 rounded text-sm">
+                          {token.token_prefix}...
+                        </code>
+                      </TableCell>
+                      <TableCell>
+                        {token.is_active ? (
+                          <Badge variant="default" className="bg-green-100 text-green-800">
+                            Active
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary" className="bg-red-100 text-red-800">
+                            Revoked
+                          </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-sm text-gray-600">
+                        {token.last_used_at ? formatDate(token.last_used_at) : 'Never'}
+                      </TableCell>
+                      <TableCell className="text-sm text-gray-600">
+                        {token.expires_at ? formatDate(token.expires_at) : 'Never'}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedToken(token)
+                              setIsViewDialogOpen(true)
+                            }}
+                          >
+                            <Eye size={16} />
+                          </Button>
+                          {token.is_active && (
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedToken(token)
+                                  setIsRegenerateDialogOpen(true)
+                                }}
+                              >
+                                <RefreshCw size={16} />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-red-600 hover:text-red-700"
+                                onClick={() => {
+                                  setSelectedToken(token)
+                                  setIsRevokeDialogOpen(true)
+                                }}
+                              >
+                                <Trash2 size={16} />
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <div className="text-center py-12 text-gray-500">
+                <Key size={48} className="mx-auto mb-4 opacity-50" />
+                <p>No API tokens yet</p>
+                <p className="text-sm">Create your first token to get started</p>
+              </div>
+            )}
           </div>
         </TabsContent>
 
-        <TabsContent value="documentation">
+        <TabsContent value="documentation" className="pb-4">
           <APIDocumentation />
         </TabsContent>
-      </Tabs>
+        </Tabs>
+      </div>
+    </div>
 
       {/* Create Token Dialog */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
@@ -657,7 +676,8 @@ const OrgEditAPIAccess: React.FC = () => {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
+    </PlanRestrictedFeature>
   )
 }
 

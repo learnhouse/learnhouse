@@ -229,7 +229,34 @@ layer(base);
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
-    --radius: 0.5rem;}
+    --radius: 0.5rem;
+
+    /* Z-Index Layering System */
+    --z-behind: -10;
+    --z-background: -1;
+    --z-base: 0;
+    --z-content: 1;
+    --z-elevated: 5;
+    --z-sticky: 10;
+    --z-sticky-header: 15;
+    --z-interactive: 20;
+    --z-drag-overlay: 25;
+    --z-nav: 30;
+    --z-nav-menu: 35;
+    --z-dropdown: 40;
+    --z-popover: 45;
+    --z-overlay: 50;
+    --z-modal-backdrop: 55;
+    --z-modal: 60;
+    --z-modal-content: 65;
+    --z-toast: 70;
+    --z-notification: 75;
+    --z-editor-toolbar: 80;
+    --z-editor-bubble: 85;
+    --z-tooltip: 90;
+    --z-critical: 95;
+    --z-max: 99;
+  }
   .dark {
     --background: 0 0% 3.9%;
     --foreground: 0 0% 98%;
@@ -297,14 +324,14 @@ layer(base);
 /* AI Canva Bubble Menu Styles */
 .ai-canva-bubble-menu {
   position: fixed !important;
-  z-index: 9999 !important;
+  z-index: var(--z-editor-bubble) !important;
   pointer-events: auto !important;
 }
 
 /* Ensure tippy tooltip doesn't affect layout */
 .tippy-box[data-theme~='ai-canva'] {
   position: fixed !important;
-  z-index: 9999 !important;
+  z-index: var(--z-editor-bubble) !important;
 }
 
 /* Prevent layout shifts from bubble menu */
@@ -326,7 +353,7 @@ layer(base);
   opacity: 0;
   visibility: hidden;
   transition: opacity 150ms, visibility 150ms, padding 150ms;
-  z-index: 9999;
+  z-index: var(--z-editor-toolbar);
   pointer-events: none;
   user-select: none;
   overflow: hidden;
@@ -444,7 +471,7 @@ layer(base);
               visibility 200ms;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
   outline: 1px solid rgba(0, 0, 0, 0.06);
-  z-index: 10001;
+  z-index: var(--z-tooltip);
   transform: translateX(-50%);
 }
 
@@ -461,7 +488,7 @@ layer(base);
   border-radius: 1px;
   opacity: 0;
   visibility: hidden;
-  z-index: 9999;
+  z-index: var(--z-drag-overlay);
   pointer-events: none;
   transition: opacity 100ms;
 }

@@ -34,6 +34,47 @@
     "loading": "Chargement...",
     "search": "Rechercher",
     "all": "Tout",
+    "all_courses": "Tous les cours",
+    "all_assignments": "Tous les devoirs",
+    "recent": "Récent",
+    "expand": "Développer",
+    "help": "Aide",
+    "plans": {
+      "label": "Plans",
+      "upgrade_button": "Passer au plan {{plan}}",
+      "feature_restricted": {
+        "payments": {
+          "title": "Fonctionnalité Standard",
+          "description": "Les paiements sont une fonctionnalité premium disponible uniquement pour les organisations sur notre plan Standard ou supérieur. Mettez à niveau pour débloquer le traitement des paiements et les fonctionnalités de monétisation."
+        },
+        "usergroups": {
+          "title": "Fonctionnalité Standard",
+          "description": "Les groupes d'utilisateurs sont une fonctionnalité premium disponible uniquement pour les organisations sur notre plan Standard ou supérieur. Mettez à niveau pour organiser les utilisateurs en groupes pour une meilleure gestion des accès."
+        },
+        "api_access": {
+          "title": "Fonctionnalité Pro",
+          "description": "L'accès API est une fonctionnalité premium disponible uniquement pour les organisations sur notre plan Pro ou supérieur. Mettez à niveau pour débloquer l'accès programmatique aux données de votre organisation."
+        },
+        "roles": {
+          "title": "Fonctionnalité Pro",
+          "description": "La création de rôles personnalisés est une fonctionnalité premium disponible uniquement pour les organisations sur notre plan Pro ou supérieur. Mettez à niveau pour créer des rôles avec des permissions spécifiques."
+        },
+        "ai": {
+          "title": "Fonctionnalité Standard",
+          "description": "Les fonctionnalités IA sont disponibles uniquement pour les organisations sur notre plan Standard ou supérieur. Mettez à niveau pour débloquer la création de contenu et l'assistance à l'apprentissage alimentées par l'IA."
+        },
+        "audit_logs": {
+          "title": "Fonctionnalité Enterprise",
+          "description": "Les journaux d'audit sont une fonctionnalité premium disponible uniquement pour les organisations sur notre plan Enterprise. Mettez à niveau pour obtenir une visibilité complète sur les activités de votre organisation."
+        },
+        "certifications": {
+          "title": "Fonctionnalité Pro",
+          "description": "Les certifications sont une fonctionnalité premium disponible uniquement pour les organisations sur notre plan Pro ou supérieur. Mettez à niveau pour délivrer des certificats aux apprenants qui terminent vos cours."
+        }
+      }
+    },
+    "enterprise": "Enterprise",
+    "version": "Version",
     "users": "Utilisateurs",
     "save": "Enregistrer",
     "cancel": "Annuler",
@@ -677,8 +718,8 @@
         "tabs": {
           "general": "Général",
           "landing": "Page d'accueil",
-          "previews": "Images et aperçus",
-          "socials": "Réseaux sociaux",
+          "branding": "Image de marque",
+          "ai": "IA",
           "other": "Autre"
         },
         "pages": {
@@ -686,13 +727,9 @@
             "title": "Général",
             "subtitle": "Gérez les paramètres de votre organisation"
           },
-          "previews": {
-            "title": "Aperçus",
-            "subtitle": "Gérez les aperçus de votre organisation"
-          },
-          "socials": {
-            "title": "Réseaux sociaux",
-            "subtitle": "Gérez les liens de réseaux sociaux de votre organisation"
+          "branding": {
+            "title": "Image de marque",
+            "subtitle": "Gérez l'identité visuelle et la présence sociale de votre organisation"
           },
           "landing": {
             "title": "Page d'accueil",
@@ -701,6 +738,10 @@
           "other": {
             "title": "Autre",
             "subtitle": "Gérez les paramètres supplémentaires de l'organisation"
+          },
+          "ai": {
+            "title": "Fonctionnalités IA",
+            "subtitle": "Configurez les capacités IA de votre organisation"
           }
         },
         "name": "Nom de l'organisation",
@@ -770,6 +811,14 @@
           "updating_order": "Mise à jour de l'ordre des aperçus..."
         }
       },
+      "branding": {
+        "title": "Image de marque",
+        "subtitle": "Gérez l'identité visuelle et la présence sociale de votre organisation",
+        "tabs": {
+          "images": "Images et aperçus",
+          "social": "Réseaux sociaux"
+        }
+      },
       "socials": {
         "title": "Réseaux sociaux",
         "subtitle": "Gérez la présence de votre organisation sur les réseaux sociaux",
@@ -805,6 +854,21 @@
         "toasts": {
           "save_success": "Script enregistré avec succès",
           "delete_success": "Script supprimé avec succès"
+        }
+      },
+      "ai": {
+        "title": "Fonctionnalités IA",
+        "subtitle": "Configurez les capacités IA de votre organisation",
+        "enable_ai": "Activer les fonctionnalités IA",
+        "enable_ai_description": "Autorisez les fonctionnalités alimentées par l'IA dans le contenu et les expériences d'apprentissage de votre organisation",
+        "admin_only": "Seuls les administrateurs peuvent modifier les paramètres d'IA.",
+        "features_enabled": "Fonctionnalités IA disponibles",
+        "feature_editor": "Assistance IA pour l'éditeur de contenu",
+        "feature_activity": "Interactions IA pour les activités d'apprentissage",
+        "feature_canvas": "Outils IA pour le canvas et le design",
+        "toasts": {
+          "save_success": "Paramètres IA mis à jour avec succès",
+          "save_error": "Échec de la mise à jour des paramètres IA"
         }
       },
       "audit_logs": {

@@ -62,13 +62,16 @@ function ActivityElement(props: ActivitiyElementProps) {
 
   async function deleteActivityUI() {
     const toast_loading = toast.loading(t('dashboard.courses.structure.activity.toasts.deleting'))
-    // Assignments 
+    // Assignments
     if (props.activity.activity_type === 'TYPE_ASSIGNMENT') {
       await deleteAssignmentUsingActivityUUID(props.activity.activity_uuid, access_token)
     }
 
     await deleteActivity(props.activity.activity_uuid, access_token)
     mutate(`${getAPIUrl()}courses/${props.course_uuid}/meta?with_unpublished_activities=${withUnpublishedActivities}`)
+    // Refresh sidebar cache
+    mutate((key: string) => typeof key === 'string' && key.includes('/courses/org_slug/'))
+    mutate((key: string) => typeof key === 'string' && key.includes('/assignments/course/'))
     await revalidateTags(['courses'], props.orgslug)
     toast.dismiss(toast_loading)
     toast.success(t('dashboard.courses.structure.activity.toasts.delete_success'))
@@ -131,8 +134,8 @@ function ActivityElement(props: ActivitiyElementProps) {
       {(provided, snapshot) => (
         <div
           className={`grid grid-cols-[auto_1fr_auto] gap-2 py-2 px-3 my-2 w-full rounded-md text-gray-500 
-            ${snapshot.isDragging 
-              ? 'nice-shadow bg-white ring-2 ring-blue-500/20 z-50 rotate-1 scale-[1.04]' 
+            ${snapshot.isDragging
+              ? 'nice-shadow bg-white ring-2 ring-blue-500/20 z-drag-overlay rotate-1 scale-[1.04]'
               : 'nice-shadow bg-gray-50 hover:bg-gray-100 '
             }
             items-center border-1 border-gray-200`}

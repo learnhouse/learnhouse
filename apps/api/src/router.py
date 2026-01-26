@@ -12,6 +12,7 @@ from src.services.dev.dev import isDevModeEnabledOrRaise
 from src.routers.utils import router as utils_router
 from src.security.auth import get_current_user
 from src.security.api_token_utils import require_non_api_token_user
+from src.security.features_utils.plan_check import require_plan
 
 
 v1_router = APIRouter(prefix="/api/v1")
@@ -28,7 +29,12 @@ v1_router.include_router(
     tags=["users"],
     dependencies=[Depends(get_non_api_token_user)]
 )
-v1_router.include_router(usergroups.router, prefix="/usergroups", tags=["usergroups"])
+v1_router.include_router(
+    usergroups.router,
+    prefix="/usergroups",
+    tags=["usergroups"],
+    dependencies=[Depends(require_plan("standard", "User Groups"))]
+)
 v1_router.include_router(auth.router, prefix="/auth", tags=["auth"])
 v1_router.include_router(
     orgs.router,
@@ -46,7 +52,7 @@ v1_router.include_router(
     api_tokens.router,
     prefix="/orgs",
     tags=["api-tokens"],
-    dependencies=[Depends(get_non_api_token_user)]
+    dependencies=[Depends(get_non_api_token_user), Depends(require_plan("pro", "API Access"))]
 )
 v1_router.include_router(
     blocks.router,
@@ -68,7 +74,10 @@ v1_router.include_router(
     collections.router, prefix="/collections", tags=["collections"]
 )
 v1_router.include_router(
-    certifications.router, prefix="/certifications", tags=["certifications"]
+    certifications.router,
+    prefix="/certifications",
+    tags=["certifications"],
+    dependencies=[Depends(require_plan("pro", "Certifications"))]
 )
 v1_router.include_router(
     trail.router,

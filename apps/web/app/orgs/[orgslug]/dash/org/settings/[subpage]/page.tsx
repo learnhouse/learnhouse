@@ -1,17 +1,21 @@
 'use client'
 import BreadCrumbs from '@components/Dashboard/Misc/BreadCrumbs'
 import { getUriWithOrg } from '@services/config/config'
-import { ImageIcon, TextIcon, LucideIcon, Share2Icon, LayoutDashboardIcon, CodeIcon, KeyIcon } from 'lucide-react'
+import { TextIcon, LucideIcon, LayoutDashboardIcon, CodeIcon, KeyIcon, Palette } from 'lucide-react'
 import Link from 'next/link'
 import React, { useEffect, use } from 'react';
 import { motion } from 'framer-motion'
+import Image from 'next/image'
 import OrgEditGeneral from '@components/Dashboard/Pages/Org/OrgEditGeneral/OrgEditGeneral'
-import OrgEditImages from '@components/Dashboard/Pages/Org/OrgEditImages/OrgEditImages'
-import OrgEditSocials from '@components/Dashboard/Pages/Org/OrgEditSocials/OrgEditSocials'
+import OrgEditBranding from '@components/Dashboard/Pages/Org/OrgEditBranding/OrgEditBranding'
 import OrgEditLanding from '@components/Dashboard/Pages/Org/OrgEditLanding/OrgEditLanding'
 import OrgEditOther from '@components/Dashboard/Pages/Org/OrgEditOther/OrgEditOther'
 import OrgEditAPIAccess from '@components/Dashboard/Pages/Org/OrgEditAPIAccess/OrgEditAPIAccess'
+import OrgEditAI from '@components/Dashboard/Pages/Org/OrgEditAI/OrgEditAI'
 import { useTranslation } from 'react-i18next'
+import { useOrg } from '@components/Contexts/OrgContext'
+import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
+import { PlanLevel } from '@services/plans/plans'
 
 export type OrgParams = {
   subpage: string
@@ -21,22 +25,25 @@ export type OrgParams = {
 interface TabItem {
   id: string
   label: string
-  icon: LucideIcon
+  icon?: LucideIcon
+  customIcon?: string
+  requiredPlan?: PlanLevel
 }
 
 const getSettingTabs = (t: any): TabItem[] => [
   { id: 'general', label: t('dashboard.organization.settings.tabs.general'), icon: TextIcon },
   { id: 'landing', label: t('dashboard.organization.settings.tabs.landing'), icon: LayoutDashboardIcon },
-  { id: 'previews', label: t('dashboard.organization.settings.tabs.previews'), icon: ImageIcon },
-  { id: 'socials', label: t('dashboard.organization.settings.tabs.socials'), icon: Share2Icon },
-  { id: 'api', label: t('dashboard.organization.settings.tabs.api') || 'API Access', icon: KeyIcon },
+  { id: 'branding', label: t('dashboard.organization.settings.tabs.branding'), icon: Palette },
+  { id: 'ai', label: t('dashboard.organization.settings.tabs.ai') || 'AI', customIcon: '/learnhouse_ai_simple_colored.png', requiredPlan: 'standard' },
+  { id: 'api', label: t('dashboard.organization.settings.tabs.api') || 'API Access', icon: KeyIcon, requiredPlan: 'pro' },
   { id: 'other', label: t('dashboard.organization.settings.tabs.other'), icon: CodeIcon },
 ]
 
-function TabLink({ tab, isActive, orgslug }: { 
-  tab: TabItem, 
-  isActive: boolean, 
-  orgslug: string 
+function TabLink({ tab, isActive, orgslug, currentPlan }: {
+  tab: TabItem,
+  isActive: boolean,
+  orgslug: string,
+  currentPlan: PlanLevel
 }) {
   return (
     <Link href={getUriWithOrg(orgslug, '') + `/dash/org/settings/${tab.id}`}>
@@ -46,8 +53,17 @@ function TabLink({ tab, isActive, orgslug }: {
         } cursor-pointer`}
       >
         <div className="flex items-center space-x-2.5 mx-2.5">
-          <tab.icon size={16} />
-          <div>{tab.label}</div>
+          {tab.customIcon ? (
+            <Image src={tab.customIcon} alt={tab.label} width={16} height={16} />
+          ) : tab.icon ? (
+            <tab.icon size={16} />
+          ) : null}
+          <div className="flex items-center">
+            {tab.label}
+            {tab.requiredPlan && (
+              <PlanBadge currentPlan={currentPlan} requiredPlan={tab.requiredPlan} />
+            )}
+          </div>
         </div>
       </div>
     </Link>
@@ -57,6 +73,8 @@ function TabLink({ tab, isActive, orgslug }: {
 function OrgPage(props: { params: Promise<OrgParams> }) {
   const { t } = useTranslation()
   const params = use(props.params);
+  const org = useOrg() as any
+  const currentPlan: PlanLevel = org?.config?.config?.cloud?.plan || 'free'
   const [H1Label, setH1Label] = React.useState('')
   const [H2Label, setH2Label] = React.useState('')
   const SETTING_TABS = getSettingTabs(t)
@@ -65,15 +83,15 @@ function OrgPage(props: { params: Promise<OrgParams> }) {
     if (params.subpage == 'general') {
       setH1Label(t('dashboard.organization.settings.pages.general.title'))
       setH2Label(t('dashboard.organization.settings.pages.general.subtitle'))
-    } else if (params.subpage == 'previews') {
-      setH1Label(t('dashboard.organization.settings.pages.previews.title'))
-      setH2Label(t('dashboard.organization.settings.pages.previews.subtitle'))
-    } else if (params.subpage == 'socials') {
-      setH1Label(t('dashboard.organization.settings.pages.socials.title'))
-      setH2Label(t('dashboard.organization.settings.pages.socials.subtitle'))
+    } else if (params.subpage == 'branding') {
+      setH1Label(t('dashboard.organization.settings.pages.branding.title'))
+      setH2Label(t('dashboard.organization.settings.pages.branding.subtitle'))
     } else if (params.subpage == 'landing') {
       setH1Label(t('dashboard.organization.settings.pages.landing.title'))
       setH2Label(t('dashboard.organization.settings.pages.landing.subtitle'))
+    } else if (params.subpage == 'ai') {
+      setH1Label(t('dashboard.organization.settings.pages.ai.title') || 'AI Features')
+      setH2Label(t('dashboard.organization.settings.pages.ai.subtitle') || 'Configure AI capabilities for your organization')
     } else if (params.subpage == 'api') {
       setH1Label(t('dashboard.organization.settings.pages.api.title') || 'API Access')
       setH2Label(t('dashboard.organization.settings.pages.api.subtitle') || 'Manage API tokens and access')
@@ -108,6 +126,7 @@ function OrgPage(props: { params: Promise<OrgParams> }) {
               tab={tab}
               isActive={params.subpage === tab.id}
               orgslug={params.orgslug}
+              currentPlan={currentPlan}
             />
           ))}
         </div>
@@ -121,9 +140,9 @@ function OrgPage(props: { params: Promise<OrgParams> }) {
         className="flex-1 overflow-y-auto"
       >
         {params.subpage == 'general' ? <OrgEditGeneral /> : ''}
-        {params.subpage == 'previews' ? <OrgEditImages /> : ''}
-        {params.subpage == 'socials' ? <OrgEditSocials /> : ''}
+        {params.subpage == 'branding' ? <OrgEditBranding /> : ''}
         {params.subpage == 'landing' ? <OrgEditLanding /> : ''}
+        {params.subpage == 'ai' ? <OrgEditAI /> : ''}
         {params.subpage == 'api' ? <OrgEditAPIAccess /> : ''}
         {params.subpage == 'other' ? <OrgEditOther /> : ''}
       </motion.div>
