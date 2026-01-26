@@ -321,7 +321,7 @@ function ActivityClient(props: ActivityClientProps) {
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.3 }}
-                  className="fixed inset-0 bg-white z-50"
+                  className="fixed inset-0 bg-white z-overlay"
                 >
                   {/* Focus Mode Top Bar */}
                   <motion.div 
@@ -329,7 +329,7 @@ function ActivityClient(props: ActivityClientProps) {
                     animate={{ y: 0 }}
                     exit={{ y: -100 }}
                     transition={{ duration: 0.3 }}
-                    className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-b border-gray-100"
+                    className="fixed top-0 left-0 right-0 z-modal-content bg-white/90 backdrop-blur-xl border-b border-gray-100"
                   >
                     <div className="container mx-auto px-4 py-2">
                       <div className="flex items-center justify-between h-14">
@@ -465,7 +465,7 @@ function ActivityClient(props: ActivityClientProps) {
                       animate={{ y: 0 }}
                       exit={{ y: 100 }}
                       transition={{ duration: 0.3 }}
-                      className="fixed bottom-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-t border-gray-100"
+                      className="fixed bottom-0 left-0 right-0 z-modal-content bg-white/90 backdrop-blur-xl border-t border-gray-100"
                     >
                       <div className="container mx-auto px-4">
                         <div className="flex items-center justify-between h-16">
@@ -597,7 +597,7 @@ function ActivityClient(props: ActivityClientProps) {
                                 {course.authors && course.authors.length > 0 && (
                                   <div className="flex -space-x-3">
                                     {course.authors.filter((a: any) => a.authorship_status === 'ACTIVE').slice(0, 3).map((author: any, idx: number) => (
-                                      <div key={author.user.user_uuid} className="relative z-[${10-idx}]">
+                                      <div key={author.user.user_uuid} className="relative" style={{ zIndex: 10 - idx }}>
                                         <UserAvatar
                                           border="border-2"
                                           rounded="rounded-full"
@@ -714,7 +714,7 @@ function ActivityClient(props: ActivityClientProps) {
                             <div className={`${activity.activity_type === 'TYPE_SCORM' ? 'rounded-xl overflow-hidden' : 'p-7 drop-shadow-xs rounded-lg'} ${bgColor} relative`}>
                               <button
                                 onClick={() => setIsFocusMode(true)}
-                                className={`absolute ${activity.activity_type === 'TYPE_SCORM' ? 'top-2 right-2' : 'top-4 right-4'} bg-white/80 hover:bg-white nice-shadow p-2 rounded-full cursor-pointer transition-all duration-200 group overflow-hidden z-50 pointer-events-auto`}
+                                className={`absolute ${activity.activity_type === 'TYPE_SCORM' ? 'top-2 right-2' : 'top-4 right-4'} bg-white/80 hover:bg-white nice-shadow p-2 rounded-full cursor-pointer transition-all duration-200 group overflow-hidden z-interactive pointer-events-auto`}
                                 title={t('activities.focus_mode')}
                               >
                                 <div className="flex items-center">

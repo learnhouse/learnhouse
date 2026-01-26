@@ -48,6 +48,8 @@ function NewActivityButton(props: NewActivityButtonProps) {
     const toast_loading = toast.loading(t('dashboard.courses.structure.activity.toasts.creating'))
     await createActivity(activity, props.chapterId, org.id, access_token)
     mutate(`${getAPIUrl()}courses/${course.courseStructure.course_uuid}/meta?with_unpublished_activities=${withUnpublishedActivities}`)
+    // Refresh sidebar cache
+    mutate((key: string) => typeof key === 'string' && key.includes('/courses/org_slug/'))
     toast.dismiss(toast_loading)
     toast.success(t('dashboard.courses.structure.activity.toasts.create_success'))
     setNewActivityModal(false)
@@ -65,6 +67,8 @@ function NewActivityButton(props: NewActivityButtonProps) {
     toast.loading(t('dashboard.courses.structure.activity.toasts.uploading'))
     await createFileActivity(file, type, activity, chapterId, access_token)
     mutate(`${getAPIUrl()}courses/${course.courseStructure.course_uuid}/meta?with_unpublished_activities=${withUnpublishedActivities}`)
+    // Refresh sidebar cache
+    mutate((key: string) => typeof key === 'string' && key.includes('/courses/org_slug/'))
     setNewActivityModal(false)
     toast.dismiss()
     toast.success(t('dashboard.courses.structure.activity.toasts.upload_success'))
@@ -86,6 +90,8 @@ function NewActivityButton(props: NewActivityButtonProps) {
       props.chapterId, access_token
     )
     mutate(`${getAPIUrl()}courses/${course.courseStructure.course_uuid}/meta?with_unpublished_activities=${withUnpublishedActivities}`)
+    // Refresh sidebar cache
+    mutate((key: string) => typeof key === 'string' && key.includes('/courses/org_slug/'))
     setNewActivityModal(false)
     toast.dismiss(toast_loading)
     toast.success(t('dashboard.courses.structure.activity.toasts.create_success'))

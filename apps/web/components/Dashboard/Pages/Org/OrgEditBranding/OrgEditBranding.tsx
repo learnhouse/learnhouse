@@ -1,0 +1,965 @@
+'use client'
+import React, { useState } from 'react'
+import { UploadCloud, Info, Plus, X, GripVertical, Images, StarIcon, ImageIcon, Share2, Link as LinkIcon } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { useOrg } from '@components/Contexts/OrgContext'
+import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { getOrgLogoMediaDirectory, getOrgPreviewMediaDirectory, getOrgThumbnailMediaDirectory } from '@services/media/media'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@components/ui/tabs"
+import { toast } from 'react-hot-toast'
+import { constructAcceptValue } from '@/lib/constants'
+import { uploadOrganizationLogo, uploadOrganizationThumbnail, uploadOrganizationPreview, updateOrganization } from '@services/settings/org'
+import { cn } from '@/lib/utils'
+import { Input } from "@components/ui/input"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@components/ui/dialog"
+import { Button } from "@components/ui/button"
+import { Label } from "@components/ui/label"
+import { SiLoom, SiYoutube, SiX, SiFacebook, SiInstagram } from '@icons-pack/react-simple-icons'
+import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd'
+import { useTranslation } from 'react-i18next'
+import { Form, Formik } from 'formik'
+import { revalidateTags } from '@services/utils/ts/requests'
+import { mutate } from 'swr'
+import { getAPIUrl } from '@services/config/config'
+
+const SUPPORTED_FILES = constructAcceptValue(['png', 'jpg'])
+
+type Preview = {
+  id: string;
+  url: string;
+  type: 'image' | 'youtube' | 'loom';
+  filename?: string;
+  thumbnailUrl?: string;
+  order: number;
+};
+
+type VideoService = 'youtube' | 'loom' | null;
+
+const PREVIEW_HEIGHT = 'h-28'
+const DIALOG_ICON_SIZE = 'w-16 h-16'
+
+interface OrganizationValues {
+  socials: {
+    twitter?: string
+    facebook?: string
+    instagram?: string
+    linkedin?: string
+    youtube?: string
+  }
+  links: {
+    [key: string]: string
+  }
+}
+
+export default function OrgEditBranding() {
+  const { t } = useTranslation()
+  const router = useRouter()
+  const session = useLHSession() as any
+  const access_token = session?.data?.tokens?.access_token
+  const org = useOrg() as any
+
+  // Images state
+  const ADD_PREVIEW_OPTIONS = [
+    {
+      id: 'image',
+      title: t('dashboard.organization.images.video_modal.images'),
+      description: t('dashboard.organization.images.accepted_files'),
+      icon: UploadCloud,
+      color: 'blue',
+      onClick: () => document.getElementById('previewInput')?.click()
+    },
+    {
+      id: 'youtube',
+      title: t('dashboard.organization.images.video_modal.youtube'),
+      description: t('dashboard.organization.images.video_modal.youtube_desc'),
+      icon: SiYoutube,
+      color: 'red',
+      onClick: (setSelectedService: Function) => setSelectedService('youtube')
+    },
+    {
+      id: 'loom',
+      title: t('dashboard.organization.images.video_modal.loom'),
+      description: t('dashboard.organization.images.video_modal.loom_desc'),
+      icon: SiLoom,
+      color: 'blue',
+      onClick: (setSelectedService: Function) => setSelectedService('loom')
+    }
+  ] as const;
+
+  const [localLogo, setLocalLogo] = useState<string | null>(null)
+  const [localThumbnail, setLocalThumbnail] = useState<string | null>(null)
+  const [isLogoUploading, setIsLogoUploading] = useState(false)
+  const [isThumbnailUploading, setIsThumbnailUploading] = useState(false)
+  const [previews, setPreviews] = useState<Preview[]>(() => {
+    const imagePreviews = (org?.previews?.images || [])
+      .filter((item: any) => item?.filename)
+      .map((item: any, index: number) => ({
+        id: item.filename,
+        url: getOrgThumbnailMediaDirectory(org?.org_uuid, item.filename),
+        filename: item.filename,
+        type: 'image' as const,
+        order: item.order ?? index
+      }));
+
+    const videoPreviews = (org?.previews?.videos || [])
+      .filter((video: any) => video && video.id)
+      .map((video: any, index: number) => ({
+        id: video.id,
+        url: video.url,
+        type: video.type as 'youtube' | 'loom',
+        thumbnailUrl: video.type === 'youtube'
+          ? `https://img.youtube.com/vi/${video.id}/maxresdefault.jpg`
+          : '',
+        filename: '',
+        order: video.order ?? (imagePreviews.length + index)
+      }));
+
+    const allPreviews = [...imagePreviews, ...videoPreviews];
+    return allPreviews.sort((a, b) => a.order - b.order);
+  });
+  const [isPreviewUploading, setIsPreviewUploading] = useState(false)
+  const [videoUrl, setVideoUrl] = useState('')
+  const [videoDialogOpen, setVideoDialogOpen] = useState(false)
+  const [selectedService, setSelectedService] = useState<VideoService>(null)
+
+  // Socials initial values
+  const initialValues: OrganizationValues = {
+    socials: org?.socials || {},
+    links: org?.links || {}
+  }
+
+  // Image handlers
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files.length > 0) {
+      const file = event.target.files[0]
+      setLocalLogo(URL.createObjectURL(file))
+      setIsLogoUploading(true)
+      const loadingToast = toast.loading(t('dashboard.organization.images.uploading_logo'))
+      try {
+        await uploadOrganizationLogo(org.id, file, access_token)
+        await new Promise((r) => setTimeout(r, 1500))
+        toast.success(t('dashboard.organization.images.toasts.logo_success'), { id: loadingToast })
+        router.refresh()
+      } catch (err) {
+        toast.error(t('dashboard.organization.images.toasts.logo_error'), { id: loadingToast })
+      } finally {
+        setIsLogoUploading(false)
+      }
+    }
+  }
+
+  const handleThumbnailChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files.length > 0) {
+      const file = event.target.files[0]
+      setLocalThumbnail(URL.createObjectURL(file))
+      setIsThumbnailUploading(true)
+      const loadingToast = toast.loading(t('dashboard.organization.images.uploading_thumbnail'))
+      try {
+        await uploadOrganizationThumbnail(org.id, file, access_token)
+        await new Promise((r) => setTimeout(r, 1500))
+        toast.success(t('dashboard.organization.images.toasts.thumbnail_success'), { id: loadingToast })
+        router.refresh()
+      } catch (err) {
+        toast.error(t('dashboard.organization.images.toasts.thumbnail_error'), { id: loadingToast })
+      } finally {
+        setIsThumbnailUploading(false)
+      }
+    }
+  }
+
+  const handleImageButtonClick = (inputId: string) => (event: React.MouseEvent) => {
+    event.preventDefault()
+    document.getElementById(inputId)?.click()
+  }
+
+  const handlePreviewUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files.length > 0) {
+      const files = Array.from(event.target.files)
+      const remainingSlots = 4 - previews.length
+
+      if (files.length > remainingSlots) {
+        toast.error(remainingSlots === 1
+          ? t('dashboard.organization.images.toasts.max_previews', { count: remainingSlots })
+          : t('dashboard.organization.images.toasts.max_previews_plural', { count: remainingSlots }))
+        return
+      }
+
+      setIsPreviewUploading(true)
+      const loadingToast = toast.loading(files.length === 1
+        ? t('dashboard.organization.images.uploading_previews', { count: files.length })
+        : t('dashboard.organization.images.uploading_previews_plural', { count: files.length }))
+
+      try {
+        const uploadPromises = files.map(async (file) => {
+          const response = await uploadOrganizationPreview(org.id, file, access_token)
+          return {
+            id: response.name_in_disk,
+            url: URL.createObjectURL(file),
+            filename: response.name_in_disk,
+            type: 'image' as const,
+            order: previews.length
+          }
+        })
+
+        const newPreviews = await Promise.all(uploadPromises)
+        const updatedPreviews = [...previews, ...newPreviews]
+
+        await updateOrganization(org.id, {
+          previews: {
+            images: updatedPreviews
+              .filter(p => p.type === 'image')
+              .map(p => ({
+                filename: p.filename,
+                order: p.order
+              })),
+            videos: updatedPreviews
+              .filter(p => p.type === 'youtube' || p.type === 'loom')
+              .map(p => ({
+                type: p.type,
+                url: p.url,
+                id: p.id,
+                order: p.order
+              }))
+          }
+        }, access_token)
+
+        setPreviews(updatedPreviews)
+        toast.success(files.length === 1
+          ? t('dashboard.organization.images.toasts.preview_added', { count: files.length })
+          : t('dashboard.organization.images.toasts.preview_added_plural', { count: files.length }), { id: loadingToast })
+        router.refresh()
+      } catch (err) {
+        toast.error(t('dashboard.organization.images.toasts.preview_error'), { id: loadingToast })
+      } finally {
+        setIsPreviewUploading(false)
+      }
+    }
+  }
+
+  const removePreview = async (id: string) => {
+    const loadingToast = toast.loading(t('dashboard.organization.images.toasts.preview_removed'))
+    try {
+      const updatedPreviews = previews.filter(p => p.id !== id)
+      const updatedPreviewFilenames = updatedPreviews.map(p => p.filename)
+
+      await updateOrganization(org.id, {
+        previews: {
+          images: updatedPreviewFilenames
+        }
+      }, access_token)
+
+      setPreviews(updatedPreviews)
+      toast.success(t('dashboard.organization.images.toasts.preview_removed'), { id: loadingToast })
+      router.refresh()
+    } catch (err) {
+      toast.error(t('dashboard.organization.images.toasts.preview_remove_error'), { id: loadingToast })
+    }
+  }
+
+  const extractVideoId = (url: string, type: 'youtube' | 'loom'): string | null => {
+    if (type === 'youtube') {
+      const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/
+      const match = url.match(regex)
+      return match ? match[1] : null
+    } else if (type === 'loom') {
+      const regex = /(?:loom\.com\/(?:share|embed)\/)([a-zA-Z0-9]+)/
+      const match = url.match(regex)
+      return match ? match[1] : null
+    }
+    return null
+  }
+
+  const handleVideoSubmit = async (type: 'youtube' | 'loom') => {
+    const videoId = extractVideoId(videoUrl, type);
+    if (!videoId) {
+      toast.error(t('dashboard.organization.images.toasts.invalid_url', { type }));
+      return;
+    }
+
+    if (previews.some(preview => preview.id === videoId)) {
+      toast.error(t('dashboard.organization.images.toasts.video_exists'));
+      return;
+    }
+
+    const loadingToast = toast.loading(t('dashboard.organization.images.toasts.adding_video'));
+
+    try {
+      const thumbnailUrl = type === 'youtube'
+        ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`
+        : '';
+
+      const newPreview: Preview = {
+        id: videoId,
+        url: videoUrl,
+        type,
+        thumbnailUrl,
+        filename: '',
+        order: previews.length
+      };
+
+      const updatedPreviews = [...previews, newPreview];
+
+      await updateOrganization(org.id, {
+        previews: {
+          images: updatedPreviews
+            .filter(p => p.type === 'image')
+            .map(p => ({
+              filename: p.filename,
+              order: p.order
+            })),
+          videos: updatedPreviews
+            .filter(p => p.type === 'youtube' || p.type === 'loom')
+            .map(p => ({
+              type: p.type,
+              url: p.url,
+              id: p.id,
+              order: p.order
+            }))
+        }
+      }, access_token);
+
+      setPreviews(updatedPreviews);
+      setVideoUrl('');
+      setVideoDialogOpen(false);
+      toast.success(t('dashboard.organization.images.toasts.video_preview_added'), { id: loadingToast });
+      router.refresh();
+    } catch (err) {
+      toast.error(t('dashboard.organization.images.toasts.video_preview_error'), { id: loadingToast });
+    }
+  };
+
+  const handleDragEnd = async (result: DropResult) => {
+    if (!result.destination) return;
+
+    const items = Array.from(previews);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+
+    const reorderedItems = items.map((item, index) => ({
+      ...item,
+      order: index
+    }));
+
+    setPreviews(reorderedItems);
+
+    const loadingToast = toast.loading(t('dashboard.organization.images.toasts.updating_order'));
+    try {
+      await updateOrganization(org.id, {
+        previews: {
+          images: reorderedItems
+            .filter(p => p.type === 'image')
+            .map(p => ({
+              filename: p.filename,
+              order: p.order
+            })),
+          videos: reorderedItems
+            .filter(p => p.type === 'youtube' || p.type === 'loom')
+            .map(p => ({
+              type: p.type,
+              url: p.url,
+              id: p.id,
+              order: p.order
+            }))
+        }
+      }, access_token);
+
+      toast.success(t('dashboard.organization.images.toasts.order_updated'), { id: loadingToast });
+      router.refresh();
+    } catch (err) {
+      toast.error(t('dashboard.organization.images.toasts.order_update_error'), { id: loadingToast });
+      setPreviews(previews);
+    }
+  };
+
+  const resetVideoDialog = () => {
+    setSelectedService(null)
+    setVideoUrl('')
+  }
+
+  // Socials handler
+  const updateOrg = async (values: OrganizationValues) => {
+    const loadingToast = toast.loading(t('dashboard.organization.settings.updating'))
+    try {
+      await updateOrganization(org.id, values, access_token)
+      await revalidateTags(['organizations'], org.slug)
+
+      mutate(`${getAPIUrl()}orgs/slug/${org.slug}`)
+      toast.success(t('dashboard.organization.settings.update_success'), { id: loadingToast })
+    } catch (err) {
+      toast.error(t('dashboard.organization.settings.update_error'), { id: loadingToast })
+    }
+  }
+
+  return (
+    <div className="sm:mx-10 mx-0 bg-white rounded-xl nice-shadow px-3 py-3 sm:mb-0 mb-16">
+      <div className="flex flex-col bg-gray-50 -space-y-1 px-5 py-3 mb-2 rounded-md">
+        <h1 className="font-bold text-xl text-gray-800">
+          {t('dashboard.organization.branding.title')}
+        </h1>
+        <h2 className="text-gray-500 text-md">
+          {t('dashboard.organization.branding.subtitle')}
+        </h2>
+      </div>
+
+      <Tabs defaultValue="images" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 p-1 bg-gray-100 rounded-lg">
+          <TabsTrigger
+            value="images"
+            className="data-[state=active]:bg-white data-[state=active]:shadow-xs transition-all flex items-center space-x-2"
+          >
+            <ImageIcon size={16} />
+            <span>{t('dashboard.organization.branding.tabs.images')}</span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="social"
+            className="data-[state=active]:bg-white data-[state=active]:shadow-xs transition-all flex items-center space-x-2"
+          >
+            <Share2 size={16} />
+            <span>{t('dashboard.organization.branding.tabs.social')}</span>
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Images & Previews Tab */}
+        <TabsContent value="images" className="mt-4">
+          <Tabs defaultValue="logo" className="w-full">
+            <TabsList className="grid w-full grid-cols-3 p-1 bg-gray-50 rounded-lg">
+              <TabsTrigger
+                value="logo"
+                className="data-[state=active]:bg-white data-[state=active]:shadow-xs transition-all flex items-center space-x-2"
+              >
+                <StarIcon size={14} />
+                <span>{t('dashboard.organization.images.tabs.logo')}</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="thumbnail"
+                className="data-[state=active]:bg-white data-[state=active]:shadow-xs transition-all flex items-center space-x-2"
+              >
+                <ImageIcon size={14} />
+                <span>{t('dashboard.organization.images.tabs.thumbnail')}</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="previews"
+                className="data-[state=active]:bg-white data-[state=active]:shadow-xs transition-all flex items-center space-x-2"
+              >
+                <Images size={14} />
+                <span>{t('dashboard.organization.images.tabs.previews')}</span>
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="logo" className="mt-2">
+              <div className="flex flex-col space-y-5 w-full">
+                <div className="w-full bg-linear-to-b from-gray-50 to-white rounded-xl transition-all duration-300 py-8">
+                  <div className="flex flex-col justify-center items-center space-y-8">
+                    <div className="relative group">
+                      <div
+                        className={cn(
+                          "w-[200px] sm:w-[250px] h-[100px] sm:h-[125px] bg-contain bg-no-repeat bg-center rounded-lg shadow-md bg-white",
+                          "border-2 border-gray-100 hover:border-blue-200 transition-all duration-300",
+                          isLogoUploading && "opacity-50"
+                        )}
+                        style={{ backgroundImage: `url(${localLogo || getOrgLogoMediaDirectory(org?.org_uuid, org?.logo_image)})` }}
+                      />
+                    </div>
+
+                    <div className="flex flex-col items-center space-y-4">
+                      <input
+                        type="file"
+                        id="fileInput"
+                        accept={SUPPORTED_FILES}
+                        className="hidden"
+                        onChange={handleFileChange}
+                      />
+                      <button
+                        type="button"
+                        disabled={isLogoUploading}
+                        className={cn(
+                          "font-medium text-sm px-6 py-2.5 rounded-full",
+                          "bg-linear-to-r from-blue-500 to-blue-600 text-white",
+                          "hover:from-blue-600 hover:to-blue-700",
+                          "shadow-xs hover:shadow-sm transition-all duration-300",
+                          "flex items-center space-x-2",
+                          isLogoUploading && "opacity-75 cursor-not-allowed"
+                        )}
+                        onClick={handleImageButtonClick('fileInput')}
+                      >
+                        <UploadCloud size={18} className={cn("", isLogoUploading && "animate-bounce")} />
+                        <span>{isLogoUploading ? t('dashboard.organization.images.uploading') : t('dashboard.organization.images.upload_logo')}</span>
+                      </button>
+
+                      <div className="flex flex-col text-xs space-y-2 items-center text-gray-500">
+                        <div className="flex items-center space-x-2 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full">
+                          <Info size={14} />
+                          <p className="font-medium">{t('dashboard.organization.images.accepted_files')}</p>
+                        </div>
+                        <p className="text-gray-400">{t('dashboard.organization.images.recommended_size')}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="thumbnail" className="mt-2">
+              <div className="flex flex-col space-y-5 w-full">
+                <div className="w-full bg-linear-to-b from-gray-50 to-white rounded-xl transition-all duration-300 py-8">
+                  <div className="flex flex-col justify-center items-center space-y-8">
+                    <div className="relative group">
+                      <div
+                        className={cn(
+                          "w-[200px] sm:w-[250px] h-[100px] sm:h-[125px] bg-contain bg-no-repeat bg-center rounded-lg shadow-md bg-white",
+                          "border-2 border-gray-100 hover:border-purple-200 transition-all duration-300",
+                          isThumbnailUploading && "opacity-50"
+                        )}
+                        style={{ backgroundImage: `url(${localThumbnail || getOrgThumbnailMediaDirectory(org?.org_uuid, org?.thumbnail_image)})` }}
+                      />
+                    </div>
+
+                    <div className="flex flex-col items-center space-y-4">
+                      <input
+                        type="file"
+                        id="thumbnailInput"
+                        accept={SUPPORTED_FILES}
+                        className="hidden"
+                        onChange={handleThumbnailChange}
+                      />
+                      <button
+                        type="button"
+                        disabled={isThumbnailUploading}
+                        className={cn(
+                          "font-medium text-sm px-6 py-2.5 rounded-full",
+                          "bg-linear-to-r from-purple-500 to-purple-600 text-white",
+                          "hover:from-purple-600 hover:to-purple-700",
+                          "shadow-xs hover:shadow-sm transition-all duration-300",
+                          "flex items-center space-x-2",
+                          isThumbnailUploading && "opacity-75 cursor-not-allowed"
+                        )}
+                        onClick={handleImageButtonClick('thumbnailInput')}
+                      >
+                        <UploadCloud size={18} className={cn("", isThumbnailUploading && "animate-bounce")} />
+                        <span>{isThumbnailUploading ? t('dashboard.organization.images.uploading') : t('dashboard.organization.images.upload_thumbnail')}</span>
+                      </button>
+
+                      <div className="flex flex-col text-xs space-y-2 items-center text-gray-500">
+                        <div className="flex items-center space-x-2 bg-purple-50 text-purple-700 px-3 py-1.5 rounded-full">
+                          <Info size={14} />
+                          <p className="font-medium">{t('dashboard.organization.images.accepted_files')}</p>
+                        </div>
+                        <p className="text-gray-400">{t('dashboard.organization.images.recommended_size')}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="previews" className="mt-4">
+              <div className="flex flex-col space-y-5 w-full">
+                <div className="w-full bg-linear-to-b from-gray-50 to-white rounded-xl transition-all duration-300 py-6">
+                  <div className="flex flex-col justify-center items-center space-y-6">
+                    <DragDropContext onDragEnd={handleDragEnd}>
+                      <Droppable droppableId="previews" direction="horizontal">
+                        {(provided) => (
+                          <div
+                            className={cn(
+                              "flex gap-4 w-full max-w-5xl p-4 overflow-x-auto pb-6",
+                              previews.length === 0 && "justify-center"
+                            )}
+                            {...provided.droppableProps}
+                            ref={provided.innerRef}
+                          >
+                            {previews.map((preview, index) => (
+                              <Draggable
+                                key={preview.id}
+                                draggableId={preview.id}
+                                index={index}
+                              >
+                                {(provided, snapshot) => (
+                                  <div
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    className={cn(
+                                      "relative group shrink-0",
+                                      "w-48",
+                                      snapshot.isDragging ? "scale-105 z-drag-overlay" : "hover:scale-102",
+                                    )}
+                                  >
+                                    <button
+                                      onClick={() => removePreview(preview.id)}
+                                      className={cn(
+                                        "absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5",
+                                        "opacity-0 group-hover:opacity-100 z-10 shadow-xs",
+                                        "transition-opacity duration-200"
+                                      )}
+                                    >
+                                      <X size={14} />
+                                    </button>
+                                    <div
+                                      {...provided.dragHandleProps}
+                                      className={cn(
+                                        "absolute -top-2 -left-2 bg-gray-600 hover:bg-gray-700 text-white rounded-full p-1.5",
+                                        "opacity-0 group-hover:opacity-100 cursor-grab active:cursor-grabbing z-10 shadow-xs",
+                                        "transition-opacity duration-200"
+                                      )}
+                                    >
+                                      <GripVertical size={14} />
+                                    </div>
+                                    {preview.type === 'image' ? (
+                                      <div
+                                        className={cn(
+                                          `w-full ${PREVIEW_HEIGHT} bg-contain bg-no-repeat bg-center rounded-xl bg-white`,
+                                          "border border-gray-200 hover:border-gray-300",
+                                          "transition-colors duration-200",
+                                          snapshot.isDragging ? "shadow-lg" : "shadow-xs hover:shadow-md"
+                                        )}
+                                        style={{
+                                          backgroundImage: `url(${getOrgPreviewMediaDirectory(org?.org_uuid, preview.id)})`,
+                                        }}
+                                      />
+                                    ) : (
+                                      <div className={cn(
+                                        `w-full ${PREVIEW_HEIGHT} relative rounded-xl overflow-hidden`,
+                                        "border border-gray-200 hover:border-gray-300 transition-colors duration-200",
+                                        snapshot.isDragging ? "shadow-lg" : "shadow-xs hover:shadow-md"
+                                      )}>
+                                        <div
+                                          className="absolute inset-0 bg-cover bg-center"
+                                          style={{ backgroundImage: `url(${preview.thumbnailUrl})` }}
+                                        />
+                                        <div className="absolute inset-0 bg-black bg-opacity-40 backdrop-blur-[2px] flex items-center justify-center">
+                                          {preview.type === 'youtube' ? (
+                                            <SiYoutube className="w-10 h-10 text-red-500" />
+                                          ) : (
+                                            <SiLoom className="w-10 h-10 text-blue-500" />
+                                          )}
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </Draggable>
+                            ))}
+                            {provided.placeholder}
+                            {previews.length < 4 && (
+                              <div className={cn(
+                                "shrink-0 w-48",
+                                previews.length === 0 && "m-0"
+                              )}>
+                                <Dialog open={videoDialogOpen} onOpenChange={(open) => {
+                                  setVideoDialogOpen(open);
+                                  if (!open) resetVideoDialog();
+                                }}>
+                                  <DialogTrigger asChild>
+                                    <button
+                                      className={cn(
+                                        `w-full ${PREVIEW_HEIGHT}`,
+                                        "border-2 border-dashed border-gray-200 rounded-xl",
+                                        "hover:border-blue-300 hover:bg-blue-50/50 transition-all duration-200",
+                                        "flex flex-col items-center justify-center space-y-2 group"
+                                      )}
+                                    >
+                                      <div className="bg-blue-50 rounded-full p-2 group-hover:bg-blue-100 transition-colors duration-200">
+                                        <Plus size={20} className="text-blue-500" />
+                                      </div>
+                                      <span className="text-sm font-medium text-gray-600">{t('dashboard.organization.images.add_preview')}</span>
+                                    </button>
+                                  </DialogTrigger>
+                                  <DialogContent className="sm:max-w-[600px]">
+                                    <DialogHeader>
+                                      <DialogTitle>{t('dashboard.organization.images.video_modal.title')}</DialogTitle>
+                                    </DialogHeader>
+                                    <div className={cn(
+                                      "p-6",
+                                      selectedService ? "space-y-4" : "grid grid-cols-3 gap-6"
+                                    )}>
+                                      {!selectedService ? (
+                                        <>
+                                          {ADD_PREVIEW_OPTIONS.map((option) => (
+                                            <button
+                                              key={option.id}
+                                              onClick={() => option.id === 'image'
+                                                ? option.onClick()
+                                                : option.onClick(setSelectedService)
+                                              }
+                                              className={cn(
+                                                "w-full aspect-square rounded-2xl border-2 border-dashed",
+                                                `hover:border-${option.color}-300 hover:bg-${option.color}-50/50`,
+                                                "transition-all duration-200",
+                                                "flex flex-col items-center justify-center space-y-4",
+                                                option.id === 'image' && isPreviewUploading && "opacity-50 cursor-not-allowed"
+                                              )}
+                                            >
+                                              <div className={cn(
+                                                DIALOG_ICON_SIZE,
+                                                `rounded-full bg-${option.color}-50`,
+                                                "flex items-center justify-center"
+                                              )}>
+                                                <option.icon className={`w-8 h-8 text-${option.color}-500`} />
+                                              </div>
+                                              <div className="text-center">
+                                                <p className="font-medium text-gray-700">{option.title}</p>
+                                                <p className="text-sm text-gray-500 mt-1">{option.description}</p>
+                                              </div>
+                                            </button>
+                                          ))}
+                                          <input
+                                            type="file"
+                                            id="previewInput"
+                                            accept={SUPPORTED_FILES}
+                                            className="hidden"
+                                            onChange={handlePreviewUpload}
+                                            multiple
+                                          />
+                                        </>
+                                      ) : (
+                                        <div className="space-y-4">
+                                          <div className="flex items-center justify-between">
+                                            <div className="flex items-center space-x-3">
+                                              <div className={cn(
+                                                "w-10 h-10 rounded-full flex items-center justify-center",
+                                                selectedService === 'youtube' ? "bg-red-50" : "bg-blue-50"
+                                              )}>
+                                                {selectedService === 'youtube' ? (
+                                                  <SiYoutube className="w-5 h-5 text-red-500" />
+                                                ) : (
+                                                  <SiLoom className="w-5 h-5 text-blue-500" />
+                                                )}
+                                              </div>
+                                              <div>
+                                                <h3 className="font-medium text-gray-900">
+                                                  {selectedService === 'youtube'
+                                                    ? t('dashboard.organization.images.video_modal.youtube_desc')
+                                                    : t('dashboard.organization.images.video_modal.loom_desc')}
+                                                </h3>
+                                                <p className="text-sm text-gray-500">
+                                                  {t('dashboard.organization.images.video_modal.url_placeholder', {
+                                                    service: selectedService === 'youtube' ? 'YouTube' : 'Loom'
+                                                  })}
+                                                </p>
+                                              </div>
+                                            </div>
+                                            <button
+                                              onClick={() => setSelectedService(null)}
+                                              className="text-gray-400 hover:text-gray-500 transition-colors"
+                                            >
+                                              <X size={20} />
+                                            </button>
+                                          </div>
+
+                                          <div className="space-y-3">
+                                            <Input
+                                              id="videoUrlInput"
+                                              placeholder={selectedService === 'youtube'
+                                                ? 'https://youtube.com/watch?v=...'
+                                                : 'https://www.loom.com/share/...'}
+                                              value={videoUrl}
+                                              onChange={(e) => setVideoUrl(e.target.value)}
+                                              className="w-full"
+                                              autoFocus
+                                            />
+                                            <Button
+                                              onClick={() => handleVideoSubmit(selectedService)}
+                                              className={cn(
+                                                "w-full",
+                                                selectedService === 'youtube'
+                                                  ? "bg-red-500 hover:bg-red-600"
+                                                  : "bg-blue-500 hover:bg-blue-600"
+                                              )}
+                                              disabled={!videoUrl}
+                                            >
+                                              {t('dashboard.organization.images.video_modal.add_button')}
+                                            </Button>
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </DialogContent>
+                                </Dialog>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </Droppable>
+                    </DragDropContext>
+
+                    <div className="flex items-center space-x-2 bg-gray-50 text-gray-600 px-4 py-2 rounded-full">
+                      <Info size={14} />
+                      <p className="text-sm">{t('dashboard.organization.images.drag_to_reorder')}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </TabsContent>
+
+        {/* Social Links Tab */}
+        <TabsContent value="social" className="mt-4">
+          <Formik
+            enableReinitialize
+            initialValues={initialValues}
+            onSubmit={(values, { setSubmitting }) => {
+              setTimeout(() => {
+                setSubmitting(false)
+                updateOrg(values)
+              }, 400)
+            }}
+          >
+            {({ isSubmitting, values, handleChange, setFieldValue }) => (
+              <Form>
+                <div className="flex flex-col gap-0">
+                  <div className="flex flex-col lg:flex-row lg:space-x-8 mt-0 mx-2 my-2">
+                    <div className="w-full space-y-6">
+                      <div>
+                        <Label className="text-lg font-semibold">{t('dashboard.organization.socials.labels.social_links')}</Label>
+                        <div className="space-y-3 bg-gray-50/50 p-4 rounded-lg nice-shadow mt-2">
+                          <div className="grid gap-3">
+                            <div className="flex items-center space-x-3">
+                              <div className="w-8 h-8 flex items-center justify-center bg-[#1DA1F2]/10 rounded-md">
+                                <SiX size={16} color="#1DA1F2"/>
+                              </div>
+                              <Input
+                                id="socials.twitter"
+                                name="socials.twitter"
+                                value={values.socials.twitter || ''}
+                                onChange={handleChange}
+                                placeholder={t('dashboard.organization.socials.placeholders.twitter')}
+                                className="h-9 bg-white"
+                              />
+                            </div>
+
+                            <div className="flex items-center space-x-3">
+                              <div className="w-8 h-8 flex items-center justify-center bg-[#1877F2]/10 rounded-md">
+                                <SiFacebook size={16} color="#1877F2"/>
+                              </div>
+                              <Input
+                                id="socials.facebook"
+                                name="socials.facebook"
+                                value={values.socials.facebook || ''}
+                                onChange={handleChange}
+                                placeholder={t('dashboard.organization.socials.placeholders.facebook')}
+                                className="h-9 bg-white"
+                              />
+                            </div>
+
+                            <div className="flex items-center space-x-3">
+                              <div className="w-8 h-8 flex items-center justify-center bg-[#E4405F]/10 rounded-md">
+                                <SiInstagram size={16} color="#E4405F"/>
+                              </div>
+                              <Input
+                                id="socials.instagram"
+                                name="socials.instagram"
+                                value={values.socials.instagram || ''}
+                                onChange={handleChange}
+                                placeholder={t('dashboard.organization.socials.placeholders.instagram')}
+                                className="h-9 bg-white"
+                              />
+                            </div>
+
+                            <div className="flex items-center space-x-3">
+                              <div className="w-8 h-8 flex items-center justify-center bg-[#FF0000]/10 rounded-md">
+                                <SiYoutube size={16} color="#FF0000"/>
+                              </div>
+                              <Input
+                                id="socials.youtube"
+                                name="socials.youtube"
+                                value={values.socials.youtube || ''}
+                                onChange={handleChange}
+                                placeholder={t('dashboard.organization.socials.placeholders.youtube')}
+                                className="h-9 bg-white"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="w-full space-y-6 mt-6 lg:mt-0">
+                      <div>
+                        <Label className="text-lg font-semibold">{t('dashboard.organization.socials.labels.custom_links')}</Label>
+                        <div className="space-y-3 bg-gray-50/50 p-4 rounded-lg nice-shadow mt-2">
+                          {Object.entries(values.links).map(([linkKey, linkValue], index) => (
+                            <div key={index} className="flex gap-3 items-center">
+                              <div className="w-8 h-8 flex items-center justify-center bg-gray-200/50 rounded-md text-xs font-medium text-gray-600">
+                                {index + 1}
+                              </div>
+                              <div className="flex-1 flex gap-2">
+                                <Input
+                                  placeholder={t('dashboard.organization.socials.placeholders.label')}
+                                  value={linkKey}
+                                  className="h-9 w-1/3 bg-white"
+                                  onChange={(e) => {
+                                    const newLinks = { ...values.links };
+                                    delete newLinks[linkKey];
+                                    newLinks[e.target.value] = linkValue;
+                                    setFieldValue('links', newLinks);
+                                  }}
+                                />
+                                <Input
+                                  placeholder={t('dashboard.organization.socials.placeholders.url')}
+                                  value={linkValue}
+                                  className="h-9 flex-1 bg-white"
+                                  onChange={(e) => {
+                                    const newLinks = { ...values.links };
+                                    newLinks[linkKey] = e.target.value;
+                                    setFieldValue('links', newLinks);
+                                  }}
+                                />
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => {
+                                    const newLinks = { ...values.links };
+                                    delete newLinks[linkKey];
+                                    setFieldValue('links', newLinks);
+                                  }}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+
+                          {Object.keys(values.links).length < 3 && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="mt-2"
+                              onClick={() => {
+                                const newLinks = { ...values.links };
+                                newLinks[`Link ${Object.keys(newLinks).length + 1}`] = '';
+                                setFieldValue('links', newLinks);
+                              }}
+                            >
+                              <Plus className="h-4 w-4 mr-2" />
+                              {t('dashboard.organization.socials.add_link')}
+                            </Button>
+                          )}
+
+                          <p className="text-xs text-gray-500 mt-2">
+                            {t('dashboard.organization.socials.custom_links_desc')}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-row-reverse mt-3 mx-2 mb-2">
+                    <Button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="bg-black text-white hover:bg-black/90"
+                    >
+                      {isSubmitting ? t('dashboard.organization.settings.saving') : t('dashboard.organization.settings.save_changes')}
+                    </Button>
+                  </div>
+                </div>
+              </Form>
+            )}
+          </Formik>
+        </TabsContent>
+      </Tabs>
+    </div>
+  )
+}

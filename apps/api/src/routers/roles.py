@@ -5,13 +5,14 @@ from src.db.roles import RoleCreate, RoleRead, RoleUpdate
 from src.security.auth import get_current_user
 from src.services.roles.roles import create_role, delete_role, read_role, update_role, get_roles_by_organization
 from src.db.users import PublicUser
+from src.security.features_utils.plan_check import require_plan
 from typing import List
 
 
 router = APIRouter()
 
 
-@router.post("/org/{org_id}")
+@router.post("/org/{org_id}", dependencies=[Depends(require_plan("pro", "Create Role"))])
 async def api_create_role(
     request: Request,
     org_id: int,

@@ -34,8 +34,45 @@
     "loading": "Ładowanie...",
     "search": "Szukaj",
     "all": "Wszystkie",
+    "all_courses": "Wszystkie kursy",
+    "all_assignments": "Wszystkie zadania",
+    "recent": "Ostatnie",
+    "expand": "Rozwiń",
     "help": "Pomoc",
-    "plans": "Plany",
+    "plans": {
+      "label": "Plany",
+      "upgrade_button": "Przejdź na {{plan}}",
+      "feature_restricted": {
+        "payments": {
+          "title": "Funkcja Standard",
+          "description": "Płatności to funkcja premium dostępna tylko dla organizacji z planem Standard lub wyższym. Uaktualnij, aby odblokować przetwarzanie płatności i funkcje monetyzacji."
+        },
+        "usergroups": {
+          "title": "Funkcja Standard",
+          "description": "Grupy użytkowników to funkcja premium dostępna tylko dla organizacji z planem Standard lub wyższym. Uaktualnij, aby organizować użytkowników w grupy dla lepszego zarządzania dostępem."
+        },
+        "api_access": {
+          "title": "Funkcja Pro",
+          "description": "Dostęp do API to funkcja premium dostępna tylko dla organizacji z planem Pro lub wyższym. Uaktualnij, aby odblokować programowy dostęp do danych Twojej organizacji."
+        },
+        "roles": {
+          "title": "Funkcja Pro",
+          "description": "Tworzenie niestandardowych ról to funkcja premium dostępna tylko dla organizacji z planem Pro lub wyższym. Uaktualnij, aby tworzyć role ze specyficznymi uprawnieniami."
+        },
+        "ai": {
+          "title": "Funkcja Standard",
+          "description": "Funkcje AI są dostępne tylko dla organizacji z planem Standard lub wyższym. Uaktualnij, aby odblokować tworzenie treści i wsparcie nauki z wykorzystaniem AI."
+        },
+        "audit_logs": {
+          "title": "Funkcja Enterprise",
+          "description": "Dzienniki audytu to funkcja premium dostępna tylko dla organizacji z planem Enterprise. Uaktualnij, aby uzyskać pełny wgląd w działania Twojej organizacji."
+        },
+        "certifications": {
+          "title": "Funkcja Pro",
+          "description": "Certyfikaty to funkcja premium dostępna tylko dla organizacji z planem Pro lub wyższym. Uaktualnij, aby wydawać certyfikaty uczniom, którzy ukończyli Twoje kursy."
+        }
+      }
+    },
     "enterprise": "Przedsiębiorstwo",
     "version": "Wersja",
     "users": "Użytkownicy",
@@ -681,8 +718,8 @@
         "tabs": {
           "general": "Ogólne",
           "landing": "Strona lądowania",
-          "previews": "Obrazy i podglądy",
-          "socials": "Social media",
+          "branding": "Branding",
+          "ai": "AI",
           "other": "Inne"
         },
         "pages": {
@@ -690,13 +727,9 @@
             "title": "Ogólne",
             "subtitle": "Zarządzaj ustawieniami organizacji"
           },
-          "previews": {
-            "title": "Podglądy",
-            "subtitle": "Zarządzaj podglądami organizacji"
-          },
-          "socials": {
-            "title": "Social media",
-            "subtitle": "Zarządzaj linkami do mediów społecznościowych organizacji"
+          "branding": {
+            "title": "Branding",
+            "subtitle": "Zarządzaj tożsamością wizualną i obecnością społecznościową organizacji"
           },
           "landing": {
             "title": "Strona lądowania",
@@ -705,6 +738,10 @@
           "other": {
             "title": "Inne",
             "subtitle": "Zarządzaj dodatkowymi ustawieniami organizacji"
+          },
+          "ai": {
+            "title": "Funkcje AI",
+            "subtitle": "Skonfiguruj możliwości AI dla swojej organizacji"
           }
         },
         "name": "Nazwa organizacji",
@@ -774,6 +811,14 @@
           "updating_order": "Aktualizowanie kolejności podglądów..."
         }
       },
+      "branding": {
+        "title": "Branding",
+        "subtitle": "Zarządzaj tożsamością wizualną i obecnością społecznościową organizacji",
+        "tabs": {
+          "images": "Obrazy i podglądy",
+          "social": "Linki społecznościowe"
+        }
+      },
       "socials": {
         "title": "Linki społecznościowe",
         "subtitle": "Zarządzaj obecnością swojej organizacji w mediach społecznościowych",
@@ -809,6 +854,21 @@
         "toasts": {
           "save_success": "Skrypt został pomyślnie zapisany",
           "delete_success": "Skrypt został pomyślnie usunięty"
+        }
+      },
+      "ai": {
+        "title": "Funkcje AI",
+        "subtitle": "Skonfiguruj możliwości AI dla swojej organizacji",
+        "enable_ai": "Włącz funkcje AI",
+        "enable_ai_description": "Zezwól na funkcje oparte na AI w treściach i doświadczeniach edukacyjnych Twojej organizacji",
+        "admin_only": "Tylko administratorzy mogą modyfikować ustawienia AI.",
+        "features_enabled": "Dostępne funkcje AI",
+        "feature_editor": "Asystent AI w edytorze treści",
+        "feature_activity": "Interakcje AI w aktywnościach edukacyjnych",
+        "feature_canvas": "Narzędzia AI do projektowania i canvas",
+        "toasts": {
+          "save_success": "Ustawienia AI zostały pomyślnie zaktualizowane",
+          "save_error": "Nie udało się zaktualizować ustawień AI"
         }
       },
       "audit_logs": {

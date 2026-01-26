@@ -56,6 +56,43 @@ module.exports = {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      zIndex: {
+        // Negative layers
+        'behind': '-10',
+        'background': '-1',
+        // Base layers
+        'base': '0',
+        'content': '1',
+        'elevated': '5',
+        // Sticky elements
+        'sticky': '10',
+        'sticky-header': '15',
+        // Interactive elements
+        'interactive': '20',
+        'drag-overlay': '25',
+        // Navigation
+        'nav': '30',
+        'nav-menu': '35',
+        // Dropdowns and popovers
+        'dropdown': '40',
+        'popover': '45',
+        // Overlays
+        'overlay': '50',
+        'modal-backdrop': '55',
+        // Modals
+        'modal': '60',
+        'modal-content': '65',
+        // Toasts
+        'toast': '70',
+        'notification': '75',
+        // Editor
+        'editor-toolbar': '80',
+        'editor-bubble': '85',
+        // Critical
+        'tooltip': '90',
+        'critical': '95',
+        'max': '99',
+      },
       keyframes: {
         "accordion-down": {
           from: { height: "0" },

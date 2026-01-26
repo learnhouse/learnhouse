@@ -2,48 +2,122 @@
 import { useOrg } from '@components/Contexts/OrgContext'
 import { signOut } from 'next-auth/react'
 import LearnHouseDashboardLogo from '@public/dashLogo.png'
-import { Backpack, BadgeDollarSign, BookCopy, ChevronLeft, ChevronRight, HelpCircle, Home, LogOut, Package2, School, Settings, Users } from 'lucide-react'
+import {
+  House,
+  BookOpen,
+  Files,
+  Users,
+  CurrencyCircleDollar,
+  Buildings,
+  Globe,
+  Question,
+  Gear,
+  SignOut,
+  Package,
+  SidebarSimple,
+  Check,
+  CaretDown,
+  PencilSimple
+} from '@phosphor-icons/react'
 import Image from 'next/image'
 import Link from 'next/link'
 import React, { useEffect, useState } from 'react'
 import UserAvatar from '../../Objects/UserAvatar'
 import AdminAuthorization from '@components/Security/AdminAuthorization'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { getUriWithOrg, getUriWithoutOrg } from '@services/config/config'
+import { getUriWithOrg, getUriWithoutOrg, getAPIUrl } from '@services/config/config'
 import useFeatureFlag from '@components/Hooks/useFeatureFlag'
 import { useTranslation } from 'react-i18next'
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-  DropdownMenuSub,
-  DropdownMenuSubTrigger,
-  DropdownMenuSubContent,
-  DropdownMenuPortal,
-} from "@components/ui/dropdown-menu"
-import { Check, Languages } from 'lucide-react'
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@components/ui/tooltip"
+import {
+  HoverMenu,
+  HoverMenuContent,
+  HoverMenuItem,
+  HoverMenuLabel,
+  HoverMenuSeparator,
+} from "@components/ui/hover-menu"
 import { AVAILABLE_LANGUAGES } from '@/lib/languages'
-import { cn } from '@/lib/utils'
 import { getOrgLogoMediaDirectory } from '@services/media/media'
-import { useEEStatus } from '@components/Hooks/useEEStatus'
-import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
+import { cn } from '@/lib/utils'
+import useSWR, { mutate } from 'swr'
+import { swrFetcher } from '@services/utils/ts/requests'
+import { getAssignmentsFromACourse } from '@services/courses/assignments'
 
 function DashLeftMenu() {
   const org = useOrg() as any
   const session = useLHSession() as any
   const { t, i18n } = useTranslation()
   const [isCollapsed, setIsCollapsed] = useState(false)
-  const { isEE } = useEEStatus()
+  const [recentAssignments, setRecentAssignments] = useState<any[]>([])
+  const access_token = session?.data?.tokens?.access_token
 
-  // Load collapse state from localStorage
+  // SWR key for courses
+  const coursesKey = org?.slug ? `${getAPIUrl()}courses/org_slug/${org.slug}/page/1/limit/8` : null
+
+  // Fetch recent courses
+  const { data: coursesData } = useSWR(
+    coursesKey,
+    (url) => swrFetcher(url, access_token),
+    {
+      revalidateOnFocus: true,
+      revalidateOnReconnect: true,
+    }
+  )
+  const recentCourses = coursesData?.slice(0, 8) || []
+
+  // Fetch assignments from courses
+  const [assignmentsRefreshKey, setAssignmentsRefreshKey] = useState(0)
+
+  useEffect(() => {
+    if (coursesData && access_token) {
+      const coursesToFetch = coursesData.slice(0, 5)
+      const promises = coursesToFetch.map((course: any) =>
+        getAssignmentsFromACourse(course.course_uuid, access_token)
+      )
+
+      Promise.all(promises).then((results) => {
+        const allAssignments: any[] = []
+        results.forEach((res: any, index: number) => {
+          if (res?.data) {
+            res.data.forEach((assignment: any) => {
+              allAssignments.push({
+                ...assignment,
+                courseName: coursesToFetch[index].name
+              })
+            })
+          }
+        })
+        setRecentAssignments(allAssignments.slice(0, 8))
+      }).catch(() => {
+        // Silently ignore errors
+      })
+    }
+  }, [coursesData, access_token, assignmentsRefreshKey])
+
+  // Refresh on window focus
+  useEffect(() => {
+    const handleFocus = () => {
+      // Revalidate courses SWR cache
+      if (coursesKey) {
+        mutate(coursesKey)
+      }
+      // Trigger assignments refetch
+      setAssignmentsRefreshKey(prev => prev + 1)
+    }
+    window.addEventListener('focus', handleFocus)
+    return () => window.removeEventListener('focus', handleFocus)
+  }, [coursesKey])
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('dash-menu-collapsed')
-      if (saved !== null && saved === 'true') {
-        setTimeout(() => setIsCollapsed(true), 0)
+      if (saved !== null) {
+        setIsCollapsed(saved === 'true')
       }
     }
   }, [])
@@ -57,6 +131,7 @@ function DashLeftMenu() {
   const changeLanguage = (lng: string) => {
     i18n.changeLanguage(lng)
   }
+
   const isPaymentsEnabled = useFeatureFlag({ path: ['features', 'payments', 'enabled'], defaultValue: false })
 
   async function logOutUI() {
@@ -71,257 +146,374 @@ function DashLeftMenu() {
   const plan = org?.config?.config?.cloud?.plan || 'free'
 
   return (
+    <TooltipProvider delayDuration={0}>
     <div
-      style={{
-        background:
-          'linear-gradient(180deg, rgba(20, 19, 19, 1) 0%, rgba(10, 10, 10, 1) 100%)',
-      }}
       className={cn(
-        "flex flex-col text-white shadow-2xl h-screen sticky top-0 border-r border-white/5 transition-all duration-500 ease-in-out z-50",
-        isCollapsed ? "w-20" : "w-64"
+        "flex flex-col text-white h-screen sticky top-0 z-overlay border-r border-white/[0.08] bg-[#0f0f10] transition-all duration-300",
+        isCollapsed ? "w-[72px]" : "w-64"
       )}
     >
-      <div className="flex flex-col h-full px-4 relative">
-        {/* Toggle Button */}
-        <button
-          onClick={toggleCollapse}
-          className="absolute -right-3 top-12 bg-white text-black border border-white/10 rounded-full p-1 hover:scale-110 transition-all z-50 shadow-lg"
+      {/* Header with Logo and Toggle */}
+      <div className={cn(
+        "flex items-center h-16 border-b border-white/[0.08] px-4 shrink-0",
+        isCollapsed ? "justify-center" : "justify-between"
+      )}>
+        <Link
+          className={cn("flex items-center transition-opacity hover:opacity-70", isCollapsed ? "" : "space-x-3")}
+          href={'/'}
         >
-          {isCollapsed ? <ChevronRight size={12} /> : <ChevronLeft size={12} />}
-        </button>
-
-        <div className={cn("flex h-24 items-center transition-all duration-500", isCollapsed ? "justify-center" : "px-3")}>
-          <Link
-            className="flex items-center space-x-3 transition-all hover:opacity-80 group"
-            href={'/'}
-          >
-            <div className="relative flex items-center shrink-0">
-              {org?.logo_image ? (
-                <img
-                  src={getOrgLogoMediaDirectory(org.org_uuid, org.logo_image)}
-                  alt={org?.name}
-                  className={cn(
-                    "transition-all object-contain rounded-lg",
-                    isCollapsed ? "h-10 w-10" : "h-11 w-auto"
-                  )}
-                />
-              ) : (
-                <Image
-                  alt="Learnhouse logo"
-                  width={isCollapsed ? 32 : 38}
-                  height={isCollapsed ? 32 : 38}
-                  src={LearnHouseDashboardLogo}
-                  className="transition-all rounded-lg"
-                />
-              )}
+          {org?.logo_image ? (
+            <img
+              src={getOrgLogoMediaDirectory(org.org_uuid, org.logo_image)}
+              alt={org?.name}
+              className="h-9 w-9 object-contain rounded-lg"
+            />
+          ) : (
+            <Image
+              alt="Learnhouse logo"
+              width={32}
+              height={32}
+              src={LearnHouseDashboardLogo}
+              className="rounded-lg"
+            />
+          )}
+          {!isCollapsed && (
+            <div className="flex flex-col min-w-0">
+              <span className="font-semibold text-sm text-white truncate">
+                {org?.name}
+              </span>
+              <span className={cn(
+                "text-[9px] font-medium uppercase tracking-wider",
+                plan === 'enterprise' ? "text-amber-400" :
+                plan === 'pro' ? "text-purple-400" :
+                plan === 'standard' ? "text-blue-400" :
+                "text-white/40"
+              )}>
+                {plan}
+              </span>
             </div>
-            {!isCollapsed && (
-              <div className="flex flex-col animate-in fade-in slide-in-from-left-2 duration-500 min-w-0 pr-2">
-                <span className="font-semibold text-[13px] text-white/90 truncate">
-                  {org?.name}
-                </span>
-                <span className={cn(
-                  "text-[10px] font-medium px-1.5 py-0.5 border rounded w-fit mt-1",
-                  plan === 'enterprise' ? "text-amber-400/70 border-amber-400/20" :
-                  plan === 'pro' ? "text-purple-400/70 border-purple-400/20" :
-                  plan === 'standard' ? "text-blue-400/70 border-blue-400/20" :
-                  "text-white/30 border-white/10"
-                )}>
-                  {plan.charAt(0).toUpperCase() + plan.slice(1)}
-                </span>
-              </div>
-            )}
-          </Link>
-        </div>
+          )}
+        </Link>
 
-        <div className="flex-1 flex flex-col justify-center space-y-1 py-8">
-          <AdminAuthorization authorizationMode="component">
-            <MenuLink 
-              href="/dash" 
-              icon={<Home size={18} />} 
-              label={t('common.home')} 
-              isCollapsed={isCollapsed} 
+        {!isCollapsed && (
+          <button
+            onClick={toggleCollapse}
+            className="p-2 rounded-lg text-white/40 hover:text-white hover:bg-white/[0.08] transition-all"
+          >
+            <SidebarSimple size={18} weight="fill" />
+          </button>
+        )}
+      </div>
+
+      {/* Main Navigation - Vertically Centered */}
+      <div className="flex-1 flex flex-col justify-center py-4 px-3">
+        <AdminAuthorization authorizationMode="component">
+          <div className="space-y-1">
+            <MenuLink
+              href="/dash"
+              icon={<House size={20} weight="fill" />}
+              label={t('common.home')}
+              isCollapsed={isCollapsed}
             />
-            <MenuLink 
-              href="/dash/courses" 
-              icon={<BookCopy size={18} />} 
-              label={t('courses.courses')} 
-              isCollapsed={isCollapsed} 
-            />
-            <MenuLink 
-              href="/dash/assignments" 
-              icon={<Backpack size={18} />} 
-              label={t('common.assignments')} 
-              isCollapsed={isCollapsed} 
-            />
-            <MenuLink 
-              href="/dash/users/settings/users" 
-              icon={<Users size={18} />} 
-              label={t('common.users')} 
-              isCollapsed={isCollapsed} 
+
+            {/* Courses with hover menu */}
+            <HoverMenu
+              content={
+                <HoverMenuContent className="w-64">
+                  <HoverMenuLabel className="text-white/70 font-medium">{t('courses.courses')}</HoverMenuLabel>
+                  <HoverMenuSeparator />
+                  <HoverMenuItem asChild>
+                    <Link href="/dash/courses" className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/[0.08] cursor-pointer transition-colors">
+                      <BookOpen size={16} weight="fill" />
+                      <span>{t('common.all_courses')}</span>
+                    </Link>
+                  </HoverMenuItem>
+                  {recentCourses.length > 0 && (
+                    <>
+                      <HoverMenuSeparator />
+                      <HoverMenuLabel className="text-white/40">{t('common.recent')}</HoverMenuLabel>
+                      {recentCourses.map((course: any) => (
+                        <HoverMenuItem key={course.course_uuid} asChild>
+                          <Link
+                            href={`/dash/courses/course/${course.course_uuid.replace('course_', '')}/settings`}
+                            className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/[0.08] cursor-pointer transition-colors"
+                          >
+                            <PencilSimple size={14} className="text-white/40" />
+                            <span className="truncate">{course.name}</span>
+                          </Link>
+                        </HoverMenuItem>
+                      ))}
+                    </>
+                  )}
+                </HoverMenuContent>
+              }
+            >
+              <button
+                className={cn(
+                  "flex items-center w-full rounded-lg text-white/50 hover:text-white hover:bg-white/[0.08] transition-all",
+                  isCollapsed ? "justify-center h-10" : "px-3 py-2 gap-3"
+                )}
+              >
+                <span className="relative flex items-center justify-center">
+                  <BookOpen size={20} weight="fill" />
+                  {isCollapsed && (
+                    <CaretDown size={8} weight="bold" className="absolute -right-2.5 text-white/30" />
+                  )}
+                </span>
+                {!isCollapsed && (
+                  <>
+                    <span className="text-sm font-medium flex-1 text-left">{t('courses.courses')}</span>
+                    <CaretDown size={14} weight="bold" className="text-white/40" />
+                  </>
+                )}
+              </button>
+            </HoverMenu>
+
+            {/* Assignments with hover menu */}
+            <HoverMenu
+              content={
+                <HoverMenuContent className="w-72">
+                  <HoverMenuLabel className="text-white/70 font-medium">{t('common.assignments')}</HoverMenuLabel>
+                  <HoverMenuSeparator />
+                  <HoverMenuItem asChild>
+                    <Link href="/dash/assignments" className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/[0.08] cursor-pointer transition-colors">
+                      <Files size={16} weight="fill" />
+                      <span>{t('common.all_assignments')}</span>
+                    </Link>
+                  </HoverMenuItem>
+                  {recentAssignments.length > 0 && (
+                    <>
+                      <HoverMenuSeparator />
+                      <HoverMenuLabel className="text-white/40">{t('common.recent')}</HoverMenuLabel>
+                      {recentAssignments.map((assignment: any) => (
+                        <HoverMenuItem key={assignment.assignment_uuid} asChild>
+                          <Link
+                            href={`/dash/assignments/${assignment.assignment_uuid.replace('assignment_', '')}?subpage=editor`}
+                            className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/[0.08] cursor-pointer transition-colors"
+                          >
+                            <PencilSimple size={14} className="text-white/40" />
+                            <div className="flex flex-col min-w-0">
+                              <span className="truncate">{assignment.title}</span>
+                              <span className="text-xs text-white/30 truncate">{assignment.courseName}</span>
+                            </div>
+                          </Link>
+                        </HoverMenuItem>
+                      ))}
+                    </>
+                  )}
+                </HoverMenuContent>
+              }
+            >
+              <button
+                className={cn(
+                  "flex items-center w-full rounded-lg text-white/50 hover:text-white hover:bg-white/[0.08] transition-all",
+                  isCollapsed ? "justify-center h-10" : "px-3 py-2 gap-3"
+                )}
+              >
+                <span className="relative flex items-center justify-center">
+                  <Files size={20} weight="fill" />
+                  {isCollapsed && (
+                    <CaretDown size={8} weight="bold" className="absolute -right-2.5 text-white/30" />
+                  )}
+                </span>
+                {!isCollapsed && (
+                  <>
+                    <span className="text-sm font-medium flex-1 text-left">{t('common.assignments')}</span>
+                    <CaretDown size={14} weight="bold" className="text-white/40" />
+                  </>
+                )}
+              </button>
+            </HoverMenu>
+            <MenuLink
+              href="/dash/users/settings/users"
+              icon={<Users size={20} weight="fill" />}
+              label={t('common.users')}
+              isCollapsed={isCollapsed}
             />
             {isPaymentsEnabled && (
-              <MenuLink 
-                href="/dash/payments/customers" 
-                icon={<BadgeDollarSign size={18} />} 
-                label={t('common.payments')} 
-                isCollapsed={isCollapsed} 
+              <MenuLink
+                href="/dash/payments/customers"
+                icon={<CurrencyCircleDollar size={20} weight="fill" />}
+                label={t('common.payments')}
+                isCollapsed={isCollapsed}
               />
             )}
-            <MenuLink 
-              href="/dash/org/settings/general" 
-              icon={<School size={18} />} 
-              label={t('common.organization')} 
-              isCollapsed={isCollapsed} 
+            <MenuLink
+              href="/dash/org/settings/general"
+              icon={<Buildings size={20} weight="fill" />}
+              label={t('common.organization')}
+              isCollapsed={isCollapsed}
             />
-            
-            <div className="my-4 border-t border-white/5 mx-2 opacity-50" />
-            
-            <MenuLink 
-              href="https://docs.learnhouse.app" 
-              icon={<HelpCircle size={18} />} 
-              label={t('common.help')} 
-              isCollapsed={isCollapsed} 
-              isExternal
-            />
-          </AdminAuthorization>
-        </div>
+          </div>
+        </AdminAuthorization>
+      </div>
 
-        <div className="flex flex-col pb-5 pt-2 mt-auto">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <div className={cn(
-                "flex items-center space-x-3 cursor-pointer rounded-lg hover:bg-white/5 transition-all group",
-                isCollapsed ? "justify-center p-2" : "px-3 py-2"
-              )}>
-                <div className="shrink-0">
-                  <UserAvatar
-                    width={isCollapsed ? 32 : 26}
-                    rounded="rounded-full"
-                    shadow="shadow-none"
-                  />
-                </div>
-                {!isCollapsed && (
-                  <div className="flex flex-col flex-1 min-w-0 animate-in fade-in duration-500">
-                    <span className="text-[13px] font-semibold truncate text-white/90">
-                      {session?.data?.user?.username}
-                    </span>
-                    <span className="text-[10px] text-white/30 truncate font-medium">
-                      {session?.data?.user?.email}
-                    </span>
-                  </div>
-                )}
-              </div>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent side="right" align="end" className="w-56 ml-2">
-              <DropdownMenuLabel>
-                <div className="flex flex-col">
-                  <p className="text-sm font-medium">{session?.data?.user?.username}</p>
-                  <p className="text-xs text-gray-500">{session?.data?.user?.email}</p>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger className="flex items-center space-x-2">
-                  <Languages size={14} />
-                  <span>{t('common.language')}</span>
-                </DropdownMenuSubTrigger>
-                <DropdownMenuPortal>
-                  <DropdownMenuSubContent>
-                    {AVAILABLE_LANGUAGES.map((language) => (
-                      <DropdownMenuItem
-                        key={language.code}
-                        onClick={() => changeLanguage(language.code)}
-                        className="flex items-center justify-between"
-                      >
-                        <span>{t(language.translationKey)} ({language.nativeName})</span>
-                        {i18n.language === language.code && <Check size={14} />}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuSubContent>
-                </DropdownMenuPortal>
-              </DropdownMenuSub>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href="/dash/user-account/settings/general" className="flex items-center space-x-2 w-full">
-                  <Settings size={16} />
-                  <span>{t('common.settings')}</span>
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/dash/user-account/owned" className="flex items-center space-x-2 w-full">
-                  <Package2 size={16} />
-                  <span>{t('courses.my_courses')}</span>
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => logOutUI()}
-                className="flex items-center space-x-2 text-red-500 focus:text-red-500"
-              >
-                <LogOut size={16} />
-                <span>{t('user.sign_out')}</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {!isCollapsed && (
-            <>
-              <div className="h-px bg-white/5 -mx-4 mt-3" />
-              <div className="px-5 mt-3 flex items-center space-x-2 animate-in fade-in duration-500">
-                <span className="text-[10px] font-medium text-white/20">
-                  {isEE ? 'Enterprise' : 'Community'}
-                </span>
-                <span className="text-white/10">·</span>
-                <span className="text-[10px] font-medium text-white/20 px-1.5 py-0.5 border border-white/10 rounded">
-                  v0.1.0
-                </span>
-              </div>
-            </>
+      {/* Bottom Section */}
+      <div className="border-t border-white/[0.08] py-3 px-3 shrink-0">
+        <div className="space-y-1">
+          {/* Expand button when collapsed */}
+          {isCollapsed && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={toggleCollapse}
+                  className="flex items-center justify-center w-full h-10 rounded-lg text-white/40 hover:text-white hover:bg-white/[0.08] transition-all"
+                >
+                  <SidebarSimple size={20} weight="fill" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="z-tooltip bg-[#1a1a1b] border-white/10 text-white text-xs px-2 py-1 shadow-lg shadow-black/20">
+                {t('common.expand')}
+              </TooltipContent>
+            </Tooltip>
           )}
+
+          {/* Language Switcher with hover menu */}
+          <HoverMenu
+            align="end"
+            content={
+              <HoverMenuContent className="w-64 max-h-96 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                <HoverMenuLabel className="flex items-center gap-2 text-white/70 font-medium">
+                  <Globe size={16} weight="fill" />
+                  <span>{t('common.language')}</span>
+                </HoverMenuLabel>
+                <HoverMenuSeparator />
+                {AVAILABLE_LANGUAGES.map((language) => (
+                  <HoverMenuItem
+                    key={language.code}
+                    onClick={() => changeLanguage(language.code)}
+                    className="flex items-center justify-between px-3 py-2.5 cursor-pointer text-white/70 hover:text-white hover:bg-white/[0.08] transition-colors"
+                  >
+                    <div className="flex flex-col">
+                      <span className="font-medium text-sm">{language.nativeName}</span>
+                      <span className="text-xs text-white/40">{t(language.translationKey)}</span>
+                    </div>
+                    {i18n.language === language.code && (
+                      <Check size={16} weight="bold" className="text-green-500" />
+                    )}
+                  </HoverMenuItem>
+                ))}
+              </HoverMenuContent>
+            }
+          >
+            <button className={cn(
+              "flex items-center w-full rounded-lg text-white/50 hover:text-white hover:bg-white/[0.08] transition-all group",
+              isCollapsed ? "justify-center h-10" : "px-3 py-2 gap-3"
+            )}>
+              <Globe size={20} weight="fill" />
+              {!isCollapsed && (
+                <span className="text-sm font-medium">{t('common.language')}</span>
+              )}
+            </button>
+          </HoverMenu>
+
+          {/* Help */}
+          <MenuLink
+            href="https://docs.learnhouse.app"
+            icon={<Question size={20} weight="fill" />}
+            label={t('common.help')}
+            isCollapsed={isCollapsed}
+            isExternal
+          />
+
+          {/* User Menu with hover menu */}
+          <HoverMenu
+            align="end"
+            content={
+              <HoverMenuContent className="w-56">
+                <div className="px-3 py-2">
+                  <p className="text-sm font-semibold text-white/90">{session?.data?.user?.username}</p>
+                  <p className="text-xs text-white/40">{session?.data?.user?.email}</p>
+                </div>
+                <HoverMenuSeparator />
+                <HoverMenuItem asChild>
+                  <Link href="/dash/user-account/settings/general" className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/[0.08] cursor-pointer transition-colors">
+                    <Gear size={16} weight="fill" />
+                    <span>{t('common.settings')}</span>
+                  </Link>
+                </HoverMenuItem>
+                <HoverMenuItem asChild>
+                  <Link href="/dash/user-account/owned" className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/[0.08] cursor-pointer transition-colors">
+                    <Package size={16} weight="fill" />
+                    <span>{t('courses.my_courses')}</span>
+                  </Link>
+                </HoverMenuItem>
+                <HoverMenuSeparator />
+                <HoverMenuItem
+                  onClick={() => logOutUI()}
+                  className="flex items-center gap-2 px-3 py-2 text-sm text-red-500 hover:text-red-400 hover:bg-white/[0.08] cursor-pointer transition-colors"
+                >
+                  <SignOut size={16} weight="fill" />
+                  <span>{t('user.sign_out')}</span>
+                </HoverMenuItem>
+              </HoverMenuContent>
+            }
+          >
+            <button className={cn(
+              "flex items-center w-full rounded-lg text-white/50 hover:text-white hover:bg-white/[0.08] transition-all group",
+              isCollapsed ? "justify-center h-10" : "px-3 py-2 gap-3"
+            )}>
+              <UserAvatar width={24} rounded="rounded-full" shadow="shadow-none" />
+              {!isCollapsed && (
+                <div className="flex flex-col min-w-0 flex-1 text-left">
+                  <span className="text-sm font-medium truncate text-white/90">{session?.data?.user?.username}</span>
+                  <span className="text-xs text-white/40 truncate">{session?.data?.user?.email}</span>
+                </div>
+              )}
+            </button>
+          </HoverMenu>
         </div>
       </div>
     </div>
+    </TooltipProvider>
   )
 }
 
-const MenuLink = ({ href, icon, label, isCollapsed, isExternal }: { href: string, icon: React.ReactNode, label: string, isCollapsed: boolean, isExternal?: boolean }) => {
+const MenuLink = ({ href, icon, label, isCollapsed, isExternal }: {
+  href: string
+  icon: React.ReactNode
+  label: string
+  isCollapsed: boolean
+  isExternal?: boolean
+}) => {
   const content = (
     <div
       className={cn(
-        "flex items-center px-3 py-2.5 rounded-xl transition-all duration-300 text-white/50 hover:text-white group relative hover:bg-white/5",
-        isCollapsed ? "justify-center space-x-0" : "space-x-3"
+        "flex items-center w-full rounded-lg text-white/50 hover:text-white hover:bg-white/[0.08] transition-all",
+        isCollapsed ? "justify-center h-10" : "px-3 py-2 gap-3"
       )}
     >
-      <div className="group-hover:scale-110 transition-transform duration-300">
-        {icon}
-      </div>
+      {icon}
       {!isCollapsed && (
-        <span className="text-sm font-semibold tracking-tight animate-in slide-in-from-left-2 duration-500">
-          {label}
-        </span>
+        <span className="text-sm font-medium">{label}</span>
       )}
-    {isCollapsed && (
-      <div className="absolute left-full ml-4 px-3 py-1.5 bg-white text-black text-[11px] font-bold rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 whitespace-nowrap z-50 pointer-events-none shadow-[0_10px_30px_-5px_rgba(0,0,0,0.3),0_0_0_1px_rgba(255,255,255,0.05)] translate-x-[-10px] group-hover:translate-x-0 uppercase tracking-wider">
-        {label}
-      </div>
-    )}
     </div>
   )
 
-  if (isExternal) {
-    return (
-      <a href={href} target="_blank" rel="noopener noreferrer" aria-label={label}>
-        {content}
-      </a>
-    )
-  }
-
-  return (
+  const linkElement = isExternal ? (
+    <a href={href} target="_blank" rel="noopener noreferrer" aria-label={label}>
+      {content}
+    </a>
+  ) : (
     <Link aria-label={label} href={href}>
       {content}
     </Link>
   )
+
+  if (isCollapsed) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          {linkElement}
+        </TooltipTrigger>
+        <TooltipContent side="right" className="z-tooltip bg-[#1a1a1b] border-white/10 text-white text-xs px-2 py-1 shadow-lg shadow-black/20">
+          {label}
+        </TooltipContent>
+      </Tooltip>
+    )
+  }
+
+  return linkElement
 }
 
 export default DashLeftMenu

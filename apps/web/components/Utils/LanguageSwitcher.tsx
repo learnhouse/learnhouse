@@ -31,7 +31,7 @@ const LanguageSwitcher = () => {
       </DropdownMenuTrigger>
 
       <DropdownMenuContent
-        className="min-w-[180px] z-[100]"
+        className="min-w-[180px] z-dropdown"
         align="end"
       >
         {AVAILABLE_LANGUAGES.map((language) => (

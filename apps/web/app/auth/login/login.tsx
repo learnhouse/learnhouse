@@ -86,7 +86,7 @@ const LoginClient = (props: LoginClientProps) => {
 
   return (
     <div className="grid grid-flow-col justify-stretch h-screen">
-      <div className="absolute top-4 right-4 z-50">
+      <div className="absolute top-4 right-4 z-dropdown">
         <LanguageSwitcher />
       </div>
       <div

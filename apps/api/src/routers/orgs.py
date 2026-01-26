@@ -38,6 +38,7 @@ from src.services.orgs.orgs import (
     update_org_logo,
     update_org_preview,
     update_org_signup_mechanism,
+    update_org_ai_config,
     update_org_thumbnail,
     update_org_landing,
     upload_org_landing_content_service,
@@ -168,6 +169,22 @@ async def api_get_org_signup_mechanism(
     """
     return await update_org_signup_mechanism(
         request, signup_mechanism, org_id, current_user, db_session
+    )
+
+
+@router.put("/{org_id}/config/ai")
+async def api_update_org_ai_config(
+    request: Request,
+    org_id: int,
+    ai_enabled: bool,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+):
+    """
+    Update organization AI configuration
+    """
+    return await update_org_ai_config(
+        request, ai_enabled, org_id, current_user, db_session
     )
 
 
