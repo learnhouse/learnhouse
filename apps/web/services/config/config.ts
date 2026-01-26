@@ -67,12 +67,14 @@ const getLEARNHOUSE_API_URL = () => getConfig('NEXT_PUBLIC_LEARNHOUSE_API_URL', 
 const getLEARNHOUSE_BACKEND_URL = () => getConfig('NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL', 'http://localhost/')
 const getLEARNHOUSE_DOMAIN = () => getConfig('NEXT_PUBLIC_LEARNHOUSE_DOMAIN', 'localhost')
 const getLEARNHOUSE_TOP_DOMAIN = () => getConfig('NEXT_PUBLIC_LEARNHOUSE_TOP_DOMAIN', 'localhost')
+const getLEARNHOUSE_TELEMETRY_DISABLED = () => getConfig('NEXT_TELEMETRY_DISABLED', 'true').toLowerCase();
 
 // Export getter functions for dynamic runtime configuration
 export const getLEARNHOUSE_HTTP_PROTOCOL_VAL = getLEARNHOUSE_HTTP_PROTOCOL
 export const getLEARNHOUSE_BACKEND_URL_VAL = getLEARNHOUSE_BACKEND_URL
 export const getLEARNHOUSE_DOMAIN_VAL = getLEARNHOUSE_DOMAIN
 export const getLEARNHOUSE_TOP_DOMAIN_VAL = getLEARNHOUSE_TOP_DOMAIN
+export const getLEARNHOUSE_TELEMETRY_DISABLED_VAL = getLEARNHOUSE_TELEMETRY_DISABLED
 
 // Export constants for backward compatibility
 // These are computed once at module load, but getConfig uses runtime values
