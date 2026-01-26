@@ -1,11 +1,23 @@
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
+import { useOrg } from '@components/Contexts/OrgContext'
 import { getUriWithOrg } from '@services/config/config'
-import { BookCopy, Signpost, SquareLibrary } from 'lucide-react'
+import { planMeetsRequirement, PlanLevel } from '@services/plans/plans'
+import { BookCopy, Signpost, SquareLibrary, Users } from 'lucide-react'
 import Link from 'next/link'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 
 function MenuLinks(props: { orgslug: string }) {
+  const org = useOrg() as any
+  const plan: PlanLevel = org?.config?.config?.cloud?.plan || 'free'
+
+  // Check if feature is enabled AND plan allows it
+  const isCommunitiesEnabled = org?.config?.config?.features?.communities?.enabled !== false
+  const canAccessCommunities = planMeetsRequirement(plan, 'standard')
+  const showCommunities = isCommunitiesEnabled && canAccessCommunities
+
+  const isCollectionsEnabled = org?.config?.config?.features?.collections?.enabled !== false
+
   return (
     <div className='pl-1'>
       <ul className="flex space-x-5">
@@ -14,11 +26,20 @@ function MenuLinks(props: { orgslug: string }) {
           type="courses"
           orgslug={props.orgslug}
         ></LinkItem>
-        <LinkItem
-          link="/collections"
-          type="collections"
-          orgslug={props.orgslug}
-        ></LinkItem>
+        {isCollectionsEnabled && (
+          <LinkItem
+            link="/collections"
+            type="collections"
+            orgslug={props.orgslug}
+          ></LinkItem>
+        )}
+        {showCommunities && (
+          <LinkItem
+            link="/communities"
+            type="communities"
+            orgslug={props.orgslug}
+          ></LinkItem>
+        )}
         <AuthenticatedClientElement checkMethod="authentication">
           <LinkItem
             link="/trail"
@@ -55,6 +76,13 @@ const LinkItem = (props: any) => {
           <>
             <Signpost size={20} />{' '}
             <span>{t('courses.progress')}</span>
+          </>
+        )}
+
+        {props.type == 'communities' && (
+          <>
+            <Users size={20} />{' '}
+            <span>Communities</span>
           </>
         )}
       </li>

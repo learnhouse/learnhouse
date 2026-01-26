@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useMediaQuery } from 'usehooks-ts'
 import { getUriWithOrg } from '@services/config/config'
 import { Monitor, ScanEye, SquareUserRound, UserPlus, Users, Shield } from 'lucide-react'
-import BreadCrumbs from '@components/Dashboard/Misc/BreadCrumbs'
+import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import OrgUsers from '@components/Dashboard/Pages/Users/OrgUsers/OrgUsers'
@@ -84,7 +84,11 @@ function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
   return (
     <div className="h-screen w-full bg-[#f8f8f8] grid grid-rows-[auto_1fr]">
       <div className="pl-10 pr-10  tracking-tight bg-[#fcfbfc] z-10 shadow-[0px_4px_16px_rgba(0,0,0,0.06)]">
-        <BreadCrumbs type="orgusers"></BreadCrumbs>
+        <div className="pt-6 pb-4">
+          <Breadcrumbs items={[
+            { label: t('common.users'), href: '/dash/users/settings/users', icon: <Users size={14} /> }
+          ]} />
+        </div>
         <div className="my-2  py-3">
           <div className="w-100 flex flex-col space-y-1">
             <div className="pt-3 flex font-bold text-4xl tracking-tighter">

@@ -66,3 +66,16 @@ export const uploadOrganizationPreview = async (orgId: string, file: File, acces
   const res = await errorHandling(result)
   return res
 };
+
+export async function updateOrgCommunitiesConfig(
+  org_id: string,
+  communities_enabled: boolean,
+  access_token: string
+) {
+  const result: any = await fetch(
+    `${getAPIUrl()}orgs/${org_id}/config/communities?communities_enabled=${communities_enabled}`,
+    RequestBodyWithAuthHeader('PUT', null, null, access_token)
+  )
+  const res = await errorHandling(result)
+  return res
+}

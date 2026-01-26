@@ -1,10 +1,10 @@
 'use client'
 import React, { use } from 'react';
 import { motion } from 'framer-motion'
-import BreadCrumbs from '@components/Dashboard/Misc/BreadCrumbs'
+import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import Link from 'next/link'
 import { getUriWithOrg } from '@services/config/config'
-import { Settings, Users, Gem } from 'lucide-react'
+import { Settings, Users, Gem, CreditCard } from 'lucide-react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import PaymentsConfigurationPage from '@components/Dashboard/Pages/Payments/PaymentsConfigurationPage'
@@ -82,7 +82,11 @@ function PaymentsPage(props: { params: Promise<PaymentsParams> }) {
     >
     <div className="h-screen w-full bg-[#f8f8f8] flex flex-col">
       <div className="pl-10 pr-10 tracking-tight bg-[#fcfbfc] z-10 nice-shadow flex-shrink-0">
-        <BreadCrumbs type="payments" />
+        <div className="pt-6 pb-4">
+          <Breadcrumbs items={[
+            { label: 'Payments', href: '/dash/payments', icon: <CreditCard size={14} /> }
+          ]} />
+        </div>
         <div className="my-2 py-2">
           <div className="w-100 flex flex-col space-y-1">
             <div className="pt-3 flex font-bold text-4xl tracking-tighter">

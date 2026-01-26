@@ -46,6 +46,8 @@ class Rights(BaseModel):
     activities: Permission
     roles: Permission
     dashboard: DashboardPermission
+    communities: Permission
+    discussions: PermissionsWithOwn  # Own = author can edit/delete their own
 
     def __getitem__(self, item):
         return getattr(self, item)

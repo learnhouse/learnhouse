@@ -15,6 +15,7 @@ export const FEATURE_PLAN_REQUIREMENTS: Record<string, PlanLevel> = {
   usergroups: 'standard',
   payments: 'standard',
   ai: 'standard',
+  communities: 'standard',
   certifications: 'pro',
   roles: 'pro',
   api_tokens: 'pro',

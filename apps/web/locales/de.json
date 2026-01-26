@@ -720,6 +720,8 @@
           "landing": "Landingpage",
           "branding": "Branding",
           "ai": "KI",
+          "api": "API-Zugang",
+          "features": "Funktionen",
           "other": "Sonstiges"
         },
         "pages": {
@@ -742,6 +744,14 @@
           "ai": {
             "title": "KI-Funktionen",
             "subtitle": "Konfigurieren Sie die KI-Fähigkeiten Ihrer Organisation"
+          },
+          "api": {
+            "title": "API-Zugang",
+            "subtitle": "Verwalten Sie API-Token und programmatischen Zugang"
+          },
+          "features": {
+            "title": "Funktionen",
+            "subtitle": "Aktivieren oder deaktivieren Sie Funktionen für Ihre Organisation"
           }
         },
         "name": "Organisations-Name",
@@ -869,6 +879,33 @@
         "toasts": {
           "save_success": "KI-Einstellungen erfolgreich aktualisiert",
           "save_error": "Fehler beim Aktualisieren der KI-Einstellungen"
+        }
+      },
+      "features": {
+        "title": "Funktionseinstellungen",
+        "subtitle": "Aktivieren oder deaktivieren Sie Funktionen für Ihre Organisation",
+        "admin_only": "Nur Organisationsadministratoren können Funktionseinstellungen ändern.",
+        "upgrade_notice": "Upgraden Sie auf den {{plan}}-Plan, um diese Funktion zu aktivieren",
+        "toggles": {
+          "communities": {
+            "title": "Communities",
+            "description": "Diskussions-Communities für Ihre Organisationsmitglieder aktivieren"
+          },
+          "payments": {
+            "title": "Zahlungen",
+            "description": "Zahlungsabwicklung für Kurse und Abonnements aktivieren"
+          },
+          "collections": {
+            "title": "Sammlungen",
+            "description": "Organisation von Kursen in Sammlungen ermöglichen"
+          }
+        },
+        "toasts": {
+          "enabling": "{{feature}} wird aktiviert...",
+          "disabling": "{{feature}} wird deaktiviert...",
+          "enabled": "{{feature}} aktiviert",
+          "disabled": "{{feature}} deaktiviert",
+          "error": "Fehler beim Aktualisieren der {{feature}}-Konfiguration"
         }
       },
       "audit_logs": {
@@ -1929,6 +1966,116 @@
           "create_error": "Fehler beim Erstellen der Zertifizierung",
           "remove_success": "Zertifizierung erfolgreich entfernt",
           "remove_error": "Fehler beim Entfernen der Zertifizierung"
+        }
+      },
+      "communities": {
+        "title": "Communities",
+        "new_community": "Neue Community",
+        "no_communities": "Noch keine Communities",
+        "no_communities_description": "Erstellen Sie Ihre erste Community, um Diskussionen zu starten",
+        "card": {
+          "open_settings": "Einstellungen öffnen",
+          "view_community": "Community anzeigen",
+          "quick_edit": "Schnellbearbeitung"
+        },
+        "settings": {
+          "tabs": {
+            "general": "Allgemein",
+            "thumbnail": "Vorschaubild",
+            "moderation": "Moderation"
+          }
+        },
+        "general": {
+          "title": "Community-Einstellungen",
+          "subtitle": "Aktualisieren Sie die grundlegenden Informationen Ihrer Community",
+          "form": {
+            "name_label": "Community-Name",
+            "name_required": "Community-Name ist erforderlich",
+            "name_min_length": "Name muss mindestens 3 Zeichen lang sein",
+            "name_max_length": "Name darf höchstens 100 Zeichen lang sein",
+            "name_placeholder": "Community-Namen eingeben",
+            "description_label": "Beschreibung",
+            "description_max_length": "Beschreibung darf höchstens 500 Zeichen lang sein",
+            "description_placeholder": "Beschreiben Sie, worum es in dieser Community geht",
+            "public_label": "Öffentliche Community",
+            "public_description": "Diese Community für alle sichtbar machen",
+            "characters_left": "{{count}} Zeichen übrig"
+          },
+          "toasts": {
+            "updating": "Community wird aktualisiert...",
+            "update_success": "Community erfolgreich aktualisiert",
+            "update_error": "Fehler beim Aktualisieren der Community"
+          }
+        },
+        "thumbnail": {
+          "title": "Community-Vorschaubild",
+          "subtitle": "Laden Sie ein Titelbild für Ihre Community hoch",
+          "no_thumbnail": "Kein Vorschaubild festgelegt",
+          "upload_image": "Bild hochladen",
+          "browse_unsplash": "Unsplash durchsuchen",
+          "uploading": "Wird hochgeladen...",
+          "supported_formats": "Unterstützte Formate: JPG, JPEG, PNG. Max. Größe: 8MB. Empfohlenes Seitenverhältnis: 16:9",
+          "toasts": {
+            "update_success": "Vorschaubild erfolgreich aktualisiert",
+            "update_error": "Fehler beim Aktualisieren des Vorschaubilds",
+            "invalid_type": "Ungültiger Dateityp. Bitte laden Sie nur PNG- oder JPG/JPEG-Bilder hoch",
+            "file_too_large": "Dateigröße überschreitet das Limit von 8MB"
+          }
+        },
+        "moderation": {
+          "title": "Inhaltsmoderation",
+          "subtitle": "Konfigurieren Sie gesperrte Wörter und Inhaltsfilter",
+          "info_title": "Gesperrte Wörter",
+          "info_description": "Diskussionen und Antworten, die diese Wörter enthalten, werden blockiert. Benutzer sehen eine Fehlermeldung und ihr Inhalt wird nicht veröffentlicht.",
+          "add_word_label": "Gesperrtes Wort hinzufügen",
+          "add_word_placeholder": "Wort oder Phrase eingeben...",
+          "add_button": "Hinzufügen",
+          "batch_add_label": "Wörter stapelweise hinzufügen",
+          "batch_add_description": "Mehrere Wörter auf einmal hinzufügen, durch Kommas getrennt",
+          "batch_add_placeholder": "wort1, wort2, wort3...",
+          "add_all_button": "Alle hinzufügen",
+          "blocked_words_label": "Gesperrte Wörter",
+          "no_blocked_words": "Noch keine gesperrten Wörter",
+          "no_blocked_words_description": "Fügen Sie Wörter hinzu, um die Inhaltsmoderation zu aktivieren",
+          "word_exists_error": "Dieses Wort ist bereits in der Liste",
+          "all_words_exist_error": "Alle Wörter sind bereits in der Liste oder die Eingabe ist leer",
+          "toasts": {
+            "saving": "Moderationseinstellungen werden gespeichert...",
+            "save_success": "Moderationseinstellungen gespeichert",
+            "save_error": "Fehler beim Speichern der Moderationseinstellungen"
+          }
+        },
+        "modals": {
+          "create": {
+            "title": "Community erstellen",
+            "description": "Erstellen Sie eine neue Community für Diskussionen",
+            "form": {
+              "name_label": "Community-Name",
+              "name_placeholder": "Community-Namen eingeben",
+              "description_label": "Beschreibung",
+              "description_placeholder": "Beschreiben Sie, worum es in dieser Community geht",
+              "public_label": "Diese Community öffentlich machen (für alle sichtbar)"
+            },
+            "cancel": "Abbrechen",
+            "submit": "Community erstellen"
+          },
+          "edit": {
+            "title": "Community bearbeiten",
+            "description": "Community-Einstellungen aktualisieren"
+          },
+          "delete": {
+            "title": "{{name}} löschen?",
+            "message": "Sind Sie sicher, dass Sie diese Community löschen möchten? Alle Diskussionen werden dauerhaft entfernt.",
+            "button": "Community löschen"
+          }
+        },
+        "toasts": {
+          "creating": "Community wird erstellt...",
+          "create_success": "Community erfolgreich erstellt",
+          "create_error": "Fehler beim Erstellen der Community",
+          "deleting": "Community wird gelöscht...",
+          "delete_success": "Community erfolgreich gelöscht",
+          "delete_error": "Fehler beim Löschen der Community"
         }
       },
       "structure": {
