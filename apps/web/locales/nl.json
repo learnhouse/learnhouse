@@ -34,8 +34,45 @@
     "loading": "Laden...",
     "search": "Zoeken",
     "all": "Alle",
+    "all_courses": "Alle cursussen",
+    "all_assignments": "Alle opdrachten",
+    "recent": "Recent",
+    "expand": "Uitklappen",
     "help": "Hulp",
-    "plans": "Plannen",
+    "plans": {
+      "label": "Plannen",
+      "upgrade_button": "Upgraden naar {{plan}}",
+      "feature_restricted": {
+        "payments": {
+          "title": "Standard Functie",
+          "description": "Betalingen is een premiumfunctie die alleen beschikbaar is voor organisaties met ons Standard-abonnement of hoger. Upgrade om betalingsverwerking en monetisatiefuncties te ontgrendelen."
+        },
+        "usergroups": {
+          "title": "Standard Functie",
+          "description": "Gebruikersgroepen is een premiumfunctie die alleen beschikbaar is voor organisaties met ons Standard-abonnement of hoger. Upgrade om gebruikers in groepen te organiseren voor beter toegangsbeheer."
+        },
+        "api_access": {
+          "title": "Pro Functie",
+          "description": "API-toegang is een premiumfunctie die alleen beschikbaar is voor organisaties met ons Pro-abonnement of hoger. Upgrade om programmatische toegang tot de gegevens van uw organisatie te ontgrendelen."
+        },
+        "roles": {
+          "title": "Pro Functie",
+          "description": "Het maken van aangepaste rollen is een premiumfunctie die alleen beschikbaar is voor organisaties met ons Pro-abonnement of hoger. Upgrade om rollen met specifieke rechten te maken."
+        },
+        "ai": {
+          "title": "Standard Functie",
+          "description": "AI-functies zijn alleen beschikbaar voor organisaties met ons Standard-abonnement of hoger. Upgrade om AI-gestuurde contentcreatie en leerondersteuning te ontgrendelen."
+        },
+        "audit_logs": {
+          "title": "Enterprise Functie",
+          "description": "Auditlogboeken zijn een premiumfunctie die alleen beschikbaar is voor organisaties met ons Enterprise-abonnement. Upgrade om volledige zichtbaarheid van de activiteiten van uw organisatie te krijgen."
+        },
+        "certifications": {
+          "title": "Pro Functie",
+          "description": "Certificeringen zijn een premiumfunctie die alleen beschikbaar is voor organisaties met ons Pro-abonnement of hoger. Upgrade om certificaten uit te geven aan leerlingen die uw cursussen voltooien."
+        }
+      }
+    },
     "enterprise": "Enterprise",
     "version": "Versie",
     "users": "Gebruikers",
@@ -681,8 +718,8 @@
         "tabs": {
           "general": "Algemeen",
           "landing": "Landingspagina",
-          "previews": "Afbeeldingen & Previews",
-          "socials": "Socials",
+          "branding": "Branding",
+          "ai": "AI",
           "other": "Overig"
         },
         "pages": {
@@ -690,13 +727,9 @@
             "title": "Algemeen",
             "subtitle": "Beheer organisatie-instellingen"
           },
-          "previews": {
-            "title": "Previews",
-            "subtitle": "Beheer organisatie-previews"
-          },
-          "socials": {
-            "title": "Socials",
-            "subtitle": "Beheer social media links van de organisatie"
+          "branding": {
+            "title": "Branding",
+            "subtitle": "Beheer de visuele identiteit en sociale aanwezigheid van je organisatie"
           },
           "landing": {
             "title": "Landingspagina",
@@ -705,6 +738,10 @@
           "other": {
             "title": "Overig",
             "subtitle": "Beheer aanvullende organisatie-instellingen"
+          },
+          "ai": {
+            "title": "AI-functies",
+            "subtitle": "Configureer AI-mogelijkheden voor je organisatie"
           }
         },
         "name": "Organisatienaam",
@@ -774,6 +811,14 @@
           "updating_order": "Volgorde van previews bijwerken..."
         }
       },
+      "branding": {
+        "title": "Branding",
+        "subtitle": "Beheer de visuele identiteit en sociale aanwezigheid van je organisatie",
+        "tabs": {
+          "images": "Afbeeldingen & Previews",
+          "social": "Sociale links"
+        }
+      },
       "socials": {
         "title": "Sociale links",
         "subtitle": "Beheer de social media aanwezigheid van je organisatie",
@@ -809,6 +854,21 @@
         "toasts": {
           "save_success": "Script succesvol opgeslagen",
           "delete_success": "Script succesvol verwijderd"
+        }
+      },
+      "ai": {
+        "title": "AI-functies",
+        "subtitle": "Configureer AI-mogelijkheden voor je organisatie",
+        "enable_ai": "AI-functies inschakelen",
+        "enable_ai_description": "Sta AI-gestuurde functies toe in de content en leerervaringen van je organisatie",
+        "admin_only": "Alleen beheerders kunnen AI-instellingen wijzigen.",
+        "features_enabled": "Beschikbare AI-functies",
+        "feature_editor": "AI-gestuurde contenteditor-ondersteuning",
+        "feature_activity": "AI-leeractiviteit-interacties",
+        "feature_canvas": "AI-canvas- en ontwerptools",
+        "toasts": {
+          "save_success": "AI-instellingen succesvol bijgewerkt",
+          "save_error": "AI-instellingen bijwerken mislukt"
         }
       },
       "audit_logs": {

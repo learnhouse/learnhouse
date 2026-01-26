@@ -34,8 +34,45 @@
     "loading": "Caricamento...",
     "search": "Cerca",
     "all": "Tutti",
+    "all_courses": "Tutti i corsi",
+    "all_assignments": "Tutti i compiti",
+    "recent": "Recente",
+    "expand": "Espandi",
     "help": "Aiuto",
-    "plans": "Piani",
+    "plans": {
+      "label": "Piani",
+      "upgrade_button": "Passa a {{plan}}",
+      "feature_restricted": {
+        "payments": {
+          "title": "Funzionalità Standard",
+          "description": "I pagamenti sono una funzionalità premium disponibile solo per le organizzazioni con piano Standard o superiore. Effettua l'upgrade per sbloccare l'elaborazione dei pagamenti e le funzionalità di monetizzazione."
+        },
+        "usergroups": {
+          "title": "Funzionalità Standard",
+          "description": "I gruppi di utenti sono una funzionalità premium disponibile solo per le organizzazioni con piano Standard o superiore. Effettua l'upgrade per organizzare gli utenti in gruppi per una migliore gestione degli accessi."
+        },
+        "api_access": {
+          "title": "Funzionalità Pro",
+          "description": "L'accesso API è una funzionalità premium disponibile solo per le organizzazioni con piano Pro o superiore. Effettua l'upgrade per sbloccare l'accesso programmatico ai dati della tua organizzazione."
+        },
+        "roles": {
+          "title": "Funzionalità Pro",
+          "description": "La creazione di ruoli personalizzati è una funzionalità premium disponibile solo per le organizzazioni con piano Pro o superiore. Effettua l'upgrade per creare ruoli con permessi specifici."
+        },
+        "ai": {
+          "title": "Funzionalità Standard",
+          "description": "Le funzionalità IA sono disponibili solo per le organizzazioni con piano Standard o superiore. Effettua l'upgrade per sbloccare la creazione di contenuti e l'assistenza all'apprendimento con IA."
+        },
+        "audit_logs": {
+          "title": "Funzionalità Enterprise",
+          "description": "I log di audit sono una funzionalità premium disponibile solo per le organizzazioni con piano Enterprise. Effettua l'upgrade per ottenere piena visibilità sulle attività della tua organizzazione."
+        },
+        "certifications": {
+          "title": "Funzionalità Pro",
+          "description": "Le certificazioni sono una funzionalità premium disponibile solo per le organizzazioni con piano Pro o superiore. Effettua l'upgrade per rilasciare certificati agli studenti che completano i tuoi corsi."
+        }
+      }
+    },
     "enterprise": "Enterprise",
     "version": "Versione",
     "users": "Utenti",
@@ -681,8 +718,8 @@
         "tabs": {
           "general": "Generale",
           "landing": "Pagina di destinazione",
-          "previews": "Immagini e anteprime",
-          "socials": "Social",
+          "branding": "Branding",
+          "ai": "IA",
           "other": "Altro"
         },
         "pages": {
@@ -690,13 +727,9 @@
             "title": "Generale",
             "subtitle": "Gestisci le impostazioni della tua organizzazione"
           },
-          "previews": {
-            "title": "Anteprime",
-            "subtitle": "Gestisci le anteprime della tua organizzazione"
-          },
-          "socials": {
-            "title": "Social",
-            "subtitle": "Gestisci i link ai social media della tua organizzazione"
+          "branding": {
+            "title": "Branding",
+            "subtitle": "Gestisci l'identità visiva e la presenza social della tua organizzazione"
           },
           "landing": {
             "title": "Pagina di destinazione",
@@ -705,6 +738,10 @@
           "other": {
             "title": "Altro",
             "subtitle": "Gestisci impostazioni aggiuntive dell'organizzazione"
+          },
+          "ai": {
+            "title": "Funzionalità IA",
+            "subtitle": "Configura le capacità IA della tua organizzazione"
           }
         },
         "name": "Nome organizzazione",
@@ -774,6 +811,14 @@
           "updating_order": "Aggiornamento ordine anteprime..."
         }
       },
+      "branding": {
+        "title": "Branding",
+        "subtitle": "Gestisci l'identità visiva e la presenza social della tua organizzazione",
+        "tabs": {
+          "images": "Immagini e anteprime",
+          "social": "Link social"
+        }
+      },
       "socials": {
         "title": "Link social",
         "subtitle": "Gestisci la presenza sui social media della tua organizzazione",
@@ -809,6 +854,21 @@
         "toasts": {
           "save_success": "Script salvato con successo",
           "delete_success": "Script eliminato con successo"
+        }
+      },
+      "ai": {
+        "title": "Funzionalità IA",
+        "subtitle": "Configura le capacità IA della tua organizzazione",
+        "enable_ai": "Abilita funzionalità IA",
+        "enable_ai_description": "Consenti funzionalità basate su IA nei contenuti e nelle esperienze di apprendimento della tua organizzazione",
+        "admin_only": "Solo gli amministratori possono modificare le impostazioni IA.",
+        "features_enabled": "Funzionalità IA disponibili",
+        "feature_editor": "Assistenza IA per l'editor di contenuti",
+        "feature_activity": "Interazioni IA nelle attività di apprendimento",
+        "feature_canvas": "Strumenti IA per canvas e design",
+        "toasts": {
+          "save_success": "Impostazioni IA aggiornate con successo",
+          "save_error": "Impossibile aggiornare le impostazioni IA"
         }
       },
       "audit_logs": {

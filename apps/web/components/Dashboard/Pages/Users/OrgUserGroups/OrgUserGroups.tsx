@@ -6,9 +6,11 @@ import EditUserGroup from '@components/Objects/Modals/Dash/OrgUserGroups/EditUse
 import ManageUsers from '@components/Objects/Modals/Dash/OrgUserGroups/ManageUsers'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
+import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/PlanRestrictedFeature'
 import { getAPIUrl } from '@services/config/config'
 import { deleteUserGroup } from '@services/usergroups/usergroups'
 import { swrFetcher } from '@services/utils/ts/requests'
+import { PlanLevel } from '@services/plans/plans'
 import { Pencil, SquareUserRound, Users, X } from 'lucide-react'
 import React from 'react'
 import toast from 'react-hot-toast'
@@ -20,6 +22,7 @@ function OrgUserGroups() {
     const org = useOrg() as any
     const session = useLHSession() as any
     const access_token = session?.data?.tokens?.access_token;
+    const currentPlan: PlanLevel = org?.config?.config?.cloud?.plan || 'free'
     const [userGroupManagementModal, setUserGroupManagementModal] = React.useState(false)
     const [createUserGroupModal, setCreateUserGroupModal] = React.useState(false)
     const [editUserGroupModal, setEditUserGroupModal] = React.useState(false)
@@ -49,8 +52,13 @@ function OrgUserGroups() {
     }
 
     return (
-        <>
-            <div className="h-6"></div>
+        <PlanRestrictedFeature
+            currentPlan={currentPlan}
+            requiredPlan="standard"
+            icon={SquareUserRound}
+            titleKey="common.plans.feature_restricted.usergroups.title"
+            descriptionKey="common.plans.feature_restricted.usergroups.description"
+        >
             <div className="ml-10 mr-10 mx-auto bg-white rounded-xl shadow-xs px-4 py-4">
                 <div className="flex flex-col bg-gray-50 -space-y-1  px-5 py-3 rounded-md mb-3 ">
                     <h1 className="font-bold text-xl text-gray-800">{t('dashboard.users.usergroups.title')}</h1>
@@ -169,10 +177,7 @@ function OrgUserGroups() {
                 </div>
 
             </div>
-
-
-
-        </>
+        </PlanRestrictedFeature>
     )
 }
 

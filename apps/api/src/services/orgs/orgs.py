@@ -645,6 +645,57 @@ async def update_org_signup_mechanism(
     return {"detail": "Signup mechanism updated"}
 
 
+async def update_org_ai_config(
+    request: Request,
+    ai_enabled: bool,
+    org_id: int,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+):
+    statement = select(Organization).where(Organization.id == org_id)
+    result = db_session.exec(statement)
+
+    org = result.first()
+
+    if not org:
+        raise HTTPException(
+            status_code=404,
+            detail="Organization not found",
+        )
+
+    # RBAC check
+    await rbac_check(request, org.org_uuid, current_user, "update", db_session)
+
+    # Get org config
+    statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
+    result = db_session.exec(statement)
+
+    org_config = result.first()
+
+    if org_config is None:
+        logging.error(f"Organization {org_id} has no config")
+        raise HTTPException(
+            status_code=404,
+            detail="Organization config not found",
+        )
+
+    updated_config = org_config.config
+
+    # Update config
+    updated_config = OrganizationConfigBase(**updated_config)
+    updated_config.features.ai.enabled = ai_enabled
+
+    # Update the database
+    org_config.config = json.loads(updated_config.model_dump_json())
+    org_config.update_date = str(datetime.now())
+
+    db_session.add(org_config)
+    db_session.commit()
+    db_session.refresh(org_config)
+
+    return {"detail": "AI configuration updated"}
+
+
 async def get_org_join_mechanism(
     request: Request,
     org_id: int,

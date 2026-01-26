@@ -13,6 +13,8 @@ import React, { useEffect } from 'react'
 import { BarLoader } from 'react-spinners'
 import { revalidateTags } from '@services/utils/ts/requests'
 import { useRouter } from 'next/navigation'
+import { mutate } from 'swr'
+import { getAPIUrl } from '@services/config/config'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import toast from 'react-hot-toast'
 import { useFormik } from 'formik'
@@ -83,6 +85,8 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
 
         if (res.success) {
           await revalidateTags(['courses'], orgslug)
+          // Refresh sidebar courses cache
+          mutate((key) => typeof key === 'string' && key.includes('/courses/org_slug/'))
           toast.dismiss(toast_loading)
           toast.success(t('courses.course_created_success'))
 

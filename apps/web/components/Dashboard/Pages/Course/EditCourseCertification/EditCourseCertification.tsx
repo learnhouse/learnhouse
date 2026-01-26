@@ -258,7 +258,6 @@ function EditCourseCertification(props: EditCourseCertificationProps) {
     <div>
       {courseStructure && (
         <div>
-          <div className="h-6"></div>
           <div className="mx-4 sm:mx-10 bg-white rounded-xl shadow-xs px-4 py-4">
             {/* Header Section */}
             <div className="flex items-center justify-between bg-gray-50 px-3 sm:px-5 py-3 rounded-md mb-3">

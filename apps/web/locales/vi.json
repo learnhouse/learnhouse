@@ -34,8 +34,45 @@
     "loading": "Đang tải...",
     "search": "Tìm kiếm",
     "all": "Tất cả",
+    "all_courses": "Tất cả khóa học",
+    "all_assignments": "Tất cả bài tập",
+    "recent": "Gần đây",
+    "expand": "Mở rộng",
     "help": "Trợ giúp",
-    "plans": "Gói dịch vụ",
+    "plans": {
+      "label": "Gói dịch vụ",
+      "upgrade_button": "Nâng cấp lên {{plan}}",
+      "feature_restricted": {
+        "payments": {
+          "title": "Tính năng Standard",
+          "description": "Thanh toán là tính năng cao cấp chỉ dành cho các tổ chức sử dụng gói Standard trở lên. Nâng cấp để mở khóa xử lý thanh toán và các tính năng kiếm tiền."
+        },
+        "usergroups": {
+          "title": "Tính năng Standard",
+          "description": "Nhóm người dùng là tính năng cao cấp chỉ dành cho các tổ chức sử dụng gói Standard trở lên. Nâng cấp để tổ chức người dùng thành các nhóm để quản lý quyền truy cập tốt hơn."
+        },
+        "api_access": {
+          "title": "Tính năng Pro",
+          "description": "Truy cập API là tính năng cao cấp chỉ dành cho các tổ chức sử dụng gói Pro trở lên. Nâng cấp để mở khóa quyền truy cập lập trình vào dữ liệu tổ chức của bạn."
+        },
+        "roles": {
+          "title": "Tính năng Pro",
+          "description": "Tạo vai trò tùy chỉnh là tính năng cao cấp chỉ dành cho các tổ chức sử dụng gói Pro trở lên. Nâng cấp để tạo các vai trò với quyền cụ thể."
+        },
+        "ai": {
+          "title": "Tính năng Standard",
+          "description": "Các tính năng AI chỉ dành cho các tổ chức sử dụng gói Standard trở lên. Nâng cấp để mở khóa tạo nội dung và hỗ trợ học tập bằng AI."
+        },
+        "audit_logs": {
+          "title": "Tính năng Enterprise",
+          "description": "Nhật ký kiểm tra là tính năng cao cấp chỉ dành cho các tổ chức sử dụng gói Enterprise. Nâng cấp để có khả năng hiển thị đầy đủ các hoạt động của tổ chức bạn."
+        },
+        "certifications": {
+          "title": "Tính năng Pro",
+          "description": "Chứng chỉ là tính năng cao cấp chỉ dành cho các tổ chức sử dụng gói Pro trở lên. Nâng cấp để cấp chứng chỉ cho học viên hoàn thành khóa học của bạn."
+        }
+      }
+    },
     "enterprise": "Doanh nghiệp",
     "version": "Phiên bản",
     "users": "Người dùng",
@@ -681,8 +718,8 @@
         "tabs": {
           "general": "Chung",
           "landing": "Trang đích",
-          "previews": "Hình ảnh & Xem trước",
-          "socials": "Mạng xã hội",
+          "branding": "Thương hiệu",
+          "ai": "AI",
           "other": "Khác"
         },
         "pages": {
@@ -690,13 +727,9 @@
             "title": "Chung",
             "subtitle": "Quản lý cấu hình tổ chức"
           },
-          "previews": {
-            "title": "Xem trước",
-            "subtitle": "Quản lý ảnh xem trước của tổ chức"
-          },
-          "socials": {
-            "title": "Mạng xã hội",
-            "subtitle": "Quản lý liên kết mạng xã hội của tổ chức"
+          "branding": {
+            "title": "Thương hiệu",
+            "subtitle": "Quản lý nhận diện thương hiệu và sự hiện diện trên mạng xã hội của tổ chức"
           },
           "landing": {
             "title": "Trang đích",
@@ -705,6 +738,10 @@
           "other": {
             "title": "Khác",
             "subtitle": "Quản lý các cấu hình tổ chức khác"
+          },
+          "ai": {
+            "title": "Tính năng AI",
+            "subtitle": "Cấu hình khả năng AI cho tổ chức của bạn"
           }
         },
         "name": "Tên tổ chức",
@@ -774,6 +811,14 @@
           "updating_order": "Đang cập nhật thứ tự xem trước..."
         }
       },
+      "branding": {
+        "title": "Thương hiệu",
+        "subtitle": "Quản lý nhận diện thương hiệu và sự hiện diện trên mạng xã hội của tổ chức",
+        "tabs": {
+          "images": "Hình ảnh & Xem trước",
+          "social": "Liên kết mạng xã hội"
+        }
+      },
       "socials": {
         "title": "Liên kết mạng xã hội",
         "subtitle": "Quản lý sự hiện diện trên mạng xã hội của tổ chức bạn",
@@ -809,6 +854,21 @@
         "toasts": {
           "save_success": "Lưu kịch bản thành công",
           "delete_success": "Xóa kịch bản thành công"
+        }
+      },
+      "ai": {
+        "title": "Tính năng AI",
+        "subtitle": "Cấu hình khả năng AI cho tổ chức của bạn",
+        "enable_ai": "Bật tính năng AI",
+        "enable_ai_description": "Cho phép các tính năng hỗ trợ bởi AI trong nội dung và trải nghiệm học tập của tổ chức bạn",
+        "admin_only": "Chỉ quản trị viên mới có thể sửa đổi cài đặt AI.",
+        "features_enabled": "Các tính năng AI có sẵn",
+        "feature_editor": "Hỗ trợ biên tập nội dung bằng AI",
+        "feature_activity": "Tương tác hoạt động học tập AI",
+        "feature_canvas": "Công cụ canvas và thiết kế AI",
+        "toasts": {
+          "save_success": "Cập nhật cài đặt AI thành công",
+          "save_error": "Cập nhật cài đặt AI thất bại"
         }
       },
       "audit_logs": {

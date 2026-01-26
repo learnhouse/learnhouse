@@ -392,7 +392,7 @@ const APIDocumentation: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-xl nice-shadow p-8">
+      <div className="pb-4">
         <div className="flex justify-center items-center py-12">
           <RefreshCw className="animate-spin text-gray-400 mr-2" size={24} />
           <span className="text-gray-500">Loading API documentation...</span>
@@ -403,7 +403,7 @@ const APIDocumentation: React.FC = () => {
 
   if (error) {
     return (
-      <div className="bg-white rounded-xl nice-shadow p-8">
+      <div className="pb-4">
         <div className="text-center py-12">
           <p className="text-red-500 mb-4">{error}</p>
           <Button onClick={loadSpec} variant="outline">
@@ -420,15 +420,7 @@ const APIDocumentation: React.FC = () => {
   const groups = filterEndpoints(getEndpointGroups(spec))
 
   return (
-    <div className="bg-white rounded-xl nice-shadow">
-      <div className="flex flex-col bg-gray-50 -space-y-1 px-5 py-3 mx-3 my-3 rounded-md">
-        <h1 className="font-bold text-xl text-gray-800">API Documentation & Playground</h1>
-        <h2 className="text-gray-500 text-md">
-          Explore and test API endpoints using your API tokens
-        </h2>
-      </div>
-
-      <div className="px-5 py-4">
+    <div className="pb-4">
         {/* API Token Input */}
         <div className="mb-6">
           <Label htmlFor="apiToken" className="flex items-center gap-2 mb-2">
@@ -669,7 +661,6 @@ const APIDocumentation: React.FC = () => {
             )}
           </div>
         </div>
-      </div>
     </div>
   )
 }
