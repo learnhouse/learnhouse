@@ -15,6 +15,8 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import { BookOpen, Download } from 'lucide-react'
 import Link from 'next/link'
 import { useTranslation } from 'react-i18next'
+import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
+import { PlanLevel } from '@services/plans/plans'
 
 type CourseProps = {
   orgslug: string
@@ -33,6 +35,7 @@ function CoursesHome(params: CourseProps) {
   const isUserAdmin = useAdminStatus() as any
   const org = useOrg() as any
   const { isEnterprise } = useEnterprisePlan()
+  const currentPlan: PlanLevel = org?.config?.config?.cloud?.plan || 'free'
 
   async function closeNewCourseModal() {
     setNewCourseModal(false)
@@ -64,7 +67,7 @@ function CoursesHome(params: CourseProps) {
             orgId={params.org_id}
           >
             <div className="flex items-center space-x-2">
-              {isEnterprise && (
+              {isEnterprise ? (
                 <Modal
                   isDialogOpen={importCourseModal}
                   onOpenChange={setImportCourseModal}
@@ -85,6 +88,15 @@ function CoursesHome(params: CourseProps) {
                     </button>
                   }
                 />
+              ) : (
+                <button
+                  disabled
+                  className="rounded-lg bg-gray-300 antialiased p-2 px-5 my-auto font text-xs font-bold text-gray-500 flex items-center gap-2 cursor-not-allowed"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>{t('dashboard.courses.import_course')}</span>
+                  <PlanBadge currentPlan={currentPlan} requiredPlan="enterprise" alwaysShow noMargin />
+                </button>
               )}
               <Modal
                 isDialogOpen={newCourseModal}

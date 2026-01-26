@@ -34,8 +34,45 @@
     "loading": "Yükleniyor...",
     "search": "Ara",
     "all": "Hepsi",
+    "all_courses": "Tüm kurslar",
+    "all_assignments": "Tüm ödevler",
+    "recent": "Son",
+    "expand": "Genişlet",
     "help": "Yardım",
-    "plans": "Planlar",
+    "plans": {
+      "label": "Planlar",
+      "upgrade_button": "{{plan}} planına yükselt",
+      "feature_restricted": {
+        "payments": {
+          "title": "Standart Özellik",
+          "description": "Ödemeler, yalnızca Standart veya üzeri plandaki kuruluşlar için kullanılabilen premium bir özelliktir. Ödeme işleme ve para kazanma özelliklerini açmak için yükseltin."
+        },
+        "usergroups": {
+          "title": "Standart Özellik",
+          "description": "Kullanıcı grupları, yalnızca Standart veya üzeri plandaki kuruluşlar için kullanılabilen premium bir özelliktir. Daha iyi erişim yönetimi için kullanıcıları gruplara ayırmak için yükseltin."
+        },
+        "api_access": {
+          "title": "Pro Özellik",
+          "description": "API Erişimi, yalnızca Pro veya üzeri plandaki kuruluşlar için kullanılabilen premium bir özelliktir. Kuruluşunuzun verilerine programatik erişim için yükseltin."
+        },
+        "roles": {
+          "title": "Pro Özellik",
+          "description": "Özel roller oluşturmak, yalnızca Pro veya üzeri plandaki kuruluşlar için kullanılabilen premium bir özelliktir. Belirli izinlerle roller oluşturmak için yükseltin."
+        },
+        "ai": {
+          "title": "Standard Özellik",
+          "description": "Yapay zeka özellikleri yalnızca Standard veya üzeri plandaki kuruluşlar için kullanılabilir. Yapay zeka destekli içerik oluşturma ve öğrenme desteğini açmak için yükseltin."
+        },
+        "audit_logs": {
+          "title": "Enterprise Özellik",
+          "description": "Denetim günlükleri, yalnızca Enterprise plandaki kuruluşlar için kullanılabilen premium bir özelliktir. Kuruluşunuzun faaliyetlerini tam olarak görüntülemek için yükseltin."
+        },
+        "certifications": {
+          "title": "Pro Özellik",
+          "description": "Sertifikalar, yalnızca Pro veya üzeri plandaki kuruluşlar için kullanılabilen premium bir özelliktir. Kurslarınızı tamamlayan öğrencilere sertifika vermek için yükseltin."
+        }
+      }
+    },
     "enterprise": "Kurumsal",
     "version": "Sürüm",
     "users": "Kullanıcılar",
@@ -681,8 +718,8 @@
         "tabs": {
           "general": "Genel",
           "landing": "Açılış Sayfası",
-          "previews": "Resimler ve Önizlemeler",
-          "socials": "Sosyal Medya",
+          "branding": "Marka",
+          "ai": "YZ",
           "other": "Diğer"
         },
         "pages": {
@@ -690,13 +727,9 @@
             "title": "Genel",
             "subtitle": "Organizasyon yapılandırmasını yönetin"
           },
-          "previews": {
-            "title": "Önizlemeler",
-            "subtitle": "Organizasyon resim önizlemelerini yönetin"
-          },
-          "socials": {
-            "title": "Sosyal Medya",
-            "subtitle": "Organizasyon sosyal medya bağlantılarını yönetin"
+          "branding": {
+            "title": "Marka",
+            "subtitle": "Organizasyonunuzun görsel kimliğini ve sosyal varlığını yönetin"
           },
           "landing": {
             "title": "Açılış Sayfası",
@@ -705,6 +738,10 @@
           "other": {
             "title": "Diğer",
             "subtitle": "Diğer organizasyon yapılandırmalarını yönetin"
+          },
+          "ai": {
+            "title": "Yapay Zeka Özellikleri",
+            "subtitle": "Organizasyonunuz için yapay zeka yeteneklerini yapılandırın"
           }
         },
         "name": "Organizasyon Adı",
@@ -774,6 +811,14 @@
           "updating_order": "Önizleme sırası güncelleniyor..."
         }
       },
+      "branding": {
+        "title": "Marka",
+        "subtitle": "Organizasyonunuzun görsel kimliğini ve sosyal varlığını yönetin",
+        "tabs": {
+          "images": "Resimler ve Önizlemeler",
+          "social": "Sosyal Bağlantılar"
+        }
+      },
       "socials": {
         "title": "Sosyal Bağlantılar",
         "subtitle": "Organizasyonunuzun sosyal medya varlığını yönetin",
@@ -809,6 +854,21 @@
         "toasts": {
           "save_success": "Script başarıyla kaydedildi",
           "delete_success": "Script başarıyla silindi"
+        }
+      },
+      "ai": {
+        "title": "Yapay Zeka Özellikleri",
+        "subtitle": "Organizasyonunuz için yapay zeka yeteneklerini yapılandırın",
+        "enable_ai": "Yapay Zeka Özelliklerini Etkinleştir",
+        "enable_ai_description": "Organizasyonunuzun içerik ve öğrenme deneyimlerinde yapay zeka destekli özelliklere izin verin",
+        "admin_only": "Yalnızca yöneticiler AI ayarlarını değiştirebilir.",
+        "features_enabled": "Mevcut Yapay Zeka Özellikleri",
+        "feature_editor": "Yapay zeka destekli içerik editörü yardımı",
+        "feature_activity": "Yapay zeka öğrenme etkinliği etkileşimleri",
+        "feature_canvas": "Yapay zeka kanvas ve tasarım araçları",
+        "toasts": {
+          "save_success": "Yapay zeka ayarları başarıyla güncellendi",
+          "save_error": "Yapay zeka ayarları güncellenemedi"
         }
       },
       "audit_logs": {

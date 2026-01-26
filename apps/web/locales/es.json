@@ -34,8 +34,45 @@
     "loading": "Cargando...",
     "search": "Buscar",
     "all": "Todo",
+    "all_courses": "Todos los cursos",
+    "all_assignments": "Todas las tareas",
+    "recent": "Reciente",
+    "expand": "Expandir",
     "help": "Ayuda",
-    "plans": "Planes",
+    "plans": {
+      "label": "Planes",
+      "upgrade_button": "Actualizar a {{plan}}",
+      "feature_restricted": {
+        "payments": {
+          "title": "Función Standard",
+          "description": "Los pagos son una función premium disponible solo para organizaciones en nuestro plan Standard o superior. Actualiza para desbloquear el procesamiento de pagos y las funciones de monetización."
+        },
+        "usergroups": {
+          "title": "Función Standard",
+          "description": "Los grupos de usuarios son una función premium disponible solo para organizaciones en nuestro plan Standard o superior. Actualiza para organizar usuarios en grupos para una mejor gestión de accesos."
+        },
+        "api_access": {
+          "title": "Función Pro",
+          "description": "El acceso API es una función premium disponible solo para organizaciones en nuestro plan Pro o superior. Actualiza para desbloquear el acceso programático a los datos de tu organización."
+        },
+        "roles": {
+          "title": "Función Pro",
+          "description": "La creación de roles personalizados es una función premium disponible solo para organizaciones en nuestro plan Pro o superior. Actualiza para crear roles con permisos específicos."
+        },
+        "ai": {
+          "title": "Función Standard",
+          "description": "Las funciones de IA están disponibles solo para organizaciones en nuestro plan Standard o superior. Actualiza para desbloquear la creación de contenido y la asistencia de aprendizaje con IA."
+        },
+        "audit_logs": {
+          "title": "Función Enterprise",
+          "description": "Los registros de auditoría son una función premium disponible solo para organizaciones en nuestro plan Enterprise. Actualiza para obtener visibilidad completa de las actividades de tu organización."
+        },
+        "certifications": {
+          "title": "Función Pro",
+          "description": "Las certificaciones son una función premium disponible solo para organizaciones en nuestro plan Pro o superior. Actualiza para emitir certificados a los estudiantes que completen tus cursos."
+        }
+      }
+    },
     "enterprise": "Empresa",
     "version": "Versión",
     "users": "Usuarios",
@@ -681,8 +718,8 @@
         "tabs": {
           "general": "General",
           "landing": "Página de inicio",
-          "previews": "Imágenes y vistas previas",
-          "socials": "Redes sociales",
+          "branding": "Marca",
+          "ai": "IA",
           "other": "Otros"
         },
         "pages": {
@@ -690,13 +727,9 @@
             "title": "General",
             "subtitle": "Gestiona los ajustes de tu organización"
           },
-          "previews": {
-            "title": "Vistas previas",
-            "subtitle": "Gestiona las vistas previas de tu organización"
-          },
-          "socials": {
-            "title": "Redes sociales",
-            "subtitle": "Gestiona los enlaces a redes sociales de tu organización"
+          "branding": {
+            "title": "Marca",
+            "subtitle": "Gestiona la identidad visual y presencia social de tu organización"
           },
           "landing": {
             "title": "Página de inicio",
@@ -705,6 +738,10 @@
           "other": {
             "title": "Otros",
             "subtitle": "Gestiona ajustes adicionales de la organización"
+          },
+          "ai": {
+            "title": "Funciones de IA",
+            "subtitle": "Configura las capacidades de IA de tu organización"
           }
         },
         "name": "Nombre de la organización",
@@ -774,6 +811,14 @@
           "updating_order": "Actualizando el orden de las vistas previas..."
         }
       },
+      "branding": {
+        "title": "Marca",
+        "subtitle": "Gestiona la identidad visual y presencia social de tu organización",
+        "tabs": {
+          "images": "Imágenes y vistas previas",
+          "social": "Enlaces sociales"
+        }
+      },
       "socials": {
         "title": "Enlaces sociales",
         "subtitle": "Gestiona la presencia de tu organización en redes sociales",
@@ -809,6 +854,21 @@
         "toasts": {
           "save_success": "Script guardado con éxito",
           "delete_success": "Script eliminado con éxito"
+        }
+      },
+      "ai": {
+        "title": "Funciones de IA",
+        "subtitle": "Configura las capacidades de IA de tu organización",
+        "enable_ai": "Activar funciones de IA",
+        "enable_ai_description": "Permite funciones impulsadas por IA en el contenido y las experiencias de aprendizaje de tu organización",
+        "admin_only": "Solo los administradores pueden modificar la configuración de IA.",
+        "features_enabled": "Funciones de IA disponibles",
+        "feature_editor": "Asistencia de IA para el editor de contenido",
+        "feature_activity": "Interacciones de IA en actividades de aprendizaje",
+        "feature_canvas": "Herramientas de IA para canvas y diseño",
+        "toasts": {
+          "save_success": "Configuración de IA actualizada con éxito",
+          "save_error": "Error al actualizar la configuración de IA"
         }
       },
       "audit_logs": {

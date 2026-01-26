@@ -3,6 +3,8 @@ import logging
 from fastapi import FastAPI, APIRouter, Depends
 from sqlmodel import Session
 from src.core.events.database import engine
+from src.security.auth import get_current_user
+from src.security.api_token_utils import require_non_api_token_user
 from ee.middleware.audit import EEAuditLogMiddleware
 from ee.services.audit import flush_audit_logs_to_db
 from ee.routers import cloud_internal
@@ -12,6 +14,11 @@ from ee.routers import audit_logs
 from ee.routers import scorm
 
 logger = logging.getLogger(__name__)
+
+# Helper dependency to reject API token access
+async def get_non_api_token_user(user = Depends(get_current_user)):
+    """Dependency that rejects API token access."""
+    return await require_non_api_token_user(user)
 
 def register_middlewares(app: FastAPI):
     """Register Enterprise Edition middlewares."""
@@ -39,21 +46,24 @@ def register_routers(v1_router: APIRouter):
     v1_router.include_router(
         info.router,
         prefix="/ee",
-        tags=["ee"]
+        tags=["ee"],
+        dependencies=[Depends(get_non_api_token_user)]
     )
 
     # Audit Logs
     v1_router.include_router(
         audit_logs.router,
         prefix="/ee/audit_logs",
-        tags=["ee", "audit_logs"]
+        tags=["ee", "audit_logs"],
+        dependencies=[Depends(get_non_api_token_user)]
     )
 
     # SCORM
     v1_router.include_router(
         scorm.router,
         prefix="/scorm",
-        tags=["scorm"]
+        tags=["scorm"],
+        dependencies=[Depends(get_non_api_token_user)]
     )
 
     logger.info("EE Routers registered")

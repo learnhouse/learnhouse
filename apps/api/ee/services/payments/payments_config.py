@@ -7,7 +7,7 @@ from ee.db.payments.payments import (
     PaymentsConfigUpdate,
     PaymentsConfigRead,
 )
-from src.db.users import PublicUser, AnonymousUser, InternalUser
+from src.db.users import PublicUser, AnonymousUser, InternalUser, APITokenUser
 from src.db.organizations import Organization
 from src.services.orgs.orgs import rbac_check
 
@@ -16,7 +16,7 @@ async def init_payments_config(
     request: Request,
     org_id: int,
     provider: Literal["stripe"],
-    current_user: PublicUser | AnonymousUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: Session,
 ) -> PaymentsConfig:
     # Validate organization exists
@@ -61,7 +61,7 @@ async def init_payments_config(
 async def get_payments_config(
     request: Request,
     org_id: int,
-    current_user: PublicUser | AnonymousUser | InternalUser,
+    current_user: PublicUser | AnonymousUser | InternalUser | APITokenUser,
     db_session: Session,
 ) -> list[PaymentsConfigRead]:
     # Check if organization exists
@@ -84,7 +84,7 @@ async def update_payments_config(
     request: Request,
     org_id: int,
     payments_config: PaymentsConfigUpdate,
-    current_user: PublicUser | AnonymousUser | InternalUser,
+    current_user: PublicUser | AnonymousUser | InternalUser | APITokenUser,
     db_session: Session,
 ) -> PaymentsConfig:
     # Check if organization exists
@@ -116,7 +116,7 @@ async def update_payments_config(
 async def delete_payments_config(
     request: Request,
     org_id: int,
-    current_user: PublicUser | AnonymousUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: Session,
 ) -> None:
     # Check if organization exists

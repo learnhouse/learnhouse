@@ -11,7 +11,7 @@ from ee.db.payments.payments_products import (
     PaymentsProduct,
 )
 from ee.db.payments.payments_users import PaymentStatusEnum
-from src.db.users import AnonymousUser, InternalUser, PublicUser
+from src.db.users import AnonymousUser, InternalUser, PublicUser, APITokenUser
 from ee.services.payments.payments_config import (
     get_payments_config,
     update_payments_config,
@@ -27,7 +27,7 @@ from ee.services.payments.payments_users import (
 async def get_stripe_connected_account_id(
     request: Request,
     org_id: int,
-    current_user: PublicUser | AnonymousUser | InternalUser,
+    current_user: PublicUser | AnonymousUser | InternalUser | APITokenUser,
     db_session: Session,
 ):
     # Get payments config
@@ -61,7 +61,7 @@ async def create_stripe_product(
     request: Request,
     org_id: int,
     product_data: PaymentsProduct,
-    current_user: PublicUser | AnonymousUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: Session,
 ):
     creds = await get_stripe_internal_credentials()
@@ -108,7 +108,7 @@ async def archive_stripe_product(
     request: Request,
     org_id: int,
     product_id: str,
-    current_user: PublicUser | AnonymousUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: Session,
 ):
     creds = await get_stripe_internal_credentials()
@@ -135,7 +135,7 @@ async def update_stripe_product(
     org_id: int,
     product_id: str,
     product_data: PaymentsProduct,
-    current_user: PublicUser | AnonymousUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: Session,
 ):
     creds = await get_stripe_internal_credentials()
@@ -202,7 +202,7 @@ async def create_checkout_session(
     org_id: int,
     product_id: int,
     redirect_uri: str,
-    current_user: PublicUser | AnonymousUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: Session,
 ):
     # Get Stripe credentials
@@ -324,7 +324,7 @@ async def generate_stripe_connect_link(
     request: Request,
     org_id: int,
     redirect_uri: str,
-    current_user: PublicUser | AnonymousUser | InternalUser,
+    current_user: PublicUser | AnonymousUser | InternalUser | APITokenUser,
     db_session: Session,
 ):
     """
@@ -352,7 +352,7 @@ async def create_stripe_account(
     request: Request,
     org_id: int,
     type: Literal["standard"], # Only standard is supported for now, we'll see if we need express later
-    current_user: PublicUser | AnonymousUser | InternalUser,
+    current_user: PublicUser | AnonymousUser | InternalUser | APITokenUser,
     db_session: Session,
 ):
     # Get credentials
@@ -399,7 +399,7 @@ async def update_stripe_account_id(
     request: Request,
     org_id: int,
     stripe_account_id: str,
-    current_user: PublicUser | AnonymousUser | InternalUser,
+    current_user: PublicUser | AnonymousUser | InternalUser | APITokenUser,
     db_session: Session,
 ):
     """
@@ -434,7 +434,7 @@ async def handle_stripe_oauth_callback(
     request: Request,
     org_id: int,
     code: str,
-    current_user: PublicUser | AnonymousUser | InternalUser,
+    current_user: PublicUser | AnonymousUser | InternalUser | APITokenUser,
     db_session: Session,
 ):
     """

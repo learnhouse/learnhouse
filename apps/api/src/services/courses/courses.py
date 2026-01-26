@@ -10,7 +10,7 @@ from src.security.features_utils.usage import (
     increase_feature_usage,
 )
 from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum, ResourceAuthorshipStatusEnum
-from src.db.users import PublicUser, AnonymousUser, User, UserRead
+from src.db.users import PublicUser, AnonymousUser, User, UserRead, APITokenUser
 from src.db.courses.courses import (
     Course,
     CourseCreate,
@@ -394,17 +394,18 @@ async def create_course(
     request: Request,
     org_id: int,
     course_object: CourseCreate,
-    current_user: PublicUser | AnonymousUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: Session,
     thumbnail_file: UploadFile | None = None,
     thumbnail_type: ThumbnailType = ThumbnailType.IMAGE,
 ):
     """
     Create a new course
-    
+
     SECURITY NOTES:
     - Requires proper permissions to create courses in the organization
     - User becomes the CREATOR of the course automatically
+    - For API tokens, the user who created the token becomes the CREATOR
     - Course creation is subject to organization limits and permissions
     """
     course = Course.model_validate(course_object)
@@ -451,9 +452,15 @@ async def create_course(
     db_session.refresh(course)
 
     # SECURITY: Make the user the creator of the course
+    # For API tokens, use the user who created the token as the author
+    if isinstance(current_user, APITokenUser):
+        author_user_id = current_user.created_by_user_id
+    else:
+        author_user_id = current_user.id
+
     resource_author = ResourceAuthor(
         resource_uuid=course.course_uuid,
-        user_id=current_user.id,
+        user_id=author_user_id,
         authorship=ResourceAuthorshipEnum.CREATOR,
         authorship_status=ResourceAuthorshipStatusEnum.ACTIVE,
         creation_date=str(datetime.now()),
