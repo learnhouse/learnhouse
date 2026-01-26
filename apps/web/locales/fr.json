@@ -720,6 +720,8 @@
           "landing": "Page d'accueil",
           "branding": "Image de marque",
           "ai": "IA",
+          "api": "Accès API",
+          "features": "Fonctionnalités",
           "other": "Autre"
         },
         "pages": {
@@ -742,6 +744,14 @@
           "ai": {
             "title": "Fonctionnalités IA",
             "subtitle": "Configurez les capacités IA de votre organisation"
+          },
+          "api": {
+            "title": "Accès API",
+            "subtitle": "Gérez les jetons API et l'accès programmatique"
+          },
+          "features": {
+            "title": "Fonctionnalités",
+            "subtitle": "Activez ou désactivez les fonctionnalités de votre organisation"
           }
         },
         "name": "Nom de l'organisation",
@@ -869,6 +879,33 @@
         "toasts": {
           "save_success": "Paramètres IA mis à jour avec succès",
           "save_error": "Échec de la mise à jour des paramètres IA"
+        }
+      },
+      "features": {
+        "title": "Paramètres des fonctionnalités",
+        "subtitle": "Activez ou désactivez les fonctionnalités de votre organisation",
+        "admin_only": "Seuls les administrateurs de l'organisation peuvent modifier les paramètres des fonctionnalités.",
+        "upgrade_notice": "Passez au plan {{plan}} pour activer cette fonctionnalité",
+        "toggles": {
+          "communities": {
+            "title": "Communautés",
+            "description": "Activer les communautés de discussion pour les membres de votre organisation"
+          },
+          "payments": {
+            "title": "Paiements",
+            "description": "Activer le traitement des paiements pour les cours et les abonnements"
+          },
+          "collections": {
+            "title": "Collections",
+            "description": "Permettre l'organisation des cours en collections"
+          }
+        },
+        "toasts": {
+          "enabling": "Activation de {{feature}}...",
+          "disabling": "Désactivation de {{feature}}...",
+          "enabled": "{{feature}} activé",
+          "disabled": "{{feature}} désactivé",
+          "error": "Échec de la mise à jour de la configuration de {{feature}}"
         }
       },
       "audit_logs": {
@@ -1929,6 +1966,116 @@
           "create_error": "Échec de la création de la certification",
           "remove_success": "Certification supprimée avec succès",
           "remove_error": "Échec de la suppression de la certification"
+        }
+      },
+      "communities": {
+        "title": "Communautés",
+        "new_community": "Nouvelle communauté",
+        "no_communities": "Pas encore de communautés",
+        "no_communities_description": "Créez votre première communauté pour démarrer les discussions",
+        "card": {
+          "open_settings": "Ouvrir les paramètres",
+          "view_community": "Voir la communauté",
+          "quick_edit": "Modification rapide"
+        },
+        "settings": {
+          "tabs": {
+            "general": "Général",
+            "thumbnail": "Miniature",
+            "moderation": "Modération"
+          }
+        },
+        "general": {
+          "title": "Paramètres de la communauté",
+          "subtitle": "Mettez à jour les informations de base de votre communauté",
+          "form": {
+            "name_label": "Nom de la communauté",
+            "name_required": "Le nom de la communauté est requis",
+            "name_min_length": "Le nom doit contenir au moins 3 caractères",
+            "name_max_length": "Le nom doit contenir moins de 100 caractères",
+            "name_placeholder": "Entrez le nom de la communauté",
+            "description_label": "Description",
+            "description_max_length": "La description doit contenir moins de 500 caractères",
+            "description_placeholder": "Décrivez le sujet de cette communauté",
+            "public_label": "Communauté publique",
+            "public_description": "Rendre cette communauté visible par tous",
+            "characters_left": "{{count}} caractères restants"
+          },
+          "toasts": {
+            "updating": "Mise à jour de la communauté...",
+            "update_success": "Communauté mise à jour avec succès",
+            "update_error": "Échec de la mise à jour de la communauté"
+          }
+        },
+        "thumbnail": {
+          "title": "Miniature de la communauté",
+          "subtitle": "Téléchargez une image de couverture pour votre communauté",
+          "no_thumbnail": "Aucune miniature définie",
+          "upload_image": "Télécharger une image",
+          "browse_unsplash": "Parcourir Unsplash",
+          "uploading": "Téléchargement...",
+          "supported_formats": "Formats pris en charge : JPG, JPEG, PNG. Taille max : 8 Mo. Ratio recommandé : 16:9",
+          "toasts": {
+            "update_success": "Miniature mise à jour avec succès",
+            "update_error": "Échec de la mise à jour de la miniature",
+            "invalid_type": "Type de fichier invalide. Veuillez télécharger uniquement des images PNG ou JPG/JPEG",
+            "file_too_large": "La taille du fichier dépasse la limite de 8 Mo"
+          }
+        },
+        "moderation": {
+          "title": "Modération du contenu",
+          "subtitle": "Configurez les mots bloqués et les filtres de contenu",
+          "info_title": "Mots bloqués",
+          "info_description": "Les discussions et réponses contenant ces mots seront bloquées. Les utilisateurs verront un message d'erreur et leur contenu ne sera pas publié.",
+          "add_word_label": "Ajouter un mot bloqué",
+          "add_word_placeholder": "Entrez un mot ou une expression...",
+          "add_button": "Ajouter",
+          "batch_add_label": "Ajouter des mots en lot",
+          "batch_add_description": "Ajoutez plusieurs mots à la fois, séparés par des virgules",
+          "batch_add_placeholder": "mot1, mot2, mot3...",
+          "add_all_button": "Tout ajouter",
+          "blocked_words_label": "Mots bloqués",
+          "no_blocked_words": "Pas encore de mots bloqués",
+          "no_blocked_words_description": "Ajoutez des mots pour activer la modération du contenu",
+          "word_exists_error": "Ce mot est déjà dans la liste",
+          "all_words_exist_error": "Tous les mots sont déjà dans la liste ou l'entrée est vide",
+          "toasts": {
+            "saving": "Enregistrement des paramètres de modération...",
+            "save_success": "Paramètres de modération enregistrés",
+            "save_error": "Échec de l'enregistrement des paramètres de modération"
+          }
+        },
+        "modals": {
+          "create": {
+            "title": "Créer une communauté",
+            "description": "Créez une nouvelle communauté pour les discussions",
+            "form": {
+              "name_label": "Nom de la communauté",
+              "name_placeholder": "Entrez le nom de la communauté",
+              "description_label": "Description",
+              "description_placeholder": "Décrivez le sujet de cette communauté",
+              "public_label": "Rendre cette communauté publique (visible par tous)"
+            },
+            "cancel": "Annuler",
+            "submit": "Créer la communauté"
+          },
+          "edit": {
+            "title": "Modifier la communauté",
+            "description": "Mettre à jour les paramètres de la communauté"
+          },
+          "delete": {
+            "title": "Supprimer {{name}} ?",
+            "message": "Êtes-vous sûr de vouloir supprimer cette communauté ? Toutes les discussions seront définitivement supprimées.",
+            "button": "Supprimer la communauté"
+          }
+        },
+        "toasts": {
+          "creating": "Création de la communauté...",
+          "create_success": "Communauté créée avec succès",
+          "create_error": "Échec de la création de la communauté",
+          "deleting": "Suppression de la communauté...",
+          "delete_success": "Communauté supprimée avec succès",
+          "delete_error": "Échec de la suppression de la communauté"
         }
       },
       "structure": {

@@ -27,7 +27,8 @@ import ActivityChapterDropdown from '@components/Pages/Activity/ActivityChapterD
 import FixedActivitySecondaryBar from '@components/Pages/Activity/FixedActivitySecondaryBar'
 import CourseEndView from '@components/Pages/Activity/CourseEndView'
 import { motion, AnimatePresence } from 'framer-motion'
-import ActivityBreadcrumbs from '@components/Pages/Activity/ActivityBreadcrumbs'
+import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
+import { BookCopy } from 'lucide-react'
 import MiniInfoTooltip from '@components/Objects/MiniInfoTooltip'
 import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
 import ActivityIndicators from '@components/Pages/Courses/ActivityIndicators'
@@ -537,13 +538,14 @@ function ActivityClient(props: ActivityClientProps) {
                   />
                 ) : (
                   <div className="space-y-4 pt-0">
-                    <div className="pt-2">
-                      <ActivityBreadcrumbs 
-                        course={course}
-                        activity={activity}
-                        orgslug={orgslug}
-                      />
-                      <div className="space-y-4 pb-4 activity-info-section">
+                    <div className="pt-2 pb-6">
+                      <Breadcrumbs items={[
+                        { label: t('courses.courses'), href: getUriWithOrg(orgslug, '/courses'), icon: <BookCopy size={14} /> },
+                        { label: course.name, href: getUriWithOrg(orgslug, `/course/${courseuuid}`) },
+                        { label: activity.name }
+                      ]} />
+                    </div>
+                    <div className="space-y-4 activity-info-section">
                         <div className="flex justify-between items-center">
                           <div className="flex space-x-6">
                             <div className="flex">
@@ -770,7 +772,6 @@ function ActivityClient(props: ActivityClientProps) {
                       
                       <div style={{ height: '100px' }}></div>
                     </div>
-                  </div>
                 )}
               </GeneralWrapperStyled>
             )}

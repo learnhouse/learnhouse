@@ -720,6 +720,8 @@
           "landing": "Trang đích",
           "branding": "Thương hiệu",
           "ai": "AI",
+          "api": "Truy cập API",
+          "features": "Tính năng",
           "other": "Khác"
         },
         "pages": {
@@ -742,6 +744,14 @@
           "ai": {
             "title": "Tính năng AI",
             "subtitle": "Cấu hình khả năng AI cho tổ chức của bạn"
+          },
+          "api": {
+            "title": "Truy cập API",
+            "subtitle": "Quản lý token API và truy cập lập trình"
+          },
+          "features": {
+            "title": "Tính năng",
+            "subtitle": "Bật hoặc tắt tính năng cho tổ chức của bạn"
           }
         },
         "name": "Tên tổ chức",
@@ -869,6 +879,33 @@
         "toasts": {
           "save_success": "Cập nhật cài đặt AI thành công",
           "save_error": "Cập nhật cài đặt AI thất bại"
+        }
+      },
+      "features": {
+        "title": "Cài đặt tính năng",
+        "subtitle": "Bật hoặc tắt tính năng cho tổ chức của bạn",
+        "admin_only": "Chỉ quản trị viên tổ chức mới có thể sửa đổi cài đặt tính năng.",
+        "upgrade_notice": "Nâng cấp lên gói {{plan}} để bật tính năng này",
+        "toggles": {
+          "communities": {
+            "title": "Cộng đồng",
+            "description": "Bật cộng đồng thảo luận cho thành viên tổ chức"
+          },
+          "payments": {
+            "title": "Thanh toán",
+            "description": "Bật xử lý thanh toán cho khóa học và đăng ký"
+          },
+          "collections": {
+            "title": "Bộ sưu tập",
+            "description": "Cho phép sắp xếp khóa học thành bộ sưu tập"
+          }
+        },
+        "toasts": {
+          "enabling": "Đang bật {{feature}}...",
+          "disabling": "Đang tắt {{feature}}...",
+          "enabled": "Đã bật {{feature}}",
+          "disabled": "Đã tắt {{feature}}",
+          "error": "Cập nhật cấu hình {{feature}} thất bại"
         }
       },
       "audit_logs": {
@@ -1929,6 +1966,116 @@
           "create_error": "Kích hoạt chứng nhận thất bại",
           "remove_success": "Đã xóa chứng nhận thành công",
           "remove_error": "Xóa chứng nhận thất bại"
+        }
+      },
+      "communities": {
+        "title": "Cộng đồng",
+        "new_community": "Cộng đồng mới",
+        "no_communities": "Chưa có cộng đồng nào",
+        "no_communities_description": "Tạo cộng đồng đầu tiên để bắt đầu thảo luận",
+        "card": {
+          "open_settings": "Mở cài đặt",
+          "view_community": "Xem cộng đồng",
+          "quick_edit": "Chỉnh sửa nhanh"
+        },
+        "settings": {
+          "tabs": {
+            "general": "Chung",
+            "thumbnail": "Hình thu nhỏ",
+            "moderation": "Kiểm duyệt"
+          }
+        },
+        "general": {
+          "title": "Cài đặt cộng đồng",
+          "subtitle": "Cập nhật thông tin cơ bản của cộng đồng",
+          "form": {
+            "name_label": "Tên cộng đồng",
+            "name_required": "Tên cộng đồng là bắt buộc",
+            "name_min_length": "Tên phải có ít nhất 3 ký tự",
+            "name_max_length": "Tên phải ít hơn 100 ký tự",
+            "name_placeholder": "Nhập tên cộng đồng",
+            "description_label": "Mô tả",
+            "description_max_length": "Mô tả phải ít hơn 500 ký tự",
+            "description_placeholder": "Mô tả cộng đồng này về điều gì",
+            "public_label": "Cộng đồng công khai",
+            "public_description": "Hiển thị cộng đồng này cho tất cả mọi người",
+            "characters_left": "Còn {{count}} ký tự"
+          },
+          "toasts": {
+            "updating": "Đang cập nhật cộng đồng...",
+            "update_success": "Cập nhật cộng đồng thành công",
+            "update_error": "Cập nhật cộng đồng thất bại"
+          }
+        },
+        "thumbnail": {
+          "title": "Hình thu nhỏ cộng đồng",
+          "subtitle": "Tải lên ảnh bìa cho cộng đồng của bạn",
+          "no_thumbnail": "Chưa đặt hình thu nhỏ",
+          "upload_image": "Tải ảnh lên",
+          "browse_unsplash": "Duyệt Unsplash",
+          "uploading": "Đang tải lên...",
+          "supported_formats": "Định dạng hỗ trợ: JPG, JPEG, PNG. Kích thước tối đa: 8MB. Tỷ lệ khuyến nghị: 16:9",
+          "toasts": {
+            "update_success": "Cập nhật hình thu nhỏ thành công",
+            "update_error": "Cập nhật hình thu nhỏ thất bại",
+            "invalid_type": "Loại tệp không hợp lệ. Vui lòng chỉ tải lên ảnh PNG hoặc JPG/JPEG",
+            "file_too_large": "Kích thước tệp vượt quá giới hạn 8MB"
+          }
+        },
+        "moderation": {
+          "title": "Kiểm duyệt nội dung",
+          "subtitle": "Cấu hình từ bị chặn và bộ lọc nội dung",
+          "info_title": "Từ bị chặn",
+          "info_description": "Các cuộc thảo luận và trả lời chứa những từ này sẽ bị chặn. Người dùng sẽ thấy thông báo lỗi và nội dung của họ sẽ không được đăng.",
+          "add_word_label": "Thêm từ bị chặn",
+          "add_word_placeholder": "Nhập từ hoặc cụm từ...",
+          "add_button": "Thêm",
+          "batch_add_label": "Thêm hàng loạt",
+          "batch_add_description": "Thêm nhiều từ cùng lúc, phân cách bằng dấu phẩy",
+          "batch_add_placeholder": "từ1, từ2, từ3...",
+          "add_all_button": "Thêm tất cả",
+          "blocked_words_label": "Từ bị chặn",
+          "no_blocked_words": "Chưa có từ bị chặn",
+          "no_blocked_words_description": "Thêm từ để bật kiểm duyệt nội dung",
+          "word_exists_error": "Từ này đã có trong danh sách",
+          "all_words_exist_error": "Tất cả từ đã có trong danh sách hoặc đầu vào trống",
+          "toasts": {
+            "saving": "Đang lưu cài đặt kiểm duyệt...",
+            "save_success": "Đã lưu cài đặt kiểm duyệt",
+            "save_error": "Lưu cài đặt kiểm duyệt thất bại"
+          }
+        },
+        "modals": {
+          "create": {
+            "title": "Tạo cộng đồng",
+            "description": "Tạo cộng đồng mới cho các cuộc thảo luận",
+            "form": {
+              "name_label": "Tên cộng đồng",
+              "name_placeholder": "Nhập tên cộng đồng",
+              "description_label": "Mô tả",
+              "description_placeholder": "Mô tả cộng đồng này về điều gì",
+              "public_label": "Đặt cộng đồng này ở chế độ công khai (mọi người đều thấy)"
+            },
+            "cancel": "Hủy",
+            "submit": "Tạo cộng đồng"
+          },
+          "edit": {
+            "title": "Chỉnh sửa cộng đồng",
+            "description": "Cập nhật cài đặt cộng đồng"
+          },
+          "delete": {
+            "title": "Xóa {{name}}?",
+            "message": "Bạn có chắc muốn xóa cộng đồng này? Tất cả thảo luận sẽ bị xóa vĩnh viễn.",
+            "button": "Xóa cộng đồng"
+          }
+        },
+        "toasts": {
+          "creating": "Đang tạo cộng đồng...",
+          "create_success": "Tạo cộng đồng thành công",
+          "create_error": "Tạo cộng đồng thất bại",
+          "deleting": "Đang xóa cộng đồng...",
+          "delete_success": "Xóa cộng đồng thành công",
+          "delete_error": "Xóa cộng đồng thất bại"
         }
       },
       "structure": {

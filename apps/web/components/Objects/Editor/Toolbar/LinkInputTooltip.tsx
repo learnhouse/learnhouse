@@ -57,7 +57,7 @@ const TooltipContainer = styled.div`
   border: 1px solid rgba(217, 217, 217, 0.5);
   border-radius: 6px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
+  z-index: var(--z-editor-bubble);
   padding: 8px;
   margin-top: 4px;
 `

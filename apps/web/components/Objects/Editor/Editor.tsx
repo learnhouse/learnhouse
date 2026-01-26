@@ -512,7 +512,7 @@ export const EditorContentWrapper = styled.div`
   margin-top: 97px;
   background-color: white;
   border-radius: 10px;
-  z-index: 300;
+  z-index: var(--z-content);
   box-shadow: 0 4px 6px -1px rgba(209, 213, 219, 0.25), 0 2px 4px -2px rgba(209, 213, 219, 0.25);
   outline: 1px solid rgba(229, 231, 235, 0.4);
 

@@ -118,7 +118,22 @@ class TestRBAC:
             ),
             dashboard=DashboardPermission(
                 action_access=True,
-            )
+            ),
+            communities=Permission(
+                action_create=False,
+                action_read=True,
+                action_update=False,
+                action_delete=False,
+            ),
+            discussions=PermissionsWithOwn(
+                action_create=False,
+                action_read=True,
+                action_read_own=False,
+                action_update=False,
+                action_update_own=False,
+                action_delete=False,
+                action_delete_own=False,
+            ),
         )
         role.role_type = RoleTypeEnum.TYPE_GLOBAL
         role.role_uuid = "role_test"

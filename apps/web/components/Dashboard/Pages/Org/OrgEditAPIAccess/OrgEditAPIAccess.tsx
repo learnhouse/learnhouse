@@ -158,7 +158,7 @@ const OrgEditAPIAccess: React.FC = () => {
         setShowTokenValue(true)
         mutate(tokensUrl)
         toast.success('API token regenerated successfully', { id: loadingToast })
-        setIsRegenerateDialogOpen(false)
+        // Don't close the dialog here - keep it open to show the new token
       } else {
         toast.error(response.data?.detail || 'Failed to regenerate token', { id: loadingToast })
       }
