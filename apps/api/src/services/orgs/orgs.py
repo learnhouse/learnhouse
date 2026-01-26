@@ -26,7 +26,7 @@ from src.security.rbac.rbac import (
     authorization_verify_based_on_org_admin_status,
     authorization_verify_if_user_is_anon,
 )
-from src.db.users import AnonymousUser, InternalUser, PublicUser
+from src.db.users import AnonymousUser, APITokenUser, InternalUser, PublicUser
 from src.db.user_organizations import UserOrganization
 from src.db.organizations import (
     Organization,
@@ -645,6 +645,57 @@ async def update_org_signup_mechanism(
     return {"detail": "Signup mechanism updated"}
 
 
+async def update_org_ai_config(
+    request: Request,
+    ai_enabled: bool,
+    org_id: int,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+):
+    statement = select(Organization).where(Organization.id == org_id)
+    result = db_session.exec(statement)
+
+    org = result.first()
+
+    if not org:
+        raise HTTPException(
+            status_code=404,
+            detail="Organization not found",
+        )
+
+    # RBAC check
+    await rbac_check(request, org.org_uuid, current_user, "update", db_session)
+
+    # Get org config
+    statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
+    result = db_session.exec(statement)
+
+    org_config = result.first()
+
+    if org_config is None:
+        logging.error(f"Organization {org_id} has no config")
+        raise HTTPException(
+            status_code=404,
+            detail="Organization config not found",
+        )
+
+    updated_config = org_config.config
+
+    # Update config
+    updated_config = OrganizationConfigBase(**updated_config)
+    updated_config.features.ai.enabled = ai_enabled
+
+    # Update the database
+    org_config.config = json.loads(updated_config.model_dump_json())
+    org_config.update_date = str(datetime.now())
+
+    db_session.add(org_config)
+    db_session.commit()
+    db_session.refresh(org_config)
+
+    return {"detail": "AI configuration updated"}
+
+
 async def get_org_join_mechanism(
     request: Request,
     org_id: int,
@@ -786,18 +837,54 @@ async def upload_org_landing_content_service(
 async def rbac_check(
     request: Request,
     org_uuid: str,
-    current_user: PublicUser | AnonymousUser | InternalUser,
+    current_user: PublicUser | AnonymousUser | InternalUser | APITokenUser,
     action: Literal["create", "read", "update", "delete"],
     db_session: Session,
 ):
     # Organizations are readable by anyone
     if action == "read":
         return True
-    
+
     # Internal users can do anything
     if isinstance(current_user, InternalUser):
         return True
 
+    # API Token path: verify token has permissions for this action on payments
+    if isinstance(current_user, APITokenUser):
+        # Verify token belongs to this organization
+        org = db_session.exec(
+            select(Organization).where(Organization.org_uuid == org_uuid)
+        ).first()
+
+        if not org or org.id != current_user.org_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="API token cannot access resources outside its organization",
+            )
+
+        # Check token's rights for payments
+        if not current_user.rights:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="API token has no permissions configured",
+            )
+
+        rights = current_user.rights
+        if isinstance(rights, dict):
+            payments_rights = rights.get("payments", {})
+            has_permission = payments_rights.get(f"action_{action}", False)
+        else:
+            payments_rights = getattr(rights, "payments", None)
+            has_permission = getattr(payments_rights, f"action_{action}", False) if payments_rights else False
+
+        if not has_permission:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"API token does not have '{action}' permission for payments",
+            )
+        return True
+
+    # Regular user path
     else:
         isUserAnon = await authorization_verify_if_user_is_anon(current_user.id)
 

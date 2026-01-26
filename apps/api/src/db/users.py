@@ -71,6 +71,20 @@ class InternalUser(SQLModel):
     username: str = "internal"
 
 
+class APITokenUser(SQLModel):
+    """
+    Represents an authenticated API token request.
+    Used to identify requests made with API tokens instead of user sessions.
+    """
+    id: int = 0  # Token ID
+    user_uuid: str = "apitoken_user"  # Will be set to token_uuid
+    username: str = "api_token"
+    org_id: int  # CRITICAL: Organization scope - token can only access this org
+    rights: Optional[dict] = None  # Token's rights/permissions
+    token_name: str = ""
+    created_by_user_id: int = 0  # User who created the token
+
+
 class User(UserBase, table=True):
     __table_args__ = {"extend_existing": True}
     id: Optional[int] = Field(default=None, primary_key=True)

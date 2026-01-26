@@ -34,8 +34,45 @@
     "loading": "Wird geladen...",
     "search": "Suchen",
     "all": "Alle",
+    "all_courses": "Alle Kurse",
+    "all_assignments": "Alle Aufgaben",
+    "recent": "Kürzlich",
+    "expand": "Erweitern",
     "help": "Hilfe",
-    "plans": "Pläne",
+    "plans": {
+      "label": "Pläne",
+      "upgrade_button": "Auf {{plan}} upgraden",
+      "feature_restricted": {
+        "payments": {
+          "title": "Standard-Funktion",
+          "description": "Zahlungen sind eine Premium-Funktion, die nur für Organisationen mit unserem Standard-Plan oder höher verfügbar ist. Führen Sie ein Upgrade durch, um Zahlungsverarbeitung und Monetarisierungsfunktionen freizuschalten."
+        },
+        "usergroups": {
+          "title": "Standard-Funktion",
+          "description": "Benutzergruppen sind eine Premium-Funktion, die nur für Organisationen mit unserem Standard-Plan oder höher verfügbar ist. Führen Sie ein Upgrade durch, um Benutzer in Gruppen für eine bessere Zugriffsverwaltung zu organisieren."
+        },
+        "api_access": {
+          "title": "Pro-Funktion",
+          "description": "API-Zugriff ist eine Premium-Funktion, die nur für Organisationen mit unserem Pro-Plan oder höher verfügbar ist. Führen Sie ein Upgrade durch, um programmatischen Zugriff auf die Daten Ihrer Organisation freizuschalten."
+        },
+        "roles": {
+          "title": "Pro-Funktion",
+          "description": "Das Erstellen benutzerdefinierter Rollen ist eine Premium-Funktion, die nur für Organisationen mit unserem Pro-Plan oder höher verfügbar ist. Führen Sie ein Upgrade durch, um Rollen mit spezifischen Berechtigungen zu erstellen."
+        },
+        "ai": {
+          "title": "Standard-Funktion",
+          "description": "KI-Funktionen sind nur für Organisationen mit unserem Standard-Plan oder höher verfügbar. Führen Sie ein Upgrade durch, um KI-gestützte Inhaltserstellung und Lernunterstützung freizuschalten."
+        },
+        "audit_logs": {
+          "title": "Enterprise-Funktion",
+          "description": "Audit-Protokolle sind eine Premium-Funktion, die nur für Organisationen mit unserem Enterprise-Plan verfügbar ist. Führen Sie ein Upgrade durch, um vollständige Einblicke in die Aktivitäten Ihrer Organisation zu erhalten."
+        },
+        "certifications": {
+          "title": "Pro-Funktion",
+          "description": "Zertifizierungen sind eine Premium-Funktion, die nur für Organisationen mit unserem Pro-Plan oder höher verfügbar ist. Führen Sie ein Upgrade durch, um Zertifikate an Lernende auszustellen, die Ihre Kurse abschließen."
+        }
+      }
+    },
     "enterprise": "Unternehmen",
     "version": "Version",
     "users": "Benutzer",
@@ -681,8 +718,8 @@
         "tabs": {
           "general": "Allgemein",
           "landing": "Landingpage",
-          "previews": "Bilder & Vorschauen",
-          "socials": "Soziale Netzwerke",
+          "branding": "Branding",
+          "ai": "KI",
           "other": "Sonstiges"
         },
         "pages": {
@@ -690,13 +727,9 @@
             "title": "Allgemein",
             "subtitle": "Verwalten Sie Ihre Organisations-Einstellungen"
           },
-          "previews": {
-            "title": "Vorschauen",
-            "subtitle": "Verwalten Sie Ihre Organisations-Vorschauen"
-          },
-          "socials": {
-            "title": "Soziale Netzwerke",
-            "subtitle": "Verwalten Sie die Social-Media-Links Ihrer Organisation"
+          "branding": {
+            "title": "Branding",
+            "subtitle": "Verwalten Sie die visuelle Identität und soziale Präsenz Ihrer Organisation"
           },
           "landing": {
             "title": "Landingpage",
@@ -705,6 +738,10 @@
           "other": {
             "title": "Sonstiges",
             "subtitle": "Verwalten Sie zusätzliche Organisations-Einstellungen"
+          },
+          "ai": {
+            "title": "KI-Funktionen",
+            "subtitle": "Konfigurieren Sie die KI-Fähigkeiten Ihrer Organisation"
           }
         },
         "name": "Organisations-Name",
@@ -774,6 +811,14 @@
           "updating_order": "Vorschaureihenfolge wird aktualisiert..."
         }
       },
+      "branding": {
+        "title": "Branding",
+        "subtitle": "Verwalten Sie die visuelle Identität und soziale Präsenz Ihrer Organisation",
+        "tabs": {
+          "images": "Bilder & Vorschauen",
+          "social": "Soziale Links"
+        }
+      },
       "socials": {
         "title": "Soziale Links",
         "subtitle": "Verwalten Sie die Social-Media-Präsenz Ihrer Organisation",
@@ -809,6 +854,21 @@
         "toasts": {
           "save_success": "Skript erfolgreich gespeichert",
           "delete_success": "Skript erfolgreich gelöscht"
+        }
+      },
+      "ai": {
+        "title": "KI-Funktionen",
+        "subtitle": "Konfigurieren Sie die KI-Fähigkeiten Ihrer Organisation",
+        "enable_ai": "KI-Funktionen aktivieren",
+        "enable_ai_description": "Ermöglichen Sie KI-gestützte Funktionen in den Inhalten und Lernerfahrungen Ihrer Organisation",
+        "admin_only": "Nur Administratoren können KI-Einstellungen ändern.",
+        "features_enabled": "Verfügbare KI-Funktionen",
+        "feature_editor": "KI-gestützte Inhaltseditor-Unterstützung",
+        "feature_activity": "KI-Interaktionen für Lernaktivitäten",
+        "feature_canvas": "KI-Canvas- und Design-Tools",
+        "toasts": {
+          "save_success": "KI-Einstellungen erfolgreich aktualisiert",
+          "save_error": "Fehler beim Aktualisieren der KI-Einstellungen"
         }
       },
       "audit_logs": {

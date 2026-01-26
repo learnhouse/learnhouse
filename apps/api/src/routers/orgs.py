@@ -1,4 +1,4 @@
-from typing import List, Literal
+from typing import List, Literal, Union
 from fastapi import APIRouter, Depends, Request, UploadFile
 from sqlmodel import Session
 from src.services.orgs.invites import (
@@ -18,7 +18,7 @@ from src.services.orgs.users import (
     update_user_role,
 )
 from src.db.organization_config import OrganizationConfigBase
-from src.db.users import PublicUser
+from src.db.users import AnonymousUser, PublicUser
 from src.db.organizations import (
     OrganizationCreate,
     OrganizationRead,
@@ -38,6 +38,7 @@ from src.services.orgs.orgs import (
     update_org_logo,
     update_org_preview,
     update_org_signup_mechanism,
+    update_org_ai_config,
     update_org_thumbnail,
     update_org_landing,
     upload_org_landing_content_service,
@@ -168,6 +169,22 @@ async def api_get_org_signup_mechanism(
     """
     return await update_org_signup_mechanism(
         request, signup_mechanism, org_id, current_user, db_session
+    )
+
+
+@router.put("/{org_id}/config/ai")
+async def api_update_org_ai_config(
+    request: Request,
+    org_id: int,
+    ai_enabled: bool,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+):
+    """
+    Update organization AI configuration
+    """
+    return await update_org_ai_config(
+        request, ai_enabled, org_id, current_user, db_session
     )
 
 
@@ -366,12 +383,13 @@ async def api_user_orgs(
     request: Request,
     page: int,
     limit: int,
-    current_user: PublicUser = Depends(get_current_user),
+    current_user: Union[PublicUser, AnonymousUser] = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
 ) -> List[OrganizationRead]:
     """
     Get orgs by page and limit by current user
     """
+    # API tokens cannot access organization endpoints
     return await get_orgs_by_user(
         request, db_session, str(current_user.id), page, limit
     )
@@ -382,12 +400,13 @@ async def api_user_orgs_admin(
     request: Request,
     page: int,
     limit: int,
-    current_user: PublicUser = Depends(get_current_user),
+    current_user: Union[PublicUser, AnonymousUser] = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
 ) -> List[OrganizationRead]:
     """
     Get orgs by page and limit by current user
     """
+    # API tokens cannot access organization endpoints
     return await get_orgs_by_user_admin(
         request, db_session, str(current_user.id), page, limit
     )

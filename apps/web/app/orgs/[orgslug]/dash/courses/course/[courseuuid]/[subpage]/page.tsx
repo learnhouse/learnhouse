@@ -15,6 +15,10 @@ import { useRouter } from 'next/navigation'
 import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
 import { getUriWithOrg } from '@services/config/config';
 import { useTranslation } from 'react-i18next';
+import { useOrg } from '@components/Contexts/OrgContext';
+import { PlanLevel, isFeatureAvailable } from '@services/plans/plans';
+import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge';
+import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/PlanRestrictedFeature';
 
 export type CourseOverviewParams = {
   orgslug: string
@@ -26,7 +30,10 @@ function CourseOverviewPage(props: { params: Promise<CourseOverviewParams> }) {
   const { t } = useTranslation()
   const params = use(props.params);
   const router = useRouter();
-  
+  const org = useOrg() as any;
+  const currentPlan: PlanLevel = org?.config?.config?.cloud?.plan || 'free';
+  const hasCertificationsAccess = isFeatureAvailable('certifications', currentPlan);
+
   function getEntireCourseUUID(courseuuid: string) {
     // add course_ to uuid
     return `course_${courseuuid}`
@@ -70,7 +77,8 @@ function CourseOverviewPage(props: { params: Promise<CourseOverviewParams> }) {
       label: t('dashboard.courses.settings.tabs.certification'),
       icon: Award,
       href: `/dash/courses/course/${params.courseuuid}/certification`,
-      requiredPermission: 'create_certifications' as const
+      requiredPermission: 'create_certifications' as const,
+      requiresPlan: 'pro' as PlanLevel
     }
   ]
 
@@ -114,7 +122,7 @@ function CourseOverviewPage(props: { params: Promise<CourseOverviewParams> }) {
   return (
     <div className="h-screen w-full bg-[#f8f8f8] grid grid-rows-[auto_1fr]">
       <CourseProvider courseuuid={courseuuid} withUnpublishedActivities={true}>
-        <div className="pl-10 pr-10 text-sm tracking-tight bg-[#fcfbfc] z-10 nice-shadow">
+        <div className="pl-10 pr-10 text-sm tracking-tight bg-[#fcfbfc] z-elevated nice-shadow">
           <CourseOverviewTop params={params} />
           <div className="flex space-x-3 font-black text-sm">
             {tabs.map((tab) => {
@@ -159,6 +167,9 @@ function CourseOverviewPage(props: { params: Promise<CourseOverviewParams> }) {
                     <div className="flex items-center space-x-2.5 mx-2">
                       <IconComponent size={16} />
                       <div>{tab.label}</div>
+                      {(tab as any).requiresPlan && (
+                        <PlanBadge currentPlan={currentPlan} requiredPlan={(tab as any).requiresPlan} size="sm" noMargin />
+                      )}
                     </div>
                   </div>
                 </Link>
@@ -187,7 +198,18 @@ function CourseOverviewPage(props: { params: Promise<CourseOverviewParams> }) {
               <EditCourseContributors orgslug={params.orgslug} />
             ) : null}
             {params.subpage == 'certification' && hasPermission('create_certifications') ? (
-              <EditCourseCertification orgslug={params.orgslug} />
+              <div className="h-6" />
+            ) : null}
+            {params.subpage == 'certification' && hasPermission('create_certifications') ? (
+              <PlanRestrictedFeature
+                currentPlan={currentPlan}
+                requiredPlan="pro"
+                icon={Award}
+                titleKey="common.plans.feature_restricted.certifications.title"
+                descriptionKey="common.plans.feature_restricted.certifications.description"
+              >
+                <EditCourseCertification orgslug={params.orgslug} />
+              </PlanRestrictedFeature>
             ) : null}
           </div>
         </motion.div>

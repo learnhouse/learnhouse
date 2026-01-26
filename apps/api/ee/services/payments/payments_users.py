@@ -6,7 +6,7 @@ from ee.db.payments.payments_courses import PaymentsCourse
 from ee.db.payments.payments_users import PaymentsUser, PaymentStatusEnum, ProviderSpecificData
 from ee.db.payments.payments_products import PaymentsProduct
 from src.db.resource_authors import ResourceAuthor
-from src.db.users import InternalUser, PublicUser, AnonymousUser, User, UserRead
+from src.db.users import InternalUser, PublicUser, AnonymousUser, User, UserRead, APITokenUser
 from src.db.organizations import Organization
 from src.services.orgs.orgs import rbac_check
 from datetime import datetime
@@ -18,7 +18,7 @@ async def create_payment_user(
     product_id: int,
     status: PaymentStatusEnum,
     provider_data: Any,
-    current_user: PublicUser | AnonymousUser | InternalUser,
+    current_user: PublicUser | AnonymousUser | InternalUser | APITokenUser,
     db_session: Session,
 ) -> PaymentsUser:
     # Check if organization exists
@@ -82,7 +82,7 @@ async def get_payment_user(
     request: Request,
     org_id: int,
     payment_user_id: int,
-    current_user: PublicUser | AnonymousUser | InternalUser,
+    current_user: PublicUser | AnonymousUser | InternalUser | APITokenUser,
     db_session: Session,
 ) -> PaymentsUser:
     # Check if organization exists
@@ -110,7 +110,7 @@ async def update_payment_user_status(
     org_id: int,
     payment_user_id: int,
     status: PaymentStatusEnum,
-    current_user: PublicUser | AnonymousUser | InternalUser,
+    current_user: PublicUser | AnonymousUser | InternalUser | APITokenUser,
     db_session: Session,
 ) -> PaymentsUser:
     # Check if organization exists
@@ -144,7 +144,7 @@ async def update_payment_user_status(
 async def list_payment_users(
     request: Request,
     org_id: int,
-    current_user: PublicUser | AnonymousUser | InternalUser,
+    current_user: PublicUser | AnonymousUser | InternalUser | APITokenUser,
     db_session: Session,
 ) -> list[PaymentsUser]:
     # Check if organization exists
@@ -168,7 +168,7 @@ async def delete_payment_user(
     request: Request,
     org_id: int,
     payment_user_id: int,
-    current_user: PublicUser | AnonymousUser | InternalUser,
+    current_user: PublicUser | AnonymousUser | InternalUser | APITokenUser,
     db_session: Session,
 ) -> None:
     # Check if organization exists
@@ -196,7 +196,7 @@ async def delete_payment_user(
 
 async def get_owned_courses(
     request: Request,
-    current_user: PublicUser | AnonymousUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: Session,
 ) -> list[CourseRead]:
     # Anonymous users don't own any courses

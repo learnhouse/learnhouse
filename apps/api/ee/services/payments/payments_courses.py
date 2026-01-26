@@ -3,7 +3,7 @@ from sqlmodel import Session, select
 from ee.db.payments.payments_courses import PaymentsCourse
 from ee.db.payments.payments_products import PaymentsProduct
 from src.db.courses.courses import Course
-from src.db.users import PublicUser, AnonymousUser
+from src.db.users import PublicUser, AnonymousUser, APITokenUser
 from src.security.courses_security import courses_rbac_check
 
 async def link_course_to_product(
@@ -11,7 +11,7 @@ async def link_course_to_product(
     org_id: int,
     course_id: int,
     product_id: int,
-    current_user: PublicUser | AnonymousUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: Session,
 ):
     # Check if course exists and user has permission
@@ -60,7 +60,7 @@ async def unlink_course_from_product(
     request: Request,
     org_id: int,
     course_id: int,
-    current_user: PublicUser | AnonymousUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: Session,
 ):
     # Check if course exists and user has permission
@@ -95,7 +95,7 @@ async def get_courses_by_product(
     request: Request,
     org_id: int,
     product_id: int,
-    current_user: PublicUser | AnonymousUser,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
     db_session: Session,
 ):
     # Check if product exists

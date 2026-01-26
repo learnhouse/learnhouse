@@ -6,6 +6,7 @@ import { getUriWithOrg } from '@services/config/config'
 import { deleteCourseFromBackend } from '@services/courses/courses'
 import { getCourseThumbnailMediaDirectory, getUserAvatarMediaDirectory } from '@services/media/media'
 import { revalidateTags } from '@services/utils/ts/requests'
+import { mutate } from 'swr'
 import { BookMinus, FilePenLine, Settings2, MoreVertical } from 'lucide-react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import Link from 'next/link'
@@ -66,6 +67,8 @@ function CourseThumbnail({ course, orgslug, customLink }: PropsType) {
     try {
       await deleteCourseFromBackend(course.course_uuid, session.data?.tokens?.access_token)
       await revalidateTags(['courses'], orgslug)
+      // Refresh sidebar cache
+      mutate((key) => typeof key === 'string' && key.includes('/courses/org_slug/'))
       toast.success(t('courses.course_deleted_success'))
       router.refresh()
     } catch (error) {
@@ -176,7 +179,7 @@ const AdminEditOptions = ({ course, orgSlug, deleteCourse }: {
       checkMethod="roles"
       orgId={course.org_id}
     >
-      <div className="absolute top-2 right-2 z-20">
+      <div className="absolute top-2 right-2 z-interactive">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="p-1.5 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-all shadow-md">
