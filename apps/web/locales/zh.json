@@ -720,6 +720,8 @@
           "landing": "落地页",
           "branding": "品牌",
           "ai": "AI",
+          "api": "API访问",
+          "features": "功能",
           "other": "其他"
         },
         "pages": {
@@ -742,6 +744,14 @@
           "ai": {
             "title": "AI功能",
             "subtitle": "为您的组织配置AI功能"
+          },
+          "api": {
+            "title": "API访问",
+            "subtitle": "管理API令牌和程序化访问"
+          },
+          "features": {
+            "title": "功能",
+            "subtitle": "为您的组织启用或禁用功能"
           }
         },
         "name": "组织名称",
@@ -869,6 +879,33 @@
         "toasts": {
           "save_success": "AI设置更新成功",
           "save_error": "AI设置更新失败"
+        }
+      },
+      "features": {
+        "title": "功能设置",
+        "subtitle": "为您的组织启用或禁用功能",
+        "admin_only": "只有组织管理员才能修改功能设置。",
+        "upgrade_notice": "升级到{{plan}}计划以启用此功能",
+        "toggles": {
+          "communities": {
+            "title": "社区",
+            "description": "为组织成员启用讨论社区"
+          },
+          "payments": {
+            "title": "支付",
+            "description": "为课程和订阅启用支付处理"
+          },
+          "collections": {
+            "title": "合集",
+            "description": "允许将课程组织到合集中"
+          }
+        },
+        "toasts": {
+          "enabling": "正在启用{{feature}}...",
+          "disabling": "正在禁用{{feature}}...",
+          "enabled": "{{feature}}已启用",
+          "disabled": "{{feature}}已禁用",
+          "error": "更新{{feature}}配置失败"
         }
       },
       "audit_logs": {
@@ -1929,6 +1966,116 @@
           "create_error": "创建认证失败",
           "remove_success": "认证已成功移除",
           "remove_error": "移除认证失败"
+        }
+      },
+      "communities": {
+        "title": "社区",
+        "new_community": "新建社区",
+        "no_communities": "暂无社区",
+        "no_communities_description": "创建您的第一个社区开始讨论",
+        "card": {
+          "open_settings": "打开设置",
+          "view_community": "查看社区",
+          "quick_edit": "快速编辑"
+        },
+        "settings": {
+          "tabs": {
+            "general": "常规",
+            "thumbnail": "缩略图",
+            "moderation": "内容审核"
+          }
+        },
+        "general": {
+          "title": "社区设置",
+          "subtitle": "更新社区基本信息",
+          "form": {
+            "name_label": "社区名称",
+            "name_required": "社区名称为必填项",
+            "name_min_length": "名称至少需要3个字符",
+            "name_max_length": "名称不能超过100个字符",
+            "name_placeholder": "输入社区名称",
+            "description_label": "描述",
+            "description_max_length": "描述不能超过500个字符",
+            "description_placeholder": "描述这个社区是关于什么的",
+            "public_label": "公开社区",
+            "public_description": "让所有人都能看到此社区",
+            "characters_left": "剩余{{count}}个字符"
+          },
+          "toasts": {
+            "updating": "正在更新社区...",
+            "update_success": "社区更新成功",
+            "update_error": "更新社区失败"
+          }
+        },
+        "thumbnail": {
+          "title": "社区缩略图",
+          "subtitle": "上传社区封面图片",
+          "no_thumbnail": "未设置缩略图",
+          "upload_image": "上传图片",
+          "browse_unsplash": "浏览Unsplash",
+          "uploading": "上传中...",
+          "supported_formats": "支持格式: JPG, JPEG, PNG。最大: 8MB。推荐比例: 16:9",
+          "toasts": {
+            "update_success": "缩略图更新成功",
+            "update_error": "更新缩略图失败",
+            "invalid_type": "无效的文件类型。请仅上传PNG或JPG/JPEG图片",
+            "file_too_large": "文件大小超过8MB限制"
+          }
+        },
+        "moderation": {
+          "title": "内容审核",
+          "subtitle": "配置屏蔽词和内容过滤器",
+          "info_title": "屏蔽词",
+          "info_description": "包含这些词的讨论和回复将被屏蔽。用户将看到错误消息，其内容将不会发布。",
+          "add_word_label": "添加屏蔽词",
+          "add_word_placeholder": "输入词语或短语...",
+          "add_button": "添加",
+          "batch_add_label": "批量添加",
+          "batch_add_description": "一次添加多个词，用逗号分隔",
+          "batch_add_placeholder": "词1, 词2, 词3...",
+          "add_all_button": "全部添加",
+          "blocked_words_label": "屏蔽词",
+          "no_blocked_words": "暂无屏蔽词",
+          "no_blocked_words_description": "添加词语以启用内容审核",
+          "word_exists_error": "此词已在列表中",
+          "all_words_exist_error": "所有词都已在列表中或输入为空",
+          "toasts": {
+            "saving": "正在保存审核设置...",
+            "save_success": "审核设置已保存",
+            "save_error": "保存审核设置失败"
+          }
+        },
+        "modals": {
+          "create": {
+            "title": "创建社区",
+            "description": "创建新的讨论社区",
+            "form": {
+              "name_label": "社区名称",
+              "name_placeholder": "输入社区名称",
+              "description_label": "描述",
+              "description_placeholder": "描述这个社区是关于什么的",
+              "public_label": "公开此社区（所有人可见）"
+            },
+            "cancel": "取消",
+            "submit": "创建社区"
+          },
+          "edit": {
+            "title": "编辑社区",
+            "description": "更新社区设置"
+          },
+          "delete": {
+            "title": "删除{{name}}？",
+            "message": "确定要删除此社区吗？所有讨论将被永久删除。",
+            "button": "删除社区"
+          }
+        },
+        "toasts": {
+          "creating": "正在创建社区...",
+          "create_success": "社区创建成功",
+          "create_error": "创建社区失败",
+          "deleting": "正在删除社区...",
+          "delete_success": "社区删除成功",
+          "delete_error": "删除社区失败"
         }
       },
       "structure": {

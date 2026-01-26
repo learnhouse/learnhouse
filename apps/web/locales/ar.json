@@ -720,6 +720,8 @@
           "landing": "صفحة الهبوط",
           "branding": "الهوية البصرية",
           "ai": "الذكاء الاصطناعي",
+          "api": "الوصول لـ API",
+          "features": "الميزات",
           "other": "أخرى"
         },
         "pages": {
@@ -742,6 +744,14 @@
           "ai": {
             "title": "ميزات الذكاء الاصطناعي",
             "subtitle": "قم بتكوين قدرات الذكاء الاصطناعي لمنظمتك"
+          },
+          "api": {
+            "title": "الوصول لـ API",
+            "subtitle": "إدارة رموز API والوصول البرمجي"
+          },
+          "features": {
+            "title": "الميزات",
+            "subtitle": "تفعيل أو تعطيل الميزات لمنظمتك"
           }
         },
         "name": "اسم المنظمة",
@@ -869,6 +879,33 @@
         "toasts": {
           "save_success": "تم تحديث إعدادات الذكاء الاصطناعي بنجاح",
           "save_error": "فشل تحديث إعدادات الذكاء الاصطناعي"
+        }
+      },
+      "features": {
+        "title": "إعدادات الميزات",
+        "subtitle": "تفعيل أو تعطيل الميزات لمنظمتك",
+        "admin_only": "يمكن لمسؤولي المنظمة فقط تعديل إعدادات الميزات.",
+        "upgrade_notice": "قم بالترقية إلى خطة {{plan}} لتفعيل هذه الميزة",
+        "toggles": {
+          "communities": {
+            "title": "المجتمعات",
+            "description": "تفعيل مجتمعات النقاش لأعضاء منظمتك"
+          },
+          "payments": {
+            "title": "المدفوعات",
+            "description": "تفعيل معالجة المدفوعات للدورات والاشتراكات"
+          },
+          "collections": {
+            "title": "المجموعات",
+            "description": "السماح بتنظيم الدورات في مجموعات"
+          }
+        },
+        "toasts": {
+          "enabling": "جاري تفعيل {{feature}}...",
+          "disabling": "جاري تعطيل {{feature}}...",
+          "enabled": "تم تفعيل {{feature}}",
+          "disabled": "تم تعطيل {{feature}}",
+          "error": "فشل تحديث تكوين {{feature}}"
         }
       },
       "audit_logs": {
@@ -1929,6 +1966,116 @@
           "create_error": "فشل إنشاء الشهادة",
           "remove_success": "تم إزالة الشهادة بنجاح",
           "remove_error": "فشل إزالة الشهادة"
+        }
+      },
+      "communities": {
+        "title": "المجتمعات",
+        "new_community": "مجتمع جديد",
+        "no_communities": "لا توجد مجتمعات بعد",
+        "no_communities_description": "أنشئ أول مجتمع لك لبدء النقاشات",
+        "card": {
+          "open_settings": "فتح الإعدادات",
+          "view_community": "عرض المجتمع",
+          "quick_edit": "تعديل سريع"
+        },
+        "settings": {
+          "tabs": {
+            "general": "عام",
+            "thumbnail": "الصورة المصغرة",
+            "moderation": "الإشراف"
+          }
+        },
+        "general": {
+          "title": "إعدادات المجتمع",
+          "subtitle": "تحديث المعلومات الأساسية للمجتمع",
+          "form": {
+            "name_label": "اسم المجتمع",
+            "name_required": "اسم المجتمع مطلوب",
+            "name_min_length": "يجب أن يكون الاسم 3 أحرف على الأقل",
+            "name_max_length": "يجب أن يكون الاسم أقل من 100 حرف",
+            "name_placeholder": "أدخل اسم المجتمع",
+            "description_label": "الوصف",
+            "description_max_length": "يجب أن يكون الوصف أقل من 500 حرف",
+            "description_placeholder": "صف موضوع هذا المجتمع",
+            "public_label": "مجتمع عام",
+            "public_description": "اجعل هذا المجتمع مرئياً للجميع",
+            "characters_left": "{{count}} حرف متبقي"
+          },
+          "toasts": {
+            "updating": "جاري تحديث المجتمع...",
+            "update_success": "تم تحديث المجتمع بنجاح",
+            "update_error": "فشل تحديث المجتمع"
+          }
+        },
+        "thumbnail": {
+          "title": "صورة المجتمع المصغرة",
+          "subtitle": "ارفع صورة غلاف لمجتمعك",
+          "no_thumbnail": "لم يتم تعيين صورة مصغرة",
+          "upload_image": "رفع صورة",
+          "browse_unsplash": "تصفح Unsplash",
+          "uploading": "جاري الرفع...",
+          "supported_formats": "الصيغ المدعومة: JPG، JPEG، PNG. الحد الأقصى: 8 ميجابايت. النسبة الموصى بها: 16:9",
+          "toasts": {
+            "update_success": "تم تحديث الصورة المصغرة بنجاح",
+            "update_error": "فشل تحديث الصورة المصغرة",
+            "invalid_type": "نوع ملف غير صالح. يرجى رفع صور PNG أو JPG/JPEG فقط",
+            "file_too_large": "حجم الملف يتجاوز حد 8 ميجابايت"
+          }
+        },
+        "moderation": {
+          "title": "إشراف المحتوى",
+          "subtitle": "تكوين الكلمات المحظورة وفلاتر المحتوى",
+          "info_title": "الكلمات المحظورة",
+          "info_description": "سيتم حظر النقاشات والردود التي تحتوي على هذه الكلمات. سيرى المستخدمون رسالة خطأ ولن يتم نشر محتواهم.",
+          "add_word_label": "إضافة كلمة محظورة",
+          "add_word_placeholder": "أدخل كلمة أو عبارة...",
+          "add_button": "إضافة",
+          "batch_add_label": "إضافة دفعة",
+          "batch_add_description": "أضف عدة كلمات دفعة واحدة، مفصولة بفواصل",
+          "batch_add_placeholder": "كلمة1، كلمة2، كلمة3...",
+          "add_all_button": "إضافة الكل",
+          "blocked_words_label": "الكلمات المحظورة",
+          "no_blocked_words": "لا توجد كلمات محظورة بعد",
+          "no_blocked_words_description": "أضف كلمات لتفعيل إشراف المحتوى",
+          "word_exists_error": "هذه الكلمة موجودة بالفعل في القائمة",
+          "all_words_exist_error": "جميع الكلمات موجودة بالفعل في القائمة أو الإدخال فارغ",
+          "toasts": {
+            "saving": "جاري حفظ إعدادات الإشراف...",
+            "save_success": "تم حفظ إعدادات الإشراف",
+            "save_error": "فشل حفظ إعدادات الإشراف"
+          }
+        },
+        "modals": {
+          "create": {
+            "title": "إنشاء مجتمع",
+            "description": "أنشئ مجتمعاً جديداً للنقاشات",
+            "form": {
+              "name_label": "اسم المجتمع",
+              "name_placeholder": "أدخل اسم المجتمع",
+              "description_label": "الوصف",
+              "description_placeholder": "صف موضوع هذا المجتمع",
+              "public_label": "اجعل هذا المجتمع عاماً (مرئي للجميع)"
+            },
+            "cancel": "إلغاء",
+            "submit": "إنشاء المجتمع"
+          },
+          "edit": {
+            "title": "تعديل المجتمع",
+            "description": "تحديث إعدادات المجتمع"
+          },
+          "delete": {
+            "title": "حذف {{name}}؟",
+            "message": "هل أنت متأكد من رغبتك في حذف هذا المجتمع؟ سيتم حذف جميع النقاشات نهائياً.",
+            "button": "حذف المجتمع"
+          }
+        },
+        "toasts": {
+          "creating": "جاري إنشاء المجتمع...",
+          "create_success": "تم إنشاء المجتمع بنجاح",
+          "create_error": "فشل إنشاء المجتمع",
+          "deleting": "جاري حذف المجتمع...",
+          "delete_success": "تم حذف المجتمع بنجاح",
+          "delete_error": "فشل حذف المجتمع"
         }
       },
       "structure": {

@@ -26,42 +26,42 @@ export const Z_INDEX = {
   CONTENT: 1,
   ELEVATED: 5,
 
-  // Sticky elements (10-19)
+  // Sticky elements (10-25)
   STICKY: 10,
   STICKY_HEADER: 15,
 
-  // Interactive elements (20-29)
+  // Interactive elements (20-25)
   INTERACTIVE: 20,
   DRAG_OVERLAY: 25,
 
-  // Navigation (30-39)
-  NAV: 30,
-  NAV_MENU: 35,
+  // Navigation (highest values to always stay above page content)
+  NAV: 9999,
+  NAV_MENU: 10000,
 
-  // Dropdowns and popovers (40-49)
-  DROPDOWN: 40,
-  POPOVER: 45,
+  // Dropdowns and popovers (110-115)
+  DROPDOWN: 110,
+  POPOVER: 115,
 
-  // Overlays (50-59)
-  OVERLAY: 50,
-  MODAL_BACKDROP: 55,
+  // Overlays (120-125)
+  OVERLAY: 120,
+  MODAL_BACKDROP: 125,
 
-  // Modals (60-69)
-  MODAL: 60,
-  MODAL_CONTENT: 65,
+  // Modals (130-135)
+  MODAL: 130,
+  MODAL_CONTENT: 135,
 
-  // Toasts and notifications (70-79)
-  TOAST: 70,
-  NOTIFICATION: 75,
+  // Toasts and notifications (140-145)
+  TOAST: 140,
+  NOTIFICATION: 145,
 
-  // Editor-specific layers (80-89)
-  EDITOR_TOOLBAR: 80,
-  EDITOR_BUBBLE: 85,
+  // Editor-specific layers (150-155)
+  EDITOR_TOOLBAR: 150,
+  EDITOR_BUBBLE: 155,
 
-  // Critical elements (90-99)
-  TOOLTIP: 90,
-  CRITICAL: 95,
-  MAX: 99,
+  // Critical elements (160+)
+  TOOLTIP: 160,
+  CRITICAL: 165,
+  MAX: 999,
 } as const
 
 // Type for z-index values
@@ -74,32 +74,32 @@ export function getZIndex(key: ZIndexKey): number {
 }
 
 // Tailwind-compatible class names mapping
-// Use these in className attributes: `z-${zClass.MODAL}`
+// Use these in className attributes - prefer using z-{name} from tailwind config
 export const zClass = {
-  BEHIND: '[z-index:-10]',
-  BACKGROUND: '[z-index:-1]',
-  BASE: 'z-0',
-  CONTENT: '[z-index:1]',
-  ELEVATED: '[z-index:5]',
-  STICKY: 'z-10',
-  STICKY_HEADER: '[z-index:15]',
-  INTERACTIVE: 'z-20',
-  DRAG_OVERLAY: '[z-index:25]',
-  NAV: 'z-30',
-  NAV_MENU: '[z-index:35]',
-  DROPDOWN: 'z-40',
-  POPOVER: '[z-index:45]',
-  OVERLAY: 'z-50',
-  MODAL_BACKDROP: '[z-index:55]',
-  MODAL: '[z-index:60]',
-  MODAL_CONTENT: '[z-index:65]',
-  TOAST: '[z-index:70]',
-  NOTIFICATION: '[z-index:75]',
-  EDITOR_TOOLBAR: '[z-index:80]',
-  EDITOR_BUBBLE: '[z-index:85]',
-  TOOLTIP: '[z-index:90]',
-  CRITICAL: '[z-index:95]',
-  MAX: '[z-index:99]',
+  BEHIND: 'z-behind',
+  BACKGROUND: 'z-background',
+  BASE: 'z-base',
+  CONTENT: 'z-content',
+  ELEVATED: 'z-elevated',
+  STICKY: 'z-sticky',
+  STICKY_HEADER: 'z-sticky-header',
+  INTERACTIVE: 'z-interactive',
+  DRAG_OVERLAY: 'z-drag-overlay',
+  NAV: 'z-nav',
+  NAV_MENU: 'z-nav-menu',
+  DROPDOWN: 'z-dropdown',
+  POPOVER: 'z-popover',
+  OVERLAY: 'z-overlay',
+  MODAL_BACKDROP: 'z-modal-backdrop',
+  MODAL: 'z-modal',
+  MODAL_CONTENT: 'z-modal-content',
+  TOAST: 'z-toast',
+  NOTIFICATION: 'z-notification',
+  EDITOR_TOOLBAR: 'z-editor-toolbar',
+  EDITOR_BUBBLE: 'z-editor-bubble',
+  TOOLTIP: 'z-tooltip',
+  CRITICAL: 'z-critical',
+  MAX: 'z-max',
 } as const
 
 // CSS custom properties for use in CSS/styled-components
