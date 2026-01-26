@@ -530,7 +530,7 @@ export default function OrgEditImages() {
                                 className={cn(
                                   "relative group shrink-0",
                                   "w-48",
-                                  snapshot.isDragging ? "scale-105 z-50" : "hover:scale-102",
+                                  snapshot.isDragging ? "scale-105 z-drag-overlay" : "hover:scale-102",
                                 )}
                               >
                                 <button

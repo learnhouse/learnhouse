@@ -34,8 +34,45 @@
     "loading": "Memuat...",
     "search": "Cari",
     "all": "Semua",
+    "all_courses": "Semua kursus",
+    "all_assignments": "Semua tugas",
+    "recent": "Terbaru",
+    "expand": "Perluas",
     "help": "Bantuan",
-    "plans": "Paket",
+    "plans": {
+      "label": "Paket",
+      "upgrade_button": "Upgrade ke {{plan}}",
+      "feature_restricted": {
+        "payments": {
+          "title": "Fitur Standard",
+          "description": "Pembayaran adalah fitur premium yang hanya tersedia untuk organisasi dengan paket Standard atau lebih tinggi. Upgrade untuk membuka pemrosesan pembayaran dan fitur monetisasi."
+        },
+        "usergroups": {
+          "title": "Fitur Standard",
+          "description": "Grup pengguna adalah fitur premium yang hanya tersedia untuk organisasi dengan paket Standard atau lebih tinggi. Upgrade untuk mengorganisir pengguna ke dalam grup untuk manajemen akses yang lebih baik."
+        },
+        "api_access": {
+          "title": "Fitur Pro",
+          "description": "Akses API adalah fitur premium yang hanya tersedia untuk organisasi dengan paket Pro atau lebih tinggi. Upgrade untuk membuka akses programatik ke data organisasi Anda."
+        },
+        "roles": {
+          "title": "Fitur Pro",
+          "description": "Membuat peran kustom adalah fitur premium yang hanya tersedia untuk organisasi dengan paket Pro atau lebih tinggi. Upgrade untuk membuat peran dengan izin spesifik."
+        },
+        "ai": {
+          "title": "Fitur Standard",
+          "description": "Fitur AI hanya tersedia untuk organisasi dengan paket Standard atau lebih tinggi. Upgrade untuk membuka pembuatan konten dan bantuan pembelajaran berbasis AI."
+        },
+        "audit_logs": {
+          "title": "Fitur Enterprise",
+          "description": "Log audit adalah fitur premium yang hanya tersedia untuk organisasi dengan paket Enterprise. Upgrade untuk mendapatkan visibilitas penuh atas aktivitas organisasi Anda."
+        },
+        "certifications": {
+          "title": "Fitur Pro",
+          "description": "Sertifikat adalah fitur premium yang hanya tersedia untuk organisasi dengan paket Pro atau lebih tinggi. Upgrade untuk menerbitkan sertifikat kepada pelajar yang menyelesaikan kursus Anda."
+        }
+      }
+    },
     "enterprise": "Enterprise",
     "version": "Versi",
     "users": "Pengguna",
@@ -681,8 +718,8 @@
         "tabs": {
           "general": "Umum",
           "landing": "Halaman Landas",
-          "previews": "Gambar & Pratinjau",
-          "socials": "Media Sosial",
+          "branding": "Branding",
+          "ai": "AI",
           "other": "Lainnya"
         },
         "pages": {
@@ -690,13 +727,9 @@
             "title": "Umum",
             "subtitle": "Kelola pengaturan organisasi Anda"
           },
-          "previews": {
-            "title": "Pratinjau",
-            "subtitle": "Kelola pratinjau organisasi Anda"
-          },
-          "socials": {
-            "title": "Media Sosial",
-            "subtitle": "Kelola tautan media sosial organisasi Anda"
+          "branding": {
+            "title": "Branding",
+            "subtitle": "Kelola identitas visual dan kehadiran sosial organisasi Anda"
           },
           "landing": {
             "title": "Halaman Landas",
@@ -705,6 +738,10 @@
           "other": {
             "title": "Lainnya",
             "subtitle": "Kelola pengaturan organisasi tambahan"
+          },
+          "ai": {
+            "title": "Fitur AI",
+            "subtitle": "Konfigurasi kemampuan AI untuk organisasi Anda"
           }
         },
         "name": "Nama Organisasi",
@@ -774,6 +811,14 @@
           "updating_order": "Memperbarui urutan pratinjau..."
         }
       },
+      "branding": {
+        "title": "Branding",
+        "subtitle": "Kelola identitas visual dan kehadiran sosial organisasi Anda",
+        "tabs": {
+          "images": "Gambar & Pratinjau",
+          "social": "Tautan Sosial"
+        }
+      },
       "socials": {
         "title": "Tautan Sosial",
         "subtitle": "Kelola kehadiran media sosial organisasi Anda",
@@ -809,6 +854,21 @@
         "toasts": {
           "save_success": "Skrip berhasil disimpan",
           "delete_success": "Skrip berhasil dihapus"
+        }
+      },
+      "ai": {
+        "title": "Fitur AI",
+        "subtitle": "Konfigurasi kemampuan AI untuk organisasi Anda",
+        "enable_ai": "Aktifkan Fitur AI",
+        "enable_ai_description": "Izinkan fitur berbasis AI di konten dan pengalaman pembelajaran organisasi Anda",
+        "admin_only": "Hanya administrator yang dapat mengubah pengaturan AI.",
+        "features_enabled": "Fitur AI Tersedia",
+        "feature_editor": "Bantuan editor konten berbasis AI",
+        "feature_activity": "Interaksi aktivitas pembelajaran AI",
+        "feature_canvas": "Alat kanvas dan desain AI",
+        "toasts": {
+          "save_success": "Pengaturan AI berhasil diperbarui",
+          "save_error": "Gagal memperbarui pengaturan AI"
         }
       },
       "audit_logs": {

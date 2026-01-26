@@ -11,6 +11,9 @@ import PaymentsConfigurationPage from '@components/Dashboard/Pages/Payments/Paym
 import PaymentsProductPage from '@components/Dashboard/Pages/Payments/PaymentsProductPage'
 import PaymentsCustomersPage from '@components/Dashboard/Pages/Payments/PaymentsCustomersPage'
 import useFeatureFlag from '@components/Hooks/useFeatureFlag'
+import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/PlanRestrictedFeature'
+import { PlanLevel } from '@services/plans/plans'
+import { BadgeDollarSign } from 'lucide-react'
 
 export type PaymentsParams = {
   subpage: string
@@ -22,6 +25,7 @@ function PaymentsPage(props: { params: Promise<PaymentsParams> }) {
   const session = useLHSession() as any
   const org = useOrg() as any
   const subpage = params.subpage || 'customers'
+  const currentPlan: PlanLevel = org?.config?.config?.cloud?.plan || 'free'
 
   const isPaymentsEnabled = useFeatureFlag({
     path: ['features', 'payments', 'enabled'],
@@ -68,6 +72,14 @@ function PaymentsPage(props: { params: Promise<PaymentsParams> }) {
   const { h1, h2 } = getPageTitle()
 
   return (
+    <PlanRestrictedFeature
+      currentPlan={currentPlan}
+      requiredPlan="standard"
+      icon={BadgeDollarSign}
+      titleKey="common.plans.feature_restricted.payments.title"
+      descriptionKey="common.plans.feature_restricted.payments.description"
+      fullScreen
+    >
     <div className="h-screen w-full bg-[#f8f8f8] flex flex-col">
       <div className="pl-10 pr-10 tracking-tight bg-[#fcfbfc] z-10 nice-shadow flex-shrink-0">
         <BreadCrumbs type="payments" />
@@ -115,6 +127,7 @@ function PaymentsPage(props: { params: Promise<PaymentsParams> }) {
         {subpage === 'customers' && <PaymentsCustomersPage />}
       </motion.div>
     </div>
+    </PlanRestrictedFeature>
   )
 }
 

@@ -34,8 +34,45 @@
     "loading": "Loading...",
     "search": "Search",
     "all": "All",
+    "all_courses": "All Courses",
+    "all_assignments": "All Assignments",
+    "recent": "Recent",
+    "expand": "Expand",
     "help": "Help",
-    "plans": "Plans",
+    "plans": {
+      "label": "Plans",
+      "upgrade_button": "Upgrade to {{plan}}",
+      "feature_restricted": {
+        "payments": {
+          "title": "Standard Feature",
+          "description": "Payments is a premium feature available only to organizations on our Standard plan or higher. Upgrade to unlock payment processing and monetization features."
+        },
+        "usergroups": {
+          "title": "Standard Feature",
+          "description": "User Groups is a premium feature available only to organizations on our Standard plan or higher. Upgrade to organize users into groups for better access management."
+        },
+        "api_access": {
+          "title": "Pro Feature",
+          "description": "API Access is a premium feature available only to organizations on our Pro plan or higher. Upgrade to unlock programmatic access to your organization's data."
+        },
+        "roles": {
+          "title": "Pro Feature",
+          "description": "Creating custom roles is a premium feature available only to organizations on our Pro plan or higher. Upgrade to create roles with specific permissions."
+        },
+        "ai": {
+          "title": "Standard Feature",
+          "description": "AI features are available only to organizations on our Standard plan or higher. Upgrade to unlock AI-powered content creation and learning assistance."
+        },
+        "audit_logs": {
+          "title": "Enterprise Feature",
+          "description": "Audit logs are a premium feature available only to organizations on our Enterprise plan. Upgrade to gain full visibility into your organization's activities."
+        },
+        "certifications": {
+          "title": "Pro Feature",
+          "description": "Certifications is a premium feature available only to organizations on our Pro plan or higher. Upgrade to issue certificates to learners who complete your courses."
+        }
+      }
+    },
     "enterprise": "Enterprise",
     "version": "Version",
     "users": "Users",
@@ -699,8 +736,9 @@
         "tabs": {
           "general": "General",
           "landing": "Landing Page",
-          "previews": "Images & Previews",
-          "socials": "Socials",
+          "branding": "Branding",
+          "ai": "AI",
+          "api": "API Access",
           "other": "Other"
         },
         "pages": {
@@ -708,13 +746,9 @@
             "title": "General",
             "subtitle": "Manage your organization settings"
           },
-          "previews": {
-            "title": "Previews",
-            "subtitle": "Manage your organization previews"
-          },
-          "socials": {
-            "title": "Socials",
-            "subtitle": "Manage your organization social media links"
+          "branding": {
+            "title": "Branding",
+            "subtitle": "Manage your organization's visual identity and social presence"
           },
           "landing": {
             "title": "Landing Page",
@@ -723,6 +757,14 @@
           "other": {
             "title": "Other",
             "subtitle": "Manage additional organization settings"
+          },
+          "ai": {
+            "title": "AI Features",
+            "subtitle": "Configure AI capabilities for your organization"
+          },
+          "api": {
+            "title": "API Access",
+            "subtitle": "Manage API tokens and programmatic access"
           }
         },
         "name": "Organization Name",
@@ -792,6 +834,14 @@
           "updating_order": "Updating preview order..."
         }
       },
+      "branding": {
+        "title": "Branding",
+        "subtitle": "Manage your organization's visual identity and social presence",
+        "tabs": {
+          "images": "Images & Previews",
+          "social": "Social Links"
+        }
+      },
       "socials": {
         "title": "Social Links",
         "subtitle": "Manage your organization's social media presence",
@@ -827,6 +877,21 @@
         "toasts": {
           "save_success": "Script saved successfully",
           "delete_success": "Script deleted successfully"
+        }
+      },
+      "ai": {
+        "title": "AI Features",
+        "subtitle": "Configure AI capabilities for your organization",
+        "enable_ai": "Enable AI Features",
+        "enable_ai_description": "Allow AI-powered features across your organization's content and learning experiences",
+        "admin_only": "Only administrators can modify AI settings.",
+        "features_enabled": "AI Features Available",
+        "feature_editor": "AI-powered content editor assistance",
+        "feature_activity": "AI learning activity interactions",
+        "feature_canvas": "AI canvas and design tools",
+        "toasts": {
+          "save_success": "AI settings updated successfully",
+          "save_error": "Failed to update AI settings"
         }
       },
       "audit_logs": {

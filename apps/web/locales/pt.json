@@ -34,8 +34,45 @@
     "loading": "Carregando...",
     "search": "Buscar",
     "all": "Tudo",
+    "all_courses": "Todos os cursos",
+    "all_assignments": "Todas as tarefas",
+    "recent": "Recente",
+    "expand": "Expandir",
     "help": "Ajuda",
-    "plans": "Planos",
+    "plans": {
+      "label": "Planos",
+      "upgrade_button": "Atualizar para {{plan}}",
+      "feature_restricted": {
+        "payments": {
+          "title": "Recurso Standard",
+          "description": "Pagamentos é um recurso premium disponível apenas para organizações no nosso plano Standard ou superior. Atualize para desbloquear o processamento de pagamentos e recursos de monetização."
+        },
+        "usergroups": {
+          "title": "Recurso Standard",
+          "description": "Grupos de usuários é um recurso premium disponível apenas para organizações no nosso plano Standard ou superior. Atualize para organizar usuários em grupos para melhor gerenciamento de acesso."
+        },
+        "api_access": {
+          "title": "Recurso Pro",
+          "description": "O acesso à API é um recurso premium disponível apenas para organizações no nosso plano Pro ou superior. Atualize para desbloquear o acesso programático aos dados da sua organização."
+        },
+        "roles": {
+          "title": "Recurso Pro",
+          "description": "A criação de funções personalizadas é um recurso premium disponível apenas para organizações no nosso plano Pro ou superior. Atualize para criar funções com permissões específicas."
+        },
+        "ai": {
+          "title": "Recurso Standard",
+          "description": "Os recursos de IA estão disponíveis apenas para organizações no nosso plano Standard ou superior. Atualize para desbloquear a criação de conteúdo e assistência de aprendizado com IA."
+        },
+        "audit_logs": {
+          "title": "Recurso Enterprise",
+          "description": "Os registros de auditoria são um recurso premium disponível apenas para organizações no nosso plano Enterprise. Atualize para obter visibilidade total das atividades da sua organização."
+        },
+        "certifications": {
+          "title": "Recurso Pro",
+          "description": "As certificações são um recurso premium disponível apenas para organizações no nosso plano Pro ou superior. Atualize para emitir certificados aos alunos que concluírem seus cursos."
+        }
+      }
+    },
     "enterprise": "Empresarial",
     "version": "Versão",
     "users": "Usuários",
@@ -681,8 +718,8 @@
         "tabs": {
           "general": "Geral",
           "landing": "Página de Destino",
-          "previews": "Imagens e Visualizações",
-          "socials": "Redes Sociais",
+          "branding": "Branding",
+          "ai": "IA",
           "other": "Outro"
         },
         "pages": {
@@ -690,13 +727,9 @@
             "title": "Geral",
             "subtitle": "Gerencie as configurações da sua organização"
           },
-          "previews": {
-            "title": "Visualizações",
-            "subtitle": "Gerencie as visualizações da sua organização"
-          },
-          "socials": {
-            "title": "Redes Sociais",
-            "subtitle": "Gerencie os links de redes sociais da sua organização"
+          "branding": {
+            "title": "Branding",
+            "subtitle": "Gerencie a identidade visual e presença social da sua organização"
           },
           "landing": {
             "title": "Página de Destino",
@@ -705,6 +738,10 @@
           "other": {
             "title": "Outro",
             "subtitle": "Gerencie configurações adicionais da organização"
+          },
+          "ai": {
+            "title": "Recursos de IA",
+            "subtitle": "Configure os recursos de IA da sua organização"
           }
         },
         "name": "Nome da Organização",
@@ -774,6 +811,14 @@
           "updating_order": "Atualizando ordem de visualização..."
         }
       },
+      "branding": {
+        "title": "Branding",
+        "subtitle": "Gerencie a identidade visual e presença social da sua organização",
+        "tabs": {
+          "images": "Imagens e Visualizações",
+          "social": "Links Sociais"
+        }
+      },
       "socials": {
         "title": "Links Sociais",
         "subtitle": "Gerencie a presença da sua organização nas redes sociais",
@@ -809,6 +854,21 @@
         "toasts": {
           "save_success": "Script salvo com sucesso",
           "delete_success": "Script excluído com sucesso"
+        }
+      },
+      "ai": {
+        "title": "Recursos de IA",
+        "subtitle": "Configure os recursos de IA da sua organização",
+        "enable_ai": "Ativar Recursos de IA",
+        "enable_ai_description": "Permitir recursos de IA no conteúdo e nas experiências de aprendizado da sua organização",
+        "admin_only": "Apenas administradores podem modificar as configurações de IA.",
+        "features_enabled": "Recursos de IA Disponíveis",
+        "feature_editor": "Assistência de IA no editor de conteúdo",
+        "feature_activity": "Interações de IA em atividades de aprendizado",
+        "feature_canvas": "Ferramentas de IA para canvas e design",
+        "toasts": {
+          "save_success": "Configurações de IA atualizadas com sucesso",
+          "save_error": "Falha ao atualizar configurações de IA"
         }
       },
       "audit_logs": {

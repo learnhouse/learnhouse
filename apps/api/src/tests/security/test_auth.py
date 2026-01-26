@@ -1,7 +1,6 @@
 import pytest
 from unittest.mock import Mock, AsyncMock, patch
 from fastapi import HTTPException, Request
-from fastapi_jwt_auth2 import AuthJWT
 from sqlmodel import Session
 from src.security.auth import (
     authenticate_user,
@@ -161,76 +160,100 @@ class TestAuth:
     @pytest.mark.asyncio
     async def test_get_current_user_authenticated(self, mock_request, mock_db_session, mock_user):
         """Test getting current user when authenticated"""
-        with patch('src.security.auth.security_get_user', new_callable=AsyncMock) as mock_get_user:
+        # Set up mock request with no API token header
+        mock_request.headers = Mock()
+        mock_request.headers.get = Mock(return_value="")
+        mock_request.state = Mock()
+
+        with patch('src.security.auth.security_get_user', new_callable=AsyncMock) as mock_get_user, \
+             patch('src.security.auth.AuthJWT') as MockAuthJWT:
+
             mock_get_user.return_value = mock_user
-            
-            # Mock AuthJWT
-            mock_authorize = Mock(spec=AuthJWT)
+
+            # Mock AuthJWT instance
+            mock_authorize = Mock()
             mock_authorize.jwt_optional.return_value = None
             mock_authorize.get_jwt_subject.return_value = "test@example.com"
-            
+            MockAuthJWT.return_value = mock_authorize
+
             result = await get_current_user(
                 request=mock_request,
-                Authorize=mock_authorize,
                 db_session=mock_db_session
             )
-            
+
             assert isinstance(result, PublicUser)
             mock_get_user.assert_called_once_with(mock_request, mock_db_session, email="test@example.com")
 
     @pytest.mark.asyncio
     async def test_get_current_user_anonymous(self, mock_request, mock_db_session):
         """Test getting current user when anonymous"""
-        # Mock AuthJWT
-        mock_authorize = Mock(spec=AuthJWT)
-        mock_authorize.jwt_optional.return_value = None
-        mock_authorize.get_jwt_subject.return_value = None
-        
-        result = await get_current_user(
-            request=mock_request,
-            Authorize=mock_authorize,
-            db_session=mock_db_session
-        )
-        
-        assert isinstance(result, AnonymousUser)
+        # Set up mock request with no API token header
+        mock_request.headers = Mock()
+        mock_request.headers.get = Mock(return_value="")
+
+        with patch('src.security.auth.AuthJWT') as MockAuthJWT:
+            # Mock AuthJWT instance
+            mock_authorize = Mock()
+            mock_authorize.jwt_optional.return_value = None
+            mock_authorize.get_jwt_subject.return_value = None
+            MockAuthJWT.return_value = mock_authorize
+
+            result = await get_current_user(
+                request=mock_request,
+                db_session=mock_db_session
+            )
+
+            assert isinstance(result, AnonymousUser)
 
     @pytest.mark.asyncio
     async def test_get_current_user_jwt_error(self, mock_request, mock_db_session):
         """Test getting current user when JWT is invalid"""
         from jose import JWTError
-        
-        # Mock AuthJWT to raise JWTError
-        mock_authorize = Mock(spec=AuthJWT)
-        mock_authorize.jwt_optional.side_effect = JWTError("Invalid token")
-        
-        with pytest.raises(HTTPException) as exc_info:
-            await get_current_user(
-                request=mock_request,
-                Authorize=mock_authorize,
-                db_session=mock_db_session
-            )
-        
-        assert exc_info.value.status_code == 401
-        assert "Could not validate credentials" in exc_info.value.detail
+
+        # Set up mock request with no API token header
+        mock_request.headers = Mock()
+        mock_request.headers.get = Mock(return_value="")
+
+        with patch('src.security.auth.AuthJWT') as MockAuthJWT:
+            # Mock AuthJWT to raise JWTError
+            mock_authorize = Mock()
+            mock_authorize.jwt_optional.side_effect = JWTError("Invalid token")
+            MockAuthJWT.return_value = mock_authorize
+
+            with pytest.raises(HTTPException) as exc_info:
+                await get_current_user(
+                    request=mock_request,
+                    db_session=mock_db_session
+                )
+
+            assert exc_info.value.status_code == 401
+            assert "Could not validate credentials" in exc_info.value.detail
 
     @pytest.mark.asyncio
     async def test_get_current_user_user_not_found(self, mock_request, mock_db_session):
         """Test getting current user when user doesn't exist in database"""
-        with patch('src.security.auth.security_get_user', new_callable=AsyncMock) as mock_get_user:
+        # Set up mock request with no API token header
+        mock_request.headers = Mock()
+        mock_request.headers.get = Mock(return_value="")
+        mock_request.state = Mock()
+
+        with patch('src.security.auth.security_get_user', new_callable=AsyncMock) as mock_get_user, \
+             patch('src.security.auth.AuthJWT') as MockAuthJWT:
+
             mock_get_user.return_value = None
-            
-            # Mock AuthJWT
-            mock_authorize = Mock(spec=AuthJWT)
+
+            # Mock AuthJWT instance
+            mock_authorize = Mock()
             mock_authorize.jwt_optional.return_value = None
             mock_authorize.get_jwt_subject.return_value = "nonexistent@example.com"
-            
+            MockAuthJWT.return_value = mock_authorize
+
             with pytest.raises(HTTPException) as exc_info:
                 await get_current_user(
                     request=mock_request,
-                    Authorize=mock_authorize,
                     db_session=mock_db_session
                 )
-            
+
             assert exc_info.value.status_code == 401
             assert "Could not validate credentials" in exc_info.value.detail
 

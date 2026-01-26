@@ -34,8 +34,45 @@
     "loading": "加载中...",
     "search": "搜索",
     "all": "全部",
+    "all_courses": "所有课程",
+    "all_assignments": "所有作业",
+    "recent": "最近",
+    "expand": "展开",
     "help": "帮助",
-    "plans": "方案",
+    "plans": {
+      "label": "方案",
+      "upgrade_button": "升级到 {{plan}}",
+      "feature_restricted": {
+        "payments": {
+          "title": "标准版功能",
+          "description": "支付功能仅适用于标准版或更高版本的组织。升级以解锁支付处理和变现功能。"
+        },
+        "usergroups": {
+          "title": "标准版功能",
+          "description": "用户组是仅适用于标准版或更高版本组织的高级功能。升级以将用户组织成组以更好地管理访问权限。"
+        },
+        "api_access": {
+          "title": "专业版功能",
+          "description": "API访问是仅适用于专业版或更高版本组织的高级功能。升级以解锁对组织数据的编程访问。"
+        },
+        "roles": {
+          "title": "专业版功能",
+          "description": "创建自定义角色是仅适用于专业版或更高版本组织的高级功能。升级以创建具有特定权限的角色。"
+        },
+        "ai": {
+          "title": "标准版功能",
+          "description": "AI功能仅适用于标准版或更高版本的组织。升级以解锁AI驱动的内容创建和学习辅助功能。"
+        },
+        "audit_logs": {
+          "title": "企业版功能",
+          "description": "审计日志是仅适用于企业版组织的高级功能。升级以获得组织活动的完整可见性。"
+        },
+        "certifications": {
+          "title": "专业版功能",
+          "description": "证书是仅适用于专业版或更高版本组织的高级功能。升级以向完成课程的学员颁发证书。"
+        }
+      }
+    },
     "enterprise": "企业",
     "version": "版本",
     "users": "用户",
@@ -681,8 +718,8 @@
         "tabs": {
           "general": "常规",
           "landing": "落地页",
-          "previews": "预览图像",
-          "socials": "社交媒体",
+          "branding": "品牌",
+          "ai": "AI",
           "other": "其他"
         },
         "pages": {
@@ -690,13 +727,9 @@
             "title": "常规",
             "subtitle": "管理组织的常规设置"
           },
-          "previews": {
-            "title": "预览",
-            "subtitle": "管理组织的预览图"
-          },
-          "socials": {
-            "title": "社交媒体",
-            "subtitle": "管理组织的社交媒体链接"
+          "branding": {
+            "title": "品牌",
+            "subtitle": "管理组织的视觉标识和社交媒体形象"
           },
           "landing": {
             "title": "落地页",
@@ -705,6 +738,10 @@
           "other": {
             "title": "其他",
             "subtitle": "管理组织的其他设置"
+          },
+          "ai": {
+            "title": "AI功能",
+            "subtitle": "为您的组织配置AI功能"
           }
         },
         "name": "组织名称",
@@ -774,6 +811,14 @@
           "updating_order": "正在更新预览图顺序..."
         }
       },
+      "branding": {
+        "title": "品牌",
+        "subtitle": "管理组织的视觉标识和社交媒体形象",
+        "tabs": {
+          "images": "预览图像",
+          "social": "社交媒体链接"
+        }
+      },
       "socials": {
         "title": "社交媒体链接",
         "subtitle": "管理组织的社交媒体形象",
@@ -809,6 +854,21 @@
         "toasts": {
           "save_success": "脚本保存成功",
           "delete_success": "脚本删除成功"
+        }
+      },
+      "ai": {
+        "title": "AI功能",
+        "subtitle": "为您的组织配置AI功能",
+        "enable_ai": "启用AI功能",
+        "enable_ai_description": "允许在组织的内容和学习体验中使用AI驱动的功能",
+        "admin_only": "只有管理员可以修改AI设置。",
+        "features_enabled": "可用的AI功能",
+        "feature_editor": "AI驱动的内容编辑器辅助",
+        "feature_activity": "AI学习活动交互",
+        "feature_canvas": "AI画布和设计工具",
+        "toasts": {
+          "save_success": "AI设置更新成功",
+          "save_error": "AI设置更新失败"
         }
       },
       "audit_logs": {

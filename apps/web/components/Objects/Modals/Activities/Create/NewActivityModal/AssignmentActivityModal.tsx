@@ -23,6 +23,7 @@ function NewAssignment({ submitActivity, chapterId, course, closeModal }: any) {
     const { t } = useTranslation()
     const org = useOrg() as any;
     const session = useLHSession() as any
+    const withUnpublishedActivities = course ? course.withUnpublishedActivities : false
     const [activityName, setActivityName] = React.useState('')
     const [isSubmitting, setIsSubmitting] = React.useState(false)
     const [activityDescription, setActivityDescription] = React.useState('')
@@ -79,7 +80,10 @@ function NewAssignment({ submitActivity, chapterId, course, closeModal }: any) {
 
         }
 
-        mutate(`${getAPIUrl()}courses/${course.courseStructure.course_uuid}/meta`)
+        mutate(`${getAPIUrl()}courses/${course.courseStructure.course_uuid}/meta?with_unpublished_activities=${withUnpublishedActivities}`)
+        // Refresh sidebar courses and assignments cache
+        mutate((key) => typeof key === 'string' && key.includes('/courses/org_slug/'))
+        mutate((key) => typeof key === 'string' && key.includes('/assignments/course/'))
         setIsSubmitting(false)
         closeModal()
     }

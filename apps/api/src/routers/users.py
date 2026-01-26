@@ -1,4 +1,4 @@
-from typing import Literal, List
+from typing import Literal, List, Union
 from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile
 from pydantic import EmailStr
 from sqlmodel import Session
@@ -12,8 +12,8 @@ from src.core.events.database import get_db_session
 from src.db.courses.courses import CourseRead
 
 from src.db.users import (
+    AnonymousUser,
     PublicUser,
-    User,
     UserCreate,
     UserRead,
     UserSession,
@@ -41,7 +41,9 @@ router = APIRouter()
 
 
 @router.get("/profile")
-async def api_get_current_user(current_user: User = Depends(get_current_user)):
+async def api_get_current_user(
+    current_user: Union[PublicUser, AnonymousUser] = Depends(get_current_user)
+):
     """
     Get current user
     """
@@ -52,7 +54,7 @@ async def api_get_current_user(current_user: User = Depends(get_current_user)):
 async def api_get_current_user_session(
     request: Request,
     db_session: Session = Depends(get_db_session),
-    current_user: PublicUser = Depends(get_current_user),
+    current_user: Union[PublicUser, AnonymousUser] = Depends(get_current_user),
 ) -> UserSession:
     """
     Get current user

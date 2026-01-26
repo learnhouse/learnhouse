@@ -19,6 +19,8 @@ import {
   SelectValue,
 } from '@components/ui/select'
 import { useTranslation } from 'react-i18next'
+import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/PlanRestrictedFeature'
+import { PlanLevel } from '@services/plans/plans'
 
 const ITEMS_PER_PAGE = 20
 
@@ -91,14 +93,14 @@ const OrgAuditLogs = () => {
 
   const logs = data?.items || []
   const total = data?.total || 0
-  const isEnterprise = org?.config?.config?.cloud?.plan === 'enterprise'
+  const currentPlan: PlanLevel = org?.config?.config?.cloud?.plan || 'free'
 
   const handleRefresh = () => {
     mutate(logsUrl)
   }
 
   const handleExport = async () => {
-    if (!isEnterprise) {
+    if (currentPlan !== 'enterprise') {
       toast.error(t('dashboard.organization.audit_logs.enterprise_only'))
       return
     }
@@ -163,27 +165,16 @@ const OrgAuditLogs = () => {
     return 'bg-gray-100 text-gray-700'
   }
 
-  if (!isEnterprise) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 px-4 text-center space-y-4">
-        <div className="bg-indigo-50 p-4 rounded-full">
-          <ShieldCheck className="w-12 h-12 text-indigo-600" />
-        </div>
-        <h1 className="text-2xl font-bold text-gray-800">{t('dashboard.organization.audit_logs.enterprise_feature')}</h1>
-        <p className="text-gray-500 max-w-md mx-auto">
-          {t('dashboard.organization.audit_logs.enterprise_description')}
-        </p>
-        <button className="bg-indigo-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-indigo-700 transition-colors">
-          {t('dashboard.organization.audit_logs.upgrade_button')}
-        </button>
-      </div>
-    )
-  }
-
   return (
-    <div>
-      <div className="h-6"></div>
-      <div className="ml-10 mr-10 mx-auto bg-white rounded-xl shadow-xs px-4 py-4">
+    <PlanRestrictedFeature
+      currentPlan={currentPlan}
+      requiredPlan="enterprise"
+      icon={ShieldCheck}
+      titleKey="common.plans.feature_restricted.audit_logs.title"
+      descriptionKey="common.plans.feature_restricted.audit_logs.description"
+    >
+      <>
+        <div className="ml-10 mr-10 mx-auto bg-white rounded-xl shadow-xs px-4 py-4">
         <div className="flex flex-col bg-gray-50 -space-y-1 px-5 py-3 rounded-md mb-3">
           <div className="flex justify-between items-center">
             <div>
@@ -484,8 +475,9 @@ const OrgAuditLogs = () => {
             </div>
           </div>
         )}
-      </div>
-    </div>
+        </div>
+      </>
+    </PlanRestrictedFeature>
   )
 }
 

@@ -775,7 +775,7 @@ const TableDropdown = styled.div`
   left: 0;
   background: white;
   border-radius: 6px;
-  z-index: 1000;
+  z-index: var(--z-tooltip);
   min-width: 180px;
   margin-top: 4px;
   padding: 4px;
@@ -821,7 +821,7 @@ const ListDropdown = styled.div`
   left: 0;
   background: white;
   border-radius: 6px;
-  z-index: 1000;
+  z-index: var(--z-tooltip);
   min-width: 180px;
   margin-top: 4px;
   padding: 4px;

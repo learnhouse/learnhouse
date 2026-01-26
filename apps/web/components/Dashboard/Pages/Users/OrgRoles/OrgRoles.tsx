@@ -5,10 +5,12 @@ import AddRole from '@components/Objects/Modals/Dash/OrgRoles/AddRole'
 import EditRole from '@components/Objects/Modals/Dash/OrgRoles/EditRole'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
+import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
 import { getAPIUrl } from '@services/config/config'
 import { deleteRole } from '@services/roles/roles'
 import { swrFetcher } from '@services/utils/ts/requests'
-import { Pencil, Shield, X, Globe } from 'lucide-react'
+import { PlanLevel, planMeetsRequirement } from '@services/plans/plans'
+import { Pencil, Shield, X, Globe, Lock } from 'lucide-react'
 import React from 'react'
 import toast from 'react-hot-toast'
 import useSWR, { mutate } from 'swr'
@@ -19,6 +21,8 @@ function OrgRoles() {
     const org = useOrg() as any
     const session = useLHSession() as any
     const access_token = session?.data?.tokens?.access_token;
+    const currentPlan: PlanLevel = org?.config?.config?.cloud?.plan || 'free'
+    const canCreateRoles = planMeetsRequirement(currentPlan, 'pro')
     const [createRoleModal, setCreateRoleModal] = React.useState(false)
     const [editRoleModal, setEditRoleModal] = React.useState(false)
     const [selectedRole, setSelectedRole] = React.useState(null) as any
@@ -85,7 +89,6 @@ function OrgRoles() {
 
     return (
         <>
-            <div className="h-6"></div>
             <div className="mx-4 sm:mx-6 lg:mx-10 bg-white rounded-xl nice-shadow px-3 sm:px-4 py-4">
                 <div className="flex flex-col bg-gray-50 -space-y-1 px-3 sm:px-5 py-3 rounded-md mb-3">
                     <h1 className="font-bold text-lg sm:text-xl text-gray-800">{t('dashboard.users.roles.title')}</h1>
@@ -262,26 +265,39 @@ function OrgRoles() {
                 </div>
                 
                 <div className='flex justify-end mt-3 mr-2'>
-                    <Modal
-                        isDialogOpen={createRoleModal}
-                        onOpenChange={() => setCreateRoleModal(!createRoleModal)}
-                        minHeight="no-min"
-                        minWidth='xl'
-                        customWidth="max-w-7xl"
-                        dialogContent={
-                            <AddRole
-                                setCreateRoleModal={setCreateRoleModal}
-                            />
-                        }
-                        dialogTitle={t('dashboard.users.roles.modals.create.title')}
-                        dialogDescription={t('dashboard.users.roles.modals.create.description')}
-                        dialogTrigger={
-                            <button className="flex space-x-2 hover:cursor-pointer p-2 sm:p-1 sm:px-3 bg-black rounded-md font-bold items-center text-sm text-white w-full sm:w-auto justify-center hover:bg-gray-800 transition-colors shadow-sm">
-                                <Shield className="w-4 h-4" />
+                    {canCreateRoles ? (
+                        <Modal
+                            isDialogOpen={createRoleModal}
+                            onOpenChange={() => setCreateRoleModal(!createRoleModal)}
+                            minHeight="no-min"
+                            minWidth='xl'
+                            customWidth="max-w-7xl"
+                            dialogContent={
+                                <AddRole
+                                    setCreateRoleModal={setCreateRoleModal}
+                                />
+                            }
+                            dialogTitle={t('dashboard.users.roles.modals.create.title')}
+                            dialogDescription={t('dashboard.users.roles.modals.create.description')}
+                            dialogTrigger={
+                                <button className="flex space-x-2 hover:cursor-pointer p-2 sm:p-1 sm:px-3 bg-black rounded-md font-bold items-center text-sm text-white w-full sm:w-auto justify-center hover:bg-gray-800 transition-colors shadow-sm">
+                                    <Shield className="w-4 h-4" />
+                                    <span>{t('dashboard.users.roles.actions.create')}</span>
+                                </button>
+                            }
+                        />
+                    ) : (
+                        <div className="flex items-center space-x-2">
+                            <button
+                                disabled
+                                className="flex space-x-2 p-2 sm:p-1 sm:px-3 bg-gray-300 rounded-md font-bold items-center text-sm text-gray-500 w-full sm:w-auto justify-center cursor-not-allowed"
+                            >
+                                <Lock className="w-4 h-4" />
                                 <span>{t('dashboard.users.roles.actions.create')}</span>
                             </button>
-                        }
-                    />
+                            <PlanBadge currentPlan={currentPlan} requiredPlan="pro" />
+                        </div>
+                    )}
                 </div>
             </div>
         </>

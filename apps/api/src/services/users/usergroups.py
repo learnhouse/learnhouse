@@ -10,13 +10,14 @@ from src.security.features_utils.usage import (
 )
 from src.security.rbac.rbac import (
     authorization_verify_based_on_roles_and_authorship,
+    authorization_verify_based_on_roles_and_authorship_or_api_token,
     authorization_verify_if_user_is_anon,
 )
 from src.db.usergroup_resources import UserGroupResource
 from src.db.usergroup_user import UserGroupUser
 from src.db.organizations import Organization
 from src.db.usergroups import UserGroup, UserGroupCreate, UserGroupRead, UserGroupUpdate
-from src.db.users import AnonymousUser, InternalUser, PublicUser, User, UserRead
+from src.db.users import AnonymousUser, APITokenUser, InternalUser, PublicUser, User, UserRead
 
 
 async def create_usergroup(
@@ -486,22 +487,32 @@ async def remove_resources_from_usergroup(
 async def rbac_check(
     request: Request,
     usergroup_uuid: str,
-    current_user: PublicUser | AnonymousUser | InternalUser,
+    current_user: PublicUser | AnonymousUser | InternalUser | APITokenUser,
     action: Literal["create", "read", "update", "delete"],
     db_session: Session,
 ):
     if isinstance(current_user, InternalUser):
         return True
 
-    await authorization_verify_if_user_is_anon(current_user.id)
+    # Handle both regular users and API tokens
+    if isinstance(current_user, APITokenUser):
+        await authorization_verify_based_on_roles_and_authorship_or_api_token(
+            request,
+            current_user,
+            action,
+            usergroup_uuid,
+            db_session,
+        )
+    else:
+        await authorization_verify_if_user_is_anon(current_user.id)
 
-    await authorization_verify_based_on_roles_and_authorship(
-        request,
-        current_user.id,
-        action,
-        usergroup_uuid,
-        db_session,
-    )
+        await authorization_verify_based_on_roles_and_authorship(
+            request,
+            current_user.id,
+            action,
+            usergroup_uuid,
+            db_session,
+        )
 
 
 ## 🔒 RBAC Utils ##

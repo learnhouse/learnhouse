@@ -1,6 +1,7 @@
+from typing import Optional, Union
 from sqlmodel import Session
 from src.core.events.database import get_db_session
-from src.db.users import AnonymousUser, PublicUser, User, UserRead
+from src.db.users import AnonymousUser, APITokenUser, PublicUser, User, UserRead
 from src.services.users.users import security_get_user
 from config.config import get_learnhouse_config
 from pydantic import BaseModel
@@ -77,27 +78,48 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
 
 async def get_current_user(
     request: Request,
-    Authorize: AuthJWT = Depends(),
     db_session: Session = Depends(get_db_session),
-):
+) -> Union[PublicUser, APITokenUser, AnonymousUser]:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
 
+    # Step 1: Check for API token (Bearer lh_...)
+    auth_header = request.headers.get("Authorization", "").strip()
+
+    # Case-insensitive check for "Bearer " prefix with lh_ token
+    if auth_header.lower().startswith("bearer lh_"):
+        token = auth_header[7:].strip()  # Remove "Bearer " prefix and trim
+        api_token_user = await validate_api_token(token, db_session)
+        if api_token_user:
+            request.state.user = api_token_user
+            request.state.is_api_token = True
+            return api_token_user
+        raise credentials_exception
+
+    # Step 2: Fall back to existing JWT logic
+    # Create AuthJWT instance manually to avoid auto-validation issues with API tokens
+    Authorize = AuthJWT(request)
     try:
         Authorize.jwt_optional()
         username = Authorize.get_jwt_subject() or None
         token_data = TokenData(username=username)  # type: ignore
     except JWTError:
         raise credentials_exception
+    except Exception as e:
+        # Handle cases where the Authorization header format is unexpected
+        print(f"[DEBUG AUTH] JWT parsing error: {e}")
+        raise credentials_exception
+
     if username:
         user = await security_get_user(request, db_session, email=token_data.username)  # type: ignore # treated as an email
         if user is None:
             raise credentials_exception
         public_user = PublicUser(**user.model_dump())
         request.state.user = public_user
+        request.state.is_api_token = False
         return public_user
     else:
         return AnonymousUser()
@@ -106,3 +128,37 @@ async def get_current_user(
 async def non_public_endpoint(current_user: UserRead | AnonymousUser):
     if isinstance(current_user, AnonymousUser):
         raise HTTPException(status_code=401, detail="Not authenticated")
+
+
+async def validate_api_token(
+    token: str,
+    db_session: Session,
+) -> Optional[APITokenUser]:
+    """
+    Validate an API token and return an APITokenUser if valid.
+
+    Args:
+        token: The full token string (lh_...)
+        db_session: Database session
+
+    Returns:
+        APITokenUser if valid, None otherwise
+    """
+    from src.services.api_tokens.api_tokens import validate_api_token_for_auth
+
+    # Validate the token using the service
+    api_token = await validate_api_token_for_auth(token, db_session)
+
+    if not api_token:
+        return None
+
+    # Create and return an APITokenUser
+    return APITokenUser(
+        id=api_token.id,
+        user_uuid=api_token.token_uuid,
+        username=f"api_token_{api_token.name}",
+        org_id=api_token.org_id,
+        rights=api_token.rights,
+        token_name=api_token.name,
+        created_by_user_id=api_token.created_by_user_id,
+    )
