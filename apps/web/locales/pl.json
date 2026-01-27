@@ -720,6 +720,8 @@
           "landing": "Strona lądowania",
           "branding": "Branding",
           "ai": "AI",
+          "api": "Dostęp API",
+          "features": "Funkcje",
           "other": "Inne"
         },
         "pages": {
@@ -742,6 +744,14 @@
           "ai": {
             "title": "Funkcje AI",
             "subtitle": "Skonfiguruj możliwości AI dla swojej organizacji"
+          },
+          "api": {
+            "title": "Dostęp API",
+            "subtitle": "Zarządzaj tokenami API i dostępem programistycznym"
+          },
+          "features": {
+            "title": "Funkcje",
+            "subtitle": "Włącz lub wyłącz funkcje dla swojej organizacji"
           }
         },
         "name": "Nazwa organizacji",
@@ -869,6 +879,33 @@
         "toasts": {
           "save_success": "Ustawienia AI zostały pomyślnie zaktualizowane",
           "save_error": "Nie udało się zaktualizować ustawień AI"
+        }
+      },
+      "features": {
+        "title": "Ustawienia funkcji",
+        "subtitle": "Włącz lub wyłącz funkcje dla swojej organizacji",
+        "admin_only": "Tylko administratorzy organizacji mogą modyfikować ustawienia funkcji.",
+        "upgrade_notice": "Przejdź na plan {{plan}}, aby włączyć tę funkcję",
+        "toggles": {
+          "communities": {
+            "title": "Społeczności",
+            "description": "Włącz społeczności dyskusyjne dla członków organizacji"
+          },
+          "payments": {
+            "title": "Płatności",
+            "description": "Włącz przetwarzanie płatności dla kursów i subskrypcji"
+          },
+          "collections": {
+            "title": "Kolekcje",
+            "description": "Pozwól na organizowanie kursów w kolekcje"
+          }
+        },
+        "toasts": {
+          "enabling": "Włączanie {{feature}}...",
+          "disabling": "Wyłączanie {{feature}}...",
+          "enabled": "{{feature}} włączone",
+          "disabled": "{{feature}} wyłączone",
+          "error": "Nie udało się zaktualizować konfiguracji {{feature}}"
         }
       },
       "audit_logs": {
@@ -1929,6 +1966,116 @@
           "create_error": "Nie udało się utworzyć certyfikacji",
           "remove_success": "Certyfikacja została pomyślnie usunięta",
           "remove_error": "Nie udało się usunąć certyfikacji"
+        }
+      },
+      "communities": {
+        "title": "Społeczności",
+        "new_community": "Nowa społeczność",
+        "no_communities": "Brak społeczności",
+        "no_communities_description": "Utwórz swoją pierwszą społeczność, aby rozpocząć dyskusje",
+        "card": {
+          "open_settings": "Otwórz ustawienia",
+          "view_community": "Zobacz społeczność",
+          "quick_edit": "Szybka edycja"
+        },
+        "settings": {
+          "tabs": {
+            "general": "Ogólne",
+            "thumbnail": "Miniatura",
+            "moderation": "Moderacja"
+          }
+        },
+        "general": {
+          "title": "Ustawienia społeczności",
+          "subtitle": "Zaktualizuj podstawowe informacje o społeczności",
+          "form": {
+            "name_label": "Nazwa społeczności",
+            "name_required": "Nazwa społeczności jest wymagana",
+            "name_min_length": "Nazwa musi mieć co najmniej 3 znaki",
+            "name_max_length": "Nazwa musi mieć mniej niż 100 znaków",
+            "name_placeholder": "Wprowadź nazwę społeczności",
+            "description_label": "Opis",
+            "description_max_length": "Opis musi mieć mniej niż 500 znaków",
+            "description_placeholder": "Opisz, czego dotyczy ta społeczność",
+            "public_label": "Publiczna społeczność",
+            "public_description": "Uczyń tę społeczność widoczną dla wszystkich",
+            "characters_left": "Pozostało {{count}} znaków"
+          },
+          "toasts": {
+            "updating": "Aktualizowanie społeczności...",
+            "update_success": "Społeczność została zaktualizowana",
+            "update_error": "Nie udało się zaktualizować społeczności"
+          }
+        },
+        "thumbnail": {
+          "title": "Miniatura społeczności",
+          "subtitle": "Prześlij obraz okładki dla swojej społeczności",
+          "no_thumbnail": "Nie ustawiono miniatury",
+          "upload_image": "Prześlij obraz",
+          "browse_unsplash": "Przeglądaj Unsplash",
+          "uploading": "Przesyłanie...",
+          "supported_formats": "Obsługiwane formaty: JPG, JPEG, PNG. Maks. rozmiar: 8MB. Zalecany format: 16:9",
+          "toasts": {
+            "update_success": "Miniatura została zaktualizowana",
+            "update_error": "Nie udało się zaktualizować miniatury",
+            "invalid_type": "Nieprawidłowy typ pliku. Prześlij tylko obrazy PNG lub JPG/JPEG",
+            "file_too_large": "Rozmiar pliku przekracza limit 8MB"
+          }
+        },
+        "moderation": {
+          "title": "Moderacja treści",
+          "subtitle": "Skonfiguruj zablokowane słowa i filtry treści",
+          "info_title": "Zablokowane słowa",
+          "info_description": "Dyskusje i odpowiedzi zawierające te słowa zostaną zablokowane. Użytkownicy zobaczą komunikat o błędzie, a ich treść nie zostanie opublikowana.",
+          "add_word_label": "Dodaj zablokowane słowo",
+          "add_word_placeholder": "Wprowadź słowo lub frazę...",
+          "add_button": "Dodaj",
+          "batch_add_label": "Dodaj grupowo",
+          "batch_add_description": "Dodaj wiele słów naraz, oddzielając je przecinkami",
+          "batch_add_placeholder": "słowo1, słowo2, słowo3...",
+          "add_all_button": "Dodaj wszystkie",
+          "blocked_words_label": "Zablokowane słowa",
+          "no_blocked_words": "Brak zablokowanych słów",
+          "no_blocked_words_description": "Dodaj słowa, aby włączyć moderację treści",
+          "word_exists_error": "To słowo jest już na liście",
+          "all_words_exist_error": "Wszystkie słowa są już na liście lub pole jest puste",
+          "toasts": {
+            "saving": "Zapisywanie ustawień moderacji...",
+            "save_success": "Ustawienia moderacji zostały zapisane",
+            "save_error": "Nie udało się zapisać ustawień moderacji"
+          }
+        },
+        "modals": {
+          "create": {
+            "title": "Utwórz społeczność",
+            "description": "Utwórz nową społeczność do dyskusji",
+            "form": {
+              "name_label": "Nazwa społeczności",
+              "name_placeholder": "Wprowadź nazwę społeczności",
+              "description_label": "Opis",
+              "description_placeholder": "Opisz, czego dotyczy ta społeczność",
+              "public_label": "Uczyń tę społeczność publiczną (widoczną dla wszystkich)"
+            },
+            "cancel": "Anuluj",
+            "submit": "Utwórz społeczność"
+          },
+          "edit": {
+            "title": "Edytuj społeczność",
+            "description": "Zaktualizuj ustawienia społeczności"
+          },
+          "delete": {
+            "title": "Usunąć {{name}}?",
+            "message": "Czy na pewno chcesz usunąć tę społeczność? Wszystkie dyskusje zostaną trwale usunięte.",
+            "button": "Usuń społeczność"
+          }
+        },
+        "toasts": {
+          "creating": "Tworzenie społeczności...",
+          "create_success": "Społeczność została utworzona",
+          "create_error": "Nie udało się utworzyć społeczności",
+          "deleting": "Usuwanie społeczności...",
+          "delete_success": "Społeczność została usunięta",
+          "delete_error": "Nie udało się usunąć społeczności"
         }
       },
       "structure": {

@@ -86,7 +86,7 @@ const TooltipContent = styled(Tooltip.Content, {
   lineHeight: 1,
   color: '#4b5563',
   backgroundColor: 'rgba(255, 255, 255, 0.95)',
-  zIndex: 500,
+  zIndex: 'var(--z-tooltip)',
   boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.05)',
   outline: '1px solid rgba(0, 0, 0, 0.06)',
   userSelect: 'none',

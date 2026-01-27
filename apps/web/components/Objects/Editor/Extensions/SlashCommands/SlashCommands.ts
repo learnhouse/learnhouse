@@ -6,6 +6,7 @@ import { filterCommands } from './slashCommandsConfig'
 import SlashCommandsList from './SlashCommandsList'
 import { SlashCommandItem, SlashCommandsListRef } from './types'
 import { PluginKey } from '@tiptap/pm/state'
+import { Z_INDEX } from '@/lib/z-index'
 
 const slashCommandsPluginKey = new PluginKey('slashCommands')
 
@@ -66,7 +67,7 @@ export const SlashCommands = Extension.create({
                 animation: 'shift-away',
                 maxWidth: 'none',
                 theme: 'slash-commands',
-                zIndex: 9999,
+                zIndex: Z_INDEX.EDITOR_BUBBLE,
               })
             },
 

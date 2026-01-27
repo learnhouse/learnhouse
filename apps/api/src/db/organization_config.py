@@ -47,6 +47,14 @@ class DiscussionOrgConfig(BaseModel):
     limit: int = 10
 
 
+class CommunitiesOrgConfig(BaseModel):
+    enabled: bool = True
+
+
+class CollectionsOrgConfig(BaseModel):
+    enabled: bool = True
+
+
 class AnalyticsOrgConfig(BaseModel):
     enabled: bool = True
     limit: int = 10
@@ -71,6 +79,8 @@ class OrgFeatureConfig(BaseModel):
     assignments: AssignmentOrgConfig = AssignmentOrgConfig()
     payments: PaymentOrgConfig = PaymentOrgConfig()
     discussions: DiscussionOrgConfig = DiscussionOrgConfig()
+    communities: CommunitiesOrgConfig = CommunitiesOrgConfig()
+    collections: CollectionsOrgConfig = CollectionsOrgConfig()
     analytics: AnalyticsOrgConfig = AnalyticsOrgConfig()
     collaboration: CollaborationOrgConfig = CollaborationOrgConfig()
     api: APIOrgConfig = APIOrgConfig()

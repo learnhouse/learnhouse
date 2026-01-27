@@ -1,6 +1,6 @@
 'use client';
-import BreadCrumbs from '@components/Dashboard/Misc/BreadCrumbs'
-import { BookOpen, BookX, EllipsisVertical, Eye, Layers2, Monitor, Pencil, UserRoundPen } from 'lucide-react'
+import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
+import { BookOpen, BookX, EllipsisVertical, Eye, Layers2, Monitor, Pencil, UserRoundPen, Backpack } from 'lucide-react'
 import React, { useEffect } from 'react'
 import { AssignmentProvider, useAssignments } from '@components/Contexts/Assignments/AssignmentContext';
 import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip';
@@ -97,13 +97,19 @@ function AssignmentEdit() {
 export default AssignmentEdit
 
 function BrdCmpx() {
+    const { t } = useTranslation()
     const assignment = useAssignments() as any
 
     useEffect(() => {
     }, [assignment])
 
     return (
-        <BreadCrumbs type="assignments" last_breadcrumb={assignment?.assignment_object?.title} />
+        <div className="pt-6 pb-4">
+            <Breadcrumbs items={[
+                { label: t('common.assignments'), href: '/dash/assignments', icon: <Backpack size={14} /> },
+                ...(assignment?.assignment_object?.title ? [{ label: assignment.assignment_object.title }] : [])
+            ]} />
+        </div>
     )
 }
 

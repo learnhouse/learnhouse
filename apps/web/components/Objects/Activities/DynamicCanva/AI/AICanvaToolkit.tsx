@@ -133,7 +133,7 @@ function AICanvaToolkit(props: AICanvaToolkitProps) {
         position: 'fixed',
         top: `${bubbleState.top}px`,
         left: `${bubbleState.left}px`,
-        zIndex: 9999,
+        zIndex: 'var(--z-tooltip)',
         pointerEvents: 'auto',
       }}
     >

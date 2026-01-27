@@ -1,7 +1,7 @@
 'use client'
 import { useCourse } from '@components/Contexts/CourseContext'
 import { useEffect } from 'react'
-import BreadCrumbs from './BreadCrumbs'
+import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import SaveState from './SaveState'
 import { CourseOverviewParams } from 'app/orgs/[orgslug]/dash/courses/course/[courseuuid]/[subpage]/page'
 import { getUriWithOrg } from '@services/config/config'
@@ -10,7 +10,7 @@ import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import Link from 'next/link'
 import Image from 'next/image'
 import EmptyThumbnailImage from '../../../public/empty_thumbnail.png'
-import { BookOpen } from 'lucide-react'
+import { BookOpen, BookCopy } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 export function CourseOverviewTop({
@@ -26,10 +26,12 @@ export function CourseOverviewTop({
 
   return (
     <>
-      <BreadCrumbs
-        type="courses"
-        last_breadcrumb={course.courseStructure.name}
-      ></BreadCrumbs>
+      <div className="pt-6 pb-4">
+        <Breadcrumbs items={[
+          { label: t('courses.courses'), href: '/dash/courses', icon: <BookCopy size={14} /> },
+          { label: course.courseStructure.name }
+        ]} />
+      </div>
       <div className="flex">
         <div className="flex py-3 grow items-center">
           <Link

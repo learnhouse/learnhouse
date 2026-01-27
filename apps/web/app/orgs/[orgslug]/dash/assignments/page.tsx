@@ -1,12 +1,12 @@
 'use client';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import { useOrg } from '@components/Contexts/OrgContext';
-import BreadCrumbs from '@components/Dashboard/Misc/BreadCrumbs'
+import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import { getAPIUrl, getUriWithOrg } from '@services/config/config';
 import { getAssignmentsFromACourse } from '@services/courses/assignments';
 import { getCourseThumbnailMediaDirectory } from '@services/media/media';
 import { swrFetcher } from '@services/utils/ts/requests';
-import { EllipsisVertical, GalleryVerticalEnd, Info, Layers2, UserRoundPen } from 'lucide-react';
+import { EllipsisVertical, GalleryVerticalEnd, Info, Layers2, UserRoundPen, Backpack } from 'lucide-react';
 import Link from 'next/link';
 import React from 'react'
 import useSWR from 'swr';
@@ -49,8 +49,10 @@ function AssignmentsHome() {
   return (
     <div className='flex w-full'>
       <div className='pl-4 sm:pl-10 mr-4 sm:mr-10 tracking-tighter flex flex-col space-y-5 w-full'>
-        <div className='flex flex-col space-y-2'>
-          <BreadCrumbs type="assignments" />
+        <div className='flex flex-col space-y-2 pt-6'>
+          <Breadcrumbs items={[
+            { label: t('common.assignments'), href: '/dash/assignments', icon: <Backpack size={14} /> }
+          ]} />
           <h1 className="pt-3 flex font-bold text-4xl">{t('dashboard.assignments.home.title')}</h1>
         </div>
         <div className='flex flex-col space-y-3 w-full'>

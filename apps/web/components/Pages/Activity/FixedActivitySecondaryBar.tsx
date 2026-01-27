@@ -174,10 +174,11 @@ export default function FixedActivitySecondaryBar(props: FixedActivitySecondaryB
   if (!shouldShow) return null;
 
   return (
-    <div 
-      className={`fixed top-[60px] left-0 right-0 z-nav bg-white/90 backdrop-blur-xl transition-all duration-300 animate-in fade-in slide-in-from-top ${
+    <div
+      className={`fixed top-[60px] left-0 right-0 bg-white/90 backdrop-blur-xl transition-all duration-300 animate-in fade-in slide-in-from-top ${
         isScrolled ? 'nice-shadow' : ''
       }`}
+      style={{ zIndex: 9998 }}
     >
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16 py-2">

@@ -720,6 +720,8 @@
           "landing": "Página de inicio",
           "branding": "Marca",
           "ai": "IA",
+          "api": "Acceso API",
+          "features": "Funcionalidades",
           "other": "Otros"
         },
         "pages": {
@@ -742,6 +744,14 @@
           "ai": {
             "title": "Funciones de IA",
             "subtitle": "Configura las capacidades de IA de tu organización"
+          },
+          "api": {
+            "title": "Acceso API",
+            "subtitle": "Gestiona tokens API y acceso programático"
+          },
+          "features": {
+            "title": "Funcionalidades",
+            "subtitle": "Activa o desactiva funcionalidades para tu organización"
           }
         },
         "name": "Nombre de la organización",
@@ -869,6 +879,33 @@
         "toasts": {
           "save_success": "Configuración de IA actualizada con éxito",
           "save_error": "Error al actualizar la configuración de IA"
+        }
+      },
+      "features": {
+        "title": "Configuración de funcionalidades",
+        "subtitle": "Activa o desactiva funcionalidades para tu organización",
+        "admin_only": "Solo los administradores de la organización pueden modificar la configuración de funcionalidades.",
+        "upgrade_notice": "Actualiza al plan {{plan}} para habilitar esta función",
+        "toggles": {
+          "communities": {
+            "title": "Comunidades",
+            "description": "Habilitar comunidades de discusión para los miembros de tu organización"
+          },
+          "payments": {
+            "title": "Pagos",
+            "description": "Habilitar procesamiento de pagos para cursos y suscripciones"
+          },
+          "collections": {
+            "title": "Colecciones",
+            "description": "Permitir organizar cursos en colecciones"
+          }
+        },
+        "toasts": {
+          "enabling": "Habilitando {{feature}}...",
+          "disabling": "Deshabilitando {{feature}}...",
+          "enabled": "{{feature}} habilitado",
+          "disabled": "{{feature}} deshabilitado",
+          "error": "Error al actualizar la configuración de {{feature}}"
         }
       },
       "audit_logs": {
@@ -1929,6 +1966,116 @@
           "create_error": "Error al crear la certificación",
           "remove_success": "Certificación eliminada con éxito",
           "remove_error": "Error al eliminar la certificación"
+        }
+      },
+      "communities": {
+        "title": "Comunidades",
+        "new_community": "Nueva comunidad",
+        "no_communities": "Aún no hay comunidades",
+        "no_communities_description": "Crea tu primera comunidad para iniciar discusiones",
+        "card": {
+          "open_settings": "Abrir configuración",
+          "view_community": "Ver comunidad",
+          "quick_edit": "Edición rápida"
+        },
+        "settings": {
+          "tabs": {
+            "general": "General",
+            "thumbnail": "Miniatura",
+            "moderation": "Moderación"
+          }
+        },
+        "general": {
+          "title": "Configuración de la comunidad",
+          "subtitle": "Actualiza la información básica de tu comunidad",
+          "form": {
+            "name_label": "Nombre de la comunidad",
+            "name_required": "El nombre de la comunidad es obligatorio",
+            "name_min_length": "El nombre debe tener al menos 3 caracteres",
+            "name_max_length": "El nombre debe tener menos de 100 caracteres",
+            "name_placeholder": "Ingresa el nombre de la comunidad",
+            "description_label": "Descripción",
+            "description_max_length": "La descripción debe tener menos de 500 caracteres",
+            "description_placeholder": "Describe de qué trata esta comunidad",
+            "public_label": "Comunidad pública",
+            "public_description": "Hacer esta comunidad visible para todos",
+            "characters_left": "{{count}} caracteres restantes"
+          },
+          "toasts": {
+            "updating": "Actualizando comunidad...",
+            "update_success": "Comunidad actualizada correctamente",
+            "update_error": "Error al actualizar la comunidad"
+          }
+        },
+        "thumbnail": {
+          "title": "Miniatura de la comunidad",
+          "subtitle": "Sube una imagen de portada para tu comunidad",
+          "no_thumbnail": "Sin miniatura establecida",
+          "upload_image": "Subir imagen",
+          "browse_unsplash": "Explorar Unsplash",
+          "uploading": "Subiendo...",
+          "supported_formats": "Formatos compatibles: JPG, JPEG, PNG. Tamaño máx.: 8MB. Relación recomendada: 16:9",
+          "toasts": {
+            "update_success": "Miniatura actualizada correctamente",
+            "update_error": "Error al actualizar la miniatura",
+            "invalid_type": "Tipo de archivo no válido. Por favor sube solo imágenes PNG o JPG/JPEG",
+            "file_too_large": "El tamaño del archivo supera el límite de 8MB"
+          }
+        },
+        "moderation": {
+          "title": "Moderación de contenido",
+          "subtitle": "Configura palabras bloqueadas y filtros de contenido",
+          "info_title": "Palabras bloqueadas",
+          "info_description": "Las discusiones y respuestas que contengan estas palabras serán bloqueadas. Los usuarios verán un mensaje de error y su contenido no se publicará.",
+          "add_word_label": "Agregar palabra bloqueada",
+          "add_word_placeholder": "Ingresa una palabra o frase...",
+          "add_button": "Agregar",
+          "batch_add_label": "Agregar palabras en lote",
+          "batch_add_description": "Agrega múltiples palabras a la vez, separadas por comas",
+          "batch_add_placeholder": "palabra1, palabra2, palabra3...",
+          "add_all_button": "Agregar todo",
+          "blocked_words_label": "Palabras bloqueadas",
+          "no_blocked_words": "Aún no hay palabras bloqueadas",
+          "no_blocked_words_description": "Agrega palabras para habilitar la moderación de contenido",
+          "word_exists_error": "Esta palabra ya está en la lista",
+          "all_words_exist_error": "Todas las palabras ya están en la lista o la entrada está vacía",
+          "toasts": {
+            "saving": "Guardando configuración de moderación...",
+            "save_success": "Configuración de moderación guardada",
+            "save_error": "Error al guardar la configuración de moderación"
+          }
+        },
+        "modals": {
+          "create": {
+            "title": "Crear comunidad",
+            "description": "Crea una nueva comunidad para discusiones",
+            "form": {
+              "name_label": "Nombre de la comunidad",
+              "name_placeholder": "Ingresa el nombre de la comunidad",
+              "description_label": "Descripción",
+              "description_placeholder": "Describe de qué trata esta comunidad",
+              "public_label": "Hacer esta comunidad pública (visible para todos)"
+            },
+            "cancel": "Cancelar",
+            "submit": "Crear comunidad"
+          },
+          "edit": {
+            "title": "Editar comunidad",
+            "description": "Actualizar configuración de la comunidad"
+          },
+          "delete": {
+            "title": "¿Eliminar {{name}}?",
+            "message": "¿Estás seguro de que quieres eliminar esta comunidad? Todas las discusiones se eliminarán permanentemente.",
+            "button": "Eliminar comunidad"
+          }
+        },
+        "toasts": {
+          "creating": "Creando comunidad...",
+          "create_success": "Comunidad creada correctamente",
+          "create_error": "Error al crear la comunidad",
+          "deleting": "Eliminando comunidad...",
+          "delete_success": "Comunidad eliminada correctamente",
+          "delete_error": "Error al eliminar la comunidad"
         }
       },
       "structure": {

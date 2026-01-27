@@ -1,7 +1,7 @@
 'use client'
-import BreadCrumbs from '@components/Dashboard/Misc/BreadCrumbs'
+import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import { getUriWithOrg } from '@services/config/config'
-import { TextIcon, LucideIcon, LayoutDashboardIcon, CodeIcon, KeyIcon, Palette } from 'lucide-react'
+import { TextIcon, LucideIcon, LayoutDashboardIcon, CodeIcon, KeyIcon, Palette, School, ToggleRight } from 'lucide-react'
 import Link from 'next/link'
 import React, { useEffect, use } from 'react';
 import { motion } from 'framer-motion'
@@ -12,6 +12,7 @@ import OrgEditLanding from '@components/Dashboard/Pages/Org/OrgEditLanding/OrgEd
 import OrgEditOther from '@components/Dashboard/Pages/Org/OrgEditOther/OrgEditOther'
 import OrgEditAPIAccess from '@components/Dashboard/Pages/Org/OrgEditAPIAccess/OrgEditAPIAccess'
 import OrgEditAI from '@components/Dashboard/Pages/Org/OrgEditAI/OrgEditAI'
+import OrgEditFeatures from '@components/Dashboard/Pages/Org/OrgEditFeatures/OrgEditFeatures'
 import { useTranslation } from 'react-i18next'
 import { useOrg } from '@components/Contexts/OrgContext'
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
@@ -32,6 +33,7 @@ interface TabItem {
 
 const getSettingTabs = (t: any): TabItem[] => [
   { id: 'general', label: t('dashboard.organization.settings.tabs.general'), icon: TextIcon },
+  { id: 'features', label: t('dashboard.organization.settings.tabs.features') || 'Features', icon: ToggleRight },
   { id: 'landing', label: t('dashboard.organization.settings.tabs.landing'), icon: LayoutDashboardIcon },
   { id: 'branding', label: t('dashboard.organization.settings.tabs.branding'), icon: Palette },
   { id: 'ai', label: t('dashboard.organization.settings.tabs.ai') || 'AI', customIcon: '/learnhouse_ai_simple_colored.png', requiredPlan: 'standard' },
@@ -83,6 +85,9 @@ function OrgPage(props: { params: Promise<OrgParams> }) {
     if (params.subpage == 'general') {
       setH1Label(t('dashboard.organization.settings.pages.general.title'))
       setH2Label(t('dashboard.organization.settings.pages.general.subtitle'))
+    } else if (params.subpage == 'features') {
+      setH1Label(t('dashboard.organization.settings.pages.features.title') || 'Features')
+      setH2Label(t('dashboard.organization.settings.pages.features.subtitle') || 'Enable or disable features for your organization')
     } else if (params.subpage == 'branding') {
       setH1Label(t('dashboard.organization.settings.pages.branding.title'))
       setH2Label(t('dashboard.organization.settings.pages.branding.subtitle'))
@@ -108,7 +113,11 @@ function OrgPage(props: { params: Promise<OrgParams> }) {
   return (
     <div className="h-full w-full bg-[#f8f8f8] flex flex-col">
       <div className="pl-10 pr-10 tracking-tight bg-[#fcfbfc] nice-shadow flex-shrink-0">
-        <BreadCrumbs type="org"></BreadCrumbs>
+        <div className="pt-6 pb-4">
+          <Breadcrumbs items={[
+            { label: t('common.organization'), href: '/dash/org/settings/general', icon: <School size={14} /> }
+          ]} />
+        </div>
         <div className="my-2  py-2">
           <div className="w-100 flex flex-col space-y-1">
             <div className="pt-3 flex font-bold text-4xl tracking-tighter">
@@ -140,6 +149,7 @@ function OrgPage(props: { params: Promise<OrgParams> }) {
         className="flex-1 overflow-y-auto"
       >
         {params.subpage == 'general' ? <OrgEditGeneral /> : ''}
+        {params.subpage == 'features' ? <OrgEditFeatures /> : ''}
         {params.subpage == 'branding' ? <OrgEditBranding /> : ''}
         {params.subpage == 'landing' ? <OrgEditLanding /> : ''}
         {params.subpage == 'ai' ? <OrgEditAI /> : ''}

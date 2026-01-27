@@ -70,28 +70,28 @@ module.exports = {
         // Interactive elements
         'interactive': '20',
         'drag-overlay': '25',
-        // Navigation
-        'nav': '30',
-        'nav-menu': '35',
+        // Navigation (highest values to always stay above page content)
+        'nav': '9999',
+        'nav-menu': '10000',
         // Dropdowns and popovers
-        'dropdown': '40',
-        'popover': '45',
+        'dropdown': '110',
+        'popover': '115',
         // Overlays
-        'overlay': '50',
-        'modal-backdrop': '55',
+        'overlay': '120',
+        'modal-backdrop': '125',
         // Modals
-        'modal': '60',
-        'modal-content': '65',
+        'modal': '130',
+        'modal-content': '135',
         // Toasts
-        'toast': '70',
-        'notification': '75',
+        'toast': '140',
+        'notification': '145',
         // Editor
-        'editor-toolbar': '80',
-        'editor-bubble': '85',
+        'editor-toolbar': '150',
+        'editor-bubble': '155',
         // Critical
-        'tooltip': '90',
-        'critical': '95',
-        'max': '99',
+        'tooltip': '160',
+        'critical': '165',
+        'max': '999',
       },
       keyframes: {
         "accordion-down": {

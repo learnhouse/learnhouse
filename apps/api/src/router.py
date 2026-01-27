@@ -6,13 +6,15 @@ from src.routers import stream
 from src.routers import api_tokens
 from src.routers.ai import ai
 from src.routers.courses import chapters, collections, courses, assignments, certifications
+from src.routers.communities import communities as communities_router_module
+from src.routers.communities import discussions as discussions_router_module
 from src.routers.courses.activities import activities, blocks
 from src.core.ee_hooks import register_ee_routers
 from src.services.dev.dev import isDevModeEnabledOrRaise
 from src.routers.utils import router as utils_router
 from src.security.auth import get_current_user
 from src.security.api_token_utils import require_non_api_token_user
-from src.security.features_utils.plan_check import require_plan
+from src.security.features_utils.plan_check import require_plan, require_plan_for_community
 
 
 v1_router = APIRouter(prefix="/api/v1")
@@ -72,6 +74,17 @@ v1_router.include_router(chapters.router, prefix="/chapters", tags=["chapters"])
 v1_router.include_router(activities.router, prefix="/activities", tags=["activities"])
 v1_router.include_router(
     collections.router, prefix="/collections", tags=["collections"]
+)
+v1_router.include_router(
+    communities_router_module.router,
+    prefix="/communities",
+    tags=["communities"],
+    dependencies=[Depends(require_plan_for_community("standard", "Communities"))]
+)
+v1_router.include_router(
+    discussions_router_module.router,
+    tags=["discussions"],
+    dependencies=[Depends(require_plan_for_community("standard", "Communities"))]
 )
 v1_router.include_router(
     certifications.router,
