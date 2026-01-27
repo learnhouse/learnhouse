@@ -720,6 +720,8 @@
           "landing": "Halaman Landas",
           "branding": "Branding",
           "ai": "AI",
+          "api": "Akses API",
+          "features": "Fitur",
           "other": "Lainnya"
         },
         "pages": {
@@ -742,6 +744,14 @@
           "ai": {
             "title": "Fitur AI",
             "subtitle": "Konfigurasi kemampuan AI untuk organisasi Anda"
+          },
+          "api": {
+            "title": "Akses API",
+            "subtitle": "Kelola token API dan akses programatik"
+          },
+          "features": {
+            "title": "Fitur",
+            "subtitle": "Aktifkan atau nonaktifkan fitur untuk organisasi Anda"
           }
         },
         "name": "Nama Organisasi",
@@ -869,6 +879,33 @@
         "toasts": {
           "save_success": "Pengaturan AI berhasil diperbarui",
           "save_error": "Gagal memperbarui pengaturan AI"
+        }
+      },
+      "features": {
+        "title": "Pengaturan Fitur",
+        "subtitle": "Aktifkan atau nonaktifkan fitur untuk organisasi Anda",
+        "admin_only": "Hanya administrator organisasi yang dapat mengubah pengaturan fitur.",
+        "upgrade_notice": "Tingkatkan ke paket {{plan}} untuk mengaktifkan fitur ini",
+        "toggles": {
+          "communities": {
+            "title": "Komunitas",
+            "description": "Aktifkan komunitas diskusi untuk anggota organisasi"
+          },
+          "payments": {
+            "title": "Pembayaran",
+            "description": "Aktifkan pemrosesan pembayaran untuk kursus dan langganan"
+          },
+          "collections": {
+            "title": "Koleksi",
+            "description": "Izinkan pengorganisasian kursus ke dalam koleksi"
+          }
+        },
+        "toasts": {
+          "enabling": "Mengaktifkan {{feature}}...",
+          "disabling": "Menonaktifkan {{feature}}...",
+          "enabled": "{{feature}} diaktifkan",
+          "disabled": "{{feature}} dinonaktifkan",
+          "error": "Gagal memperbarui konfigurasi {{feature}}"
         }
       },
       "audit_logs": {
@@ -1929,6 +1966,116 @@
           "create_error": "Gagal membuat sertifikasi",
           "remove_success": "Sertifikasi berhasil dihapus",
           "remove_error": "Gagal menghapus sertifikasi"
+        }
+      },
+      "communities": {
+        "title": "Komunitas",
+        "new_community": "Komunitas Baru",
+        "no_communities": "Belum ada komunitas",
+        "no_communities_description": "Buat komunitas pertama Anda untuk memulai diskusi",
+        "card": {
+          "open_settings": "Buka Pengaturan",
+          "view_community": "Lihat Komunitas",
+          "quick_edit": "Edit Cepat"
+        },
+        "settings": {
+          "tabs": {
+            "general": "Umum",
+            "thumbnail": "Gambar Mini",
+            "moderation": "Moderasi"
+          }
+        },
+        "general": {
+          "title": "Pengaturan Komunitas",
+          "subtitle": "Perbarui informasi dasar komunitas Anda",
+          "form": {
+            "name_label": "Nama Komunitas",
+            "name_required": "Nama komunitas wajib diisi",
+            "name_min_length": "Nama harus minimal 3 karakter",
+            "name_max_length": "Nama harus kurang dari 100 karakter",
+            "name_placeholder": "Masukkan nama komunitas",
+            "description_label": "Deskripsi",
+            "description_max_length": "Deskripsi harus kurang dari 500 karakter",
+            "description_placeholder": "Jelaskan tentang komunitas ini",
+            "public_label": "Komunitas Publik",
+            "public_description": "Jadikan komunitas ini terlihat oleh semua orang",
+            "characters_left": "{{count}} karakter tersisa"
+          },
+          "toasts": {
+            "updating": "Memperbarui komunitas...",
+            "update_success": "Komunitas berhasil diperbarui",
+            "update_error": "Gagal memperbarui komunitas"
+          }
+        },
+        "thumbnail": {
+          "title": "Gambar Mini Komunitas",
+          "subtitle": "Unggah gambar sampul untuk komunitas Anda",
+          "no_thumbnail": "Gambar mini belum diatur",
+          "upload_image": "Unggah Gambar",
+          "browse_unsplash": "Jelajahi Unsplash",
+          "uploading": "Mengunggah...",
+          "supported_formats": "Format yang didukung: JPG, JPEG, PNG. Ukuran maks: 8MB. Rasio yang disarankan: 16:9",
+          "toasts": {
+            "update_success": "Gambar mini berhasil diperbarui",
+            "update_error": "Gagal memperbarui gambar mini",
+            "invalid_type": "Tipe file tidak valid. Harap unggah hanya gambar PNG atau JPG/JPEG",
+            "file_too_large": "Ukuran file melebihi batas 8MB"
+          }
+        },
+        "moderation": {
+          "title": "Moderasi Konten",
+          "subtitle": "Konfigurasi kata yang diblokir dan filter konten",
+          "info_title": "Kata yang diblokir",
+          "info_description": "Diskusi dan balasan yang mengandung kata-kata ini akan diblokir. Pengguna akan melihat pesan kesalahan dan konten mereka tidak akan dipublikasikan.",
+          "add_word_label": "Tambah kata yang diblokir",
+          "add_word_placeholder": "Masukkan kata atau frasa...",
+          "add_button": "Tambah",
+          "batch_add_label": "Tambah massal",
+          "batch_add_description": "Tambahkan beberapa kata sekaligus, dipisahkan dengan koma",
+          "batch_add_placeholder": "kata1, kata2, kata3...",
+          "add_all_button": "Tambah Semua",
+          "blocked_words_label": "Kata yang diblokir",
+          "no_blocked_words": "Belum ada kata yang diblokir",
+          "no_blocked_words_description": "Tambahkan kata untuk mengaktifkan moderasi konten",
+          "word_exists_error": "Kata ini sudah ada dalam daftar",
+          "all_words_exist_error": "Semua kata sudah ada dalam daftar atau input kosong",
+          "toasts": {
+            "saving": "Menyimpan pengaturan moderasi...",
+            "save_success": "Pengaturan moderasi tersimpan",
+            "save_error": "Gagal menyimpan pengaturan moderasi"
+          }
+        },
+        "modals": {
+          "create": {
+            "title": "Buat Komunitas",
+            "description": "Buat komunitas baru untuk diskusi",
+            "form": {
+              "name_label": "Nama Komunitas",
+              "name_placeholder": "Masukkan nama komunitas",
+              "description_label": "Deskripsi",
+              "description_placeholder": "Jelaskan tentang komunitas ini",
+              "public_label": "Jadikan komunitas ini publik (terlihat oleh semua orang)"
+            },
+            "cancel": "Batal",
+            "submit": "Buat Komunitas"
+          },
+          "edit": {
+            "title": "Edit Komunitas",
+            "description": "Perbarui pengaturan komunitas"
+          },
+          "delete": {
+            "title": "Hapus {{name}}?",
+            "message": "Apakah Anda yakin ingin menghapus komunitas ini? Semua diskusi akan dihapus secara permanen.",
+            "button": "Hapus Komunitas"
+          }
+        },
+        "toasts": {
+          "creating": "Membuat komunitas...",
+          "create_success": "Komunitas berhasil dibuat",
+          "create_error": "Gagal membuat komunitas",
+          "deleting": "Menghapus komunitas...",
+          "delete_success": "Komunitas berhasil dihapus",
+          "delete_error": "Gagal menghapus komunitas"
         }
       },
       "structure": {

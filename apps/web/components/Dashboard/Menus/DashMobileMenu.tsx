@@ -1,6 +1,6 @@
 'use client'
 import { useOrg } from '@components/Contexts/OrgContext'
-import { Backpack, BadgeDollarSign, BookCopy, Home, School, Settings, Users } from 'lucide-react'
+import { Backpack, BadgeDollarSign, BookCopy, Home, MessagesSquare, School, Settings, Users } from 'lucide-react'
 import Link from 'next/link'
 import React from 'react'
 import AdminAuthorization from '@components/Security/AdminAuthorization'
@@ -31,6 +31,12 @@ function DashMobileMenu() {
             <Link href={`/dash/assignments`} className="flex flex-col items-center p-2" aria-label="Manage assignments">
               <Backpack size={20} />
               <span className="text-xs mt-1">Assignments</span>
+            </Link>
+          </ToolTip>
+          <ToolTip content={'Communities'} slateBlack sideOffset={8} side="top">
+            <Link href={`/dash/communities`} className="flex flex-col items-center p-2" aria-label="Manage communities">
+              <MessagesSquare size={20} />
+              <span className="text-xs mt-1">Communities</span>
             </Link>
           </ToolTip>
           <ToolTip content={'Payments'} slateBlack sideOffset={8} side="top">

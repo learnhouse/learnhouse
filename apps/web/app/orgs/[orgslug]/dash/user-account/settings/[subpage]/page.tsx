@@ -6,7 +6,7 @@ import UserEditPassword from '@components/Dashboard/Pages/UserAccount/UserEditPa
 import Link from 'next/link'
 import { getUriWithOrg } from '@services/config/config'
 import { Info, Lock, LucideIcon, User } from 'lucide-react'
-import BreadCrumbs from '@components/Dashboard/Misc/BreadCrumbs'
+import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import UserProfile from '@components/Dashboard/Pages/UserAccount/UserProfile/UserProfile';
 import { useTranslation } from 'react-i18next';
@@ -99,10 +99,12 @@ function SettingsPage({ params }: { params: Promise<SettingsParams> }) {
   return (
     <div className="h-full w-full bg-[#f8f8f8] flex flex-col">
       <div className="pl-10 pr-10 tracking-tight bg-[#fcfbfc] z-10 nice-shadow flex-shrink-0">
-        <BreadCrumbs
-          type="user"
-          last_breadcrumb={session?.user?.username}
-        />
+        <div className="pt-6 pb-4">
+          <Breadcrumbs items={[
+            { label: t('user.user_settings'), href: '/dash/user-account/settings/general', icon: <User size={14} /> },
+            ...(session?.user?.username ? [{ label: session.user.username }] : [])
+          ]} />
+        </div>
         <div className="my-2 tracking-tighter">
           <div className="w-100 flex justify-between">
             <div className="pt-3 flex font-bold text-4xl">{t('user.settings.title')}</div>

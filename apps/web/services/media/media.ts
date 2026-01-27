@@ -49,6 +49,15 @@ export function getCourseThumbnailMediaDirectory(
   return uri
 }
 
+export function getCommunityThumbnailMediaDirectory(
+  orgUUID: string,
+  communityUUID: string,
+  fileId: string
+) {
+  let uri = `${getMediaUrl()}content/orgs/${orgUUID}/communities/${communityUUID}/thumbnails/${fileId}`
+  return uri
+}
+
 export function getOrgLandingMediaDirectory(orgUUID: string, fileId: string) {
   let uri = `${getMediaUrl()}content/orgs/${orgUUID}/landing/${fileId}`
   return uri

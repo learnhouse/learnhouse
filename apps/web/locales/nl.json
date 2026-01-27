@@ -720,6 +720,8 @@
           "landing": "Landingspagina",
           "branding": "Branding",
           "ai": "AI",
+          "api": "API-toegang",
+          "features": "Functies",
           "other": "Overig"
         },
         "pages": {
@@ -742,6 +744,14 @@
           "ai": {
             "title": "AI-functies",
             "subtitle": "Configureer AI-mogelijkheden voor je organisatie"
+          },
+          "api": {
+            "title": "API-toegang",
+            "subtitle": "Beheer API-tokens en programmatische toegang"
+          },
+          "features": {
+            "title": "Functies",
+            "subtitle": "Schakel functies in of uit voor je organisatie"
           }
         },
         "name": "Organisatienaam",
@@ -869,6 +879,33 @@
         "toasts": {
           "save_success": "AI-instellingen succesvol bijgewerkt",
           "save_error": "AI-instellingen bijwerken mislukt"
+        }
+      },
+      "features": {
+        "title": "Functie-instellingen",
+        "subtitle": "Schakel functies in of uit voor je organisatie",
+        "admin_only": "Alleen organisatiebeheerders kunnen functie-instellingen wijzigen.",
+        "upgrade_notice": "Upgrade naar het {{plan}}-plan om deze functie te activeren",
+        "toggles": {
+          "communities": {
+            "title": "Community's",
+            "description": "Schakel discussiecommunity's in voor je organisatieleden"
+          },
+          "payments": {
+            "title": "Betalingen",
+            "description": "Schakel betalingsverwerking in voor cursussen en abonnementen"
+          },
+          "collections": {
+            "title": "Collecties",
+            "description": "Sta organisatie van cursussen in collecties toe"
+          }
+        },
+        "toasts": {
+          "enabling": "{{feature}} wordt ingeschakeld...",
+          "disabling": "{{feature}} wordt uitgeschakeld...",
+          "enabled": "{{feature}} ingeschakeld",
+          "disabled": "{{feature}} uitgeschakeld",
+          "error": "Bijwerken van {{feature}}-configuratie mislukt"
         }
       },
       "audit_logs": {
@@ -1929,6 +1966,116 @@
           "create_error": "Aanmaken van certificering mislukt",
           "remove_success": "Certificering succesvol verwijderd",
           "remove_error": "Verwijderen van certificering mislukt"
+        }
+      },
+      "communities": {
+        "title": "Community's",
+        "new_community": "Nieuwe community",
+        "no_communities": "Nog geen community's",
+        "no_communities_description": "Maak je eerste community om discussies te starten",
+        "card": {
+          "open_settings": "Instellingen openen",
+          "view_community": "Community bekijken",
+          "quick_edit": "Snel bewerken"
+        },
+        "settings": {
+          "tabs": {
+            "general": "Algemeen",
+            "thumbnail": "Miniatuur",
+            "moderation": "Moderatie"
+          }
+        },
+        "general": {
+          "title": "Community-instellingen",
+          "subtitle": "Werk de basisinformatie van je community bij",
+          "form": {
+            "name_label": "Community-naam",
+            "name_required": "Community-naam is verplicht",
+            "name_min_length": "Naam moet minimaal 3 tekens bevatten",
+            "name_max_length": "Naam moet minder dan 100 tekens bevatten",
+            "name_placeholder": "Voer community-naam in",
+            "description_label": "Beschrijving",
+            "description_max_length": "Beschrijving moet minder dan 500 tekens bevatten",
+            "description_placeholder": "Beschrijf waar deze community over gaat",
+            "public_label": "Openbare Community",
+            "public_description": "Maak deze community zichtbaar voor iedereen",
+            "characters_left": "{{count}} tekens over"
+          },
+          "toasts": {
+            "updating": "Community bijwerken...",
+            "update_success": "Community succesvol bijgewerkt",
+            "update_error": "Community bijwerken mislukt"
+          }
+        },
+        "thumbnail": {
+          "title": "Community-miniatuur",
+          "subtitle": "Upload een omslagafbeelding voor je community",
+          "no_thumbnail": "Geen miniatuur ingesteld",
+          "upload_image": "Afbeelding uploaden",
+          "browse_unsplash": "Bladeren op Unsplash",
+          "uploading": "Uploaden...",
+          "supported_formats": "Ondersteunde formaten: JPG, JPEG, PNG. Max. grootte: 8MB. Aanbevolen verhouding: 16:9",
+          "toasts": {
+            "update_success": "Miniatuur succesvol bijgewerkt",
+            "update_error": "Miniatuur bijwerken mislukt",
+            "invalid_type": "Ongeldig bestandstype. Upload alleen PNG- of JPG/JPEG-afbeeldingen",
+            "file_too_large": "Bestandsgrootte overschrijdt de limiet van 8MB"
+          }
+        },
+        "moderation": {
+          "title": "Contentmoderatie",
+          "subtitle": "Configureer geblokkeerde woorden en contentfilters",
+          "info_title": "Geblokkeerde woorden",
+          "info_description": "Discussies en reacties met deze woorden worden geblokkeerd. Gebruikers zien een foutmelding en hun content wordt niet geplaatst.",
+          "add_word_label": "Geblokkeerd woord toevoegen",
+          "add_word_placeholder": "Voer een woord of zin in...",
+          "add_button": "Toevoegen",
+          "batch_add_label": "Woorden in bulk toevoegen",
+          "batch_add_description": "Voeg meerdere woorden tegelijk toe, gescheiden door komma's",
+          "batch_add_placeholder": "woord1, woord2, woord3...",
+          "add_all_button": "Alles Toevoegen",
+          "blocked_words_label": "Geblokkeerde woorden",
+          "no_blocked_words": "Nog geen geblokkeerde woorden",
+          "no_blocked_words_description": "Voeg woorden toe om contentmoderatie in te schakelen",
+          "word_exists_error": "Dit woord staat al in de lijst",
+          "all_words_exist_error": "Alle woorden staan al in de lijst of de invoer is leeg",
+          "toasts": {
+            "saving": "Moderatie-instellingen opslaan...",
+            "save_success": "Moderatie-instellingen opgeslagen",
+            "save_error": "Opslaan van moderatie-instellingen mislukt"
+          }
+        },
+        "modals": {
+          "create": {
+            "title": "Community Aanmaken",
+            "description": "Maak een nieuwe community voor discussies",
+            "form": {
+              "name_label": "Community-naam",
+              "name_placeholder": "Voer community-naam in",
+              "description_label": "Beschrijving",
+              "description_placeholder": "Beschrijf waar deze community over gaat",
+              "public_label": "Maak deze community openbaar (zichtbaar voor iedereen)"
+            },
+            "cancel": "Annuleren",
+            "submit": "Community Aanmaken"
+          },
+          "edit": {
+            "title": "Community Bewerken",
+            "description": "Community-instellingen bijwerken"
+          },
+          "delete": {
+            "title": "{{name}} verwijderen?",
+            "message": "Weet je zeker dat je deze community wilt verwijderen? Alle discussies worden permanent verwijderd.",
+            "button": "Community Verwijderen"
+          }
+        },
+        "toasts": {
+          "creating": "Community aanmaken...",
+          "create_success": "Community succesvol aangemaakt",
+          "create_error": "Community aanmaken mislukt",
+          "deleting": "Community verwijderen...",
+          "delete_success": "Community succesvol verwijderd",
+          "delete_error": "Community verwijderen mislukt"
         }
       },
       "structure": {

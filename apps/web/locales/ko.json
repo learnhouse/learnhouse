@@ -720,6 +720,8 @@
           "landing": "랜딩 페이지",
           "branding": "브랜딩",
           "ai": "AI",
+          "api": "API 접근",
+          "features": "기능",
           "other": "기타"
         },
         "pages": {
@@ -742,6 +744,14 @@
           "ai": {
             "title": "AI 기능",
             "subtitle": "조직의 AI 기능을 구성합니다"
+          },
+          "api": {
+            "title": "API 접근",
+            "subtitle": "API 토큰 및 프로그래밍 방식 접근 관리"
+          },
+          "features": {
+            "title": "기능",
+            "subtitle": "조직의 기능을 활성화 또는 비활성화"
           }
         },
         "name": "조직 이름",
@@ -869,6 +879,33 @@
         "toasts": {
           "save_success": "AI 설정이 성공적으로 업데이트되었습니다",
           "save_error": "AI 설정 업데이트에 실패했습니다"
+        }
+      },
+      "features": {
+        "title": "기능 설정",
+        "subtitle": "조직의 기능을 활성화 또는 비활성화",
+        "admin_only": "조직 관리자만 기능 설정을 수정할 수 있습니다.",
+        "upgrade_notice": "이 기능을 활성화하려면 {{plan}} 플랜으로 업그레이드하세요",
+        "toggles": {
+          "communities": {
+            "title": "커뮤니티",
+            "description": "조직 구성원을 위한 토론 커뮤니티 활성화"
+          },
+          "payments": {
+            "title": "결제",
+            "description": "코스 및 구독에 대한 결제 처리 활성화"
+          },
+          "collections": {
+            "title": "컬렉션",
+            "description": "코스를 컬렉션으로 정리 허용"
+          }
+        },
+        "toasts": {
+          "enabling": "{{feature}} 활성화 중...",
+          "disabling": "{{feature}} 비활성화 중...",
+          "enabled": "{{feature}} 활성화됨",
+          "disabled": "{{feature}} 비활성화됨",
+          "error": "{{feature}} 구성 업데이트 실패"
         }
       },
       "audit_logs": {
@@ -1929,6 +1966,116 @@
           "create_error": "인증 생성에 실패했습니다",
           "remove_success": "인증이 성공적으로 제거되었습니다",
           "remove_error": "인증 제거에 실패했습니다"
+        }
+      },
+      "communities": {
+        "title": "커뮤니티",
+        "new_community": "새 커뮤니티",
+        "no_communities": "아직 커뮤니티가 없습니다",
+        "no_communities_description": "첫 번째 커뮤니티를 만들어 토론을 시작하세요",
+        "card": {
+          "open_settings": "설정 열기",
+          "view_community": "커뮤니티 보기",
+          "quick_edit": "빠른 편집"
+        },
+        "settings": {
+          "tabs": {
+            "general": "일반",
+            "thumbnail": "썸네일",
+            "moderation": "관리"
+          }
+        },
+        "general": {
+          "title": "커뮤니티 설정",
+          "subtitle": "커뮤니티 기본 정보 업데이트",
+          "form": {
+            "name_label": "커뮤니티 이름",
+            "name_required": "커뮤니티 이름은 필수입니다",
+            "name_min_length": "이름은 최소 3자 이상이어야 합니다",
+            "name_max_length": "이름은 100자 미만이어야 합니다",
+            "name_placeholder": "커뮤니티 이름 입력",
+            "description_label": "설명",
+            "description_max_length": "설명은 500자 미만이어야 합니다",
+            "description_placeholder": "이 커뮤니티가 무엇에 관한 것인지 설명하세요",
+            "public_label": "공개 커뮤니티",
+            "public_description": "이 커뮤니티를 모든 사람에게 공개",
+            "characters_left": "{{count}}자 남음"
+          },
+          "toasts": {
+            "updating": "커뮤니티 업데이트 중...",
+            "update_success": "커뮤니티가 성공적으로 업데이트되었습니다",
+            "update_error": "커뮤니티 업데이트에 실패했습니다"
+          }
+        },
+        "thumbnail": {
+          "title": "커뮤니티 썸네일",
+          "subtitle": "커뮤니티 커버 이미지 업로드",
+          "no_thumbnail": "썸네일이 설정되지 않음",
+          "upload_image": "이미지 업로드",
+          "browse_unsplash": "Unsplash 둘러보기",
+          "uploading": "업로드 중...",
+          "supported_formats": "지원 형식: JPG, JPEG, PNG. 최대 크기: 8MB. 권장 비율: 16:9",
+          "toasts": {
+            "update_success": "썸네일이 성공적으로 업데이트되었습니다",
+            "update_error": "썸네일 업데이트에 실패했습니다",
+            "invalid_type": "유효하지 않은 파일 형식입니다. PNG 또는 JPG/JPEG 이미지만 업로드하세요",
+            "file_too_large": "파일 크기가 8MB 제한을 초과했습니다"
+          }
+        },
+        "moderation": {
+          "title": "콘텐츠 관리",
+          "subtitle": "차단 단어 및 콘텐츠 필터 설정",
+          "info_title": "차단 단어",
+          "info_description": "이 단어가 포함된 토론과 답글은 차단됩니다. 사용자에게 오류 메시지가 표시되고 콘텐츠가 게시되지 않습니다.",
+          "add_word_label": "차단 단어 추가",
+          "add_word_placeholder": "단어 또는 문구 입력...",
+          "add_button": "추가",
+          "batch_add_label": "일괄 추가",
+          "batch_add_description": "쉼표로 구분하여 여러 단어를 한 번에 추가",
+          "batch_add_placeholder": "단어1, 단어2, 단어3...",
+          "add_all_button": "모두 추가",
+          "blocked_words_label": "차단 단어",
+          "no_blocked_words": "아직 차단 단어가 없습니다",
+          "no_blocked_words_description": "콘텐츠 관리를 활성화하려면 단어를 추가하세요",
+          "word_exists_error": "이 단어는 이미 목록에 있습니다",
+          "all_words_exist_error": "모든 단어가 이미 목록에 있거나 입력이 비어 있습니다",
+          "toasts": {
+            "saving": "관리 설정 저장 중...",
+            "save_success": "관리 설정이 저장되었습니다",
+            "save_error": "관리 설정 저장에 실패했습니다"
+          }
+        },
+        "modals": {
+          "create": {
+            "title": "커뮤니티 만들기",
+            "description": "토론을 위한 새 커뮤니티 만들기",
+            "form": {
+              "name_label": "커뮤니티 이름",
+              "name_placeholder": "커뮤니티 이름 입력",
+              "description_label": "설명",
+              "description_placeholder": "이 커뮤니티가 무엇에 관한 것인지 설명하세요",
+              "public_label": "이 커뮤니티를 공개로 설정 (모든 사람에게 표시)"
+            },
+            "cancel": "취소",
+            "submit": "커뮤니티 만들기"
+          },
+          "edit": {
+            "title": "커뮤니티 편집",
+            "description": "커뮤니티 설정 업데이트"
+          },
+          "delete": {
+            "title": "{{name}} 삭제하시겠습니까?",
+            "message": "이 커뮤니티를 삭제하시겠습니까? 모든 토론이 영구적으로 삭제됩니다.",
+            "button": "커뮤니티 삭제"
+          }
+        },
+        "toasts": {
+          "creating": "커뮤니티 생성 중...",
+          "create_success": "커뮤니티가 성공적으로 생성되었습니다",
+          "create_error": "커뮤니티 생성에 실패했습니다",
+          "deleting": "커뮤니티 삭제 중...",
+          "delete_success": "커뮤니티가 성공적으로 삭제되었습니다",
+          "delete_error": "커뮤니티 삭제에 실패했습니다"
         }
       },
       "structure": {

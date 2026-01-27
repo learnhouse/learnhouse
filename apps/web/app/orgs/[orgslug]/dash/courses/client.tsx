@@ -1,6 +1,7 @@
 'use client'
-import BreadCrumbs from '@components/Dashboard/Misc/BreadCrumbs'
+import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import CreateCourseModal from '@components/Objects/Modals/Course/Create/CreateCourse'
+import { BookCopy } from 'lucide-react'
 import ScormCourseImport from '../../../../../ee/components/Modals/ScormCourseImport'
 import CourseThumbnail, { removeCoursePrefix } from '@components/Objects/Thumbnails/CourseThumbnail'
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
@@ -47,8 +48,10 @@ function CoursesHome(params: CourseProps) {
 
   return (
     <div className="h-full w-full bg-[#f8f8f8] pl-10 pr-10">
-      <div className="mb-6">
-        <BreadCrumbs type="courses" />
+      <div className="mb-6 pt-6">
+        <Breadcrumbs items={[
+          { label: t('courses.courses'), href: '/dash/courses', icon: <BookCopy size={14} /> }
+        ]} />
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-4">
           <div className="flex items-center space-x-4">
             <h1 className="text-3xl font-bold mb-4 sm:mb-0">{t('dashboard.courses.title')}</h1>
