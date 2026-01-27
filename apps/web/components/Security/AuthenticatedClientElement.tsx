@@ -13,6 +13,8 @@ interface AuthenticatedClientElementProps {
   | 'activities'
   | 'users'
   | 'organizations'
+  | 'communities'
+  | 'discussions'
   action?: 'create' | 'update' | 'delete' | 'read'
 }
 

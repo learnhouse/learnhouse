@@ -100,10 +100,18 @@ export const swrFetcher = async (url: string, token?: string) => {
   }
 }
 
-export const errorHandling = (res: any) => {
+export const errorHandling = async (res: any) => {
   if (!res.ok) {
-    const error: any = new Error(`${res.statusText}`)
+    let detail: any = res.statusText
+    try {
+      const body = await res.json()
+      detail = body.detail || body.message || body
+    } catch (_e) {
+      // If we can't parse JSON, use statusText
+    }
+    const error: any = new Error(typeof detail === 'string' ? detail : JSON.stringify(detail))
     error.status = res.status
+    error.detail = detail
     throw error
   }
   return res.json()

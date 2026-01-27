@@ -25,6 +25,12 @@ async def check_element_type(element_uuid):
         return "activities"
     elif element_uuid.startswith("role_"):
         return "roles"
+    elif element_uuid.startswith("community_"):
+        return "communities"
+    elif element_uuid.startswith("discussion_"):
+        return "discussions"
+    elif element_uuid.startswith("vote_"):
+        return "votes"
     else:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -166,6 +172,30 @@ async def get_element_organization_id(
 
     elif element_type == "houses":
         # Houses might not have org_id - return None
+        return None
+
+    elif element_type == "communities":
+        from src.db.communities.communities import Community
+        statement = select(Community).where(Community.community_uuid == element_uuid)
+        community = db_session.exec(statement).first()
+        return community.org_id if community else None
+
+    elif element_type == "discussions":
+        from src.db.communities.discussions import Discussion
+        statement = select(Discussion).where(Discussion.discussion_uuid == element_uuid)
+        discussion = db_session.exec(statement).first()
+        return discussion.org_id if discussion else None
+
+    elif element_type == "votes":
+        # Votes don't have org_id directly, need to get from discussion
+        from src.db.communities.discussion_votes import DiscussionVote
+        from src.db.communities.discussions import Discussion
+        statement = select(DiscussionVote).where(DiscussionVote.vote_uuid == element_uuid)
+        vote = db_session.exec(statement).first()
+        if vote:
+            discussion_statement = select(Discussion).where(Discussion.id == vote.discussion_id)
+            discussion = db_session.exec(discussion_statement).first()
+            return discussion.org_id if discussion else None
         return None
 
     # Unknown element type

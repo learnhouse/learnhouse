@@ -17,7 +17,8 @@ import {
   SidebarSimple,
   Check,
   CaretDown,
-  PencilSimple
+  PencilSimple,
+  ChatsCircle
 } from '@phosphor-icons/react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -26,7 +27,6 @@ import UserAvatar from '../../Objects/UserAvatar'
 import AdminAuthorization from '@components/Security/AdminAuthorization'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { getUriWithOrg, getUriWithoutOrg, getAPIUrl } from '@services/config/config'
-import useFeatureFlag from '@components/Hooks/useFeatureFlag'
 import { useTranslation } from 'react-i18next'
 import {
   Tooltip,
@@ -131,8 +131,6 @@ function DashLeftMenu() {
   const changeLanguage = (lng: string) => {
     i18n.changeLanguage(lng)
   }
-
-  const isPaymentsEnabled = useFeatureFlag({ path: ['features', 'payments', 'enabled'], defaultValue: false })
 
   async function logOutUI() {
     const res = await signOut({ redirect: true, callbackUrl: getUriWithoutOrg('/login?orgslug=' + org.slug) })
@@ -325,19 +323,23 @@ function DashLeftMenu() {
               </button>
             </HoverMenu>
             <MenuLink
+              href="/dash/communities"
+              icon={<ChatsCircle size={20} weight="fill" />}
+              label="Communities"
+              isCollapsed={isCollapsed}
+            />
+            <MenuLink
               href="/dash/users/settings/users"
               icon={<Users size={20} weight="fill" />}
               label={t('common.users')}
               isCollapsed={isCollapsed}
             />
-            {isPaymentsEnabled && (
-              <MenuLink
-                href="/dash/payments/customers"
-                icon={<CurrencyCircleDollar size={20} weight="fill" />}
-                label={t('common.payments')}
-                isCollapsed={isCollapsed}
-              />
-            )}
+            <MenuLink
+              href="/dash/payments/customers"
+              icon={<CurrencyCircleDollar size={20} weight="fill" />}
+              label={t('common.payments')}
+              isCollapsed={isCollapsed}
+            />
             <MenuLink
               href="/dash/org/settings/general"
               icon={<Buildings size={20} weight="fill" />}

@@ -10,17 +10,18 @@ import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/Ge
 import {
   getCourseThumbnailMediaDirectory,
 } from '@services/media/media'
-import { ArrowRight, Backpack, Check, File, StickyNote, Video, Square, Image as ImageIcon, Layers } from 'lucide-react'
+import { ArrowRight, Backpack, Check, File, StickyNote, Video, Square, Image as ImageIcon, Layers, BookCopy } from 'lucide-react'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { CourseProvider } from '@components/Contexts/CourseContext'
 import { useMediaQuery } from 'usehooks-ts'
 import CoursesActions from '@components/Objects/Courses/CourseActions/CoursesActions'
 import CourseActionsMobile from '@components/Objects/Courses/CourseActions/CourseActionsMobile'
 import CourseAuthors from '@components/Objects/Courses/CourseAuthors/CourseAuthors'
-import CourseBreadcrumbs from '@components/Pages/Courses/CourseBreadcrumbs'
+import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import useSWR from 'swr'
 import { useTranslation } from 'react-i18next'
+import CourseCommunitySection from '@components/Objects/Communities/CourseCommunitySection'
 
 const CourseClient = (props: any) => {
   const { t } = useTranslation()
@@ -146,11 +147,13 @@ const CourseClient = (props: any) => {
       ) : (
         <>
           <GeneralWrapperStyled>
-            <CourseBreadcrumbs 
-              course={course}
-              orgslug={orgslug}
-            />
-            <div className="pb-2 pt-3 flex flex-col md:flex-row justify-between items-start md:items-center">
+            <div className="pb-4">
+              <Breadcrumbs items={[
+                { label: t('courses.courses'), href: getUriWithOrg(orgslug, '/courses'), icon: <BookCopy size={14} /> },
+                { label: course.name }
+              ]} />
+            </div>
+            <div className="pb-2 flex flex-col md:flex-row justify-between items-start md:items-center">
               <div>
                 <h1 className="text-3xl md:text-3xl  font-bold">{course.name}</h1>
               </div>
@@ -451,8 +454,11 @@ const CourseClient = (props: any) => {
                 })}
               </div>
             </div>
+
+            {/* Community Section */}
+            <CourseCommunitySection courseUuid={course.course_uuid} orgslug={orgslug} />
           </GeneralWrapperStyled>
-          
+
           {/* Mobile Actions Box */}
           {isMobile && (
             <CourseActionsMobile courseuuid={courseuuid} orgslug={orgslug} course={course} trailData={trailData} />

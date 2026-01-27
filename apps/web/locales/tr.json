@@ -720,6 +720,8 @@
           "landing": "Açılış Sayfası",
           "branding": "Marka",
           "ai": "YZ",
+          "api": "API Erişimi",
+          "features": "Özellikler",
           "other": "Diğer"
         },
         "pages": {
@@ -742,6 +744,14 @@
           "ai": {
             "title": "Yapay Zeka Özellikleri",
             "subtitle": "Organizasyonunuz için yapay zeka yeteneklerini yapılandırın"
+          },
+          "api": {
+            "title": "API Erişimi",
+            "subtitle": "API tokenlarını ve programatik erişimi yönetin"
+          },
+          "features": {
+            "title": "Özellikler",
+            "subtitle": "Organizasyonunuz için özellikleri etkinleştirin veya devre dışı bırakın"
           }
         },
         "name": "Organizasyon Adı",
@@ -869,6 +879,33 @@
         "toasts": {
           "save_success": "Yapay zeka ayarları başarıyla güncellendi",
           "save_error": "Yapay zeka ayarları güncellenemedi"
+        }
+      },
+      "features": {
+        "title": "Özellik Ayarları",
+        "subtitle": "Organizasyonunuz için özellikleri etkinleştirin veya devre dışı bırakın",
+        "admin_only": "Yalnızca organizasyon yöneticileri özellik ayarlarını değiştirebilir.",
+        "upgrade_notice": "Bu özelliği etkinleştirmek için {{plan}} planına yükseltin",
+        "toggles": {
+          "communities": {
+            "title": "Topluluklar",
+            "description": "Organizasyon üyeleri için tartışma topluluklarını etkinleştir"
+          },
+          "payments": {
+            "title": "Ödemeler",
+            "description": "Kurslar ve abonelikler için ödeme işlemlerini etkinleştir"
+          },
+          "collections": {
+            "title": "Koleksiyonlar",
+            "description": "Kursları koleksiyonlar halinde düzenlemeye izin ver"
+          }
+        },
+        "toasts": {
+          "enabling": "{{feature}} etkinleştiriliyor...",
+          "disabling": "{{feature}} devre dışı bırakılıyor...",
+          "enabled": "{{feature}} etkinleştirildi",
+          "disabled": "{{feature}} devre dışı bırakıldı",
+          "error": "{{feature}} yapılandırması güncellenemedi"
         }
       },
       "audit_logs": {
@@ -1929,6 +1966,116 @@
           "create_error": "Sertifikasyon oluşturulamadı",
           "remove_success": "Sertifikasyon başarıyla kaldırıldı",
           "remove_error": "Sertifikasyon kaldırılamadı"
+        }
+      },
+      "communities": {
+        "title": "Topluluklar",
+        "new_community": "Yeni Topluluk",
+        "no_communities": "Henüz topluluk yok",
+        "no_communities_description": "Tartışmalara başlamak için ilk topluluğunuzu oluşturun",
+        "card": {
+          "open_settings": "Ayarları Aç",
+          "view_community": "Topluluğu Görüntüle",
+          "quick_edit": "Hızlı Düzenle"
+        },
+        "settings": {
+          "tabs": {
+            "general": "Genel",
+            "thumbnail": "Küçük Resim",
+            "moderation": "Moderasyon"
+          }
+        },
+        "general": {
+          "title": "Topluluk Ayarları",
+          "subtitle": "Topluluğunuzun temel bilgilerini güncelleyin",
+          "form": {
+            "name_label": "Topluluk Adı",
+            "name_required": "Topluluk adı gereklidir",
+            "name_min_length": "Ad en az 3 karakter olmalıdır",
+            "name_max_length": "Ad 100 karakterden az olmalıdır",
+            "name_placeholder": "Topluluk adını girin",
+            "description_label": "Açıklama",
+            "description_max_length": "Açıklama 500 karakterden az olmalıdır",
+            "description_placeholder": "Bu topluluğun ne hakkında olduğunu açıklayın",
+            "public_label": "Herkese Açık Topluluk",
+            "public_description": "Bu topluluğu herkes için görünür yap",
+            "characters_left": "{{count}} karakter kaldı"
+          },
+          "toasts": {
+            "updating": "Topluluk güncelleniyor...",
+            "update_success": "Topluluk başarıyla güncellendi",
+            "update_error": "Topluluk güncellenemedi"
+          }
+        },
+        "thumbnail": {
+          "title": "Topluluk Küçük Resmi",
+          "subtitle": "Topluluğunuz için kapak resmi yükleyin",
+          "no_thumbnail": "Küçük resim ayarlanmamış",
+          "upload_image": "Resim Yükle",
+          "browse_unsplash": "Unsplash'ta Ara",
+          "uploading": "Yükleniyor...",
+          "supported_formats": "Desteklenen formatlar: JPG, JPEG, PNG. Maksimum boyut: 8MB. Önerilen en-boy oranı: 16:9",
+          "toasts": {
+            "update_success": "Küçük resim başarıyla güncellendi",
+            "update_error": "Küçük resim güncellenemedi",
+            "invalid_type": "Geçersiz dosya türü. Lütfen yalnızca PNG veya JPG/JPEG resim yükleyin",
+            "file_too_large": "Dosya boyutu 8MB sınırını aşıyor"
+          }
+        },
+        "moderation": {
+          "title": "İçerik Moderasyonu",
+          "subtitle": "Yasaklı kelimeleri ve içerik filtrelerini yapılandırın",
+          "info_title": "Yasaklı kelimeler",
+          "info_description": "Bu kelimeleri içeren tartışmalar ve yanıtlar engellenecektir. Kullanıcılar bir hata mesajı görecek ve içerikleri yayınlanmayacaktır.",
+          "add_word_label": "Yasaklı kelime ekle",
+          "add_word_placeholder": "Kelime veya ifade girin...",
+          "add_button": "Ekle",
+          "batch_add_label": "Toplu ekle",
+          "batch_add_description": "Virgülle ayırarak birden fazla kelime ekleyin",
+          "batch_add_placeholder": "kelime1, kelime2, kelime3...",
+          "add_all_button": "Tümünü Ekle",
+          "blocked_words_label": "Yasaklı kelimeler",
+          "no_blocked_words": "Henüz yasaklı kelime yok",
+          "no_blocked_words_description": "İçerik moderasyonunu etkinleştirmek için kelime ekleyin",
+          "word_exists_error": "Bu kelime zaten listede",
+          "all_words_exist_error": "Tüm kelimeler zaten listede veya giriş boş",
+          "toasts": {
+            "saving": "Moderasyon ayarları kaydediliyor...",
+            "save_success": "Moderasyon ayarları kaydedildi",
+            "save_error": "Moderasyon ayarları kaydedilemedi"
+          }
+        },
+        "modals": {
+          "create": {
+            "title": "Topluluk Oluştur",
+            "description": "Tartışmalar için yeni bir topluluk oluşturun",
+            "form": {
+              "name_label": "Topluluk Adı",
+              "name_placeholder": "Topluluk adını girin",
+              "description_label": "Açıklama",
+              "description_placeholder": "Bu topluluğun ne hakkında olduğunu açıklayın",
+              "public_label": "Bu topluluğu herkese açık yap (herkes için görünür)"
+            },
+            "cancel": "İptal",
+            "submit": "Topluluk Oluştur"
+          },
+          "edit": {
+            "title": "Topluluğu Düzenle",
+            "description": "Topluluk ayarlarını güncelle"
+          },
+          "delete": {
+            "title": "{{name}} silinsin mi?",
+            "message": "Bu topluluğu silmek istediğinizden emin misiniz? Tüm tartışmalar kalıcı olarak kaldırılacaktır.",
+            "button": "Topluluğu Sil"
+          }
+        },
+        "toasts": {
+          "creating": "Topluluk oluşturuluyor...",
+          "create_success": "Topluluk başarıyla oluşturuldu",
+          "create_error": "Topluluk oluşturulamadı",
+          "deleting": "Topluluk siliniyor...",
+          "delete_success": "Topluluk başarıyla silindi",
+          "delete_error": "Topluluk silinemedi"
         }
       },
       "structure": {

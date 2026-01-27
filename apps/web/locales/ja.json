@@ -720,6 +720,8 @@
           "landing": "ランディングページ",
           "branding": "ブランディング",
           "ai": "AI",
+          "api": "APIアクセス",
+          "features": "機能",
           "other": "その他"
         },
         "pages": {
@@ -742,6 +744,14 @@
           "ai": {
             "title": "AI機能",
             "subtitle": "組織のAI機能を設定します"
+          },
+          "api": {
+            "title": "APIアクセス",
+            "subtitle": "APIトークンとプログラムによるアクセスを管理"
+          },
+          "features": {
+            "title": "機能",
+            "subtitle": "組織の機能を有効または無効にする"
           }
         },
         "name": "組織名",
@@ -869,6 +879,33 @@
         "toasts": {
           "save_success": "AI設定が正常に更新されました",
           "save_error": "AI設定の更新に失敗しました"
+        }
+      },
+      "features": {
+        "title": "機能設定",
+        "subtitle": "組織の機能を有効または無効にする",
+        "admin_only": "機能設定を変更できるのは組織管理者のみです。",
+        "upgrade_notice": "この機能を有効にするには{{plan}}プランにアップグレードしてください",
+        "toggles": {
+          "communities": {
+            "title": "コミュニティ",
+            "description": "組織メンバー向けのディスカッションコミュニティを有効にする"
+          },
+          "payments": {
+            "title": "決済",
+            "description": "コースとサブスクリプションの決済処理を有効にする"
+          },
+          "collections": {
+            "title": "コレクション",
+            "description": "コースをコレクションに整理することを許可する"
+          }
+        },
+        "toasts": {
+          "enabling": "{{feature}}を有効にしています...",
+          "disabling": "{{feature}}を無効にしています...",
+          "enabled": "{{feature}}が有効になりました",
+          "disabled": "{{feature}}が無効になりました",
+          "error": "{{feature}}の設定の更新に失敗しました"
         }
       },
       "audit_logs": {
@@ -1929,6 +1966,116 @@
           "create_error": "証明書の作成に失敗しました",
           "remove_success": "証明書を正常に削除しました",
           "remove_error": "証明書の削除に失敗しました"
+        }
+      },
+      "communities": {
+        "title": "コミュニティ",
+        "new_community": "新しいコミュニティ",
+        "no_communities": "コミュニティはまだありません",
+        "no_communities_description": "最初のコミュニティを作成してディスカッションを始めましょう",
+        "card": {
+          "open_settings": "設定を開く",
+          "view_community": "コミュニティを見る",
+          "quick_edit": "クイック編集"
+        },
+        "settings": {
+          "tabs": {
+            "general": "一般",
+            "thumbnail": "サムネイル",
+            "moderation": "モデレーション"
+          }
+        },
+        "general": {
+          "title": "コミュニティ設定",
+          "subtitle": "コミュニティの基本情報を更新",
+          "form": {
+            "name_label": "コミュニティ名",
+            "name_required": "コミュニティ名は必須です",
+            "name_min_length": "名前は3文字以上必要です",
+            "name_max_length": "名前は100文字以下にしてください",
+            "name_placeholder": "コミュニティ名を入力",
+            "description_label": "説明",
+            "description_max_length": "説明は500文字以下にしてください",
+            "description_placeholder": "このコミュニティについて説明してください",
+            "public_label": "公開コミュニティ",
+            "public_description": "このコミュニティを全員に公開する",
+            "characters_left": "残り{{count}}文字"
+          },
+          "toasts": {
+            "updating": "コミュニティを更新中...",
+            "update_success": "コミュニティが更新されました",
+            "update_error": "コミュニティの更新に失敗しました"
+          }
+        },
+        "thumbnail": {
+          "title": "コミュニティサムネイル",
+          "subtitle": "コミュニティのカバー画像をアップロード",
+          "no_thumbnail": "サムネイルが設定されていません",
+          "upload_image": "画像をアップロード",
+          "browse_unsplash": "Unsplashを閲覧",
+          "uploading": "アップロード中...",
+          "supported_formats": "対応形式: JPG, JPEG, PNG。最大サイズ: 8MB。推奨アスペクト比: 16:9",
+          "toasts": {
+            "update_success": "サムネイルが更新されました",
+            "update_error": "サムネイルの更新に失敗しました",
+            "invalid_type": "無効なファイル形式です。PNGまたはJPG/JPEG画像のみアップロードしてください",
+            "file_too_large": "ファイルサイズが8MBの制限を超えています"
+          }
+        },
+        "moderation": {
+          "title": "コンテンツモデレーション",
+          "subtitle": "禁止ワードとコンテンツフィルターを設定",
+          "info_title": "禁止ワード",
+          "info_description": "これらのワードを含むディスカッションや返信はブロックされます。ユーザーにはエラーメッセージが表示され、コンテンツは投稿されません。",
+          "add_word_label": "禁止ワードを追加",
+          "add_word_placeholder": "単語やフレーズを入力...",
+          "add_button": "追加",
+          "batch_add_label": "一括追加",
+          "batch_add_description": "カンマで区切って複数の単語を一度に追加",
+          "batch_add_placeholder": "単語1, 単語2, 単語3...",
+          "add_all_button": "すべて追加",
+          "blocked_words_label": "禁止ワード",
+          "no_blocked_words": "禁止ワードはまだありません",
+          "no_blocked_words_description": "コンテンツモデレーションを有効にするにはワードを追加してください",
+          "word_exists_error": "このワードは既にリストにあります",
+          "all_words_exist_error": "すべてのワードが既にリストにあるか、入力が空です",
+          "toasts": {
+            "saving": "モデレーション設定を保存中...",
+            "save_success": "モデレーション設定が保存されました",
+            "save_error": "モデレーション設定の保存に失敗しました"
+          }
+        },
+        "modals": {
+          "create": {
+            "title": "コミュニティを作成",
+            "description": "ディスカッション用の新しいコミュニティを作成",
+            "form": {
+              "name_label": "コミュニティ名",
+              "name_placeholder": "コミュニティ名を入力",
+              "description_label": "説明",
+              "description_placeholder": "このコミュニティについて説明してください",
+              "public_label": "このコミュニティを公開する（全員に表示）"
+            },
+            "cancel": "キャンセル",
+            "submit": "コミュニティを作成"
+          },
+          "edit": {
+            "title": "コミュニティを編集",
+            "description": "コミュニティ設定を更新"
+          },
+          "delete": {
+            "title": "{{name}}を削除しますか？",
+            "message": "このコミュニティを削除してもよろしいですか？すべてのディスカッションが完全に削除されます。",
+            "button": "コミュニティを削除"
+          }
+        },
+        "toasts": {
+          "creating": "コミュニティを作成中...",
+          "create_success": "コミュニティが作成されました",
+          "create_error": "コミュニティの作成に失敗しました",
+          "deleting": "コミュニティを削除中...",
+          "delete_success": "コミュニティが削除されました",
+          "delete_error": "コミュニティの削除に失敗しました"
         }
       },
       "structure": {

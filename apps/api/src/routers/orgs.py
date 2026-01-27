@@ -39,6 +39,9 @@ from src.services.orgs.orgs import (
     update_org_preview,
     update_org_signup_mechanism,
     update_org_ai_config,
+    update_org_communities_config,
+    update_org_payments_config,
+    update_org_collections_config,
     update_org_thumbnail,
     update_org_landing,
     upload_org_landing_content_service,
@@ -185,6 +188,54 @@ async def api_update_org_ai_config(
     """
     return await update_org_ai_config(
         request, ai_enabled, org_id, current_user, db_session
+    )
+
+
+@router.put("/{org_id}/config/communities")
+async def api_update_org_communities_config(
+    request: Request,
+    org_id: int,
+    communities_enabled: bool,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+):
+    """
+    Update organization communities configuration
+    """
+    return await update_org_communities_config(
+        request, communities_enabled, org_id, current_user, db_session
+    )
+
+
+@router.put("/{org_id}/config/payments")
+async def api_update_org_payments_config(
+    request: Request,
+    org_id: int,
+    payments_enabled: bool,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+):
+    """
+    Update organization payments configuration
+    """
+    return await update_org_payments_config(
+        request, payments_enabled, org_id, current_user, db_session
+    )
+
+
+@router.put("/{org_id}/config/collections")
+async def api_update_org_collections_config(
+    request: Request,
+    org_id: int,
+    collections_enabled: bool,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+):
+    """
+    Update organization collections configuration
+    """
+    return await update_org_collections_config(
+        request, collections_enabled, org_id, current_user, db_session
     )
 
 
