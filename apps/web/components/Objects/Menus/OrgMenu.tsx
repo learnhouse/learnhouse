@@ -69,8 +69,8 @@ export const OrgMenu = (props: any) => {
   return (
     <>
       <div className="backdrop-blur-lg h-[60px] blur-3xl z-behind"></div>
-      <div className="backdrop-blur-lg bg-white/90 fixed top-0 left-0 right-0 h-[60px] ring-1 ring-inset ring-gray-500/10 shadow-[0px_4px_16px_rgba(0,0,0,0.03)]" style={{ zIndex: 9999 }}>
-        <div className="flex items-center justify-between w-full max-w-(--breakpoint-2xl) mx-auto px-4 sm:px-6 lg:px-16 h-full">
+      <div className="backdrop-blur-lg bg-white/90 fixed top-0 left-0 right-0 h-[60px] nice-shadow" style={{ zIndex: 9999 }}>
+        <div className="flex items-center justify-between w-full max-w-(--breakpoint-2xl) mx-auto px-4 sm:px-6 lg:px-8 h-full">
           <div className="flex items-center space-x-5 md:w-auto w-full">
             <div className="logo flex md:w-auto w-full justify-center">
               <Link href={getUriWithOrg(orgslug, '/')}>

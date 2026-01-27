@@ -2,7 +2,7 @@ import AuthenticatedClientElement from '@components/Security/AuthenticatedClient
 import { useOrg } from '@components/Contexts/OrgContext'
 import { getUriWithOrg } from '@services/config/config'
 import { planMeetsRequirement, PlanLevel } from '@services/plans/plans'
-import { BookCopy, Signpost, SquareLibrary, Users } from 'lucide-react'
+import { Books, Signpost, SquaresFour, ChatsCircle } from '@phosphor-icons/react'
 import Link from 'next/link'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
@@ -57,31 +57,31 @@ const LinkItem = (props: any) => {
   const orgslug = props.orgslug
   return (
     <Link href={getUriWithOrg(orgslug, link)}>
-      <li className="flex space-x-2 items-center text-[#909192] font-medium">
+      <li className="flex space-x-2 items-center text-gray-700 font-semibold">
         {props.type == 'courses' && (
           <>
-            <BookCopy size={20}  />{' '}
+            <Books size={20} weight="fill" />{' '}
             <span>{t('courses.courses')}</span>
           </>
         )}
 
         {props.type == 'collections' && (
           <>
-            <SquareLibrary size={20} />{' '}
+            <SquaresFour size={20} weight="fill" />{' '}
             <span>{t('collections.collections')}</span>
           </>
         )}
 
         {props.type == 'trail' && (
           <>
-            <Signpost size={20} />{' '}
+            <Signpost size={20} weight="fill" />{' '}
             <span>{t('courses.progress')}</span>
           </>
         )}
 
         {props.type == 'communities' && (
           <>
-            <Users size={20} />{' '}
+            <ChatsCircle size={20} weight="fill" />{' '}
             <span>Communities</span>
           </>
         )}

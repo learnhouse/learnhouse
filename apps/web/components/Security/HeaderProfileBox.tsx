@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo } from 'react'
 import styled from 'styled-components'
 import Link from 'next/link'
-import { Package2, Crown, Shield, User, Users, LogOut, User as UserIcon, ChevronDown } from 'lucide-react'
+import { Package, Crown, Shield, User, Users, SignOut, CaretDown, Globe, Check } from '@phosphor-icons/react'
 import UserAvatar from '@components/Objects/UserAvatar'
 import useAdminStatus from '@components/Hooks/useAdminStatus'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
@@ -23,7 +23,6 @@ import {
 } from "@components/ui/dropdown-menu"
 import { signOut } from 'next-auth/react'
 import { useTranslation } from 'react-i18next'
-import { Languages, Check } from 'lucide-react'
 import { AVAILABLE_LANGUAGES } from '@/lib/languages'
 import LanguageSwitcher from '@components/Utils/LanguageSwitcher'
 
@@ -78,28 +77,28 @@ export const HeaderProfileBox = () => {
     const roleConfigs: { [key: string]: RoleInfo } = {
       'role_global_admin': {
         name: t('roles.role_admin'),
-        icon: <Crown size={12} />,
+        icon: <Crown size={12} weight="fill" />,
         bgColor: 'bg-purple-600',
         textColor: 'text-white',
         description: t('roles.role_admin_desc')
       },
       'role_global_maintainer': {
         name: t('roles.role_maintainer'),
-        icon: <Shield size={12} />,
+        icon: <Shield size={12} weight="fill" />,
         bgColor: 'bg-blue-600',
         textColor: 'text-white',
         description: t('roles.role_maintainer_desc')
       },
       'role_global_instructor': {
         name: t('roles.role_instructor'),
-        icon: <Users size={12} />,
+        icon: <Users size={12} weight="fill" />,
         bgColor: 'bg-green-600',
         textColor: 'text-white',
         description: t('roles.role_instructor_desc')
       },
       'role_global_user': {
         name: t('roles.role_user'),
-        icon: <User size={12} />,
+        icon: <User size={12} weight="fill" />,
         bgColor: 'bg-gray-500',
         textColor: 'text-white',
         description: t('roles.role_user_desc')
@@ -196,7 +195,7 @@ export const HeaderProfileBox = () => {
                           side="bottom"
                         >
                           <div className="text-[6px] bg-gray-500 text-white px-1 py-0.5 font-medium rounded-full flex items-center gap-0.5 w-fit">
-                            <Shield size={12} />
+                            <Shield size={12} weight="fill" />
                             {customRole.name}
                           </div>
                         </Tooltip>
@@ -204,7 +203,7 @@ export const HeaderProfileBox = () => {
                     </div>
                     <p className='text-xs text-gray-500'>{session.data.user.email}</p>
                   </div>
-                  <ChevronDown size={16} className="text-gray-500" />
+                  <CaretDown size={16} weight="fill" className="text-gray-500" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end">
@@ -221,27 +220,27 @@ export const HeaderProfileBox = () => {
                 {rights?.dashboard?.action_access && (
                   <DropdownMenuItem asChild>
                     <Link href="/dash" className="flex items-center space-x-2">
-                      <Shield size={16} />
+                      <Shield size={16} weight="fill" />
                       <span>{t('common.dashboard')}</span>
                     </Link>
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuItem asChild>
                   <Link href="/dash/user-account/settings/general" className="flex items-center space-x-2">
-                    <UserIcon size={16} />
+                    <User size={16} weight="fill" />
                     <span>{t('user.user_settings')}</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/dash/user-account/owned" className="flex items-center space-x-2">
-                    <Package2 size={16} />
+                    <Package size={16} weight="fill" />
                     <span>{t('courses.my_courses')}</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuSub>
                   <DropdownMenuSubTrigger className="flex items-center space-x-2">
-                    <Languages size={14} />
+                    <Globe size={14} weight="fill" />
                     <span>{t('common.language')}</span>
                   </DropdownMenuSubTrigger>
                   <DropdownMenuPortal>
@@ -253,18 +252,18 @@ export const HeaderProfileBox = () => {
                           className="flex items-center justify-between"
                         >
                           <span>{t(language.translationKey)} ({language.nativeName})</span>
-                          {i18n.language === language.code && <Check size={14} />}
+                          {i18n.language === language.code && <Check size={14} weight="bold" />}
                         </DropdownMenuItem>
                       ))}
                     </DropdownMenuSubContent>
                   </DropdownMenuPortal>
                 </DropdownMenuSub>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   onClick={() => signOut({ callbackUrl: '/' })}
                   className="flex items-center space-x-2 text-red-600 focus:text-red-600"
                 >
-                  <LogOut size={16} />
+                  <SignOut size={16} weight="fill" />
                   <span>Sign Out</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
