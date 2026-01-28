@@ -1,5 +1,6 @@
 import uvicorn
 import logfire
+import sentry_sdk
 from fastapi import FastAPI, Request
 from config.config import LearnHouseConfig, get_learnhouse_config
 from src.core.events.events import shutdown_app, startup_app
@@ -20,6 +21,16 @@ from src.core.ee_hooks import register_ee_middlewares
 
 # Get LearnHouse Config
 learnhouse_config: LearnHouseConfig = get_learnhouse_config()
+
+# Initialize Sentry if configured
+if learnhouse_config.general_config.sentry_config.enabled:
+    sentry_sdk.init(
+        dsn=learnhouse_config.general_config.sentry_config.dsn,
+        traces_sample_rate=1.0 if learnhouse_config.general_config.development_mode else 0.1,
+        profiles_sample_rate=1.0 if learnhouse_config.general_config.development_mode else 0.1,
+        environment="development" if learnhouse_config.general_config.development_mode else "production",
+        send_default_pii=False,
+    )
 
 # Global Config
 app = FastAPI(

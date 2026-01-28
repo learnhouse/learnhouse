@@ -1,3 +1,5 @@
+const { withSentryConfig } = require("@sentry/nextjs");
+
 /** @type {import('common.next').NextConfig} */
 const nextConfig = {
   async rewrites() {
@@ -45,4 +47,18 @@ if (process.env.NODE_ENV === 'development') {
   )
 }
 
-module.exports = nextConfig
+// Only wrap with Sentry if DSN is configured
+const SENTRY_DSN = process.env.NEXT_PUBLIC_LEARNHOUSE_SENTRY_DSN;
+
+if (SENTRY_DSN) {
+  module.exports = withSentryConfig(nextConfig, {
+    org: process.env.SENTRY_ORG,
+    project: process.env.SENTRY_PROJECT,
+    silent: !process.env.CI,
+    widenClientFileUpload: true,
+    disableLogger: true,
+    automaticVercelMonitors: true,
+  });
+} else {
+  module.exports = nextConfig;
+}
