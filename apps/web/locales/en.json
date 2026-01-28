@@ -219,6 +219,8 @@
     "no_updates_yet": "No updates yet",
     "no_updates_desc": "Updates about this course will appear here",
     "quit_course": "Quit Course",
+    "quit_course_confirm": "Are you sure you want to quit this course? You will lose all your progress.",
+    "quit_course_title": "Quit Course?",
     "course_content": "Course Content",
     "course_completion": "Course Completion",
     "course_completed_exclamation": "Course Completed!",

@@ -70,8 +70,8 @@ function AIEditorToolkit(props: AIEditorToolkitProps) {
                   mass: 0.2,
                   velocity: 2,
                 }}
-                className="fixed top-0 left-0 w-full h-full z-overlay flex justify-center items-center "
-                style={{ pointerEvents: 'none' }}
+                className="fixed inset-0 flex justify-center items-end pb-10"
+                style={{ pointerEvents: 'none', zIndex: 99999 }}
               >
                 <>
                   {aiEditorState.isFeedbackModalOpen && (
@@ -86,7 +86,7 @@ function AIEditorToolkit(props: AIEditorToolkitProps) {
                       background:
                         'linear-gradient(0deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.2) 100%), radial-gradient(105.16% 105.16% at 50% -5.16%, rgba(255, 255, 255, 0.18) 0%, rgba(0, 0, 0, 0) 100%), rgb(2 1 25 / 98%)',
                     }}
-                    className="z-editor-toolbar rounded-2xl max-w-(--breakpoint-2xl) my-10 mx-auto w-fit fixed bottom-0 left-1/2 transform -translate-x-1/2 shadow-xl ring-1 ring-inset ring-white/10 text-white p-3 flex-col-reverse backdrop-blur-md"
+                    className="rounded-2xl max-w-(--breakpoint-2xl) w-fit shadow-xl ring-1 ring-inset ring-white/10 text-white p-3 flex-col-reverse backdrop-blur-md"
                   >
                     <div className="flex space-x-2">
                       <div className="pr-1">

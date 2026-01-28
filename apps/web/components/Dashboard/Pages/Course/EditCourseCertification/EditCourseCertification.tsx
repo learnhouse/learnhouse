@@ -11,6 +11,7 @@ import * as Form from '@radix-ui/react-form';
 import React, { useEffect, useState, useRef } from 'react';
 import { useCourseFieldSync, useCourse } from '@components/Contexts/CourseContext';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
+import { useOrg } from '@components/Contexts/OrgContext';
 import { 
   createCertification, 
   deleteCertification 
@@ -56,6 +57,7 @@ function EditCourseCertification(props: EditCourseCertificationProps) {
   const [isCreating, setIsCreating] = useState(false);
   const course = useCourse() as any;
   const session = useLHSession() as any;
+  const org = useOrg() as any;
   const access_token = session?.data?.tokens?.access_token;
 
   // Use the new field sync hook
@@ -73,12 +75,12 @@ function EditCourseCertification(props: EditCourseCertificationProps) {
 
   // Fetch existing certifications
   const { data: certifications, error: certificationsError, mutate: mutateCertifications } = useSWR(
-    courseStructure?.course_uuid && access_token ? 
-    `certifications/course/${courseStructure.course_uuid}` : null,
+    courseStructure?.course_uuid && access_token && org?.id ?
+    `certifications/course/${courseStructure.course_uuid}?org_id=${org.id}` : null,
     async () => {
-      if (!courseStructure?.course_uuid || !access_token) return null;
+      if (!courseStructure?.course_uuid || !access_token || !org?.id) return null;
       const result = await fetch(
-        `${getAPIUrl()}certifications/course/${courseStructure.course_uuid}`,
+        `${getAPIUrl()}certifications/course/${courseStructure.course_uuid}?org_id=${org.id}`,
         {
           method: 'GET',
           headers: {
@@ -171,6 +173,7 @@ function EditCourseCertification(props: EditCourseCertificationProps) {
         const result = await createCertification(
           courseStructure.id,
           config,
+          org.id,
           access_token
         );
 
@@ -196,6 +199,7 @@ function EditCourseCertification(props: EditCourseCertificationProps) {
       try {
         const result = await deleteCertification(
           existingCertification.certification_uuid,
+          org.id,
           access_token
         );
 
