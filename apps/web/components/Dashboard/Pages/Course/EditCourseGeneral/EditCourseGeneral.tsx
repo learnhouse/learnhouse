@@ -8,9 +8,9 @@ import FormLayout, {
 import { useFormik } from 'formik';
 import { AlertTriangle } from 'lucide-react';
 import * as Form from '@radix-ui/react-form';
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import ThumbnailUpdate from './ThumbnailUpdate';
-import { useCourse, useCourseDispatch } from '@components/Contexts/CourseContext';
+import { useCourseFieldSync } from '@components/Contexts/CourseContext';
 import FormTagInput from '@components/Objects/StyledElements/Form/TagInput';
 import LearningItemsList from './LearningItemsList';
 import {
@@ -69,51 +69,53 @@ const validate = (values: any, t: any) => {
 function EditCourseGeneral(props: EditCourseStructureProps) {
   const { t } = useTranslation()
   const [error, setError] = useState('');
-  const course = useCourse();
-  const dispatchCourse = useCourseDispatch() as any;
-  const { isLoading, courseStructure } = course as any;
+
+  // Use the new field sync hook
+  const {
+    syncChanges,
+    cancelPendingSync,
+    courseStructure,
+    isLoading,
+    isSaving,
+  } = useCourseFieldSync('editCourseGeneral');
+
+  // Track if we should sync (to avoid syncing on initial load)
+  const hasInitializedRef = useRef(false);
+  const previousValuesRef = useRef<any>(null);
 
   // Initialize learnings as a JSON array if it's not already
-  const initializeLearnings = (learnings: any) => {
+  const initializeLearnings = useCallback((learnings: any) => {
     if (!learnings) {
       return JSON.stringify([{ id: 'default-1', text: '', emoji: '📝' }]);
     }
-    
+
     try {
-      // Check if it's already a valid JSON array
       const parsed = JSON.parse(learnings);
       if (Array.isArray(parsed)) {
         return learnings;
       }
-      
-      // If it's a string but not a JSON array, convert it to a learning item
       if (typeof learnings === 'string') {
-        return JSON.stringify([{ 
-          id: 'default-1', 
-          text: learnings, 
-          emoji: '📝' 
+        return JSON.stringify([{
+          id: 'default-1',
+          text: learnings,
+          emoji: '📝'
         }]);
       }
-      
-      // Default empty array
       return JSON.stringify([{ id: 'default-1', text: '', emoji: '📝' }]);
     } catch (e) {
-      // If it's not valid JSON, convert the string to a learning item
       if (typeof learnings === 'string') {
-        return JSON.stringify([{ 
-          id: 'default-1', 
-          text: learnings, 
-          emoji: '📝' 
+        return JSON.stringify([{
+          id: 'default-1',
+          text: learnings,
+          emoji: '📝'
         }]);
       }
-      
-      // Default empty array
       return JSON.stringify([{ id: 'default-1', text: '', emoji: '📝' }]);
     }
-  };
+  }, []);
 
-  // Create initial values object
-  const getInitialValues = () => {
+  // Memoize initial values to prevent unnecessary recalculations
+  const initialValues = useMemo(() => {
     const thumbnailType = courseStructure?.thumbnail_type || 'image';
     return {
       name: courseStructure?.name || '',
@@ -124,62 +126,67 @@ function EditCourseGeneral(props: EditCourseStructureProps) {
       public: courseStructure?.public || false,
       thumbnail_type: thumbnailType,
     };
-  };
+  }, [courseStructure?.name, courseStructure?.description, courseStructure?.about,
+      courseStructure?.learnings, courseStructure?.tags, courseStructure?.public,
+      courseStructure?.thumbnail_type, initializeLearnings]);
 
   const formik = useFormik({
-    initialValues: getInitialValues(),
+    initialValues,
     validate: (values) => validate(values, t),
     onSubmit: async values => {
-      try {
-        // Add your submission logic here
-        dispatchCourse({ type: 'setIsSaved' });
-      } catch (e) {
-        setError(t('dashboard.courses.general.errors.save_failed'));
-      }
+      // The actual save is handled by SaveState component
+      // This is just for form validation purposes
     },
     enableReinitialize: true,
   }) as any;
 
-  // Debounce timer ref
-  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Sync to context with debounce to avoid re-rendering the whole tree on every keystroke
+  // Sync form changes to context using the new system
   useEffect(() => {
-    if (!isLoading && courseStructure) {
-      const formikValues = formik.values as any;
-      const initialValues = formik.initialValues as any;
-      
-      const valuesChanged = Object.keys(formikValues).some(
-        key => formikValues[key] !== initialValues[key]
-      );
+    // Skip if loading or saving
+    if (isLoading || isSaving) return;
 
-      if (valuesChanged) {
-        // Clear existing timer
-        if (debounceTimerRef.current) {
-          clearTimeout(debounceTimerRef.current);
-        }
-
-        // Set new timer
-        debounceTimerRef.current = setTimeout(() => {
-          dispatchCourse({ type: 'setIsNotSaved' });
-          const updatedCourse = {
-            ...courseStructure,
-            ...formikValues,
-          };
-          dispatchCourse({ type: 'setCourseStructure', payload: updatedCourse });
-        }, 500);
-      }
+    // Skip initial mount
+    if (!hasInitializedRef.current) {
+      hasInitializedRef.current = true;
+      previousValuesRef.current = formik.values;
+      return;
     }
 
-    // Cleanup on unmount
-    return () => {
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
-      }
-    };
-  }, [formik.values, isLoading, courseStructure, dispatchCourse]);
+    // Check if values actually changed from previous
+    const prevValues = previousValuesRef.current;
+    if (!prevValues) {
+      previousValuesRef.current = formik.values;
+      return;
+    }
 
-  // Reset form when courseStructure changes (initial load)
+    // Compare current values with previous
+    const hasChanges = Object.keys(formik.values).some(
+      key => formik.values[key] !== prevValues[key]
+    );
+
+    if (hasChanges) {
+      // Build only the changed fields
+      const changes: any = {};
+      Object.keys(formik.values).forEach(key => {
+        if (formik.values[key] !== prevValues[key]) {
+          changes[key] = formik.values[key];
+        }
+      });
+
+      // Sync changes with debounce
+      syncChanges(changes);
+
+      // Update previous values ref
+      previousValuesRef.current = { ...formik.values };
+    }
+  }, [formik.values, isLoading, isSaving, syncChanges]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      cancelPendingSync();
+    };
+  }, [cancelPendingSync]);
 
   if (isLoading || !courseStructure) {
     return <div>{t('dashboard.courses.settings.loading')}</div>;
@@ -208,6 +215,7 @@ function EditCourseGeneral(props: EditCourseStructureProps) {
                     value={formik.values.name}
                     type="text"
                     required
+                    disabled={isSaving}
                   />
                 </Form.Control>
               </FormField>
@@ -221,6 +229,7 @@ function EditCourseGeneral(props: EditCourseStructureProps) {
                     value={formik.values.description}
                     type="text"
                     required
+                    disabled={isSaving}
                   />
                 </Form.Control>
               </FormField>
@@ -233,17 +242,21 @@ function EditCourseGeneral(props: EditCourseStructureProps) {
                     onChange={formik.handleChange}
                     value={formik.values.about}
                     required
+                    disabled={isSaving}
                   />
                 </Form.Control>
               </FormField>
 
               <FormField name="learnings">
-                <FormLabelAndMessage label={t('dashboard.courses.general.form.learnings_label')} message={formik.errors.learnings} />
+                <FormLabelAndMessage label={t('dashboard.courses.general.form.learnings_label')} message={formik.touched.learnings ? formik.errors.learnings : undefined} />
                 <Form.Control asChild>
                   <LearningItemsList
                     value={formik.values.learnings}
-                    onChange={(value) => formik.setFieldValue('learnings', value)}
-                    error={formik.errors.learnings}
+                    onChange={(value) => {
+                      formik.setFieldTouched('learnings', true, false)
+                      formik.setFieldValue('learnings', value)
+                    }}
+                    error={formik.touched.learnings ? formik.errors.learnings : undefined}
                   />
                 </Form.Control>
               </FormField>
@@ -268,6 +281,7 @@ function EditCourseGeneral(props: EditCourseStructureProps) {
                       if (!value) return;
                       formik.setFieldValue('thumbnail_type', value);
                     }}
+                    disabled={isSaving}
                   >
                     <CustomSelectTrigger className="w-full bg-white">
                       <CustomSelectValue>
@@ -300,4 +314,3 @@ function EditCourseGeneral(props: EditCourseStructureProps) {
 }
 
 export default EditCourseGeneral;
-

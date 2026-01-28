@@ -17,8 +17,8 @@ class AuditLogBase(SQLModel):
     method: str
     path: str
     status_code: int
-    payload: Optional[Dict[str, Any]] = Field(
-        default=None, 
+    payload: Optional[Any] = Field(
+        default=None,
         sa_column=Column(JSON)
     )
     ip_address: Optional[str] = None

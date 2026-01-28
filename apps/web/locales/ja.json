@@ -81,6 +81,8 @@
     "version": "バージョン",
     "users": "ユーザー",
     "save": "保存",
+    "save_changes": "変更を保存",
+    "saving": "保存中...",
     "cancel": "キャンセル",
     "submit": "送信",
     "delete": "削除",
@@ -217,6 +219,8 @@
     "course_completed_exclamation": "コースを修了しました！",
     "what_you_will_learn": "学べる内容",
     "course_lessons": "コースのレッスン",
+    "share_course": "コースを共有",
+    "copy_link": "リンクをコピー",
     "unlock_certificate_message": "すべてのアクティビティを完了して修了証を受け取りましょう",
     "chapter": "章",
     "chapters": "章",
@@ -284,6 +288,159 @@
       "configure": "設定",
       "ready_to_analyze": "分析準備完了",
       "course_details": "コース詳細"
+    },
+    "clone_course": "コースを複製",
+    "clone_course_title": "\"{{name}}\" を複製",
+    "clone_course_confirm": "すべての章、アクティビティ、ファイルを含むコースの完全なコピーを作成します。複製されたコースは非公開に設定されます。",
+    "cloning_course": "コースを複製中...",
+    "course_cloned_success": "コースが正常に複製されました",
+    "course_cloned_error": "コースの複製に失敗しました",
+    "published": "公開中",
+    "unpublished": "非公開",
+    "search_courses": "コースを検索...",
+    "search_results": "「{{query}}」に一致する {{count}} 件のコースが見つかりました",
+    "no_search_results": "コースが見つかりません",
+    "try_different_search": "別の検索語をお試しください",
+    "select_courses": "選択",
+    "select_all": "すべて選択",
+    "clear_selection": "選択解除",
+    "selected_count": "{{count}} 件選択中",
+    "clone_selected": "選択を複製",
+    "clone_selected_confirm": "{{count}} 件のコースのコピーを作成します。複製されたコースは非公開に設定されます。続行しますか？",
+    "delete_selected": "選択を削除",
+    "delete_selected_confirm": "{{count}} 件のコースを完全に削除します。この操作は取り消せません。続行しますか？",
+    "course_description_required": "コースの説明は必須です"
+  },
+  "communities": {
+    "title": "コミュニティ",
+    "new_community": "新しいコミュニティ",
+    "no_communities": "コミュニティがまだありません",
+    "no_communities_description": "コミュニティを作成してディスカッションを始めましょう",
+    "public": "公開",
+    "private": "非公開",
+    "discussions": "ディスカッション",
+    "discussion": "ディスカッション",
+    "created": "作成日",
+    "linked_course": "関連コース",
+    "community_guidelines": "コミュニティガイドライン",
+    "community_guidelines_text": "敬意を持ち、建設的に行動してください。他の人を助け、コミュニティと知識を共有しましょう。",
+    "new_discussion": "新しいディスカッション",
+    "manage": "管理",
+    "sidebar": {
+      "posted_by": "投稿者",
+      "upvotes": "いいね",
+      "category": "カテゴリ",
+      "created": "作成日",
+      "pinned": "ピン留め",
+      "locked": "ロック中",
+      "reactions": "リアクション",
+      "community": "コミュニティ"
+    },
+    "discussion_list": {
+      "search_placeholder": "ディスカッションを検索...",
+      "sort_by": "並び替え：",
+      "latest_activity": "最新の活動",
+      "top": "人気",
+      "hot": "トレンド",
+      "new_discussion": "新しいディスカッション",
+      "select": "選択",
+      "cancel": "キャンセル",
+      "select_all": "すべて選択",
+      "deselect_all": "選択解除",
+      "selected": "選択中",
+      "delete": "削除",
+      "delete_discussions_title": "{{count}}件のディスカッションを削除しますか？",
+      "delete_discussions_title_plural": "{{count}}件のディスカッションを削除しますか？",
+      "delete_discussions_confirm": "{{count}}件の{{type}}を削除してもよろしいですか？この操作は取り消せません。",
+      "no_results": "結果が見つかりません",
+      "no_results_description": "検索条件を調整するか、フィルターをクリアしてください",
+      "clear_search": "検索をクリア",
+      "no_discussions": "ディスカッションがまだありません",
+      "no_discussions_description": "このコミュニティで最初のディスカッションを始めましょう！",
+      "start_discussion": "ディスカッションを開始"
+    },
+    "discussion_detail": {
+      "edit": "編集",
+      "delete": "削除",
+      "delete_title": "ディスカッションを削除しますか？",
+      "delete_confirm": "このディスカッションを削除してもよろしいですか？この操作は取り消せません。",
+      "delete_button": "ディスカッションを削除",
+      "no_details": "追加の詳細はありません。"
+    },
+    "discussion_card": {
+      "pin_discussion": "ディスカッションをピン留め",
+      "unpin_discussion": "ピン留めを解除",
+      "lock_discussion": "ディスカッションをロック",
+      "unlock_discussion": "ロックを解除",
+      "delete_discussion": "ディスカッションを削除",
+      "delete_title": "ディスカッションを削除しますか？",
+      "delete_confirm": "このディスカッションを削除してもよろしいですか？この操作は取り消せません。",
+      "votes": "票"
+    },
+    "comments": {
+      "no_replies": "まだ返信がありません",
+      "locked": "このディスカッションはロックされています",
+      "sign_in_to_reply": "ログイン",
+      "to_reply": "して返信",
+      "write_reply": "返信を書く...",
+      "reply": "返信",
+      "edit": "編集",
+      "delete": "削除",
+      "save": "保存",
+      "cancel": "キャンセル",
+      "failed_to_post": "返信の投稿に失敗しました。もう一度お試しください。",
+      "content_not_allowed": "返信に許可されていないコンテンツが含まれています。",
+      "failed_to_update": "更新に失敗しました。もう一度お試しください。"
+    },
+    "label_filter": {
+      "label": "ラベル：",
+      "all": "すべて",
+      "all_discussions": "すべてのディスカッション",
+      "clear_filter": "フィルターをクリア"
+    },
+    "labels": {
+      "general": "一般",
+      "question": "質問",
+      "idea": "アイデア",
+      "announcement": "お知らせ",
+      "showcase": "ショーケース"
+    },
+    "create_discussion": {
+      "title": "ディスカッションを開始",
+      "description": "コミュニティとあなたの考えを共有しましょう",
+      "category_label": "カテゴリ",
+      "title_label": "ディスカッションタイトル",
+      "title_placeholder": "何について話し合いたいですか？",
+      "emoji_selected": "カスタム絵文字を選択済み",
+      "emoji_hint": "+をクリックしてカスタム絵文字を追加（任意）",
+      "details_label": "詳細（任意）",
+      "details_placeholder": "ディスカッションにコンテキストや詳細を追加...",
+      "editor_hint": "ツールバーを使用して、太字、斜体、リストなどでテキストを書式設定できます。",
+      "cancel": "キャンセル",
+      "submit": "ディスカッションを投稿",
+      "title_required": "タイトルは必須です",
+      "title_min_length": "タイトルは5文字以上必要です",
+      "title_max_length": "タイトルは200文字以内にしてください",
+      "content_not_allowed": "ディスカッションに許可されていないコンテンツが含まれています。",
+      "failed_to_create": "ディスカッションの作成に失敗しました。もう一度お試しください。"
+    },
+    "edit_discussion": {
+      "title": "ディスカッションを編集",
+      "description": "ディスカッションを更新",
+      "save": "変更を保存",
+      "cancel": "キャンセル",
+      "close": "閉じる",
+      "failed_to_update": "更新に失敗しました。もう一度お試しください。",
+      "content_not_allowed": "ディスカッションに許可されていないコンテンツが含まれています。",
+      "max_edits_reached": "編集の最大回数（{{count}}回）に達しました。このディスカッションはこれ以上編集できません。",
+      "edits_remaining": "残り{{count}}回編集できます。",
+      "no_edits_remaining": "編集回数が残っていません（{{count}}回）。"
+    },
+    "course_section": {
+      "title": "コミュニティディスカッション",
+      "view_all": "すべて表示",
+      "no_discussions": "まだディスカッションがありません",
+      "start_first": "最初のディスカッションを始める"
     }
   },
   "collections": {
@@ -732,6 +889,30 @@
       "no_courses": "コースがまだありません",
       "create_course_placeholder": "コースを作成してコンテンツを追加しましょう",
       "no_courses_available": "利用可能なコースがまだありません",
+      "publishing": "コースを公開中...",
+      "unpublishing": "コースを非公開中...",
+      "published_success": "コースが正常に公開されました",
+      "unpublished_success": "コースが正常に非公開になりました",
+      "publish_error": "公開状態の更新に失敗しました",
+      "published": "公開中",
+      "unpublished": "非公開",
+      "processing": "処理中...",
+      "click_to_publish": "クリックして公開",
+      "click_to_unpublish": "クリックして非公開",
+      "preview": "プレビュー",
+      "save": {
+        "success": "変更が正常に保存されました",
+        "error": "変更の保存に失敗しました",
+        "partial_success": "一部の問題がありますが保存されました：{{failed}}",
+        "partial_error": "一部保存されました（{{success}}）が、失敗：{{failed}}",
+        "certification_error": "認定設定の保存に失敗しました",
+        "saving": "保存中...",
+        "saved": "保存済み",
+        "save": "保存",
+        "unsaved": "未保存の変更",
+        "retry": "エラー - クリックして再試行",
+        "retry_button": "再試行"
+      },
       "overview_top": {
         "course_label": "コース",
         "rights_guide_button": "権利ガイド"
@@ -1032,7 +1213,43 @@
           "tabs": {
             "general": "一般",
             "thumbnail": "サムネイル",
+            "course": "リンクされたコース",
             "moderation": "モデレーション"
+          },
+          "general": {
+            "title": "一般設定",
+            "subtitle": "コミュニティ名、説明、表示設定を管理"
+          },
+          "thumbnail": {
+            "title": "サムネイル",
+            "subtitle": "コミュニティのカバー画像を更新"
+          },
+          "course": {
+            "title": "リンクされたコース",
+            "subtitle": "このコミュニティをコースに接続"
+          },
+          "moderation": {
+            "title": "モデレーション",
+            "subtitle": "コンテンツモデレーション設定を構成"
+          }
+        },
+        "course": {
+          "title": "リンクされたコース",
+          "subtitle": "コース専用のディスカッションのためにこのコミュニティをコースに接続",
+          "currently_linked": "現在リンク中",
+          "unlink": "リンク解除",
+          "link_button": "コースをリンク",
+          "search_placeholder": "コースを検索...",
+          "no_courses": "コースが見つかりません",
+          "course_linked_id": "コースがリンクされています (ID: {{id}})",
+          "course_not_found": "リンクされたコースが存在しないか、アクセス権がありません",
+          "toasts": {
+            "linking": "コースをリンク中...",
+            "link_success": "コースが正常にリンクされました",
+            "link_error": "コースのリンクに失敗しました",
+            "unlinking": "コースのリンクを解除中...",
+            "unlink_success": "コースのリンクが正常に解除されました",
+            "unlink_error": "コースのリンク解除に失敗しました"
           }
         },
         "general": {

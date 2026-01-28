@@ -55,6 +55,7 @@ class CourseBase(SQLModel):
     thumbnail_image: Optional[str] = Field(default="")
     thumbnail_video: Optional[str] = Field(default="")
     public: bool
+    published: bool = Field(default=False)
     open_to_contributors: bool
 
 
@@ -87,6 +88,7 @@ class CourseUpdate(CourseBase):
     thumbnail_image: Optional[str] = Field(default="")
     thumbnail_video: Optional[str] = Field(default="")
     public: Optional[bool] = None
+    published: Optional[bool] = None
     open_to_contributors: Optional[bool] = None
     seo: Optional[dict] = None
 

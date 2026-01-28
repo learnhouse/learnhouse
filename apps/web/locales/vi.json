@@ -81,6 +81,8 @@
     "version": "Phiên bản",
     "users": "Người dùng",
     "save": "Lưu",
+    "save_changes": "Lưu thay đổi",
+    "saving": "Đang lưu...",
     "cancel": "Hủy",
     "submit": "Gửi",
     "delete": "Xóa",
@@ -217,6 +219,8 @@
     "course_completed_exclamation": "Khóa học đã hoàn thành!",
     "what_you_will_learn": "Bạn sẽ học được gì",
     "course_lessons": "Các bài học",
+    "share_course": "Chia sẻ khóa học",
+    "copy_link": "Sao chép liên kết",
     "unlock_certificate_message": "Hoàn thành tất cả các hoạt động để mở khóa chứng chỉ của bạn",
     "chapter": "Chương",
     "chapters": "Chương",
@@ -284,6 +288,159 @@
       "configure": "Cấu hình",
       "ready_to_analyze": "Sẵn sàng phân tích",
       "course_details": "Chi tiết khóa học"
+    },
+    "clone_course": "Sao chép khóa học",
+    "clone_course_title": "Sao chép \"{{name}}\"",
+    "clone_course_confirm": "Điều này sẽ tạo một bản sao hoàn chỉnh của khóa học bao gồm tất cả các chương, hoạt động và tệp. Khóa học được sao chép sẽ được đặt ở chế độ riêng tư.",
+    "cloning_course": "Đang sao chép khóa học...",
+    "course_cloned_success": "Sao chép khóa học thành công",
+    "course_cloned_error": "Sao chép khóa học thất bại",
+    "published": "Đã xuất bản",
+    "unpublished": "Chưa xuất bản",
+    "search_courses": "Tìm kiếm khóa học...",
+    "search_results": "Tìm thấy {{count}} khóa học cho \"{{query}}\"",
+    "no_search_results": "Không tìm thấy khóa học",
+    "try_different_search": "Thử từ khóa tìm kiếm khác",
+    "select_courses": "Chọn",
+    "select_all": "Chọn tất cả",
+    "clear_selection": "Bỏ chọn",
+    "selected_count": "Đã chọn {{count}}",
+    "clone_selected": "Sao chép đã chọn",
+    "clone_selected_confirm": "Sẽ tạo bản sao của {{count}} khóa học. Tất cả khóa học sao chép sẽ ở chế độ riêng tư. Tiếp tục?",
+    "delete_selected": "Xóa đã chọn",
+    "delete_selected_confirm": "{{count}} khóa học sẽ bị xóa vĩnh viễn. Không thể hoàn tác hành động này. Tiếp tục?",
+    "course_description_required": "Mô tả khóa học là bắt buộc"
+  },
+  "communities": {
+    "title": "Cộng đồng",
+    "new_community": "Cộng đồng mới",
+    "no_communities": "Chưa có cộng đồng nào",
+    "no_communities_description": "Tạo cộng đồng để bắt đầu thảo luận",
+    "public": "Công khai",
+    "private": "Riêng tư",
+    "discussions": "thảo luận",
+    "discussion": "thảo luận",
+    "created": "Đã tạo",
+    "linked_course": "Khóa học liên kết",
+    "community_guidelines": "Quy tắc cộng đồng",
+    "community_guidelines_text": "Hãy tôn trọng và xây dựng. Giúp đỡ người khác và chia sẻ kiến thức với cộng đồng.",
+    "new_discussion": "Thảo luận mới",
+    "manage": "Quản lý",
+    "sidebar": {
+      "posted_by": "Đăng bởi",
+      "upvotes": "Lượt thích",
+      "category": "Danh mục",
+      "created": "Đã tạo",
+      "pinned": "Đã ghim",
+      "locked": "Đã khóa",
+      "reactions": "Phản ứng",
+      "community": "Cộng đồng"
+    },
+    "discussion_list": {
+      "search_placeholder": "Tìm kiếm thảo luận...",
+      "sort_by": "Sắp xếp:",
+      "latest_activity": "Hoạt động mới nhất",
+      "top": "Phổ biến",
+      "hot": "Xu hướng",
+      "new_discussion": "Thảo luận mới",
+      "select": "Chọn",
+      "cancel": "Hủy",
+      "select_all": "Chọn tất cả",
+      "deselect_all": "Bỏ chọn tất cả",
+      "selected": "đã chọn",
+      "delete": "Xóa",
+      "delete_discussions_title": "Xóa {{count}} thảo luận?",
+      "delete_discussions_title_plural": "Xóa {{count}} thảo luận?",
+      "delete_discussions_confirm": "Bạn có chắc muốn xóa {{count}} {{type}}? Không thể hoàn tác hành động này.",
+      "no_results": "Không tìm thấy kết quả",
+      "no_results_description": "Hãy thử điều chỉnh tìm kiếm hoặc xóa bộ lọc",
+      "clear_search": "Xóa tìm kiếm",
+      "no_discussions": "Chưa có thảo luận nào",
+      "no_discussions_description": "Hãy là người đầu tiên bắt đầu thảo luận trong cộng đồng này!",
+      "start_discussion": "Bắt đầu thảo luận"
+    },
+    "discussion_detail": {
+      "edit": "Chỉnh sửa",
+      "delete": "Xóa",
+      "delete_title": "Xóa thảo luận?",
+      "delete_confirm": "Bạn có chắc muốn xóa thảo luận này? Không thể hoàn tác hành động này.",
+      "delete_button": "Xóa thảo luận",
+      "no_details": "Không có chi tiết bổ sung."
+    },
+    "discussion_card": {
+      "pin_discussion": "Ghim thảo luận",
+      "unpin_discussion": "Bỏ ghim thảo luận",
+      "lock_discussion": "Khóa thảo luận",
+      "unlock_discussion": "Mở khóa thảo luận",
+      "delete_discussion": "Xóa thảo luận",
+      "delete_title": "Xóa thảo luận?",
+      "delete_confirm": "Bạn có chắc muốn xóa thảo luận này? Không thể hoàn tác hành động này.",
+      "votes": "phiếu"
+    },
+    "comments": {
+      "no_replies": "Chưa có phản hồi",
+      "locked": "Thảo luận này đã bị khóa",
+      "sign_in_to_reply": "Đăng nhập",
+      "to_reply": "để trả lời",
+      "write_reply": "Viết phản hồi...",
+      "reply": "Trả lời",
+      "edit": "Chỉnh sửa",
+      "delete": "Xóa",
+      "save": "Lưu",
+      "cancel": "Hủy",
+      "failed_to_post": "Không thể đăng phản hồi. Vui lòng thử lại.",
+      "content_not_allowed": "Phản hồi của bạn chứa nội dung không được phép.",
+      "failed_to_update": "Cập nhật thất bại. Vui lòng thử lại."
+    },
+    "label_filter": {
+      "label": "Nhãn:",
+      "all": "Tất cả",
+      "all_discussions": "Tất cả thảo luận",
+      "clear_filter": "Xóa bộ lọc"
+    },
+    "labels": {
+      "general": "Chung",
+      "question": "Câu hỏi",
+      "idea": "Ý tưởng",
+      "announcement": "Thông báo",
+      "showcase": "Trưng bày"
+    },
+    "create_discussion": {
+      "title": "Bắt đầu thảo luận",
+      "description": "Chia sẻ suy nghĩ với cộng đồng",
+      "category_label": "Danh mục",
+      "title_label": "Tiêu đề thảo luận",
+      "title_placeholder": "Bạn muốn thảo luận về điều gì?",
+      "emoji_selected": "Đã chọn emoji tùy chỉnh",
+      "emoji_hint": "Nhấn + để thêm emoji tùy chỉnh (tùy chọn)",
+      "details_label": "Chi tiết (tùy chọn)",
+      "details_placeholder": "Thêm ngữ cảnh hoặc chi tiết cho thảo luận của bạn...",
+      "editor_hint": "Sử dụng thanh công cụ để định dạng văn bản với in đậm, in nghiêng, danh sách và hơn thế nữa.",
+      "cancel": "Hủy",
+      "submit": "Đăng thảo luận",
+      "title_required": "Tiêu đề là bắt buộc",
+      "title_min_length": "Tiêu đề phải có ít nhất 5 ký tự",
+      "title_max_length": "Tiêu đề phải dưới 200 ký tự",
+      "content_not_allowed": "Thảo luận của bạn chứa nội dung không được phép.",
+      "failed_to_create": "Không thể tạo thảo luận. Vui lòng thử lại."
+    },
+    "edit_discussion": {
+      "title": "Chỉnh sửa thảo luận",
+      "description": "Cập nhật thảo luận của bạn",
+      "save": "Lưu thay đổi",
+      "cancel": "Hủy",
+      "close": "Đóng",
+      "failed_to_update": "Cập nhật thất bại. Vui lòng thử lại.",
+      "content_not_allowed": "Thảo luận của bạn chứa nội dung không được phép.",
+      "max_edits_reached": "Bạn đã đạt đến số lần chỉnh sửa tối đa ({{count}}). Bạn không thể chỉnh sửa thảo luận này nữa.",
+      "edits_remaining": "Bạn còn {{count}} lần chỉnh sửa.",
+      "no_edits_remaining": "Bạn không còn lần chỉnh sửa nào ({{count}})."
+    },
+    "course_section": {
+      "title": "Thảo luận cộng đồng",
+      "view_all": "Xem tất cả",
+      "no_discussions": "Chưa có thảo luận nào",
+      "start_first": "Bắt đầu thảo luận đầu tiên"
     }
   },
   "collections": {
@@ -732,6 +889,30 @@
       "no_courses": "Chưa có khóa học nào",
       "create_course_placeholder": "Tạo khóa học để thêm nội dung",
       "no_courses_available": "Hiện không có khóa học nào",
+      "publishing": "Đang xuất bản khóa học...",
+      "unpublishing": "Đang hủy xuất bản khóa học...",
+      "published_success": "Khóa học đã được xuất bản thành công",
+      "unpublished_success": "Khóa học đã được hủy xuất bản",
+      "publish_error": "Lỗi khi cập nhật trạng thái xuất bản",
+      "published": "Đã xuất bản",
+      "unpublished": "Chưa xuất bản",
+      "processing": "Đang xử lý...",
+      "click_to_publish": "Nhấp để xuất bản",
+      "click_to_unpublish": "Nhấp để hủy xuất bản",
+      "preview": "Xem trước",
+      "save": {
+        "success": "Đã lưu thay đổi thành công",
+        "error": "Không thể lưu thay đổi",
+        "partial_success": "Đã lưu với một số vấn đề: {{failed}}",
+        "partial_error": "Đã lưu một phần ({{success}}), nhưng thất bại: {{failed}}",
+        "certification_error": "Không thể lưu cài đặt chứng chỉ",
+        "saving": "Đang lưu...",
+        "saved": "Đã lưu",
+        "save": "Lưu",
+        "unsaved": "Thay đổi chưa được lưu",
+        "retry": "Lỗi - Nhấp để thử lại",
+        "retry_button": "Thử lại"
+      },
       "overview_top": {
         "course_label": "Khóa học",
         "rights_guide_button": "Hướng dẫn về quyền hạn"
@@ -1032,7 +1213,43 @@
           "tabs": {
             "general": "Chung",
             "thumbnail": "Hình thu nhỏ",
+            "course": "Khóa học liên kết",
             "moderation": "Kiểm duyệt"
+          },
+          "general": {
+            "title": "Cài đặt chung",
+            "subtitle": "Quản lý tên, mô tả và khả năng hiển thị cộng đồng"
+          },
+          "thumbnail": {
+            "title": "Hình thu nhỏ",
+            "subtitle": "Cập nhật ảnh bìa cộng đồng"
+          },
+          "course": {
+            "title": "Khóa học liên kết",
+            "subtitle": "Kết nối cộng đồng này với một khóa học"
+          },
+          "moderation": {
+            "title": "Kiểm duyệt",
+            "subtitle": "Cấu hình cài đặt kiểm duyệt nội dung"
+          }
+        },
+        "course": {
+          "title": "Khóa học liên kết",
+          "subtitle": "Kết nối cộng đồng này với một khóa học để thảo luận riêng cho khóa học",
+          "currently_linked": "Đang liên kết",
+          "unlink": "Hủy liên kết",
+          "link_button": "Liên kết khóa học",
+          "search_placeholder": "Tìm kiếm khóa học...",
+          "no_courses": "Không tìm thấy khóa học",
+          "course_linked_id": "Khóa học đã liên kết (ID: {{id}})",
+          "course_not_found": "Khóa học liên kết có thể không còn tồn tại hoặc bạn không có quyền truy cập",
+          "toasts": {
+            "linking": "Đang liên kết khóa học...",
+            "link_success": "Liên kết khóa học thành công",
+            "link_error": "Liên kết khóa học thất bại",
+            "unlinking": "Đang hủy liên kết khóa học...",
+            "unlink_success": "Hủy liên kết khóa học thành công",
+            "unlink_error": "Hủy liên kết khóa học thất bại"
           }
         },
         "general": {

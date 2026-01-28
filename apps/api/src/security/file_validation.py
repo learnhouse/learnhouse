@@ -64,30 +64,30 @@ def validate_zip_content(content: bytes) -> bool:
     return content[:4] == b'PK\x03\x04' or content[:4] == b'PK\x05\x06'
 
 
-# File type configurations
+# File type configurations (no size limits)
 FILE_TYPES = {
     'image': {
         'extensions': ['.jpg', '.jpeg', '.png', '.gif', '.webp'],
         'mime_types': ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
-        'max_size': 10 * 1024 * 1024,  # 10MB
+        'max_size': None,  # No limit
         'validator': validate_image_content
     },
     'video': {
         'extensions': ['.mp4', '.webm'],
         'mime_types': ['video/mp4', 'video/webm'],
-        'max_size': 100 * 1024 * 1024,  # 100MB
+        'max_size': None,  # No limit
         'validator': validate_video_content
     },
     'document': {
         'extensions': ['.pdf'],
         'mime_types': ['application/pdf'],
-        'max_size': 50 * 1024 * 1024,  # 50MB
+        'max_size': None,  # No limit
         'validator': lambda content: content.startswith(b'%PDF-')
     },
     'scorm': {
         'extensions': ['.zip'],
         'mime_types': ['application/zip', 'application/x-zip-compressed'],
-        'max_size': 200 * 1024 * 1024,  # 200MB for SCORM packages
+        'max_size': None,  # No limit
         'validator': validate_zip_content
     }
 }
@@ -135,11 +135,11 @@ def validate_upload(
         allowed_exts = [ext for t in allowed_types for ext in FILE_TYPES.get(t, {}).get('extensions', [])]
         raise HTTPException(status_code=415, detail=f"File type not allowed. Allowed: {allowed_exts}")
     
-    # Check file size
-    size_limit = max_size or config['max_size']
-    if len(content) > size_limit:
+    # Check file size (skip if no limit set)
+    size_limit = max_size or config.get('max_size')
+    if size_limit and len(content) > size_limit:
         raise HTTPException(
-            status_code=413, 
+            status_code=413,
             detail=f"File too large ({len(content)/1024/1024:.1f}MB > {size_limit/1024/1024:.1f}MB)"
         )
     

@@ -10,6 +10,5 @@ async def upload_avatar(avatar_file: UploadFile, user_uuid: str) -> str:
         type_of_dir="users",
         uuid=user_uuid,
         allowed_types=["image"],
-        filename_prefix="avatar",
-        max_size=2 * 1024 * 1024  # 2MB
+        filename_prefix="avatar"
     )
