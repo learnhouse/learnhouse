@@ -81,6 +81,8 @@
     "version": "버전",
     "users": "사용자",
     "save": "저장",
+    "save_changes": "변경 사항 저장",
+    "saving": "저장 중...",
     "cancel": "취소",
     "submit": "제출",
     "delete": "삭제",
@@ -217,6 +219,8 @@
     "course_completed_exclamation": "코스를 수료했습니다!",
     "what_you_will_learn": "학습 내용",
     "course_lessons": "코스 레슨",
+    "share_course": "코스 공유",
+    "copy_link": "링크 복사",
     "unlock_certificate_message": "모든 활동을 완료하여 수료증을 받으세요",
     "chapter": "장",
     "chapters": "장",
@@ -284,6 +288,159 @@
       "configure": "구성",
       "ready_to_analyze": "분석 준비 완료",
       "course_details": "코스 세부정보"
+    },
+    "clone_course": "코스 복제",
+    "clone_course_title": "\"{{name}}\" 복제",
+    "clone_course_confirm": "모든 장, 활동 및 파일을 포함한 코스의 전체 복사본이 생성됩니다. 복제된 코스는 비공개로 설정됩니다.",
+    "cloning_course": "코스 복제 중...",
+    "course_cloned_success": "코스가 성공적으로 복제되었습니다",
+    "course_cloned_error": "코스 복제 실패",
+    "published": "게시됨",
+    "unpublished": "미게시",
+    "search_courses": "코스 검색...",
+    "search_results": "\"{{query}}\"에 대해 {{count}}개의 코스를 찾았습니다",
+    "no_search_results": "코스를 찾을 수 없습니다",
+    "try_different_search": "다른 검색어를 시도해 보세요",
+    "select_courses": "선택",
+    "select_all": "전체 선택",
+    "clear_selection": "선택 해제",
+    "selected_count": "{{count}}개 선택됨",
+    "clone_selected": "선택 복제",
+    "clone_selected_confirm": "{{count}}개 코스의 복사본이 생성됩니다. 모든 복제된 코스는 비공개로 설정됩니다. 계속하시겠습니까?",
+    "delete_selected": "선택 삭제",
+    "delete_selected_confirm": "{{count}}개의 코스가 영구 삭제됩니다. 이 작업은 취소할 수 없습니다. 계속하시겠습니까?",
+    "course_description_required": "코스 설명은 필수입니다"
+  },
+  "communities": {
+    "title": "커뮤니티",
+    "new_community": "새 커뮤니티",
+    "no_communities": "아직 커뮤니티가 없습니다",
+    "no_communities_description": "커뮤니티를 만들어 토론을 시작하세요",
+    "public": "공개",
+    "private": "비공개",
+    "discussions": "토론",
+    "discussion": "토론",
+    "created": "생성일",
+    "linked_course": "연결된 코스",
+    "community_guidelines": "커뮤니티 가이드라인",
+    "community_guidelines_text": "존중하고 건설적으로 행동해 주세요. 다른 사람들을 돕고 커뮤니티와 지식을 나누세요.",
+    "new_discussion": "새 토론",
+    "manage": "관리",
+    "sidebar": {
+      "posted_by": "작성자",
+      "upvotes": "추천수",
+      "category": "카테고리",
+      "created": "생성일",
+      "pinned": "고정됨",
+      "locked": "잠김",
+      "reactions": "반응",
+      "community": "커뮤니티"
+    },
+    "discussion_list": {
+      "search_placeholder": "토론 검색...",
+      "sort_by": "정렬:",
+      "latest_activity": "최근 활동",
+      "top": "인기",
+      "hot": "트렌딩",
+      "new_discussion": "새 토론",
+      "select": "선택",
+      "cancel": "취소",
+      "select_all": "전체 선택",
+      "deselect_all": "선택 해제",
+      "selected": "선택됨",
+      "delete": "삭제",
+      "delete_discussions_title": "{{count}}개 토론을 삭제하시겠습니까?",
+      "delete_discussions_title_plural": "{{count}}개 토론을 삭제하시겠습니까?",
+      "delete_discussions_confirm": "{{count}}개의 {{type}}을(를) 삭제하시겠습니까? 이 작업은 취소할 수 없습니다.",
+      "no_results": "결과를 찾을 수 없습니다",
+      "no_results_description": "검색어를 조정하거나 필터를 지워보세요",
+      "clear_search": "검색 지우기",
+      "no_discussions": "아직 토론이 없습니다",
+      "no_discussions_description": "이 커뮤니티에서 첫 번째 토론을 시작해 보세요!",
+      "start_discussion": "토론 시작"
+    },
+    "discussion_detail": {
+      "edit": "수정",
+      "delete": "삭제",
+      "delete_title": "토론을 삭제하시겠습니까?",
+      "delete_confirm": "이 토론을 삭제하시겠습니까? 이 작업은 취소할 수 없습니다.",
+      "delete_button": "토론 삭제",
+      "no_details": "추가 세부 정보가 없습니다."
+    },
+    "discussion_card": {
+      "pin_discussion": "토론 고정",
+      "unpin_discussion": "고정 해제",
+      "lock_discussion": "토론 잠금",
+      "unlock_discussion": "잠금 해제",
+      "delete_discussion": "토론 삭제",
+      "delete_title": "토론을 삭제하시겠습니까?",
+      "delete_confirm": "이 토론을 삭제하시겠습니까? 이 작업은 취소할 수 없습니다.",
+      "votes": "표"
+    },
+    "comments": {
+      "no_replies": "아직 답글이 없습니다",
+      "locked": "이 토론은 잠겨 있습니다",
+      "sign_in_to_reply": "로그인",
+      "to_reply": "하여 답글 달기",
+      "write_reply": "답글 작성...",
+      "reply": "답글",
+      "edit": "수정",
+      "delete": "삭제",
+      "save": "저장",
+      "cancel": "취소",
+      "failed_to_post": "답글 게시에 실패했습니다. 다시 시도해 주세요.",
+      "content_not_allowed": "답글에 허용되지 않는 콘텐츠가 포함되어 있습니다.",
+      "failed_to_update": "업데이트에 실패했습니다. 다시 시도해 주세요."
+    },
+    "label_filter": {
+      "label": "라벨:",
+      "all": "전체",
+      "all_discussions": "모든 토론",
+      "clear_filter": "필터 지우기"
+    },
+    "labels": {
+      "general": "일반",
+      "question": "질문",
+      "idea": "아이디어",
+      "announcement": "공지",
+      "showcase": "쇼케이스"
+    },
+    "create_discussion": {
+      "title": "토론 시작",
+      "description": "커뮤니티와 생각을 나누세요",
+      "category_label": "카테고리",
+      "title_label": "토론 제목",
+      "title_placeholder": "무엇에 대해 토론하고 싶으신가요?",
+      "emoji_selected": "사용자 정의 이모지 선택됨",
+      "emoji_hint": "+를 클릭하여 사용자 정의 이모지 추가 (선택사항)",
+      "details_label": "세부 정보 (선택사항)",
+      "details_placeholder": "토론에 더 많은 맥락이나 세부 정보를 추가하세요...",
+      "editor_hint": "도구 모음을 사용하여 굵게, 기울임꼴, 목록 등으로 텍스트 서식을 지정하세요.",
+      "cancel": "취소",
+      "submit": "토론 게시",
+      "title_required": "제목은 필수입니다",
+      "title_min_length": "제목은 최소 5자 이상이어야 합니다",
+      "title_max_length": "제목은 200자 미만이어야 합니다",
+      "content_not_allowed": "토론에 허용되지 않는 콘텐츠가 포함되어 있습니다.",
+      "failed_to_create": "토론 생성에 실패했습니다. 다시 시도해 주세요."
+    },
+    "edit_discussion": {
+      "title": "토론 수정",
+      "description": "토론 업데이트",
+      "save": "변경 사항 저장",
+      "cancel": "취소",
+      "close": "닫기",
+      "failed_to_update": "업데이트에 실패했습니다. 다시 시도해 주세요.",
+      "content_not_allowed": "토론에 허용되지 않는 콘텐츠가 포함되어 있습니다.",
+      "max_edits_reached": "최대 수정 횟수({{count}}회)에 도달했습니다. 더 이상 이 토론을 수정할 수 없습니다.",
+      "edits_remaining": "{{count}}회 수정할 수 있습니다.",
+      "no_edits_remaining": "남은 수정 횟수가 없습니다({{count}}회)."
+    },
+    "course_section": {
+      "title": "커뮤니티 토론",
+      "view_all": "모두 보기",
+      "no_discussions": "아직 토론이 없습니다",
+      "start_first": "첫 번째 토론을 시작하세요"
     }
   },
   "collections": {
@@ -732,6 +889,30 @@
       "no_courses": "아직 코스가 없습니다",
       "create_course_placeholder": "코스를 생성하여 콘텐츠를 추가해 보세요",
       "no_courses_available": "이용 가능한 코스가 아직 없습니다",
+      "publishing": "코스 게시 중...",
+      "unpublishing": "코스 게시 취소 중...",
+      "published_success": "코스가 성공적으로 게시되었습니다",
+      "unpublished_success": "코스 게시가 성공적으로 취소되었습니다",
+      "publish_error": "게시 상태 업데이트 실패",
+      "published": "게시됨",
+      "unpublished": "미게시",
+      "processing": "처리 중...",
+      "click_to_publish": "클릭하여 게시",
+      "click_to_unpublish": "클릭하여 게시 취소",
+      "preview": "미리보기",
+      "save": {
+        "success": "변경 사항이 성공적으로 저장되었습니다",
+        "error": "변경 사항 저장에 실패했습니다",
+        "partial_success": "일부 문제가 있지만 저장되었습니다: {{failed}}",
+        "partial_error": "부분적으로 저장됨 ({{success}}), 실패: {{failed}}",
+        "certification_error": "인증 설정 저장에 실패했습니다",
+        "saving": "저장 중...",
+        "saved": "저장됨",
+        "save": "저장",
+        "unsaved": "저장되지 않은 변경 사항",
+        "retry": "오류 - 클릭하여 재시도",
+        "retry_button": "재시도"
+      },
       "overview_top": {
         "course_label": "코스",
         "rights_guide_button": "권한 가이드"
@@ -1032,7 +1213,43 @@
           "tabs": {
             "general": "일반",
             "thumbnail": "썸네일",
+            "course": "연결된 코스",
             "moderation": "관리"
+          },
+          "general": {
+            "title": "일반 설정",
+            "subtitle": "커뮤니티 이름, 설명 및 공개 여부 관리"
+          },
+          "thumbnail": {
+            "title": "썸네일",
+            "subtitle": "커뮤니티 커버 이미지 업데이트"
+          },
+          "course": {
+            "title": "연결된 코스",
+            "subtitle": "이 커뮤니티를 코스에 연결"
+          },
+          "moderation": {
+            "title": "관리",
+            "subtitle": "콘텐츠 관리 설정 구성"
+          }
+        },
+        "course": {
+          "title": "연결된 코스",
+          "subtitle": "코스 전용 토론을 위해 이 커뮤니티를 코스에 연결",
+          "currently_linked": "현재 연결됨",
+          "unlink": "연결 해제",
+          "link_button": "코스 연결",
+          "search_placeholder": "코스 검색...",
+          "no_courses": "코스를 찾을 수 없습니다",
+          "course_linked_id": "코스가 연결됨 (ID: {{id}})",
+          "course_not_found": "연결된 코스가 더 이상 존재하지 않거나 접근 권한이 없습니다",
+          "toasts": {
+            "linking": "코스 연결 중...",
+            "link_success": "코스가 성공적으로 연결되었습니다",
+            "link_error": "코스 연결에 실패했습니다",
+            "unlinking": "코스 연결 해제 중...",
+            "unlink_success": "코스 연결이 성공적으로 해제되었습니다",
+            "unlink_error": "코스 연결 해제에 실패했습니다"
           }
         },
         "general": {

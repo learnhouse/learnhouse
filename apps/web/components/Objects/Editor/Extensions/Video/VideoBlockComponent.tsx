@@ -5,6 +5,7 @@ import {
   CheckCircle2, AlertCircle, Download, Expand
 } from 'lucide-react'
 import React from 'react'
+import toast from 'react-hot-toast'
 import { uploadNewVideoFile } from '../../../../../services/blocks/Video/video'
 import { getVideoBlockStreamUrl } from '@services/media/media'
 import { useOrg } from '@components/Contexts/OrgContext'
@@ -143,7 +144,7 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
 
   const isEditable = editorState?.isEditable
   const access_token = session?.data?.tokens?.access_token
-  const fileId = blockObject ? `${blockObject.content.file_id}.${blockObject.content.file_format}` : null
+  const fileId = blockObject?.content?.file_id ? `${blockObject.content.file_id}.${blockObject.content.file_format}` : null
 
   const handleVideoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -217,8 +218,10 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
       setTimeout(() => {
         setUploadProgress(0)
       }, 1000)
-    } catch (err) {
-      setError('Failed to upload video. Please try again.')
+    } catch (err: any) {
+      const errorMessage = err?.message || 'Failed to upload video. Please try again.'
+      setError(errorMessage)
+      toast.error(errorMessage)
     } finally {
       setIsLoading(false)
     }

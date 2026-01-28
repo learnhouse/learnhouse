@@ -81,6 +81,8 @@
     "version": "ভার্সন",
     "users": "ব্যবহারকারী",
     "save": "সংরক্ষণ করুন",
+    "save_changes": "পরিবর্তন সংরক্ষণ করুন",
+    "saving": "সংরক্ষণ করা হচ্ছে...",
     "cancel": "বাতিল",
     "submit": "জমা দিন",
     "delete": "মুছে ফেলুন",
@@ -217,6 +219,8 @@
     "course_completed_exclamation": "কোর্স সম্পন্ন হয়েছে!",
     "what_you_will_learn": "আপনি যা শিখবেন",
     "course_lessons": "কোর্স লেসন",
+    "share_course": "কোর্স শেয়ার করুন",
+    "copy_link": "লিংক কপি করুন",
     "unlock_certificate_message": "শংসাপত্র আনলক করতে সমস্ত ক্রিয়াকলাপ সম্পন্ন করুন।",
     "chapter": "অধ্যায়",
     "chapters": "অধ্যায়সমূহ",
@@ -284,6 +288,159 @@
       "configure": "কনফিগার করুন",
       "ready_to_analyze": "বিশ্লেষণের জন্য প্রস্তুত",
       "course_details": "কোর্সের বিবরণ"
+    },
+    "clone_course": "কোর্স ক্লোন করুন",
+    "clone_course_title": "\"{{name}}\" ক্লোন করুন",
+    "clone_course_confirm": "এটি সমস্ত অধ্যায়, কার্যকলাপ এবং ফাইল সহ কোর্সের একটি সম্পূর্ণ অনুলিপি তৈরি করবে। ক্লোন করা কোর্সটি ব্যক্তিগত হিসাবে সেট করা হবে।",
+    "cloning_course": "কোর্স ক্লোন করা হচ্ছে...",
+    "course_cloned_success": "কোর্স সফলভাবে ক্লোন করা হয়েছে",
+    "course_cloned_error": "কোর্স ক্লোন করতে ব্যর্থ হয়েছে",
+    "published": "প্রকাশিত",
+    "unpublished": "অপ্রকাশিত",
+    "search_courses": "কোর্স অনুসন্ধান করুন...",
+    "search_results": "\"{{query}}\" এর জন্য {{count}}টি কোর্স পাওয়া গেছে",
+    "no_search_results": "কোনো কোর্স পাওয়া যায়নি",
+    "try_different_search": "অন্য একটি অনুসন্ধান শব্দ চেষ্টা করুন",
+    "select_courses": "নির্বাচন করুন",
+    "select_all": "সব নির্বাচন করুন",
+    "clear_selection": "নির্বাচন সাফ করুন",
+    "selected_count": "{{count}}টি নির্বাচিত",
+    "clone_selected": "নির্বাচিত ক্লোন করুন",
+    "clone_selected_confirm": "{{count}}টি কোর্সের কপি তৈরি হবে। সমস্ত ক্লোন করা কোর্স ব্যক্তিগত হবে। চালিয়ে যান?",
+    "delete_selected": "নির্বাচিত মুছুন",
+    "delete_selected_confirm": "{{count}}টি কোর্স স্থায়ীভাবে মুছে ফেলা হবে। এই ক্রিয়া পূর্বাবস্থায় ফেরানো যাবে না। চালিয়ে যান?",
+    "course_description_required": "কোর্সের বিবরণ প্রয়োজন"
+  },
+  "communities": {
+    "title": "কমিউনিটি",
+    "new_community": "নতুন কমিউনিটি",
+    "no_communities": "এখনও কোনও কমিউনিটি নেই",
+    "no_communities_description": "আলোচনা শুরু করতে একটি কমিউনিটি তৈরি করুন",
+    "public": "সর্বজনীন",
+    "private": "ব্যক্তিগত",
+    "discussions": "আলোচনা",
+    "discussion": "আলোচনা",
+    "created": "তৈরি হয়েছে",
+    "linked_course": "যুক্ত কোর্স",
+    "community_guidelines": "কমিউনিটি নির্দেশিকা",
+    "community_guidelines_text": "শ্রদ্ধাশীল এবং গঠনমূলক হোন। অন্যদের সাহায্য করুন এবং কমিউনিটির সাথে আপনার জ্ঞান শেয়ার করুন।",
+    "new_discussion": "নতুন আলোচনা",
+    "manage": "পরিচালনা করুন",
+    "sidebar": {
+      "posted_by": "পোস্ট করেছেন",
+      "upvotes": "আপভোট",
+      "category": "বিভাগ",
+      "created": "তৈরি হয়েছে",
+      "pinned": "পিন করা",
+      "locked": "লক করা",
+      "reactions": "প্রতিক্রিয়া",
+      "community": "কমিউনিটি"
+    },
+    "discussion_list": {
+      "search_placeholder": "আলোচনা খুঁজুন...",
+      "sort_by": "সাজান:",
+      "latest_activity": "সাম্প্রতিক কার্যকলাপ",
+      "top": "শীর্ষ",
+      "hot": "ট্রেন্ডিং",
+      "new_discussion": "নতুন আলোচনা",
+      "select": "নির্বাচন করুন",
+      "cancel": "বাতিল",
+      "select_all": "সব নির্বাচন করুন",
+      "deselect_all": "সব অনির্বাচন করুন",
+      "selected": "নির্বাচিত",
+      "delete": "মুছুন",
+      "delete_discussions_title": "{{count}}টি আলোচনা মুছবেন?",
+      "delete_discussions_title_plural": "{{count}}টি আলোচনা মুছবেন?",
+      "delete_discussions_confirm": "আপনি কি নিশ্চিত যে {{count}}টি {{type}} মুছতে চান? এই ক্রিয়া পূর্বাবস্থায় ফেরানো যাবে না।",
+      "no_results": "কোনও ফলাফল পাওয়া যায়নি",
+      "no_results_description": "আপনার অনুসন্ধান সামঞ্জস্য করুন বা ফিল্টার পরিষ্কার করুন",
+      "clear_search": "অনুসন্ধান পরিষ্কার করুন",
+      "no_discussions": "এখনও কোনও আলোচনা নেই",
+      "no_discussions_description": "এই কমিউনিটিতে প্রথম আলোচনা শুরু করুন!",
+      "start_discussion": "আলোচনা শুরু করুন"
+    },
+    "discussion_detail": {
+      "edit": "সম্পাদনা",
+      "delete": "মুছুন",
+      "delete_title": "আলোচনা মুছবেন?",
+      "delete_confirm": "আপনি কি নিশ্চিত যে এই আলোচনা মুছতে চান? এই ক্রিয়া পূর্বাবস্থায় ফেরানো যাবে না।",
+      "delete_button": "আলোচনা মুছুন",
+      "no_details": "কোনও অতিরিক্ত বিবরণ প্রদান করা হয়নি।"
+    },
+    "discussion_card": {
+      "pin_discussion": "আলোচনা পিন করুন",
+      "unpin_discussion": "পিন সরান",
+      "lock_discussion": "আলোচনা লক করুন",
+      "unlock_discussion": "আলোচনা আনলক করুন",
+      "delete_discussion": "আলোচনা মুছুন",
+      "delete_title": "আলোচনা মুছবেন?",
+      "delete_confirm": "আপনি কি নিশ্চিত যে এই আলোচনা মুছতে চান? এই ক্রিয়া পূর্বাবস্থায় ফেরানো যাবে না।",
+      "votes": "ভোট"
+    },
+    "comments": {
+      "no_replies": "এখনও কোনও উত্তর নেই",
+      "locked": "এই আলোচনা লক করা আছে",
+      "sign_in_to_reply": "সাইন ইন করুন",
+      "to_reply": "উত্তর দিতে",
+      "write_reply": "একটি উত্তর লিখুন...",
+      "reply": "উত্তর দিন",
+      "edit": "সম্পাদনা",
+      "delete": "মুছুন",
+      "save": "সংরক্ষণ করুন",
+      "cancel": "বাতিল",
+      "failed_to_post": "উত্তর পোস্ট করতে ব্যর্থ। অনুগ্রহ করে আবার চেষ্টা করুন।",
+      "content_not_allowed": "আপনার উত্তরে অনুমোদিত নয় এমন বিষয়বস্তু রয়েছে।",
+      "failed_to_update": "আপডেট করতে ব্যর্থ। অনুগ্রহ করে আবার চেষ্টা করুন।"
+    },
+    "label_filter": {
+      "label": "লেবেল:",
+      "all": "সব",
+      "all_discussions": "সব আলোচনা",
+      "clear_filter": "ফিল্টার পরিষ্কার করুন"
+    },
+    "labels": {
+      "general": "সাধারণ",
+      "question": "প্রশ্ন",
+      "idea": "ধারণা",
+      "announcement": "ঘোষণা",
+      "showcase": "প্রদর্শনী"
+    },
+    "create_discussion": {
+      "title": "আলোচনা শুরু করুন",
+      "description": "কমিউনিটির সাথে আপনার ভাবনা শেয়ার করুন",
+      "category_label": "বিভাগ",
+      "title_label": "আলোচনার শিরোনাম",
+      "title_placeholder": "আপনি কী নিয়ে আলোচনা করতে চান?",
+      "emoji_selected": "কাস্টম ইমোজি নির্বাচিত",
+      "emoji_hint": "কাস্টম ইমোজি যোগ করতে + ক্লিক করুন (ঐচ্ছিক)",
+      "details_label": "বিবরণ (ঐচ্ছিক)",
+      "details_placeholder": "আপনার আলোচনায় আরও প্রসঙ্গ বা বিবরণ যোগ করুন...",
+      "editor_hint": "বোল্ড, ইটালিক, তালিকা এবং আরও অনেক কিছু দিয়ে আপনার টেক্সট ফরম্যাট করতে টুলবার ব্যবহার করুন।",
+      "cancel": "বাতিল",
+      "submit": "আলোচনা পোস্ট করুন",
+      "title_required": "শিরোনাম প্রয়োজন",
+      "title_min_length": "শিরোনাম কমপক্ষে ৫ অক্ষরের হতে হবে",
+      "title_max_length": "শিরোনাম ২০০ অক্ষরের কম হতে হবে",
+      "content_not_allowed": "আপনার আলোচনায় অনুমোদিত নয় এমন বিষয়বস্তু রয়েছে।",
+      "failed_to_create": "আলোচনা তৈরি করতে ব্যর্থ। অনুগ্রহ করে আবার চেষ্টা করুন।"
+    },
+    "edit_discussion": {
+      "title": "আলোচনা সম্পাদনা করুন",
+      "description": "আপনার আলোচনা আপডেট করুন",
+      "save": "পরিবর্তন সংরক্ষণ করুন",
+      "cancel": "বাতিল",
+      "close": "বন্ধ করুন",
+      "failed_to_update": "আপডেট করতে ব্যর্থ। অনুগ্রহ করে আবার চেষ্টা করুন।",
+      "content_not_allowed": "আপনার আলোচনায় অনুমোদিত নয় এমন বিষয়বস্তু রয়েছে।",
+      "max_edits_reached": "আপনি সর্বোচ্চ সম্পাদনা সীমায় পৌঁছেছেন ({{count}})। আপনি এই আলোচনাটি আর সম্পাদনা করতে পারবেন না।",
+      "edits_remaining": "আপনার {{count}}টি সম্পাদনা বাকি আছে।",
+      "no_edits_remaining": "আপনার কোনো সম্পাদনা বাকি নেই ({{count}})।"
+    },
+    "course_section": {
+      "title": "কমিউনিটি আলোচনা",
+      "view_all": "সব দেখুন",
+      "no_discussions": "এখনও কোনো আলোচনা নেই",
+      "start_first": "প্রথম আলোচনা শুরু করুন"
     }
   },
   "collections": {
@@ -732,6 +889,30 @@
       "no_courses": "এখনও কোনো কোর্স নেই",
       "create_course_placeholder": "কন্টেন্ট যোগ করতে কোর্স তৈরি করুন",
       "no_courses_available": "এখনও কোনো কোর্স উপলব্ধ নেই",
+      "publishing": "কোর্স প্রকাশ হচ্ছে...",
+      "unpublishing": "কোর্স অপ্রকাশিত হচ্ছে...",
+      "published_success": "কোর্স সফলভাবে প্রকাশিত হয়েছে",
+      "unpublished_success": "কোর্স সফলভাবে অপ্রকাশিত হয়েছে",
+      "publish_error": "প্রকাশনার স্থিতি আপডেট করতে ব্যর্থ",
+      "published": "প্রকাশিত",
+      "unpublished": "অপ্রকাশিত",
+      "processing": "প্রক্রিয়াকরণ হচ্ছে...",
+      "click_to_publish": "প্রকাশ করতে ক্লিক করুন",
+      "click_to_unpublish": "অপ্রকাশিত করতে ক্লিক করুন",
+      "preview": "প্রিভিউ",
+      "save": {
+        "success": "পরিবর্তনগুলি সফলভাবে সংরক্ষিত হয়েছে",
+        "error": "পরিবর্তনগুলি সংরক্ষণ করতে ব্যর্থ",
+        "partial_success": "কিছু সমস্যা সহ সংরক্ষিত: {{failed}}",
+        "partial_error": "আংশিকভাবে সংরক্ষিত ({{success}}), কিন্তু ব্যর্থ: {{failed}}",
+        "certification_error": "সার্টিফিকেশন সেটিংস সংরক্ষণ করতে ব্যর্থ",
+        "saving": "সংরক্ষণ হচ্ছে...",
+        "saved": "সংরক্ষিত",
+        "save": "সংরক্ষণ করুন",
+        "unsaved": "অসংরক্ষিত পরিবর্তন",
+        "retry": "ত্রুটি - পুনরায় চেষ্টা করতে ক্লিক করুন",
+        "retry_button": "পুনরায় চেষ্টা করুন"
+      },
       "overview_top": {
         "course_label": "কোর্স",
         "rights_guide_button": "অধিকার নির্দেশিকা"
@@ -1032,7 +1213,43 @@
           "tabs": {
             "general": "সাধারণ",
             "thumbnail": "থাম্বনেইল",
+            "course": "সংযুক্ত কোর্স",
             "moderation": "মডারেশন"
+          },
+          "general": {
+            "title": "সাধারণ সেটিংস",
+            "subtitle": "কমিউনিটির নাম, বিবরণ এবং দৃশ্যমানতা পরিচালনা করুন"
+          },
+          "thumbnail": {
+            "title": "থাম্বনেইল",
+            "subtitle": "কমিউনিটির কভার ইমেজ আপডেট করুন"
+          },
+          "course": {
+            "title": "সংযুক্ত কোর্স",
+            "subtitle": "এই কমিউনিটিকে একটি কোর্সের সাথে সংযুক্ত করুন"
+          },
+          "moderation": {
+            "title": "মডারেশন",
+            "subtitle": "কন্টেন্ট মডারেশন সেটিংস কনফিগার করুন"
+          }
+        },
+        "course": {
+          "title": "সংযুক্ত কোর্স",
+          "subtitle": "কোর্স-নির্দিষ্ট আলোচনার জন্য এই কমিউনিটিকে একটি কোর্সের সাথে সংযুক্ত করুন",
+          "currently_linked": "বর্তমানে সংযুক্ত",
+          "unlink": "সংযোগ বিচ্ছিন্ন করুন",
+          "link_button": "কোর্স সংযুক্ত করুন",
+          "search_placeholder": "কোর্স অনুসন্ধান করুন...",
+          "no_courses": "কোনো কোর্স পাওয়া যায়নি",
+          "course_linked_id": "কোর্স সংযুক্ত (ID: {{id}})",
+          "course_not_found": "সংযুক্ত কোর্সটি আর বিদ্যমান নেই অথবা আপনার অ্যাক্সেস নেই",
+          "toasts": {
+            "linking": "কোর্স সংযুক্ত করা হচ্ছে...",
+            "link_success": "কোর্স সফলভাবে সংযুক্ত হয়েছে",
+            "link_error": "কোর্স সংযুক্ত করতে ব্যর্থ",
+            "unlinking": "কোর্সের সংযোগ বিচ্ছিন্ন করা হচ্ছে...",
+            "unlink_success": "কোর্সের সংযোগ সফলভাবে বিচ্ছিন্ন হয়েছে",
+            "unlink_error": "কোর্সের সংযোগ বিচ্ছিন্ন করতে ব্যর্থ"
           }
         },
         "general": {

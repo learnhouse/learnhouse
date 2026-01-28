@@ -81,7 +81,7 @@ function PaymentsPage(props: { params: Promise<PaymentsParams> }) {
       fullScreen
     >
     <div className="h-screen w-full bg-[#f8f8f8] flex flex-col">
-      <div className="pl-10 pr-10 tracking-tight bg-[#fcfbfc] z-10 nice-shadow flex-shrink-0">
+      <div className="pl-10 pr-10 tracking-tight bg-[#fcfbfc] z-10 nice-shadow flex-shrink-0 relative">
         <div className="pt-6 pb-4">
           <Breadcrumbs items={[
             { label: 'Payments', href: '/dash/payments', icon: <CreditCard size={14} /> }

@@ -325,7 +325,7 @@ function DashLeftMenu() {
             <MenuLink
               href="/dash/communities"
               icon={<ChatsCircle size={20} weight="fill" />}
-              label="Communities"
+              label={t('communities.title')}
               isCollapsed={isCollapsed}
             />
             <MenuLink

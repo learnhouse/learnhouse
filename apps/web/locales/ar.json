@@ -81,6 +81,8 @@
     "version": "الإصدار",
     "users": "المستخدمين",
     "save": "حفظ",
+    "save_changes": "حفظ التغييرات",
+    "saving": "جاري الحفظ...",
     "cancel": "إلغاء",
     "submit": "إرسال",
     "delete": "حذف",
@@ -217,6 +219,8 @@
     "course_completed_exclamation": "تم إكمال الدورة!",
     "what_you_will_learn": "ماذا ستتعلم",
     "course_lessons": "دروس الدورة",
+    "share_course": "مشاركة الدورة",
+    "copy_link": "نسخ الرابط",
     "unlock_certificate_message": "أكمل كل الأنشطة للحصول على الشهادة",
     "chapter": "فصل",
     "chapters": "فصول",
@@ -284,6 +288,159 @@
       "configure": "تكوين",
       "ready_to_analyze": "جاهز للتحليل",
       "course_details": "تفاصيل الدورة"
+    },
+    "clone_course": "نسخ الدورة",
+    "clone_course_title": "نسخ \"{{name}}\"",
+    "clone_course_confirm": "سيتم إنشاء نسخة كاملة من الدورة بما في ذلك جميع الفصول والأنشطة والملفات. ستكون الدورة المنسوخة خاصة.",
+    "cloning_course": "جاري نسخ الدورة...",
+    "course_cloned_success": "تم نسخ الدورة بنجاح",
+    "course_cloned_error": "فشل نسخ الدورة",
+    "published": "منشور",
+    "unpublished": "غير منشور",
+    "search_courses": "البحث عن دورات...",
+    "search_results": "تم العثور على {{count}} دورة تطابق \"{{query}}\"",
+    "no_search_results": "لم يتم العثور على دورات",
+    "try_different_search": "جرب مصطلح بحث مختلف",
+    "select_courses": "تحديد",
+    "select_all": "تحديد الكل",
+    "clear_selection": "مسح التحديد",
+    "selected_count": "{{count}} محدد",
+    "clone_selected": "نسخ المحدد",
+    "clone_selected_confirm": "سيتم إنشاء نسخ من {{count}} دورة. جميع الدورات المنسوخة ستكون خاصة. هل تريد المتابعة؟",
+    "delete_selected": "حذف المحدد",
+    "delete_selected_confirm": "سيتم حذف {{count}} دورة بشكل دائم. لا يمكن التراجع عن هذا الإجراء. هل تريد المتابعة؟",
+    "course_description_required": "وصف الدورة مطلوب"
+  },
+  "communities": {
+    "title": "المجتمعات",
+    "new_community": "مجتمع جديد",
+    "no_communities": "لا توجد مجتمعات بعد",
+    "no_communities_description": "أنشئ مجتمعًا لبدء النقاشات",
+    "public": "عام",
+    "private": "خاص",
+    "discussions": "نقاشات",
+    "discussion": "نقاش",
+    "created": "تم الإنشاء",
+    "linked_course": "الدورة المرتبطة",
+    "community_guidelines": "إرشادات المجتمع",
+    "community_guidelines_text": "كن محترمًا وبناءً. ساعد الآخرين وشارك معرفتك مع المجتمع.",
+    "new_discussion": "نقاش جديد",
+    "manage": "إدارة",
+    "sidebar": {
+      "posted_by": "نشر بواسطة",
+      "upvotes": "التصويتات الإيجابية",
+      "category": "الفئة",
+      "created": "تم الإنشاء",
+      "pinned": "مثبت",
+      "locked": "مقفل",
+      "reactions": "التفاعلات",
+      "community": "المجتمع"
+    },
+    "discussion_list": {
+      "search_placeholder": "البحث في النقاشات...",
+      "sort_by": "ترتيب حسب:",
+      "latest_activity": "أحدث نشاط",
+      "top": "الأكثر شعبية",
+      "hot": "الرائج",
+      "new_discussion": "نقاش جديد",
+      "select": "تحديد",
+      "cancel": "إلغاء",
+      "select_all": "تحديد الكل",
+      "deselect_all": "إلغاء تحديد الكل",
+      "selected": "محدد",
+      "delete": "حذف",
+      "delete_discussions_title": "حذف {{count}} نقاش؟",
+      "delete_discussions_title_plural": "حذف {{count}} نقاشات؟",
+      "delete_discussions_confirm": "هل أنت متأكد أنك تريد حذف {{count}} {{type}}؟ لا يمكن التراجع عن هذا الإجراء.",
+      "no_results": "لم يتم العثور على نتائج",
+      "no_results_description": "حاول تعديل بحثك أو مسح الفلتر",
+      "clear_search": "مسح البحث",
+      "no_discussions": "لا توجد نقاشات بعد",
+      "no_discussions_description": "كن أول من يبدأ نقاشًا في هذا المجتمع!",
+      "start_discussion": "بدء نقاش"
+    },
+    "discussion_detail": {
+      "edit": "تعديل",
+      "delete": "حذف",
+      "delete_title": "حذف النقاش؟",
+      "delete_confirm": "هل أنت متأكد أنك تريد حذف هذا النقاش؟ لا يمكن التراجع عن هذا الإجراء.",
+      "delete_button": "حذف النقاش",
+      "no_details": "لم يتم تقديم تفاصيل إضافية."
+    },
+    "discussion_card": {
+      "pin_discussion": "تثبيت النقاش",
+      "unpin_discussion": "إلغاء تثبيت النقاش",
+      "lock_discussion": "قفل النقاش",
+      "unlock_discussion": "فتح قفل النقاش",
+      "delete_discussion": "حذف النقاش",
+      "delete_title": "حذف النقاش؟",
+      "delete_confirm": "هل أنت متأكد أنك تريد حذف هذا النقاش؟ لا يمكن التراجع عن هذا الإجراء.",
+      "votes": "أصوات"
+    },
+    "comments": {
+      "no_replies": "لا توجد ردود بعد",
+      "locked": "هذا النقاش مقفل",
+      "sign_in_to_reply": "سجل الدخول",
+      "to_reply": "للرد",
+      "write_reply": "اكتب ردًا...",
+      "reply": "رد",
+      "edit": "تعديل",
+      "delete": "حذف",
+      "save": "حفظ",
+      "cancel": "إلغاء",
+      "failed_to_post": "فشل في نشر الرد. يرجى المحاولة مرة أخرى.",
+      "content_not_allowed": "ردك يحتوي على محتوى غير مسموح به.",
+      "failed_to_update": "فشل في التحديث. يرجى المحاولة مرة أخرى."
+    },
+    "label_filter": {
+      "label": "التصنيف:",
+      "all": "الكل",
+      "all_discussions": "جميع النقاشات",
+      "clear_filter": "مسح الفلتر"
+    },
+    "labels": {
+      "general": "عام",
+      "question": "سؤال",
+      "idea": "فكرة",
+      "announcement": "إعلان",
+      "showcase": "عرض"
+    },
+    "create_discussion": {
+      "title": "بدء نقاش",
+      "description": "شارك أفكارك مع المجتمع",
+      "category_label": "الفئة",
+      "title_label": "عنوان النقاش",
+      "title_placeholder": "عن ماذا تريد أن تناقش؟",
+      "emoji_selected": "تم اختيار رمز تعبيري مخصص",
+      "emoji_hint": "انقر على + لإضافة رمز تعبيري مخصص (اختياري)",
+      "details_label": "التفاصيل (اختياري)",
+      "details_placeholder": "أضف المزيد من السياق أو التفاصيل لنقاشك...",
+      "editor_hint": "استخدم شريط الأدوات لتنسيق نصك بالخط العريض والمائل والقوائم والمزيد.",
+      "cancel": "إلغاء",
+      "submit": "نشر النقاش",
+      "title_required": "العنوان مطلوب",
+      "title_min_length": "يجب أن يكون العنوان 5 أحرف على الأقل",
+      "title_max_length": "يجب أن يكون العنوان أقل من 200 حرف",
+      "content_not_allowed": "نقاشك يحتوي على محتوى غير مسموح به.",
+      "failed_to_create": "فشل في إنشاء النقاش. يرجى المحاولة مرة أخرى."
+    },
+    "edit_discussion": {
+      "title": "تعديل النقاش",
+      "description": "تحديث نقاشك",
+      "save": "حفظ التغييرات",
+      "cancel": "إلغاء",
+      "close": "إغلاق",
+      "failed_to_update": "فشل في التحديث. يرجى المحاولة مرة أخرى.",
+      "content_not_allowed": "نقاشك يحتوي على محتوى غير مسموح به.",
+      "max_edits_reached": "لقد وصلت إلى الحد الأقصى من التعديلات ({{count}}). لا يمكنك تعديل هذا النقاش بعد الآن.",
+      "edits_remaining": "لديك {{count}} تعديل(ات) متبقية.",
+      "no_edits_remaining": "لم يتبق لديك أي تعديلات ({{count}})."
+    },
+    "course_section": {
+      "title": "نقاشات المجتمع",
+      "view_all": "عرض الكل",
+      "no_discussions": "لا توجد نقاشات بعد",
+      "start_first": "ابدأ أول نقاش"
     }
   },
   "collections": {
@@ -732,6 +889,30 @@
       "no_courses": "لا توجد دورات بعد",
       "create_course_placeholder": "أنشئ دورة لإضافة محتوى",
       "no_courses_available": "لا توجد دورات متاحة بعد",
+      "publishing": "جارٍ نشر الدورة...",
+      "unpublishing": "جارٍ إلغاء نشر الدورة...",
+      "published_success": "تم نشر الدورة بنجاح",
+      "unpublished_success": "تم إلغاء نشر الدورة بنجاح",
+      "publish_error": "فشل تحديث حالة النشر",
+      "published": "منشور",
+      "unpublished": "غير منشور",
+      "processing": "جارٍ المعالجة...",
+      "click_to_publish": "انقر للنشر",
+      "click_to_unpublish": "انقر لإلغاء النشر",
+      "preview": "معاينة",
+      "save": {
+        "success": "تم حفظ التغييرات بنجاح",
+        "error": "فشل في حفظ التغييرات",
+        "partial_success": "تم الحفظ مع بعض المشاكل: {{failed}}",
+        "partial_error": "تم الحفظ جزئياً ({{success}})، لكن فشل: {{failed}}",
+        "certification_error": "فشل في حفظ إعدادات الشهادة",
+        "saving": "جارٍ الحفظ...",
+        "saved": "تم الحفظ",
+        "save": "حفظ",
+        "unsaved": "تغييرات غير محفوظة",
+        "retry": "خطأ - انقر لإعادة المحاولة",
+        "retry_button": "إعادة المحاولة"
+      },
       "overview_top": {
         "course_label": "الدورة",
         "rights_guide_button": "دليل الحقوق"
@@ -1032,7 +1213,43 @@
           "tabs": {
             "general": "عام",
             "thumbnail": "الصورة المصغرة",
+            "course": "الدورة المرتبطة",
             "moderation": "الإشراف"
+          },
+          "general": {
+            "title": "الإعدادات العامة",
+            "subtitle": "إدارة اسم المجتمع والوصف والرؤية"
+          },
+          "thumbnail": {
+            "title": "الصورة المصغرة",
+            "subtitle": "تحديث صورة غلاف المجتمع"
+          },
+          "course": {
+            "title": "الدورة المرتبطة",
+            "subtitle": "ربط هذا المجتمع بدورة"
+          },
+          "moderation": {
+            "title": "الإشراف",
+            "subtitle": "تكوين إعدادات إشراف المحتوى"
+          }
+        },
+        "course": {
+          "title": "الدورة المرتبطة",
+          "subtitle": "ربط هذا المجتمع بدورة للنقاشات الخاصة بالدورة",
+          "currently_linked": "مرتبط حالياً",
+          "unlink": "إلغاء الارتباط",
+          "link_button": "ربط دورة",
+          "search_placeholder": "البحث عن دورات...",
+          "no_courses": "لم يتم العثور على دورات",
+          "course_linked_id": "الدورة مرتبطة (المعرف: {{id}})",
+          "course_not_found": "قد لا تكون الدورة المرتبطة موجودة بعد الآن أو ليس لديك حق الوصول إليها",
+          "toasts": {
+            "linking": "جاري ربط الدورة...",
+            "link_success": "تم ربط الدورة بنجاح",
+            "link_error": "فشل ربط الدورة",
+            "unlinking": "جاري إلغاء ارتباط الدورة...",
+            "unlink_success": "تم إلغاء ارتباط الدورة بنجاح",
+            "unlink_error": "فشل إلغاء ارتباط الدورة"
           }
         },
         "general": {

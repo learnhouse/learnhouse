@@ -87,7 +87,7 @@ const LinkItem = (props: any) => {
         {props.type == 'communities' && (
           <>
             <ChatsCircle size={20} weight="fill" />{' '}
-            <span>Communities</span>
+            <span>{t('communities.title')}</span>
           </>
         )}
       </li>

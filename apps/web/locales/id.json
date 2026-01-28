@@ -81,6 +81,8 @@
     "version": "Versi",
     "users": "Pengguna",
     "save": "Simpan",
+    "save_changes": "Simpan Perubahan",
+    "saving": "Menyimpan...",
     "cancel": "Batal",
     "submit": "Kirim",
     "delete": "Hapus",
@@ -217,6 +219,8 @@
     "course_completed_exclamation": "Kursus Selesai!",
     "what_you_will_learn": "Apa yang akan Anda pelajari",
     "course_lessons": "Pelajaran Kursus",
+    "share_course": "Bagikan Kursus",
+    "copy_link": "Salin Tautan",
     "unlock_certificate_message": "Selesaikan semua aktivitas untuk membuka sertifikat Anda",
     "chapter": "Bab",
     "chapters": "Bab",
@@ -284,6 +288,159 @@
       "configure": "Konfigurasi",
       "ready_to_analyze": "Siap untuk dianalisis",
       "course_details": "Detail Kursus"
+    },
+    "clone_course": "Klon Kursus",
+    "clone_course_title": "Klon \"{{name}}\"",
+    "clone_course_confirm": "Ini akan membuat salinan lengkap kursus termasuk semua bab, aktivitas, dan file. Kursus yang dikloning akan diatur sebagai privat.",
+    "cloning_course": "Mengkloning kursus...",
+    "course_cloned_success": "Kursus berhasil dikloning",
+    "course_cloned_error": "Gagal mengkloning kursus",
+    "published": "Diterbitkan",
+    "unpublished": "Belum diterbitkan",
+    "search_courses": "Cari kursus...",
+    "search_results": "Ditemukan {{count}} kursus untuk \"{{query}}\"",
+    "no_search_results": "Kursus tidak ditemukan",
+    "try_different_search": "Coba kata kunci pencarian lain",
+    "select_courses": "Pilih",
+    "select_all": "Pilih Semua",
+    "clear_selection": "Hapus Pilihan",
+    "selected_count": "{{count}} dipilih",
+    "clone_selected": "Klon Terpilih",
+    "clone_selected_confirm": "Akan membuat salinan dari {{count}} kursus. Semua kursus yang dikloning akan bersifat privat. Lanjutkan?",
+    "delete_selected": "Hapus Terpilih",
+    "delete_selected_confirm": "{{count}} kursus akan dihapus secara permanen. Tindakan ini tidak dapat dibatalkan. Lanjutkan?",
+    "course_description_required": "Deskripsi kursus wajib diisi"
+  },
+  "communities": {
+    "title": "Komunitas",
+    "new_community": "Komunitas Baru",
+    "no_communities": "Belum ada komunitas",
+    "no_communities_description": "Buat komunitas untuk memulai diskusi",
+    "public": "Publik",
+    "private": "Privat",
+    "discussions": "diskusi",
+    "discussion": "diskusi",
+    "created": "Dibuat",
+    "linked_course": "Kursus Terkait",
+    "community_guidelines": "Panduan Komunitas",
+    "community_guidelines_text": "Bersikaplah hormat dan konstruktif. Bantu orang lain dan bagikan pengetahuan Anda dengan komunitas.",
+    "new_discussion": "Diskusi Baru",
+    "manage": "Kelola",
+    "sidebar": {
+      "posted_by": "Diposting oleh",
+      "upvotes": "Vote naik",
+      "category": "Kategori",
+      "created": "Dibuat",
+      "pinned": "Disematkan",
+      "locked": "Dikunci",
+      "reactions": "Reaksi",
+      "community": "Komunitas"
+    },
+    "discussion_list": {
+      "search_placeholder": "Cari diskusi...",
+      "sort_by": "Urutkan:",
+      "latest_activity": "Aktivitas terbaru",
+      "top": "Populer",
+      "hot": "Trending",
+      "new_discussion": "Diskusi baru",
+      "select": "Pilih",
+      "cancel": "Batal",
+      "select_all": "Pilih semua",
+      "deselect_all": "Batalkan pilihan",
+      "selected": "dipilih",
+      "delete": "Hapus",
+      "delete_discussions_title": "Hapus {{count}} diskusi?",
+      "delete_discussions_title_plural": "Hapus {{count}} diskusi?",
+      "delete_discussions_confirm": "Apakah Anda yakin ingin menghapus {{count}} {{type}}? Tindakan ini tidak dapat dibatalkan.",
+      "no_results": "Tidak ada hasil",
+      "no_results_description": "Coba sesuaikan pencarian atau hapus filter",
+      "clear_search": "Hapus pencarian",
+      "no_discussions": "Belum ada diskusi",
+      "no_discussions_description": "Jadilah yang pertama memulai diskusi di komunitas ini!",
+      "start_discussion": "Mulai Diskusi"
+    },
+    "discussion_detail": {
+      "edit": "Edit",
+      "delete": "Hapus",
+      "delete_title": "Hapus diskusi?",
+      "delete_confirm": "Apakah Anda yakin ingin menghapus diskusi ini? Tindakan ini tidak dapat dibatalkan.",
+      "delete_button": "Hapus Diskusi",
+      "no_details": "Tidak ada detail tambahan."
+    },
+    "discussion_card": {
+      "pin_discussion": "Sematkan diskusi",
+      "unpin_discussion": "Lepas sematan",
+      "lock_discussion": "Kunci diskusi",
+      "unlock_discussion": "Buka kunci diskusi",
+      "delete_discussion": "Hapus diskusi",
+      "delete_title": "Hapus diskusi?",
+      "delete_confirm": "Apakah Anda yakin ingin menghapus diskusi ini? Tindakan ini tidak dapat dibatalkan.",
+      "votes": "suara"
+    },
+    "comments": {
+      "no_replies": "Belum ada balasan",
+      "locked": "Diskusi ini dikunci",
+      "sign_in_to_reply": "Masuk",
+      "to_reply": "untuk membalas",
+      "write_reply": "Tulis balasan...",
+      "reply": "Balas",
+      "edit": "Edit",
+      "delete": "Hapus",
+      "save": "Simpan",
+      "cancel": "Batal",
+      "failed_to_post": "Gagal memposting balasan. Silakan coba lagi.",
+      "content_not_allowed": "Balasan Anda berisi konten yang tidak diizinkan.",
+      "failed_to_update": "Gagal memperbarui. Silakan coba lagi."
+    },
+    "label_filter": {
+      "label": "Label:",
+      "all": "Semua",
+      "all_discussions": "Semua diskusi",
+      "clear_filter": "Hapus filter"
+    },
+    "labels": {
+      "general": "Umum",
+      "question": "Pertanyaan",
+      "idea": "Ide",
+      "announcement": "Pengumuman",
+      "showcase": "Showcase"
+    },
+    "create_discussion": {
+      "title": "Mulai Diskusi",
+      "description": "Bagikan pemikiran Anda dengan komunitas",
+      "category_label": "Kategori",
+      "title_label": "Judul Diskusi",
+      "title_placeholder": "Apa yang ingin Anda diskusikan?",
+      "emoji_selected": "Emoji kustom dipilih",
+      "emoji_hint": "Klik + untuk menambah emoji kustom (opsional)",
+      "details_label": "Detail (opsional)",
+      "details_placeholder": "Tambahkan konteks atau detail lebih lanjut ke diskusi Anda...",
+      "editor_hint": "Gunakan toolbar untuk memformat teks dengan tebal, miring, daftar, dan lainnya.",
+      "cancel": "Batal",
+      "submit": "Posting Diskusi",
+      "title_required": "Judul wajib diisi",
+      "title_min_length": "Judul harus minimal 5 karakter",
+      "title_max_length": "Judul harus kurang dari 200 karakter",
+      "content_not_allowed": "Diskusi Anda berisi konten yang tidak diizinkan.",
+      "failed_to_create": "Gagal membuat diskusi. Silakan coba lagi."
+    },
+    "edit_discussion": {
+      "title": "Edit Diskusi",
+      "description": "Perbarui diskusi Anda",
+      "save": "Simpan Perubahan",
+      "cancel": "Batal",
+      "close": "Tutup",
+      "failed_to_update": "Gagal memperbarui. Silakan coba lagi.",
+      "content_not_allowed": "Diskusi Anda berisi konten yang tidak diizinkan.",
+      "max_edits_reached": "Anda telah mencapai batas maksimum pengeditan ({{count}}). Anda tidak dapat mengedit diskusi ini lagi.",
+      "edits_remaining": "Anda memiliki {{count}} pengeditan tersisa.",
+      "no_edits_remaining": "Anda tidak memiliki pengeditan tersisa ({{count}})."
+    },
+    "course_section": {
+      "title": "Diskusi Komunitas",
+      "view_all": "Lihat Semua",
+      "no_discussions": "Belum ada diskusi",
+      "start_first": "Mulai diskusi pertama"
     }
   },
   "collections": {
@@ -732,6 +889,30 @@
       "no_courses": "Belum ada kursus",
       "create_course_placeholder": "Buat kursus untuk menambahkan konten",
       "no_courses_available": "Belum ada kursus yang tersedia",
+      "publishing": "Menerbitkan kursus...",
+      "unpublishing": "Membatalkan penerbitan kursus...",
+      "published_success": "Kursus berhasil diterbitkan",
+      "unpublished_success": "Kursus berhasil dibatalkan penerbitannya",
+      "publish_error": "Gagal memperbarui status penerbitan",
+      "published": "Diterbitkan",
+      "unpublished": "Belum diterbitkan",
+      "processing": "Memproses...",
+      "click_to_publish": "Klik untuk menerbitkan",
+      "click_to_unpublish": "Klik untuk membatalkan penerbitan",
+      "preview": "Pratinjau",
+      "save": {
+        "success": "Perubahan berhasil disimpan",
+        "error": "Gagal menyimpan perubahan",
+        "partial_success": "Disimpan dengan beberapa masalah: {{failed}}",
+        "partial_error": "Sebagian tersimpan ({{success}}), tetapi gagal: {{failed}}",
+        "certification_error": "Gagal menyimpan pengaturan sertifikasi",
+        "saving": "Menyimpan...",
+        "saved": "Tersimpan",
+        "save": "Simpan",
+        "unsaved": "Perubahan belum disimpan",
+        "retry": "Kesalahan - Klik untuk mencoba lagi",
+        "retry_button": "Coba lagi"
+      },
       "overview_top": {
         "course_label": "Kursus",
         "rights_guide_button": "Panduan Hak"
@@ -1032,7 +1213,43 @@
           "tabs": {
             "general": "Umum",
             "thumbnail": "Gambar Mini",
+            "course": "Kursus Terkait",
             "moderation": "Moderasi"
+          },
+          "general": {
+            "title": "Pengaturan Umum",
+            "subtitle": "Kelola nama, deskripsi, dan visibilitas komunitas"
+          },
+          "thumbnail": {
+            "title": "Gambar Mini",
+            "subtitle": "Perbarui gambar sampul komunitas"
+          },
+          "course": {
+            "title": "Kursus Terkait",
+            "subtitle": "Hubungkan komunitas ini ke kursus"
+          },
+          "moderation": {
+            "title": "Moderasi",
+            "subtitle": "Konfigurasi pengaturan moderasi konten"
+          }
+        },
+        "course": {
+          "title": "Kursus Terkait",
+          "subtitle": "Hubungkan komunitas ini ke kursus untuk diskusi khusus kursus",
+          "currently_linked": "Saat ini terhubung",
+          "unlink": "Putuskan",
+          "link_button": "Hubungkan Kursus",
+          "search_placeholder": "Cari kursus...",
+          "no_courses": "Kursus tidak ditemukan",
+          "course_linked_id": "Kursus terhubung (ID: {{id}})",
+          "course_not_found": "Kursus yang terhubung mungkin tidak ada lagi atau Anda tidak memiliki akses",
+          "toasts": {
+            "linking": "Menghubungkan kursus...",
+            "link_success": "Kursus berhasil dihubungkan",
+            "link_error": "Gagal menghubungkan kursus",
+            "unlinking": "Memutuskan kursus...",
+            "unlink_success": "Kursus berhasil diputuskan",
+            "unlink_error": "Gagal memutuskan kursus"
           }
         },
         "general": {

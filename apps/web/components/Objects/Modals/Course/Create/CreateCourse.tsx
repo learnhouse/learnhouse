@@ -49,6 +49,7 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
       .required(t('courses.course_name_required'))
       .max(100, 'Must be 100 characters or less'),
     description: Yup.string()
+      .required(t('courses.course_description_required'))
       .max(1000, 'Must be 1000 characters or less'),
     learnings: Yup.string(),
     tags: Yup.string(),
@@ -90,13 +91,17 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
           toast.dismiss(toast_loading)
           toast.success(t('courses.course_created_success'))
 
-          if (res.data.org_id === orgId) {
-            closeModal()
-            router.refresh()
-            await revalidateTags(['courses'], orgslug)
-          }
+          closeModal()
+          // Redirect to the course dashboard - remove 'course_' prefix if present
+          const courseId = res.data.course_uuid?.replace('course_', '') || res.data.course_uuid
+          router.push(`/dash/courses/course/${courseId}/general`)
         } else {
-          toast.error(res.data.detail)
+          const errorMessage = typeof res.data?.detail === 'string'
+            ? res.data.detail
+            : Array.isArray(res.data?.detail)
+              ? res.data.detail.map((e: any) => e.msg).join(', ')
+              : t('courses.failed_to_create_course')
+          toast.error(errorMessage)
         }
       } catch (error) {
         toast.error(t('courses.failed_to_create_course'))
@@ -166,7 +171,7 @@ function CreateCourseModal({ closeModal, orgslug }: any) {
           <Textarea
             onChange={formik.handleChange}
             value={formik.values.description}
-
+            required
           />
         </Form.Control>
       </FormField>

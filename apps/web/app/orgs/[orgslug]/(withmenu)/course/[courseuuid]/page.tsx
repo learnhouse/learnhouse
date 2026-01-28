@@ -1,11 +1,12 @@
 import React from 'react'
 import CourseClient from './course'
-import { getCourseMetadata } from '@services/courses/courses'
+import { getCourseMetadata, getCourseRights } from '@services/courses/courses'
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { Metadata } from 'next'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import { nextAuthOptions } from 'app/auth/options'
 import { getServerSession } from 'next-auth'
+import { notFound } from 'next/navigation'
 
 type MetadataProps = {
   params: Promise<{ orgslug: string; courseuuid: string }>
@@ -95,11 +96,22 @@ const CoursePage = async (params: any) => {
   const { courseuuid, orgslug } = await params.params
 
   // Fetch course metadata once
-  const course_meta = await getCourseMetadata(
-    courseuuid,
-    { revalidate: 0, tags: ['courses'] },
-    access_token ? access_token : null
-  )
+  let course_meta
+  try {
+    course_meta = await getCourseMetadata(
+      courseuuid,
+      { revalidate: 0, tags: ['courses'] },
+      access_token ? access_token : null
+    )
+  } catch (error) {
+    // If course not found (404) or any error, show not found
+    notFound()
+  }
+
+  // If no course data returned, show not found
+  if (!course_meta) {
+    notFound()
+  }
 
   return (
     <CourseClient

@@ -81,6 +81,8 @@
     "version": "版本",
     "users": "用户",
     "save": "保存",
+    "save_changes": "保存更改",
+    "saving": "正在保存...",
     "cancel": "取消",
     "submit": "提交",
     "delete": "删除",
@@ -217,6 +219,8 @@
     "course_completed_exclamation": "课程已完成！",
     "what_you_will_learn": "您将学到什么",
     "course_lessons": "课程课时",
+    "share_course": "分享课程",
+    "copy_link": "复制链接",
     "unlock_certificate_message": "完成所有活动以获得证书",
     "chapter": "章",
     "chapters": "章",
@@ -284,6 +288,159 @@
       "configure": "配置",
       "ready_to_analyze": "准备分析",
       "course_details": "课程详情"
+    },
+    "clone_course": "复制课程",
+    "clone_course_title": "复制 \"{{name}}\"",
+    "clone_course_confirm": "这将创建课程的完整副本，包括所有章节、活动和文件。复制的课程将设为私有。",
+    "cloning_course": "正在复制课程...",
+    "course_cloned_success": "课程复制成功",
+    "course_cloned_error": "复制课程失败",
+    "published": "已发布",
+    "unpublished": "未发布",
+    "search_courses": "搜索课程...",
+    "search_results": "找到 {{count}} 个与 \"{{query}}\" 匹配的课程",
+    "no_search_results": "未找到课程",
+    "try_different_search": "尝试其他搜索词",
+    "select_courses": "选择",
+    "select_all": "全选",
+    "clear_selection": "清除选择",
+    "selected_count": "已选择 {{count}} 个",
+    "clone_selected": "复制所选",
+    "clone_selected_confirm": "这将创建 {{count}} 个课程的副本。所有复制的课程将设为私有。继续？",
+    "delete_selected": "删除所选",
+    "delete_selected_confirm": "这将永久删除 {{count}} 个课程。此操作无法撤消。继续？",
+    "course_description_required": "课程描述是必需的"
+  },
+  "communities": {
+    "title": "社区",
+    "new_community": "新建社区",
+    "no_communities": "暂无社区",
+    "no_communities_description": "创建社区以开始讨论",
+    "public": "公开",
+    "private": "私密",
+    "discussions": "讨论",
+    "discussion": "讨论",
+    "created": "创建于",
+    "linked_course": "关联课程",
+    "community_guidelines": "社区准则",
+    "community_guidelines_text": "请保持尊重和建设性。帮助他人，与社区分享您的知识。",
+    "new_discussion": "新建讨论",
+    "manage": "管理",
+    "sidebar": {
+      "posted_by": "发布者",
+      "upvotes": "点赞数",
+      "category": "分类",
+      "created": "创建于",
+      "pinned": "已置顶",
+      "locked": "已锁定",
+      "reactions": "反应",
+      "community": "社区"
+    },
+    "discussion_list": {
+      "search_placeholder": "搜索讨论...",
+      "sort_by": "排序方式：",
+      "latest_activity": "最新活动",
+      "top": "热门",
+      "hot": "趋势",
+      "new_discussion": "新建讨论",
+      "select": "选择",
+      "cancel": "取消",
+      "select_all": "全选",
+      "deselect_all": "取消全选",
+      "selected": "已选择",
+      "delete": "删除",
+      "delete_discussions_title": "删除 {{count}} 个讨论？",
+      "delete_discussions_title_plural": "删除 {{count}} 个讨论？",
+      "delete_discussions_confirm": "确定要删除 {{count}} 个{{type}}吗？此操作无法撤消。",
+      "no_results": "未找到结果",
+      "no_results_description": "请尝试调整搜索条件或清除筛选器",
+      "clear_search": "清除搜索",
+      "no_discussions": "暂无讨论",
+      "no_discussions_description": "成为第一个在这个社区发起讨论的人！",
+      "start_discussion": "发起讨论"
+    },
+    "discussion_detail": {
+      "edit": "编辑",
+      "delete": "删除",
+      "delete_title": "删除讨论？",
+      "delete_confirm": "确定要删除此讨论吗？此操作无法撤消。",
+      "delete_button": "删除讨论",
+      "no_details": "未提供额外详情。"
+    },
+    "discussion_card": {
+      "pin_discussion": "置顶讨论",
+      "unpin_discussion": "取消置顶",
+      "lock_discussion": "锁定讨论",
+      "unlock_discussion": "解锁讨论",
+      "delete_discussion": "删除讨论",
+      "delete_title": "删除讨论？",
+      "delete_confirm": "确定要删除此讨论吗？此操作无法撤消。",
+      "votes": "票"
+    },
+    "comments": {
+      "no_replies": "暂无回复",
+      "locked": "此讨论已锁定",
+      "sign_in_to_reply": "登录",
+      "to_reply": "以回复",
+      "write_reply": "写回复...",
+      "reply": "回复",
+      "edit": "编辑",
+      "delete": "删除",
+      "save": "保存",
+      "cancel": "取消",
+      "failed_to_post": "发布回复失败，请重试。",
+      "content_not_allowed": "您的回复包含不允许的内容。",
+      "failed_to_update": "更新失败，请重试。"
+    },
+    "label_filter": {
+      "label": "标签：",
+      "all": "全部",
+      "all_discussions": "所有讨论",
+      "clear_filter": "清除筛选"
+    },
+    "labels": {
+      "general": "综合",
+      "question": "问题",
+      "idea": "想法",
+      "announcement": "公告",
+      "showcase": "展示"
+    },
+    "create_discussion": {
+      "title": "发起讨论",
+      "description": "与社区分享您的想法",
+      "category_label": "分类",
+      "title_label": "讨论标题",
+      "title_placeholder": "您想讨论什么？",
+      "emoji_selected": "已选择自定义表情",
+      "emoji_hint": "点击 + 添加自定义表情（可选）",
+      "details_label": "详情（可选）",
+      "details_placeholder": "为您的讨论添加更多背景或详情...",
+      "editor_hint": "使用工具栏为文本添加粗体、斜体、列表等格式。",
+      "cancel": "取消",
+      "submit": "发布讨论",
+      "title_required": "标题为必填项",
+      "title_min_length": "标题至少需要5个字符",
+      "title_max_length": "标题不能超过200个字符",
+      "content_not_allowed": "您的讨论包含不允许的内容。",
+      "failed_to_create": "创建讨论失败，请重试。"
+    },
+    "edit_discussion": {
+      "title": "编辑讨论",
+      "description": "更新您的讨论",
+      "save": "保存更改",
+      "cancel": "取消",
+      "close": "关闭",
+      "failed_to_update": "更新失败，请重试。",
+      "content_not_allowed": "您的讨论包含不允许的内容。",
+      "max_edits_reached": "您已达到最大编辑次数（{{count}}次）。您无法再编辑此讨论。",
+      "edits_remaining": "您还剩{{count}}次编辑机会。",
+      "no_edits_remaining": "您没有剩余的编辑次数（{{count}}次）。"
+    },
+    "course_section": {
+      "title": "社区讨论",
+      "view_all": "查看全部",
+      "no_discussions": "暂无讨论",
+      "start_first": "发起第一个讨论"
     }
   },
   "collections": {
@@ -732,6 +889,30 @@
       "no_courses": "尚无课程",
       "create_course_placeholder": "创建课程以添加内容",
       "no_courses_available": "尚无可用课程",
+      "publishing": "正在发布课程...",
+      "unpublishing": "正在取消发布课程...",
+      "published_success": "课程发布成功",
+      "unpublished_success": "课程取消发布成功",
+      "publish_error": "更新发布状态失败",
+      "published": "已发布",
+      "unpublished": "未发布",
+      "processing": "处理中...",
+      "click_to_publish": "点击发布",
+      "click_to_unpublish": "点击取消发布",
+      "preview": "预览",
+      "save": {
+        "success": "更改已成功保存",
+        "error": "保存更改失败",
+        "partial_success": "已保存，但存在一些问题：{{failed}}",
+        "partial_error": "部分保存成功（{{success}}），但失败：{{failed}}",
+        "certification_error": "保存认证设置失败",
+        "saving": "保存中...",
+        "saved": "已保存",
+        "save": "保存",
+        "unsaved": "未保存的更改",
+        "retry": "错误 - 点击重试",
+        "retry_button": "重试"
+      },
       "overview_top": {
         "course_label": "课程",
         "rights_guide_button": "权利指南"
@@ -1032,7 +1213,43 @@
           "tabs": {
             "general": "常规",
             "thumbnail": "缩略图",
+            "course": "关联课程",
             "moderation": "内容审核"
+          },
+          "general": {
+            "title": "常规设置",
+            "subtitle": "管理社区名称、描述和可见性"
+          },
+          "thumbnail": {
+            "title": "缩略图",
+            "subtitle": "更新社区封面图片"
+          },
+          "course": {
+            "title": "关联课程",
+            "subtitle": "将此社区连接到课程"
+          },
+          "moderation": {
+            "title": "内容审核",
+            "subtitle": "配置内容审核设置"
+          }
+        },
+        "course": {
+          "title": "关联课程",
+          "subtitle": "将此社区连接到课程以进行特定课程的讨论",
+          "currently_linked": "当前已关联",
+          "unlink": "取消关联",
+          "link_button": "关联课程",
+          "search_placeholder": "搜索课程...",
+          "no_courses": "未找到课程",
+          "course_linked_id": "课程已关联 (ID: {{id}})",
+          "course_not_found": "关联的课程可能已不存在或您无权访问",
+          "toasts": {
+            "linking": "正在关联课程...",
+            "link_success": "课程关联成功",
+            "link_error": "课程关联失败",
+            "unlinking": "正在取消关联课程...",
+            "unlink_success": "课程取消关联成功",
+            "unlink_error": "课程取消关联失败"
           }
         },
         "general": {

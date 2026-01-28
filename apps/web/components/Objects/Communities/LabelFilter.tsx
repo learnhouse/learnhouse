@@ -1,5 +1,6 @@
 'use client'
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import { ChevronDown, MessageSquare, HelpCircle, Lightbulb, Megaphone, Star, X } from 'lucide-react'
 import {
   DropdownMenu,
@@ -31,6 +32,7 @@ function getLabelIcon(iconName: string, size: number = 12) {
 }
 
 export function LabelFilter({ value, onChange }: LabelFilterProps) {
+  const { t } = useTranslation()
   const currentLabel = value ? DISCUSSION_LABELS.find(l => l.id === value) : null
 
   return (
@@ -43,12 +45,12 @@ export function LabelFilter({ value, onChange }: LabelFilterProps) {
                 <span style={{ color: currentLabel.color }}>
                   {getLabelIcon(currentLabel.icon, 12)}
                 </span>
-                <span className="font-medium text-gray-700">{currentLabel.name}</span>
+                <span className="font-medium text-gray-700">{t(`communities.labels.${currentLabel.id}`)}</span>
               </>
             ) : (
               <>
-                <span className="text-gray-500">Label:</span>
-                <span className="font-medium text-gray-700">All</span>
+                <span className="text-gray-500">{t('communities.label_filter.label')}</span>
+                <span className="font-medium text-gray-700">{t('communities.label_filter.all')}</span>
               </>
             )}
             <ChevronDown size={12} className="text-gray-400" />
@@ -60,7 +62,7 @@ export function LabelFilter({ value, onChange }: LabelFilterProps) {
             className={`flex items-center gap-2 text-sm cursor-pointer ${!value ? 'bg-gray-100 text-gray-900' : 'text-gray-600'}`}
           >
             <MessageSquare size={14} className="text-gray-400" />
-            <span>All discussions</span>
+            <span>{t('communities.label_filter.all_discussions')}</span>
           </DropdownMenuItem>
           {DISCUSSION_LABELS.map((label) => (
             <DropdownMenuItem
@@ -71,7 +73,7 @@ export function LabelFilter({ value, onChange }: LabelFilterProps) {
               <span style={{ color: label.color }}>
                 {getLabelIcon(label.icon, 14)}
               </span>
-              <span>{label.name}</span>
+              <span>{t(`communities.labels.${label.id}`)}</span>
             </DropdownMenuItem>
           ))}
         </DropdownMenuContent>
@@ -82,7 +84,7 @@ export function LabelFilter({ value, onChange }: LabelFilterProps) {
         <button
           onClick={() => onChange(null)}
           className="p-1 hover:bg-gray-100 rounded transition-colors"
-          title="Clear filter"
+          title={t('communities.label_filter.clear_filter')}
         >
           <X size={12} className="text-gray-400" />
         </button>

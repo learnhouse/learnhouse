@@ -1,5 +1,6 @@
 'use client'
 import React, { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { updateDiscussion, DISCUSSION_LABELS, DiscussionWithAuthor } from '@services/communities/discussions'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
@@ -53,6 +54,7 @@ export function EditDiscussionModal({
   discussion,
   onUpdated,
 }: EditDiscussionModalProps) {
+  const { t } = useTranslation()
   const session = useLHSession() as any
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -80,13 +82,13 @@ export function EditDiscussionModal({
 
   const validateTitle = (value: string) => {
     if (!value.trim()) {
-      return 'Title is required'
+      return t('communities.create_discussion.title_required')
     }
     if (value.trim().length < 5) {
-      return 'Title must be at least 5 characters'
+      return t('communities.create_discussion.title_min_length')
     }
     if (value.length > 200) {
-      return 'Title must be less than 200 characters'
+      return t('communities.create_discussion.title_max_length')
     }
     return null
   }
@@ -101,7 +103,7 @@ export function EditDiscussionModal({
     e.preventDefault()
 
     if (!canEdit) {
-      setError(`You have reached the maximum number of edits (${MAX_EDITS}). You can no longer edit this discussion.`)
+      setError(t('communities.edit_discussion.max_edits_reached', { count: MAX_EDITS }))
       return
     }
 
@@ -132,13 +134,13 @@ export function EditDiscussionModal({
     } catch (err: any) {
       console.error('Failed to update discussion:', err)
       if (err?.detail?.code === 'EDIT_LIMIT_REACHED') {
-        setError(err.detail.message || `You have reached the maximum number of edits (${MAX_EDITS}).`)
+        setError(err.detail.message || t('communities.edit_discussion.max_edits_reached', { count: MAX_EDITS }))
       } else if (err?.detail?.code === 'MODERATION_BLOCKED') {
-        setError(err.detail.message || 'Your discussion contains content that is not allowed.')
+        setError(err.detail.message || t('communities.edit_discussion.content_not_allowed'))
       } else if (typeof err?.detail === 'string') {
         setError(err.detail)
       } else {
-        setError('Failed to update discussion. Please try again.')
+        setError(t('communities.edit_discussion.failed_to_update'))
       }
     } finally {
       setIsSubmitting(false)
@@ -155,8 +157,8 @@ export function EditDiscussionModal({
           onClose()
         }
       }}
-      dialogTitle="Edit Discussion"
-      dialogDescription="Update your discussion"
+      dialogTitle={t('communities.edit_discussion.title')}
+      dialogDescription={t('communities.edit_discussion.description')}
       minWidth="lg"
       dialogContent={
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -165,14 +167,14 @@ export function EditDiscussionModal({
             <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-100 rounded-lg text-blue-700 text-sm">
               <Info size={16} className="flex-shrink-0" />
               <span>
-                You have <strong>{remainingEdits}</strong> edit{remainingEdits === 1 ? '' : 's'} remaining for this discussion.
+                {t('communities.edit_discussion.edits_remaining', { count: remainingEdits })}
               </span>
             </div>
           ) : (
             <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-100 rounded-lg text-amber-700 text-sm">
               <AlertCircle size={16} className="flex-shrink-0" />
               <span>
-                You have used all {MAX_EDITS} edits. This discussion can no longer be edited.
+                {t('communities.edit_discussion.no_edits_remaining', { count: MAX_EDITS })}
               </span>
             </div>
           )}
@@ -180,7 +182,7 @@ export function EditDiscussionModal({
           {/* Label Selection */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Category
+              {t('communities.create_discussion.category_label')}
             </label>
             <div className="flex flex-wrap gap-2">
               {DISCUSSION_LABELS.map((label) => (
@@ -199,7 +201,7 @@ export function EditDiscussionModal({
                     {getLabelIcon(label.icon, 16)}
                   </span>
                   <span className={`text-sm ${selectedLabel === label.id ? 'font-medium text-gray-900' : 'text-gray-600'}`}>
-                    {label.name}
+                    {t(`communities.labels.${label.id}`)}
                   </span>
                   {selectedLabel === label.id && (
                     <Check size={14} className="text-gray-900" />
@@ -215,7 +217,7 @@ export function EditDiscussionModal({
               htmlFor="title"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
-              Discussion Title *
+              {t('communities.create_discussion.title_label')} *
             </label>
             <div className="flex gap-3">
               {/* Emoji Picker */}
@@ -237,7 +239,7 @@ export function EditDiscussionModal({
                   value={title}
                   onChange={handleTitleChange}
                   disabled={!canEdit}
-                  placeholder="What would you like to discuss?"
+                  placeholder={t('communities.create_discussion.title_placeholder')}
                   className={`w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all h-12 ${
                     !canEdit ? 'bg-gray-100 cursor-not-allowed' : ''
                   }`}
@@ -252,13 +254,13 @@ export function EditDiscussionModal({
           {/* Content Editor */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Details (optional)
+              {t('communities.create_discussion.details_label')}
             </label>
             <div className={!canEdit ? 'opacity-50 pointer-events-none' : ''}>
               <DiscussionEditor
                 content={content}
                 onChange={setContent}
-                placeholder="Add more context or details to your discussion..."
+                placeholder={t('communities.create_discussion.details_placeholder')}
                 minHeight="180px"
                 editable={canEdit}
               />
@@ -280,7 +282,7 @@ export function EditDiscussionModal({
               onClick={onClose}
               className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
             >
-              {canEdit ? 'Cancel' : 'Close'}
+              {canEdit ? t('communities.edit_discussion.cancel') : t('communities.edit_discussion.close')}
             </button>
             {canEdit && (
               <button
@@ -289,7 +291,7 @@ export function EditDiscussionModal({
                 className="px-4 py-2 text-sm font-medium text-white bg-neutral-900 hover:bg-neutral-800 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 {isSubmitting && <Loader2 size={16} className="animate-spin" />}
-                Save Changes
+                {t('communities.edit_discussion.save')}
               </button>
             )}
           </div>

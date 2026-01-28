@@ -8,8 +8,8 @@ import { useFormik } from 'formik';
 import { AlertTriangle, Award, FileText, Settings } from 'lucide-react';
 import CertificatePreview from './CertificatePreview';
 import * as Form from '@radix-ui/react-form';
-import React, { useEffect, useState } from 'react';
-import { useCourse, useCourseDispatch } from '@components/Contexts/CourseContext';
+import React, { useEffect, useState, useRef } from 'react';
+import { useCourseFieldSync, useCourse } from '@components/Contexts/CourseContext';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
 import { 
   createCertification, 
@@ -54,11 +54,22 @@ function EditCourseCertification(props: EditCourseCertificationProps) {
   const { t } = useTranslation()
   const [error, setError] = useState('');
   const [isCreating, setIsCreating] = useState(false);
-  const course = useCourse();
-  const dispatchCourse = useCourseDispatch() as any;
-  const { isLoading, courseStructure } = course as any;
+  const course = useCourse() as any;
   const session = useLHSession() as any;
   const access_token = session?.data?.tokens?.access_token;
+
+  // Use the new field sync hook
+  const {
+    syncChanges,
+    cancelPendingSync,
+    courseStructure,
+    isLoading,
+    isSaving,
+  } = useCourseFieldSync('editCourseCertification');
+
+  // Track previous values to detect changes
+  const previousValuesRef = useRef<any>(null);
+  const hasInitializedRef = useRef(false);
 
   // Fetch existing certifications
   const { data: certifications, error: certificationsError, mutate: mutateCertifications } = useSWR(
@@ -216,35 +227,56 @@ function EditCourseCertification(props: EditCourseCertificationProps) {
 
   // Handle form changes - update course context with certification data
   useEffect(() => {
-    if (!isLoading && hasExistingCertification) {
-      const formikValues = formik.values as any;
-      const initialValues = formik.initialValues as any;
-      const valuesChanged = Object.keys(formikValues).some(
-        key => formikValues[key] !== initialValues[key]
-      );
+    // Skip if loading, saving, or no existing certification
+    if (isLoading || isSaving || !hasExistingCertification) return;
 
-      if (valuesChanged) {
-        dispatchCourse({ type: 'setIsNotSaved' });
-        
-        // Store certification data in course context so it gets saved with the main save button
-        const updatedCourse = {
-          ...courseStructure,
-          // Store certification data for the main save functionality
-          _certificationData: {
-            certification_uuid: existingCertification.certification_uuid,
-            config: {
-              certification_name: formikValues.certification_name,
-              certification_description: formikValues.certification_description,
-              certification_type: formikValues.certification_type,
-              certificate_pattern: formikValues.certificate_pattern,
-              certificate_instructor: formikValues.certificate_instructor,
-            }
-          }
-        };
-        dispatchCourse({ type: 'setCourseStructure', payload: updatedCourse });
-      }
+    // Skip initial mount
+    if (!hasInitializedRef.current) {
+      hasInitializedRef.current = true;
+      previousValuesRef.current = formik.values;
+      return;
     }
-  }, [formik.values, isLoading, hasExistingCertification, existingCertification]);
+
+    const formikValues = formik.values as any;
+    const prevValues = previousValuesRef.current;
+
+    // Check if values actually changed from previous
+    if (!prevValues) {
+      previousValuesRef.current = formikValues;
+      return;
+    }
+
+    const hasChanges = Object.keys(formikValues).some(
+      key => formikValues[key] !== prevValues[key]
+    );
+
+    if (hasChanges) {
+      // Store certification data in course context so it gets saved with the main save button
+      const certificationData = {
+        _certificationData: {
+          certification_uuid: existingCertification.certification_uuid,
+          config: {
+            certification_name: formikValues.certification_name,
+            certification_description: formikValues.certification_description,
+            certification_type: formikValues.certification_type,
+            certificate_pattern: formikValues.certificate_pattern,
+            certificate_instructor: formikValues.certificate_instructor,
+          }
+        }
+      };
+
+      // Sync changes immediately (certification changes are important)
+      syncChanges(certificationData, true);
+      previousValuesRef.current = { ...formikValues };
+    }
+  }, [formik.values, isLoading, isSaving, hasExistingCertification, existingCertification, syncChanges]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      cancelPendingSync();
+    };
+  }, [cancelPendingSync]);
 
   if (isLoading || !courseStructure || (courseStructure.course_uuid && access_token && certifications === undefined)) {
     return <div>{t('dashboard.courses.settings.loading')}</div>;
