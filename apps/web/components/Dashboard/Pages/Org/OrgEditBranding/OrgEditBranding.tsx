@@ -1,6 +1,6 @@
 'use client'
 import React, { useState } from 'react'
-import { UploadCloud, Info, Plus, X, GripVertical, Images, StarIcon, ImageIcon, Share2, Link as LinkIcon } from 'lucide-react'
+import { UploadCloud, Info, Plus, X, GripVertical, Images, StarIcon, ImageIcon, Share2, Link as LinkIcon, Palette } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
@@ -8,7 +8,7 @@ import { getOrgLogoMediaDirectory, getOrgPreviewMediaDirectory, getOrgThumbnailM
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@components/ui/tabs"
 import { toast } from 'react-hot-toast'
 import { constructAcceptValue } from '@/lib/constants'
-import { uploadOrganizationLogo, uploadOrganizationThumbnail, uploadOrganizationPreview, updateOrganization } from '@services/settings/org'
+import { uploadOrganizationLogo, uploadOrganizationThumbnail, uploadOrganizationPreview, updateOrganization, updateOrgColorConfig } from '@services/settings/org'
 import { cn } from '@/lib/utils'
 import { Input } from "@components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@components/ui/dialog"
@@ -121,6 +121,10 @@ export default function OrgEditBranding() {
   const [videoUrl, setVideoUrl] = useState('')
   const [videoDialogOpen, setVideoDialogOpen] = useState(false)
   const [selectedService, setSelectedService] = useState<VideoService>(null)
+
+  // Theme state
+  const [primaryColor, setPrimaryColor] = useState<string>(org?.config?.config?.general?.color || '')
+  const [isColorSaving, setIsColorSaving] = useState(false)
 
   // Socials initial values
   const initialValues: OrganizationValues = {
@@ -376,6 +380,49 @@ export default function OrgEditBranding() {
     setVideoUrl('')
   }
 
+  // Theme handlers
+  const handleColorSave = async () => {
+    setIsColorSaving(true)
+    const loadingToast = toast.loading(t('dashboard.organization.settings.updating'))
+    try {
+      await updateOrgColorConfig(org.id, primaryColor, access_token)
+      await revalidateTags(['organizations'], org.slug)
+      mutate(`${getAPIUrl()}orgs/slug/${org.slug}`)
+      toast.success(t('dashboard.organization.settings.update_success'), { id: loadingToast })
+      router.refresh()
+    } catch (err) {
+      toast.error(t('dashboard.organization.settings.update_error'), { id: loadingToast })
+    } finally {
+      setIsColorSaving(false)
+    }
+  }
+
+  const handleClearColor = async () => {
+    setPrimaryColor('')
+    setIsColorSaving(true)
+    const loadingToast = toast.loading(t('dashboard.organization.settings.updating'))
+    try {
+      await updateOrgColorConfig(org.id, '', access_token)
+      await revalidateTags(['organizations'], org.slug)
+      mutate(`${getAPIUrl()}orgs/slug/${org.slug}`)
+      toast.success(t('dashboard.organization.settings.update_success'), { id: loadingToast })
+      router.refresh()
+    } catch (err) {
+      toast.error(t('dashboard.organization.settings.update_error'), { id: loadingToast })
+    } finally {
+      setIsColorSaving(false)
+    }
+  }
+
+  // Helper to convert hex to rgba
+  const hexToRgba = (hex: string, alpha: number): string => {
+    if (!hex || hex.length < 7) return 'transparent'
+    const r = parseInt(hex.slice(1, 3), 16)
+    const g = parseInt(hex.slice(3, 5), 16)
+    const b = parseInt(hex.slice(5, 7), 16)
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`
+  }
+
   // Socials handler
   const updateOrg = async (values: OrganizationValues) => {
     const loadingToast = toast.loading(t('dashboard.organization.settings.updating'))
@@ -401,52 +448,47 @@ export default function OrgEditBranding() {
         </h2>
       </div>
 
-      <Tabs defaultValue="images" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 p-1 bg-gray-100 rounded-lg">
+      <Tabs defaultValue="logo" className="w-full">
+        <TabsList className="flex w-full p-1 bg-gray-100 rounded-lg gap-1 overflow-x-auto">
           <TabsTrigger
-            value="images"
-            className="data-[state=active]:bg-white data-[state=active]:shadow-xs transition-all flex items-center space-x-2"
+            value="logo"
+            className="flex-1 min-w-fit data-[state=active]:bg-white data-[state=active]:shadow-xs transition-all flex items-center justify-center space-x-2 px-3"
           >
-            <ImageIcon size={16} />
-            <span>{t('dashboard.organization.branding.tabs.images')}</span>
+            <StarIcon size={14} />
+            <span className="hidden sm:inline">{t('dashboard.organization.images.tabs.logo')}</span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="theme"
+            className="flex-1 min-w-fit data-[state=active]:bg-white data-[state=active]:shadow-xs transition-all flex items-center justify-center space-x-2 px-3"
+          >
+            <Palette size={14} />
+            <span className="hidden sm:inline">{t('dashboard.organization.branding.tabs.theme')}</span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="thumbnail"
+            className="flex-1 min-w-fit data-[state=active]:bg-white data-[state=active]:shadow-xs transition-all flex items-center justify-center space-x-2 px-3"
+          >
+            <ImageIcon size={14} />
+            <span className="hidden sm:inline">{t('dashboard.organization.images.tabs.thumbnail')}</span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="previews"
+            className="flex-1 min-w-fit data-[state=active]:bg-white data-[state=active]:shadow-xs transition-all flex items-center justify-center space-x-2 px-3"
+          >
+            <Images size={14} />
+            <span className="hidden sm:inline">{t('dashboard.organization.images.tabs.previews')}</span>
           </TabsTrigger>
           <TabsTrigger
             value="social"
-            className="data-[state=active]:bg-white data-[state=active]:shadow-xs transition-all flex items-center space-x-2"
+            className="flex-1 min-w-fit data-[state=active]:bg-white data-[state=active]:shadow-xs transition-all flex items-center justify-center space-x-2 px-3"
           >
-            <Share2 size={16} />
-            <span>{t('dashboard.organization.branding.tabs.social')}</span>
+            <Share2 size={14} />
+            <span className="hidden sm:inline">{t('dashboard.organization.branding.tabs.social')}</span>
           </TabsTrigger>
         </TabsList>
 
-        {/* Images & Previews Tab */}
-        <TabsContent value="images" className="mt-4">
-          <Tabs defaultValue="logo" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 p-1 bg-gray-50 rounded-lg">
-              <TabsTrigger
-                value="logo"
-                className="data-[state=active]:bg-white data-[state=active]:shadow-xs transition-all flex items-center space-x-2"
-              >
-                <StarIcon size={14} />
-                <span>{t('dashboard.organization.images.tabs.logo')}</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="thumbnail"
-                className="data-[state=active]:bg-white data-[state=active]:shadow-xs transition-all flex items-center space-x-2"
-              >
-                <ImageIcon size={14} />
-                <span>{t('dashboard.organization.images.tabs.thumbnail')}</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="previews"
-                className="data-[state=active]:bg-white data-[state=active]:shadow-xs transition-all flex items-center space-x-2"
-              >
-                <Images size={14} />
-                <span>{t('dashboard.organization.images.tabs.previews')}</span>
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="logo" className="mt-2">
+        {/* Logo Tab */}
+        <TabsContent value="logo" className="mt-4">
               <div className="flex flex-col space-y-5 w-full">
                 <div className="w-full bg-linear-to-b from-gray-50 to-white rounded-xl transition-all duration-300 py-8">
                   <div className="flex flex-col justify-center items-center space-y-8">
@@ -497,9 +539,10 @@ export default function OrgEditBranding() {
                   </div>
                 </div>
               </div>
-            </TabsContent>
+        </TabsContent>
 
-            <TabsContent value="thumbnail" className="mt-2">
+        {/* Thumbnail Tab */}
+        <TabsContent value="thumbnail" className="mt-4">
               <div className="flex flex-col space-y-5 w-full">
                 <div className="w-full bg-linear-to-b from-gray-50 to-white rounded-xl transition-all duration-300 py-8">
                   <div className="flex flex-col justify-center items-center space-y-8">
@@ -550,9 +593,10 @@ export default function OrgEditBranding() {
                   </div>
                 </div>
               </div>
-            </TabsContent>
+        </TabsContent>
 
-            <TabsContent value="previews" className="mt-4">
+        {/* Previews Tab */}
+        <TabsContent value="previews" className="mt-4">
               <div className="flex flex-col space-y-5 w-full">
                 <div className="w-full bg-linear-to-b from-gray-50 to-white rounded-xl transition-all duration-300 py-6">
                   <div className="flex flex-col justify-center items-center space-y-6">
@@ -788,8 +832,97 @@ export default function OrgEditBranding() {
                   </div>
                 </div>
               </div>
-            </TabsContent>
-          </Tabs>
+        </TabsContent>
+
+        {/* Theme Tab */}
+        <TabsContent value="theme" className="mt-4">
+          <div className="flex flex-col lg:flex-row gap-6">
+            {/* Color Picker */}
+            <div className="flex-1 bg-gray-50/50 rounded-xl p-5">
+              <Label className="text-sm font-medium text-gray-700 mb-3 block">{t('dashboard.organization.theme.primary_color')}</Label>
+
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <input
+                    type="color"
+                    value={primaryColor || '#ffffff'}
+                    onChange={(e) => setPrimaryColor(e.target.value)}
+                    className="w-12 h-12 rounded-lg cursor-pointer border border-gray-200 hover:border-gray-300 transition-colors"
+                    style={{ padding: 0 }}
+                  />
+                </div>
+                <Input
+                  type="text"
+                  value={primaryColor}
+                  onChange={(e) => setPrimaryColor(e.target.value)}
+                  placeholder="No color"
+                  className="w-28 h-10 font-mono text-sm uppercase bg-white"
+                  maxLength={7}
+                />
+                {primaryColor && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleClearColor}
+                    disabled={isColorSaving}
+                    className="text-gray-400 hover:text-gray-600 h-10 px-2"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+
+              <p className="text-xs text-gray-400 mt-3">{t('dashboard.organization.theme.primary_color_desc')}</p>
+            </div>
+
+            {/* Preview */}
+            <div className="flex-1">
+              <Label className="text-sm font-medium text-gray-700 mb-3 block">{t('dashboard.organization.theme.preview')}</Label>
+
+              <div
+                className="rounded-xl overflow-hidden border border-gray-200"
+                style={{ backgroundColor: primaryColor ? hexToRgba(primaryColor, 0.05) : '#f9fafb' }}
+              >
+                {/* Header Preview */}
+                <div
+                  className="h-10 px-3 flex items-center justify-between"
+                  style={{ backgroundColor: primaryColor || 'rgba(255, 255, 255, 0.9)' }}
+                >
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-5 h-5 rounded"
+                      style={{ backgroundColor: primaryColor ? 'rgba(255, 255, 255, 0.25)' : '#e5e7eb' }}
+                    />
+                    <div
+                      className="h-2 w-12 rounded-full"
+                      style={{ backgroundColor: primaryColor ? 'rgba(255, 255, 255, 0.5)' : '#d1d5db' }}
+                    />
+                  </div>
+                  <div
+                    className="w-5 h-5 rounded-full"
+                    style={{ backgroundColor: primaryColor ? 'rgba(255, 255, 255, 0.25)' : '#e5e7eb' }}
+                  />
+                </div>
+                {/* Content Preview */}
+                <div className="p-3 flex gap-2">
+                  <div className="w-16 h-10 rounded bg-white shadow-sm" />
+                  <div className="w-16 h-10 rounded bg-white shadow-sm" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Save Button */}
+          <div className="flex justify-end mt-5">
+            <Button
+              onClick={handleColorSave}
+              disabled={isColorSaving}
+              className="bg-black text-white hover:bg-black/90"
+            >
+              {isColorSaving ? t('dashboard.organization.settings.saving') : t('dashboard.organization.settings.save_changes')}
+            </Button>
+          </div>
         </TabsContent>
 
         {/* Social Links Tab */}

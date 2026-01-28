@@ -79,3 +79,16 @@ export async function updateOrgCommunitiesConfig(
   const res = await errorHandling(result)
   return res
 }
+
+export async function updateOrgColorConfig(
+  org_id: string,
+  color: string,
+  access_token: string
+) {
+  const result: any = await fetch(
+    `${getAPIUrl()}orgs/${org_id}/config/color?color=${encodeURIComponent(color)}`,
+    RequestBodyWithAuthHeader('PUT', null, null, access_token)
+  )
+  const res = await errorHandling(result)
+  return res
+}

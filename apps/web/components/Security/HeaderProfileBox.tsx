@@ -39,7 +39,7 @@ interface CustomRoleInfo {
   description?: string;
 }
 
-export const HeaderProfileBox = () => {
+export const HeaderProfileBox = ({ primaryColor = '' }: { primaryColor?: string }) => {
   const session = useLHSession() as any
   const { isAdmin, loading, userRoles, rights } = useAdminStatus()
   const org = useOrg() as any
@@ -151,14 +151,14 @@ export const HeaderProfileBox = () => {
         <UnidentifiedArea className="flex items-center">
           <ul className="flex space-x-0.5 sm:space-x-1 items-center">
             <li>
-              <LanguageSwitcher />
+              <LanguageSwitcher primaryColor={primaryColor} />
             </li>
             <li>
               <Link
-                className="hover:bg-gray-100 px-3 py-2 rounded-lg transition-colors text-sm font-bold text-gray-700"
+                className={`px-3 py-2 rounded-lg transition-colors text-sm font-bold ${primaryColor ? 'hover:bg-white/10 text-white' : 'hover:bg-gray-100 text-gray-700'}`}
                 href={{ pathname: getUriWithoutOrg('/login'), query: org ? { orgslug: org.slug } : null }} >{t('auth.login')}</Link>
             </li>
-            <li className="bg-black rounded-lg shadow-sm hover:bg-gray-800 transition-colors px-4 py-2 text-white text-xs sm:text-sm font-bold ml-1 sm:ml-2">
+            <li className={`rounded-lg shadow-sm transition-colors px-4 py-2 text-xs sm:text-sm font-bold ml-1 sm:ml-2 ${primaryColor ? 'bg-white text-gray-900 hover:bg-gray-100' : 'bg-black text-white hover:bg-gray-800'}`}>
               <Link href={{ pathname: getUriWithoutOrg('/signup'), query: org ? { orgslug: org.slug } : null }}>{t('auth.sign_up')}</Link>
             </li>
           </ul>
@@ -169,11 +169,11 @@ export const HeaderProfileBox = () => {
           <div className="flex items-center space-x-3">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="cursor-pointer flex items-center space-x-3 hover:bg-gray-50 rounded-lg p-2 transition-colors">
-                  <UserAvatar border="border-2" rounded="rounded-lg" width={30} />
+                <button className={`cursor-pointer flex items-center space-x-3 rounded-lg p-2 transition-colors ${primaryColor ? 'hover:bg-white/10' : 'hover:bg-gray-50'}`}>
+                  <UserAvatar border="border-2" rounded="rounded-lg" width={30} shadow={primaryColor ? '' : undefined} />
                   <div className="flex flex-col space-y-0">
                     <div className="flex items-center space-x-2">
-                      <p className='text-sm font-semibold text-gray-900 capitalize'>{session.data.user.username}</p>
+                      <p className={`text-sm font-semibold capitalize ${primaryColor ? 'text-white' : 'text-gray-900'}`}>{session.data.user.username}</p>
                       {userRoleInfo && userRoleInfo.name !== 'USER' && (
                         <Tooltip 
                           content={userRoleInfo.description}
@@ -201,9 +201,9 @@ export const HeaderProfileBox = () => {
                         </Tooltip>
                       ))}
                     </div>
-                    <p className='text-xs text-gray-500'>{session.data.user.email}</p>
+                    <p className={`text-xs ${primaryColor ? 'text-white/70' : 'text-gray-500'}`}>{session.data.user.email}</p>
                   </div>
-                  <CaretDown size={16} weight="fill" className="text-gray-500" />
+                  <CaretDown size={16} weight="fill" className={primaryColor ? 'text-white/70' : 'text-gray-500'} />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end">
