@@ -236,15 +236,15 @@
     --z-dropdown: 110;
     --z-popover: 115;
     --z-overlay: 120;
-    --z-modal-backdrop: 125;
-    --z-modal: 130;
-    --z-modal-content: 135;
-    --z-toast: 140;
-    --z-notification: 145;
     --z-editor-toolbar: 150;
     --z-editor-bubble: 155;
     --z-tooltip: 160;
-    --z-critical: 165;
+    --z-modal-backdrop: 200;
+    --z-modal: 210;
+    --z-modal-content: 220;
+    --z-toast: 230;
+    --z-notification: 240;
+    --z-critical: 250;
     --z-max: 999;
   }
   .dark {
@@ -772,4 +772,26 @@
 
 .tippy-box[data-animation='shift-away'][data-state='hidden'][data-placement^='right'] {
   transform: translateX(-5px);
+}
+
+/* Rotating gradient background for AI/Magic elements */
+@property --gradient-angle {
+  syntax: '<angle>';
+  initial-value: 32deg;
+  inherits: false;
+}
+
+@keyframes rotateGradientAngle {
+  from {
+    --gradient-angle: 32deg;
+  }
+  to {
+    --gradient-angle: 392deg;
+  }
+}
+
+.rotating-gradient-bg {
+  background: conic-gradient(from var(--gradient-angle) at 53.75% 50%, rgb(35, 40, 93) 4deg, rgba(20, 0, 52, 0.95) 59deg, rgba(164, 45, 238, 0.88) 281deg);
+  animation: rotateGradientAngle 20s linear infinite;
+  box-shadow: 0 2px 8px -2px rgba(164, 45, 238, 0.3);
 }

@@ -78,19 +78,19 @@ module.exports = {
         'popover': '115',
         // Overlays
         'overlay': '120',
-        'modal-backdrop': '125',
-        // Modals
-        'modal': '130',
-        'modal-content': '135',
-        // Toasts
-        'toast': '140',
-        'notification': '145',
-        // Editor
+        // Editor (below modals)
         'editor-toolbar': '150',
         'editor-bubble': '155',
-        // Critical
         'tooltip': '160',
-        'critical': '165',
+        // Modals (above editor)
+        'modal-backdrop': '200',
+        'modal': '210',
+        'modal-content': '220',
+        // Toasts and notifications
+        'toast': '230',
+        'notification': '240',
+        // Critical
+        'critical': '250',
         'max': '999',
       },
       keyframes: {

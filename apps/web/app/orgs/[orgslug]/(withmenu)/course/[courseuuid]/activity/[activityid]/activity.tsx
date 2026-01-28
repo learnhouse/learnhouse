@@ -537,7 +537,7 @@ function ActivityClient(props: ActivityClientProps) {
                     trailData={trailData}
                   />
                 ) : (
-                  <div className="space-y-4 pt-0">
+                  <div className="space-y-4 pt-0 relative">
                     <div className="pt-2 pb-6">
                       <Breadcrumbs items={[
                         { label: t('courses.courses'), href: getUriWithOrg(orgslug, '/courses'), icon: <BookCopy size={14} /> },
@@ -545,7 +545,7 @@ function ActivityClient(props: ActivityClientProps) {
                         { label: activity.name }
                       ]} />
                     </div>
-                    <div className="space-y-4 activity-info-section">
+                    <div className="space-y-4 activity-info-section relative" style={{ zIndex: 999, pointerEvents: 'auto' }}>
                         <div className="flex justify-between items-center">
                           <div className="flex space-x-6">
                             <div className="flex">
@@ -669,13 +669,13 @@ function ActivityClient(props: ActivityClientProps) {
                               </div>
                             </div>
                           </div>
-                          <div className="flex space-x-2 items-center">
+                          <div className="flex space-x-2 items-center relative z-interactive">
                             {activity && activity.published == true && activity.content.paid_access != false && (
                               <AuthenticatedClientElement checkMethod="authentication">
                                 {activity.activity_type != 'TYPE_ASSIGNMENT' && (
                                   <>
                                     <AIActivityAsk activity={activity} />
-                                    <ActivityChapterDropdown 
+                                    <ActivityChapterDropdown
                                       course={course}
                                       currentActivityId={activity.activity_uuid ? activity.activity_uuid.replace('activity_', '') : activityid.replace('activity_', '')}
                                       orgslug={orgslug}
@@ -713,7 +713,7 @@ function ActivityClient(props: ActivityClientProps) {
                           {activity.content.paid_access == false ? (
                             <PaidCourseActivityDisclaimer course={course} />
                           ) : (
-                            <div className={`${activity.activity_type === 'TYPE_SCORM' ? 'rounded-xl overflow-hidden' : 'p-7 drop-shadow-xs rounded-lg'} ${bgColor} relative`}>
+                            <div className={`${activity.activity_type === 'TYPE_SCORM' ? 'rounded-xl overflow-hidden' : 'p-7 drop-shadow-xs rounded-lg'} ${bgColor} relative isolate`} style={{ zIndex: 0 }}>
                               <button
                                 onClick={() => setIsFocusMode(true)}
                                 className={`absolute ${activity.activity_type === 'TYPE_SCORM' ? 'top-2 right-2' : 'top-4 right-4'} bg-white/80 hover:bg-white nice-shadow p-2 rounded-full cursor-pointer transition-all duration-200 group overflow-hidden z-interactive pointer-events-auto`}

@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useLHSession } from '@components/Contexts/LHSessionContext';
+import { useOrg } from '@components/Contexts/OrgContext';
 import { getUserCertificates } from '@services/courses/certifications';
 import CertificatePreview from '@components/Dashboard/Pages/Course/EditCourseCertification/CertificatePreview';
 import { ArrowLeft, Download } from 'lucide-react';
@@ -19,6 +20,7 @@ interface CertificatePageProps {
 
 const CertificatePage: React.FC<CertificatePageProps> = ({ orgslug, courseid, qrCodeLink }) => {
   const session = useLHSession() as any;
+  const org = useOrg() as any;
   const [userCertificate, setUserCertificate] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -32,10 +34,15 @@ const CertificatePage: React.FC<CertificatePageProps> = ({ orgslug, courseid, qr
         return;
       }
 
+      if (!org?.id) {
+        return; // Wait for org to be available
+      }
+
       try {
         const cleanCourseId = courseid.replace('course_', '');
         const result = await getUserCertificates(
           `course_${cleanCourseId}`,
+          org.id,
           session.data.tokens.access_token
         );
 
@@ -53,7 +60,7 @@ const CertificatePage: React.FC<CertificatePageProps> = ({ orgslug, courseid, qr
     };
 
     fetchCertificate();
-  }, [courseid, session?.data?.tokens?.access_token]);
+  }, [courseid, session?.data?.tokens?.access_token, org?.id]);
 
 
 

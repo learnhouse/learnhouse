@@ -51,15 +51,16 @@ function TrailCourseElement(props: TrailCourseElementProps) {
   // Fetch certificate for this course
   useEffect(() => {
     const fetchCourseCertificate = async () => {
-      if (!access_token || course_progress < 100) return;
-      
+      if (!access_token || course_progress < 100 || !org?.id) return;
+
       setIsLoadingCertificate(true);
       try {
         const result = await getUserCertificates(
           props.course.course_uuid,
+          org.id,
           access_token
         );
-        
+
         if (result.success && result.data && result.data.length > 0) {
           setCourseCertificate(result.data[0]);
         }
@@ -71,7 +72,7 @@ function TrailCourseElement(props: TrailCourseElementProps) {
     };
 
     fetchCourseCertificate();
-  }, [access_token, course_progress, props.course.course_uuid]);
+  }, [access_token, course_progress, props.course.course_uuid, org?.id]);
 
   useEffect(() => {}, [props.course, org])
 

@@ -2,7 +2,7 @@
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import PageLoading from '@components/Objects/Loaders/PageLoading'
-import TrailCourseElement from '@components/Pages/Trail/TrailCourseElement'
+import TrailCourseCard from '@components/Pages/Trail/TrailCourseCard'
 import UserCertificates from '@components/Pages/Trail/UserCertificates'
 import TypeOfContentTitle from '@components/Objects/StyledElements/Titles/TypeOfContentTitle'
 import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
@@ -35,7 +35,7 @@ function Trail(params: any) {
 
   const handleQuitAllCourses = async () => {
     if (!trail?.runs?.length || isQuittingAll) return;
-    
+
     setIsQuittingAll(true)
     const totalCourses = trail.runs.length;
 
@@ -61,72 +61,64 @@ function Trail(params: any) {
 
   return (
     <GeneralWrapperStyled>
-      <div className="flex justify-between items-center mb-6">
-        <TypeOfContentTitle title={t('courses.progress')} type="tra" />
-        {trail?.runs?.length > 0 && (
-          <ConfirmationModal
-            confirmationButtonText={isQuittingAll ? t('courses.quitting_courses', { progress: quittingProgress }) : t('courses.quit_all_courses')}
-            confirmationMessage={t('courses.quit_all_courses_confirm')}
-            dialogTitle={t('courses.quit_all_courses_title')}
-            dialogTrigger={
-              <button
-                disabled={isQuittingAll}
-                className={`px-4 py-2 rounded-lg font-medium text-sm transition-all
-                  ${isQuittingAll 
-                    ? 'bg-gray-100 text-gray-500 cursor-not-allowed' 
-                    : 'bg-red-100 text-red-700 hover:bg-red-200'
-                  }`}
-              >
-                {isQuittingAll 
-                  ? t('courses.quitting_courses', { progress: quittingProgress })
-                  : t('courses.quit_all_courses')
-                }
-              </button>
-            }
-            functionToExecute={handleQuitAllCourses}
-            status="warning"
-          />
-        )}
-      </div>
-      
-      <div className="space-y-8">
-        {/* Progress Section */}
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <div className="flex items-center space-x-3 mb-6">
-            <BookOpen className="w-6 h-6 text-blue-500" />
-            <h2 className="text-xl font-semibold text-gray-900">{t('user.my_progress')}</h2>
-            {trail?.runs && (
-              <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
-                {trail.runs.length}
-              </span>
-            )}
-          </div>
-          
-          {!trail ? (
-            <PageLoading></PageLoading>
-          ) : trail.runs.length === 0 ? (
-            <div className="text-center py-8">
-              <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500">{t('user.no_courses_in_progress')}</p>
-              <p className="text-sm text-gray-400 mt-1">{t('user.start_course_to_see_progress')}</p>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {trail.runs.map((run: any) => (
-                <TrailCourseElement
-                  key={run.course.course_uuid}
-                  run={run}
-                  course={run.course}
-                  orgslug={orgslug}
-                />
-              ))}
-            </div>
+      <div className="flex flex-col space-y-2 mb-6">
+        <div className="flex items-center justify-between">
+          <TypeOfContentTitle title={t('courses.progress')} type="tra" />
+          {trail?.runs?.length > 0 && (
+            <ConfirmationModal
+              confirmationButtonText={isQuittingAll ? t('courses.quitting_courses', { progress: quittingProgress }) : t('courses.quit_all_courses')}
+              confirmationMessage={t('courses.quit_all_courses_confirm')}
+              dialogTitle={t('courses.quit_all_courses_title')}
+              dialogTrigger={
+                <button
+                  disabled={isQuittingAll}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-colors
+                    ${isQuittingAll
+                      ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
+                      : 'bg-red-50 text-red-700 hover:bg-red-100'
+                    }`}
+                >
+                  {isQuittingAll
+                    ? t('courses.quitting_courses', { progress: quittingProgress })
+                    : t('courses.quit_all_courses')
+                  }
+                </button>
+              }
+              functionToExecute={handleQuitAllCourses}
+              status="warning"
+            />
           )}
         </div>
-        
-        {/* Certificates Section */}
-        <UserCertificates orgslug={orgslug} />
+
+        {!trail ? (
+          <PageLoading></PageLoading>
+        ) : trail.runs.length === 0 ? (
+          <div className="col-span-full flex flex-col justify-center items-center py-12 px-4 border-2 border-dashed border-gray-100 rounded-2xl bg-gray-50/30">
+            <div className="p-4 bg-white rounded-full nice-shadow mb-4">
+              <BookOpen className="w-8 h-8 text-gray-300" strokeWidth={1.5} />
+            </div>
+            <h1 className="text-xl font-bold text-gray-600 mb-2">
+              {t('user.no_courses_in_progress')}
+            </h1>
+            <p className="text-md text-gray-400 mb-6 text-center max-w-xs">
+              {t('user.start_course_to_see_progress')}
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {trail.runs.map((run: any) => (
+              <TrailCourseCard
+                key={run.course.course_uuid}
+                run={run}
+                course={run.course}
+                orgslug={orgslug}
+              />
+            ))}
+          </div>
+        )}
       </div>
+
+      <UserCertificates orgslug={orgslug} />
     </GeneralWrapperStyled>
   )
 }
