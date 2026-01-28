@@ -74,6 +74,10 @@
         "certifications": {
           "title": "Pro Feature",
           "description": "Certifications is a premium feature available only to organizations on our Pro plan or higher. Upgrade to issue certificates to learners who complete your courses."
+        },
+        "seo": {
+          "title": "Standard Feature",
+          "description": "SEO optimization tools are available only to organizations on our Standard plan or higher. Upgrade to customize search engine appearance, social sharing previews, and structured data for your courses."
         }
       }
     },
@@ -1742,6 +1746,7 @@
           "content": "Content",
           "access": "Access",
           "contributors": "Contributors",
+          "seo": "SEO",
           "certification": "Certification"
         },
         "access_denied": {
@@ -1908,6 +1913,74 @@
           "remove_success": "Successfully removed {{count}} contributor(s)",
           "remove_failed": "Failed to remove contributors",
           "cannot_modify_creator": "Cannot modify a creator's role or status"
+        }
+      },
+      "seo": {
+        "title": "SEO Settings",
+        "subtitle": "Optimize your course for search engines and social media sharing",
+        "sections": {
+          "basic": {
+            "title": "Basic SEO",
+            "subtitle": "Configure how your course appears in search engine results"
+          },
+          "opengraph": {
+            "title": "Open Graph",
+            "subtitle": "Customize how your course appears when shared on social media (Facebook, LinkedIn, etc.)"
+          },
+          "twitter": {
+            "title": "Twitter Card",
+            "subtitle": "Customize how your course appears when shared on Twitter/X"
+          },
+          "robots": {
+            "title": "Robots & Structured Data",
+            "subtitle": "Control search engine indexing and enable rich snippets"
+          }
+        },
+        "form": {
+          "title_label": "SEO Title",
+          "title_placeholder": "Enter a custom title for search engines",
+          "title_hint": "Leave empty to use the course name. Recommended: 50-60 characters",
+          "description_label": "Meta Description",
+          "description_placeholder": "Enter a compelling description for search results",
+          "description_hint": "Leave empty to use the course description. Recommended: 150-160 characters",
+          "keywords_label": "Keywords",
+          "keywords_placeholder": "keyword1, keyword2, keyword3",
+          "keywords_hint": "Comma-separated list of keywords related to your course",
+          "canonical_url_label": "Canonical URL",
+          "canonical_url_placeholder": "https://example.com/course/your-course",
+          "canonical_url_hint": "Use if this course is duplicated elsewhere. Leave empty for default URL",
+          "og_title_label": "OG Title",
+          "og_title_placeholder": "Custom title for social media sharing",
+          "og_description_label": "OG Description",
+          "og_description_placeholder": "Custom description for social media sharing",
+          "og_image_label": "OG Image URL",
+          "og_image_placeholder": "https://example.com/image.jpg",
+          "og_image_hint": "Custom image URL for social sharing. Leave empty to use course thumbnail",
+          "twitter_card_label": "Card Type",
+          "twitter_card_summary": "Summary",
+          "twitter_card_summary_large": "Summary with Large Image",
+          "twitter_title_label": "Twitter Title",
+          "twitter_title_placeholder": "Custom title for Twitter sharing",
+          "twitter_description_label": "Twitter Description",
+          "twitter_description_placeholder": "Custom description for Twitter sharing",
+          "robots_noindex_label": "Prevent search engine indexing (noindex)",
+          "robots_noindex_hint": "When enabled, search engines will not index this course",
+          "robots_nofollow_label": "Prevent following links (nofollow)",
+          "robots_nofollow_hint": "When enabled, search engines will not follow links on this page",
+          "enable_jsonld_label": "Enable JSON-LD Structured Data",
+          "enable_jsonld_hint": "Adds Course schema.org markup for rich snippets in search results"
+        },
+        "validation": {
+          "title_max_length": "SEO title must be 70 characters or less",
+          "description_max_length": "Meta description must be 160 characters or less",
+          "og_title_max_length": "OG title must be 70 characters or less",
+          "og_description_max_length": "OG description must be 200 characters or less",
+          "twitter_title_max_length": "Twitter title must be 70 characters or less",
+          "twitter_description_max_length": "Twitter description must be 200 characters or less",
+          "invalid_url": "Please enter a valid URL"
+        },
+        "errors": {
+          "save_failed": "Failed to save SEO settings"
         }
       },
       "certification": {
