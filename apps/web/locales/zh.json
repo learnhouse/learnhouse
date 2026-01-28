@@ -70,6 +70,10 @@
         "certifications": {
           "title": "专业版功能",
           "description": "证书是仅适用于专业版或更高版本组织的高级功能。升级以向完成课程的学员颁发证书。"
+        },
+        "communities": {
+          "title": "标准版功能",
+          "description": "社区是仅对标准版或更高版本计划的组织可用的高级功能。升级以解锁成员的讨论社区。"
         }
       }
     },
@@ -262,7 +266,25 @@
     "submitting_contributor_application": "正在提交申请...",
     "contributor_application_success": "您的贡献者申请已成功提交",
     "contributor_application_error": "提交申请失败，请稍后重试。",
-    "contribute": "贡献"
+    "contribute": "贡献",
+    "scorm": {
+      "upload_package": "上传SCORM包",
+      "package_file": "包文件 (.zip)",
+      "click_to_upload": "点击上传或拖放",
+      "supported_versions": "SCORM 1.2 或 SCORM 2004 包",
+      "import_info": "上传您的SCORM包以分析其内容。您将能够配置课程并将活动分配给章节。",
+      "analyze_package": "分析包",
+      "package_analyzed": "包分析成功",
+      "assign_scos": "将活动分配给章节",
+      "activity_name": "活动",
+      "chapter_name": "章节",
+      "upload_different": "上传不同的包",
+      "selected": "已选择",
+      "create_course": "创建课程",
+      "configure": "配置",
+      "ready_to_analyze": "准备分析",
+      "course_details": "课程详情"
+    }
   },
   "collections": {
     "collections": "合集",
@@ -709,7 +731,471 @@
       "import_scorm_description": "导入 SCORM 包以创建新课程",
       "no_courses": "尚无课程",
       "create_course_placeholder": "创建课程以添加内容",
-      "no_courses_available": "尚无可用课程"
+      "no_courses_available": "尚无可用课程",
+      "overview_top": {
+        "course_label": "课程",
+        "rights_guide_button": "权利指南"
+      },
+      "settings": {
+        "tabs": {
+          "general": "常规",
+          "content": "内容",
+          "access": "访问",
+          "contributors": "贡献者",
+          "certification": "认证"
+        },
+        "access_denied": {
+          "title": "拒绝访问",
+          "message": "您没有权限访问此课程。"
+        },
+        "access_restricted": {
+          "title": "访问受限",
+          "message": "您没有权限访问 {{tab}} 选项卡。"
+        },
+        "loading": "加载中..."
+      },
+      "general": {
+        "form": {
+          "name_label": "名称",
+          "name_required": "必填",
+          "name_max_length": "最多 100 个字符",
+          "description_label": "描述",
+          "description_required": "必填",
+          "description_max_length": "最多 1000 个字符",
+          "about_label": "关于",
+          "learnings_label": "学习成果",
+          "learnings_required": "必填",
+          "learnings_invalid_format": "格式无效",
+          "learnings_min_items": "至少需要一个学习项",
+          "learnings_empty_text": "所有学习项必须包含文字",
+          "learnings_invalid_json": "JSON 格式无效",
+          "tags_label": "标签",
+          "tags_placeholder": "按 Enter 键添加...",
+          "thumbnail_type_label": "缩略图类型",
+          "thumbnail_type_image": "图像",
+          "thumbnail_type_video": "视频",
+          "thumbnail_type_both": "两者",
+          "thumbnail_label": "缩略图",
+          "image_search_placeholder": "搜索图像..."
+        },
+        "thumbnail": {
+          "upload_image": "上传图像",
+          "upload_video": "上传视频",
+          "gallery": "图库",
+          "tabs": {
+            "image": "图像",
+            "video": "视频"
+          },
+          "supported_formats": {
+            "image": "支持的格式：PNG, JPG/JPEG（最大 8MB）",
+            "video": "支持的格式：MP4, WebM（最大 100MB）"
+          }
+        },
+        "errors": {
+          "save_failed": "保存课程结构失败。"
+        }
+      },
+      "access": {
+        "title": "课程访问",
+        "subtitle": "选择您的课程是向互联网上的所有人开放，还是仅向注册用户开放",
+        "public": {
+          "title": "公开",
+          "description": "课程对互联网上的所有人可见，并被搜索引擎索引",
+          "active": "激活中",
+          "confirmation_title": "设为公开？",
+          "confirmation_message": "您确定要将此课程设为向互联网上的所有人开放吗？",
+          "confirmation_button": "设为公开"
+        },
+        "users_only": {
+          "title": "仅限用户",
+          "description": "课程仅对注册用户可见，您还可以选择特定的用户组",
+          "active": "激活中",
+          "confirmation_title": "设为仅限用户？",
+          "confirmation_message": "您确定要将此课程设为仅对注册用户开放吗？",
+          "confirmation_button": "仅限用户"
+        },
+        "usergroups": {
+          "title": "用户组",
+          "subtitle": "您可以通过将课程关联到特定的用户组，仅向这些用户授予访问权限",
+          "table": {
+            "name": "名称",
+            "actions": "操作"
+          },
+          "actions": {
+            "delete_link": "删除关联",
+            "link_to_usergroup": "关联用户组"
+          },
+          "modals": {
+            "link_title": "将课程关联到用户组",
+            "link_description": "选择要与此课程关联的用户组。该组的成员将获得访问权限。",
+            "unlink_title": "取消关联用户组？",
+            "unlink_message": "该组的成员将不再能访问此课程",
+            "unlink_button": "取消关联",
+            "warning": "不属于此组的用户将失去对此课程的访问权限",
+            "usergroup_name": "用户组名称",
+            "no_usergroups": "没有可用的用户组",
+            "create_usergroup": "创建一个用户组",
+            "link_button": "关联"
+          },
+          "toasts": {
+            "link_success": "用户组关联成功",
+            "link_error": "错误 {{status}}: {{detail}}",
+            "unlink_success": "用户组取消关联成功",
+            "unlink_error": "取消关联用户组时发生了错误。"
+          }
+        }
+      },
+      "contributors": {
+        "title": "课程贡献者",
+        "subtitle": "管理并向您的课程添加新的贡献者",
+        "open_to_contributors": {
+          "title": "开放贡献",
+          "description": "课程向贡献者开放。用户可以申请帮助改进课程内容。",
+          "active": "激活中",
+          "confirmation_title": "开放贡献？",
+          "confirmation_message": "您确定要向贡献者开放此课程吗？",
+          "confirmation_button": "开放贡献"
+        },
+        "closed_to_contributors": {
+          "title": "关闭贡献",
+          "description": "课程不向贡献者开放。只有现有的贡献者可以修改课程内容。",
+          "active": "激活中",
+          "confirmation_title": "关闭贡献？",
+          "confirmation_message": "您确定要向贡献者关闭此课程吗？",
+          "confirmation_button": "关闭贡献"
+        },
+        "search": {
+          "placeholder": "通过姓名或用户名搜索并添加用户...",
+          "searching": "正在搜索...",
+          "no_results": "未找到用户"
+        },
+        "table": {
+          "name": "姓名",
+          "username": "用户名",
+          "email": "电子邮件",
+          "role": "角色",
+          "status": "状态",
+          "added_on": "添加日期"
+        },
+        "roles": {
+          "creator": "创建者",
+          "contributor": "贡献者",
+          "maintainer": "维护者",
+          "reporter": "报告者"
+        },
+        "statuses": {
+          "active": "激活",
+          "inactive": "未激活",
+          "pending": "处理中"
+        },
+        "actions": {
+          "selected_users": "已选择 {{count}} 个用户",
+          "selected_users_plural": "已选择 {{count}} 个用户",
+          "clear": "清除",
+          "add_selected": "添加已选",
+          "selected_contributors": "已选择 {{count}} 个贡献者",
+          "selected_contributors_plural": "已选择 {{count}} 个贡献者",
+          "remove_selected": "移除已选",
+          "already_contributor": "已经是贡献者"
+        },
+        "toasts": {
+          "add_success": "成功添加 {{count}} 个贡献者",
+          "add_error": "添加 {{username}} 失败：{{reason}}",
+          "add_failed": "添加贡献者失败",
+          "update_success": "贡献者更新成功",
+          "update_error": "错误：{{detail}}",
+          "update_failed": "更新贡献者时发生了错误。",
+          "remove_success": "成功移除 {{count}} 个贡献者",
+          "remove_failed": "移除贡献者失败",
+          "cannot_modify_creator": "无法修改创建者的角色或状态"
+        }
+      },
+      "certification": {
+        "title": "课程认证",
+        "subtitle": "启用并配置学生完成此课程后可获得的证书",
+        "form": {
+          "certification_name_label": "认证名称",
+          "certification_name_required": "启用认证时，名称必填",
+          "certification_name_max_length": "最多 100 个字符",
+          "certification_name_placeholder": "例如：高级 JavaScript 认证",
+          "certification_type_label": "认证类型",
+          "certification_description_label": "认证描述",
+          "certification_description_required": "启用认证时，描述必填",
+          "certification_description_max_length": "最多 500 个字符",
+          "certification_description_placeholder": "描述此认证确认的内容及其价值...",
+          "certificate_pattern_label": "证书花纹",
+          "certificate_instructor_label": "讲师姓名（可选）",
+          "certificate_instructor_placeholder": "例如：张三教授"
+        },
+        "types": {
+          "completion": "结业证书",
+          "achievement": "成就证明",
+          "assessment": "评估证书",
+          "participation": "参与证明",
+          "mastery": "掌握证明",
+          "professional": "专业发展",
+          "continuing": "继续教育",
+          "workshop": "工作坊证明",
+          "specialization": "专业化证明"
+        },
+        "patterns": {
+          "royal": {
+            "name": "皇家",
+            "description": "带有王冠装饰图案"
+          },
+          "tech": {
+            "name": "科技",
+            "description": "电路板风格图案"
+          },
+          "nature": {
+            "name": "自然",
+            "description": "有机植物图案"
+          },
+          "geometric": {
+            "name": "几何",
+            "description": "抽象形状与线条"
+          },
+          "vintage": {
+            "name": "复古",
+            "description": "装饰艺术风格花纹"
+          },
+          "waves": {
+            "name": "波浪",
+            "description": "流动的水波图案"
+          },
+          "minimal": {
+            "name": "极简",
+            "description": "简洁大方"
+          },
+          "professional": {
+            "name": "专业",
+            "description": "正式商务设计"
+          },
+          "academic": {
+            "name": "学术",
+            "description": "传统大学风格"
+          },
+          "modern": {
+            "name": "现代",
+            "description": "当代简洁线条"
+          }
+        },
+        "sections": {
+          "basic_info": {
+            "title": "基本信息",
+            "subtitle": "配置您认证的基本详情"
+          },
+          "certificate_design": {
+            "title": "证书设计",
+            "subtitle": "为您的证书选择装饰花纹"
+          },
+          "preview": {
+            "title": "证书预览",
+            "subtitle": "实时预览您的证书"
+          }
+        },
+        "states": {
+          "disabled": {
+            "title": "认证未配置",
+            "message": "启用认证以在学生完成课程后向其发放证书。",
+            "button": "启用认证",
+            "creating": "正在创建..."
+          },
+          "creating": {
+            "title": "正在创建认证...",
+            "message": "请稍候，我们正在设置课程认证。"
+          }
+        },
+        "errors": {
+          "loading": "加载认证时出错",
+          "create_failed": "创建认证失败。",
+          "remove_failed": "移除认证失败。"
+        },
+        "toasts": {
+          "create_success": "认证创建成功",
+          "create_error": "创建认证失败",
+          "remove_success": "认证已成功移除",
+          "remove_error": "移除认证失败"
+        }
+      },
+      "communities": {
+        "title": "社区",
+        "new_community": "新建社区",
+        "no_communities": "暂无社区",
+        "no_communities_description": "创建您的第一个社区开始讨论",
+        "card": {
+          "open_settings": "打开设置",
+          "view_community": "查看社区",
+          "quick_edit": "快速编辑"
+        },
+        "settings": {
+          "tabs": {
+            "general": "常规",
+            "thumbnail": "缩略图",
+            "moderation": "内容审核"
+          }
+        },
+        "general": {
+          "title": "社区设置",
+          "subtitle": "更新社区基本信息",
+          "form": {
+            "name_label": "社区名称",
+            "name_required": "社区名称为必填项",
+            "name_min_length": "名称至少需要3个字符",
+            "name_max_length": "名称不能超过100个字符",
+            "name_placeholder": "输入社区名称",
+            "description_label": "描述",
+            "description_max_length": "描述不能超过500个字符",
+            "description_placeholder": "描述这个社区是关于什么的",
+            "public_label": "公开社区",
+            "public_description": "让所有人都能看到此社区",
+            "characters_left": "剩余{{count}}个字符"
+          },
+          "toasts": {
+            "updating": "正在更新社区...",
+            "update_success": "社区更新成功",
+            "update_error": "更新社区失败"
+          }
+        },
+        "thumbnail": {
+          "title": "社区缩略图",
+          "subtitle": "上传社区封面图片",
+          "no_thumbnail": "未设置缩略图",
+          "upload_image": "上传图片",
+          "browse_unsplash": "浏览Unsplash",
+          "uploading": "上传中...",
+          "supported_formats": "支持格式: JPG, JPEG, PNG。最大: 8MB。推荐比例: 16:9",
+          "toasts": {
+            "update_success": "缩略图更新成功",
+            "update_error": "更新缩略图失败",
+            "invalid_type": "无效的文件类型。请仅上传PNG或JPG/JPEG图片",
+            "file_too_large": "文件大小超过8MB限制"
+          }
+        },
+        "moderation": {
+          "title": "内容审核",
+          "subtitle": "配置屏蔽词和内容过滤器",
+          "info_title": "屏蔽词",
+          "info_description": "包含这些词的讨论和回复将被屏蔽。用户将看到错误消息，其内容将不会发布。",
+          "add_word_label": "添加屏蔽词",
+          "add_word_placeholder": "输入词语或短语...",
+          "add_button": "添加",
+          "batch_add_label": "批量添加",
+          "batch_add_description": "一次添加多个词，用逗号分隔",
+          "batch_add_placeholder": "词1, 词2, 词3...",
+          "add_all_button": "全部添加",
+          "blocked_words_label": "屏蔽词",
+          "no_blocked_words": "暂无屏蔽词",
+          "no_blocked_words_description": "添加词语以启用内容审核",
+          "word_exists_error": "此词已在列表中",
+          "all_words_exist_error": "所有词都已在列表中或输入为空",
+          "toasts": {
+            "saving": "正在保存审核设置...",
+            "save_success": "审核设置已保存",
+            "save_error": "保存审核设置失败"
+          }
+        },
+        "modals": {
+          "create": {
+            "title": "创建社区",
+            "description": "创建新的讨论社区",
+            "form": {
+              "name_label": "社区名称",
+              "name_placeholder": "输入社区名称",
+              "description_label": "描述",
+              "description_placeholder": "描述这个社区是关于什么的",
+              "public_label": "公开此社区（所有人可见）"
+            },
+            "cancel": "取消",
+            "submit": "创建社区"
+          },
+          "edit": {
+            "title": "编辑社区",
+            "description": "更新社区设置"
+          },
+          "delete": {
+            "title": "删除{{name}}？",
+            "message": "确定要删除此社区吗？所有讨论将被永久删除。",
+            "button": "删除社区"
+          }
+        },
+        "toasts": {
+          "creating": "正在创建社区...",
+          "create_success": "社区创建成功",
+          "create_error": "创建社区失败",
+          "deleting": "正在删除社区...",
+          "delete_success": "社区删除成功",
+          "delete_error": "删除社区失败"
+        }
+      },
+      "structure": {
+        "loading": "加载中...",
+        "add_chapter_button": "添加章节",
+        "modals": {
+          "new_chapter": {
+            "title": "创建章节",
+            "description": "向课程添加新章节",
+            "form": {
+              "name_label": "章节名称",
+              "name_required": "请提供您的章节标题",
+              "description_label": "章节描述",
+              "description_required": "请提供您的章节描述",
+              "submit": "创建章节"
+            }
+          },
+          "delete_chapter": {
+            "title": "删除 {{name}}？",
+            "message": "您确定要删除此章节吗？",
+            "button": "删除章节"
+          },
+          "new_activity": {
+            "title": "创建活动",
+            "description": "选择要添加到课程中的活动类型"
+          },
+          "delete_activity": {
+            "title": "删除 {{name}}？",
+            "message": "您确定要删除此活动吗？",
+            "button": "删除活动"
+          }
+        },
+        "actions": {
+          "add_chapter": "添加章节",
+          "add_activity": "添加活动",
+          "publish": "发布",
+          "unpublish": "取消发布",
+          "preview_activity": "预览活动",
+          "edit_page": "编辑页面",
+          "edit_assignment": "编辑作业"
+        },
+        "chapter_element": {
+          "chapter_name_placeholder": "章节名称"
+        },
+        "activity": {
+          "name_placeholder": "活动名称",
+          "types": {
+            "video": "视频",
+            "document": "文档",
+            "assignment": "作业",
+            "assignments": "作业合集",
+            "dynamic": "动态内容",
+            "dynamic_page": "动态页面",
+            "scorm": "Scorm"
+          },
+          "toasts": {
+            "deleting": "正在删除活动...",
+            "delete_success": "活动删除成功",
+            "updating": "正在更新活动...",
+            "update_success": "活动更新成功",
+            "name_update_success": "活动名称更新成功",
+            "name_update_error": "更新活动名称失败",
+            "creating": "正在创建活动...",
+            "create_success": "活动创建成功",
+            "uploading": "正在上传文件并创建活动...",
+            "upload_success": "文件上传成功",
+            "creating_uploading": "正在创建活动并上传文件..."
+          }
+        }
+      }
     },
     "organization": {
       "settings": {
@@ -768,7 +1254,10 @@
         "saving": "保存中...",
         "update_success": "组织已更新",
         "update_error": "更新组织失败",
-        "updating": "正在更新组织..."
+        "updating": "正在更新组织...",
+        "footer_text": "页脚文本",
+        "footer_text_placeholder": "输入页脚文本...",
+        "footer_text_desc": "显示在组织页面底部的自定义文本"
       },
       "images": {
         "title": "图像与预览",
@@ -826,7 +1315,8 @@
         "subtitle": "管理组织的视觉标识和社交媒体形象",
         "tabs": {
           "images": "预览图像",
-          "social": "社交媒体链接"
+          "social": "社交媒体链接",
+          "theme": "主题"
         }
       },
       "socials": {
@@ -959,7 +1449,11 @@
           "generating": "正在生成 CSV...",
           "success": "CSV 导出成功",
           "error": "导出 CSV 失败"
-        }
+        },
+        "enterprise_only": "审计日志仅在企业版计划中可用",
+        "enterprise_feature": "企业版功能",
+        "enterprise_description": "审计日志是仅对企业版计划的组织可用的高级功能。升级以获得对组织活动的完全可见性。",
+        "upgrade_button": "升级到企业版"
       },
       "landing": {
         "title": "落地页",
@@ -1110,6 +1604,16 @@
           "selected": "已选择",
           "select": "选择"
         }
+      },
+      "theme": {
+        "primary_color": "主色",
+        "primary_color_desc": "为组织的页头和页面背景选择主色。",
+        "clear_color": "清除颜色",
+        "preview": "实时预览",
+        "preview_hint": "这是您组织的页头和背景的显示效果",
+        "footer_text": "页脚文本",
+        "footer_text_desc": "添加要在页脚显示的自定义文本。",
+        "footer_text_placeholder": "输入页脚文本..."
       }
     },
     "users": {
@@ -1167,7 +1671,10 @@
           "remove_from_org": "从组织中移除",
           "removing": "正在移除...",
           "remove_success": "用户已从组织中移除",
-          "remove_error": "移除用户失败"
+          "remove_error": "移除用户失败",
+          "updating_role": "正在更新角色...",
+          "role_update_success": "角色更新成功",
+          "role_update_error": "更新角色时出错"
         },
         "modals": {
           "update_role": {
@@ -1179,6 +1686,13 @@
             "message": "您确定要将此用户从组织中移除吗？",
             "button": "移除用户"
           }
+        },
+        "search_placeholder": "搜索用户...",
+        "no_results": "未找到与您搜索匹配的用户",
+        "no_users": "此组织中还没有用户",
+        "pagination": {
+          "showing": "显示 {{start}}-{{end}} 共 {{total}}",
+          "page": "第 {{current}} 页，共 {{total}} 页"
         }
       },
       "signups": {
@@ -1668,481 +2182,6 @@
           "toasts": {
             "creating": "正在创建作业...",
             "success": "作业创建成功"
-          }
-        }
-      }
-    },
-    "courses": {
-      "title": "课程",
-      "rights_guide": "权利指南",
-      "create_course": "创建课程",
-      "create_new_course": "创建新课程",
-      "import_course": "导入课程",
-      "import_scorm_description": "导入 SCORM 包以创建新课程",
-      "no_courses": "尚无课程",
-      "create_course_placeholder": "创建课程以添加内容",
-      "no_courses_available": "尚无可用课程",
-      "overview_top": {
-        "course_label": "课程",
-        "rights_guide_button": "权利指南"
-      },
-      "settings": {
-        "tabs": {
-          "general": "常规",
-          "content": "内容",
-          "access": "访问",
-          "contributors": "贡献者",
-          "certification": "认证"
-        },
-        "access_denied": {
-          "title": "拒绝访问",
-          "message": "您没有权限访问此课程。"
-        },
-        "access_restricted": {
-          "title": "访问受限",
-          "message": "您没有权限访问 {{tab}} 选项卡。"
-        },
-        "loading": "加载中..."
-      },
-      "general": {
-        "form": {
-          "name_label": "名称",
-          "name_required": "必填",
-          "name_max_length": "最多 100 个字符",
-          "description_label": "描述",
-          "description_required": "必填",
-          "description_max_length": "最多 1000 个字符",
-          "about_label": "关于",
-          "learnings_label": "学习成果",
-          "learnings_required": "必填",
-          "learnings_invalid_format": "格式无效",
-          "learnings_min_items": "至少需要一个学习项",
-          "learnings_empty_text": "所有学习项必须包含文字",
-          "learnings_invalid_json": "JSON 格式无效",
-          "tags_label": "标签",
-          "tags_placeholder": "按 Enter 键添加...",
-          "thumbnail_type_label": "缩略图类型",
-          "thumbnail_type_image": "图像",
-          "thumbnail_type_video": "视频",
-          "thumbnail_type_both": "两者",
-          "thumbnail_label": "缩略图",
-          "image_search_placeholder": "搜索图像..."
-        },
-        "thumbnail": {
-          "upload_image": "上传图像",
-          "upload_video": "上传视频",
-          "gallery": "图库",
-          "tabs": {
-            "image": "图像",
-            "video": "视频"
-          },
-          "supported_formats": {
-            "image": "支持的格式：PNG, JPG/JPEG（最大 8MB）",
-            "video": "支持的格式：MP4, WebM（最大 100MB）"
-          }
-        },
-        "errors": {
-          "save_failed": "保存课程结构失败。"
-        }
-      },
-      "access": {
-        "title": "课程访问",
-        "subtitle": "选择您的课程是向互联网上的所有人开放，还是仅向注册用户开放",
-        "public": {
-          "title": "公开",
-          "description": "课程对互联网上的所有人可见，并被搜索引擎索引",
-          "active": "激活中",
-          "confirmation_title": "设为公开？",
-          "confirmation_message": "您确定要将此课程设为向互联网上的所有人开放吗？",
-          "confirmation_button": "设为公开"
-        },
-        "users_only": {
-          "title": "仅限用户",
-          "description": "课程仅对注册用户可见，您还可以选择特定的用户组",
-          "active": "激活中",
-          "confirmation_title": "设为仅限用户？",
-          "confirmation_message": "您确定要将此课程设为仅对注册用户开放吗？",
-          "confirmation_button": "仅限用户"
-        },
-        "usergroups": {
-          "title": "用户组",
-          "subtitle": "您可以通过将课程关联到特定的用户组，仅向这些用户授予访问权限",
-          "table": {
-            "name": "名称",
-            "actions": "操作"
-          },
-          "actions": {
-            "delete_link": "删除关联",
-            "link_to_usergroup": "关联用户组"
-          },
-          "modals": {
-            "link_title": "将课程关联到用户组",
-            "link_description": "选择要与此课程关联的用户组。该组的成员将获得访问权限。",
-            "unlink_title": "取消关联用户组？",
-            "unlink_message": "该组的成员将不再能访问此课程",
-            "unlink_button": "取消关联",
-            "warning": "不属于此组的用户将失去对此课程的访问权限",
-            "usergroup_name": "用户组名称",
-            "no_usergroups": "没有可用的用户组",
-            "create_usergroup": "创建一个用户组",
-            "link_button": "关联"
-          },
-          "toasts": {
-            "link_success": "用户组关联成功",
-            "link_error": "错误 {{status}}: {{detail}}",
-            "unlink_success": "用户组取消关联成功",
-            "unlink_error": "取消关联用户组时发生了错误。"
-          }
-        }
-      },
-      "contributors": {
-        "title": "课程贡献者",
-        "subtitle": "管理并向您的课程添加新的贡献者",
-        "open_to_contributors": {
-          "title": "开放贡献",
-          "description": "课程向贡献者开放。用户可以申请帮助改进课程内容。",
-          "active": "激活中",
-          "confirmation_title": "开放贡献？",
-          "confirmation_message": "您确定要向贡献者开放此课程吗？",
-          "confirmation_button": "开放贡献"
-        },
-        "closed_to_contributors": {
-          "title": "关闭贡献",
-          "description": "课程不向贡献者开放。只有现有的贡献者可以修改课程内容。",
-          "active": "激活中",
-          "confirmation_title": "关闭贡献？",
-          "confirmation_message": "您确定要向贡献者关闭此课程吗？",
-          "confirmation_button": "关闭贡献"
-        },
-        "search": {
-          "placeholder": "通过姓名或用户名搜索并添加用户...",
-          "searching": "正在搜索...",
-          "no_results": "未找到用户"
-        },
-        "table": {
-          "name": "姓名",
-          "username": "用户名",
-          "email": "电子邮件",
-          "role": "角色",
-          "status": "状态",
-          "added_on": "添加日期"
-        },
-        "roles": {
-          "creator": "创建者",
-          "contributor": "贡献者",
-          "maintainer": "维护者",
-          "reporter": "报告者"
-        },
-        "statuses": {
-          "active": "激活",
-          "inactive": "未激活",
-          "pending": "处理中"
-        },
-        "actions": {
-          "selected_users": "已选择 {{count}} 个用户",
-          "selected_users_plural": "已选择 {{count}} 个用户",
-          "clear": "清除",
-          "add_selected": "添加已选",
-          "selected_contributors": "已选择 {{count}} 个贡献者",
-          "selected_contributors_plural": "已选择 {{count}} 个贡献者",
-          "remove_selected": "移除已选",
-          "already_contributor": "已经是贡献者"
-        },
-        "toasts": {
-          "add_success": "成功添加 {{count}} 个贡献者",
-          "add_error": "添加 {{username}} 失败：{{reason}}",
-          "add_failed": "添加贡献者失败",
-          "update_success": "贡献者更新成功",
-          "update_error": "错误：{{detail}}",
-          "update_failed": "更新贡献者时发生了错误。",
-          "remove_success": "成功移除 {{count}} 个贡献者",
-          "remove_failed": "移除贡献者失败",
-          "cannot_modify_creator": "无法修改创建者的角色或状态"
-        }
-      },
-      "certification": {
-        "title": "课程认证",
-        "subtitle": "启用并配置学生完成此课程后可获得的证书",
-        "form": {
-          "certification_name_label": "认证名称",
-          "certification_name_required": "启用认证时，名称必填",
-          "certification_name_max_length": "最多 100 个字符",
-          "certification_name_placeholder": "例如：高级 JavaScript 认证",
-          "certification_type_label": "认证类型",
-          "certification_description_label": "认证描述",
-          "certification_description_required": "启用认证时，描述必填",
-          "certification_description_max_length": "最多 500 个字符",
-          "certification_description_placeholder": "描述此认证确认的内容及其价值...",
-          "certificate_pattern_label": "证书花纹",
-          "certificate_instructor_label": "讲师姓名（可选）",
-          "certificate_instructor_placeholder": "例如：张三教授"
-        },
-        "types": {
-          "completion": "结业证书",
-          "achievement": "成就证明",
-          "assessment": "评估证书",
-          "participation": "参与证明",
-          "mastery": "掌握证明",
-          "professional": "专业发展",
-          "continuing": "继续教育",
-          "workshop": "工作坊证明",
-          "specialization": "专业化证明"
-        },
-        "patterns": {
-          "royal": {
-            "name": "皇家",
-            "description": "带有王冠装饰图案"
-          },
-          "tech": {
-            "name": "科技",
-            "description": "电路板风格图案"
-          },
-          "nature": {
-            "name": "自然",
-            "description": "有机植物图案"
-          },
-          "geometric": {
-            "name": "几何",
-            "description": "抽象形状与线条"
-          },
-          "vintage": {
-            "name": "复古",
-            "description": "装饰艺术风格花纹"
-          },
-          "waves": {
-            "name": "波浪",
-            "description": "流动的水波图案"
-          },
-          "minimal": {
-            "name": "极简",
-            "description": "简洁大方"
-          },
-          "professional": {
-            "name": "专业",
-            "description": "正式商务设计"
-          },
-          "academic": {
-            "name": "学术",
-            "description": "传统大学风格"
-          },
-          "modern": {
-            "name": "现代",
-            "description": "当代简洁线条"
-          }
-        },
-        "sections": {
-          "basic_info": {
-            "title": "基本信息",
-            "subtitle": "配置您认证的基本详情"
-          },
-          "certificate_design": {
-            "title": "证书设计",
-            "subtitle": "为您的证书选择装饰花纹"
-          },
-          "preview": {
-            "title": "证书预览",
-            "subtitle": "实时预览您的证书"
-          }
-        },
-        "states": {
-          "disabled": {
-            "title": "认证未配置",
-            "message": "启用认证以在学生完成课程后向其发放证书。",
-            "button": "启用认证",
-            "creating": "正在创建..."
-          },
-          "creating": {
-            "title": "正在创建认证...",
-            "message": "请稍候，我们正在设置课程认证。"
-          }
-        },
-        "errors": {
-          "loading": "加载认证时出错",
-          "create_failed": "创建认证失败。",
-          "remove_failed": "移除认证失败。"
-        },
-        "toasts": {
-          "create_success": "认证创建成功",
-          "create_error": "创建认证失败",
-          "remove_success": "认证已成功移除",
-          "remove_error": "移除认证失败"
-        }
-      },
-      "communities": {
-        "title": "社区",
-        "new_community": "新建社区",
-        "no_communities": "暂无社区",
-        "no_communities_description": "创建您的第一个社区开始讨论",
-        "card": {
-          "open_settings": "打开设置",
-          "view_community": "查看社区",
-          "quick_edit": "快速编辑"
-        },
-        "settings": {
-          "tabs": {
-            "general": "常规",
-            "thumbnail": "缩略图",
-            "moderation": "内容审核"
-          }
-        },
-        "general": {
-          "title": "社区设置",
-          "subtitle": "更新社区基本信息",
-          "form": {
-            "name_label": "社区名称",
-            "name_required": "社区名称为必填项",
-            "name_min_length": "名称至少需要3个字符",
-            "name_max_length": "名称不能超过100个字符",
-            "name_placeholder": "输入社区名称",
-            "description_label": "描述",
-            "description_max_length": "描述不能超过500个字符",
-            "description_placeholder": "描述这个社区是关于什么的",
-            "public_label": "公开社区",
-            "public_description": "让所有人都能看到此社区",
-            "characters_left": "剩余{{count}}个字符"
-          },
-          "toasts": {
-            "updating": "正在更新社区...",
-            "update_success": "社区更新成功",
-            "update_error": "更新社区失败"
-          }
-        },
-        "thumbnail": {
-          "title": "社区缩略图",
-          "subtitle": "上传社区封面图片",
-          "no_thumbnail": "未设置缩略图",
-          "upload_image": "上传图片",
-          "browse_unsplash": "浏览Unsplash",
-          "uploading": "上传中...",
-          "supported_formats": "支持格式: JPG, JPEG, PNG。最大: 8MB。推荐比例: 16:9",
-          "toasts": {
-            "update_success": "缩略图更新成功",
-            "update_error": "更新缩略图失败",
-            "invalid_type": "无效的文件类型。请仅上传PNG或JPG/JPEG图片",
-            "file_too_large": "文件大小超过8MB限制"
-          }
-        },
-        "moderation": {
-          "title": "内容审核",
-          "subtitle": "配置屏蔽词和内容过滤器",
-          "info_title": "屏蔽词",
-          "info_description": "包含这些词的讨论和回复将被屏蔽。用户将看到错误消息，其内容将不会发布。",
-          "add_word_label": "添加屏蔽词",
-          "add_word_placeholder": "输入词语或短语...",
-          "add_button": "添加",
-          "batch_add_label": "批量添加",
-          "batch_add_description": "一次添加多个词，用逗号分隔",
-          "batch_add_placeholder": "词1, 词2, 词3...",
-          "add_all_button": "全部添加",
-          "blocked_words_label": "屏蔽词",
-          "no_blocked_words": "暂无屏蔽词",
-          "no_blocked_words_description": "添加词语以启用内容审核",
-          "word_exists_error": "此词已在列表中",
-          "all_words_exist_error": "所有词都已在列表中或输入为空",
-          "toasts": {
-            "saving": "正在保存审核设置...",
-            "save_success": "审核设置已保存",
-            "save_error": "保存审核设置失败"
-          }
-        },
-        "modals": {
-          "create": {
-            "title": "创建社区",
-            "description": "创建新的讨论社区",
-            "form": {
-              "name_label": "社区名称",
-              "name_placeholder": "输入社区名称",
-              "description_label": "描述",
-              "description_placeholder": "描述这个社区是关于什么的",
-              "public_label": "公开此社区（所有人可见）"
-            },
-            "cancel": "取消",
-            "submit": "创建社区"
-          },
-          "edit": {
-            "title": "编辑社区",
-            "description": "更新社区设置"
-          },
-          "delete": {
-            "title": "删除{{name}}？",
-            "message": "确定要删除此社区吗？所有讨论将被永久删除。",
-            "button": "删除社区"
-          }
-        },
-        "toasts": {
-          "creating": "正在创建社区...",
-          "create_success": "社区创建成功",
-          "create_error": "创建社区失败",
-          "deleting": "正在删除社区...",
-          "delete_success": "社区删除成功",
-          "delete_error": "删除社区失败"
-        }
-      },
-      "structure": {
-        "loading": "加载中...",
-        "add_chapter_button": "添加章节",
-        "modals": {
-          "new_chapter": {
-            "title": "创建章节",
-            "description": "向课程添加新章节",
-            "form": {
-              "name_label": "章节名称",
-              "name_required": "请提供您的章节标题",
-              "description_label": "章节描述",
-              "description_required": "请提供您的章节描述",
-              "submit": "创建章节"
-            }
-          },
-          "delete_chapter": {
-            "title": "删除 {{name}}？",
-            "message": "您确定要删除此章节吗？",
-            "button": "删除章节"
-          },
-          "new_activity": {
-            "title": "创建活动",
-            "description": "选择要添加到课程中的活动类型"
-          },
-          "delete_activity": {
-            "title": "删除 {{name}}？",
-            "message": "您确定要删除此活动吗？",
-            "button": "删除活动"
-          }
-        },
-        "actions": {
-          "add_chapter": "添加章节",
-          "add_activity": "添加活动",
-          "publish": "发布",
-          "unpublish": "取消发布",
-          "preview_activity": "预览活动",
-          "edit_page": "编辑页面",
-          "edit_assignment": "编辑作业"
-        },
-        "chapter_element": {
-          "chapter_name_placeholder": "章节名称"
-        },
-        "activity": {
-          "name_placeholder": "活动名称",
-          "types": {
-            "video": "视频",
-            "document": "文档",
-            "assignment": "作业",
-            "assignments": "作业合集",
-            "dynamic": "动态内容",
-            "dynamic_page": "动态页面",
-            "scorm": "Scorm"
-          },
-          "toasts": {
-            "deleting": "正在删除活动...",
-            "delete_success": "活动删除成功",
-            "updating": "正在更新活动...",
-            "update_success": "活动更新成功",
-            "name_update_success": "活动名称更新成功",
-            "name_update_error": "更新活动名称失败",
-            "creating": "正在创建活动...",
-            "create_success": "活动创建成功",
-            "uploading": "正在上传文件并创建活动...",
-            "upload_success": "文件上传成功",
-            "creating_uploading": "正在创建活动并上传文件..."
           }
         }
       }

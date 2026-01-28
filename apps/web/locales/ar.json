@@ -70,6 +70,10 @@
         "certifications": {
           "title": "ميزة الخطة الاحترافية",
           "description": "الشهادات هي ميزة مميزة متاحة فقط للمؤسسات على خطتنا الاحترافية أو أعلى. قم بالترقية لإصدار شهادات للمتعلمين الذين أكملوا دوراتك."
+        },
+        "communities": {
+          "title": "ميزة الخطة القياسية",
+          "description": "المجتمعات هي ميزة مميزة متاحة فقط للمنظمات في خطتنا القياسية أو أعلى. قم بالترقية لفتح مجتمعات النقاش لأعضائك."
         }
       }
     },
@@ -262,7 +266,25 @@
     "submitting_contributor_application": "جاري إرسال الطلب...",
     "contributor_application_success": "تم إرسال طلب مساهمتك بنجاح",
     "contributor_application_error": "فشل إرسال الطلب، يرجى المحاولة لاحقاً.",
-    "contribute": "ساهم"
+    "contribute": "ساهم",
+    "scorm": {
+      "upload_package": "تحميل حزمة SCORM",
+      "package_file": "ملف الحزمة (.zip)",
+      "click_to_upload": "انقر للتحميل أو اسحب وأفلت",
+      "supported_versions": "حزمة SCORM 1.2 أو SCORM 2004",
+      "import_info": "قم بتحميل حزمة SCORM الخاصة بك لتحليل محتوياتها. ستتمكن من تكوين الدورة وتعيين الأنشطة للفصول.",
+      "analyze_package": "تحليل الحزمة",
+      "package_analyzed": "تم تحليل الحزمة بنجاح",
+      "assign_scos": "تعيين الأنشطة للفصول",
+      "activity_name": "النشاط",
+      "chapter_name": "الفصل",
+      "upload_different": "تحميل حزمة مختلفة",
+      "selected": "محدد",
+      "create_course": "إنشاء دورة",
+      "configure": "تكوين",
+      "ready_to_analyze": "جاهز للتحليل",
+      "course_details": "تفاصيل الدورة"
+    }
   },
   "collections": {
     "collections": "المجموعات",
@@ -709,7 +731,471 @@
       "import_scorm_description": "استيراد حزمة SCORM لإنشاء دورة جديدة",
       "no_courses": "لا توجد دورات بعد",
       "create_course_placeholder": "أنشئ دورة لإضافة محتوى",
-      "no_courses_available": "لا توجد دورات متاحة بعد"
+      "no_courses_available": "لا توجد دورات متاحة بعد",
+      "overview_top": {
+        "course_label": "الدورة",
+        "rights_guide_button": "دليل الحقوق"
+      },
+      "settings": {
+        "tabs": {
+          "general": "عام",
+          "content": "المحتوى",
+          "access": "الوصول",
+          "contributors": "المساهمون",
+          "certification": "الشهادات"
+        },
+        "access_denied": {
+          "title": "تم رفض الوصول",
+          "message": "ليس لديك الصلاحيات للوصول لهذه الدورة."
+        },
+        "access_restricted": {
+          "title": "الوصول مقيد",
+          "message": "ليس لديك الصلاحيات للوصول لتبويب {{tab}}."
+        },
+        "loading": "جاري التحميل..."
+      },
+      "general": {
+        "form": {
+          "name_label": "الاسم",
+          "name_required": "مطلوب",
+          "name_max_length": "أقل من 100 حرف",
+          "description_label": "الوصف",
+          "description_required": "مطلوب",
+          "description_max_length": "أقل من 1000 حرف",
+          "about_label": "حول",
+          "learnings_label": "ماذا ستعلم الدورة",
+          "learnings_required": "مطلوب",
+          "learnings_invalid_format": "تنسيق غير صالح",
+          "learnings_min_items": "مطلوب عنصر تعليمي واحد على الأقل",
+          "learnings_empty_text": "جميع عناصر التعلم يجب أن تحتوي على نص",
+          "learnings_invalid_json": "تنسيق JSON غير صالح",
+          "tags_label": "الوسوم",
+          "tags_placeholder": "اضغط Enter للإضافة...",
+          "thumbnail_type_label": "نوع الصورة المصغرة",
+          "thumbnail_type_image": "صورة",
+          "thumbnail_type_video": "فيديو",
+          "thumbnail_type_both": "كلاهما",
+          "thumbnail_label": "الصورة المصغرة",
+          "image_search_placeholder": "بحث عن صور..."
+        },
+        "thumbnail": {
+          "upload_image": "رفع صورة",
+          "upload_video": "رفع فيديو",
+          "gallery": "المعرض",
+          "tabs": {
+            "image": "صورة",
+            "video": "فيديو"
+          },
+          "supported_formats": {
+            "image": "التنسيقات المدعومة: PNG, JPG/JPEG (بحد أقصى 8 ميجابايت)",
+            "video": "التنسيقات المدعومة: MP4, WebM (بحد أقصى 100 ميجابايت)"
+          }
+        },
+        "errors": {
+          "save_failed": "فشل حفظ هيكل الدورة."
+        }
+      },
+      "access": {
+        "title": "الوصول للدورة",
+        "subtitle": "اختر ما إذا كانت دورتك متاحة للجميع على الإنترنت أم للمستخدمين المسجلين فقط",
+        "public": {
+          "title": "عام",
+          "description": "الدورة متاحة لأي شخص على الإنترنت، مؤرشفة في محركات البحث ومفتوحة للجميع",
+          "active": "نشط",
+          "confirmation_title": "جعلها عامة؟",
+          "confirmation_message": "هل أنت متأكد أنك تريد جعل هذه الدورة متاحة لأي شخص على الإنترنت؟",
+          "confirmation_button": "اجعلها عامة"
+        },
+        "users_only": {
+          "title": "للمستخدمين فقط",
+          "description": "الدورة متاحة فقط للمستخدمين المسجلين، ويمكنك أيضاً اختيار مجموعات مستخدمين محددة",
+          "active": "نشط",
+          "confirmation_title": "جعلها للمستخدمين فقط؟",
+          "confirmation_message": "هل أنت متأكد أنك تريد جعل هذه الدورة متاحة للمستخدمين المسجلين فقط؟",
+          "confirmation_button": "للمستخدمين فقط"
+        },
+        "usergroups": {
+          "title": "مجموعات المستخدمين",
+          "subtitle": "يمكنك منح الوصول لهذه الدورة لمجموعات مستخدمين محددة فقط عن طريق ربطها بالمجموعة",
+          "table": {
+            "name": "الاسم",
+            "actions": "الإجراءات"
+          },
+          "actions": {
+            "delete_link": "حذف الربط",
+            "link_to_usergroup": "ربط بمجموعة"
+          },
+          "modals": {
+            "link_title": "ربط الدورة بمجموعة مستخدمين",
+            "link_description": "اختر مجموعة مستخدمين لربطها بهذه الدورة. أعضاء هذه المجموعة سيحصلون على الوصول.",
+            "unlink_title": "إلغاء ربط المجموعة؟",
+            "unlink_message": "أعضاء هذه المجموعة لن يعود لديهم وصول لهذه الدورة",
+            "unlink_button": "إلغاء الربط",
+            "warning": "المستخدمون الذين ليسوا جزءاً من هذه المجموعة سيفقدون الوصول لهذه الدورة",
+            "usergroup_name": "اسم مجموعة المستخدمين",
+            "no_usergroups": "لا توجد مجموعات مستخدمين متاحة",
+            "create_usergroup": "أنشئ مجموعة مستخدمين",
+            "link_button": "ربط"
+          },
+          "toasts": {
+            "link_success": "تم الربط بالمجموعة بنجاح",
+            "link_error": "خطأ {{status}}: {{detail}}",
+            "unlink_success": "تم إلغاء ربط المجموعة بنجاح",
+            "unlink_error": "حدث خطأ أثناء إلغاء ربط المجموعة."
+          }
+        }
+      },
+      "contributors": {
+        "title": "المساهمون في الدورة",
+        "subtitle": "أدر وأضف مساهمين جدد لدورتك",
+        "open_to_contributors": {
+          "title": "مفتوح للمساهمين",
+          "description": "الدورة مفتوحة للمساهمين. يمكن للمستخدمين طلب المساعدة في تحسين محتوى الدورة.",
+          "active": "نشط",
+          "confirmation_title": "الفتح للمساهمين؟",
+          "confirmation_message": "هل أنت متأكد أنك تريد فتح هذه الدورة للمساهمين؟",
+          "confirmation_button": "الفتح للمساهمين"
+        },
+        "closed_to_contributors": {
+          "title": "مغلق للمساهمين",
+          "description": "الدورة مغلقة للمساهمين. المساهمون الحاليون فقط هم من يمكنهم تعديل محتوى الدورة.",
+          "active": "نشط",
+          "confirmation_title": "الإغلاق للمساهمين؟",
+          "confirmation_message": "هل أنت متأكد أنك تريد إغلاق هذه الدورة للمساهمين؟",
+          "confirmation_button": "الإغلاق للمساهمين"
+        },
+        "search": {
+          "placeholder": "ابحث عن مستخدمين بالاسم أو اسم المستخدم للإضافة...",
+          "searching": "جاري البحث...",
+          "no_results": "لم يتم العثور على مستخدمين"
+        },
+        "table": {
+          "name": "الاسم",
+          "username": "اسم المستخدم",
+          "email": "البريد الإلكتروني",
+          "role": "الدور",
+          "status": "الحالة",
+          "added_on": "أضيف في"
+        },
+        "roles": {
+          "creator": "منشئ",
+          "contributor": "مساهم",
+          "maintainer": "مسؤول صيانة",
+          "reporter": "مبلغ"
+        },
+        "statuses": {
+          "active": "نشط",
+          "inactive": "غير نشط",
+          "pending": "قيد الانتظار"
+        },
+        "actions": {
+          "selected_users": "تم اختيار {{count}} مستخدم",
+          "selected_users_plural": "تم اختيار {{count}} مستخدمين",
+          "clear": "مسح",
+          "add_selected": "إضافة المختارين",
+          "selected_contributors": "تم اختيار {{count}} مساهم",
+          "selected_contributors_plural": "تم اختيار {{count}} مساهمين",
+          "remove_selected": "إزالة المختارين",
+          "already_contributor": "مساهم بالفعل"
+        },
+        "toasts": {
+          "add_success": "تم إضافة {{count}} مساهم بنجاح",
+          "add_error": "فشل إضافة {{username}}: {{reason}}",
+          "add_failed": "فشل إضافة المساهمين",
+          "update_success": "تم تحديث المساهم بنجاح",
+          "update_error": "خطأ: {{detail}}",
+          "update_failed": "حدث خطأ أثناء تحديث المساهم.",
+          "remove_success": "تم إزالة {{count}} مساهم بنجاح",
+          "remove_failed": "فشل إزالة المساهمين",
+          "cannot_modify_creator": "لا يمكن تعديل دور أو حالة المنشئ"
+        }
+      },
+      "certification": {
+        "title": "شهادات الدورة",
+        "subtitle": "قم بتمكين وتكوين الشهادات للطلاب الذين يكملون هذه الدورة",
+        "form": {
+          "certification_name_label": "اسم الشهادة",
+          "certification_name_required": "مطلوب عند تمكين الشهادات",
+          "certification_name_max_length": "أقل من 100 حرف",
+          "certification_name_placeholder": "مثال: شهادة جافا سكريبت المتقدمة",
+          "certification_type_label": "نوع الشهادة",
+          "certification_description_label": "وصف الشهادة",
+          "certification_description_required": "مطلوب عند تمكين الشهادات",
+          "certification_description_max_length": "أقل من 500 حرف",
+          "certification_description_placeholder": "صف ما تؤكده هذه الشهادة وقيمتها...",
+          "certificate_pattern_label": "نمط الشهادة",
+          "certificate_instructor_label": "اسم المدرس (اختياري)",
+          "certificate_instructor_placeholder": "مثال: د. أحمد محمد"
+        },
+        "types": {
+          "completion": "إكمال دورة",
+          "achievement": "إنجاز",
+          "assessment": "بناءً على التقييم",
+          "participation": "مشاركة",
+          "mastery": "إتقان مهارة",
+          "professional": "تطوير مهني",
+          "continuing": "تعليم مستمر",
+          "workshop": "حضور ورشة عمل",
+          "specialization": "تخصص"
+        },
+        "patterns": {
+          "royal": {
+            "name": "ملكي",
+            "description": "مزين بزخارف التاج"
+          },
+          "tech": {
+            "name": "تقني",
+            "description": "أنماط مستوحاة من لوحات الدوائر"
+          },
+          "nature": {
+            "name": "طبيعة",
+            "description": "أنماط نباتية عضوية"
+          },
+          "geometric": {
+            "name": "هندسي",
+            "description": "أشكال وخطوط مجردة"
+          },
+          "vintage": {
+            "name": "عتيق",
+            "description": "أنماط على طراز آرت ديكو"
+          },
+          "waves": {
+            "name": "أمواج",
+            "description": "أنماط مائية انسيابية"
+          },
+          "minimal": {
+            "name": "بسيط",
+            "description": "نظيف وبسيط"
+          },
+          "professional": {
+            "name": "احترافي",
+            "description": "تصميم أعمال رسمي"
+          },
+          "academic": {
+            "name": "أكاديمي",
+            "description": "طراز جامعي تقليدي"
+          },
+          "modern": {
+            "name": "حديث",
+            "description": "خطوط نظيفة معاصرة"
+          }
+        },
+        "sections": {
+          "basic_info": {
+            "title": "معلومات أساسية",
+            "subtitle": "قم بتكوين التفاصيل الأساسية لشهادتك"
+          },
+          "certificate_design": {
+            "title": "تصميم الشهادة",
+            "subtitle": "اختر نمطاً زخرفياً لشهادتك"
+          },
+          "preview": {
+            "title": "معاينة الشهادة",
+            "subtitle": "معاينة مباشرة لشهادتك"
+          }
+        },
+        "states": {
+          "disabled": {
+            "title": "الشهادات غير مكونة",
+            "message": "قم بتمكين الشهادات لإصدارها للطلاب عند إكمال الدورة.",
+            "button": "تمكين الشهادات",
+            "creating": "جاري الإنشاء..."
+          },
+          "creating": {
+            "title": "جاري إنشاء الشهادات...",
+            "message": "يرجى الانتظار بينما نقوم بإعداد شهادات الدورة."
+          }
+        },
+        "errors": {
+          "loading": "خطأ أثناء تحميل الشهادات",
+          "create_failed": "فشل إنشاء الشهادة.",
+          "remove_failed": "فشل إزالة الشهادة."
+        },
+        "toasts": {
+          "create_success": "تم إنشاء الشهادة بنجاح",
+          "create_error": "فشل إنشاء الشهادة",
+          "remove_success": "تم إزالة الشهادة بنجاح",
+          "remove_error": "فشل إزالة الشهادة"
+        }
+      },
+      "communities": {
+        "title": "المجتمعات",
+        "new_community": "مجتمع جديد",
+        "no_communities": "لا توجد مجتمعات بعد",
+        "no_communities_description": "أنشئ أول مجتمع لك لبدء النقاشات",
+        "card": {
+          "open_settings": "فتح الإعدادات",
+          "view_community": "عرض المجتمع",
+          "quick_edit": "تعديل سريع"
+        },
+        "settings": {
+          "tabs": {
+            "general": "عام",
+            "thumbnail": "الصورة المصغرة",
+            "moderation": "الإشراف"
+          }
+        },
+        "general": {
+          "title": "إعدادات المجتمع",
+          "subtitle": "تحديث المعلومات الأساسية للمجتمع",
+          "form": {
+            "name_label": "اسم المجتمع",
+            "name_required": "اسم المجتمع مطلوب",
+            "name_min_length": "يجب أن يكون الاسم 3 أحرف على الأقل",
+            "name_max_length": "يجب أن يكون الاسم أقل من 100 حرف",
+            "name_placeholder": "أدخل اسم المجتمع",
+            "description_label": "الوصف",
+            "description_max_length": "يجب أن يكون الوصف أقل من 500 حرف",
+            "description_placeholder": "صف موضوع هذا المجتمع",
+            "public_label": "مجتمع عام",
+            "public_description": "اجعل هذا المجتمع مرئياً للجميع",
+            "characters_left": "{{count}} حرف متبقي"
+          },
+          "toasts": {
+            "updating": "جاري تحديث المجتمع...",
+            "update_success": "تم تحديث المجتمع بنجاح",
+            "update_error": "فشل تحديث المجتمع"
+          }
+        },
+        "thumbnail": {
+          "title": "صورة المجتمع المصغرة",
+          "subtitle": "ارفع صورة غلاف لمجتمعك",
+          "no_thumbnail": "لم يتم تعيين صورة مصغرة",
+          "upload_image": "رفع صورة",
+          "browse_unsplash": "تصفح Unsplash",
+          "uploading": "جاري الرفع...",
+          "supported_formats": "الصيغ المدعومة: JPG، JPEG، PNG. الحد الأقصى: 8 ميجابايت. النسبة الموصى بها: 16:9",
+          "toasts": {
+            "update_success": "تم تحديث الصورة المصغرة بنجاح",
+            "update_error": "فشل تحديث الصورة المصغرة",
+            "invalid_type": "نوع ملف غير صالح. يرجى رفع صور PNG أو JPG/JPEG فقط",
+            "file_too_large": "حجم الملف يتجاوز حد 8 ميجابايت"
+          }
+        },
+        "moderation": {
+          "title": "إشراف المحتوى",
+          "subtitle": "تكوين الكلمات المحظورة وفلاتر المحتوى",
+          "info_title": "الكلمات المحظورة",
+          "info_description": "سيتم حظر النقاشات والردود التي تحتوي على هذه الكلمات. سيرى المستخدمون رسالة خطأ ولن يتم نشر محتواهم.",
+          "add_word_label": "إضافة كلمة محظورة",
+          "add_word_placeholder": "أدخل كلمة أو عبارة...",
+          "add_button": "إضافة",
+          "batch_add_label": "إضافة دفعة",
+          "batch_add_description": "أضف عدة كلمات دفعة واحدة، مفصولة بفواصل",
+          "batch_add_placeholder": "كلمة1، كلمة2، كلمة3...",
+          "add_all_button": "إضافة الكل",
+          "blocked_words_label": "الكلمات المحظورة",
+          "no_blocked_words": "لا توجد كلمات محظورة بعد",
+          "no_blocked_words_description": "أضف كلمات لتفعيل إشراف المحتوى",
+          "word_exists_error": "هذه الكلمة موجودة بالفعل في القائمة",
+          "all_words_exist_error": "جميع الكلمات موجودة بالفعل في القائمة أو الإدخال فارغ",
+          "toasts": {
+            "saving": "جاري حفظ إعدادات الإشراف...",
+            "save_success": "تم حفظ إعدادات الإشراف",
+            "save_error": "فشل حفظ إعدادات الإشراف"
+          }
+        },
+        "modals": {
+          "create": {
+            "title": "إنشاء مجتمع",
+            "description": "أنشئ مجتمعاً جديداً للنقاشات",
+            "form": {
+              "name_label": "اسم المجتمع",
+              "name_placeholder": "أدخل اسم المجتمع",
+              "description_label": "الوصف",
+              "description_placeholder": "صف موضوع هذا المجتمع",
+              "public_label": "اجعل هذا المجتمع عاماً (مرئي للجميع)"
+            },
+            "cancel": "إلغاء",
+            "submit": "إنشاء المجتمع"
+          },
+          "edit": {
+            "title": "تعديل المجتمع",
+            "description": "تحديث إعدادات المجتمع"
+          },
+          "delete": {
+            "title": "حذف {{name}}؟",
+            "message": "هل أنت متأكد من رغبتك في حذف هذا المجتمع؟ سيتم حذف جميع النقاشات نهائياً.",
+            "button": "حذف المجتمع"
+          }
+        },
+        "toasts": {
+          "creating": "جاري إنشاء المجتمع...",
+          "create_success": "تم إنشاء المجتمع بنجاح",
+          "create_error": "فشل إنشاء المجتمع",
+          "deleting": "جاري حذف المجتمع...",
+          "delete_success": "تم حذف المجتمع بنجاح",
+          "delete_error": "فشل حذف المجتمع"
+        }
+      },
+      "structure": {
+        "loading": "جاري التحميل...",
+        "add_chapter_button": "إضافة فصل",
+        "modals": {
+          "new_chapter": {
+            "title": "إنشاء فصل",
+            "description": "أضف فصلاً جديداً للدورة",
+            "form": {
+              "name_label": "اسم الفصل",
+              "name_required": "يرجى تقديم عنوان لفصلك",
+              "description_label": "وصف الفصل",
+              "description_required": "يرجى تقديم وصف لفصلك",
+              "submit": "إنشاء فصل"
+            }
+          },
+          "delete_chapter": {
+            "title": "حذف {{name}}؟",
+            "message": "هل أنت متأكد أنك تريد حذف هذا الفصل؟",
+            "button": "حذف الفصل"
+          },
+          "new_activity": {
+            "title": "إنشاء نشاط",
+            "description": "اختر نوع النشاط لإضافته للدورة"
+          },
+          "delete_activity": {
+            "title": "حذف {{name}}؟",
+            "message": "هل أنت متأكد أنك تريد حذف هذا النشاط؟",
+            "button": "حذف النشاط"
+          }
+        },
+        "actions": {
+          "add_chapter": "إضافة فصل",
+          "add_activity": "إضافة نشاط",
+          "publish": "نشر",
+          "unpublish": "إلغاء النشر",
+          "preview_activity": "معاينة النشاط",
+          "edit_page": "تعديل الصفحة",
+          "edit_assignment": "تعديل الواجب"
+        },
+        "chapter_element": {
+          "chapter_name_placeholder": "اسم الفصل"
+        },
+        "activity": {
+          "name_placeholder": "اسم النشاط",
+          "types": {
+            "video": "فيديو",
+            "document": "مستند",
+            "assignment": "واجب",
+            "assignments": "واجبات",
+            "dynamic": "ديناميكي",
+            "dynamic_page": "صفحة ديناميكية",
+            "scorm": "Scorm"
+          },
+          "toasts": {
+            "deleting": "جاري حذف النشاط...",
+            "delete_success": "تم حذف النشاط بنجاح",
+            "updating": "جاري تحديث المهمة...",
+            "update_success": "تم تحديث النشاط بنجاح",
+            "name_update_success": "تم تحديث اسم النشاط بنجاح",
+            "name_update_error": "فشل تحديث اسم النشاط",
+            "creating": "جاري إنشاء النشاط...",
+            "create_success": "تم إنشاء النشاط بنجاح",
+            "uploading": "جاري رفع الملف وإنشاء النشاط...",
+            "upload_success": "تم رفع الملف بنجاح",
+            "creating_uploading": "جاري إنشاء النشاط ورفع الملف..."
+          }
+        }
+      }
     },
     "organization": {
       "settings": {
@@ -768,7 +1254,10 @@
         "saving": "جاري الحفظ...",
         "update_success": "تم تحديث المنظمة",
         "update_error": "فشل تحديث المنظمة",
-        "updating": "جاري تحديث المنظمة..."
+        "updating": "جاري تحديث المنظمة...",
+        "footer_text": "نص التذييل",
+        "footer_text_placeholder": "أدخل نص التذييل...",
+        "footer_text_desc": "نص مخصص يظهر في أسفل صفحات منظمتك"
       },
       "images": {
         "title": "الصور والمعاينات",
@@ -826,7 +1315,8 @@
         "subtitle": "أدر الهوية البصرية والتواجد الاجتماعي لمنظمتك",
         "tabs": {
           "images": "الصور والمعاينات",
-          "social": "روابط التواصل"
+          "social": "روابط التواصل",
+          "theme": "السمة"
         }
       },
       "socials": {
@@ -959,7 +1449,11 @@
           "generating": "جاري إنشاء CSV...",
           "success": "تم تصدير CSV بنجاح",
           "error": "فشل تصدير CSV"
-        }
+        },
+        "enterprise_only": "سجلات التدقيق متاحة فقط في خطة المؤسسة",
+        "enterprise_feature": "ميزة المؤسسة",
+        "enterprise_description": "سجلات التدقيق هي ميزة مميزة متاحة فقط للمنظمات في خطة المؤسسة. قم بالترقية للحصول على رؤية كاملة لأنشطة منظمتك.",
+        "upgrade_button": "الترقية إلى المؤسسة"
       },
       "landing": {
         "title": "صفحة الهبوط",
@@ -1110,6 +1604,16 @@
           "selected": "مختار",
           "select": "اختر"
         }
+      },
+      "theme": {
+        "primary_color": "اللون الأساسي",
+        "primary_color_desc": "اختر لونًا أساسيًا لرأس منظمتك وخلفية الصفحة.",
+        "clear_color": "مسح اللون",
+        "preview": "معاينة مباشرة",
+        "preview_hint": "هذا هو الشكل الذي سيظهر به رأس منظمتك والخلفية",
+        "footer_text": "نص التذييل",
+        "footer_text_desc": "أضف نصًا مخصصًا ليظهر في تذييل الصفحة.",
+        "footer_text_placeholder": "أدخل نص التذييل..."
       }
     },
     "users": {
@@ -1167,7 +1671,10 @@
           "remove_from_org": "إزالة من المنظمة",
           "removing": "جاري الإزالة...",
           "remove_success": "تم إزالة المستخدم من المنظمة",
-          "remove_error": "فشل إزالة المستخدم"
+          "remove_error": "فشل إزالة المستخدم",
+          "updating_role": "جاري تحديث الدور...",
+          "role_update_success": "تم تحديث الدور بنجاح",
+          "role_update_error": "خطأ في تحديث الدور"
         },
         "modals": {
           "update_role": {
@@ -1179,6 +1686,13 @@
             "message": "هل أنت متأكد أنك تريد إزالة هذا المستخدم من المنظمة؟",
             "button": "إزالة المستخدم"
           }
+        },
+        "search_placeholder": "البحث عن المستخدمين...",
+        "no_results": "لم يتم العثور على مستخدمين مطابقين لبحثك",
+        "no_users": "لا يوجد مستخدمون في هذه المنظمة بعد",
+        "pagination": {
+          "showing": "عرض {{start}}-{{end}} من {{total}}",
+          "page": "صفحة {{current}} من {{total}}"
         }
       },
       "signups": {
@@ -1668,481 +2182,6 @@
           "toasts": {
             "creating": "جاري إنشاء الواجب...",
             "success": "تم إنشاء الواجب بنجاح"
-          }
-        }
-      }
-    },
-    "courses": {
-      "title": "الدورات",
-      "rights_guide": "دليل الحقوق",
-      "create_course": "إنشاء دورة",
-      "create_new_course": "إنشاء دورة جديدة",
-      "import_course": "استيراد دورة",
-      "import_scorm_description": "استيراد حزمة SCORM لإنشاء دورة جديدة",
-      "no_courses": "لا توجد دورات بعد",
-      "create_course_placeholder": "أنشئ دورة لإضافة محتوى",
-      "no_courses_available": "لا توجد دورات متاحة بعد",
-      "overview_top": {
-        "course_label": "الدورة",
-        "rights_guide_button": "دليل الحقوق"
-      },
-      "settings": {
-        "tabs": {
-          "general": "عام",
-          "content": "المحتوى",
-          "access": "الوصول",
-          "contributors": "المساهمون",
-          "certification": "الشهادات"
-        },
-        "access_denied": {
-          "title": "تم رفض الوصول",
-          "message": "ليس لديك الصلاحيات للوصول لهذه الدورة."
-        },
-        "access_restricted": {
-          "title": "الوصول مقيد",
-          "message": "ليس لديك الصلاحيات للوصول لتبويب {{tab}}."
-        },
-        "loading": "جاري التحميل..."
-      },
-      "general": {
-        "form": {
-          "name_label": "الاسم",
-          "name_required": "مطلوب",
-          "name_max_length": "أقل من 100 حرف",
-          "description_label": "الوصف",
-          "description_required": "مطلوب",
-          "description_max_length": "أقل من 1000 حرف",
-          "about_label": "حول",
-          "learnings_label": "ماذا ستعلم الدورة",
-          "learnings_required": "مطلوب",
-          "learnings_invalid_format": "تنسيق غير صالح",
-          "learnings_min_items": "مطلوب عنصر تعليمي واحد على الأقل",
-          "learnings_empty_text": "جميع عناصر التعلم يجب أن تحتوي على نص",
-          "learnings_invalid_json": "تنسيق JSON غير صالح",
-          "tags_label": "الوسوم",
-          "tags_placeholder": "اضغط Enter للإضافة...",
-          "thumbnail_type_label": "نوع الصورة المصغرة",
-          "thumbnail_type_image": "صورة",
-          "thumbnail_type_video": "فيديو",
-          "thumbnail_type_both": "كلاهما",
-          "thumbnail_label": "الصورة المصغرة",
-          "image_search_placeholder": "بحث عن صور..."
-        },
-        "thumbnail": {
-          "upload_image": "رفع صورة",
-          "upload_video": "رفع فيديو",
-          "gallery": "المعرض",
-          "tabs": {
-            "image": "صورة",
-            "video": "فيديو"
-          },
-          "supported_formats": {
-            "image": "التنسيقات المدعومة: PNG, JPG/JPEG (بحد أقصى 8 ميجابايت)",
-            "video": "التنسيقات المدعومة: MP4, WebM (بحد أقصى 100 ميجابايت)"
-          }
-        },
-        "errors": {
-          "save_failed": "فشل حفظ هيكل الدورة."
-        }
-      },
-      "access": {
-        "title": "الوصول للدورة",
-        "subtitle": "اختر ما إذا كانت دورتك متاحة للجميع على الإنترنت أم للمستخدمين المسجلين فقط",
-        "public": {
-          "title": "عام",
-          "description": "الدورة متاحة لأي شخص على الإنترنت، مؤرشفة في محركات البحث ومفتوحة للجميع",
-          "active": "نشط",
-          "confirmation_title": "جعلها عامة؟",
-          "confirmation_message": "هل أنت متأكد أنك تريد جعل هذه الدورة متاحة لأي شخص على الإنترنت؟",
-          "confirmation_button": "اجعلها عامة"
-        },
-        "users_only": {
-          "title": "للمستخدمين فقط",
-          "description": "الدورة متاحة فقط للمستخدمين المسجلين، ويمكنك أيضاً اختيار مجموعات مستخدمين محددة",
-          "active": "نشط",
-          "confirmation_title": "جعلها للمستخدمين فقط؟",
-          "confirmation_message": "هل أنت متأكد أنك تريد جعل هذه الدورة متاحة للمستخدمين المسجلين فقط؟",
-          "confirmation_button": "للمستخدمين فقط"
-        },
-        "usergroups": {
-          "title": "مجموعات المستخدمين",
-          "subtitle": "يمكنك منح الوصول لهذه الدورة لمجموعات مستخدمين محددة فقط عن طريق ربطها بالمجموعة",
-          "table": {
-            "name": "الاسم",
-            "actions": "الإجراءات"
-          },
-          "actions": {
-            "delete_link": "حذف الربط",
-            "link_to_usergroup": "ربط بمجموعة"
-          },
-          "modals": {
-            "link_title": "ربط الدورة بمجموعة مستخدمين",
-            "link_description": "اختر مجموعة مستخدمين لربطها بهذه الدورة. أعضاء هذه المجموعة سيحصلون على الوصول.",
-            "unlink_title": "إلغاء ربط المجموعة؟",
-            "unlink_message": "أعضاء هذه المجموعة لن يعود لديهم وصول لهذه الدورة",
-            "unlink_button": "إلغاء الربط",
-            "warning": "المستخدمون الذين ليسوا جزءاً من هذه المجموعة سيفقدون الوصول لهذه الدورة",
-            "usergroup_name": "اسم مجموعة المستخدمين",
-            "no_usergroups": "لا توجد مجموعات مستخدمين متاحة",
-            "create_usergroup": "أنشئ مجموعة مستخدمين",
-            "link_button": "ربط"
-          },
-          "toasts": {
-            "link_success": "تم الربط بالمجموعة بنجاح",
-            "link_error": "خطأ {{status}}: {{detail}}",
-            "unlink_success": "تم إلغاء ربط المجموعة بنجاح",
-            "unlink_error": "حدث خطأ أثناء إلغاء ربط المجموعة."
-          }
-        }
-      },
-      "contributors": {
-        "title": "المساهمون في الدورة",
-        "subtitle": "أدر وأضف مساهمين جدد لدورتك",
-        "open_to_contributors": {
-          "title": "مفتوح للمساهمين",
-          "description": "الدورة مفتوحة للمساهمين. يمكن للمستخدمين طلب المساعدة في تحسين محتوى الدورة.",
-          "active": "نشط",
-          "confirmation_title": "الفتح للمساهمين؟",
-          "confirmation_message": "هل أنت متأكد أنك تريد فتح هذه الدورة للمساهمين؟",
-          "confirmation_button": "الفتح للمساهمين"
-        },
-        "closed_to_contributors": {
-          "title": "مغلق للمساهمين",
-          "description": "الدورة مغلقة للمساهمين. المساهمون الحاليون فقط هم من يمكنهم تعديل محتوى الدورة.",
-          "active": "نشط",
-          "confirmation_title": "الإغلاق للمساهمين؟",
-          "confirmation_message": "هل أنت متأكد أنك تريد إغلاق هذه الدورة للمساهمين؟",
-          "confirmation_button": "الإغلاق للمساهمين"
-        },
-        "search": {
-          "placeholder": "ابحث عن مستخدمين بالاسم أو اسم المستخدم للإضافة...",
-          "searching": "جاري البحث...",
-          "no_results": "لم يتم العثور على مستخدمين"
-        },
-        "table": {
-          "name": "الاسم",
-          "username": "اسم المستخدم",
-          "email": "البريد الإلكتروني",
-          "role": "الدور",
-          "status": "الحالة",
-          "added_on": "أضيف في"
-        },
-        "roles": {
-          "creator": "منشئ",
-          "contributor": "مساهم",
-          "maintainer": "مسؤول صيانة",
-          "reporter": "مبلغ"
-        },
-        "statuses": {
-          "active": "نشط",
-          "inactive": "غير نشط",
-          "pending": "قيد الانتظار"
-        },
-        "actions": {
-          "selected_users": "تم اختيار {{count}} مستخدم",
-          "selected_users_plural": "تم اختيار {{count}} مستخدمين",
-          "clear": "مسح",
-          "add_selected": "إضافة المختارين",
-          "selected_contributors": "تم اختيار {{count}} مساهم",
-          "selected_contributors_plural": "تم اختيار {{count}} مساهمين",
-          "remove_selected": "إزالة المختارين",
-          "already_contributor": "مساهم بالفعل"
-        },
-        "toasts": {
-          "add_success": "تم إضافة {{count}} مساهم بنجاح",
-          "add_error": "فشل إضافة {{username}}: {{reason}}",
-          "add_failed": "فشل إضافة المساهمين",
-          "update_success": "تم تحديث المساهم بنجاح",
-          "update_error": "خطأ: {{detail}}",
-          "update_failed": "حدث خطأ أثناء تحديث المساهم.",
-          "remove_success": "تم إزالة {{count}} مساهم بنجاح",
-          "remove_failed": "فشل إزالة المساهمين",
-          "cannot_modify_creator": "لا يمكن تعديل دور أو حالة المنشئ"
-        }
-      },
-      "certification": {
-        "title": "شهادات الدورة",
-        "subtitle": "قم بتمكين وتكوين الشهادات للطلاب الذين يكملون هذه الدورة",
-        "form": {
-          "certification_name_label": "اسم الشهادة",
-          "certification_name_required": "مطلوب عند تمكين الشهادات",
-          "certification_name_max_length": "أقل من 100 حرف",
-          "certification_name_placeholder": "مثال: شهادة جافا سكريبت المتقدمة",
-          "certification_type_label": "نوع الشهادة",
-          "certification_description_label": "وصف الشهادة",
-          "certification_description_required": "مطلوب عند تمكين الشهادات",
-          "certification_description_max_length": "أقل من 500 حرف",
-          "certification_description_placeholder": "صف ما تؤكده هذه الشهادة وقيمتها...",
-          "certificate_pattern_label": "نمط الشهادة",
-          "certificate_instructor_label": "اسم المدرس (اختياري)",
-          "certificate_instructor_placeholder": "مثال: د. أحمد محمد"
-        },
-        "types": {
-          "completion": "إكمال دورة",
-          "achievement": "إنجاز",
-          "assessment": "بناءً على التقييم",
-          "participation": "مشاركة",
-          "mastery": "إتقان مهارة",
-          "professional": "تطوير مهني",
-          "continuing": "تعليم مستمر",
-          "workshop": "حضور ورشة عمل",
-          "specialization": "تخصص"
-        },
-        "patterns": {
-          "royal": {
-            "name": "ملكي",
-            "description": "مزين بزخارف التاج"
-          },
-          "tech": {
-            "name": "تقني",
-            "description": "أنماط مستوحاة من لوحات الدوائر"
-          },
-          "nature": {
-            "name": "طبيعة",
-            "description": "أنماط نباتية عضوية"
-          },
-          "geometric": {
-            "name": "هندسي",
-            "description": "أشكال وخطوط مجردة"
-          },
-          "vintage": {
-            "name": "عتيق",
-            "description": "أنماط على طراز آرت ديكو"
-          },
-          "waves": {
-            "name": "أمواج",
-            "description": "أنماط مائية انسيابية"
-          },
-          "minimal": {
-            "name": "بسيط",
-            "description": "نظيف وبسيط"
-          },
-          "professional": {
-            "name": "احترافي",
-            "description": "تصميم أعمال رسمي"
-          },
-          "academic": {
-            "name": "أكاديمي",
-            "description": "طراز جامعي تقليدي"
-          },
-          "modern": {
-            "name": "حديث",
-            "description": "خطوط نظيفة معاصرة"
-          }
-        },
-        "sections": {
-          "basic_info": {
-            "title": "معلومات أساسية",
-            "subtitle": "قم بتكوين التفاصيل الأساسية لشهادتك"
-          },
-          "certificate_design": {
-            "title": "تصميم الشهادة",
-            "subtitle": "اختر نمطاً زخرفياً لشهادتك"
-          },
-          "preview": {
-            "title": "معاينة الشهادة",
-            "subtitle": "معاينة مباشرة لشهادتك"
-          }
-        },
-        "states": {
-          "disabled": {
-            "title": "الشهادات غير مكونة",
-            "message": "قم بتمكين الشهادات لإصدارها للطلاب عند إكمال الدورة.",
-            "button": "تمكين الشهادات",
-            "creating": "جاري الإنشاء..."
-          },
-          "creating": {
-            "title": "جاري إنشاء الشهادات...",
-            "message": "يرجى الانتظار بينما نقوم بإعداد شهادات الدورة."
-          }
-        },
-        "errors": {
-          "loading": "خطأ أثناء تحميل الشهادات",
-          "create_failed": "فشل إنشاء الشهادة.",
-          "remove_failed": "فشل إزالة الشهادة."
-        },
-        "toasts": {
-          "create_success": "تم إنشاء الشهادة بنجاح",
-          "create_error": "فشل إنشاء الشهادة",
-          "remove_success": "تم إزالة الشهادة بنجاح",
-          "remove_error": "فشل إزالة الشهادة"
-        }
-      },
-      "communities": {
-        "title": "المجتمعات",
-        "new_community": "مجتمع جديد",
-        "no_communities": "لا توجد مجتمعات بعد",
-        "no_communities_description": "أنشئ أول مجتمع لك لبدء النقاشات",
-        "card": {
-          "open_settings": "فتح الإعدادات",
-          "view_community": "عرض المجتمع",
-          "quick_edit": "تعديل سريع"
-        },
-        "settings": {
-          "tabs": {
-            "general": "عام",
-            "thumbnail": "الصورة المصغرة",
-            "moderation": "الإشراف"
-          }
-        },
-        "general": {
-          "title": "إعدادات المجتمع",
-          "subtitle": "تحديث المعلومات الأساسية للمجتمع",
-          "form": {
-            "name_label": "اسم المجتمع",
-            "name_required": "اسم المجتمع مطلوب",
-            "name_min_length": "يجب أن يكون الاسم 3 أحرف على الأقل",
-            "name_max_length": "يجب أن يكون الاسم أقل من 100 حرف",
-            "name_placeholder": "أدخل اسم المجتمع",
-            "description_label": "الوصف",
-            "description_max_length": "يجب أن يكون الوصف أقل من 500 حرف",
-            "description_placeholder": "صف موضوع هذا المجتمع",
-            "public_label": "مجتمع عام",
-            "public_description": "اجعل هذا المجتمع مرئياً للجميع",
-            "characters_left": "{{count}} حرف متبقي"
-          },
-          "toasts": {
-            "updating": "جاري تحديث المجتمع...",
-            "update_success": "تم تحديث المجتمع بنجاح",
-            "update_error": "فشل تحديث المجتمع"
-          }
-        },
-        "thumbnail": {
-          "title": "صورة المجتمع المصغرة",
-          "subtitle": "ارفع صورة غلاف لمجتمعك",
-          "no_thumbnail": "لم يتم تعيين صورة مصغرة",
-          "upload_image": "رفع صورة",
-          "browse_unsplash": "تصفح Unsplash",
-          "uploading": "جاري الرفع...",
-          "supported_formats": "الصيغ المدعومة: JPG، JPEG، PNG. الحد الأقصى: 8 ميجابايت. النسبة الموصى بها: 16:9",
-          "toasts": {
-            "update_success": "تم تحديث الصورة المصغرة بنجاح",
-            "update_error": "فشل تحديث الصورة المصغرة",
-            "invalid_type": "نوع ملف غير صالح. يرجى رفع صور PNG أو JPG/JPEG فقط",
-            "file_too_large": "حجم الملف يتجاوز حد 8 ميجابايت"
-          }
-        },
-        "moderation": {
-          "title": "إشراف المحتوى",
-          "subtitle": "تكوين الكلمات المحظورة وفلاتر المحتوى",
-          "info_title": "الكلمات المحظورة",
-          "info_description": "سيتم حظر النقاشات والردود التي تحتوي على هذه الكلمات. سيرى المستخدمون رسالة خطأ ولن يتم نشر محتواهم.",
-          "add_word_label": "إضافة كلمة محظورة",
-          "add_word_placeholder": "أدخل كلمة أو عبارة...",
-          "add_button": "إضافة",
-          "batch_add_label": "إضافة دفعة",
-          "batch_add_description": "أضف عدة كلمات دفعة واحدة، مفصولة بفواصل",
-          "batch_add_placeholder": "كلمة1، كلمة2، كلمة3...",
-          "add_all_button": "إضافة الكل",
-          "blocked_words_label": "الكلمات المحظورة",
-          "no_blocked_words": "لا توجد كلمات محظورة بعد",
-          "no_blocked_words_description": "أضف كلمات لتفعيل إشراف المحتوى",
-          "word_exists_error": "هذه الكلمة موجودة بالفعل في القائمة",
-          "all_words_exist_error": "جميع الكلمات موجودة بالفعل في القائمة أو الإدخال فارغ",
-          "toasts": {
-            "saving": "جاري حفظ إعدادات الإشراف...",
-            "save_success": "تم حفظ إعدادات الإشراف",
-            "save_error": "فشل حفظ إعدادات الإشراف"
-          }
-        },
-        "modals": {
-          "create": {
-            "title": "إنشاء مجتمع",
-            "description": "أنشئ مجتمعاً جديداً للنقاشات",
-            "form": {
-              "name_label": "اسم المجتمع",
-              "name_placeholder": "أدخل اسم المجتمع",
-              "description_label": "الوصف",
-              "description_placeholder": "صف موضوع هذا المجتمع",
-              "public_label": "اجعل هذا المجتمع عاماً (مرئي للجميع)"
-            },
-            "cancel": "إلغاء",
-            "submit": "إنشاء المجتمع"
-          },
-          "edit": {
-            "title": "تعديل المجتمع",
-            "description": "تحديث إعدادات المجتمع"
-          },
-          "delete": {
-            "title": "حذف {{name}}؟",
-            "message": "هل أنت متأكد من رغبتك في حذف هذا المجتمع؟ سيتم حذف جميع النقاشات نهائياً.",
-            "button": "حذف المجتمع"
-          }
-        },
-        "toasts": {
-          "creating": "جاري إنشاء المجتمع...",
-          "create_success": "تم إنشاء المجتمع بنجاح",
-          "create_error": "فشل إنشاء المجتمع",
-          "deleting": "جاري حذف المجتمع...",
-          "delete_success": "تم حذف المجتمع بنجاح",
-          "delete_error": "فشل حذف المجتمع"
-        }
-      },
-      "structure": {
-        "loading": "جاري التحميل...",
-        "add_chapter_button": "إضافة فصل",
-        "modals": {
-          "new_chapter": {
-            "title": "إنشاء فصل",
-            "description": "أضف فصلاً جديداً للدورة",
-            "form": {
-              "name_label": "اسم الفصل",
-              "name_required": "يرجى تقديم عنوان لفصلك",
-              "description_label": "وصف الفصل",
-              "description_required": "يرجى تقديم وصف لفصلك",
-              "submit": "إنشاء فصل"
-            }
-          },
-          "delete_chapter": {
-            "title": "حذف {{name}}؟",
-            "message": "هل أنت متأكد أنك تريد حذف هذا الفصل؟",
-            "button": "حذف الفصل"
-          },
-          "new_activity": {
-            "title": "إنشاء نشاط",
-            "description": "اختر نوع النشاط لإضافته للدورة"
-          },
-          "delete_activity": {
-            "title": "حذف {{name}}؟",
-            "message": "هل أنت متأكد أنك تريد حذف هذا النشاط؟",
-            "button": "حذف النشاط"
-          }
-        },
-        "actions": {
-          "add_chapter": "إضافة فصل",
-          "add_activity": "إضافة نشاط",
-          "publish": "نشر",
-          "unpublish": "إلغاء النشر",
-          "preview_activity": "معاينة النشاط",
-          "edit_page": "تعديل الصفحة",
-          "edit_assignment": "تعديل الواجب"
-        },
-        "chapter_element": {
-          "chapter_name_placeholder": "اسم الفصل"
-        },
-        "activity": {
-          "name_placeholder": "اسم النشاط",
-          "types": {
-            "video": "فيديو",
-            "document": "مستند",
-            "assignment": "واجب",
-            "assignments": "واجبات",
-            "dynamic": "ديناميكي",
-            "dynamic_page": "صفحة ديناميكية",
-            "scorm": "Scorm"
-          },
-          "toasts": {
-            "deleting": "جاري حذف النشاط...",
-            "delete_success": "تم حذف النشاط بنجاح",
-            "updating": "جاري تحديث المهمة...",
-            "update_success": "تم تحديث النشاط بنجاح",
-            "name_update_success": "تم تحديث اسم النشاط بنجاح",
-            "name_update_error": "فشل تحديث اسم النشاط",
-            "creating": "جاري إنشاء النشاط...",
-            "create_success": "تم إنشاء النشاط بنجاح",
-            "uploading": "جاري رفع الملف وإنشاء النشاط...",
-            "upload_success": "تم رفع الملف بنجاح",
-            "creating_uploading": "جاري إنشاء النشاط ورفع الملف..."
           }
         }
       }

@@ -70,6 +70,10 @@
         "certifications": {
           "title": "Fitur Pro",
           "description": "Sertifikat adalah fitur premium yang hanya tersedia untuk organisasi dengan paket Pro atau lebih tinggi. Upgrade untuk menerbitkan sertifikat kepada pelajar yang menyelesaikan kursus Anda."
+        },
+        "communities": {
+          "title": "Fitur Standar",
+          "description": "Komunitas adalah fitur premium yang hanya tersedia untuk organisasi pada paket Standar kami atau lebih tinggi. Tingkatkan untuk membuka komunitas diskusi untuk anggota Anda."
         }
       }
     },
@@ -262,7 +266,25 @@
     "submitting_contributor_application": "Mengirimkan permohonan...",
     "contributor_application_success": "Permohonan Anda untuk berkontribusi telah berhasil dikirim",
     "contributor_application_error": "Gagal mengirimkan permohonan Anda. Silakan coba lagi nanti.",
-    "contribute": "Berkontribusi"
+    "contribute": "Berkontribusi",
+    "scorm": {
+      "upload_package": "Unggah Paket SCORM",
+      "package_file": "File Paket (.zip)",
+      "click_to_upload": "Klik untuk mengunggah atau seret dan lepas",
+      "supported_versions": "Paket SCORM 1.2 atau SCORM 2004",
+      "import_info": "Unggah paket SCORM Anda untuk menganalisis kontennya. Anda akan dapat mengonfigurasi kursus dan menetapkan aktivitas ke bab.",
+      "analyze_package": "Analisis Paket",
+      "package_analyzed": "Paket Berhasil Dianalisis",
+      "assign_scos": "Tetapkan Aktivitas ke Bab",
+      "activity_name": "Aktivitas",
+      "chapter_name": "Bab",
+      "upload_different": "Unggah paket berbeda",
+      "selected": "dipilih",
+      "create_course": "Buat Kursus",
+      "configure": "Konfigurasi",
+      "ready_to_analyze": "Siap untuk dianalisis",
+      "course_details": "Detail Kursus"
+    }
   },
   "collections": {
     "collections": "Koleksi",
@@ -709,7 +731,471 @@
       "import_scorm_description": "Impor paket SCORM untuk membuat kursus baru",
       "no_courses": "Belum ada kursus",
       "create_course_placeholder": "Buat kursus untuk menambahkan konten",
-      "no_courses_available": "Belum ada kursus yang tersedia"
+      "no_courses_available": "Belum ada kursus yang tersedia",
+      "overview_top": {
+        "course_label": "Kursus",
+        "rights_guide_button": "Panduan Hak"
+      },
+      "settings": {
+        "tabs": {
+          "general": "Umum",
+          "content": "Konten",
+          "access": "Akses",
+          "contributors": "Kontributor",
+          "certification": "Sertifikasi"
+        },
+        "access_denied": {
+          "title": "Akses Ditolak",
+          "message": "Anda tidak memiliki izin untuk mengakses kursus ini."
+        },
+        "access_restricted": {
+          "title": "Akses Dibatasi",
+          "message": "Anda tidak memiliki izin untuk mengakses {{tab}}"
+        },
+        "loading": "Memuat..."
+      },
+      "general": {
+        "form": {
+          "name_label": "Nama",
+          "name_required": "Wajib isi",
+          "name_max_length": "Harus 100 karakter atau kurang",
+          "description_label": "Deskripsi",
+          "description_required": "Wajib isi",
+          "description_max_length": "Harus 1000 karakter atau kurang",
+          "about_label": "Tentang",
+          "learnings_label": "Pembelajaran",
+          "learnings_required": "Wajib isi",
+          "learnings_invalid_format": "Format tidak valid",
+          "learnings_min_items": "Setidaknya satu item pembelajaran diperlukan",
+          "learnings_empty_text": "Semua item pembelajaran harus memiliki teks",
+          "learnings_invalid_json": "Format JSON tidak valid",
+          "tags_label": "Tag",
+          "tags_placeholder": "Tekan Enter untuk menambah...",
+          "thumbnail_type_label": "Tipe Thumbnail",
+          "thumbnail_type_image": "Gambar",
+          "thumbnail_type_video": "Video",
+          "thumbnail_type_both": "Keduanya",
+          "thumbnail_label": "Thumbnail",
+          "image_search_placeholder": "Cari gambar..."
+        },
+        "thumbnail": {
+          "upload_image": "Unggah Gambar",
+          "upload_video": "Unggah Video",
+          "gallery": "Galeri",
+          "tabs": {
+            "image": "Gambar",
+            "video": "Video"
+          },
+          "supported_formats": {
+            "image": "Format yang diizinkan: PNG, JPG/JPEG (maks 8MB)",
+            "video": "Format yang diizinkan: MP4, WebM (maks 100MB)"
+          }
+        },
+        "errors": {
+          "save_failed": "Gagal menyimpan struktur kursus."
+        }
+      },
+      "access": {
+        "title": "Akses ke kursus",
+        "subtitle": "Pilih apakah Anda ingin kursus Anda tersedia secara publik di internet atau hanya dapat diakses oleh pengguna yang sudah masuk",
+        "public": {
+          "title": "Publik",
+          "description": "Kursus tersedia secara publik di internet, diindeks oleh mesin pencari dan dapat diakses oleh siapa saja",
+          "active": "Aktif",
+          "confirmation_title": "Ubah ke Publik?",
+          "confirmation_message": "Apakah Anda yakin ingin kursus ini tersedia secara publik di internet?",
+          "confirmation_button": "Ubah ke Publik"
+        },
+        "users_only": {
+          "title": "Hanya Pengguna",
+          "description": "Kursus hanya dapat diakses oleh pengguna yang sudah masuk, selain itu Anda dapat memilih Grup Pengguna mana yang dapat mengakses kursus ini",
+          "active": "Aktif",
+          "confirmation_title": "Ubah ke Hanya Pengguna?",
+          "confirmation_message": "Apakah Anda yakin ingin kursus ini hanya dapat diakses oleh pengguna yang sudah masuk?",
+          "confirmation_button": "Ubah ke Hanya Pengguna"
+        },
+        "usergroups": {
+          "title": "Grup Pengguna",
+          "subtitle": "Anda dapat memilih untuk memberikan akses kursus ini ke grup pengguna tertentu saja dengan menghubungkannya ke Grup Pengguna",
+          "table": {
+            "name": "Nama",
+            "actions": "Tindakan"
+          },
+          "actions": {
+            "delete_link": "Hapus tautan",
+            "link_to_usergroup": "Hubungkan ke Grup Pengguna"
+          },
+          "modals": {
+            "link_title": "Hubungkan Kursus ke Grup Pengguna",
+            "link_description": "Pilih Grup Pengguna untuk dihubungkan dengan kursus ini. Pengguna dari Grup Pengguna ini akan memiliki akses ke kursus ini.",
+            "unlink_title": "Putuskan Grup Pengguna?",
+            "unlink_message": "Pengguna dari Grup Pengguna ini tidak akan lagi memiliki akses ke kursus ini",
+            "unlink_button": "Hapus Tautan",
+            "warning": "Pengguna yang bukan bagian dari Grup Pengguna tidak akan lagi memiliki akses ke kursus ini",
+            "usergroup_name": "Nama Grup Pengguna",
+            "no_usergroups": "Tidak ada Grup Pengguna tersedia",
+            "create_usergroup": "Buat Grup Pengguna",
+            "link_button": "Hubungkan"
+          },
+          "toasts": {
+            "link_success": "Berhasil terhubung ke grup pengguna",
+            "link_error": "Kesalahan {{status}}: {{detail}}",
+            "unlink_success": "Berhasil diputuskan dari grup pengguna",
+            "unlink_error": "Terjadi kesalahan saat memutuskan hubungan grup pengguna."
+          }
+        }
+      },
+      "contributors": {
+        "title": "Kontributor Kursus",
+        "subtitle": "Kelola kontributor dan tambahkan yang baru ke kursus Anda",
+        "open_to_contributors": {
+          "title": "Terbuka untuk Kontributor",
+          "description": "Kursus terbuka untuk kontributor. Pengguna dapat mendaftar untuk menjadi kontributor dan membantu meningkatkan konten kursus.",
+          "active": "Aktif",
+          "confirmation_title": "Buka untuk Kontributor?",
+          "confirmation_message": "Apakah Anda yakin ingin membuka kursus ini untuk kontributor?",
+          "confirmation_button": "Buka untuk Kontributor"
+        },
+        "closed_to_contributors": {
+          "title": "Tertutup untuk Kontributor",
+          "description": "Kursus tertutup untuk kontributor. Hanya kontributor yang ada yang dapat memodifikasi konten kursus.",
+          "active": "Aktif",
+          "confirmation_title": "Tutup untuk Kontributor?",
+          "confirmation_message": "Apakah Anda yakin ingin menutup kursus ini untuk kontributor?",
+          "confirmation_button": "Tutup untuk Kontributor"
+        },
+        "search": {
+          "placeholder": "Cari pengguna berdasarkan nama atau nama pengguna untuk ditambahkan sebagai kontributor...",
+          "searching": "Mencari...",
+          "no_results": "Tidak ada pengguna ditemukan"
+        },
+        "table": {
+          "name": "Nama",
+          "username": "Nama pengguna",
+          "email": "Email",
+          "role": "Peran",
+          "status": "Status",
+          "added_on": "Ditambahkan Pada"
+        },
+        "roles": {
+          "creator": "PEMBUAT",
+          "contributor": "KONTRIBUTOR",
+          "maintainer": "MAINTAINER",
+          "reporter": "REPORTER"
+        },
+        "statuses": {
+          "active": "AKTIF",
+          "inactive": "TIDAK AKTIF",
+          "pending": "TERTUNDA"
+        },
+        "actions": {
+          "selected_users": "{{count}} pengguna terpilih",
+          "selected_users_plural": "{{count}} pengguna terpilih",
+          "clear": "Bersihkan",
+          "add_selected": "Tambah yang Terpilih",
+          "selected_contributors": "{{count}} kontributor terpilih",
+          "selected_contributors_plural": "{{count}} kontributor terpilih",
+          "remove_selected": "Hapus yang Terpilih",
+          "already_contributor": "Sudah menjadi kontributor"
+        },
+        "toasts": {
+          "add_success": "Berhasil menambahkan {{count}} kontributor",
+          "add_error": "Gagal menambahkan {{username}}: {{reason}}",
+          "add_failed": "Gagal menambahkan kontributor",
+          "update_success": "Berhasil memperbarui kontributor",
+          "update_error": "Kesalahan: {{detail}}",
+          "update_failed": "Terjadi kesalahan saat memperbarui kontributor.",
+          "remove_success": "Berhasil menghapus {{count}} kontributor",
+          "remove_failed": "Gagal menghapus kontributor",
+          "cannot_modify_creator": "Tidak dapat memodifikasi peran atau status pembuat"
+        }
+      },
+      "certification": {
+        "title": "Sertifikasi Kursus",
+        "subtitle": "Aktifkan dan konfigurasikan sertifikat untuk siswa yang menyelesaikan kursus ini",
+        "form": {
+          "certification_name_label": "Nama Sertifikasi",
+          "certification_name_required": "Wajib saat sertifikasi diaktifkan",
+          "certification_name_max_length": "Harus 100 karakter atau kurang",
+          "certification_name_placeholder": "mis., Sertifikasi JavaScript Tingkat Lanjut",
+          "certification_type_label": "Tipe Sertifikasi",
+          "certification_description_label": "Deskripsi Sertifikasi",
+          "certification_description_required": "Wajib saat sertifikasi diaktifkan",
+          "certification_description_max_length": "Harus 500 karakter atau kurang",
+          "certification_description_placeholder": "Jelaskan apa yang direpresentasikan oleh sertifikasi ini dan nilainya...",
+          "certificate_pattern_label": "Pola Sertifikat",
+          "certificate_instructor_label": "Nama Instruktur (Opsional)",
+          "certificate_instructor_placeholder": "mis., Dr. Jane Smith"
+        },
+        "types": {
+          "completion": "Penyelesaian Kursus",
+          "achievement": "Berdasarkan Pencapaian",
+          "assessment": "Berdasarkan Penilaian",
+          "participation": "Partisipasi",
+          "mastery": "Penguasaan Keahlian",
+          "professional": "Pengembangan Profesional",
+          "continuing": "Pendidikan Berkelanjutan",
+          "workshop": "Kehadiran Workshop",
+          "specialization": "Spesialisasi"
+        },
+        "patterns": {
+          "royal": {
+            "name": "Royal",
+            "description": "Berhias dengan motif mahkota"
+          },
+          "tech": {
+            "name": "Tech",
+            "description": "Pola yang terinspirasi sirkuit"
+          },
+          "nature": {
+            "name": "Nature",
+            "description": "Pola daun organik"
+          },
+          "geometric": {
+            "name": "Geometric",
+            "description": "Bentuk & garis abstrak"
+          },
+          "vintage": {
+            "name": "Vintage",
+            "description": "Gaya art deco"
+          },
+          "waves": {
+            "name": "Waves",
+            "description": "Pola air mengalir"
+          },
+          "minimal": {
+            "name": "Minimal",
+            "description": "Bersih dan sederhana"
+          },
+          "professional": {
+            "name": "Professional",
+            "description": "Desain siap bisnis"
+          },
+          "academic": {
+            "name": "Academic",
+            "description": "Gaya universitas tradisional"
+          },
+          "modern": {
+            "name": "Modern",
+            "description": "Garis bersih kontemporer"
+          }
+        },
+        "sections": {
+          "basic_info": {
+            "title": "Informasi Dasar",
+            "subtitle": "Konfigurasikan detail dasar sertifikasi Anda"
+          },
+          "certificate_design": {
+            "title": "Desain Sertifikat",
+            "subtitle": "Pilih pola dekoratif untuk sertifikat Anda"
+          },
+          "preview": {
+            "title": "Pratinjau Sertifikat",
+            "subtitle": "Pratinjau langsung sertifikat Anda"
+          }
+        },
+        "states": {
+          "disabled": {
+            "title": "Sertifikasi Belum Dikonfigurasi",
+            "message": "Aktifkan sertifikasi untuk memberikan sertifikat kepada siswa setelah penyelesaian kursus.",
+            "button": "Aktifkan Sertifikasi",
+            "creating": "Membuat..."
+          },
+          "creating": {
+            "title": "Membuat Sertifikasi...",
+            "message": "Harap tunggu sementara kami menyiapkan sertifikasi kursus Anda."
+          }
+        },
+        "errors": {
+          "loading": "Kesalahan memuat sertifikasi",
+          "create_failed": "Gagal membuat sertifikasi.",
+          "remove_failed": "Gagal menghapus sertifikasi."
+        },
+        "toasts": {
+          "create_success": "Sertifikasi berhasil dibuat",
+          "create_error": "Gagal membuat sertifikasi",
+          "remove_success": "Sertifikasi berhasil dihapus",
+          "remove_error": "Gagal menghapus sertifikasi"
+        }
+      },
+      "communities": {
+        "title": "Komunitas",
+        "new_community": "Komunitas Baru",
+        "no_communities": "Belum ada komunitas",
+        "no_communities_description": "Buat komunitas pertama Anda untuk memulai diskusi",
+        "card": {
+          "open_settings": "Buka Pengaturan",
+          "view_community": "Lihat Komunitas",
+          "quick_edit": "Edit Cepat"
+        },
+        "settings": {
+          "tabs": {
+            "general": "Umum",
+            "thumbnail": "Gambar Mini",
+            "moderation": "Moderasi"
+          }
+        },
+        "general": {
+          "title": "Pengaturan Komunitas",
+          "subtitle": "Perbarui informasi dasar komunitas Anda",
+          "form": {
+            "name_label": "Nama Komunitas",
+            "name_required": "Nama komunitas wajib diisi",
+            "name_min_length": "Nama harus minimal 3 karakter",
+            "name_max_length": "Nama harus kurang dari 100 karakter",
+            "name_placeholder": "Masukkan nama komunitas",
+            "description_label": "Deskripsi",
+            "description_max_length": "Deskripsi harus kurang dari 500 karakter",
+            "description_placeholder": "Jelaskan tentang komunitas ini",
+            "public_label": "Komunitas Publik",
+            "public_description": "Jadikan komunitas ini terlihat oleh semua orang",
+            "characters_left": "{{count}} karakter tersisa"
+          },
+          "toasts": {
+            "updating": "Memperbarui komunitas...",
+            "update_success": "Komunitas berhasil diperbarui",
+            "update_error": "Gagal memperbarui komunitas"
+          }
+        },
+        "thumbnail": {
+          "title": "Gambar Mini Komunitas",
+          "subtitle": "Unggah gambar sampul untuk komunitas Anda",
+          "no_thumbnail": "Gambar mini belum diatur",
+          "upload_image": "Unggah Gambar",
+          "browse_unsplash": "Jelajahi Unsplash",
+          "uploading": "Mengunggah...",
+          "supported_formats": "Format yang didukung: JPG, JPEG, PNG. Ukuran maks: 8MB. Rasio yang disarankan: 16:9",
+          "toasts": {
+            "update_success": "Gambar mini berhasil diperbarui",
+            "update_error": "Gagal memperbarui gambar mini",
+            "invalid_type": "Tipe file tidak valid. Harap unggah hanya gambar PNG atau JPG/JPEG",
+            "file_too_large": "Ukuran file melebihi batas 8MB"
+          }
+        },
+        "moderation": {
+          "title": "Moderasi Konten",
+          "subtitle": "Konfigurasi kata yang diblokir dan filter konten",
+          "info_title": "Kata yang diblokir",
+          "info_description": "Diskusi dan balasan yang mengandung kata-kata ini akan diblokir. Pengguna akan melihat pesan kesalahan dan konten mereka tidak akan dipublikasikan.",
+          "add_word_label": "Tambah kata yang diblokir",
+          "add_word_placeholder": "Masukkan kata atau frasa...",
+          "add_button": "Tambah",
+          "batch_add_label": "Tambah massal",
+          "batch_add_description": "Tambahkan beberapa kata sekaligus, dipisahkan dengan koma",
+          "batch_add_placeholder": "kata1, kata2, kata3...",
+          "add_all_button": "Tambah Semua",
+          "blocked_words_label": "Kata yang diblokir",
+          "no_blocked_words": "Belum ada kata yang diblokir",
+          "no_blocked_words_description": "Tambahkan kata untuk mengaktifkan moderasi konten",
+          "word_exists_error": "Kata ini sudah ada dalam daftar",
+          "all_words_exist_error": "Semua kata sudah ada dalam daftar atau input kosong",
+          "toasts": {
+            "saving": "Menyimpan pengaturan moderasi...",
+            "save_success": "Pengaturan moderasi tersimpan",
+            "save_error": "Gagal menyimpan pengaturan moderasi"
+          }
+        },
+        "modals": {
+          "create": {
+            "title": "Buat Komunitas",
+            "description": "Buat komunitas baru untuk diskusi",
+            "form": {
+              "name_label": "Nama Komunitas",
+              "name_placeholder": "Masukkan nama komunitas",
+              "description_label": "Deskripsi",
+              "description_placeholder": "Jelaskan tentang komunitas ini",
+              "public_label": "Jadikan komunitas ini publik (terlihat oleh semua orang)"
+            },
+            "cancel": "Batal",
+            "submit": "Buat Komunitas"
+          },
+          "edit": {
+            "title": "Edit Komunitas",
+            "description": "Perbarui pengaturan komunitas"
+          },
+          "delete": {
+            "title": "Hapus {{name}}?",
+            "message": "Apakah Anda yakin ingin menghapus komunitas ini? Semua diskusi akan dihapus secara permanen.",
+            "button": "Hapus Komunitas"
+          }
+        },
+        "toasts": {
+          "creating": "Membuat komunitas...",
+          "create_success": "Komunitas berhasil dibuat",
+          "create_error": "Gagal membuat komunitas",
+          "deleting": "Menghapus komunitas...",
+          "delete_success": "Komunitas berhasil dihapus",
+          "delete_error": "Gagal menghapus komunitas"
+        }
+      },
+      "structure": {
+        "loading": "Memuat...",
+        "add_chapter_button": "Tambah Bab",
+        "modals": {
+          "new_chapter": {
+            "title": "Buat bab",
+            "description": "Tambah bab baru ke kursus",
+            "form": {
+              "name_label": "Nama bab",
+              "name_required": "Harap berikan nama bab",
+              "description_label": "Deskripsi bab",
+              "description_required": "Harap berikan deskripsi bab",
+              "submit": "Buat Bab"
+            }
+          },
+          "delete_chapter": {
+            "title": "Hapus {{name}} ?",
+            "message": "Apakah Anda yakin ingin menghapus bab ini?",
+            "button": "Hapus Bab"
+          },
+          "new_activity": {
+            "title": "Buat Aktivitas",
+            "description": "Pilih di antara tipe aktivitas untuk ditambahkan ke kursus"
+          },
+          "delete_activity": {
+            "title": "Hapus {{name}} ?",
+            "message": "Apakah Anda yakin ingin menghapus aktivitas ini ?",
+            "button": "Hapus Aktivitas"
+          }
+        },
+        "actions": {
+          "add_chapter": "Tambah Bab",
+          "add_activity": "Tambah Aktivitas",
+          "publish": "Terbitkan",
+          "unpublish": "Batalkan Terbit",
+          "preview_activity": "Pratinjau Aktivitas",
+          "edit_page": "Edit Halaman",
+          "edit_assignment": "Edit Tugas"
+        },
+        "chapter_element": {
+          "chapter_name_placeholder": "Nama bab"
+        },
+        "activity": {
+          "name_placeholder": "Nama aktivitas",
+          "types": {
+            "video": "Video",
+            "document": "Dokumen",
+            "assignment": "Tugas",
+            "assignments": "Tugas",
+            "dynamic": "Dinamis",
+            "dynamic_page": "Halaman Dinamis",
+            "scorm": "Scorm"
+          },
+          "toasts": {
+            "deleting": "Menghapus aktivitas...",
+            "delete_success": "Aktivitas berhasil dihapus",
+            "updating": "Memperbarui tugas...",
+            "update_success": "Aktivitas telah berhasil diperbarui",
+            "name_update_success": "Nama aktivitas berhasil diperbarui",
+            "name_update_error": "Gagal memperbarui nama aktivitas",
+            "creating": "Membuat aktivitas...",
+            "create_success": "Aktivitas berhasil dibuat",
+            "uploading": "Mengunggah file dan membuat aktivitas...",
+            "upload_success": "File berhasil diunggah",
+            "creating_uploading": "Membuat aktivitas dan mengunggah file..."
+          }
+        }
+      }
     },
     "organization": {
       "settings": {
@@ -768,7 +1254,10 @@
         "saving": "Menyimpan...",
         "update_success": "Organisasi Diperbarui",
         "update_error": "Gagal memperbarui organisasi",
-        "updating": "Memperbarui organisasi..."
+        "updating": "Memperbarui organisasi...",
+        "footer_text": "Teks Footer",
+        "footer_text_placeholder": "Masukkan teks footer...",
+        "footer_text_desc": "Teks kustom yang ditampilkan di bagian bawah halaman organisasi Anda"
       },
       "images": {
         "title": "Gambar & Pratinjau",
@@ -826,7 +1315,8 @@
         "subtitle": "Kelola identitas visual dan kehadiran sosial organisasi Anda",
         "tabs": {
           "images": "Gambar & Pratinjau",
-          "social": "Tautan Sosial"
+          "social": "Tautan Sosial",
+          "theme": "Tema"
         }
       },
       "socials": {
@@ -959,7 +1449,11 @@
           "generating": "Menghasilkan CSV...",
           "success": "CSV berhasil diekspor",
           "error": "Gagal mengekspor CSV"
-        }
+        },
+        "enterprise_only": "Log audit hanya tersedia pada paket Enterprise",
+        "enterprise_feature": "Fitur Enterprise",
+        "enterprise_description": "Log audit adalah fitur premium yang hanya tersedia untuk organisasi pada paket Enterprise kami. Tingkatkan untuk mendapatkan visibilitas penuh atas aktivitas organisasi Anda.",
+        "upgrade_button": "Tingkatkan ke Enterprise"
       },
       "landing": {
         "title": "Halaman Landas",
@@ -1110,6 +1604,16 @@
           "selected": "Terpilih",
           "select": "Pilih"
         }
+      },
+      "theme": {
+        "primary_color": "Warna Utama",
+        "primary_color_desc": "Pilih warna utama untuk header dan latar belakang halaman organisasi Anda.",
+        "clear_color": "Hapus warna",
+        "preview": "Pratinjau Langsung",
+        "preview_hint": "Ini adalah tampilan header dan latar belakang organisasi Anda",
+        "footer_text": "Teks Footer",
+        "footer_text_desc": "Tambahkan teks kustom untuk ditampilkan di footer halaman.",
+        "footer_text_placeholder": "Masukkan teks footer..."
       }
     },
     "users": {
@@ -1167,7 +1671,10 @@
           "remove_from_org": "Hapus dari organisasi",
           "removing": "Menghapus...",
           "remove_success": "Berhasil menghapus pengguna dari organisasi",
-          "remove_error": "Kesalahan menghapus pengguna"
+          "remove_error": "Kesalahan menghapus pengguna",
+          "updating_role": "Memperbarui peran...",
+          "role_update_success": "Peran berhasil diperbarui",
+          "role_update_error": "Kesalahan memperbarui peran"
         },
         "modals": {
           "update_role": {
@@ -1179,6 +1686,13 @@
             "message": "Apakah Anda yakin ingin menghapus pengguna ini dari organisasi?",
             "button": "Hapus Pengguna"
           }
+        },
+        "search_placeholder": "Cari pengguna...",
+        "no_results": "Tidak ada pengguna yang ditemukan sesuai pencarian Anda",
+        "no_users": "Belum ada pengguna di organisasi ini",
+        "pagination": {
+          "showing": "Menampilkan {{start}}-{{end}} dari {{total}}",
+          "page": "Halaman {{current}} dari {{total}}"
         }
       },
       "signups": {
@@ -1668,481 +2182,6 @@
           "toasts": {
             "creating": "Membuat tugas...",
             "success": "Tugas berhasil dibuat"
-          }
-        }
-      }
-    },
-    "courses": {
-      "title": "Kursus",
-      "rights_guide": "Panduan Hak",
-      "create_course": "Buat Kursus",
-      "create_new_course": "Buat kursus baru",
-      "import_course": "Impor kursus",
-      "import_scorm_description": "Impor paket SCORM untuk membuat kursus baru",
-      "no_courses": "Belum ada kursus",
-      "create_course_placeholder": "Buat kursus untuk menambahkan konten",
-      "no_courses_available": "Belum ada kursus yang tersedia",
-      "overview_top": {
-        "course_label": "Kursus",
-        "rights_guide_button": "Panduan Hak"
-      },
-      "settings": {
-        "tabs": {
-          "general": "Umum",
-          "content": "Konten",
-          "access": "Akses",
-          "contributors": "Kontributor",
-          "certification": "Sertifikasi"
-        },
-        "access_denied": {
-          "title": "Akses Ditolak",
-          "message": "Anda tidak memiliki izin untuk mengakses kursus ini."
-        },
-        "access_restricted": {
-          "title": "Akses Dibatasi",
-          "message": "Anda tidak memiliki izin untuk mengakses {{tab}}"
-        },
-        "loading": "Memuat..."
-      },
-      "general": {
-        "form": {
-          "name_label": "Nama",
-          "name_required": "Wajib isi",
-          "name_max_length": "Harus 100 karakter atau kurang",
-          "description_label": "Deskripsi",
-          "description_required": "Wajib isi",
-          "description_max_length": "Harus 1000 karakter atau kurang",
-          "about_label": "Tentang",
-          "learnings_label": "Pembelajaran",
-          "learnings_required": "Wajib isi",
-          "learnings_invalid_format": "Format tidak valid",
-          "learnings_min_items": "Setidaknya satu item pembelajaran diperlukan",
-          "learnings_empty_text": "Semua item pembelajaran harus memiliki teks",
-          "learnings_invalid_json": "Format JSON tidak valid",
-          "tags_label": "Tag",
-          "tags_placeholder": "Tekan Enter untuk menambah...",
-          "thumbnail_type_label": "Tipe Thumbnail",
-          "thumbnail_type_image": "Gambar",
-          "thumbnail_type_video": "Video",
-          "thumbnail_type_both": "Keduanya",
-          "thumbnail_label": "Thumbnail",
-          "image_search_placeholder": "Cari gambar..."
-        },
-        "thumbnail": {
-          "upload_image": "Unggah Gambar",
-          "upload_video": "Unggah Video",
-          "gallery": "Galeri",
-          "tabs": {
-            "image": "Gambar",
-            "video": "Video"
-          },
-          "supported_formats": {
-            "image": "Format yang diizinkan: PNG, JPG/JPEG (maks 8MB)",
-            "video": "Format yang diizinkan: MP4, WebM (maks 100MB)"
-          }
-        },
-        "errors": {
-          "save_failed": "Gagal menyimpan struktur kursus."
-        }
-      },
-      "access": {
-        "title": "Akses ke kursus",
-        "subtitle": "Pilih apakah Anda ingin kursus Anda tersedia secara publik di internet atau hanya dapat diakses oleh pengguna yang sudah masuk",
-        "public": {
-          "title": "Publik",
-          "description": "Kursus tersedia secara publik di internet, diindeks oleh mesin pencari dan dapat diakses oleh siapa saja",
-          "active": "Aktif",
-          "confirmation_title": "Ubah ke Publik?",
-          "confirmation_message": "Apakah Anda yakin ingin kursus ini tersedia secara publik di internet?",
-          "confirmation_button": "Ubah ke Publik"
-        },
-        "users_only": {
-          "title": "Hanya Pengguna",
-          "description": "Kursus hanya dapat diakses oleh pengguna yang sudah masuk, selain itu Anda dapat memilih Grup Pengguna mana yang dapat mengakses kursus ini",
-          "active": "Aktif",
-          "confirmation_title": "Ubah ke Hanya Pengguna?",
-          "confirmation_message": "Apakah Anda yakin ingin kursus ini hanya dapat diakses oleh pengguna yang sudah masuk?",
-          "confirmation_button": "Ubah ke Hanya Pengguna"
-        },
-        "usergroups": {
-          "title": "Grup Pengguna",
-          "subtitle": "Anda dapat memilih untuk memberikan akses kursus ini ke grup pengguna tertentu saja dengan menghubungkannya ke Grup Pengguna",
-          "table": {
-            "name": "Nama",
-            "actions": "Tindakan"
-          },
-          "actions": {
-            "delete_link": "Hapus tautan",
-            "link_to_usergroup": "Hubungkan ke Grup Pengguna"
-          },
-          "modals": {
-            "link_title": "Hubungkan Kursus ke Grup Pengguna",
-            "link_description": "Pilih Grup Pengguna untuk dihubungkan dengan kursus ini. Pengguna dari Grup Pengguna ini akan memiliki akses ke kursus ini.",
-            "unlink_title": "Putuskan Grup Pengguna?",
-            "unlink_message": "Pengguna dari Grup Pengguna ini tidak akan lagi memiliki akses ke kursus ini",
-            "unlink_button": "Hapus Tautan",
-            "warning": "Pengguna yang bukan bagian dari Grup Pengguna tidak akan lagi memiliki akses ke kursus ini",
-            "usergroup_name": "Nama Grup Pengguna",
-            "no_usergroups": "Tidak ada Grup Pengguna tersedia",
-            "create_usergroup": "Buat Grup Pengguna",
-            "link_button": "Hubungkan"
-          },
-          "toasts": {
-            "link_success": "Berhasil terhubung ke grup pengguna",
-            "link_error": "Kesalahan {{status}}: {{detail}}",
-            "unlink_success": "Berhasil diputuskan dari grup pengguna",
-            "unlink_error": "Terjadi kesalahan saat memutuskan hubungan grup pengguna."
-          }
-        }
-      },
-      "contributors": {
-        "title": "Kontributor Kursus",
-        "subtitle": "Kelola kontributor dan tambahkan yang baru ke kursus Anda",
-        "open_to_contributors": {
-          "title": "Terbuka untuk Kontributor",
-          "description": "Kursus terbuka untuk kontributor. Pengguna dapat mendaftar untuk menjadi kontributor dan membantu meningkatkan konten kursus.",
-          "active": "Aktif",
-          "confirmation_title": "Buka untuk Kontributor?",
-          "confirmation_message": "Apakah Anda yakin ingin membuka kursus ini untuk kontributor?",
-          "confirmation_button": "Buka untuk Kontributor"
-        },
-        "closed_to_contributors": {
-          "title": "Tertutup untuk Kontributor",
-          "description": "Kursus tertutup untuk kontributor. Hanya kontributor yang ada yang dapat memodifikasi konten kursus.",
-          "active": "Aktif",
-          "confirmation_title": "Tutup untuk Kontributor?",
-          "confirmation_message": "Apakah Anda yakin ingin menutup kursus ini untuk kontributor?",
-          "confirmation_button": "Tutup untuk Kontributor"
-        },
-        "search": {
-          "placeholder": "Cari pengguna berdasarkan nama atau nama pengguna untuk ditambahkan sebagai kontributor...",
-          "searching": "Mencari...",
-          "no_results": "Tidak ada pengguna ditemukan"
-        },
-        "table": {
-          "name": "Nama",
-          "username": "Nama pengguna",
-          "email": "Email",
-          "role": "Peran",
-          "status": "Status",
-          "added_on": "Ditambahkan Pada"
-        },
-        "roles": {
-          "creator": "PEMBUAT",
-          "contributor": "KONTRIBUTOR",
-          "maintainer": "MAINTAINER",
-          "reporter": "REPORTER"
-        },
-        "statuses": {
-          "active": "AKTIF",
-          "inactive": "TIDAK AKTIF",
-          "pending": "TERTUNDA"
-        },
-        "actions": {
-          "selected_users": "{{count}} pengguna terpilih",
-          "selected_users_plural": "{{count}} pengguna terpilih",
-          "clear": "Bersihkan",
-          "add_selected": "Tambah yang Terpilih",
-          "selected_contributors": "{{count}} kontributor terpilih",
-          "selected_contributors_plural": "{{count}} kontributor terpilih",
-          "remove_selected": "Hapus yang Terpilih",
-          "already_contributor": "Sudah menjadi kontributor"
-        },
-        "toasts": {
-          "add_success": "Berhasil menambahkan {{count}} kontributor",
-          "add_error": "Gagal menambahkan {{username}}: {{reason}}",
-          "add_failed": "Gagal menambahkan kontributor",
-          "update_success": "Berhasil memperbarui kontributor",
-          "update_error": "Kesalahan: {{detail}}",
-          "update_failed": "Terjadi kesalahan saat memperbarui kontributor.",
-          "remove_success": "Berhasil menghapus {{count}} kontributor",
-          "remove_failed": "Gagal menghapus kontributor",
-          "cannot_modify_creator": "Tidak dapat memodifikasi peran atau status pembuat"
-        }
-      },
-      "certification": {
-        "title": "Sertifikasi Kursus",
-        "subtitle": "Aktifkan dan konfigurasikan sertifikat untuk siswa yang menyelesaikan kursus ini",
-        "form": {
-          "certification_name_label": "Nama Sertifikasi",
-          "certification_name_required": "Wajib saat sertifikasi diaktifkan",
-          "certification_name_max_length": "Harus 100 karakter atau kurang",
-          "certification_name_placeholder": "mis., Sertifikasi JavaScript Tingkat Lanjut",
-          "certification_type_label": "Tipe Sertifikasi",
-          "certification_description_label": "Deskripsi Sertifikasi",
-          "certification_description_required": "Wajib saat sertifikasi diaktifkan",
-          "certification_description_max_length": "Harus 500 karakter atau kurang",
-          "certification_description_placeholder": "Jelaskan apa yang direpresentasikan oleh sertifikasi ini dan nilainya...",
-          "certificate_pattern_label": "Pola Sertifikat",
-          "certificate_instructor_label": "Nama Instruktur (Opsional)",
-          "certificate_instructor_placeholder": "mis., Dr. Jane Smith"
-        },
-        "types": {
-          "completion": "Penyelesaian Kursus",
-          "achievement": "Berdasarkan Pencapaian",
-          "assessment": "Berdasarkan Penilaian",
-          "participation": "Partisipasi",
-          "mastery": "Penguasaan Keahlian",
-          "professional": "Pengembangan Profesional",
-          "continuing": "Pendidikan Berkelanjutan",
-          "workshop": "Kehadiran Workshop",
-          "specialization": "Spesialisasi"
-        },
-        "patterns": {
-          "royal": {
-            "name": "Royal",
-            "description": "Berhias dengan motif mahkota"
-          },
-          "tech": {
-            "name": "Tech",
-            "description": "Pola yang terinspirasi sirkuit"
-          },
-          "nature": {
-            "name": "Nature",
-            "description": "Pola daun organik"
-          },
-          "geometric": {
-            "name": "Geometric",
-            "description": "Bentuk & garis abstrak"
-          },
-          "vintage": {
-            "name": "Vintage",
-            "description": "Gaya art deco"
-          },
-          "waves": {
-            "name": "Waves",
-            "description": "Pola air mengalir"
-          },
-          "minimal": {
-            "name": "Minimal",
-            "description": "Bersih dan sederhana"
-          },
-          "professional": {
-            "name": "Professional",
-            "description": "Desain siap bisnis"
-          },
-          "academic": {
-            "name": "Academic",
-            "description": "Gaya universitas tradisional"
-          },
-          "modern": {
-            "name": "Modern",
-            "description": "Garis bersih kontemporer"
-          }
-        },
-        "sections": {
-          "basic_info": {
-            "title": "Informasi Dasar",
-            "subtitle": "Konfigurasikan detail dasar sertifikasi Anda"
-          },
-          "certificate_design": {
-            "title": "Desain Sertifikat",
-            "subtitle": "Pilih pola dekoratif untuk sertifikat Anda"
-          },
-          "preview": {
-            "title": "Pratinjau Sertifikat",
-            "subtitle": "Pratinjau langsung sertifikat Anda"
-          }
-        },
-        "states": {
-          "disabled": {
-            "title": "Sertifikasi Belum Dikonfigurasi",
-            "message": "Aktifkan sertifikasi untuk memberikan sertifikat kepada siswa setelah penyelesaian kursus.",
-            "button": "Aktifkan Sertifikasi",
-            "creating": "Membuat..."
-          },
-          "creating": {
-            "title": "Membuat Sertifikasi...",
-            "message": "Harap tunggu sementara kami menyiapkan sertifikasi kursus Anda."
-          }
-        },
-        "errors": {
-          "loading": "Kesalahan memuat sertifikasi",
-          "create_failed": "Gagal membuat sertifikasi.",
-          "remove_failed": "Gagal menghapus sertifikasi."
-        },
-        "toasts": {
-          "create_success": "Sertifikasi berhasil dibuat",
-          "create_error": "Gagal membuat sertifikasi",
-          "remove_success": "Sertifikasi berhasil dihapus",
-          "remove_error": "Gagal menghapus sertifikasi"
-        }
-      },
-      "communities": {
-        "title": "Komunitas",
-        "new_community": "Komunitas Baru",
-        "no_communities": "Belum ada komunitas",
-        "no_communities_description": "Buat komunitas pertama Anda untuk memulai diskusi",
-        "card": {
-          "open_settings": "Buka Pengaturan",
-          "view_community": "Lihat Komunitas",
-          "quick_edit": "Edit Cepat"
-        },
-        "settings": {
-          "tabs": {
-            "general": "Umum",
-            "thumbnail": "Gambar Mini",
-            "moderation": "Moderasi"
-          }
-        },
-        "general": {
-          "title": "Pengaturan Komunitas",
-          "subtitle": "Perbarui informasi dasar komunitas Anda",
-          "form": {
-            "name_label": "Nama Komunitas",
-            "name_required": "Nama komunitas wajib diisi",
-            "name_min_length": "Nama harus minimal 3 karakter",
-            "name_max_length": "Nama harus kurang dari 100 karakter",
-            "name_placeholder": "Masukkan nama komunitas",
-            "description_label": "Deskripsi",
-            "description_max_length": "Deskripsi harus kurang dari 500 karakter",
-            "description_placeholder": "Jelaskan tentang komunitas ini",
-            "public_label": "Komunitas Publik",
-            "public_description": "Jadikan komunitas ini terlihat oleh semua orang",
-            "characters_left": "{{count}} karakter tersisa"
-          },
-          "toasts": {
-            "updating": "Memperbarui komunitas...",
-            "update_success": "Komunitas berhasil diperbarui",
-            "update_error": "Gagal memperbarui komunitas"
-          }
-        },
-        "thumbnail": {
-          "title": "Gambar Mini Komunitas",
-          "subtitle": "Unggah gambar sampul untuk komunitas Anda",
-          "no_thumbnail": "Gambar mini belum diatur",
-          "upload_image": "Unggah Gambar",
-          "browse_unsplash": "Jelajahi Unsplash",
-          "uploading": "Mengunggah...",
-          "supported_formats": "Format yang didukung: JPG, JPEG, PNG. Ukuran maks: 8MB. Rasio yang disarankan: 16:9",
-          "toasts": {
-            "update_success": "Gambar mini berhasil diperbarui",
-            "update_error": "Gagal memperbarui gambar mini",
-            "invalid_type": "Tipe file tidak valid. Harap unggah hanya gambar PNG atau JPG/JPEG",
-            "file_too_large": "Ukuran file melebihi batas 8MB"
-          }
-        },
-        "moderation": {
-          "title": "Moderasi Konten",
-          "subtitle": "Konfigurasi kata yang diblokir dan filter konten",
-          "info_title": "Kata yang diblokir",
-          "info_description": "Diskusi dan balasan yang mengandung kata-kata ini akan diblokir. Pengguna akan melihat pesan kesalahan dan konten mereka tidak akan dipublikasikan.",
-          "add_word_label": "Tambah kata yang diblokir",
-          "add_word_placeholder": "Masukkan kata atau frasa...",
-          "add_button": "Tambah",
-          "batch_add_label": "Tambah massal",
-          "batch_add_description": "Tambahkan beberapa kata sekaligus, dipisahkan dengan koma",
-          "batch_add_placeholder": "kata1, kata2, kata3...",
-          "add_all_button": "Tambah Semua",
-          "blocked_words_label": "Kata yang diblokir",
-          "no_blocked_words": "Belum ada kata yang diblokir",
-          "no_blocked_words_description": "Tambahkan kata untuk mengaktifkan moderasi konten",
-          "word_exists_error": "Kata ini sudah ada dalam daftar",
-          "all_words_exist_error": "Semua kata sudah ada dalam daftar atau input kosong",
-          "toasts": {
-            "saving": "Menyimpan pengaturan moderasi...",
-            "save_success": "Pengaturan moderasi tersimpan",
-            "save_error": "Gagal menyimpan pengaturan moderasi"
-          }
-        },
-        "modals": {
-          "create": {
-            "title": "Buat Komunitas",
-            "description": "Buat komunitas baru untuk diskusi",
-            "form": {
-              "name_label": "Nama Komunitas",
-              "name_placeholder": "Masukkan nama komunitas",
-              "description_label": "Deskripsi",
-              "description_placeholder": "Jelaskan tentang komunitas ini",
-              "public_label": "Jadikan komunitas ini publik (terlihat oleh semua orang)"
-            },
-            "cancel": "Batal",
-            "submit": "Buat Komunitas"
-          },
-          "edit": {
-            "title": "Edit Komunitas",
-            "description": "Perbarui pengaturan komunitas"
-          },
-          "delete": {
-            "title": "Hapus {{name}}?",
-            "message": "Apakah Anda yakin ingin menghapus komunitas ini? Semua diskusi akan dihapus secara permanen.",
-            "button": "Hapus Komunitas"
-          }
-        },
-        "toasts": {
-          "creating": "Membuat komunitas...",
-          "create_success": "Komunitas berhasil dibuat",
-          "create_error": "Gagal membuat komunitas",
-          "deleting": "Menghapus komunitas...",
-          "delete_success": "Komunitas berhasil dihapus",
-          "delete_error": "Gagal menghapus komunitas"
-        }
-      },
-      "structure": {
-        "loading": "Memuat...",
-        "add_chapter_button": "Tambah Bab",
-        "modals": {
-          "new_chapter": {
-            "title": "Buat bab",
-            "description": "Tambah bab baru ke kursus",
-            "form": {
-              "name_label": "Nama bab",
-              "name_required": "Harap berikan nama bab",
-              "description_label": "Deskripsi bab",
-              "description_required": "Harap berikan deskripsi bab",
-              "submit": "Buat Bab"
-            }
-          },
-          "delete_chapter": {
-            "title": "Hapus {{name}} ?",
-            "message": "Apakah Anda yakin ingin menghapus bab ini?",
-            "button": "Hapus Bab"
-          },
-          "new_activity": {
-            "title": "Buat Aktivitas",
-            "description": "Pilih di antara tipe aktivitas untuk ditambahkan ke kursus"
-          },
-          "delete_activity": {
-            "title": "Hapus {{name}} ?",
-            "message": "Apakah Anda yakin ingin menghapus aktivitas ini ?",
-            "button": "Hapus Aktivitas"
-          }
-        },
-        "actions": {
-          "add_chapter": "Tambah Bab",
-          "add_activity": "Tambah Aktivitas",
-          "publish": "Terbitkan",
-          "unpublish": "Batalkan Terbit",
-          "preview_activity": "Pratinjau Aktivitas",
-          "edit_page": "Edit Halaman",
-          "edit_assignment": "Edit Tugas"
-        },
-        "chapter_element": {
-          "chapter_name_placeholder": "Nama bab"
-        },
-        "activity": {
-          "name_placeholder": "Nama aktivitas",
-          "types": {
-            "video": "Video",
-            "document": "Dokumen",
-            "assignment": "Tugas",
-            "assignments": "Tugas",
-            "dynamic": "Dinamis",
-            "dynamic_page": "Halaman Dinamis",
-            "scorm": "Scorm"
-          },
-          "toasts": {
-            "deleting": "Menghapus aktivitas...",
-            "delete_success": "Aktivitas berhasil dihapus",
-            "updating": "Memperbarui tugas...",
-            "update_success": "Aktivitas telah berhasil diperbarui",
-            "name_update_success": "Nama aktivitas berhasil diperbarui",
-            "name_update_error": "Gagal memperbarui nama aktivitas",
-            "creating": "Membuat aktivitas...",
-            "create_success": "Aktivitas berhasil dibuat",
-            "uploading": "Mengunggah file dan membuat aktivitas...",
-            "upload_success": "File berhasil diunggah",
-            "creating_uploading": "Membuat aktivitas dan mengunggah file..."
           }
         }
       }

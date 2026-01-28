@@ -92,3 +92,16 @@ export async function updateOrgColorConfig(
   const res = await errorHandling(result)
   return res
 }
+
+export async function updateOrgFooterTextConfig(
+  org_id: string,
+  footer_text: string,
+  access_token: string
+) {
+  const result: any = await fetch(
+    `${getAPIUrl()}orgs/${org_id}/config/footer_text?footer_text=${encodeURIComponent(footer_text)}`,
+    RequestBodyWithAuthHeader('PUT', null, null, access_token)
+  )
+  const res = await errorHandling(result)
+  return res
+}
