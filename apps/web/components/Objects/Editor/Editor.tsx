@@ -60,6 +60,7 @@ import UserBlock from './Extensions/Users/UserBlock'
 import DragHandle from './Extensions/DragHandle/DragHandle'
 import { SlashCommands } from './Extensions/SlashCommands'
 import PasteFileHandler from './Extensions/PasteFileHandler/PasteFileHandler'
+import MagicBlock from './Extensions/MagicBlocks/MagicBlock'
 
 interface Editor {
   content: string
@@ -188,6 +189,10 @@ function Editor(props: Editor) {
         activity: props.activity,
         getAccessToken: () => props.session?.data?.tokens?.access_token,
       }),
+      MagicBlock.configure({
+        editable: true,
+        activity: props.activity,
+      }),
     ],
     content: props.content,
     immediatelyRender: false,
@@ -212,18 +217,6 @@ function Editor(props: Editor) {
   return (
     <Page>
       <CourseProvider courseuuid={props.course.course_uuid}>
-        <motion.div
-          initial={{ opacity: 0, scale: 0.98 }}
-          animate={{ opacity: 1, scale: 1 }}
-          key="modal"
-          transition={{
-            type: 'spring',
-            stiffness: 360,
-            damping: 70,
-            delay: 0.02,
-          }}
-          exit={{ opacity: 0 }}
-        >
           <EditorTop>
             <EditorDocSection>
               <EditorInfoWrapper>
@@ -327,10 +320,9 @@ function Editor(props: Editor) {
               </EditorUserProfileWrapper>
             </EditorUsersSection>
           </EditorTop>
-        </motion.div>
         <motion.div
-          initial={{ opacity: 0, scale: 0.99 }}
-          animate={{ opacity: 1, scale: 1 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
           transition={{
             type: 'spring',
             stiffness: 360,
@@ -338,6 +330,7 @@ function Editor(props: Editor) {
             delay: 0.5,
           }}
           exit={{ opacity: 0 }}
+          style={{ position: 'relative' }}
         >
           <EditorContentWrapper>
             <AIEditorToolkit activity={props.activity} editor={editor} />
@@ -353,6 +346,7 @@ const Page = styled.div`
   height: 100vh;
   width: 100%;
   padding-top: 30px;
+  position: relative;
 
   // dots background
   background-image: radial-gradient(#4744446b 1px, transparent 1px),
@@ -387,7 +381,7 @@ const EditorTop = styled.div`
   box-shadow: 0 4px 6px -1px rgba(209, 213, 219, 0.25), 0 2px 4px -2px rgba(209, 213, 219, 0.25);
   outline: 1px solid rgba(229, 231, 235, 0.5);
   position: fixed;
-  z-index: var(--z-editor-toolbar);
+  z-index: 200;
   width: -webkit-fill-available;
   width: -moz-available;
   gap: 10px;
@@ -517,7 +511,8 @@ export const EditorContentWrapper = styled.div`
   margin-top: 97px;
   background-color: white;
   border-radius: 10px;
-  z-index: var(--z-content);
+  position: relative;
+  z-index: 1;
   box-shadow: 0 4px 6px -1px rgba(209, 213, 219, 0.25), 0 2px 4px -2px rgba(209, 213, 219, 0.25);
   outline: 1px solid rgba(229, 231, 235, 0.4);
 

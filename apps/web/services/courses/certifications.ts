@@ -12,11 +12,12 @@ import {
 
 export async function getCourseCertifications(
   course_uuid: string,
+  org_id: number,
   next: any,
   access_token: string
 ) {
   const result = await fetch(
-    `${getAPIUrl()}certifications/course/${course_uuid}`,
+    `${getAPIUrl()}certifications/course/${course_uuid}?org_id=${org_id}`,
     RequestBodyWithAuthHeader('GET', null, next, access_token)
   )
   const res = await getResponseMetadata(result)
@@ -26,10 +27,11 @@ export async function getCourseCertifications(
 export async function createCertification(
   course_id: number,
   config: any,
+  org_id: number,
   access_token: string
 ) {
   const result = await fetch(
-    `${getAPIUrl()}certifications/`,
+    `${getAPIUrl()}certifications/?org_id=${org_id}`,
     RequestBodyWithAuthHeader('POST', { course_id, config }, null, access_token)
   )
   const res = await errorHandling(result)
@@ -39,10 +41,11 @@ export async function createCertification(
 export async function updateCertification(
   certification_uuid: string,
   config: any,
+  org_id: number,
   access_token: string
 ) {
   const result = await fetch(
-    `${getAPIUrl()}certifications/${certification_uuid}`,
+    `${getAPIUrl()}certifications/${certification_uuid}?org_id=${org_id}`,
     RequestBodyWithAuthHeader('PUT', { config }, null, access_token)
   )
   const res = await errorHandling(result)
@@ -51,10 +54,11 @@ export async function updateCertification(
 
 export async function deleteCertification(
   certification_uuid: string,
+  org_id: number,
   access_token: string
 ) {
   const result = await fetch(
-    `${getAPIUrl()}certifications/${certification_uuid}`,
+    `${getAPIUrl()}certifications/${certification_uuid}?org_id=${org_id}`,
     RequestBodyWithAuthHeader('DELETE', null, null, access_token)
   )
   const res = await errorHandling(result)
@@ -63,10 +67,11 @@ export async function deleteCertification(
 
 export async function getUserCertificates(
   course_uuid: string,
+  org_id: number,
   access_token: string
 ) {
   const result = await fetch(
-    `${getAPIUrl()}certifications/user/course/${course_uuid}`,
+    `${getAPIUrl()}certifications/user/course/${course_uuid}?org_id=${org_id}`,
     RequestBodyWithAuthHeader('GET', null, null, access_token)
   )
   const res = await getResponseMetadata(result)
@@ -74,10 +79,11 @@ export async function getUserCertificates(
 }
 
 export async function getCertificateByUuid(
-  user_certification_uuid: string
+  user_certification_uuid: string,
+  org_id: number
 ) {
   const result = await fetch(
-    `${getAPIUrl()}certifications/certificate/${user_certification_uuid}`,
+    `${getAPIUrl()}certifications/certificate/${user_certification_uuid}?org_id=${org_id}`,
     {
       method: 'GET',
       headers: {
@@ -90,10 +96,11 @@ export async function getCertificateByUuid(
 }
 
 export async function getAllUserCertificates(
+  org_id: number,
   access_token: string
 ) {
   const result = await fetch(
-    `${getAPIUrl()}certifications/user/all`,
+    `${getAPIUrl()}certifications/user/all?org_id=${org_id}`,
     RequestBodyWithAuthHeader('GET', null, null, access_token)
   )
   const res = await getResponseMetadata(result)

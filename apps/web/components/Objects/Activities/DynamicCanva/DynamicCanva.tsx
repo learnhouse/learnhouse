@@ -10,6 +10,7 @@ import VideoBlock from '@components/Objects/Editor/Extensions/Video/VideoBlock'
 import MathEquationBlock from '@components/Objects/Editor/Extensions/MathEquation/MathEquationBlock'
 import PDFBlock from '@components/Objects/Editor/Extensions/PDF/PDFBlock'
 import QuizBlock from '@components/Objects/Editor/Extensions/Quiz/QuizBlock'
+import MagicBlock from '@components/Objects/Editor/Extensions/MagicBlocks/MagicBlock'
 
 // Lowlight
 import { common, createLowlight } from 'lowlight'
@@ -144,6 +145,10 @@ function Canva(props: Editor) {
         activity: props.activity,
       }),
       Scenarios.configure({
+        editable: false,
+        activity: props.activity,
+      }),
+      MagicBlock.configure({
         editable: false,
         activity: props.activity,
       }),

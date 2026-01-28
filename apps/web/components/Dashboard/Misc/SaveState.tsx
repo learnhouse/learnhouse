@@ -15,6 +15,7 @@ import { mutate } from 'swr'
 import { updateCourse } from '@services/courses/courses'
 import { updateCertification } from '@services/courses/certifications'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { useOrg } from '@components/Contexts/OrgContext'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 
@@ -28,6 +29,7 @@ function SaveState(props: { orgslug: string }) {
   const { t } = useTranslation()
   const course = useCourse() as any
   const session = useLHSession() as any
+  const org = useOrg() as any
   const router = useRouter()
   const dispatchCourse = useCourseDispatch() as any
   const debounceManager = useDebounceManager()
@@ -103,6 +105,7 @@ function SaveState(props: { orgslug: string }) {
           await updateCertification(
             certData.certification_uuid,
             certData.config,
+            org?.id,
             session.data?.tokens?.access_token
           )
           results.push({ success: true, operation: 'certification' })
