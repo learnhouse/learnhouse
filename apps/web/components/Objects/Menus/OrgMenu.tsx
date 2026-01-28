@@ -20,6 +20,9 @@ export const OrgMenu = (props: any) => {
   const [isFocusMode, setIsFocusMode] = useState(false)
   const pathname = usePathname()
 
+  // Get primary color from org config
+  const primaryColor = org?.config?.config?.general?.color || ''
+
   useEffect(() => {
     // Only check focus mode if we're in an activity page
     if (typeof window !== 'undefined' && pathname?.includes('/activity/')) {
@@ -69,7 +72,13 @@ export const OrgMenu = (props: any) => {
   return (
     <>
       <div className="backdrop-blur-lg h-[60px] blur-3xl z-behind"></div>
-      <div className="backdrop-blur-lg bg-white/90 fixed top-0 left-0 right-0 h-[60px] nice-shadow" style={{ zIndex: 9999 }}>
+      <div
+        className={`backdrop-blur-lg fixed top-0 left-0 right-0 h-[60px] ${!primaryColor ? 'bg-white/90 nice-shadow' : ''}`}
+        style={{
+          zIndex: 9999,
+          backgroundColor: primaryColor || undefined
+        }}
+      >
         <div className="flex items-center justify-between w-full max-w-(--breakpoint-2xl) mx-auto px-4 sm:px-6 lg:px-8 h-full">
           <div className="flex items-center space-x-5 md:w-auto w-full">
             <div className="logo flex md:w-auto w-full justify-center">
@@ -89,21 +98,21 @@ export const OrgMenu = (props: any) => {
               </Link>
             </div>
             <div className="hidden md:flex">
-              <MenuLinks orgslug={orgslug} />
+              <MenuLinks orgslug={orgslug} primaryColor={primaryColor} />
             </div>
           </div>
-          
+
           {/* Search Section */}
           <div className="hidden md:flex flex-1 justify-center max-w-lg px-4">
-            <SearchBar orgslug={orgslug} className="w-full" />
+            <SearchBar orgslug={orgslug} className="w-full" primaryColor={primaryColor} />
           </div>
 
           <div className="flex items-center space-x-4">
             <div className="hidden md:flex">
-              <HeaderProfileBox />
+              <HeaderProfileBox primaryColor={primaryColor} />
             </div>
             <button
-              className="md:hidden text-gray-600 focus:outline-hidden"
+              className={`md:hidden focus:outline-hidden ${primaryColor ? 'text-white' : 'text-gray-600'}`}
               onClick={toggleMenu}
             >
               {isMenuOpen ? (
