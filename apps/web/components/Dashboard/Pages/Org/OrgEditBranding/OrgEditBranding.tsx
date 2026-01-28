@@ -124,7 +124,7 @@ export default function OrgEditBranding() {
 
   // Theme state
   const [primaryColor, setPrimaryColor] = useState<string>(org?.config?.config?.general?.color || '')
-  const [isColorSaving, setIsColorSaving] = useState(false)
+  const [isThemeSaving, setIsThemeSaving] = useState(false)
 
   // Socials initial values
   const initialValues: OrganizationValues = {
@@ -381,8 +381,8 @@ export default function OrgEditBranding() {
   }
 
   // Theme handlers
-  const handleColorSave = async () => {
-    setIsColorSaving(true)
+  const handleThemeSave = async () => {
+    setIsThemeSaving(true)
     const loadingToast = toast.loading(t('dashboard.organization.settings.updating'))
     try {
       await updateOrgColorConfig(org.id, primaryColor, access_token)
@@ -393,25 +393,12 @@ export default function OrgEditBranding() {
     } catch (err) {
       toast.error(t('dashboard.organization.settings.update_error'), { id: loadingToast })
     } finally {
-      setIsColorSaving(false)
+      setIsThemeSaving(false)
     }
   }
 
-  const handleClearColor = async () => {
+  const handleClearColor = () => {
     setPrimaryColor('')
-    setIsColorSaving(true)
-    const loadingToast = toast.loading(t('dashboard.organization.settings.updating'))
-    try {
-      await updateOrgColorConfig(org.id, '', access_token)
-      await revalidateTags(['organizations'], org.slug)
-      mutate(`${getAPIUrl()}orgs/slug/${org.slug}`)
-      toast.success(t('dashboard.organization.settings.update_success'), { id: loadingToast })
-      router.refresh()
-    } catch (err) {
-      toast.error(t('dashboard.organization.settings.update_error'), { id: loadingToast })
-    } finally {
-      setIsColorSaving(false)
-    }
   }
 
   // Helper to convert hex to rgba
@@ -865,7 +852,7 @@ export default function OrgEditBranding() {
                     variant="ghost"
                     size="sm"
                     onClick={handleClearColor}
-                    disabled={isColorSaving}
+                    disabled={isThemeSaving}
                     className="text-gray-400 hover:text-gray-600 h-10 px-2"
                   >
                     <X className="h-4 w-4" />
@@ -916,11 +903,11 @@ export default function OrgEditBranding() {
           {/* Save Button */}
           <div className="flex justify-end mt-5">
             <Button
-              onClick={handleColorSave}
-              disabled={isColorSaving}
+              onClick={handleThemeSave}
+              disabled={isThemeSaving}
               className="bg-black text-white hover:bg-black/90"
             >
-              {isColorSaving ? t('dashboard.organization.settings.saving') : t('dashboard.organization.settings.save_changes')}
+              {isThemeSaving ? t('dashboard.organization.settings.saving') : t('dashboard.organization.settings.save_changes')}
             </Button>
           </div>
         </TabsContent>

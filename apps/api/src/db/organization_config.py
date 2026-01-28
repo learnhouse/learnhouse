@@ -90,6 +90,7 @@ class OrgFeatureConfig(BaseModel):
 class OrgGeneralConfig(BaseModel):
     enabled: bool = True
     color: str = ""
+    footer_text: str = ""
     watermark: bool = True
 
 

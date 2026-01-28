@@ -70,6 +70,10 @@
         "certifications": {
           "title": "Pro Özellik",
           "description": "Sertifikalar, yalnızca Pro veya üzeri plandaki kuruluşlar için kullanılabilen premium bir özelliktir. Kurslarınızı tamamlayan öğrencilere sertifika vermek için yükseltin."
+        },
+        "communities": {
+          "title": "Standart Özellik",
+          "description": "Topluluklar, yalnızca Standart planımızdaki veya daha üst planlarındaki kuruluşlar için kullanılabilen bir premium özelliktir. Üyeleriniz için tartışma topluluklarının kilidini açmak için yükseltin."
         }
       }
     },
@@ -262,7 +266,25 @@
     "submitting_contributor_application": "Başvuru gönderiliyor...",
     "contributor_application_success": "Katkıda bulunma başvurunuz başarıyla gönderildi",
     "contributor_application_error": "Başvurunuz gönderilemedi. Lütfen daha sonra tekrar deneyin.",
-    "contribute": "Katkıda bulun"
+    "contribute": "Katkıda bulun",
+    "scorm": {
+      "upload_package": "SCORM Paketi Yükle",
+      "package_file": "Paket Dosyası (.zip)",
+      "click_to_upload": "Yüklemek için tıklayın veya sürükleyip bırakın",
+      "supported_versions": "SCORM 1.2 veya SCORM 2004 paketi",
+      "import_info": "İçeriğini analiz etmek için SCORM paketinizi yükleyin. Kursu yapılandırabilir ve etkinlikleri bölümlere atayabilirsiniz.",
+      "analyze_package": "Paketi Analiz Et",
+      "package_analyzed": "Paket Başarıyla Analiz Edildi",
+      "assign_scos": "Etkinlikleri Bölümlere Ata",
+      "activity_name": "Etkinlik",
+      "chapter_name": "Bölüm",
+      "upload_different": "Farklı paket yükle",
+      "selected": "seçildi",
+      "create_course": "Kurs Oluştur",
+      "configure": "Yapılandır",
+      "ready_to_analyze": "Analiz için hazır",
+      "course_details": "Kurs Detayları"
+    }
   },
   "collections": {
     "collections": "Koleksiyonlar",
@@ -709,7 +731,471 @@
       "import_scorm_description": "Yeni bir kurs oluşturmak için bir SCORM paketi içe aktarın",
       "no_courses": "Henüz kurs yok",
       "create_course_placeholder": "İçerik eklemek için bir kurs oluşturun",
-      "no_courses_available": "Şu anda mevcut kurs bulunmamaktadır"
+      "no_courses_available": "Şu anda mevcut kurs bulunmamaktadır",
+      "overview_top": {
+        "course_label": "Kurs",
+        "rights_guide_button": "Haklar Rehberi"
+      },
+      "settings": {
+        "tabs": {
+          "general": "Genel",
+          "content": "İçerik",
+          "access": "Erişim",
+          "contributors": "Katkıda Bulunanlar",
+          "certification": "Sertifikasyon"
+        },
+        "access_denied": {
+          "title": "Erişim Reddedildi",
+          "message": "Bu kursa erişim izniniz yok."
+        },
+        "access_restricted": {
+          "title": "Erişim Kısıtlı",
+          "message": "{{tab}} sekmesine erişim izniniz yok."
+        },
+        "loading": "Yükleniyor..."
+      },
+      "general": {
+        "form": {
+          "name_label": "Ad",
+          "name_required": "Bu alan gereklidir",
+          "name_max_length": "Ad en fazla 100 karakter olmalıdır",
+          "description_label": "Açıklama",
+          "description_required": "Bu alan gereklidir",
+          "description_max_length": "Açıklama en fazla 1000 karakter olmalıdır",
+          "about_label": "Hakkında",
+          "learnings_label": "Öğrenilecekler",
+          "learnings_required": "Bu alan gereklidir",
+          "learnings_invalid_format": "Geçersiz format",
+          "learnings_min_items": "En az bir öğe gereklidir",
+          "learnings_empty_text": "Tüm öğeler metin içermelidir",
+          "learnings_invalid_json": "Geçersiz JSON formatı",
+          "tags_label": "Etiketler",
+          "tags_placeholder": "Eklemek için Enter tuşuna basın...",
+          "thumbnail_type_label": "Küçük Resim Türü",
+          "thumbnail_type_image": "Resim",
+          "thumbnail_type_video": "Video",
+          "thumbnail_type_both": "Her İkisi",
+          "thumbnail_label": "Küçük Resim",
+          "image_search_placeholder": "Resim ara..."
+        },
+        "thumbnail": {
+          "upload_image": "Resim Yükle",
+          "upload_video": "Video Yükle",
+          "gallery": "Galeri",
+          "tabs": {
+            "image": "Resim",
+            "video": "Video"
+          },
+          "supported_formats": {
+            "image": "PNG, JPG/JPEG desteklenir (maks 8MB)",
+            "video": "MP4, WebM desteklenir (maks 100MB)"
+          }
+        },
+        "errors": {
+          "save_failed": "Kurs yapısı kaydedilemedi"
+        }
+      },
+      "access": {
+        "title": "Kurs Erişimi",
+        "subtitle": "Kursunuzun internette genel mi olacağını yoksa sadece kayıtlı kullanıcılara mı özel olacağını seçin.",
+        "public": {
+          "title": "Genel",
+          "description": "Kurs internette serbestçe erişilebilir olacak, arama motorları tarafından indekslenecek ve herkes katılabilir.",
+          "active": "Aktif",
+          "confirmation_title": "Genel Erişime Geçilsin mi?",
+          "confirmation_message": "Bu kursu internette genel erişime açmak istediğinizden emin misiniz?",
+          "confirmation_button": "Genel Erişime Geç"
+        },
+        "users_only": {
+          "title": "Sadece Kayıtlı Kullanıcılar",
+          "description": "Kurs sadece kayıtlı kullanıcılar için erişilebilir olacak ve hangi kullanıcı gruplarının erişebileceğini seçebileceksiniz.",
+          "active": "Aktif",
+          "confirmation_title": "Sadece Kullanıcılara Özelliğe Geçilsin mi?",
+          "confirmation_message": "Bu kursu sadece kayıtlı kullanıcılarla sınırlamak istediğinizden emin misiniz?",
+          "confirmation_button": "Sadece Kullanıcılara Geç"
+        },
+        "usergroups": {
+          "title": "Kullanıcı Grupları",
+          "subtitle": "Kursu sadece belirli kullanıcı gruplarına kısıtlamak istiyorsanız, onları buradan bağlayabilirsiniz.",
+          "table": {
+            "name": "Ad",
+            "actions": "Eylemler"
+          },
+          "actions": {
+            "delete_link": "Bağlantıyı Kaldır",
+            "link_to_usergroup": "Kullanıcı Grubuna Bağla"
+          },
+          "modals": {
+            "link_title": "Kursu Kullanıcı Grubuna Bağla",
+            "link_description": "Kursa bağlamak istediğiniz kullanıcı grubunu seçin. Bu grubun üyeleri kursa erişebilecek.",
+            "unlink_title": "Kullanıcı grubu bağlantısı kaldırılsın mı?",
+            "unlink_message": "Bu grubun üyeleri artık bu kursa erişemeyecek.",
+            "unlink_button": "Bağlantıyı Kaldır",
+            "warning": "Bu grupta olmayan kullanıcılar artık bu kursa erişemeyecek.",
+            "usergroup_name": "Kullanıcı Grubu Adı",
+            "no_usergroups": "Bağlanacak kullanıcı grubu yok",
+            "create_usergroup": "Kullanıcı grubu oluştur",
+            "link_button": "Bağla"
+          },
+          "toasts": {
+            "link_success": "Kullanıcı grubuna başarıyla bağlandı",
+            "link_error": "Hata {{status}}: {{detail}}",
+            "unlink_success": "Kullanıcı grubu bağlantısı başarıyla kaldırıldı",
+            "unlink_error": "Kullanıcı grubu bağlantısı kaldırılamadı"
+          }
+        }
+      },
+      "contributors": {
+        "title": "Kurs Katkıda Bulunanları",
+        "subtitle": "Katkıda bulunanları yönetin ve kursa yeni üyeler ekleyin.",
+        "open_to_contributors": {
+          "title": "Katkıda Bulunanlara Açık",
+          "description": "Kurs katkıda bulunanlara açık. Kullanıcılar kurs içeriğini iyileştirmeye yardımcı olmak için başvurabilirler.",
+          "active": "Aktif",
+          "confirmation_title": "Katkıda Bulunanlara Açılsın mı?",
+          "confirmation_message": "Bu kursu katkıda bulunanlara açmak istediğinizden emin misiniz?",
+          "confirmation_button": "Katkıda Bulunanlara Aç"
+        },
+        "closed_to_contributors": {
+          "title": "Katkıda Bulunanlara Kapalı",
+          "description": "Kurs katkıda bulunanlara kapalı. Sadece mevcut üyeler içeriği düzenleyebilir.",
+          "active": "Aktif",
+          "confirmation_title": "Katkıda Bulunanlara Kapatılsın mı?",
+          "confirmation_message": "Bu kursu katkıda bulunanlara kapatmak istediğinizden emin misiniz?",
+          "confirmation_button": "Katkıda Bulunanlara Kapat"
+        },
+        "search": {
+          "placeholder": "Adı veya kullanıcı adıyla katkıda bulunan eklemek için kullanıcı ara...",
+          "searching": "Aranıyor...",
+          "no_results": "Kullanıcı bulunamadı"
+        },
+        "table": {
+          "name": "Ad",
+          "username": "Kullanıcı Adı",
+          "email": "E-posta",
+          "role": "Rol",
+          "status": "Durum",
+          "added_on": "Eklenme Tarihi"
+        },
+        "roles": {
+          "creator": "Oluşturucu",
+          "contributor": "Katkıda Bulunan",
+          "maintainer": "Sorumlu",
+          "reporter": "Raporlayıcı"
+        },
+        "statuses": {
+          "active": "Aktif",
+          "inactive": "Pasif",
+          "pending": "Beklemede"
+        },
+        "actions": {
+          "selected_users": "{{count}} kullanıcı seçildi",
+          "selected_users_plural": "{{count}} kullanıcı seçildi",
+          "clear": "Temizle",
+          "add_selected": "Seçilenleri Ekle",
+          "selected_contributors": "{{count}} katkıda bulunan seçildi",
+          "selected_contributors_plural": "{{count}} katkıda bulunan seçildi",
+          "remove_selected": "Seçilenleri Kaldır",
+          "already_contributor": "Zaten katkıda bulunan"
+        },
+        "toasts": {
+          "add_success": "{{count}} katkıda bulunan başarıyla eklendi",
+          "add_error": "{{username}} eklenemedi: {{reason}}",
+          "add_failed": "Katkıda bulunanlar eklenemedi",
+          "update_success": "Katkıda bulunan başarıyla güncellendi",
+          "update_error": "Hata: {{detail}}",
+          "update_failed": "Katkıda bulunan güncellenirken hata oluştu",
+          "remove_success": "{{count}} katkıda bulunan başarıyla kaldırıldı",
+          "remove_failed": "Katkıda bulunanlar kaldırılamadı",
+          "cannot_modify_creator": "Ana oluşturucunun rolünü veya durumunu değiştiremezsiniz"
+        }
+      },
+      "certification": {
+        "title": "Kurs Sertifikasyonu",
+        "subtitle": "Bu kursu tamamlayan öğrenciler için sertifikasyonu etkinleştirin ve yapılandırın.",
+        "form": {
+          "certification_name_label": "Sertifika Adı",
+          "certification_name_required": "Sertifikasyon etkinken sertifika adı gereklidir",
+          "certification_name_max_length": "Ad en fazla 100 karakter olmalıdır",
+          "certification_name_placeholder": "ör. İleri JavaScript Sertifikası",
+          "certification_type_label": "Sertifika Türü",
+          "certification_description_label": "Sertifika Açıklaması",
+          "certification_description_required": "Sertifikasyon etkinken açıklama gereklidir",
+          "certification_description_max_length": "Açıklama en fazla 500 karakter olmalıdır",
+          "certification_description_placeholder": "Bu sertifikanın neyi temsil ettiğini açıklayın...",
+          "certificate_pattern_label": "Sertifika Deseni",
+          "certificate_instructor_label": "Eğitmen Adı (isteğe bağlı)",
+          "certificate_instructor_placeholder": "ör. Dr. Jane Doe"
+        },
+        "types": {
+          "completion": "Tamamlama",
+          "achievement": "Başarı",
+          "assessment": "Değerlendirme",
+          "participation": "Katılım",
+          "mastery": "Ustalık",
+          "professional": "Mesleki",
+          "continuing": "Sürekli",
+          "workshop": "Atölye",
+          "specialization": "Uzmanlık"
+        },
+        "patterns": {
+          "royal": {
+            "name": "Kraliyet",
+            "description": "Taç desenli süslü stil"
+          },
+          "tech": {
+            "name": "Teknoloji",
+            "description": "Devre kartından ilham alan desen"
+          },
+          "nature": {
+            "name": "Doğa",
+            "description": "Organik yaprak motifi"
+          },
+          "geometric": {
+            "name": "Geometrik",
+            "description": "Modern şekiller ve çizgiler"
+          },
+          "vintage": {
+            "name": "Vintage",
+            "description": "Klasik Art Deco stili"
+          },
+          "waves": {
+            "name": "Dalgalar",
+            "description": "Akışkan su benzeri desenler"
+          },
+          "minimal": {
+            "name": "Minimal",
+            "description": "Temiz ve basit tasarım"
+          },
+          "professional": {
+            "name": "Profesyonel",
+            "description": "İş dünyasına uygun tasarım"
+          },
+          "academic": {
+            "name": "Akademik",
+            "description": "Geleneksel üniversite stili"
+          },
+          "modern": {
+            "name": "Modern",
+            "description": "Keskin ve çağdaş çizgiler"
+          }
+        },
+        "sections": {
+          "basic_info": {
+            "title": "Temel Bilgiler",
+            "subtitle": "Sertifikanın temel detaylarını yapılandırın"
+          },
+          "certificate_design": {
+            "title": "Sertifika Tasarımı",
+            "subtitle": "Sertifikanız için görsel dekorasyonu seçin"
+          },
+          "preview": {
+            "title": "Sertifika Önizlemesi",
+            "subtitle": "Sertifikanızın nasıl görüneceğine dair gerçek zamanlı önizleme"
+          }
+        },
+        "states": {
+          "disabled": {
+            "title": "Sertifikasyon Yapılandırılmadı",
+            "message": "Öğrencilerinize kursu tamamladıklarında vermek için sertifikasyonu etkinleştirin.",
+            "button": "Sertifikasyonu Etkinleştir",
+            "creating": "Etkinleştiriliyor..."
+          },
+          "creating": {
+            "title": "Sertifikasyon oluşturuluyor...",
+            "message": "Sizin için sertifikasyonu kurarken lütfen bekleyin."
+          }
+        },
+        "errors": {
+          "loading": "Sertifikasyon yüklenirken hata oluştu",
+          "create_failed": "Sertifikasyon oluşturulamadı",
+          "remove_failed": "Sertifikasyon kaldırılamadı"
+        },
+        "toasts": {
+          "create_success": "Sertifikasyon başarıyla oluşturuldu",
+          "create_error": "Sertifikasyon oluşturulamadı",
+          "remove_success": "Sertifikasyon başarıyla kaldırıldı",
+          "remove_error": "Sertifikasyon kaldırılamadı"
+        }
+      },
+      "communities": {
+        "title": "Topluluklar",
+        "new_community": "Yeni Topluluk",
+        "no_communities": "Henüz topluluk yok",
+        "no_communities_description": "Tartışmalara başlamak için ilk topluluğunuzu oluşturun",
+        "card": {
+          "open_settings": "Ayarları Aç",
+          "view_community": "Topluluğu Görüntüle",
+          "quick_edit": "Hızlı Düzenle"
+        },
+        "settings": {
+          "tabs": {
+            "general": "Genel",
+            "thumbnail": "Küçük Resim",
+            "moderation": "Moderasyon"
+          }
+        },
+        "general": {
+          "title": "Topluluk Ayarları",
+          "subtitle": "Topluluğunuzun temel bilgilerini güncelleyin",
+          "form": {
+            "name_label": "Topluluk Adı",
+            "name_required": "Topluluk adı gereklidir",
+            "name_min_length": "Ad en az 3 karakter olmalıdır",
+            "name_max_length": "Ad 100 karakterden az olmalıdır",
+            "name_placeholder": "Topluluk adını girin",
+            "description_label": "Açıklama",
+            "description_max_length": "Açıklama 500 karakterden az olmalıdır",
+            "description_placeholder": "Bu topluluğun ne hakkında olduğunu açıklayın",
+            "public_label": "Herkese Açık Topluluk",
+            "public_description": "Bu topluluğu herkes için görünür yap",
+            "characters_left": "{{count}} karakter kaldı"
+          },
+          "toasts": {
+            "updating": "Topluluk güncelleniyor...",
+            "update_success": "Topluluk başarıyla güncellendi",
+            "update_error": "Topluluk güncellenemedi"
+          }
+        },
+        "thumbnail": {
+          "title": "Topluluk Küçük Resmi",
+          "subtitle": "Topluluğunuz için kapak resmi yükleyin",
+          "no_thumbnail": "Küçük resim ayarlanmamış",
+          "upload_image": "Resim Yükle",
+          "browse_unsplash": "Unsplash'ta Ara",
+          "uploading": "Yükleniyor...",
+          "supported_formats": "Desteklenen formatlar: JPG, JPEG, PNG. Maksimum boyut: 8MB. Önerilen en-boy oranı: 16:9",
+          "toasts": {
+            "update_success": "Küçük resim başarıyla güncellendi",
+            "update_error": "Küçük resim güncellenemedi",
+            "invalid_type": "Geçersiz dosya türü. Lütfen yalnızca PNG veya JPG/JPEG resim yükleyin",
+            "file_too_large": "Dosya boyutu 8MB sınırını aşıyor"
+          }
+        },
+        "moderation": {
+          "title": "İçerik Moderasyonu",
+          "subtitle": "Yasaklı kelimeleri ve içerik filtrelerini yapılandırın",
+          "info_title": "Yasaklı kelimeler",
+          "info_description": "Bu kelimeleri içeren tartışmalar ve yanıtlar engellenecektir. Kullanıcılar bir hata mesajı görecek ve içerikleri yayınlanmayacaktır.",
+          "add_word_label": "Yasaklı kelime ekle",
+          "add_word_placeholder": "Kelime veya ifade girin...",
+          "add_button": "Ekle",
+          "batch_add_label": "Toplu ekle",
+          "batch_add_description": "Virgülle ayırarak birden fazla kelime ekleyin",
+          "batch_add_placeholder": "kelime1, kelime2, kelime3...",
+          "add_all_button": "Tümünü Ekle",
+          "blocked_words_label": "Yasaklı kelimeler",
+          "no_blocked_words": "Henüz yasaklı kelime yok",
+          "no_blocked_words_description": "İçerik moderasyonunu etkinleştirmek için kelime ekleyin",
+          "word_exists_error": "Bu kelime zaten listede",
+          "all_words_exist_error": "Tüm kelimeler zaten listede veya giriş boş",
+          "toasts": {
+            "saving": "Moderasyon ayarları kaydediliyor...",
+            "save_success": "Moderasyon ayarları kaydedildi",
+            "save_error": "Moderasyon ayarları kaydedilemedi"
+          }
+        },
+        "modals": {
+          "create": {
+            "title": "Topluluk Oluştur",
+            "description": "Tartışmalar için yeni bir topluluk oluşturun",
+            "form": {
+              "name_label": "Topluluk Adı",
+              "name_placeholder": "Topluluk adını girin",
+              "description_label": "Açıklama",
+              "description_placeholder": "Bu topluluğun ne hakkında olduğunu açıklayın",
+              "public_label": "Bu topluluğu herkese açık yap (herkes için görünür)"
+            },
+            "cancel": "İptal",
+            "submit": "Topluluk Oluştur"
+          },
+          "edit": {
+            "title": "Topluluğu Düzenle",
+            "description": "Topluluk ayarlarını güncelle"
+          },
+          "delete": {
+            "title": "{{name}} silinsin mi?",
+            "message": "Bu topluluğu silmek istediğinizden emin misiniz? Tüm tartışmalar kalıcı olarak kaldırılacaktır.",
+            "button": "Topluluğu Sil"
+          }
+        },
+        "toasts": {
+          "creating": "Topluluk oluşturuluyor...",
+          "create_success": "Topluluk başarıyla oluşturuldu",
+          "create_error": "Topluluk oluşturulamadı",
+          "deleting": "Topluluk siliniyor...",
+          "delete_success": "Topluluk başarıyla silindi",
+          "delete_error": "Topluluk silinemedi"
+        }
+      },
+      "structure": {
+        "loading": "Yükleniyor...",
+        "add_chapter_button": "Bölüm Ekle",
+        "modals": {
+          "new_chapter": {
+            "title": "Bölüm Oluştur",
+            "description": "Kursunuza yeni bir bölüm ekleyin",
+            "form": {
+              "name_label": "Bölüm Adı",
+              "name_required": "Lütfen bölüm için bir ad girin",
+              "description_label": "Bölüm Açıklามası",
+              "description_required": "Lütfen bu bölüm için bir açıklama girin",
+              "submit": "Bölüm Oluştur"
+            }
+          },
+          "delete_chapter": {
+            "title": "{{name}} silinsin mi?",
+            "message": "Bu bölümü silmek istediğinizden emin misiniz?",
+            "button": "Bölümü Sil"
+          },
+          "new_activity": {
+            "title": "Aktivite Oluştur",
+            "description": "Kursa eklemek istediğiniz aktivite türünü seçin"
+          },
+          "delete_activity": {
+            "title": "{{name}} silinsin mi?",
+            "message": "Bu aktiviteyi silmek istediğinizden emin misiniz?",
+            "button": "Aktiviteyi Sil"
+          }
+        },
+        "actions": {
+          "add_chapter": "Bölüm Ekle",
+          "add_activity": "Aktivite Ekle",
+          "publish": "Yayınla",
+          "unpublish": "Yayından Kaldır",
+          "preview_activity": "Aktivite Önizleme",
+          "edit_page": "Sayfayı Düzenle",
+          "edit_assignment": "Ödevi Düzenle"
+        },
+        "chapter_element": {
+          "chapter_name_placeholder": "Bölüm Adı"
+        },
+        "activity": {
+          "name_placeholder": "Aktivite Adı",
+          "types": {
+            "video": "Video",
+            "document": "Doküman",
+            "assignment": "Ödev",
+            "assignments": "Ödevler",
+            "dynamic": "Dinamik",
+            "dynamic_page": "Dinamik Sayfa",
+            "scorm": "Scorm"
+          },
+          "toasts": {
+            "deleting": "Aktivite siliniyor...",
+            "delete_success": "Aktivite başarıyla silindi",
+            "updating": "Ödev güncelleniyor...",
+            "update_success": "Aktivite başarıyla güncellendi",
+            "name_update_success": "Aktivite adı başarıyla güncellendi",
+            "name_update_error": "Aktivite adı güncellenemedi",
+            "creating": "Aktivite oluşturuluyor...",
+            "create_success": "Aktivite başarıyla oluşturuldu",
+            "uploading": "Dosya yükleniyor ve aktivite oluşturuluyor...",
+            "upload_success": "Dosya başarıyla yüklendi",
+            "creating_uploading": "Aktivite oluşturuluyor ve dosya yükleniyor..."
+          }
+        }
+      }
     },
     "organization": {
       "settings": {
@@ -768,7 +1254,10 @@
         "saving": "Kaydediliyor...",
         "update_success": "Organizasyon bilgileri güncellendi",
         "update_error": "Organizasyon bilgileri güncellenemedi",
-        "updating": "Organizasyon bilgileri güncelleniyor..."
+        "updating": "Organizasyon bilgileri güncelleniyor...",
+        "footer_text": "Alt Bilgi Metni",
+        "footer_text_placeholder": "Alt bilgi metnini girin...",
+        "footer_text_desc": "Kuruluş sayfalarınızın altında görüntülenen özel metin"
       },
       "images": {
         "title": "Resimler ve Önizlemeler",
@@ -826,7 +1315,8 @@
         "subtitle": "Organizasyonunuzun görsel kimliğini ve sosyal varlığını yönetin",
         "tabs": {
           "images": "Resimler ve Önizlemeler",
-          "social": "Sosyal Bağlantılar"
+          "social": "Sosyal Bağlantılar",
+          "theme": "Tema"
         }
       },
       "socials": {
@@ -959,7 +1449,11 @@
           "generating": "CSV oluşturuluyor...",
           "success": "CSV başarıyla dışa aktarıldı",
           "error": "CSV dışa aktarılamadı"
-        }
+        },
+        "enterprise_only": "Denetim günlükleri yalnızca Enterprise planında kullanılabilir",
+        "enterprise_feature": "Enterprise Özelliği",
+        "enterprise_description": "Denetim günlükleri, yalnızca Enterprise planımızdaki kuruluşlar için kullanılabilen bir premium özelliktir. Kuruluşunuzun etkinliklerine tam görünürlük elde etmek için yükseltin.",
+        "upgrade_button": "Enterprise'a Yükselt"
       },
       "landing": {
         "title": "Açılış Sayfası",
@@ -1110,6 +1604,16 @@
           "selected": "Seçildi",
           "select": "Seç"
         }
+      },
+      "theme": {
+        "primary_color": "Ana Renk",
+        "primary_color_desc": "Kuruluşunuzun başlığı ve sayfa arka planı için bir ana renk seçin.",
+        "clear_color": "Rengi temizle",
+        "preview": "Canlı Önizleme",
+        "preview_hint": "Kuruluşunuzun başlığı ve arka planı böyle görünecek",
+        "footer_text": "Alt Bilgi Metni",
+        "footer_text_desc": "Sayfa alt bilgisinde görüntülenecek özel metin ekleyin.",
+        "footer_text_placeholder": "Alt bilgi metnini girin..."
       }
     },
     "users": {
@@ -1167,7 +1671,10 @@
           "remove_from_org": "Organizasyondan Kaldır",
           "removing": "Kaldırılıyor...",
           "remove_success": "Kullanıcı organizasyondan başarıyla kaldırıldı",
-          "remove_error": "Kullanıcı kaldırılırken hata oluştu"
+          "remove_error": "Kullanıcı kaldırılırken hata oluştu",
+          "updating_role": "Rol güncelleniyor...",
+          "role_update_success": "Rol başarıyla güncellendi",
+          "role_update_error": "Rol güncellenirken hata oluştu"
         },
         "modals": {
           "update_role": {
@@ -1179,6 +1686,13 @@
             "message": "Bu kullanıcıyı organizasyondan kaldırmak istediğinizden emin misiniz?",
             "button": "Kullanıcıyı Kaldır"
           }
+        },
+        "search_placeholder": "Kullanıcı ara...",
+        "no_results": "Aramanızla eşleşen kullanıcı bulunamadı",
+        "no_users": "Bu kuruluşta henüz kullanıcı yok",
+        "pagination": {
+          "showing": "{{total}} öğeden {{start}}-{{end}} arası gösteriliyor",
+          "page": "{{total}} sayfadan {{current}}. sayfa"
         }
       },
       "signups": {
@@ -1668,481 +2182,6 @@
           "toasts": {
             "creating": "Ödev oluşturuluyor...",
             "success": "Ödev başarıyla oluşturuldu"
-          }
-        }
-      }
-    },
-    "courses": {
-      "title": "Kurslar",
-      "rights_guide": "Haklar Rehberi",
-      "create_course": "Kurs Oluştur",
-      "create_new_course": "Yeni Kurs Oluştur",
-      "import_course": "Kurs içe aktar",
-      "import_scorm_description": "Yeni bir kurs oluşturmak için bir SCORM paketi içe aktarın",
-      "no_courses": "Henüz kurs yok",
-      "create_course_placeholder": "İçerik eklemek için bir kurs oluşturun",
-      "no_courses_available": "Şu anda mevcut kurs bulunmamaktadır",
-      "overview_top": {
-        "course_label": "Kurs",
-        "rights_guide_button": "Haklar Rehberi"
-      },
-      "settings": {
-        "tabs": {
-          "general": "Genel",
-          "content": "İçerik",
-          "access": "Erişim",
-          "contributors": "Katkıda Bulunanlar",
-          "certification": "Sertifikasyon"
-        },
-        "access_denied": {
-          "title": "Erişim Reddedildi",
-          "message": "Bu kursa erişim izniniz yok."
-        },
-        "access_restricted": {
-          "title": "Erişim Kısıtlı",
-          "message": "{{tab}} sekmesine erişim izniniz yok."
-        },
-        "loading": "Yükleniyor..."
-      },
-      "general": {
-        "form": {
-          "name_label": "Ad",
-          "name_required": "Bu alan gereklidir",
-          "name_max_length": "Ad en fazla 100 karakter olmalıdır",
-          "description_label": "Açıklama",
-          "description_required": "Bu alan gereklidir",
-          "description_max_length": "Açıklama en fazla 1000 karakter olmalıdır",
-          "about_label": "Hakkında",
-          "learnings_label": "Öğrenilecekler",
-          "learnings_required": "Bu alan gereklidir",
-          "learnings_invalid_format": "Geçersiz format",
-          "learnings_min_items": "En az bir öğe gereklidir",
-          "learnings_empty_text": "Tüm öğeler metin içermelidir",
-          "learnings_invalid_json": "Geçersiz JSON formatı",
-          "tags_label": "Etiketler",
-          "tags_placeholder": "Eklemek için Enter tuşuna basın...",
-          "thumbnail_type_label": "Küçük Resim Türü",
-          "thumbnail_type_image": "Resim",
-          "thumbnail_type_video": "Video",
-          "thumbnail_type_both": "Her İkisi",
-          "thumbnail_label": "Küçük Resim",
-          "image_search_placeholder": "Resim ara..."
-        },
-        "thumbnail": {
-          "upload_image": "Resim Yükle",
-          "upload_video": "Video Yükle",
-          "gallery": "Galeri",
-          "tabs": {
-            "image": "Resim",
-            "video": "Video"
-          },
-          "supported_formats": {
-            "image": "PNG, JPG/JPEG desteklenir (maks 8MB)",
-            "video": "MP4, WebM desteklenir (maks 100MB)"
-          }
-        },
-        "errors": {
-          "save_failed": "Kurs yapısı kaydedilemedi"
-        }
-      },
-      "access": {
-        "title": "Kurs Erişimi",
-        "subtitle": "Kursunuzun internette genel mi olacağını yoksa sadece kayıtlı kullanıcılara mı özel olacağını seçin.",
-        "public": {
-          "title": "Genel",
-          "description": "Kurs internette serbestçe erişilebilir olacak, arama motorları tarafından indekslenecek ve herkes katılabilir.",
-          "active": "Aktif",
-          "confirmation_title": "Genel Erişime Geçilsin mi?",
-          "confirmation_message": "Bu kursu internette genel erişime açmak istediğinizden emin misiniz?",
-          "confirmation_button": "Genel Erişime Geç"
-        },
-        "users_only": {
-          "title": "Sadece Kayıtlı Kullanıcılar",
-          "description": "Kurs sadece kayıtlı kullanıcılar için erişilebilir olacak ve hangi kullanıcı gruplarının erişebileceğini seçebileceksiniz.",
-          "active": "Aktif",
-          "confirmation_title": "Sadece Kullanıcılara Özelliğe Geçilsin mi?",
-          "confirmation_message": "Bu kursu sadece kayıtlı kullanıcılarla sınırlamak istediğinizden emin misiniz?",
-          "confirmation_button": "Sadece Kullanıcılara Geç"
-        },
-        "usergroups": {
-          "title": "Kullanıcı Grupları",
-          "subtitle": "Kursu sadece belirli kullanıcı gruplarına kısıtlamak istiyorsanız, onları buradan bağlayabilirsiniz.",
-          "table": {
-            "name": "Ad",
-            "actions": "Eylemler"
-          },
-          "actions": {
-            "delete_link": "Bağlantıyı Kaldır",
-            "link_to_usergroup": "Kullanıcı Grubuna Bağla"
-          },
-          "modals": {
-            "link_title": "Kursu Kullanıcı Grubuna Bağla",
-            "link_description": "Kursa bağlamak istediğiniz kullanıcı grubunu seçin. Bu grubun üyeleri kursa erişebilecek.",
-            "unlink_title": "Kullanıcı grubu bağlantısı kaldırılsın mı?",
-            "unlink_message": "Bu grubun üyeleri artık bu kursa erişemeyecek.",
-            "unlink_button": "Bağlantıyı Kaldır",
-            "warning": "Bu grupta olmayan kullanıcılar artık bu kursa erişemeyecek.",
-            "usergroup_name": "Kullanıcı Grubu Adı",
-            "no_usergroups": "Bağlanacak kullanıcı grubu yok",
-            "create_usergroup": "Kullanıcı grubu oluştur",
-            "link_button": "Bağla"
-          },
-          "toasts": {
-            "link_success": "Kullanıcı grubuna başarıyla bağlandı",
-            "link_error": "Hata {{status}}: {{detail}}",
-            "unlink_success": "Kullanıcı grubu bağlantısı başarıyla kaldırıldı",
-            "unlink_error": "Kullanıcı grubu bağlantısı kaldırılamadı"
-          }
-        }
-      },
-      "contributors": {
-        "title": "Kurs Katkıda Bulunanları",
-        "subtitle": "Katkıda bulunanları yönetin ve kursa yeni üyeler ekleyin.",
-        "open_to_contributors": {
-          "title": "Katkıda Bulunanlara Açık",
-          "description": "Kurs katkıda bulunanlara açık. Kullanıcılar kurs içeriğini iyileştirmeye yardımcı olmak için başvurabilirler.",
-          "active": "Aktif",
-          "confirmation_title": "Katkıda Bulunanlara Açılsın mı?",
-          "confirmation_message": "Bu kursu katkıda bulunanlara açmak istediğinizden emin misiniz?",
-          "confirmation_button": "Katkıda Bulunanlara Aç"
-        },
-        "closed_to_contributors": {
-          "title": "Katkıda Bulunanlara Kapalı",
-          "description": "Kurs katkıda bulunanlara kapalı. Sadece mevcut üyeler içeriği düzenleyebilir.",
-          "active": "Aktif",
-          "confirmation_title": "Katkıda Bulunanlara Kapatılsın mı?",
-          "confirmation_message": "Bu kursu katkıda bulunanlara kapatmak istediğinizden emin misiniz?",
-          "confirmation_button": "Katkıda Bulunanlara Kapat"
-        },
-        "search": {
-          "placeholder": "Adı veya kullanıcı adıyla katkıda bulunan eklemek için kullanıcı ara...",
-          "searching": "Aranıyor...",
-          "no_results": "Kullanıcı bulunamadı"
-        },
-        "table": {
-          "name": "Ad",
-          "username": "Kullanıcı Adı",
-          "email": "E-posta",
-          "role": "Rol",
-          "status": "Durum",
-          "added_on": "Eklenme Tarihi"
-        },
-        "roles": {
-          "creator": "Oluşturucu",
-          "contributor": "Katkıda Bulunan",
-          "maintainer": "Sorumlu",
-          "reporter": "Raporlayıcı"
-        },
-        "statuses": {
-          "active": "Aktif",
-          "inactive": "Pasif",
-          "pending": "Beklemede"
-        },
-        "actions": {
-          "selected_users": "{{count}} kullanıcı seçildi",
-          "selected_users_plural": "{{count}} kullanıcı seçildi",
-          "clear": "Temizle",
-          "add_selected": "Seçilenleri Ekle",
-          "selected_contributors": "{{count}} katkıda bulunan seçildi",
-          "selected_contributors_plural": "{{count}} katkıda bulunan seçildi",
-          "remove_selected": "Seçilenleri Kaldır",
-          "already_contributor": "Zaten katkıda bulunan"
-        },
-        "toasts": {
-          "add_success": "{{count}} katkıda bulunan başarıyla eklendi",
-          "add_error": "{{username}} eklenemedi: {{reason}}",
-          "add_failed": "Katkıda bulunanlar eklenemedi",
-          "update_success": "Katkıda bulunan başarıyla güncellendi",
-          "update_error": "Hata: {{detail}}",
-          "update_failed": "Katkıda bulunan güncellenirken hata oluştu",
-          "remove_success": "{{count}} katkıda bulunan başarıyla kaldırıldı",
-          "remove_failed": "Katkıda bulunanlar kaldırılamadı",
-          "cannot_modify_creator": "Ana oluşturucunun rolünü veya durumunu değiştiremezsiniz"
-        }
-      },
-      "certification": {
-        "title": "Kurs Sertifikasyonu",
-        "subtitle": "Bu kursu tamamlayan öğrenciler için sertifikasyonu etkinleştirin ve yapılandırın.",
-        "form": {
-          "certification_name_label": "Sertifika Adı",
-          "certification_name_required": "Sertifikasyon etkinken sertifika adı gereklidir",
-          "certification_name_max_length": "Ad en fazla 100 karakter olmalıdır",
-          "certification_name_placeholder": "ör. İleri JavaScript Sertifikası",
-          "certification_type_label": "Sertifika Türü",
-          "certification_description_label": "Sertifika Açıklaması",
-          "certification_description_required": "Sertifikasyon etkinken açıklama gereklidir",
-          "certification_description_max_length": "Açıklama en fazla 500 karakter olmalıdır",
-          "certification_description_placeholder": "Bu sertifikanın neyi temsil ettiğini açıklayın...",
-          "certificate_pattern_label": "Sertifika Deseni",
-          "certificate_instructor_label": "Eğitmen Adı (isteğe bağlı)",
-          "certificate_instructor_placeholder": "ör. Dr. Jane Doe"
-        },
-        "types": {
-          "completion": "Tamamlama",
-          "achievement": "Başarı",
-          "assessment": "Değerlendirme",
-          "participation": "Katılım",
-          "mastery": "Ustalık",
-          "professional": "Mesleki",
-          "continuing": "Sürekli",
-          "workshop": "Atölye",
-          "specialization": "Uzmanlık"
-        },
-        "patterns": {
-          "royal": {
-            "name": "Kraliyet",
-            "description": "Taç desenli süslü stil"
-          },
-          "tech": {
-            "name": "Teknoloji",
-            "description": "Devre kartından ilham alan desen"
-          },
-          "nature": {
-            "name": "Doğa",
-            "description": "Organik yaprak motifi"
-          },
-          "geometric": {
-            "name": "Geometrik",
-            "description": "Modern şekiller ve çizgiler"
-          },
-          "vintage": {
-            "name": "Vintage",
-            "description": "Klasik Art Deco stili"
-          },
-          "waves": {
-            "name": "Dalgalar",
-            "description": "Akışkan su benzeri desenler"
-          },
-          "minimal": {
-            "name": "Minimal",
-            "description": "Temiz ve basit tasarım"
-          },
-          "professional": {
-            "name": "Profesyonel",
-            "description": "İş dünyasına uygun tasarım"
-          },
-          "academic": {
-            "name": "Akademik",
-            "description": "Geleneksel üniversite stili"
-          },
-          "modern": {
-            "name": "Modern",
-            "description": "Keskin ve çağdaş çizgiler"
-          }
-        },
-        "sections": {
-          "basic_info": {
-            "title": "Temel Bilgiler",
-            "subtitle": "Sertifikanın temel detaylarını yapılandırın"
-          },
-          "certificate_design": {
-            "title": "Sertifika Tasarımı",
-            "subtitle": "Sertifikanız için görsel dekorasyonu seçin"
-          },
-          "preview": {
-            "title": "Sertifika Önizlemesi",
-            "subtitle": "Sertifikanızın nasıl görüneceğine dair gerçek zamanlı önizleme"
-          }
-        },
-        "states": {
-          "disabled": {
-            "title": "Sertifikasyon Yapılandırılmadı",
-            "message": "Öğrencilerinize kursu tamamladıklarında vermek için sertifikasyonu etkinleştirin.",
-            "button": "Sertifikasyonu Etkinleştir",
-            "creating": "Etkinleştiriliyor..."
-          },
-          "creating": {
-            "title": "Sertifikasyon oluşturuluyor...",
-            "message": "Sizin için sertifikasyonu kurarken lütfen bekleyin."
-          }
-        },
-        "errors": {
-          "loading": "Sertifikasyon yüklenirken hata oluştu",
-          "create_failed": "Sertifikasyon oluşturulamadı",
-          "remove_failed": "Sertifikasyon kaldırılamadı"
-        },
-        "toasts": {
-          "create_success": "Sertifikasyon başarıyla oluşturuldu",
-          "create_error": "Sertifikasyon oluşturulamadı",
-          "remove_success": "Sertifikasyon başarıyla kaldırıldı",
-          "remove_error": "Sertifikasyon kaldırılamadı"
-        }
-      },
-      "communities": {
-        "title": "Topluluklar",
-        "new_community": "Yeni Topluluk",
-        "no_communities": "Henüz topluluk yok",
-        "no_communities_description": "Tartışmalara başlamak için ilk topluluğunuzu oluşturun",
-        "card": {
-          "open_settings": "Ayarları Aç",
-          "view_community": "Topluluğu Görüntüle",
-          "quick_edit": "Hızlı Düzenle"
-        },
-        "settings": {
-          "tabs": {
-            "general": "Genel",
-            "thumbnail": "Küçük Resim",
-            "moderation": "Moderasyon"
-          }
-        },
-        "general": {
-          "title": "Topluluk Ayarları",
-          "subtitle": "Topluluğunuzun temel bilgilerini güncelleyin",
-          "form": {
-            "name_label": "Topluluk Adı",
-            "name_required": "Topluluk adı gereklidir",
-            "name_min_length": "Ad en az 3 karakter olmalıdır",
-            "name_max_length": "Ad 100 karakterden az olmalıdır",
-            "name_placeholder": "Topluluk adını girin",
-            "description_label": "Açıklama",
-            "description_max_length": "Açıklama 500 karakterden az olmalıdır",
-            "description_placeholder": "Bu topluluğun ne hakkında olduğunu açıklayın",
-            "public_label": "Herkese Açık Topluluk",
-            "public_description": "Bu topluluğu herkes için görünür yap",
-            "characters_left": "{{count}} karakter kaldı"
-          },
-          "toasts": {
-            "updating": "Topluluk güncelleniyor...",
-            "update_success": "Topluluk başarıyla güncellendi",
-            "update_error": "Topluluk güncellenemedi"
-          }
-        },
-        "thumbnail": {
-          "title": "Topluluk Küçük Resmi",
-          "subtitle": "Topluluğunuz için kapak resmi yükleyin",
-          "no_thumbnail": "Küçük resim ayarlanmamış",
-          "upload_image": "Resim Yükle",
-          "browse_unsplash": "Unsplash'ta Ara",
-          "uploading": "Yükleniyor...",
-          "supported_formats": "Desteklenen formatlar: JPG, JPEG, PNG. Maksimum boyut: 8MB. Önerilen en-boy oranı: 16:9",
-          "toasts": {
-            "update_success": "Küçük resim başarıyla güncellendi",
-            "update_error": "Küçük resim güncellenemedi",
-            "invalid_type": "Geçersiz dosya türü. Lütfen yalnızca PNG veya JPG/JPEG resim yükleyin",
-            "file_too_large": "Dosya boyutu 8MB sınırını aşıyor"
-          }
-        },
-        "moderation": {
-          "title": "İçerik Moderasyonu",
-          "subtitle": "Yasaklı kelimeleri ve içerik filtrelerini yapılandırın",
-          "info_title": "Yasaklı kelimeler",
-          "info_description": "Bu kelimeleri içeren tartışmalar ve yanıtlar engellenecektir. Kullanıcılar bir hata mesajı görecek ve içerikleri yayınlanmayacaktır.",
-          "add_word_label": "Yasaklı kelime ekle",
-          "add_word_placeholder": "Kelime veya ifade girin...",
-          "add_button": "Ekle",
-          "batch_add_label": "Toplu ekle",
-          "batch_add_description": "Virgülle ayırarak birden fazla kelime ekleyin",
-          "batch_add_placeholder": "kelime1, kelime2, kelime3...",
-          "add_all_button": "Tümünü Ekle",
-          "blocked_words_label": "Yasaklı kelimeler",
-          "no_blocked_words": "Henüz yasaklı kelime yok",
-          "no_blocked_words_description": "İçerik moderasyonunu etkinleştirmek için kelime ekleyin",
-          "word_exists_error": "Bu kelime zaten listede",
-          "all_words_exist_error": "Tüm kelimeler zaten listede veya giriş boş",
-          "toasts": {
-            "saving": "Moderasyon ayarları kaydediliyor...",
-            "save_success": "Moderasyon ayarları kaydedildi",
-            "save_error": "Moderasyon ayarları kaydedilemedi"
-          }
-        },
-        "modals": {
-          "create": {
-            "title": "Topluluk Oluştur",
-            "description": "Tartışmalar için yeni bir topluluk oluşturun",
-            "form": {
-              "name_label": "Topluluk Adı",
-              "name_placeholder": "Topluluk adını girin",
-              "description_label": "Açıklama",
-              "description_placeholder": "Bu topluluğun ne hakkında olduğunu açıklayın",
-              "public_label": "Bu topluluğu herkese açık yap (herkes için görünür)"
-            },
-            "cancel": "İptal",
-            "submit": "Topluluk Oluştur"
-          },
-          "edit": {
-            "title": "Topluluğu Düzenle",
-            "description": "Topluluk ayarlarını güncelle"
-          },
-          "delete": {
-            "title": "{{name}} silinsin mi?",
-            "message": "Bu topluluğu silmek istediğinizden emin misiniz? Tüm tartışmalar kalıcı olarak kaldırılacaktır.",
-            "button": "Topluluğu Sil"
-          }
-        },
-        "toasts": {
-          "creating": "Topluluk oluşturuluyor...",
-          "create_success": "Topluluk başarıyla oluşturuldu",
-          "create_error": "Topluluk oluşturulamadı",
-          "deleting": "Topluluk siliniyor...",
-          "delete_success": "Topluluk başarıyla silindi",
-          "delete_error": "Topluluk silinemedi"
-        }
-      },
-      "structure": {
-        "loading": "Yükleniyor...",
-        "add_chapter_button": "Bölüm Ekle",
-        "modals": {
-          "new_chapter": {
-            "title": "Bölüm Oluştur",
-            "description": "Kursunuza yeni bir bölüm ekleyin",
-            "form": {
-              "name_label": "Bölüm Adı",
-              "name_required": "Lütfen bölüm için bir ad girin",
-              "description_label": "Bölüm Açıklามası",
-              "description_required": "Lütfen bu bölüm için bir açıklama girin",
-              "submit": "Bölüm Oluştur"
-            }
-          },
-          "delete_chapter": {
-            "title": "{{name}} silinsin mi?",
-            "message": "Bu bölümü silmek istediğinizden emin misiniz?",
-            "button": "Bölümü Sil"
-          },
-          "new_activity": {
-            "title": "Aktivite Oluştur",
-            "description": "Kursa eklemek istediğiniz aktivite türünü seçin"
-          },
-          "delete_activity": {
-            "title": "{{name}} silinsin mi?",
-            "message": "Bu aktiviteyi silmek istediğinizden emin misiniz?",
-            "button": "Aktiviteyi Sil"
-          }
-        },
-        "actions": {
-          "add_chapter": "Bölüm Ekle",
-          "add_activity": "Aktivite Ekle",
-          "publish": "Yayınla",
-          "unpublish": "Yayından Kaldır",
-          "preview_activity": "Aktivite Önizleme",
-          "edit_page": "Sayfayı Düzenle",
-          "edit_assignment": "Ödevi Düzenle"
-        },
-        "chapter_element": {
-          "chapter_name_placeholder": "Bölüm Adı"
-        },
-        "activity": {
-          "name_placeholder": "Aktivite Adı",
-          "types": {
-            "video": "Video",
-            "document": "Doküman",
-            "assignment": "Ödev",
-            "assignments": "Ödevler",
-            "dynamic": "Dinamik",
-            "dynamic_page": "Dinamik Sayfa",
-            "scorm": "Scorm"
-          },
-          "toasts": {
-            "deleting": "Aktivite siliniyor...",
-            "delete_success": "Aktivite başarıyla silindi",
-            "updating": "Ödev güncelleniyor...",
-            "update_success": "Aktivite başarıyla güncellendi",
-            "name_update_success": "Aktivite adı başarıyla güncellendi",
-            "name_update_error": "Aktivite adı güncellenemedi",
-            "creating": "Aktivite oluşturuluyor...",
-            "create_success": "Aktivite başarıyla oluşturuldu",
-            "uploading": "Dosya yükleniyor ve aktivite oluşturuluyor...",
-            "upload_success": "Dosya başarıyla yüklendi",
-            "creating_uploading": "Aktivite oluşturuluyor ve dosya yükleniyor..."
           }
         }
       }

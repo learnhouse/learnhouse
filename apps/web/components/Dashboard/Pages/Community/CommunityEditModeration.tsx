@@ -82,7 +82,7 @@ const CommunityEditModeration: React.FC = () => {
       return
     }
 
-    const uniqueNewWords = [...new Set(newWordsToAdd)]
+    const uniqueNewWords = Array.from(new Set(newWordsToAdd))
     setWords([...words, ...uniqueNewWords])
     setBatchWords('')
     setError(null)
