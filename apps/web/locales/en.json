@@ -848,8 +848,16 @@
         "subtitle": "Manage your organization's visual identity and social presence",
         "tabs": {
           "images": "Images & Previews",
+          "theme": "Theme",
           "social": "Social Links"
         }
+      },
+      "theme": {
+        "primary_color": "Primary Color",
+        "primary_color_desc": "Choose a primary color for your organization's header and page background tint.",
+        "clear_color": "Clear color",
+        "preview": "Live Preview",
+        "preview_hint": "This is how your organization header and background will appear"
       },
       "socials": {
         "title": "Social Links",

@@ -89,7 +89,7 @@ class OrgFeatureConfig(BaseModel):
 # General
 class OrgGeneralConfig(BaseModel):
     enabled: bool = True
-    color: str = "normal"
+    color: str = ""
     watermark: bool = True
 
 

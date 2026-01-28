@@ -71,6 +71,7 @@ interface SearchBarProps {
   className?: string;
   isMobile?: boolean;
   showSearchSuggestions?: boolean;
+  primaryColor?: string;
 }
 
 const CourseResultsSkeleton = () => (
@@ -91,11 +92,12 @@ const CourseResultsSkeleton = () => (
   </div>
 );
 
-export const SearchBar: React.FC<SearchBarProps> = ({ 
-  orgslug, 
-  className = '', 
+export const SearchBar: React.FC<SearchBarProps> = ({
+  orgslug,
+  className = '',
   isMobile = false,
   showSearchSuggestions = false,
+  primaryColor = '',
 }) => {
   const { t } = useTranslation();
   const org = useOrg() as any;
@@ -362,12 +364,15 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           onChange={handleSearchChange}
           onFocus={() => setShowResults(true)}
           placeholder={t('search.search_placeholder')}
-          className="w-full h-9 pl-11 pr-4 rounded-xl nice-shadow bg-white 
-                     focus:outline-none focus:ring-1 focus:ring-black/5 focus:border-black/20 
-                     text-sm placeholder:text-black/40 transition-all"
+          className={`w-full h-9 pl-11 pr-4 rounded-xl
+                     focus:outline-none focus:ring-1 transition-all text-sm
+                     ${primaryColor
+                       ? 'bg-white/20 text-white placeholder:text-white/60 focus:ring-white/20 focus:border-white/30'
+                       : 'bg-white text-black placeholder:text-black/40 focus:ring-black/5 focus:border-black/20 nice-shadow'
+                     }`}
         />
         <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-          <Search className="text-black/40 group-focus-within:text-black/60 transition-colors" size={18} />
+          <Search className={`${primaryColor ? 'text-white/60 group-focus-within:text-white/80' : 'text-black/40 group-focus-within:text-black/60'} transition-colors`} size={18} />
         </div>
       </div>
 
