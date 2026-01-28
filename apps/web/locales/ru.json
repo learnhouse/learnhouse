@@ -70,6 +70,10 @@
         "certifications": {
           "title": "Функция Pro",
           "description": "Сертификаты — это премиум-функция, доступная только для организаций на тарифе Pro или выше. Обновитесь, чтобы выдавать сертификаты учащимся, завершившим ваши курсы."
+        },
+        "communities": {
+          "title": "Функция Standard",
+          "description": "Сообщества — это премиум-функция, доступная только для организаций с планом Standard или выше. Обновитесь, чтобы разблокировать дискуссионные сообщества для ваших участников."
         }
       }
     },
@@ -262,7 +266,25 @@
     "submitting_contributor_application": "Отправка заявки...",
     "contributor_application_success": "Ваша заявка на участие была успешно отправлена",
     "contributor_application_error": "Не удалось отправить заявку. Пожалуйста, попробуйте позже.",
-    "contribute": "Участвовать"
+    "contribute": "Участвовать",
+    "scorm": {
+      "upload_package": "Загрузить пакет SCORM",
+      "package_file": "Файл пакета (.zip)",
+      "click_to_upload": "Нажмите для загрузки или перетащите",
+      "supported_versions": "Пакет SCORM 1.2 или SCORM 2004",
+      "import_info": "Загрузите ваш пакет SCORM для анализа его содержимого. Вы сможете настроить курс и назначить активности главам.",
+      "analyze_package": "Анализировать пакет",
+      "package_analyzed": "Пакет успешно проанализирован",
+      "assign_scos": "Назначить активности главам",
+      "activity_name": "Активность",
+      "chapter_name": "Глава",
+      "upload_different": "Загрузить другой пакет",
+      "selected": "выбрано",
+      "create_course": "Создать курс",
+      "configure": "Настроить",
+      "ready_to_analyze": "Готов к анализу",
+      "course_details": "Детали курса"
+    }
   },
   "collections": {
     "collections": "Коллекции",
@@ -709,7 +731,471 @@
       "import_scorm_description": "Импортировать пакет SCORM для создания нового курса",
       "no_courses": "Курсов пока нет",
       "create_course_placeholder": "Создайте курс, чтобы добавить контент",
-      "no_courses_available": "Доступных курсов пока нет"
+      "no_courses_available": "Доступных курсов пока нет",
+      "overview_top": {
+        "course_label": "Курс",
+        "rights_guide_button": "Руководство по правам"
+      },
+      "settings": {
+        "tabs": {
+          "general": "Общие",
+          "content": "Контент",
+          "access": "Доступ",
+          "contributors": "Участники",
+          "certification": "Сертификация"
+        },
+        "access_denied": {
+          "title": "Доступ запрещен",
+          "message": "У вас нет прав для доступа к этому курсу."
+        },
+        "access_restricted": {
+          "title": "Доступ ограничен",
+          "message": "У вас нет прав для доступа к вкладке {{tab}}"
+        },
+        "loading": "Загрузка..."
+      },
+      "general": {
+        "form": {
+          "name_label": "Название",
+          "name_required": "Обязательно",
+          "name_max_length": "Не более 100 символов",
+          "description_label": "Описание",
+          "description_required": "Обязательно",
+          "description_max_length": "Не более 1000 символов",
+          "about_label": "Подробности",
+          "learnings_label": "Чему научит курс",
+          "learnings_required": "Обязательно",
+          "learnings_invalid_format": "Неверный формат",
+          "learnings_min_items": "Требуется хотя бы один пункт обучения",
+          "learnings_empty_text": "Все пункты обучения должны содержать текст",
+          "learnings_invalid_json": "Неверный формат JSON",
+          "tags_label": "Теги",
+          "tags_placeholder": "Нажмите Enter, чтобы добавить...",
+          "thumbnail_type_label": "Тип миниатюры",
+          "thumbnail_type_image": "Изображение",
+          "thumbnail_type_video": "Видео",
+          "thumbnail_type_both": "Оба",
+          "thumbnail_label": "Миниатюра",
+          "image_search_placeholder": "Поиск изображений..."
+        },
+        "thumbnail": {
+          "upload_image": "Загрузить изображение",
+          "upload_video": "Загрузить видео",
+          "gallery": "Галерея",
+          "tabs": {
+            "image": "Изображение",
+            "video": "Видео"
+          },
+          "supported_formats": {
+            "image": "Поддерживаемые форматы: PNG, JPG/JPEG (макс. 8 МБ)",
+            "video": "Поддерживаемые форматы: MP4, WebM (макс. 100 МБ)"
+          }
+        },
+        "errors": {
+          "save_failed": "Не удалось сохранить структуру курса."
+        }
+      },
+      "access": {
+        "title": "Доступ к курсу",
+        "subtitle": "Выберите, будет ли ваш курс доступен всем в Интернете или только зарегистрированным пользователям",
+        "public": {
+          "title": "Публичный",
+          "description": "Курс доступен всем в Интернете, индексируется поисковыми системами и открыт для каждого",
+          "active": "Активен",
+          "confirmation_title": "Сделать публичным?",
+          "confirmation_message": "Вы уверены, что хотите сделать этот курс доступным для всех в Интернете?",
+          "confirmation_button": "Сделать публичным"
+        },
+        "users_only": {
+          "title": "Только для пользователей",
+          "description": "Курс доступен только зарегистрированным пользователям, также вы можете выбрать конкретные группы пользователей",
+          "active": "Активен",
+          "confirmation_title": "Сделать только для пользователей?",
+          "confirmation_message": "Вы уверены, что хотите сделать этот курс доступным только для зарегистрированных пользователей?",
+          "confirmation_button": "Только для пользователей"
+        },
+        "usergroups": {
+          "title": "Группы пользователей",
+          "subtitle": "Вы можете предоставить доступ к этому курсу только определенным группам пользователей, связав его с группой",
+          "table": {
+            "name": "Название",
+            "actions": "Действия"
+          },
+          "actions": {
+            "delete_link": "Удалить связь",
+            "link_to_usergroup": "Связать с группой"
+          },
+          "modals": {
+            "link_title": "Связать курс с группой пользователей",
+            "link_description": "Выберите группу пользователей для связи с этим курсом. Участники этой группы получат доступ к курсу.",
+            "unlink_title": "Удалить связь с группой?",
+            "unlink_message": "Участники этой группы больше не будут иметь доступ к этому курсу",
+            "unlink_button": "Удалить связь",
+            "warning": "Пользователи, не входящие в эту группу, потеряют доступ к этому курсу",
+            "usergroup_name": "Название группы",
+            "no_usergroups": "Нет доступных групп",
+            "create_usergroup": "Создать группу пользователей",
+            "link_button": "Связать"
+          },
+          "toasts": {
+            "link_success": "Успешно связано с группой",
+            "link_error": "Ошибка {{status}}: {{detail}}",
+            "unlink_success": "Связь с группой успешно удалена",
+            "unlink_error": "Произошла ошибка при удалении связи с группой."
+          }
+        }
+      },
+      "contributors": {
+        "title": "Участники курса",
+        "subtitle": "Управляйте участниками и добавляйте новых в ваш курс",
+        "open_to_contributors": {
+          "title": "Открыто для участников",
+          "description": "Курс открыт для участников. Пользователи могут подавать заявки на участие в улучшении контента курса.",
+          "active": "Активен",
+          "confirmation_title": "Открыть для участников?",
+          "confirmation_message": "Вы уверены, что хотите открыть этот курс для участников?",
+          "confirmation_button": "Открыть для участников"
+        },
+        "closed_to_contributors": {
+          "title": "Закрыто для участников",
+          "description": "Курс закрыт для участников. Только текущие участники могут изменять контент курса.",
+          "active": "Активен",
+          "confirmation_title": "Закрыть для участников?",
+          "confirmation_message": "Вы уверены, что хотите закрыть этот курс для участников?",
+          "confirmation_button": "Закрыть для участников"
+        },
+        "search": {
+          "placeholder": "Поиск пользователей по имени или логину для добавления...",
+          "searching": "Поиск...",
+          "no_results": "Пользователи не найдены"
+        },
+        "table": {
+          "name": "Имя",
+          "username": "Логин",
+          "email": "Электронная почта",
+          "role": "Роль",
+          "status": "Статус",
+          "added_on": "Добавлен"
+        },
+        "roles": {
+          "creator": "СОЗДАТЕЛЬ",
+          "contributor": "УЧАСТНИК",
+          "maintainer": "СОПРОВОЖДАЮЩИЙ",
+          "reporter": "РЕПОРТЕР"
+        },
+        "statuses": {
+          "active": "АКТИВЕН",
+          "inactive": "НЕАКТИВЕН",
+          "pending": "ОЖИДАЕТ"
+        },
+        "actions": {
+          "selected_users": "Выбран {{count}} пользователь",
+          "selected_users_plural": "Выбрано {{count}} пользователей",
+          "clear": "Очистить",
+          "add_selected": "Добавить выбранных",
+          "selected_contributors": "Выбран {{count}} участник",
+          "selected_contributors_plural": "Выбрано {{count}} участников",
+          "remove_selected": "Удалить выбранных",
+          "already_contributor": "Уже является участником"
+        },
+        "toasts": {
+          "add_success": "Успешно добавлено {{count}} участника(ов)",
+          "add_error": "Не удалось добавить {{username}}: {{reason}}",
+          "add_failed": "Не удалось добавить участников",
+          "update_success": "Участник успешно обновлен",
+          "update_error": "Ошибка: {{detail}}",
+          "update_failed": "Произошла ошибка при обновлении участника.",
+          "remove_success": "Успешно удалено {{count}} участника(ов)",
+          "remove_failed": "Не удалось удалить участников",
+          "cannot_modify_creator": "Нельзя изменить роль или статус создателя"
+        }
+      },
+      "certification": {
+        "title": "Сертификация курса",
+        "subtitle": "Включите и настройте сертификаты для учеников, завершивших этот курс",
+        "form": {
+          "certification_name_label": "Название сертификации",
+          "certification_name_required": "Обязательно при включенной сертификации",
+          "certification_name_max_length": "Не более 100 символов",
+          "certification_name_placeholder": "напр., Сертификация Advanced JavaScript",
+          "certification_type_label": "Тип сертификации",
+          "certification_description_label": "Описание сертификации",
+          "certification_description_required": "Обязательно при включенной сертификации",
+          "certification_description_max_length": "Не более 500 символов",
+          "certification_description_placeholder": "Опишите, что подтверждает эта сертификация и ее ценность...",
+          "certificate_pattern_label": "Узор сертификата",
+          "certificate_instructor_label": "Имя инструктора (необязательно)",
+          "certificate_instructor_placeholder": "напр., Д-р Анна Петрова"
+        },
+        "types": {
+          "completion": "Завершение курса",
+          "achievement": "За достижения",
+          "assessment": "На основе оценки",
+          "participation": "За участие",
+          "mastery": "За овладение навыками",
+          "professional": "Профессиональное развитие",
+          "continuing": "Повышение квалификации",
+          "workshop": "Посещение семинара",
+          "specialization": "Специализация"
+        },
+        "patterns": {
+          "royal": {
+            "name": "Королевский",
+            "description": "Украшенный мотивами короны"
+          },
+          "tech": {
+            "name": "Техно",
+            "description": "Узоры в стиле микросхем"
+          },
+          "nature": {
+            "name": "Природа",
+            "description": "Органические растительные узоры"
+          },
+          "geometric": {
+            "name": "Геометрия",
+            "description": "Абстрактные формы и линии"
+          },
+          "vintage": {
+            "name": "Винтаж",
+            "description": "Стиль арт-деко"
+          },
+          "waves": {
+            "name": "Волны",
+            "description": "Плавные водные узоры"
+          },
+          "minimal": {
+            "name": "Минимализм",
+            "description": "Чисто и просто"
+          },
+          "professional": {
+            "name": "Профессиональный",
+            "description": "Строгий деловой дизайн"
+          },
+          "academic": {
+            "name": "Академический",
+            "description": "Традиционный университетский стиль"
+          },
+          "modern": {
+            "name": "Модерн",
+            "description": "Современные чистые линии"
+          }
+        },
+        "sections": {
+          "basic_info": {
+            "title": "Основная информация",
+            "subtitle": "Настройте основные детали вашей сертификации"
+          },
+          "certificate_design": {
+            "title": "Дизайн сертификата",
+            "subtitle": "Выберите декоративный узор для вашего сертификата"
+          },
+          "preview": {
+            "title": "Предпросмотр сертификата",
+            "subtitle": "Живой предпросмотр вашего сертификата"
+          }
+        },
+        "states": {
+          "disabled": {
+            "title": "Сертификация не настроена",
+            "message": "Включите сертификацию, чтобы выдавать ученикам сертификаты после завершения курса.",
+            "button": "Включить сертификацию",
+            "creating": "Создание..."
+          },
+          "creating": {
+            "title": "Создание сертификации...",
+            "message": "Пожалуйста, подождите, пока мы настраиваем сертификацию курса."
+          }
+        },
+        "errors": {
+          "loading": "Ошибка при загрузке сертификаций",
+          "create_failed": "Не удалось создать сертификацию.",
+          "remove_failed": "Не удалось удалить сертификацию."
+        },
+        "toasts": {
+          "create_success": "Сертификация успешно создана",
+          "create_error": "Не удалось создать сертификацию",
+          "remove_success": "Сертификация успешно удалена",
+          "remove_error": "Не удалось удалить сертификацию"
+        }
+      },
+      "communities": {
+        "title": "Сообщества",
+        "new_community": "Новое сообщество",
+        "no_communities": "Пока нет сообществ",
+        "no_communities_description": "Создайте свое первое сообщество, чтобы начать обсуждения",
+        "card": {
+          "open_settings": "Открыть настройки",
+          "view_community": "Посмотреть сообщество",
+          "quick_edit": "Быстрое редактирование"
+        },
+        "settings": {
+          "tabs": {
+            "general": "Общие",
+            "thumbnail": "Миниатюра",
+            "moderation": "Модерация"
+          }
+        },
+        "general": {
+          "title": "Настройки сообщества",
+          "subtitle": "Обновите основную информацию о вашем сообществе",
+          "form": {
+            "name_label": "Название сообщества",
+            "name_required": "Название сообщества обязательно",
+            "name_min_length": "Название должно содержать минимум 3 символа",
+            "name_max_length": "Название должно содержать менее 100 символов",
+            "name_placeholder": "Введите название сообщества",
+            "description_label": "Описание",
+            "description_max_length": "Описание должно содержать менее 500 символов",
+            "description_placeholder": "Опишите, о чем это сообщество",
+            "public_label": "Публичное сообщество",
+            "public_description": "Сделать это сообщество видимым для всех",
+            "characters_left": "Осталось {{count}} символов"
+          },
+          "toasts": {
+            "updating": "Обновление сообщества...",
+            "update_success": "Сообщество успешно обновлено",
+            "update_error": "Не удалось обновить сообщество"
+          }
+        },
+        "thumbnail": {
+          "title": "Миниатюра сообщества",
+          "subtitle": "Загрузите обложку для вашего сообщества",
+          "no_thumbnail": "Миниатюра не установлена",
+          "upload_image": "Загрузить изображение",
+          "browse_unsplash": "Искать на Unsplash",
+          "uploading": "Загрузка...",
+          "supported_formats": "Поддерживаемые форматы: JPG, JPEG, PNG. Макс. размер: 8МБ. Рекомендуемое соотношение: 16:9",
+          "toasts": {
+            "update_success": "Миниатюра успешно обновлена",
+            "update_error": "Не удалось обновить миниатюру",
+            "invalid_type": "Недопустимый тип файла. Загружайте только изображения PNG или JPG/JPEG",
+            "file_too_large": "Размер файла превышает лимит 8МБ"
+          }
+        },
+        "moderation": {
+          "title": "Модерация контента",
+          "subtitle": "Настройте заблокированные слова и фильтры контента",
+          "info_title": "Заблокированные слова",
+          "info_description": "Обсуждения и ответы, содержащие эти слова, будут заблокированы. Пользователи увидят сообщение об ошибке, и их контент не будет опубликован.",
+          "add_word_label": "Добавить заблокированное слово",
+          "add_word_placeholder": "Введите слово или фразу...",
+          "add_button": "Добавить",
+          "batch_add_label": "Массовое добавление слов",
+          "batch_add_description": "Добавьте несколько слов сразу, разделенных запятыми",
+          "batch_add_placeholder": "слово1, слово2, слово3...",
+          "add_all_button": "Добавить все",
+          "blocked_words_label": "Заблокированные слова",
+          "no_blocked_words": "Заблокированных слов пока нет",
+          "no_blocked_words_description": "Добавьте слова, чтобы включить модерацию контента",
+          "word_exists_error": "Это слово уже в списке",
+          "all_words_exist_error": "Все слова уже в списке или ввод пуст",
+          "toasts": {
+            "saving": "Сохранение настроек модерации...",
+            "save_success": "Настройки модерации сохранены",
+            "save_error": "Не удалось сохранить настройки модерации"
+          }
+        },
+        "modals": {
+          "create": {
+            "title": "Создать сообщество",
+            "description": "Создайте новое сообщество для обсуждений",
+            "form": {
+              "name_label": "Название сообщества",
+              "name_placeholder": "Введите название сообщества",
+              "description_label": "Описание",
+              "description_placeholder": "Опишите, о чем это сообщество",
+              "public_label": "Сделать это сообщество публичным (видимым для всех)"
+            },
+            "cancel": "Отмена",
+            "submit": "Создать сообщество"
+          },
+          "edit": {
+            "title": "Редактировать сообщество",
+            "description": "Обновить настройки сообщества"
+          },
+          "delete": {
+            "title": "Удалить {{name}}?",
+            "message": "Вы уверены, что хотите удалить это сообщество? Все обсуждения будут удалены навсегда.",
+            "button": "Удалить сообщество"
+          }
+        },
+        "toasts": {
+          "creating": "Создание сообщества...",
+          "create_success": "Сообщество успешно создано",
+          "create_error": "Не удалось создать сообщество",
+          "deleting": "Удаление сообщества...",
+          "delete_success": "Сообщество успешно удалено",
+          "delete_error": "Не удалось удалить сообщество"
+        }
+      },
+      "structure": {
+        "loading": "Загрузка...",
+        "add_chapter_button": "Добавить главу",
+        "modals": {
+          "new_chapter": {
+            "title": "Создать главу",
+            "description": "Добавьте новую главу в курс",
+            "form": {
+              "name_label": "Название главы",
+              "name_required": "Пожалуйста, укажите название главы",
+              "description_label": "Описание главы",
+              "description_required": "Пожалуйста, укажите описание главы",
+              "submit": "Создать главу"
+            }
+          },
+          "delete_chapter": {
+            "title": "Удалить {{name}}?",
+            "message": "Вы уверены, что хотите удалить эту главу?",
+            "button": "Удалить главу"
+          },
+          "new_activity": {
+            "title": "Создать занятие",
+            "description": "Выберите тип занятия для добавления в курс"
+          },
+          "delete_activity": {
+            "title": "Удалить {{name}}?",
+            "message": "Вы уверены, что хотите удалить это занятие?",
+            "button": "Удалить занятие"
+          }
+        },
+        "actions": {
+          "add_chapter": "Добавить главу",
+          "add_activity": "Добавить занятие",
+          "publish": "Опубликовать",
+          "unpublish": "Снять с публикации",
+          "preview_activity": "Предпросмотр занятия",
+          "edit_page": "Редактировать страницу",
+          "edit_assignment": "Редактировать задание"
+        },
+        "chapter_element": {
+          "chapter_name_placeholder": "Название главы"
+        },
+        "activity": {
+          "name_placeholder": "Название занятия",
+          "types": {
+            "video": "Видео",
+            "document": "Документ",
+            "assignment": "Задание",
+            "assignments": "Задания",
+            "dynamic": "Динамическое",
+            "dynamic_page": "Динамическая страница",
+            "scorm": "Scorm"
+          },
+          "toasts": {
+            "deleting": "Удаление занятия...",
+            "delete_success": "Занятие успешно удалено",
+            "updating": "Обновление задания...",
+            "update_success": "Занятие успешно обновлено",
+            "name_update_success": "Название занятия успешно обновлено",
+            "name_update_error": "Не удалось обновить название занятия",
+            "creating": "Создание занятия...",
+            "create_success": "Занятие успешно создано",
+            "uploading": "Загрузка файла и создание занятия...",
+            "upload_success": "Файл успешно загружен",
+            "creating_uploading": "Создание занятия и загрузка файла..."
+          }
+        }
+      }
     },
     "organization": {
       "settings": {
@@ -768,7 +1254,10 @@
         "saving": "Сохранение...",
         "update_success": "Организация обновлена",
         "update_error": "Не удалось обновить организацию",
-        "updating": "Обновление организации..."
+        "updating": "Обновление организации...",
+        "footer_text": "Текст подвала",
+        "footer_text_placeholder": "Введите текст подвала...",
+        "footer_text_desc": "Пользовательский текст, отображаемый внизу страниц вашей организации"
       },
       "images": {
         "title": "Изображения и превью",
@@ -826,7 +1315,8 @@
         "subtitle": "Управляйте визуальной идентичностью и присутствием в соцсетях вашей организации",
         "tabs": {
           "images": "Изображения и превью",
-          "social": "Ссылки на соцсети"
+          "social": "Ссылки на соцсети",
+          "theme": "Тема"
         }
       },
       "socials": {
@@ -959,7 +1449,11 @@
           "generating": "Генерация CSV...",
           "success": "CSV успешно экспортирован",
           "error": "Не удалось экспортировать CSV"
-        }
+        },
+        "enterprise_only": "Журналы аудита доступны только в плане Enterprise",
+        "enterprise_feature": "Функция Enterprise",
+        "enterprise_description": "Журналы аудита — это премиум-функция, доступная только для организаций с планом Enterprise. Обновитесь, чтобы получить полную видимость активностей вашей организации.",
+        "upgrade_button": "Обновить до Enterprise"
       },
       "landing": {
         "title": "Лендинг",
@@ -1110,6 +1604,16 @@
           "selected": "Выбрано",
           "select": "Выбрать"
         }
+      },
+      "theme": {
+        "primary_color": "Основной цвет",
+        "primary_color_desc": "Выберите основной цвет для заголовка и фона страницы вашей организации.",
+        "clear_color": "Очистить цвет",
+        "preview": "Предпросмотр",
+        "preview_hint": "Так будут выглядеть заголовок и фон вашей организации",
+        "footer_text": "Текст подвала",
+        "footer_text_desc": "Добавьте пользовательский текст для отображения в подвале страницы.",
+        "footer_text_placeholder": "Введите текст подвала..."
       }
     },
     "users": {
@@ -1167,7 +1671,10 @@
           "remove_from_org": "Удалить из организации",
           "removing": "Удаление...",
           "remove_success": "Пользователь удален из организации",
-          "remove_error": "Ошибка при удалении пользователя"
+          "remove_error": "Ошибка при удалении пользователя",
+          "updating_role": "Обновление роли...",
+          "role_update_success": "Роль успешно обновлена",
+          "role_update_error": "Ошибка обновления роли"
         },
         "modals": {
           "update_role": {
@@ -1179,6 +1686,13 @@
             "message": "Вы уверены, что хотите удалить этого пользователя из организации?",
             "button": "Удалить пользователя"
           }
+        },
+        "search_placeholder": "Поиск пользователей...",
+        "no_results": "Пользователи, соответствующие вашему поиску, не найдены",
+        "no_users": "В этой организации пока нет пользователей",
+        "pagination": {
+          "showing": "Показано {{start}}-{{end}} из {{total}}",
+          "page": "Страница {{current}} из {{total}}"
         }
       },
       "signups": {
@@ -1668,481 +2182,6 @@
           "toasts": {
             "creating": "Создание задания...",
             "success": "Задание успешно создано"
-          }
-        }
-      }
-    },
-    "courses": {
-      "title": "Курсы",
-      "rights_guide": "Руководство по правам",
-      "create_course": "Создать курс",
-      "create_new_course": "Создать новый курс",
-      "import_course": "Импортировать курс",
-      "import_scorm_description": "Импортировать пакет SCORM для создания нового курса",
-      "no_courses": "Курсов пока нет",
-      "create_course_placeholder": "Создайте курс, чтобы добавить контент",
-      "no_courses_available": "Доступных курсов пока нет",
-      "overview_top": {
-        "course_label": "Курс",
-        "rights_guide_button": "Руководство по правам"
-      },
-      "settings": {
-        "tabs": {
-          "general": "Общие",
-          "content": "Контент",
-          "access": "Доступ",
-          "contributors": "Участники",
-          "certification": "Сертификация"
-        },
-        "access_denied": {
-          "title": "Доступ запрещен",
-          "message": "У вас нет прав для доступа к этому курсу."
-        },
-        "access_restricted": {
-          "title": "Доступ ограничен",
-          "message": "У вас нет прав для доступа к вкладке {{tab}}"
-        },
-        "loading": "Загрузка..."
-      },
-      "general": {
-        "form": {
-          "name_label": "Название",
-          "name_required": "Обязательно",
-          "name_max_length": "Не более 100 символов",
-          "description_label": "Описание",
-          "description_required": "Обязательно",
-          "description_max_length": "Не более 1000 символов",
-          "about_label": "Подробности",
-          "learnings_label": "Чему научит курс",
-          "learnings_required": "Обязательно",
-          "learnings_invalid_format": "Неверный формат",
-          "learnings_min_items": "Требуется хотя бы один пункт обучения",
-          "learnings_empty_text": "Все пункты обучения должны содержать текст",
-          "learnings_invalid_json": "Неверный формат JSON",
-          "tags_label": "Теги",
-          "tags_placeholder": "Нажмите Enter, чтобы добавить...",
-          "thumbnail_type_label": "Тип миниатюры",
-          "thumbnail_type_image": "Изображение",
-          "thumbnail_type_video": "Видео",
-          "thumbnail_type_both": "Оба",
-          "thumbnail_label": "Миниатюра",
-          "image_search_placeholder": "Поиск изображений..."
-        },
-        "thumbnail": {
-          "upload_image": "Загрузить изображение",
-          "upload_video": "Загрузить видео",
-          "gallery": "Галерея",
-          "tabs": {
-            "image": "Изображение",
-            "video": "Видео"
-          },
-          "supported_formats": {
-            "image": "Поддерживаемые форматы: PNG, JPG/JPEG (макс. 8 МБ)",
-            "video": "Поддерживаемые форматы: MP4, WebM (макс. 100 МБ)"
-          }
-        },
-        "errors": {
-          "save_failed": "Не удалось сохранить структуру курса."
-        }
-      },
-      "access": {
-        "title": "Доступ к курсу",
-        "subtitle": "Выберите, будет ли ваш курс доступен всем в Интернете или только зарегистрированным пользователям",
-        "public": {
-          "title": "Публичный",
-          "description": "Курс доступен всем в Интернете, индексируется поисковыми системами и открыт для каждого",
-          "active": "Активен",
-          "confirmation_title": "Сделать публичным?",
-          "confirmation_message": "Вы уверены, что хотите сделать этот курс доступным для всех в Интернете?",
-          "confirmation_button": "Сделать публичным"
-        },
-        "users_only": {
-          "title": "Только для пользователей",
-          "description": "Курс доступен только зарегистрированным пользователям, также вы можете выбрать конкретные группы пользователей",
-          "active": "Активен",
-          "confirmation_title": "Сделать только для пользователей?",
-          "confirmation_message": "Вы уверены, что хотите сделать этот курс доступным только для зарегистрированных пользователей?",
-          "confirmation_button": "Только для пользователей"
-        },
-        "usergroups": {
-          "title": "Группы пользователей",
-          "subtitle": "Вы можете предоставить доступ к этому курсу только определенным группам пользователей, связав его с группой",
-          "table": {
-            "name": "Название",
-            "actions": "Действия"
-          },
-          "actions": {
-            "delete_link": "Удалить связь",
-            "link_to_usergroup": "Связать с группой"
-          },
-          "modals": {
-            "link_title": "Связать курс с группой пользователей",
-            "link_description": "Выберите группу пользователей для связи с этим курсом. Участники этой группы получат доступ к курсу.",
-            "unlink_title": "Удалить связь с группой?",
-            "unlink_message": "Участники этой группы больше не будут иметь доступ к этому курсу",
-            "unlink_button": "Удалить связь",
-            "warning": "Пользователи, не входящие в эту группу, потеряют доступ к этому курсу",
-            "usergroup_name": "Название группы",
-            "no_usergroups": "Нет доступных групп",
-            "create_usergroup": "Создать группу пользователей",
-            "link_button": "Связать"
-          },
-          "toasts": {
-            "link_success": "Успешно связано с группой",
-            "link_error": "Ошибка {{status}}: {{detail}}",
-            "unlink_success": "Связь с группой успешно удалена",
-            "unlink_error": "Произошла ошибка при удалении связи с группой."
-          }
-        }
-      },
-      "contributors": {
-        "title": "Участники курса",
-        "subtitle": "Управляйте участниками и добавляйте новых в ваш курс",
-        "open_to_contributors": {
-          "title": "Открыто для участников",
-          "description": "Курс открыт для участников. Пользователи могут подавать заявки на участие в улучшении контента курса.",
-          "active": "Активен",
-          "confirmation_title": "Открыть для участников?",
-          "confirmation_message": "Вы уверены, что хотите открыть этот курс для участников?",
-          "confirmation_button": "Открыть для участников"
-        },
-        "closed_to_contributors": {
-          "title": "Закрыто для участников",
-          "description": "Курс закрыт для участников. Только текущие участники могут изменять контент курса.",
-          "active": "Активен",
-          "confirmation_title": "Закрыть для участников?",
-          "confirmation_message": "Вы уверены, что хотите закрыть этот курс для участников?",
-          "confirmation_button": "Закрыть для участников"
-        },
-        "search": {
-          "placeholder": "Поиск пользователей по имени или логину для добавления...",
-          "searching": "Поиск...",
-          "no_results": "Пользователи не найдены"
-        },
-        "table": {
-          "name": "Имя",
-          "username": "Логин",
-          "email": "Электронная почта",
-          "role": "Роль",
-          "status": "Статус",
-          "added_on": "Добавлен"
-        },
-        "roles": {
-          "creator": "СОЗДАТЕЛЬ",
-          "contributor": "УЧАСТНИК",
-          "maintainer": "СОПРОВОЖДАЮЩИЙ",
-          "reporter": "РЕПОРТЕР"
-        },
-        "statuses": {
-          "active": "АКТИВЕН",
-          "inactive": "НЕАКТИВЕН",
-          "pending": "ОЖИДАЕТ"
-        },
-        "actions": {
-          "selected_users": "Выбран {{count}} пользователь",
-          "selected_users_plural": "Выбрано {{count}} пользователей",
-          "clear": "Очистить",
-          "add_selected": "Добавить выбранных",
-          "selected_contributors": "Выбран {{count}} участник",
-          "selected_contributors_plural": "Выбрано {{count}} участников",
-          "remove_selected": "Удалить выбранных",
-          "already_contributor": "Уже является участником"
-        },
-        "toasts": {
-          "add_success": "Успешно добавлено {{count}} участника(ов)",
-          "add_error": "Не удалось добавить {{username}}: {{reason}}",
-          "add_failed": "Не удалось добавить участников",
-          "update_success": "Участник успешно обновлен",
-          "update_error": "Ошибка: {{detail}}",
-          "update_failed": "Произошла ошибка при обновлении участника.",
-          "remove_success": "Успешно удалено {{count}} участника(ов)",
-          "remove_failed": "Не удалось удалить участников",
-          "cannot_modify_creator": "Нельзя изменить роль или статус создателя"
-        }
-      },
-      "certification": {
-        "title": "Сертификация курса",
-        "subtitle": "Включите и настройте сертификаты для учеников, завершивших этот курс",
-        "form": {
-          "certification_name_label": "Название сертификации",
-          "certification_name_required": "Обязательно при включенной сертификации",
-          "certification_name_max_length": "Не более 100 символов",
-          "certification_name_placeholder": "напр., Сертификация Advanced JavaScript",
-          "certification_type_label": "Тип сертификации",
-          "certification_description_label": "Описание сертификации",
-          "certification_description_required": "Обязательно при включенной сертификации",
-          "certification_description_max_length": "Не более 500 символов",
-          "certification_description_placeholder": "Опишите, что подтверждает эта сертификация и ее ценность...",
-          "certificate_pattern_label": "Узор сертификата",
-          "certificate_instructor_label": "Имя инструктора (необязательно)",
-          "certificate_instructor_placeholder": "напр., Д-р Анна Петрова"
-        },
-        "types": {
-          "completion": "Завершение курса",
-          "achievement": "За достижения",
-          "assessment": "На основе оценки",
-          "participation": "За участие",
-          "mastery": "За овладение навыками",
-          "professional": "Профессиональное развитие",
-          "continuing": "Повышение квалификации",
-          "workshop": "Посещение семинара",
-          "specialization": "Специализация"
-        },
-        "patterns": {
-          "royal": {
-            "name": "Королевский",
-            "description": "Украшенный мотивами короны"
-          },
-          "tech": {
-            "name": "Техно",
-            "description": "Узоры в стиле микросхем"
-          },
-          "nature": {
-            "name": "Природа",
-            "description": "Органические растительные узоры"
-          },
-          "geometric": {
-            "name": "Геометрия",
-            "description": "Абстрактные формы и линии"
-          },
-          "vintage": {
-            "name": "Винтаж",
-            "description": "Стиль арт-деко"
-          },
-          "waves": {
-            "name": "Волны",
-            "description": "Плавные водные узоры"
-          },
-          "minimal": {
-            "name": "Минимализм",
-            "description": "Чисто и просто"
-          },
-          "professional": {
-            "name": "Профессиональный",
-            "description": "Строгий деловой дизайн"
-          },
-          "academic": {
-            "name": "Академический",
-            "description": "Традиционный университетский стиль"
-          },
-          "modern": {
-            "name": "Модерн",
-            "description": "Современные чистые линии"
-          }
-        },
-        "sections": {
-          "basic_info": {
-            "title": "Основная информация",
-            "subtitle": "Настройте основные детали вашей сертификации"
-          },
-          "certificate_design": {
-            "title": "Дизайн сертификата",
-            "subtitle": "Выберите декоративный узор для вашего сертификата"
-          },
-          "preview": {
-            "title": "Предпросмотр сертификата",
-            "subtitle": "Живой предпросмотр вашего сертификата"
-          }
-        },
-        "states": {
-          "disabled": {
-            "title": "Сертификация не настроена",
-            "message": "Включите сертификацию, чтобы выдавать ученикам сертификаты после завершения курса.",
-            "button": "Включить сертификацию",
-            "creating": "Создание..."
-          },
-          "creating": {
-            "title": "Создание сертификации...",
-            "message": "Пожалуйста, подождите, пока мы настраиваем сертификацию курса."
-          }
-        },
-        "errors": {
-          "loading": "Ошибка при загрузке сертификаций",
-          "create_failed": "Не удалось создать сертификацию.",
-          "remove_failed": "Не удалось удалить сертификацию."
-        },
-        "toasts": {
-          "create_success": "Сертификация успешно создана",
-          "create_error": "Не удалось создать сертификацию",
-          "remove_success": "Сертификация успешно удалена",
-          "remove_error": "Не удалось удалить сертификацию"
-        }
-      },
-      "communities": {
-        "title": "Сообщества",
-        "new_community": "Новое сообщество",
-        "no_communities": "Пока нет сообществ",
-        "no_communities_description": "Создайте свое первое сообщество, чтобы начать обсуждения",
-        "card": {
-          "open_settings": "Открыть настройки",
-          "view_community": "Посмотреть сообщество",
-          "quick_edit": "Быстрое редактирование"
-        },
-        "settings": {
-          "tabs": {
-            "general": "Общие",
-            "thumbnail": "Миниатюра",
-            "moderation": "Модерация"
-          }
-        },
-        "general": {
-          "title": "Настройки сообщества",
-          "subtitle": "Обновите основную информацию о вашем сообществе",
-          "form": {
-            "name_label": "Название сообщества",
-            "name_required": "Название сообщества обязательно",
-            "name_min_length": "Название должно содержать минимум 3 символа",
-            "name_max_length": "Название должно содержать менее 100 символов",
-            "name_placeholder": "Введите название сообщества",
-            "description_label": "Описание",
-            "description_max_length": "Описание должно содержать менее 500 символов",
-            "description_placeholder": "Опишите, о чем это сообщество",
-            "public_label": "Публичное сообщество",
-            "public_description": "Сделать это сообщество видимым для всех",
-            "characters_left": "Осталось {{count}} символов"
-          },
-          "toasts": {
-            "updating": "Обновление сообщества...",
-            "update_success": "Сообщество успешно обновлено",
-            "update_error": "Не удалось обновить сообщество"
-          }
-        },
-        "thumbnail": {
-          "title": "Миниатюра сообщества",
-          "subtitle": "Загрузите обложку для вашего сообщества",
-          "no_thumbnail": "Миниатюра не установлена",
-          "upload_image": "Загрузить изображение",
-          "browse_unsplash": "Искать на Unsplash",
-          "uploading": "Загрузка...",
-          "supported_formats": "Поддерживаемые форматы: JPG, JPEG, PNG. Макс. размер: 8МБ. Рекомендуемое соотношение: 16:9",
-          "toasts": {
-            "update_success": "Миниатюра успешно обновлена",
-            "update_error": "Не удалось обновить миниатюру",
-            "invalid_type": "Недопустимый тип файла. Загружайте только изображения PNG или JPG/JPEG",
-            "file_too_large": "Размер файла превышает лимит 8МБ"
-          }
-        },
-        "moderation": {
-          "title": "Модерация контента",
-          "subtitle": "Настройте заблокированные слова и фильтры контента",
-          "info_title": "Заблокированные слова",
-          "info_description": "Обсуждения и ответы, содержащие эти слова, будут заблокированы. Пользователи увидят сообщение об ошибке, и их контент не будет опубликован.",
-          "add_word_label": "Добавить заблокированное слово",
-          "add_word_placeholder": "Введите слово или фразу...",
-          "add_button": "Добавить",
-          "batch_add_label": "Массовое добавление слов",
-          "batch_add_description": "Добавьте несколько слов сразу, разделенных запятыми",
-          "batch_add_placeholder": "слово1, слово2, слово3...",
-          "add_all_button": "Добавить все",
-          "blocked_words_label": "Заблокированные слова",
-          "no_blocked_words": "Заблокированных слов пока нет",
-          "no_blocked_words_description": "Добавьте слова, чтобы включить модерацию контента",
-          "word_exists_error": "Это слово уже в списке",
-          "all_words_exist_error": "Все слова уже в списке или ввод пуст",
-          "toasts": {
-            "saving": "Сохранение настроек модерации...",
-            "save_success": "Настройки модерации сохранены",
-            "save_error": "Не удалось сохранить настройки модерации"
-          }
-        },
-        "modals": {
-          "create": {
-            "title": "Создать сообщество",
-            "description": "Создайте новое сообщество для обсуждений",
-            "form": {
-              "name_label": "Название сообщества",
-              "name_placeholder": "Введите название сообщества",
-              "description_label": "Описание",
-              "description_placeholder": "Опишите, о чем это сообщество",
-              "public_label": "Сделать это сообщество публичным (видимым для всех)"
-            },
-            "cancel": "Отмена",
-            "submit": "Создать сообщество"
-          },
-          "edit": {
-            "title": "Редактировать сообщество",
-            "description": "Обновить настройки сообщества"
-          },
-          "delete": {
-            "title": "Удалить {{name}}?",
-            "message": "Вы уверены, что хотите удалить это сообщество? Все обсуждения будут удалены навсегда.",
-            "button": "Удалить сообщество"
-          }
-        },
-        "toasts": {
-          "creating": "Создание сообщества...",
-          "create_success": "Сообщество успешно создано",
-          "create_error": "Не удалось создать сообщество",
-          "deleting": "Удаление сообщества...",
-          "delete_success": "Сообщество успешно удалено",
-          "delete_error": "Не удалось удалить сообщество"
-        }
-      },
-      "structure": {
-        "loading": "Загрузка...",
-        "add_chapter_button": "Добавить главу",
-        "modals": {
-          "new_chapter": {
-            "title": "Создать главу",
-            "description": "Добавьте новую главу в курс",
-            "form": {
-              "name_label": "Название главы",
-              "name_required": "Пожалуйста, укажите название главы",
-              "description_label": "Описание главы",
-              "description_required": "Пожалуйста, укажите описание главы",
-              "submit": "Создать главу"
-            }
-          },
-          "delete_chapter": {
-            "title": "Удалить {{name}}?",
-            "message": "Вы уверены, что хотите удалить эту главу?",
-            "button": "Удалить главу"
-          },
-          "new_activity": {
-            "title": "Создать занятие",
-            "description": "Выберите тип занятия для добавления в курс"
-          },
-          "delete_activity": {
-            "title": "Удалить {{name}}?",
-            "message": "Вы уверены, что хотите удалить это занятие?",
-            "button": "Удалить занятие"
-          }
-        },
-        "actions": {
-          "add_chapter": "Добавить главу",
-          "add_activity": "Добавить занятие",
-          "publish": "Опубликовать",
-          "unpublish": "Снять с публикации",
-          "preview_activity": "Предпросмотр занятия",
-          "edit_page": "Редактировать страницу",
-          "edit_assignment": "Редактировать задание"
-        },
-        "chapter_element": {
-          "chapter_name_placeholder": "Название главы"
-        },
-        "activity": {
-          "name_placeholder": "Название занятия",
-          "types": {
-            "video": "Видео",
-            "document": "Документ",
-            "assignment": "Задание",
-            "assignments": "Задания",
-            "dynamic": "Динамическое",
-            "dynamic_page": "Динамическая страница",
-            "scorm": "Scorm"
-          },
-          "toasts": {
-            "deleting": "Удаление занятия...",
-            "delete_success": "Занятие успешно удалено",
-            "updating": "Обновление задания...",
-            "update_success": "Занятие успешно обновлено",
-            "name_update_success": "Название занятия успешно обновлено",
-            "name_update_error": "Не удалось обновить название занятия",
-            "creating": "Создание занятия...",
-            "create_success": "Занятие успешно создано",
-            "uploading": "Загрузка файла и создание занятия...",
-            "upload_success": "Файл успешно загружен",
-            "creating_uploading": "Создание занятия и загрузка файла..."
           }
         }
       }

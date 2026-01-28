@@ -70,6 +70,10 @@
         "certifications": {
           "title": "프로 기능",
           "description": "인증서는 프로 플랜 이상의 조직에서만 사용할 수 있는 프리미엄 기능입니다. 업그레이드하여 과정을 완료한 학습자에게 인증서를 발급하세요."
+        },
+        "communities": {
+          "title": "스탠다드 기능",
+          "description": "커뮤니티는 스탠다드 플랜 이상의 조직에서만 사용할 수 있는 프리미엄 기능입니다. 회원을 위한 토론 커뮤니티를 잠금 해제하려면 업그레이드하세요."
         }
       }
     },
@@ -262,7 +266,25 @@
     "submitting_contributor_application": "기여자 신청서 제출 중...",
     "contributor_application_success": "기여자 신청서가 성공적으로 제출되었습니다",
     "contributor_application_error": "신청서 제출 실패. 나중에 다시 시도해 주세요.",
-    "contribute": "기여하기"
+    "contribute": "기여하기",
+    "scorm": {
+      "upload_package": "SCORM 패키지 업로드",
+      "package_file": "패키지 파일 (.zip)",
+      "click_to_upload": "클릭하여 업로드하거나 드래그 앤 드롭",
+      "supported_versions": "SCORM 1.2 또는 SCORM 2004 패키지",
+      "import_info": "SCORM 패키지를 업로드하여 내용을 분석합니다. 코스를 구성하고 활동을 챕터에 할당할 수 있습니다.",
+      "analyze_package": "패키지 분석",
+      "package_analyzed": "패키지 분석 성공",
+      "assign_scos": "챕터에 활동 할당",
+      "activity_name": "활동",
+      "chapter_name": "챕터",
+      "upload_different": "다른 패키지 업로드",
+      "selected": "선택됨",
+      "create_course": "코스 생성",
+      "configure": "구성",
+      "ready_to_analyze": "분석 준비 완료",
+      "course_details": "코스 세부정보"
+    }
   },
   "collections": {
     "collections": "컬렉션",
@@ -709,7 +731,471 @@
       "import_scorm_description": "SCORM 패키지를 가져와 새 코스 만들기",
       "no_courses": "아직 코스가 없습니다",
       "create_course_placeholder": "코스를 생성하여 콘텐츠를 추가해 보세요",
-      "no_courses_available": "이용 가능한 코스가 아직 없습니다"
+      "no_courses_available": "이용 가능한 코스가 아직 없습니다",
+      "overview_top": {
+        "course_label": "코스",
+        "rights_guide_button": "권한 가이드"
+      },
+      "settings": {
+        "tabs": {
+          "general": "일반",
+          "content": "콘텐츠",
+          "access": "액세스",
+          "contributors": "기여자",
+          "certification": "인증"
+        },
+        "access_denied": {
+          "title": "액세스 거부",
+          "message": "이 코스에 액세스할 권한이 없습니다."
+        },
+        "access_restricted": {
+          "title": "액세스 제한",
+          "message": "{{tab}}에 액세스할 권한이 없습니다"
+        },
+        "loading": "로딩 중..."
+      },
+      "general": {
+        "form": {
+          "name_label": "이름",
+          "name_required": "필수 항목입니다",
+          "name_max_length": "100자 이하로 입력해 주세요",
+          "description_label": "설명",
+          "description_required": "필수 항목입니다",
+          "description_max_length": "1000자 이하로 입력해 주세요",
+          "about_label": "정보",
+          "learnings_label": "학습 내용",
+          "learnings_required": "필수 항목입니다",
+          "learnings_invalid_format": "유효하지 않은 형식입니다",
+          "learnings_min_items": "최소 하나 이상의 학습 항목이 필요합니다",
+          "learnings_empty_text": "모든 학습 항목에 텍스트가 있어야 합니다",
+          "learnings_invalid_json": "유효하지 않은 JSON 형식입니다",
+          "tags_label": "태그",
+          "tags_placeholder": "Enter 키로 추가...",
+          "thumbnail_type_label": "썸네일 유형",
+          "thumbnail_type_image": "이미지",
+          "thumbnail_type_video": "동영상",
+          "thumbnail_type_both": "둘 다",
+          "thumbnail_label": "썸네일",
+          "image_search_placeholder": "이미지 검색..."
+        },
+        "thumbnail": {
+          "upload_image": "이미지 업로드",
+          "upload_video": "동영상 업로드",
+          "gallery": "갤러리",
+          "tabs": {
+            "image": "이미지",
+            "video": "동영상"
+          },
+          "supported_formats": {
+            "image": "지원 형식: PNG, JPG/JPEG (최대 8MB)",
+            "video": "지원 형식: MP4, WebM (최대 100MB)"
+          }
+        },
+        "errors": {
+          "save_failed": "코스 구조 저장에 실패했습니다."
+        }
+      },
+      "access": {
+        "title": "코스 액세스",
+        "subtitle": "코스를 인터넷에 공개할지 또는 로그인한 사용자만 액세스할 수 있게 할지 선택합니다",
+        "public": {
+          "title": "공개",
+          "description": "코스가 인터넷에 공개적으로 제공되며, 검색 엔진에 의해 인덱싱되고 누구나 액세스할 수 있습니다",
+          "active": "활성",
+          "confirmation_title": "공개로 변경하시겠습니까?",
+          "confirmation_message": "정말로 이 코스를 인터넷에 공개하시겠습니까?",
+          "confirmation_button": "공개로 변경"
+        },
+        "users_only": {
+          "title": "사용자 전용",
+          "description": "코스는 로그인한 사용자만 액세스할 수 있으며, 추가적으로 이 코스에 액세스할 수 있는 사용자 그룹을 선택할 수 있습니다",
+          "active": "활성",
+          "confirmation_title": "사용자 전용으로 변경하시겠습니까?",
+          "confirmation_message": "정말로 이 코스를 로그인한 사용자만 액세스할 수 있게 하시겠습니까?",
+          "confirmation_button": "사용자 전용으로 변경"
+        },
+        "usergroups": {
+          "title": "사용자 그룹",
+          "subtitle": "특정 사용자 그룹에만 이 코스에 대한 액세스 권한을 부여하려면 사용자 그룹과 연결할 수 있습니다",
+          "table": {
+            "name": "이름",
+            "actions": "작업"
+          },
+          "actions": {
+            "delete_link": "연결 삭제",
+            "link_to_usergroup": "사용자 그룹에 연결"
+          },
+          "modals": {
+            "link_title": "코스를 사용자 그룹에 연결",
+            "link_description": "이 코스를 연결할 사용자 그룹을 선택하세요. 해당 사용자 그룹의 사용자가 이 코스에 액세스할 수 있습니다.",
+            "unlink_title": "사용자 그룹 연결을 해제하시겠습니까?",
+            "unlink_message": "이 사용자 그룹의 사용자는 더 이상 이 코스에 액세스할 수 없습니다",
+            "unlink_button": "연결 삭제",
+            "warning": "사용자 그룹에 속하지 않은 사용자는 더 이상 이 코스에 액세스할 수 없습니다",
+            "usergroup_name": "사용자 그룹 이름",
+            "no_usergroups": "이용 가능한 사용자 그룹이 없습니다",
+            "create_usergroup": "사용자 그룹 생성",
+            "link_button": "연결"
+          },
+          "toasts": {
+            "link_success": "사용자 그룹에 성공적으로 연결되었습니다",
+            "link_error": "오류 {{status}}: {{detail}}",
+            "unlink_success": "사용자 그룹 연결이 성공적으로 해제되었습니다",
+            "unlink_error": "사용자 그룹 연결 해제 중 오류가 발생했습니다."
+          }
+        }
+      },
+      "contributors": {
+        "title": "코스 기여자",
+        "subtitle": "기여자를 관리하고 코스에 새 기여자를 추가합니다",
+        "open_to_contributors": {
+          "title": "기여자 모집 중",
+          "description": "코스가 기여자에게 열려 있습니다. 사용자는 기여자를 신청하고 코스 콘텐츠 개선을 도울 수 있습니다.",
+          "active": "활성",
+          "confirmation_title": "기여자에게 개방하시겠습니까?",
+          "confirmation_message": "정말로 이 코스를 기여자에게 개방하시겠습니까?",
+          "confirmation_button": "기여자에게 개방"
+        },
+        "closed_to_contributors": {
+          "title": "기여자 모집 마감",
+          "description": "코스가 기여자에게 닫혀 있습니다. 기존 기여자만 코스 콘텐츠를 수정할 수 있습니다.",
+          "active": "활성",
+          "confirmation_title": "기여자 모집을 마감하시겠습니까?",
+          "confirmation_message": "정말로 이 코스의 기여자 모집을 마감하시겠습니까?",
+          "confirmation_button": "모집 마감"
+        },
+        "search": {
+          "placeholder": "기여자로 추가할 사용자를 이름 또는 사용자 이름으로 검색...",
+          "searching": "검색 중...",
+          "no_results": "사용자를 찾을 수 없습니다"
+        },
+        "table": {
+          "name": "이름",
+          "username": "사용자 이름",
+          "email": "이메일",
+          "role": "역할",
+          "status": "상태",
+          "added_on": "추가된 날짜"
+        },
+        "roles": {
+          "creator": "생성자",
+          "contributor": "기여자",
+          "maintainer": "유지관리자",
+          "reporter": "리포터"
+        },
+        "statuses": {
+          "active": "활성",
+          "inactive": "비활성",
+          "pending": "대기 중"
+        },
+        "actions": {
+          "selected_users": "{{count}}명의 사용자 선택됨",
+          "selected_users_plural": "{{count}}명의 사용자 선택됨",
+          "clear": "지우기",
+          "add_selected": "선택 항목 추가",
+          "selected_contributors": "{{count}}명의 기여자 선택됨",
+          "selected_contributors_plural": "{{count}}명의 기여자 선택됨",
+          "remove_selected": "선택 항목 제거",
+          "already_contributor": "이미 기여자입니다"
+        },
+        "toasts": {
+          "add_success": "{{count}}명의 기여자를 성공적으로 추가했습니다",
+          "add_error": "{{username}} 추가 실패: {{reason}}",
+          "add_failed": "기여자 추가 실패",
+          "update_success": "기여자가 성공적으로 업데이트되었습니다",
+          "update_error": "오류: {{detail}}",
+          "update_failed": "기여자 업데이트 중 오류가 발생했습니다.",
+          "remove_success": "{{count}}명의 기여자를 성공적으로 제거했습니다",
+          "remove_failed": "기여자 제거 실패",
+          "cannot_modify_creator": "생성자의 역할이나 상태는 수정할 수 없습니다"
+        }
+      },
+      "certification": {
+        "title": "코스 인증",
+        "subtitle": "이 코스를 완료한 학생들을 위한 수료증을 활성화하고 구성합니다",
+        "form": {
+          "certification_name_label": "인증 명칭",
+          "certification_name_required": "인증 활성화 시 필수 항목입니다",
+          "certification_name_max_length": "100자 이하로 입력해 주세요",
+          "certification_name_placeholder": "예: 고급 JavaScript 인증",
+          "certification_type_label": "인증 유형",
+          "certification_description_label": "인증 설명",
+          "certification_description_required": "인증 활성화 시 필수 항목입니다",
+          "certification_description_max_length": "500자 이하로 입력해 주세요",
+          "certification_description_placeholder": "이 인증이 무엇을 나타내고 어떤 가치가 있는지 설명해 주세요...",
+          "certificate_pattern_label": "수료증 패턴",
+          "certificate_instructor_label": "강사 이름 (선택 사항)",
+          "certificate_instructor_placeholder": "예: Dr. Jane Smith"
+        },
+        "types": {
+          "completion": "코스 수료",
+          "achievement": "성과 기반",
+          "assessment": "평가 기반",
+          "participation": "참여",
+          "mastery": "기술 숙달",
+          "professional": "전문성 개발",
+          "continuing": "평생 교육",
+          "workshop": "워크숍 참석",
+          "specialization": "전공"
+        },
+        "patterns": {
+          "royal": {
+            "name": "로열",
+            "description": "왕관 모티브의 화려한 스타일"
+          },
+          "tech": {
+            "name": "테크",
+            "description": "회로에서 영감을 받은 패턴"
+          },
+          "nature": {
+            "name": "네이처",
+            "description": "유기적인 잎 패턴"
+          },
+          "geometric": {
+            "name": "지오메트릭",
+            "description": "추상적인 도형 및 선"
+          },
+          "vintage": {
+            "name": "빈티지",
+            "description": "아르데코 스타일링"
+          },
+          "waves": {
+            "name": "웨이브",
+            "description": "흐르는 물 패턴"
+          },
+          "minimal": {
+            "name": "미니멀",
+            "description": "깨끗하고 단순함"
+          },
+          "professional": {
+            "name": "프로페셔널",
+            "description": "비즈니스용 디자인"
+          },
+          "academic": {
+            "name": "아카데믹",
+            "description": "전통적인 대학 스타일"
+          },
+          "modern": {
+            "name": "모던",
+            "description": "현대적인 깔끔한 라인"
+          }
+        },
+        "sections": {
+          "basic_info": {
+            "title": "기본 정보",
+            "subtitle": "인증의 기본 세부 정보를 구성합니다"
+          },
+          "certificate_design": {
+            "title": "수료증 디자인",
+            "subtitle": "수료증을 위한 장식 패턴을 선택하세요"
+          },
+          "preview": {
+            "title": "수료증 미리보기",
+            "subtitle": "수료증 실시간 미리보기"
+          }
+        },
+        "states": {
+          "disabled": {
+            "title": "인증이 구성되지 않음",
+            "message": "코스 수료 시 학생들에게 수료증을 제공하려면 인증을 활성화하세요.",
+            "button": "인증 활성화",
+            "creating": "생성 중..."
+          },
+          "creating": {
+            "title": "인증 생성 중...",
+            "message": "코스 인증을 설정하는 동안 잠시만 기다려 주세요."
+          }
+        },
+        "errors": {
+          "loading": "인증 로드 중 오류 발생",
+          "create_failed": "인증 생성에 실패했습니다.",
+          "remove_failed": "인증 제거에 실패했습니다."
+        },
+        "toasts": {
+          "create_success": "인증이 성공적으로 생성되었습니다",
+          "create_error": "인증 생성에 실패했습니다",
+          "remove_success": "인증이 성공적으로 제거되었습니다",
+          "remove_error": "인증 제거에 실패했습니다"
+        }
+      },
+      "communities": {
+        "title": "커뮤니티",
+        "new_community": "새 커뮤니티",
+        "no_communities": "아직 커뮤니티가 없습니다",
+        "no_communities_description": "첫 번째 커뮤니티를 만들어 토론을 시작하세요",
+        "card": {
+          "open_settings": "설정 열기",
+          "view_community": "커뮤니티 보기",
+          "quick_edit": "빠른 편집"
+        },
+        "settings": {
+          "tabs": {
+            "general": "일반",
+            "thumbnail": "썸네일",
+            "moderation": "관리"
+          }
+        },
+        "general": {
+          "title": "커뮤니티 설정",
+          "subtitle": "커뮤니티 기본 정보 업데이트",
+          "form": {
+            "name_label": "커뮤니티 이름",
+            "name_required": "커뮤니티 이름은 필수입니다",
+            "name_min_length": "이름은 최소 3자 이상이어야 합니다",
+            "name_max_length": "이름은 100자 미만이어야 합니다",
+            "name_placeholder": "커뮤니티 이름 입력",
+            "description_label": "설명",
+            "description_max_length": "설명은 500자 미만이어야 합니다",
+            "description_placeholder": "이 커뮤니티가 무엇에 관한 것인지 설명하세요",
+            "public_label": "공개 커뮤니티",
+            "public_description": "이 커뮤니티를 모든 사람에게 공개",
+            "characters_left": "{{count}}자 남음"
+          },
+          "toasts": {
+            "updating": "커뮤니티 업데이트 중...",
+            "update_success": "커뮤니티가 성공적으로 업데이트되었습니다",
+            "update_error": "커뮤니티 업데이트에 실패했습니다"
+          }
+        },
+        "thumbnail": {
+          "title": "커뮤니티 썸네일",
+          "subtitle": "커뮤니티 커버 이미지 업로드",
+          "no_thumbnail": "썸네일이 설정되지 않음",
+          "upload_image": "이미지 업로드",
+          "browse_unsplash": "Unsplash 둘러보기",
+          "uploading": "업로드 중...",
+          "supported_formats": "지원 형식: JPG, JPEG, PNG. 최대 크기: 8MB. 권장 비율: 16:9",
+          "toasts": {
+            "update_success": "썸네일이 성공적으로 업데이트되었습니다",
+            "update_error": "썸네일 업데이트에 실패했습니다",
+            "invalid_type": "유효하지 않은 파일 형식입니다. PNG 또는 JPG/JPEG 이미지만 업로드하세요",
+            "file_too_large": "파일 크기가 8MB 제한을 초과했습니다"
+          }
+        },
+        "moderation": {
+          "title": "콘텐츠 관리",
+          "subtitle": "차단 단어 및 콘텐츠 필터 설정",
+          "info_title": "차단 단어",
+          "info_description": "이 단어가 포함된 토론과 답글은 차단됩니다. 사용자에게 오류 메시지가 표시되고 콘텐츠가 게시되지 않습니다.",
+          "add_word_label": "차단 단어 추가",
+          "add_word_placeholder": "단어 또는 문구 입력...",
+          "add_button": "추가",
+          "batch_add_label": "일괄 추가",
+          "batch_add_description": "쉼표로 구분하여 여러 단어를 한 번에 추가",
+          "batch_add_placeholder": "단어1, 단어2, 단어3...",
+          "add_all_button": "모두 추가",
+          "blocked_words_label": "차단 단어",
+          "no_blocked_words": "아직 차단 단어가 없습니다",
+          "no_blocked_words_description": "콘텐츠 관리를 활성화하려면 단어를 추가하세요",
+          "word_exists_error": "이 단어는 이미 목록에 있습니다",
+          "all_words_exist_error": "모든 단어가 이미 목록에 있거나 입력이 비어 있습니다",
+          "toasts": {
+            "saving": "관리 설정 저장 중...",
+            "save_success": "관리 설정이 저장되었습니다",
+            "save_error": "관리 설정 저장에 실패했습니다"
+          }
+        },
+        "modals": {
+          "create": {
+            "title": "커뮤니티 만들기",
+            "description": "토론을 위한 새 커뮤니티 만들기",
+            "form": {
+              "name_label": "커뮤니티 이름",
+              "name_placeholder": "커뮤니티 이름 입력",
+              "description_label": "설명",
+              "description_placeholder": "이 커뮤니티가 무엇에 관한 것인지 설명하세요",
+              "public_label": "이 커뮤니티를 공개로 설정 (모든 사람에게 표시)"
+            },
+            "cancel": "취소",
+            "submit": "커뮤니티 만들기"
+          },
+          "edit": {
+            "title": "커뮤니티 편집",
+            "description": "커뮤니티 설정 업데이트"
+          },
+          "delete": {
+            "title": "{{name}} 삭제하시겠습니까?",
+            "message": "이 커뮤니티를 삭제하시겠습니까? 모든 토론이 영구적으로 삭제됩니다.",
+            "button": "커뮤니티 삭제"
+          }
+        },
+        "toasts": {
+          "creating": "커뮤니티 생성 중...",
+          "create_success": "커뮤니티가 성공적으로 생성되었습니다",
+          "create_error": "커뮤니티 생성에 실패했습니다",
+          "deleting": "커뮤니티 삭제 중...",
+          "delete_success": "커뮤니티가 성공적으로 삭제되었습니다",
+          "delete_error": "커뮤니티 삭제에 실패했습니다"
+        }
+      },
+      "structure": {
+        "loading": "로딩 중...",
+        "add_chapter_button": "장 추가",
+        "modals": {
+          "new_chapter": {
+            "title": "장 생성",
+            "description": "코스에 새 장을 추가합니다",
+            "form": {
+              "name_label": "장 이름",
+              "name_required": "장 이름을 입력해 주세요",
+              "description_label": "장 설명",
+              "description_required": "장 설명을 입력해 주세요",
+              "submit": "장 생성"
+            }
+          },
+          "delete_chapter": {
+            "title": "{{name}}을(를) 삭제하시겠습니까?",
+            "message": "정말로 이 장을 삭제하시겠습니까?",
+            "button": "장 삭제"
+          },
+          "new_activity": {
+            "title": "활동 생성",
+            "description": "코스에 추가할 활동 유형 중에서 선택하세요"
+          },
+          "delete_activity": {
+            "title": "{{name}}을(를) 삭제하시겠습니까?",
+            "message": "정말로 이 활동을 삭제하시겠습니까?",
+            "button": "활동 삭제"
+          }
+        },
+        "actions": {
+          "add_chapter": "장 추가",
+          "add_activity": "활동 추가",
+          "publish": "게시",
+          "unpublish": "게시 취소",
+          "preview_activity": "활동 미리보기",
+          "edit_page": "페이지 편집",
+          "edit_assignment": "과제 편집"
+        },
+        "chapter_element": {
+          "chapter_name_placeholder": "장 이름"
+        },
+        "activity": {
+          "name_placeholder": "활동 이름",
+          "types": {
+            "video": "동영상",
+            "document": "문서",
+            "assignment": "과제",
+            "assignments": "과제",
+            "dynamic": "동적",
+            "dynamic_page": "동적 페이지",
+            "scorm": "Scorm"
+          },
+          "toasts": {
+            "deleting": "활동 삭제 중...",
+            "delete_success": "활동이 성공적으로 삭제되었습니다",
+            "updating": "과제 업데이트 중...",
+            "update_success": "활동이 성공적으로 업데이트되었습니다",
+            "name_update_success": "활동 이름이 성공적으로 업데이트되었습니다",
+            "name_update_error": "활동 이름 업데이트에 실패했습니다",
+            "creating": "활동 생성 중...",
+            "create_success": "활동이 성공적으로 생성되었습니다",
+            "uploading": "파일 업로드 및 활동 생성 중...",
+            "upload_success": "파일이 성공적으로 업로드되었습니다",
+            "creating_uploading": "활동 생성 및 파일 업로드 중..."
+          }
+        }
+      }
     },
     "organization": {
       "settings": {
@@ -768,7 +1254,10 @@
         "saving": "저장 중...",
         "update_success": "조직 정보가 업데이트되었습니다",
         "update_error": "조직 정보 업데이트에 실패했습니다",
-        "updating": "조직 정보를 업데이트하는 중..."
+        "updating": "조직 정보를 업데이트하는 중...",
+        "footer_text": "푸터 텍스트",
+        "footer_text_placeholder": "푸터 텍스트 입력...",
+        "footer_text_desc": "조직 페이지 하단에 표시되는 사용자 지정 텍스트"
       },
       "images": {
         "title": "이미지 및 미리보기",
@@ -826,7 +1315,8 @@
         "subtitle": "조직의 시각적 아이덴티티와 소셜 미디어 활동을 관리합니다",
         "tabs": {
           "images": "이미지 및 미리보기",
-          "social": "소셜 링크"
+          "social": "소셜 링크",
+          "theme": "테마"
         }
       },
       "socials": {
@@ -959,7 +1449,11 @@
           "generating": "CSV 생성 중...",
           "success": "CSV가 성공적으로 내보내졌습니다",
           "error": "CSV 내보내기에 실패했습니다"
-        }
+        },
+        "enterprise_only": "감사 로그는 엔터프라이즈 플랜에서만 사용 가능합니다",
+        "enterprise_feature": "엔터프라이즈 기능",
+        "enterprise_description": "감사 로그는 엔터프라이즈 플랜의 조직에서만 사용할 수 있는 프리미엄 기능입니다. 조직 활동에 대한 완전한 가시성을 얻으려면 업그레이드하세요.",
+        "upgrade_button": "엔터프라이즈로 업그레이드"
       },
       "landing": {
         "title": "랜딩 페이지",
@@ -1110,6 +1604,16 @@
           "selected": "선택됨",
           "select": "선택"
         }
+      },
+      "theme": {
+        "primary_color": "기본 색상",
+        "primary_color_desc": "조직의 헤더와 페이지 배경에 사용할 기본 색상을 선택하세요.",
+        "clear_color": "색상 지우기",
+        "preview": "라이브 미리보기",
+        "preview_hint": "조직의 헤더와 배경이 이렇게 표시됩니다",
+        "footer_text": "푸터 텍스트",
+        "footer_text_desc": "페이지 푸터에 표시할 사용자 지정 텍스트를 추가합니다.",
+        "footer_text_placeholder": "푸터 텍스트 입력..."
       }
     },
     "users": {
@@ -1167,7 +1671,10 @@
           "remove_from_org": "조직에서 제거",
           "removing": "제거 중...",
           "remove_success": "조직에서 사용자를 제거했습니다",
-          "remove_error": "사용자 제거 중 오류 발생"
+          "remove_error": "사용자 제거 중 오류 발생",
+          "updating_role": "역할 업데이트 중...",
+          "role_update_success": "역할이 성공적으로 업데이트되었습니다",
+          "role_update_error": "역할 업데이트 오류"
         },
         "modals": {
           "update_role": {
@@ -1179,6 +1686,13 @@
             "message": "정말로 이 사용자를 조직에서 제거하시겠습니까?",
             "button": "사용자 제거"
           }
+        },
+        "search_placeholder": "사용자 검색...",
+        "no_results": "검색과 일치하는 사용자를 찾을 수 없습니다",
+        "no_users": "이 조직에는 아직 사용자가 없습니다",
+        "pagination": {
+          "showing": "{{total}}개 중 {{start}}-{{end}}개 표시",
+          "page": "{{total}}페이지 중 {{current}}페이지"
         }
       },
       "signups": {
@@ -1668,481 +2182,6 @@
           "toasts": {
             "creating": "과제 생성 중...",
             "success": "과제가 성공적으로 생성되었습니다"
-          }
-        }
-      }
-    },
-    "courses": {
-      "title": "코스",
-      "rights_guide": "권한 가이드",
-      "create_course": "코스 생성",
-      "create_new_course": "새 코스 생성",
-      "import_course": "코스 가져오기",
-      "import_scorm_description": "SCORM 패키지를 가져와 새 코스 만들기",
-      "no_courses": "아직 코스가 없습니다",
-      "create_course_placeholder": "코스를 생성하여 콘텐츠를 추가해 보세요",
-      "no_courses_available": "이용 가능한 코스가 아직 없습니다",
-      "overview_top": {
-        "course_label": "코스",
-        "rights_guide_button": "권한 가이드"
-      },
-      "settings": {
-        "tabs": {
-          "general": "일반",
-          "content": "콘텐츠",
-          "access": "액세스",
-          "contributors": "기여자",
-          "certification": "인증"
-        },
-        "access_denied": {
-          "title": "액세스 거부",
-          "message": "이 코스에 액세스할 권한이 없습니다."
-        },
-        "access_restricted": {
-          "title": "액세스 제한",
-          "message": "{{tab}}에 액세스할 권한이 없습니다"
-        },
-        "loading": "로딩 중..."
-      },
-      "general": {
-        "form": {
-          "name_label": "이름",
-          "name_required": "필수 항목입니다",
-          "name_max_length": "100자 이하로 입력해 주세요",
-          "description_label": "설명",
-          "description_required": "필수 항목입니다",
-          "description_max_length": "1000자 이하로 입력해 주세요",
-          "about_label": "정보",
-          "learnings_label": "학습 내용",
-          "learnings_required": "필수 항목입니다",
-          "learnings_invalid_format": "유효하지 않은 형식입니다",
-          "learnings_min_items": "최소 하나 이상의 학습 항목이 필요합니다",
-          "learnings_empty_text": "모든 학습 항목에 텍스트가 있어야 합니다",
-          "learnings_invalid_json": "유효하지 않은 JSON 형식입니다",
-          "tags_label": "태그",
-          "tags_placeholder": "Enter 키로 추가...",
-          "thumbnail_type_label": "썸네일 유형",
-          "thumbnail_type_image": "이미지",
-          "thumbnail_type_video": "동영상",
-          "thumbnail_type_both": "둘 다",
-          "thumbnail_label": "썸네일",
-          "image_search_placeholder": "이미지 검색..."
-        },
-        "thumbnail": {
-          "upload_image": "이미지 업로드",
-          "upload_video": "동영상 업로드",
-          "gallery": "갤러리",
-          "tabs": {
-            "image": "이미지",
-            "video": "동영상"
-          },
-          "supported_formats": {
-            "image": "지원 형식: PNG, JPG/JPEG (최대 8MB)",
-            "video": "지원 형식: MP4, WebM (최대 100MB)"
-          }
-        },
-        "errors": {
-          "save_failed": "코스 구조 저장에 실패했습니다."
-        }
-      },
-      "access": {
-        "title": "코스 액세스",
-        "subtitle": "코스를 인터넷에 공개할지 또는 로그인한 사용자만 액세스할 수 있게 할지 선택합니다",
-        "public": {
-          "title": "공개",
-          "description": "코스가 인터넷에 공개적으로 제공되며, 검색 엔진에 의해 인덱싱되고 누구나 액세스할 수 있습니다",
-          "active": "활성",
-          "confirmation_title": "공개로 변경하시겠습니까?",
-          "confirmation_message": "정말로 이 코스를 인터넷에 공개하시겠습니까?",
-          "confirmation_button": "공개로 변경"
-        },
-        "users_only": {
-          "title": "사용자 전용",
-          "description": "코스는 로그인한 사용자만 액세스할 수 있으며, 추가적으로 이 코스에 액세스할 수 있는 사용자 그룹을 선택할 수 있습니다",
-          "active": "활성",
-          "confirmation_title": "사용자 전용으로 변경하시겠습니까?",
-          "confirmation_message": "정말로 이 코스를 로그인한 사용자만 액세스할 수 있게 하시겠습니까?",
-          "confirmation_button": "사용자 전용으로 변경"
-        },
-        "usergroups": {
-          "title": "사용자 그룹",
-          "subtitle": "특정 사용자 그룹에만 이 코스에 대한 액세스 권한을 부여하려면 사용자 그룹과 연결할 수 있습니다",
-          "table": {
-            "name": "이름",
-            "actions": "작업"
-          },
-          "actions": {
-            "delete_link": "연결 삭제",
-            "link_to_usergroup": "사용자 그룹에 연결"
-          },
-          "modals": {
-            "link_title": "코스를 사용자 그룹에 연결",
-            "link_description": "이 코스를 연결할 사용자 그룹을 선택하세요. 해당 사용자 그룹의 사용자가 이 코스에 액세스할 수 있습니다.",
-            "unlink_title": "사용자 그룹 연결을 해제하시겠습니까?",
-            "unlink_message": "이 사용자 그룹의 사용자는 더 이상 이 코스에 액세스할 수 없습니다",
-            "unlink_button": "연결 삭제",
-            "warning": "사용자 그룹에 속하지 않은 사용자는 더 이상 이 코스에 액세스할 수 없습니다",
-            "usergroup_name": "사용자 그룹 이름",
-            "no_usergroups": "이용 가능한 사용자 그룹이 없습니다",
-            "create_usergroup": "사용자 그룹 생성",
-            "link_button": "연결"
-          },
-          "toasts": {
-            "link_success": "사용자 그룹에 성공적으로 연결되었습니다",
-            "link_error": "오류 {{status}}: {{detail}}",
-            "unlink_success": "사용자 그룹 연결이 성공적으로 해제되었습니다",
-            "unlink_error": "사용자 그룹 연결 해제 중 오류가 발생했습니다."
-          }
-        }
-      },
-      "contributors": {
-        "title": "코스 기여자",
-        "subtitle": "기여자를 관리하고 코스에 새 기여자를 추가합니다",
-        "open_to_contributors": {
-          "title": "기여자 모집 중",
-          "description": "코스가 기여자에게 열려 있습니다. 사용자는 기여자를 신청하고 코스 콘텐츠 개선을 도울 수 있습니다.",
-          "active": "활성",
-          "confirmation_title": "기여자에게 개방하시겠습니까?",
-          "confirmation_message": "정말로 이 코스를 기여자에게 개방하시겠습니까?",
-          "confirmation_button": "기여자에게 개방"
-        },
-        "closed_to_contributors": {
-          "title": "기여자 모집 마감",
-          "description": "코스가 기여자에게 닫혀 있습니다. 기존 기여자만 코스 콘텐츠를 수정할 수 있습니다.",
-          "active": "활성",
-          "confirmation_title": "기여자 모집을 마감하시겠습니까?",
-          "confirmation_message": "정말로 이 코스의 기여자 모집을 마감하시겠습니까?",
-          "confirmation_button": "모집 마감"
-        },
-        "search": {
-          "placeholder": "기여자로 추가할 사용자를 이름 또는 사용자 이름으로 검색...",
-          "searching": "검색 중...",
-          "no_results": "사용자를 찾을 수 없습니다"
-        },
-        "table": {
-          "name": "이름",
-          "username": "사용자 이름",
-          "email": "이메일",
-          "role": "역할",
-          "status": "상태",
-          "added_on": "추가된 날짜"
-        },
-        "roles": {
-          "creator": "생성자",
-          "contributor": "기여자",
-          "maintainer": "유지관리자",
-          "reporter": "리포터"
-        },
-        "statuses": {
-          "active": "활성",
-          "inactive": "비활성",
-          "pending": "대기 중"
-        },
-        "actions": {
-          "selected_users": "{{count}}명의 사용자 선택됨",
-          "selected_users_plural": "{{count}}명의 사용자 선택됨",
-          "clear": "지우기",
-          "add_selected": "선택 항목 추가",
-          "selected_contributors": "{{count}}명의 기여자 선택됨",
-          "selected_contributors_plural": "{{count}}명의 기여자 선택됨",
-          "remove_selected": "선택 항목 제거",
-          "already_contributor": "이미 기여자입니다"
-        },
-        "toasts": {
-          "add_success": "{{count}}명의 기여자를 성공적으로 추가했습니다",
-          "add_error": "{{username}} 추가 실패: {{reason}}",
-          "add_failed": "기여자 추가 실패",
-          "update_success": "기여자가 성공적으로 업데이트되었습니다",
-          "update_error": "오류: {{detail}}",
-          "update_failed": "기여자 업데이트 중 오류가 발생했습니다.",
-          "remove_success": "{{count}}명의 기여자를 성공적으로 제거했습니다",
-          "remove_failed": "기여자 제거 실패",
-          "cannot_modify_creator": "생성자의 역할이나 상태는 수정할 수 없습니다"
-        }
-      },
-      "certification": {
-        "title": "코스 인증",
-        "subtitle": "이 코스를 완료한 학생들을 위한 수료증을 활성화하고 구성합니다",
-        "form": {
-          "certification_name_label": "인증 명칭",
-          "certification_name_required": "인증 활성화 시 필수 항목입니다",
-          "certification_name_max_length": "100자 이하로 입력해 주세요",
-          "certification_name_placeholder": "예: 고급 JavaScript 인증",
-          "certification_type_label": "인증 유형",
-          "certification_description_label": "인증 설명",
-          "certification_description_required": "인증 활성화 시 필수 항목입니다",
-          "certification_description_max_length": "500자 이하로 입력해 주세요",
-          "certification_description_placeholder": "이 인증이 무엇을 나타내고 어떤 가치가 있는지 설명해 주세요...",
-          "certificate_pattern_label": "수료증 패턴",
-          "certificate_instructor_label": "강사 이름 (선택 사항)",
-          "certificate_instructor_placeholder": "예: Dr. Jane Smith"
-        },
-        "types": {
-          "completion": "코스 수료",
-          "achievement": "성과 기반",
-          "assessment": "평가 기반",
-          "participation": "참여",
-          "mastery": "기술 숙달",
-          "professional": "전문성 개발",
-          "continuing": "평생 교육",
-          "workshop": "워크숍 참석",
-          "specialization": "전공"
-        },
-        "patterns": {
-          "royal": {
-            "name": "로열",
-            "description": "왕관 모티브의 화려한 스타일"
-          },
-          "tech": {
-            "name": "테크",
-            "description": "회로에서 영감을 받은 패턴"
-          },
-          "nature": {
-            "name": "네이처",
-            "description": "유기적인 잎 패턴"
-          },
-          "geometric": {
-            "name": "지오메트릭",
-            "description": "추상적인 도형 및 선"
-          },
-          "vintage": {
-            "name": "빈티지",
-            "description": "아르데코 스타일링"
-          },
-          "waves": {
-            "name": "웨이브",
-            "description": "흐르는 물 패턴"
-          },
-          "minimal": {
-            "name": "미니멀",
-            "description": "깨끗하고 단순함"
-          },
-          "professional": {
-            "name": "프로페셔널",
-            "description": "비즈니스용 디자인"
-          },
-          "academic": {
-            "name": "아카데믹",
-            "description": "전통적인 대학 스타일"
-          },
-          "modern": {
-            "name": "모던",
-            "description": "현대적인 깔끔한 라인"
-          }
-        },
-        "sections": {
-          "basic_info": {
-            "title": "기본 정보",
-            "subtitle": "인증의 기본 세부 정보를 구성합니다"
-          },
-          "certificate_design": {
-            "title": "수료증 디자인",
-            "subtitle": "수료증을 위한 장식 패턴을 선택하세요"
-          },
-          "preview": {
-            "title": "수료증 미리보기",
-            "subtitle": "수료증 실시간 미리보기"
-          }
-        },
-        "states": {
-          "disabled": {
-            "title": "인증이 구성되지 않음",
-            "message": "코스 수료 시 학생들에게 수료증을 제공하려면 인증을 활성화하세요.",
-            "button": "인증 활성화",
-            "creating": "생성 중..."
-          },
-          "creating": {
-            "title": "인증 생성 중...",
-            "message": "코스 인증을 설정하는 동안 잠시만 기다려 주세요."
-          }
-        },
-        "errors": {
-          "loading": "인증 로드 중 오류 발생",
-          "create_failed": "인증 생성에 실패했습니다.",
-          "remove_failed": "인증 제거에 실패했습니다."
-        },
-        "toasts": {
-          "create_success": "인증이 성공적으로 생성되었습니다",
-          "create_error": "인증 생성에 실패했습니다",
-          "remove_success": "인증이 성공적으로 제거되었습니다",
-          "remove_error": "인증 제거에 실패했습니다"
-        }
-      },
-      "communities": {
-        "title": "커뮤니티",
-        "new_community": "새 커뮤니티",
-        "no_communities": "아직 커뮤니티가 없습니다",
-        "no_communities_description": "첫 번째 커뮤니티를 만들어 토론을 시작하세요",
-        "card": {
-          "open_settings": "설정 열기",
-          "view_community": "커뮤니티 보기",
-          "quick_edit": "빠른 편집"
-        },
-        "settings": {
-          "tabs": {
-            "general": "일반",
-            "thumbnail": "썸네일",
-            "moderation": "관리"
-          }
-        },
-        "general": {
-          "title": "커뮤니티 설정",
-          "subtitle": "커뮤니티 기본 정보 업데이트",
-          "form": {
-            "name_label": "커뮤니티 이름",
-            "name_required": "커뮤니티 이름은 필수입니다",
-            "name_min_length": "이름은 최소 3자 이상이어야 합니다",
-            "name_max_length": "이름은 100자 미만이어야 합니다",
-            "name_placeholder": "커뮤니티 이름 입력",
-            "description_label": "설명",
-            "description_max_length": "설명은 500자 미만이어야 합니다",
-            "description_placeholder": "이 커뮤니티가 무엇에 관한 것인지 설명하세요",
-            "public_label": "공개 커뮤니티",
-            "public_description": "이 커뮤니티를 모든 사람에게 공개",
-            "characters_left": "{{count}}자 남음"
-          },
-          "toasts": {
-            "updating": "커뮤니티 업데이트 중...",
-            "update_success": "커뮤니티가 성공적으로 업데이트되었습니다",
-            "update_error": "커뮤니티 업데이트에 실패했습니다"
-          }
-        },
-        "thumbnail": {
-          "title": "커뮤니티 썸네일",
-          "subtitle": "커뮤니티 커버 이미지 업로드",
-          "no_thumbnail": "썸네일이 설정되지 않음",
-          "upload_image": "이미지 업로드",
-          "browse_unsplash": "Unsplash 둘러보기",
-          "uploading": "업로드 중...",
-          "supported_formats": "지원 형식: JPG, JPEG, PNG. 최대 크기: 8MB. 권장 비율: 16:9",
-          "toasts": {
-            "update_success": "썸네일이 성공적으로 업데이트되었습니다",
-            "update_error": "썸네일 업데이트에 실패했습니다",
-            "invalid_type": "유효하지 않은 파일 형식입니다. PNG 또는 JPG/JPEG 이미지만 업로드하세요",
-            "file_too_large": "파일 크기가 8MB 제한을 초과했습니다"
-          }
-        },
-        "moderation": {
-          "title": "콘텐츠 관리",
-          "subtitle": "차단 단어 및 콘텐츠 필터 설정",
-          "info_title": "차단 단어",
-          "info_description": "이 단어가 포함된 토론과 답글은 차단됩니다. 사용자에게 오류 메시지가 표시되고 콘텐츠가 게시되지 않습니다.",
-          "add_word_label": "차단 단어 추가",
-          "add_word_placeholder": "단어 또는 문구 입력...",
-          "add_button": "추가",
-          "batch_add_label": "일괄 추가",
-          "batch_add_description": "쉼표로 구분하여 여러 단어를 한 번에 추가",
-          "batch_add_placeholder": "단어1, 단어2, 단어3...",
-          "add_all_button": "모두 추가",
-          "blocked_words_label": "차단 단어",
-          "no_blocked_words": "아직 차단 단어가 없습니다",
-          "no_blocked_words_description": "콘텐츠 관리를 활성화하려면 단어를 추가하세요",
-          "word_exists_error": "이 단어는 이미 목록에 있습니다",
-          "all_words_exist_error": "모든 단어가 이미 목록에 있거나 입력이 비어 있습니다",
-          "toasts": {
-            "saving": "관리 설정 저장 중...",
-            "save_success": "관리 설정이 저장되었습니다",
-            "save_error": "관리 설정 저장에 실패했습니다"
-          }
-        },
-        "modals": {
-          "create": {
-            "title": "커뮤니티 만들기",
-            "description": "토론을 위한 새 커뮤니티 만들기",
-            "form": {
-              "name_label": "커뮤니티 이름",
-              "name_placeholder": "커뮤니티 이름 입력",
-              "description_label": "설명",
-              "description_placeholder": "이 커뮤니티가 무엇에 관한 것인지 설명하세요",
-              "public_label": "이 커뮤니티를 공개로 설정 (모든 사람에게 표시)"
-            },
-            "cancel": "취소",
-            "submit": "커뮤니티 만들기"
-          },
-          "edit": {
-            "title": "커뮤니티 편집",
-            "description": "커뮤니티 설정 업데이트"
-          },
-          "delete": {
-            "title": "{{name}} 삭제하시겠습니까?",
-            "message": "이 커뮤니티를 삭제하시겠습니까? 모든 토론이 영구적으로 삭제됩니다.",
-            "button": "커뮤니티 삭제"
-          }
-        },
-        "toasts": {
-          "creating": "커뮤니티 생성 중...",
-          "create_success": "커뮤니티가 성공적으로 생성되었습니다",
-          "create_error": "커뮤니티 생성에 실패했습니다",
-          "deleting": "커뮤니티 삭제 중...",
-          "delete_success": "커뮤니티가 성공적으로 삭제되었습니다",
-          "delete_error": "커뮤니티 삭제에 실패했습니다"
-        }
-      },
-      "structure": {
-        "loading": "로딩 중...",
-        "add_chapter_button": "장 추가",
-        "modals": {
-          "new_chapter": {
-            "title": "장 생성",
-            "description": "코스에 새 장을 추가합니다",
-            "form": {
-              "name_label": "장 이름",
-              "name_required": "장 이름을 입력해 주세요",
-              "description_label": "장 설명",
-              "description_required": "장 설명을 입력해 주세요",
-              "submit": "장 생성"
-            }
-          },
-          "delete_chapter": {
-            "title": "{{name}}을(를) 삭제하시겠습니까?",
-            "message": "정말로 이 장을 삭제하시겠습니까?",
-            "button": "장 삭제"
-          },
-          "new_activity": {
-            "title": "활동 생성",
-            "description": "코스에 추가할 활동 유형 중에서 선택하세요"
-          },
-          "delete_activity": {
-            "title": "{{name}}을(를) 삭제하시겠습니까?",
-            "message": "정말로 이 활동을 삭제하시겠습니까?",
-            "button": "활동 삭제"
-          }
-        },
-        "actions": {
-          "add_chapter": "장 추가",
-          "add_activity": "활동 추가",
-          "publish": "게시",
-          "unpublish": "게시 취소",
-          "preview_activity": "활동 미리보기",
-          "edit_page": "페이지 편집",
-          "edit_assignment": "과제 편집"
-        },
-        "chapter_element": {
-          "chapter_name_placeholder": "장 이름"
-        },
-        "activity": {
-          "name_placeholder": "활동 이름",
-          "types": {
-            "video": "동영상",
-            "document": "문서",
-            "assignment": "과제",
-            "assignments": "과제",
-            "dynamic": "동적",
-            "dynamic_page": "동적 페이지",
-            "scorm": "Scorm"
-          },
-          "toasts": {
-            "deleting": "활동 삭제 중...",
-            "delete_success": "활동이 성공적으로 삭제되었습니다",
-            "updating": "과제 업데이트 중...",
-            "update_success": "활동이 성공적으로 업데이트되었습니다",
-            "name_update_success": "활동 이름이 성공적으로 업데이트되었습니다",
-            "name_update_error": "활동 이름 업데이트에 실패했습니다",
-            "creating": "활동 생성 중...",
-            "create_success": "활동이 성공적으로 생성되었습니다",
-            "uploading": "파일 업로드 및 활동 생성 중...",
-            "upload_success": "파일이 성공적으로 업로드되었습니다",
-            "creating_uploading": "활동 생성 및 파일 업로드 중..."
           }
         }
       }

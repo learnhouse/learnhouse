@@ -790,7 +790,10 @@
         "saving": "Saving...",
         "update_success": "Organization Updated",
         "update_error": "Failed to update organization",
-        "updating": "Updating organization..."
+        "updating": "Updating organization...",
+        "footer_text": "Footer Text",
+        "footer_text_placeholder": "Enter footer text...",
+        "footer_text_desc": "Custom text displayed at the bottom of your organization pages"
       },
       "images": {
         "title": "Images & Previews",
@@ -857,7 +860,10 @@
         "primary_color_desc": "Choose a primary color for your organization's header and page background tint.",
         "clear_color": "Clear color",
         "preview": "Live Preview",
-        "preview_hint": "This is how your organization header and background will appear"
+        "preview_hint": "This is how your organization header and background will appear",
+        "footer_text": "Footer Text",
+        "footer_text_desc": "Add custom text to display in the page footer.",
+        "footer_text_placeholder": "Enter footer text..."
       },
       "socials": {
         "title": "Social Links",

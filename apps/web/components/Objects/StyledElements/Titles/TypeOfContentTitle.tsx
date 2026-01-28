@@ -25,7 +25,7 @@ function TypeOfContentTitle({ title, type }: TypeOfContentTitleProps) {
 
   return (
     <div className="flex items-center gap-2.5 my-4 group cursor-default">
-      <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gray-50 border border-gray-100 shadow-xs transition-all group-hover:bg-gray-100">
+      <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-white nice-shadow">
         {getIcon()}
       </div>
       <h1 className="text-xl font-bold text-gray-900 tracking-tight">

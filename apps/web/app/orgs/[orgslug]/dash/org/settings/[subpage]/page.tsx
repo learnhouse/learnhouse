@@ -33,9 +33,9 @@ interface TabItem {
 
 const getSettingTabs = (t: any): TabItem[] => [
   { id: 'general', label: t('dashboard.organization.settings.tabs.general'), icon: TextIcon },
+  { id: 'branding', label: t('dashboard.organization.settings.tabs.branding'), icon: Palette },
   { id: 'features', label: t('dashboard.organization.settings.tabs.features') || 'Features', icon: ToggleRight },
   { id: 'landing', label: t('dashboard.organization.settings.tabs.landing'), icon: LayoutDashboardIcon },
-  { id: 'branding', label: t('dashboard.organization.settings.tabs.branding'), icon: Palette },
   { id: 'ai', label: t('dashboard.organization.settings.tabs.ai') || 'AI', customIcon: '/learnhouse_ai_simple_colored.png', requiredPlan: 'standard' },
   { id: 'api', label: t('dashboard.organization.settings.tabs.api') || 'API Access', icon: KeyIcon, requiredPlan: 'pro' },
   { id: 'other', label: t('dashboard.organization.settings.tabs.other'), icon: CodeIcon },

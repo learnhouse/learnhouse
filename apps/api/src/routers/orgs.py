@@ -43,6 +43,7 @@ from src.services.orgs.orgs import (
     update_org_payments_config,
     update_org_collections_config,
     update_org_color_config,
+    update_org_footer_text_config,
     update_org_thumbnail,
     update_org_landing,
     upload_org_landing_content_service,
@@ -253,6 +254,22 @@ async def api_update_org_color_config(
     """
     return await update_org_color_config(
         request, color, org_id, current_user, db_session
+    )
+
+
+@router.put("/{org_id}/config/footer_text")
+async def api_update_org_footer_text_config(
+    request: Request,
+    org_id: int,
+    footer_text: str = "",
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+):
+    """
+    Update organization footer text configuration
+    """
+    return await update_org_footer_text_config(
+        request, footer_text, org_id, current_user, db_session
     )
 
 

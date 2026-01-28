@@ -929,6 +929,61 @@ async def update_org_color_config(
     return {"detail": "Color configuration updated"}
 
 
+async def update_org_footer_text_config(
+    request: Request,
+    footer_text: str,
+    org_id: int,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+):
+    statement = select(Organization).where(Organization.id == org_id)
+    result = db_session.exec(statement)
+
+    org = result.first()
+
+    if not org:
+        raise HTTPException(
+            status_code=404,
+            detail="Organization not found",
+        )
+
+    # RBAC check
+    await rbac_check(request, org.org_uuid, current_user, "update", db_session)
+
+    # Get org config
+    statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
+    result = db_session.exec(statement)
+
+    org_config = result.first()
+
+    if org_config is None:
+        logging.error(f"Organization {org_id} has no config")
+        raise HTTPException(
+            status_code=404,
+            detail="Organization config not found",
+        )
+
+    # Create a deep copy to ensure SQLAlchemy detects the change
+    updated_config = json.loads(json.dumps(org_config.config))
+
+    # Handle backward compatibility
+    if "general" not in updated_config:
+        updated_config["general"] = {"enabled": True, "color": "", "footer_text": "", "watermark": True}
+
+    # Update config
+    updated_config["general"]["footer_text"] = footer_text
+
+    # Update the database with the new dictionary
+    org_config.config = updated_config
+    org_config.update_date = str(datetime.now())
+
+    db_session.add(org_config)
+    db_session.commit()
+    db_session.refresh(org_config)
+
+    return {"detail": "Footer text configuration updated"}
+
+
 async def get_org_join_mechanism(
     request: Request,
     org_id: int,
