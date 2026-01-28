@@ -1,5 +1,6 @@
 'use client'
 import React, { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import { MoreHorizontal, Pencil, Trash2, X, Check, Loader2, AlertCircle } from 'lucide-react'
@@ -44,6 +45,7 @@ interface CommentCardProps {
 }
 
 export function CommentCard({ comment, onDeleted, onUpdated }: CommentCardProps) {
+  const { t } = useTranslation()
   const session = useLHSession() as any
   const accessToken = session?.data?.tokens?.access_token
   const currentUserId = session?.data?.user?.id
@@ -58,7 +60,7 @@ export function CommentCard({ comment, onDeleted, onUpdated }: CommentCardProps)
   const timeAgo = dayjs(comment.creation_date).fromNow()
   const authorName = comment.author
     ? `${comment.author.first_name} ${comment.author.last_name}`.trim() || comment.author.username
-    : 'Unknown'
+    : t('common.unknown')
 
   const handleEdit = async () => {
     if (!editContent.trim() || isSubmitting) return
@@ -76,11 +78,11 @@ export function CommentCard({ comment, onDeleted, onUpdated }: CommentCardProps)
     } catch (err: any) {
       console.error('Failed to update reply:', err)
       if (err?.detail?.code === 'MODERATION_BLOCKED') {
-        setError(err.detail.message || 'Your reply contains content that is not allowed.')
+        setError(err.detail.message || t('communities.comments.content_not_allowed'))
       } else if (typeof err?.detail === 'string') {
         setError(err.detail)
       } else {
-        setError('Failed to update reply. Please try again.')
+        setError(t('communities.comments.failed_to_update'))
       }
     } finally {
       setIsSubmitting(false)
@@ -176,14 +178,14 @@ export function CommentCard({ comment, onDeleted, onUpdated }: CommentCardProps)
                     disabled={!editContent.trim() || isSubmitting}
                     className="px-3 py-1 text-xs font-medium text-white bg-neutral-900 hover:bg-neutral-800 rounded-md transition-colors disabled:opacity-50 flex items-center gap-1"
                   >
-                    {isSubmitting ? <Loader2 size={12} className="animate-spin" /> : 'Save'}
+                    {isSubmitting ? <Loader2 size={12} className="animate-spin" /> : t('communities.comments.save')}
                   </button>
                   <button
                     onClick={cancelEdit}
                     disabled={isSubmitting}
                     className="px-3 py-1 text-xs text-gray-600 hover:text-gray-900 transition-colors"
                   >
-                    Cancel
+                    {t('communities.comments.cancel')}
                   </button>
                 </div>
               </div>
@@ -214,14 +216,14 @@ export function CommentCard({ comment, onDeleted, onUpdated }: CommentCardProps)
             <DropdownMenuContent align="end" className="w-36">
               <DropdownMenuItem onClick={() => setIsEditing(true)}>
                 <Pencil className="mr-2 h-4 w-4" />
-                Edit
+                {t('communities.comments.edit')}
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={handleDelete}
                 className="text-red-600 focus:text-red-600 focus:bg-red-50"
               >
                 <Trash2 className="mr-2 h-4 w-4" />
-                Delete
+                {t('communities.comments.delete')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

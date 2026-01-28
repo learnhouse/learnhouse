@@ -81,6 +81,8 @@
     "version": "Version",
     "users": "Benutzer",
     "save": "Speichern",
+    "save_changes": "Änderungen speichern",
+    "saving": "Wird gespeichert...",
     "cancel": "Abbrechen",
     "submit": "Absenden",
     "delete": "Löschen",
@@ -217,6 +219,8 @@
     "course_completed_exclamation": "Kurs abgeschlossen!",
     "what_you_will_learn": "Was Sie lernen werden",
     "course_lessons": "Kurslektionen",
+    "share_course": "Kurs teilen",
+    "copy_link": "Link kopieren",
     "unlock_certificate_message": "Schließen Sie alle Aktivitäten ab, um Ihr Zertifikat freizuschalten",
     "chapter": "Kapitel",
     "chapters": "Kapitel",
@@ -284,6 +288,159 @@
       "configure": "Konfigurieren",
       "ready_to_analyze": "Bereit zur Analyse",
       "course_details": "Kursdetails"
+    },
+    "clone_course": "Kurs klonen",
+    "clone_course_title": "\"{{name}}\" klonen",
+    "clone_course_confirm": "Dies erstellt eine vollständige Kopie des Kurses einschließlich aller Kapitel, Aktivitäten und Dateien. Der geklonte Kurs wird als privat eingestellt.",
+    "cloning_course": "Kurs wird geklont...",
+    "course_cloned_success": "Kurs erfolgreich geklont",
+    "course_cloned_error": "Fehler beim Klonen des Kurses",
+    "published": "Veröffentlicht",
+    "unpublished": "Unveröffentlicht",
+    "search_courses": "Kurse suchen...",
+    "search_results": "{{count}} Kurs(e) gefunden für \"{{query}}\"",
+    "no_search_results": "Keine Kurse gefunden",
+    "try_different_search": "Versuchen Sie einen anderen Suchbegriff",
+    "select_courses": "Auswählen",
+    "select_all": "Alle auswählen",
+    "clear_selection": "Auswahl aufheben",
+    "selected_count": "{{count}} ausgewählt",
+    "clone_selected": "Auswahl klonen",
+    "clone_selected_confirm": "Dies erstellt Kopien von {{count}} Kurs(en). Alle geklonten Kurse werden als privat eingestellt. Fortfahren?",
+    "delete_selected": "Auswahl löschen",
+    "delete_selected_confirm": "Dies löscht {{count}} Kurs(e) dauerhaft. Diese Aktion kann nicht rückgängig gemacht werden. Fortfahren?",
+    "course_description_required": "Kursbeschreibung ist erforderlich"
+  },
+  "communities": {
+    "title": "Communities",
+    "new_community": "Neue Community",
+    "no_communities": "Noch keine Communities",
+    "no_communities_description": "Erstellen Sie eine Community, um Diskussionen zu starten",
+    "public": "Öffentlich",
+    "private": "Privat",
+    "discussions": "Diskussionen",
+    "discussion": "Diskussion",
+    "created": "Erstellt",
+    "linked_course": "Verknüpfter Kurs",
+    "community_guidelines": "Community-Richtlinien",
+    "community_guidelines_text": "Seien Sie respektvoll und konstruktiv. Helfen Sie anderen und teilen Sie Ihr Wissen mit der Community.",
+    "new_discussion": "Neue Diskussion",
+    "manage": "Verwalten",
+    "sidebar": {
+      "posted_by": "Gepostet von",
+      "upvotes": "Upvotes",
+      "category": "Kategorie",
+      "created": "Erstellt",
+      "pinned": "Angepinnt",
+      "locked": "Gesperrt",
+      "reactions": "Reaktionen",
+      "community": "Community"
+    },
+    "discussion_list": {
+      "search_placeholder": "Diskussionen suchen...",
+      "sort_by": "Sortieren nach:",
+      "latest_activity": "Neueste Aktivität",
+      "top": "Beliebteste",
+      "hot": "Angesagt",
+      "new_discussion": "Neue Diskussion",
+      "select": "Auswählen",
+      "cancel": "Abbrechen",
+      "select_all": "Alle auswählen",
+      "deselect_all": "Alle abwählen",
+      "selected": "ausgewählt",
+      "delete": "Löschen",
+      "delete_discussions_title": "{{count}} Diskussion löschen?",
+      "delete_discussions_title_plural": "{{count}} Diskussionen löschen?",
+      "delete_discussions_confirm": "Sind Sie sicher, dass Sie {{count}} {{type}} löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+      "no_results": "Keine Ergebnisse gefunden",
+      "no_results_description": "Versuchen Sie, Ihre Suche anzupassen oder den Filter zu löschen",
+      "clear_search": "Suche löschen",
+      "no_discussions": "Noch keine Diskussionen",
+      "no_discussions_description": "Seien Sie der Erste, der eine Diskussion in dieser Community startet!",
+      "start_discussion": "Diskussion starten"
+    },
+    "discussion_detail": {
+      "edit": "Bearbeiten",
+      "delete": "Löschen",
+      "delete_title": "Diskussion löschen?",
+      "delete_confirm": "Sind Sie sicher, dass Sie diese Diskussion löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+      "delete_button": "Diskussion löschen",
+      "no_details": "Keine zusätzlichen Details angegeben."
+    },
+    "discussion_card": {
+      "pin_discussion": "Diskussion anpinnen",
+      "unpin_discussion": "Diskussion lösen",
+      "lock_discussion": "Diskussion sperren",
+      "unlock_discussion": "Diskussion entsperren",
+      "delete_discussion": "Diskussion löschen",
+      "delete_title": "Diskussion löschen?",
+      "delete_confirm": "Sind Sie sicher, dass Sie diese Diskussion löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+      "votes": "Stimmen"
+    },
+    "comments": {
+      "no_replies": "Noch keine Antworten",
+      "locked": "Diese Diskussion ist gesperrt",
+      "sign_in_to_reply": "Anmelden",
+      "to_reply": "um zu antworten",
+      "write_reply": "Antwort schreiben...",
+      "reply": "Antworten",
+      "edit": "Bearbeiten",
+      "delete": "Löschen",
+      "save": "Speichern",
+      "cancel": "Abbrechen",
+      "failed_to_post": "Antwort konnte nicht gepostet werden. Bitte versuchen Sie es erneut.",
+      "content_not_allowed": "Ihre Antwort enthält nicht erlaubte Inhalte.",
+      "failed_to_update": "Aktualisierung fehlgeschlagen. Bitte versuchen Sie es erneut."
+    },
+    "label_filter": {
+      "label": "Label:",
+      "all": "Alle",
+      "all_discussions": "Alle Diskussionen",
+      "clear_filter": "Filter löschen"
+    },
+    "labels": {
+      "general": "Allgemein",
+      "question": "Frage",
+      "idea": "Idee",
+      "announcement": "Ankündigung",
+      "showcase": "Showcase"
+    },
+    "create_discussion": {
+      "title": "Diskussion starten",
+      "description": "Teilen Sie Ihre Gedanken mit der Community",
+      "category_label": "Kategorie",
+      "title_label": "Diskussionstitel",
+      "title_placeholder": "Worüber möchten Sie diskutieren?",
+      "emoji_selected": "Benutzerdefiniertes Emoji ausgewählt",
+      "emoji_hint": "Klicken Sie auf +, um ein benutzerdefiniertes Emoji hinzuzufügen (optional)",
+      "details_label": "Details (optional)",
+      "details_placeholder": "Fügen Sie mehr Kontext oder Details zu Ihrer Diskussion hinzu...",
+      "editor_hint": "Verwenden Sie die Symbolleiste, um Ihren Text mit Fett, Kursiv, Listen und mehr zu formatieren.",
+      "cancel": "Abbrechen",
+      "submit": "Diskussion veröffentlichen",
+      "title_required": "Titel ist erforderlich",
+      "title_min_length": "Titel muss mindestens 5 Zeichen lang sein",
+      "title_max_length": "Titel muss weniger als 200 Zeichen haben",
+      "content_not_allowed": "Ihre Diskussion enthält nicht erlaubte Inhalte.",
+      "failed_to_create": "Diskussion konnte nicht erstellt werden. Bitte versuchen Sie es erneut."
+    },
+    "edit_discussion": {
+      "title": "Diskussion bearbeiten",
+      "description": "Aktualisieren Sie Ihre Diskussion",
+      "save": "Änderungen speichern",
+      "cancel": "Abbrechen",
+      "close": "Schließen",
+      "failed_to_update": "Aktualisierung fehlgeschlagen. Bitte versuchen Sie es erneut.",
+      "content_not_allowed": "Ihre Diskussion enthält nicht erlaubte Inhalte.",
+      "max_edits_reached": "Sie haben die maximale Anzahl an Bearbeitungen erreicht ({{count}}). Sie können diese Diskussion nicht mehr bearbeiten.",
+      "edits_remaining": "Sie haben noch {{count}} Bearbeitung(en) übrig.",
+      "no_edits_remaining": "Sie haben keine Bearbeitungen mehr übrig ({{count}})."
+    },
+    "course_section": {
+      "title": "Community-Diskussionen",
+      "view_all": "Alle anzeigen",
+      "no_discussions": "Noch keine Diskussionen",
+      "start_first": "Starten Sie die erste Diskussion"
     }
   },
   "collections": {
@@ -732,6 +889,30 @@
       "no_courses": "Noch keine Kurse",
       "create_course_placeholder": "Erstellen Sie einen Kurs, um Inhalte hinzuzufügen",
       "no_courses_available": "Noch keine Kurse verfügbar",
+      "publishing": "Kurs wird veröffentlicht...",
+      "unpublishing": "Kurs wird unveröffentlicht...",
+      "published_success": "Kurs erfolgreich veröffentlicht",
+      "unpublished_success": "Kurs erfolgreich unveröffentlicht",
+      "publish_error": "Fehler beim Aktualisieren des Veröffentlichungsstatus",
+      "published": "Veröffentlicht",
+      "unpublished": "Unveröffentlicht",
+      "processing": "Wird verarbeitet...",
+      "click_to_publish": "Klicken zum Veröffentlichen",
+      "click_to_unpublish": "Klicken zum Entfernen",
+      "preview": "Vorschau",
+      "save": {
+        "success": "Änderungen erfolgreich gespeichert",
+        "error": "Änderungen konnten nicht gespeichert werden",
+        "partial_success": "Mit einigen Problemen gespeichert: {{failed}}",
+        "partial_error": "Teilweise gespeichert ({{success}}), aber fehlgeschlagen: {{failed}}",
+        "certification_error": "Zertifizierungseinstellungen konnten nicht gespeichert werden",
+        "saving": "Speichern...",
+        "saved": "Gespeichert",
+        "save": "Speichern",
+        "unsaved": "Nicht gespeicherte Änderungen",
+        "retry": "Fehler - Klicken zum Wiederholen",
+        "retry_button": "Wiederholen"
+      },
       "overview_top": {
         "course_label": "Kurs",
         "rights_guide_button": "Rechte-Leitfaden"
@@ -1032,7 +1213,43 @@
           "tabs": {
             "general": "Allgemein",
             "thumbnail": "Vorschaubild",
+            "course": "Verknüpfter Kurs",
             "moderation": "Moderation"
+          },
+          "general": {
+            "title": "Allgemeine Einstellungen",
+            "subtitle": "Community-Name, Beschreibung und Sichtbarkeit verwalten"
+          },
+          "thumbnail": {
+            "title": "Vorschaubild",
+            "subtitle": "Das Titelbild der Community aktualisieren"
+          },
+          "course": {
+            "title": "Verknüpfter Kurs",
+            "subtitle": "Diese Community mit einem Kurs verbinden"
+          },
+          "moderation": {
+            "title": "Moderation",
+            "subtitle": "Einstellungen für die Inhaltsmoderation konfigurieren"
+          }
+        },
+        "course": {
+          "title": "Verknüpfter Kurs",
+          "subtitle": "Diese Community mit einem Kurs für kursspezifische Diskussionen verbinden",
+          "currently_linked": "Aktuell verknüpft",
+          "unlink": "Verknüpfung aufheben",
+          "link_button": "Kurs verknüpfen",
+          "search_placeholder": "Kurse suchen...",
+          "no_courses": "Keine Kurse gefunden",
+          "course_linked_id": "Kurs verknüpft (ID: {{id}})",
+          "course_not_found": "Der verknüpfte Kurs existiert möglicherweise nicht mehr oder Sie haben keinen Zugriff darauf",
+          "toasts": {
+            "linking": "Kurs wird verknüpft...",
+            "link_success": "Kurs erfolgreich verknüpft",
+            "link_error": "Kurs konnte nicht verknüpft werden",
+            "unlinking": "Verknüpfung wird aufgehoben...",
+            "unlink_success": "Kursverknüpfung erfolgreich aufgehoben",
+            "unlink_error": "Verknüpfung konnte nicht aufgehoben werden"
           }
         },
         "general": {

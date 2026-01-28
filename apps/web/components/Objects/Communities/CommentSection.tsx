@@ -1,5 +1,6 @@
 'use client'
 import React, { useState, useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { MessageSquare, Send, Loader2, User, AlertCircle, Lock } from 'lucide-react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import {
@@ -16,6 +17,7 @@ interface CommentSectionProps {
 }
 
 export function CommentSection({ discussionUuid, isLocked = false }: CommentSectionProps) {
+  const { t } = useTranslation()
   const session = useLHSession() as any
   const accessToken = session?.data?.tokens?.access_token
   const isAuthenticated = session?.status === 'authenticated'
@@ -64,11 +66,11 @@ export function CommentSection({ discussionUuid, isLocked = false }: CommentSect
       console.error('Failed to post reply:', err)
       // Handle moderation error
       if (err?.detail?.code === 'MODERATION_BLOCKED') {
-        setError(err.detail.message || 'Your reply contains content that is not allowed.')
+        setError(err.detail.message || t('communities.comments.content_not_allowed'))
       } else if (typeof err?.detail === 'string') {
         setError(err.detail)
       } else {
-        setError('Failed to post reply. Please try again.')
+        setError(t('communities.comments.failed_to_post'))
       }
     } finally {
       setIsSubmitting(false)
@@ -102,7 +104,7 @@ export function CommentSection({ discussionUuid, isLocked = false }: CommentSect
         </div>
       ) : comments.length === 0 ? (
         <div className="py-8 text-center">
-          <p className="text-gray-400 text-sm">No replies yet</p>
+          <p className="text-gray-400 text-sm">{t('communities.comments.no_replies')}</p>
         </div>
       ) : (
         <>
@@ -122,7 +124,7 @@ export function CommentSection({ discussionUuid, isLocked = false }: CommentSect
         {isLocked ? (
           <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 rounded-md">
             <Lock size={14} className="text-amber-600" />
-            <p className="text-sm text-amber-700">This discussion is locked</p>
+            <p className="text-sm text-amber-700">{t('communities.comments.locked')}</p>
           </div>
         ) : isAuthenticated ? (
           <div>
@@ -151,7 +153,7 @@ export function CommentSection({ discussionUuid, isLocked = false }: CommentSect
                   onFocus={() => setIsFocused(true)}
                   onBlur={() => !newComment && setIsFocused(false)}
                   onKeyDown={handleKeyDown}
-                  placeholder="Write a reply..."
+                  placeholder={t('communities.comments.write_reply')}
                   rows={isFocused || newComment ? 2 : 1}
                   className="w-full px-3 py-2 text-sm bg-transparent outline-none resize-none placeholder:text-gray-400"
                 />
@@ -166,7 +168,7 @@ export function CommentSection({ discussionUuid, isLocked = false }: CommentSect
                       {isSubmitting ? (
                         <Loader2 size={12} className="animate-spin" />
                       ) : (
-                        'Reply'
+                        t('communities.comments.reply')
                       )}
                     </button>
                   </div>
@@ -178,7 +180,7 @@ export function CommentSection({ discussionUuid, isLocked = false }: CommentSect
           <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-md">
             <User size={14} className="text-gray-400" />
             <p className="text-sm text-gray-500">
-              <span className="font-medium text-gray-700">Sign in</span> to reply
+              <span className="font-medium text-gray-700">{t('communities.comments.sign_in_to_reply')}</span> {t('communities.comments.to_reply')}
             </p>
           </div>
         )}

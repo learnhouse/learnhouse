@@ -1,9 +1,11 @@
 from typing import List
 from uuid import uuid4
-from sqlmodel import Session, select, or_, and_, text
+from sqlmodel import Session, select, or_, and_, text, func
 from src.db.usergroup_resources import UserGroupResource
 from src.db.usergroup_user import UserGroupUser
 from src.db.organizations import Organization
+from src.db.roles import Role
+from src.db.user_organizations import UserOrganization
 from src.security.features_utils.usage import (
     check_limits_with_usage,
     decrease_feature_usage,
@@ -30,6 +32,50 @@ from datetime import datetime
 from src.security.courses_security import courses_rbac_check
 
 
+async def _user_can_view_unpublished_course(
+    request: Request,
+    course: Course,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+) -> bool:
+    """
+    Check if the user has permission to view an unpublished course.
+
+    Users can view unpublished courses if they are:
+    1. A resource author (creator, maintainer, or contributor) of the course
+    2. An admin or maintainer in the organization
+
+    Anonymous users cannot view unpublished courses.
+    """
+    # Anonymous users cannot view unpublished courses
+    if isinstance(current_user, AnonymousUser):
+        return False
+
+    # Check if user is a resource author of this course
+    author_statement = select(ResourceAuthor).where(
+        ResourceAuthor.resource_uuid == course.course_uuid,
+        ResourceAuthor.user_id == current_user.id,
+        ResourceAuthor.authorship_status == ResourceAuthorshipStatusEnum.ACTIVE
+    )
+    is_author = db_session.exec(author_statement).first()
+    if is_author:
+        return True
+
+    # Check if user has admin/maintainer role in the organization
+    role_statement = (
+        select(Role)
+        .join(UserOrganization)
+        .where(UserOrganization.org_id == course.org_id)
+        .where(UserOrganization.user_id == current_user.id)
+    )
+    user_roles = db_session.exec(role_statement).all()
+    for role in user_roles:
+        if role.id in [1, 2]:  # Admin or Maintainer role IDs
+            return True
+
+    return False
+
+
 async def get_course(
     request: Request,
     course_uuid: str,
@@ -47,6 +93,18 @@ async def get_course(
 
     # RBAC check
     await courses_rbac_check(request, course.course_uuid, current_user, "read", db_session)
+
+    # Check if course is published - unpublished courses require special permission
+    if not course.published:
+        # Check if user can view unpublished courses
+        can_view_unpublished = await _user_can_view_unpublished_course(
+            request, course, current_user, db_session
+        )
+        if not can_view_unpublished:
+            raise HTTPException(
+                status_code=404,
+                detail="Course not found",
+            )
 
     # Get course authors with their roles
     authors_statement = (
@@ -155,6 +213,18 @@ async def get_course_meta(
     # RBAC check
     await courses_rbac_check(request, course.course_uuid, current_user, "read", db_session)
 
+    # Check if course is published - unpublished courses require special permission
+    if not course.published:
+        # Check if user can view unpublished courses
+        can_view_unpublished = await _user_can_view_unpublished_course(
+            request, course, current_user, db_session
+        )
+        if not can_view_unpublished:
+            raise HTTPException(
+                status_code=404,
+                detail="Course not found",
+            )
+
     # Get course chapters
     chapters = []
     if course.id is not None:
@@ -189,8 +259,31 @@ async def get_courses_orgslug(
     db_session: Session,
     page: int = 1,
     limit: int = 10,
+    include_unpublished: bool = False,
 ) -> List[CourseRead]:
     offset = (page - 1) * limit
+
+    # Get organization
+    org_statement = select(Organization).where(Organization.slug == org_slug)
+    org = db_session.exec(org_statement).first()
+    if not org:
+        return []
+
+    # Check if user can view unpublished courses (must be admin/editor in org)
+    can_view_unpublished = False
+    if include_unpublished and not isinstance(current_user, AnonymousUser):
+        # Check if user has admin/editor role in this organization
+        role_statement = (
+            select(Role)
+            .join(UserOrganization)
+            .where(UserOrganization.org_id == org.id)
+            .where(UserOrganization.user_id == current_user.id)
+        )
+        user_roles = db_session.exec(role_statement).all()
+        for role in user_roles:
+            if role.id in [1, 2]:  # Admin role IDs
+                can_view_unpublished = True
+                break
 
     # Base query
     query = (
@@ -199,39 +292,48 @@ async def get_courses_orgslug(
         .where(Organization.slug == org_slug)
     )
 
+    # Only show published courses unless user has permission to view unpublished
+    if not can_view_unpublished:
+        query = query.where(Course.published == True)
+
     if isinstance(current_user, AnonymousUser):
         # For anonymous users, only show public courses
         query = query.where(Course.public == True)
     else:
-        # For authenticated users, show:
-        # 1. Public courses
-        # 2. Courses not in any UserGroup
-        # 3. Courses in UserGroups where the user is a member
-        # 4. Courses where the user is a resource author
-        query = (
-            query
-            .outerjoin(UserGroupResource, UserGroupResource.resource_uuid == Course.course_uuid)  # type: ignore
-            .outerjoin(UserGroupUser, and_(
-                UserGroupUser.usergroup_id == UserGroupResource.usergroup_id,
-                UserGroupUser.user_id == current_user.id
-            ))
-            .outerjoin(ResourceAuthor, ResourceAuthor.resource_uuid == Course.course_uuid)  # type: ignore
-            .where(or_(
-                Course.public == True,
-                UserGroupResource.resource_uuid == None,  # Courses not in any UserGroup # noqa: E711
-                UserGroupUser.user_id == current_user.id,  # Courses in UserGroups where user is a member
-                ResourceAuthor.user_id == current_user.id  # Courses where user is a resource author
-            ))
-        )
+        # For authenticated users with admin access viewing dashboard, show all courses
+        if can_view_unpublished:
+            # Admins see all courses in the organization (no additional filter)
+            pass
+        else:
+            # For regular users, show:
+            # 1. Public courses
+            # 2. Courses not in any UserGroup
+            # 3. Courses in UserGroups where the user is a member
+            # 4. Courses where the user is a resource author
+            query = (
+                query
+                .outerjoin(UserGroupResource, UserGroupResource.resource_uuid == Course.course_uuid)  # type: ignore
+                .outerjoin(UserGroupUser, and_(
+                    UserGroupUser.usergroup_id == UserGroupResource.usergroup_id,
+                    UserGroupUser.user_id == current_user.id
+                ))
+                .outerjoin(ResourceAuthor, ResourceAuthor.resource_uuid == Course.course_uuid)  # type: ignore
+                .where(or_(
+                    Course.public == True,
+                    UserGroupResource.resource_uuid == None,  # Courses not in any UserGroup # noqa: E711
+                    UserGroupUser.user_id == current_user.id,  # Courses in UserGroups where user is a member
+                    ResourceAuthor.user_id == current_user.id  # Courses where user is a resource author
+                ))
+            )
 
-    # Apply pagination
-    query = query.offset(offset).limit(limit).distinct()
+    # Apply ordering and pagination
+    query = query.order_by(Course.creation_date.desc()).offset(offset).limit(limit).distinct()
 
     courses = db_session.exec(query).all()
-    
+
     if not courses:
         return []
-        
+
     # Get all course UUIDs
     course_uuids = [course.course_uuid for course in courses]
     
@@ -275,6 +377,7 @@ async def get_courses_orgslug(
             "tags": course.tags or "",
             "thumbnail_image": course.thumbnail_image or "",
             "public": course.public,
+            "published": course.published,
             "open_to_contributors": course.open_to_contributors,
             "course_uuid": course.course_uuid,
             "creation_date": course.creation_date,
@@ -284,6 +387,51 @@ async def get_courses_orgslug(
         course_reads.append(course_read)
 
     return course_reads
+
+
+async def get_courses_count_orgslug(
+    request: Request,
+    current_user: PublicUser | AnonymousUser,
+    org_slug: str,
+    db_session: Session,
+) -> int:
+    """
+    Get total count of courses for an organization (respecting visibility rules)
+    """
+    # Base query
+    query = (
+        select(func.count(Course.id.distinct()))
+        .join(Organization)
+        .where(Organization.slug == org_slug)
+    )
+
+    if isinstance(current_user, AnonymousUser):
+        # For anonymous users, only count public courses
+        query = query.where(Course.public == True)
+    else:
+        # For authenticated users, count:
+        # 1. Public courses
+        # 2. Courses not in any UserGroup
+        # 3. Courses in UserGroups where the user is a member
+        # 4. Courses where the user is a resource author
+        query = (
+            query
+            .outerjoin(UserGroupResource, UserGroupResource.resource_uuid == Course.course_uuid)  # type: ignore
+            .outerjoin(UserGroupUser, and_(
+                UserGroupUser.usergroup_id == UserGroupResource.usergroup_id,
+                UserGroupUser.user_id == current_user.id
+            ))
+            .outerjoin(ResourceAuthor, ResourceAuthor.resource_uuid == Course.course_uuid)  # type: ignore
+            .where(or_(
+                Course.public == True,
+                UserGroupResource.resource_uuid == None,  # Courses not in any UserGroup # noqa: E711
+                UserGroupUser.user_id == current_user.id,  # Courses in UserGroups where user is a member
+                ResourceAuthor.user_id == current_user.id  # Courses where user is a resource author
+            ))
+        )
+
+    count = db_session.exec(query).one()
+    return count
 
 
 async def search_courses(
@@ -338,8 +486,8 @@ async def search_courses(
             ))
         )
 
-    # Apply pagination
-    query = query.offset(offset).limit(limit).distinct()
+    # Apply ordering and pagination
+    query = query.order_by(Course.creation_date.desc()).offset(offset).limit(limit).distinct()
 
     courses = db_session.exec(query).all()
 
@@ -379,6 +527,7 @@ async def search_courses(
             "tags": course.tags or "",
             "thumbnail_image": course.thumbnail_image or "",
             "public": course.public,
+            "published": course.published,
             "open_to_contributors": course.open_to_contributors,
             "course_uuid": course.course_uuid,
             "creation_date": course.creation_date,
@@ -789,16 +938,358 @@ async def get_user_courses(
             "tags": course.tags or "",
             "thumbnail_image": course.thumbnail_image or "",
             "public": course.public,
+            "published": course.published,
             "open_to_contributors": course.open_to_contributors,
             "course_uuid": course.course_uuid,
             "creation_date": course.creation_date,
             "update_date": course.update_date,
             "authors": authors_with_role
         })
-        
+
         result.append(course_read)
-    
+
     return result
+
+
+async def clone_course(
+    request: Request,
+    course_uuid: str,
+    current_user: PublicUser | AnonymousUser | APITokenUser,
+    db_session: Session,
+) -> CourseRead:
+    """
+    Clone a course with all its chapters, activities, blocks, and files.
+
+    This creates a complete copy of the course including:
+    - Course metadata (name, description, about, learnings, tags, SEO, etc.)
+    - Thumbnail files
+    - Chapters with their ordering
+    - Activities with their files (videos, documents, PDFs)
+    - Dynamic activity blocks with their files (images, videos, PDFs)
+
+    The cloned course will:
+    - Have a new course_uuid
+    - Have "(Copy)" appended to the name
+    - Be set to private (public=False) by default
+    - Have the current user as the creator
+    """
+    import shutil
+    import os
+    from src.db.courses.chapters import Chapter
+    from src.db.courses.activities import Activity
+    from src.db.courses.blocks import Block
+    from src.db.courses.course_chapters import CourseChapter
+    from src.db.courses.chapter_activities import ChapterActivity
+
+    # Get the original course
+    statement = select(Course).where(Course.course_uuid == course_uuid)
+    original_course = db_session.exec(statement).first()
+
+    if not original_course:
+        raise HTTPException(
+            status_code=404,
+            detail="Course not found",
+        )
+
+    # RBAC check - user needs read access to clone
+    await courses_rbac_check(request, original_course.course_uuid, current_user, "read", db_session)
+
+    # Also check if user can create courses
+    await courses_rbac_check(request, "course_x", current_user, "create", db_session)
+
+    # Usage check for creating new course
+    check_limits_with_usage("courses", original_course.org_id, db_session)
+
+    # Get organization for file operations
+    org_statement = select(Organization).where(Organization.id == original_course.org_id)
+    org = db_session.exec(org_statement).first()
+
+    if not org:
+        raise HTTPException(
+            status_code=404,
+            detail="Organization not found",
+        )
+
+    # Create new course UUID
+    new_course_uuid = str(f"course_{uuid4()}")
+
+    # Create the new course
+    new_course = Course(
+        org_id=original_course.org_id,
+        name=f"{original_course.name} (Copy)",
+        description=original_course.description,
+        about=original_course.about,
+        learnings=original_course.learnings,
+        tags=original_course.tags,
+        thumbnail_type=original_course.thumbnail_type,
+        thumbnail_image="",
+        thumbnail_video="",
+        public=False,  # Cloned courses start as private
+        published=False,  # Cloned courses start as unpublished
+        open_to_contributors=False,
+        course_uuid=new_course_uuid,
+        creation_date=str(datetime.now()),
+        update_date=str(datetime.now()),
+        seo=original_course.seo,
+    )
+
+    # Copy thumbnail files if they exist
+    content_base = "content/orgs"
+    original_course_path = f"{content_base}/{org.org_uuid}/courses/{original_course.course_uuid}"
+    new_course_path = f"{content_base}/{org.org_uuid}/courses/{new_course_uuid}"
+
+    # Create new course directory and thumbnails subdirectory
+    os.makedirs(f"{new_course_path}/thumbnails", exist_ok=True)
+
+    # Copy thumbnail image if exists (thumbnails are in a subdirectory)
+    if original_course.thumbnail_image:
+        original_thumbnail_path = f"{original_course_path}/thumbnails/{original_course.thumbnail_image}"
+        if os.path.exists(original_thumbnail_path):
+            new_thumbnail_name = f"{new_course_uuid}_thumbnail_{uuid4()}.{original_course.thumbnail_image.split('.')[-1]}"
+            new_thumbnail_path = f"{new_course_path}/thumbnails/{new_thumbnail_name}"
+            shutil.copy2(original_thumbnail_path, new_thumbnail_path)
+            new_course.thumbnail_image = new_thumbnail_name
+
+    # Copy thumbnail video if exists (also in thumbnails subdirectory)
+    if original_course.thumbnail_video:
+        original_video_path = f"{original_course_path}/thumbnails/{original_course.thumbnail_video}"
+        if os.path.exists(original_video_path):
+            new_video_name = f"{new_course_uuid}_thumbnail_{uuid4()}.{original_course.thumbnail_video.split('.')[-1]}"
+            new_video_path = f"{new_course_path}/thumbnails/{new_video_name}"
+            shutil.copy2(original_video_path, new_video_path)
+            new_course.thumbnail_video = new_video_name
+
+    # Insert new course
+    db_session.add(new_course)
+    db_session.commit()
+    db_session.refresh(new_course)
+
+    # Make current user the creator
+    if isinstance(current_user, APITokenUser):
+        author_user_id = current_user.created_by_user_id
+    else:
+        author_user_id = current_user.id
+
+    resource_author = ResourceAuthor(
+        resource_uuid=new_course.course_uuid,
+        user_id=author_user_id,
+        authorship=ResourceAuthorshipEnum.CREATOR,
+        authorship_status=ResourceAuthorshipStatusEnum.ACTIVE,
+        creation_date=str(datetime.now()),
+        update_date=str(datetime.now()),
+    )
+    db_session.add(resource_author)
+    db_session.commit()
+
+    # Get original chapters with order
+    statement = (
+        select(Chapter, CourseChapter)
+        .join(CourseChapter, Chapter.id == CourseChapter.chapter_id)
+        .where(CourseChapter.course_id == original_course.id)
+        .order_by(CourseChapter.order)
+    )
+    chapter_results = db_session.exec(statement).all()
+
+    # Map old chapter IDs to new chapters
+    chapter_id_map = {}
+
+    for original_chapter, course_chapter in chapter_results:
+        new_chapter_uuid = f"chapter_{uuid4()}"
+
+        new_chapter = Chapter(
+            name=original_chapter.name,
+            description=original_chapter.description,
+            thumbnail_image=original_chapter.thumbnail_image,
+            chapter_uuid=new_chapter_uuid,
+            org_id=original_course.org_id,
+            course_id=new_course.id,
+            creation_date=str(datetime.now()),
+            update_date=str(datetime.now()),
+        )
+
+        db_session.add(new_chapter)
+        db_session.commit()
+        db_session.refresh(new_chapter)
+
+        chapter_id_map[original_chapter.id] = new_chapter.id
+
+        # Create CourseChapter link
+        new_course_chapter = CourseChapter(
+            course_id=new_course.id,
+            chapter_id=new_chapter.id,
+            org_id=original_course.org_id,
+            order=course_chapter.order,
+            creation_date=str(datetime.now()),
+            update_date=str(datetime.now()),
+        )
+        db_session.add(new_course_chapter)
+        db_session.commit()
+
+        # Get activities for this chapter with order
+        statement = (
+            select(Activity, ChapterActivity)
+            .join(ChapterActivity, Activity.id == ChapterActivity.activity_id)
+            .where(ChapterActivity.chapter_id == original_chapter.id)
+            .order_by(ChapterActivity.order)
+        )
+        activity_results = db_session.exec(statement).all()
+
+        for original_activity, chapter_activity in activity_results:
+            new_activity_uuid = f"activity_{uuid4()}"
+
+            # Clone activity content (will update file references for blocks)
+            new_content = dict(original_activity.content) if original_activity.content else {}
+            new_details = dict(original_activity.details) if original_activity.details else {}
+
+            new_activity = Activity(
+                name=original_activity.name,
+                activity_type=original_activity.activity_type,
+                activity_sub_type=original_activity.activity_sub_type,
+                content=new_content,
+                details=new_details,
+                published=original_activity.published,
+                org_id=original_course.org_id,
+                course_id=new_course.id,
+                activity_uuid=new_activity_uuid,
+                creation_date=str(datetime.now()),
+                update_date=str(datetime.now()),
+            )
+
+            db_session.add(new_activity)
+            db_session.commit()
+            db_session.refresh(new_activity)
+
+            # Create ChapterActivity link
+            new_chapter_activity = ChapterActivity(
+                chapter_id=new_chapter.id,
+                activity_id=new_activity.id,
+                course_id=new_course.id,
+                org_id=original_course.org_id,
+                order=chapter_activity.order,
+                creation_date=str(datetime.now()),
+                update_date=str(datetime.now()),
+            )
+            db_session.add(new_chapter_activity)
+            db_session.commit()
+
+            # Copy all activity files recursively
+            original_activity_path = f"{original_course_path}/activities/{original_activity.activity_uuid}"
+            new_activity_path = f"{new_course_path}/activities/{new_activity_uuid}"
+
+            # Copy entire activity directory structure if it exists
+            # This handles all activity types: videos, documents, SCORM, assignments, etc.
+            if os.path.exists(original_activity_path):
+                shutil.copytree(original_activity_path, new_activity_path, dirs_exist_ok=True)
+
+            # Clone blocks for dynamic activities
+            if original_activity.activity_type.value == "TYPE_DYNAMIC":
+                statement = select(Block).where(Block.activity_id == original_activity.id)
+                original_blocks = db_session.exec(statement).all()
+
+                # Map old block UUIDs to new block UUIDs (for updating activity content references)
+                block_uuid_map = {}
+
+                for original_block in original_blocks:
+                    new_block_uuid = f"block_{uuid4()}"
+                    block_uuid_map[original_block.block_uuid] = new_block_uuid
+
+                    # Clone block content and update file references
+                    new_block_content = dict(original_block.content) if original_block.content else {}
+
+                    # Update activity_uuid reference in block content
+                    if 'activity_uuid' in new_block_content:
+                        new_block_content['activity_uuid'] = new_activity_uuid
+
+                    # Determine block type folder and rename copied folder from old UUID to new UUID
+                    block_type_folder = ""
+                    if original_block.block_type.value == "BLOCK_VIDEO":
+                        block_type_folder = "videoBlock"
+                    elif original_block.block_type.value == "BLOCK_IMAGE":
+                        block_type_folder = "imageBlock"
+                    elif original_block.block_type.value == "BLOCK_DOCUMENT_PDF":
+                        block_type_folder = "pdfBlock"
+
+                    if block_type_folder:
+                        # The copytree already copied files with old UUIDs, we need to rename folders
+                        old_copied_block_path = f"{new_activity_path}/dynamic/blocks/{block_type_folder}/{original_block.block_uuid}"
+                        new_block_path = f"{new_activity_path}/dynamic/blocks/{block_type_folder}/{new_block_uuid}"
+
+                        if os.path.exists(old_copied_block_path):
+                            # Rename the folder to use new block UUID
+                            os.rename(old_copied_block_path, new_block_path)
+
+                            # Rename files inside the folder and update file references
+                            if os.path.exists(new_block_path):
+                                for filename in os.listdir(new_block_path):
+                                    old_file_path = f"{new_block_path}/{filename}"
+                                    if os.path.isfile(old_file_path):
+                                        # Generate new file ID
+                                        new_file_id = str(uuid4())
+                                        file_ext = filename.split('.')[-1] if '.' in filename else ''
+                                        new_filename = f"block_{new_file_id}.{file_ext}" if file_ext else f"block_{new_file_id}"
+                                        new_file_path = f"{new_block_path}/{new_filename}"
+                                        os.rename(old_file_path, new_file_path)
+
+                                        # Update file reference in block content
+                                        if 'file_id' in new_block_content:
+                                            new_block_content['file_id'] = f"block_{new_file_id}"
+
+                    new_block = Block(
+                        block_type=original_block.block_type,
+                        content=new_block_content,
+                        org_id=original_course.org_id,
+                        course_id=new_course.id,
+                        chapter_id=new_chapter.id,
+                        activity_id=new_activity.id,
+                        block_uuid=new_block_uuid,
+                        creation_date=str(datetime.now()),
+                        update_date=str(datetime.now()),
+                    )
+
+                    db_session.add(new_block)
+                    db_session.commit()
+
+                # Update activity content to reference new block UUIDs
+                if new_content and block_uuid_map:
+                    content_str = str(new_content)
+                    for old_uuid, new_uuid in block_uuid_map.items():
+                        content_str = content_str.replace(old_uuid, new_uuid)
+                    # Try to parse back if it was modified
+                    try:
+                        import ast
+                        new_activity.content = ast.literal_eval(content_str)
+                        db_session.add(new_activity)
+                        db_session.commit()
+                    except:
+                        pass  # Keep original content if parsing fails
+
+    # Increase feature usage for the new course
+    increase_feature_usage("courses", new_course.org_id, db_session)
+
+    # Get course authors with their roles
+    authors_statement = (
+        select(ResourceAuthor, User)
+        .join(User, ResourceAuthor.user_id == User.id)
+        .where(ResourceAuthor.resource_uuid == new_course.course_uuid)
+        .order_by(ResourceAuthor.id.asc())
+    )
+    author_results = db_session.exec(authors_statement).all()
+
+    # Convert to AuthorWithRole objects
+    authors = [
+        AuthorWithRole(
+            user=UserRead.model_validate(user),
+            authorship=resource_author.authorship,
+            authorship_status=resource_author.authorship_status,
+            creation_date=resource_author.creation_date,
+            update_date=resource_author.update_date
+        )
+        for resource_author, user in author_results
+    ]
+
+    course_read = CourseRead(**new_course.model_dump(), authors=authors)
+
+    return CourseRead.model_validate(course_read)
 
 
 async def get_course_user_rights(

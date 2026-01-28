@@ -1,6 +1,7 @@
 'use client'
 import React from 'react'
 import Link from 'next/link'
+import { useTranslation } from 'react-i18next'
 import {
   MessageCircle,
   Plus,
@@ -35,6 +36,7 @@ export function CommunitySidebar({
   orgslug,
   onCreateDiscussion,
 }: CommunitySidebarProps) {
+  const { t } = useTranslation()
   const { canManageCommunity, canCreateDiscussion } = useCommunityRights(community.community_uuid)
   const org = useOrg() as any
   const session = useLHSession() as any
@@ -89,12 +91,12 @@ export function CommunitySidebar({
                 {community.public ? (
                   <>
                     <Globe size={12} className="text-green-500" />
-                    <span>Public</span>
+                    <span>{t('communities.public')}</span>
                   </>
                 ) : (
                   <>
                     <Lock size={12} className="text-gray-400" />
-                    <span>Private</span>
+                    <span>{t('communities.private')}</span>
                   </>
                 )}
               </div>
@@ -115,11 +117,11 @@ export function CommunitySidebar({
         <div className="px-4 py-3 space-y-2">
           <div className="flex items-center gap-2 text-sm text-gray-600">
             <MessageCircle size={14} className="text-gray-400" />
-            <span>{discussionCount} {discussionCount === 1 ? 'discussion' : 'discussions'}</span>
+            <span>{discussionCount} {discussionCount === 1 ? t('communities.discussion') : t('communities.discussions')}</span>
           </div>
           <div className="flex items-center gap-2 text-sm text-gray-600">
             <Calendar size={14} className="text-gray-400" />
-            <span>Created {createdDate}</span>
+            <span>{t('communities.created')} {createdDate}</span>
           </div>
         </div>
 
@@ -127,7 +129,7 @@ export function CommunitySidebar({
         {linkedCourse && (
           <div className="px-4 py-3 border-t border-gray-100">
             <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
-              Linked Course
+              {t('communities.linked_course')}
             </div>
             <Link
               href={getUriWithOrg(orgslug, `/course/${linkedCourse.course_uuid.replace('course_', '')}`)}
@@ -169,7 +171,7 @@ export function CommunitySidebar({
               className="w-full py-2.5 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 cursor-pointer bg-neutral-900 text-white hover:bg-neutral-800 text-sm"
             >
               <Plus className="w-4 h-4" />
-              <span>New Discussion</span>
+              <span>{t('communities.new_discussion')}</span>
             </button>
           )}
 
@@ -179,7 +181,7 @@ export function CommunitySidebar({
               className="w-full bg-white text-neutral-600 border border-neutral-200 py-2.5 rounded-lg font-medium hover:bg-neutral-50 transition-colors flex items-center justify-center gap-2 text-sm"
             >
               <Settings className="w-4 h-4" />
-              Manage
+              {t('communities.manage')}
             </Link>
           )}
         </div>
@@ -187,9 +189,9 @@ export function CommunitySidebar({
 
       {/* Quick Tips Card */}
       <div className="bg-white nice-shadow rounded-lg overflow-hidden p-4">
-        <h3 className="font-medium text-gray-900 mb-2 text-sm">Community Guidelines</h3>
+        <h3 className="font-medium text-gray-900 mb-2 text-sm">{t('communities.community_guidelines')}</h3>
         <p className="text-xs text-gray-500 leading-relaxed">
-          Be respectful and constructive. Help others and share your knowledge with the community.
+          {t('communities.community_guidelines_text')}
         </p>
       </div>
     </div>

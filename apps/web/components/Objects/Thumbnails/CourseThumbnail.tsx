@@ -2,15 +2,13 @@
 import { useOrg } from '@components/Contexts/OrgContext'
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
-import { getUriWithOrg } from '@services/config/config'
-import { deleteCourseFromBackend } from '@services/courses/courses'
+import { getUriWithOrg, getAPIUrl } from '@services/config/config'
+import { deleteCourseFromBackend, cloneCourse } from '@services/courses/courses'
 import { getCourseThumbnailMediaDirectory, getUserAvatarMediaDirectory } from '@services/media/media'
-import { revalidateTags } from '@services/utils/ts/requests'
 import { mutate } from 'swr'
-import { BookMinus, FilePenLine, Settings2, MoreVertical } from 'lucide-react'
+import { BookMinus, FilePenLine, Settings2, MoreVertical, Copy } from 'lucide-react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import React from 'react'
 import toast from 'react-hot-toast'
 import UserAvatar from '@components/Objects/UserAvatar'
@@ -29,6 +27,7 @@ type Course = {
   thumbnail_image: string
   org_id: string | number
   update_date: string
+  public?: boolean
   authors?: Array<{
     user: {
       id: string
@@ -47,13 +46,13 @@ type PropsType = {
   course: Course
   orgslug: string
   customLink?: string
+  isDashboard?: boolean
 }
 
 export const removeCoursePrefix = (course_uuid: string) => course_uuid.replace('course_', '')
 
-function CourseThumbnail({ course, orgslug, customLink }: PropsType) {
+function CourseThumbnail({ course, orgslug, customLink, isDashboard = false }: PropsType) {
   const { t, i18n } = useTranslation()
-  const router = useRouter() 
   const org = useOrg() as any
   const session = useLHSession() as any
 
@@ -66,13 +65,29 @@ function CourseThumbnail({ course, orgslug, customLink }: PropsType) {
     const toastId = toast.loading(t('courses.deleting_course'))
     try {
       await deleteCourseFromBackend(course.course_uuid, session.data?.tokens?.access_token)
-      await revalidateTags(['courses'], orgslug)
-      // Refresh sidebar cache
-      mutate((key) => typeof key === 'string' && key.includes('/courses/org_slug/'))
+      // Revalidate all courses SWR caches
+      mutate((key) => typeof key === 'string' && key.includes('/courses/'), undefined, { revalidate: true })
       toast.success(t('courses.course_deleted_success'))
-      router.refresh()
     } catch (error) {
       toast.error(t('courses.course_deleted_error'))
+    } finally {
+      toast.dismiss(toastId)
+    }
+  }
+
+  const handleCloneCourse = async () => {
+    const toastId = toast.loading(t('courses.cloning_course'))
+    try {
+      const result = await cloneCourse(course.course_uuid, session.data?.tokens?.access_token)
+      if (result.success) {
+        // Revalidate all courses SWR caches
+        mutate((key) => typeof key === 'string' && key.includes('/courses/'), undefined, { revalidate: true })
+        toast.success(t('courses.course_cloned_success'))
+      } else {
+        toast.error(result.HTTPmessage || t('courses.course_cloned_error'))
+      }
+    } catch (error) {
+      toast.error(t('courses.course_cloned_error'))
     } finally {
       toast.dismiss(toastId)
     }
@@ -90,6 +105,7 @@ function CourseThumbnail({ course, orgslug, customLink }: PropsType) {
         course={course}
         orgSlug={orgslug}
         deleteCourse={deleteCourse}
+        cloneCourse={handleCloneCourse}
       />
       
       <Link prefetch href={courseLink} className="block relative aspect-video overflow-hidden bg-gray-50">
@@ -98,6 +114,19 @@ function CourseThumbnail({ course, orgslug, customLink }: PropsType) {
           style={{ backgroundImage: `url(${thumbnailImage})` }}
         />
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
+        {isDashboard && (
+          <div className="absolute bottom-2 left-2">
+            {course.published ? (
+              <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide bg-green-100 text-green-700 rounded-full">
+                {t('courses.published')}
+              </span>
+            ) : (
+              <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide bg-yellow-100 text-yellow-700 rounded-full">
+                {t('courses.unpublished')}
+              </span>
+            )}
+          </div>
+        )}
       </Link>
 
       <div className="p-3 flex flex-col space-y-1.5">
@@ -166,10 +195,11 @@ function CourseThumbnail({ course, orgslug, customLink }: PropsType) {
   )
 }
 
-const AdminEditOptions = ({ course, orgSlug, deleteCourse }: {
+const AdminEditOptions = ({ course, orgSlug, deleteCourse, cloneCourse }: {
   course: Course
   orgSlug: string
   deleteCourse: () => Promise<void>
+  cloneCourse: () => Promise<void>
 }) => {
   const { t } = useTranslation()
   return (
@@ -196,6 +226,20 @@ const AdminEditOptions = ({ course, orgSlug, deleteCourse }: {
               <Link prefetch href={getUriWithOrg(orgSlug, `/dash/courses/course/${removeCoursePrefix(course.course_uuid)}/general`)} className="flex items-center cursor-pointer">
                 <Settings2 className="mr-2 h-4 w-4" /> {t('common.settings')}
               </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <ConfirmationModal
+                confirmationButtonText={t('courses.clone_course')}
+                confirmationMessage={t('courses.clone_course_confirm')}
+                dialogTitle={t('courses.clone_course_title', { name: course.name })}
+                dialogTrigger={
+                  <button className="w-full text-left flex items-center px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors">
+                    <Copy className="mr-2 h-4 w-4" /> {t('courses.clone_course')}
+                  </button>
+                }
+                functionToExecute={cloneCourse}
+                status="info"
+              />
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <ConfirmationModal

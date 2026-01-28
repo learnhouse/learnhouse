@@ -81,6 +81,8 @@
     "version": "Versão",
     "users": "Usuários",
     "save": "Salvar",
+    "save_changes": "Salvar alterações",
+    "saving": "Salvando...",
     "cancel": "Cancelar",
     "submit": "Enviar",
     "delete": "Excluir",
@@ -217,6 +219,8 @@
     "course_completed_exclamation": "Curso Concluído!",
     "what_you_will_learn": "O que você aprenderá",
     "course_lessons": "Lições do Curso",
+    "share_course": "Compartilhar curso",
+    "copy_link": "Copiar link",
     "unlock_certificate_message": "Conclua todas as atividades para desbloquear seu certificado",
     "chapter": "Capítulo",
     "chapters": "Capítulos",
@@ -284,6 +288,159 @@
       "configure": "Configurar",
       "ready_to_analyze": "Pronto para analisar",
       "course_details": "Detalhes do curso"
+    },
+    "clone_course": "Clonar curso",
+    "clone_course_title": "Clonar \"{{name}}\"",
+    "clone_course_confirm": "Isso criará uma cópia completa do curso, incluindo todos os capítulos, atividades e arquivos. O curso clonado será definido como privado.",
+    "cloning_course": "Clonando curso...",
+    "course_cloned_success": "Curso clonado com sucesso",
+    "course_cloned_error": "Falha ao clonar o curso",
+    "published": "Publicado",
+    "unpublished": "Não publicado",
+    "search_courses": "Pesquisar cursos...",
+    "search_results": "{{count}} curso(s) encontrado(s) para \"{{query}}\"",
+    "no_search_results": "Nenhum curso encontrado",
+    "try_different_search": "Tente um termo de pesquisa diferente",
+    "select_courses": "Selecionar",
+    "select_all": "Selecionar tudo",
+    "clear_selection": "Limpar seleção",
+    "selected_count": "{{count}} selecionado(s)",
+    "clone_selected": "Clonar seleção",
+    "clone_selected_confirm": "Isso criará cópias de {{count}} curso(s). Todos os cursos clonados serão privados. Continuar?",
+    "delete_selected": "Excluir seleção",
+    "delete_selected_confirm": "Isso excluirá permanentemente {{count}} curso(s). Esta ação não pode ser desfeita. Continuar?",
+    "course_description_required": "A descrição do curso é obrigatória"
+  },
+  "communities": {
+    "title": "Comunidades",
+    "new_community": "Nova comunidade",
+    "no_communities": "Nenhuma comunidade ainda",
+    "no_communities_description": "Crie uma comunidade para iniciar discussões",
+    "public": "Pública",
+    "private": "Privada",
+    "discussions": "discussões",
+    "discussion": "discussão",
+    "created": "Criado",
+    "linked_course": "Curso vinculado",
+    "community_guidelines": "Diretrizes da comunidade",
+    "community_guidelines_text": "Seja respeitoso e construtivo. Ajude os outros e compartilhe seu conhecimento com a comunidade.",
+    "new_discussion": "Nova discussão",
+    "manage": "Gerenciar",
+    "sidebar": {
+      "posted_by": "Publicado por",
+      "upvotes": "Votos positivos",
+      "category": "Categoria",
+      "created": "Criado",
+      "pinned": "Fixado",
+      "locked": "Bloqueado",
+      "reactions": "Reações",
+      "community": "Comunidade"
+    },
+    "discussion_list": {
+      "search_placeholder": "Pesquisar discussões...",
+      "sort_by": "Ordenar por:",
+      "latest_activity": "Atividade recente",
+      "top": "Populares",
+      "hot": "Em alta",
+      "new_discussion": "Nova discussão",
+      "select": "Selecionar",
+      "cancel": "Cancelar",
+      "select_all": "Selecionar tudo",
+      "deselect_all": "Desmarcar tudo",
+      "selected": "selecionado(s)",
+      "delete": "Excluir",
+      "delete_discussions_title": "Excluir {{count}} discussão?",
+      "delete_discussions_title_plural": "Excluir {{count}} discussões?",
+      "delete_discussions_confirm": "Tem certeza de que deseja excluir {{count}} {{type}}? Esta ação não pode ser desfeita.",
+      "no_results": "Nenhum resultado encontrado",
+      "no_results_description": "Tente ajustar sua pesquisa ou limpar o filtro",
+      "clear_search": "Limpar pesquisa",
+      "no_discussions": "Nenhuma discussão ainda",
+      "no_discussions_description": "Seja o primeiro a iniciar uma discussão nesta comunidade!",
+      "start_discussion": "Iniciar discussão"
+    },
+    "discussion_detail": {
+      "edit": "Editar",
+      "delete": "Excluir",
+      "delete_title": "Excluir discussão?",
+      "delete_confirm": "Tem certeza de que deseja excluir esta discussão? Esta ação não pode ser desfeita.",
+      "delete_button": "Excluir discussão",
+      "no_details": "Nenhum detalhe adicional fornecido."
+    },
+    "discussion_card": {
+      "pin_discussion": "Fixar discussão",
+      "unpin_discussion": "Desfixar discussão",
+      "lock_discussion": "Bloquear discussão",
+      "unlock_discussion": "Desbloquear discussão",
+      "delete_discussion": "Excluir discussão",
+      "delete_title": "Excluir discussão?",
+      "delete_confirm": "Tem certeza de que deseja excluir esta discussão? Esta ação não pode ser desfeita.",
+      "votes": "votos"
+    },
+    "comments": {
+      "no_replies": "Nenhuma resposta ainda",
+      "locked": "Esta discussão está bloqueada",
+      "sign_in_to_reply": "Faça login",
+      "to_reply": "para responder",
+      "write_reply": "Escreva uma resposta...",
+      "reply": "Responder",
+      "edit": "Editar",
+      "delete": "Excluir",
+      "save": "Salvar",
+      "cancel": "Cancelar",
+      "failed_to_post": "Falha ao publicar resposta. Por favor, tente novamente.",
+      "content_not_allowed": "Sua resposta contém conteúdo não permitido.",
+      "failed_to_update": "Falha ao atualizar. Por favor, tente novamente."
+    },
+    "label_filter": {
+      "label": "Rótulo:",
+      "all": "Todos",
+      "all_discussions": "Todas as discussões",
+      "clear_filter": "Limpar filtro"
+    },
+    "labels": {
+      "general": "Geral",
+      "question": "Pergunta",
+      "idea": "Ideia",
+      "announcement": "Anúncio",
+      "showcase": "Vitrine"
+    },
+    "create_discussion": {
+      "title": "Iniciar uma discussão",
+      "description": "Compartilhe suas ideias com a comunidade",
+      "category_label": "Categoria",
+      "title_label": "Título da discussão",
+      "title_placeholder": "Sobre o que você gostaria de discutir?",
+      "emoji_selected": "Emoji personalizado selecionado",
+      "emoji_hint": "Clique em + para adicionar um emoji personalizado (opcional)",
+      "details_label": "Detalhes (opcional)",
+      "details_placeholder": "Adicione mais contexto ou detalhes à sua discussão...",
+      "editor_hint": "Use a barra de ferramentas para formatar seu texto com negrito, itálico, listas e mais.",
+      "cancel": "Cancelar",
+      "submit": "Publicar discussão",
+      "title_required": "O título é obrigatório",
+      "title_min_length": "O título deve ter pelo menos 5 caracteres",
+      "title_max_length": "O título deve ter menos de 200 caracteres",
+      "content_not_allowed": "Sua discussão contém conteúdo não permitido.",
+      "failed_to_create": "Falha ao criar a discussão. Por favor, tente novamente."
+    },
+    "edit_discussion": {
+      "title": "Editar discussão",
+      "description": "Atualize sua discussão",
+      "save": "Salvar alterações",
+      "cancel": "Cancelar",
+      "close": "Fechar",
+      "failed_to_update": "Falha ao atualizar. Por favor, tente novamente.",
+      "content_not_allowed": "Sua discussão contém conteúdo não permitido.",
+      "max_edits_reached": "Você atingiu o número máximo de edições ({{count}}). Você não pode mais editar esta discussão.",
+      "edits_remaining": "Você tem {{count}} edição(ões) restante(s).",
+      "no_edits_remaining": "Você não tem mais edições restantes ({{count}})."
+    },
+    "course_section": {
+      "title": "Discussões da comunidade",
+      "view_all": "Ver tudo",
+      "no_discussions": "Ainda não há discussões",
+      "start_first": "Inicie a primeira discussão"
     }
   },
   "collections": {
@@ -732,6 +889,30 @@
       "no_courses": "Nenhum curso ainda",
       "create_course_placeholder": "Crie um curso para adicionar conteúdo",
       "no_courses_available": "Nenhum curso disponível ainda",
+      "publishing": "Publicando curso...",
+      "unpublishing": "Despublicando curso...",
+      "published_success": "Curso publicado com sucesso",
+      "unpublished_success": "Curso despublicado com sucesso",
+      "publish_error": "Falha ao atualizar o status de publicação",
+      "published": "Publicado",
+      "unpublished": "Não publicado",
+      "processing": "Processando...",
+      "click_to_publish": "Clique para publicar",
+      "click_to_unpublish": "Clique para despublicar",
+      "preview": "Pré-visualizar",
+      "save": {
+        "success": "Alterações salvas com sucesso",
+        "error": "Falha ao salvar as alterações",
+        "partial_success": "Salvo com alguns problemas: {{failed}}",
+        "partial_error": "Salvo parcialmente ({{success}}), mas falhou: {{failed}}",
+        "certification_error": "Falha ao salvar as configurações de certificação",
+        "saving": "Salvando...",
+        "saved": "Salvo",
+        "save": "Salvar",
+        "unsaved": "Alterações não salvas",
+        "retry": "Erro - Clique para tentar novamente",
+        "retry_button": "Tentar novamente"
+      },
       "overview_top": {
         "course_label": "Curso",
         "rights_guide_button": "Guia de Direitos"
@@ -1032,7 +1213,43 @@
           "tabs": {
             "general": "Geral",
             "thumbnail": "Miniatura",
+            "course": "Curso vinculado",
             "moderation": "Moderação"
+          },
+          "general": {
+            "title": "Configurações gerais",
+            "subtitle": "Gerenciar nome, descrição e visibilidade da comunidade"
+          },
+          "thumbnail": {
+            "title": "Miniatura",
+            "subtitle": "Atualizar a imagem de capa da comunidade"
+          },
+          "course": {
+            "title": "Curso vinculado",
+            "subtitle": "Conectar esta comunidade a um curso"
+          },
+          "moderation": {
+            "title": "Moderação",
+            "subtitle": "Configurar definições de moderação de conteúdo"
+          }
+        },
+        "course": {
+          "title": "Curso vinculado",
+          "subtitle": "Conectar esta comunidade a um curso para discussões específicas do curso",
+          "currently_linked": "Atualmente vinculado",
+          "unlink": "Desvincular",
+          "link_button": "Vincular curso",
+          "search_placeholder": "Pesquisar cursos...",
+          "no_courses": "Nenhum curso encontrado",
+          "course_linked_id": "Curso vinculado (ID: {{id}})",
+          "course_not_found": "O curso vinculado pode não existir mais ou você não tem acesso a ele",
+          "toasts": {
+            "linking": "Vinculando curso...",
+            "link_success": "Curso vinculado com sucesso",
+            "link_error": "Falha ao vincular curso",
+            "unlinking": "Desvinculando curso...",
+            "unlink_success": "Curso desvinculado com sucesso",
+            "unlink_error": "Falha ao desvincular curso"
           }
         },
         "general": {

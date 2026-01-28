@@ -1,6 +1,7 @@
 'use client'
 import React from 'react'
 import Link from 'next/link'
+import { useTranslation } from 'react-i18next'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 
@@ -101,6 +102,7 @@ export function DiscussionCard({
   onDiscussionUpdate,
   onDiscussionDelete,
 }: DiscussionCardProps) {
+  const { t } = useTranslation()
   const session = useLHSession() as any
   const accessToken = session?.data?.tokens?.access_token
   const currentUserId = session?.data?.user?.id
@@ -112,7 +114,7 @@ export function DiscussionCard({
 
   const authorName = discussion.author
     ? `${discussion.author.first_name} ${discussion.author.last_name}`.trim() || discussion.author.username
-    : 'Unknown'
+    : t('common.unknown')
 
   const discussionLink = getUriWithOrg(orgslug, `/community/${communityId}/discussion/${discussionId}`)
 
@@ -252,7 +254,7 @@ export function DiscussionCard({
                   color: labelInfo.color,
                 }}
               >
-                {labelInfo.name}
+                {t(`communities.labels.${discussion.label || 'general'}`)}
               </span>
               {isSelectMode ? (
                 <span>{authorName}</span>
@@ -308,23 +310,23 @@ export function DiscussionCard({
                   <>
                     <DropdownMenuItem onClick={handlePin} className="cursor-pointer">
                       <Pin size={14} className="mr-2" />
-                      {discussion.is_pinned ? 'Unpin' : 'Pin'} discussion
+                      {discussion.is_pinned ? t('communities.discussion_card.unpin_discussion') : t('communities.discussion_card.pin_discussion')}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={handleLock} className="cursor-pointer">
                       <Lock size={14} className="mr-2" />
-                      {discussion.is_locked ? 'Unlock' : 'Lock'} discussion
+                      {discussion.is_locked ? t('communities.discussion_card.unlock_discussion') : t('communities.discussion_card.lock_discussion')}
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                   </>
                 )}
                 <ConfirmationModal
-                  confirmationMessage="Are you sure you want to delete this discussion? This action cannot be undone."
-                  confirmationButtonText="Delete"
-                  dialogTitle="Delete discussion?"
+                  confirmationMessage={t('communities.discussion_card.delete_confirm')}
+                  confirmationButtonText={t('communities.comments.delete')}
+                  dialogTitle={t('communities.discussion_card.delete_title')}
                   dialogTrigger={
                     <button className="w-full text-left flex items-center px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-sm transition-colors cursor-pointer">
                       <Trash2 size={14} className="mr-2" />
-                      Delete discussion
+                      {t('communities.discussion_card.delete_discussion')}
                     </button>
                   }
                   functionToExecute={handleDelete}
@@ -339,7 +341,7 @@ export function DiscussionCard({
       {/* Show upvote count in select mode */}
       {isSelectMode && (
         <div className="flex items-center gap-1 text-gray-400 flex-shrink-0">
-          <span className="text-xs">{discussion.upvote_count} votes</span>
+          <span className="text-xs">{discussion.upvote_count} {t('communities.discussion_card.votes')}</span>
         </div>
       )}
     </div>

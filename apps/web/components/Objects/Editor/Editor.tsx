@@ -59,6 +59,7 @@ import UserAvatar from '../UserAvatar'
 import UserBlock from './Extensions/Users/UserBlock'
 import DragHandle from './Extensions/DragHandle/DragHandle'
 import { SlashCommands } from './Extensions/SlashCommands'
+import PasteFileHandler from './Extensions/PasteFileHandler/PasteFileHandler'
 
 interface Editor {
   content: string
@@ -183,6 +184,10 @@ function Editor(props: Editor) {
       }),
       DragHandle,
       SlashCommands,
+      PasteFileHandler.configure({
+        activity: props.activity,
+        getAccessToken: () => props.session?.data?.tokens?.access_token,
+      }),
     ],
     content: props.content,
     immediatelyRender: false,

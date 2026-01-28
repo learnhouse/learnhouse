@@ -132,7 +132,7 @@ function CourseOverviewPage(props: { params: Promise<CourseOverviewParams> }) {
   return (
     <div className="h-screen w-full bg-[#f8f8f8] grid grid-rows-[auto_1fr]">
       <CourseProvider courseuuid={courseuuid} withUnpublishedActivities={true}>
-        <div className="pl-10 pr-10 text-sm tracking-tight bg-[#fcfbfc] z-elevated nice-shadow">
+        <div className="pl-10 pr-10 text-sm tracking-tight bg-[#fcfbfc] z-10 nice-shadow relative">
           <CourseOverviewTop params={params} />
           <div className="flex space-x-3 font-black text-sm">
             {tabs.map((tab) => {
@@ -192,9 +192,9 @@ function CourseOverviewPage(props: { params: Promise<CourseOverviewParams> }) {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.1, type: 'spring', stiffness: 80 }}
-          className="h-full overflow-y-auto relative"
+          className="h-full overflow-y-auto"
         >
-          <div className="absolute inset-0">
+          <div>
             {params.subpage == 'content' && hasPermission('update_content') ? (
               <EditCourseStructure orgslug={params.orgslug} />
             ) : null}

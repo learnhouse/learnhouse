@@ -106,7 +106,7 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
           session.data?.tokens?.access_token
         )
         setHasAccess(response.has_access)
-        
+
       } catch (error) {
         console.error('Failed to check course access')
         toast.error('Failed to check course access. Please try again later.')
@@ -129,7 +129,7 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
     const loadingToast = toast.loading(
       isStarted ? t('courses.leave_course') + '...' : t('courses.start_course') + '...'
     )
-    
+
     try {
       if (isStarted) {
         await removeCourse('course_' + courseuuid, orgslug, session.data?.tokens?.access_token)
@@ -139,11 +139,11 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
         await startCourse('course_' + courseuuid, orgslug, session.data?.tokens?.access_token)
         mutate(`${getAPIUrl()}trail/org/${org?.id}/trail`)
         toast.success(t('courses.start_course_success'), { id: loadingToast })
-        
+
         // Get the first activity from the first chapter
         const firstChapter = course.chapters?.[0]
         const firstActivity = firstChapter?.activities?.[0]
-        
+
         if (firstActivity) {
           // Redirect to the first activity
           router.push(
@@ -175,12 +175,12 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
 
     setIsContributeLoading(true)
     const loadingToast = toast.loading(t('courses.submitting_contributor_application'))
-    
+
     try {
       const data = {
         message: "I would like to contribute to this course."
       }
-      
+
       await applyForContributor('course_' + courseuuid, data, session.data?.tokens?.access_token)
       await revalidateTags(['courses'], orgslug)
       await refetch()
@@ -206,11 +206,11 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
 
     return (
       <>
-        <UserAvatar 
-          width={24} 
-          use_with_session={true} 
-          rounded="rounded-full" 
-          border="border-2" 
+        <UserAvatar
+          width={24}
+          use_with_session={true}
+          rounded="rounded-full"
+          border="border-2"
           borderColor="border-white"
         />
         <span>{action === 'start' ? t('courses.start_course') : t('courses.leave_course')}</span>
@@ -223,7 +223,7 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
     if (contributorStatus === 'INACTIVE' || course.open_to_contributors !== true) {
       return null;
     }
-    
+
     if (!session.data?.user) {
       return (
         <button
@@ -276,7 +276,7 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
 
   const renderProgressSection = () => {
     const totalActivities = course.chapters?.reduce((acc: number, chapter: any) => acc + chapter.activities.length, 0) || 0;
-    
+
     // Find the correct run using the cleaned UUID
     const run = trailData?.runs?.find(
       (run: any) => {
@@ -284,15 +284,15 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
         return cleanRunCourseUuid === cleanCourseUuid;
       }
     );
-    
+
     const completedActivities = run?.steps?.filter((step: any) => step.complete)?.length || 0;
     const progressPercentage = totalActivities > 0 ? Math.round((completedActivities / totalActivities) * 100) : 0;
 
     if (!isStarted) {
       return (
         <div className="relative bg-white nice-shadow rounded-lg overflow-hidden">
-          <div 
-            className="absolute inset-0 opacity-[0.05]" 
+          <div
+            className="absolute inset-0 opacity-[0.05]"
             style={{
               backgroundImage: 'radial-gradient(circle at center, #101010 1px, transparent 1px)',
               backgroundSize: '12px 12px'
@@ -333,8 +333,8 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
 
     return (
         <div className="relative bg-white nice-shadow rounded-lg overflow-hidden">
-          <div 
-          className="absolute inset-0 opacity-[0.05]" 
+          <div
+          className="absolute inset-0 opacity-[0.05]"
           style={{
             backgroundImage: 'radial-gradient(circle at center, #000 1px, transparent 1px)',
             backgroundSize: '24px 24px'

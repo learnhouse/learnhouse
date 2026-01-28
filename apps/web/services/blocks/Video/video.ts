@@ -14,12 +14,23 @@ export async function uploadNewVideoFile(
   formData.append('file_object', file)
   formData.append('activity_uuid', activity_uuid)
 
-  return fetch(
+  const result = await fetch(
     `${getAPIUrl()}blocks/video`,
     RequestBodyFormWithAuthHeader('POST', formData, null, access_token)
   )
-    .then((result) => result.json())
-    .catch((error) => console.error('error', error))
+
+  const data = await result.json()
+
+  if (!result.ok) {
+    const errorMessage = typeof data?.detail === 'string'
+      ? data.detail
+      : Array.isArray(data?.detail)
+        ? data.detail.map((e: any) => e.msg).join(', ')
+        : 'Upload failed'
+    throw new Error(errorMessage)
+  }
+
+  return data
 }
 
 export async function getVideoFile(file_id: string, access_token: string) {

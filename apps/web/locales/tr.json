@@ -81,6 +81,8 @@
     "version": "Sürüm",
     "users": "Kullanıcılar",
     "save": "Kaydet",
+    "save_changes": "Değişiklikleri Kaydet",
+    "saving": "Kaydediliyor...",
     "cancel": "İptal",
     "submit": "Gönder",
     "delete": "Sil",
@@ -217,6 +219,8 @@
     "course_completed_exclamation": "Kurs Tamamlandı!",
     "what_you_will_learn": "Ne öğreneceksiniz",
     "course_lessons": "Kurs Dersleri",
+    "share_course": "Kursu Paylaş",
+    "copy_link": "Bağlantıyı Kopyala",
     "unlock_certificate_message": "Sertifikanızı açmak için tüm aktiviteleri tamamlayın",
     "chapter": "Bölüm",
     "chapters": "Bölümler",
@@ -284,6 +288,159 @@
       "configure": "Yapılandır",
       "ready_to_analyze": "Analiz için hazır",
       "course_details": "Kurs Detayları"
+    },
+    "clone_course": "Kursu Klonla",
+    "clone_course_title": "\"{{name}}\" Klonla",
+    "clone_course_confirm": "Tüm bölümler, etkinlikler ve dosyalar dahil kursun tam bir kopyası oluşturulacaktır. Klonlanan kurs özel olarak ayarlanacaktır.",
+    "cloning_course": "Kurs klonlanıyor...",
+    "course_cloned_success": "Kurs başarıyla klonlandı",
+    "course_cloned_error": "Kurs klonlanamadı",
+    "published": "Yayınlandı",
+    "unpublished": "Yayınlanmadı",
+    "search_courses": "Kurs ara...",
+    "search_results": "\"{{query}}\" için {{count}} kurs bulundu",
+    "no_search_results": "Kurs bulunamadı",
+    "try_different_search": "Farklı bir arama terimi deneyin",
+    "select_courses": "Seç",
+    "select_all": "Tümünü Seç",
+    "clear_selection": "Seçimi Temizle",
+    "selected_count": "{{count}} seçili",
+    "clone_selected": "Seçilenleri Klonla",
+    "clone_selected_confirm": "{{count}} kurs kopyalanacak. Tüm klonlanan kurslar özel olacak. Devam edilsin mi?",
+    "delete_selected": "Seçilenleri Sil",
+    "delete_selected_confirm": "{{count}} kurs kalıcı olarak silinecek. Bu işlem geri alınamaz. Devam edilsin mi?",
+    "course_description_required": "Kurs açıklaması gerekli"
+  },
+  "communities": {
+    "title": "Topluluklar",
+    "new_community": "Yeni Topluluk",
+    "no_communities": "Henüz topluluk yok",
+    "no_communities_description": "Tartışmalara başlamak için bir topluluk oluşturun",
+    "public": "Herkese Açık",
+    "private": "Özel",
+    "discussions": "tartışma",
+    "discussion": "tartışma",
+    "created": "Oluşturuldu",
+    "linked_course": "Bağlı Kurs",
+    "community_guidelines": "Topluluk Kuralları",
+    "community_guidelines_text": "Saygılı ve yapıcı olun. Başkalarına yardım edin ve bilginizi toplulukla paylaşın.",
+    "new_discussion": "Yeni Tartışma",
+    "manage": "Yönet",
+    "sidebar": {
+      "posted_by": "Gönderen",
+      "upvotes": "Oy",
+      "category": "Kategori",
+      "created": "Oluşturuldu",
+      "pinned": "Sabitlendi",
+      "locked": "Kilitli",
+      "reactions": "Tepkiler",
+      "community": "Topluluk"
+    },
+    "discussion_list": {
+      "search_placeholder": "Tartışmalarda ara...",
+      "sort_by": "Sırala:",
+      "latest_activity": "Son aktivite",
+      "top": "Popüler",
+      "hot": "Trend",
+      "new_discussion": "Yeni tartışma",
+      "select": "Seç",
+      "cancel": "İptal",
+      "select_all": "Tümünü seç",
+      "deselect_all": "Seçimi kaldır",
+      "selected": "seçili",
+      "delete": "Sil",
+      "delete_discussions_title": "{{count}} tartışma silinsin mi?",
+      "delete_discussions_title_plural": "{{count}} tartışma silinsin mi?",
+      "delete_discussions_confirm": "{{count}} {{type}} silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
+      "no_results": "Sonuç bulunamadı",
+      "no_results_description": "Aramanızı düzenlemeyi veya filtreyi temizlemeyi deneyin",
+      "clear_search": "Aramayı temizle",
+      "no_discussions": "Henüz tartışma yok",
+      "no_discussions_description": "Bu toplulukta ilk tartışmayı başlatan siz olun!",
+      "start_discussion": "Tartışma Başlat"
+    },
+    "discussion_detail": {
+      "edit": "Düzenle",
+      "delete": "Sil",
+      "delete_title": "Tartışma silinsin mi?",
+      "delete_confirm": "Bu tartışmayı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
+      "delete_button": "Tartışmayı Sil",
+      "no_details": "Ek detay sağlanmadı."
+    },
+    "discussion_card": {
+      "pin_discussion": "Tartışmayı sabitle",
+      "unpin_discussion": "Sabitlemeyi kaldır",
+      "lock_discussion": "Tartışmayı kilitle",
+      "unlock_discussion": "Kilidi aç",
+      "delete_discussion": "Tartışmayı sil",
+      "delete_title": "Tartışma silinsin mi?",
+      "delete_confirm": "Bu tartışmayı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
+      "votes": "oy"
+    },
+    "comments": {
+      "no_replies": "Henüz yanıt yok",
+      "locked": "Bu tartışma kilitli",
+      "sign_in_to_reply": "Giriş yapın",
+      "to_reply": "yanıtlamak için",
+      "write_reply": "Yanıt yazın...",
+      "reply": "Yanıtla",
+      "edit": "Düzenle",
+      "delete": "Sil",
+      "save": "Kaydet",
+      "cancel": "İptal",
+      "failed_to_post": "Yanıt gönderilemedi. Lütfen tekrar deneyin.",
+      "content_not_allowed": "Yanıtınız izin verilmeyen içerik barındırıyor.",
+      "failed_to_update": "Güncelleme başarısız. Lütfen tekrar deneyin."
+    },
+    "label_filter": {
+      "label": "Etiket:",
+      "all": "Tümü",
+      "all_discussions": "Tüm tartışmalar",
+      "clear_filter": "Filtreyi temizle"
+    },
+    "labels": {
+      "general": "Genel",
+      "question": "Soru",
+      "idea": "Fikir",
+      "announcement": "Duyuru",
+      "showcase": "Vitrin"
+    },
+    "create_discussion": {
+      "title": "Tartışma Başlat",
+      "description": "Düşüncelerinizi toplulukla paylaşın",
+      "category_label": "Kategori",
+      "title_label": "Tartışma Başlığı",
+      "title_placeholder": "Ne hakkında konuşmak istersiniz?",
+      "emoji_selected": "Özel emoji seçildi",
+      "emoji_hint": "Özel emoji eklemek için + tıklayın (isteğe bağlı)",
+      "details_label": "Detaylar (isteğe bağlı)",
+      "details_placeholder": "Tartışmanıza daha fazla bağlam veya detay ekleyin...",
+      "editor_hint": "Metninizi kalın, italik, listeler ve daha fazlasıyla biçimlendirmek için araç çubuğunu kullanın.",
+      "cancel": "İptal",
+      "submit": "Tartışmayı Gönder",
+      "title_required": "Başlık gerekli",
+      "title_min_length": "Başlık en az 5 karakter olmalı",
+      "title_max_length": "Başlık 200 karakterden az olmalı",
+      "content_not_allowed": "Tartışmanız izin verilmeyen içerik barındırıyor.",
+      "failed_to_create": "Tartışma oluşturulamadı. Lütfen tekrar deneyin."
+    },
+    "edit_discussion": {
+      "title": "Tartışmayı Düzenle",
+      "description": "Tartışmanızı güncelleyin",
+      "save": "Değişiklikleri Kaydet",
+      "cancel": "İptal",
+      "close": "Kapat",
+      "failed_to_update": "Güncelleme başarısız. Lütfen tekrar deneyin.",
+      "content_not_allowed": "Tartışmanız izin verilmeyen içerik barındırıyor.",
+      "max_edits_reached": "Maksimum düzenleme sayısına ulaştınız ({{count}}). Bu tartışmayı artık düzenleyemezsiniz.",
+      "edits_remaining": "{{count}} düzenleme hakkınız kaldı.",
+      "no_edits_remaining": "Düzenleme hakkınız kalmadı ({{count}})."
+    },
+    "course_section": {
+      "title": "Topluluk Tartışmaları",
+      "view_all": "Tümünü Gör",
+      "no_discussions": "Henüz tartışma yok",
+      "start_first": "İlk tartışmayı başlatın"
     }
   },
   "collections": {
@@ -732,6 +889,30 @@
       "no_courses": "Henüz kurs yok",
       "create_course_placeholder": "İçerik eklemek için bir kurs oluşturun",
       "no_courses_available": "Şu anda mevcut kurs bulunmamaktadır",
+      "publishing": "Kurs yayınlanıyor...",
+      "unpublishing": "Kurs yayından kaldırılıyor...",
+      "published_success": "Kurs başarıyla yayınlandı",
+      "unpublished_success": "Kurs yayından kaldırıldı",
+      "publish_error": "Yayın durumu güncellenirken hata oluştu",
+      "published": "Yayınlandı",
+      "unpublished": "Yayınlanmadı",
+      "processing": "İşleniyor...",
+      "click_to_publish": "Yayınlamak için tıklayın",
+      "click_to_unpublish": "Yayından kaldırmak için tıklayın",
+      "preview": "Önizleme",
+      "save": {
+        "success": "Değişiklikler başarıyla kaydedildi",
+        "error": "Değişiklikler kaydedilemedi",
+        "partial_success": "Bazı sorunlarla kaydedildi: {{failed}}",
+        "partial_error": "Kısmen kaydedildi ({{success}}), ancak başarısız: {{failed}}",
+        "certification_error": "Sertifika ayarları kaydedilemedi",
+        "saving": "Kaydediliyor...",
+        "saved": "Kaydedildi",
+        "save": "Kaydet",
+        "unsaved": "Kaydedilmemiş değişiklikler",
+        "retry": "Hata - Tekrar denemek için tıklayın",
+        "retry_button": "Tekrar dene"
+      },
       "overview_top": {
         "course_label": "Kurs",
         "rights_guide_button": "Haklar Rehberi"
@@ -1032,7 +1213,43 @@
           "tabs": {
             "general": "Genel",
             "thumbnail": "Küçük Resim",
+            "course": "Bağlı Kurs",
             "moderation": "Moderasyon"
+          },
+          "general": {
+            "title": "Genel Ayarlar",
+            "subtitle": "Topluluk adını, açıklamasını ve görünürlüğünü yönetin"
+          },
+          "thumbnail": {
+            "title": "Küçük Resim",
+            "subtitle": "Topluluk kapak resmini güncelleyin"
+          },
+          "course": {
+            "title": "Bağlı Kurs",
+            "subtitle": "Bu topluluğu bir kursa bağlayın"
+          },
+          "moderation": {
+            "title": "Moderasyon",
+            "subtitle": "İçerik moderasyon ayarlarını yapılandırın"
+          }
+        },
+        "course": {
+          "title": "Bağlı Kurs",
+          "subtitle": "Kursa özel tartışmalar için bu topluluğu bir kursa bağlayın",
+          "currently_linked": "Şu anda bağlı",
+          "unlink": "Bağlantıyı Kaldır",
+          "link_button": "Kurs Bağla",
+          "search_placeholder": "Kurs ara...",
+          "no_courses": "Kurs bulunamadı",
+          "course_linked_id": "Kurs bağlandı (ID: {{id}})",
+          "course_not_found": "Bağlı kurs artık mevcut olmayabilir veya erişim izniniz yok",
+          "toasts": {
+            "linking": "Kurs bağlanıyor...",
+            "link_success": "Kurs başarıyla bağlandı",
+            "link_error": "Kurs bağlanamadı",
+            "unlinking": "Kurs bağlantısı kaldırılıyor...",
+            "unlink_success": "Kurs bağlantısı başarıyla kaldırıldı",
+            "unlink_error": "Kurs bağlantısı kaldırılamadı"
           }
         },
         "general": {

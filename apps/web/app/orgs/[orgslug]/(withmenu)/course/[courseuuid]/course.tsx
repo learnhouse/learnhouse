@@ -22,6 +22,7 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import useSWR from 'swr'
 import { useTranslation } from 'react-i18next'
 import CourseCommunitySection from '@components/Objects/Communities/CourseCommunitySection'
+import CourseShare from '@components/Objects/Courses/CourseShare/CourseShare'
 
 const CourseClient = (props: any) => {
   const { t } = useTranslation()
@@ -193,10 +194,12 @@ const CourseClient = (props: any) => {
                 { label: course.name }
               ]} />
             </div>
-            <div className="pb-2 flex flex-col md:flex-row justify-between items-start md:items-center">
-              <div>
-                <h1 className="text-3xl md:text-3xl  font-bold">{course.name}</h1>
-              </div>
+            <div className="pb-2 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+              <h1 className="text-3xl md:text-3xl font-bold">{course.name}</h1>
+              <CourseShare
+                courseName={course.name}
+                courseUrl={getUriWithOrg(orgslug, `/course/${courseuuid}`)}
+              />
             </div>
 
             <div className="flex flex-col md:flex-row gap-8 pt-2">

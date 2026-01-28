@@ -1,6 +1,7 @@
 import { NodeViewWrapper } from '@tiptap/react'
 import React, { useEffect } from 'react'
-import { FileText, Download, Expand, Upload, Loader2 } from 'lucide-react'
+import { FileText, Download, Expand, Upload, Loader2, AlertCircle } from 'lucide-react'
+import toast from 'react-hot-toast'
 import { uploadNewPDFFile } from '../../../../../services/blocks/Pdf/pdf'
 import { getActivityBlockMediaDirectory } from '@services/media/media'
 import { useOrg } from '@components/Contexts/OrgContext'
@@ -23,6 +24,7 @@ function PDFBlockComponent(props: any) {
     props.node.attrs.blockObject
   )
   const [isModalOpen, setIsModalOpen] = React.useState(false)
+  const [error, setError] = React.useState<string | null>(null)
   const fileInputRef = React.useRef<HTMLInputElement>(null)
   const fileId = blockObject
     ? `${blockObject.content.file_id}.${blockObject.content.file_format}`
@@ -41,16 +43,24 @@ function PDFBlockComponent(props: any) {
     e.preventDefault()
     if (!pdf) return
     setIsLoading(true)
-    let object = await uploadNewPDFFile(
-      pdf,
-      props.extension.options.activity.activity_uuid, access_token
-    )
-    setIsLoading(false)
-    setblockObject(object)
-    props.updateAttributes({
-      blockObject: object,
-    })
-    setPDF(null)
+    setError(null)
+    try {
+      let object = await uploadNewPDFFile(
+        pdf,
+        props.extension.options.activity.activity_uuid, access_token
+      )
+      setblockObject(object)
+      props.updateAttributes({
+        blockObject: object,
+      })
+      setPDF(null)
+    } catch (err: any) {
+      const errorMessage = err?.message || 'Failed to upload PDF. Please try again.'
+      setError(errorMessage)
+      toast.error(errorMessage)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleDownload = () => {
@@ -211,6 +221,12 @@ function PDFBlockComponent(props: any) {
                     <Upload size={14} />
                     Upload PDF
                   </button>
+                </div>
+              )}
+              {error && (
+                <div className="mt-3 flex items-center gap-2 text-sm text-red-500 font-medium bg-red-50 rounded-lg p-3">
+                  <AlertCircle size={16} />
+                  {error}
                 </div>
               )}
             </form>

@@ -81,6 +81,8 @@
     "version": "เวอร์ชัน",
     "users": "ผู้ใช้งาน",
     "save": "บันทึก",
+    "save_changes": "บันทึกการเปลี่ยนแปลง",
+    "saving": "กำลังบันทึก...",
     "cancel": "ยกเลิก",
     "submit": "ส่ง",
     "delete": "ลบ",
@@ -217,6 +219,8 @@
     "course_completed_exclamation": "จบหลักสูตรแล้ว!",
     "what_you_will_learn": "สิ่งที่คุณจะได้เรียนรู้",
     "course_lessons": "บทเรียนในคอร์ส",
+    "share_course": "แชร์คอร์ส",
+    "copy_link": "คัดลอกลิงก์",
     "unlock_certificate_message": "ทำกิจกรรมให้ครบทั้งหมดเพื่อรับใบประกาศนียบัตร",
     "chapter": "บท",
     "chapters": "บท",
@@ -284,6 +288,159 @@
       "configure": "กำหนดค่า",
       "ready_to_analyze": "พร้อมวิเคราะห์",
       "course_details": "รายละเอียดคอร์ส"
+    },
+    "clone_course": "คัดลอกคอร์ส",
+    "clone_course_title": "คัดลอก \"{{name}}\"",
+    "clone_course_confirm": "จะสร้างสำเนาคอร์สเรียนเต็มรูปแบบรวมถึงทุกบท กิจกรรม และไฟล์ คอร์สที่คัดลอกจะถูกตั้งเป็นส่วนตัว",
+    "cloning_course": "กำลังคัดลอกคอร์ส...",
+    "course_cloned_success": "คัดลอกคอร์สสำเร็จแล้ว",
+    "course_cloned_error": "คัดลอกคอร์สล้มเหลว",
+    "published": "เผยแพร่แล้ว",
+    "unpublished": "ยังไม่เผยแพร่",
+    "search_courses": "ค้นหาคอร์ส...",
+    "search_results": "พบ {{count}} คอร์สสำหรับ \"{{query}}\"",
+    "no_search_results": "ไม่พบคอร์สเรียน",
+    "try_different_search": "ลองคำค้นหาอื่น",
+    "select_courses": "เลือก",
+    "select_all": "เลือกทั้งหมด",
+    "clear_selection": "ล้างการเลือก",
+    "selected_count": "เลือก {{count}} รายการ",
+    "clone_selected": "คัดลอกที่เลือก",
+    "clone_selected_confirm": "จะสร้างสำเนาของ {{count}} คอร์ส คอร์สที่คัดลอกทั้งหมดจะเป็นแบบส่วนตัว ดำเนินการต่อ?",
+    "delete_selected": "ลบที่เลือก",
+    "delete_selected_confirm": "{{count}} คอร์สจะถูกลบอย่างถาวร การดำเนินการนี้ไม่สามารถย้อนกลับได้ ดำเนินการต่อ?",
+    "course_description_required": "ต้องระบุคำอธิบายคอร์ส"
+  },
+  "communities": {
+    "title": "ชุมชน",
+    "new_community": "ชุมชนใหม่",
+    "no_communities": "ยังไม่มีชุมชน",
+    "no_communities_description": "สร้างชุมชนเพื่อเริ่มการสนทนา",
+    "public": "สาธารณะ",
+    "private": "ส่วนตัว",
+    "discussions": "การสนทนา",
+    "discussion": "การสนทนา",
+    "created": "สร้างเมื่อ",
+    "linked_course": "คอร์สที่เชื่อมโยง",
+    "community_guidelines": "กฎของชุมชน",
+    "community_guidelines_text": "กรุณาเคารพและสร้างสรรค์ ช่วยเหลือผู้อื่นและแบ่งปันความรู้กับชุมชน",
+    "new_discussion": "การสนทนาใหม่",
+    "manage": "จัดการ",
+    "sidebar": {
+      "posted_by": "โพสต์โดย",
+      "upvotes": "โหวต",
+      "category": "หมวดหมู่",
+      "created": "สร้างเมื่อ",
+      "pinned": "ปักหมุด",
+      "locked": "ล็อก",
+      "reactions": "รีแอกชัน",
+      "community": "ชุมชน"
+    },
+    "discussion_list": {
+      "search_placeholder": "ค้นหาการสนทนา...",
+      "sort_by": "เรียงตาม:",
+      "latest_activity": "กิจกรรมล่าสุด",
+      "top": "ยอดนิยม",
+      "hot": "มาแรง",
+      "new_discussion": "การสนทนาใหม่",
+      "select": "เลือก",
+      "cancel": "ยกเลิก",
+      "select_all": "เลือกทั้งหมด",
+      "deselect_all": "ยกเลิกการเลือกทั้งหมด",
+      "selected": "ที่เลือก",
+      "delete": "ลบ",
+      "delete_discussions_title": "ลบ {{count}} การสนทนา?",
+      "delete_discussions_title_plural": "ลบ {{count}} การสนทนา?",
+      "delete_discussions_confirm": "คุณแน่ใจหรือไม่ว่าต้องการลบ {{count}} {{type}}? การกระทำนี้ไม่สามารถย้อนกลับได้",
+      "no_results": "ไม่พบผลลัพธ์",
+      "no_results_description": "ลองปรับการค้นหาหรือล้างตัวกรอง",
+      "clear_search": "ล้างการค้นหา",
+      "no_discussions": "ยังไม่มีการสนทนา",
+      "no_discussions_description": "เป็นคนแรกที่เริ่มการสนทนาในชุมชนนี้!",
+      "start_discussion": "เริ่มการสนทนา"
+    },
+    "discussion_detail": {
+      "edit": "แก้ไข",
+      "delete": "ลบ",
+      "delete_title": "ลบการสนทนา?",
+      "delete_confirm": "คุณแน่ใจหรือไม่ว่าต้องการลบการสนทนานี้? การกระทำนี้ไม่สามารถย้อนกลับได้",
+      "delete_button": "ลบการสนทนา",
+      "no_details": "ไม่มีรายละเอียดเพิ่มเติม"
+    },
+    "discussion_card": {
+      "pin_discussion": "ปักหมุดการสนทนา",
+      "unpin_discussion": "ยกเลิกการปักหมุด",
+      "lock_discussion": "ล็อกการสนทนา",
+      "unlock_discussion": "ปลดล็อกการสนทนา",
+      "delete_discussion": "ลบการสนทนา",
+      "delete_title": "ลบการสนทนา?",
+      "delete_confirm": "คุณแน่ใจหรือไม่ว่าต้องการลบการสนทนานี้? การกระทำนี้ไม่สามารถย้อนกลับได้",
+      "votes": "โหวต"
+    },
+    "comments": {
+      "no_replies": "ยังไม่มีการตอบกลับ",
+      "locked": "การสนทนานี้ถูกล็อก",
+      "sign_in_to_reply": "เข้าสู่ระบบ",
+      "to_reply": "เพื่อตอบกลับ",
+      "write_reply": "เขียนคำตอบ...",
+      "reply": "ตอบกลับ",
+      "edit": "แก้ไข",
+      "delete": "ลบ",
+      "save": "บันทึก",
+      "cancel": "ยกเลิก",
+      "failed_to_post": "ไม่สามารถโพสต์ได้ กรุณาลองอีกครั้ง",
+      "content_not_allowed": "คำตอบของคุณมีเนื้อหาที่ไม่อนุญาต",
+      "failed_to_update": "ไม่สามารถอัปเดตได้ กรุณาลองอีกครั้ง"
+    },
+    "label_filter": {
+      "label": "ป้ายกำกับ:",
+      "all": "ทั้งหมด",
+      "all_discussions": "การสนทนาทั้งหมด",
+      "clear_filter": "ล้างตัวกรอง"
+    },
+    "labels": {
+      "general": "ทั่วไป",
+      "question": "คำถาม",
+      "idea": "ไอเดีย",
+      "announcement": "ประกาศ",
+      "showcase": "โชว์เคส"
+    },
+    "create_discussion": {
+      "title": "เริ่มการสนทนา",
+      "description": "แบ่งปันความคิดของคุณกับชุมชน",
+      "category_label": "หมวดหมู่",
+      "title_label": "หัวข้อการสนทนา",
+      "title_placeholder": "คุณต้องการพูดคุยเรื่องอะไร?",
+      "emoji_selected": "เลือกอิโมจิแบบกำหนดเองแล้ว",
+      "emoji_hint": "คลิก + เพื่อเพิ่มอิโมจิแบบกำหนดเอง (ไม่บังคับ)",
+      "details_label": "รายละเอียด (ไม่บังคับ)",
+      "details_placeholder": "เพิ่มบริบทหรือรายละเอียดเพิ่มเติมในการสนทนาของคุณ...",
+      "editor_hint": "ใช้แถบเครื่องมือเพื่อจัดรูปแบบข้อความด้วยตัวหนา ตัวเอียง รายการ และอื่นๆ",
+      "cancel": "ยกเลิก",
+      "submit": "โพสต์การสนทนา",
+      "title_required": "ต้องระบุหัวข้อ",
+      "title_min_length": "หัวข้อต้องมีอย่างน้อย 5 ตัวอักษร",
+      "title_max_length": "หัวข้อต้องน้อยกว่า 200 ตัวอักษร",
+      "content_not_allowed": "การสนทนาของคุณมีเนื้อหาที่ไม่อนุญาต",
+      "failed_to_create": "ไม่สามารถสร้างการสนทนาได้ กรุณาลองอีกครั้ง"
+    },
+    "edit_discussion": {
+      "title": "แก้ไขการสนทนา",
+      "description": "อัปเดตการสนทนาของคุณ",
+      "save": "บันทึกการเปลี่ยนแปลง",
+      "cancel": "ยกเลิก",
+      "close": "ปิด",
+      "failed_to_update": "ไม่สามารถอัปเดตได้ กรุณาลองอีกครั้ง",
+      "content_not_allowed": "การสนทนาของคุณมีเนื้อหาที่ไม่อนุญาต",
+      "max_edits_reached": "คุณได้ถึงจำนวนครั้งสูงสุดในการแก้ไข ({{count}} ครั้ง) คุณไม่สามารถแก้ไขการสนทนานี้ได้อีก",
+      "edits_remaining": "คุณเหลือการแก้ไขอีก {{count}} ครั้ง",
+      "no_edits_remaining": "คุณไม่มีสิทธิ์แก้ไขเหลือแล้ว ({{count}} ครั้ง)"
+    },
+    "course_section": {
+      "title": "การสนทนาของชุมชน",
+      "view_all": "ดูทั้งหมด",
+      "no_discussions": "ยังไม่มีการสนทนา",
+      "start_first": "เริ่มการสนทนาแรก"
     }
   },
   "collections": {
@@ -732,6 +889,30 @@
       "no_courses": "ยังไม่มีคอร์สเรียน",
       "create_course_placeholder": "สร้างคอร์สเพื่อเพิ่มเนื้อหา",
       "no_courses_available": "ยังไม่มีคอร์สเรียนในขณะนี้",
+      "publishing": "กำลังเผยแพร่คอร์ส...",
+      "unpublishing": "กำลังยกเลิกการเผยแพร่คอร์ส...",
+      "published_success": "เผยแพร่คอร์สเรียบร้อยแล้ว",
+      "unpublished_success": "ยกเลิกการเผยแพร่คอร์สเรียบร้อยแล้ว",
+      "publish_error": "เกิดข้อผิดพลาดในการอัปเดตสถานะการเผยแพร่",
+      "published": "เผยแพร่แล้ว",
+      "unpublished": "ยังไม่เผยแพร่",
+      "processing": "กำลังประมวลผล...",
+      "click_to_publish": "คลิกเพื่อเผยแพร่",
+      "click_to_unpublish": "คลิกเพื่อยกเลิกการเผยแพร่",
+      "preview": "ดูตัวอย่าง",
+      "save": {
+        "success": "บันทึกการเปลี่ยนแปลงสำเร็จ",
+        "error": "ไม่สามารถบันทึกการเปลี่ยนแปลงได้",
+        "partial_success": "บันทึกแล้วแต่มีปัญหาบางอย่าง: {{failed}}",
+        "partial_error": "บันทึกบางส่วนสำเร็จ ({{success}}) แต่ล้มเหลว: {{failed}}",
+        "certification_error": "ไม่สามารถบันทึกการตั้งค่าใบรับรองได้",
+        "saving": "กำลังบันทึก...",
+        "saved": "บันทึกแล้ว",
+        "save": "บันทึก",
+        "unsaved": "การเปลี่ยนแปลงที่ยังไม่ได้บันทึก",
+        "retry": "ข้อผิดพลาด - คลิกเพื่อลองอีกครั้ง",
+        "retry_button": "ลองอีกครั้ง"
+      },
       "overview_top": {
         "course_label": "คอร์สเรียน",
         "rights_guide_button": "คู่มือการใช้งานสิทธิ์"
@@ -1032,7 +1213,43 @@
           "tabs": {
             "general": "ทั่วไป",
             "thumbnail": "รูปขนาดย่อ",
+            "course": "คอร์สที่เชื่อมโยง",
             "moderation": "การดูแล"
+          },
+          "general": {
+            "title": "การตั้งค่าทั่วไป",
+            "subtitle": "จัดการชื่อ คำอธิบาย และการมองเห็นชุมชน"
+          },
+          "thumbnail": {
+            "title": "รูปขนาดย่อ",
+            "subtitle": "อัปเดตรูปปกชุมชน"
+          },
+          "course": {
+            "title": "คอร์สที่เชื่อมโยง",
+            "subtitle": "เชื่อมต่อชุมชนนี้กับคอร์ส"
+          },
+          "moderation": {
+            "title": "การดูแล",
+            "subtitle": "กำหนดค่าการตั้งค่าการดูแลเนื้อหา"
+          }
+        },
+        "course": {
+          "title": "คอร์สที่เชื่อมโยง",
+          "subtitle": "เชื่อมต่อชุมชนนี้กับคอร์สสำหรับการสนทนาเฉพาะคอร์ส",
+          "currently_linked": "เชื่อมโยงอยู่",
+          "unlink": "ยกเลิกการเชื่อมโยง",
+          "link_button": "เชื่อมโยงคอร์ส",
+          "search_placeholder": "ค้นหาคอร์ส...",
+          "no_courses": "ไม่พบคอร์ส",
+          "course_linked_id": "คอร์สที่เชื่อมโยง (ID: {{id}})",
+          "course_not_found": "คอร์สที่เชื่อมโยงอาจไม่มีอยู่แล้วหรือคุณไม่มีสิทธิ์เข้าถึง",
+          "toasts": {
+            "linking": "กำลังเชื่อมโยงคอร์ส...",
+            "link_success": "เชื่อมโยงคอร์สสำเร็จ",
+            "link_error": "เชื่อมโยงคอร์สล้มเหลว",
+            "unlinking": "กำลังยกเลิกการเชื่อมโยงคอร์ส...",
+            "unlink_success": "ยกเลิกการเชื่อมโยงคอร์สสำเร็จ",
+            "unlink_error": "ยกเลิกการเชื่อมโยงคอร์สล้มเหลว"
           }
         },
         "general": {

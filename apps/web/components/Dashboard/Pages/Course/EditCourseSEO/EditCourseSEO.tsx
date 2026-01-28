@@ -8,8 +8,8 @@ import FormLayout, {
 import { useFormik } from 'formik';
 import { AlertTriangle } from 'lucide-react';
 import * as Form from '@radix-ui/react-form';
-import React, { useEffect, useRef } from 'react';
-import { useCourse, useCourseDispatch } from '@components/Contexts/CourseContext';
+import React, { useEffect, useRef, useMemo } from 'react';
+import { useCourseFieldSync } from '@components/Contexts/CourseContext';
 import {
   CustomSelect,
   CustomSelectContent,
@@ -90,11 +90,22 @@ const isValidUrl = (url: string) => {
 function EditCourseSEO(props: EditCourseSEOProps) {
   const { t } = useTranslation()
   const [error, setError] = React.useState('');
-  const course = useCourse();
-  const dispatchCourse = useCourseDispatch() as any;
-  const { isLoading, courseStructure } = course as any;
 
-  const getInitialValues = (): SEOValues => {
+  // Use the new field sync hook
+  const {
+    syncChanges,
+    cancelPendingSync,
+    courseStructure,
+    isLoading,
+    isSaving,
+  } = useCourseFieldSync('editCourseSEO');
+
+  // Track if we should sync (to avoid syncing on initial load)
+  const hasInitializedRef = useRef(false);
+  const previousValuesRef = useRef<SEOValues | null>(null);
+
+  // Memoize initial values
+  const initialValues = useMemo((): SEOValues => {
     const seo = courseStructure?.seo || {};
     return {
       title: seo.title || '',
@@ -111,68 +122,73 @@ function EditCourseSEO(props: EditCourseSEOProps) {
       robots_nofollow: seo.robots_nofollow || false,
       enable_jsonld: seo.enable_jsonld !== false,
     };
-  };
+  }, [courseStructure?.seo]);
 
   const formik = useFormik({
-    initialValues: getInitialValues(),
+    initialValues,
     validate: (values) => validate(values, t),
     onSubmit: async () => {
-      try {
-        dispatchCourse({ type: 'setIsSaved' });
-      } catch (e) {
-        setError(t('dashboard.courses.seo.errors.save_failed'));
-      }
+      // The actual save is handled by SaveState component
     },
     enableReinitialize: true,
   });
 
-  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
-
+  // Sync form changes to context using the new system
   useEffect(() => {
-    if (!isLoading && courseStructure) {
-      const formikValues = formik.values;
-      const initialValues = formik.initialValues;
+    // Skip if loading or saving
+    if (isLoading || isSaving) return;
 
-      const valuesChanged = Object.keys(formikValues).some(
-        key => formikValues[key as keyof SEOValues] !== initialValues[key as keyof SEOValues]
-      );
-
-      if (valuesChanged) {
-        if (debounceTimerRef.current) {
-          clearTimeout(debounceTimerRef.current);
-        }
-
-        debounceTimerRef.current = setTimeout(() => {
-          dispatchCourse({ type: 'setIsNotSaved' });
-          const updatedCourse = {
-            ...courseStructure,
-            seo: {
-              title: formikValues.title || null,
-              description: formikValues.description || null,
-              keywords: formikValues.keywords || null,
-              canonical_url: formikValues.canonical_url || null,
-              og_title: formikValues.og_title || null,
-              og_description: formikValues.og_description || null,
-              og_image: formikValues.og_image || null,
-              twitter_card: formikValues.twitter_card || null,
-              twitter_title: formikValues.twitter_title || null,
-              twitter_description: formikValues.twitter_description || null,
-              robots_noindex: formikValues.robots_noindex,
-              robots_nofollow: formikValues.robots_nofollow,
-              enable_jsonld: formikValues.enable_jsonld,
-            },
-          };
-          dispatchCourse({ type: 'setCourseStructure', payload: updatedCourse });
-        }, 500);
-      }
+    // Skip initial mount
+    if (!hasInitializedRef.current) {
+      hasInitializedRef.current = true;
+      previousValuesRef.current = formik.values;
+      return;
     }
 
+    // Check if values actually changed from previous
+    const prevValues = previousValuesRef.current;
+    if (!prevValues) {
+      previousValuesRef.current = formik.values;
+      return;
+    }
+
+    // Compare current values with previous
+    const hasChanges = Object.keys(formik.values).some(
+      key => formik.values[key as keyof SEOValues] !== prevValues[key as keyof SEOValues]
+    );
+
+    if (hasChanges) {
+      // Build the SEO object with only changed fields tracked
+      const seoData = {
+        title: formik.values.title || null,
+        description: formik.values.description || null,
+        keywords: formik.values.keywords || null,
+        canonical_url: formik.values.canonical_url || null,
+        og_title: formik.values.og_title || null,
+        og_description: formik.values.og_description || null,
+        og_image: formik.values.og_image || null,
+        twitter_card: formik.values.twitter_card || null,
+        twitter_title: formik.values.twitter_title || null,
+        twitter_description: formik.values.twitter_description || null,
+        robots_noindex: formik.values.robots_noindex,
+        robots_nofollow: formik.values.robots_nofollow,
+        enable_jsonld: formik.values.enable_jsonld,
+      };
+
+      // Sync changes with debounce - only update the seo field
+      syncChanges({ seo: seoData });
+
+      // Update previous values ref
+      previousValuesRef.current = { ...formik.values };
+    }
+  }, [formik.values, isLoading, isSaving, syncChanges]);
+
+  // Cleanup on unmount
+  useEffect(() => {
     return () => {
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
-      }
+      cancelPendingSync();
     };
-  }, [formik.values, isLoading, courseStructure, dispatchCourse]);
+  }, [cancelPendingSync]);
 
   if (isLoading || !courseStructure) {
     return <div>{t('dashboard.courses.settings.loading')}</div>;
@@ -223,6 +239,7 @@ function EditCourseSEO(props: EditCourseSEOProps) {
                       value={formik.values.title}
                       type="text"
                       placeholder={t('dashboard.courses.seo.form.title_placeholder')}
+                      disabled={isSaving}
                     />
                   </Form.Control>
                   <p className="text-xs text-gray-400 mt-1">
@@ -244,6 +261,7 @@ function EditCourseSEO(props: EditCourseSEOProps) {
                       onChange={formik.handleChange}
                       value={formik.values.description}
                       placeholder={t('dashboard.courses.seo.form.description_placeholder')}
+                      disabled={isSaving}
                     />
                   </Form.Control>
                   <p className="text-xs text-gray-400 mt-1">
@@ -263,6 +281,7 @@ function EditCourseSEO(props: EditCourseSEOProps) {
                       value={formik.values.keywords}
                       type="text"
                       placeholder={t('dashboard.courses.seo.form.keywords_placeholder')}
+                      disabled={isSaving}
                     />
                   </Form.Control>
                   <p className="text-xs text-gray-400 mt-1">
@@ -282,6 +301,7 @@ function EditCourseSEO(props: EditCourseSEOProps) {
                       value={formik.values.canonical_url}
                       type="text"
                       placeholder={t('dashboard.courses.seo.form.canonical_url_placeholder')}
+                      disabled={isSaving}
                     />
                   </Form.Control>
                   <p className="text-xs text-gray-400 mt-1">
@@ -318,6 +338,7 @@ function EditCourseSEO(props: EditCourseSEOProps) {
                       value={formik.values.og_title}
                       type="text"
                       placeholder={t('dashboard.courses.seo.form.og_title_placeholder')}
+                      disabled={isSaving}
                     />
                   </Form.Control>
                 </FormField>
@@ -336,6 +357,7 @@ function EditCourseSEO(props: EditCourseSEOProps) {
                       onChange={formik.handleChange}
                       value={formik.values.og_description}
                       placeholder={t('dashboard.courses.seo.form.og_description_placeholder')}
+                      disabled={isSaving}
                     />
                   </Form.Control>
                 </FormField>
@@ -352,6 +374,7 @@ function EditCourseSEO(props: EditCourseSEOProps) {
                       value={formik.values.og_image}
                       type="text"
                       placeholder={t('dashboard.courses.seo.form.og_image_placeholder')}
+                      disabled={isSaving}
                     />
                   </Form.Control>
                   <p className="text-xs text-gray-400 mt-1">
@@ -384,6 +407,7 @@ function EditCourseSEO(props: EditCourseSEOProps) {
                         if (!value) return;
                         formik.setFieldValue('twitter_card', value);
                       }}
+                      disabled={isSaving}
                     >
                       <CustomSelectTrigger className="w-full bg-white">
                         <CustomSelectValue>
@@ -419,6 +443,7 @@ function EditCourseSEO(props: EditCourseSEOProps) {
                       value={formik.values.twitter_title}
                       type="text"
                       placeholder={t('dashboard.courses.seo.form.twitter_title_placeholder')}
+                      disabled={isSaving}
                     />
                   </Form.Control>
                 </FormField>
@@ -437,6 +462,7 @@ function EditCourseSEO(props: EditCourseSEOProps) {
                       onChange={formik.handleChange}
                       value={formik.values.twitter_description}
                       placeholder={t('dashboard.courses.seo.form.twitter_description_placeholder')}
+                      disabled={isSaving}
                     />
                   </Form.Control>
                 </FormField>
@@ -463,6 +489,7 @@ function EditCourseSEO(props: EditCourseSEOProps) {
                     checked={formik.values.robots_noindex}
                     onChange={formik.handleChange}
                     className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black"
+                    disabled={isSaving}
                   />
                   <label htmlFor="robots_noindex" className="text-sm font-medium text-gray-700">
                     {t('dashboard.courses.seo.form.robots_noindex_label')}
@@ -480,6 +507,7 @@ function EditCourseSEO(props: EditCourseSEOProps) {
                     checked={formik.values.robots_nofollow}
                     onChange={formik.handleChange}
                     className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black"
+                    disabled={isSaving}
                   />
                   <label htmlFor="robots_nofollow" className="text-sm font-medium text-gray-700">
                     {t('dashboard.courses.seo.form.robots_nofollow_label')}
@@ -498,6 +526,7 @@ function EditCourseSEO(props: EditCourseSEOProps) {
                       checked={formik.values.enable_jsonld}
                       onChange={formik.handleChange}
                       className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black"
+                      disabled={isSaving}
                     />
                     <label htmlFor="enable_jsonld" className="text-sm font-medium text-gray-700">
                       {t('dashboard.courses.seo.form.enable_jsonld_label')}

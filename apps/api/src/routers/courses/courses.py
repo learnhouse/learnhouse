@@ -22,11 +22,13 @@ from src.services.courses.courses import (
     get_course_by_id,
     get_course_meta,
     get_courses_orgslug,
+    get_courses_count_orgslug,
     update_course,
     delete_course,
     update_course_thumbnail,
     search_courses,
     get_course_user_rights,
+    clone_course,
 )
 from src.services.courses.updates import (
     create_update,
@@ -152,6 +154,7 @@ async def api_get_course_by_orgslug(
     page: int,
     limit: int,
     org_slug: str,
+    include_unpublished: bool = False,
     db_session: Session = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ) -> List[CourseRead]:
@@ -159,7 +162,22 @@ async def api_get_course_by_orgslug(
     Get courses by page and limit
     """
     return await get_courses_orgslug(
-        request, current_user, org_slug, db_session, page, limit
+        request, current_user, org_slug, db_session, page, limit, include_unpublished
+    )
+
+
+@router.get("/org_slug/{org_slug}/count")
+async def api_get_courses_count(
+    request: Request,
+    org_slug: str,
+    db_session: Session = Depends(get_db_session),
+    current_user: PublicUser = Depends(get_current_user),
+) -> int:
+    """
+    Get total count of courses for an organization
+    """
+    return await get_courses_count_orgslug(
+        request, current_user, org_slug, db_session
     )
 
 
@@ -209,6 +227,36 @@ async def api_delete_course(
     """
 
     return await delete_course(request, course_uuid, current_user, db_session)
+
+
+@router.post("/{course_uuid}/clone")
+async def api_clone_course(
+    request: Request,
+    course_uuid: str,
+    db_session: Session = Depends(get_db_session),
+    current_user: PublicUser = Depends(get_current_user),
+) -> CourseRead:
+    """
+    Clone a course with all its chapters, activities, blocks, and files.
+
+    Creates a complete copy of the course including:
+    - Course metadata (name, description, about, learnings, tags, SEO, etc.)
+    - Thumbnail files
+    - Chapters with their ordering
+    - Activities with their files (videos, documents, PDFs)
+    - Dynamic activity blocks with their files (images, videos, PDFs)
+
+    The cloned course will:
+    - Have a new course_uuid
+    - Have "(Copy)" appended to the name
+    - Be set to private (public=False) by default
+    - Have the current user as the creator
+
+    **Required Permissions:**
+    - Read access to the source course
+    - Create permission for courses in the organization
+    """
+    return await clone_course(request, course_uuid, current_user, db_session)
 
 
 @router.post("/{course_uuid}/apply-contributor")
