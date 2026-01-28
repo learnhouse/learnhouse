@@ -140,8 +140,48 @@ const CourseClient = (props: any) => {
     return false
   }
 
+  // Generate JSON-LD structured data for SEO
+  const generateJsonLd = () => {
+    if (!course || !org) return null
+    const seo = course.seo || {}
+
+    // Check if JSON-LD is enabled (defaults to true if not set)
+    if (seo.enable_jsonld === false) return null
+
+    const jsonLd = {
+      '@context': 'https://schema.org',
+      '@type': 'Course',
+      name: seo.title || course.name,
+      description: seo.description || course.description || '',
+      provider: {
+        '@type': 'Organization',
+        name: org.name,
+        ...(org.description && { description: org.description }),
+      },
+      ...(course.thumbnail_image && {
+        image: getCourseThumbnailMediaDirectory(
+          org?.org_uuid,
+          course?.course_uuid,
+          course?.thumbnail_image
+        ),
+      }),
+      ...(course.creation_date && { dateCreated: course.creation_date }),
+      ...(course.update_date && { dateModified: course.update_date }),
+    }
+
+    return jsonLd
+  }
+
+  const jsonLd = generateJsonLd()
+
   return (
     <>
+      {jsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      )}
       {!course && !org ? (
         <PageLoading></PageLoading>
       ) : (
