@@ -607,6 +607,15 @@
     "min_price": "Preço Mínimo:",
     "choose_price": "Escolha seu preço"
   },
+  "account": {
+    "title": "Conta",
+    "general": "Geral",
+    "profile": "Perfil",
+    "security": "Segurança",
+    "my_courses": "Meus Cursos",
+    "no_purchased_courses": "Nenhum curso comprado ainda",
+    "purchased_courses_description": "Os cursos que você comprou ou assinou aparecerão aqui"
+  },
   "user": {
     "user_settings": "Configurações do Usuário",
     "settings": {

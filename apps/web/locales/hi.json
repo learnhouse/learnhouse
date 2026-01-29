@@ -607,6 +607,15 @@
     "min_price": "न्यूनतम मूल्य:",
     "choose_price": "अपनी कीमत चुनें"
   },
+  "account": {
+    "title": "खाता",
+    "general": "सामान्य",
+    "profile": "प्रोफ़ाइल",
+    "security": "सुरक्षा",
+    "my_courses": "मेरे कोर्स",
+    "no_purchased_courses": "अभी तक कोई कोर्स नहीं खरीदा",
+    "purchased_courses_description": "आपके द्वारा खरीदे या सब्सक्राइब किए गए कोर्स यहां दिखाई देंगे"
+  },
   "user": {
     "user_settings": "उपयोगकर्ता सेटिंग्स",
     "settings": {
