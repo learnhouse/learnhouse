@@ -55,7 +55,7 @@ function LayoutContent({ children, orgslug }: { children: React.ReactNode; orgsl
       }}
     >
       <OrgMenu orgslug={orgslug}></OrgMenu>
-      <div className="flex-1">
+      <div className="flex-1 relative" style={{ zIndex: 'var(--z-content)' }}>
         {children}
       </div>
       <OrgFooter />

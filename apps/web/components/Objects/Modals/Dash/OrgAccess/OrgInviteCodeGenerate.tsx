@@ -22,7 +22,7 @@ function OrgInviteCodeGenerate(props: OrgInviteCodeGenerateProps) {
     const [usergroup_id, setUsergroup_id] = React.useState(0);
 
     const { data: usergroups } = useSWR(
-        org ? `${getAPIUrl()}usergroups/org/${org.id}` : null,
+        org ? `${getAPIUrl()}usergroups/org/${org.id}?org_id=${org.id}` : null,
         (url) => swrFetcher(url, access_token)
     )
 

@@ -48,12 +48,12 @@ function EditUserGroup(props: EditUserGroupProps) {
         validate: getValidate(t),
         onSubmit: async (values) => {
             setIsSubmitting(true)
-            const res = await updateUserGroup(props.usergroup.id, access_token, values)
+            const res = await updateUserGroup(props.usergroup.id, org.id, access_token, values)
 
             if (res.status == 200) {
                 setIsSubmitting(false)
                 toast.success(t('dashboard.users.usergroups.modals.edit.toasts.success'))
-                mutate(`${getAPIUrl()}usergroups/org/${org.id}`)
+                mutate(`${getAPIUrl()}usergroups/org/${org.id}?org_id=${org.id}`)
             } else {
                 toast.error(t('dashboard.users.usergroups.modals.edit.toasts.error'))
                 setIsSubmitting(false)

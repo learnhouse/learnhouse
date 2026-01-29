@@ -60,38 +60,38 @@ module.exports = {
         // Negative layers
         'behind': '-10',
         'background': '-1',
-        // Base layers
+        // Base content layers (0-10)
         'base': '0',
         'content': '1',
         'elevated': '5',
-        // Sticky elements
+        // Sticky elements (10-20)
         'sticky': '10',
         'sticky-header': '15',
-        // Interactive elements
+        // Interactive elements on page (20-40)
         'interactive': '20',
-        'drag-overlay': '25',
-        // Navigation (highest values to always stay above page content)
-        'nav': '9999',
-        'nav-menu': '10000',
-        // Dropdowns and popovers
-        'dropdown': '110',
-        'popover': '115',
-        // Overlays
+        'drag-overlay': '30',
+        // Fixed navigation header (50)
+        'nav': '50',
+        'nav-menu': '51',
+        // Dropdowns and popovers - MUST be above nav (100+)
+        'dropdown': '100',
+        'popover': '110',
+        // Overlays and editor tools (120-140)
         'overlay': '120',
-        // Editor (below modals)
-        'editor-toolbar': '150',
-        'editor-bubble': '155',
-        'tooltip': '160',
-        // Modals (above editor)
+        'editor-toolbar': '130',
+        'editor-bubble': '135',
+        // Tooltips (150)
+        'tooltip': '150',
+        // Modals - highest priority UI (200+)
         'modal-backdrop': '200',
         'modal': '210',
         'modal-content': '220',
-        // Toasts and notifications
-        'toast': '230',
-        'notification': '240',
-        // Critical
-        'critical': '250',
-        'max': '999',
+        // Toasts and notifications (300+)
+        'toast': '300',
+        'notification': '310',
+        // Critical/emergency UI (400+)
+        'critical': '400',
+        'max': '9999',
       },
       keyframes: {
         "accordion-down": {

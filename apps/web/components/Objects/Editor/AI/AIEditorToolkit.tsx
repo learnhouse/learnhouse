@@ -71,7 +71,7 @@ function AIEditorToolkit(props: AIEditorToolkitProps) {
                   velocity: 2,
                 }}
                 className="fixed inset-0 flex justify-center items-end pb-10"
-                style={{ pointerEvents: 'none', zIndex: 99999 }}
+                style={{ pointerEvents: 'none', zIndex: 'var(--z-modal-content)' }}
               >
                 <>
                   {aiEditorState.isFeedbackModalOpen && (

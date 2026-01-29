@@ -178,7 +178,7 @@ export default function FixedActivitySecondaryBar(props: FixedActivitySecondaryB
       className={`fixed top-[60px] left-0 right-0 bg-white/90 backdrop-blur-xl transition-all duration-300 animate-in fade-in slide-in-from-top ${
         isScrolled ? 'nice-shadow' : ''
       }`}
-      style={{ zIndex: 9998 }}
+      style={{ zIndex: 'var(--z-drag-overlay)' }}
     >
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16 py-2">
