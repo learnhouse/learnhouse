@@ -61,6 +61,9 @@ import DragHandle from './Extensions/DragHandle/DragHandle'
 import { SlashCommands } from './Extensions/SlashCommands'
 import PasteFileHandler from './Extensions/PasteFileHandler/PasteFileHandler'
 import MagicBlock from './Extensions/MagicBlocks/MagicBlock'
+import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
+import { PlanLevel, planMeetsRequirement } from '@services/plans/plans'
+import { useOrg } from '@components/Contexts/OrgContext'
 
 interface Editor {
   content: string
@@ -77,6 +80,11 @@ function Editor(props: Editor) {
   const is_ai_feature_enabled = useGetAIFeatures({ feature: 'editor' })
   const [isButtonAvailable, setIsButtonAvailable] = React.useState(false)
   const [editorReady, setEditorReady] = React.useState(false)
+
+  // Get current plan for feature restrictions (use OrgContext which has fresh data)
+  const orgContext = useOrg() as any
+  const currentPlan: PlanLevel = orgContext?.config?.config?.cloud?.plan || 'free'
+  const canUseAI = planMeetsRequirement(currentPlan, 'standard')
 
 
   React.useEffect(() => {
@@ -184,7 +192,9 @@ function Editor(props: Editor) {
         activity: props.activity,
       }),
       DragHandle,
-      SlashCommands,
+      SlashCommands.configure({
+        currentPlan: currentPlan,
+      }),
       PasteFileHandler.configure({
         activity: props.activity,
         getAccessToken: () => props.session?.data?.tokens?.access_token,
@@ -250,7 +260,7 @@ function Editor(props: Editor) {
             <EditorUsersSection className="space-x-2">
               <div>
                 <div className="transition-all ease-linear text-teal-100 rounded-md hover:cursor-pointer">
-                  {isButtonAvailable && (
+                  {isButtonAvailable && canUseAI && (
                     <div
                       onClick={() =>
                         dispatchAIEditor({
@@ -275,6 +285,22 @@ function Editor(props: Editor) {
                         />
                       </i>{' '}
                       <i className="not-italic text-xs font-bold">AI Editor</i>
+                    </div>
+                  )}
+                  {isButtonAvailable && !canUseAI && (
+                    <div
+                      className="rounded-md px-3 py-2 drop-shadow-md flex items-center space-x-1.5 text-sm text-gray-400 bg-gray-200 cursor-not-allowed opacity-70"
+                    >
+                      <i>
+                        <Image
+                          className="opacity-50 grayscale"
+                          width={20}
+                          src={learnhouseAI_icon}
+                          alt=""
+                        />
+                      </i>
+                      <i className="not-italic text-xs font-bold">AI Editor</i>
+                      <PlanBadge currentPlan={currentPlan} requiredPlan="standard" size="sm" />
                     </div>
                   )}
                 </div>

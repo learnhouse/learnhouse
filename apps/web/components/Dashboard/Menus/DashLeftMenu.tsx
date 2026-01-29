@@ -18,8 +18,11 @@ import {
   Check,
   CaretDown,
   PencilSimple,
-  ChatsCircle
+  ChatsCircle,
+  Book,
+  ChatCircleDots,
 } from '@phosphor-icons/react'
+import { DiscordIcon } from '@components/Objects/Icons/DiscordIcon'
 import Image from 'next/image'
 import Link from 'next/link'
 import React, { useEffect, useState } from 'react'
@@ -41,12 +44,14 @@ import {
   HoverMenuLabel,
   HoverMenuSeparator,
 } from "@components/ui/hover-menu"
+import { FeedbackModal } from '@components/Objects/Modals/FeedbackModal'
 import { AVAILABLE_LANGUAGES } from '@/lib/languages'
 import { getOrgLogoMediaDirectory } from '@services/media/media'
 import { cn } from '@/lib/utils'
 import useSWR, { mutate } from 'swr'
 import { swrFetcher } from '@services/utils/ts/requests'
 import { getAssignmentsFromACourse } from '@services/courses/assignments'
+import { DASHBOARD_MENU_ITEMS } from '@/lib/dashboard-menu-items'
 
 function DashLeftMenu() {
   const org = useOrg() as any
@@ -54,6 +59,7 @@ function DashLeftMenu() {
   const { t, i18n } = useTranslation()
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [recentAssignments, setRecentAssignments] = useState<any[]>([])
+  const [feedbackModalOpen, setFeedbackModalOpen] = useState(false)
   const access_token = session?.data?.tokens?.access_token
 
   // SWR key for courses
@@ -409,14 +415,70 @@ function DashLeftMenu() {
             </button>
           </HoverMenu>
 
-          {/* Help */}
-          <MenuLink
-            href="https://docs.learnhouse.app"
-            icon={<Question size={20} weight="fill" />}
-            label={t('common.help')}
-            isCollapsed={isCollapsed}
-            isExternal
-          />
+          {/* Help with hover menu */}
+          <HoverMenu
+            align="end"
+            content={
+              <HoverMenuContent className="w-56">
+                <HoverMenuLabel className="flex items-center gap-2 text-white/70 font-medium">
+                  <Question size={16} weight="fill" />
+                  <span>{t('common.help')}</span>
+                </HoverMenuLabel>
+                <HoverMenuSeparator />
+                <HoverMenuItem asChild>
+                  <a
+                    href="https://docs.learnhouse.app"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/[0.08] cursor-pointer transition-colors"
+                  >
+                    <Book size={16} weight="fill" />
+                    <span>{t('common.help_menu.documentation')}</span>
+                  </a>
+                </HoverMenuItem>
+                <HoverMenuItem asChild>
+                  <a
+                    href="https://learnhouse.app"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/[0.08] cursor-pointer transition-colors"
+                  >
+                    <Globe size={16} weight="fill" />
+                    <span>{t('common.help_menu.website')}</span>
+                  </a>
+                </HoverMenuItem>
+                <HoverMenuItem asChild>
+                  <a
+                    href="https://discord.gg/learnhouse"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/[0.08] cursor-pointer transition-colors"
+                  >
+                    <DiscordIcon size={16} />
+                    <span>{t('common.help_menu.discord')}</span>
+                  </a>
+                </HoverMenuItem>
+                <HoverMenuSeparator />
+                <HoverMenuItem
+                  onClick={() => setFeedbackModalOpen(true)}
+                  className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/[0.08] cursor-pointer transition-colors"
+                >
+                  <ChatCircleDots size={16} weight="fill" />
+                  <span>{t('common.help_menu.report_feedback')}</span>
+                </HoverMenuItem>
+              </HoverMenuContent>
+            }
+          >
+            <button className={cn(
+              "flex items-center w-full rounded-lg text-white/50 hover:text-white hover:bg-white/[0.08] transition-all group",
+              isCollapsed ? "justify-center h-10" : "px-3 py-2 gap-3"
+            )}>
+              <Question size={20} weight="fill" />
+              {!isCollapsed && (
+                <span className="text-sm font-medium">{t('common.help')}</span>
+              )}
+            </button>
+          </HoverMenu>
 
           {/* User Menu with hover menu */}
           <HoverMenu
@@ -467,6 +529,15 @@ function DashLeftMenu() {
         </div>
       </div>
     </div>
+
+      {/* Feedback Modal */}
+      <FeedbackModal
+        open={feedbackModalOpen}
+        onOpenChange={setFeedbackModalOpen}
+        theme="dark"
+        userName={session?.data?.user?.username}
+        userEmail={session?.data?.user?.email}
+      />
     </TooltipProvider>
   )
 }
