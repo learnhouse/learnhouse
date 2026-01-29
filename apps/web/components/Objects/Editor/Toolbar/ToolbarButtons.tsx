@@ -40,12 +40,19 @@ import React from 'react'
 import Image from 'next/image'
 import LinkInputTooltip from './LinkInputTooltip'
 import lrnaiIcon from 'public/lrnai_icon.png'
+import { useOrg } from '@components/Contexts/OrgContext'
+import { PlanLevel, planMeetsRequirement } from '@services/plans/plans'
 
 export const ToolbarButtons = ({ editor, props }: any) => {
   const [showTableMenu, setShowTableMenu] = React.useState(false)
   const [showListMenu, setShowListMenu] = React.useState(false)
   const [showLinkInput, setShowLinkInput] = React.useState(false)
   const linkButtonRef = React.useRef<HTMLDivElement>(null)
+
+  // Get current plan for AI feature restrictions
+  const orgContext = useOrg() as any
+  const currentPlan: PlanLevel = orgContext?.config?.config?.cloud?.plan || 'free'
+  const canUseAI = planMeetsRequirement(currentPlan, 'standard')
 
   if (!editor) {
     return null
@@ -514,17 +521,23 @@ export const ToolbarButtons = ({ editor, props }: any) => {
           <GitBranch size={15} />
         </ToolBtnInteractive>
       </ToolTip>
-      <ToolTip content={'Magic Block (AI Generated)'}>
-        <ToolBtnMagic
-          onClick={() =>
-            editor.chain().focus().insertContent({
-              type: 'blockMagic',
-            }).run()
-          }
-          aria-label="Insert AI-generated magic block"
-        >
-          <Image src={lrnaiIcon} alt="Magic Block" width={15} height={15} />
-        </ToolBtnMagic>
+      <ToolTip content={canUseAI ? 'Magic Block (AI Generated)' : 'Magic Block requires Standard plan'}>
+        {canUseAI ? (
+          <ToolBtnMagic
+            onClick={() =>
+              editor.chain().focus().insertContent({
+                type: 'blockMagic',
+              }).run()
+            }
+            aria-label="Insert AI-generated magic block"
+          >
+            <Image src={lrnaiIcon} alt="Magic Block" width={15} height={15} />
+          </ToolBtnMagic>
+        ) : (
+          <ToolBtnMagicDisabled aria-label="Magic Block requires Standard plan">
+            <Image src={lrnaiIcon} alt="Magic Block" width={15} height={15} />
+          </ToolBtnMagicDisabled>
+        )}
       </ToolTip>
     </ToolButtonsWrapper>
   )
@@ -772,6 +785,18 @@ const ToolBtnMagic = styled(ToolBtn)`
 
   img {
     filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+  }
+`
+
+// Magic Block button disabled state - grayed out gradient
+const ToolBtnMagicDisabled = styled(ToolBtnMagic)`
+  filter: grayscale(100%);
+  opacity: 0.5;
+  cursor: not-allowed;
+
+  &:hover {
+    transform: none;
+    cursor: not-allowed;
   }
 `
 

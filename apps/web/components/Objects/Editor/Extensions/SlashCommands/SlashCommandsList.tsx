@@ -17,12 +17,20 @@ import {
   categoryLabels,
   groupCommandsByCategory,
 } from './slashCommandsConfig'
+import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
+import { planMeetsRequirement } from '@services/plans/plans'
 
 const SlashCommandsList = forwardRef<SlashCommandsListRef, SlashCommandsListProps>(
-  ({ items, command }, ref) => {
+  ({ items, command, currentPlan = 'free' }, ref) => {
     const [selectedIndex, setSelectedIndex] = useState(0)
     const containerRef = useRef<HTMLDivElement>(null)
     const itemRefs = useRef<Map<number, HTMLButtonElement>>(new Map())
+
+    // Helper to check if a command is available based on plan
+    const isCommandAvailable = useCallback((item: SlashCommandItem) => {
+      if (!item.requiredPlan) return true
+      return planMeetsRequirement(currentPlan, item.requiredPlan)
+    }, [currentPlan])
 
     // Flatten items for keyboard navigation
     const flatItems = items
@@ -46,11 +54,11 @@ const SlashCommandsList = forwardRef<SlashCommandsListRef, SlashCommandsListProp
     const selectItem = useCallback(
       (index: number) => {
         const item = flatItems[index]
-        if (item) {
+        if (item && isCommandAvailable(item)) {
           command(item)
         }
       },
-      [flatItems, command]
+      [flatItems, command, isCommandAvailable]
     )
 
     useImperativeHandle(ref, () => ({
@@ -101,6 +109,7 @@ const SlashCommandsList = forwardRef<SlashCommandsListRef, SlashCommandsListProp
             {categoryItems.map((item) => {
               const currentIndex = overallIndex
               overallIndex++
+              const available = isCommandAvailable(item)
               return (
                 <button
                   key={item.id}
@@ -113,14 +122,24 @@ const SlashCommandsList = forwardRef<SlashCommandsListRef, SlashCommandsListProp
                   }}
                   className={`slash-commands-item ${
                     currentIndex === selectedIndex ? 'is-selected' : ''
-                  }`}
-                  onClick={() => selectItem(currentIndex)}
+                  } ${!available ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  onClick={() => available && selectItem(currentIndex)}
                   onMouseEnter={() => setSelectedIndex(currentIndex)}
+                  disabled={!available}
                 >
-                  <div className="slash-commands-item-icon">{item.icon}</div>
+                  <div className={`slash-commands-item-icon ${!available ? 'grayscale' : ''}`}>{item.icon}</div>
                   <div className="slash-commands-item-content">
-                    <div className="slash-commands-item-title">{item.title}</div>
-                    <div className="slash-commands-item-description">
+                    <div className="slash-commands-item-title flex items-center gap-2">
+                      <span className={!available ? 'text-gray-400' : ''}>{item.title}</span>
+                      {item.requiredPlan && (
+                        <PlanBadge
+                          currentPlan={currentPlan}
+                          requiredPlan={item.requiredPlan}
+                          size="sm"
+                        />
+                      )}
+                    </div>
+                    <div className={`slash-commands-item-description ${!available ? 'text-gray-400' : ''}`}>
                       {item.description}
                     </div>
                   </div>

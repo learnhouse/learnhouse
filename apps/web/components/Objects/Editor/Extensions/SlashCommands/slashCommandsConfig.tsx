@@ -219,6 +219,7 @@ export const slashCommands: SlashCommandItem[] = [
     command: (editor) => {
       editor.chain().focus().insertContent({ type: 'blockMagic' }).run()
     },
+    requiredPlan: 'standard',
   },
   {
     id: 'quiz',

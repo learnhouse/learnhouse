@@ -12,12 +12,10 @@ import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationMo
 import { useSearchParams } from 'next/navigation'
 import React, { useState, useMemo } from 'react'
 import useAdminStatus from '@components/Hooks/useAdminStatus'
-import useEnterprisePlan from '@components/Hooks/useEnterprisePlan'
 import { getAPIUrl } from '@services/config/config'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { Download, Copy } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
 import { PlanLevel } from '@services/plans/plans'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { deleteCourseFromBackend, cloneCourse } from '@services/courses/courses'
@@ -44,7 +42,6 @@ function CoursesHome(params: CourseProps) {
   const orgslug = params.orgslug
   const isUserAdmin = useAdminStatus() as any
   const org = useOrg() as any
-  const { isEnterprise } = useEnterprisePlan()
   const currentPlan: PlanLevel = org?.config?.config?.cloud?.plan || 'free'
   const session = useLHSession() as any
   const access_token = session.data?.tokens?.access_token
@@ -125,7 +122,7 @@ function CoursesHome(params: CourseProps) {
           />
         )
       default:
-        return <ImportTypeSelector onSelectType={handleImportTypeSelect} />
+        return <ImportTypeSelector onSelectType={handleImportTypeSelect} currentPlan={currentPlan} />
     }
   }
 
@@ -302,34 +299,23 @@ function CoursesHome(params: CourseProps) {
             orgId={params.org_id}
           >
             <div className="flex items-center space-x-2">
-              {isEnterprise ? (
-                <Modal
-                  isDialogOpen={importCourseModal}
-                  onOpenChange={(open) => {
-                    setImportCourseModal(open)
-                    if (!open) setImportType('select')
-                  }}
-                  minHeight="no-min"
-                  dialogTitle={getImportModalTitle()}
-                  dialogDescription={getImportModalDescription()}
-                  dialogContent={getImportModalContent()}
-                  dialogTrigger={
-                    <button className="rounded-lg bg-black hover:scale-105 transition-all duration-100 ease-linear antialiased p-2 px-5 my-auto font text-xs font-bold text-white nice-shadow flex space-x-2 items-center">
-                      <Download className="w-4 h-4" />
-                      <span>{t('dashboard.courses.import_course')}</span>
-                    </button>
-                  }
-                />
-              ) : (
-                <button
-                  disabled
-                  className="rounded-lg bg-gray-300 antialiased p-2 px-5 my-auto font text-xs font-bold text-gray-500 flex items-center gap-2 cursor-not-allowed"
-                >
-                  <Download className="w-4 h-4" />
-                  <span>{t('dashboard.courses.import_course')}</span>
-                  <PlanBadge currentPlan={currentPlan} requiredPlan="enterprise" alwaysShow noMargin />
-                </button>
-              )}
+              <Modal
+                isDialogOpen={importCourseModal}
+                onOpenChange={(open) => {
+                  setImportCourseModal(open)
+                  if (!open) setImportType('select')
+                }}
+                minHeight="no-min"
+                dialogTitle={getImportModalTitle()}
+                dialogDescription={getImportModalDescription()}
+                dialogContent={getImportModalContent()}
+                dialogTrigger={
+                  <button className="rounded-lg bg-black hover:scale-105 transition-all duration-100 ease-linear antialiased p-2 px-5 my-auto font text-xs font-bold text-white nice-shadow flex space-x-2 items-center">
+                    <Download className="w-4 h-4" />
+                    <span>{t('dashboard.courses.import_course')}</span>
+                  </button>
+                }
+              />
               <Modal
                 isDialogOpen={newCourseModal}
                 onOpenChange={setNewCourseModal}

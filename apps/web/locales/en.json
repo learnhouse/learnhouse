@@ -40,6 +40,23 @@
     "recent": "Recent",
     "expand": "Expand",
     "help": "Help",
+    "help_menu": {
+      "documentation": "Documentation",
+      "website": "LearnHouse Website",
+      "discord": "Discord",
+      "report_feedback": "Report Issue or Feedback",
+      "feedback_title": "Send Feedback",
+      "feedback_description": "Help us improve LearnHouse by sharing your thoughts, reporting bugs, or suggesting new features.",
+      "feedback_placeholder": "Tell us what's on your mind...",
+      "feedback_success": "Thank you for your feedback!",
+      "send_feedback": "Send Feedback",
+      "sending": "Sending...",
+      "how_was_experience": "How was your experience?",
+      "reaction_happy": "Good",
+      "reaction_neutral": "Okay",
+      "reaction_sad": "Bad",
+      "attach_image": "Attach screenshot"
+    },
     "plans": {
       "label": "Plans",
       "upgrade_button": "Upgrade to {{plan}}",

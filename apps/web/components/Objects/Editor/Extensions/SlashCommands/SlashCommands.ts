@@ -7,15 +7,29 @@ import SlashCommandsList from './SlashCommandsList'
 import { SlashCommandItem, SlashCommandsListRef } from './types'
 import { PluginKey } from '@tiptap/pm/state'
 import { Z_INDEX } from '@/lib/z-index'
+import { PlanLevel } from '@services/plans/plans'
 
 const slashCommandsPluginKey = new PluginKey('slashCommands')
 
-export const SlashCommands = Extension.create({
+interface SlashCommandsOptions {
+  currentPlan: PlanLevel
+}
+
+export const SlashCommands = Extension.create<SlashCommandsOptions>({
   name: 'slashCommands',
 
   addOptions() {
     return {
-      suggestion: {
+      currentPlan: 'free' as PlanLevel,
+    }
+  },
+
+  addProseMirrorPlugins() {
+    const currentPlan = this.options.currentPlan
+
+    return [
+      Suggestion({
+        editor: this.editor,
         char: '/',
         startOfLine: false,
         pluginKey: slashCommandsPluginKey,
@@ -48,6 +62,7 @@ export const SlashCommands = Extension.create({
                     props.command(item)
                   },
                   editor: props.editor,
+                  currentPlan: currentPlan,
                 },
                 editor: props.editor,
               })
@@ -78,6 +93,7 @@ export const SlashCommands = Extension.create({
                   props.command(item)
                 },
                 editor: props.editor,
+                currentPlan: currentPlan,
               })
 
               if (!props.clientRect) {
@@ -104,15 +120,6 @@ export const SlashCommands = Extension.create({
             },
           }
         },
-      },
-    }
-  },
-
-  addProseMirrorPlugins() {
-    return [
-      Suggestion({
-        editor: this.editor,
-        ...this.options.suggestion,
       }),
     ]
   },
