@@ -9,16 +9,38 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { SearchBar } from '@components/Objects/Search/SearchBar'
 import { usePathname } from 'next/navigation'
+import { useTranslation } from 'react-i18next'
+import useAdminStatus from '@components/Hooks/useAdminStatus'
+import {
+  Question,
+  Book,
+  Globe,
+  ChatCircleDots,
+  SquaresFour,
+} from '@phosphor-icons/react'
+import { DiscordIcon } from '@components/Objects/Icons/DiscordIcon'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@components/ui/dropdown-menu"
+import { FeedbackModal } from '@components/Objects/Modals/FeedbackModal'
+import { DASHBOARD_MENU_ITEMS } from '@/lib/dashboard-menu-items'
 
 export const OrgMenu = (props: any) => {
   const orgslug = props.orgslug
   const session = useLHSession() as any;
   const access_token = session?.data?.tokens?.access_token;
-  const [feedbackModal, setFeedbackModal] = React.useState(false)
   const org = useOrg() as any;
   const [isMenuOpen, setIsMenuOpen] = React.useState(false)
   const [isFocusMode, setIsFocusMode] = useState(false)
   const pathname = usePathname()
+  const { t } = useTranslation()
+  const { rights } = useAdminStatus()
+  const [feedbackModalOpen, setFeedbackModalOpen] = useState(false)
 
   // Get primary color from org config
   const primaryColor = org?.config?.config?.general?.color || ''
@@ -55,10 +77,6 @@ export const OrgMenu = (props: any) => {
       window.removeEventListener('focusModeChange', handleFocusModeChange as EventListener);
     };
   }, [pathname]);
-
-  function closeFeedbackModal() {
-    setFeedbackModal(false)
-  }
 
   function toggleMenu() {
     setIsMenuOpen(!isMenuOpen)
@@ -107,7 +125,105 @@ export const OrgMenu = (props: any) => {
             <SearchBar orgslug={orgslug} className="w-full" primaryColor={primaryColor} />
           </div>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2">
+            {/* Dashboard Dropdown - Only visible to admins */}
+            {session?.status === 'authenticated' && rights?.dashboard?.action_access && (
+              <div className="hidden md:flex">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      className={`p-2 rounded-lg transition-colors ${primaryColor ? 'hover:bg-white/10 text-white' : 'hover:bg-gray-100 text-gray-600'}`}
+                      aria-label={t('common.dashboard')}
+                    >
+                      <SquaresFour size={20} weight="fill" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel className="flex items-center gap-2">
+                      <SquaresFour size={16} weight="fill" />
+                      <span>{t('common.dashboard')}</span>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {DASHBOARD_MENU_ITEMS.map((item) => {
+                      const IconComponent = item.icon
+                      return (
+                        <DropdownMenuItem key={item.id} asChild>
+                          <Link href={item.href} className="flex items-center gap-2">
+                            <IconComponent size={16} weight="fill" />
+                            <span>{t(item.labelKey)}</span>
+                          </Link>
+                        </DropdownMenuItem>
+                      )
+                    })}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            )}
+
+            {/* Help Dropdown - Only visible to admins/maintainers/instructors */}
+            {session?.status === 'authenticated' && rights?.dashboard?.action_access && (
+              <div className="hidden md:flex">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      className={`p-2 rounded-lg transition-colors ${primaryColor ? 'hover:bg-white/10 text-white' : 'hover:bg-gray-100 text-gray-600'}`}
+                      aria-label={t('common.help')}
+                    >
+                      <Question size={20} weight="fill" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel className="flex items-center gap-2">
+                      <Question size={16} weight="fill" />
+                      <span>{t('common.help')}</span>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <a
+                        href="https://docs.learnhouse.app"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2"
+                      >
+                        <Book size={16} weight="fill" />
+                        <span>{t('common.help_menu.documentation')}</span>
+                      </a>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <a
+                        href="https://learnhouse.app"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2"
+                      >
+                        <Globe size={16} weight="fill" />
+                        <span>{t('common.help_menu.website')}</span>
+                      </a>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <a
+                        href="https://discord.gg/learnhouse"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2"
+                      >
+                        <DiscordIcon size={16} />
+                        <span>{t('common.help_menu.discord')}</span>
+                      </a>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => setFeedbackModalOpen(true)}
+                      className="flex items-center gap-2"
+                    >
+                      <ChatCircleDots size={16} weight="fill" />
+                      <span>{t('common.help_menu.report_feedback')}</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            )}
+
             <div className="hidden md:flex">
               <HeaderProfileBox primaryColor={primaryColor} />
             </div>
@@ -147,6 +263,15 @@ export const OrgMenu = (props: any) => {
           </div>
         </div>
       </div>
+
+      {/* Feedback Modal */}
+      <FeedbackModal
+        open={feedbackModalOpen}
+        onOpenChange={setFeedbackModalOpen}
+        theme="light"
+        userName={session?.data?.user?.username}
+        userEmail={session?.data?.user?.email}
+      />
     </>
   )
 }

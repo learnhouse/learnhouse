@@ -1,6 +1,6 @@
 import { NodeViewProps, NodeViewWrapper } from '@tiptap/react'
 import { Node } from '@tiptap/core'
-import { X, Edit3, Expand, GripHorizontal } from 'lucide-react'
+import { X, Edit3, Expand, GripHorizontal, Lock } from 'lucide-react'
 import React from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import Image from 'next/image'
@@ -8,12 +8,15 @@ import lrnaiIcon from 'public/lrnai_icon.png'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useCourse } from '@components/Contexts/CourseContext'
+import { useOrg } from '@components/Contexts/OrgContext'
 import { cn } from '@/lib/utils'
 import MagicBlockModal from './MagicBlockModal'
 import MagicBlockPreview from './MagicBlockPreview'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import type { MagicBlockContext, MagicBlockMessage } from './types'
 import { getMagicBlockSession } from '@services/ai/magicblocks'
+import { PlanLevel, planMeetsRequirement } from '@services/plans/plans'
+import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
 
 interface EditorState {
   isEditable: boolean
@@ -52,6 +55,7 @@ function MagicBlockComponent(props: ExtendedNodeViewProps) {
   const editorState = useEditorProvider() as EditorState
   const session = useLHSession() as Session
   const course = useCourse() as Course | null
+  const orgContext = useOrg() as any
 
   const [isModalOpen, setIsModalOpen] = React.useState(false)
   const [isPreviewModalOpen, setIsPreviewModalOpen] = React.useState(false)
@@ -60,6 +64,10 @@ function MagicBlockComponent(props: ExtendedNodeViewProps) {
 
   const isEditable = editorState?.isEditable
   const accessToken = session?.data?.tokens?.access_token
+
+  // Check plan for AI features
+  const currentPlan: PlanLevel = orgContext?.config?.config?.cloud?.plan || 'free'
+  const canUseAI = planMeetsRequirement(currentPlan, 'standard')
 
   // Get attributes from node
   const blockUuid = node.attrs.blockUuid || `magic_${uuidv4()}`
@@ -262,41 +270,67 @@ function MagicBlockComponent(props: ExtendedNodeViewProps) {
 
           {/* Content area */}
           {!htmlContent ? (
-            // No content - show create button
+            // No content - show create button or plan restriction
             <div className="text-center py-8">
-              <div className="inline-flex flex-col items-center gap-3">
-                <div
-                  style={{
-                    background: 'conic-gradient(from 32deg at 53.75% 50%, rgb(35, 40, 93) 4deg, rgba(20, 0, 52, 0.95) 59deg, rgba(164, 45, 238, 0.88) 281deg)',
-                  }}
-                  className="p-4 rounded-full drop-shadow-md"
-                >
-                  <Image src={lrnaiIcon} alt="Magic Block" width={32} height={32} />
+              {canUseAI ? (
+                <div className="inline-flex flex-col items-center gap-3">
+                  <div
+                    style={{
+                      background: 'conic-gradient(from 32deg at 53.75% 50%, rgb(35, 40, 93) 4deg, rgba(20, 0, 52, 0.95) 59deg, rgba(164, 45, 238, 0.88) 281deg)',
+                    }}
+                    className="p-4 rounded-full drop-shadow-md"
+                  >
+                    <Image src={lrnaiIcon} alt="Magic Block" width={32} height={32} />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="font-semibold text-white/80">
+                      Create Interactive Content
+                    </p>
+                    <p className="text-sm text-white/50">
+                      Generate quizzes, simulations, charts and more with AI
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setIsModalOpen(true)}
+                    style={{
+                      background: 'conic-gradient(from 32deg at 53.75% 50%, rgb(35, 40, 93) 4deg, rgba(20, 0, 52, 0.95) 59deg, rgba(164, 45, 238, 0.88) 281deg)',
+                    }}
+                    className="mt-2 px-5 py-2.5 text-white text-sm font-bold rounded-full transition-all duration-300 ease-in-out hover:scale-105 flex items-center gap-2 drop-shadow-md"
+                  >
+                    <Image
+                      className="outline outline-1 outline-neutral-200/20 rounded-md"
+                      width={16}
+                      src={lrnaiIcon}
+                      alt=""
+                    />
+                    Generate with AI
+                  </button>
                 </div>
-                <div className="space-y-1">
-                  <p className="font-semibold text-white/80">
-                    Create Interactive Content
-                  </p>
-                  <p className="text-sm text-white/50">
-                    Generate quizzes, simulations, charts and more with AI
-                  </p>
+              ) : (
+                <div className="inline-flex flex-col items-center gap-3">
+                  <div className="p-4 rounded-full bg-white/10">
+                    <Lock className="w-8 h-8 text-white/40" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="font-semibold text-white/80 flex items-center gap-2 justify-center">
+                      Magic Blocks
+                      <PlanBadge currentPlan={currentPlan} requiredPlan="standard" size="sm" alwaysShow />
+                    </p>
+                    <p className="text-sm text-white/50">
+                      Upgrade to Standard plan to generate interactive content with AI
+                    </p>
+                  </div>
+                  <div className="mt-2 px-5 py-2.5 bg-white/10 text-white/50 text-sm font-bold rounded-full flex items-center gap-2 cursor-not-allowed">
+                    <Image
+                      className="outline outline-1 outline-neutral-200/20 rounded-md opacity-50 grayscale"
+                      width={16}
+                      src={lrnaiIcon}
+                      alt=""
+                    />
+                    Generate with AI
+                  </div>
                 </div>
-                <button
-                  onClick={() => setIsModalOpen(true)}
-                  style={{
-                    background: 'conic-gradient(from 32deg at 53.75% 50%, rgb(35, 40, 93) 4deg, rgba(20, 0, 52, 0.95) 59deg, rgba(164, 45, 238, 0.88) 281deg)',
-                  }}
-                  className="mt-2 px-5 py-2.5 text-white text-sm font-bold rounded-full transition-all duration-300 ease-in-out hover:scale-105 flex items-center gap-2 drop-shadow-md"
-                >
-                  <Image
-                    className="outline outline-1 outline-neutral-200/20 rounded-md"
-                    width={16}
-                    src={lrnaiIcon}
-                    alt=""
-                  />
-                  Generate with AI
-                </button>
-              </div>
+              )}
             </div>
           ) : (
             // Has content - show preview with edit button
