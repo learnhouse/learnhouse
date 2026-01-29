@@ -339,7 +339,7 @@ const UserProfileBuilder = () => {
 
   if (isLoading) {
     return (
-      <div className="sm:mx-10 mx-0 bg-white rounded-xl nice-shadow p-6">
+      <div className="bg-white rounded-xl nice-shadow p-6">
         <div className="flex items-center justify-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
         </div>
@@ -348,16 +348,19 @@ const UserProfileBuilder = () => {
   }
 
   return (
-    <div className="sm:mx-10 mx-0 bg-white rounded-xl nice-shadow">
-      <div className="p-6 space-y-6">
+    <div className="bg-white rounded-xl nice-shadow">
+      <div className="flex flex-col gap-0">
         {/* Header */}
-        <div className="flex items-center justify-between border-b pb-4">
-          <div>
-            <h2 className="text-xl font-semibold flex items-center">{t('user.settings.profile_builder.title')} <div className="text-xs ml-2 bg-gray-200 text-gray-700 px-2 py-1 rounded-full">{t('user.settings.profile_builder.beta')}</div></h2>
-            <p className="text-gray-600">{t('user.settings.profile_builder.subtitle')}</p>
+        <div className="flex items-center justify-between bg-gray-50 px-5 py-3 mx-3 my-3 rounded-md">
+          <div className="flex flex-col -space-y-1">
+            <h1 className="font-bold text-xl text-gray-800 flex items-center">
+              {t('user.settings.profile_builder.title')}
+              <span className="text-xs ml-2 bg-gray-200 text-gray-700 px-2 py-1 rounded-full">{t('user.settings.profile_builder.beta')}</span>
+            </h1>
+            <h2 className="text-gray-500 text-md">{t('user.settings.profile_builder.subtitle')}</h2>
           </div>
-          <Button 
-            variant="default" 
+          <Button
+            variant="default"
             onClick={handleSave}
             disabled={isSaving}
             className="bg-black hover:bg-black/90"
@@ -365,6 +368,8 @@ const UserProfileBuilder = () => {
             {isSaving ? t('user.settings.profile_builder.saving') : t('user.settings.profile_builder.save_changes')}
           </Button>
         </div>
+
+        <div className="mx-5 mb-5 space-y-6">
 
         {/* Main Content */}
         <div className="grid grid-cols-4 gap-6">
@@ -506,6 +511,7 @@ const UserProfileBuilder = () => {
               </div>
             )}
           </div>
+        </div>
         </div>
       </div>
     </div>

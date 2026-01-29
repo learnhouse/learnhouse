@@ -429,13 +429,13 @@ function DashLeftMenu() {
                 </div>
                 <HoverMenuSeparator />
                 <HoverMenuItem asChild>
-                  <Link href="/dash/user-account/settings/general" className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/[0.08] cursor-pointer transition-colors">
+                  <Link href="/account/general" className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/[0.08] cursor-pointer transition-colors">
                     <Gear size={16} weight="fill" />
                     <span>{t('common.settings')}</span>
                   </Link>
                 </HoverMenuItem>
                 <HoverMenuItem asChild>
-                  <Link href="/dash/user-account/owned" className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/[0.08] cursor-pointer transition-colors">
+                  <Link href="/account/my-courses" className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/[0.08] cursor-pointer transition-colors">
                     <Package size={16} weight="fill" />
                     <span>{t('courses.my_courses')}</span>
                   </Link>

@@ -607,6 +607,15 @@
     "min_price": "최저 가격:",
     "choose_price": "가격 선택"
   },
+  "account": {
+    "title": "계정",
+    "general": "일반",
+    "profile": "프로필",
+    "security": "보안",
+    "my_courses": "내 강좌",
+    "no_purchased_courses": "구매한 강좌가 없습니다",
+    "purchased_courses_description": "구매하거나 구독한 강좌가 여기에 표시됩니다"
+  },
   "user": {
     "user_settings": "사용자 설정",
     "settings": {

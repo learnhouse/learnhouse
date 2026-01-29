@@ -607,6 +607,15 @@
     "min_price": "Minimum fiyat:",
     "choose_price": "Fiyatınızı seçin"
   },
+  "account": {
+    "title": "Hesap",
+    "general": "Genel",
+    "profile": "Profil",
+    "security": "Güvenlik",
+    "my_courses": "Kurslarım",
+    "no_purchased_courses": "Henüz satın alınmış kurs yok",
+    "purchased_courses_description": "Satın aldığınız veya abone olduğunuz kurslar burada görünecek"
+  },
   "user": {
     "user_settings": "Kullanıcı Ayarları",
     "settings": {

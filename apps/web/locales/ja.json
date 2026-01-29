@@ -607,6 +607,15 @@
     "min_price": "最低価格:",
     "choose_price": "価格を選択"
   },
+  "account": {
+    "title": "アカウント",
+    "general": "一般",
+    "profile": "プロフィール",
+    "security": "セキュリティ",
+    "my_courses": "マイコース",
+    "no_purchased_courses": "購入したコースはまだありません",
+    "purchased_courses_description": "購入またはサブスクリプションしたコースがここに表示されます"
+  },
   "user": {
     "user_settings": "ユーザー設定",
     "settings": {

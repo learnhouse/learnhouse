@@ -607,6 +607,15 @@
     "min_price": "Минимальная цена:",
     "choose_price": "Выберите свою цену"
   },
+  "account": {
+    "title": "Аккаунт",
+    "general": "Общие",
+    "profile": "Профиль",
+    "security": "Безопасность",
+    "my_courses": "Мои курсы",
+    "no_purchased_courses": "Пока нет купленных курсов",
+    "purchased_courses_description": "Здесь появятся курсы, которые вы купили или на которые подписались"
+  },
   "user": {
     "user_settings": "Настройки пользователя",
     "settings": {

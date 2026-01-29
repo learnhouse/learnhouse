@@ -607,6 +607,15 @@
     "min_price": "ราคาขั้นต่ำ:",
     "choose_price": "เลือกราคาของคุณ"
   },
+  "account": {
+    "title": "บัญชี",
+    "general": "ทั่วไป",
+    "profile": "โปรไฟล์",
+    "security": "ความปลอดภัย",
+    "my_courses": "คอร์สของฉัน",
+    "no_purchased_courses": "ยังไม่มีคอร์สที่ซื้อ",
+    "purchased_courses_description": "คอร์สที่คุณซื้อหรือสมัครสมาชิกจะแสดงที่นี่"
+  },
   "user": {
     "user_settings": "การตั้งค่าผู้ใช้",
     "settings": {

@@ -607,6 +607,15 @@
     "min_price": "السعر الأدنى:",
     "choose_price": "اختر سعرك"
   },
+  "account": {
+    "title": "الحساب",
+    "general": "عام",
+    "profile": "الملف الشخصي",
+    "security": "الأمان",
+    "my_courses": "دوراتي",
+    "no_purchased_courses": "لا توجد دورات مشتراة بعد",
+    "purchased_courses_description": "ستظهر هنا الدورات التي اشتريتها أو اشتركت فيها"
+  },
   "user": {
     "user_settings": "إعدادات المستخدم",
     "settings": {

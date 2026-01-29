@@ -607,6 +607,15 @@
     "min_price": "最低价格：",
     "choose_price": "选择您的价格"
   },
+  "account": {
+    "title": "账户",
+    "general": "通用",
+    "profile": "个人资料",
+    "security": "安全",
+    "my_courses": "我的课程",
+    "no_purchased_courses": "暂无已购课程",
+    "purchased_courses_description": "您购买或订阅的课程将显示在这里"
+  },
   "user": {
     "user_settings": "用户设置",
     "settings": {
