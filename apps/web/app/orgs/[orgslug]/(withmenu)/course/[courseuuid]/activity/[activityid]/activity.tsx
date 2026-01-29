@@ -317,12 +317,13 @@ function ActivityClient(props: ActivityClientProps) {
           <AIChatBotProvider>
             {isFocusMode ? (
               <AnimatePresence>
-                <motion.div 
+                <motion.div
                   initial={isInitialRender.current ? false : { opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.3 }}
-                  className="fixed inset-0 bg-white z-overlay"
+                  className="fixed inset-0 bg-white"
+                  style={{ zIndex: 'var(--z-overlay)' }}
                 >
                   {/* Focus Mode Top Bar */}
                   <motion.div 
@@ -330,7 +331,8 @@ function ActivityClient(props: ActivityClientProps) {
                     animate={{ y: 0 }}
                     exit={{ y: -100 }}
                     transition={{ duration: 0.3 }}
-                    className="fixed top-0 left-0 right-0 z-modal-content bg-white/90 backdrop-blur-xl border-b border-gray-100"
+                    className="fixed top-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-b border-gray-100"
+                    style={{ zIndex: 'var(--z-modal-content)' }}
                   >
                     <div className="container mx-auto px-4 py-2">
                       <div className="flex items-center justify-between h-14">
@@ -466,7 +468,8 @@ function ActivityClient(props: ActivityClientProps) {
                       animate={{ y: 0 }}
                       exit={{ y: 100 }}
                       transition={{ duration: 0.3 }}
-                      className="fixed bottom-0 left-0 right-0 z-modal-content bg-white/90 backdrop-blur-xl border-t border-gray-100"
+                      className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-gray-100"
+                      style={{ zIndex: 'var(--z-modal-content)' }}
                     >
                       <div className="container mx-auto px-4">
                         <div className="flex items-center justify-between h-16">
@@ -545,7 +548,7 @@ function ActivityClient(props: ActivityClientProps) {
                         { label: activity.name }
                       ]} />
                     </div>
-                    <div className="space-y-4 activity-info-section relative" style={{ zIndex: 999, pointerEvents: 'auto' }}>
+                    <div className="space-y-4 activity-info-section relative" style={{ zIndex: 'var(--z-content)' }}>
                         <div className="flex justify-between items-center">
                           <div className="flex space-x-6">
                             <div className="flex">
@@ -669,7 +672,7 @@ function ActivityClient(props: ActivityClientProps) {
                               </div>
                             </div>
                           </div>
-                          <div className="flex space-x-2 items-center relative z-interactive">
+                          <div className="flex space-x-2 items-center relative" style={{ zIndex: 'var(--z-interactive)' }}>
                             {activity && activity.published == true && activity.content.paid_access != false && (
                               <AuthenticatedClientElement checkMethod="authentication">
                                 {activity.activity_type != 'TYPE_ASSIGNMENT' && (
@@ -713,10 +716,11 @@ function ActivityClient(props: ActivityClientProps) {
                           {activity.content.paid_access == false ? (
                             <PaidCourseActivityDisclaimer course={course} />
                           ) : (
-                            <div className={`${activity.activity_type === 'TYPE_SCORM' ? 'rounded-xl overflow-hidden' : 'p-7 drop-shadow-xs rounded-lg'} ${bgColor} relative isolate`} style={{ zIndex: 0 }}>
+                            <div className={`${activity.activity_type === 'TYPE_SCORM' ? 'rounded-xl overflow-hidden' : 'p-7 drop-shadow-xs rounded-lg'} ${bgColor} relative isolate`} style={{ zIndex: 'var(--z-base)' }}>
                               <button
                                 onClick={() => setIsFocusMode(true)}
-                                className={`absolute ${activity.activity_type === 'TYPE_SCORM' ? 'top-2 right-2' : 'top-4 right-4'} bg-white/80 hover:bg-white nice-shadow p-2 rounded-full cursor-pointer transition-all duration-200 group overflow-hidden z-interactive pointer-events-auto`}
+                                className={`absolute ${activity.activity_type === 'TYPE_SCORM' ? 'top-2 right-2' : 'top-4 right-4'} bg-white/80 hover:bg-white nice-shadow p-2 rounded-full cursor-pointer transition-all duration-200 group overflow-hidden pointer-events-auto`}
+                                style={{ zIndex: 'var(--z-interactive)' }}
                                 title={t('activities.focus_mode')}
                               >
                                 <div className="flex items-center">

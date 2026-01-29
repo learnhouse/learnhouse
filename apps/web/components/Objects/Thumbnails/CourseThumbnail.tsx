@@ -4,9 +4,11 @@ import AuthenticatedClientElement from '@components/Security/AuthenticatedClient
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import { getUriWithOrg, getAPIUrl } from '@services/config/config'
 import { deleteCourseFromBackend, cloneCourse } from '@services/courses/courses'
+import { exportCourse, downloadBlob, ExportStatus } from '@services/courses/transfer'
+import { exportToast } from '@components/Objects/StyledElements/Toast/ExportToast'
 import { getCourseThumbnailMediaDirectory, getUserAvatarMediaDirectory } from '@services/media/media'
 import { mutate } from 'swr'
-import { BookMinus, FilePenLine, Settings2, MoreVertical, Copy } from 'lucide-react'
+import { BookMinus, FilePenLine, Settings2, MoreVertical, Copy, Download, CheckSquare, Square } from 'lucide-react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import Link from 'next/link'
 import React from 'react'
@@ -47,14 +49,22 @@ type PropsType = {
   orgslug: string
   customLink?: string
   isDashboard?: boolean
+  isSelected?: boolean
+  onToggleSelect?: (courseUuid: string) => void
 }
 
 export const removeCoursePrefix = (course_uuid: string) => course_uuid.replace('course_', '')
 
-function CourseThumbnail({ course, orgslug, customLink, isDashboard = false }: PropsType) {
+function CourseThumbnail({ course, orgslug, customLink, isDashboard = false, isSelected = false, onToggleSelect }: PropsType) {
   const { t, i18n } = useTranslation()
   const org = useOrg() as any
   const session = useLHSession() as any
+
+  const handleSelectClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    onToggleSelect?.(course.course_uuid)
+  }
 
   const activeAuthors = course.authors?.filter(author => author.authorship_status === 'ACTIVE') || []
   const displayedAuthors = activeAuthors.slice(0, 3)
@@ -93,6 +103,25 @@ function CourseThumbnail({ course, orgslug, customLink, isDashboard = false }: P
     }
   }
 
+  const handleExportCourse = async () => {
+    const toastId = exportToast.start('single', course.name)
+
+    try {
+      const blob = await exportCourse(
+        course.course_uuid,
+        session.data?.tokens?.access_token,
+        (progress, status) => {
+          exportToast.update(toastId, status as ExportStatus, progress, course.name, undefined, 'single')
+        }
+      )
+      const timestamp = new Date().toISOString().split('T')[0]
+      downloadBlob(blob, `${course.name.replace(/[^a-z0-9]/gi, '_')}-${timestamp}.zip`)
+      exportToast.complete(toastId, course.name, undefined, 'single')
+    } catch (error: any) {
+      exportToast.error(toastId, error.message || t('courses.course_exported_error'), course.name, undefined, 'single')
+    }
+  }
+
   const thumbnailImage = course.thumbnail_image
     ? getCourseThumbnailMediaDirectory(org?.org_uuid, course.course_uuid, course.thumbnail_image)
     : '/empty_thumbnail.png'
@@ -100,14 +129,33 @@ function CourseThumbnail({ course, orgslug, customLink, isDashboard = false }: P
   const courseLink = customLink ? customLink : getUriWithOrg(orgslug, `/course/${removeCoursePrefix(course.course_uuid)}`)
 
   return (
-    <div className="group relative flex flex-col bg-white rounded-xl nice-shadow overflow-hidden w-full transition-all duration-300 hover:scale-[1.01]">
+    <div className={`group relative flex flex-col bg-white rounded-xl nice-shadow overflow-hidden w-full transition-all duration-300 hover:scale-[1.01] ${isSelected ? 'ring-2 ring-black ring-offset-2' : ''}`}>
+      {/* Selection checkbox - visible on hover or when selected (dashboard only) */}
+      {isDashboard && onToggleSelect && (
+        <button
+          onClick={handleSelectClick}
+          className={`absolute top-2 left-2 z-20 p-1.5 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-all shadow-md ${
+            isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+          }`}
+        >
+          {isSelected ? (
+            <CheckSquare className="w-4 h-4 text-black" />
+          ) : (
+            <Square className="w-4 h-4 text-gray-500" />
+          )}
+        </button>
+      )}
+
+      {/* Options menu - visible on hover or when dropdown is open */}
       <AdminEditOptions
         course={course}
         orgSlug={orgslug}
         deleteCourse={deleteCourse}
         cloneCourse={handleCloneCourse}
+        exportCourse={handleExportCourse}
+        isDashboard={isDashboard}
       />
-      
+
       <Link prefetch href={courseLink} className="block relative aspect-video overflow-hidden bg-gray-50">
         <div
           className="w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
@@ -195,13 +243,17 @@ function CourseThumbnail({ course, orgslug, customLink, isDashboard = false }: P
   )
 }
 
-const AdminEditOptions = ({ course, orgSlug, deleteCourse, cloneCourse }: {
+const AdminEditOptions = ({ course, orgSlug, deleteCourse, cloneCourse, exportCourse, isDashboard = false }: {
   course: Course
   orgSlug: string
   deleteCourse: () => Promise<void>
   cloneCourse: () => Promise<void>
+  exportCourse: () => Promise<void>
+  isDashboard?: boolean
 }) => {
   const { t } = useTranslation()
+  const [isOpen, setIsOpen] = React.useState(false)
+
   return (
     <AuthenticatedClientElement
       action="update"
@@ -209,8 +261,10 @@ const AdminEditOptions = ({ course, orgSlug, deleteCourse, cloneCourse }: {
       checkMethod="roles"
       orgId={course.org_id}
     >
-      <div className="absolute top-2 right-2 z-interactive">
-        <DropdownMenu>
+      <div className={`absolute top-2 right-2 z-20 transition-opacity ${
+        isDashboard && !isOpen ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'
+      }`}>
+        <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
           <DropdownMenuTrigger asChild>
             <button className="p-1.5 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-all shadow-md">
               <MoreVertical size={18} className="text-gray-700" />
@@ -240,6 +294,14 @@ const AdminEditOptions = ({ course, orgSlug, deleteCourse, cloneCourse }: {
                 functionToExecute={cloneCourse}
                 status="info"
               />
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <button
+                onClick={exportCourse}
+                className="w-full text-left flex items-center px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors"
+              >
+                <Download className="mr-2 h-4 w-4" /> {t('courses.export_course')}
+              </button>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <ConfirmationModal

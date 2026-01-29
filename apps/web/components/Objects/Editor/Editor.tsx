@@ -381,7 +381,7 @@ const EditorTop = styled.div`
   box-shadow: 0 4px 6px -1px rgba(209, 213, 219, 0.25), 0 2px 4px -2px rgba(209, 213, 219, 0.25);
   outline: 1px solid rgba(229, 231, 235, 0.5);
   position: fixed;
-  z-index: 200;
+  z-index: var(--z-editor-toolbar);
   width: -webkit-fill-available;
   width: -moz-available;
   gap: 10px;

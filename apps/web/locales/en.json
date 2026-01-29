@@ -299,6 +299,62 @@
     "delete_selected": "Delete Selected",
     "delete_selected_confirm": "This will permanently delete {{count}} course(s). This action cannot be undone. Continue?",
     "course_description_required": "Course description is required",
+    "export_course": "Export Course",
+    "export_selected": "Export Selected",
+    "exporting_course": "Exporting course...",
+    "exporting_courses": "Exporting {{count}} course(s)...",
+    "course_exported_success": "Course exported successfully",
+    "courses_exported_success": "{{count}} course(s) exported successfully",
+    "course_exported_error": "Failed to export course",
+    "courses_exported_error": "Failed to export courses",
+    "clone_courses_title": "Clone Courses",
+    "delete_courses_title": "Delete Courses",
+    "deleting_courses": "Deleting {{count}} course(s)...",
+    "courses_deleted_success": "{{count}} course(s) deleted successfully",
+    "courses_deleted_partial": "{{success}} course(s) deleted, {{error}} failed",
+    "cloning_courses": "Cloning {{count}} course(s)...",
+    "courses_cloned_success": "{{count}} course(s) cloned successfully",
+    "courses_cloned_partial": "{{success}} course(s) cloned, {{error}} failed",
+    "import": {
+      "scorm_package": "SCORM Package",
+      "scorm_description": "Import SCORM 1.2 or SCORM 2004 packages",
+      "learnhouse_courses": "LearnHouse Courses",
+      "learnhouse_description": "Import courses exported from LearnHouse",
+      "upload_package": "Upload Package",
+      "configure": "Configure",
+      "complete": "Complete",
+      "click_to_upload": "Click to upload or drag and drop",
+      "learnhouse_format": "LearnHouse course export (.zip)",
+      "learnhouse_info": "Upload a LearnHouse course export package (.zip). You'll be able to select which courses to import and configure import options.",
+      "analyze_package": "Analyze Package",
+      "ready_to_analyze": "Ready to analyze",
+      "invalid_file_format": "Please upload a .zip file",
+      "analysis_failed": "Failed to analyze package",
+      "package_analyzed": "Package Analyzed Successfully",
+      "select_courses": "Select Courses to Import",
+      "select_all": "Select All",
+      "deselect_all": "Deselect All",
+      "chapters": "chapters",
+      "activities": "activities",
+      "has_thumbnail": "Has thumbnail",
+      "selected": "selected",
+      "options": "Import Options",
+      "name_prefix": "Course Name Prefix",
+      "name_prefix_placeholder": "e.g. Imported -",
+      "set_private": "Set as private",
+      "set_unpublished": "Set as unpublished",
+      "select_at_least_one": "Please select at least one course to import",
+      "import_courses": "Import {{count}} Course(s)",
+      "upload_different": "Upload different package",
+      "importing_courses": "Importing courses...",
+      "please_wait": "This may take a moment",
+      "import_complete": "Import Complete!",
+      "import_failed": "Import Failed",
+      "import_partial": "Import Partially Complete",
+      "import_summary": "{{successful}} of {{total}} course(s) imported successfully",
+      "created": "Created",
+      "done": "Done"
+    },
     "scorm": {
       "upload_package": "Upload SCORM Package",
       "package_file": "Package File (.zip)",
@@ -901,7 +957,11 @@
       "create_course": "Create Course",
       "create_new_course": "Create a new course",
       "import_course": "Import Course",
+      "import_scorm": "Import SCORM Package",
       "import_scorm_description": "Import a SCORM package to create a new course",
+      "import_learnhouse": "Import LearnHouse Courses",
+      "import_learnhouse_description": "Import courses from a LearnHouse export package",
+      "import_select_type": "Select the type of package you want to import",
       "no_courses": "No courses yet",
       "create_course_placeholder": "Create a course to add content",
       "no_courses_available": "No courses available yet"
@@ -1500,6 +1560,17 @@
       "usergroups": {
         "title": "Manage UserGroups & Users",
         "subtitle": "UserGroups are a way to group users together to manage their access to the resources (Courses) in your organization.",
+        "search_placeholder": "Search groups...",
+        "no_results": "No groups found matching your search",
+        "no_groups": "No user groups yet",
+        "count": {
+          "singular": "group",
+          "plural": "groups"
+        },
+        "member_count": {
+          "singular": "member",
+          "plural": "members"
+        },
         "table": {
           "usergroup": "UserGroup",
           "description": "Description",
@@ -1516,14 +1587,35 @@
           "manage_users": {
             "title": "Manage UserGroup Users",
             "description": "Manage the users in this UserGroup",
+            "search_placeholder": "Search users by name or username...",
+            "no_results": "No users found matching your search",
+            "no_users": "No users in this organization yet",
+            "tabs": {
+              "all": "All Users",
+              "in_group": "In Group",
+              "not_in_group": "Not in Group"
+            },
+            "selection": {
+              "count": "{{count}} users selected",
+              "clear": "Clear",
+              "add_selected": "Add {{count}} to Group",
+              "remove_selected": "Remove {{count}} from Group",
+              "select_all_visible": "Select all visible"
+            },
+            "status": {
+              "in_group": "In Group",
+              "not_in_group": "Not in Group",
+              "linked": "Linked",
+              "not_linked": "Not linked"
+            },
+            "pagination": {
+              "showing": "Showing {{start}}-{{end}} of {{total}}",
+              "page": "Page {{current}} of {{total}}"
+            },
             "table": {
               "user": "User",
               "linked": "Linked",
               "actions": "Actions"
-            },
-            "status": {
-              "linked": "Linked",
-              "not_linked": "Not linked"
             },
             "actions": {
               "link": "Link",
@@ -1532,6 +1624,11 @@
             "toasts": {
               "link_success": "User linked successfully",
               "unlink_success": "User unlinked successfully",
+              "bulk_adding": "Adding users to group...",
+              "bulk_add_success": "Successfully added {{count}} users to group",
+              "bulk_removing": "Removing users from group...",
+              "bulk_remove_success": "Successfully removed {{count}} users from group",
+              "bulk_error": "An error occurred during the operation",
               "error": "Error {{status}}: {{detail}}"
             }
           },

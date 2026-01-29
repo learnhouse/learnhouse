@@ -71,11 +71,11 @@ export const OrgMenu = (props: any) => {
 
   return (
     <>
-      <div className="backdrop-blur-lg h-[60px] blur-3xl z-behind"></div>
+      <div className="backdrop-blur-lg h-[60px] blur-3xl" style={{ zIndex: 'var(--z-behind)' }}></div>
       <div
         className={`backdrop-blur-lg fixed top-0 left-0 right-0 h-[60px] ${!primaryColor ? 'bg-white/90 nice-shadow' : ''}`}
         style={{
-          zIndex: 9999,
+          zIndex: 'var(--z-nav)',
           backgroundColor: primaryColor || undefined
         }}
       >
@@ -132,7 +132,7 @@ export const OrgMenu = (props: any) => {
         className={`fixed inset-x-0 bg-white/80 backdrop-blur-lg md:hidden shadow-lg transition-all duration-300 ease-in-out ${
           isMenuOpen ? 'top-[60px] opacity-100' : '-top-full opacity-0'
         }`}
-        style={{ zIndex: 10000 }}
+        style={{ zIndex: 'var(--z-nav-menu)' }}
       >
         <div className="flex flex-col px-4 py-3 space-y-4 justify-center items-center">
           {/* Mobile Search */}

@@ -26,18 +26,18 @@ function LinkToUserGroup(props: LinkToUserGroupProps) {
     const courseStructure = course.courseStructure
 
     const { data: usergroups } = useSWR(
-        courseStructure && org ? `${getAPIUrl()}usergroups/org/${org.id}` : null,
+        courseStructure && org ? `${getAPIUrl()}usergroups/org/${org.id}?org_id=${org.id}` : null,
         (url) => swrFetcher(url, access_token)
     )
     const [selectedUserGroup, setSelectedUserGroup] = React.useState(null) as any
 
 
     const handleLink = async () => {
-        const res = await linkResourcesToUserGroup(selectedUserGroup, courseStructure.course_uuid, access_token)
+        const res = await linkResourcesToUserGroup(selectedUserGroup, courseStructure.course_uuid, org.id, access_token)
         if (res.status === 200) {
             props.setUserGroupModal(false)
             toast.success(t('dashboard.courses.access.usergroups.toasts.link_success'))
-            mutate(`${getAPIUrl()}usergroups/resource/${courseStructure.course_uuid}`)
+            mutate(`${getAPIUrl()}usergroups/resource/${courseStructure.course_uuid}?org_id=${org.id}`)
         }
         else {
             toast.error(t('dashboard.courses.access.usergroups.toasts.link_error', { status: res.status, detail: res.data.detail }))

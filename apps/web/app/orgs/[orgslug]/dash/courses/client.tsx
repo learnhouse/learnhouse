@@ -1,8 +1,9 @@
 'use client'
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import CreateCourseModal from '@components/Objects/Modals/Course/Create/CreateCourse'
-import { BookCopy, Search, X, Trash2, CheckSquare, Square, ChevronLeft, ChevronRight } from 'lucide-react'
+import { BookCopy, Search, X, Trash2, ChevronLeft, ChevronRight, Upload } from 'lucide-react'
 import ScormCourseImport from '../../../../../ee/components/Modals/ScormCourseImport'
+import { ImportTypeSelector, LearnHouseCourseImport } from '@components/Objects/Modals/Course/Import'
 import CourseThumbnail, { removeCoursePrefix } from '@components/Objects/Thumbnails/CourseThumbnail'
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
 import NewCourseButton from '@components/Objects/StyledElements/Buttons/NewCourseButton'
@@ -20,6 +21,8 @@ import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
 import { PlanLevel } from '@services/plans/plans'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { deleteCourseFromBackend, cloneCourse } from '@services/courses/courses'
+import { exportCoursesBatch, downloadBlob, ExportStatus } from '@services/courses/transfer'
+import { exportToast } from '@components/Objects/StyledElements/Toast/ExportToast'
 import { swrFetcher } from '@services/utils/ts/requests'
 import { mutate } from 'swr'
 import useSWR from 'swr'
@@ -37,6 +40,7 @@ function CoursesHome(params: CourseProps) {
   const isCreatingCourse = searchParams.get('new') ? true : false
   const [newCourseModal, setNewCourseModal] = React.useState(isCreatingCourse)
   const [importCourseModal, setImportCourseModal] = React.useState(false)
+  const [importType, setImportType] = React.useState<'select' | 'scorm' | 'learnhouse'>('select')
   const orgslug = params.orgslug
   const isUserAdmin = useAdminStatus() as any
   const org = useOrg() as any
@@ -86,7 +90,6 @@ function CoursesHome(params: CourseProps) {
 
   // Selection state
   const [selectedCourses, setSelectedCourses] = useState<Set<string>>(new Set())
-  const [isSelectionMode, setIsSelectionMode] = useState(false)
 
   async function closeNewCourseModal() {
     setNewCourseModal(false)
@@ -95,7 +98,57 @@ function CoursesHome(params: CourseProps) {
 
   async function closeImportCourseModal() {
     setImportCourseModal(false)
+    setImportType('select')
     mutateCourses()
+  }
+
+  const handleImportTypeSelect = (type: 'scorm' | 'learnhouse') => {
+    setImportType(type)
+  }
+
+  const getImportModalContent = () => {
+    switch (importType) {
+      case 'scorm':
+        return (
+          <ScormCourseImport
+            orgId={Number(params.org_id)}
+            orgslug={orgslug}
+            closeModal={closeImportCourseModal}
+          />
+        )
+      case 'learnhouse':
+        return (
+          <LearnHouseCourseImport
+            orgId={Number(params.org_id)}
+            orgslug={orgslug}
+            closeModal={closeImportCourseModal}
+          />
+        )
+      default:
+        return <ImportTypeSelector onSelectType={handleImportTypeSelect} />
+    }
+  }
+
+  const getImportModalTitle = () => {
+    switch (importType) {
+      case 'scorm':
+        return t('dashboard.courses.import_scorm')
+      case 'learnhouse':
+        return t('dashboard.courses.import_learnhouse')
+      default:
+        return t('dashboard.courses.import_course')
+    }
+  }
+
+  const getImportModalDescription = () => {
+    switch (importType) {
+      case 'scorm':
+        return t('dashboard.courses.import_scorm_description')
+      case 'learnhouse':
+        return t('dashboard.courses.import_learnhouse_description')
+      default:
+        return t('dashboard.courses.import_select_type')
+    }
   }
 
   // Toggle course selection
@@ -107,9 +160,6 @@ function CoursesHome(params: CourseProps) {
       newSelection.add(courseUuid)
     }
     setSelectedCourses(newSelection)
-    if (newSelection.size === 0) {
-      setIsSelectionMode(false)
-    }
   }
 
   // Select all visible courses (on current page)
@@ -121,7 +171,6 @@ function CoursesHome(params: CourseProps) {
   // Clear selection
   const clearSelection = () => {
     setSelectedCourses(new Set())
-    setIsSelectionMode(false)
   }
 
   // Bulk delete courses
@@ -180,6 +229,28 @@ function CoursesHome(params: CourseProps) {
     mutateCourses()
   }
 
+  // Bulk export courses
+  const bulkExportCourses = async () => {
+    const count = selectedCourses.size
+    const toastId = exportToast.start('batch', undefined, count)
+
+    try {
+      const blob = await exportCoursesBatch(
+        Array.from(selectedCourses),
+        access_token,
+        (progress, status) => {
+          exportToast.update(toastId, status as ExportStatus, progress, undefined, count, 'batch')
+        }
+      )
+      const timestamp = new Date().toISOString().split('T')[0]
+      downloadBlob(blob, `learnhouse-courses-export-${timestamp}.zip`)
+      exportToast.complete(toastId, undefined, count, 'batch')
+    } catch (error: any) {
+      exportToast.error(toastId, error.message || t('courses.courses_exported_error'), undefined, count, 'batch')
+    }
+    clearSelection()
+  }
+
   // Pagination handlers
   const goToPage = (page: number) => {
     if (page >= 1 && page <= totalPages) {
@@ -234,17 +305,14 @@ function CoursesHome(params: CourseProps) {
               {isEnterprise ? (
                 <Modal
                   isDialogOpen={importCourseModal}
-                  onOpenChange={setImportCourseModal}
+                  onOpenChange={(open) => {
+                    setImportCourseModal(open)
+                    if (!open) setImportType('select')
+                  }}
                   minHeight="no-min"
-                  dialogTitle={t('dashboard.courses.import_course')}
-                  dialogDescription={t('dashboard.courses.import_scorm_description')}
-                  dialogContent={
-                    <ScormCourseImport
-                      orgId={Number(params.org_id)}
-                      orgslug={orgslug}
-                      closeModal={closeImportCourseModal}
-                    />
-                  }
+                  dialogTitle={getImportModalTitle()}
+                  dialogDescription={getImportModalDescription()}
+                  dialogContent={getImportModalContent()}
                   dialogTrigger={
                     <button className="rounded-lg bg-black hover:scale-105 transition-all duration-100 ease-linear antialiased p-2 px-5 my-auto font text-xs font-bold text-white nice-shadow flex space-x-2 items-center">
                       <Download className="w-4 h-4" />
@@ -309,77 +377,67 @@ function CoursesHome(params: CourseProps) {
             )}
           </div>
 
-          {/* Selection and Bulk Actions - Far Right */}
-          <AuthenticatedClientElement
-            checkMethod="roles"
-            action="update"
-            ressourceType="courses"
-            orgId={params.org_id}
-          >
-            <div className="flex items-center gap-2 ml-auto">
-              {!isSelectionMode ? (
+          {/* Bulk Actions - shown when items selected */}
+          {selectedCourses.size > 0 && (
+            <AuthenticatedClientElement
+              checkMethod="roles"
+              action="update"
+              ressourceType="courses"
+              orgId={params.org_id}
+            >
+              <div className="flex items-center gap-2 ml-auto">
+                <span className="text-sm font-medium text-gray-500 px-2">
+                  {t('courses.selected_count', { count: selectedCourses.size })}
+                </span>
                 <button
-                  onClick={() => setIsSelectionMode(true)}
+                  onClick={selectAllCourses}
                   className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 bg-white nice-shadow rounded-lg transition-colors"
                 >
-                  <CheckSquare className="w-4 h-4" />
-                  <span>{t('courses.select_courses')}</span>
+                  <span>{t('courses.select_all')}</span>
                 </button>
-              ) : (
-                <>
-                  <button
-                    onClick={selectAllCourses}
-                    className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 bg-white nice-shadow rounded-lg transition-colors"
-                  >
-                    <CheckSquare className="w-4 h-4" />
-                    <span>{t('courses.select_all')}</span>
-                  </button>
-                  <button
-                    onClick={clearSelection}
-                    className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 bg-white nice-shadow rounded-lg transition-colors"
-                  >
-                    <X className="w-4 h-4" />
-                    <span>{t('courses.clear_selection')}</span>
-                  </button>
-
-                  {/* Bulk actions - shown when items selected */}
-                  {selectedCourses.size > 0 && (
-                    <>
-                      <span className="text-sm font-medium text-gray-500 px-2">
-                        {t('courses.selected_count', { count: selectedCourses.size })}
-                      </span>
-                      <ConfirmationModal
-                        confirmationButtonText={t('courses.clone_selected')}
-                        confirmationMessage={t('courses.clone_selected_confirm', { count: selectedCourses.size })}
-                        dialogTitle={t('courses.clone_courses_title')}
-                        dialogTrigger={
-                          <button className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:text-gray-900 bg-white nice-shadow rounded-lg transition-colors">
-                            <Copy className="w-4 h-4" />
-                            <span>{t('courses.clone_selected')}</span>
-                          </button>
-                        }
-                        functionToExecute={bulkCloneCourses}
-                        status="info"
-                      />
-                      <ConfirmationModal
-                        confirmationButtonText={t('courses.delete_selected')}
-                        confirmationMessage={t('courses.delete_selected_confirm', { count: selectedCourses.size })}
-                        dialogTitle={t('courses.delete_courses_title')}
-                        dialogTrigger={
-                          <button className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:text-red-700 bg-white nice-shadow rounded-lg transition-colors">
-                            <Trash2 className="w-4 h-4" />
-                            <span>{t('courses.delete_selected')}</span>
-                          </button>
-                        }
-                        functionToExecute={bulkDeleteCourses}
-                        status="warning"
-                      />
-                    </>
-                  )}
-                </>
-              )}
-            </div>
-          </AuthenticatedClientElement>
+                <button
+                  onClick={clearSelection}
+                  className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 bg-white nice-shadow rounded-lg transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                  <span>{t('courses.clear_selection')}</span>
+                </button>
+                <ConfirmationModal
+                  confirmationButtonText={t('courses.clone_selected')}
+                  confirmationMessage={t('courses.clone_selected_confirm', { count: selectedCourses.size })}
+                  dialogTitle={t('courses.clone_courses_title')}
+                  dialogTrigger={
+                    <button className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:text-gray-900 bg-white nice-shadow rounded-lg transition-colors">
+                      <Copy className="w-4 h-4" />
+                      <span>{t('courses.clone_selected')}</span>
+                    </button>
+                  }
+                  functionToExecute={bulkCloneCourses}
+                  status="info"
+                />
+                <button
+                  onClick={bulkExportCourses}
+                  className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:text-gray-900 bg-white nice-shadow rounded-lg transition-colors"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>{t('courses.export_selected')}</span>
+                </button>
+                <ConfirmationModal
+                  confirmationButtonText={t('courses.delete_selected')}
+                  confirmationMessage={t('courses.delete_selected_confirm', { count: selectedCourses.size })}
+                  dialogTitle={t('courses.delete_courses_title')}
+                  dialogTrigger={
+                    <button className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:text-red-700 bg-white nice-shadow rounded-lg transition-colors">
+                      <Trash2 className="w-4 h-4" />
+                      <span>{t('courses.delete_selected')}</span>
+                    </button>
+                  }
+                  functionToExecute={bulkDeleteCourses}
+                  status="warning"
+                />
+              </div>
+            </AuthenticatedClientElement>
+          )}
         </div>
       )}
 
@@ -392,28 +450,15 @@ function CoursesHome(params: CourseProps) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {paginatedCourses.map((course: any) => (
-          <div key={course.course_uuid} className="relative">
-            {/* Selection Checkbox */}
-            {isSelectionMode && (
-              <button
-                onClick={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  toggleCourseSelection(course.course_uuid)
-                }}
-                className="absolute top-2 left-2 z-50 p-1.5 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-all shadow-md"
-              >
-                {selectedCourses.has(course.course_uuid) ? (
-                  <CheckSquare className="w-5 h-5 text-black" />
-                ) : (
-                  <Square className="w-5 h-5 text-gray-400" />
-                )}
-              </button>
-            )}
-            <div className={`${selectedCourses.has(course.course_uuid) ? 'ring-2 ring-black ring-offset-2 rounded-xl' : ''}`}>
-              <CourseThumbnail customLink={`/dash/courses/course/${removeCoursePrefix(course.course_uuid)}/general`} course={course} orgslug={orgslug} isDashboard={true} />
-            </div>
-          </div>
+          <CourseThumbnail
+            key={course.course_uuid}
+            customLink={`/dash/courses/course/${removeCoursePrefix(course.course_uuid)}/general`}
+            course={course}
+            orgslug={orgslug}
+            isDashboard={true}
+            isSelected={selectedCourses.has(course.course_uuid)}
+            onToggleSelect={toggleCourseSelection}
+          />
         ))}
         {filteredCourses.length === 0 && searchQuery && (
           <div className="col-span-full flex justify-center items-center py-8">

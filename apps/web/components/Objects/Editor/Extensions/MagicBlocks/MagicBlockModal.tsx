@@ -154,7 +154,7 @@ function MagicBlockModal({
   return createPortal(
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 flex items-center justify-center" style={{ pointerEvents: 'none', zIndex: 9999 }}>
+        <div className="fixed inset-0 flex items-center justify-center" style={{ pointerEvents: 'none', zIndex: 'var(--z-toast)' }}>
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}

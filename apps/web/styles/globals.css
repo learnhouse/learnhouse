@@ -230,22 +230,22 @@
     --z-sticky: 10;
     --z-sticky-header: 15;
     --z-interactive: 20;
-    --z-drag-overlay: 25;
-    --z-nav: 9999;
-    --z-nav-menu: 10000;
-    --z-dropdown: 110;
-    --z-popover: 115;
+    --z-drag-overlay: 30;
+    --z-nav: 50;
+    --z-nav-menu: 51;
+    --z-dropdown: 100;
+    --z-popover: 110;
     --z-overlay: 120;
-    --z-editor-toolbar: 150;
-    --z-editor-bubble: 155;
-    --z-tooltip: 160;
+    --z-editor-toolbar: 130;
+    --z-editor-bubble: 135;
+    --z-tooltip: 150;
     --z-modal-backdrop: 200;
     --z-modal: 210;
     --z-modal-content: 220;
-    --z-toast: 230;
-    --z-notification: 240;
-    --z-critical: 250;
-    --z-max: 999;
+    --z-toast: 300;
+    --z-notification: 310;
+    --z-critical: 400;
+    --z-max: 9999;
   }
   .dark {
     --background: 0 0% 3.9%;
@@ -794,4 +794,18 @@
   background: conic-gradient(from var(--gradient-angle) at 53.75% 50%, rgb(35, 40, 93) 4deg, rgba(20, 0, 52, 0.95) 59deg, rgba(164, 45, 238, 0.88) 281deg);
   animation: rotateGradientAngle 20s linear infinite;
   box-shadow: 0 2px 8px -2px rgba(164, 45, 238, 0.3);
+}
+
+/* Export progress shimmer animation */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 1.5s infinite;
 }
