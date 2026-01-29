@@ -7,6 +7,7 @@ import { unLinkResourcesToUserGroup } from '@services/usergroups/usergroups'
 import { swrFetcher } from '@services/utils/ts/requests'
 import { Globe, SquareUserRound, Users, X } from 'lucide-react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { useOrg } from '@components/Contexts/OrgContext'
 import React, { useEffect, useState, useRef, useCallback } from 'react'
 import toast from 'react-hot-toast'
 import useSWR, { mutate } from 'swr'
@@ -21,6 +22,7 @@ function EditCourseAccess(props: EditCourseAccessProps) {
     const { t } = useTranslation()
     const session = useLHSession() as any;
     const access_token = session?.data?.tokens?.access_token;
+    const org = useOrg() as any;
 
     // Use the new field sync hook
     const {
@@ -32,7 +34,7 @@ function EditCourseAccess(props: EditCourseAccessProps) {
     } = useCourseFieldSync('editCourseAccess');
 
     const { data: usergroups } = useSWR(
-        courseStructure?.course_uuid ? `${getAPIUrl()}usergroups/resource/${courseStructure.course_uuid}` : null,
+        courseStructure?.course_uuid && org?.id ? `${getAPIUrl()}usergroups/resource/${courseStructure.course_uuid}?org_id=${org.id}` : null,
         (url) => swrFetcher(url, access_token)
     );
 
@@ -151,13 +153,14 @@ function UserGroupsSection({ usergroups }: { usergroups: any[] }) {
     const [userGroupModal, setUserGroupModal] = useState(false);
     const session = useLHSession() as any;
     const access_token = session?.data?.tokens?.access_token;
+    const org = useOrg() as any;
 
     const removeUserGroupLink = async (usergroup_id: number) => {
         try {
-            const res = await unLinkResourcesToUserGroup(usergroup_id, course.courseStructure.course_uuid, access_token);
+            const res = await unLinkResourcesToUserGroup(usergroup_id, course.courseStructure.course_uuid, org.id, access_token);
             if (res.status === 200) {
                 toast.success(t('dashboard.courses.access.usergroups.toasts.unlink_success'));
-                mutate(`${getAPIUrl()}usergroups/resource/${course.courseStructure.course_uuid}`);
+                mutate(`${getAPIUrl()}usergroups/resource/${course.courseStructure.course_uuid}?org_id=${org.id}`);
             } else {
                 toast.error(t('dashboard.courses.access.usergroups.toasts.link_error', { status: res.status, detail: res.data.detail }));
             }

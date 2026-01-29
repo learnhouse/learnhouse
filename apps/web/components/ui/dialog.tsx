@@ -21,9 +21,10 @@ const DialogOverlay = React.forwardRef<
   <DialogPrimitive.Overlay
     ref={ref}
     className={cn(
-      "fixed inset-0 z-modal-backdrop bg-black/40 backdrop-blur-[2px] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+      "fixed inset-0 bg-black/40 backdrop-blur-[2px] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
       className
     )}
+    style={{ zIndex: 'var(--z-modal-backdrop)' }}
     {...props}
   />
 ))
@@ -34,7 +35,7 @@ const DialogContent = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
 >(({ className, children, ...props }, ref) => (
   <DialogPortal>
-    <div style={{ position: 'fixed', inset: 0, zIndex: 9999, pointerEvents: 'none' }}>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 'var(--z-modal)', pointerEvents: 'none' }}>
       <DialogOverlay style={{ pointerEvents: 'auto' }} />
       <DialogPrimitive.Content
         ref={ref}

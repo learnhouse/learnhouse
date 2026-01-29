@@ -39,16 +39,18 @@ function AddUserGroup(props: AddUserGroupProps) {
         initialValues: {
             name: '',
             description: '',
-            org_id: org.id
+            org_id: org?.id || ''
         },
+        enableReinitialize: true,
         validate: getValidate(t),
         onSubmit: async (values) => {
             const toastID = toast.loading(t('dashboard.users.usergroups.modals.create.toasts.creating'))
             setIsSubmitting(true)
-            const res = await createUserGroup(values, access_token)
+            const submitValues = { ...values, org_id: org?.id }
+            const res = await createUserGroup(submitValues, access_token)
             if (res.status == 200) {
                 setIsSubmitting(false)
-                mutate(`${getAPIUrl()}usergroups/org/${org.id}`)
+                mutate(`${getAPIUrl()}usergroups/org/${org.id}?org_id=${org.id}`)
                 props.setCreateUserGroupModal(false)
                 toast.success(t('dashboard.users.usergroups.modals.create.toasts.success'), {id:toastID})
             } else {
