@@ -607,6 +607,15 @@
     "min_price": "ন্যূনতম মূল্য:",
     "choose_price": "আপনার মূল্য বেছে নিন"
   },
+  "account": {
+    "title": "অ্যাকাউন্ট",
+    "general": "সাধারণ",
+    "profile": "প্রোফাইল",
+    "security": "নিরাপত্তা",
+    "my_courses": "আমার কোর্স",
+    "no_purchased_courses": "এখনও কোনো কোর্স কেনা হয়নি",
+    "purchased_courses_description": "আপনার কেনা বা সাবস্ক্রাইব করা কোর্সগুলো এখানে দেখা যাবে"
+  },
   "user": {
     "user_settings": "ব্যবহারকারী সেটি้ง",
     "settings": {

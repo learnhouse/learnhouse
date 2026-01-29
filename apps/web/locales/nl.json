@@ -607,6 +607,15 @@
     "min_price": "Minimale prijs:",
     "choose_price": "Kies je prijs"
   },
+  "account": {
+    "title": "Account",
+    "general": "Algemeen",
+    "profile": "Profiel",
+    "security": "Beveiliging",
+    "my_courses": "Mijn cursussen",
+    "no_purchased_courses": "Nog geen cursussen gekocht",
+    "purchased_courses_description": "Cursussen die je hebt gekocht of waarop je bent geabonneerd verschijnen hier"
+  },
   "user": {
     "user_settings": "Gebruikersinstellingen",
     "settings": {

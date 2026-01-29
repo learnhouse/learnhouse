@@ -607,6 +607,15 @@
     "min_price": "Giá tối thiểu:",
     "choose_price": "Chọn giá của bạn"
   },
+  "account": {
+    "title": "Tài khoản",
+    "general": "Chung",
+    "profile": "Hồ sơ",
+    "security": "Bảo mật",
+    "my_courses": "Khóa học của tôi",
+    "no_purchased_courses": "Chưa có khóa học nào được mua",
+    "purchased_courses_description": "Các khóa học bạn đã mua hoặc đăng ký sẽ xuất hiện ở đây"
+  },
   "user": {
     "user_settings": "Cài đặt người dùng",
     "settings": {

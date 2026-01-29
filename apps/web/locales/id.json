@@ -607,6 +607,15 @@
     "min_price": "Harga minimum:",
     "choose_price": "Pilih harga Anda"
   },
+  "account": {
+    "title": "Akun",
+    "general": "Umum",
+    "profile": "Profil",
+    "security": "Keamanan",
+    "my_courses": "Kursus Saya",
+    "no_purchased_courses": "Belum ada kursus yang dibeli",
+    "purchased_courses_description": "Kursus yang Anda beli atau langgani akan muncul di sini"
+  },
   "user": {
     "user_settings": "Pengaturan Pengguna",
     "settings": {

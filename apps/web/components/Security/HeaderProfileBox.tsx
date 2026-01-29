@@ -226,13 +226,13 @@ export const HeaderProfileBox = ({ primaryColor = '' }: { primaryColor?: string 
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuItem asChild>
-                  <Link href="/dash/user-account/settings/general" className="flex items-center space-x-2">
+                  <Link href="/account/general" className="flex items-center space-x-2">
                     <User size={16} weight="fill" />
                     <span>{t('user.user_settings')}</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/dash/user-account/owned" className="flex items-center space-x-2">
+                  <Link href="/account/my-courses" className="flex items-center space-x-2">
                     <Package size={16} weight="fill" />
                     <span>{t('courses.my_courses')}</span>
                   </Link>
