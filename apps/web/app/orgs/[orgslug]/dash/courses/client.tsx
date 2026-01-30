@@ -1,6 +1,8 @@
 'use client'
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import CreateCourseModal from '@components/Objects/Modals/Course/Create/CreateCourse'
+import CourseCreationTypeSelector from '@components/Objects/Modals/Course/Create/CourseCreationTypeSelector'
+import AICourseCreationModal from '@components/Objects/Modals/Course/Create/AICourse/AICourseCreationModal'
 import { BookCopy, Search, X, Trash2, ChevronLeft, ChevronRight, Upload } from 'lucide-react'
 import ScormCourseImport from '../../../../../ee/components/Modals/ScormCourseImport'
 import { ImportTypeSelector, LearnHouseCourseImport } from '@components/Objects/Modals/Course/Import'
@@ -39,6 +41,8 @@ function CoursesHome(params: CourseProps) {
   const [newCourseModal, setNewCourseModal] = React.useState(isCreatingCourse)
   const [importCourseModal, setImportCourseModal] = React.useState(false)
   const [importType, setImportType] = React.useState<'select' | 'scorm' | 'learnhouse'>('select')
+  const [creationType, setCreationType] = React.useState<'select' | 'scratch' | 'ai'>('select')
+  const [aiCourseModalOpen, setAiCourseModalOpen] = React.useState(false)
   const orgslug = params.orgslug
   const isUserAdmin = useAdminStatus() as any
   const org = useOrg() as any
@@ -90,7 +94,55 @@ function CoursesHome(params: CourseProps) {
 
   async function closeNewCourseModal() {
     setNewCourseModal(false)
+    setCreationType('select')
     mutateCourses()
+  }
+
+  const handleCreationTypeSelect = (type: 'scratch' | 'ai') => {
+    if (type === 'ai') {
+      setNewCourseModal(false)
+      setAiCourseModalOpen(true)
+    } else {
+      setCreationType('scratch')
+    }
+  }
+
+  const closeAICourseModal = () => {
+    setAiCourseModalOpen(false)
+    setCreationType('select')
+    mutateCourses()
+  }
+
+  const getNewCourseModalContent = () => {
+    switch (creationType) {
+      case 'scratch':
+        return (
+          <CreateCourseModal
+            closeModal={closeNewCourseModal}
+            orgslug={orgslug}
+          />
+        )
+      default:
+        return <CourseCreationTypeSelector onSelectType={handleCreationTypeSelect} currentPlan={currentPlan} />
+    }
+  }
+
+  const getNewCourseModalTitle = () => {
+    switch (creationType) {
+      case 'scratch':
+        return t('dashboard.courses.create_course')
+      default:
+        return t('courses.create.choose_type')
+    }
+  }
+
+  const getNewCourseModalDescription = () => {
+    switch (creationType) {
+      case 'scratch':
+        return t('dashboard.courses.create_new_course')
+      default:
+        return t('courses.create.choose_type_description')
+    }
   }
 
   async function closeImportCourseModal() {
@@ -318,22 +370,27 @@ function CoursesHome(params: CourseProps) {
               />
               <Modal
                 isDialogOpen={newCourseModal}
-                onOpenChange={setNewCourseModal}
-                minHeight="md"
-                minWidth="lg"
-                dialogContent={
-                  <CreateCourseModal
-                    closeModal={closeNewCourseModal}
-                    orgslug={orgslug}
-                  />
-                }
-                dialogTitle={t('dashboard.courses.create_course')}
-                dialogDescription={t('dashboard.courses.create_new_course')}
+                onOpenChange={(open) => {
+                  setNewCourseModal(open)
+                  if (!open) setCreationType('select')
+                }}
+                minHeight={creationType === 'select' ? 'no-min' : 'md'}
+                minWidth={creationType === 'select' ? 'md' : 'lg'}
+                dialogContent={getNewCourseModalContent()}
+                dialogTitle={getNewCourseModalTitle()}
+                dialogDescription={getNewCourseModalDescription()}
                 dialogTrigger={
                   <button>
                     <NewCourseButton />
                   </button>
                 }
+              />
+              <AICourseCreationModal
+                isOpen={aiCourseModalOpen}
+                onClose={closeAICourseModal}
+                orgId={Number(params.org_id)}
+                orgslug={orgslug}
+                accessToken={access_token}
               />
             </div>
           </AuthenticatedClientElement>

@@ -163,6 +163,10 @@ async def update_activity(
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
+    import logging
+    import json
+    logger = logging.getLogger(__name__)
+
     statement = select(Activity).where(Activity.activity_uuid == activity_uuid)
     activity = db_session.exec(statement).first()
 
@@ -184,14 +188,49 @@ async def update_activity(
 
     await courses_rbac_check_for_activities(request, course.course_uuid, current_user, "update", db_session)
 
-    # Update only the fields that were passed in
-    for var, value in vars(activity_object).items():
-        if value is not None:
-            setattr(activity, var, value)
+    # Update only the fields that were explicitly set (not default values)
+    # Using model_dump(exclude_unset=True) to get only the fields that were passed in
+    update_data = activity_object.model_dump(exclude_unset=True)
+
+    # Debug logging for content updates
+    if 'content' in update_data:
+        content = update_data['content']
+        logger.info(f"[Activity Update] Activity UUID: {activity_uuid}")
+        logger.info(f"[Activity Update] Content type: {type(content)}")
+        if isinstance(content, dict):
+            logger.info(f"[Activity Update] Content has 'type' key: {'type' in content}")
+            logger.info(f"[Activity Update] Content 'type' value: {content.get('type')}")
+            try:
+                # Test serialization with ensure_ascii=False to preserve Unicode
+                content_json = json.dumps(content, ensure_ascii=False)
+                logger.info(f"[Activity Update] Content JSON size: {len(content_json)} bytes")
+                logger.info(f"[Activity Update] Content JSON valid: {content_json.startswith('{') and content_json.endswith('}')}")
+                # Try to parse it back to verify round-trip
+                json.loads(content_json)
+                logger.info(f"[Activity Update] Content JSON round-trip: SUCCESS")
+            except Exception as e:
+                logger.error(f"[Activity Update] Content JSON serialization error: {e}")
+        elif isinstance(content, str):
+            logger.warning(f"[Activity Update] Content is STRING not dict! Length: {len(content)}")
+            logger.warning(f"[Activity Update] Content preview: {content[:200]}")
+
+    for field, value in update_data.items():
+        setattr(activity, field, value)
+
+    # Mark content as modified if it was updated (important for JSON fields)
+    if 'content' in update_data:
+        from sqlalchemy.orm.attributes import flag_modified
+        flag_modified(activity, "content")
 
     db_session.add(activity)
     db_session.commit()
     db_session.refresh(activity)
+
+    # Verify the save worked
+    if 'content' in update_data:
+        logger.info(f"[Activity Update] Post-save content type: {type(activity.content)}")
+        if isinstance(activity.content, dict):
+            logger.info(f"[Activity Update] Post-save content 'type': {activity.content.get('type')}")
 
     activity = ActivityRead.model_validate(activity)
 

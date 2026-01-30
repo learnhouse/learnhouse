@@ -11,7 +11,6 @@
     "lint:fix": "eslint --fix . || true"
   },
   "dependencies": {
-    "@sentry/nextjs": "^9.4.0",
     "@emoji-mart/data": "^1.2.1",
     "@emoji-mart/react": "^1.1.1",
     "@hello-pangea/dnd": "^18.0.1",
@@ -36,6 +35,7 @@
     "@radix-ui/react-toggle": "^1.1.10",
     "@radix-ui/react-toggle-group": "^1.1.11",
     "@radix-ui/react-tooltip": "^1.2.8",
+    "@sentry/nextjs": "^9.4.0",
     "@stitches/react": "^1.2.8",
     "@tanstack/react-table": "^8.21.3",
     "@tiptap/core": "^3.10.1",
@@ -89,8 +89,11 @@
     "react-hot-toast": "^2.6.0",
     "react-i18next": "^16.5.1",
     "react-katex": "^3.1.0",
+    "react-markdown": "^10.1.0",
     "react-spinners": "^0.17.0",
     "react-youtube": "^10.1.0",
+    "rehype-highlight": "^7.0.2",
+    "remark-gfm": "^4.0.1",
     "require-in-the-middle": "^8.0.1",
     "screenfull": "^6.0.2",
     "sharp": "^0.34.4",
