@@ -1260,7 +1260,7 @@ async def clone_course(
                         new_activity.content = ast.literal_eval(content_str)
                         db_session.add(new_activity)
                         db_session.commit()
-                    except:
+                    except Exception:
                         pass  # Keep original content if parsing fails
 
     # Increase feature usage for the new course

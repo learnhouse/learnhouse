@@ -30,6 +30,7 @@ type Course = {
   org_id: string | number
   update_date: string
   public?: boolean
+  published?: boolean
   authors?: Array<{
     user: {
       id: string
