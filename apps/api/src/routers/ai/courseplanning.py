@@ -1,12 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.responses import StreamingResponse
-from sqlmodel import Session, select
 import json
 import logging
 from datetime import datetime
 from uuid import uuid4
 
-logger = logging.getLogger(__name__)
+from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import StreamingResponse
+from sqlmodel import Session, select
 
 from src.db.organizations import Organization
 from src.db.courses.courses import Course
@@ -45,6 +44,7 @@ from src.services.ai.schemas.courseplanning import (
     CoursePlanningMessage,
 )
 
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -55,7 +55,7 @@ async def event_generator(generator, session_uuid: str):
         async for chunk in generator:
             yield f"data: {json.dumps({'type': 'chunk', 'content': chunk})}\n\n"
         yield f"data: {json.dumps({'type': 'done', 'session_uuid': session_uuid})}\n\n"
-    except Exception as e:
+    except Exception:
         logger.exception("Error in event_generator for session %s", session_uuid)
         yield f"data: {json.dumps({'type': 'error', 'message': 'An internal error occurred while generating the stream.'})}\n\n"
 
@@ -71,7 +71,7 @@ async def event_generator_with_save(generator, session_uuid: str, activity_uuid:
         # Content is saved via the dedicated save endpoint called from frontend
         logger.info(f"[AI Content] Streaming complete for activity {activity_uuid}, content will be saved via explicit API call")
         yield f"data: {json.dumps({'type': 'done', 'session_uuid': session_uuid})}\n\n"
-    except Exception as e:
+    except Exception:
         logger.exception("Error in event_generator_with_save for activity %s", activity_uuid)
         yield f"data: {json.dumps({'type': 'error', 'message': 'An internal error occurred while generating activity content.'})}\n\n"
 

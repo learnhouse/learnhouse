@@ -1,10 +1,10 @@
-from fastapi import APIRouter, Depends, Request
-from fastapi.responses import StreamingResponse
-from sqlmodel import Session
 import json
 import logging
 
-logger = logging.getLogger(__name__)
+from fastapi import APIRouter, Depends, Request
+from fastapi.responses import StreamingResponse
+from sqlmodel import Session
+
 from src.services.ai.ai import (
     ai_send_activity_chat_message,
     ai_start_activity_chat_session,
@@ -21,6 +21,7 @@ from src.core.events.database import get_db_session
 from src.db.users import PublicUser
 from src.security.auth import get_current_user
 
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -89,7 +90,7 @@ async def activity_chat_event_generator(
         if follow_ups:
             yield f"data: {json.dumps({'type': 'follow_ups', 'follow_up_suggestions': follow_ups})}\n\n"
 
-    except Exception as e:
+    except Exception:
         logger.exception("Error in activity_chat_event_generator")
         yield f"data: {json.dumps({'type': 'error', 'message': 'An internal error occurred while processing the AI chat request.'})}\n\n"
 
