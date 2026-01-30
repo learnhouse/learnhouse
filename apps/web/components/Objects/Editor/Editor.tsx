@@ -112,6 +112,10 @@ function Editor(props: Editor) {
     editable: true,
     extensions: [
       StarterKit.configure({
+        // Disable codeBlock since we use CodeBlockLowlight instead
+        codeBlock: false,
+        // Disable link since we use custom getLinkExtension() instead
+        link: false,
         bulletList: {
           HTMLAttributes: {
             class: 'bullet-list',
