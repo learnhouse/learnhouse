@@ -26,7 +26,7 @@ SECURITY MEASURES IMPLEMENTED:
 
 from typing import Literal, Union
 from fastapi import HTTPException, Request, status
-from sqlmodel import Session, select, and_, or_
+from sqlmodel import Session, select
 from src.db.users import AnonymousUser, PublicUser, APITokenUser
 from src.db.communities.communities import Community
 from src.db.communities.discussions import Discussion

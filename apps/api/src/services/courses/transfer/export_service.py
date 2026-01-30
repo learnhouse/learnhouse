@@ -25,7 +25,7 @@ from src.db.users import PublicUser, AnonymousUser, APITokenUser
 from src.security.courses_security import courses_rbac_check
 
 from .models import ExportManifest, ExportCourseInfo
-from .storage_utils import read_file_content, list_directory, walk_directory, file_exists
+from .storage_utils import read_file_content, list_directory, walk_directory
 
 
 async def export_course(

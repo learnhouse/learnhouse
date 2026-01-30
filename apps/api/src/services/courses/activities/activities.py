@@ -207,7 +207,7 @@ async def update_activity(
                 logger.info(f"[Activity Update] Content JSON valid: {content_json.startswith('{') and content_json.endswith('}')}")
                 # Try to parse it back to verify round-trip
                 json.loads(content_json)
-                logger.info(f"[Activity Update] Content JSON round-trip: SUCCESS")
+                logger.info("[Activity Update] Content JSON round-trip: SUCCESS")
             except Exception as e:
                 logger.error(f"[Activity Update] Content JSON serialization error: {e}")
         elif isinstance(content, str):

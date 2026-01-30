@@ -1,4 +1,24 @@
-import { getUriWithOrg } from '@services/config/config'
+import { getUriWithOrg, getAPIUrl } from '@services/config/config'
+
+/**
+ * Validates that a URL is a safe API URL by checking it starts with the configured API base URL.
+ * This prevents SSRF attacks by ensuring requests only go to the expected API server.
+ */
+function validateApiUrl(url: string): void {
+  const apiBase = getAPIUrl();
+  if (!url.startsWith(apiBase)) {
+    throw new Error(`Invalid API URL: URL must start with ${apiBase}`);
+  }
+}
+
+/**
+ * A secure fetch wrapper that validates URLs before making requests.
+ * Use this for all API calls to prevent SSRF vulnerabilities.
+ */
+export async function secureFetch(url: string, options: RequestInit): Promise<Response> {
+  validateApiUrl(url);
+  return fetch(url, options);
+}
 
 export const RequestBody = (method: string, data: any, next: any) => {
   let HeadersConfig = new Headers({ 'Content-Type': 'application/json' })
