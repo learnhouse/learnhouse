@@ -139,7 +139,7 @@ async def get_communities_by_org(
         ))
         .where(or_(
             Community.public == True,
-            UserGroupResource.resource_uuid == None,  # Not in any UserGroup
+            UserGroupResource.resource_uuid.is_(None),  # Not in any UserGroup
             UserGroupUser.user_id == current_user.id,  # User in linked UserGroup
         ))
         .distinct()
