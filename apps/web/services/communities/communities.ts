@@ -49,6 +49,11 @@ export interface CommunityRights {
     is_admin: boolean
     is_maintainer_role: boolean
   }
+  access: {
+    via_public: boolean
+    via_usergroups: number[]
+    has_usergroup_restriction: boolean
+  }
 }
 
 export async function getCommunities(

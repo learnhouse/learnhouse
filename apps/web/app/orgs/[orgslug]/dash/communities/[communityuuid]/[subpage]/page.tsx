@@ -1,7 +1,7 @@
 'use client'
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import { getUriWithOrg } from '@services/config/config'
-import { TextIcon, LucideIcon, Image as ImageIcon, Link2, Shield, MessagesSquare } from 'lucide-react'
+import { TextIcon, LucideIcon, Image as ImageIcon, Link2, Shield, MessagesSquare, Users } from 'lucide-react'
 import Link from 'next/link'
 import React, { useEffect, use } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -12,6 +12,7 @@ import CommunityEditGeneral from '@components/Dashboard/Pages/Community/Communit
 import CommunityEditThumbnail from '@components/Dashboard/Pages/Community/CommunityEditThumbnail'
 import CommunityEditCourse from '@components/Dashboard/Pages/Community/CommunityEditCourse'
 import CommunityEditModeration from '@components/Dashboard/Pages/Community/CommunityEditModeration'
+import CommunityEditAccess from '@components/Dashboard/Pages/Community/CommunityEditAccess'
 
 export type CommunityParams = {
   subpage: string
@@ -28,6 +29,7 @@ interface TabItem {
 const SETTING_TABS: TabItem[] = [
   { id: 'general', labelKey: 'dashboard.courses.communities.settings.tabs.general', icon: TextIcon },
   { id: 'thumbnail', labelKey: 'dashboard.courses.communities.settings.tabs.thumbnail', icon: ImageIcon },
+  { id: 'access', labelKey: 'dashboard.courses.communities.settings.tabs.access', icon: Users },
   { id: 'course', labelKey: 'dashboard.courses.communities.settings.tabs.course', icon: Link2 },
   { id: 'moderation', labelKey: 'dashboard.courses.communities.settings.tabs.moderation', icon: Shield },
 ]
@@ -77,6 +79,9 @@ function CommunitySettingsContent({ params }: { params: CommunityParams }) {
     } else if (params.subpage === 'thumbnail') {
       setH1Label(t('dashboard.courses.communities.settings.thumbnail.title'))
       setH2Label(t('dashboard.courses.communities.settings.thumbnail.subtitle'))
+    } else if (params.subpage === 'access') {
+      setH1Label(t('dashboard.courses.communities.settings.access.title'))
+      setH2Label(t('dashboard.courses.communities.settings.access.subtitle'))
     } else if (params.subpage === 'course') {
       setH1Label(t('dashboard.courses.communities.settings.course.title'))
       setH2Label(t('dashboard.courses.communities.settings.course.subtitle'))
@@ -130,6 +135,7 @@ function CommunitySettingsContent({ params }: { params: CommunityParams }) {
       >
         {params.subpage === 'general' && <CommunityEditGeneral />}
         {params.subpage === 'thumbnail' && <CommunityEditThumbnail />}
+        {params.subpage === 'access' && <CommunityEditAccess />}
         {params.subpage === 'course' && <CommunityEditCourse />}
         {params.subpage === 'moderation' && <CommunityEditModeration />}
       </motion.div>

@@ -2472,6 +2472,7 @@
           "tabs": {
             "general": "General",
             "thumbnail": "Thumbnail",
+            "access": "Access",
             "course": "Linked Course",
             "moderation": "Moderation"
           },
@@ -2482,6 +2483,10 @@
           "thumbnail": {
             "title": "Thumbnail",
             "subtitle": "Update the community cover image"
+          },
+          "access": {
+            "title": "Access Settings",
+            "subtitle": "Control who can access this community"
           },
           "course": {
             "title": "Linked Course",
@@ -2569,6 +2574,60 @@
             "saving": "Saving moderation settings...",
             "save_success": "Moderation settings saved",
             "save_error": "Failed to save moderation settings"
+          }
+        },
+        "access": {
+          "title": "Access Settings",
+          "subtitle": "Choose if you want your community to be publicly available or only accessible to specific user groups",
+          "public": {
+            "title": "Public",
+            "description": "The community is publicly available. Anyone can view and participate in discussions.",
+            "active": "Active",
+            "confirmation_title": "Change to Public?",
+            "confirmation_message": "Are you sure you want this community to be publicly available?",
+            "confirmation_button": "Change to Public"
+          },
+          "restricted": {
+            "title": "Restricted",
+            "description": "The community is only accessible to members of selected User Groups. Link User Groups to grant access.",
+            "active": "Active",
+            "confirmation_title": "Change to Restricted?",
+            "confirmation_message": "Are you sure you want this community to be restricted? Only members of linked User Groups will have access.",
+            "confirmation_button": "Change to Restricted"
+          },
+          "usergroups": {
+            "title": "User Groups",
+            "subtitle": "Grant access to this community by linking it to User Groups. Users in these groups will be able to view and participate.",
+            "table": {
+              "name": "Name",
+              "actions": "Actions"
+            },
+            "actions": {
+              "delete_link": "Remove",
+              "link_to_usergroup": "Link to User Group"
+            },
+            "modals": {
+              "link_title": "Link Community to User Group",
+              "link_description": "Choose a User Group to link this community to. Users from this User Group will have access.",
+              "unlink_title": "Remove User Group Access?",
+              "unlink_message": "Users from this User Group will no longer have access to this community.",
+              "unlink_button": "Remove Access",
+              "warning": "Users not in linked User Groups will lose access to this community",
+              "usergroup_name": "User Group Name",
+              "no_usergroups": "No User Groups available",
+              "create_usergroup": "Create a User Group",
+              "link_button": "Link"
+            },
+            "toasts": {
+              "link_success": "Successfully linked User Group",
+              "link_error": "Error {{status}}: {{detail}}",
+              "unlink_success": "Successfully removed User Group access",
+              "unlink_error": "An error occurred while removing User Group access"
+            }
+          },
+          "toasts": {
+            "update_success": "Access settings updated successfully",
+            "update_error": "Failed to update access settings"
           }
         },
         "modals": {
