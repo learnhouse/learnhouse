@@ -1,10 +1,10 @@
 'use server';
 import { getAPIUrl } from '@services/config/config';
-import { RequestBodyWithAuthHeader, errorHandling } from '@services/utils/ts/requests';
+import { RequestBodyWithAuthHeader, errorHandling, secureFetch } from '@services/utils/ts/requests';
 
 export async function getPaymentConfigs(orgId: number, access_token: string) {
-  const result = await fetch(
-    `${getAPIUrl()}payments/${orgId}/config`,
+  const result = await secureFetch(
+    `${getAPIUrl()}payments/${encodeURIComponent(String(orgId))}/config`,
     RequestBodyWithAuthHeader('GET', null, null, access_token)
   );
   const res = await errorHandling(result);
@@ -12,8 +12,8 @@ export async function getPaymentConfigs(orgId: number, access_token: string) {
 }
 
 export async function checkPaidAccess(courseId: number, orgId: number, access_token: string) {
-  const result = await fetch(
-    `${getAPIUrl()}payments/${orgId}/courses/${courseId}/access`,
+  const result = await secureFetch(
+    `${getAPIUrl()}payments/${encodeURIComponent(String(orgId))}/courses/${encodeURIComponent(String(courseId))}/access`,
     RequestBodyWithAuthHeader('GET', null, null, access_token)
   );
   const res = await errorHandling(result);
@@ -21,8 +21,8 @@ export async function checkPaidAccess(courseId: number, orgId: number, access_to
 }
 
 export async function initializePaymentConfig(orgId: number, data: any, provider: string, access_token: string) {
-  const result = await fetch(
-    `${getAPIUrl()}payments/${orgId}/config?provider=${provider}`,
+  const result = await secureFetch(
+    `${getAPIUrl()}payments/${encodeURIComponent(String(orgId))}/config?provider=${encodeURIComponent(provider)}`,
     RequestBodyWithAuthHeader('POST', data, null, access_token)
   );
   const res = await errorHandling(result);
@@ -30,8 +30,8 @@ export async function initializePaymentConfig(orgId: number, data: any, provider
 }
 
 export async function updatePaymentConfig(orgId: number, id: string, data: any, access_token: string) {
-  const result = await fetch(
-    `${getAPIUrl()}payments/${orgId}/config?id=${id}`,
+  const result = await secureFetch(
+    `${getAPIUrl()}payments/${encodeURIComponent(String(orgId))}/config?id=${encodeURIComponent(id)}`,
     RequestBodyWithAuthHeader('PUT', data, null, access_token)
   );
   const res = await errorHandling(result);
@@ -39,8 +39,8 @@ export async function updatePaymentConfig(orgId: number, id: string, data: any, 
 }
 
 export async function updateStripeAccountID(orgId: number, data: any, access_token: string) {
-  const result = await fetch(
-    `${getAPIUrl()}payments/${orgId}/stripe/account?stripe_account_id=${data.stripe_account_id}`,
+  const result = await secureFetch(
+    `${getAPIUrl()}payments/${encodeURIComponent(String(orgId))}/stripe/account?stripe_account_id=${encodeURIComponent(data.stripe_account_id)}`,
     RequestBodyWithAuthHeader('PUT', data, null, access_token)
   );
   const res = await errorHandling(result);
@@ -48,8 +48,8 @@ export async function updateStripeAccountID(orgId: number, data: any, access_tok
 }
 
 export async function getStripeOnboardingLink(orgId: number, access_token: string, redirect_uri: string) {
-  const result = await fetch(
-    `${getAPIUrl()}payments/${orgId}/stripe/connect/link?redirect_uri=${redirect_uri}`,
+  const result = await secureFetch(
+    `${getAPIUrl()}payments/${encodeURIComponent(String(orgId))}/stripe/connect/link?redirect_uri=${encodeURIComponent(redirect_uri)}`,
     RequestBodyWithAuthHeader('POST', null, null, access_token)
   );
   const res = await errorHandling(result);
@@ -57,8 +57,8 @@ export async function getStripeOnboardingLink(orgId: number, access_token: strin
 }
 
 export async function verifyStripeConnection(orgId: number, code: string, access_token: string) {
-  const result = await fetch(
-    `${getAPIUrl()}payments/stripe/oauth/callback?code=${code}&org_id=${orgId}`,
+  const result = await secureFetch(
+    `${getAPIUrl()}payments/stripe/oauth/callback?code=${encodeURIComponent(code)}&org_id=${encodeURIComponent(String(orgId))}`,
     RequestBodyWithAuthHeader('GET', null, null, access_token)
   );
   const res = await errorHandling(result);
@@ -66,8 +66,8 @@ export async function verifyStripeConnection(orgId: number, code: string, access
 }
 
 export async function deletePaymentConfig(orgId: number, id: string, access_token: string) {
-  const result = await fetch(
-    `${getAPIUrl()}payments/${orgId}/config?id=${id}`,
+  const result = await secureFetch(
+    `${getAPIUrl()}payments/${encodeURIComponent(String(orgId))}/config?id=${encodeURIComponent(id)}`,
     RequestBodyWithAuthHeader('DELETE', null, null, access_token)
   );
   const res = await errorHandling(result);
@@ -75,8 +75,8 @@ export async function deletePaymentConfig(orgId: number, id: string, access_toke
 }
 
 export async function getOrgCustomers(orgId: number, access_token: string) {
-  const result = await fetch(
-    `${getAPIUrl()}payments/${orgId}/customers`,
+  const result = await secureFetch(
+    `${getAPIUrl()}payments/${encodeURIComponent(String(orgId))}/customers`,
     RequestBodyWithAuthHeader('GET', null, null, access_token)
   );
   const res = await errorHandling(result);
@@ -84,8 +84,8 @@ export async function getOrgCustomers(orgId: number, access_token: string) {
 }
 
 export async function getOwnedCourses(orgId: number, access_token: string) {
-  const result = await fetch(
-    `${getAPIUrl()}payments/${orgId}/courses/owned`,
+  const result = await secureFetch(
+    `${getAPIUrl()}payments/${encodeURIComponent(String(orgId))}/courses/owned`,
     RequestBodyWithAuthHeader('GET', null, null, access_token)
   );
   const res = await errorHandling(result);

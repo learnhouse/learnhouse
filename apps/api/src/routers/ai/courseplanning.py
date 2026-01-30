@@ -2,8 +2,11 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from sqlmodel import Session, select
 import json
+import logging
 from datetime import datetime
 from uuid import uuid4
+
+logger = logging.getLogger(__name__)
 
 from src.db.organizations import Organization
 from src.db.courses.courses import Course
@@ -53,16 +56,14 @@ async def event_generator(generator, session_uuid: str):
             yield f"data: {json.dumps({'type': 'chunk', 'content': chunk})}\n\n"
         yield f"data: {json.dumps({'type': 'done', 'session_uuid': session_uuid})}\n\n"
     except Exception as e:
-        yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+        logger.exception("Error in event_generator for session %s", session_uuid)
+        yield f"data: {json.dumps({'type': 'error', 'message': 'An internal error occurred while generating the stream.'})}\n\n"
 
 
 async def event_generator_with_save(generator, session_uuid: str, activity_uuid: str):
     """Convert async generator to SSE format.
     Note: Content saving is handled by the dedicated /save-activity-content endpoint
     called from the frontend after parsing the stream."""
-    import logging
-    logger = logging.getLogger(__name__)
-
     try:
         async for chunk in generator:
             yield f"data: {json.dumps({'type': 'chunk', 'content': chunk})}\n\n"
@@ -71,7 +72,8 @@ async def event_generator_with_save(generator, session_uuid: str, activity_uuid:
         logger.info(f"[AI Content] Streaming complete for activity {activity_uuid}, content will be saved via explicit API call")
         yield f"data: {json.dumps({'type': 'done', 'session_uuid': session_uuid})}\n\n"
     except Exception as e:
-        yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+        logger.exception("Error in event_generator_with_save for activity %s", activity_uuid)
+        yield f"data: {json.dumps({'type': 'error', 'message': 'An internal error occurred while generating activity content.'})}\n\n"
 
 
 def get_org_ai_model(org_id: int, db_session: Session) -> str:
@@ -520,7 +522,7 @@ async def save_activity_content(
     activity_uuid = save_request.activity_uuid
     content = save_request.content
 
-    logger.info(f"[Save Activity Content] === START ===")
+    logger.info("[Save Activity Content] === START ===")
     logger.info(f"[Save Activity Content] Activity UUID: {activity_uuid}")
     logger.info(f"[Save Activity Content] Content type: {type(content)}")
     if isinstance(content, dict):
@@ -560,7 +562,7 @@ async def save_activity_content(
     # Direct update using SQLAlchemy ORM
     try:
         # Update activity directly - ensure fresh reference
-        logger.info(f"[Save Activity Content] Updating activity.content...")
+        logger.info("[Save Activity Content] Updating activity.content...")
 
         # Set content directly on the model
         activity.content = content
@@ -574,7 +576,7 @@ async def save_activity_content(
         db_session.add(activity)
         db_session.commit()
 
-        logger.info(f"[Save Activity Content] Commit completed")
+        logger.info("[Save Activity Content] Commit completed")
 
         # Verify by re-fetching with a fresh query
         db_session.expire_all()  # Clear any cached data
@@ -586,13 +588,13 @@ async def save_activity_content(
             content_size = len(json.dumps(verified_activity.content)) if verified_activity.content else 0
             logger.info(f"[Save Activity Content] Verified from DB - content keys: {content_keys}, size: {content_size} bytes")
         else:
-            logger.warning(f"[Save Activity Content] Verification failed - content is empty!")
+            logger.warning("[Save Activity Content] Verification failed - content is empty!")
             logger.warning(f"[Save Activity Content] Verified activity content: {verified_activity.content if verified_activity else 'None'}")
 
-        logger.info(f"[Save Activity Content] === SUCCESS ===")
+        logger.info("[Save Activity Content] === SUCCESS ===")
         return {"success": True, "activity_uuid": activity_uuid}
     except Exception as e:
-        logger.error(f"[Save Activity Content] === FAILED ===")
+        logger.error("[Save Activity Content] === FAILED ===")
         logger.error(f"[Save Activity Content] Error: {e}")
         import traceback
         logger.error(f"[Save Activity Content] Traceback: {traceback.format_exc()}")

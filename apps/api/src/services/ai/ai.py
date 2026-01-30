@@ -1,4 +1,4 @@
-from typing import AsyncGenerator, Tuple, Dict, Any
+from typing import Tuple, Dict, Any
 from fastapi import Depends, HTTPException, Request
 from sqlmodel import Session, select
 from src.db.organization_config import OrganizationConfig
@@ -14,10 +14,8 @@ from src.db.courses.activities import Activity, ActivityRead
 from src.security.auth import get_current_user
 from src.services.ai.base import (
     ask_ai,
-    ask_ai_stream,
     get_chat_session_history,
     save_message_to_history,
-    generate_follow_up_suggestions,
 )
 
 from src.services.ai.schemas.ai import (
