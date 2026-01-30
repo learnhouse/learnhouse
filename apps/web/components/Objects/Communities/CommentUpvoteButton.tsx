@@ -2,6 +2,7 @@
 import React, { useState, useCallback } from 'react'
 import { ChevronUp } from 'lucide-react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { useOrgMembership } from '@components/Contexts/OrgContext'
 import { upvoteComment, removeCommentUpvote } from '@services/communities/discussions'
 import { cn } from '@/lib/utils'
 
@@ -19,15 +20,17 @@ export function CommentUpvoteButton({
   onVoteChange,
 }: CommentUpvoteButtonProps) {
   const session = useLHSession() as any
+  const { isUserPartOfTheOrg } = useOrgMembership()
   const [voteCount, setVoteCount] = useState(initialVoteCount)
   const [hasVoted, setHasVoted] = useState(initialHasVoted)
   const [isLoading, setIsLoading] = useState(false)
 
   const isAuthenticated = session?.status === 'authenticated'
+  const canVote = isAuthenticated && isUserPartOfTheOrg
   const accessToken = session?.data?.tokens?.access_token
 
   const handleVote = useCallback(async () => {
-    if (!isAuthenticated || isLoading) return
+    if (!canVote || isLoading) return
 
     setIsLoading(true)
 
@@ -53,21 +56,21 @@ export function CommentUpvoteButton({
     } finally {
       setIsLoading(false)
     }
-  }, [hasVoted, voteCount, isAuthenticated, isLoading, commentUuid, accessToken, onVoteChange])
+  }, [hasVoted, voteCount, canVote, isLoading, commentUuid, accessToken, onVoteChange])
 
   return (
     <button
       onClick={handleVote}
-      disabled={!isAuthenticated || isLoading}
+      disabled={!canVote || isLoading}
       className={cn(
         'flex items-center gap-1 px-2 py-1 rounded-md transition-all duration-200 text-xs',
         hasVoted
           ? 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
           : 'bg-gray-50 text-gray-500 hover:bg-gray-100',
-        !isAuthenticated && 'opacity-50 cursor-not-allowed',
+        !canVote && 'opacity-50 cursor-not-allowed',
         isLoading && 'opacity-70'
       )}
-      title={isAuthenticated ? (hasVoted ? 'Remove upvote' : 'Upvote this reply') : 'Sign in to vote'}
+      title={canVote ? (hasVoted ? 'Remove upvote' : 'Upvote this reply') : 'Join organization to vote'}
     >
       <ChevronUp
         size={14}

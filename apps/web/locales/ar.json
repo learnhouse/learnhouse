@@ -129,6 +129,11 @@
     "creating": "جاري الإنشاء...",
     "view_details": "عرض التفاصيل"
   },
+  "banner": {
+    "viewing_as_guest": "أنت تتصفح {{name}} كضيف.",
+    "join_organization": "انضم لهذه المنظمة",
+    "to_access_features": "للوصول إلى جميع الميزات."
+  },
   "auth": {
     "login": "تسجيل الدخول",
     "email": "البريد الإلكتروني",
@@ -189,6 +194,9 @@
     "you_own_this_course_description": "لقد قمت بشراء هذه الدورة ولديك وصول كامل للمحتوى.",
     "paid_course": "دورة مدفوعة",
     "paid_course_description": "يتطلب الوصول لمحتوى هذه الدورة الشراء.",
+    "join_org_required": "عضوية المنظمة مطلوبة",
+    "join_org_required_description": "يجب عليك الانضمام لهذه المنظمة للتسجيل في الدورات.",
+    "join_organization": "انضم للمنظمة",
     "purchase_course_title": "شراء الدورة",
     "purchase_course_description": "اختر خيار دفع للوصول لهذه الدورة",
     "ready_to_begin": "مستعد للبدء؟",
@@ -524,6 +532,7 @@
     "comments": {
       "no_replies": "لا توجد ردود بعد",
       "locked": "هذا النقاش مقفل",
+      "join_org_to_reply": "انضم لهذه المنظمة للمشاركة في النقاشات",
       "sign_in_to_reply": "سجل الدخول",
       "to_reply": "للرد",
       "write_reply": "اكتب ردًا...",

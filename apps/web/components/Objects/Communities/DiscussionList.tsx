@@ -12,6 +12,7 @@ import {
   DiscussionWithAuthor,
 } from '@services/communities/discussions'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { useOrgMembership } from '@components/Contexts/OrgContext'
 import { useCommunityRights } from '@components/Hooks/useCommunityRights'
 import { useDiscussions, mutateDiscussions } from '@components/Hooks/useDiscussions'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
@@ -31,7 +32,9 @@ export function DiscussionList({
 }: DiscussionListProps) {
   const { t } = useTranslation()
   const session = useLHSession() as any
-  const { canCreateDiscussion, canManageCommunity } = useCommunityRights(communityUuid)
+  const { isUserPartOfTheOrg } = useOrgMembership()
+  const { canCreateDiscussion: hasCreatePermission, canManageCommunity } = useCommunityRights(communityUuid)
+  const canCreateDiscussion = hasCreatePermission && isUserPartOfTheOrg
   const accessToken = session?.data?.tokens?.access_token
 
   const [sortBy, setSortBy] = useState<DiscussionSortBy>('recent')
