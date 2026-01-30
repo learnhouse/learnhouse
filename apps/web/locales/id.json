@@ -129,6 +129,11 @@
     "creating": "Membuat...",
     "view_details": "Lihat Detail"
   },
+  "banner": {
+    "viewing_as_guest": "Anda melihat {{name}} sebagai tamu.",
+    "join_organization": "Bergabung dengan organisasi ini",
+    "to_access_features": "untuk mengakses semua fitur."
+  },
   "auth": {
     "login": "Masuk",
     "email": "Email",
@@ -189,6 +194,9 @@
     "you_own_this_course_description": "Anda telah membeli kursus ini dan memiliki akses penuh ke semua konten.",
     "paid_course": "Kursus Berbayar",
     "paid_course_description": "Kursus ini memerlukan pembelian untuk mengakses kontennya.",
+    "join_org_required": "Keanggotaan Organisasi Diperlukan",
+    "join_org_required_description": "Anda perlu bergabung dengan organisasi ini untuk mendaftar di kursus.",
+    "join_organization": "Bergabung dengan Organisasi",
     "purchase_course_title": "Beli Kursus",
     "purchase_course_description": "Pilih opsi pembayaran untuk mengakses kursus ini",
     "ready_to_begin": "Siap untuk memulai?",
@@ -524,6 +532,7 @@
     "comments": {
       "no_replies": "Belum ada balasan",
       "locked": "Diskusi ini dikunci",
+      "join_org_to_reply": "Bergabung dengan organisasi ini untuk berpartisipasi dalam diskusi",
       "sign_in_to_reply": "Masuk",
       "to_reply": "untuk membalas",
       "write_reply": "Tulis balasan...",

@@ -6,7 +6,7 @@ import { markActivityAsComplete, unmarkActivityAsComplete } from '@services/cour
 import { usePathname, useRouter } from 'next/navigation'
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
 import { getCourseThumbnailMediaDirectory, getUserAvatarMediaDirectory } from '@services/media/media'
-import { useOrg } from '@components/Contexts/OrgContext'
+import { useOrg, useOrgMembership } from '@components/Contexts/OrgContext'
 import { CourseProvider } from '@components/Contexts/CourseContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import React, { useEffect, useRef, useMemo, lazy, Suspense } from 'react'
@@ -797,6 +797,7 @@ export function MarkStatus(props: {
   const router = useRouter()
   const session = useLHSession() as any;
   const org = useOrg() as any;
+  const { isUserPartOfTheOrg } = useOrgMembership();
   const isMobile = useMediaQuery('(max-width: 768px)')
   const [isLoading, setIsLoading] = React.useState(false);
   const [showMarkedTooltip, setShowMarkedTooltip] = React.useState(false);
@@ -937,6 +938,11 @@ export function MarkStatus(props: {
 
   // Don't render until we have trail data
   if (!props.trailData) {
+    return null;
+  }
+
+  // Don't show progress tracking for non-members
+  if (!isUserPartOfTheOrg) {
     return null;
   }
 

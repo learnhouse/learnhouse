@@ -129,6 +129,11 @@
     "creating": "Aanmaken...",
     "view_details": "Details bekijken"
   },
+  "banner": {
+    "viewing_as_guest": "Je bekijkt {{name}} als gast.",
+    "join_organization": "Word lid van deze organisatie",
+    "to_access_features": "om alle functies te gebruiken."
+  },
   "auth": {
     "login": "Inloggen",
     "email": "E-mail",
@@ -189,6 +194,9 @@
     "you_own_this_course_description": "Je hebt deze cursus gekocht en hebt volledige toegang tot alle inhoud.",
     "paid_course": "Betaalde cursus",
     "paid_course_description": "Deze cursus vereist aankoop om toegang te krijgen tot de inhoud.",
+    "join_org_required": "Organisatielidmaatschap vereist",
+    "join_org_required_description": "Je moet lid worden van deze organisatie om je in te schrijven voor cursussen.",
+    "join_organization": "Word lid van organisatie",
     "purchase_course_title": "Cursus kopen",
     "purchase_course_description": "Selecteer een betaaloptie om toegang te krijgen tot deze cursus",
     "ready_to_begin": "Klaar om te beginnen?",
@@ -524,6 +532,7 @@
     "comments": {
       "no_replies": "Nog geen reacties",
       "locked": "Deze discussie is vergrendeld",
+      "join_org_to_reply": "Word lid van deze organisatie om deel te nemen aan discussies",
       "sign_in_to_reply": "Log in",
       "to_reply": "om te reageren",
       "write_reply": "Schrijf een reactie...",

@@ -129,6 +129,11 @@
     "creating": "তৈরি হচ্ছে...",
     "view_details": "বিস্তারিত দেখুন"
   },
+  "banner": {
+    "viewing_as_guest": "আপনি {{name}} অতিথি হিসেবে দেখছেন।",
+    "join_organization": "এই সংস্থায় যোগ দিন",
+    "to_access_features": "সমস্ত বৈশিষ্ট্য অ্যাক্সেস করতে।"
+  },
   "auth": {
     "login": "লগইন",
     "email": "ইমেল",
@@ -189,6 +194,9 @@
     "you_own_this_course_description": "আপনি এই কোর্সটি কিনেছেন এবং সমস্ত কন্টেন্ট অ্যাক্সেস করতে পারেন।",
     "paid_course": "পেইড কোর্স",
     "paid_course_description": "কন্টেন্ট অ্যাক্সেস করতে এই কোর্সের জন্য পেমেন্ট প্রয়োজন।",
+    "join_org_required": "সংস্থার সদস্যপদ প্রয়োজন",
+    "join_org_required_description": "কোর্সে নথিভুক্ত হতে আপনাকে এই সংস্থায় যোগ দিতে হবে।",
+    "join_organization": "সংস্থায় যোগ দিন",
     "purchase_course_title": "কোর্স কিনুন",
     "purchase_course_description": "এই কোর্সটি অ্যাক্সেস করতে পেমেন্ট পদ্ধতি বেছে নিন।",
     "ready_to_begin": "শুরু করতে প্রস্তুত?",
@@ -524,6 +532,7 @@
     "comments": {
       "no_replies": "এখনও কোনও উত্তর নেই",
       "locked": "এই আলোচনা লক করা আছে",
+      "join_org_to_reply": "আলোচনায় অংশ নিতে এই সংস্থায় যোগ দিন",
       "sign_in_to_reply": "সাইন ইন করুন",
       "to_reply": "উত্তর দিতে",
       "write_reply": "একটি উত্তর লিখুন...",

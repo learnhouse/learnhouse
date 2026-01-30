@@ -129,6 +129,11 @@
     "creating": "作成中...",
     "view_details": "詳細を見る"
   },
+  "banner": {
+    "viewing_as_guest": "{{name}}をゲストとして閲覧しています。",
+    "join_organization": "この組織に参加",
+    "to_access_features": "してすべての機能を利用できます。"
+  },
   "auth": {
     "login": "ログイン",
     "email": "メールアドレス",
@@ -189,6 +194,9 @@
     "you_own_this_course_description": "このコースを購入済みです。すべてのコンテンツにフルアクセスできます。",
     "paid_course": "有料コース",
     "paid_course_description": "このコースのコンテンツにアクセスするには購入が必要です。",
+    "join_org_required": "組織への参加が必要です",
+    "join_org_required_description": "コースに登録するには、この組織に参加する必要があります。",
+    "join_organization": "組織に参加",
     "purchase_course_title": "コースを購入",
     "purchase_course_description": "支払い方法を選択してコースを開始しましょう",
     "ready_to_begin": "準備はいいですか？",
@@ -524,6 +532,7 @@
     "comments": {
       "no_replies": "まだ返信がありません",
       "locked": "このディスカッションはロックされています",
+      "join_org_to_reply": "ディスカッションに参加するには、この組織に参加してください",
       "sign_in_to_reply": "ログイン",
       "to_reply": "して返信",
       "write_reply": "返信を書く...",
