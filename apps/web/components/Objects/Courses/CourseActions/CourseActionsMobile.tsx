@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { useOrgMembership } from '@components/Contexts/OrgContext'
 import { getUriWithoutOrg, getUriWithOrg } from '@services/config/config'
 import { getProductsByCourse } from '@services/payments/products'
-import { LogIn, LogOut, ShoppingCart, AlertCircle } from 'lucide-react'
+import { LogIn, LogOut, ShoppingCart, AlertCircle, UserPlus } from 'lucide-react'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import CoursePaidOptions from './CoursePaidOptions'
 import { checkPaidAccess } from '@services/payments/payments'
@@ -127,6 +128,7 @@ const MultipleAuthors = ({ authors }: { authors: Author[] }) => {
 const CourseActionsMobile = ({ courseuuid, orgslug, course, trailData }: CourseActionsMobileProps) => {
   const router = useRouter()
   const session = useLHSession() as any
+  const { isUserPartOfTheOrg } = useOrgMembership()
   const [linkedProducts, setLinkedProducts] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isActionLoading, setIsActionLoading] = useState(false)
@@ -189,6 +191,12 @@ const CourseActionsMobile = ({ courseuuid, orgslug, course, trailData }: CourseA
       return
     }
 
+    // Check if user is part of the organization
+    if (!isUserPartOfTheOrg) {
+      router.push(getUriWithoutOrg(`/signup?orgslug=${orgslug}`))
+      return
+    }
+
     setIsActionLoading(true)
     try {
       if (isStarted) {
@@ -224,6 +232,32 @@ const CourseActionsMobile = ({ courseuuid, orgslug, course, trailData }: CourseA
 
   if (isLoading) {
     return <div className="animate-pulse h-16 bg-gray-100 rounded-lg mt-4 mb-8" />
+  }
+
+  // Show join organization prompt for authenticated users who are not part of the org
+  if (session.data?.user && !isUserPartOfTheOrg) {
+    return (
+      <div className="bg-white/90 backdrop-blur-sm shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40 rounded-lg overflow-hidden p-4 my-6 mx-2">
+        <div className="flex flex-col space-y-3">
+          <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+            <div className="flex items-center gap-2">
+              <UserPlus className="w-4 h-4 text-amber-800" />
+              <span className="text-amber-800 text-sm font-semibold">Organization Membership Required</span>
+            </div>
+            <p className="text-amber-700 text-xs mt-1">
+              You need to join this organization to enroll in courses.
+            </p>
+          </div>
+          <a
+            href={getUriWithoutOrg(`/signup?orgslug=${orgslug}`)}
+            className="w-full py-2 px-4 rounded-lg bg-neutral-900 text-white font-semibold text-sm hover:bg-neutral-800 transition-colors flex items-center justify-center gap-2"
+          >
+            <UserPlus className="w-4 h-4" />
+            Join Organization
+          </a>
+        </div>
+      </div>
+    )
   }
 
   // Filter active authors and sort by role priority

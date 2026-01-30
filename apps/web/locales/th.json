@@ -129,6 +129,11 @@
     "creating": "กำลังสร้าง...",
     "view_details": "ดูรายละเอียด"
   },
+  "banner": {
+    "viewing_as_guest": "คุณกำลังดู {{name}} ในฐานะแขก",
+    "join_organization": "เข้าร่วมองค์กรนี้",
+    "to_access_features": "เพื่อเข้าถึงฟีเจอร์ทั้งหมด"
+  },
   "auth": {
     "login": "เข้าสู่ระบบ",
     "email": "อีเมล",
@@ -189,6 +194,9 @@
     "you_own_this_course_description": "คุณซื้อคอร์สนี้แล้วและสามารถเข้าถึงเนื้อหาทั้งหมดได้",
     "paid_course": "คอร์สแบบชำระเงิน",
     "paid_course_description": "คอร์สนี้ต้องชำระเงินก่อนเข้าถึงเนื้อหา",
+    "join_org_required": "ต้องเป็นสมาชิกขององค์กร",
+    "join_org_required_description": "คุณต้องเข้าร่วมองค์กรนี้เพื่อลงทะเบียนเรียนคอร์ส",
+    "join_organization": "เข้าร่วมองค์กร",
     "purchase_course_title": "ซื้อคอร์สเรียน",
     "purchase_course_description": "เลือกช่องทางการชำระเงินเพื่อเข้าถึงคอร์สนี้",
     "ready_to_begin": "พร้อมที่จะเริ่มหรือยัง?",
@@ -524,6 +532,7 @@
     "comments": {
       "no_replies": "ยังไม่มีการตอบกลับ",
       "locked": "การสนทนานี้ถูกล็อก",
+      "join_org_to_reply": "เข้าร่วมองค์กรนี้เพื่อมีส่วนร่วมในการสนทนา",
       "sign_in_to_reply": "เข้าสู่ระบบ",
       "to_reply": "เพื่อตอบกลับ",
       "write_reply": "เขียนคำตอบ...",

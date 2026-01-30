@@ -129,6 +129,11 @@
     "creating": "Đang tạo...",
     "view_details": "Xem chi tiết"
   },
+  "banner": {
+    "viewing_as_guest": "Bạn đang xem {{name}} với tư cách khách.",
+    "join_organization": "Tham gia tổ chức này",
+    "to_access_features": "để truy cập tất cả tính năng."
+  },
   "auth": {
     "login": "Đăng nhập",
     "email": "Email",
@@ -189,6 +194,9 @@
     "you_own_this_course_description": "Bạn đã mua khóa học này và có quyền truy cập đầy đủ vào tất cả nội dung.",
     "paid_course": "Khóa học trả phí",
     "paid_course_description": "Khóa học này yêu cầu mua để truy cập nội dung.",
+    "join_org_required": "Yêu cầu tư cách thành viên tổ chức",
+    "join_org_required_description": "Bạn cần tham gia tổ chức này để đăng ký khóa học.",
+    "join_organization": "Tham gia tổ chức",
     "purchase_course_title": "Mua khóa học",
     "purchase_course_description": "Chọn một tùy chọn thanh toán để truy cập khóa học này",
     "ready_to_begin": "Sẵn sàng bắt đầu?",
@@ -524,6 +532,7 @@
     "comments": {
       "no_replies": "Chưa có phản hồi",
       "locked": "Thảo luận này đã bị khóa",
+      "join_org_to_reply": "Tham gia tổ chức này để tham gia thảo luận",
       "sign_in_to_reply": "Đăng nhập",
       "to_reply": "để trả lời",
       "write_reply": "Viết phản hồi...",
