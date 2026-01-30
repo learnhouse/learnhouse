@@ -134,6 +134,11 @@
     "creating": "Creating...",
     "view_details": "View Details"
   },
+  "banner": {
+    "viewing_as_guest": "You're viewing {{name}} as a guest.",
+    "join_organization": "Join this organization",
+    "to_access_features": "to access all features."
+  },
   "auth": {
     "login": "Login",
     "email": "Email",
@@ -194,6 +199,9 @@
     "you_own_this_course_description": "You have purchased this course and have full access to all content.",
     "paid_course": "Paid Course",
     "paid_course_description": "This course requires purchase to access its content.",
+    "join_org_required": "Organization Membership Required",
+    "join_org_required_description": "You need to join this organization to enroll in courses.",
+    "join_organization": "Join Organization",
     "purchase_course_title": "Purchase Course",
     "purchase_course_description": "Select a payment option to access this course",
     "ready_to_begin": "Ready to Begin?",
@@ -520,6 +528,7 @@
     "comments": {
       "no_replies": "No replies yet",
       "locked": "This discussion is locked",
+      "join_org_to_reply": "Join this organization to participate in discussions",
       "sign_in_to_reply": "Sign in",
       "to_reply": "to reply",
       "write_reply": "Write a reply...",

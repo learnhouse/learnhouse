@@ -1,8 +1,9 @@
 'use client'
 import React, { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { MessageSquare, Send, Loader2, User, AlertCircle, Lock } from 'lucide-react'
+import { MessageSquare, Send, Loader2, User, AlertCircle, Lock, UserPlus } from 'lucide-react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { useOrgMembership } from '@components/Contexts/OrgContext'
 import {
   getComments,
   createComment,
@@ -22,6 +23,8 @@ export function CommentSection({ discussionUuid, isLocked = false }: CommentSect
   const accessToken = session?.data?.tokens?.access_token
   const isAuthenticated = session?.status === 'authenticated'
   const currentUser = session?.data?.user
+  const { isUserPartOfTheOrg } = useOrgMembership()
+  const canComment = isAuthenticated && isUserPartOfTheOrg
 
   const [comments, setComments] = useState<DiscussionCommentWithAuthor[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -49,7 +52,7 @@ export function CommentSection({ discussionUuid, isLocked = false }: CommentSect
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!newComment.trim() || !isAuthenticated || isSubmitting) return
+    if (!newComment.trim() || !canComment || isSubmitting) return
 
     setIsSubmitting(true)
     setError(null)
@@ -126,7 +129,7 @@ export function CommentSection({ discussionUuid, isLocked = false }: CommentSect
             <Lock size={14} className="text-amber-600" />
             <p className="text-sm text-amber-700">{t('communities.comments.locked')}</p>
           </div>
-        ) : isAuthenticated ? (
+        ) : canComment ? (
           <div>
             {error && (
               <div className="flex items-center gap-2 mb-2 px-3 py-2 bg-red-50 rounded-md text-red-700 text-sm">
@@ -175,6 +178,13 @@ export function CommentSection({ discussionUuid, isLocked = false }: CommentSect
                 )}
               </div>
             </form>
+          </div>
+        ) : isAuthenticated && !isUserPartOfTheOrg ? (
+          <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 rounded-md">
+            <UserPlus size={14} className="text-amber-600" />
+            <p className="text-sm text-amber-700">
+              {t('communities.comments.join_org_to_reply')}
+            </p>
           </div>
         ) : (
           <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-md">

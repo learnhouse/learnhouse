@@ -29,6 +29,7 @@ import {
 } from "@components/ui/dropdown-menu"
 import { FeedbackModal } from '@components/Objects/Modals/FeedbackModal'
 import { DASHBOARD_MENU_ITEMS } from '@/lib/dashboard-menu-items'
+import { useJoinBannerVisible, JOIN_BANNER_HEIGHT } from '@components/Objects/Banners/OrgJoinBanner'
 
 export const OrgMenu = (props: any) => {
   const orgslug = props.orgslug
@@ -41,6 +42,8 @@ export const OrgMenu = (props: any) => {
   const { t } = useTranslation()
   const { rights } = useAdminStatus()
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false)
+  const { isVisible: isJoinBannerVisible } = useJoinBannerVisible()
+  const topOffset = isJoinBannerVisible ? JOIN_BANNER_HEIGHT : 0
 
   // Get primary color from org config
   const primaryColor = org?.config?.config?.general?.color || ''
@@ -89,12 +92,13 @@ export const OrgMenu = (props: any) => {
 
   return (
     <>
-      <div className="backdrop-blur-lg h-[60px] blur-3xl" style={{ zIndex: 'var(--z-behind)' }}></div>
+      <div className="backdrop-blur-lg h-[60px] blur-3xl" style={{ zIndex: 'var(--z-behind)', marginTop: topOffset }}></div>
       <div
-        className={`backdrop-blur-lg fixed top-0 left-0 right-0 h-[60px] ${!primaryColor ? 'bg-white/90 nice-shadow' : ''}`}
+        className={`backdrop-blur-lg fixed left-0 right-0 h-[60px] ${!primaryColor ? 'bg-white/90 nice-shadow' : ''}`}
         style={{
           zIndex: 'var(--z-nav)',
-          backgroundColor: primaryColor || undefined
+          backgroundColor: primaryColor || undefined,
+          top: topOffset
         }}
       >
         <div className="flex items-center justify-between w-full max-w-(--breakpoint-2xl) mx-auto px-4 sm:px-6 lg:px-8 h-full">
@@ -246,9 +250,12 @@ export const OrgMenu = (props: any) => {
       </div>
       <div
         className={`fixed inset-x-0 bg-white/80 backdrop-blur-lg md:hidden shadow-lg transition-all duration-300 ease-in-out ${
-          isMenuOpen ? 'top-[60px] opacity-100' : '-top-full opacity-0'
+          isMenuOpen ? 'opacity-100' : '-top-full opacity-0'
         }`}
-        style={{ zIndex: 'var(--z-nav-menu)' }}
+        style={{
+          zIndex: 'var(--z-nav-menu)',
+          top: isMenuOpen ? topOffset + 60 : undefined
+        }}
       >
         <div className="flex flex-col px-4 py-3 space-y-4 justify-center items-center">
           {/* Mobile Search */}

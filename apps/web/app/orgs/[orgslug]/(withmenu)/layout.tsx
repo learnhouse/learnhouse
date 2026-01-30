@@ -5,6 +5,7 @@ import { SessionProvider } from 'next-auth/react'
 import Watermark from '@components/Objects/Watermark'
 import { OrgMenu } from '@components/Objects/Menus/OrgMenu'
 import { useOrg } from '@components/Contexts/OrgContext'
+import { OrgJoinBanner, OrgJoinBannerProvider } from '@components/Objects/Banners/OrgJoinBanner'
 import Image from 'next/image'
 import Link from 'next/link'
 
@@ -54,6 +55,7 @@ function LayoutContent({ children, orgslug }: { children: React.ReactNode; orgsl
         backgroundColor: primaryColor ? hexToRgba(primaryColor, 0.05) : 'transparent'
       }}
     >
+      <OrgJoinBanner />
       <OrgMenu orgslug={orgslug}></OrgMenu>
       <div className="flex-1 relative" style={{ zIndex: 'var(--z-content)' }}>
         {children}
@@ -79,9 +81,11 @@ export default function RootLayout(
   return (
     <>
       <SessionProvider>
-        <LayoutContent orgslug={params?.orgslug}>
-          {children}
-        </LayoutContent>
+        <OrgJoinBannerProvider>
+          <LayoutContent orgslug={params?.orgslug}>
+            {children}
+          </LayoutContent>
+        </OrgJoinBannerProvider>
       </SessionProvider>
     </>
   )

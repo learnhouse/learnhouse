@@ -129,6 +129,11 @@
     "creating": "생성 중...",
     "view_details": "상세 보기"
   },
+  "banner": {
+    "viewing_as_guest": "{{name}}을(를) 게스트로 보고 있습니다.",
+    "join_organization": "이 조직에 가입",
+    "to_access_features": "하여 모든 기능을 이용하세요."
+  },
   "auth": {
     "login": "로그인",
     "email": "이메일",
@@ -189,6 +194,9 @@
     "you_own_this_course_description": "이 코스를 구매하셨으며 모든 콘텐츠에 대한 전체 권한이 있습니다.",
     "paid_course": "유료 코스",
     "paid_course_description": "이 코스의 콘텐츠에 액세스하려면 구매가 필요합니다.",
+    "join_org_required": "조직 가입 필요",
+    "join_org_required_description": "코스에 등록하려면 이 조직에 가입해야 합니다.",
+    "join_organization": "조직 가입",
     "purchase_course_title": "코스 구매",
     "purchase_course_description": "결제 옵션을 선택하여 코스를 시작하세요",
     "ready_to_begin": "시작할 준비가 되셨나요?",
@@ -524,6 +532,7 @@
     "comments": {
       "no_replies": "아직 답글이 없습니다",
       "locked": "이 토론은 잠겨 있습니다",
+      "join_org_to_reply": "토론에 참여하려면 이 조직에 가입하세요",
       "sign_in_to_reply": "로그인",
       "to_reply": "하여 답글 달기",
       "write_reply": "답글 작성...",

@@ -129,6 +129,11 @@
     "creating": "创建中...",
     "view_details": "查看详情"
   },
+  "banner": {
+    "viewing_as_guest": "您正在以访客身份浏览 {{name}}。",
+    "join_organization": "加入此组织",
+    "to_access_features": "以访问所有功能。"
+  },
   "auth": {
     "login": "登录",
     "email": "电子邮件",
@@ -189,6 +194,9 @@
     "you_own_this_course_description": "您已购买此课程，可以完全访问所有内容。",
     "paid_course": "付费课程",
     "paid_course_description": "访问此课程内容需要购买。",
+    "join_org_required": "需要组织会员资格",
+    "join_org_required_description": "您需要加入此组织才能注册课程。",
+    "join_organization": "加入组织",
     "purchase_course_title": "购买课程",
     "purchase_course_description": "选择支付选项以访问此课程",
     "ready_to_begin": "准备好开始了吗？",
@@ -524,6 +532,7 @@
     "comments": {
       "no_replies": "暂无回复",
       "locked": "此讨论已锁定",
+      "join_org_to_reply": "加入此组织以参与讨论",
       "sign_in_to_reply": "登录",
       "to_reply": "以回复",
       "write_reply": "写回复...",

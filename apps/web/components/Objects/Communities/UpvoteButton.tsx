@@ -2,6 +2,7 @@
 import React, { useState, useCallback } from 'react'
 import { ChevronUp } from 'lucide-react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
+import { useOrgMembership } from '@components/Contexts/OrgContext'
 import { upvoteDiscussion, removeUpvote } from '@services/communities/discussions'
 import { cn } from '@/lib/utils'
 
@@ -23,15 +24,17 @@ export function UpvoteButton({
   compact = false,
 }: UpvoteButtonProps) {
   const session = useLHSession() as any
+  const { isUserPartOfTheOrg } = useOrgMembership()
   const [voteCount, setVoteCount] = useState(initialVoteCount)
   const [hasVoted, setHasVoted] = useState(initialHasVoted)
   const [isLoading, setIsLoading] = useState(false)
 
   const isAuthenticated = session?.status === 'authenticated'
+  const canVote = isAuthenticated && isUserPartOfTheOrg
   const accessToken = session?.data?.tokens?.access_token
 
   const handleVote = useCallback(async () => {
-    if (!isAuthenticated || isLoading || disabled) return
+    if (!canVote || isLoading || disabled) return
 
     setIsLoading(true)
 
@@ -57,22 +60,22 @@ export function UpvoteButton({
     } finally {
       setIsLoading(false)
     }
-  }, [hasVoted, voteCount, isAuthenticated, isLoading, disabled, discussionUuid, accessToken, onVoteChange])
+  }, [hasVoted, voteCount, canVote, isLoading, disabled, discussionUuid, accessToken, onVoteChange])
 
   if (compact) {
     return (
       <button
         onClick={handleVote}
-        disabled={!isAuthenticated || isLoading || disabled}
+        disabled={!canVote || isLoading || disabled}
         className={cn(
           'flex items-center gap-1 px-2 py-1 rounded-md transition-all duration-200 text-xs',
           hasVoted
             ? 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
             : 'bg-gray-50 text-gray-500 hover:bg-gray-100',
-          (!isAuthenticated || disabled) && 'opacity-50 cursor-not-allowed',
+          (!canVote || disabled) && 'opacity-50 cursor-not-allowed',
           isLoading && 'opacity-70'
         )}
-        title={isAuthenticated ? (hasVoted ? 'Remove upvote' : 'Upvote') : 'Sign in to vote'}
+        title={canVote ? (hasVoted ? 'Remove upvote' : 'Upvote') : 'Join organization to vote'}
       >
         <ChevronUp
           size={14}
@@ -90,16 +93,16 @@ export function UpvoteButton({
   return (
     <button
       onClick={handleVote}
-      disabled={!isAuthenticated || isLoading || disabled}
+      disabled={!canVote || isLoading || disabled}
       className={cn(
         'flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg transition-all duration-200',
         hasVoted
           ? 'bg-blue-100 text-blue-600 hover:bg-blue-200'
           : 'bg-gray-100 text-gray-500 hover:bg-gray-200',
-        (!isAuthenticated || disabled) && 'opacity-50 cursor-not-allowed',
+        (!canVote || disabled) && 'opacity-50 cursor-not-allowed',
         isLoading && 'opacity-70'
       )}
-      title={isAuthenticated ? (hasVoted ? 'Remove upvote' : 'Upvote') : 'Sign in to vote'}
+      title={canVote ? (hasVoted ? 'Remove upvote' : 'Upvote') : 'Join organization to vote'}
     >
       <ChevronUp
         size={20}
