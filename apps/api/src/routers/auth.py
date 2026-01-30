@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import timedelta, datetime, timezone
 from typing import Literal, Optional
 from fastapi import Depends, APIRouter, HTTPException, Response, status, Request, Form
 from pydantic import BaseModel, EmailStr
@@ -18,6 +18,15 @@ from src.security.auth import (
     JWT_COOKIE_NAME,
 )
 from src.services.auth.utils import signWithGoogle
+from src.services.dev.dev import isDevModeEnabled
+
+
+def get_token_expiry_ms() -> Optional[int]:
+    """Get the token expiry timestamp in milliseconds for frontend use."""
+    if isDevModeEnabled() or JWT_ACCESS_TOKEN_EXPIRES is None:
+        return None  # No expiry in dev mode
+    expiry_time = datetime.now(timezone.utc) + JWT_ACCESS_TOKEN_EXPIRES
+    return int(expiry_time.timestamp() * 1000)
 
 
 router = APIRouter()
@@ -87,7 +96,7 @@ def refresh(request: Request, response: Response):
         domain=cookie_domain,
         expires=int(timedelta(hours=8).total_seconds()),
     )
-    return {"access_token": new_access_token}
+    return {"access_token": new_access_token, "expiry": get_token_expiry_ms()}
 
 
 @router.post("/login")
@@ -120,7 +129,11 @@ async def login(
 
     result = {
         "user": user,
-        "tokens": {"access_token": access_token, "refresh_token": refresh_token},
+        "tokens": {
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "expiry": get_token_expiry_ms(),
+        },
     }
     return result
 
@@ -166,7 +179,11 @@ async def third_party_login(
 
     result = {
         "user": user,
-        "tokens": {"access_token": access_token, "refresh_token": refresh_token},
+        "tokens": {
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "expiry": get_token_expiry_ms(),
+        },
     }
     return result
 
