@@ -129,6 +129,11 @@
     "creating": "Oluşturuluyor...",
     "view_details": "Detayları Görüntüle"
   },
+  "banner": {
+    "viewing_as_guest": "{{name}} sitesini misafir olarak görüntülüyorsunuz.",
+    "join_organization": "Bu organizasyona katılın",
+    "to_access_features": "tüm özelliklere erişmek için."
+  },
   "auth": {
     "login": "Giriş Yap",
     "email": "E-posta",
@@ -189,6 +194,9 @@
     "you_own_this_course_description": "Bu kursu satın aldınız ve tüm içeriğe tam erişiminiz var.",
     "paid_course": "Ücretli Kurs",
     "paid_course_description": "Bu kursun içeriğine erişmek için satın alma gereklidir.",
+    "join_org_required": "Kuruluş Üyeliği Gerekli",
+    "join_org_required_description": "Kurslara kaydolmak için bu kuruluşa katılmanız gerekiyor.",
+    "join_organization": "Kuruluşa Katıl",
     "purchase_course_title": "Kursu Satın Al",
     "purchase_course_description": "Bu kursa erişmek için bir ödeme seçeneği seçin",
     "ready_to_begin": "Başlamaya hazır mısınız?",
@@ -524,6 +532,7 @@
     "comments": {
       "no_replies": "Henüz yanıt yok",
       "locked": "Bu tartışma kilitli",
+      "join_org_to_reply": "Tartışmalara katılmak için bu kuruluşa katılın",
       "sign_in_to_reply": "Giriş yapın",
       "to_reply": "yanıtlamak için",
       "write_reply": "Yanıt yazın...",

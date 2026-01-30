@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { getAPIUrl, getUriWithOrg, getUriWithoutOrg } from '@services/config/config'
 import { getProductsByCourse } from '@services/payments/products'
-import { ShoppingCart, AlertCircle, UserPen, ClockIcon, ArrowRight, BookOpen } from 'lucide-react'
+import { ShoppingCart, AlertCircle, UserPen, ClockIcon, ArrowRight, BookOpen, UserPlus } from 'lucide-react'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import CoursePaidOptions from './CoursePaidOptions'
 import { checkPaidAccess } from '@services/payments/payments'
@@ -14,7 +14,7 @@ import toast from 'react-hot-toast'
 import { useContributorStatus } from '../../../../hooks/useContributorStatus'
 import CourseProgress from '../CourseProgress/CourseProgress'
 import UserAvatar from '@components/Objects/UserAvatar'
-import { useOrg } from '@components/Contexts/OrgContext'
+import { useOrg, useOrgMembership } from '@components/Contexts/OrgContext'
 import { mutate } from 'swr'
 import { useTranslation } from 'react-i18next'
 
@@ -66,6 +66,7 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
   const { contributorStatus, refetch } = useContributorStatus(courseuuid)
   const [isProgressOpen, setIsProgressOpen] = useState(false)
   const org = useOrg() as any
+  const { isUserPartOfTheOrg } = useOrgMembership()
 
   // Clean up course UUID by removing 'course_' prefix if it exists
   const cleanCourseUuid = course.course_uuid?.replace('course_', '');
@@ -121,6 +122,12 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
 
   const handleCourseAction = async () => {
     if (!session.data?.user) {
+      router.push(getUriWithoutOrg(`/signup?orgslug=${orgslug}`))
+      return
+    }
+
+    // Check if user is part of the organization
+    if (!isUserPartOfTheOrg) {
       router.push(getUriWithoutOrg(`/signup?orgslug=${orgslug}`))
       return
     }
@@ -393,6 +400,32 @@ function CoursesActions({ courseuuid, orgslug, course, trailData }: CourseAction
 
   if (isLoading) {
     return <div className="animate-pulse h-20 bg-gray-100 rounded-lg nice-shadow" />
+  }
+
+  // Show join organization prompt for authenticated users who are not part of the org
+  if (session.data?.user && !isUserPartOfTheOrg) {
+    return (
+      <div className="bg-white shadow-md shadow-gray-300/25 outline outline-1 outline-neutral-200/40 rounded-lg overflow-hidden p-4">
+        <div className="space-y-4">
+          <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg nice-shadow">
+            <div className="flex items-center gap-3">
+              <UserPlus className="w-5 h-5 text-amber-800" />
+              <h3 className="text-amber-800 font-semibold">{t('courses.join_org_required')}</h3>
+            </div>
+            <p className="text-amber-700 text-sm mt-1">
+              {t('courses.join_org_required_description')}
+            </p>
+          </div>
+          <a
+            href={getUriWithoutOrg(`/signup?orgslug=${orgslug}`)}
+            className="w-full bg-neutral-900 text-white py-3 rounded-lg nice-shadow font-semibold hover:bg-neutral-800 transition-colors flex items-center justify-center gap-2"
+          >
+            <UserPlus className="w-5 h-5" />
+            {t('courses.join_organization')}
+          </a>
+        </div>
+      </div>
+    )
   }
 
   if (linkedProducts.length > 0) {
