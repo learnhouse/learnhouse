@@ -129,6 +129,11 @@
     "creating": "Tworzenie...",
     "view_details": "Zobacz szczegóły"
   },
+  "banner": {
+    "viewing_as_guest": "Przeglądasz {{name}} jako gość.",
+    "join_organization": "Dołącz do tej organizacji",
+    "to_access_features": "aby uzyskać dostęp do wszystkich funkcji."
+  },
   "auth": {
     "login": "Zaloguj się",
     "email": "Email",
@@ -189,6 +194,9 @@
     "you_own_this_course_description": "Zakupiłeś ten kurs i masz pełny dostęp do wszystkich treści.",
     "paid_course": "Płatny kurs",
     "paid_course_description": "Ten kurs wymaga zakupu, aby uzyskać dostęp do treści.",
+    "join_org_required": "Wymagane członkostwo w organizacji",
+    "join_org_required_description": "Musisz dołączyć do tej organizacji, aby zapisać się na kursy.",
+    "join_organization": "Dołącz do organizacji",
     "purchase_course_title": "Kup kurs",
     "purchase_course_description": "Wybierz opcję płatności, aby uzyskać dostęp do tego kursu",
     "ready_to_begin": "Gotowy do startu?",
@@ -524,6 +532,7 @@
     "comments": {
       "no_replies": "Brak odpowiedzi",
       "locked": "Ta dyskusja jest zablokowana",
+      "join_org_to_reply": "Dołącz do tej organizacji, aby uczestniczyć w dyskusjach",
       "sign_in_to_reply": "Zaloguj się",
       "to_reply": "aby odpowiedzieć",
       "write_reply": "Napisz odpowiedź...",

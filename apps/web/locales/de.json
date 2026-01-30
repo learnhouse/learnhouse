@@ -129,6 +129,11 @@
     "creating": "Wird erstellt...",
     "view_details": "Details anzeigen"
   },
+  "banner": {
+    "viewing_as_guest": "Sie betrachten {{name}} als Gast.",
+    "join_organization": "Dieser Organisation beitreten",
+    "to_access_features": "um alle Funktionen zu nutzen."
+  },
   "auth": {
     "login": "Anmelden",
     "email": "E-Mail",
@@ -189,6 +194,9 @@
     "you_own_this_course_description": "Sie haben diesen Kurs gekauft und haben vollen Zugriff auf alle Inhalte.",
     "paid_course": "Kostenpflichtiger Kurs",
     "paid_course_description": "Dieser Kurs erfordert einen Kauf, um auf seine Inhalte zuzugreifen.",
+    "join_org_required": "Organisationsmitgliedschaft erforderlich",
+    "join_org_required_description": "Sie müssen dieser Organisation beitreten, um sich für Kurse anzumelden.",
+    "join_organization": "Organisation beitreten",
     "purchase_course_title": "Kurs kaufen",
     "purchase_course_description": "Wählen Sie eine Zahlungsoption, um auf diesen Kurs zuzugreifen",
     "ready_to_begin": "Bereit zum Start?",
@@ -524,6 +532,7 @@
     "comments": {
       "no_replies": "Noch keine Antworten",
       "locked": "Diese Diskussion ist gesperrt",
+      "join_org_to_reply": "Treten Sie dieser Organisation bei, um an Diskussionen teilzunehmen",
       "sign_in_to_reply": "Anmelden",
       "to_reply": "um zu antworten",
       "write_reply": "Antwort schreiben...",
