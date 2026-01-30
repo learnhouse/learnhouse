@@ -20,9 +20,6 @@ const nextConfig = {
   generateBuildId: async () => {
     return process.env.BUILD_ID || 'learnhouse-production'
   },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
 }
 
 // Generate runtime config for development

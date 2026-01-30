@@ -9,6 +9,7 @@ import { mutate } from 'swr'
 import UnsplashImagePicker from './UnsplashImagePicker'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
+import { SafeImage, SafeVideo } from '@components/Objects/SafeImage'
 
 const MAX_FILE_SIZE = 8_000_000; // 8MB for images
 const MAX_VIDEO_FILE_SIZE = 100_000_000; // 100MB for videos
@@ -190,7 +191,7 @@ function ThumbnailUpdate({ thumbnailType }: ThumbnailUpdateProps) {
       if (localThumbnail.type === 'video') {
         return (
           <div className="max-w-[480px] mx-auto">
-            <video
+            <SafeVideo
               src={localThumbnail.url}
               className={`${isLoading ? 'animate-pulse' : ''} w-full aspect-video object-cover rounded-lg border border-gray-200`}
               controls
@@ -200,7 +201,7 @@ function ThumbnailUpdate({ thumbnailType }: ThumbnailUpdateProps) {
       } else {
         return (
           <div className="max-w-[480px] mx-auto">
-            <img
+            <SafeImage
               src={localThumbnail.url}
               alt="Course thumbnail preview"
               className={`${isLoading ? 'animate-pulse' : ''} w-full aspect-video object-cover rounded-lg border border-gray-200`}
@@ -214,7 +215,7 @@ function ThumbnailUpdate({ thumbnailType }: ThumbnailUpdateProps) {
     if (activeTab === 'video' && currentThumbnailUrl) {
       return (
         <div className="max-w-[480px] mx-auto">
-          <video
+          <SafeVideo
             src={currentThumbnailUrl}
             className="w-full aspect-video object-cover rounded-lg border border-gray-200"
             controls
@@ -224,7 +225,7 @@ function ThumbnailUpdate({ thumbnailType }: ThumbnailUpdateProps) {
     } else if (currentThumbnailUrl) {
       return (
         <div className="max-w-[480px] mx-auto">
-          <img
+          <SafeImage
             src={currentThumbnailUrl}
             alt="Current course thumbnail"
             className="w-full aspect-video object-cover rounded-lg border border-gray-200"
