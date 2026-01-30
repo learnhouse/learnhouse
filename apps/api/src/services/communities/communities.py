@@ -1,7 +1,7 @@
 from typing import List, Union
 from uuid import uuid4
 from datetime import datetime
-from sqlmodel import Session, select
+from sqlmodel import Session, select, and_, or_
 from fastapi import HTTPException, Request
 
 from src.db.users import PublicUser, AnonymousUser, APITokenUser
@@ -13,6 +13,8 @@ from src.db.communities.communities import (
     CommunityRead,
     CommunityUpdate,
 )
+from src.db.usergroup_resources import UserGroupResource
+from src.db.usergroup_user import UserGroupUser
 from src.security.communities_security import (
     communities_rbac_check,
     communities_rbac_check_with_lookup,
@@ -103,18 +105,56 @@ async def get_communities_by_org(
     """
     offset = (page - 1) * limit
 
-    # Base query
-    query = select(Community).where(Community.org_id == org_id)
-
     # For anonymous users, only show public communities
     if isinstance(current_user, AnonymousUser) or current_user.id == 0:
-        query = query.where(Community.public == True)
+        query = select(Community).where(
+            Community.org_id == org_id,
+            Community.public == True
+        )
+        query = query.order_by(Community.creation_date.desc()).offset(offset).limit(limit)  # type: ignore
+        communities = db_session.exec(query).all()
+        return [CommunityRead.model_validate(c.model_dump()) for c in communities]
 
-    # Apply pagination and ordering
-    query = query.order_by(Community.creation_date.desc()).offset(offset).limit(limit)  # type: ignore
+    # Check if user is admin/maintainer
+    is_admin_or_maintainer = await authorization_verify_based_on_org_admin_status(
+        request, current_user.id, "read", f"org_{org_id}", db_session
+    )
+
+    if is_admin_or_maintainer:
+        # Admins see all communities
+        query = select(Community).where(Community.org_id == org_id)
+        query = query.order_by(Community.creation_date.desc()).offset(offset).limit(limit)  # type: ignore
+        communities = db_session.exec(query).all()
+        return [CommunityRead.model_validate(c.model_dump()) for c in communities]
+
+    # For regular users, use a subquery approach to avoid DISTINCT with JSON columns
+    # Get IDs of communities the user has access to
+    accessible_community_ids_query = (
+        select(Community.id)
+        .where(Community.org_id == org_id)
+        .outerjoin(UserGroupResource, UserGroupResource.resource_uuid == Community.community_uuid)
+        .outerjoin(UserGroupUser, and_(
+            UserGroupUser.usergroup_id == UserGroupResource.usergroup_id,
+            UserGroupUser.user_id == current_user.id
+        ))
+        .where(or_(
+            Community.public == True,
+            UserGroupResource.resource_uuid == None,  # Not in any UserGroup
+            UserGroupUser.user_id == current_user.id,  # User in linked UserGroup
+        ))
+        .distinct()
+    )
+
+    # Now select full communities using the IDs
+    query = (
+        select(Community)
+        .where(Community.id.in_(accessible_community_ids_query))
+        .order_by(Community.creation_date.desc())
+        .offset(offset)
+        .limit(limit)
+    )
 
     communities = db_session.exec(query).all()
-
     return [CommunityRead.model_validate(c.model_dump()) for c in communities]
 
 
@@ -317,22 +357,56 @@ async def get_community_user_rights(
             "is_admin": False,
             "is_maintainer_role": False,
         },
+        "access": {
+            "via_public": False,
+            "via_usergroups": [],
+            "has_usergroup_restriction": False,
+        },
     }
 
     # Handle anonymous users
     if current_user.id == 0:
         if community.public:
             rights["permissions"]["read"] = True
+            rights["access"]["via_public"] = True
         return rights
 
-    # Authenticated users can read communities
-    rights["permissions"]["read"] = True
-    rights["permissions"]["create_discussion"] = True
+    # Check community access method
+    rights["access"]["via_public"] = community.public
+
+    # Check UserGroups access
+    usergroup_stmt = select(UserGroupResource).where(
+        UserGroupResource.resource_uuid == community_uuid
+    )
+    usergroup_resources = db_session.exec(usergroup_stmt).all()
+
+    if usergroup_resources:
+        rights["access"]["has_usergroup_restriction"] = True
+        usergroup_ids = [ugr.usergroup_id for ugr in usergroup_resources]
+
+        membership_stmt = select(UserGroupUser).where(
+            UserGroupUser.usergroup_id.in_(usergroup_ids),
+            UserGroupUser.user_id == current_user.id
+        )
+        user_memberships = db_session.exec(membership_stmt).all()
+        rights["access"]["via_usergroups"] = [m.usergroup_id for m in user_memberships]
 
     # Check admin/maintainer role
     is_admin_or_maintainer = await authorization_verify_based_on_org_admin_status(
         request, current_user.id, "update", community_uuid, db_session
     )
+
+    # Check if user has access via public, UserGroups, or admin status
+    has_access = (
+        community.public or
+        not rights["access"]["has_usergroup_restriction"] or
+        len(rights["access"]["via_usergroups"]) > 0 or
+        is_admin_or_maintainer
+    )
+
+    if has_access:
+        rights["permissions"]["read"] = True
+        rights["permissions"]["create_discussion"] = True
 
     if is_admin_or_maintainer:
         rights["ownership"]["is_admin"] = True
