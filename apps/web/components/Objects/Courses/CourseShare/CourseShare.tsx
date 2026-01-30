@@ -86,37 +86,35 @@ function CourseShare({ courseName, courseUrl }: CourseShareProps) {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-10 z-50 bg-white rounded-lg nice-shadow p-2 min-w-[140px]">
-          <div className="flex flex-wrap gap-1.5 justify-center">
-            {shareLinks.map((link) => {
-              const Icon = link.icon
-              return (
-                <a
-                  key={link.name}
-                  href={link.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => setIsOpen(false)}
-                  className={`flex items-center justify-center w-8 h-8 rounded-md bg-neutral-100 text-neutral-600 transition-all duration-200 ${link.color}`}
-                  title={link.name}
-                >
-                  <Icon size={14} />
-                </a>
-              )
-            })}
+        <div className="absolute right-0 top-10 z-50 bg-white rounded-lg nice-shadow py-1 min-w-[160px]">
+          {shareLinks.map((link) => {
+            const Icon = link.icon
+            return (
+              <a
+                key={link.name}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setIsOpen(false)}
+                className={`flex items-center gap-2.5 px-3 py-2 text-sm text-neutral-600 transition-all duration-200 ${link.color}`}
+              >
+                <Icon size={16} />
+                <span>{link.name}</span>
+              </a>
+            )
+          })}
 
-            <button
-              onClick={copyToClipboard}
-              className={`flex items-center justify-center w-8 h-8 rounded-md transition-all duration-200 ${
-                copied
-                  ? 'bg-green-500 text-white'
-                  : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
-              }`}
-              title={t('courses.copy_link')}
-            >
-              {copied ? <Check size={14} /> : <Link2 size={14} />}
-            </button>
-          </div>
+          <button
+            onClick={copyToClipboard}
+            className={`flex items-center gap-2.5 w-full px-3 py-2 text-sm transition-all duration-200 ${
+              copied
+                ? 'bg-green-500 text-white'
+                : 'text-neutral-600 hover:bg-neutral-100'
+            }`}
+          >
+            {copied ? <Check size={16} /> : <Link2 size={16} />}
+            <span>{copied ? t('courses.copied') : t('courses.copy_link')}</span>
+          </button>
         </div>
       )}
     </div>
