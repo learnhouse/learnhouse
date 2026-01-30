@@ -31,6 +31,7 @@
     "dutch": "Dutch",
     "thai": "Thai",
     "bengali": "Bengali",
+    "unknown": "Unknown",
     "loading": "Loading...",
     "search": "Search",
     "all": "All",
@@ -39,6 +40,23 @@
     "recent": "Recent",
     "expand": "Expand",
     "help": "Help",
+    "help_menu": {
+      "documentation": "Documentation",
+      "website": "LearnHouse Website",
+      "discord": "Discord",
+      "report_feedback": "Report Issue or Feedback",
+      "feedback_title": "Send Feedback",
+      "feedback_description": "Help us improve LearnHouse by sharing your thoughts, reporting bugs, or suggesting new features.",
+      "feedback_placeholder": "Tell us what's on your mind...",
+      "feedback_success": "Thank you for your feedback!",
+      "send_feedback": "Send Feedback",
+      "sending": "Sending...",
+      "how_was_experience": "How was your experience?",
+      "reaction_happy": "Good",
+      "reaction_neutral": "Okay",
+      "reaction_sad": "Bad",
+      "attach_image": "Attach screenshot"
+    },
     "plans": {
       "label": "Plans",
       "upgrade_button": "Upgrade to {{plan}}",
@@ -74,6 +92,10 @@
         "certifications": {
           "title": "Pro Feature",
           "description": "Certifications is a premium feature available only to organizations on our Pro plan or higher. Upgrade to issue certificates to learners who complete your courses."
+        },
+        "seo": {
+          "title": "Standard Feature",
+          "description": "SEO optimization tools are available only to organizations on our Standard plan or higher. Upgrade to customize search engine appearance, social sharing previews, and structured data for your courses."
         }
       }
     },
@@ -81,6 +103,8 @@
     "version": "Version",
     "users": "Users",
     "save": "Save",
+    "save_changes": "Save Changes",
+    "saving": "Saving...",
     "cancel": "Cancel",
     "submit": "Submit",
     "delete": "Delete",
@@ -212,11 +236,15 @@
     "no_updates_yet": "No updates yet",
     "no_updates_desc": "Updates about this course will appear here",
     "quit_course": "Quit Course",
+    "quit_course_confirm": "Are you sure you want to quit this course? You will lose all your progress.",
+    "quit_course_title": "Quit Course?",
     "course_content": "Course Content",
     "course_completion": "Course Completion",
     "course_completed_exclamation": "Course Completed!",
     "what_you_will_learn": "What you will learn",
     "course_lessons": "Course Lessons",
+    "share_course": "Share Course",
+    "copy_link": "Copy Link",
     "unlock_certificate_message": "Complete all activities to unlock your certificate",
     "chapter": "Chapter",
     "chapters": "Chapters",
@@ -267,6 +295,83 @@
     "contributor_application_success": "Your application to contribute has been submitted successfully",
     "contributor_application_error": "Failed to submit your application. Please try again later.",
     "contribute": "Contribute",
+    "clone_course": "Clone Course",
+    "clone_course_title": "Clone \"{{name}}\"",
+    "clone_course_confirm": "This will create a complete copy of the course including all chapters, activities, and files. The cloned course will be set to private.",
+    "cloning_course": "Cloning course...",
+    "course_cloned_success": "Course cloned successfully",
+    "course_cloned_error": "Failed to clone course",
+    "published": "Published",
+    "unpublished": "Unpublished",
+    "search_courses": "Search courses...",
+    "search_results": "Found {{count}} course(s) matching \"{{query}}\"",
+    "no_search_results": "No courses found",
+    "try_different_search": "Try a different search term",
+    "select_courses": "Select",
+    "select_all": "Select All",
+    "clear_selection": "Clear",
+    "selected_count": "{{count}} selected",
+    "clone_selected": "Clone Selected",
+    "clone_selected_confirm": "This will create copies of {{count}} course(s). All cloned courses will be private. Continue?",
+    "delete_selected": "Delete Selected",
+    "delete_selected_confirm": "This will permanently delete {{count}} course(s). This action cannot be undone. Continue?",
+    "course_description_required": "Course description is required",
+    "export_course": "Export Course",
+    "export_selected": "Export Selected",
+    "exporting_course": "Exporting course...",
+    "exporting_courses": "Exporting {{count}} course(s)...",
+    "course_exported_success": "Course exported successfully",
+    "courses_exported_success": "{{count}} course(s) exported successfully",
+    "course_exported_error": "Failed to export course",
+    "courses_exported_error": "Failed to export courses",
+    "clone_courses_title": "Clone Courses",
+    "delete_courses_title": "Delete Courses",
+    "deleting_courses": "Deleting {{count}} course(s)...",
+    "courses_deleted_success": "{{count}} course(s) deleted successfully",
+    "courses_deleted_partial": "{{success}} course(s) deleted, {{error}} failed",
+    "cloning_courses": "Cloning {{count}} course(s)...",
+    "courses_cloned_success": "{{count}} course(s) cloned successfully",
+    "courses_cloned_partial": "{{success}} course(s) cloned, {{error}} failed",
+    "import": {
+      "scorm_package": "SCORM Package",
+      "scorm_description": "Import SCORM 1.2 or SCORM 2004 packages",
+      "learnhouse_courses": "LearnHouse Courses",
+      "learnhouse_description": "Import courses exported from LearnHouse",
+      "upload_package": "Upload Package",
+      "configure": "Configure",
+      "complete": "Complete",
+      "click_to_upload": "Click to upload or drag and drop",
+      "learnhouse_format": "LearnHouse course export (.zip)",
+      "learnhouse_info": "Upload a LearnHouse course export package (.zip). You'll be able to select which courses to import and configure import options.",
+      "analyze_package": "Analyze Package",
+      "ready_to_analyze": "Ready to analyze",
+      "invalid_file_format": "Please upload a .zip file",
+      "analysis_failed": "Failed to analyze package",
+      "package_analyzed": "Package Analyzed Successfully",
+      "select_courses": "Select Courses to Import",
+      "select_all": "Select All",
+      "deselect_all": "Deselect All",
+      "chapters": "chapters",
+      "activities": "activities",
+      "has_thumbnail": "Has thumbnail",
+      "selected": "selected",
+      "options": "Import Options",
+      "name_prefix": "Course Name Prefix",
+      "name_prefix_placeholder": "e.g. Imported -",
+      "set_private": "Set as private",
+      "set_unpublished": "Set as unpublished",
+      "select_at_least_one": "Please select at least one course to import",
+      "import_courses": "Import {{count}} Course(s)",
+      "upload_different": "Upload different package",
+      "importing_courses": "Importing courses...",
+      "please_wait": "This may take a moment",
+      "import_complete": "Import Complete!",
+      "import_failed": "Import Failed",
+      "import_partial": "Import Partially Complete",
+      "import_summary": "{{successful}} of {{total}} course(s) imported successfully",
+      "created": "Created",
+      "done": "Done"
+    },
     "scorm": {
       "upload_package": "Upload SCORM Package",
       "package_file": "Package File (.zip)",
@@ -284,6 +389,198 @@
       "configure": "Configure",
       "ready_to_analyze": "Ready to analyze",
       "course_details": "Course Details"
+    },
+    "create": {
+      "choose_type": "Create New Course",
+      "choose_type_description": "Choose how you want to create your course",
+      "from_scratch": "Start from Scratch",
+      "from_scratch_description": "Manually create your course structure and content",
+      "with_ai": "Start with AI",
+      "with_ai_description": "Let AI help you plan and generate your course content",
+      "ai": {
+        "title": "AI Course Creator",
+        "step_planning": "Planning",
+        "step_content": "Content",
+        "continue_to_content": "Continue to Content",
+        "creating_structure": "Creating structure...",
+        "finish_and_edit": "Finish & Edit Course",
+        "chat_title": "Course Planner",
+        "chat_description": "Describe the course you want to create, or choose a template below:",
+        "iterations": "iterations",
+        "max_iterations_reached": "Maximum iterations reached. Continue to content generation or start over.",
+        "content_step_hint": "Your course structure has been created. Generate content for each activity below.",
+        "content_step_info": "Use the panel on the left to generate content for your activities.",
+        "input_placeholder_initial": "Describe the course you want to create...",
+        "input_placeholder_iterate": "Describe changes to the plan...",
+        "generating": "Creating course plan...",
+        "plan_generated": "Course Plan Generated",
+        "plan_generated_hint": "Review the plan in the preview panel. You can edit it or ask for changes.",
+        "describe_course": "Describe Your Course",
+        "describe_course_hint": "Tell the AI about the course you want to create, including the topic, target audience, and learning objectives.",
+        "generating_plan": "Generating course plan...",
+        "chapters": "Chapters",
+        "activities": "activities",
+        "add_chapter": "Add Chapter",
+        "add_activity": "Add Activity",
+        "generate_content": "Generate Content",
+        "generate_content_description": "Generate AI-powered content for each activity in your course.",
+        "generated": "generated",
+        "generate_all": "Generate All",
+        "generate": "Generate",
+        "generating_short": "Generating...",
+        "done": "Done",
+        "course_structure_created": "Course structure created successfully!",
+        "failed_to_create": "Failed to create course structure",
+        "create_course": "Create Course",
+        "course_created_success": "Course created successfully!",
+        "content_generated_success": "Content generated successfully!",
+        "content_parse_error": "Failed to parse generated content",
+        "all_content_generated": "All Content Generated!",
+        "all_content_generated_hint": "Click 'Finish & Edit Course' to view and edit your course content.",
+        "attach_image": "Photo",
+        "attach_video": "Video",
+        "attach_youtube": "YouTube Video",
+        "attach_file": "Document",
+        "attach": "Attach",
+        "send": "Send",
+        "processing_video": "Analyzing video content...",
+        "video_processing_hint": "AI is processing your video attachment",
+        "still_working": "Still generating your course plan...",
+        "video_takes_time": "Video analysis can take 1-2 minutes",
+        "video_hint": "Videos may take 1-2 minutes to process"
+      }
+    }
+  },
+  "communities": {
+    "title": "Communities",
+    "new_community": "New Community",
+    "no_communities": "No communities yet",
+    "no_communities_description": "Create a community to start discussions",
+    "public": "Public",
+    "private": "Private",
+    "discussions": "discussions",
+    "discussion": "discussion",
+    "created": "Created",
+    "linked_course": "Linked Course",
+    "community_guidelines": "Community Guidelines",
+    "community_guidelines_text": "Be respectful and constructive. Help others and share your knowledge with the community.",
+    "new_discussion": "New Discussion",
+    "manage": "Manage",
+    "sidebar": {
+      "posted_by": "Posted by",
+      "upvotes": "Upvotes",
+      "category": "Category",
+      "created": "Created",
+      "pinned": "Pinned",
+      "locked": "Locked",
+      "reactions": "Reactions",
+      "community": "Community"
+    },
+    "discussion_list": {
+      "search_placeholder": "Search discussions...",
+      "sort_by": "Sort by:",
+      "latest_activity": "Latest activity",
+      "top": "Top",
+      "hot": "Hot",
+      "new_discussion": "New discussion",
+      "select": "Select",
+      "cancel": "Cancel",
+      "select_all": "Select all",
+      "deselect_all": "Deselect all",
+      "selected": "selected",
+      "delete": "Delete",
+      "delete_discussions_title": "Delete {{count}} discussion?",
+      "delete_discussions_title_plural": "Delete {{count}} discussions?",
+      "delete_discussions_confirm": "Are you sure you want to delete {{count}} {{type}}? This action cannot be undone.",
+      "no_results": "No results found",
+      "no_results_description": "Try adjusting your search or clear the filter",
+      "clear_search": "Clear search",
+      "no_discussions": "No discussions yet",
+      "no_discussions_description": "Be the first to start a discussion in this community!",
+      "start_discussion": "Start Discussion"
+    },
+    "discussion_detail": {
+      "edit": "Edit",
+      "delete": "Delete",
+      "delete_title": "Delete Discussion?",
+      "delete_confirm": "Are you sure you want to delete this discussion? This action cannot be undone.",
+      "delete_button": "Delete Discussion",
+      "no_details": "No additional details provided."
+    },
+    "discussion_card": {
+      "pin_discussion": "Pin discussion",
+      "unpin_discussion": "Unpin discussion",
+      "lock_discussion": "Lock discussion",
+      "unlock_discussion": "Unlock discussion",
+      "delete_discussion": "Delete discussion",
+      "delete_title": "Delete discussion?",
+      "delete_confirm": "Are you sure you want to delete this discussion? This action cannot be undone.",
+      "votes": "votes"
+    },
+    "comments": {
+      "no_replies": "No replies yet",
+      "locked": "This discussion is locked",
+      "sign_in_to_reply": "Sign in",
+      "to_reply": "to reply",
+      "write_reply": "Write a reply...",
+      "reply": "Reply",
+      "edit": "Edit",
+      "delete": "Delete",
+      "save": "Save",
+      "cancel": "Cancel",
+      "failed_to_post": "Failed to post reply. Please try again.",
+      "content_not_allowed": "Your reply contains content that is not allowed.",
+      "failed_to_update": "Failed to update reply. Please try again."
+    },
+    "label_filter": {
+      "label": "Label:",
+      "all": "All",
+      "all_discussions": "All discussions",
+      "clear_filter": "Clear filter"
+    },
+    "labels": {
+      "general": "General",
+      "question": "Question",
+      "idea": "Idea",
+      "announcement": "Announcement",
+      "showcase": "Showcase"
+    },
+    "create_discussion": {
+      "title": "Start a Discussion",
+      "description": "Share your thoughts with the community",
+      "category_label": "Category",
+      "title_label": "Discussion Title",
+      "title_placeholder": "What would you like to discuss?",
+      "emoji_selected": "Custom emoji selected",
+      "emoji_hint": "Click the + to add a custom emoji (optional)",
+      "details_label": "Details (optional)",
+      "details_placeholder": "Add more context or details to your discussion...",
+      "editor_hint": "Use the toolbar to format your text with bold, italic, lists, and more.",
+      "cancel": "Cancel",
+      "submit": "Post Discussion",
+      "title_required": "Title is required",
+      "title_min_length": "Title must be at least 5 characters",
+      "title_max_length": "Title must be less than 200 characters",
+      "content_not_allowed": "Your discussion contains content that is not allowed.",
+      "failed_to_create": "Failed to create discussion. Please try again."
+    },
+    "edit_discussion": {
+      "title": "Edit Discussion",
+      "description": "Update your discussion",
+      "save": "Save Changes",
+      "cancel": "Cancel",
+      "close": "Close",
+      "failed_to_update": "Failed to update discussion. Please try again.",
+      "content_not_allowed": "Your discussion contains content that is not allowed.",
+      "max_edits_reached": "You have reached the maximum number of edits ({{count}}). You can no longer edit this discussion.",
+      "edits_remaining": "You have {{count}} edit(s) remaining for this discussion.",
+      "no_edits_remaining": "You have used all {{count}} edits. This discussion can no longer be edited."
+    },
+    "course_section": {
+      "title": "Community Discussions",
+      "view_all": "View All",
+      "no_discussions": "No discussions yet",
+      "start_first": "Start the first discussion"
     }
   },
   "collections": {
@@ -449,6 +746,15 @@
     "benefits": "Benefits:",
     "min_price": "Minimum Price:",
     "choose_price": "Choose your price"
+  },
+  "account": {
+    "title": "Account",
+    "general": "General",
+    "profile": "Profile",
+    "security": "Security",
+    "my_courses": "My Courses",
+    "no_purchased_courses": "No purchased courses yet",
+    "purchased_courses_description": "Courses you have purchased or subscribed to will appear here"
   },
   "user": {
     "user_settings": "User Settings",
@@ -728,7 +1034,11 @@
       "create_course": "Create Course",
       "create_new_course": "Create a new course",
       "import_course": "Import Course",
+      "import_scorm": "Import SCORM Package",
       "import_scorm_description": "Import a SCORM package to create a new course",
+      "import_learnhouse": "Import LearnHouse Courses",
+      "import_learnhouse_description": "Import courses from a LearnHouse export package",
+      "import_select_type": "Select the type of package you want to import",
       "no_courses": "No courses yet",
       "create_course_placeholder": "Create a course to add content",
       "no_courses_available": "No courses available yet"
@@ -790,7 +1100,10 @@
         "saving": "Saving...",
         "update_success": "Organization Updated",
         "update_error": "Failed to update organization",
-        "updating": "Updating organization..."
+        "updating": "Updating organization...",
+        "footer_text": "Footer Text",
+        "footer_text_placeholder": "Enter footer text...",
+        "footer_text_desc": "Custom text displayed at the bottom of your organization pages"
       },
       "images": {
         "title": "Images & Previews",
@@ -848,8 +1161,19 @@
         "subtitle": "Manage your organization's visual identity and social presence",
         "tabs": {
           "images": "Images & Previews",
+          "theme": "Theme",
           "social": "Social Links"
         }
+      },
+      "theme": {
+        "primary_color": "Primary Color",
+        "primary_color_desc": "Choose a primary color for your organization's header and page background tint.",
+        "clear_color": "Clear color",
+        "preview": "Live Preview",
+        "preview_hint": "This is how your organization header and background will appear",
+        "footer_text": "Footer Text",
+        "footer_text_desc": "Add custom text to display in the page footer.",
+        "footer_text_placeholder": "Enter footer text..."
       },
       "socials": {
         "title": "Social Links",
@@ -1313,6 +1637,17 @@
       "usergroups": {
         "title": "Manage UserGroups & Users",
         "subtitle": "UserGroups are a way to group users together to manage their access to the resources (Courses) in your organization.",
+        "search_placeholder": "Search groups...",
+        "no_results": "No groups found matching your search",
+        "no_groups": "No user groups yet",
+        "count": {
+          "singular": "group",
+          "plural": "groups"
+        },
+        "member_count": {
+          "singular": "member",
+          "plural": "members"
+        },
         "table": {
           "usergroup": "UserGroup",
           "description": "Description",
@@ -1329,14 +1664,35 @@
           "manage_users": {
             "title": "Manage UserGroup Users",
             "description": "Manage the users in this UserGroup",
+            "search_placeholder": "Search users by name or username...",
+            "no_results": "No users found matching your search",
+            "no_users": "No users in this organization yet",
+            "tabs": {
+              "all": "All Users",
+              "in_group": "In Group",
+              "not_in_group": "Not in Group"
+            },
+            "selection": {
+              "count": "{{count}} users selected",
+              "clear": "Clear",
+              "add_selected": "Add {{count}} to Group",
+              "remove_selected": "Remove {{count}} from Group",
+              "select_all_visible": "Select all visible"
+            },
+            "status": {
+              "in_group": "In Group",
+              "not_in_group": "Not in Group",
+              "linked": "Linked",
+              "not_linked": "Not linked"
+            },
+            "pagination": {
+              "showing": "Showing {{start}}-{{end}} of {{total}}",
+              "page": "Page {{current}} of {{total}}"
+            },
             "table": {
               "user": "User",
               "linked": "Linked",
               "actions": "Actions"
-            },
-            "status": {
-              "linked": "Linked",
-              "not_linked": "Not linked"
             },
             "actions": {
               "link": "Link",
@@ -1345,6 +1701,11 @@
             "toasts": {
               "link_success": "User linked successfully",
               "unlink_success": "User unlinked successfully",
+              "bulk_adding": "Adding users to group...",
+              "bulk_add_success": "Successfully added {{count}} users to group",
+              "bulk_removing": "Removing users from group...",
+              "bulk_remove_success": "Successfully removed {{count}} users from group",
+              "bulk_error": "An error occurred during the operation",
               "error": "Error {{status}}: {{detail}}"
             }
           },
@@ -1718,6 +2079,30 @@
       "no_courses": "No courses yet",
       "create_course_placeholder": "Create a course to add content",
       "no_courses_available": "No courses available yet",
+      "publishing": "Publishing course...",
+      "unpublishing": "Unpublishing course...",
+      "published_success": "Course published successfully",
+      "unpublished_success": "Course unpublished successfully",
+      "publish_error": "Failed to update publish status",
+      "published": "Published",
+      "unpublished": "Unpublished",
+      "processing": "Processing...",
+      "click_to_publish": "Click to publish",
+      "click_to_unpublish": "Click to unpublish",
+      "preview": "Preview",
+      "save": {
+        "success": "Changes saved successfully",
+        "error": "Failed to save changes",
+        "partial_success": "Saved with some issues: {{failed}}",
+        "partial_error": "Partially saved ({{success}}), but failed: {{failed}}",
+        "certification_error": "Failed to save certification settings",
+        "saving": "Saving...",
+        "saved": "Saved",
+        "save": "Save",
+        "unsaved": "Unsaved changes",
+        "retry": "Error - Click to retry",
+        "retry_button": "Retry"
+      },
       "overview_top": {
         "course_label": "Course",
         "rights_guide_button": "Rights Guide"
@@ -1728,6 +2113,7 @@
           "content": "Content",
           "access": "Access",
           "contributors": "Contributors",
+          "seo": "SEO",
           "certification": "Certification"
         },
         "access_denied": {
@@ -1896,6 +2282,74 @@
           "cannot_modify_creator": "Cannot modify a creator's role or status"
         }
       },
+      "seo": {
+        "title": "SEO Settings",
+        "subtitle": "Optimize your course for search engines and social media sharing",
+        "sections": {
+          "basic": {
+            "title": "Basic SEO",
+            "subtitle": "Configure how your course appears in search engine results"
+          },
+          "opengraph": {
+            "title": "Open Graph",
+            "subtitle": "Customize how your course appears when shared on social media (Facebook, LinkedIn, etc.)"
+          },
+          "twitter": {
+            "title": "Twitter Card",
+            "subtitle": "Customize how your course appears when shared on Twitter/X"
+          },
+          "robots": {
+            "title": "Robots & Structured Data",
+            "subtitle": "Control search engine indexing and enable rich snippets"
+          }
+        },
+        "form": {
+          "title_label": "SEO Title",
+          "title_placeholder": "Enter a custom title for search engines",
+          "title_hint": "Leave empty to use the course name. Recommended: 50-60 characters",
+          "description_label": "Meta Description",
+          "description_placeholder": "Enter a compelling description for search results",
+          "description_hint": "Leave empty to use the course description. Recommended: 150-160 characters",
+          "keywords_label": "Keywords",
+          "keywords_placeholder": "keyword1, keyword2, keyword3",
+          "keywords_hint": "Comma-separated list of keywords related to your course",
+          "canonical_url_label": "Canonical URL",
+          "canonical_url_placeholder": "https://example.com/course/your-course",
+          "canonical_url_hint": "Use if this course is duplicated elsewhere. Leave empty for default URL",
+          "og_title_label": "OG Title",
+          "og_title_placeholder": "Custom title for social media sharing",
+          "og_description_label": "OG Description",
+          "og_description_placeholder": "Custom description for social media sharing",
+          "og_image_label": "OG Image URL",
+          "og_image_placeholder": "https://example.com/image.jpg",
+          "og_image_hint": "Custom image URL for social sharing. Leave empty to use course thumbnail",
+          "twitter_card_label": "Card Type",
+          "twitter_card_summary": "Summary",
+          "twitter_card_summary_large": "Summary with Large Image",
+          "twitter_title_label": "Twitter Title",
+          "twitter_title_placeholder": "Custom title for Twitter sharing",
+          "twitter_description_label": "Twitter Description",
+          "twitter_description_placeholder": "Custom description for Twitter sharing",
+          "robots_noindex_label": "Prevent search engine indexing (noindex)",
+          "robots_noindex_hint": "When enabled, search engines will not index this course",
+          "robots_nofollow_label": "Prevent following links (nofollow)",
+          "robots_nofollow_hint": "When enabled, search engines will not follow links on this page",
+          "enable_jsonld_label": "Enable JSON-LD Structured Data",
+          "enable_jsonld_hint": "Adds Course schema.org markup for rich snippets in search results"
+        },
+        "validation": {
+          "title_max_length": "SEO title must be 70 characters or less",
+          "description_max_length": "Meta description must be 160 characters or less",
+          "og_title_max_length": "OG title must be 70 characters or less",
+          "og_description_max_length": "OG description must be 200 characters or less",
+          "twitter_title_max_length": "Twitter title must be 70 characters or less",
+          "twitter_description_max_length": "Twitter description must be 200 characters or less",
+          "invalid_url": "Please enter a valid URL"
+        },
+        "errors": {
+          "save_failed": "Failed to save SEO settings"
+        }
+      },
       "certification": {
         "title": "Course Certification",
         "subtitle": "Enable and configure certificates for students who complete this course",
@@ -2018,7 +2472,48 @@
           "tabs": {
             "general": "General",
             "thumbnail": "Thumbnail",
+            "access": "Access",
+            "course": "Linked Course",
             "moderation": "Moderation"
+          },
+          "general": {
+            "title": "General Settings",
+            "subtitle": "Manage community name, description, and visibility"
+          },
+          "thumbnail": {
+            "title": "Thumbnail",
+            "subtitle": "Update the community cover image"
+          },
+          "access": {
+            "title": "Access Settings",
+            "subtitle": "Control who can access this community"
+          },
+          "course": {
+            "title": "Linked Course",
+            "subtitle": "Connect this community to a course"
+          },
+          "moderation": {
+            "title": "Moderation",
+            "subtitle": "Configure content moderation settings"
+          }
+        },
+        "course": {
+          "title": "Linked Course",
+          "subtitle": "Connect this community to a course for course-specific discussions",
+          "currently_linked": "Currently linked",
+          "unlink": "Unlink",
+          "link_button": "Link Course",
+          "search_placeholder": "Search courses...",
+          "no_courses": "No courses found",
+          "course_linked_id": "Course linked (ID: {{id}})",
+          "course_not_found": "The linked course may no longer exist or you don't have access to it",
+          "toasts": {
+            "linking": "Linking course...",
+            "link_success": "Course linked successfully",
+            "link_error": "Failed to link course",
+            "unlinking": "Unlinking course...",
+            "unlink_success": "Course unlinked successfully",
+            "unlink_error": "Failed to unlink course"
           }
         },
         "general": {
@@ -2079,6 +2574,60 @@
             "saving": "Saving moderation settings...",
             "save_success": "Moderation settings saved",
             "save_error": "Failed to save moderation settings"
+          }
+        },
+        "access": {
+          "title": "Access Settings",
+          "subtitle": "Choose if you want your community to be publicly available or only accessible to specific user groups",
+          "public": {
+            "title": "Public",
+            "description": "The community is publicly available. Anyone can view and participate in discussions.",
+            "active": "Active",
+            "confirmation_title": "Change to Public?",
+            "confirmation_message": "Are you sure you want this community to be publicly available?",
+            "confirmation_button": "Change to Public"
+          },
+          "restricted": {
+            "title": "Restricted",
+            "description": "The community is only accessible to members of selected User Groups. Link User Groups to grant access.",
+            "active": "Active",
+            "confirmation_title": "Change to Restricted?",
+            "confirmation_message": "Are you sure you want this community to be restricted? Only members of linked User Groups will have access.",
+            "confirmation_button": "Change to Restricted"
+          },
+          "usergroups": {
+            "title": "User Groups",
+            "subtitle": "Grant access to this community by linking it to User Groups. Users in these groups will be able to view and participate.",
+            "table": {
+              "name": "Name",
+              "actions": "Actions"
+            },
+            "actions": {
+              "delete_link": "Remove",
+              "link_to_usergroup": "Link to User Group"
+            },
+            "modals": {
+              "link_title": "Link Community to User Group",
+              "link_description": "Choose a User Group to link this community to. Users from this User Group will have access.",
+              "unlink_title": "Remove User Group Access?",
+              "unlink_message": "Users from this User Group will no longer have access to this community.",
+              "unlink_button": "Remove Access",
+              "warning": "Users not in linked User Groups will lose access to this community",
+              "usergroup_name": "User Group Name",
+              "no_usergroups": "No User Groups available",
+              "create_usergroup": "Create a User Group",
+              "link_button": "Link"
+            },
+            "toasts": {
+              "link_success": "Successfully linked User Group",
+              "link_error": "Error {{status}}: {{detail}}",
+              "unlink_success": "Successfully removed User Group access",
+              "unlink_error": "An error occurred while removing User Group access"
+            }
+          },
+          "toasts": {
+            "update_success": "Access settings updated successfully",
+            "update_error": "Failed to update access settings"
           }
         },
         "modals": {

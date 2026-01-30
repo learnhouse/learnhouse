@@ -4,12 +4,13 @@ import { CourseProvider } from '../../../../../../../../components/Contexts/Cour
 import Link from 'next/link'
 import { CourseOverviewTop } from '@components/Dashboard/Misc/CourseOverviewTop'
 import { motion } from 'framer-motion'
-import { GalleryVerticalEnd, Globe, Info, UserPen, Award, Lock } from 'lucide-react'
+import { GalleryVerticalEnd, Globe, Info, UserPen, Award, Lock, Search } from 'lucide-react'
 import EditCourseStructure from '@components/Dashboard/Pages/Course/EditCourseStructure/EditCourseStructure'
 import EditCourseGeneral from '@components/Dashboard/Pages/Course/EditCourseGeneral/EditCourseGeneral'
 import EditCourseAccess from '@components/Dashboard/Pages/Course/EditCourseAccess/EditCourseAccess'
 import EditCourseContributors from '@components/Dashboard/Pages/Course/EditCourseContributors/EditCourseContributors'
 import EditCourseCertification from '@components/Dashboard/Pages/Course/EditCourseCertification/EditCourseCertification'
+import EditCourseSEO from '@components/Dashboard/Pages/Course/EditCourseSEO/EditCourseSEO'
 import { useCourseRights } from '@hooks/useCourseRights'
 import { useRouter } from 'next/navigation'
 import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
@@ -33,6 +34,7 @@ function CourseOverviewPage(props: { params: Promise<CourseOverviewParams> }) {
   const org = useOrg() as any;
   const currentPlan: PlanLevel = org?.config?.config?.cloud?.plan || 'free';
   const hasCertificationsAccess = isFeatureAvailable('certifications', currentPlan);
+  const hasSEOAccess = isFeatureAvailable('seo', currentPlan);
 
   function getEntireCourseUUID(courseuuid: string) {
     // add course_ to uuid
@@ -71,6 +73,14 @@ function CourseOverviewPage(props: { params: Promise<CourseOverviewParams> }) {
       icon: UserPen,
       href: `/dash/courses/course/${params.courseuuid}/contributors`,
       requiredPermission: 'manage_contributors' as const
+    },
+    {
+      key: 'seo',
+      label: t('dashboard.courses.settings.tabs.seo'),
+      icon: Search,
+      href: `/dash/courses/course/${params.courseuuid}/seo`,
+      requiredPermission: 'update' as const,
+      requiresPlan: 'standard' as PlanLevel
     },
     {
       key: 'certification',
@@ -122,7 +132,7 @@ function CourseOverviewPage(props: { params: Promise<CourseOverviewParams> }) {
   return (
     <div className="h-screen w-full bg-[#f8f8f8] grid grid-rows-[auto_1fr]">
       <CourseProvider courseuuid={courseuuid} withUnpublishedActivities={true}>
-        <div className="pl-10 pr-10 text-sm tracking-tight bg-[#fcfbfc] z-elevated nice-shadow">
+        <div className="pl-10 pr-10 text-sm tracking-tight bg-[#fcfbfc] z-10 nice-shadow relative">
           <CourseOverviewTop params={params} />
           <div className="flex space-x-3 font-black text-sm">
             {tabs.map((tab) => {
@@ -182,9 +192,9 @@ function CourseOverviewPage(props: { params: Promise<CourseOverviewParams> }) {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.1, type: 'spring', stiffness: 80 }}
-          className="h-full overflow-y-auto relative"
+          className="h-full overflow-y-auto"
         >
-          <div className="absolute inset-0">
+          <div>
             {params.subpage == 'content' && hasPermission('update_content') ? (
               <EditCourseStructure orgslug={params.orgslug} />
             ) : null}
@@ -196,6 +206,20 @@ function CourseOverviewPage(props: { params: Promise<CourseOverviewParams> }) {
             ) : null}
             {params.subpage == 'contributors' && hasPermission('manage_contributors') ? (
               <EditCourseContributors orgslug={params.orgslug} />
+            ) : null}
+            {params.subpage == 'seo' && hasPermission('update') ? (
+              <>
+                <div className="h-6" />
+                <PlanRestrictedFeature
+                  currentPlan={currentPlan}
+                  requiredPlan="standard"
+                  icon={Search}
+                  titleKey="common.plans.feature_restricted.seo.title"
+                  descriptionKey="common.plans.feature_restricted.seo.description"
+                >
+                  <EditCourseSEO orgslug={params.orgslug} />
+                </PlanRestrictedFeature>
+              </>
             ) : null}
             {params.subpage == 'certification' && hasPermission('create_certifications') ? (
               <div className="h-6" />

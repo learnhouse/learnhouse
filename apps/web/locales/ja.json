@@ -39,6 +39,23 @@
     "recent": "最近",
     "expand": "展開",
     "help": "ヘルプ",
+    "help_menu": {
+      "documentation": "ドキュメント",
+      "website": "LearnHouse ウェブサイト",
+      "discord": "Discord",
+      "report_feedback": "問題の報告またはフィードバック",
+      "feedback_title": "フィードバックを送信",
+      "feedback_description": "ご意見の共有、バグの報告、新機能のご提案で LearnHouse の改善にご協力ください。",
+      "feedback_placeholder": "お気づきの点をお聞かせください...",
+      "feedback_success": "フィードバックありがとうございます！",
+      "send_feedback": "フィードバックを送信",
+      "sending": "送信中...",
+      "how_was_experience": "体験はいかがでしたか？",
+      "reaction_happy": "良い",
+      "reaction_neutral": "普通",
+      "reaction_sad": "悪い",
+      "attach_image": "スクリーンショットを添付"
+    },
     "plans": {
       "label": "プラン",
       "upgrade_button": "{{plan}}にアップグレード",
@@ -70,6 +87,10 @@
         "certifications": {
           "title": "プロ機能",
           "description": "認定証はプロプラン以上の組織でのみ利用可能なプレミアム機能です。アップグレードしてコースを修了した学習者に認定証を発行しましょう。"
+        },
+        "communities": {
+          "title": "スタンダード機能",
+          "description": "コミュニティは、スタンダードプラン以上の組織のみが利用できるプレミアム機能です。メンバー向けのディスカッションコミュニティをアンロックするにはアップグレードしてください。"
         }
       }
     },
@@ -77,6 +98,8 @@
     "version": "バージョン",
     "users": "ユーザー",
     "save": "保存",
+    "save_changes": "変更を保存",
+    "saving": "保存中...",
     "cancel": "キャンセル",
     "submit": "送信",
     "delete": "削除",
@@ -213,6 +236,8 @@
     "course_completed_exclamation": "コースを修了しました！",
     "what_you_will_learn": "学べる内容",
     "course_lessons": "コースのレッスン",
+    "share_course": "コースを共有",
+    "copy_link": "リンクをコピー",
     "unlock_certificate_message": "すべてのアクティビティを完了して修了証を受け取りましょう",
     "chapter": "章",
     "chapters": "章",
@@ -262,7 +287,305 @@
     "submitting_contributor_application": "投稿者の応募を送信中...",
     "contributor_application_success": "投稿者への応募が正常に送信されました",
     "contributor_application_error": "応募の送信に失敗しました。後でもう一度お試しください。",
-    "contribute": "投稿する"
+    "contribute": "投稿する",
+    "scorm": {
+      "upload_package": "SCORMパッケージをアップロード",
+      "package_file": "パッケージファイル (.zip)",
+      "click_to_upload": "クリックしてアップロードまたはドラッグ＆ドロップ",
+      "supported_versions": "SCORM 1.2またはSCORM 2004パッケージ",
+      "import_info": "SCORMパッケージをアップロードして内容を分析します。コースを設定し、アクティビティをチャプターに割り当てることができます。",
+      "analyze_package": "パッケージを分析",
+      "package_analyzed": "パッケージの分析が完了しました",
+      "assign_scos": "アクティビティをチャプターに割り当て",
+      "activity_name": "アクティビティ",
+      "chapter_name": "チャプター",
+      "upload_different": "別のパッケージをアップロード",
+      "selected": "選択済み",
+      "create_course": "コースを作成",
+      "configure": "設定",
+      "ready_to_analyze": "分析準備完了",
+      "course_details": "コース詳細"
+    },
+    "clone_course": "コースを複製",
+    "clone_course_title": "\"{{name}}\" を複製",
+    "clone_course_confirm": "すべての章、アクティビティ、ファイルを含むコースの完全なコピーを作成します。複製されたコースは非公開に設定されます。",
+    "cloning_course": "コースを複製中...",
+    "course_cloned_success": "コースが正常に複製されました",
+    "course_cloned_error": "コースの複製に失敗しました",
+    "published": "公開中",
+    "unpublished": "非公開",
+    "search_courses": "コースを検索...",
+    "search_results": "「{{query}}」に一致する {{count}} 件のコースが見つかりました",
+    "no_search_results": "コースが見つかりません",
+    "try_different_search": "別の検索語をお試しください",
+    "select_courses": "選択",
+    "select_all": "すべて選択",
+    "clear_selection": "選択解除",
+    "selected_count": "{{count}} 件選択中",
+    "clone_selected": "選択を複製",
+    "clone_selected_confirm": "{{count}} 件のコースのコピーを作成します。複製されたコースは非公開に設定されます。続行しますか？",
+    "delete_selected": "選択を削除",
+    "delete_selected_confirm": "{{count}} 件のコースを完全に削除します。この操作は取り消せません。続行しますか？",
+    "course_description_required": "コースの説明は必須です",
+    "export_course": "コースをエクスポート",
+    "export_selected": "選択をエクスポート",
+    "exporting_course": "コースをエクスポート中...",
+    "exporting_courses": "{{count}} 件のコースをエクスポート中...",
+    "course_exported_success": "コースのエクスポートに成功しました",
+    "courses_exported_success": "{{count}} 件のコースのエクスポートに成功しました",
+    "course_exported_error": "コースのエクスポートに失敗しました",
+    "courses_exported_error": "コースのエクスポートに失敗しました",
+    "clone_courses_title": "コースを複製",
+    "delete_courses_title": "コースを削除",
+    "deleting_courses": "{{count}} 件のコースを削除中...",
+    "courses_deleted_success": "{{count}} 件のコースを削除しました",
+    "courses_deleted_partial": "{{success}} 件のコースを削除、{{error}} 件が失敗",
+    "cloning_courses": "{{count}} 件のコースを複製中...",
+    "courses_cloned_success": "{{count}} 件のコースを複製しました",
+    "courses_cloned_partial": "{{success}} 件のコースを複製、{{error}} 件が失敗",
+    "import": {
+      "scorm_package": "SCORMパッケージ",
+      "scorm_description": "SCORM 1.2 または SCORM 2004 パッケージをインポート",
+      "learnhouse_courses": "LearnHouseコース",
+      "learnhouse_description": "LearnHouseからエクスポートしたコースをインポート",
+      "upload_package": "パッケージをアップロード",
+      "configure": "設定",
+      "complete": "完了",
+      "click_to_upload": "クリックしてアップロードまたはドラッグ＆ドロップ",
+      "learnhouse_format": "LearnHouseコースエクスポート (.zip)",
+      "learnhouse_info": "LearnHouseコースエクスポートパッケージ (.zip) をアップロードします。インポートするコースを選択し、インポートオプションを設定できます。",
+      "analyze_package": "パッケージを分析",
+      "ready_to_analyze": "分析準備完了",
+      "invalid_file_format": ".zip ファイルをアップロードしてください",
+      "analysis_failed": "パッケージの分析に失敗しました",
+      "package_analyzed": "パッケージの分析に成功しました",
+      "select_courses": "インポートするコースを選択",
+      "select_all": "すべて選択",
+      "deselect_all": "すべて解除",
+      "chapters": "チャプター",
+      "activities": "アクティビティ",
+      "has_thumbnail": "サムネイルあり",
+      "selected": "選択済み",
+      "options": "インポートオプション",
+      "name_prefix": "コース名プレフィックス",
+      "name_prefix_placeholder": "例: インポート済み -",
+      "set_private": "非公開に設定",
+      "set_unpublished": "未公開に設定",
+      "select_at_least_one": "少なくとも1つのコースを選択してください",
+      "import_courses": "{{count}} 件のコースをインポート",
+      "upload_different": "別のパッケージをアップロード",
+      "importing_courses": "コースをインポート中...",
+      "please_wait": "しばらくお待ちください",
+      "import_complete": "インポート完了！",
+      "import_failed": "インポート失敗",
+      "import_partial": "一部インポート完了",
+      "import_summary": "{{total}} 件中 {{successful}} 件のコースをインポートしました",
+      "created": "作成済み",
+      "done": "完了"
+    },
+    "scorm": {
+      "upload_package": "SCORMパッケージをアップロード",
+      "package_file": "パッケージファイル (.zip)",
+      "click_to_upload": "クリックしてアップロードまたはドラッグ＆ドロップ",
+      "supported_versions": "SCORM 1.2 または SCORM 2004 パッケージ",
+      "import_info": "SCORMパッケージをアップロードして内容を分析します。コースを設定し、アクティビティをチャプターに割り当てることができます。",
+      "analyze_package": "パッケージを分析",
+      "package_analyzed": "パッケージの分析に成功しました",
+      "assign_scos": "アクティビティをチャプターに割り当て",
+      "activity_name": "アクティビティ",
+      "chapter_name": "チャプター",
+      "upload_different": "別のパッケージをアップロード",
+      "selected": "選択済み",
+      "create_course": "コースを作成",
+      "configure": "設定",
+      "ready_to_analyze": "分析準備完了",
+      "course_details": "コース詳細"
+    },
+    "create": {
+      "choose_type": "新しいコースを作成",
+      "choose_type_description": "コースの作成方法を選択してください",
+      "from_scratch": "ゼロから始める",
+      "from_scratch_description": "コースの構造とコンテンツを手動で作成します",
+      "with_ai": "AIで始める",
+      "with_ai_description": "AIにコースの計画と内容の生成を手伝ってもらいます",
+      "ai": {
+        "title": "AIコースクリエイター",
+        "step_planning": "計画",
+        "step_content": "コンテンツ",
+        "continue_to_content": "コンテンツへ進む",
+        "creating_structure": "構造を作成中...",
+        "finish_and_edit": "完了してコースを編集",
+        "chat_title": "コースプランナー",
+        "chat_description": "作成したいコースを説明するか、下のテンプレートを選択してください：",
+        "iterations": "回の反復",
+        "max_iterations_reached": "最大反復回数に達しました。コンテンツ生成に進むか、最初からやり直してください。",
+        "content_step_hint": "コース構造が作成されました。以下の各アクティビティのコンテンツを生成してください。",
+        "content_step_info": "左のパネルを使用して、アクティビティのコンテンツを生成します。",
+        "input_placeholder_initial": "作成したいコースを説明してください...",
+        "input_placeholder_iterate": "プランの変更点を説明してください...",
+        "generating": "コースプランを作成中...",
+        "plan_generated": "コースプラン生成完了",
+        "plan_generated_hint": "プレビューパネルでプランを確認してください。編集したり、変更を依頼したりできます。",
+        "describe_course": "コースを説明",
+        "describe_course_hint": "トピック、対象者、学習目標を含め、作成したいコースについてAIに伝えてください。",
+        "generating_plan": "コースプランを生成中...",
+        "chapters": "チャプター",
+        "activities": "アクティビティ",
+        "add_chapter": "チャプターを追加",
+        "add_activity": "アクティビティを追加",
+        "generate_content": "コンテンツを生成",
+        "generate_content_description": "コースの各アクティビティにAI駆動のコンテンツを生成します。",
+        "generated": "生成済み",
+        "generate_all": "すべて生成",
+        "generate": "生成",
+        "generating_short": "生成中...",
+        "done": "完了",
+        "course_structure_created": "コース構造が正常に作成されました！",
+        "failed_to_create": "コース構造の作成に失敗しました",
+        "create_course": "コースを作成",
+        "course_created_success": "コースが正常に作成されました！",
+        "content_generated_success": "コンテンツが正常に生成されました！",
+        "content_parse_error": "生成されたコンテンツの解析に失敗しました",
+        "all_content_generated": "すべてのコンテンツが生成されました！",
+        "all_content_generated_hint": "「完了してコースを編集」をクリックして、コースのコンテンツを表示・編集してください。",
+        "attach_image": "写真",
+        "attach_video": "動画",
+        "attach_youtube": "YouTubeリンク",
+        "attach_file": "ドキュメント"
+      }
+    }
+  },
+  "communities": {
+    "title": "コミュニティ",
+    "new_community": "新しいコミュニティ",
+    "no_communities": "コミュニティがまだありません",
+    "no_communities_description": "コミュニティを作成してディスカッションを始めましょう",
+    "public": "公開",
+    "private": "非公開",
+    "discussions": "ディスカッション",
+    "discussion": "ディスカッション",
+    "created": "作成日",
+    "linked_course": "関連コース",
+    "community_guidelines": "コミュニティガイドライン",
+    "community_guidelines_text": "敬意を持ち、建設的に行動してください。他の人を助け、コミュニティと知識を共有しましょう。",
+    "new_discussion": "新しいディスカッション",
+    "manage": "管理",
+    "sidebar": {
+      "posted_by": "投稿者",
+      "upvotes": "いいね",
+      "category": "カテゴリ",
+      "created": "作成日",
+      "pinned": "ピン留め",
+      "locked": "ロック中",
+      "reactions": "リアクション",
+      "community": "コミュニティ"
+    },
+    "discussion_list": {
+      "search_placeholder": "ディスカッションを検索...",
+      "sort_by": "並び替え：",
+      "latest_activity": "最新の活動",
+      "top": "人気",
+      "hot": "トレンド",
+      "new_discussion": "新しいディスカッション",
+      "select": "選択",
+      "cancel": "キャンセル",
+      "select_all": "すべて選択",
+      "deselect_all": "選択解除",
+      "selected": "選択中",
+      "delete": "削除",
+      "delete_discussions_title": "{{count}}件のディスカッションを削除しますか？",
+      "delete_discussions_title_plural": "{{count}}件のディスカッションを削除しますか？",
+      "delete_discussions_confirm": "{{count}}件の{{type}}を削除してもよろしいですか？この操作は取り消せません。",
+      "no_results": "結果が見つかりません",
+      "no_results_description": "検索条件を調整するか、フィルターをクリアしてください",
+      "clear_search": "検索をクリア",
+      "no_discussions": "ディスカッションがまだありません",
+      "no_discussions_description": "このコミュニティで最初のディスカッションを始めましょう！",
+      "start_discussion": "ディスカッションを開始"
+    },
+    "discussion_detail": {
+      "edit": "編集",
+      "delete": "削除",
+      "delete_title": "ディスカッションを削除しますか？",
+      "delete_confirm": "このディスカッションを削除してもよろしいですか？この操作は取り消せません。",
+      "delete_button": "ディスカッションを削除",
+      "no_details": "追加の詳細はありません。"
+    },
+    "discussion_card": {
+      "pin_discussion": "ディスカッションをピン留め",
+      "unpin_discussion": "ピン留めを解除",
+      "lock_discussion": "ディスカッションをロック",
+      "unlock_discussion": "ロックを解除",
+      "delete_discussion": "ディスカッションを削除",
+      "delete_title": "ディスカッションを削除しますか？",
+      "delete_confirm": "このディスカッションを削除してもよろしいですか？この操作は取り消せません。",
+      "votes": "票"
+    },
+    "comments": {
+      "no_replies": "まだ返信がありません",
+      "locked": "このディスカッションはロックされています",
+      "sign_in_to_reply": "ログイン",
+      "to_reply": "して返信",
+      "write_reply": "返信を書く...",
+      "reply": "返信",
+      "edit": "編集",
+      "delete": "削除",
+      "save": "保存",
+      "cancel": "キャンセル",
+      "failed_to_post": "返信の投稿に失敗しました。もう一度お試しください。",
+      "content_not_allowed": "返信に許可されていないコンテンツが含まれています。",
+      "failed_to_update": "更新に失敗しました。もう一度お試しください。"
+    },
+    "label_filter": {
+      "label": "ラベル：",
+      "all": "すべて",
+      "all_discussions": "すべてのディスカッション",
+      "clear_filter": "フィルターをクリア"
+    },
+    "labels": {
+      "general": "一般",
+      "question": "質問",
+      "idea": "アイデア",
+      "announcement": "お知らせ",
+      "showcase": "ショーケース"
+    },
+    "create_discussion": {
+      "title": "ディスカッションを開始",
+      "description": "コミュニティとあなたの考えを共有しましょう",
+      "category_label": "カテゴリ",
+      "title_label": "ディスカッションタイトル",
+      "title_placeholder": "何について話し合いたいですか？",
+      "emoji_selected": "カスタム絵文字を選択済み",
+      "emoji_hint": "+をクリックしてカスタム絵文字を追加（任意）",
+      "details_label": "詳細（任意）",
+      "details_placeholder": "ディスカッションにコンテキストや詳細を追加...",
+      "editor_hint": "ツールバーを使用して、太字、斜体、リストなどでテキストを書式設定できます。",
+      "cancel": "キャンセル",
+      "submit": "ディスカッションを投稿",
+      "title_required": "タイトルは必須です",
+      "title_min_length": "タイトルは5文字以上必要です",
+      "title_max_length": "タイトルは200文字以内にしてください",
+      "content_not_allowed": "ディスカッションに許可されていないコンテンツが含まれています。",
+      "failed_to_create": "ディスカッションの作成に失敗しました。もう一度お試しください。"
+    },
+    "edit_discussion": {
+      "title": "ディスカッションを編集",
+      "description": "ディスカッションを更新",
+      "save": "変更を保存",
+      "cancel": "キャンセル",
+      "close": "閉じる",
+      "failed_to_update": "更新に失敗しました。もう一度お試しください。",
+      "content_not_allowed": "ディスカッションに許可されていないコンテンツが含まれています。",
+      "max_edits_reached": "編集の最大回数（{{count}}回）に達しました。このディスカッションはこれ以上編集できません。",
+      "edits_remaining": "残り{{count}}回編集できます。",
+      "no_edits_remaining": "編集回数が残っていません（{{count}}回）。"
+    },
+    "course_section": {
+      "title": "コミュニティディスカッション",
+      "view_all": "すべて表示",
+      "no_discussions": "まだディスカッションがありません",
+      "start_first": "最初のディスカッションを始める"
+    }
   },
   "collections": {
     "collections": "コレクション",
@@ -427,6 +750,15 @@
     "benefits": "特典:",
     "min_price": "最低価格:",
     "choose_price": "価格を選択"
+  },
+  "account": {
+    "title": "アカウント",
+    "general": "一般",
+    "profile": "プロフィール",
+    "security": "セキュリティ",
+    "my_courses": "マイコース",
+    "no_purchased_courses": "購入したコースはまだありません",
+    "purchased_courses_description": "購入またはサブスクリプションしたコースがここに表示されます"
   },
   "user": {
     "user_settings": "ユーザー設定",
@@ -706,10 +1038,538 @@
       "create_course": "コースを作成",
       "create_new_course": "新しいコースを作成",
       "import_course": "コースをインポート",
+      "import_scorm": "SCORMパッケージをインポート",
       "import_scorm_description": "SCORMパッケージをインポートして新しいコースを作成",
+      "import_learnhouse": "LearnHouseコースをインポート",
+      "import_learnhouse_description": "LearnHouseエクスポートパッケージからコースをインポート",
+      "import_select_type": "インポートするパッケージの種類を選択",
       "no_courses": "コースがまだありません",
       "create_course_placeholder": "コースを作成してコンテンツを追加しましょう",
-      "no_courses_available": "利用可能なコースがまだありません"
+      "no_courses_available": "利用可能なコースがまだありません",
+      "publishing": "コースを公開中...",
+      "unpublishing": "コースを非公開中...",
+      "published_success": "コースが正常に公開されました",
+      "unpublished_success": "コースが正常に非公開になりました",
+      "publish_error": "公開状態の更新に失敗しました",
+      "published": "公開中",
+      "unpublished": "非公開",
+      "processing": "処理中...",
+      "click_to_publish": "クリックして公開",
+      "click_to_unpublish": "クリックして非公開",
+      "preview": "プレビュー",
+      "save": {
+        "success": "変更が正常に保存されました",
+        "error": "変更の保存に失敗しました",
+        "partial_success": "一部の問題がありますが保存されました：{{failed}}",
+        "partial_error": "一部保存されました（{{success}}）が、失敗：{{failed}}",
+        "certification_error": "認定設定の保存に失敗しました",
+        "saving": "保存中...",
+        "saved": "保存済み",
+        "save": "保存",
+        "unsaved": "未保存の変更",
+        "retry": "エラー - クリックして再試行",
+        "retry_button": "再試行"
+      },
+      "overview_top": {
+        "course_label": "コース",
+        "rights_guide_button": "権利ガイド"
+      },
+      "settings": {
+        "tabs": {
+          "general": "一般",
+          "content": "コンテンツ",
+          "access": "アクセス",
+          "contributors": "投稿者",
+          "certification": "証明書"
+        },
+        "access_denied": {
+          "title": "アクセス拒否",
+          "message": "このコースへのアクセス権限がありません。"
+        },
+        "access_restricted": {
+          "title": "アクセス制限",
+          "message": "{{tab}} へのアクセス権限がありません"
+        },
+        "loading": "読み込み中..."
+      },
+      "general": {
+        "form": {
+          "name_label": "名前",
+          "name_required": "必須",
+          "name_max_length": "100文字以内で入力してください",
+          "description_label": "説明",
+          "description_required": "必須",
+          "description_max_length": "1000文字以内で入力してください",
+          "about_label": "概要",
+          "learnings_label": "学べること",
+          "learnings_required": "必須",
+          "learnings_invalid_format": "無効な形式です",
+          "learnings_min_items": "少なくとも1つの学習項目が必要です",
+          "learnings_empty_text": "すべての学習項目にテキストを入力してください",
+          "learnings_invalid_json": "無効なJSON形式です",
+          "tags_label": "タグ",
+          "tags_placeholder": "Enterキーで追加...",
+          "thumbnail_type_label": "サムネイルの種類",
+          "thumbnail_type_image": "画像",
+          "thumbnail_type_video": "動画",
+          "thumbnail_type_both": "両方",
+          "thumbnail_label": "サムネイル",
+          "image_search_placeholder": "画像を検索..."
+        },
+        "thumbnail": {
+          "upload_image": "画像をアップロード",
+          "upload_video": "動画をアップロード",
+          "gallery": "ギャラリー",
+          "tabs": {
+            "image": "画像",
+            "video": "動画"
+          },
+          "supported_formats": {
+            "image": "対応形式: PNG, JPG/JPEG (最大8MB)",
+            "video": "対応形式: MP4, WebM (最大100MB)"
+          }
+        },
+        "errors": {
+          "save_failed": "コース構造の保存に失敗しました。"
+        }
+      },
+      "access": {
+        "title": "コースへのアクセス",
+        "subtitle": "コースをインターネット上で公開するか、サインイン済みのユーザーのみに限定するかを選択します",
+        "public": {
+          "title": "公開",
+          "description": "コースはインターネット上で一般公開され、検索エンジンのインデックス対象となり、誰でもアクセス可能です",
+          "active": "有効",
+          "confirmation_title": "公開に変更しますか？",
+          "confirmation_message": "本当にこのコースをインターネット上で一般公開しますか？",
+          "confirmation_button": "公開に変更"
+        },
+        "users_only": {
+          "title": "ユーザー限定",
+          "description": "コースはサインイン済みのユーザーのみがアクセス可能で、特定のユーザーグループを指定することもできます",
+          "active": "有効",
+          "confirmation_title": "ユーザー限定に変更しますか？",
+          "confirmation_message": "本当にこのコースをサインイン済みのユーザー限定にしますか？",
+          "confirmation_button": "ユーザー限定に変更"
+        },
+        "usergroups": {
+          "title": "ユーザーグループ",
+          "subtitle": "特定のユーザーグループにのみアクセス権を付与するには、コースをユーザーグループにリンクします",
+          "table": {
+            "name": "名前",
+            "actions": "アクション"
+          },
+          "actions": {
+            "delete_link": "リンクを解除",
+            "link_to_usergroup": "ユーザーグループにリンク"
+          },
+          "modals": {
+            "link_title": "コースをユーザーグループにリンク",
+            "link_description": "このコースをリンクするユーザーグループを選択してください。そのグループのユーザーがコースにアクセスできるようになります。",
+            "unlink_title": "ユーザーグループのリンクを解除しますか？",
+            "unlink_message": "このユーザーグループのユーザーはこのコースにアクセスできなくなります",
+            "unlink_button": "リンクを解除",
+            "warning": "そのグループに属していないユーザーは、このコースにアクセスできなくなります",
+            "usergroup_name": "ユーザーグループ名",
+            "no_usergroups": "利用可能なユーザーグループがありません",
+            "create_usergroup": "ユーザーグループを作成",
+            "link_button": "リンク"
+          },
+          "toasts": {
+            "link_success": "ユーザーグループへのリンクに成功しました",
+            "link_error": "エラー {{status}}: {{detail}}",
+            "unlink_success": "ユーザーグループのリンク解除に成功しました",
+            "unlink_error": "ユーザーグループのリンク解除中にエラーが発生しました。"
+          }
+        }
+      },
+      "contributors": {
+        "title": "コース投稿者",
+        "subtitle": "投稿者の管理と新しい投稿者の追加",
+        "open_to_contributors": {
+          "title": "投稿者を募集中",
+          "description": "コースは投稿者に開放されています。ユーザーは投稿者に応募し、コンテンツの改善をサポートできます。",
+          "active": "有効",
+          "confirmation_title": "投稿者に開放しますか？",
+          "confirmation_message": "本当にこのコースを投稿者に開放しますか？",
+          "confirmation_button": "投稿者に開放"
+        },
+        "closed_to_contributors": {
+          "title": "投稿者の募集を停止中",
+          "description": "コースは投稿者に開放されていません。既存の投稿者のみがコンテンツを修正できます。",
+          "active": "有効",
+          "confirmation_title": "募集を停止しますか？",
+          "confirmation_message": "本当にこのコースの投稿者の募集を停止しますか？",
+          "confirmation_button": "募集を停止"
+        },
+        "search": {
+          "placeholder": "投稿者として追加するユーザーを名前またはユーザー名で検索...",
+          "searching": "検索中...",
+          "no_results": "ユーザーが見つかりませんでした"
+        },
+        "table": {
+          "name": "氏名",
+          "username": "ユーザー名",
+          "email": "メールアドレス",
+          "role": "ロール",
+          "status": "ステータス",
+          "added_on": "追加日"
+        },
+        "roles": {
+          "creator": "作成者",
+          "contributor": "投稿者",
+          "maintainer": "メンテナー",
+          "reporter": "レポーター"
+        },
+        "statuses": {
+          "active": "アクティブ",
+          "inactive": "非アクティブ",
+          "pending": "保留中"
+        },
+        "actions": {
+          "selected_users": "{{count}} 名のユーザーを選択中",
+          "selected_users_plural": "{{count}} 名のユーザーを選択中",
+          "clear": "クリア",
+          "add_selected": "選択したユーザーを追加",
+          "selected_contributors": "{{count}} 名の投稿者を選択中",
+          "selected_contributors_plural": "{{count}} 名の投稿者を選択中",
+          "remove_selected": "選択した投稿者を削除",
+          "already_contributor": "すでに追加されています"
+        },
+        "toasts": {
+          "add_success": "{{count}} 名の投稿者を正常に追加しました",
+          "add_error": "{{username}} の追加に失敗しました: {{reason}}",
+          "add_failed": "投稿者の追加に失敗しました",
+          "update_success": "投稿者を正常に更新しました",
+          "update_error": "エラー: {{detail}}",
+          "update_failed": "投稿者の更新中にエラーが発生しました。",
+          "remove_success": "{{count}} 名の投稿者を正常に削除しました",
+          "remove_failed": "投稿者の削除に失敗しました",
+          "cannot_modify_creator": "作成者のロールやステータスは変更できません"
+        }
+      },
+      "certification": {
+        "title": "コース証明書",
+        "subtitle": "コースを修了した受講生向けの証明書を有効化および設定します",
+        "form": {
+          "certification_name_label": "証明書の名称",
+          "certification_name_required": "証明書を有効にする場合は必須です",
+          "certification_name_max_length": "100文字以内で入力してください",
+          "certification_name_placeholder": "例: 上級JavaScript認定",
+          "certification_type_label": "証明書の種類",
+          "certification_description_label": "証明書の説明",
+          "certification_description_required": "証明書を有効にする場合は必須です",
+          "certification_description_max_length": "500文字以内で入力してください",
+          "certification_description_placeholder": "この証明書が何を表し、どのような価値があるかを説明してください...",
+          "certificate_pattern_label": "証明書のパターン",
+          "certificate_instructor_label": "講師名（任意）",
+          "certificate_instructor_placeholder": "例: Dr. Jane Smith"
+        },
+        "types": {
+          "completion": "コース修了証",
+          "achievement": "実績ベース",
+          "assessment": "評価ベース",
+          "participation": "参加証",
+          "mastery": "スキル習得証明",
+          "professional": "専門性開発",
+          "continuing": "継続教育",
+          "workshop": "ワークショップ参加証",
+          "specialization": "専門分野認定"
+        },
+        "patterns": {
+          "royal": {
+            "name": "ロイヤル",
+            "description": "王冠をあしらった装飾"
+          },
+          "tech": {
+            "name": "テック",
+            "description": "回路をイメージしたパターン"
+          },
+          "nature": {
+            "name": "ネイチャー",
+            "description": "有機的な葉のパターン"
+          },
+          "geometric": {
+            "name": "幾何学",
+            "description": "抽象的な形と線"
+          },
+          "vintage": {
+            "name": "ビンテージ",
+            "description": "アールデコ調のスタイリング"
+          },
+          "waves": {
+            "name": "ウェーブ",
+            "description": "流れる水のパターン"
+          },
+          "minimal": {
+            "name": "ミニマル",
+            "description": "クリーンでシンプル"
+          },
+          "professional": {
+            "name": "プロフェッショナル",
+            "description": "ビジネス向けのデザイン"
+          },
+          "academic": {
+            "name": "アカデミック",
+            "description": "伝統的な大学スタイル"
+          },
+          "modern": {
+            "name": "モダン",
+            "description": "現代的で洗練されたライン"
+          }
+        },
+        "sections": {
+          "basic_info": {
+            "title": "基本情報",
+            "subtitle": "証明書の基本的な詳細を設定します"
+          },
+          "certificate_design": {
+            "title": "証明書のデザイン",
+            "subtitle": "証明書の装飾パターンを選択してください"
+          },
+          "preview": {
+            "title": "証明書のプレビュー",
+            "subtitle": "証明書のライブプレビュー"
+          }
+        },
+        "states": {
+          "disabled": {
+            "title": "証明書が設定されていません",
+            "message": "証明書を有効にすると、コースを修了した受講生に証明書を発行できます。",
+            "button": "証明書を有効にする",
+            "creating": "作成中..."
+          },
+          "creating": {
+            "title": "証明書を作成中...",
+            "message": "コース証明書の設定が完了するまでお待ちください。"
+          }
+        },
+        "errors": {
+          "loading": "証明書の読み込みエラー",
+          "create_failed": "証明書の作成に失敗しました。",
+          "remove_failed": "証明書の削除に失敗しました。"
+        },
+        "toasts": {
+          "create_success": "証明書を正常に作成しました",
+          "create_error": "証明書の作成に失敗しました",
+          "remove_success": "証明書を正常に削除しました",
+          "remove_error": "証明書の削除に失敗しました"
+        }
+      },
+      "communities": {
+        "title": "コミュニティ",
+        "new_community": "新しいコミュニティ",
+        "no_communities": "コミュニティはまだありません",
+        "no_communities_description": "最初のコミュニティを作成してディスカッションを始めましょう",
+        "card": {
+          "open_settings": "設定を開く",
+          "view_community": "コミュニティを見る",
+          "quick_edit": "クイック編集"
+        },
+        "settings": {
+          "tabs": {
+            "general": "一般",
+            "thumbnail": "サムネイル",
+            "course": "リンクされたコース",
+            "moderation": "モデレーション"
+          },
+          "general": {
+            "title": "一般設定",
+            "subtitle": "コミュニティ名、説明、表示設定を管理"
+          },
+          "thumbnail": {
+            "title": "サムネイル",
+            "subtitle": "コミュニティのカバー画像を更新"
+          },
+          "course": {
+            "title": "リンクされたコース",
+            "subtitle": "このコミュニティをコースに接続"
+          },
+          "moderation": {
+            "title": "モデレーション",
+            "subtitle": "コンテンツモデレーション設定を構成"
+          }
+        },
+        "course": {
+          "title": "リンクされたコース",
+          "subtitle": "コース専用のディスカッションのためにこのコミュニティをコースに接続",
+          "currently_linked": "現在リンク中",
+          "unlink": "リンク解除",
+          "link_button": "コースをリンク",
+          "search_placeholder": "コースを検索...",
+          "no_courses": "コースが見つかりません",
+          "course_linked_id": "コースがリンクされています (ID: {{id}})",
+          "course_not_found": "リンクされたコースが存在しないか、アクセス権がありません",
+          "toasts": {
+            "linking": "コースをリンク中...",
+            "link_success": "コースが正常にリンクされました",
+            "link_error": "コースのリンクに失敗しました",
+            "unlinking": "コースのリンクを解除中...",
+            "unlink_success": "コースのリンクが正常に解除されました",
+            "unlink_error": "コースのリンク解除に失敗しました"
+          }
+        },
+        "general": {
+          "title": "コミュニティ設定",
+          "subtitle": "コミュニティの基本情報を更新",
+          "form": {
+            "name_label": "コミュニティ名",
+            "name_required": "コミュニティ名は必須です",
+            "name_min_length": "名前は3文字以上必要です",
+            "name_max_length": "名前は100文字以下にしてください",
+            "name_placeholder": "コミュニティ名を入力",
+            "description_label": "説明",
+            "description_max_length": "説明は500文字以下にしてください",
+            "description_placeholder": "このコミュニティについて説明してください",
+            "public_label": "公開コミュニティ",
+            "public_description": "このコミュニティを全員に公開する",
+            "characters_left": "残り{{count}}文字"
+          },
+          "toasts": {
+            "updating": "コミュニティを更新中...",
+            "update_success": "コミュニティが更新されました",
+            "update_error": "コミュニティの更新に失敗しました"
+          }
+        },
+        "thumbnail": {
+          "title": "コミュニティサムネイル",
+          "subtitle": "コミュニティのカバー画像をアップロード",
+          "no_thumbnail": "サムネイルが設定されていません",
+          "upload_image": "画像をアップロード",
+          "browse_unsplash": "Unsplashを閲覧",
+          "uploading": "アップロード中...",
+          "supported_formats": "対応形式: JPG, JPEG, PNG。最大サイズ: 8MB。推奨アスペクト比: 16:9",
+          "toasts": {
+            "update_success": "サムネイルが更新されました",
+            "update_error": "サムネイルの更新に失敗しました",
+            "invalid_type": "無効なファイル形式です。PNGまたはJPG/JPEG画像のみアップロードしてください",
+            "file_too_large": "ファイルサイズが8MBの制限を超えています"
+          }
+        },
+        "moderation": {
+          "title": "コンテンツモデレーション",
+          "subtitle": "禁止ワードとコンテンツフィルターを設定",
+          "info_title": "禁止ワード",
+          "info_description": "これらのワードを含むディスカッションや返信はブロックされます。ユーザーにはエラーメッセージが表示され、コンテンツは投稿されません。",
+          "add_word_label": "禁止ワードを追加",
+          "add_word_placeholder": "単語やフレーズを入力...",
+          "add_button": "追加",
+          "batch_add_label": "一括追加",
+          "batch_add_description": "カンマで区切って複数の単語を一度に追加",
+          "batch_add_placeholder": "単語1, 単語2, 単語3...",
+          "add_all_button": "すべて追加",
+          "blocked_words_label": "禁止ワード",
+          "no_blocked_words": "禁止ワードはまだありません",
+          "no_blocked_words_description": "コンテンツモデレーションを有効にするにはワードを追加してください",
+          "word_exists_error": "このワードは既にリストにあります",
+          "all_words_exist_error": "すべてのワードが既にリストにあるか、入力が空です",
+          "toasts": {
+            "saving": "モデレーション設定を保存中...",
+            "save_success": "モデレーション設定が保存されました",
+            "save_error": "モデレーション設定の保存に失敗しました"
+          }
+        },
+        "modals": {
+          "create": {
+            "title": "コミュニティを作成",
+            "description": "ディスカッション用の新しいコミュニティを作成",
+            "form": {
+              "name_label": "コミュニティ名",
+              "name_placeholder": "コミュニティ名を入力",
+              "description_label": "説明",
+              "description_placeholder": "このコミュニティについて説明してください",
+              "public_label": "このコミュニティを公開する（全員に表示）"
+            },
+            "cancel": "キャンセル",
+            "submit": "コミュニティを作成"
+          },
+          "edit": {
+            "title": "コミュニティを編集",
+            "description": "コミュニティ設定を更新"
+          },
+          "delete": {
+            "title": "{{name}}を削除しますか？",
+            "message": "このコミュニティを削除してもよろしいですか？すべてのディスカッションが完全に削除されます。",
+            "button": "コミュニティを削除"
+          }
+        },
+        "toasts": {
+          "creating": "コミュニティを作成中...",
+          "create_success": "コミュニティが作成されました",
+          "create_error": "コミュニティの作成に失敗しました",
+          "deleting": "コミュニティを削除中...",
+          "delete_success": "コミュニティが削除されました",
+          "delete_error": "コミュニティの削除に失敗しました"
+        }
+      },
+      "structure": {
+        "loading": "読み込み中...",
+        "add_chapter_button": "章を追加",
+        "modals": {
+          "new_chapter": {
+            "title": "章を作成",
+            "description": "コースに新しい章を追加します",
+            "form": {
+              "name_label": "章の名前",
+              "name_required": "章の名前を入力してください",
+              "description_label": "章の説明",
+              "description_required": "章の説明を入力してください",
+              "submit": "章を作成"
+            }
+          },
+          "delete_chapter": {
+            "title": "{{name}} を削除しますか？",
+            "message": "本当にこの章を削除しますか？",
+            "button": "章を削除"
+          },
+          "new_activity": {
+            "title": "アクティビティを作成",
+            "description": "コースに追加するアクティビティの種類を選択してください"
+          },
+          "delete_activity": {
+            "title": "{{name}} を削除しますか？",
+            "message": "本当にこのアクティビティを削除しますか？",
+            "button": "アクティビティを削除"
+          }
+        },
+        "actions": {
+          "add_chapter": "章を追加",
+          "add_activity": "アクティビティを追加",
+          "publish": "公開",
+          "unpublish": "非公開",
+          "preview_activity": "アクティビティをプレビュー",
+          "edit_page": "ページを編集",
+          "edit_assignment": "課題を編集"
+        },
+        "chapter_element": {
+          "chapter_name_placeholder": "章の名前"
+        },
+        "activity": {
+          "name_placeholder": "アクティビティ名",
+          "types": {
+            "video": "動画",
+            "document": "ドキュメント",
+            "assignment": "課題",
+            "assignments": "課題",
+            "dynamic": "ダイナミック",
+            "dynamic_page": "ダイナミックページ",
+            "scorm": "Scorm"
+          },
+          "toasts": {
+            "deleting": "アクティビティを削除中...",
+            "delete_success": "アクティビティを正常に削除しました",
+            "updating": "課題を更新中...",
+            "update_success": "アクティビティを正常に更新しました",
+            "name_update_success": "アクティビティ名を正常に更新しました",
+            "name_update_error": "アクティビティ名の更新に失敗しました",
+            "creating": "アクティビティを作成中...",
+            "create_success": "アクティビティを正常に作成しました",
+            "uploading": "ファイルをアップロードしてアクティビティを作成中...",
+            "upload_success": "ファイルを正常にアップロードしました",
+            "creating_uploading": "アクティビティの作成とファイルのアップロード中..."
+          }
+        }
+      }
     },
     "organization": {
       "settings": {
@@ -768,7 +1628,10 @@
         "saving": "保存中...",
         "update_success": "組織を更新しました",
         "update_error": "組織の更新に失敗しました",
-        "updating": "組織を更新中..."
+        "updating": "組織を更新中...",
+        "footer_text": "フッターテキスト",
+        "footer_text_placeholder": "フッターテキストを入力...",
+        "footer_text_desc": "組織ページの下部に表示されるカスタムテキスト"
       },
       "images": {
         "title": "画像とプレビュー",
@@ -826,7 +1689,8 @@
         "subtitle": "組織のビジュアルアイデンティティとソーシャルプレゼンスを管理します",
         "tabs": {
           "images": "画像とプレビュー",
-          "social": "ソーシャルリンク"
+          "social": "ソーシャルリンク",
+          "theme": "テーマ"
         }
       },
       "socials": {
@@ -959,7 +1823,11 @@
           "generating": "CSVを生成中...",
           "success": "CSVを正常にエクスポートしました",
           "error": "CSVのエクスポートに失敗しました"
-        }
+        },
+        "enterprise_only": "監査ログはエンタープライズプランでのみ利用可能です",
+        "enterprise_feature": "エンタープライズ機能",
+        "enterprise_description": "監査ログは、エンタープライズプランの組織のみが利用できるプレミアム機能です。組織のアクティビティを完全に可視化するにはアップグレードしてください。",
+        "upgrade_button": "エンタープライズにアップグレード"
       },
       "landing": {
         "title": "ランディングページ",
@@ -1110,6 +1978,16 @@
           "selected": "選択済み",
           "select": "選択"
         }
+      },
+      "theme": {
+        "primary_color": "プライマリカラー",
+        "primary_color_desc": "組織のヘッダーとページ背景のプライマリカラーを選択してください。",
+        "clear_color": "色をクリア",
+        "preview": "ライブプレビュー",
+        "preview_hint": "組織のヘッダーと背景はこのように表示されます",
+        "footer_text": "フッターテキスト",
+        "footer_text_desc": "ページフッターに表示するカスタムテキストを追加します。",
+        "footer_text_placeholder": "フッターテキストを入力..."
       }
     },
     "users": {
@@ -1167,7 +2045,10 @@
           "remove_from_org": "組織から削除",
           "removing": "削除中...",
           "remove_success": "組織からユーザーを削除しました",
-          "remove_error": "ユーザーの削除中にエラーが発生しました"
+          "remove_error": "ユーザーの削除中にエラーが発生しました",
+          "updating_role": "ロールを更新中...",
+          "role_update_success": "ロールが正常に更新されました",
+          "role_update_error": "ロールの更新エラー"
         },
         "modals": {
           "update_role": {
@@ -1179,6 +2060,13 @@
             "message": "このユーザーを組織から削除してもよろしいですか？",
             "button": "ユーザーを削除"
           }
+        },
+        "search_placeholder": "ユーザーを検索...",
+        "no_results": "検索に一致するユーザーが見つかりません",
+        "no_users": "この組織にはまだユーザーがいません",
+        "pagination": {
+          "showing": "{{total}}件中{{start}}-{{end}}件を表示",
+          "page": "{{total}}ページ中{{current}}ページ"
         }
       },
       "signups": {
@@ -1671,482 +2559,6 @@
           }
         }
       }
-    },
-    "courses": {
-      "title": "コース",
-      "rights_guide": "権利ガイド",
-      "create_course": "コースを作成",
-      "create_new_course": "新しいコースを作成",
-      "import_course": "コースをインポート",
-      "import_scorm_description": "SCORMパッケージをインポートして新しいコースを作成",
-      "no_courses": "コースがまだありません",
-      "create_course_placeholder": "コースを作成してコンテンツを追加しましょう",
-      "no_courses_available": "利用可能なコースがまだありません",
-      "overview_top": {
-        "course_label": "コース",
-        "rights_guide_button": "権利ガイド"
-      },
-      "settings": {
-        "tabs": {
-          "general": "一般",
-          "content": "コンテンツ",
-          "access": "アクセス",
-          "contributors": "投稿者",
-          "certification": "証明書"
-        },
-        "access_denied": {
-          "title": "アクセス拒否",
-          "message": "このコースへのアクセス権限がありません。"
-        },
-        "access_restricted": {
-          "title": "アクセス制限",
-          "message": "{{tab}} へのアクセス権限がありません"
-        },
-        "loading": "読み込み中..."
-      },
-      "general": {
-        "form": {
-          "name_label": "名前",
-          "name_required": "必須",
-          "name_max_length": "100文字以内で入力してください",
-          "description_label": "説明",
-          "description_required": "必須",
-          "description_max_length": "1000文字以内で入力してください",
-          "about_label": "概要",
-          "learnings_label": "学べること",
-          "learnings_required": "必須",
-          "learnings_invalid_format": "無効な形式です",
-          "learnings_min_items": "少なくとも1つの学習項目が必要です",
-          "learnings_empty_text": "すべての学習項目にテキストを入力してください",
-          "learnings_invalid_json": "無効なJSON形式です",
-          "tags_label": "タグ",
-          "tags_placeholder": "Enterキーで追加...",
-          "thumbnail_type_label": "サムネイルの種類",
-          "thumbnail_type_image": "画像",
-          "thumbnail_type_video": "動画",
-          "thumbnail_type_both": "両方",
-          "thumbnail_label": "サムネイル",
-          "image_search_placeholder": "画像を検索..."
-        },
-        "thumbnail": {
-          "upload_image": "画像をアップロード",
-          "upload_video": "動画をアップロード",
-          "gallery": "ギャラリー",
-          "tabs": {
-            "image": "画像",
-            "video": "動画"
-          },
-          "supported_formats": {
-            "image": "対応形式: PNG, JPG/JPEG (最大8MB)",
-            "video": "対応形式: MP4, WebM (最大100MB)"
-          }
-        },
-        "errors": {
-          "save_failed": "コース構造の保存に失敗しました。"
-        }
-      },
-      "access": {
-        "title": "コースへのアクセス",
-        "subtitle": "コースをインターネット上で公開するか、サインイン済みのユーザーのみに限定するかを選択します",
-        "public": {
-          "title": "公開",
-          "description": "コースはインターネット上で一般公開され、検索エンジンのインデックス対象となり、誰でもアクセス可能です",
-          "active": "有効",
-          "confirmation_title": "公開に変更しますか？",
-          "confirmation_message": "本当にこのコースをインターネット上で一般公開しますか？",
-          "confirmation_button": "公開に変更"
-        },
-        "users_only": {
-          "title": "ユーザー限定",
-          "description": "コースはサインイン済みのユーザーのみがアクセス可能で、特定のユーザーグループを指定することもできます",
-          "active": "有効",
-          "confirmation_title": "ユーザー限定に変更しますか？",
-          "confirmation_message": "本当にこのコースをサインイン済みのユーザー限定にしますか？",
-          "confirmation_button": "ユーザー限定に変更"
-        },
-        "usergroups": {
-          "title": "ユーザーグループ",
-          "subtitle": "特定のユーザーグループにのみアクセス権を付与するには、コースをユーザーグループにリンクします",
-          "table": {
-            "name": "名前",
-            "actions": "アクション"
-          },
-          "actions": {
-            "delete_link": "リンクを解除",
-            "link_to_usergroup": "ユーザーグループにリンク"
-          },
-          "modals": {
-            "link_title": "コースをユーザーグループにリンク",
-            "link_description": "このコースをリンクするユーザーグループを選択してください。そのグループのユーザーがコースにアクセスできるようになります。",
-            "unlink_title": "ユーザーグループのリンクを解除しますか？",
-            "unlink_message": "このユーザーグループのユーザーはこのコースにアクセスできなくなります",
-            "unlink_button": "リンクを解除",
-            "warning": "そのグループに属していないユーザーは、このコースにアクセスできなくなります",
-            "usergroup_name": "ユーザーグループ名",
-            "no_usergroups": "利用可能なユーザーグループがありません",
-            "create_usergroup": "ユーザーグループを作成",
-            "link_button": "リンク"
-          },
-          "toasts": {
-            "link_success": "ユーザーグループへのリンクに成功しました",
-            "link_error": "エラー {{status}}: {{detail}}",
-            "unlink_success": "ユーザーグループのリンク解除に成功しました",
-            "unlink_error": "ユーザーグループのリンク解除中にエラーが発生しました。"
-          }
-        }
-      },
-      "contributors": {
-        "title": "コース投稿者",
-        "subtitle": "投稿者の管理と新しい投稿者の追加",
-        "open_to_contributors": {
-          "title": "投稿者を募集中",
-          "description": "コースは投稿者に開放されています。ユーザーは投稿者に応募し、コンテンツの改善をサポートできます。",
-          "active": "有効",
-          "confirmation_title": "投稿者に開放しますか？",
-          "confirmation_message": "本当にこのコースを投稿者に開放しますか？",
-          "confirmation_button": "投稿者に開放"
-        },
-        "closed_to_contributors": {
-          "title": "投稿者の募集を停止中",
-          "description": "コースは投稿者に開放されていません。既存の投稿者のみがコンテンツを修正できます。",
-          "active": "有効",
-          "confirmation_title": "募集を停止しますか？",
-          "confirmation_message": "本当にこのコースの投稿者の募集を停止しますか？",
-          "confirmation_button": "募集を停止"
-        },
-        "search": {
-          "placeholder": "投稿者として追加するユーザーを名前またはユーザー名で検索...",
-          "searching": "検索中...",
-          "no_results": "ユーザーが見つかりませんでした"
-        },
-        "table": {
-          "name": "氏名",
-          "username": "ユーザー名",
-          "email": "メールアドレス",
-          "role": "ロール",
-          "status": "ステータス",
-          "added_on": "追加日"
-        },
-        "roles": {
-          "creator": "作成者",
-          "contributor": "投稿者",
-          "maintainer": "メンテナー",
-          "reporter": "レポーター"
-        },
-        "statuses": {
-          "active": "アクティブ",
-          "inactive": "非アクティブ",
-          "pending": "保留中"
-        },
-        "actions": {
-          "selected_users": "{{count}} 名のユーザーを選択中",
-          "selected_users_plural": "{{count}} 名のユーザーを選択中",
-          "clear": "クリア",
-          "add_selected": "選択したユーザーを追加",
-          "selected_contributors": "{{count}} 名の投稿者を選択中",
-          "selected_contributors_plural": "{{count}} 名の投稿者を選択中",
-          "remove_selected": "選択した投稿者を削除",
-          "already_contributor": "すでに追加されています"
-        },
-        "toasts": {
-          "add_success": "{{count}} 名の投稿者を正常に追加しました",
-          "add_error": "{{username}} の追加に失敗しました: {{reason}}",
-          "add_failed": "投稿者の追加に失敗しました",
-          "update_success": "投稿者を正常に更新しました",
-          "update_error": "エラー: {{detail}}",
-          "update_failed": "投稿者の更新中にエラーが発生しました。",
-          "remove_success": "{{count}} 名の投稿者を正常に削除しました",
-          "remove_failed": "投稿者の削除に失敗しました",
-          "cannot_modify_creator": "作成者のロールやステータスは変更できません"
-        }
-      },
-      "certification": {
-        "title": "コース証明書",
-        "subtitle": "コースを修了した受講生向けの証明書を有効化および設定します",
-        "form": {
-          "certification_name_label": "証明書の名称",
-          "certification_name_required": "証明書を有効にする場合は必須です",
-          "certification_name_max_length": "100文字以内で入力してください",
-          "certification_name_placeholder": "例: 上級JavaScript認定",
-          "certification_type_label": "証明書の種類",
-          "certification_description_label": "証明書の説明",
-          "certification_description_required": "証明書を有効にする場合は必須です",
-          "certification_description_max_length": "500文字以内で入力してください",
-          "certification_description_placeholder": "この証明書が何を表し、どのような価値があるかを説明してください...",
-          "certificate_pattern_label": "証明書のパターン",
-          "certificate_instructor_label": "講師名（任意）",
-          "certificate_instructor_placeholder": "例: Dr. Jane Smith"
-        },
-        "types": {
-          "completion": "コース修了証",
-          "achievement": "実績ベース",
-          "assessment": "評価ベース",
-          "participation": "参加証",
-          "mastery": "スキル習得証明",
-          "professional": "専門性開発",
-          "continuing": "継続教育",
-          "workshop": "ワークショップ参加証",
-          "specialization": "専門分野認定"
-        },
-        "patterns": {
-          "royal": {
-            "name": "ロイヤル",
-            "description": "王冠をあしらった装飾"
-          },
-          "tech": {
-            "name": "テック",
-            "description": "回路をイメージしたパターン"
-          },
-          "nature": {
-            "name": "ネイチャー",
-            "description": "有機的な葉のパターン"
-          },
-          "geometric": {
-            "name": "幾何学",
-            "description": "抽象的な形と線"
-          },
-          "vintage": {
-            "name": "ビンテージ",
-            "description": "アールデコ調のスタイリング"
-          },
-          "waves": {
-            "name": "ウェーブ",
-            "description": "流れる水のパターン"
-          },
-          "minimal": {
-            "name": "ミニマル",
-            "description": "クリーンでシンプル"
-          },
-          "professional": {
-            "name": "プロフェッショナル",
-            "description": "ビジネス向けのデザイン"
-          },
-          "academic": {
-            "name": "アカデミック",
-            "description": "伝統的な大学スタイル"
-          },
-          "modern": {
-            "name": "モダン",
-            "description": "現代的で洗練されたライン"
-          }
-        },
-        "sections": {
-          "basic_info": {
-            "title": "基本情報",
-            "subtitle": "証明書の基本的な詳細を設定します"
-          },
-          "certificate_design": {
-            "title": "証明書のデザイン",
-            "subtitle": "証明書の装飾パターンを選択してください"
-          },
-          "preview": {
-            "title": "証明書のプレビュー",
-            "subtitle": "証明書のライブプレビュー"
-          }
-        },
-        "states": {
-          "disabled": {
-            "title": "証明書が設定されていません",
-            "message": "証明書を有効にすると、コースを修了した受講生に証明書を発行できます。",
-            "button": "証明書を有効にする",
-            "creating": "作成中..."
-          },
-          "creating": {
-            "title": "証明書を作成中...",
-            "message": "コース証明書の設定が完了するまでお待ちください。"
-          }
-        },
-        "errors": {
-          "loading": "証明書の読み込みエラー",
-          "create_failed": "証明書の作成に失敗しました。",
-          "remove_failed": "証明書の削除に失敗しました。"
-        },
-        "toasts": {
-          "create_success": "証明書を正常に作成しました",
-          "create_error": "証明書の作成に失敗しました",
-          "remove_success": "証明書を正常に削除しました",
-          "remove_error": "証明書の削除に失敗しました"
-        }
-      },
-      "communities": {
-        "title": "コミュニティ",
-        "new_community": "新しいコミュニティ",
-        "no_communities": "コミュニティはまだありません",
-        "no_communities_description": "最初のコミュニティを作成してディスカッションを始めましょう",
-        "card": {
-          "open_settings": "設定を開く",
-          "view_community": "コミュニティを見る",
-          "quick_edit": "クイック編集"
-        },
-        "settings": {
-          "tabs": {
-            "general": "一般",
-            "thumbnail": "サムネイル",
-            "moderation": "モデレーション"
-          }
-        },
-        "general": {
-          "title": "コミュニティ設定",
-          "subtitle": "コミュニティの基本情報を更新",
-          "form": {
-            "name_label": "コミュニティ名",
-            "name_required": "コミュニティ名は必須です",
-            "name_min_length": "名前は3文字以上必要です",
-            "name_max_length": "名前は100文字以下にしてください",
-            "name_placeholder": "コミュニティ名を入力",
-            "description_label": "説明",
-            "description_max_length": "説明は500文字以下にしてください",
-            "description_placeholder": "このコミュニティについて説明してください",
-            "public_label": "公開コミュニティ",
-            "public_description": "このコミュニティを全員に公開する",
-            "characters_left": "残り{{count}}文字"
-          },
-          "toasts": {
-            "updating": "コミュニティを更新中...",
-            "update_success": "コミュニティが更新されました",
-            "update_error": "コミュニティの更新に失敗しました"
-          }
-        },
-        "thumbnail": {
-          "title": "コミュニティサムネイル",
-          "subtitle": "コミュニティのカバー画像をアップロード",
-          "no_thumbnail": "サムネイルが設定されていません",
-          "upload_image": "画像をアップロード",
-          "browse_unsplash": "Unsplashを閲覧",
-          "uploading": "アップロード中...",
-          "supported_formats": "対応形式: JPG, JPEG, PNG。最大サイズ: 8MB。推奨アスペクト比: 16:9",
-          "toasts": {
-            "update_success": "サムネイルが更新されました",
-            "update_error": "サムネイルの更新に失敗しました",
-            "invalid_type": "無効なファイル形式です。PNGまたはJPG/JPEG画像のみアップロードしてください",
-            "file_too_large": "ファイルサイズが8MBの制限を超えています"
-          }
-        },
-        "moderation": {
-          "title": "コンテンツモデレーション",
-          "subtitle": "禁止ワードとコンテンツフィルターを設定",
-          "info_title": "禁止ワード",
-          "info_description": "これらのワードを含むディスカッションや返信はブロックされます。ユーザーにはエラーメッセージが表示され、コンテンツは投稿されません。",
-          "add_word_label": "禁止ワードを追加",
-          "add_word_placeholder": "単語やフレーズを入力...",
-          "add_button": "追加",
-          "batch_add_label": "一括追加",
-          "batch_add_description": "カンマで区切って複数の単語を一度に追加",
-          "batch_add_placeholder": "単語1, 単語2, 単語3...",
-          "add_all_button": "すべて追加",
-          "blocked_words_label": "禁止ワード",
-          "no_blocked_words": "禁止ワードはまだありません",
-          "no_blocked_words_description": "コンテンツモデレーションを有効にするにはワードを追加してください",
-          "word_exists_error": "このワードは既にリストにあります",
-          "all_words_exist_error": "すべてのワードが既にリストにあるか、入力が空です",
-          "toasts": {
-            "saving": "モデレーション設定を保存中...",
-            "save_success": "モデレーション設定が保存されました",
-            "save_error": "モデレーション設定の保存に失敗しました"
-          }
-        },
-        "modals": {
-          "create": {
-            "title": "コミュニティを作成",
-            "description": "ディスカッション用の新しいコミュニティを作成",
-            "form": {
-              "name_label": "コミュニティ名",
-              "name_placeholder": "コミュニティ名を入力",
-              "description_label": "説明",
-              "description_placeholder": "このコミュニティについて説明してください",
-              "public_label": "このコミュニティを公開する（全員に表示）"
-            },
-            "cancel": "キャンセル",
-            "submit": "コミュニティを作成"
-          },
-          "edit": {
-            "title": "コミュニティを編集",
-            "description": "コミュニティ設定を更新"
-          },
-          "delete": {
-            "title": "{{name}}を削除しますか？",
-            "message": "このコミュニティを削除してもよろしいですか？すべてのディスカッションが完全に削除されます。",
-            "button": "コミュニティを削除"
-          }
-        },
-        "toasts": {
-          "creating": "コミュニティを作成中...",
-          "create_success": "コミュニティが作成されました",
-          "create_error": "コミュニティの作成に失敗しました",
-          "deleting": "コミュニティを削除中...",
-          "delete_success": "コミュニティが削除されました",
-          "delete_error": "コミュニティの削除に失敗しました"
-        }
-      },
-      "structure": {
-        "loading": "読み込み中...",
-        "add_chapter_button": "章を追加",
-        "modals": {
-          "new_chapter": {
-            "title": "章を作成",
-            "description": "コースに新しい章を追加します",
-            "form": {
-              "name_label": "章の名前",
-              "name_required": "章の名前を入力してください",
-              "description_label": "章の説明",
-              "description_required": "章の説明を入力してください",
-              "submit": "章を作成"
-            }
-          },
-          "delete_chapter": {
-            "title": "{{name}} を削除しますか？",
-            "message": "本当にこの章を削除しますか？",
-            "button": "章を削除"
-          },
-          "new_activity": {
-            "title": "アクティビティを作成",
-            "description": "コースに追加するアクティビティの種類を選択してください"
-          },
-          "delete_activity": {
-            "title": "{{name}} を削除しますか？",
-            "message": "本当にこのアクティビティを削除しますか？",
-            "button": "アクティビティを削除"
-          }
-        },
-        "actions": {
-          "add_chapter": "章を追加",
-          "add_activity": "アクティビティを追加",
-          "publish": "公開",
-          "unpublish": "非公開",
-          "preview_activity": "アクティビティをプレビュー",
-          "edit_page": "ページを編集",
-          "edit_assignment": "課題を編集"
-        },
-        "chapter_element": {
-          "chapter_name_placeholder": "章の名前"
-        },
-        "activity": {
-          "name_placeholder": "アクティビティ名",
-          "types": {
-            "video": "動画",
-            "document": "ドキュメント",
-            "assignment": "課題",
-            "assignments": "課題",
-            "dynamic": "ダイナミック",
-            "dynamic_page": "ダイナミックページ",
-            "scorm": "Scorm"
-          },
-          "toasts": {
-            "deleting": "アクティビティを削除中...",
-            "delete_success": "アクティビティを正常に削除しました",
-            "updating": "課題を更新中...",
-            "update_success": "アクティビティを正常に更新しました",
-            "name_update_success": "アクティビティ名を正常に更新しました",
-            "name_update_error": "アクティビティ名の更新に失敗しました",
-            "creating": "アクティビティを作成中...",
-            "create_success": "アクティビティを正常に作成しました",
-            "uploading": "ファイルをアップロードしてアクティビティを作成中...",
-            "upload_success": "ファイルを正常にアップロードしました",
-            "creating_uploading": "アクティビティの作成とファイルのアップロード中..."
-          }
-        }
-      }
     }
   }
 }
-

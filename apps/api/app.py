@@ -1,13 +1,12 @@
 import uvicorn
 import logfire
-from fastapi import FastAPI, Request
+import sentry_sdk
+from fastapi import FastAPI
 from config.config import LearnHouseConfig, get_learnhouse_config
 from src.core.events.events import shutdown_app, startup_app
 from src.router import v1_router
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi_jwt_auth2.exceptions import AuthJWTException
 from fastapi.middleware.gzip import GZipMiddleware
 from src.core.ee_hooks import register_ee_middlewares
 
@@ -20,6 +19,16 @@ from src.core.ee_hooks import register_ee_middlewares
 
 # Get LearnHouse Config
 learnhouse_config: LearnHouseConfig = get_learnhouse_config()
+
+# Initialize Sentry if configured
+if learnhouse_config.general_config.sentry_config.enabled:
+    sentry_sdk.init(
+        dsn=learnhouse_config.general_config.sentry_config.dsn,
+        traces_sample_rate=1.0 if learnhouse_config.general_config.development_mode else 0.1,
+        profiles_sample_rate=1.0 if learnhouse_config.general_config.development_mode else 0.1,
+        environment="development" if learnhouse_config.general_config.development_mode else "production",
+        send_default_pii=False,
+    )
 
 # Global Config
 app = FastAPI(
@@ -56,15 +65,6 @@ register_ee_middlewares(app)
 # Events
 app.add_event_handler("startup", startup_app(app))
 app.add_event_handler("shutdown", shutdown_app(app))
-
-
-# JWT Exception Handler
-@app.exception_handler(AuthJWTException)
-def authjwt_exception_handler(request: Request, exc: AuthJWTException):
-    return JSONResponse(
-        status_code=exc.status_code,  # type: ignore
-        content={"detail": exc.message},  # type: ignore
-    )
 
 
 # Static Files

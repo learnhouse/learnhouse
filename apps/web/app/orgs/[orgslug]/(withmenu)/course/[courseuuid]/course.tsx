@@ -22,6 +22,7 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import useSWR from 'swr'
 import { useTranslation } from 'react-i18next'
 import CourseCommunitySection from '@components/Objects/Communities/CourseCommunitySection'
+import CourseShare from '@components/Objects/Courses/CourseShare/CourseShare'
 
 const CourseClient = (props: any) => {
   const { t } = useTranslation()
@@ -140,8 +141,48 @@ const CourseClient = (props: any) => {
     return false
   }
 
+  // Generate JSON-LD structured data for SEO
+  const generateJsonLd = () => {
+    if (!course || !org) return null
+    const seo = course.seo || {}
+
+    // Check if JSON-LD is enabled (defaults to true if not set)
+    if (seo.enable_jsonld === false) return null
+
+    const jsonLd = {
+      '@context': 'https://schema.org',
+      '@type': 'Course',
+      name: seo.title || course.name,
+      description: seo.description || course.description || '',
+      provider: {
+        '@type': 'Organization',
+        name: org.name,
+        ...(org.description && { description: org.description }),
+      },
+      ...(course.thumbnail_image && {
+        image: getCourseThumbnailMediaDirectory(
+          org?.org_uuid,
+          course?.course_uuid,
+          course?.thumbnail_image
+        ),
+      }),
+      ...(course.creation_date && { dateCreated: course.creation_date }),
+      ...(course.update_date && { dateModified: course.update_date }),
+    }
+
+    return jsonLd
+  }
+
+  const jsonLd = generateJsonLd()
+
   return (
     <>
+      {jsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      )}
       {!course && !org ? (
         <PageLoading></PageLoading>
       ) : (
@@ -153,10 +194,12 @@ const CourseClient = (props: any) => {
                 { label: course.name }
               ]} />
             </div>
-            <div className="pb-2 flex flex-col md:flex-row justify-between items-start md:items-center">
-              <div>
-                <h1 className="text-3xl md:text-3xl  font-bold">{course.name}</h1>
-              </div>
+            <div className="pb-2 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+              <h1 className="text-3xl md:text-3xl font-bold">{course.name}</h1>
+              <CourseShare
+                courseName={course.name}
+                courseUrl={getUriWithOrg(orgslug, `/course/${courseuuid}`)}
+              />
             </div>
 
             <div className="flex flex-col md:flex-row gap-8 pt-2">

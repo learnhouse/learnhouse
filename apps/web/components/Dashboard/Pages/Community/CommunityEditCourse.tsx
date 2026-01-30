@@ -1,6 +1,7 @@
 'use client'
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslation } from 'react-i18next'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useCommunity, useCommunityDispatch } from '@components/Contexts/CommunityContext'
@@ -22,6 +23,7 @@ interface Course {
 }
 
 const CommunityEditCourse: React.FC = () => {
+  const { t } = useTranslation()
   const router = useRouter()
   const session = useLHSession() as any
   const org = useOrg() as any
@@ -66,18 +68,18 @@ const CommunityEditCourse: React.FC = () => {
     if (!selectedCourse) return
 
     setIsSubmitting(true)
-    const loadingToast = toast.loading('Linking course...')
+    const loadingToast = toast.loading(t('dashboard.courses.communities.course.toasts.linking'))
 
     try {
       await linkCommunityToCourse(community.community_uuid, selectedCourse, accessToken)
       await revalidateTags(['communities'], org.slug)
       mutate(`${getAPIUrl()}communities/${community.community_uuid}`)
-      toast.success('Course linked successfully', { id: loadingToast })
+      toast.success(t('dashboard.courses.communities.course.toasts.link_success'), { id: loadingToast })
       setSelectedCourse(null)
       router.refresh()
     } catch (error) {
       console.error('Failed to link course:', error)
-      toast.error('Failed to link course', { id: loadingToast })
+      toast.error(t('dashboard.courses.communities.course.toasts.link_error'), { id: loadingToast })
     } finally {
       setIsSubmitting(false)
     }
@@ -85,17 +87,17 @@ const CommunityEditCourse: React.FC = () => {
 
   const handleUnlink = async () => {
     setIsSubmitting(true)
-    const loadingToast = toast.loading('Unlinking course...')
+    const loadingToast = toast.loading(t('dashboard.courses.communities.course.toasts.unlinking'))
 
     try {
       await unlinkCommunityFromCourse(community.community_uuid, accessToken)
       await revalidateTags(['communities'], org.slug)
       mutate(`${getAPIUrl()}communities/${community.community_uuid}`)
-      toast.success('Course unlinked successfully', { id: loadingToast })
+      toast.success(t('dashboard.courses.communities.course.toasts.unlink_success'), { id: loadingToast })
       router.refresh()
     } catch (error) {
       console.error('Failed to unlink course:', error)
-      toast.error('Failed to unlink course', { id: loadingToast })
+      toast.error(t('dashboard.courses.communities.course.toasts.unlink_error'), { id: loadingToast })
     } finally {
       setIsSubmitting(false)
     }
@@ -105,9 +107,9 @@ const CommunityEditCourse: React.FC = () => {
     <div className="sm:mx-10 mx-0 bg-white rounded-xl nice-shadow">
       <div className="flex flex-col gap-0">
         <div className="flex flex-col bg-gray-50 -space-y-1 px-5 py-3 mx-3 my-3 rounded-md">
-          <h1 className="font-bold text-xl text-gray-800">Linked Course</h1>
+          <h1 className="font-bold text-xl text-gray-800">{t('dashboard.courses.communities.course.title')}</h1>
           <h2 className="text-gray-500 text-md">
-            Connect this community to a course for course-specific discussions
+            {t('dashboard.courses.communities.course.subtitle')}
           </h2>
         </div>
 
@@ -122,7 +124,7 @@ const CommunityEditCourse: React.FC = () => {
                   </div>
                   <div>
                     <p className="font-medium text-gray-900">{linkedCourse.name}</p>
-                    <p className="text-xs text-gray-500">Currently linked</p>
+                    <p className="text-xs text-gray-500">{t('dashboard.courses.communities.course.currently_linked')}</p>
                   </div>
                 </div>
                 <Button
@@ -136,7 +138,7 @@ const CommunityEditCourse: React.FC = () => {
                   ) : (
                     <Unlink size={14} className="mr-2" />
                   )}
-                  Unlink
+                  {t('dashboard.courses.communities.course.unlink')}
                 </Button>
               </div>
             </div>
@@ -146,9 +148,9 @@ const CommunityEditCourse: React.FC = () => {
             <div className="p-4 bg-yellow-50 border border-yellow-100 rounded-lg">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-yellow-900">Course linked (ID: {community.course_id})</p>
+                  <p className="text-sm font-medium text-yellow-900">{t('dashboard.courses.communities.course.course_linked_id', { id: community.course_id })}</p>
                   <p className="text-xs text-yellow-600 mt-1">
-                    The linked course may no longer exist or you don't have access to it
+                    {t('dashboard.courses.communities.course.course_not_found')}
                   </p>
                 </div>
                 <Button
@@ -162,7 +164,7 @@ const CommunityEditCourse: React.FC = () => {
                   ) : (
                     <Unlink size={14} className="mr-2" />
                   )}
-                  Unlink
+                  {t('dashboard.courses.communities.course.unlink')}
                 </Button>
               </div>
             </div>
@@ -181,7 +183,7 @@ const CommunityEditCourse: React.FC = () => {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search courses..."
+                  placeholder={t('dashboard.courses.communities.course.search_placeholder')}
                   className="pl-10"
                 />
               </div>
@@ -195,7 +197,7 @@ const CommunityEditCourse: React.FC = () => {
                 ) : filteredCourses.length === 0 ? (
                   <div className="text-center py-12 text-gray-500">
                     <BookOpen size={32} className="mx-auto mb-2 text-gray-300" />
-                    <p className="text-sm">No courses found</p>
+                    <p className="text-sm">{t('dashboard.courses.communities.course.no_courses')}</p>
                   </div>
                 ) : (
                   <div className="divide-y divide-gray-100">
@@ -233,7 +235,7 @@ const CommunityEditCourse: React.FC = () => {
                   ) : (
                     <Link2 size={16} className="mr-2" />
                   )}
-                  Link Course
+                  {t('dashboard.courses.communities.course.link_button')}
                 </Button>
               </div>
             </>

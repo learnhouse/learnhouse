@@ -13,7 +13,10 @@ function Watermark() {
     }
         , [org]);
 
-    if (org?.config?.config?.general?.watermark) {
+    const plan = org?.config?.config?.cloud?.plan || 'free'
+    const isFreeUser = plan === 'free'
+
+    if (isFreeUser) {
         return (
             <div className='fixed bottom-8 right-8'>
                 <Link href={`https://www.learnhouse.app/?source=in-app`} className="flex items-center cursor-pointer bg-white/80 backdrop-blur-lg text-gray-700 rounded-2xl p-2 light-shadow text-xs px-5 font-semibold space-x-2">

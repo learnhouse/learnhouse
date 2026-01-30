@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo } from 'react'
 import styled from 'styled-components'
 import Link from 'next/link'
-import { Package2, Crown, Shield, User, Users, LogOut, User as UserIcon, ChevronDown } from 'lucide-react'
+import { Package, Crown, Shield, User, Users, SignOut, CaretDown, Globe, Check } from '@phosphor-icons/react'
 import UserAvatar from '@components/Objects/UserAvatar'
 import useAdminStatus from '@components/Hooks/useAdminStatus'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
@@ -23,7 +23,6 @@ import {
 } from "@components/ui/dropdown-menu"
 import { signOut } from 'next-auth/react'
 import { useTranslation } from 'react-i18next'
-import { Languages, Check } from 'lucide-react'
 import { AVAILABLE_LANGUAGES } from '@/lib/languages'
 import LanguageSwitcher from '@components/Utils/LanguageSwitcher'
 
@@ -40,7 +39,7 @@ interface CustomRoleInfo {
   description?: string;
 }
 
-export const HeaderProfileBox = () => {
+export const HeaderProfileBox = ({ primaryColor = '' }: { primaryColor?: string }) => {
   const session = useLHSession() as any
   const { isAdmin, loading, userRoles, rights } = useAdminStatus()
   const org = useOrg() as any
@@ -78,28 +77,28 @@ export const HeaderProfileBox = () => {
     const roleConfigs: { [key: string]: RoleInfo } = {
       'role_global_admin': {
         name: t('roles.role_admin'),
-        icon: <Crown size={12} />,
+        icon: <Crown size={12} weight="fill" />,
         bgColor: 'bg-purple-600',
         textColor: 'text-white',
         description: t('roles.role_admin_desc')
       },
       'role_global_maintainer': {
         name: t('roles.role_maintainer'),
-        icon: <Shield size={12} />,
+        icon: <Shield size={12} weight="fill" />,
         bgColor: 'bg-blue-600',
         textColor: 'text-white',
         description: t('roles.role_maintainer_desc')
       },
       'role_global_instructor': {
         name: t('roles.role_instructor'),
-        icon: <Users size={12} />,
+        icon: <Users size={12} weight="fill" />,
         bgColor: 'bg-green-600',
         textColor: 'text-white',
         description: t('roles.role_instructor_desc')
       },
       'role_global_user': {
         name: t('roles.role_user'),
-        icon: <User size={12} />,
+        icon: <User size={12} weight="fill" />,
         bgColor: 'bg-gray-500',
         textColor: 'text-white',
         description: t('roles.role_user_desc')
@@ -152,14 +151,14 @@ export const HeaderProfileBox = () => {
         <UnidentifiedArea className="flex items-center">
           <ul className="flex space-x-0.5 sm:space-x-1 items-center">
             <li>
-              <LanguageSwitcher />
+              <LanguageSwitcher primaryColor={primaryColor} />
             </li>
             <li>
               <Link
-                className="hover:bg-gray-100 px-3 py-2 rounded-lg transition-colors text-sm font-bold text-gray-700"
+                className={`px-3 py-2 rounded-lg transition-colors text-sm font-bold ${primaryColor ? 'hover:bg-white/10 text-white' : 'hover:bg-gray-100 text-gray-700'}`}
                 href={{ pathname: getUriWithoutOrg('/login'), query: org ? { orgslug: org.slug } : null }} >{t('auth.login')}</Link>
             </li>
-            <li className="bg-black rounded-lg shadow-sm hover:bg-gray-800 transition-colors px-4 py-2 text-white text-xs sm:text-sm font-bold ml-1 sm:ml-2">
+            <li className={`rounded-lg shadow-sm transition-colors px-4 py-2 text-xs sm:text-sm font-bold ml-1 sm:ml-2 ${primaryColor ? 'bg-white text-gray-900 hover:bg-gray-100' : 'bg-black text-white hover:bg-gray-800'}`}>
               <Link href={{ pathname: getUriWithoutOrg('/signup'), query: org ? { orgslug: org.slug } : null }}>{t('auth.sign_up')}</Link>
             </li>
           </ul>
@@ -170,11 +169,11 @@ export const HeaderProfileBox = () => {
           <div className="flex items-center space-x-3">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="cursor-pointer flex items-center space-x-3 hover:bg-gray-50 rounded-lg p-2 transition-colors">
-                  <UserAvatar border="border-2" rounded="rounded-lg" width={30} />
+                <button className={`cursor-pointer flex items-center space-x-3 rounded-lg p-2 transition-colors ${primaryColor ? 'hover:bg-white/10' : 'hover:bg-gray-50'}`}>
+                  <UserAvatar border="border-2" rounded="rounded-lg" width={30} shadow={primaryColor ? '' : undefined} />
                   <div className="flex flex-col space-y-0">
                     <div className="flex items-center space-x-2">
-                      <p className='text-sm font-semibold text-gray-900 capitalize'>{session.data.user.username}</p>
+                      <p className={`text-sm font-semibold capitalize ${primaryColor ? 'text-white' : 'text-gray-900'}`}>{session.data.user.username}</p>
                       {userRoleInfo && userRoleInfo.name !== 'USER' && (
                         <Tooltip 
                           content={userRoleInfo.description}
@@ -196,15 +195,15 @@ export const HeaderProfileBox = () => {
                           side="bottom"
                         >
                           <div className="text-[6px] bg-gray-500 text-white px-1 py-0.5 font-medium rounded-full flex items-center gap-0.5 w-fit">
-                            <Shield size={12} />
+                            <Shield size={12} weight="fill" />
                             {customRole.name}
                           </div>
                         </Tooltip>
                       ))}
                     </div>
-                    <p className='text-xs text-gray-500'>{session.data.user.email}</p>
+                    <p className={`text-xs ${primaryColor ? 'text-white/70' : 'text-gray-500'}`}>{session.data.user.email}</p>
                   </div>
-                  <ChevronDown size={16} className="text-gray-500" />
+                  <CaretDown size={16} weight="fill" className={primaryColor ? 'text-white/70' : 'text-gray-500'} />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end">
@@ -221,27 +220,27 @@ export const HeaderProfileBox = () => {
                 {rights?.dashboard?.action_access && (
                   <DropdownMenuItem asChild>
                     <Link href="/dash" className="flex items-center space-x-2">
-                      <Shield size={16} />
+                      <Shield size={16} weight="fill" />
                       <span>{t('common.dashboard')}</span>
                     </Link>
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuItem asChild>
-                  <Link href="/dash/user-account/settings/general" className="flex items-center space-x-2">
-                    <UserIcon size={16} />
+                  <Link href="/account/general" className="flex items-center space-x-2">
+                    <User size={16} weight="fill" />
                     <span>{t('user.user_settings')}</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/dash/user-account/owned" className="flex items-center space-x-2">
-                    <Package2 size={16} />
+                  <Link href="/account/my-courses" className="flex items-center space-x-2">
+                    <Package size={16} weight="fill" />
                     <span>{t('courses.my_courses')}</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuSub>
                   <DropdownMenuSubTrigger className="flex items-center space-x-2">
-                    <Languages size={14} />
+                    <Globe size={14} weight="fill" />
                     <span>{t('common.language')}</span>
                   </DropdownMenuSubTrigger>
                   <DropdownMenuPortal>
@@ -253,18 +252,18 @@ export const HeaderProfileBox = () => {
                           className="flex items-center justify-between"
                         >
                           <span>{t(language.translationKey)} ({language.nativeName})</span>
-                          {i18n.language === language.code && <Check size={14} />}
+                          {i18n.language === language.code && <Check size={14} weight="bold" />}
                         </DropdownMenuItem>
                       ))}
                     </DropdownMenuSubContent>
                   </DropdownMenuPortal>
                 </DropdownMenuSub>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   onClick={() => signOut({ callbackUrl: '/' })}
                   className="flex items-center space-x-2 text-red-600 focus:text-red-600"
                 >
-                  <LogOut size={16} />
+                  <SignOut size={16} weight="fill" />
                   <span>Sign Out</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>

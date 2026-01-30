@@ -39,6 +39,23 @@
     "recent": "Recente",
     "expand": "Espandi",
     "help": "Aiuto",
+    "help_menu": {
+      "documentation": "Documentazione",
+      "website": "Sito web LearnHouse",
+      "discord": "Discord",
+      "report_feedback": "Segnala problema o feedback",
+      "feedback_title": "Invia Feedback",
+      "feedback_description": "Aiutaci a migliorare LearnHouse condividendo i tuoi pensieri, segnalando bug o suggerendo nuove funzionalità.",
+      "feedback_placeholder": "Dicci cosa pensi...",
+      "feedback_success": "Grazie per il tuo feedback!",
+      "send_feedback": "Invia Feedback",
+      "sending": "Invio...",
+      "how_was_experience": "Com'è stata la tua esperienza?",
+      "reaction_happy": "Buona",
+      "reaction_neutral": "Ok",
+      "reaction_sad": "Cattiva",
+      "attach_image": "Allega screenshot"
+    },
     "plans": {
       "label": "Piani",
       "upgrade_button": "Passa a {{plan}}",
@@ -70,6 +87,10 @@
         "certifications": {
           "title": "Funzionalità Pro",
           "description": "Le certificazioni sono una funzionalità premium disponibile solo per le organizzazioni con piano Pro o superiore. Effettua l'upgrade per rilasciare certificati agli studenti che completano i tuoi corsi."
+        },
+        "communities": {
+          "title": "Funzionalità Standard",
+          "description": "Le Community sono una funzionalità premium disponibile solo per le organizzazioni con piano Standard o superiore. Effettua l'upgrade per sbloccare le community di discussione per i tuoi membri."
         }
       }
     },
@@ -77,6 +98,8 @@
     "version": "Versione",
     "users": "Utenti",
     "save": "Salva",
+    "save_changes": "Salva modifiche",
+    "saving": "Salvataggio...",
     "cancel": "Annulla",
     "submit": "Invia",
     "delete": "Elimina",
@@ -213,6 +236,8 @@
     "course_completed_exclamation": "Corso completato!",
     "what_you_will_learn": "Cosa imparerai",
     "course_lessons": "Lezioni del corso",
+    "share_course": "Condividi corso",
+    "copy_link": "Copia link",
     "unlock_certificate_message": "Completa tutte le attività per sbloccare il tuo certificato",
     "chapter": "Capitolo",
     "chapters": "Capitoli",
@@ -262,7 +287,305 @@
     "submitting_contributor_application": "Invio candidatura collaboratore...",
     "contributor_application_success": "La tua candidatura come collaboratore è stata inviata con successo",
     "contributor_application_error": "Impossibile inviare la candidatura. Riprova più tardi.",
-    "contribute": "Contribuisci"
+    "contribute": "Contribuisci",
+    "scorm": {
+      "upload_package": "Carica pacchetto SCORM",
+      "package_file": "File del pacchetto (.zip)",
+      "click_to_upload": "Clicca per caricare o trascina e rilascia",
+      "supported_versions": "Pacchetto SCORM 1.2 o SCORM 2004",
+      "import_info": "Carica il tuo pacchetto SCORM per analizzarne il contenuto. Potrai configurare il corso e assegnare attività ai capitoli.",
+      "analyze_package": "Analizza pacchetto",
+      "package_analyzed": "Pacchetto analizzato con successo",
+      "assign_scos": "Assegna attività ai capitoli",
+      "activity_name": "Attività",
+      "chapter_name": "Capitolo",
+      "upload_different": "Carica pacchetto diverso",
+      "selected": "selezionato",
+      "create_course": "Crea corso",
+      "configure": "Configura",
+      "ready_to_analyze": "Pronto per l'analisi",
+      "course_details": "Dettagli del corso"
+    },
+    "clone_course": "Clona corso",
+    "clone_course_title": "Clona \"{{name}}\"",
+    "clone_course_confirm": "Verrà creata una copia completa del corso, inclusi tutti i capitoli, le attività e i file. Il corso clonato sarà impostato come privato.",
+    "cloning_course": "Clonazione corso...",
+    "course_cloned_success": "Corso clonato con successo",
+    "course_cloned_error": "Impossibile clonare il corso",
+    "published": "Pubblicato",
+    "unpublished": "Non pubblicato",
+    "search_courses": "Cerca corsi...",
+    "search_results": "Trovati {{count}} corso/i per \"{{query}}\"",
+    "no_search_results": "Nessun corso trovato",
+    "try_different_search": "Prova un termine di ricerca diverso",
+    "select_courses": "Seleziona",
+    "select_all": "Seleziona tutto",
+    "clear_selection": "Cancella selezione",
+    "selected_count": "{{count}} selezionato/i",
+    "clone_selected": "Clona selezione",
+    "clone_selected_confirm": "Verranno create copie di {{count}} corso/i. Tutti i corsi clonati saranno privati. Continuare?",
+    "delete_selected": "Elimina selezione",
+    "delete_selected_confirm": "Verranno eliminati permanentemente {{count}} corso/i. Questa azione non può essere annullata. Continuare?",
+    "course_description_required": "La descrizione del corso è obbligatoria",
+    "export_course": "Esporta Corso",
+    "export_selected": "Esporta Selezionati",
+    "exporting_course": "Esportazione corso...",
+    "exporting_courses": "Esportazione di {{count}} corso/i...",
+    "course_exported_success": "Corso esportato con successo",
+    "courses_exported_success": "{{count}} corso/i esportati con successo",
+    "course_exported_error": "Esportazione corso fallita",
+    "courses_exported_error": "Esportazione corsi fallita",
+    "clone_courses_title": "Clona Corsi",
+    "delete_courses_title": "Elimina Corsi",
+    "deleting_courses": "Eliminazione di {{count}} corso/i...",
+    "courses_deleted_success": "{{count}} corso/i eliminati con successo",
+    "courses_deleted_partial": "{{success}} corso/i eliminati, {{error}} falliti",
+    "cloning_courses": "Clonazione di {{count}} corso/i...",
+    "courses_cloned_success": "{{count}} corso/i clonati con successo",
+    "courses_cloned_partial": "{{success}} corso/i clonati, {{error}} falliti",
+    "import": {
+      "scorm_package": "Pacchetto SCORM",
+      "scorm_description": "Importa pacchetti SCORM 1.2 o SCORM 2004",
+      "learnhouse_courses": "Corsi LearnHouse",
+      "learnhouse_description": "Importa corsi esportati da LearnHouse",
+      "upload_package": "Carica Pacchetto",
+      "configure": "Configura",
+      "complete": "Completato",
+      "click_to_upload": "Clicca per caricare o trascina",
+      "learnhouse_format": "Esportazione corso LearnHouse (.zip)",
+      "learnhouse_info": "Carica un pacchetto di esportazione corsi LearnHouse (.zip). Potrai selezionare quali corsi importare e configurare le opzioni di importazione.",
+      "analyze_package": "Analizza Pacchetto",
+      "ready_to_analyze": "Pronto per l'analisi",
+      "invalid_file_format": "Carica un file .zip",
+      "analysis_failed": "Analisi pacchetto fallita",
+      "package_analyzed": "Pacchetto Analizzato con Successo",
+      "select_courses": "Seleziona Corsi da Importare",
+      "select_all": "Seleziona Tutti",
+      "deselect_all": "Deseleziona Tutti",
+      "chapters": "capitoli",
+      "activities": "attività",
+      "has_thumbnail": "Ha miniatura",
+      "selected": "selezionati",
+      "options": "Opzioni di Importazione",
+      "name_prefix": "Prefisso Nome Corso",
+      "name_prefix_placeholder": "es. Importato -",
+      "set_private": "Imposta come privato",
+      "set_unpublished": "Imposta come non pubblicato",
+      "select_at_least_one": "Seleziona almeno un corso da importare",
+      "import_courses": "Importa {{count}} Corso/i",
+      "upload_different": "Carica pacchetto diverso",
+      "importing_courses": "Importazione corsi...",
+      "please_wait": "Potrebbe richiedere un momento",
+      "import_complete": "Importazione Completata!",
+      "import_failed": "Importazione Fallita",
+      "import_partial": "Importazione Parzialmente Completata",
+      "import_summary": "{{successful}} di {{total}} corso/i importati con successo",
+      "created": "Creato",
+      "done": "Fatto"
+    },
+    "scorm": {
+      "upload_package": "Carica Pacchetto SCORM",
+      "package_file": "File Pacchetto (.zip)",
+      "click_to_upload": "Clicca per caricare o trascina",
+      "supported_versions": "Pacchetto SCORM 1.2 o SCORM 2004",
+      "import_info": "Carica il tuo pacchetto SCORM per analizzarne il contenuto. Potrai configurare il corso e assegnare attività ai capitoli.",
+      "analyze_package": "Analizza Pacchetto",
+      "package_analyzed": "Pacchetto Analizzato con Successo",
+      "assign_scos": "Assegna Attività ai Capitoli",
+      "activity_name": "Attività",
+      "chapter_name": "Capitolo",
+      "upload_different": "Carica pacchetto diverso",
+      "selected": "selezionati",
+      "create_course": "Crea Corso",
+      "configure": "Configura",
+      "ready_to_analyze": "Pronto per l'analisi",
+      "course_details": "Dettagli Corso"
+    },
+    "create": {
+      "choose_type": "Crea nuovo corso",
+      "choose_type_description": "Scegli come vuoi creare il tuo corso",
+      "from_scratch": "Inizia da zero",
+      "from_scratch_description": "Crea manualmente la struttura e i contenuti del tuo corso",
+      "with_ai": "Inizia con l'IA",
+      "with_ai_description": "Lascia che l'IA ti aiuti a pianificare e generare i contenuti del tuo corso",
+      "ai": {
+        "title": "Creatore di Corsi IA",
+        "step_planning": "Pianificazione",
+        "step_content": "Contenuto",
+        "continue_to_content": "Continua al contenuto",
+        "creating_structure": "Creazione struttura...",
+        "finish_and_edit": "Termina e modifica corso",
+        "chat_title": "Pianificatore di Corsi",
+        "chat_description": "Descrivi il corso che vuoi creare, oppure scegli un modello qui sotto:",
+        "iterations": "iterazioni",
+        "max_iterations_reached": "Iterazioni massime raggiunte. Continua con la generazione dei contenuti o ricomincia.",
+        "content_step_hint": "La struttura del tuo corso è stata creata. Genera il contenuto per ogni attività qui sotto.",
+        "content_step_info": "Usa il pannello a sinistra per generare contenuti per le tue attività.",
+        "input_placeholder_initial": "Descrivi il corso che vuoi creare...",
+        "input_placeholder_iterate": "Descrivi le modifiche al piano...",
+        "generating": "Creazione piano del corso...",
+        "plan_generated": "Piano del corso generato",
+        "plan_generated_hint": "Rivedi il piano nel pannello di anteprima. Puoi modificarlo o richiedere cambiamenti.",
+        "describe_course": "Descrivi il tuo corso",
+        "describe_course_hint": "Racconta all'IA del corso che vuoi creare, inclusi argomento, pubblico target e obiettivi di apprendimento.",
+        "generating_plan": "Generazione piano del corso...",
+        "chapters": "Capitoli",
+        "activities": "attività",
+        "add_chapter": "Aggiungi capitolo",
+        "add_activity": "Aggiungi attività",
+        "generate_content": "Genera contenuto",
+        "generate_content_description": "Genera contenuti potenziati dall'IA per ogni attività del tuo corso.",
+        "generated": "generato",
+        "generate_all": "Genera tutto",
+        "generate": "Genera",
+        "generating_short": "Generazione...",
+        "done": "Fatto",
+        "course_structure_created": "Struttura del corso creata con successo!",
+        "failed_to_create": "Errore nella creazione della struttura del corso",
+        "create_course": "Crea corso",
+        "course_created_success": "Corso creato con successo!",
+        "content_generated_success": "Contenuto generato con successo!",
+        "content_parse_error": "Errore nell'analisi del contenuto generato",
+        "all_content_generated": "Tutti i contenuti generati!",
+        "all_content_generated_hint": "Clicca su 'Termina e modifica corso' per visualizzare e modificare i contenuti del tuo corso.",
+        "attach_image": "Foto",
+        "attach_video": "Video",
+        "attach_youtube": "Link YouTube",
+        "attach_file": "Documento"
+      }
+    }
+  },
+  "communities": {
+    "title": "Comunità",
+    "new_community": "Nuova comunità",
+    "no_communities": "Ancora nessuna comunità",
+    "no_communities_description": "Crea una comunità per avviare le discussioni",
+    "public": "Pubblica",
+    "private": "Privata",
+    "discussions": "discussioni",
+    "discussion": "discussione",
+    "created": "Creato",
+    "linked_course": "Corso collegato",
+    "community_guidelines": "Linee guida della comunità",
+    "community_guidelines_text": "Sii rispettoso e costruttivo. Aiuta gli altri e condividi le tue conoscenze con la comunità.",
+    "new_discussion": "Nuova discussione",
+    "manage": "Gestisci",
+    "sidebar": {
+      "posted_by": "Pubblicato da",
+      "upvotes": "Voti positivi",
+      "category": "Categoria",
+      "created": "Creato",
+      "pinned": "Fissato",
+      "locked": "Bloccato",
+      "reactions": "Reazioni",
+      "community": "Comunità"
+    },
+    "discussion_list": {
+      "search_placeholder": "Cerca discussioni...",
+      "sort_by": "Ordina per:",
+      "latest_activity": "Attività recente",
+      "top": "Popolari",
+      "hot": "Di tendenza",
+      "new_discussion": "Nuova discussione",
+      "select": "Seleziona",
+      "cancel": "Annulla",
+      "select_all": "Seleziona tutto",
+      "deselect_all": "Deseleziona tutto",
+      "selected": "selezionato/i",
+      "delete": "Elimina",
+      "delete_discussions_title": "Eliminare {{count}} discussione?",
+      "delete_discussions_title_plural": "Eliminare {{count}} discussioni?",
+      "delete_discussions_confirm": "Sei sicuro di voler eliminare {{count}} {{type}}? Questa azione non può essere annullata.",
+      "no_results": "Nessun risultato trovato",
+      "no_results_description": "Prova a modificare la ricerca o a cancellare il filtro",
+      "clear_search": "Cancella ricerca",
+      "no_discussions": "Ancora nessuna discussione",
+      "no_discussions_description": "Sii il primo ad avviare una discussione in questa comunità!",
+      "start_discussion": "Avvia discussione"
+    },
+    "discussion_detail": {
+      "edit": "Modifica",
+      "delete": "Elimina",
+      "delete_title": "Eliminare la discussione?",
+      "delete_confirm": "Sei sicuro di voler eliminare questa discussione? Questa azione non può essere annullata.",
+      "delete_button": "Elimina discussione",
+      "no_details": "Nessun dettaglio aggiuntivo fornito."
+    },
+    "discussion_card": {
+      "pin_discussion": "Fissa discussione",
+      "unpin_discussion": "Rimuovi fissaggio",
+      "lock_discussion": "Blocca discussione",
+      "unlock_discussion": "Sblocca discussione",
+      "delete_discussion": "Elimina discussione",
+      "delete_title": "Eliminare la discussione?",
+      "delete_confirm": "Sei sicuro di voler eliminare questa discussione? Questa azione non può essere annullata.",
+      "votes": "voti"
+    },
+    "comments": {
+      "no_replies": "Ancora nessuna risposta",
+      "locked": "Questa discussione è bloccata",
+      "sign_in_to_reply": "Accedi",
+      "to_reply": "per rispondere",
+      "write_reply": "Scrivi una risposta...",
+      "reply": "Rispondi",
+      "edit": "Modifica",
+      "delete": "Elimina",
+      "save": "Salva",
+      "cancel": "Annulla",
+      "failed_to_post": "Impossibile pubblicare la risposta. Riprova.",
+      "content_not_allowed": "La tua risposta contiene contenuti non consentiti.",
+      "failed_to_update": "Aggiornamento non riuscito. Riprova."
+    },
+    "label_filter": {
+      "label": "Etichetta:",
+      "all": "Tutte",
+      "all_discussions": "Tutte le discussioni",
+      "clear_filter": "Cancella filtro"
+    },
+    "labels": {
+      "general": "Generale",
+      "question": "Domanda",
+      "idea": "Idea",
+      "announcement": "Annuncio",
+      "showcase": "Vetrina"
+    },
+    "create_discussion": {
+      "title": "Avvia una discussione",
+      "description": "Condividi le tue idee con la comunità",
+      "category_label": "Categoria",
+      "title_label": "Titolo della discussione",
+      "title_placeholder": "Di cosa vorresti discutere?",
+      "emoji_selected": "Emoji personalizzata selezionata",
+      "emoji_hint": "Clicca su + per aggiungere un emoji personalizzata (opzionale)",
+      "details_label": "Dettagli (opzionale)",
+      "details_placeholder": "Aggiungi più contesto o dettagli alla tua discussione...",
+      "editor_hint": "Usa la barra degli strumenti per formattare il testo con grassetto, corsivo, elenchi e altro.",
+      "cancel": "Annulla",
+      "submit": "Pubblica discussione",
+      "title_required": "Il titolo è obbligatorio",
+      "title_min_length": "Il titolo deve contenere almeno 5 caratteri",
+      "title_max_length": "Il titolo deve contenere meno di 200 caratteri",
+      "content_not_allowed": "La tua discussione contiene contenuti non consentiti.",
+      "failed_to_create": "Impossibile creare la discussione. Riprova."
+    },
+    "edit_discussion": {
+      "title": "Modifica discussione",
+      "description": "Aggiorna la tua discussione",
+      "save": "Salva modifiche",
+      "cancel": "Annulla",
+      "close": "Chiudi",
+      "failed_to_update": "Aggiornamento non riuscito. Riprova.",
+      "content_not_allowed": "La tua discussione contiene contenuti non consentiti.",
+      "max_edits_reached": "Hai raggiunto il numero massimo di modifiche ({{count}}). Non puoi più modificare questa discussione.",
+      "edits_remaining": "Ti restano {{count}} modifica/e.",
+      "no_edits_remaining": "Non ti restano modifiche ({{count}})."
+    },
+    "course_section": {
+      "title": "Discussioni della community",
+      "view_all": "Vedi tutto",
+      "no_discussions": "Ancora nessuna discussione",
+      "start_first": "Avvia la prima discussione"
+    }
   },
   "collections": {
     "collections": "Collezioni",
@@ -427,6 +750,15 @@
     "benefits": "Vantaggi:",
     "min_price": "Prezzo minimo:",
     "choose_price": "Scegli il tuo prezzo"
+  },
+  "account": {
+    "title": "Account",
+    "general": "Generale",
+    "profile": "Profilo",
+    "security": "Sicurezza",
+    "my_courses": "I miei corsi",
+    "no_purchased_courses": "Nessun corso acquistato",
+    "purchased_courses_description": "I corsi che hai acquistato o a cui ti sei abbonato appariranno qui"
   },
   "user": {
     "user_settings": "Impostazioni utente",
@@ -706,10 +1038,538 @@
       "create_course": "Crea corso",
       "create_new_course": "Crea un nuovo corso",
       "import_course": "Importa corso",
+      "import_scorm": "Importa Pacchetto SCORM",
       "import_scorm_description": "Importa un pacchetto SCORM per creare un nuovo corso",
+      "import_learnhouse": "Importa Corsi LearnHouse",
+      "import_learnhouse_description": "Importa corsi da un pacchetto di esportazione LearnHouse",
+      "import_select_type": "Seleziona il tipo di pacchetto che vuoi importare",
       "no_courses": "Ancora nessun corso",
       "create_course_placeholder": "Crea un corso per aggiungere contenuti",
-      "no_courses_available": "Ancora nessun corso disponibile"
+      "no_courses_available": "Ancora nessun corso disponibile",
+      "publishing": "Pubblicazione corso...",
+      "unpublishing": "Depubblicazione corso...",
+      "published_success": "Corso pubblicato con successo",
+      "unpublished_success": "Corso depubblicato con successo",
+      "publish_error": "Impossibile aggiornare lo stato di pubblicazione",
+      "published": "Pubblicato",
+      "unpublished": "Non pubblicato",
+      "processing": "Elaborazione...",
+      "click_to_publish": "Clicca per pubblicare",
+      "click_to_unpublish": "Clicca per depubblicare",
+      "preview": "Anteprima",
+      "save": {
+        "success": "Modifiche salvate con successo",
+        "error": "Impossibile salvare le modifiche",
+        "partial_success": "Salvato con alcuni problemi: {{failed}}",
+        "partial_error": "Salvato parzialmente ({{success}}), ma fallito: {{failed}}",
+        "certification_error": "Impossibile salvare le impostazioni di certificazione",
+        "saving": "Salvataggio...",
+        "saved": "Salvato",
+        "save": "Salva",
+        "unsaved": "Modifiche non salvate",
+        "retry": "Errore - Clicca per riprovare",
+        "retry_button": "Riprova"
+      },
+      "overview_top": {
+        "course_label": "Corso",
+        "rights_guide_button": "Guida ai diritti"
+      },
+      "settings": {
+        "tabs": {
+          "general": "Generale",
+          "content": "Contenuto",
+          "access": "Accesso",
+          "contributors": "Collaboratori",
+          "certification": "Certificazione"
+        },
+        "access_denied": {
+          "title": "Accesso negato",
+          "message": "Non hai il permesso di accedere a questo corso."
+        },
+        "access_restricted": {
+          "title": "Accesso limitato",
+          "message": "Non hai il permesso di accedere a {{tab}}"
+        },
+        "loading": "Caricamento..."
+      },
+      "general": {
+        "form": {
+          "name_label": "Nome",
+          "name_required": "Obbligatorio",
+          "name_max_length": "Deve contenere massimo 100 caratteri",
+          "description_label": "Descrizione",
+          "description_required": "Obbligatorio",
+          "description_max_length": "Deve contenere massimo 1000 caratteri",
+          "about_label": "Informazioni",
+          "learnings_label": "Obiettivi di apprendimento",
+          "learnings_required": "Obbligatorio",
+          "learnings_invalid_format": "Formato non valido",
+          "learnings_min_items": "È richiesto almeno un obiettivo di apprendimento",
+          "learnings_empty_text": "Tutti gli obiettivi di apprendimento devono avere del testo",
+          "learnings_invalid_json": "Formato JSON non valido",
+          "tags_label": "Tag",
+          "tags_placeholder": "Invio per aggiungere...",
+          "thumbnail_type_label": "Tipo miniatura",
+          "thumbnail_type_image": "Immagine",
+          "thumbnail_type_video": "Video",
+          "thumbnail_type_both": "Entrambi",
+          "thumbnail_label": "Miniatura",
+          "image_search_placeholder": "Cerca immagini..."
+        },
+        "thumbnail": {
+          "upload_image": "Carica immagine",
+          "upload_video": "Carica video",
+          "gallery": "Galleria",
+          "tabs": {
+            "image": "Immagine",
+            "video": "Video"
+          },
+          "supported_formats": {
+            "image": "Formati supportati: PNG, JPG/JPEG (max 8MB)",
+            "video": "Formati supportati: MP4, WebM (max 100MB)"
+          }
+        },
+        "errors": {
+          "save_failed": "Impossibile salvare la struttura del corso."
+        }
+      },
+      "access": {
+        "title": "Accesso al corso",
+        "subtitle": "Scegli se vuoi che il tuo corso sia disponibile pubblicamente su internet o accessibile solo agli utenti registrati",
+        "public": {
+          "title": "Pubblico",
+          "description": "Il corso è disponibile pubblicamente su internet, è indicizzato dai motori di ricerca e può essere consultato da chiunque",
+          "active": "Attivo",
+          "confirmation_title": "Passare a Pubblico?",
+          "confirmation_message": "Sei sicuro di volere che questo corso sia disponibile pubblicamente su internet?",
+          "confirmation_button": "Passa a Pubblico"
+        },
+        "users_only": {
+          "title": "Solo utenti",
+          "description": "Il corso è accessibile solo agli utenti registrati, inoltre puoi scegliere quali gruppi di utenti possono accedere a questo corso",
+          "active": "Attivo",
+          "confirmation_title": "Passare a Solo utenti?",
+          "confirmation_message": "Sei sicuro di volere che questo corso sia accessibile solo agli utenti registrati?",
+          "confirmation_button": "Passa a Solo utenti"
+        },
+        "usergroups": {
+          "title": "Gruppi utenti",
+          "subtitle": "Puoi scegliere di dare accesso a questo corso solo a gruppi specifici di utenti collegandolo a un gruppo utenti",
+          "table": {
+            "name": "Nome",
+            "actions": "Azioni"
+          },
+          "actions": {
+            "delete_link": "Elimina collegamento",
+            "link_to_usergroup": "Collega a un gruppo utenti"
+          },
+          "modals": {
+            "link_title": "Collega corso a un gruppo utenti",
+            "link_description": "Scegli un gruppo utenti da collegare a questo corso. Gli utenti di questo gruppo avranno accesso a questo corso.",
+            "unlink_title": "Scollegare gruppo utenti?",
+            "unlink_message": "Gli utenti di questo gruppo non avranno più accesso a questo corso",
+            "unlink_button": "Elimina collegamento",
+            "warning": "Gli utenti che non fanno parte del gruppo non avranno più accesso a questo corso",
+            "usergroup_name": "Nome gruppo utenti",
+            "no_usergroups": "Nessun gruppo utenti disponibile",
+            "create_usergroup": "Crea un gruppo utenti",
+            "link_button": "Collega"
+          },
+          "toasts": {
+            "link_success": "Collegato con successo al gruppo utenti",
+            "link_error": "Errore {{status}}: {{detail}}",
+            "unlink_success": "Scollegato con successo dal gruppo utenti",
+            "unlink_error": "Si è verificato un errore durante lo scollegamento del gruppo utenti."
+          }
+        }
+      },
+      "contributors": {
+        "title": "Collaboratori del corso",
+        "subtitle": "Gestisci i collaboratori e aggiungine di nuovi al tuo corso",
+        "open_to_contributors": {
+          "title": "Aperto ai collaboratori",
+          "description": "Il corso è aperto ai collaboratori. Gli utenti possono candidarsi per diventare collaboratori e aiutare a migliorare i contenuti del corso.",
+          "active": "Attivo",
+          "confirmation_title": "Aprire ai collaboratori?",
+          "confirmation_message": "Sei sicuro di voler aprire questo corso ai collaboratori?",
+          "confirmation_button": "Apri ai collaboratori"
+        },
+        "closed_to_contributors": {
+          "title": "Chiuso ai collaboratori",
+          "description": "Il corso è chiuso ai collaboratori. Solo i collaboratori esistenti possono modificare i contenuti del corso.",
+          "active": "Attivo",
+          "confirmation_title": "Chiudere ai collaboratori?",
+          "confirmation_message": "Sei sicuro di voler chiudere questo corso ai collaboratori?",
+          "confirmation_button": "Chiudi ai collaboratori"
+        },
+        "search": {
+          "placeholder": "Cerca utenti per nome o nome utente da aggiungere come collaboratori...",
+          "searching": "Ricerca in corso...",
+          "no_results": "Nessun utente trovato"
+        },
+        "table": {
+          "name": "Nome",
+          "username": "Nome utente",
+          "email": "Email",
+          "role": "Ruolo",
+          "status": "Stato",
+          "added_on": "Aggiunto il"
+        },
+        "roles": {
+          "creator": "CREATORE",
+          "contributor": "COLLABORATORE",
+          "maintainer": "MAINTAINER",
+          "reporter": "REPORTER"
+        },
+        "statuses": {
+          "active": "ATTIVO",
+          "inactive": "INATTIVO",
+          "pending": "IN ATTESA"
+        },
+        "actions": {
+          "selected_users": "{{count}} utente selezionato",
+          "selected_users_plural": "{{count}} utenti selezionati",
+          "clear": "Pulisci",
+          "add_selected": "Aggiungi selezionati",
+          "selected_contributors": "{{count}} collaboratore selezionato",
+          "selected_contributors_plural": "{{count}} collaboratori selezionati",
+          "remove_selected": "Rimuovi selezionati",
+          "already_contributor": "Già collaboratore"
+        },
+        "toasts": {
+          "add_success": "{{count}} collaboratore/i aggiunto/i con successo",
+          "add_error": "Impossibile aggiungere {{username}}: {{reason}}",
+          "add_failed": "Impossibile aggiungere collaboratori",
+          "update_success": "Collaboratore aggiornato con successo",
+          "update_error": "Errore: {{detail}}",
+          "update_failed": "Si è verificato un errore durante l'aggiornamento del collaboratore.",
+          "remove_success": "{{count}} collaboratore/i rimosso/i con successo",
+          "remove_failed": "Impossibile rimuovere collaboratori",
+          "cannot_modify_creator": "Impossibile modificare il ruolo o lo stato di un creatore"
+        }
+      },
+      "certification": {
+        "title": "Certificazione corso",
+        "subtitle": "Abilita e configura i certificati per gli studenti che completano questo corso",
+        "form": {
+          "certification_name_label": "Nome certificazione",
+          "certification_name_required": "Obbligatorio quando la certificazione è abilitata",
+          "certification_name_max_length": "Deve contenere massimo 100 caratteri",
+          "certification_name_placeholder": "es. Certificazione JavaScript Avanzata",
+          "certification_type_label": "Tipo certificazione",
+          "certification_description_label": "Descrizione certificazione",
+          "certification_description_required": "Obbligatorio quando la certificazione è abilitata",
+          "certification_description_max_length": "Deve contenere massimo 500 caratteri",
+          "certification_description_placeholder": "Descrivi cosa rappresenta questa certificazione e il suo valore...",
+          "certificate_pattern_label": "Modello certificato",
+          "certificate_instructor_label": "Nome istruttore (opzionale)",
+          "certificate_instructor_placeholder": "es. Dr. Jane Smith"
+        },
+        "types": {
+          "completion": "Completamento corso",
+          "achievement": "Basato sui risultati",
+          "assessment": "Basato sulla valutazione",
+          "participation": "Partecipazione",
+          "mastery": "Padronanza abilità",
+          "professional": "Sviluppo professionale",
+          "continuing": "Formazione continua",
+          "workshop": "Partecipazione workshop",
+          "specialization": "Specializzazione"
+        },
+        "patterns": {
+          "royal": {
+            "name": "Reale",
+            "description": "Ornato con motivi a corona"
+          },
+          "tech": {
+            "name": "Tech",
+            "description": "Modelli ispirati ai circuiti"
+          },
+          "nature": {
+            "name": "Natura",
+            "description": "Modelli di foglie organiche"
+          },
+          "geometric": {
+            "name": "Geometrico",
+            "description": "Forme e linee astratte"
+          },
+          "vintage": {
+            "name": "Vintage",
+            "description": "Stile art déco"
+          },
+          "waves": {
+            "name": "Onde",
+            "description": "Modelli di acqua fluente"
+          },
+          "minimal": {
+            "name": "Minimale",
+            "description": "Pulito e semplice"
+          },
+          "professional": {
+            "name": "Professionale",
+            "description": "Design pronto per il business"
+          },
+          "academic": {
+            "name": "Accademico",
+            "description": "Stile universitario tradizionale"
+          },
+          "modern": {
+            "name": "Moderno",
+            "description": "Linee pulite contemporanee"
+          }
+        },
+        "sections": {
+          "basic_info": {
+            "title": "Informazioni di base",
+            "subtitle": "Configura i dettagli di base della tua certificazione"
+          },
+          "certificate_design": {
+            "title": "Design certificato",
+            "subtitle": "Scegli un modello decorativo per il tuo certificato"
+          },
+          "preview": {
+            "title": "Anteprima certificato",
+            "subtitle": "Anteprima dal vivo del tuo certificato"
+          }
+        },
+        "states": {
+          "disabled": {
+            "title": "Nessuna certificazione configurata",
+            "message": "Abilita la certificazione per fornire agli studenti i certificati al completamento del corso.",
+            "button": "Abilita certificazione",
+            "creating": "Creazione..."
+          },
+          "creating": {
+            "title": "Creazione certificazione...",
+            "message": "Attendi mentre configuriamo la certificazione del corso."
+          }
+        },
+        "errors": {
+          "loading": "Errore durante il caricamento delle certificazioni",
+          "create_failed": "Impossibile creare la certificazione.",
+          "remove_failed": "Impossibile rimuovere la certificazione."
+        },
+        "toasts": {
+          "create_success": "Certificazione creata con successo",
+          "create_error": "Impossibile creare la certificazione",
+          "remove_success": "Certificazione rimossa con successo",
+          "remove_error": "Impossibile rimuovere la certificazione"
+        }
+      },
+      "communities": {
+        "title": "Community",
+        "new_community": "Nuova community",
+        "no_communities": "Nessuna community ancora",
+        "no_communities_description": "Crea la tua prima community per avviare le discussioni",
+        "card": {
+          "open_settings": "Apri impostazioni",
+          "view_community": "Vedi community",
+          "quick_edit": "Modifica rapida"
+        },
+        "settings": {
+          "tabs": {
+            "general": "Generale",
+            "thumbnail": "Miniatura",
+            "course": "Corso collegato",
+            "moderation": "Moderazione"
+          },
+          "general": {
+            "title": "Impostazioni generali",
+            "subtitle": "Gestisci nome, descrizione e visibilità della community"
+          },
+          "thumbnail": {
+            "title": "Miniatura",
+            "subtitle": "Aggiorna l'immagine di copertina della community"
+          },
+          "course": {
+            "title": "Corso collegato",
+            "subtitle": "Collega questa community a un corso"
+          },
+          "moderation": {
+            "title": "Moderazione",
+            "subtitle": "Configura le impostazioni di moderazione dei contenuti"
+          }
+        },
+        "course": {
+          "title": "Corso collegato",
+          "subtitle": "Collega questa community a un corso per discussioni specifiche del corso",
+          "currently_linked": "Attualmente collegato",
+          "unlink": "Scollega",
+          "link_button": "Collega corso",
+          "search_placeholder": "Cerca corsi...",
+          "no_courses": "Nessun corso trovato",
+          "course_linked_id": "Corso collegato (ID: {{id}})",
+          "course_not_found": "Il corso collegato potrebbe non esistere più o non hai accesso ad esso",
+          "toasts": {
+            "linking": "Collegamento corso...",
+            "link_success": "Corso collegato con successo",
+            "link_error": "Impossibile collegare il corso",
+            "unlinking": "Scollegamento corso...",
+            "unlink_success": "Corso scollegato con successo",
+            "unlink_error": "Impossibile scollegare il corso"
+          }
+        },
+        "general": {
+          "title": "Impostazioni Community",
+          "subtitle": "Aggiorna le informazioni di base della tua community",
+          "form": {
+            "name_label": "Nome Community",
+            "name_required": "Il nome della community è obbligatorio",
+            "name_min_length": "Il nome deve avere almeno 3 caratteri",
+            "name_max_length": "Il nome deve avere meno di 100 caratteri",
+            "name_placeholder": "Inserisci il nome della community",
+            "description_label": "Descrizione",
+            "description_max_length": "La descrizione deve avere meno di 500 caratteri",
+            "description_placeholder": "Descrivi di cosa tratta questa community",
+            "public_label": "Community Pubblica",
+            "public_description": "Rendi questa community visibile a tutti",
+            "characters_left": "{{count}} caratteri rimanenti"
+          },
+          "toasts": {
+            "updating": "Aggiornamento community...",
+            "update_success": "Community aggiornata con successo",
+            "update_error": "Impossibile aggiornare la community"
+          }
+        },
+        "thumbnail": {
+          "title": "Miniatura Community",
+          "subtitle": "Carica un'immagine di copertina per la tua community",
+          "no_thumbnail": "Nessuna miniatura impostata",
+          "upload_image": "Carica Immagine",
+          "browse_unsplash": "Sfoglia Unsplash",
+          "uploading": "Caricamento...",
+          "supported_formats": "Formati supportati: JPG, JPEG, PNG. Dimensione max: 8MB. Proporzioni consigliate: 16:9",
+          "toasts": {
+            "update_success": "Miniatura aggiornata con successo",
+            "update_error": "Impossibile aggiornare la miniatura",
+            "invalid_type": "Tipo di file non valido. Carica solo immagini PNG o JPG/JPEG",
+            "file_too_large": "La dimensione del file supera il limite di 8MB"
+          }
+        },
+        "moderation": {
+          "title": "Moderazione Contenuti",
+          "subtitle": "Configura parole bloccate e filtri contenuti",
+          "info_title": "Parole bloccate",
+          "info_description": "Le discussioni e le risposte contenenti queste parole saranno bloccate. Gli utenti vedranno un messaggio di errore e il loro contenuto non verrà pubblicato.",
+          "add_word_label": "Aggiungi parola bloccata",
+          "add_word_placeholder": "Inserisci una parola o frase...",
+          "add_button": "Aggiungi",
+          "batch_add_label": "Aggiungi parole in blocco",
+          "batch_add_description": "Aggiungi più parole contemporaneamente, separate da virgole",
+          "batch_add_placeholder": "parola1, parola2, parola3...",
+          "add_all_button": "Aggiungi Tutto",
+          "blocked_words_label": "Parole bloccate",
+          "no_blocked_words": "Nessuna parola bloccata ancora",
+          "no_blocked_words_description": "Aggiungi parole per abilitare la moderazione dei contenuti",
+          "word_exists_error": "Questa parola è già nella lista",
+          "all_words_exist_error": "Tutte le parole sono già nella lista o l'input è vuoto",
+          "toasts": {
+            "saving": "Salvataggio impostazioni moderazione...",
+            "save_success": "Impostazioni moderazione salvate",
+            "save_error": "Impossibile salvare le impostazioni di moderazione"
+          }
+        },
+        "modals": {
+          "create": {
+            "title": "Crea Community",
+            "description": "Crea una nuova community per le discussioni",
+            "form": {
+              "name_label": "Nome Community",
+              "name_placeholder": "Inserisci il nome della community",
+              "description_label": "Descrizione",
+              "description_placeholder": "Descrivi di cosa tratta questa community",
+              "public_label": "Rendi questa community pubblica (visibile a tutti)"
+            },
+            "cancel": "Annulla",
+            "submit": "Crea Community"
+          },
+          "edit": {
+            "title": "Modifica Community",
+            "description": "Aggiorna le impostazioni della community"
+          },
+          "delete": {
+            "title": "Eliminare {{name}}?",
+            "message": "Sei sicuro di voler eliminare questa community? Tutte le discussioni saranno rimosse permanentemente.",
+            "button": "Elimina Community"
+          }
+        },
+        "toasts": {
+          "creating": "Creazione community...",
+          "create_success": "Community creata con successo",
+          "create_error": "Impossibile creare la community",
+          "deleting": "Eliminazione community...",
+          "delete_success": "Community eliminata con successo",
+          "delete_error": "Impossibile eliminare la community"
+        }
+      },
+      "structure": {
+        "loading": "Caricamento...",
+        "add_chapter_button": "Aggiungi capitolo",
+        "modals": {
+          "new_chapter": {
+            "title": "Crea capitolo",
+            "description": "Aggiungi un nuovo capitolo al corso",
+            "form": {
+              "name_label": "Nome capitolo",
+              "name_required": "Fornisci un nome per il capitolo",
+              "description_label": "Descrizione capitolo",
+              "description_required": "Fornisci una descrizione per il capitolo",
+              "submit": "Crea capitolo"
+            }
+          },
+          "delete_chapter": {
+            "title": "Eliminare {{name}}?",
+            "message": "Sei sicuro di voler eliminare questo capitolo?",
+            "button": "Elimina capitolo"
+          },
+          "new_activity": {
+            "title": "Crea attività",
+            "description": "Scegli tra i tipi di attività da aggiungere al corso"
+          },
+          "delete_activity": {
+            "title": "Eliminare {{name}}?",
+            "message": "Sei sicuro di voler eliminare questa attività?",
+            "button": "Elimina attività"
+          }
+        },
+        "actions": {
+          "add_chapter": "Aggiungi capitolo",
+          "add_activity": "Aggiungi attività",
+          "publish": "Pubblica",
+          "unpublish": "Annulla pubblicazione",
+          "preview_activity": "Anteprima attività",
+          "edit_page": "Modifica pagina",
+          "edit_assignment": "Modifica compito"
+        },
+        "chapter_element": {
+          "chapter_name_placeholder": "Nome capitolo"
+        },
+        "activity": {
+          "name_placeholder": "Nome attività",
+          "types": {
+            "video": "Video",
+            "document": "Documento",
+            "assignment": "Compito",
+            "assignments": "Compiti",
+            "dynamic": "Dinamica",
+            "dynamic_page": "Pagina dinamica",
+            "scorm": "Scorm"
+          },
+          "toasts": {
+            "deleting": "Eliminazione attività...",
+            "delete_success": "Attività eliminata con successo",
+            "updating": "Aggiornamento compito...",
+            "update_success": "L'attività è stata aggiornata con successo",
+            "name_update_success": "Nome attività aggiornato con successo",
+            "name_update_error": "Impossibile aggiornare il nome dell'attività",
+            "creating": "Creazione attività...",
+            "create_success": "Attività creata con successo",
+            "uploading": "Caricamento file e creazione attività...",
+            "upload_success": "File caricato con successo",
+            "creating_uploading": "Creazione attività e caricamento file..."
+          }
+        }
+      }
     },
     "organization": {
       "settings": {
@@ -768,7 +1628,10 @@
         "saving": "Salvataggio...",
         "update_success": "Organizzazione aggiornata",
         "update_error": "Impossibile aggiornare l'organizzazione",
-        "updating": "Aggiornamento organizzazione..."
+        "updating": "Aggiornamento organizzazione...",
+        "footer_text": "Testo del footer",
+        "footer_text_placeholder": "Inserisci il testo del footer...",
+        "footer_text_desc": "Testo personalizzato visualizzato in fondo alle pagine della tua organizzazione"
       },
       "images": {
         "title": "Immagini e anteprime",
@@ -826,7 +1689,8 @@
         "subtitle": "Gestisci l'identità visiva e la presenza social della tua organizzazione",
         "tabs": {
           "images": "Immagini e anteprime",
-          "social": "Link social"
+          "social": "Link social",
+          "theme": "Tema"
         }
       },
       "socials": {
@@ -959,7 +1823,11 @@
           "generating": "Generazione CSV...",
           "success": "CSV esportato con successo",
           "error": "Impossibile esportare CSV"
-        }
+        },
+        "enterprise_only": "I log di audit sono disponibili solo con il piano Enterprise",
+        "enterprise_feature": "Funzionalità Enterprise",
+        "enterprise_description": "I log di audit sono una funzionalità premium disponibile solo per le organizzazioni con piano Enterprise. Effettua l'upgrade per ottenere piena visibilità sulle attività della tua organizzazione.",
+        "upgrade_button": "Passa a Enterprise"
       },
       "landing": {
         "title": "Pagina di destinazione",
@@ -1110,6 +1978,16 @@
           "selected": "Selezionati",
           "select": "Seleziona"
         }
+      },
+      "theme": {
+        "primary_color": "Colore primario",
+        "primary_color_desc": "Scegli un colore primario per l'intestazione e lo sfondo della pagina della tua organizzazione.",
+        "clear_color": "Cancella colore",
+        "preview": "Anteprima dal vivo",
+        "preview_hint": "Ecco come appariranno l'intestazione e lo sfondo della tua organizzazione",
+        "footer_text": "Testo del footer",
+        "footer_text_desc": "Aggiungi testo personalizzato da visualizzare nel footer della pagina.",
+        "footer_text_placeholder": "Inserisci il testo del footer..."
       }
     },
     "users": {
@@ -1167,7 +2045,10 @@
           "remove_from_org": "Rimuovi dall'organizzazione",
           "removing": "Rimozione...",
           "remove_success": "Utente rimosso dall'organizzazione",
-          "remove_error": "Errore durante la rimozione dell'utente"
+          "remove_error": "Errore durante la rimozione dell'utente",
+          "updating_role": "Aggiornamento ruolo...",
+          "role_update_success": "Ruolo aggiornato con successo",
+          "role_update_error": "Errore nell'aggiornamento del ruolo"
         },
         "modals": {
           "update_role": {
@@ -1179,6 +2060,13 @@
             "message": "Sei sicuro di voler rimuovere questo utente dall'organizzazione?",
             "button": "Rimuovi utente"
           }
+        },
+        "search_placeholder": "Cerca utenti...",
+        "no_results": "Nessun utente trovato corrispondente alla tua ricerca",
+        "no_users": "Nessun utente in questa organizzazione ancora",
+        "pagination": {
+          "showing": "Visualizzazione {{start}}-{{end}} di {{total}}",
+          "page": "Pagina {{current}} di {{total}}"
         }
       },
       "signups": {
@@ -1668,481 +2556,6 @@
           "toasts": {
             "creating": "Creazione compito...",
             "success": "Compito creato con successo"
-          }
-        }
-      }
-    },
-    "courses": {
-      "title": "Corsi",
-      "rights_guide": "Guida ai diritti",
-      "create_course": "Crea corso",
-      "create_new_course": "Crea un nuovo corso",
-      "import_course": "Importa corso",
-      "import_scorm_description": "Importa un pacchetto SCORM per creare un nuovo corso",
-      "no_courses": "Ancora nessun corso",
-      "create_course_placeholder": "Crea un corso per aggiungere contenuti",
-      "no_courses_available": "Ancora nessun corso disponibile",
-      "overview_top": {
-        "course_label": "Corso",
-        "rights_guide_button": "Guida ai diritti"
-      },
-      "settings": {
-        "tabs": {
-          "general": "Generale",
-          "content": "Contenuto",
-          "access": "Accesso",
-          "contributors": "Collaboratori",
-          "certification": "Certificazione"
-        },
-        "access_denied": {
-          "title": "Accesso negato",
-          "message": "Non hai il permesso di accedere a questo corso."
-        },
-        "access_restricted": {
-          "title": "Accesso limitato",
-          "message": "Non hai il permesso di accedere a {{tab}}"
-        },
-        "loading": "Caricamento..."
-      },
-      "general": {
-        "form": {
-          "name_label": "Nome",
-          "name_required": "Obbligatorio",
-          "name_max_length": "Deve contenere massimo 100 caratteri",
-          "description_label": "Descrizione",
-          "description_required": "Obbligatorio",
-          "description_max_length": "Deve contenere massimo 1000 caratteri",
-          "about_label": "Informazioni",
-          "learnings_label": "Obiettivi di apprendimento",
-          "learnings_required": "Obbligatorio",
-          "learnings_invalid_format": "Formato non valido",
-          "learnings_min_items": "È richiesto almeno un obiettivo di apprendimento",
-          "learnings_empty_text": "Tutti gli obiettivi di apprendimento devono avere del testo",
-          "learnings_invalid_json": "Formato JSON non valido",
-          "tags_label": "Tag",
-          "tags_placeholder": "Invio per aggiungere...",
-          "thumbnail_type_label": "Tipo miniatura",
-          "thumbnail_type_image": "Immagine",
-          "thumbnail_type_video": "Video",
-          "thumbnail_type_both": "Entrambi",
-          "thumbnail_label": "Miniatura",
-          "image_search_placeholder": "Cerca immagini..."
-        },
-        "thumbnail": {
-          "upload_image": "Carica immagine",
-          "upload_video": "Carica video",
-          "gallery": "Galleria",
-          "tabs": {
-            "image": "Immagine",
-            "video": "Video"
-          },
-          "supported_formats": {
-            "image": "Formati supportati: PNG, JPG/JPEG (max 8MB)",
-            "video": "Formati supportati: MP4, WebM (max 100MB)"
-          }
-        },
-        "errors": {
-          "save_failed": "Impossibile salvare la struttura del corso."
-        }
-      },
-      "access": {
-        "title": "Accesso al corso",
-        "subtitle": "Scegli se vuoi che il tuo corso sia disponibile pubblicamente su internet o accessibile solo agli utenti registrati",
-        "public": {
-          "title": "Pubblico",
-          "description": "Il corso è disponibile pubblicamente su internet, è indicizzato dai motori di ricerca e può essere consultato da chiunque",
-          "active": "Attivo",
-          "confirmation_title": "Passare a Pubblico?",
-          "confirmation_message": "Sei sicuro di volere che questo corso sia disponibile pubblicamente su internet?",
-          "confirmation_button": "Passa a Pubblico"
-        },
-        "users_only": {
-          "title": "Solo utenti",
-          "description": "Il corso è accessibile solo agli utenti registrati, inoltre puoi scegliere quali gruppi di utenti possono accedere a questo corso",
-          "active": "Attivo",
-          "confirmation_title": "Passare a Solo utenti?",
-          "confirmation_message": "Sei sicuro di volere che questo corso sia accessibile solo agli utenti registrati?",
-          "confirmation_button": "Passa a Solo utenti"
-        },
-        "usergroups": {
-          "title": "Gruppi utenti",
-          "subtitle": "Puoi scegliere di dare accesso a questo corso solo a gruppi specifici di utenti collegandolo a un gruppo utenti",
-          "table": {
-            "name": "Nome",
-            "actions": "Azioni"
-          },
-          "actions": {
-            "delete_link": "Elimina collegamento",
-            "link_to_usergroup": "Collega a un gruppo utenti"
-          },
-          "modals": {
-            "link_title": "Collega corso a un gruppo utenti",
-            "link_description": "Scegli un gruppo utenti da collegare a questo corso. Gli utenti di questo gruppo avranno accesso a questo corso.",
-            "unlink_title": "Scollegare gruppo utenti?",
-            "unlink_message": "Gli utenti di questo gruppo non avranno più accesso a questo corso",
-            "unlink_button": "Elimina collegamento",
-            "warning": "Gli utenti che non fanno parte del gruppo non avranno più accesso a questo corso",
-            "usergroup_name": "Nome gruppo utenti",
-            "no_usergroups": "Nessun gruppo utenti disponibile",
-            "create_usergroup": "Crea un gruppo utenti",
-            "link_button": "Collega"
-          },
-          "toasts": {
-            "link_success": "Collegato con successo al gruppo utenti",
-            "link_error": "Errore {{status}}: {{detail}}",
-            "unlink_success": "Scollegato con successo dal gruppo utenti",
-            "unlink_error": "Si è verificato un errore durante lo scollegamento del gruppo utenti."
-          }
-        }
-      },
-      "contributors": {
-        "title": "Collaboratori del corso",
-        "subtitle": "Gestisci i collaboratori e aggiungine di nuovi al tuo corso",
-        "open_to_contributors": {
-          "title": "Aperto ai collaboratori",
-          "description": "Il corso è aperto ai collaboratori. Gli utenti possono candidarsi per diventare collaboratori e aiutare a migliorare i contenuti del corso.",
-          "active": "Attivo",
-          "confirmation_title": "Aprire ai collaboratori?",
-          "confirmation_message": "Sei sicuro di voler aprire questo corso ai collaboratori?",
-          "confirmation_button": "Apri ai collaboratori"
-        },
-        "closed_to_contributors": {
-          "title": "Chiuso ai collaboratori",
-          "description": "Il corso è chiuso ai collaboratori. Solo i collaboratori esistenti possono modificare i contenuti del corso.",
-          "active": "Attivo",
-          "confirmation_title": "Chiudere ai collaboratori?",
-          "confirmation_message": "Sei sicuro di voler chiudere questo corso ai collaboratori?",
-          "confirmation_button": "Chiudi ai collaboratori"
-        },
-        "search": {
-          "placeholder": "Cerca utenti per nome o nome utente da aggiungere come collaboratori...",
-          "searching": "Ricerca in corso...",
-          "no_results": "Nessun utente trovato"
-        },
-        "table": {
-          "name": "Nome",
-          "username": "Nome utente",
-          "email": "Email",
-          "role": "Ruolo",
-          "status": "Stato",
-          "added_on": "Aggiunto il"
-        },
-        "roles": {
-          "creator": "CREATORE",
-          "contributor": "COLLABORATORE",
-          "maintainer": "MAINTAINER",
-          "reporter": "REPORTER"
-        },
-        "statuses": {
-          "active": "ATTIVO",
-          "inactive": "INATTIVO",
-          "pending": "IN ATTESA"
-        },
-        "actions": {
-          "selected_users": "{{count}} utente selezionato",
-          "selected_users_plural": "{{count}} utenti selezionati",
-          "clear": "Pulisci",
-          "add_selected": "Aggiungi selezionati",
-          "selected_contributors": "{{count}} collaboratore selezionato",
-          "selected_contributors_plural": "{{count}} collaboratori selezionati",
-          "remove_selected": "Rimuovi selezionati",
-          "already_contributor": "Già collaboratore"
-        },
-        "toasts": {
-          "add_success": "{{count}} collaboratore/i aggiunto/i con successo",
-          "add_error": "Impossibile aggiungere {{username}}: {{reason}}",
-          "add_failed": "Impossibile aggiungere collaboratori",
-          "update_success": "Collaboratore aggiornato con successo",
-          "update_error": "Errore: {{detail}}",
-          "update_failed": "Si è verificato un errore durante l'aggiornamento del collaboratore.",
-          "remove_success": "{{count}} collaboratore/i rimosso/i con successo",
-          "remove_failed": "Impossibile rimuovere collaboratori",
-          "cannot_modify_creator": "Impossibile modificare il ruolo o lo stato di un creatore"
-        }
-      },
-      "certification": {
-        "title": "Certificazione corso",
-        "subtitle": "Abilita e configura i certificati per gli studenti che completano questo corso",
-        "form": {
-          "certification_name_label": "Nome certificazione",
-          "certification_name_required": "Obbligatorio quando la certificazione è abilitata",
-          "certification_name_max_length": "Deve contenere massimo 100 caratteri",
-          "certification_name_placeholder": "es. Certificazione JavaScript Avanzata",
-          "certification_type_label": "Tipo certificazione",
-          "certification_description_label": "Descrizione certificazione",
-          "certification_description_required": "Obbligatorio quando la certificazione è abilitata",
-          "certification_description_max_length": "Deve contenere massimo 500 caratteri",
-          "certification_description_placeholder": "Descrivi cosa rappresenta questa certificazione e il suo valore...",
-          "certificate_pattern_label": "Modello certificato",
-          "certificate_instructor_label": "Nome istruttore (opzionale)",
-          "certificate_instructor_placeholder": "es. Dr. Jane Smith"
-        },
-        "types": {
-          "completion": "Completamento corso",
-          "achievement": "Basato sui risultati",
-          "assessment": "Basato sulla valutazione",
-          "participation": "Partecipazione",
-          "mastery": "Padronanza abilità",
-          "professional": "Sviluppo professionale",
-          "continuing": "Formazione continua",
-          "workshop": "Partecipazione workshop",
-          "specialization": "Specializzazione"
-        },
-        "patterns": {
-          "royal": {
-            "name": "Reale",
-            "description": "Ornato con motivi a corona"
-          },
-          "tech": {
-            "name": "Tech",
-            "description": "Modelli ispirati ai circuiti"
-          },
-          "nature": {
-            "name": "Natura",
-            "description": "Modelli di foglie organiche"
-          },
-          "geometric": {
-            "name": "Geometrico",
-            "description": "Forme e linee astratte"
-          },
-          "vintage": {
-            "name": "Vintage",
-            "description": "Stile art déco"
-          },
-          "waves": {
-            "name": "Onde",
-            "description": "Modelli di acqua fluente"
-          },
-          "minimal": {
-            "name": "Minimale",
-            "description": "Pulito e semplice"
-          },
-          "professional": {
-            "name": "Professionale",
-            "description": "Design pronto per il business"
-          },
-          "academic": {
-            "name": "Accademico",
-            "description": "Stile universitario tradizionale"
-          },
-          "modern": {
-            "name": "Moderno",
-            "description": "Linee pulite contemporanee"
-          }
-        },
-        "sections": {
-          "basic_info": {
-            "title": "Informazioni di base",
-            "subtitle": "Configura i dettagli di base della tua certificazione"
-          },
-          "certificate_design": {
-            "title": "Design certificato",
-            "subtitle": "Scegli un modello decorativo per il tuo certificato"
-          },
-          "preview": {
-            "title": "Anteprima certificato",
-            "subtitle": "Anteprima dal vivo del tuo certificato"
-          }
-        },
-        "states": {
-          "disabled": {
-            "title": "Nessuna certificazione configurata",
-            "message": "Abilita la certificazione per fornire agli studenti i certificati al completamento del corso.",
-            "button": "Abilita certificazione",
-            "creating": "Creazione..."
-          },
-          "creating": {
-            "title": "Creazione certificazione...",
-            "message": "Attendi mentre configuriamo la certificazione del corso."
-          }
-        },
-        "errors": {
-          "loading": "Errore durante il caricamento delle certificazioni",
-          "create_failed": "Impossibile creare la certificazione.",
-          "remove_failed": "Impossibile rimuovere la certificazione."
-        },
-        "toasts": {
-          "create_success": "Certificazione creata con successo",
-          "create_error": "Impossibile creare la certificazione",
-          "remove_success": "Certificazione rimossa con successo",
-          "remove_error": "Impossibile rimuovere la certificazione"
-        }
-      },
-      "communities": {
-        "title": "Community",
-        "new_community": "Nuova community",
-        "no_communities": "Nessuna community ancora",
-        "no_communities_description": "Crea la tua prima community per avviare le discussioni",
-        "card": {
-          "open_settings": "Apri impostazioni",
-          "view_community": "Vedi community",
-          "quick_edit": "Modifica rapida"
-        },
-        "settings": {
-          "tabs": {
-            "general": "Generale",
-            "thumbnail": "Miniatura",
-            "moderation": "Moderazione"
-          }
-        },
-        "general": {
-          "title": "Impostazioni Community",
-          "subtitle": "Aggiorna le informazioni di base della tua community",
-          "form": {
-            "name_label": "Nome Community",
-            "name_required": "Il nome della community è obbligatorio",
-            "name_min_length": "Il nome deve avere almeno 3 caratteri",
-            "name_max_length": "Il nome deve avere meno di 100 caratteri",
-            "name_placeholder": "Inserisci il nome della community",
-            "description_label": "Descrizione",
-            "description_max_length": "La descrizione deve avere meno di 500 caratteri",
-            "description_placeholder": "Descrivi di cosa tratta questa community",
-            "public_label": "Community Pubblica",
-            "public_description": "Rendi questa community visibile a tutti",
-            "characters_left": "{{count}} caratteri rimanenti"
-          },
-          "toasts": {
-            "updating": "Aggiornamento community...",
-            "update_success": "Community aggiornata con successo",
-            "update_error": "Impossibile aggiornare la community"
-          }
-        },
-        "thumbnail": {
-          "title": "Miniatura Community",
-          "subtitle": "Carica un'immagine di copertina per la tua community",
-          "no_thumbnail": "Nessuna miniatura impostata",
-          "upload_image": "Carica Immagine",
-          "browse_unsplash": "Sfoglia Unsplash",
-          "uploading": "Caricamento...",
-          "supported_formats": "Formati supportati: JPG, JPEG, PNG. Dimensione max: 8MB. Proporzioni consigliate: 16:9",
-          "toasts": {
-            "update_success": "Miniatura aggiornata con successo",
-            "update_error": "Impossibile aggiornare la miniatura",
-            "invalid_type": "Tipo di file non valido. Carica solo immagini PNG o JPG/JPEG",
-            "file_too_large": "La dimensione del file supera il limite di 8MB"
-          }
-        },
-        "moderation": {
-          "title": "Moderazione Contenuti",
-          "subtitle": "Configura parole bloccate e filtri contenuti",
-          "info_title": "Parole bloccate",
-          "info_description": "Le discussioni e le risposte contenenti queste parole saranno bloccate. Gli utenti vedranno un messaggio di errore e il loro contenuto non verrà pubblicato.",
-          "add_word_label": "Aggiungi parola bloccata",
-          "add_word_placeholder": "Inserisci una parola o frase...",
-          "add_button": "Aggiungi",
-          "batch_add_label": "Aggiungi parole in blocco",
-          "batch_add_description": "Aggiungi più parole contemporaneamente, separate da virgole",
-          "batch_add_placeholder": "parola1, parola2, parola3...",
-          "add_all_button": "Aggiungi Tutto",
-          "blocked_words_label": "Parole bloccate",
-          "no_blocked_words": "Nessuna parola bloccata ancora",
-          "no_blocked_words_description": "Aggiungi parole per abilitare la moderazione dei contenuti",
-          "word_exists_error": "Questa parola è già nella lista",
-          "all_words_exist_error": "Tutte le parole sono già nella lista o l'input è vuoto",
-          "toasts": {
-            "saving": "Salvataggio impostazioni moderazione...",
-            "save_success": "Impostazioni moderazione salvate",
-            "save_error": "Impossibile salvare le impostazioni di moderazione"
-          }
-        },
-        "modals": {
-          "create": {
-            "title": "Crea Community",
-            "description": "Crea una nuova community per le discussioni",
-            "form": {
-              "name_label": "Nome Community",
-              "name_placeholder": "Inserisci il nome della community",
-              "description_label": "Descrizione",
-              "description_placeholder": "Descrivi di cosa tratta questa community",
-              "public_label": "Rendi questa community pubblica (visibile a tutti)"
-            },
-            "cancel": "Annulla",
-            "submit": "Crea Community"
-          },
-          "edit": {
-            "title": "Modifica Community",
-            "description": "Aggiorna le impostazioni della community"
-          },
-          "delete": {
-            "title": "Eliminare {{name}}?",
-            "message": "Sei sicuro di voler eliminare questa community? Tutte le discussioni saranno rimosse permanentemente.",
-            "button": "Elimina Community"
-          }
-        },
-        "toasts": {
-          "creating": "Creazione community...",
-          "create_success": "Community creata con successo",
-          "create_error": "Impossibile creare la community",
-          "deleting": "Eliminazione community...",
-          "delete_success": "Community eliminata con successo",
-          "delete_error": "Impossibile eliminare la community"
-        }
-      },
-      "structure": {
-        "loading": "Caricamento...",
-        "add_chapter_button": "Aggiungi capitolo",
-        "modals": {
-          "new_chapter": {
-            "title": "Crea capitolo",
-            "description": "Aggiungi un nuovo capitolo al corso",
-            "form": {
-              "name_label": "Nome capitolo",
-              "name_required": "Fornisci un nome per il capitolo",
-              "description_label": "Descrizione capitolo",
-              "description_required": "Fornisci una descrizione per il capitolo",
-              "submit": "Crea capitolo"
-            }
-          },
-          "delete_chapter": {
-            "title": "Eliminare {{name}}?",
-            "message": "Sei sicuro di voler eliminare questo capitolo?",
-            "button": "Elimina capitolo"
-          },
-          "new_activity": {
-            "title": "Crea attività",
-            "description": "Scegli tra i tipi di attività da aggiungere al corso"
-          },
-          "delete_activity": {
-            "title": "Eliminare {{name}}?",
-            "message": "Sei sicuro di voler eliminare questa attività?",
-            "button": "Elimina attività"
-          }
-        },
-        "actions": {
-          "add_chapter": "Aggiungi capitolo",
-          "add_activity": "Aggiungi attività",
-          "publish": "Pubblica",
-          "unpublish": "Annulla pubblicazione",
-          "preview_activity": "Anteprima attività",
-          "edit_page": "Modifica pagina",
-          "edit_assignment": "Modifica compito"
-        },
-        "chapter_element": {
-          "chapter_name_placeholder": "Nome capitolo"
-        },
-        "activity": {
-          "name_placeholder": "Nome attività",
-          "types": {
-            "video": "Video",
-            "document": "Documento",
-            "assignment": "Compito",
-            "assignments": "Compiti",
-            "dynamic": "Dinamica",
-            "dynamic_page": "Pagina dinamica",
-            "scorm": "Scorm"
-          },
-          "toasts": {
-            "deleting": "Eliminazione attività...",
-            "delete_success": "Attività eliminata con successo",
-            "updating": "Aggiornamento compito...",
-            "update_success": "L'attività è stata aggiornata con successo",
-            "name_update_success": "Nome attività aggiornato con successo",
-            "name_update_error": "Impossibile aggiornare il nome dell'attività",
-            "creating": "Creazione attività...",
-            "create_success": "Attività creata con successo",
-            "uploading": "Caricamento file e creazione attività...",
-            "upload_success": "File caricato con successo",
-            "creating_uploading": "Creazione attività e caricamento file..."
           }
         }
       }

@@ -6,31 +6,85 @@ from sqlmodel import Session
 from src.db.users import AnonymousUser, UserRead
 from src.core.events.database import get_db_session
 from config.config import get_learnhouse_config
-from src.security.auth import AuthJWT, authenticate_user, get_current_user
+from src.security.auth import (
+    authenticate_user,
+    get_current_user,
+    create_access_token,
+    create_refresh_token,
+    decode_refresh_token,
+    extract_jwt_from_request,
+    JWT_ACCESS_TOKEN_EXPIRES,
+    JWT_REFRESH_COOKIE_NAME,
+    JWT_COOKIE_NAME,
+)
 from src.services.auth.utils import signWithGoogle
 
 
 router = APIRouter()
 
 
-@router.get("/refresh")
-def refresh(response: Response, Authorize: AuthJWT = Depends()):
-    """
-    The jwt_refresh_token_required() function insures a valid refresh
-    token is present in the request before running any code below that function.
-    we can use the get_jwt_subject() function to get the subject of the refresh
-    token, and use the create_access_token() function again to make a new access token
-    """
-    Authorize.jwt_refresh_token_required()
-
-    current_user = Authorize.get_jwt_subject()
-    new_access_token = Authorize.create_access_token(subject=current_user)  # type: ignore
+def set_auth_cookies(response: Response, access_token: str, refresh_token: str):
+    """Helper to set authentication cookies."""
+    cookie_domain = get_learnhouse_config().hosting_config.cookie_config.domain
 
     response.set_cookie(
-        key="access_token_cookie",
+        key=JWT_COOKIE_NAME,
+        value=access_token,
+        httponly=False,
+        domain=cookie_domain,
+        expires=int(timedelta(hours=8).total_seconds()),
+    )
+    response.set_cookie(
+        key=JWT_REFRESH_COOKIE_NAME,
+        value=refresh_token,
+        httponly=True,
+        domain=cookie_domain,
+        expires=int(timedelta(days=30).total_seconds()),
+    )
+
+
+def unset_auth_cookies(response: Response):
+    """Helper to unset authentication cookies."""
+    cookie_domain = get_learnhouse_config().hosting_config.cookie_config.domain
+
+    response.delete_cookie(key=JWT_COOKIE_NAME, domain=cookie_domain)
+    response.delete_cookie(key=JWT_REFRESH_COOKIE_NAME, domain=cookie_domain)
+
+
+@router.get("/refresh")
+def refresh(request: Request, response: Response):
+    """
+    Validates the refresh token and issues a new access token.
+    The refresh token is read from cookies.
+    """
+    refresh_token = request.cookies.get(JWT_REFRESH_COOKIE_NAME)
+    if not refresh_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Refresh token missing",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    payload = decode_refresh_token(refresh_token)
+    if not payload:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid refresh token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    current_user = payload.get("sub")
+    new_access_token = create_access_token(
+        data={"sub": current_user},
+        expires_delta=JWT_ACCESS_TOKEN_EXPIRES
+    )
+
+    cookie_domain = get_learnhouse_config().hosting_config.cookie_config.domain
+    response.set_cookie(
+        key=JWT_COOKIE_NAME,
         value=new_access_token,
         httponly=False,
-        domain=get_learnhouse_config().hosting_config.cookie_config.domain,
+        domain=cookie_domain,
         expires=int(timedelta(hours=8).total_seconds()),
     )
     return {"access_token": new_access_token}
@@ -42,7 +96,6 @@ async def login(
     response: Response,
     username: str = Form(...),
     password: str = Form(...),
-    Authorize: AuthJWT = Depends(),
     db_session: Session = Depends(get_db_session),
 ):
     user = await authenticate_user(
@@ -55,18 +108,13 @@ async def login(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    access_token = Authorize.create_access_token(subject=username)
-    refresh_token = Authorize.create_refresh_token(subject=username)
-    Authorize.set_refresh_cookies(refresh_token)
-
-    # set cookies using fastapi
-    response.set_cookie(
-        key="access_token_cookie",
-        value=access_token,
-        httponly=False,
-        domain=get_learnhouse_config().hosting_config.cookie_config.domain,
-        expires=int(timedelta(hours=8).total_seconds()),
+    access_token = create_access_token(
+        data={"sub": username},
+        expires_delta=JWT_ACCESS_TOKEN_EXPIRES
     )
+    refresh_token = create_refresh_token(data={"sub": username})
+
+    set_auth_cookies(response, access_token, refresh_token)
 
     user = UserRead.model_validate(user)
 
@@ -91,7 +139,6 @@ async def third_party_login(
     org_id: Optional[int] = None,
     current_user: AnonymousUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
-    Authorize: AuthJWT = Depends(),
 ):
     # Google
     if body.provider == "google":
@@ -107,18 +154,13 @@ async def third_party_login(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    access_token = Authorize.create_access_token(subject=user.email)
-    refresh_token = Authorize.create_refresh_token(subject=user.email)
-    Authorize.set_refresh_cookies(refresh_token)
-
-    # set cookies using fastapi
-    response.set_cookie(
-        key="access_token_cookie",
-        value=access_token,
-        httponly=False,
-        domain=get_learnhouse_config().hosting_config.cookie_config.domain,
-        expires=int(timedelta(hours=8).total_seconds()),
+    access_token = create_access_token(
+        data={"sub": user.email},
+        expires_delta=JWT_ACCESS_TOKEN_EXPIRES
     )
+    refresh_token = create_refresh_token(data={"sub": user.email})
+
+    set_auth_cookies(response, access_token, refresh_token)
 
     user = UserRead.model_validate(user)
 
@@ -130,13 +172,19 @@ async def third_party_login(
 
 
 @router.delete("/logout")
-def logout(Authorize: AuthJWT = Depends()):
+def logout(request: Request, response: Response):
     """
     Because the JWT are stored in an httponly cookie now, we cannot
     log the user out by simply deleting the cookies in the frontend.
     We need the backend to send us a response to delete the cookies.
     """
-    Authorize.jwt_required()
+    token = extract_jwt_from_request(request)
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
-    Authorize.unset_jwt_cookies()
+    unset_auth_cookies(response)
     return {"msg": "Successfully logout"}

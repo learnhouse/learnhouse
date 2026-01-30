@@ -39,6 +39,23 @@
     "recent": "Kürzlich",
     "expand": "Erweitern",
     "help": "Hilfe",
+    "help_menu": {
+      "documentation": "Dokumentation",
+      "website": "LearnHouse Webseite",
+      "discord": "Discord",
+      "report_feedback": "Problem melden oder Feedback geben",
+      "feedback_title": "Feedback senden",
+      "feedback_description": "Helfen Sie uns, LearnHouse zu verbessern, indem Sie Ihre Gedanken teilen, Fehler melden oder neue Funktionen vorschlagen.",
+      "feedback_placeholder": "Teilen Sie uns mit, was Sie denken...",
+      "feedback_success": "Vielen Dank für Ihr Feedback!",
+      "send_feedback": "Feedback senden",
+      "sending": "Wird gesendet...",
+      "how_was_experience": "Wie war Ihre Erfahrung?",
+      "reaction_happy": "Gut",
+      "reaction_neutral": "Okay",
+      "reaction_sad": "Schlecht",
+      "attach_image": "Screenshot anhängen"
+    },
     "plans": {
       "label": "Pläne",
       "upgrade_button": "Auf {{plan}} upgraden",
@@ -70,6 +87,10 @@
         "certifications": {
           "title": "Pro-Funktion",
           "description": "Zertifizierungen sind eine Premium-Funktion, die nur für Organisationen mit unserem Pro-Plan oder höher verfügbar ist. Führen Sie ein Upgrade durch, um Zertifikate an Lernende auszustellen, die Ihre Kurse abschließen."
+        },
+        "communities": {
+          "title": "Standard-Funktion",
+          "description": "Communities ist eine Premium-Funktion, die nur für Organisationen in unserem Standard-Plan oder höher verfügbar ist. Upgraden Sie, um Diskussions-Communities für Ihre Mitglieder freizuschalten."
         }
       }
     },
@@ -77,6 +98,8 @@
     "version": "Version",
     "users": "Benutzer",
     "save": "Speichern",
+    "save_changes": "Änderungen speichern",
+    "saving": "Wird gespeichert...",
     "cancel": "Abbrechen",
     "submit": "Absenden",
     "delete": "Löschen",
@@ -213,6 +236,8 @@
     "course_completed_exclamation": "Kurs abgeschlossen!",
     "what_you_will_learn": "Was Sie lernen werden",
     "course_lessons": "Kurslektionen",
+    "share_course": "Kurs teilen",
+    "copy_link": "Link kopieren",
     "unlock_certificate_message": "Schließen Sie alle Aktivitäten ab, um Ihr Zertifikat freizuschalten",
     "chapter": "Kapitel",
     "chapters": "Kapitel",
@@ -262,7 +287,305 @@
     "submitting_contributor_application": "Bewerbung als Mitwirkender wird eingereicht...",
     "contributor_application_success": "Ihre Bewerbung als Mitwirkender wurde erfolgreich eingereicht",
     "contributor_application_error": "Fehler beim Einreichen Ihrer Bewerbung. Bitte versuchen Sie es später erneut.",
-    "contribute": "Mitwirken"
+    "contribute": "Mitwirken",
+    "scorm": {
+      "upload_package": "SCORM-Paket hochladen",
+      "package_file": "Paketdatei (.zip)",
+      "click_to_upload": "Klicken zum Hochladen oder ziehen und ablegen",
+      "supported_versions": "SCORM 1.2 oder SCORM 2004 Paket",
+      "import_info": "Laden Sie Ihr SCORM-Paket hoch, um dessen Inhalt zu analysieren. Sie können den Kurs konfigurieren und Aktivitäten den Kapiteln zuweisen.",
+      "analyze_package": "Paket analysieren",
+      "package_analyzed": "Paket erfolgreich analysiert",
+      "assign_scos": "Aktivitäten den Kapiteln zuweisen",
+      "activity_name": "Aktivität",
+      "chapter_name": "Kapitel",
+      "upload_different": "Anderes Paket hochladen",
+      "selected": "ausgewählt",
+      "create_course": "Kurs erstellen",
+      "configure": "Konfigurieren",
+      "ready_to_analyze": "Bereit zur Analyse",
+      "course_details": "Kursdetails"
+    },
+    "clone_course": "Kurs klonen",
+    "clone_course_title": "\"{{name}}\" klonen",
+    "clone_course_confirm": "Dies erstellt eine vollständige Kopie des Kurses einschließlich aller Kapitel, Aktivitäten und Dateien. Der geklonte Kurs wird als privat eingestellt.",
+    "cloning_course": "Kurs wird geklont...",
+    "course_cloned_success": "Kurs erfolgreich geklont",
+    "course_cloned_error": "Fehler beim Klonen des Kurses",
+    "published": "Veröffentlicht",
+    "unpublished": "Unveröffentlicht",
+    "search_courses": "Kurse suchen...",
+    "search_results": "{{count}} Kurs(e) gefunden für \"{{query}}\"",
+    "no_search_results": "Keine Kurse gefunden",
+    "try_different_search": "Versuchen Sie einen anderen Suchbegriff",
+    "select_courses": "Auswählen",
+    "select_all": "Alle auswählen",
+    "clear_selection": "Auswahl aufheben",
+    "selected_count": "{{count}} ausgewählt",
+    "clone_selected": "Auswahl klonen",
+    "clone_selected_confirm": "Dies erstellt Kopien von {{count}} Kurs(en). Alle geklonten Kurse werden als privat eingestellt. Fortfahren?",
+    "delete_selected": "Auswahl löschen",
+    "delete_selected_confirm": "Dies löscht {{count}} Kurs(e) dauerhaft. Diese Aktion kann nicht rückgängig gemacht werden. Fortfahren?",
+    "course_description_required": "Kursbeschreibung ist erforderlich",
+    "export_course": "Kurs exportieren",
+    "export_selected": "Auswahl exportieren",
+    "exporting_course": "Kurs wird exportiert...",
+    "exporting_courses": "{{count}} Kurs(e) werden exportiert...",
+    "course_exported_success": "Kurs erfolgreich exportiert",
+    "courses_exported_success": "{{count}} Kurs(e) erfolgreich exportiert",
+    "course_exported_error": "Kurs konnte nicht exportiert werden",
+    "courses_exported_error": "Kurse konnten nicht exportiert werden",
+    "clone_courses_title": "Kurse klonen",
+    "delete_courses_title": "Kurse löschen",
+    "deleting_courses": "{{count}} Kurs(e) werden gelöscht...",
+    "courses_deleted_success": "{{count}} Kurs(e) erfolgreich gelöscht",
+    "courses_deleted_partial": "{{success}} Kurs(e) gelöscht, {{error}} fehlgeschlagen",
+    "cloning_courses": "{{count}} Kurs(e) werden geklont...",
+    "courses_cloned_success": "{{count}} Kurs(e) erfolgreich geklont",
+    "courses_cloned_partial": "{{success}} Kurs(e) geklont, {{error}} fehlgeschlagen",
+    "import": {
+      "scorm_package": "SCORM-Paket",
+      "scorm_description": "SCORM 1.2 oder SCORM 2004 Pakete importieren",
+      "learnhouse_courses": "LearnHouse-Kurse",
+      "learnhouse_description": "Aus LearnHouse exportierte Kurse importieren",
+      "upload_package": "Paket hochladen",
+      "configure": "Konfigurieren",
+      "complete": "Abgeschlossen",
+      "click_to_upload": "Klicken zum Hochladen oder per Drag & Drop",
+      "learnhouse_format": "LearnHouse-Kursexport (.zip)",
+      "learnhouse_info": "Laden Sie ein LearnHouse-Kursexport-Paket (.zip) hoch. Sie können auswählen, welche Kurse importiert werden sollen, und Import-Optionen konfigurieren.",
+      "analyze_package": "Paket analysieren",
+      "ready_to_analyze": "Bereit zur Analyse",
+      "invalid_file_format": "Bitte laden Sie eine .zip-Datei hoch",
+      "analysis_failed": "Paketanalyse fehlgeschlagen",
+      "package_analyzed": "Paket erfolgreich analysiert",
+      "select_courses": "Kurse zum Importieren auswählen",
+      "select_all": "Alle auswählen",
+      "deselect_all": "Alle abwählen",
+      "chapters": "Kapitel",
+      "activities": "Aktivitäten",
+      "has_thumbnail": "Hat Vorschaubild",
+      "selected": "ausgewählt",
+      "options": "Import-Optionen",
+      "name_prefix": "Kursnamen-Präfix",
+      "name_prefix_placeholder": "z.B. Importiert -",
+      "set_private": "Als privat festlegen",
+      "set_unpublished": "Als unveröffentlicht festlegen",
+      "select_at_least_one": "Bitte wählen Sie mindestens einen Kurs zum Importieren",
+      "import_courses": "{{count}} Kurs(e) importieren",
+      "upload_different": "Anderes Paket hochladen",
+      "importing_courses": "Kurse werden importiert...",
+      "please_wait": "Dies kann einen Moment dauern",
+      "import_complete": "Import abgeschlossen!",
+      "import_failed": "Import fehlgeschlagen",
+      "import_partial": "Import teilweise abgeschlossen",
+      "import_summary": "{{successful}} von {{total}} Kurs(en) erfolgreich importiert",
+      "created": "Erstellt",
+      "done": "Fertig"
+    },
+    "scorm": {
+      "upload_package": "SCORM-Paket hochladen",
+      "package_file": "Paketdatei (.zip)",
+      "click_to_upload": "Klicken zum Hochladen oder per Drag & Drop",
+      "supported_versions": "SCORM 1.2 oder SCORM 2004 Paket",
+      "import_info": "Laden Sie Ihr SCORM-Paket hoch, um dessen Inhalt zu analysieren. Sie können den Kurs konfigurieren und Aktivitäten den Kapiteln zuweisen.",
+      "analyze_package": "Paket analysieren",
+      "package_analyzed": "Paket erfolgreich analysiert",
+      "assign_scos": "Aktivitäten den Kapiteln zuweisen",
+      "activity_name": "Aktivität",
+      "chapter_name": "Kapitel",
+      "upload_different": "Anderes Paket hochladen",
+      "selected": "ausgewählt",
+      "create_course": "Kurs erstellen",
+      "configure": "Konfigurieren",
+      "ready_to_analyze": "Bereit zur Analyse",
+      "course_details": "Kursdetails"
+    },
+    "create": {
+      "choose_type": "Neuen Kurs erstellen",
+      "choose_type_description": "Wählen Sie, wie Sie Ihren Kurs erstellen möchten",
+      "from_scratch": "Von Grund auf neu",
+      "from_scratch_description": "Erstellen Sie manuell Ihre Kursstruktur und Inhalte",
+      "with_ai": "Mit KI starten",
+      "with_ai_description": "Lassen Sie KI Ihnen bei der Planung und Generierung Ihrer Kursinhalte helfen",
+      "ai": {
+        "title": "KI-Kursersteller",
+        "step_planning": "Planung",
+        "step_content": "Inhalt",
+        "continue_to_content": "Weiter zum Inhalt",
+        "creating_structure": "Struktur wird erstellt...",
+        "finish_and_edit": "Abschließen & Kurs bearbeiten",
+        "chat_title": "Kursplaner",
+        "chat_description": "Beschreiben Sie den Kurs, den Sie erstellen möchten, oder wählen Sie unten eine Vorlage:",
+        "iterations": "Iterationen",
+        "max_iterations_reached": "Maximale Iterationen erreicht. Fahren Sie mit der Inhaltsgenerierung fort oder beginnen Sie neu.",
+        "content_step_hint": "Ihre Kursstruktur wurde erstellt. Generieren Sie unten den Inhalt für jede Aktivität.",
+        "content_step_info": "Verwenden Sie das linke Panel, um Inhalte für Ihre Aktivitäten zu generieren.",
+        "input_placeholder_initial": "Beschreiben Sie den Kurs, den Sie erstellen möchten...",
+        "input_placeholder_iterate": "Beschreiben Sie Änderungen am Plan...",
+        "generating": "Kursplan wird erstellt...",
+        "plan_generated": "Kursplan generiert",
+        "plan_generated_hint": "Überprüfen Sie den Plan im Vorschau-Panel. Sie können ihn bearbeiten oder Änderungen anfordern.",
+        "describe_course": "Beschreiben Sie Ihren Kurs",
+        "describe_course_hint": "Erzählen Sie der KI von dem Kurs, den Sie erstellen möchten, einschließlich Thema, Zielgruppe und Lernziele.",
+        "generating_plan": "Kursplan wird generiert...",
+        "chapters": "Kapitel",
+        "activities": "Aktivitäten",
+        "add_chapter": "Kapitel hinzufügen",
+        "add_activity": "Aktivität hinzufügen",
+        "generate_content": "Inhalt generieren",
+        "generate_content_description": "Generieren Sie KI-gestützte Inhalte für jede Aktivität in Ihrem Kurs.",
+        "generated": "generiert",
+        "generate_all": "Alle generieren",
+        "generate": "Generieren",
+        "generating_short": "Generierung...",
+        "done": "Fertig",
+        "course_structure_created": "Kursstruktur erfolgreich erstellt!",
+        "failed_to_create": "Fehler beim Erstellen der Kursstruktur",
+        "create_course": "Kurs erstellen",
+        "course_created_success": "Kurs erfolgreich erstellt!",
+        "content_generated_success": "Inhalt erfolgreich generiert!",
+        "content_parse_error": "Fehler beim Parsen des generierten Inhalts",
+        "all_content_generated": "Alle Inhalte generiert!",
+        "all_content_generated_hint": "Klicken Sie auf 'Abschließen & Kurs bearbeiten', um Ihre Kursinhalte anzuzeigen und zu bearbeiten.",
+        "attach_image": "Foto",
+        "attach_video": "Video",
+        "attach_youtube": "YouTube-Link",
+        "attach_file": "Dokument"
+      }
+    }
+  },
+  "communities": {
+    "title": "Communities",
+    "new_community": "Neue Community",
+    "no_communities": "Noch keine Communities",
+    "no_communities_description": "Erstellen Sie eine Community, um Diskussionen zu starten",
+    "public": "Öffentlich",
+    "private": "Privat",
+    "discussions": "Diskussionen",
+    "discussion": "Diskussion",
+    "created": "Erstellt",
+    "linked_course": "Verknüpfter Kurs",
+    "community_guidelines": "Community-Richtlinien",
+    "community_guidelines_text": "Seien Sie respektvoll und konstruktiv. Helfen Sie anderen und teilen Sie Ihr Wissen mit der Community.",
+    "new_discussion": "Neue Diskussion",
+    "manage": "Verwalten",
+    "sidebar": {
+      "posted_by": "Gepostet von",
+      "upvotes": "Upvotes",
+      "category": "Kategorie",
+      "created": "Erstellt",
+      "pinned": "Angepinnt",
+      "locked": "Gesperrt",
+      "reactions": "Reaktionen",
+      "community": "Community"
+    },
+    "discussion_list": {
+      "search_placeholder": "Diskussionen suchen...",
+      "sort_by": "Sortieren nach:",
+      "latest_activity": "Neueste Aktivität",
+      "top": "Beliebteste",
+      "hot": "Angesagt",
+      "new_discussion": "Neue Diskussion",
+      "select": "Auswählen",
+      "cancel": "Abbrechen",
+      "select_all": "Alle auswählen",
+      "deselect_all": "Alle abwählen",
+      "selected": "ausgewählt",
+      "delete": "Löschen",
+      "delete_discussions_title": "{{count}} Diskussion löschen?",
+      "delete_discussions_title_plural": "{{count}} Diskussionen löschen?",
+      "delete_discussions_confirm": "Sind Sie sicher, dass Sie {{count}} {{type}} löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+      "no_results": "Keine Ergebnisse gefunden",
+      "no_results_description": "Versuchen Sie, Ihre Suche anzupassen oder den Filter zu löschen",
+      "clear_search": "Suche löschen",
+      "no_discussions": "Noch keine Diskussionen",
+      "no_discussions_description": "Seien Sie der Erste, der eine Diskussion in dieser Community startet!",
+      "start_discussion": "Diskussion starten"
+    },
+    "discussion_detail": {
+      "edit": "Bearbeiten",
+      "delete": "Löschen",
+      "delete_title": "Diskussion löschen?",
+      "delete_confirm": "Sind Sie sicher, dass Sie diese Diskussion löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+      "delete_button": "Diskussion löschen",
+      "no_details": "Keine zusätzlichen Details angegeben."
+    },
+    "discussion_card": {
+      "pin_discussion": "Diskussion anpinnen",
+      "unpin_discussion": "Diskussion lösen",
+      "lock_discussion": "Diskussion sperren",
+      "unlock_discussion": "Diskussion entsperren",
+      "delete_discussion": "Diskussion löschen",
+      "delete_title": "Diskussion löschen?",
+      "delete_confirm": "Sind Sie sicher, dass Sie diese Diskussion löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+      "votes": "Stimmen"
+    },
+    "comments": {
+      "no_replies": "Noch keine Antworten",
+      "locked": "Diese Diskussion ist gesperrt",
+      "sign_in_to_reply": "Anmelden",
+      "to_reply": "um zu antworten",
+      "write_reply": "Antwort schreiben...",
+      "reply": "Antworten",
+      "edit": "Bearbeiten",
+      "delete": "Löschen",
+      "save": "Speichern",
+      "cancel": "Abbrechen",
+      "failed_to_post": "Antwort konnte nicht gepostet werden. Bitte versuchen Sie es erneut.",
+      "content_not_allowed": "Ihre Antwort enthält nicht erlaubte Inhalte.",
+      "failed_to_update": "Aktualisierung fehlgeschlagen. Bitte versuchen Sie es erneut."
+    },
+    "label_filter": {
+      "label": "Label:",
+      "all": "Alle",
+      "all_discussions": "Alle Diskussionen",
+      "clear_filter": "Filter löschen"
+    },
+    "labels": {
+      "general": "Allgemein",
+      "question": "Frage",
+      "idea": "Idee",
+      "announcement": "Ankündigung",
+      "showcase": "Showcase"
+    },
+    "create_discussion": {
+      "title": "Diskussion starten",
+      "description": "Teilen Sie Ihre Gedanken mit der Community",
+      "category_label": "Kategorie",
+      "title_label": "Diskussionstitel",
+      "title_placeholder": "Worüber möchten Sie diskutieren?",
+      "emoji_selected": "Benutzerdefiniertes Emoji ausgewählt",
+      "emoji_hint": "Klicken Sie auf +, um ein benutzerdefiniertes Emoji hinzuzufügen (optional)",
+      "details_label": "Details (optional)",
+      "details_placeholder": "Fügen Sie mehr Kontext oder Details zu Ihrer Diskussion hinzu...",
+      "editor_hint": "Verwenden Sie die Symbolleiste, um Ihren Text mit Fett, Kursiv, Listen und mehr zu formatieren.",
+      "cancel": "Abbrechen",
+      "submit": "Diskussion veröffentlichen",
+      "title_required": "Titel ist erforderlich",
+      "title_min_length": "Titel muss mindestens 5 Zeichen lang sein",
+      "title_max_length": "Titel muss weniger als 200 Zeichen haben",
+      "content_not_allowed": "Ihre Diskussion enthält nicht erlaubte Inhalte.",
+      "failed_to_create": "Diskussion konnte nicht erstellt werden. Bitte versuchen Sie es erneut."
+    },
+    "edit_discussion": {
+      "title": "Diskussion bearbeiten",
+      "description": "Aktualisieren Sie Ihre Diskussion",
+      "save": "Änderungen speichern",
+      "cancel": "Abbrechen",
+      "close": "Schließen",
+      "failed_to_update": "Aktualisierung fehlgeschlagen. Bitte versuchen Sie es erneut.",
+      "content_not_allowed": "Ihre Diskussion enthält nicht erlaubte Inhalte.",
+      "max_edits_reached": "Sie haben die maximale Anzahl an Bearbeitungen erreicht ({{count}}). Sie können diese Diskussion nicht mehr bearbeiten.",
+      "edits_remaining": "Sie haben noch {{count}} Bearbeitung(en) übrig.",
+      "no_edits_remaining": "Sie haben keine Bearbeitungen mehr übrig ({{count}})."
+    },
+    "course_section": {
+      "title": "Community-Diskussionen",
+      "view_all": "Alle anzeigen",
+      "no_discussions": "Noch keine Diskussionen",
+      "start_first": "Starten Sie die erste Diskussion"
+    }
   },
   "collections": {
     "collections": "Kollektionen",
@@ -427,6 +750,15 @@
     "benefits": "Vorteile:",
     "min_price": "Mindestpreis:",
     "choose_price": "Wählen Sie Ihren Preis"
+  },
+  "account": {
+    "title": "Konto",
+    "general": "Allgemein",
+    "profile": "Profil",
+    "security": "Sicherheit",
+    "my_courses": "Meine Kurse",
+    "no_purchased_courses": "Noch keine gekauften Kurse",
+    "purchased_courses_description": "Kurse, die Sie gekauft oder abonniert haben, werden hier angezeigt"
   },
   "user": {
     "user_settings": "Benutzereinstellungen",
@@ -706,10 +1038,538 @@
       "create_course": "Kurs erstellen",
       "create_new_course": "Einen neuen Kurs erstellen",
       "import_course": "Kurs importieren",
+      "import_scorm": "SCORM-Paket importieren",
       "import_scorm_description": "Ein SCORM-Paket importieren, um einen neuen Kurs zu erstellen",
+      "import_learnhouse": "LearnHouse-Kurse importieren",
+      "import_learnhouse_description": "Kurse aus einem LearnHouse-Exportpaket importieren",
+      "import_select_type": "Wählen Sie den Pakettyp aus, den Sie importieren möchten",
       "no_courses": "Noch keine Kurse",
       "create_course_placeholder": "Erstellen Sie einen Kurs, um Inhalte hinzuzufügen",
-      "no_courses_available": "Noch keine Kurse verfügbar"
+      "no_courses_available": "Noch keine Kurse verfügbar",
+      "publishing": "Kurs wird veröffentlicht...",
+      "unpublishing": "Kurs wird unveröffentlicht...",
+      "published_success": "Kurs erfolgreich veröffentlicht",
+      "unpublished_success": "Kurs erfolgreich unveröffentlicht",
+      "publish_error": "Fehler beim Aktualisieren des Veröffentlichungsstatus",
+      "published": "Veröffentlicht",
+      "unpublished": "Unveröffentlicht",
+      "processing": "Wird verarbeitet...",
+      "click_to_publish": "Klicken zum Veröffentlichen",
+      "click_to_unpublish": "Klicken zum Entfernen",
+      "preview": "Vorschau",
+      "save": {
+        "success": "Änderungen erfolgreich gespeichert",
+        "error": "Änderungen konnten nicht gespeichert werden",
+        "partial_success": "Mit einigen Problemen gespeichert: {{failed}}",
+        "partial_error": "Teilweise gespeichert ({{success}}), aber fehlgeschlagen: {{failed}}",
+        "certification_error": "Zertifizierungseinstellungen konnten nicht gespeichert werden",
+        "saving": "Speichern...",
+        "saved": "Gespeichert",
+        "save": "Speichern",
+        "unsaved": "Nicht gespeicherte Änderungen",
+        "retry": "Fehler - Klicken zum Wiederholen",
+        "retry_button": "Wiederholen"
+      },
+      "overview_top": {
+        "course_label": "Kurs",
+        "rights_guide_button": "Rechte-Leitfaden"
+      },
+      "settings": {
+        "tabs": {
+          "general": "Allgemein",
+          "content": "Inhalt",
+          "access": "Zugriff",
+          "contributors": "Mitwirkende",
+          "certification": "Zertifizierung"
+        },
+        "access_denied": {
+          "title": "Zugriff verweigert",
+          "message": "Sie haben keine Berechtigung, auf diesen Kurs zuzugreifen."
+        },
+        "access_restricted": {
+          "title": "Zugriff eingeschränkt",
+          "message": "Sie haben keine Berechtigung, auf {{tab}} zuzugreifen"
+        },
+        "loading": "Wird geladen..."
+      },
+      "general": {
+        "form": {
+          "name_label": "Name",
+          "name_required": "Erforderlich",
+          "name_max_length": "Darf maximal 100 Zeichen lang sein",
+          "description_label": "Beschreibung",
+          "description_required": "Erforderlich",
+          "description_max_length": "Darf maximal 1000 Zeichen lang sein",
+          "about_label": "Über",
+          "learnings_label": "Lernziele",
+          "learnings_required": "Erforderlich",
+          "learnings_invalid_format": "Ungültiges Format",
+          "learnings_min_items": "Mindestens ein Lernziel ist erforderlich",
+          "learnings_empty_text": "Alle Lernziele müssen Text enthalten",
+          "learnings_invalid_json": "Ungültiges JSON-Format",
+          "tags_label": "Tags",
+          "tags_placeholder": "Enter zum Hinzufügen...",
+          "thumbnail_type_label": "Vorschaubild-Typ",
+          "thumbnail_type_image": "Bild",
+          "thumbnail_type_video": "Video",
+          "thumbnail_type_both": "Beides",
+          "thumbnail_label": "Vorschaubild",
+          "image_search_placeholder": "Nach Bildern suchen..."
+        },
+        "thumbnail": {
+          "upload_image": "Bild hochladen",
+          "upload_video": "Video hochladen",
+          "gallery": "Galerie",
+          "tabs": {
+            "image": "Bild",
+            "video": "Video"
+          },
+          "supported_formats": {
+            "image": "Unterstützte Formate: PNG, JPG/JPEG (max. 8MB)",
+            "video": "Unterstützte Formate: MP4, WebM (max. 100MB)"
+          }
+        },
+        "errors": {
+          "save_failed": "Kursstruktur konnte nicht gespeichert werden."
+        }
+      },
+      "access": {
+        "title": "Kurszugriff",
+        "subtitle": "Wählen Sie, ob Ihr Kurs öffentlich im Internet oder nur für angemeldete Benutzer zugänglich sein soll",
+        "public": {
+          "title": "Öffentlich",
+          "description": "Der Kurs ist öffentlich im Internet verfügbar, wird von Suchmaschinen indexiert und kann von jedem aufgerufen werden",
+          "active": "Aktiv",
+          "confirmation_title": "Zu Öffentlich wechseln?",
+          "confirmation_message": "Sind Sie sicher, dass dieser Kurs öffentlich im Internet verfügbar sein soll?",
+          "confirmation_button": "Zu Öffentlich wechseln"
+        },
+        "users_only": {
+          "title": "Nur Benutzer",
+          "description": "Der Kurs ist nur für angemeldete Benutzer zugänglich, zusätzlich können Sie wählen, welche Benutzergruppen auf diesen Kurs zugreifen können",
+          "active": "Aktiv",
+          "confirmation_title": "Zu Nur Benutzer wechseln?",
+          "confirmation_message": "Sind Sie sicher, dass dieser Kurs nur für angemeldete Benutzer zugänglich sein soll?",
+          "confirmation_button": "Zu Nur Benutzer wechseln"
+        },
+        "usergroups": {
+          "title": "Benutzergruppen",
+          "subtitle": "Sie können wählen, ob Sie den Zugriff auf diesen Kurs nur für bestimmte Benutzergruppen freigeben möchten, indem Sie ihn mit einer Benutzergruppe verknüpfen",
+          "table": {
+            "name": "Name",
+            "actions": "Aktionen"
+          },
+          "actions": {
+            "delete_link": "Verknüpfung löschen",
+            "link_to_usergroup": "Mit einer Benutzergruppe verknüpfen"
+          },
+          "modals": {
+            "link_title": "Kurs mit einer Benutzergruppe verknüpfen",
+            "link_description": "Wählen Sie eine Benutzergruppe aus, die Sie mit diesem Kurs verknüpfen möchten. Benutzer aus dieser Benutzergruppe haben Zugriff auf diesen Kurs.",
+            "unlink_title": "Benutzergruppen-Verknüpfung aufheben?",
+            "unlink_message": "Benutzer aus dieser Benutzergruppe haben keinen Zugriff mehr auf diesen Kurs",
+            "unlink_button": "Verknüpfung löschen",
+            "warning": "Benutzer, die nicht Teil der Benutzergruppe sind, haben keinen Zugriff mehr auf diesen Kurs",
+            "usergroup_name": "Name der Benutzergruppe",
+            "no_usergroups": "Keine Benutzergruppen verfügbar",
+            "create_usergroup": "Eine Benutzergruppe erstellen",
+            "link_button": "Verknüpfen"
+          },
+          "toasts": {
+            "link_success": "Erfolgreich mit Benutzergruppe verknüpft",
+            "link_error": "Fehler {{status}}: {{detail}}",
+            "unlink_success": "Verknüpfung mit Benutzergruppe erfolgreich aufgehoben",
+            "unlink_error": "Ein Fehler ist beim Aufheben der Benutzergruppen-Verknüpfung aufgetreten."
+          }
+        }
+      },
+      "contributors": {
+        "title": "Kurs-Mitwirkende",
+        "subtitle": "Verwalten Sie Mitwirkende und fügen Sie Ihrem Kurs neue hinzu",
+        "open_to_contributors": {
+          "title": "Offen für Mitwirkende",
+          "description": "Der Kurs ist offen für Mitwirkende. Benutzer können sich bewerben, um Mitwirkende zu werden und helfen, den Kursinhalt zu verbessern.",
+          "active": "Aktiv",
+          "confirmation_title": "Für Mitwirkende öffnen?",
+          "confirmation_message": "Sind Sie sicher, dass Sie diesen Kurs für Mitwirkende öffnen möchten?",
+          "confirmation_button": "Für Mitwirkende öffnen"
+        },
+        "closed_to_contributors": {
+          "title": "Geschlossen für Mitwirkende",
+          "description": "Der Kurs ist für Mitwirkende geschlossen. Nur bestehende Mitwirkende können den Kursinhalt ändern.",
+          "active": "Aktiv",
+          "confirmation_title": "Für Mitwirkende schließen?",
+          "confirmation_message": "Sind Sie sicher, dass Sie diesen Kurs für Mitwirkende schließen möchten?",
+          "confirmation_button": "Für Mitwirkende schließen"
+        },
+        "search": {
+          "placeholder": "Benutzer nach Namen oder Benutzernamen suchen, um sie als Mitwirkende hinzuzufügen...",
+          "searching": "Wird gesucht...",
+          "no_results": "Keine Benutzer gefunden"
+        },
+        "table": {
+          "name": "Name",
+          "username": "Benutzername",
+          "email": "E-Mail",
+          "role": "Rolle",
+          "status": "Status",
+          "added_on": "Hinzugefügt am"
+        },
+        "roles": {
+          "creator": "ERSTELLER",
+          "contributor": "MITWIRKENDER",
+          "maintainer": "VERWALTER",
+          "reporter": "REPORTER"
+        },
+        "statuses": {
+          "active": "AKTIV",
+          "inactive": "INAKTIV",
+          "pending": "AUSSTEHEND"
+        },
+        "actions": {
+          "selected_users": "{{count}} Benutzer ausgewählt",
+          "selected_users_plural": "{{count}} Benutzer ausgewählt",
+          "clear": "Leeren",
+          "add_selected": "Auswahl hinzufügen",
+          "selected_contributors": "{{count}} Mitwirkender ausgewählt",
+          "selected_contributors_plural": "{{count}} Mitwirkende ausgewählt",
+          "remove_selected": "Auswahl entfernen",
+          "already_contributor": "Bereits ein Mitwirkender"
+        },
+        "toasts": {
+          "add_success": "{{count}} Mitwirkende(r) erfolgreich hinzugefügt",
+          "add_error": "Fehler beim Hinzufügen von {{username}}: {{reason}}",
+          "add_failed": "Hinzufügen von Mitwirkenden fehlgeschlagen",
+          "update_success": "Mitwirkender erfolgreich aktualisiert",
+          "update_error": "Fehler: {{detail}}",
+          "update_failed": "Ein Fehler ist beim Aktualisieren des Mitwirkenden aufgetreten.",
+          "remove_success": "{{count}} Mitwirkende(r) erfolgreich entfernt",
+          "remove_failed": "Entfernen von Mitwirkenden fehlgeschlagen",
+          "cannot_modify_creator": "Die Rolle oder der Status eines Erstellers kann nicht geändert werden"
+        }
+      },
+      "certification": {
+        "title": "Kurs-Zertifizierung",
+        "subtitle": "Aktivieren und konfigurieren Sie Zertifikate für Schüler, die diesen Kurs abschließen",
+        "form": {
+          "certification_name_label": "Name der Zertifizierung",
+          "certification_name_required": "Erforderlich, wenn die Zertifizierung aktiviert ist",
+          "certification_name_max_length": "Darf maximal 100 Zeichen lang sein",
+          "certification_name_placeholder": "z.B. Advanced JavaScript Zertifizierung",
+          "certification_type_label": "Zertifizierungstyp",
+          "certification_description_label": "Beschreibung der Zertifizierung",
+          "certification_description_required": "Erforderlich, wenn die Zertifizierung aktiviert ist",
+          "certification_description_max_length": "Darf maximal 500 Zeichen lang sein",
+          "certification_description_placeholder": "Beschreiben Sie, was diese Zertifizierung darstellt und welchen Wert sie hat...",
+          "certificate_pattern_label": "Zertifikatsmuster",
+          "certificate_instructor_label": "Name des Lehrers (Optional)",
+          "certificate_instructor_placeholder": "z.B. Dr. Jane Smith"
+        },
+        "types": {
+          "completion": "Kursabschluss",
+          "achievement": "Leistungsbasiert",
+          "assessment": "Bewertungsbasiert",
+          "participation": "Teilnahme",
+          "mastery": "Kompetenznachweis",
+          "professional": "Berufliche Weiterbildung",
+          "continuing": "Fortbildung",
+          "workshop": "Workshop-Teilnahme",
+          "specialization": "Spezialisierung"
+        },
+        "patterns": {
+          "royal": {
+            "name": "Royal",
+            "description": "Verziert mit Kronenmotiven"
+          },
+          "tech": {
+            "name": "Tech",
+            "description": "Von Schaltkreisen inspirierte Muster"
+          },
+          "nature": {
+            "name": "Natur",
+            "description": "Organische Blattmuster"
+          },
+          "geometric": {
+            "name": "Geometrisch",
+            "description": "Abstrakte Formen & Linien"
+          },
+          "vintage": {
+            "name": "Vintage",
+            "description": "Art-Deco-Stil"
+          },
+          "waves": {
+            "name": "Wellen",
+            "description": "Fließende Wassermuster"
+          },
+          "minimal": {
+            "name": "Minimal",
+            "description": "Klar und einfach"
+          },
+          "professional": {
+            "name": "Professionell",
+            "description": "Business-taugliches Design"
+          },
+          "academic": {
+            "name": "Akademisch",
+            "description": "Traditioneller Universitätsstil"
+          },
+          "modern": {
+            "name": "Modern",
+            "description": "Zeitgenössische klare Linien"
+          }
+        },
+        "sections": {
+          "basic_info": {
+            "title": "Basis-Informationen",
+            "subtitle": "Konfigurieren Sie die Basisdetails Ihrer Zertifizierung"
+          },
+          "certificate_design": {
+            "title": "Zertifikats-Design",
+            "subtitle": "Wählen Sie ein dekoratives Muster für Ihr Zertifikat"
+          },
+          "preview": {
+            "title": "Zertifikats-Vorschau",
+            "subtitle": "Live-Vorschau Ihres Zertifikats"
+          }
+        },
+        "states": {
+          "disabled": {
+            "title": "Keine Zertifizierung konfiguriert",
+            "message": "Aktivieren Sie die Zertifizierung, um Schülern nach Kursabschluss Zertifikate auszustellen.",
+            "button": "Zertifizierung aktivieren",
+            "creating": "Wird erstellt..."
+          },
+          "creating": {
+            "title": "Zertifizierung wird erstellt...",
+            "message": "Bitte warten Sie, während wir Ihre Kurszertifizierung einrichten."
+          }
+        },
+        "errors": {
+          "loading": "Fehler beim Laden der Zertifizierungen",
+          "create_failed": "Zertifizierung konnte nicht erstellt werden.",
+          "remove_failed": "Zertifizierung konnte nicht entfernt werden."
+        },
+        "toasts": {
+          "create_success": "Zertifizierung erfolgreich erstellt",
+          "create_error": "Fehler beim Erstellen der Zertifizierung",
+          "remove_success": "Zertifizierung erfolgreich entfernt",
+          "remove_error": "Fehler beim Entfernen der Zertifizierung"
+        }
+      },
+      "communities": {
+        "title": "Communities",
+        "new_community": "Neue Community",
+        "no_communities": "Noch keine Communities",
+        "no_communities_description": "Erstellen Sie Ihre erste Community, um Diskussionen zu starten",
+        "card": {
+          "open_settings": "Einstellungen öffnen",
+          "view_community": "Community anzeigen",
+          "quick_edit": "Schnellbearbeitung"
+        },
+        "settings": {
+          "tabs": {
+            "general": "Allgemein",
+            "thumbnail": "Vorschaubild",
+            "course": "Verknüpfter Kurs",
+            "moderation": "Moderation"
+          },
+          "general": {
+            "title": "Allgemeine Einstellungen",
+            "subtitle": "Community-Name, Beschreibung und Sichtbarkeit verwalten"
+          },
+          "thumbnail": {
+            "title": "Vorschaubild",
+            "subtitle": "Das Titelbild der Community aktualisieren"
+          },
+          "course": {
+            "title": "Verknüpfter Kurs",
+            "subtitle": "Diese Community mit einem Kurs verbinden"
+          },
+          "moderation": {
+            "title": "Moderation",
+            "subtitle": "Einstellungen für die Inhaltsmoderation konfigurieren"
+          }
+        },
+        "course": {
+          "title": "Verknüpfter Kurs",
+          "subtitle": "Diese Community mit einem Kurs für kursspezifische Diskussionen verbinden",
+          "currently_linked": "Aktuell verknüpft",
+          "unlink": "Verknüpfung aufheben",
+          "link_button": "Kurs verknüpfen",
+          "search_placeholder": "Kurse suchen...",
+          "no_courses": "Keine Kurse gefunden",
+          "course_linked_id": "Kurs verknüpft (ID: {{id}})",
+          "course_not_found": "Der verknüpfte Kurs existiert möglicherweise nicht mehr oder Sie haben keinen Zugriff darauf",
+          "toasts": {
+            "linking": "Kurs wird verknüpft...",
+            "link_success": "Kurs erfolgreich verknüpft",
+            "link_error": "Kurs konnte nicht verknüpft werden",
+            "unlinking": "Verknüpfung wird aufgehoben...",
+            "unlink_success": "Kursverknüpfung erfolgreich aufgehoben",
+            "unlink_error": "Verknüpfung konnte nicht aufgehoben werden"
+          }
+        },
+        "general": {
+          "title": "Community-Einstellungen",
+          "subtitle": "Aktualisieren Sie die grundlegenden Informationen Ihrer Community",
+          "form": {
+            "name_label": "Community-Name",
+            "name_required": "Community-Name ist erforderlich",
+            "name_min_length": "Name muss mindestens 3 Zeichen lang sein",
+            "name_max_length": "Name darf höchstens 100 Zeichen lang sein",
+            "name_placeholder": "Community-Namen eingeben",
+            "description_label": "Beschreibung",
+            "description_max_length": "Beschreibung darf höchstens 500 Zeichen lang sein",
+            "description_placeholder": "Beschreiben Sie, worum es in dieser Community geht",
+            "public_label": "Öffentliche Community",
+            "public_description": "Diese Community für alle sichtbar machen",
+            "characters_left": "{{count}} Zeichen übrig"
+          },
+          "toasts": {
+            "updating": "Community wird aktualisiert...",
+            "update_success": "Community erfolgreich aktualisiert",
+            "update_error": "Fehler beim Aktualisieren der Community"
+          }
+        },
+        "thumbnail": {
+          "title": "Community-Vorschaubild",
+          "subtitle": "Laden Sie ein Titelbild für Ihre Community hoch",
+          "no_thumbnail": "Kein Vorschaubild festgelegt",
+          "upload_image": "Bild hochladen",
+          "browse_unsplash": "Unsplash durchsuchen",
+          "uploading": "Wird hochgeladen...",
+          "supported_formats": "Unterstützte Formate: JPG, JPEG, PNG. Max. Größe: 8MB. Empfohlenes Seitenverhältnis: 16:9",
+          "toasts": {
+            "update_success": "Vorschaubild erfolgreich aktualisiert",
+            "update_error": "Fehler beim Aktualisieren des Vorschaubilds",
+            "invalid_type": "Ungültiger Dateityp. Bitte laden Sie nur PNG- oder JPG/JPEG-Bilder hoch",
+            "file_too_large": "Dateigröße überschreitet das Limit von 8MB"
+          }
+        },
+        "moderation": {
+          "title": "Inhaltsmoderation",
+          "subtitle": "Konfigurieren Sie gesperrte Wörter und Inhaltsfilter",
+          "info_title": "Gesperrte Wörter",
+          "info_description": "Diskussionen und Antworten, die diese Wörter enthalten, werden blockiert. Benutzer sehen eine Fehlermeldung und ihr Inhalt wird nicht veröffentlicht.",
+          "add_word_label": "Gesperrtes Wort hinzufügen",
+          "add_word_placeholder": "Wort oder Phrase eingeben...",
+          "add_button": "Hinzufügen",
+          "batch_add_label": "Wörter stapelweise hinzufügen",
+          "batch_add_description": "Mehrere Wörter auf einmal hinzufügen, durch Kommas getrennt",
+          "batch_add_placeholder": "wort1, wort2, wort3...",
+          "add_all_button": "Alle hinzufügen",
+          "blocked_words_label": "Gesperrte Wörter",
+          "no_blocked_words": "Noch keine gesperrten Wörter",
+          "no_blocked_words_description": "Fügen Sie Wörter hinzu, um die Inhaltsmoderation zu aktivieren",
+          "word_exists_error": "Dieses Wort ist bereits in der Liste",
+          "all_words_exist_error": "Alle Wörter sind bereits in der Liste oder die Eingabe ist leer",
+          "toasts": {
+            "saving": "Moderationseinstellungen werden gespeichert...",
+            "save_success": "Moderationseinstellungen gespeichert",
+            "save_error": "Fehler beim Speichern der Moderationseinstellungen"
+          }
+        },
+        "modals": {
+          "create": {
+            "title": "Community erstellen",
+            "description": "Erstellen Sie eine neue Community für Diskussionen",
+            "form": {
+              "name_label": "Community-Name",
+              "name_placeholder": "Community-Namen eingeben",
+              "description_label": "Beschreibung",
+              "description_placeholder": "Beschreiben Sie, worum es in dieser Community geht",
+              "public_label": "Diese Community öffentlich machen (für alle sichtbar)"
+            },
+            "cancel": "Abbrechen",
+            "submit": "Community erstellen"
+          },
+          "edit": {
+            "title": "Community bearbeiten",
+            "description": "Community-Einstellungen aktualisieren"
+          },
+          "delete": {
+            "title": "{{name}} löschen?",
+            "message": "Sind Sie sicher, dass Sie diese Community löschen möchten? Alle Diskussionen werden dauerhaft entfernt.",
+            "button": "Community löschen"
+          }
+        },
+        "toasts": {
+          "creating": "Community wird erstellt...",
+          "create_success": "Community erfolgreich erstellt",
+          "create_error": "Fehler beim Erstellen der Community",
+          "deleting": "Community wird gelöscht...",
+          "delete_success": "Community erfolgreich gelöscht",
+          "delete_error": "Fehler beim Löschen der Community"
+        }
+      },
+      "structure": {
+        "loading": "Wird geladen...",
+        "add_chapter_button": "Kapitel hinzufügen",
+        "modals": {
+          "new_chapter": {
+            "title": "Kapitel erstellen",
+            "description": "Fügen Sie dem Kurs ein neues Kapitel hinzu",
+            "form": {
+              "name_label": "Kapitelname",
+              "name_required": "Bitte geben Sie einen Kapitelnamen an",
+              "description_label": "Kapitelbeschreibung",
+              "description_required": "Bitte geben Sie eine Kapitelbeschreibung an",
+              "submit": "Kapitel erstellen"
+            }
+          },
+          "delete_chapter": {
+            "title": "{{name}} löschen?",
+            "message": "Sind Sie sicher, dass Sie dieses Kapitel löschen möchten?",
+            "button": "Kapitel löschen"
+          },
+          "new_activity": {
+            "title": "Aktivität erstellen",
+            "description": "Wählen Sie zwischen verschiedenen Aktivitätstypen, um sie dem Kurs hinzuzufügen"
+          },
+          "delete_activity": {
+            "title": "{{name}} löschen?",
+            "message": "Sind Sie sicher, dass Sie diese Aktivität löschen möchten?",
+            "button": "Aktivität löschen"
+          }
+        },
+        "actions": {
+          "add_chapter": "Kapitel hinzufügen",
+          "add_activity": "Aktivität hinzufügen",
+          "publish": "Veröffentlichen",
+          "unpublish": "Nicht veröffentlichen",
+          "preview_activity": "Vorschau der Aktivität",
+          "edit_page": "Seite bearbeiten",
+          "edit_assignment": "Aufgabe bearbeiten"
+        },
+        "chapter_element": {
+          "chapter_name_placeholder": "Kapitelname"
+        },
+        "activity": {
+          "name_placeholder": "Aktivitätsname",
+          "types": {
+            "video": "Video",
+            "document": "Dokument",
+            "assignment": "Aufgabe",
+            "assignments": "Aufgaben",
+            "dynamic": "Dynamisch",
+            "dynamic_page": "Dynamische Seite",
+            "scorm": "Scorm"
+          },
+          "toasts": {
+            "deleting": "Aktivität wird gelöscht...",
+            "delete_success": "Aktivität erfolgreich gelöscht",
+            "updating": "Aufgabe wird aktualisiert...",
+            "update_success": "Die Aktivität wurde erfolgreich aktualisiert",
+            "name_update_success": "Aktivitätsname erfolgreich aktualisiert",
+            "name_update_error": "Aktivitätsname konnte nicht aktualisiert werden",
+            "creating": "Aktivität wird erstellt...",
+            "create_success": "Aktivität erfolgreich erstellt",
+            "uploading": "Datei wird hochgeladen und Aktivität erstellt...",
+            "upload_success": "Datei erfolgreich hochgeladen",
+            "creating_uploading": "Aktivität wird erstellt und Datei hochgeladen..."
+          }
+        }
+      }
     },
     "organization": {
       "settings": {
@@ -768,7 +1628,10 @@
         "saving": "Speichern...",
         "update_success": "Organisation aktualisiert",
         "update_error": "Fehler beim Aktualisieren der Organisation",
-        "updating": "Organisation wird aktualisiert..."
+        "updating": "Organisation wird aktualisiert...",
+        "footer_text": "Fußzeilentext",
+        "footer_text_placeholder": "Fußzeilentext eingeben...",
+        "footer_text_desc": "Benutzerdefinierter Text, der unten auf Ihren Organisationsseiten angezeigt wird"
       },
       "images": {
         "title": "Bilder & Vorschauen",
@@ -826,7 +1689,8 @@
         "subtitle": "Verwalten Sie die visuelle Identität und soziale Präsenz Ihrer Organisation",
         "tabs": {
           "images": "Bilder & Vorschauen",
-          "social": "Soziale Links"
+          "social": "Soziale Links",
+          "theme": "Design"
         }
       },
       "socials": {
@@ -959,7 +1823,11 @@
           "generating": "CSV wird generiert...",
           "success": "CSV erfolgreich exportiert",
           "error": "Fehler beim Exportieren der CSV"
-        }
+        },
+        "enterprise_only": "Audit-Protokolle sind nur im Enterprise-Plan verfügbar",
+        "enterprise_feature": "Enterprise-Funktion",
+        "enterprise_description": "Audit-Protokolle sind eine Premium-Funktion, die nur für Organisationen in unserem Enterprise-Plan verfügbar ist. Upgraden Sie, um vollständige Einblicke in die Aktivitäten Ihrer Organisation zu erhalten.",
+        "upgrade_button": "Auf Enterprise upgraden"
       },
       "landing": {
         "title": "Landingpage",
@@ -1110,6 +1978,16 @@
           "selected": "Ausgewählt",
           "select": "Auswählen"
         }
+      },
+      "theme": {
+        "primary_color": "Primärfarbe",
+        "primary_color_desc": "Wählen Sie eine Primärfarbe für den Header und Seitenhintergrund Ihrer Organisation.",
+        "clear_color": "Farbe entfernen",
+        "preview": "Live-Vorschau",
+        "preview_hint": "So werden der Header und der Hintergrund Ihrer Organisation aussehen",
+        "footer_text": "Fußzeilentext",
+        "footer_text_desc": "Fügen Sie benutzerdefinierten Text hinzu, der in der Seitenfußzeile angezeigt wird.",
+        "footer_text_placeholder": "Fußzeilentext eingeben..."
       }
     },
     "users": {
@@ -1167,7 +2045,10 @@
           "remove_from_org": "Aus Organisation entfernen",
           "removing": "Wird entfernt...",
           "remove_success": "Benutzer aus Organisation entfernt",
-          "remove_error": "Fehler beim Entfernen des Benutzers"
+          "remove_error": "Fehler beim Entfernen des Benutzers",
+          "updating_role": "Rolle wird aktualisiert...",
+          "role_update_success": "Rolle erfolgreich aktualisiert",
+          "role_update_error": "Fehler beim Aktualisieren der Rolle"
         },
         "modals": {
           "update_role": {
@@ -1179,6 +2060,13 @@
             "message": "Sind Sie sicher, dass Sie diesen Benutzer aus der Organisation entfernen möchten?",
             "button": "Benutzer entfernen"
           }
+        },
+        "search_placeholder": "Benutzer suchen...",
+        "no_results": "Keine Benutzer gefunden, die Ihrer Suche entsprechen",
+        "no_users": "Noch keine Benutzer in dieser Organisation",
+        "pagination": {
+          "showing": "Zeige {{start}}-{{end}} von {{total}}",
+          "page": "Seite {{current}} von {{total}}"
         }
       },
       "signups": {
@@ -1668,481 +2556,6 @@
           "toasts": {
             "creating": "Aufgabe wird erstellt...",
             "success": "Aufgabe erfolgreich erstellt"
-          }
-        }
-      }
-    },
-    "courses": {
-      "title": "Kurse",
-      "rights_guide": "Rechte-Leitfaden",
-      "create_course": "Kurs erstellen",
-      "create_new_course": "Einen neuen Kurs erstellen",
-      "import_course": "Kurs importieren",
-      "import_scorm_description": "Ein SCORM-Paket importieren, um einen neuen Kurs zu erstellen",
-      "no_courses": "Noch keine Kurse",
-      "create_course_placeholder": "Erstellen Sie einen Kurs, um Inhalte hinzuzufügen",
-      "no_courses_available": "Noch keine Kurse verfügbar",
-      "overview_top": {
-        "course_label": "Kurs",
-        "rights_guide_button": "Rechte-Leitfaden"
-      },
-      "settings": {
-        "tabs": {
-          "general": "Allgemein",
-          "content": "Inhalt",
-          "access": "Zugriff",
-          "contributors": "Mitwirkende",
-          "certification": "Zertifizierung"
-        },
-        "access_denied": {
-          "title": "Zugriff verweigert",
-          "message": "Sie haben keine Berechtigung, auf diesen Kurs zuzugreifen."
-        },
-        "access_restricted": {
-          "title": "Zugriff eingeschränkt",
-          "message": "Sie haben keine Berechtigung, auf {{tab}} zuzugreifen"
-        },
-        "loading": "Wird geladen..."
-      },
-      "general": {
-        "form": {
-          "name_label": "Name",
-          "name_required": "Erforderlich",
-          "name_max_length": "Darf maximal 100 Zeichen lang sein",
-          "description_label": "Beschreibung",
-          "description_required": "Erforderlich",
-          "description_max_length": "Darf maximal 1000 Zeichen lang sein",
-          "about_label": "Über",
-          "learnings_label": "Lernziele",
-          "learnings_required": "Erforderlich",
-          "learnings_invalid_format": "Ungültiges Format",
-          "learnings_min_items": "Mindestens ein Lernziel ist erforderlich",
-          "learnings_empty_text": "Alle Lernziele müssen Text enthalten",
-          "learnings_invalid_json": "Ungültiges JSON-Format",
-          "tags_label": "Tags",
-          "tags_placeholder": "Enter zum Hinzufügen...",
-          "thumbnail_type_label": "Vorschaubild-Typ",
-          "thumbnail_type_image": "Bild",
-          "thumbnail_type_video": "Video",
-          "thumbnail_type_both": "Beides",
-          "thumbnail_label": "Vorschaubild",
-          "image_search_placeholder": "Nach Bildern suchen..."
-        },
-        "thumbnail": {
-          "upload_image": "Bild hochladen",
-          "upload_video": "Video hochladen",
-          "gallery": "Galerie",
-          "tabs": {
-            "image": "Bild",
-            "video": "Video"
-          },
-          "supported_formats": {
-            "image": "Unterstützte Formate: PNG, JPG/JPEG (max. 8MB)",
-            "video": "Unterstützte Formate: MP4, WebM (max. 100MB)"
-          }
-        },
-        "errors": {
-          "save_failed": "Kursstruktur konnte nicht gespeichert werden."
-        }
-      },
-      "access": {
-        "title": "Kurszugriff",
-        "subtitle": "Wählen Sie, ob Ihr Kurs öffentlich im Internet oder nur für angemeldete Benutzer zugänglich sein soll",
-        "public": {
-          "title": "Öffentlich",
-          "description": "Der Kurs ist öffentlich im Internet verfügbar, wird von Suchmaschinen indexiert und kann von jedem aufgerufen werden",
-          "active": "Aktiv",
-          "confirmation_title": "Zu Öffentlich wechseln?",
-          "confirmation_message": "Sind Sie sicher, dass dieser Kurs öffentlich im Internet verfügbar sein soll?",
-          "confirmation_button": "Zu Öffentlich wechseln"
-        },
-        "users_only": {
-          "title": "Nur Benutzer",
-          "description": "Der Kurs ist nur für angemeldete Benutzer zugänglich, zusätzlich können Sie wählen, welche Benutzergruppen auf diesen Kurs zugreifen können",
-          "active": "Aktiv",
-          "confirmation_title": "Zu Nur Benutzer wechseln?",
-          "confirmation_message": "Sind Sie sicher, dass dieser Kurs nur für angemeldete Benutzer zugänglich sein soll?",
-          "confirmation_button": "Zu Nur Benutzer wechseln"
-        },
-        "usergroups": {
-          "title": "Benutzergruppen",
-          "subtitle": "Sie können wählen, ob Sie den Zugriff auf diesen Kurs nur für bestimmte Benutzergruppen freigeben möchten, indem Sie ihn mit einer Benutzergruppe verknüpfen",
-          "table": {
-            "name": "Name",
-            "actions": "Aktionen"
-          },
-          "actions": {
-            "delete_link": "Verknüpfung löschen",
-            "link_to_usergroup": "Mit einer Benutzergruppe verknüpfen"
-          },
-          "modals": {
-            "link_title": "Kurs mit einer Benutzergruppe verknüpfen",
-            "link_description": "Wählen Sie eine Benutzergruppe aus, die Sie mit diesem Kurs verknüpfen möchten. Benutzer aus dieser Benutzergruppe haben Zugriff auf diesen Kurs.",
-            "unlink_title": "Benutzergruppen-Verknüpfung aufheben?",
-            "unlink_message": "Benutzer aus dieser Benutzergruppe haben keinen Zugriff mehr auf diesen Kurs",
-            "unlink_button": "Verknüpfung löschen",
-            "warning": "Benutzer, die nicht Teil der Benutzergruppe sind, haben keinen Zugriff mehr auf diesen Kurs",
-            "usergroup_name": "Name der Benutzergruppe",
-            "no_usergroups": "Keine Benutzergruppen verfügbar",
-            "create_usergroup": "Eine Benutzergruppe erstellen",
-            "link_button": "Verknüpfen"
-          },
-          "toasts": {
-            "link_success": "Erfolgreich mit Benutzergruppe verknüpft",
-            "link_error": "Fehler {{status}}: {{detail}}",
-            "unlink_success": "Verknüpfung mit Benutzergruppe erfolgreich aufgehoben",
-            "unlink_error": "Ein Fehler ist beim Aufheben der Benutzergruppen-Verknüpfung aufgetreten."
-          }
-        }
-      },
-      "contributors": {
-        "title": "Kurs-Mitwirkende",
-        "subtitle": "Verwalten Sie Mitwirkende und fügen Sie Ihrem Kurs neue hinzu",
-        "open_to_contributors": {
-          "title": "Offen für Mitwirkende",
-          "description": "Der Kurs ist offen für Mitwirkende. Benutzer können sich bewerben, um Mitwirkende zu werden und helfen, den Kursinhalt zu verbessern.",
-          "active": "Aktiv",
-          "confirmation_title": "Für Mitwirkende öffnen?",
-          "confirmation_message": "Sind Sie sicher, dass Sie diesen Kurs für Mitwirkende öffnen möchten?",
-          "confirmation_button": "Für Mitwirkende öffnen"
-        },
-        "closed_to_contributors": {
-          "title": "Geschlossen für Mitwirkende",
-          "description": "Der Kurs ist für Mitwirkende geschlossen. Nur bestehende Mitwirkende können den Kursinhalt ändern.",
-          "active": "Aktiv",
-          "confirmation_title": "Für Mitwirkende schließen?",
-          "confirmation_message": "Sind Sie sicher, dass Sie diesen Kurs für Mitwirkende schließen möchten?",
-          "confirmation_button": "Für Mitwirkende schließen"
-        },
-        "search": {
-          "placeholder": "Benutzer nach Namen oder Benutzernamen suchen, um sie als Mitwirkende hinzuzufügen...",
-          "searching": "Wird gesucht...",
-          "no_results": "Keine Benutzer gefunden"
-        },
-        "table": {
-          "name": "Name",
-          "username": "Benutzername",
-          "email": "E-Mail",
-          "role": "Rolle",
-          "status": "Status",
-          "added_on": "Hinzugefügt am"
-        },
-        "roles": {
-          "creator": "ERSTELLER",
-          "contributor": "MITWIRKENDER",
-          "maintainer": "VERWALTER",
-          "reporter": "REPORTER"
-        },
-        "statuses": {
-          "active": "AKTIV",
-          "inactive": "INAKTIV",
-          "pending": "AUSSTEHEND"
-        },
-        "actions": {
-          "selected_users": "{{count}} Benutzer ausgewählt",
-          "selected_users_plural": "{{count}} Benutzer ausgewählt",
-          "clear": "Leeren",
-          "add_selected": "Auswahl hinzufügen",
-          "selected_contributors": "{{count}} Mitwirkender ausgewählt",
-          "selected_contributors_plural": "{{count}} Mitwirkende ausgewählt",
-          "remove_selected": "Auswahl entfernen",
-          "already_contributor": "Bereits ein Mitwirkender"
-        },
-        "toasts": {
-          "add_success": "{{count}} Mitwirkende(r) erfolgreich hinzugefügt",
-          "add_error": "Fehler beim Hinzufügen von {{username}}: {{reason}}",
-          "add_failed": "Hinzufügen von Mitwirkenden fehlgeschlagen",
-          "update_success": "Mitwirkender erfolgreich aktualisiert",
-          "update_error": "Fehler: {{detail}}",
-          "update_failed": "Ein Fehler ist beim Aktualisieren des Mitwirkenden aufgetreten.",
-          "remove_success": "{{count}} Mitwirkende(r) erfolgreich entfernt",
-          "remove_failed": "Entfernen von Mitwirkenden fehlgeschlagen",
-          "cannot_modify_creator": "Die Rolle oder der Status eines Erstellers kann nicht geändert werden"
-        }
-      },
-      "certification": {
-        "title": "Kurs-Zertifizierung",
-        "subtitle": "Aktivieren und konfigurieren Sie Zertifikate für Schüler, die diesen Kurs abschließen",
-        "form": {
-          "certification_name_label": "Name der Zertifizierung",
-          "certification_name_required": "Erforderlich, wenn die Zertifizierung aktiviert ist",
-          "certification_name_max_length": "Darf maximal 100 Zeichen lang sein",
-          "certification_name_placeholder": "z.B. Advanced JavaScript Zertifizierung",
-          "certification_type_label": "Zertifizierungstyp",
-          "certification_description_label": "Beschreibung der Zertifizierung",
-          "certification_description_required": "Erforderlich, wenn die Zertifizierung aktiviert ist",
-          "certification_description_max_length": "Darf maximal 500 Zeichen lang sein",
-          "certification_description_placeholder": "Beschreiben Sie, was diese Zertifizierung darstellt und welchen Wert sie hat...",
-          "certificate_pattern_label": "Zertifikatsmuster",
-          "certificate_instructor_label": "Name des Lehrers (Optional)",
-          "certificate_instructor_placeholder": "z.B. Dr. Jane Smith"
-        },
-        "types": {
-          "completion": "Kursabschluss",
-          "achievement": "Leistungsbasiert",
-          "assessment": "Bewertungsbasiert",
-          "participation": "Teilnahme",
-          "mastery": "Kompetenznachweis",
-          "professional": "Berufliche Weiterbildung",
-          "continuing": "Fortbildung",
-          "workshop": "Workshop-Teilnahme",
-          "specialization": "Spezialisierung"
-        },
-        "patterns": {
-          "royal": {
-            "name": "Royal",
-            "description": "Verziert mit Kronenmotiven"
-          },
-          "tech": {
-            "name": "Tech",
-            "description": "Von Schaltkreisen inspirierte Muster"
-          },
-          "nature": {
-            "name": "Natur",
-            "description": "Organische Blattmuster"
-          },
-          "geometric": {
-            "name": "Geometrisch",
-            "description": "Abstrakte Formen & Linien"
-          },
-          "vintage": {
-            "name": "Vintage",
-            "description": "Art-Deco-Stil"
-          },
-          "waves": {
-            "name": "Wellen",
-            "description": "Fließende Wassermuster"
-          },
-          "minimal": {
-            "name": "Minimal",
-            "description": "Klar und einfach"
-          },
-          "professional": {
-            "name": "Professionell",
-            "description": "Business-taugliches Design"
-          },
-          "academic": {
-            "name": "Akademisch",
-            "description": "Traditioneller Universitätsstil"
-          },
-          "modern": {
-            "name": "Modern",
-            "description": "Zeitgenössische klare Linien"
-          }
-        },
-        "sections": {
-          "basic_info": {
-            "title": "Basis-Informationen",
-            "subtitle": "Konfigurieren Sie die Basisdetails Ihrer Zertifizierung"
-          },
-          "certificate_design": {
-            "title": "Zertifikats-Design",
-            "subtitle": "Wählen Sie ein dekoratives Muster für Ihr Zertifikat"
-          },
-          "preview": {
-            "title": "Zertifikats-Vorschau",
-            "subtitle": "Live-Vorschau Ihres Zertifikats"
-          }
-        },
-        "states": {
-          "disabled": {
-            "title": "Keine Zertifizierung konfiguriert",
-            "message": "Aktivieren Sie die Zertifizierung, um Schülern nach Kursabschluss Zertifikate auszustellen.",
-            "button": "Zertifizierung aktivieren",
-            "creating": "Wird erstellt..."
-          },
-          "creating": {
-            "title": "Zertifizierung wird erstellt...",
-            "message": "Bitte warten Sie, während wir Ihre Kurszertifizierung einrichten."
-          }
-        },
-        "errors": {
-          "loading": "Fehler beim Laden der Zertifizierungen",
-          "create_failed": "Zertifizierung konnte nicht erstellt werden.",
-          "remove_failed": "Zertifizierung konnte nicht entfernt werden."
-        },
-        "toasts": {
-          "create_success": "Zertifizierung erfolgreich erstellt",
-          "create_error": "Fehler beim Erstellen der Zertifizierung",
-          "remove_success": "Zertifizierung erfolgreich entfernt",
-          "remove_error": "Fehler beim Entfernen der Zertifizierung"
-        }
-      },
-      "communities": {
-        "title": "Communities",
-        "new_community": "Neue Community",
-        "no_communities": "Noch keine Communities",
-        "no_communities_description": "Erstellen Sie Ihre erste Community, um Diskussionen zu starten",
-        "card": {
-          "open_settings": "Einstellungen öffnen",
-          "view_community": "Community anzeigen",
-          "quick_edit": "Schnellbearbeitung"
-        },
-        "settings": {
-          "tabs": {
-            "general": "Allgemein",
-            "thumbnail": "Vorschaubild",
-            "moderation": "Moderation"
-          }
-        },
-        "general": {
-          "title": "Community-Einstellungen",
-          "subtitle": "Aktualisieren Sie die grundlegenden Informationen Ihrer Community",
-          "form": {
-            "name_label": "Community-Name",
-            "name_required": "Community-Name ist erforderlich",
-            "name_min_length": "Name muss mindestens 3 Zeichen lang sein",
-            "name_max_length": "Name darf höchstens 100 Zeichen lang sein",
-            "name_placeholder": "Community-Namen eingeben",
-            "description_label": "Beschreibung",
-            "description_max_length": "Beschreibung darf höchstens 500 Zeichen lang sein",
-            "description_placeholder": "Beschreiben Sie, worum es in dieser Community geht",
-            "public_label": "Öffentliche Community",
-            "public_description": "Diese Community für alle sichtbar machen",
-            "characters_left": "{{count}} Zeichen übrig"
-          },
-          "toasts": {
-            "updating": "Community wird aktualisiert...",
-            "update_success": "Community erfolgreich aktualisiert",
-            "update_error": "Fehler beim Aktualisieren der Community"
-          }
-        },
-        "thumbnail": {
-          "title": "Community-Vorschaubild",
-          "subtitle": "Laden Sie ein Titelbild für Ihre Community hoch",
-          "no_thumbnail": "Kein Vorschaubild festgelegt",
-          "upload_image": "Bild hochladen",
-          "browse_unsplash": "Unsplash durchsuchen",
-          "uploading": "Wird hochgeladen...",
-          "supported_formats": "Unterstützte Formate: JPG, JPEG, PNG. Max. Größe: 8MB. Empfohlenes Seitenverhältnis: 16:9",
-          "toasts": {
-            "update_success": "Vorschaubild erfolgreich aktualisiert",
-            "update_error": "Fehler beim Aktualisieren des Vorschaubilds",
-            "invalid_type": "Ungültiger Dateityp. Bitte laden Sie nur PNG- oder JPG/JPEG-Bilder hoch",
-            "file_too_large": "Dateigröße überschreitet das Limit von 8MB"
-          }
-        },
-        "moderation": {
-          "title": "Inhaltsmoderation",
-          "subtitle": "Konfigurieren Sie gesperrte Wörter und Inhaltsfilter",
-          "info_title": "Gesperrte Wörter",
-          "info_description": "Diskussionen und Antworten, die diese Wörter enthalten, werden blockiert. Benutzer sehen eine Fehlermeldung und ihr Inhalt wird nicht veröffentlicht.",
-          "add_word_label": "Gesperrtes Wort hinzufügen",
-          "add_word_placeholder": "Wort oder Phrase eingeben...",
-          "add_button": "Hinzufügen",
-          "batch_add_label": "Wörter stapelweise hinzufügen",
-          "batch_add_description": "Mehrere Wörter auf einmal hinzufügen, durch Kommas getrennt",
-          "batch_add_placeholder": "wort1, wort2, wort3...",
-          "add_all_button": "Alle hinzufügen",
-          "blocked_words_label": "Gesperrte Wörter",
-          "no_blocked_words": "Noch keine gesperrten Wörter",
-          "no_blocked_words_description": "Fügen Sie Wörter hinzu, um die Inhaltsmoderation zu aktivieren",
-          "word_exists_error": "Dieses Wort ist bereits in der Liste",
-          "all_words_exist_error": "Alle Wörter sind bereits in der Liste oder die Eingabe ist leer",
-          "toasts": {
-            "saving": "Moderationseinstellungen werden gespeichert...",
-            "save_success": "Moderationseinstellungen gespeichert",
-            "save_error": "Fehler beim Speichern der Moderationseinstellungen"
-          }
-        },
-        "modals": {
-          "create": {
-            "title": "Community erstellen",
-            "description": "Erstellen Sie eine neue Community für Diskussionen",
-            "form": {
-              "name_label": "Community-Name",
-              "name_placeholder": "Community-Namen eingeben",
-              "description_label": "Beschreibung",
-              "description_placeholder": "Beschreiben Sie, worum es in dieser Community geht",
-              "public_label": "Diese Community öffentlich machen (für alle sichtbar)"
-            },
-            "cancel": "Abbrechen",
-            "submit": "Community erstellen"
-          },
-          "edit": {
-            "title": "Community bearbeiten",
-            "description": "Community-Einstellungen aktualisieren"
-          },
-          "delete": {
-            "title": "{{name}} löschen?",
-            "message": "Sind Sie sicher, dass Sie diese Community löschen möchten? Alle Diskussionen werden dauerhaft entfernt.",
-            "button": "Community löschen"
-          }
-        },
-        "toasts": {
-          "creating": "Community wird erstellt...",
-          "create_success": "Community erfolgreich erstellt",
-          "create_error": "Fehler beim Erstellen der Community",
-          "deleting": "Community wird gelöscht...",
-          "delete_success": "Community erfolgreich gelöscht",
-          "delete_error": "Fehler beim Löschen der Community"
-        }
-      },
-      "structure": {
-        "loading": "Wird geladen...",
-        "add_chapter_button": "Kapitel hinzufügen",
-        "modals": {
-          "new_chapter": {
-            "title": "Kapitel erstellen",
-            "description": "Fügen Sie dem Kurs ein neues Kapitel hinzu",
-            "form": {
-              "name_label": "Kapitelname",
-              "name_required": "Bitte geben Sie einen Kapitelnamen an",
-              "description_label": "Kapitelbeschreibung",
-              "description_required": "Bitte geben Sie eine Kapitelbeschreibung an",
-              "submit": "Kapitel erstellen"
-            }
-          },
-          "delete_chapter": {
-            "title": "{{name}} löschen?",
-            "message": "Sind Sie sicher, dass Sie dieses Kapitel löschen möchten?",
-            "button": "Kapitel löschen"
-          },
-          "new_activity": {
-            "title": "Aktivität erstellen",
-            "description": "Wählen Sie zwischen verschiedenen Aktivitätstypen, um sie dem Kurs hinzuzufügen"
-          },
-          "delete_activity": {
-            "title": "{{name}} löschen?",
-            "message": "Sind Sie sicher, dass Sie diese Aktivität löschen möchten?",
-            "button": "Aktivität löschen"
-          }
-        },
-        "actions": {
-          "add_chapter": "Kapitel hinzufügen",
-          "add_activity": "Aktivität hinzufügen",
-          "publish": "Veröffentlichen",
-          "unpublish": "Nicht veröffentlichen",
-          "preview_activity": "Vorschau der Aktivität",
-          "edit_page": "Seite bearbeiten",
-          "edit_assignment": "Aufgabe bearbeiten"
-        },
-        "chapter_element": {
-          "chapter_name_placeholder": "Kapitelname"
-        },
-        "activity": {
-          "name_placeholder": "Aktivitätsname",
-          "types": {
-            "video": "Video",
-            "document": "Dokument",
-            "assignment": "Aufgabe",
-            "assignments": "Aufgaben",
-            "dynamic": "Dynamisch",
-            "dynamic_page": "Dynamische Seite",
-            "scorm": "Scorm"
-          },
-          "toasts": {
-            "deleting": "Aktivität wird gelöscht...",
-            "delete_success": "Aktivität erfolgreich gelöscht",
-            "updating": "Aufgabe wird aktualisiert...",
-            "update_success": "Die Aktivität wurde erfolgreich aktualisiert",
-            "name_update_success": "Aktivitätsname erfolgreich aktualisiert",
-            "name_update_error": "Aktivitätsname konnte nicht aktualisiert werden",
-            "creating": "Aktivität wird erstellt...",
-            "create_success": "Aktivität erfolgreich erstellt",
-            "uploading": "Datei wird hochgeladen und Aktivität erstellt...",
-            "upload_success": "Datei erfolgreich hochgeladen",
-            "creating_uploading": "Aktivität wird erstellt und Datei hochgeladen..."
           }
         }
       }

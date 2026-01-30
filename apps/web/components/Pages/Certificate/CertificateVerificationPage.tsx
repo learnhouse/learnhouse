@@ -23,9 +23,13 @@ const CertificateVerificationPage: React.FC<CertificateVerificationPageProps> = 
   // Fetch certificate data
   useEffect(() => {
     const fetchCertificate = async () => {
+      if (!org?.id) {
+        return; // Wait for org to be available
+      }
+
       try {
-        const result = await getCertificateByUuid(certificateUuid);
-        
+        const result = await getCertificateByUuid(certificateUuid, org.id);
+
         if (result.success && result.data) {
           setCertificateData(result.data);
           setVerificationStatus('valid');
@@ -43,7 +47,7 @@ const CertificateVerificationPage: React.FC<CertificateVerificationPageProps> = 
     };
 
     fetchCertificate();
-  }, [certificateUuid]);
+  }, [certificateUuid, org?.id]);
 
   const getVerificationStatusIcon = () => {
     switch (verificationStatus) {

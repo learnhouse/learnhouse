@@ -39,6 +39,23 @@
     "recent": "ล่าสุด",
     "expand": "ขยาย",
     "help": "ความช่วยเหลือ",
+    "help_menu": {
+      "documentation": "เอกสาร",
+      "website": "เว็บไซต์ LearnHouse",
+      "discord": "Discord",
+      "report_feedback": "รายงานปัญหาหรือความคิดเห็น",
+      "feedback_title": "ส่งความคิดเห็น",
+      "feedback_description": "ช่วยเราปรับปรุง LearnHouse โดยแบ่งปันความคิด รายงานข้อบกพร่อง หรือแนะนำฟีเจอร์ใหม่",
+      "feedback_placeholder": "บอกเราว่าคุณคิดอย่างไร...",
+      "feedback_success": "ขอบคุณสำหรับความคิดเห็นของคุณ!",
+      "send_feedback": "ส่งความคิดเห็น",
+      "sending": "กำลังส่ง...",
+      "how_was_experience": "ประสบการณ์ของคุณเป็นอย่างไร?",
+      "reaction_happy": "ดี",
+      "reaction_neutral": "พอใช้",
+      "reaction_sad": "แย่",
+      "attach_image": "แนบภาพหน้าจอ"
+    },
     "plans": {
       "label": "แผน",
       "upgrade_button": "อัปเกรดเป็น {{plan}}",
@@ -70,6 +87,10 @@
         "certifications": {
           "title": "ฟีเจอร์ Pro",
           "description": "ใบรับรองเป็นฟีเจอร์พรีเมียมที่มีเฉพาะสำหรับองค์กรที่ใช้แผน Pro หรือสูงกว่า อัปเกรดเพื่อออกใบรับรองให้ผู้เรียนที่สำเร็จหลักสูตรของคุณ"
+        },
+        "communities": {
+          "title": "ฟีเจอร์แบบ Standard",
+          "description": "ชุมชนเป็นฟีเจอร์พรีเมียมที่มีให้เฉพาะองค์กรในแผน Standard หรือสูงกว่าเท่านั้น อัปเกรดเพื่อปลดล็อกชุมชนสนทนาสำหรับสมาชิกของคุณ"
         }
       }
     },
@@ -77,6 +98,8 @@
     "version": "เวอร์ชัน",
     "users": "ผู้ใช้งาน",
     "save": "บันทึก",
+    "save_changes": "บันทึกการเปลี่ยนแปลง",
+    "saving": "กำลังบันทึก...",
     "cancel": "ยกเลิก",
     "submit": "ส่ง",
     "delete": "ลบ",
@@ -213,6 +236,8 @@
     "course_completed_exclamation": "จบหลักสูตรแล้ว!",
     "what_you_will_learn": "สิ่งที่คุณจะได้เรียนรู้",
     "course_lessons": "บทเรียนในคอร์ส",
+    "share_course": "แชร์คอร์ส",
+    "copy_link": "คัดลอกลิงก์",
     "unlock_certificate_message": "ทำกิจกรรมให้ครบทั้งหมดเพื่อรับใบประกาศนียบัตร",
     "chapter": "บท",
     "chapters": "บท",
@@ -262,7 +287,305 @@
     "submitting_contributor_application": "กำลังส่งใบสมัคร...",
     "contributor_application_success": "ส่งใบสมัครเป็นผู้ร่วมสร้างเนื้อหาสำเร็จแล้ว",
     "contributor_application_error": "ส่งใบสมัครล้มเหลว โปรดลองอีกครั้งในภายหลัง",
-    "contribute": "ร่วมสร้างเนื้อหา"
+    "contribute": "ร่วมสร้างเนื้อหา",
+    "scorm": {
+      "upload_package": "อัปโหลดแพ็คเกจ SCORM",
+      "package_file": "ไฟล์แพ็คเกจ (.zip)",
+      "click_to_upload": "คลิกเพื่ออัปโหลดหรือลากและวาง",
+      "supported_versions": "แพ็คเกจ SCORM 1.2 หรือ SCORM 2004",
+      "import_info": "อัปโหลดแพ็คเกจ SCORM ของคุณเพื่อวิเคราะห์เนื้อหา คุณจะสามารถกำหนดค่าคอร์สและกำหนดกิจกรรมให้กับบท",
+      "analyze_package": "วิเคราะห์แพ็คเกจ",
+      "package_analyzed": "วิเคราะห์แพ็คเกจสำเร็จ",
+      "assign_scos": "กำหนดกิจกรรมให้กับบท",
+      "activity_name": "กิจกรรม",
+      "chapter_name": "บท",
+      "upload_different": "อัปโหลดแพ็คเกจอื่น",
+      "selected": "เลือกแล้ว",
+      "create_course": "สร้างคอร์ส",
+      "configure": "กำหนดค่า",
+      "ready_to_analyze": "พร้อมวิเคราะห์",
+      "course_details": "รายละเอียดคอร์ส"
+    },
+    "clone_course": "คัดลอกคอร์ส",
+    "clone_course_title": "คัดลอก \"{{name}}\"",
+    "clone_course_confirm": "จะสร้างสำเนาคอร์สเรียนเต็มรูปแบบรวมถึงทุกบท กิจกรรม และไฟล์ คอร์สที่คัดลอกจะถูกตั้งเป็นส่วนตัว",
+    "cloning_course": "กำลังคัดลอกคอร์ส...",
+    "course_cloned_success": "คัดลอกคอร์สสำเร็จแล้ว",
+    "course_cloned_error": "คัดลอกคอร์สล้มเหลว",
+    "published": "เผยแพร่แล้ว",
+    "unpublished": "ยังไม่เผยแพร่",
+    "search_courses": "ค้นหาคอร์ส...",
+    "search_results": "พบ {{count}} คอร์สสำหรับ \"{{query}}\"",
+    "no_search_results": "ไม่พบคอร์สเรียน",
+    "try_different_search": "ลองคำค้นหาอื่น",
+    "select_courses": "เลือก",
+    "select_all": "เลือกทั้งหมด",
+    "clear_selection": "ล้างการเลือก",
+    "selected_count": "เลือก {{count}} รายการ",
+    "clone_selected": "คัดลอกที่เลือก",
+    "clone_selected_confirm": "จะสร้างสำเนาของ {{count}} คอร์ส คอร์สที่คัดลอกทั้งหมดจะเป็นแบบส่วนตัว ดำเนินการต่อ?",
+    "delete_selected": "ลบที่เลือก",
+    "delete_selected_confirm": "{{count}} คอร์สจะถูกลบอย่างถาวร การดำเนินการนี้ไม่สามารถย้อนกลับได้ ดำเนินการต่อ?",
+    "course_description_required": "ต้องระบุคำอธิบายคอร์ส",
+    "export_course": "ส่งออกคอร์ส",
+    "export_selected": "ส่งออกที่เลือก",
+    "exporting_course": "กำลังส่งออกคอร์ส...",
+    "exporting_courses": "กำลังส่งออก {{count}} คอร์ส...",
+    "course_exported_success": "ส่งออกคอร์สสำเร็จ",
+    "courses_exported_success": "ส่งออก {{count}} คอร์สสำเร็จ",
+    "course_exported_error": "ส่งออกคอร์สล้มเหลว",
+    "courses_exported_error": "ส่งออกคอร์สล้มเหลว",
+    "clone_courses_title": "โคลนคอร์ส",
+    "delete_courses_title": "ลบคอร์ส",
+    "deleting_courses": "กำลังลบ {{count}} คอร์ส...",
+    "courses_deleted_success": "ลบ {{count}} คอร์สสำเร็จ",
+    "courses_deleted_partial": "ลบ {{success}} คอร์ส, {{error}} ล้มเหลว",
+    "cloning_courses": "กำลังโคลน {{count}} คอร์ส...",
+    "courses_cloned_success": "โคลน {{count}} คอร์สสำเร็จ",
+    "courses_cloned_partial": "โคลน {{success}} คอร์ส, {{error}} ล้มเหลว",
+    "import": {
+      "scorm_package": "แพ็คเกจ SCORM",
+      "scorm_description": "นำเข้าแพ็คเกจ SCORM 1.2 หรือ SCORM 2004",
+      "learnhouse_courses": "คอร์ส LearnHouse",
+      "learnhouse_description": "นำเข้าคอร์สที่ส่งออกจาก LearnHouse",
+      "upload_package": "อัปโหลดแพ็คเกจ",
+      "configure": "กำหนดค่า",
+      "complete": "เสร็จสิ้น",
+      "click_to_upload": "คลิกเพื่ออัปโหลดหรือลากและวาง",
+      "learnhouse_format": "ส่งออกคอร์ส LearnHouse (.zip)",
+      "learnhouse_info": "อัปโหลดแพ็คเกจส่งออกคอร์ส LearnHouse (.zip) คุณจะสามารถเลือกคอร์สที่จะนำเข้าและกำหนดค่าตัวเลือกการนำเข้าได้",
+      "analyze_package": "วิเคราะห์แพ็คเกจ",
+      "ready_to_analyze": "พร้อมวิเคราะห์",
+      "invalid_file_format": "กรุณาอัปโหลดไฟล์ .zip",
+      "analysis_failed": "วิเคราะห์แพ็คเกจล้มเหลว",
+      "package_analyzed": "วิเคราะห์แพ็คเกจสำเร็จ",
+      "select_courses": "เลือกคอร์สที่จะนำเข้า",
+      "select_all": "เลือกทั้งหมด",
+      "deselect_all": "ยกเลิกการเลือกทั้งหมด",
+      "chapters": "บท",
+      "activities": "กิจกรรม",
+      "has_thumbnail": "มีรูปขนาดย่อ",
+      "selected": "เลือกแล้ว",
+      "options": "ตัวเลือกการนำเข้า",
+      "name_prefix": "คำนำหน้าชื่อคอร์ส",
+      "name_prefix_placeholder": "เช่น นำเข้าแล้ว -",
+      "set_private": "ตั้งเป็นส่วนตัว",
+      "set_unpublished": "ตั้งเป็นไม่เผยแพร่",
+      "select_at_least_one": "กรุณาเลือกอย่างน้อยหนึ่งคอร์สเพื่อนำเข้า",
+      "import_courses": "นำเข้า {{count}} คอร์ส",
+      "upload_different": "อัปโหลดแพ็คเกจอื่น",
+      "importing_courses": "กำลังนำเข้าคอร์ส...",
+      "please_wait": "อาจใช้เวลาสักครู่",
+      "import_complete": "นำเข้าเสร็จสิ้น!",
+      "import_failed": "นำเข้าล้มเหลว",
+      "import_partial": "นำเข้าเสร็จสิ้นบางส่วน",
+      "import_summary": "นำเข้า {{successful}} จาก {{total}} คอร์สสำเร็จ",
+      "created": "สร้างแล้ว",
+      "done": "เสร็จสิ้น"
+    },
+    "scorm": {
+      "upload_package": "อัปโหลดแพ็คเกจ SCORM",
+      "package_file": "ไฟล์แพ็คเกจ (.zip)",
+      "click_to_upload": "คลิกเพื่ออัปโหลดหรือลากและวาง",
+      "supported_versions": "แพ็คเกจ SCORM 1.2 หรือ SCORM 2004",
+      "import_info": "อัปโหลดแพ็คเกจ SCORM ของคุณเพื่อวิเคราะห์เนื้อหา คุณจะสามารถกำหนดค่าคอร์สและกำหนดกิจกรรมให้กับบทได้",
+      "analyze_package": "วิเคราะห์แพ็คเกจ",
+      "package_analyzed": "วิเคราะห์แพ็คเกจสำเร็จ",
+      "assign_scos": "กำหนดกิจกรรมให้กับบท",
+      "activity_name": "กิจกรรม",
+      "chapter_name": "บท",
+      "upload_different": "อัปโหลดแพ็คเกจอื่น",
+      "selected": "เลือกแล้ว",
+      "create_course": "สร้างคอร์ส",
+      "configure": "กำหนดค่า",
+      "ready_to_analyze": "พร้อมวิเคราะห์",
+      "course_details": "รายละเอียดคอร์ส"
+    },
+    "create": {
+      "choose_type": "สร้างคอร์สใหม่",
+      "choose_type_description": "เลือกวิธีที่คุณต้องการสร้างคอร์ส",
+      "from_scratch": "เริ่มจากศูนย์",
+      "from_scratch_description": "สร้างโครงสร้างและเนื้อหาคอร์สด้วยตนเอง",
+      "with_ai": "เริ่มต้นด้วย AI",
+      "with_ai_description": "ให้ AI ช่วยคุณวางแผนและสร้างเนื้อหาคอร์ส",
+      "ai": {
+        "title": "ตัวสร้างคอร์ส AI",
+        "step_planning": "การวางแผน",
+        "step_content": "เนื้อหา",
+        "continue_to_content": "ดำเนินการต่อไปยังเนื้อหา",
+        "creating_structure": "กำลังสร้างโครงสร้าง...",
+        "finish_and_edit": "เสร็จสิ้นและแก้ไขคอร์ส",
+        "chat_title": "ตัวช่วยวางแผนคอร์ส",
+        "chat_description": "อธิบายคอร์สที่คุณต้องการสร้าง หรือเลือกเทมเพลตด้านล่าง:",
+        "iterations": "รอบการทำซ้ำ",
+        "max_iterations_reached": "ถึงจำนวนรอบการทำซ้ำสูงสุดแล้ว ดำเนินการสร้างเนื้อหาต่อหรือเริ่มใหม่",
+        "content_step_hint": "โครงสร้างคอร์สของคุณถูกสร้างแล้ว สร้างเนื้อหาสำหรับแต่ละกิจกรรมด้านล่าง",
+        "content_step_info": "ใช้แผงด้านซ้ายเพื่อสร้างเนื้อหาสำหรับกิจกรรมของคุณ",
+        "input_placeholder_initial": "อธิบายคอร์สที่คุณต้องการสร้าง...",
+        "input_placeholder_iterate": "อธิบายการเปลี่ยนแปลงแผน...",
+        "generating": "กำลังสร้างแผนคอร์ส...",
+        "plan_generated": "สร้างแผนคอร์สแล้ว",
+        "plan_generated_hint": "ตรวจสอบแผนในแผงตัวอย่าง คุณสามารถแก้ไขหรือขอเปลี่ยนแปลงได้",
+        "describe_course": "อธิบายคอร์สของคุณ",
+        "describe_course_hint": "บอก AI เกี่ยวกับคอร์สที่คุณต้องการสร้าง รวมถึงหัวข้อ กลุ่มเป้าหมาย และวัตถุประสงค์การเรียนรู้",
+        "generating_plan": "กำลังสร้างแผนคอร์ส...",
+        "chapters": "บท",
+        "activities": "กิจกรรม",
+        "add_chapter": "เพิ่มบท",
+        "add_activity": "เพิ่มกิจกรรม",
+        "generate_content": "สร้างเนื้อหา",
+        "generate_content_description": "สร้างเนื้อหาด้วย AI สำหรับแต่ละกิจกรรมในคอร์สของคุณ",
+        "generated": "สร้างแล้ว",
+        "generate_all": "สร้างทั้งหมด",
+        "generate": "สร้าง",
+        "generating_short": "กำลังสร้าง...",
+        "done": "เสร็จ",
+        "course_structure_created": "สร้างโครงสร้างคอร์สสำเร็จแล้ว!",
+        "failed_to_create": "ไม่สามารถสร้างโครงสร้างคอร์สได้",
+        "create_course": "สร้างคอร์ส",
+        "course_created_success": "สร้างคอร์สสำเร็จแล้ว!",
+        "content_generated_success": "สร้างเนื้อหาสำเร็จแล้ว!",
+        "content_parse_error": "ไม่สามารถวิเคราะห์เนื้อหาที่สร้างได้",
+        "all_content_generated": "สร้างเนื้อหาทั้งหมดแล้ว!",
+        "all_content_generated_hint": "คลิก 'เสร็จสิ้นและแก้ไขคอร์ส' เพื่อดูและแก้ไขเนื้อหาคอร์สของคุณ",
+        "attach_image": "รูปภาพ",
+        "attach_video": "วิดีโอ",
+        "attach_youtube": "ลิงก์ YouTube",
+        "attach_file": "เอกสาร"
+      }
+    }
+  },
+  "communities": {
+    "title": "ชุมชน",
+    "new_community": "ชุมชนใหม่",
+    "no_communities": "ยังไม่มีชุมชน",
+    "no_communities_description": "สร้างชุมชนเพื่อเริ่มการสนทนา",
+    "public": "สาธารณะ",
+    "private": "ส่วนตัว",
+    "discussions": "การสนทนา",
+    "discussion": "การสนทนา",
+    "created": "สร้างเมื่อ",
+    "linked_course": "คอร์สที่เชื่อมโยง",
+    "community_guidelines": "กฎของชุมชน",
+    "community_guidelines_text": "กรุณาเคารพและสร้างสรรค์ ช่วยเหลือผู้อื่นและแบ่งปันความรู้กับชุมชน",
+    "new_discussion": "การสนทนาใหม่",
+    "manage": "จัดการ",
+    "sidebar": {
+      "posted_by": "โพสต์โดย",
+      "upvotes": "โหวต",
+      "category": "หมวดหมู่",
+      "created": "สร้างเมื่อ",
+      "pinned": "ปักหมุด",
+      "locked": "ล็อก",
+      "reactions": "รีแอกชัน",
+      "community": "ชุมชน"
+    },
+    "discussion_list": {
+      "search_placeholder": "ค้นหาการสนทนา...",
+      "sort_by": "เรียงตาม:",
+      "latest_activity": "กิจกรรมล่าสุด",
+      "top": "ยอดนิยม",
+      "hot": "มาแรง",
+      "new_discussion": "การสนทนาใหม่",
+      "select": "เลือก",
+      "cancel": "ยกเลิก",
+      "select_all": "เลือกทั้งหมด",
+      "deselect_all": "ยกเลิกการเลือกทั้งหมด",
+      "selected": "ที่เลือก",
+      "delete": "ลบ",
+      "delete_discussions_title": "ลบ {{count}} การสนทนา?",
+      "delete_discussions_title_plural": "ลบ {{count}} การสนทนา?",
+      "delete_discussions_confirm": "คุณแน่ใจหรือไม่ว่าต้องการลบ {{count}} {{type}}? การกระทำนี้ไม่สามารถย้อนกลับได้",
+      "no_results": "ไม่พบผลลัพธ์",
+      "no_results_description": "ลองปรับการค้นหาหรือล้างตัวกรอง",
+      "clear_search": "ล้างการค้นหา",
+      "no_discussions": "ยังไม่มีการสนทนา",
+      "no_discussions_description": "เป็นคนแรกที่เริ่มการสนทนาในชุมชนนี้!",
+      "start_discussion": "เริ่มการสนทนา"
+    },
+    "discussion_detail": {
+      "edit": "แก้ไข",
+      "delete": "ลบ",
+      "delete_title": "ลบการสนทนา?",
+      "delete_confirm": "คุณแน่ใจหรือไม่ว่าต้องการลบการสนทนานี้? การกระทำนี้ไม่สามารถย้อนกลับได้",
+      "delete_button": "ลบการสนทนา",
+      "no_details": "ไม่มีรายละเอียดเพิ่มเติม"
+    },
+    "discussion_card": {
+      "pin_discussion": "ปักหมุดการสนทนา",
+      "unpin_discussion": "ยกเลิกการปักหมุด",
+      "lock_discussion": "ล็อกการสนทนา",
+      "unlock_discussion": "ปลดล็อกการสนทนา",
+      "delete_discussion": "ลบการสนทนา",
+      "delete_title": "ลบการสนทนา?",
+      "delete_confirm": "คุณแน่ใจหรือไม่ว่าต้องการลบการสนทนานี้? การกระทำนี้ไม่สามารถย้อนกลับได้",
+      "votes": "โหวต"
+    },
+    "comments": {
+      "no_replies": "ยังไม่มีการตอบกลับ",
+      "locked": "การสนทนานี้ถูกล็อก",
+      "sign_in_to_reply": "เข้าสู่ระบบ",
+      "to_reply": "เพื่อตอบกลับ",
+      "write_reply": "เขียนคำตอบ...",
+      "reply": "ตอบกลับ",
+      "edit": "แก้ไข",
+      "delete": "ลบ",
+      "save": "บันทึก",
+      "cancel": "ยกเลิก",
+      "failed_to_post": "ไม่สามารถโพสต์ได้ กรุณาลองอีกครั้ง",
+      "content_not_allowed": "คำตอบของคุณมีเนื้อหาที่ไม่อนุญาต",
+      "failed_to_update": "ไม่สามารถอัปเดตได้ กรุณาลองอีกครั้ง"
+    },
+    "label_filter": {
+      "label": "ป้ายกำกับ:",
+      "all": "ทั้งหมด",
+      "all_discussions": "การสนทนาทั้งหมด",
+      "clear_filter": "ล้างตัวกรอง"
+    },
+    "labels": {
+      "general": "ทั่วไป",
+      "question": "คำถาม",
+      "idea": "ไอเดีย",
+      "announcement": "ประกาศ",
+      "showcase": "โชว์เคส"
+    },
+    "create_discussion": {
+      "title": "เริ่มการสนทนา",
+      "description": "แบ่งปันความคิดของคุณกับชุมชน",
+      "category_label": "หมวดหมู่",
+      "title_label": "หัวข้อการสนทนา",
+      "title_placeholder": "คุณต้องการพูดคุยเรื่องอะไร?",
+      "emoji_selected": "เลือกอิโมจิแบบกำหนดเองแล้ว",
+      "emoji_hint": "คลิก + เพื่อเพิ่มอิโมจิแบบกำหนดเอง (ไม่บังคับ)",
+      "details_label": "รายละเอียด (ไม่บังคับ)",
+      "details_placeholder": "เพิ่มบริบทหรือรายละเอียดเพิ่มเติมในการสนทนาของคุณ...",
+      "editor_hint": "ใช้แถบเครื่องมือเพื่อจัดรูปแบบข้อความด้วยตัวหนา ตัวเอียง รายการ และอื่นๆ",
+      "cancel": "ยกเลิก",
+      "submit": "โพสต์การสนทนา",
+      "title_required": "ต้องระบุหัวข้อ",
+      "title_min_length": "หัวข้อต้องมีอย่างน้อย 5 ตัวอักษร",
+      "title_max_length": "หัวข้อต้องน้อยกว่า 200 ตัวอักษร",
+      "content_not_allowed": "การสนทนาของคุณมีเนื้อหาที่ไม่อนุญาต",
+      "failed_to_create": "ไม่สามารถสร้างการสนทนาได้ กรุณาลองอีกครั้ง"
+    },
+    "edit_discussion": {
+      "title": "แก้ไขการสนทนา",
+      "description": "อัปเดตการสนทนาของคุณ",
+      "save": "บันทึกการเปลี่ยนแปลง",
+      "cancel": "ยกเลิก",
+      "close": "ปิด",
+      "failed_to_update": "ไม่สามารถอัปเดตได้ กรุณาลองอีกครั้ง",
+      "content_not_allowed": "การสนทนาของคุณมีเนื้อหาที่ไม่อนุญาต",
+      "max_edits_reached": "คุณได้ถึงจำนวนครั้งสูงสุดในการแก้ไข ({{count}} ครั้ง) คุณไม่สามารถแก้ไขการสนทนานี้ได้อีก",
+      "edits_remaining": "คุณเหลือการแก้ไขอีก {{count}} ครั้ง",
+      "no_edits_remaining": "คุณไม่มีสิทธิ์แก้ไขเหลือแล้ว ({{count}} ครั้ง)"
+    },
+    "course_section": {
+      "title": "การสนทนาของชุมชน",
+      "view_all": "ดูทั้งหมด",
+      "no_discussions": "ยังไม่มีการสนทนา",
+      "start_first": "เริ่มการสนทนาแรก"
+    }
   },
   "collections": {
     "collections": "คอลเลกชัน",
@@ -427,6 +750,15 @@
     "benefits": "สิทธิประโยชน์:",
     "min_price": "ราคาขั้นต่ำ:",
     "choose_price": "เลือกราคาของคุณ"
+  },
+  "account": {
+    "title": "บัญชี",
+    "general": "ทั่วไป",
+    "profile": "โปรไฟล์",
+    "security": "ความปลอดภัย",
+    "my_courses": "คอร์สของฉัน",
+    "no_purchased_courses": "ยังไม่มีคอร์สที่ซื้อ",
+    "purchased_courses_description": "คอร์สที่คุณซื้อหรือสมัครสมาชิกจะแสดงที่นี่"
   },
   "user": {
     "user_settings": "การตั้งค่าผู้ใช้",
@@ -706,10 +1038,538 @@
       "create_course": "สร้างคอร์ส",
       "create_new_course": "สร้างคอร์สใหม่",
       "import_course": "นำเข้าหลักสูตร",
+      "import_scorm": "นำเข้าแพ็คเกจ SCORM",
       "import_scorm_description": "นำเข้าแพ็คเกจ SCORM เพื่อสร้างหลักสูตรใหม่",
+      "import_learnhouse": "นำเข้าคอร์ส LearnHouse",
+      "import_learnhouse_description": "นำเข้าคอร์สจากแพ็คเกจส่งออก LearnHouse",
+      "import_select_type": "เลือกประเภทแพ็คเกจที่ต้องการนำเข้า",
       "no_courses": "ยังไม่มีคอร์สเรียน",
       "create_course_placeholder": "สร้างคอร์สเพื่อเพิ่มเนื้อหา",
-      "no_courses_available": "ยังไม่มีคอร์สเรียนในขณะนี้"
+      "no_courses_available": "ยังไม่มีคอร์สเรียนในขณะนี้",
+      "publishing": "กำลังเผยแพร่คอร์ส...",
+      "unpublishing": "กำลังยกเลิกการเผยแพร่คอร์ส...",
+      "published_success": "เผยแพร่คอร์สเรียบร้อยแล้ว",
+      "unpublished_success": "ยกเลิกการเผยแพร่คอร์สเรียบร้อยแล้ว",
+      "publish_error": "เกิดข้อผิดพลาดในการอัปเดตสถานะการเผยแพร่",
+      "published": "เผยแพร่แล้ว",
+      "unpublished": "ยังไม่เผยแพร่",
+      "processing": "กำลังประมวลผล...",
+      "click_to_publish": "คลิกเพื่อเผยแพร่",
+      "click_to_unpublish": "คลิกเพื่อยกเลิกการเผยแพร่",
+      "preview": "ดูตัวอย่าง",
+      "save": {
+        "success": "บันทึกการเปลี่ยนแปลงสำเร็จ",
+        "error": "ไม่สามารถบันทึกการเปลี่ยนแปลงได้",
+        "partial_success": "บันทึกแล้วแต่มีปัญหาบางอย่าง: {{failed}}",
+        "partial_error": "บันทึกบางส่วนสำเร็จ ({{success}}) แต่ล้มเหลว: {{failed}}",
+        "certification_error": "ไม่สามารถบันทึกการตั้งค่าใบรับรองได้",
+        "saving": "กำลังบันทึก...",
+        "saved": "บันทึกแล้ว",
+        "save": "บันทึก",
+        "unsaved": "การเปลี่ยนแปลงที่ยังไม่ได้บันทึก",
+        "retry": "ข้อผิดพลาด - คลิกเพื่อลองอีกครั้ง",
+        "retry_button": "ลองอีกครั้ง"
+      },
+      "overview_top": {
+        "course_label": "คอร์สเรียน",
+        "rights_guide_button": "คู่มือการใช้งานสิทธิ์"
+      },
+      "settings": {
+        "tabs": {
+          "general": "ทั่วไป",
+          "content": "เนื้อหา",
+          "access": "การเข้าถึง",
+          "contributors": "ผู้ร่วมสร้างเนื้อหา",
+          "certification": "ใบประกาศนียบัตร"
+        },
+        "access_denied": {
+          "title": "การเข้าถึงถูกปฏิเสธ",
+          "message": "คุณไม่มีสิทธิ์ในการเข้าถึงคอร์สเรียนนี้"
+        },
+        "access_restricted": {
+          "title": "จำกัดการเข้าถึง",
+          "message": "คุณไม่มีสิทธิ์ในการเข้าถึงส่วน {{tab}}"
+        },
+        "loading": "กำลังโหลด..."
+      },
+      "general": {
+        "form": {
+          "name_label": "ชื่อ",
+          "name_required": "จำเป็นต้องระบุฟิลด์นี้",
+          "name_max_length": "ชื่อต้องมีความยาวไม่เกิน 100 ตัวอักษร",
+          "description_label": "คำอธิบาย",
+          "description_required": "จำเป็นต้องระบุฟิลด์นี้",
+          "description_max_length": "คำอธิบายต้องมีความยาวไม่เกิน 1000 ตัวอักษร",
+          "about_label": "เกี่ยวกับ",
+          "learnings_label": "สิ่งที่จะได้เรียนรู้",
+          "learnings_required": "จำเป็นต้องระบุฟิลด์นี้",
+          "learnings_invalid_format": "รูปแบบไม่ถูกต้อง",
+          "learnings_min_items": "จำเป็นต้องมีอย่างน้อยหนึ่งรายการ",
+          "learnings_empty_text": "ทุกรายการต้องมีข้อความ",
+          "learnings_invalid_json": "รูปแบบ JSON ไม่ถูกต้อง",
+          "tags_label": "แท็ก",
+          "tags_placeholder": "กด Enter เพื่อเพิ่ม...",
+          "thumbnail_type_label": "ประเภทภาพหน้าปก",
+          "thumbnail_type_image": "รูปภาพ",
+          "thumbnail_type_video": "วิดีโอ",
+          "thumbnail_type_both": "ทั้งคู่",
+          "thumbnail_label": "ภาพหน้าปก",
+          "image_search_placeholder": "ค้นหารูปภาพ..."
+        },
+        "thumbnail": {
+          "upload_image": "อัปโหลดรูปภาพ",
+          "upload_video": "อัปโหลดวิดีโอ",
+          "gallery": "คลังภาพ",
+          "tabs": {
+            "image": "รูปภาพ",
+            "video": "วิดีโอ"
+          },
+          "supported_formats": {
+            "image": "รองรับไฟล์ PNG, JPG/JPEG (สูงสุด 8MB)",
+            "video": "รองรับไฟล์ MP4, WebM (สูงสุด 100MB)"
+          }
+        },
+        "errors": {
+          "save_failed": "บันทึกโครงสร้างคอร์สเรียนล้มเหลว"
+        }
+      },
+      "access": {
+        "title": "การเข้าถึงคอร์สเรียน",
+        "subtitle": "เลือกว่าคอร์สเรียนของคุณจะเป็นสาธารณะบนอินเทอร์เน็ต หรือเข้าถึงได้เฉพาะผู้ใช้ที่ลงทะเบียนเท่านั้น",
+        "public": {
+          "title": "สาธารณะ",
+          "description": "คอร์สเรียนจะเปิดให้เข้าถึงได้อย่างอิสระบนอินเทอร์เน็ต ถูกเก็บข้อมูลโดยเครื่องมือค้นหา และทุกคนสามารถเข้าเรียนได้",
+          "active": "ใช้งานอยู่",
+          "confirmation_title": "เปลี่ยนเป็นแบบสาธารณะหรือไม่?",
+          "confirmation_message": "คุณแน่ใจหรือไม่ว่าต้องการเปิดคอร์สเรียนนี้ให้เป็นสาธารณะบนอินเทอร์เน็ต?",
+          "confirmation_button": "เปลี่ยนเป็นแบบสาธารณะ"
+        },
+        "users_only": {
+          "title": "เฉพาะผู้ใช้ที่ลงทะเบียน",
+          "description": "คอร์สเรียนจะเข้าถึงได้เฉพาะผู้ใช้ที่ลงทะเบียนแล้วเท่านั้น และคุณสามารถเลือกกลุ่มผู้ใช้งานที่มีสิทธิ์เข้าถึงคอร์สนี้เพิ่มเติมได้",
+          "active": "ใช้งานอยู่",
+          "confirmation_title": "เปลี่ยนเป็นแบบเฉพาะผู้ใช้เท่านั้นหรือไม่?",
+          "confirmation_message": "คุณแน่ใจหรือไม่ว่าต้องการให้คอร์สเรียนนี้เข้าถึงได้เฉพาะผู้ใช้ที่ลงทะเบียนแล้วเท่านั้น?",
+          "confirmation_button": "เปลี่ยนเป็นแบบเฉพาะผู้ใช้เท่านั้น"
+        },
+        "usergroups": {
+          "title": "กลุ่มผู้ใช้งาน",
+          "subtitle": "หากคุณต้องการให้เฉพาะบางกลุ่มผู้ใช้งานเข้าถึงคอร์สนี้ได้ คุณสามารถเชื่อมโยงกลุ่มเหล่านั้นได้ที่นี่",
+          "table": {
+            "name": "ชื่อ",
+            "actions": "การดำเนินการ"
+          },
+          "actions": {
+            "delete_link": "ลบการเชื่อมโยง",
+            "link_to_usergroup": "เชื่อมโยงกับกลุ่มผู้ใช้งาน"
+          },
+          "modals": {
+            "link_title": "เชื่อมโยงคอร์สเรียนกับกลุ่มผู้ใช้งาน",
+            "link_description": "เลือกกลุ่มผู้ใช้งานที่คุณต้องการเชื่อมโยงกับคอร์สนี้ สมาชิกในกลุ่มนี้จะสามารถเข้าถึงคอร์สเรียนได้",
+            "unlink_title": "ยกเลิกการเชื่อมโยงกับกลุ่มผู้ใช้งานหรือไม่?",
+            "unlink_message": "สมาชิกในกลุ่มนี้จะไม่สามารถเข้าถึงคอร์สเรียนนี้ได้อีกต่อไป",
+            "unlink_button": "ลบการเชื่อมโยง",
+            "warning": "ผู้ใช้ที่ไม่ได้อยู่ในกลุ่มนี้จะไม่สามารถเข้าถึงคอร์สเรียนนี้ได้อีกต่อไป",
+            "usergroup_name": "ชื่อกลุ่มผู้ใช้งาน",
+            "no_usergroups": "ไม่มีกลุ่มผู้ใช้งานให้เลือก",
+            "create_usergroup": "สร้างกลุ่มผู้ใช้งาน",
+            "link_button": "เชื่อมโยง"
+          },
+          "toasts": {
+            "link_success": "เชื่อมโยงกับกลุ่มผู้ใช้งานสำเร็จแล้ว",
+            "link_error": "ข้อผิดพลาด {{status}}: {{detail}}",
+            "unlink_success": "ยกเลิกการเชื่อมโยงกลุ่มผู้ใช้งานสำเร็จแล้ว",
+            "unlink_error": "เกิดข้อผิดพลาดในการยกเลิกการเชื่อมโยงกลุ่มผู้ใช้งาน"
+          }
+        }
+      },
+      "contributors": {
+        "title": "ผู้ร่วมสร้างเนื้อหาคอร์สเรียน",
+        "subtitle": "จัดการสมาชิกที่ร่วมสร้างเนื้อหาและเพิ่มสมาชิกใหม่เข้าสู่คอร์สเรียน",
+        "open_to_contributors": {
+          "title": "เปิดรับผู้ร่วมสร้างเนื้อหา",
+          "description": "คอร์สเรียนเปิดรับผู้ร่วมสร้างเนื้อหา ผู้ใช้งานสามารถสมัครเพื่อช่วยพัฒนาเนื้อหาคอร์สเรียนให้ดียิ่งขึ้น",
+          "active": "ใช้งานอยู่",
+          "confirmation_title": "เปิดรับผู้ร่วมสร้างเนื้อหาหรือไม่?",
+          "confirmation_message": "คุณแน่ใจหรือไม่ว่าต้องการเปิดคอร์สเรียนนี้ให้ผู้ร่วมสร้างเนื้อหาเข้ามาช่วยได้?",
+          "confirmation_button": "เปิดรับผู้ร่วมสร้างเนื้อหา"
+        },
+        "closed_to_contributors": {
+          "title": "ปิดรับผู้ร่วมสร้างเนื้อหา",
+          "description": "คอร์สเรียนปิดรับผู้ร่วมสร้างเนื้อหา เฉพาะสมาชิกปัจจุบันเท่านั้นที่สามารถแก้ไขเนื้อหาได้",
+          "active": "ใช้งานอยู่",
+          "confirmation_title": "ปิดรับผู้ร่วมสร้างเนื้อหาหรือไม่?",
+          "confirmation_message": "คุณแน่ใจหรือไม่ว่าต้องการปิดรับผู้ร่วมสร้างเนื้อหาสำหรับคอร์สนี้?",
+          "confirmation_button": "ปิดรับผู้ร่วมสร้างเนื้อหา"
+        },
+        "search": {
+          "placeholder": "ค้นหาผู้ใช้ที่ต้องการเพิ่มเป็นผู้ร่วมสร้างเนื้อหาด้วยชื่อหรือชื่อผู้ใช้...",
+          "searching": "กำลังค้นหา...",
+          "no_results": "ไม่พบผู้ใช้ที่ค้นหา"
+        },
+        "table": {
+          "name": "ชื่อ",
+          "username": "ชื่อผู้ใช้",
+          "email": "อีเมล",
+          "role": "บทบาท",
+          "status": "สถานะ",
+          "added_on": "เพิ่มเมื่อ"
+        },
+        "roles": {
+          "creator": "ผู้สร้าง",
+          "contributor": "ผู้ร่วมสร้าง",
+          "maintainer": "ผู้ดูแล",
+          "reporter": "ผู้รายงาน"
+        },
+        "statuses": {
+          "active": "ใช้งานอยู่",
+          "inactive": "ไม่ได้ใช้งาน",
+          "pending": "รอดำเนินการ"
+        },
+        "actions": {
+          "selected_users": "เลือกผู้ใช้ {{count}} ราย",
+          "selected_users_plural": "เลือกผู้ใช้ {{count}} ราย",
+          "clear": "ล้างค่า",
+          "add_selected": "เพิ่มรายการที่เลือก",
+          "selected_contributors": "เลือกผู้ร่วมสร้าง {{count}} ราย",
+          "selected_contributors_plural": "เลือกผู้ร่วมสร้าง {{count}} ราย",
+          "remove_selected": "ลบรายการที่เลือก",
+          "already_contributor": "เป็นผู้ร่วมสร้างอยู่แล้ว"
+        },
+        "toasts": {
+          "add_success": "เพิ่มผู้ร่วมสร้าง {{count}} รายสำเร็จแล้ว",
+          "add_error": "เพิ่มผู้ใช้ {{username}} ล้มเหลว: {{reason}}",
+          "add_failed": "เพิ่มผู้ร่วมสร้างเนื้อหาล้มเหลว",
+          "update_success": "อัปเดตผู้ร่วมสร้างเนื้อหาสำเร็จแล้ว",
+          "update_error": "ข้อผิดพลาด: {{detail}}",
+          "update_failed": "เกิดข้อผิดพลาดในการอัปเดตผู้ร่วมสร้างเนื้อหา",
+          "remove_success": "ลบผู้ร่วมสร้าง {{count}} รายสำเร็จแล้ว",
+          "remove_failed": "ลบผู้ร่วมสร้างเนื้อหาล้มเหลว",
+          "cannot_modify_creator": "คุณไม่สามารถแก้ไขบทบาทหรือสถานะของผู้สร้างหลักได้"
+        }
+      },
+      "certification": {
+        "title": "ใบประกาศนียบัตรคอร์สเรียน",
+        "subtitle": "เปิดใช้งานและตั้งค่าใบประกาศนียบัตรสำหรับผู้เรียนที่จบหลักสูตรนี้",
+        "form": {
+          "certification_name_label": "ชื่อใบประกาศนียบัตร",
+          "certification_name_required": "จำเป็นต้องระบุชื่อใบประกาศเมื่อเปิดใช้งาน",
+          "certification_name_max_length": "ชื่อต้องมีความยาวไม่เกิน 100 ตัวอักษร",
+          "certification_name_placeholder": "เช่น ใบประกาศนียบัตร JavaScript ขั้นสูง",
+          "certification_type_label": "ประเภทใบประกาศนียบัตร",
+          "certification_description_label": "คำอธิบายใบประกาศนียบัตร",
+          "certification_description_required": "จำเป็นต้องระบุคำอธิบายเมื่อเปิดใช้งาน",
+          "certification_description_max_length": "คำอธิบายต้องมีความยาวไม่เกิน 500 ตัวอักษร",
+          "certification_description_placeholder": "อธิบายว่าใบประกาศนี้แสดงถึงอะไรและมีคุณค่าอย่างไร...",
+          "certificate_pattern_label": "ลวดลายใบประกาศ",
+          "certificate_instructor_label": "ชื่อผู้สอน (ระบุหรือไม่ก็ได้)",
+          "certificate_instructor_placeholder": "เช่น ดร. สมชาย ใจดี"
+        },
+        "types": {
+          "completion": "จบหลักสูตร",
+          "achievement": "ตามความสำเร็จ",
+          "assessment": "ตามการประเมิน",
+          "participation": "การเข้าร่วม",
+          "mastery": "ความเชี่ยวชาญ",
+          "professional": "การพัฒนาวิชาชีพ",
+          "continuing": "การศึกษาต่อเนื่อง",
+          "workshop": "การเข้าร่วมเวิร์กชอป",
+          "specialization": "ความเชี่ยวชาญเฉพาะด้าน"
+        },
+        "patterns": {
+          "royal": {
+            "name": "หรูหรา",
+            "description": "สไตล์วิจิตรบรรจงพร้อมลวดลายมงกุฎ"
+          },
+          "tech": {
+            "name": "เทคโนโลยี",
+            "description": "ลวดลายที่ได้รับแรงบันดาลใจจากแผงวงจร"
+          },
+          "nature": {
+            "name": "ธรรมชาติ",
+            "description": "ลวดลายใบไม้ที่เป็นธรรมชาติ"
+          },
+          "geometric": {
+            "name": "เรขาคณิต",
+            "description": "รูปทรงและเส้นสายที่ทันสมัย"
+          },
+          "vintage": {
+            "name": "วินเทจ",
+            "description": "สไตล์อาร์ตเดโค"
+          },
+          "waves": {
+            "name": "คลื่น",
+            "description": "ลวดลายสายน้ำที่ไหลลื่น"
+          },
+          "minimal": {
+            "name": "มินิมอล",
+            "description": "สะอาดตาและเรียบง่าย"
+          },
+          "professional": {
+            "name": "มืออาชีพ",
+            "description": "การออกแบบสำหรับธุรกิจ"
+          },
+          "academic": {
+            "name": "วิชาการ",
+            "description": "สไตล์มหาวิทยาลัยแบบดั้งเดิม"
+          },
+          "modern": {
+            "name": "โมเดิร์น",
+            "description": "เส้นสายที่เฉียบคมและทันสมัย"
+          }
+        },
+        "sections": {
+          "basic_info": {
+            "title": "ข้อมูลพื้นฐาน",
+            "subtitle": "ตั้งค่ารายละเอียดพื้นฐานของใบประกาศนียบัตร"
+          },
+          "certificate_design": {
+            "title": "การออกแบบใบประกาศ",
+            "subtitle": "เลือกลวดลายตกแต่งสำหรับใบประกาศนียบัตรของคุณ"
+          },
+          "preview": {
+            "title": "ตัวอย่างใบประกาศ",
+            "subtitle": "ตัวอย่างใบประกาศนียบัตรแบบเรียลไทม์"
+          }
+        },
+        "states": {
+          "disabled": {
+            "title": "ยังไม่ได้ตั้งค่าใบประกาศนียบัตร",
+            "message": "เปิดใช้งานใบประกาศนียบัตรเพื่อมอบให้กับผู้เรียนเมื่อจบหลักสูตร",
+            "button": "เปิดใช้งานใบประกาศนียบัตร",
+            "creating": "กำลังเปิดใช้งาน..."
+          },
+          "creating": {
+            "title": "กำลังสร้างใบประกาศนียบัตร...",
+            "message": "โปรดรอสักครู่ขณะที่เรากำลังตั้งค่าใบประกาศนียบัตรให้คุณ"
+          }
+        },
+        "errors": {
+          "loading": "เกิดข้อผิดพลาดในการโหลดใบประกาศนียบัตร",
+          "create_failed": "สร้างใบประกาศนียบัตรล้มเหลว",
+          "remove_failed": "ลบใบประกาศนียบัตรล้มเหลว"
+        },
+        "toasts": {
+          "create_success": "สร้างใบประกาศนียบัตรสำเร็จแล้ว",
+          "create_error": "สร้างใบประกาศนียบัตรล้มเหลว",
+          "remove_success": "ลบใบประกาศนียบัตรสำเร็จแล้ว",
+          "remove_error": "ลบใบประกาศนียบัตรล้มเหลว"
+        }
+      },
+      "communities": {
+        "title": "ชุมชน",
+        "new_community": "ชุมชนใหม่",
+        "no_communities": "ยังไม่มีชุมชน",
+        "no_communities_description": "สร้างชุมชนแรกของคุณเพื่อเริ่มการสนทนา",
+        "card": {
+          "open_settings": "เปิดการตั้งค่า",
+          "view_community": "ดูชุมชน",
+          "quick_edit": "แก้ไขด่วน"
+        },
+        "settings": {
+          "tabs": {
+            "general": "ทั่วไป",
+            "thumbnail": "รูปขนาดย่อ",
+            "course": "คอร์สที่เชื่อมโยง",
+            "moderation": "การดูแล"
+          },
+          "general": {
+            "title": "การตั้งค่าทั่วไป",
+            "subtitle": "จัดการชื่อ คำอธิบาย และการมองเห็นชุมชน"
+          },
+          "thumbnail": {
+            "title": "รูปขนาดย่อ",
+            "subtitle": "อัปเดตรูปปกชุมชน"
+          },
+          "course": {
+            "title": "คอร์สที่เชื่อมโยง",
+            "subtitle": "เชื่อมต่อชุมชนนี้กับคอร์ส"
+          },
+          "moderation": {
+            "title": "การดูแล",
+            "subtitle": "กำหนดค่าการตั้งค่าการดูแลเนื้อหา"
+          }
+        },
+        "course": {
+          "title": "คอร์สที่เชื่อมโยง",
+          "subtitle": "เชื่อมต่อชุมชนนี้กับคอร์สสำหรับการสนทนาเฉพาะคอร์ส",
+          "currently_linked": "เชื่อมโยงอยู่",
+          "unlink": "ยกเลิกการเชื่อมโยง",
+          "link_button": "เชื่อมโยงคอร์ส",
+          "search_placeholder": "ค้นหาคอร์ส...",
+          "no_courses": "ไม่พบคอร์ส",
+          "course_linked_id": "คอร์สที่เชื่อมโยง (ID: {{id}})",
+          "course_not_found": "คอร์สที่เชื่อมโยงอาจไม่มีอยู่แล้วหรือคุณไม่มีสิทธิ์เข้าถึง",
+          "toasts": {
+            "linking": "กำลังเชื่อมโยงคอร์ส...",
+            "link_success": "เชื่อมโยงคอร์สสำเร็จ",
+            "link_error": "เชื่อมโยงคอร์สล้มเหลว",
+            "unlinking": "กำลังยกเลิกการเชื่อมโยงคอร์ส...",
+            "unlink_success": "ยกเลิกการเชื่อมโยงคอร์สสำเร็จ",
+            "unlink_error": "ยกเลิกการเชื่อมโยงคอร์สล้มเหลว"
+          }
+        },
+        "general": {
+          "title": "ตั้งค่าชุมชน",
+          "subtitle": "อัปเดตข้อมูลพื้นฐานของชุมชน",
+          "form": {
+            "name_label": "ชื่อชุมชน",
+            "name_required": "ต้องระบุชื่อชุมชน",
+            "name_min_length": "ชื่อต้องมีอย่างน้อย 3 ตัวอักษร",
+            "name_max_length": "ชื่อต้องน้อยกว่า 100 ตัวอักษร",
+            "name_placeholder": "ป้อนชื่อชุมชน",
+            "description_label": "คำอธิบาย",
+            "description_max_length": "คำอธิบายต้องน้อยกว่า 500 ตัวอักษร",
+            "description_placeholder": "อธิบายว่าชุมชนนี้เกี่ยวกับอะไร",
+            "public_label": "ชุมชนสาธารณะ",
+            "public_description": "ทำให้ชุมชนนี้มองเห็นได้สำหรับทุกคน",
+            "characters_left": "เหลือ {{count}} ตัวอักษร"
+          },
+          "toasts": {
+            "updating": "กำลังอัปเดตชุมชน...",
+            "update_success": "อัปเดตชุมชนสำเร็จ",
+            "update_error": "อัปเดตชุมชนล้มเหลว"
+          }
+        },
+        "thumbnail": {
+          "title": "รูปขนาดย่อของชุมชน",
+          "subtitle": "อัปโหลดรูปปกสำหรับชุมชนของคุณ",
+          "no_thumbnail": "ไม่ได้ตั้งรูปขนาดย่อ",
+          "upload_image": "อัปโหลดรูป",
+          "browse_unsplash": "เรียกดู Unsplash",
+          "uploading": "กำลังอัปโหลด...",
+          "supported_formats": "รูปแบบที่รองรับ: JPG, JPEG, PNG ขนาดสูงสุด: 8MB อัตราส่วนที่แนะนำ: 16:9",
+          "toasts": {
+            "update_success": "อัปเดตรูปขนาดย่อสำเร็จ",
+            "update_error": "อัปเดตรูปขนาดย่อล้มเหลว",
+            "invalid_type": "ประเภทไฟล์ไม่ถูกต้อง กรุณาอัปโหลดเฉพาะรูป PNG หรือ JPG/JPEG",
+            "file_too_large": "ขนาดไฟล์เกินขีดจำกัด 8MB"
+          }
+        },
+        "moderation": {
+          "title": "การดูแลเนื้อหา",
+          "subtitle": "กำหนดค่าคำที่ถูกบล็อกและตัวกรองเนื้อหา",
+          "info_title": "คำที่ถูกบล็อก",
+          "info_description": "การสนทนาและการตอบกลับที่มีคำเหล่านี้จะถูกบล็อก ผู้ใช้จะเห็นข้อความแสดงข้อผิดพลาดและเนื้อหาของพวกเขาจะไม่ถูกโพสต์",
+          "add_word_label": "เพิ่มคำที่ถูกบล็อก",
+          "add_word_placeholder": "ป้อนคำหรือวลี...",
+          "add_button": "เพิ่ม",
+          "batch_add_label": "เพิ่มเป็นชุด",
+          "batch_add_description": "เพิ่มหลายคำพร้อมกัน คั่นด้วยเครื่องหมายจุลภาค",
+          "batch_add_placeholder": "คำ1, คำ2, คำ3...",
+          "add_all_button": "เพิ่มทั้งหมด",
+          "blocked_words_label": "คำที่ถูกบล็อก",
+          "no_blocked_words": "ยังไม่มีคำที่ถูกบล็อก",
+          "no_blocked_words_description": "เพิ่มคำเพื่อเปิดใช้งานการดูแลเนื้อหา",
+          "word_exists_error": "คำนี้อยู่ในรายการแล้ว",
+          "all_words_exist_error": "คำทั้งหมดอยู่ในรายการแล้วหรือข้อมูลนำเข้าว่างเปล่า",
+          "toasts": {
+            "saving": "กำลังบันทึกการตั้งค่าการดูแล...",
+            "save_success": "บันทึกการตั้งค่าการดูแลแล้ว",
+            "save_error": "บันทึกการตั้งค่าการดูแลล้มเหลว"
+          }
+        },
+        "modals": {
+          "create": {
+            "title": "สร้างชุมชน",
+            "description": "สร้างชุมชนใหม่สำหรับการสนทนา",
+            "form": {
+              "name_label": "ชื่อชุมชน",
+              "name_placeholder": "ป้อนชื่อชุมชน",
+              "description_label": "คำอธิบาย",
+              "description_placeholder": "อธิบายว่าชุมชนนี้เกี่ยวกับอะไร",
+              "public_label": "ทำให้ชุมชนนี้เป็นสาธารณะ (ทุกคนมองเห็นได้)"
+            },
+            "cancel": "ยกเลิก",
+            "submit": "สร้างชุมชน"
+          },
+          "edit": {
+            "title": "แก้ไขชุมชน",
+            "description": "อัปเดตการตั้งค่าชุมชน"
+          },
+          "delete": {
+            "title": "ลบ {{name}}?",
+            "message": "คุณแน่ใจหรือไม่ที่จะลบชุมชนนี้? การสนทนาทั้งหมดจะถูกลบอย่างถาวร",
+            "button": "ลบชุมชน"
+          }
+        },
+        "toasts": {
+          "creating": "กำลังสร้างชุมชน...",
+          "create_success": "สร้างชุมชนสำเร็จ",
+          "create_error": "สร้างชุมชนล้มเหลว",
+          "deleting": "กำลังลบชุมชน...",
+          "delete_success": "ลบชุมชนสำเร็จ",
+          "delete_error": "ลบชุมชนล้มเหลว"
+        }
+      },
+      "structure": {
+        "loading": "กำลังโหลด...",
+        "add_chapter_button": "เพิ่มบท",
+        "modals": {
+          "new_chapter": {
+            "title": "สร้างบท",
+            "description": "เพิ่มบทใหม่ให้กับคอร์สเรียนของคุณ",
+            "form": {
+              "name_label": "ชื่อบท",
+              "name_required": "โปรดระบุชื่อบท",
+              "description_label": "คำอธิบายบท",
+              "description_required": "โปรดระบุคำอธิบายของบทนี้",
+              "submit": "สร้างบท"
+            }
+          },
+          "delete_chapter": {
+            "title": "ลบ {{name}} หรือไม่?",
+            "message": "คุณแน่ใจหรือไม่ว่าต้องการลบบทนี้?",
+            "button": "ลบบท"
+          },
+          "new_activity": {
+            "title": "สร้างกิจกรรม",
+            "description": "เลือกประเภทกิจกรรมที่ต้องการเพิ่มเข้าสู่คอร์สเรียน"
+          },
+          "delete_activity": {
+            "title": "ลบ {{name}} หรือไม่?",
+            "message": "คุณแน่ใจหรือไม่ว่าต้องการลบกิจกรรมนี้?",
+            "button": "ลบกิจกรรม"
+          }
+        },
+        "actions": {
+          "add_chapter": "เพิ่มบท",
+          "add_activity": "เพิ่มกิจกรรม",
+          "publish": "เผยแพร่",
+          "unpublish": "ยกเลิกการเผยแพร่",
+          "preview_activity": "ตัวอย่างกิจกรรม",
+          "edit_page": "แก้ไขหน้า",
+          "edit_assignment": "แก้ไขงาน"
+        },
+        "chapter_element": {
+          "chapter_name_placeholder": "ชื่อบท"
+        },
+        "activity": {
+          "name_placeholder": "ชื่อกิจกรรม",
+          "types": {
+            "video": "วิดีโอ",
+            "document": "เอกสาร",
+            "assignment": "งานที่มอบหมาย",
+            "assignments": "งานที่มอบหมาย",
+            "dynamic": "ไดนามิก",
+            "dynamic_page": "หน้าไดนามิก",
+            "scorm": "Scorm"
+          },
+          "toasts": {
+            "deleting": "กำลังลบกิจกรรม...",
+            "delete_success": "ลบกิจกรรมสำเร็จแล้ว",
+            "updating": "กำลังอัปเดตงาน...",
+            "update_success": "อัปเดตกิจกรรมสำเร็จแล้ว",
+            "name_update_success": "อัปเดตชื่อกิจกรรมสำเร็จแล้ว",
+            "name_update_error": "อัปเดตชื่อกิจกรรมล้มเหลว",
+            "creating": "กำลังสร้างกิจกรรม...",
+            "create_success": "สร้างกิจกรรมสำเร็จแล้ว",
+            "uploading": "กำลังอัปโหลดไฟล์และสร้างกิจกรรม...",
+            "upload_success": "อัปโหลดไฟล์สำเร็จแล้ว",
+            "creating_uploading": "กำลังสร้างกิจกรรมและอัปโหลดไฟล์..."
+          }
+        }
+      }
     },
     "organization": {
       "settings": {
@@ -768,7 +1628,10 @@
         "saving": "กำลังบันทึก...",
         "update_success": "ข้อมูลองค์กรได้รับการอัปเดตแล้ว",
         "update_error": "อัปเดตข้อมูลองค์กรล้มเหลว",
-        "updating": "กำลังอัปเดตข้อมูลองค์กร..."
+        "updating": "กำลังอัปเดตข้อมูลองค์กร...",
+        "footer_text": "ข้อความท้ายหน้า",
+        "footer_text_placeholder": "ป้อนข้อความท้ายหน้า...",
+        "footer_text_desc": "ข้อความที่กำหนดเองที่แสดงที่ด้านล่างของหน้าองค์กรของคุณ"
       },
       "images": {
         "title": "รูปภาพและตัวอย่าง",
@@ -826,7 +1689,8 @@
         "subtitle": "จัดการอัตลักษณ์ภาพและการแสดงตนบนโซเชียลขององค์กรคุณ",
         "tabs": {
           "images": "รูปภาพและตัวอย่าง",
-          "social": "ลิงก์โซเชียล"
+          "social": "ลิงก์โซเชียล",
+          "theme": "ธีม"
         }
       },
       "socials": {
@@ -959,7 +1823,11 @@
           "generating": "กำลังสร้างไฟล์ CSV...",
           "success": "ส่งออกไฟล์ CSV สำเร็จแล้ว",
           "error": "ส่งออกไฟล์ CSV ล้มเหลว"
-        }
+        },
+        "enterprise_only": "บันทึกการตรวจสอบมีให้เฉพาะในแผน Enterprise เท่านั้น",
+        "enterprise_feature": "ฟีเจอร์ Enterprise",
+        "enterprise_description": "บันทึกการตรวจสอบเป็นฟีเจอร์พรีเมียมที่มีให้เฉพาะองค์กรในแผน Enterprise เท่านั้น อัปเกรดเพื่อรับการมองเห็นกิจกรรมขององค์กรของคุณอย่างเต็มที่",
+        "upgrade_button": "อัปเกรดเป็น Enterprise"
       },
       "landing": {
         "title": "หน้าแลนดิ้ง",
@@ -1110,6 +1978,16 @@
           "selected": "เลือกแล้ว",
           "select": "เลือก"
         }
+      },
+      "theme": {
+        "primary_color": "สีหลัก",
+        "primary_color_desc": "เลือกสีหลักสำหรับส่วนหัวและพื้นหลังหน้าขององค์กรของคุณ",
+        "clear_color": "ล้างสี",
+        "preview": "ตัวอย่างสด",
+        "preview_hint": "นี่คือลักษณะที่ส่วนหัวและพื้นหลังขององค์กรของคุณจะปรากฏ",
+        "footer_text": "ข้อความท้ายหน้า",
+        "footer_text_desc": "เพิ่มข้อความที่กำหนดเองเพื่อแสดงในท้ายหน้า",
+        "footer_text_placeholder": "ป้อนข้อความท้ายหน้า..."
       }
     },
     "users": {
@@ -1167,7 +2045,10 @@
           "remove_from_org": "ลบออกจากองค์กร",
           "removing": "กำลังลบ...",
           "remove_success": "ลบผู้ใช้งานออกจากองค์กรสำเร็จแล้ว",
-          "remove_error": "เกิดข้อผิดพลาดในการลบผู้ใช้งาน"
+          "remove_error": "เกิดข้อผิดพลาดในการลบผู้ใช้งาน",
+          "updating_role": "กำลังอัปเดตบทบาท...",
+          "role_update_success": "อัปเดตบทบาทสำเร็จ",
+          "role_update_error": "เกิดข้อผิดพลาดในการอัปเดตบทบาท"
         },
         "modals": {
           "update_role": {
@@ -1179,6 +2060,13 @@
             "message": "คุณแน่ใจหรือไม่ว่าต้องการลบผู้ใช้งานรายนี้ออกจากองค์กร?",
             "button": "ลบผู้ใช้งาน"
           }
+        },
+        "search_placeholder": "ค้นหาผู้ใช้...",
+        "no_results": "ไม่พบผู้ใช้ที่ตรงกับการค้นหาของคุณ",
+        "no_users": "ยังไม่มีผู้ใช้ในองค์กรนี้",
+        "pagination": {
+          "showing": "แสดง {{start}}-{{end}} จาก {{total}}",
+          "page": "หน้า {{current}} จาก {{total}}"
         }
       },
       "signups": {
@@ -1668,481 +2556,6 @@
           "toasts": {
             "creating": "กำลังสร้างงาน...",
             "success": "สร้างงานสำเร็จแล้ว"
-          }
-        }
-      }
-    },
-    "courses": {
-      "title": "คอร์สเรียน",
-      "rights_guide": "คู่มือการใช้งานสิทธิ์",
-      "create_course": "สร้างคอร์ส",
-      "create_new_course": "สร้างคอร์สใหม่",
-      "import_course": "นำเข้าหลักสูตร",
-      "import_scorm_description": "นำเข้าแพ็คเกจ SCORM เพื่อสร้างหลักสูตรใหม่",
-      "no_courses": "ยังไม่มีคอร์สเรียน",
-      "create_course_placeholder": "สร้างคอร์สเพื่อเพิ่มเนื้อหา",
-      "no_courses_available": "ยังไม่มีคอร์สเรียนในขณะนี้",
-      "overview_top": {
-        "course_label": "คอร์สเรียน",
-        "rights_guide_button": "คู่มือการใช้งานสิทธิ์"
-      },
-      "settings": {
-        "tabs": {
-          "general": "ทั่วไป",
-          "content": "เนื้อหา",
-          "access": "การเข้าถึง",
-          "contributors": "ผู้ร่วมสร้างเนื้อหา",
-          "certification": "ใบประกาศนียบัตร"
-        },
-        "access_denied": {
-          "title": "การเข้าถึงถูกปฏิเสธ",
-          "message": "คุณไม่มีสิทธิ์ในการเข้าถึงคอร์สเรียนนี้"
-        },
-        "access_restricted": {
-          "title": "จำกัดการเข้าถึง",
-          "message": "คุณไม่มีสิทธิ์ในการเข้าถึงส่วน {{tab}}"
-        },
-        "loading": "กำลังโหลด..."
-      },
-      "general": {
-        "form": {
-          "name_label": "ชื่อ",
-          "name_required": "จำเป็นต้องระบุฟิลด์นี้",
-          "name_max_length": "ชื่อต้องมีความยาวไม่เกิน 100 ตัวอักษร",
-          "description_label": "คำอธิบาย",
-          "description_required": "จำเป็นต้องระบุฟิลด์นี้",
-          "description_max_length": "คำอธิบายต้องมีความยาวไม่เกิน 1000 ตัวอักษร",
-          "about_label": "เกี่ยวกับ",
-          "learnings_label": "สิ่งที่จะได้เรียนรู้",
-          "learnings_required": "จำเป็นต้องระบุฟิลด์นี้",
-          "learnings_invalid_format": "รูปแบบไม่ถูกต้อง",
-          "learnings_min_items": "จำเป็นต้องมีอย่างน้อยหนึ่งรายการ",
-          "learnings_empty_text": "ทุกรายการต้องมีข้อความ",
-          "learnings_invalid_json": "รูปแบบ JSON ไม่ถูกต้อง",
-          "tags_label": "แท็ก",
-          "tags_placeholder": "กด Enter เพื่อเพิ่ม...",
-          "thumbnail_type_label": "ประเภทภาพหน้าปก",
-          "thumbnail_type_image": "รูปภาพ",
-          "thumbnail_type_video": "วิดีโอ",
-          "thumbnail_type_both": "ทั้งคู่",
-          "thumbnail_label": "ภาพหน้าปก",
-          "image_search_placeholder": "ค้นหารูปภาพ..."
-        },
-        "thumbnail": {
-          "upload_image": "อัปโหลดรูปภาพ",
-          "upload_video": "อัปโหลดวิดีโอ",
-          "gallery": "คลังภาพ",
-          "tabs": {
-            "image": "รูปภาพ",
-            "video": "วิดีโอ"
-          },
-          "supported_formats": {
-            "image": "รองรับไฟล์ PNG, JPG/JPEG (สูงสุด 8MB)",
-            "video": "รองรับไฟล์ MP4, WebM (สูงสุด 100MB)"
-          }
-        },
-        "errors": {
-          "save_failed": "บันทึกโครงสร้างคอร์สเรียนล้มเหลว"
-        }
-      },
-      "access": {
-        "title": "การเข้าถึงคอร์สเรียน",
-        "subtitle": "เลือกว่าคอร์สเรียนของคุณจะเป็นสาธารณะบนอินเทอร์เน็ต หรือเข้าถึงได้เฉพาะผู้ใช้ที่ลงทะเบียนเท่านั้น",
-        "public": {
-          "title": "สาธารณะ",
-          "description": "คอร์สเรียนจะเปิดให้เข้าถึงได้อย่างอิสระบนอินเทอร์เน็ต ถูกเก็บข้อมูลโดยเครื่องมือค้นหา และทุกคนสามารถเข้าเรียนได้",
-          "active": "ใช้งานอยู่",
-          "confirmation_title": "เปลี่ยนเป็นแบบสาธารณะหรือไม่?",
-          "confirmation_message": "คุณแน่ใจหรือไม่ว่าต้องการเปิดคอร์สเรียนนี้ให้เป็นสาธารณะบนอินเทอร์เน็ต?",
-          "confirmation_button": "เปลี่ยนเป็นแบบสาธารณะ"
-        },
-        "users_only": {
-          "title": "เฉพาะผู้ใช้ที่ลงทะเบียน",
-          "description": "คอร์สเรียนจะเข้าถึงได้เฉพาะผู้ใช้ที่ลงทะเบียนแล้วเท่านั้น และคุณสามารถเลือกกลุ่มผู้ใช้งานที่มีสิทธิ์เข้าถึงคอร์สนี้เพิ่มเติมได้",
-          "active": "ใช้งานอยู่",
-          "confirmation_title": "เปลี่ยนเป็นแบบเฉพาะผู้ใช้เท่านั้นหรือไม่?",
-          "confirmation_message": "คุณแน่ใจหรือไม่ว่าต้องการให้คอร์สเรียนนี้เข้าถึงได้เฉพาะผู้ใช้ที่ลงทะเบียนแล้วเท่านั้น?",
-          "confirmation_button": "เปลี่ยนเป็นแบบเฉพาะผู้ใช้เท่านั้น"
-        },
-        "usergroups": {
-          "title": "กลุ่มผู้ใช้งาน",
-          "subtitle": "หากคุณต้องการให้เฉพาะบางกลุ่มผู้ใช้งานเข้าถึงคอร์สนี้ได้ คุณสามารถเชื่อมโยงกลุ่มเหล่านั้นได้ที่นี่",
-          "table": {
-            "name": "ชื่อ",
-            "actions": "การดำเนินการ"
-          },
-          "actions": {
-            "delete_link": "ลบการเชื่อมโยง",
-            "link_to_usergroup": "เชื่อมโยงกับกลุ่มผู้ใช้งาน"
-          },
-          "modals": {
-            "link_title": "เชื่อมโยงคอร์สเรียนกับกลุ่มผู้ใช้งาน",
-            "link_description": "เลือกกลุ่มผู้ใช้งานที่คุณต้องการเชื่อมโยงกับคอร์สนี้ สมาชิกในกลุ่มนี้จะสามารถเข้าถึงคอร์สเรียนได้",
-            "unlink_title": "ยกเลิกการเชื่อมโยงกับกลุ่มผู้ใช้งานหรือไม่?",
-            "unlink_message": "สมาชิกในกลุ่มนี้จะไม่สามารถเข้าถึงคอร์สเรียนนี้ได้อีกต่อไป",
-            "unlink_button": "ลบการเชื่อมโยง",
-            "warning": "ผู้ใช้ที่ไม่ได้อยู่ในกลุ่มนี้จะไม่สามารถเข้าถึงคอร์สเรียนนี้ได้อีกต่อไป",
-            "usergroup_name": "ชื่อกลุ่มผู้ใช้งาน",
-            "no_usergroups": "ไม่มีกลุ่มผู้ใช้งานให้เลือก",
-            "create_usergroup": "สร้างกลุ่มผู้ใช้งาน",
-            "link_button": "เชื่อมโยง"
-          },
-          "toasts": {
-            "link_success": "เชื่อมโยงกับกลุ่มผู้ใช้งานสำเร็จแล้ว",
-            "link_error": "ข้อผิดพลาด {{status}}: {{detail}}",
-            "unlink_success": "ยกเลิกการเชื่อมโยงกลุ่มผู้ใช้งานสำเร็จแล้ว",
-            "unlink_error": "เกิดข้อผิดพลาดในการยกเลิกการเชื่อมโยงกลุ่มผู้ใช้งาน"
-          }
-        }
-      },
-      "contributors": {
-        "title": "ผู้ร่วมสร้างเนื้อหาคอร์สเรียน",
-        "subtitle": "จัดการสมาชิกที่ร่วมสร้างเนื้อหาและเพิ่มสมาชิกใหม่เข้าสู่คอร์สเรียน",
-        "open_to_contributors": {
-          "title": "เปิดรับผู้ร่วมสร้างเนื้อหา",
-          "description": "คอร์สเรียนเปิดรับผู้ร่วมสร้างเนื้อหา ผู้ใช้งานสามารถสมัครเพื่อช่วยพัฒนาเนื้อหาคอร์สเรียนให้ดียิ่งขึ้น",
-          "active": "ใช้งานอยู่",
-          "confirmation_title": "เปิดรับผู้ร่วมสร้างเนื้อหาหรือไม่?",
-          "confirmation_message": "คุณแน่ใจหรือไม่ว่าต้องการเปิดคอร์สเรียนนี้ให้ผู้ร่วมสร้างเนื้อหาเข้ามาช่วยได้?",
-          "confirmation_button": "เปิดรับผู้ร่วมสร้างเนื้อหา"
-        },
-        "closed_to_contributors": {
-          "title": "ปิดรับผู้ร่วมสร้างเนื้อหา",
-          "description": "คอร์สเรียนปิดรับผู้ร่วมสร้างเนื้อหา เฉพาะสมาชิกปัจจุบันเท่านั้นที่สามารถแก้ไขเนื้อหาได้",
-          "active": "ใช้งานอยู่",
-          "confirmation_title": "ปิดรับผู้ร่วมสร้างเนื้อหาหรือไม่?",
-          "confirmation_message": "คุณแน่ใจหรือไม่ว่าต้องการปิดรับผู้ร่วมสร้างเนื้อหาสำหรับคอร์สนี้?",
-          "confirmation_button": "ปิดรับผู้ร่วมสร้างเนื้อหา"
-        },
-        "search": {
-          "placeholder": "ค้นหาผู้ใช้ที่ต้องการเพิ่มเป็นผู้ร่วมสร้างเนื้อหาด้วยชื่อหรือชื่อผู้ใช้...",
-          "searching": "กำลังค้นหา...",
-          "no_results": "ไม่พบผู้ใช้ที่ค้นหา"
-        },
-        "table": {
-          "name": "ชื่อ",
-          "username": "ชื่อผู้ใช้",
-          "email": "อีเมล",
-          "role": "บทบาท",
-          "status": "สถานะ",
-          "added_on": "เพิ่มเมื่อ"
-        },
-        "roles": {
-          "creator": "ผู้สร้าง",
-          "contributor": "ผู้ร่วมสร้าง",
-          "maintainer": "ผู้ดูแล",
-          "reporter": "ผู้รายงาน"
-        },
-        "statuses": {
-          "active": "ใช้งานอยู่",
-          "inactive": "ไม่ได้ใช้งาน",
-          "pending": "รอดำเนินการ"
-        },
-        "actions": {
-          "selected_users": "เลือกผู้ใช้ {{count}} ราย",
-          "selected_users_plural": "เลือกผู้ใช้ {{count}} ราย",
-          "clear": "ล้างค่า",
-          "add_selected": "เพิ่มรายการที่เลือก",
-          "selected_contributors": "เลือกผู้ร่วมสร้าง {{count}} ราย",
-          "selected_contributors_plural": "เลือกผู้ร่วมสร้าง {{count}} ราย",
-          "remove_selected": "ลบรายการที่เลือก",
-          "already_contributor": "เป็นผู้ร่วมสร้างอยู่แล้ว"
-        },
-        "toasts": {
-          "add_success": "เพิ่มผู้ร่วมสร้าง {{count}} รายสำเร็จแล้ว",
-          "add_error": "เพิ่มผู้ใช้ {{username}} ล้มเหลว: {{reason}}",
-          "add_failed": "เพิ่มผู้ร่วมสร้างเนื้อหาล้มเหลว",
-          "update_success": "อัปเดตผู้ร่วมสร้างเนื้อหาสำเร็จแล้ว",
-          "update_error": "ข้อผิดพลาด: {{detail}}",
-          "update_failed": "เกิดข้อผิดพลาดในการอัปเดตผู้ร่วมสร้างเนื้อหา",
-          "remove_success": "ลบผู้ร่วมสร้าง {{count}} รายสำเร็จแล้ว",
-          "remove_failed": "ลบผู้ร่วมสร้างเนื้อหาล้มเหลว",
-          "cannot_modify_creator": "คุณไม่สามารถแก้ไขบทบาทหรือสถานะของผู้สร้างหลักได้"
-        }
-      },
-      "certification": {
-        "title": "ใบประกาศนียบัตรคอร์สเรียน",
-        "subtitle": "เปิดใช้งานและตั้งค่าใบประกาศนียบัตรสำหรับผู้เรียนที่จบหลักสูตรนี้",
-        "form": {
-          "certification_name_label": "ชื่อใบประกาศนียบัตร",
-          "certification_name_required": "จำเป็นต้องระบุชื่อใบประกาศเมื่อเปิดใช้งาน",
-          "certification_name_max_length": "ชื่อต้องมีความยาวไม่เกิน 100 ตัวอักษร",
-          "certification_name_placeholder": "เช่น ใบประกาศนียบัตร JavaScript ขั้นสูง",
-          "certification_type_label": "ประเภทใบประกาศนียบัตร",
-          "certification_description_label": "คำอธิบายใบประกาศนียบัตร",
-          "certification_description_required": "จำเป็นต้องระบุคำอธิบายเมื่อเปิดใช้งาน",
-          "certification_description_max_length": "คำอธิบายต้องมีความยาวไม่เกิน 500 ตัวอักษร",
-          "certification_description_placeholder": "อธิบายว่าใบประกาศนี้แสดงถึงอะไรและมีคุณค่าอย่างไร...",
-          "certificate_pattern_label": "ลวดลายใบประกาศ",
-          "certificate_instructor_label": "ชื่อผู้สอน (ระบุหรือไม่ก็ได้)",
-          "certificate_instructor_placeholder": "เช่น ดร. สมชาย ใจดี"
-        },
-        "types": {
-          "completion": "จบหลักสูตร",
-          "achievement": "ตามความสำเร็จ",
-          "assessment": "ตามการประเมิน",
-          "participation": "การเข้าร่วม",
-          "mastery": "ความเชี่ยวชาญ",
-          "professional": "การพัฒนาวิชาชีพ",
-          "continuing": "การศึกษาต่อเนื่อง",
-          "workshop": "การเข้าร่วมเวิร์กชอป",
-          "specialization": "ความเชี่ยวชาญเฉพาะด้าน"
-        },
-        "patterns": {
-          "royal": {
-            "name": "หรูหรา",
-            "description": "สไตล์วิจิตรบรรจงพร้อมลวดลายมงกุฎ"
-          },
-          "tech": {
-            "name": "เทคโนโลยี",
-            "description": "ลวดลายที่ได้รับแรงบันดาลใจจากแผงวงจร"
-          },
-          "nature": {
-            "name": "ธรรมชาติ",
-            "description": "ลวดลายใบไม้ที่เป็นธรรมชาติ"
-          },
-          "geometric": {
-            "name": "เรขาคณิต",
-            "description": "รูปทรงและเส้นสายที่ทันสมัย"
-          },
-          "vintage": {
-            "name": "วินเทจ",
-            "description": "สไตล์อาร์ตเดโค"
-          },
-          "waves": {
-            "name": "คลื่น",
-            "description": "ลวดลายสายน้ำที่ไหลลื่น"
-          },
-          "minimal": {
-            "name": "มินิมอล",
-            "description": "สะอาดตาและเรียบง่าย"
-          },
-          "professional": {
-            "name": "มืออาชีพ",
-            "description": "การออกแบบสำหรับธุรกิจ"
-          },
-          "academic": {
-            "name": "วิชาการ",
-            "description": "สไตล์มหาวิทยาลัยแบบดั้งเดิม"
-          },
-          "modern": {
-            "name": "โมเดิร์น",
-            "description": "เส้นสายที่เฉียบคมและทันสมัย"
-          }
-        },
-        "sections": {
-          "basic_info": {
-            "title": "ข้อมูลพื้นฐาน",
-            "subtitle": "ตั้งค่ารายละเอียดพื้นฐานของใบประกาศนียบัตร"
-          },
-          "certificate_design": {
-            "title": "การออกแบบใบประกาศ",
-            "subtitle": "เลือกลวดลายตกแต่งสำหรับใบประกาศนียบัตรของคุณ"
-          },
-          "preview": {
-            "title": "ตัวอย่างใบประกาศ",
-            "subtitle": "ตัวอย่างใบประกาศนียบัตรแบบเรียลไทม์"
-          }
-        },
-        "states": {
-          "disabled": {
-            "title": "ยังไม่ได้ตั้งค่าใบประกาศนียบัตร",
-            "message": "เปิดใช้งานใบประกาศนียบัตรเพื่อมอบให้กับผู้เรียนเมื่อจบหลักสูตร",
-            "button": "เปิดใช้งานใบประกาศนียบัตร",
-            "creating": "กำลังเปิดใช้งาน..."
-          },
-          "creating": {
-            "title": "กำลังสร้างใบประกาศนียบัตร...",
-            "message": "โปรดรอสักครู่ขณะที่เรากำลังตั้งค่าใบประกาศนียบัตรให้คุณ"
-          }
-        },
-        "errors": {
-          "loading": "เกิดข้อผิดพลาดในการโหลดใบประกาศนียบัตร",
-          "create_failed": "สร้างใบประกาศนียบัตรล้มเหลว",
-          "remove_failed": "ลบใบประกาศนียบัตรล้มเหลว"
-        },
-        "toasts": {
-          "create_success": "สร้างใบประกาศนียบัตรสำเร็จแล้ว",
-          "create_error": "สร้างใบประกาศนียบัตรล้มเหลว",
-          "remove_success": "ลบใบประกาศนียบัตรสำเร็จแล้ว",
-          "remove_error": "ลบใบประกาศนียบัตรล้มเหลว"
-        }
-      },
-      "communities": {
-        "title": "ชุมชน",
-        "new_community": "ชุมชนใหม่",
-        "no_communities": "ยังไม่มีชุมชน",
-        "no_communities_description": "สร้างชุมชนแรกของคุณเพื่อเริ่มการสนทนา",
-        "card": {
-          "open_settings": "เปิดการตั้งค่า",
-          "view_community": "ดูชุมชน",
-          "quick_edit": "แก้ไขด่วน"
-        },
-        "settings": {
-          "tabs": {
-            "general": "ทั่วไป",
-            "thumbnail": "รูปขนาดย่อ",
-            "moderation": "การดูแล"
-          }
-        },
-        "general": {
-          "title": "ตั้งค่าชุมชน",
-          "subtitle": "อัปเดตข้อมูลพื้นฐานของชุมชน",
-          "form": {
-            "name_label": "ชื่อชุมชน",
-            "name_required": "ต้องระบุชื่อชุมชน",
-            "name_min_length": "ชื่อต้องมีอย่างน้อย 3 ตัวอักษร",
-            "name_max_length": "ชื่อต้องน้อยกว่า 100 ตัวอักษร",
-            "name_placeholder": "ป้อนชื่อชุมชน",
-            "description_label": "คำอธิบาย",
-            "description_max_length": "คำอธิบายต้องน้อยกว่า 500 ตัวอักษร",
-            "description_placeholder": "อธิบายว่าชุมชนนี้เกี่ยวกับอะไร",
-            "public_label": "ชุมชนสาธารณะ",
-            "public_description": "ทำให้ชุมชนนี้มองเห็นได้สำหรับทุกคน",
-            "characters_left": "เหลือ {{count}} ตัวอักษร"
-          },
-          "toasts": {
-            "updating": "กำลังอัปเดตชุมชน...",
-            "update_success": "อัปเดตชุมชนสำเร็จ",
-            "update_error": "อัปเดตชุมชนล้มเหลว"
-          }
-        },
-        "thumbnail": {
-          "title": "รูปขนาดย่อของชุมชน",
-          "subtitle": "อัปโหลดรูปปกสำหรับชุมชนของคุณ",
-          "no_thumbnail": "ไม่ได้ตั้งรูปขนาดย่อ",
-          "upload_image": "อัปโหลดรูป",
-          "browse_unsplash": "เรียกดู Unsplash",
-          "uploading": "กำลังอัปโหลด...",
-          "supported_formats": "รูปแบบที่รองรับ: JPG, JPEG, PNG ขนาดสูงสุด: 8MB อัตราส่วนที่แนะนำ: 16:9",
-          "toasts": {
-            "update_success": "อัปเดตรูปขนาดย่อสำเร็จ",
-            "update_error": "อัปเดตรูปขนาดย่อล้มเหลว",
-            "invalid_type": "ประเภทไฟล์ไม่ถูกต้อง กรุณาอัปโหลดเฉพาะรูป PNG หรือ JPG/JPEG",
-            "file_too_large": "ขนาดไฟล์เกินขีดจำกัด 8MB"
-          }
-        },
-        "moderation": {
-          "title": "การดูแลเนื้อหา",
-          "subtitle": "กำหนดค่าคำที่ถูกบล็อกและตัวกรองเนื้อหา",
-          "info_title": "คำที่ถูกบล็อก",
-          "info_description": "การสนทนาและการตอบกลับที่มีคำเหล่านี้จะถูกบล็อก ผู้ใช้จะเห็นข้อความแสดงข้อผิดพลาดและเนื้อหาของพวกเขาจะไม่ถูกโพสต์",
-          "add_word_label": "เพิ่มคำที่ถูกบล็อก",
-          "add_word_placeholder": "ป้อนคำหรือวลี...",
-          "add_button": "เพิ่ม",
-          "batch_add_label": "เพิ่มเป็นชุด",
-          "batch_add_description": "เพิ่มหลายคำพร้อมกัน คั่นด้วยเครื่องหมายจุลภาค",
-          "batch_add_placeholder": "คำ1, คำ2, คำ3...",
-          "add_all_button": "เพิ่มทั้งหมด",
-          "blocked_words_label": "คำที่ถูกบล็อก",
-          "no_blocked_words": "ยังไม่มีคำที่ถูกบล็อก",
-          "no_blocked_words_description": "เพิ่มคำเพื่อเปิดใช้งานการดูแลเนื้อหา",
-          "word_exists_error": "คำนี้อยู่ในรายการแล้ว",
-          "all_words_exist_error": "คำทั้งหมดอยู่ในรายการแล้วหรือข้อมูลนำเข้าว่างเปล่า",
-          "toasts": {
-            "saving": "กำลังบันทึกการตั้งค่าการดูแล...",
-            "save_success": "บันทึกการตั้งค่าการดูแลแล้ว",
-            "save_error": "บันทึกการตั้งค่าการดูแลล้มเหลว"
-          }
-        },
-        "modals": {
-          "create": {
-            "title": "สร้างชุมชน",
-            "description": "สร้างชุมชนใหม่สำหรับการสนทนา",
-            "form": {
-              "name_label": "ชื่อชุมชน",
-              "name_placeholder": "ป้อนชื่อชุมชน",
-              "description_label": "คำอธิบาย",
-              "description_placeholder": "อธิบายว่าชุมชนนี้เกี่ยวกับอะไร",
-              "public_label": "ทำให้ชุมชนนี้เป็นสาธารณะ (ทุกคนมองเห็นได้)"
-            },
-            "cancel": "ยกเลิก",
-            "submit": "สร้างชุมชน"
-          },
-          "edit": {
-            "title": "แก้ไขชุมชน",
-            "description": "อัปเดตการตั้งค่าชุมชน"
-          },
-          "delete": {
-            "title": "ลบ {{name}}?",
-            "message": "คุณแน่ใจหรือไม่ที่จะลบชุมชนนี้? การสนทนาทั้งหมดจะถูกลบอย่างถาวร",
-            "button": "ลบชุมชน"
-          }
-        },
-        "toasts": {
-          "creating": "กำลังสร้างชุมชน...",
-          "create_success": "สร้างชุมชนสำเร็จ",
-          "create_error": "สร้างชุมชนล้มเหลว",
-          "deleting": "กำลังลบชุมชน...",
-          "delete_success": "ลบชุมชนสำเร็จ",
-          "delete_error": "ลบชุมชนล้มเหลว"
-        }
-      },
-      "structure": {
-        "loading": "กำลังโหลด...",
-        "add_chapter_button": "เพิ่มบท",
-        "modals": {
-          "new_chapter": {
-            "title": "สร้างบท",
-            "description": "เพิ่มบทใหม่ให้กับคอร์สเรียนของคุณ",
-            "form": {
-              "name_label": "ชื่อบท",
-              "name_required": "โปรดระบุชื่อบท",
-              "description_label": "คำอธิบายบท",
-              "description_required": "โปรดระบุคำอธิบายของบทนี้",
-              "submit": "สร้างบท"
-            }
-          },
-          "delete_chapter": {
-            "title": "ลบ {{name}} หรือไม่?",
-            "message": "คุณแน่ใจหรือไม่ว่าต้องการลบบทนี้?",
-            "button": "ลบบท"
-          },
-          "new_activity": {
-            "title": "สร้างกิจกรรม",
-            "description": "เลือกประเภทกิจกรรมที่ต้องการเพิ่มเข้าสู่คอร์สเรียน"
-          },
-          "delete_activity": {
-            "title": "ลบ {{name}} หรือไม่?",
-            "message": "คุณแน่ใจหรือไม่ว่าต้องการลบกิจกรรมนี้?",
-            "button": "ลบกิจกรรม"
-          }
-        },
-        "actions": {
-          "add_chapter": "เพิ่มบท",
-          "add_activity": "เพิ่มกิจกรรม",
-          "publish": "เผยแพร่",
-          "unpublish": "ยกเลิกการเผยแพร่",
-          "preview_activity": "ตัวอย่างกิจกรรม",
-          "edit_page": "แก้ไขหน้า",
-          "edit_assignment": "แก้ไขงาน"
-        },
-        "chapter_element": {
-          "chapter_name_placeholder": "ชื่อบท"
-        },
-        "activity": {
-          "name_placeholder": "ชื่อกิจกรรม",
-          "types": {
-            "video": "วิดีโอ",
-            "document": "เอกสาร",
-            "assignment": "งานที่มอบหมาย",
-            "assignments": "งานที่มอบหมาย",
-            "dynamic": "ไดนามิก",
-            "dynamic_page": "หน้าไดนามิก",
-            "scorm": "Scorm"
-          },
-          "toasts": {
-            "deleting": "กำลังลบกิจกรรม...",
-            "delete_success": "ลบกิจกรรมสำเร็จแล้ว",
-            "updating": "กำลังอัปเดตงาน...",
-            "update_success": "อัปเดตกิจกรรมสำเร็จแล้ว",
-            "name_update_success": "อัปเดตชื่อกิจกรรมสำเร็จแล้ว",
-            "name_update_error": "อัปเดตชื่อกิจกรรมล้มเหลว",
-            "creating": "กำลังสร้างกิจกรรม...",
-            "create_success": "สร้างกิจกรรมสำเร็จแล้ว",
-            "uploading": "กำลังอัปโหลดไฟล์และสร้างกิจกรรม...",
-            "upload_success": "อัปโหลดไฟล์สำเร็จแล้ว",
-            "creating_uploading": "กำลังสร้างกิจกรรมและอัปโหลดไฟล์..."
           }
         }
       }

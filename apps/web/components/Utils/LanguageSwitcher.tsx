@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@components/ui/dropdown-menu"
 
-const LanguageSwitcher = () => {
+const LanguageSwitcher = ({ primaryColor = '' }: { primaryColor?: string }) => {
   const { i18n, t } = useTranslation()
 
   const changeLanguage = (lng: string) => {
@@ -23,7 +23,7 @@ const LanguageSwitcher = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="flex items-center space-x-1.5 px-2.5 py-2 rounded-lg hover:bg-gray-100 transition-colors text-sm font-bold outline-none text-gray-600">
+        <button className={`flex items-center space-x-1.5 px-2.5 py-2 rounded-lg transition-colors text-sm font-bold outline-none ${primaryColor ? 'hover:bg-white/10 text-white' : 'hover:bg-gray-100 text-gray-600'}`}>
           <Languages size={16} strokeWidth={2.5} />
           <span>{currentLangCode}</span>
           <ChevronDown size={12} className="opacity-50" />

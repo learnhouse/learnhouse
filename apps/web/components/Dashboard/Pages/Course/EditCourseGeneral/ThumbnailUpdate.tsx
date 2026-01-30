@@ -1,6 +1,5 @@
-import { useCourse } from '@components/Contexts/CourseContext'
+import { useCourse, getCourseMetaCacheKey } from '@components/Contexts/CourseContext'
 import { useOrg } from '@components/Contexts/OrgContext'
-import { getAPIUrl } from '@services/config/config'
 import { updateCourseThumbnail } from '@services/courses/courses'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
 import { ArrowBigUpDash, UploadCloud, Image as ImageIcon, Video } from 'lucide-react'
@@ -145,7 +144,9 @@ function ThumbnailUpdate({ thumbnailType }: ThumbnailUpdateProps) {
         session.data?.tokens?.access_token
       );
       
-      await mutate(`${getAPIUrl()}courses/${course.courseStructure.course_uuid}/meta?with_unpublished_activities=${withUnpublishedActivities}`);
+      // Use unified cache key
+      const cacheKey = getCourseMetaCacheKey(course.courseStructure.course_uuid, withUnpublishedActivities);
+      await mutate(cacheKey);
       await new Promise((r) => setTimeout(r, 1500));
 
       if (res.success === false) {

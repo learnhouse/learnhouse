@@ -14,10 +14,12 @@ import {
 export async function getOrgCourses(
   org_slug: string,
   next: any,
-  access_token?: any
+  access_token?: any,
+  include_unpublished: boolean = false
 ) {
+  const url = `${getAPIUrl()}courses/org_slug/${org_slug}/page/1/limit/100${include_unpublished ? '?include_unpublished=true' : ''}`
   const result: any = await fetch(
-    `${getAPIUrl()}courses/org_slug/${org_slug}/page/1/limit/100`,
+    url,
     RequestBodyWithAuthHeader('GET', null, next, access_token)
   )
   const res = await errorHandling(result)
@@ -97,12 +99,12 @@ export async function createNewCourse(
 ) {
   // Send file thumbnail as form data
   const formData = new FormData()
-  formData.append('name', course_body.name)
-  formData.append('description', course_body.description)
+  formData.append('name', course_body.name || '')
+  formData.append('description', course_body.description || '')
   formData.append('public', course_body.visibility)
-  formData.append('learnings', course_body.learnings)
-  formData.append('tags', course_body.tags)
-  formData.append('about', course_body.description)
+  formData.append('learnings', course_body.learnings || '')
+  formData.append('tags', course_body.tags || '')
+  formData.append('about', course_body.description || '')
 
   if (thumbnail) {
     formData.append('thumbnail', thumbnail)
@@ -122,6 +124,15 @@ export async function deleteCourseFromBackend(course_uuid: any, access_token:any
     RequestBodyWithAuthHeader('DELETE', null, null,access_token)
   )
   const res = await errorHandling(result)
+  return res
+}
+
+export async function cloneCourse(course_uuid: string, access_token: string | null | undefined) {
+  const result: any = await fetch(
+    `${getAPIUrl()}courses/${course_uuid}/clone`,
+    RequestBodyWithAuthHeader('POST', null, null, access_token || undefined)
+  )
+  const res = await getResponseMetadata(result)
   return res
 }
 
