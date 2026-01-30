@@ -8,6 +8,8 @@ on:
   pull_request:
     paths:
       - "apps/web/**"
+permissions:
+  contents: read
 jobs:
   next-lint:
     runs-on: ubuntu-latest
