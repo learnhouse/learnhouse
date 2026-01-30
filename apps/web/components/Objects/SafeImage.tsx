@@ -1,11 +1,11 @@
 'use client'
-import React, { useEffect, useRef } from 'react'
+import React, { useMemo } from 'react'
 
 /**
  * Validates that a URL uses a safe protocol.
  * Only allows http:, https:, and blob: protocols to prevent XSS via javascript: or malicious data: URLs.
  */
-function isValidImageUrl(url: string): boolean {
+export function isValidMediaUrl(url: string): boolean {
   if (!url) return false
 
   // blob: URLs from createObjectURL are safe
@@ -19,34 +19,50 @@ function isValidImageUrl(url: string): boolean {
   }
 }
 
+/**
+ * Sanitizes a URL by validating it and returning a safe version.
+ * Returns undefined if the URL is invalid or uses an unsafe protocol.
+ */
+export function sanitizeMediaUrl(url: string | null | undefined): string | undefined {
+  if (!url) return undefined
+  return isValidMediaUrl(url) ? url : undefined
+}
+
 interface SafeImageProps extends Omit<React.ImgHTMLAttributes<HTMLImageElement>, 'src'> {
   src: string | null | undefined
 }
 
 /**
  * A safe image component that validates URLs before rendering.
- * This component sets the src attribute imperatively after validation,
- * which prevents static analysis tools from flagging it as a potential XSS vector.
+ * Only renders images with safe protocols (http:, https:, blob:).
  */
 export function SafeImage({ src, alt, ...props }: SafeImageProps) {
-  const imgRef = useRef<HTMLImageElement>(null)
+  const sanitizedSrc = useMemo(() => sanitizeMediaUrl(src), [src])
 
-  useEffect(() => {
-    if (imgRef.current) {
-      if (src && isValidImageUrl(src)) {
-        imgRef.current.src = src
-      } else {
-        imgRef.current.removeAttribute('src')
-      }
-    }
-  }, [src])
-
-  if (!src || !isValidImageUrl(src)) {
+  if (!sanitizedSrc) {
     return null
   }
 
   // eslint-disable-next-line @next/next/no-img-element
-  return <img ref={imgRef} alt={alt} {...props} />
+  return <img src={sanitizedSrc} alt={alt} {...props} />
+}
+
+interface SafeVideoProps extends Omit<React.VideoHTMLAttributes<HTMLVideoElement>, 'src'> {
+  src: string | null | undefined
+}
+
+/**
+ * A safe video component that validates URLs before rendering.
+ * Only renders videos with safe protocols (http:, https:, blob:).
+ */
+export function SafeVideo({ src, ...props }: SafeVideoProps) {
+  const sanitizedSrc = useMemo(() => sanitizeMediaUrl(src), [src])
+
+  if (!sanitizedSrc) {
+    return null
+  }
+
+  return <video src={sanitizedSrc} {...props} />
 }
 
 export default SafeImage
