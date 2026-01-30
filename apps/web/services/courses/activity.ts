@@ -50,3 +50,32 @@ export async function unmarkActivityAsComplete(
   const res = await errorHandling(result)
   return res
 }
+
+export async function updateActivityContent(
+  activity_uuid: string,
+  content: any,
+  access_token: string
+): Promise<{ success: boolean; data?: any; error?: string }> {
+  try {
+    const result = await fetch(
+      `${getAPIUrl()}activities/${activity_uuid}`,
+      RequestBodyWithAuthHeader('PUT', { content }, null, access_token)
+    )
+
+    if (!result.ok) {
+      const errorData = await result.json().catch(() => ({}))
+      return {
+        success: false,
+        error: errorData.detail || `HTTP error ${result.status}`,
+      }
+    }
+
+    const data = await result.json()
+    return { success: true, data }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error occurred',
+    }
+  }
+}
