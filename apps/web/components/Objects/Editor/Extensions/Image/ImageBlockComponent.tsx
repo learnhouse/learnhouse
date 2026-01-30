@@ -1,7 +1,8 @@
 import { NodeViewWrapper } from '@tiptap/react'
 import React, { useEffect } from 'react'
 import { Resizable } from 're-resizable'
-import { Image, Download, AlignLeft, AlignCenter, AlignRight, Expand, Upload, Loader2 } from 'lucide-react'
+import { Image, Download, AlignLeft, AlignCenter, AlignRight, Expand, Upload, Loader2, AlertCircle } from 'lucide-react'
+import toast from 'react-hot-toast'
 import { uploadNewImageFile } from '../../../../../services/blocks/Image/images'
 import { getActivityBlockMediaDirectory } from '@services/media/media'
 import { useOrg } from '@components/Contexts/OrgContext'
@@ -25,6 +26,7 @@ function ImageBlockComponent(props: any) {
   const [image, setImage] = React.useState<File | null>(null)
   const [isLoading, setIsLoading] = React.useState(false)
   const [isDragging, setIsDragging] = React.useState(false)
+  const [error, setError] = React.useState<string | null>(null)
   const [blockObject, setblockObject] = React.useState(
     props.node.attrs.blockObject
   )
@@ -49,19 +51,27 @@ function ImageBlockComponent(props: any) {
   const handleUpload = async (file: File) => {
     if (!access_token) return
     setIsLoading(true)
-    let object = await uploadNewImageFile(
-      file,
-      props.extension.options.activity.activity_uuid,
-      access_token
-    )
-    setIsLoading(false)
-    setblockObject(object)
-    props.updateAttributes({
-      blockObject: object,
-      size: imageSize,
-      alignment: alignment,
-    })
-    setImage(null)
+    setError(null)
+    try {
+      let object = await uploadNewImageFile(
+        file,
+        props.extension.options.activity.activity_uuid,
+        access_token
+      )
+      setblockObject(object)
+      props.updateAttributes({
+        blockObject: object,
+        size: imageSize,
+        alignment: alignment,
+      })
+      setImage(null)
+    } catch (err: any) {
+      const errorMessage = err?.message || 'Failed to upload image. Please try again.'
+      setError(errorMessage)
+      toast.error(errorMessage)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleDragEnter = (e: React.DragEvent) => {
@@ -251,6 +261,14 @@ function ImageBlockComponent(props: any) {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Error display */}
+          {error && (
+            <div className="mt-3 flex items-center gap-2 text-sm text-red-500 font-medium bg-red-50 rounded-lg p-3">
+              <AlertCircle size={16} />
+              {error}
             </div>
           )}
 

@@ -1,4 +1,4 @@
-import { useCourse, useCourseDispatch } from '@components/Contexts/CourseContext'
+import { useCourseFieldSync, useCourse } from '@components/Contexts/CourseContext'
 import LinkToUserGroup from '@components/Objects/Modals/Dash/EditCourseAccess/LinkToUserGroup'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
@@ -7,7 +7,8 @@ import { unLinkResourcesToUserGroup } from '@services/usergroups/usergroups'
 import { swrFetcher } from '@services/utils/ts/requests'
 import { Globe, SquareUserRound, Users, X } from 'lucide-react'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import React, { useEffect, useState } from 'react'
+import { useOrg } from '@components/Contexts/OrgContext'
+import React, { useEffect, useState, useRef, useCallback } from 'react'
 import toast from 'react-hot-toast'
 import useSWR, { mutate } from 'swr'
 import { useTranslation } from 'react-i18next'
@@ -21,31 +22,58 @@ function EditCourseAccess(props: EditCourseAccessProps) {
     const { t } = useTranslation()
     const session = useLHSession() as any;
     const access_token = session?.data?.tokens?.access_token;
-    const course = useCourse() as any;
-    const { isLoading, courseStructure } = course as any;
-    const dispatchCourse = useCourseDispatch() as any;
+    const org = useOrg() as any;
 
-    const { data: usergroups } = useSWR(courseStructure ? `${getAPIUrl()}usergroups/resource/${courseStructure.course_uuid}` : null, (url) => swrFetcher(url, access_token));
+    // Use the new field sync hook
+    const {
+        syncChanges,
+        cancelPendingSync,
+        courseStructure,
+        isLoading,
+        isSaving,
+    } = useCourseFieldSync('editCourseAccess');
+
+    const { data: usergroups } = useSWR(
+        courseStructure?.course_uuid && org?.id ? `${getAPIUrl()}usergroups/resource/${courseStructure.course_uuid}?org_id=${org.id}` : null,
+        (url) => swrFetcher(url, access_token)
+    );
+
+    // Track local public state
     const [isClientPublic, setIsClientPublic] = useState<boolean | undefined>(undefined);
+    const hasInitializedRef = useRef(false);
+    const previousPublicRef = useRef<boolean | undefined>(undefined);
 
+    // Initialize local state from courseStructure
     useEffect(() => {
-        if (!isLoading && courseStructure?.public !== undefined) {
+        if (!isLoading && courseStructure?.public !== undefined && !hasInitializedRef.current) {
             setIsClientPublic(courseStructure.public);
+            previousPublicRef.current = courseStructure.public;
+            hasInitializedRef.current = true;
         }
-    }, [isLoading, courseStructure]);
+    }, [isLoading, courseStructure?.public]);
 
+    // Sync public state changes to context
     useEffect(() => {
-        if (!isLoading && courseStructure?.public !== undefined && isClientPublic !== undefined) {
-            if (isClientPublic !== courseStructure.public) {
-                dispatchCourse({ type: 'setIsNotSaved' });
-                const updatedCourse = {
-                    ...courseStructure,
-                    public: isClientPublic,
-                };
-                dispatchCourse({ type: 'setCourseStructure', payload: updatedCourse });
-            }
-        }
-    }, [isLoading, isClientPublic, courseStructure, dispatchCourse]);
+        // Skip if not initialized or values haven't changed
+        if (!hasInitializedRef.current || isLoading || isSaving) return;
+        if (isClientPublic === undefined) return;
+        if (isClientPublic === previousPublicRef.current) return;
+
+        // Sync the change immediately (no debounce for toggle actions)
+        syncChanges({ public: isClientPublic }, true);
+        previousPublicRef.current = isClientPublic;
+    }, [isClientPublic, isLoading, isSaving, syncChanges]);
+
+    // Cleanup on unmount
+    useEffect(() => {
+        return () => {
+            cancelPendingSync();
+        };
+    }, [cancelPendingSync]);
+
+    const handleSetPublic = useCallback((value: boolean) => {
+        setIsClientPublic(value);
+    }, []);
 
     return (
         <div>
@@ -59,7 +87,7 @@ function EditCourseAccess(props: EditCourseAccessProps) {
                                 {t('dashboard.courses.access.subtitle')}
                             </h2>
                         </div>
-                        <div className="flex flex-col sm:flex-row sm:space-x-2 space-y-2 sm:space-y-0 mx-auto mb-3">
+                        <div className={`flex flex-col sm:flex-row sm:space-x-2 space-y-2 sm:space-y-0 mx-auto mb-3 ${isSaving ? 'opacity-50 pointer-events-none' : ''}`}>
                             <ConfirmationModal
                                 confirmationButtonText={t('dashboard.courses.access.public.confirmation_button')}
                                 confirmationMessage={t('dashboard.courses.access.public.confirmation_message')}
@@ -82,7 +110,7 @@ function EditCourseAccess(props: EditCourseAccessProps) {
                                         </div>
                                     </div>
                                 }
-                                functionToExecute={() => setIsClientPublic(true)}
+                                functionToExecute={() => handleSetPublic(true)}
                                 status="info"
                             />
                             <ConfirmationModal
@@ -107,7 +135,7 @@ function EditCourseAccess(props: EditCourseAccessProps) {
                                         </div>
                                     </div>
                                 }
-                                functionToExecute={() => setIsClientPublic(false)}
+                                functionToExecute={() => handleSetPublic(false)}
                                 status="info"
                             />
                         </div>
@@ -125,13 +153,14 @@ function UserGroupsSection({ usergroups }: { usergroups: any[] }) {
     const [userGroupModal, setUserGroupModal] = useState(false);
     const session = useLHSession() as any;
     const access_token = session?.data?.tokens?.access_token;
+    const org = useOrg() as any;
 
     const removeUserGroupLink = async (usergroup_id: number) => {
         try {
-            const res = await unLinkResourcesToUserGroup(usergroup_id, course.courseStructure.course_uuid, access_token);
+            const res = await unLinkResourcesToUserGroup(usergroup_id, course.courseStructure.course_uuid, org.id, access_token);
             if (res.status === 200) {
                 toast.success(t('dashboard.courses.access.usergroups.toasts.unlink_success'));
-                mutate(`${getAPIUrl()}usergroups/resource/${course.courseStructure.course_uuid}`);
+                mutate(`${getAPIUrl()}usergroups/resource/${course.courseStructure.course_uuid}?org_id=${org.id}`);
             } else {
                 toast.error(t('dashboard.courses.access.usergroups.toasts.link_error', { status: res.status, detail: res.data.detail }));
             }

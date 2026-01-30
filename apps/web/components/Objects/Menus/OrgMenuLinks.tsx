@@ -2,12 +2,12 @@ import AuthenticatedClientElement from '@components/Security/AuthenticatedClient
 import { useOrg } from '@components/Contexts/OrgContext'
 import { getUriWithOrg } from '@services/config/config'
 import { planMeetsRequirement, PlanLevel } from '@services/plans/plans'
-import { BookCopy, Signpost, SquareLibrary, Users } from 'lucide-react'
+import { Books, Signpost, SquaresFour, ChatsCircle } from '@phosphor-icons/react'
 import Link from 'next/link'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 
-function MenuLinks(props: { orgslug: string }) {
+function MenuLinks(props: { orgslug: string; primaryColor?: string }) {
   const org = useOrg() as any
   const plan: PlanLevel = org?.config?.config?.cloud?.plan || 'free'
 
@@ -25,12 +25,14 @@ function MenuLinks(props: { orgslug: string }) {
           link="/courses"
           type="courses"
           orgslug={props.orgslug}
+          primaryColor={props.primaryColor}
         ></LinkItem>
         {isCollectionsEnabled && (
           <LinkItem
             link="/collections"
             type="collections"
             orgslug={props.orgslug}
+            primaryColor={props.primaryColor}
           ></LinkItem>
         )}
         {showCommunities && (
@@ -38,6 +40,7 @@ function MenuLinks(props: { orgslug: string }) {
             link="/communities"
             type="communities"
             orgslug={props.orgslug}
+            primaryColor={props.primaryColor}
           ></LinkItem>
         )}
         <AuthenticatedClientElement checkMethod="authentication">
@@ -45,6 +48,7 @@ function MenuLinks(props: { orgslug: string }) {
             link="/trail"
             type="trail"
             orgslug={props.orgslug}
+            primaryColor={props.primaryColor}
           ></LinkItem>
         </AuthenticatedClientElement>
       </ul>
@@ -55,34 +59,35 @@ const LinkItem = (props: any) => {
   const { t } = useTranslation()
   const link = props.link
   const orgslug = props.orgslug
+  const textColorClass = props.primaryColor ? 'text-white' : 'text-gray-700'
   return (
     <Link href={getUriWithOrg(orgslug, link)}>
-      <li className="flex space-x-2 items-center text-[#909192] font-medium">
+      <li className={`flex space-x-2 items-center ${textColorClass} font-semibold`}>
         {props.type == 'courses' && (
           <>
-            <BookCopy size={20}  />{' '}
+            <Books size={20} weight="fill" />{' '}
             <span>{t('courses.courses')}</span>
           </>
         )}
 
         {props.type == 'collections' && (
           <>
-            <SquareLibrary size={20} />{' '}
+            <SquaresFour size={20} weight="fill" />{' '}
             <span>{t('collections.collections')}</span>
           </>
         )}
 
         {props.type == 'trail' && (
           <>
-            <Signpost size={20} />{' '}
+            <Signpost size={20} weight="fill" />{' '}
             <span>{t('courses.progress')}</span>
           </>
         )}
 
         {props.type == 'communities' && (
           <>
-            <Users size={20} />{' '}
-            <span>Communities</span>
+            <ChatsCircle size={20} weight="fill" />{' '}
+            <span>{t('communities.title')}</span>
           </>
         )}
       </li>

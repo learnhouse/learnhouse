@@ -81,21 +81,26 @@ const CourseEndView: React.FC<CourseEndViewProps> = ({
   useEffect(() => {
     const fetchUserCertificate = async () => {
       if (!isCourseCompleted) return;
-      
+
       if (!session?.data?.tokens?.access_token) {
         setCertificateError(t('auth.authenticate_to_contribute')); // Reusing an auth error key
         return;
       }
-      
+
+      if (!org?.id) {
+        return; // Wait for org to be available
+      }
+
       setIsLoadingCertificate(true);
       setCertificateError(null);
       try {
         const cleanCourseUuid = courseUuid.replace('course_', '');
         const result = await getUserCertificates(
           `course_${cleanCourseUuid}`,
+          org.id,
           session.data.tokens.access_token
         );
-        
+
         if (result.success && result.data && result.data.length > 0) {
           setUserCertificate(result.data[0]);
         } else {
@@ -110,7 +115,7 @@ const CourseEndView: React.FC<CourseEndViewProps> = ({
     };
 
     fetchUserCertificate();
-  }, [isCourseCompleted, courseUuid, session?.data?.tokens?.access_token]);
+  }, [isCourseCompleted, courseUuid, session?.data?.tokens?.access_token, org?.id]);
 
   // Generate PDF using canvas
   const downloadCertificate = async () => {

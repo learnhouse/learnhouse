@@ -24,6 +24,10 @@ interface LandingClassicProps {
 function LandingClassic({ courses, collections, orgslug, org_id }: LandingClassicProps) {
   const { t } = useTranslation()
 
+  // Limit to 12 courses (4x3 grid) for the home page
+  const displayedCourses = courses.slice(0, 12)
+  const hasMoreCourses = courses.length > 12
+
   return (
     <div className="w-full">
       <GeneralWrapperStyled>
@@ -86,7 +90,7 @@ function LandingClassic({ courses, collections, orgslug, org_id }: LandingClassi
             </AuthenticatedClientElement>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {courses.map((course: any) => (
+            {displayedCourses.map((course: any) => (
               <div key={course.course_uuid} className="flex">
                 <CourseThumbnail course={course} orgslug={orgslug} />
               </div>
@@ -105,6 +109,16 @@ function LandingClassic({ courses, collections, orgslug, org_id }: LandingClassi
               </div>
             )}
           </div>
+          {hasMoreCourses && (
+            <div className="mt-4 text-center">
+              <Link
+                href={getUriWithOrg(orgslug, '/courses')}
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+              >
+                {t('courses.view_all_courses')} ({courses.length})
+              </Link>
+            </div>
+          )}
         </div>
       </GeneralWrapperStyled>
     </div>

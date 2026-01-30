@@ -53,7 +53,8 @@ async function CoursesPage(params: any) {
   const courses = await getOrgCourses(
     orgslug,
     { revalidate: 0, tags: ['courses'] },
-    access_token ? access_token : null
+    access_token ? access_token : null,
+    true // include_unpublished for dashboard
   )
 
   return <CoursesHome org_id={org.id} orgslug={orgslug} courses={courses} />

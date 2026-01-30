@@ -36,8 +36,7 @@ async def upload_file_and_return_file_object(
         type_of_dir='orgs',
         uuid=org_uuid,
         allowed_types=allowed_types,
-        filename_prefix=f"block_{file_id}",
-        max_size=50 * 1024 * 1024  # 50MB
+        filename_prefix=f"block_{file_id}"
     )
 
     # Get file metadata

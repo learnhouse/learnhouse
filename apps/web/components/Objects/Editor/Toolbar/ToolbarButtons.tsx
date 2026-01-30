@@ -37,13 +37,22 @@ import {
 import { SiYoutube } from '@icons-pack/react-simple-icons'
 import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
 import React from 'react'
+import Image from 'next/image'
 import LinkInputTooltip from './LinkInputTooltip'
+import lrnaiIcon from 'public/lrnai_icon.png'
+import { useOrg } from '@components/Contexts/OrgContext'
+import { PlanLevel, planMeetsRequirement } from '@services/plans/plans'
 
 export const ToolbarButtons = ({ editor, props }: any) => {
   const [showTableMenu, setShowTableMenu] = React.useState(false)
   const [showListMenu, setShowListMenu] = React.useState(false)
   const [showLinkInput, setShowLinkInput] = React.useState(false)
   const linkButtonRef = React.useRef<HTMLDivElement>(null)
+
+  // Get current plan for AI feature restrictions
+  const orgContext = useOrg() as any
+  const currentPlan: PlanLevel = orgContext?.config?.config?.cloud?.plan || 'free'
+  const canUseAI = planMeetsRequirement(currentPlan, 'standard')
 
   if (!editor) {
     return null
@@ -512,6 +521,24 @@ export const ToolbarButtons = ({ editor, props }: any) => {
           <GitBranch size={15} />
         </ToolBtnInteractive>
       </ToolTip>
+      <ToolTip content={canUseAI ? 'Magic Block (AI Generated)' : 'Magic Block requires Standard plan'}>
+        {canUseAI ? (
+          <ToolBtnMagic
+            onClick={() =>
+              editor.chain().focus().insertContent({
+                type: 'blockMagic',
+              }).run()
+            }
+            aria-label="Insert AI-generated magic block"
+          >
+            <Image src={lrnaiIcon} alt="Magic Block" width={15} height={15} />
+          </ToolBtnMagic>
+        ) : (
+          <ToolBtnMagicDisabled aria-label="Magic Block requires Standard plan">
+            <Image src={lrnaiIcon} alt="Magic Block" width={15} height={15} />
+          </ToolBtnMagicDisabled>
+        )}
+      </ToolTip>
     </ToolButtonsWrapper>
   )
 }
@@ -720,6 +747,56 @@ const ToolBtnWeb = styled(ToolBtn)`
 
   &:hover {
     background: rgba(14, 165, 233, 0.12);
+  }
+`
+
+// Magic Block button - rotating gradient (same as AI Editor button)
+const ToolBtnMagic = styled(ToolBtn)`
+  @keyframes rotateGradient {
+    from {
+      --gradient-angle: 32deg;
+    }
+    to {
+      --gradient-angle: 392deg;
+    }
+  }
+
+  @property --gradient-angle {
+    syntax: '<angle>';
+    initial-value: 32deg;
+    inherits: false;
+  }
+
+  position: relative;
+  background: conic-gradient(from var(--gradient-angle) at 53.75% 50%, rgb(35, 40, 93) 4deg, rgba(20, 0, 52, 0.95) 59deg, rgba(164, 45, 238, 0.88) 281deg);
+  color: white;
+  outline: none;
+  border-radius: 6px;
+  animation: rotateGradient 20s linear infinite;
+  box-shadow: 0 2px 8px -2px rgba(164, 45, 238, 0.4);
+  padding: 6px;
+
+  &:hover {
+    background: conic-gradient(from var(--gradient-angle) at 53.75% 50%, rgb(35, 40, 93) 4deg, rgba(20, 0, 52, 0.95) 59deg, rgba(164, 45, 238, 0.88) 281deg);
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px -2px rgba(164, 45, 238, 0.5);
+    cursor: pointer;
+  }
+
+  img {
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+  }
+`
+
+// Magic Block button disabled state - grayed out gradient
+const ToolBtnMagicDisabled = styled(ToolBtnMagic)`
+  filter: grayscale(100%);
+  opacity: 0.5;
+  cursor: not-allowed;
+
+  &:hover {
+    transform: none;
+    cursor: not-allowed;
   }
 `
 

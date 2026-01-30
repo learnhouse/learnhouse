@@ -11,6 +11,12 @@ export type AIChatBotStateTypes = {
   isWaitingForResponse: boolean
   chatInputValue: string
   error: AIError
+  // Streaming state
+  isStreaming: boolean
+  streamingContent: string
+  followUpSuggestions: string[]
+  isLoadingFollowUps: boolean
+  isFullscreen: boolean
 }
 
 type AIError = {
@@ -27,6 +33,12 @@ function AIChatBotProvider({ children }: { children: React.ReactNode }) {
     isWaitingForResponse: false,
     chatInputValue: '',
     error: { isError: false, status: 0, error_message: ' ' } as AIError,
+    // Streaming state
+    isStreaming: false,
+    streamingContent: '',
+    followUpSuggestions: [] as string[],
+    isLoadingFollowUps: false,
+    isFullscreen: false,
   })
   return (
     <AIChatBotContext.Provider value={aiChatBotState}>
@@ -67,6 +79,28 @@ function aiChatBotReducer(state: any, action: any) {
       return { ...state, chatInputValue: action.payload }
     case 'setError':
       return { ...state, error: action.payload }
+    // Streaming actions
+    case 'setIsStreaming':
+      return { ...state, isStreaming: true, streamingContent: '' }
+    case 'setStreamingComplete':
+      return { ...state, isStreaming: false }
+    case 'appendStreamingContent':
+      return { ...state, streamingContent: state.streamingContent + action.payload }
+    case 'clearStreamingContent':
+      return { ...state, streamingContent: '' }
+    case 'setFollowUpSuggestions':
+      return { ...state, followUpSuggestions: action.payload, isLoadingFollowUps: false }
+    case 'clearFollowUpSuggestions':
+      return { ...state, followUpSuggestions: [] }
+    case 'setIsLoadingFollowUps':
+      return { ...state, isLoadingFollowUps: true }
+    case 'setIsNotLoadingFollowUps':
+      return { ...state, isLoadingFollowUps: false }
+    // Fullscreen
+    case 'toggleFullscreen':
+      return { ...state, isFullscreen: !state.isFullscreen }
+    case 'setFullscreen':
+      return { ...state, isFullscreen: action.payload }
 
     default:
       throw new Error(`Unhandled action type: ${action.type}`)

@@ -9,16 +9,41 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { SearchBar } from '@components/Objects/Search/SearchBar'
 import { usePathname } from 'next/navigation'
+import { useTranslation } from 'react-i18next'
+import useAdminStatus from '@components/Hooks/useAdminStatus'
+import {
+  Question,
+  Book,
+  Globe,
+  ChatCircleDots,
+  SquaresFour,
+} from '@phosphor-icons/react'
+import { DiscordIcon } from '@components/Objects/Icons/DiscordIcon'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@components/ui/dropdown-menu"
+import { FeedbackModal } from '@components/Objects/Modals/FeedbackModal'
+import { DASHBOARD_MENU_ITEMS } from '@/lib/dashboard-menu-items'
 
 export const OrgMenu = (props: any) => {
   const orgslug = props.orgslug
   const session = useLHSession() as any;
   const access_token = session?.data?.tokens?.access_token;
-  const [feedbackModal, setFeedbackModal] = React.useState(false)
   const org = useOrg() as any;
   const [isMenuOpen, setIsMenuOpen] = React.useState(false)
   const [isFocusMode, setIsFocusMode] = useState(false)
   const pathname = usePathname()
+  const { t } = useTranslation()
+  const { rights } = useAdminStatus()
+  const [feedbackModalOpen, setFeedbackModalOpen] = useState(false)
+
+  // Get primary color from org config
+  const primaryColor = org?.config?.config?.general?.color || ''
 
   useEffect(() => {
     // Only check focus mode if we're in an activity page
@@ -53,10 +78,6 @@ export const OrgMenu = (props: any) => {
     };
   }, [pathname]);
 
-  function closeFeedbackModal() {
-    setFeedbackModal(false)
-  }
-
   function toggleMenu() {
     setIsMenuOpen(!isMenuOpen)
   }
@@ -68,9 +89,15 @@ export const OrgMenu = (props: any) => {
 
   return (
     <>
-      <div className="backdrop-blur-lg h-[60px] blur-3xl z-behind"></div>
-      <div className="backdrop-blur-lg bg-white/90 fixed top-0 left-0 right-0 h-[60px] ring-1 ring-inset ring-gray-500/10 shadow-[0px_4px_16px_rgba(0,0,0,0.03)]" style={{ zIndex: 9999 }}>
-        <div className="flex items-center justify-between w-full max-w-(--breakpoint-2xl) mx-auto px-4 sm:px-6 lg:px-16 h-full">
+      <div className="backdrop-blur-lg h-[60px] blur-3xl" style={{ zIndex: 'var(--z-behind)' }}></div>
+      <div
+        className={`backdrop-blur-lg fixed top-0 left-0 right-0 h-[60px] ${!primaryColor ? 'bg-white/90 nice-shadow' : ''}`}
+        style={{
+          zIndex: 'var(--z-nav)',
+          backgroundColor: primaryColor || undefined
+        }}
+      >
+        <div className="flex items-center justify-between w-full max-w-(--breakpoint-2xl) mx-auto px-4 sm:px-6 lg:px-8 h-full">
           <div className="flex items-center space-x-5 md:w-auto w-full">
             <div className="logo flex md:w-auto w-full justify-center">
               <Link href={getUriWithOrg(orgslug, '/')}>
@@ -89,21 +116,119 @@ export const OrgMenu = (props: any) => {
               </Link>
             </div>
             <div className="hidden md:flex">
-              <MenuLinks orgslug={orgslug} />
+              <MenuLinks orgslug={orgslug} primaryColor={primaryColor} />
             </div>
-          </div>
-          
-          {/* Search Section */}
-          <div className="hidden md:flex flex-1 justify-center max-w-lg px-4">
-            <SearchBar orgslug={orgslug} className="w-full" />
           </div>
 
-          <div className="flex items-center space-x-4">
+          {/* Search Section */}
+          <div className="hidden md:flex flex-1 justify-center max-w-lg px-4">
+            <SearchBar orgslug={orgslug} className="w-full" primaryColor={primaryColor} />
+          </div>
+
+          <div className="flex items-center space-x-2">
+            {/* Dashboard Dropdown - Only visible to admins */}
+            {session?.status === 'authenticated' && rights?.dashboard?.action_access && (
+              <div className="hidden md:flex">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      className={`p-2 rounded-lg transition-colors ${primaryColor ? 'hover:bg-white/10 text-white' : 'hover:bg-gray-100 text-gray-600'}`}
+                      aria-label={t('common.dashboard')}
+                    >
+                      <SquaresFour size={20} weight="fill" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel className="flex items-center gap-2">
+                      <SquaresFour size={16} weight="fill" />
+                      <span>{t('common.dashboard')}</span>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {DASHBOARD_MENU_ITEMS.map((item) => {
+                      const IconComponent = item.icon
+                      return (
+                        <DropdownMenuItem key={item.id} asChild>
+                          <Link href={item.href} className="flex items-center gap-2">
+                            <IconComponent size={16} weight="fill" />
+                            <span>{t(item.labelKey)}</span>
+                          </Link>
+                        </DropdownMenuItem>
+                      )
+                    })}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            )}
+
+            {/* Help Dropdown - Only visible to admins/maintainers/instructors */}
+            {session?.status === 'authenticated' && rights?.dashboard?.action_access && (
+              <div className="hidden md:flex">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      className={`p-2 rounded-lg transition-colors ${primaryColor ? 'hover:bg-white/10 text-white' : 'hover:bg-gray-100 text-gray-600'}`}
+                      aria-label={t('common.help')}
+                    >
+                      <Question size={20} weight="fill" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel className="flex items-center gap-2">
+                      <Question size={16} weight="fill" />
+                      <span>{t('common.help')}</span>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <a
+                        href="https://docs.learnhouse.app"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2"
+                      >
+                        <Book size={16} weight="fill" />
+                        <span>{t('common.help_menu.documentation')}</span>
+                      </a>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <a
+                        href="https://learnhouse.app"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2"
+                      >
+                        <Globe size={16} weight="fill" />
+                        <span>{t('common.help_menu.website')}</span>
+                      </a>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <a
+                        href="https://discord.gg/learnhouse"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2"
+                      >
+                        <DiscordIcon size={16} />
+                        <span>{t('common.help_menu.discord')}</span>
+                      </a>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => setFeedbackModalOpen(true)}
+                      className="flex items-center gap-2"
+                    >
+                      <ChatCircleDots size={16} weight="fill" />
+                      <span>{t('common.help_menu.report_feedback')}</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            )}
+
             <div className="hidden md:flex">
-              <HeaderProfileBox />
+              <HeaderProfileBox primaryColor={primaryColor} />
             </div>
             <button
-              className="md:hidden text-gray-600 focus:outline-hidden"
+              className={`md:hidden focus:outline-hidden ${primaryColor ? 'text-white' : 'text-gray-600'}`}
               onClick={toggleMenu}
             >
               {isMenuOpen ? (
@@ -123,7 +248,7 @@ export const OrgMenu = (props: any) => {
         className={`fixed inset-x-0 bg-white/80 backdrop-blur-lg md:hidden shadow-lg transition-all duration-300 ease-in-out ${
           isMenuOpen ? 'top-[60px] opacity-100' : '-top-full opacity-0'
         }`}
-        style={{ zIndex: 10000 }}
+        style={{ zIndex: 'var(--z-nav-menu)' }}
       >
         <div className="flex flex-col px-4 py-3 space-y-4 justify-center items-center">
           {/* Mobile Search */}
@@ -138,6 +263,15 @@ export const OrgMenu = (props: any) => {
           </div>
         </div>
       </div>
+
+      {/* Feedback Modal */}
+      <FeedbackModal
+        open={feedbackModalOpen}
+        onOpenChange={setFeedbackModalOpen}
+        theme="light"
+        userName={session?.data?.user?.username}
+        userEmail={session?.data?.user?.email}
+      />
     </>
   )
 }

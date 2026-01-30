@@ -1,5 +1,6 @@
 import { Editor, Range } from '@tiptap/react'
 import { ReactNode } from 'react'
+import { PlanLevel } from '@services/plans/plans'
 
 export interface SlashCommandItem {
   id: string
@@ -9,6 +10,7 @@ export interface SlashCommandItem {
   category: SlashCommandCategory
   keywords: string[]
   command: (editor: Editor) => void
+  requiredPlan?: PlanLevel
 }
 
 export type SlashCommandCategory =
@@ -23,6 +25,7 @@ export interface SlashCommandsListProps {
   items: SlashCommandItem[]
   command: (item: SlashCommandItem) => void
   editor: Editor
+  currentPlan?: PlanLevel
 }
 
 export interface SlashCommandsListRef {

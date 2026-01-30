@@ -1,5 +1,6 @@
 'use client'
 import React, { useState, useEffect, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { MessageCircle, Plus, Loader2, Search, X, Trash2, CheckSquare, Square } from 'lucide-react'
 import { DiscussionCard } from './DiscussionCard'
 import { SortDropdown } from './SortDropdown'
@@ -28,6 +29,7 @@ export function DiscussionList({
   onCreateClick,
   initialDiscussions = [],
 }: DiscussionListProps) {
+  const { t } = useTranslation()
   const session = useLHSession() as any
   const { canCreateDiscussion, canManageCommunity } = useCommunityRights(communityUuid)
   const accessToken = session?.data?.tokens?.access_token
@@ -185,7 +187,7 @@ export function DiscussionList({
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
-            placeholder="Search discussions..."
+            placeholder={t('communities.discussion_list.search_placeholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-9 pr-9 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-300 transition-all"
@@ -206,7 +208,7 @@ export function DiscussionList({
             <LabelFilter value={selectedLabel} onChange={handleLabelChange} />
             <SortDropdown value={sortBy} onChange={handleSortChange} />
             <span className="text-xs text-gray-400">
-              {filteredDiscussions.length} {filteredDiscussions.length === 1 ? 'discussion' : 'discussions'}
+              {filteredDiscussions.length} {filteredDiscussions.length === 1 ? t('communities.discussion') : t('communities.discussions')}
             </span>
           </div>
 
@@ -222,7 +224,7 @@ export function DiscussionList({
                 }`}
               >
                 <CheckSquare size={14} />
-                {isSelectMode ? 'Cancel' : 'Select'}
+                {isSelectMode ? t('communities.discussion_list.cancel') : t('communities.discussion_list.select')}
               </button>
             )}
 
@@ -233,7 +235,7 @@ export function DiscussionList({
                 className="hidden md:flex items-center gap-2 px-3 py-2 h-8 bg-neutral-900 hover:bg-neutral-800 text-white rounded-md transition-colors text-xs font-medium"
               >
                 <Plus size={14} />
-                New discussion
+                {t('communities.discussion_list.new_discussion')}
               </button>
             )}
           </div>
@@ -249,17 +251,17 @@ export function DiscussionList({
               className="flex items-center gap-1.5 text-xs text-indigo-700 hover:text-indigo-800"
             >
               {allSelected ? <CheckSquare size={14} /> : <Square size={14} />}
-              {allSelected ? 'Deselect all' : 'Select all'}
+              {allSelected ? t('communities.discussion_list.deselect_all') : t('communities.discussion_list.select_all')}
             </button>
             <span className="text-xs text-indigo-600 font-medium">
-              {selectedIds.size} selected
+              {selectedIds.size} {t('communities.discussion_list.selected')}
             </span>
           </div>
 
           <ConfirmationModal
-            confirmationMessage={`Are you sure you want to delete ${selectedIds.size} ${selectedIds.size === 1 ? 'discussion' : 'discussions'}? This action cannot be undone.`}
-            confirmationButtonText="Delete"
-            dialogTitle={`Delete ${selectedIds.size} ${selectedIds.size === 1 ? 'discussion' : 'discussions'}?`}
+            confirmationMessage={t('communities.discussion_list.delete_discussions_confirm', { count: selectedIds.size, type: selectedIds.size === 1 ? t('communities.discussion') : t('communities.discussions') })}
+            confirmationButtonText={t('communities.discussion_list.delete')}
+            dialogTitle={selectedIds.size === 1 ? t('communities.discussion_list.delete_discussions_title', { count: selectedIds.size }) : t('communities.discussion_list.delete_discussions_title_plural', { count: selectedIds.size })}
             dialogTrigger={
               <button
                 disabled={isDeleting}
@@ -270,7 +272,7 @@ export function DiscussionList({
                 ) : (
                   <Trash2 size={14} />
                 )}
-                Delete
+                {t('communities.discussion_list.delete')}
               </button>
             }
             functionToExecute={handleBulkDelete}
@@ -288,22 +290,22 @@ export function DiscussionList({
             </div>
             {searchQuery ? (
               <>
-                <h3 className="text-base font-semibold text-gray-600 mb-1">No results found</h3>
+                <h3 className="text-base font-semibold text-gray-600 mb-1">{t('communities.discussion_list.no_results')}</h3>
                 <p className="text-sm text-gray-400 text-center max-w-xs mb-4">
-                  Try adjusting your search or clear the filter
+                  {t('communities.discussion_list.no_results_description')}
                 </p>
                 <button
                   onClick={() => setSearchQuery('')}
                   className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
                 >
-                  Clear search
+                  {t('communities.discussion_list.clear_search')}
                 </button>
               </>
             ) : (
               <>
-                <h3 className="text-base font-semibold text-gray-600 mb-1">No discussions yet</h3>
+                <h3 className="text-base font-semibold text-gray-600 mb-1">{t('communities.discussion_list.no_discussions')}</h3>
                 <p className="text-sm text-gray-400 text-center max-w-xs mb-4">
-                  Be the first to start a discussion in this community!
+                  {t('communities.discussion_list.no_discussions_description')}
                 </p>
                 {canCreateDiscussion && onCreateClick && (
                   <button
@@ -311,7 +313,7 @@ export function DiscussionList({
                     className="inline-flex items-center gap-2 px-4 py-2 bg-neutral-900 hover:bg-neutral-800 text-white rounded-lg transition-colors text-sm font-medium"
                   >
                     <Plus size={16} />
-                    Start Discussion
+                    {t('communities.discussion_list.start_discussion')}
                   </button>
                 )}
               </>

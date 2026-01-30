@@ -7,35 +7,55 @@ from config.config import get_learnhouse_config
 from pydantic import BaseModel
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError, jwt
+import jwt
+from jwt.exceptions import PyJWTError
 from datetime import datetime, timedelta, timezone
 from src.services.dev.dev import isDevModeEnabled
 from src.services.users.users import security_verify_password
 from src.security.security import ALGORITHM, SECRET_KEY
-from fastapi_jwt_auth2 import AuthJWT
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 
-#### JWT Auth ####################################################
-class Settings(BaseModel):
-    authjwt_secret_key: str = "secret" if isDevModeEnabled() else SECRET_KEY
-    authjwt_token_location: set[str] = {"cookies", "headers"}
-    authjwt_cookie_csrf_protect: bool = False
-    authjwt_access_token_expires: bool | float = (
-        False if isDevModeEnabled() else timedelta(hours=8).total_seconds()
-    )
-    authjwt_cookie_samesite: str = "lax"
-    authjwt_cookie_secure: bool = True
-    authjwt_cookie_domain: str = get_learnhouse_config().hosting_config.cookie_config.domain
+#### JWT Auth Configuration ####################################################
+JWT_SECRET_KEY = SECRET_KEY
+JWT_ACCESS_TOKEN_EXPIRES = None if isDevModeEnabled() else timedelta(hours=8)
+JWT_COOKIE_SAMESITE = "lax"
+JWT_COOKIE_SECURE = True
+JWT_COOKIE_DOMAIN = get_learnhouse_config().hosting_config.cookie_config.domain
+JWT_COOKIE_NAME = "access_token_cookie"
 
 
-@AuthJWT.load_config  # type: ignore
-def get_config():
-    return Settings()
+def extract_jwt_from_request(request: Request) -> Optional[str]:
+    """Extract JWT token from cookies or Authorization header."""
+    # Try cookies first
+    token = request.cookies.get(JWT_COOKIE_NAME)
+    if token:
+        return token
+
+    # Try Authorization header
+    auth_header = request.headers.get("Authorization", "")
+    if auth_header.lower().startswith("bearer ") and not auth_header.lower().startswith("bearer lh_"):
+        return auth_header[7:].strip()
+
+    return None
 
 
-#### JWT Auth ####################################################
+def decode_jwt(token: str) -> Optional[dict]:
+    """Decode and validate a JWT token."""
+    try:
+        payload = jwt.decode(
+            token,
+            JWT_SECRET_KEY,
+            algorithms=[ALGORITHM],
+            options={"require": ["exp", "sub"]} if JWT_ACCESS_TOKEN_EXPIRES else {"require": ["sub"]}
+        )
+        return payload
+    except PyJWTError:
+        return None
+
+
+#### JWT Auth Configuration ####################################################
 
 
 #### Classes ####################################################
@@ -76,6 +96,39 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     return encoded_jwt
 
 
+JWT_REFRESH_TOKEN_EXPIRES = None if isDevModeEnabled() else timedelta(days=30)
+JWT_REFRESH_COOKIE_NAME = "refresh_token_cookie"
+
+
+def create_refresh_token(data: dict, expires_delta: timedelta | None = None):
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.now(timezone.utc) + expires_delta
+    elif JWT_REFRESH_TOKEN_EXPIRES:
+        expire = datetime.now(timezone.utc) + JWT_REFRESH_TOKEN_EXPIRES
+    else:
+        expire = datetime.now(timezone.utc) + timedelta(days=30)
+    to_encode.update({"exp": expire, "type": "refresh"})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+
+def decode_refresh_token(token: str) -> Optional[dict]:
+    """Decode and validate a refresh JWT token."""
+    try:
+        payload = jwt.decode(
+            token,
+            JWT_SECRET_KEY,
+            algorithms=[ALGORITHM],
+            options={"require": ["exp", "sub"]} if JWT_REFRESH_TOKEN_EXPIRES else {"require": ["sub"]}
+        )
+        if payload.get("type") != "refresh":
+            return None
+        return payload
+    except PyJWTError:
+        return None
+
+
 async def get_current_user(
     request: Request,
     db_session: Session = Depends(get_db_session),
@@ -99,19 +152,16 @@ async def get_current_user(
             return api_token_user
         raise credentials_exception
 
-    # Step 2: Fall back to existing JWT logic
-    # Create AuthJWT instance manually to avoid auto-validation issues with API tokens
-    Authorize = AuthJWT(request)
-    try:
-        Authorize.jwt_optional()
-        username = Authorize.get_jwt_subject() or None
-        token_data = TokenData(username=username)  # type: ignore
-    except JWTError:
-        raise credentials_exception
-    except Exception as e:
-        # Handle cases where the Authorization header format is unexpected
-        print(f"[DEBUG AUTH] JWT parsing error: {e}")
-        raise credentials_exception
+    # Step 2: Fall back to JWT logic using PyJWT
+    token = extract_jwt_from_request(request)
+    username = None
+
+    if token:
+        payload = decode_jwt(token)
+        if payload:
+            username = payload.get("sub")
+
+    token_data = TokenData(username=username)
 
     if username:
         user = await security_get_user(request, db_session, email=token_data.username)  # type: ignore # treated as an email

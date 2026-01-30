@@ -4,6 +4,7 @@ import { Form, Formik } from 'formik'
 import * as Yup from 'yup'
 import {
   updateOrganization,
+  updateOrgFooterTextConfig,
 } from '@services/settings/org'
 import { revalidateTags } from '@services/utils/ts/requests'
 import { useRouter } from 'next/navigation'
@@ -84,6 +85,10 @@ const OrgEditGeneral: React.FC = () => {
   const access_token = session?.data?.tokens?.access_token
   const org = useOrg() as any
 
+  // Footer text state
+  const [footerText, setFooterText] = React.useState<string>(org?.config?.config?.general?.footer_text || '')
+  const [isFooterSaving, setIsFooterSaving] = React.useState(false)
+
   const initialValues: OrganizationValues = {
     name: org?.name,
     description: org?.description || '',
@@ -96,6 +101,8 @@ const OrgEditGeneral: React.FC = () => {
     const loadingToast = toast.loading(t('dashboard.organization.settings.updating'))
     try {
       await updateOrganization(org.id, values, access_token)
+      // Also save footer text
+      await updateOrgFooterTextConfig(org.id, footerText, access_token)
       await revalidateTags(['organizations'], org.slug)
       mutate(`${getAPIUrl()}orgs/slug/${org.slug}`)
       toast.success(t('dashboard.organization.settings.update_success'), { id: loadingToast })
@@ -215,7 +222,23 @@ const OrgEditGeneral: React.FC = () => {
                       )}
                     </div>
 
-                    
+                    <div>
+                      <Label htmlFor="footerText">
+                        {t('dashboard.organization.settings.footer_text')}
+                        <span className="text-gray-500 text-sm ml-2">
+                          ({100 - (footerText?.length || 0)} characters left)
+                        </span>
+                      </Label>
+                      <Input
+                        id="footerText"
+                        name="footerText"
+                        value={footerText}
+                        onChange={(e) => setFooterText(e.target.value)}
+                        placeholder={t('dashboard.organization.settings.footer_text_placeholder')}
+                        maxLength={100}
+                      />
+                      <p className="text-gray-500 text-sm mt-1">{t('dashboard.organization.settings.footer_text_desc')}</p>
+                    </div>
 
                     <div className="flex items-center justify-between space-x-2 mt-6 bg-gray-50/50 p-4 rounded-lg nice-shadow">
                       <div className="flex items-center space-x-4">

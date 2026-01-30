@@ -8,6 +8,8 @@ on:
   pull_request:
     paths:
       - "apps/api/**"
+permissions:
+  contents: read
 jobs:
   ruff:
     runs-on: ubuntu-latest

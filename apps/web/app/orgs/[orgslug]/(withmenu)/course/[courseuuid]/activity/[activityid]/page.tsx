@@ -5,6 +5,7 @@ import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { Metadata } from 'next'
 import { getServerSession } from 'next-auth'
 import { nextAuthOptions } from 'app/auth/options'
+import { notFound } from 'next/navigation'
 
 type MetadataProps = {
   params: Promise<{ orgslug: string; courseuuid: string; activityid: string }>
@@ -78,14 +79,27 @@ const ActivityPage = async (params: any) => {
   const courseuuid = (await params.params).courseuuid
   const orgslug = (await params.params).orgslug
 
-  const [course_meta, activity] = await Promise.all([
-    fetchCourseMetadata(courseuuid, access_token),
-    getActivityWithAuthHeader(
-      activityid,
-      { revalidate: 0, tags: ['activities'] },
-      access_token || null
-    )
-  ])
+  let course_meta
+  let activity
+
+  try {
+    [course_meta, activity] = await Promise.all([
+      fetchCourseMetadata(courseuuid, access_token),
+      getActivityWithAuthHeader(
+        activityid,
+        { revalidate: 0, tags: ['activities'] },
+        access_token || null
+      )
+    ])
+  } catch (error) {
+    // If course or activity not found (404) or any error, show not found
+    notFound()
+  }
+
+  // If no course data returned, show not found
+  if (!course_meta || !activity) {
+    notFound()
+  }
 
   return (
     <ActivityClient

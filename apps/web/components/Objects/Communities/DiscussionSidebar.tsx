@@ -1,6 +1,7 @@
 'use client'
 import React from 'react'
 import Link from 'next/link'
+import { useTranslation } from 'react-i18next'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import {
@@ -37,6 +38,7 @@ export function DiscussionSidebar({
   community,
   orgslug,
 }: DiscussionSidebarProps) {
+  const { t } = useTranslation()
   const communityId = community.community_uuid.replace('community_', '')
   const timeAgo = dayjs(discussion.creation_date).fromNow()
   const createdDate = dayjs(discussion.creation_date).format('MMM D, YYYY')
@@ -44,7 +46,7 @@ export function DiscussionSidebar({
 
   const authorName = discussion.author
     ? `${discussion.author.first_name} ${discussion.author.last_name}`.trim() || discussion.author.username
-    : 'Unknown'
+    : t('common.unknown')
 
   return (
     <div className="space-y-4">
@@ -52,7 +54,7 @@ export function DiscussionSidebar({
       <div className="bg-white nice-shadow rounded-lg overflow-hidden">
         <div className="p-4 border-b border-gray-100">
           <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">
-            Posted by
+            {t('communities.sidebar.posted_by')}
           </div>
           <div className="flex items-center gap-3">
             <UserAvatar
@@ -75,7 +77,7 @@ export function DiscussionSidebar({
         <div className="px-4 py-3 space-y-3">
           {/* Upvotes */}
           <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">Upvotes</span>
+            <span className="text-sm text-gray-600">{t('communities.sidebar.upvotes')}</span>
             <UpvoteButton
               discussionUuid={discussion.discussion_uuid}
               initialVoteCount={discussion.upvote_count}
@@ -86,7 +88,7 @@ export function DiscussionSidebar({
 
           {/* Label */}
           <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">Category</span>
+            <span className="text-sm text-gray-600">{t('communities.sidebar.category')}</span>
             <span
               className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium"
               style={{
@@ -94,13 +96,13 @@ export function DiscussionSidebar({
                 color: labelInfo.color,
               }}
             >
-              {labelInfo.name}
+              {t(`communities.labels.${labelInfo.id}`)}
             </span>
           </div>
 
           {/* Date */}
           <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">Created</span>
+            <span className="text-sm text-gray-600">{t('communities.sidebar.created')}</span>
             <span className="text-sm text-gray-900">{createdDate}</span>
           </div>
 
@@ -110,13 +112,13 @@ export function DiscussionSidebar({
               {discussion.is_pinned && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-amber-100 text-amber-700 rounded-full">
                   <Pin size={10} />
-                  Pinned
+                  {t('communities.sidebar.pinned')}
                 </span>
               )}
               {discussion.is_locked && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
                   <Lock size={10} />
-                  Locked
+                  {t('communities.sidebar.locked')}
                 </span>
               )}
             </div>
@@ -127,7 +129,7 @@ export function DiscussionSidebar({
       {/* Reactions Card */}
       <div className="bg-white nice-shadow rounded-lg overflow-hidden p-4">
         <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">
-          Reactions
+          {t('communities.sidebar.reactions')}
         </div>
         <ReactionButton discussionUuid={discussion.discussion_uuid} />
       </div>
@@ -135,7 +137,7 @@ export function DiscussionSidebar({
       {/* Community Link */}
       <div className="bg-white nice-shadow rounded-lg overflow-hidden p-4">
         <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
-          Community
+          {t('communities.sidebar.community')}
         </div>
         <Link
           href={getUriWithOrg(orgslug, `/community/${communityId}`)}
