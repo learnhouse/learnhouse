@@ -1,0 +1,57 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":disableRateLimiting"
+  ],
+  "baseBranches": ["dev"],
+  "schedule": ["every 2 weeks on saturday"],
+  "timezone": "UTC",
+  "labels": ["dependencies", "renovate"],
+  "prBodyColumns": [
+    "Package",
+    "Type",
+    "Update",
+    "Change",
+    "Pending"
+  ],
+  "prBodyNotes": [
+    "This PR contains dependency updates. Please review the changelog and release notes before merging."
+  ],
+  "fetchChangeLogs": "pr",
+  "releaseNotes": true,
+  "packageRules": [
+    {
+      "description": "Group all non-major dependencies together",
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "all non-major dependencies",
+      "groupSlug": "all-minor-patch"
+    },
+    {
+      "description": "Group all major dependencies together",
+      "matchUpdateTypes": ["major"],
+      "groupName": "all major dependencies",
+      "groupSlug": "all-major"
+    },
+    {
+      "description": "Group ESLint related packages",
+      "matchPackagePatterns": ["eslint"],
+      "groupName": "eslint"
+    },
+    {
+      "description": "Group TypeScript related packages",
+      "matchPackagePatterns": ["typescript", "^@types/"],
+      "groupName": "typescript"
+    },
+    {
+      "description": "Group Next.js related packages",
+      "matchPackagePatterns": ["next", "^@next/"],
+      "groupName": "nextjs"
+    },
+    {
+      "description": "Group React related packages",
+      "matchPackagePatterns": ["react", "^@types/react"],
+      "groupName": "react"
+    }
+  ]
+}
