@@ -8,6 +8,7 @@ import {
   File,
   FilePenLine,
   Globe,
+  GripVertical,
   Loader2,
   Lock,
   Package,
@@ -133,30 +134,36 @@ function ActivityElement(props: ActivitiyElementProps) {
     >
       {(provided, snapshot) => (
         <div
-          className={`grid grid-cols-[auto_1fr_auto] gap-2 py-2 px-3 my-2 w-full rounded-md text-gray-500 
+          className={`flex items-center gap-3 py-2.5 px-3 my-2 w-full rounded-lg text-gray-500
             ${snapshot.isDragging
-              ? 'nice-shadow bg-white ring-2 ring-blue-500/20 z-drag-overlay rotate-1 scale-[1.04]'
-              : 'nice-shadow bg-gray-50 hover:bg-gray-100 '
-            }
-            items-center border-1 border-gray-200`}
+              ? 'nice-shadow bg-white ring-2 ring-blue-500/20 z-drag-overlay rotate-1 scale-[1.02]'
+              : 'nice-shadow bg-white hover:bg-gray-50'
+            }`}
           key={props.activity.id}
           {...provided.draggableProps}
-          {...provided.dragHandleProps}
           ref={provided.innerRef}
           style={{
             ...provided.draggableProps.style
           }}
         >
+          {/* Drag Handle */}
+          <div
+            {...provided.dragHandleProps}
+            className="flex-shrink-0 cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-400 transition-colors"
+          >
+            <GripVertical size={18} />
+          </div>
+
           {/*   Activity Type Icon  */}
           <ActivityTypeIndicator activityType={props.activity.activity_type} isMobile={isMobile} />
 
-          {/*   Centered Activity Name  */}
-          <div className="flex items-center space-x-2 justify-center">
+          {/*   Activity Name  */}
+          <div className="flex-1 flex items-center gap-2 min-w-0">
             {selectedActivity === props.activity.id ? (
-              <div className="chapter-modification-zone text-[7px] text-gray-600 shadow-inner bg-gray-200/60 py-1 px-4 rounded-lg space-x-3">
+              <div className="flex items-center gap-2 bg-gray-100 py-1 px-3 rounded-md">
                 <input
                   type="text"
-                  className="bg-transparent outline-hidden text-xs text-gray-500"
+                  className="bg-transparent outline-none text-sm text-gray-600 min-w-0"
                   placeholder={t('dashboard.courses.structure.activity.name_placeholder')}
                   value={
                     modifiedActivity
@@ -173,45 +180,46 @@ function ActivityElement(props: ActivitiyElementProps) {
                 />
                 <button
                   onClick={() => updateActivityName(props.activity.id)}
-                  className="bg-transparent text-neutral-700 hover:cursor-pointer hover:text-neutral-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={isUpdatingName}
                 >
                   {isUpdatingName ? (
-                    <Loader2 size={12} className="animate-spin" />
+                    <Loader2 size={14} className="animate-spin" />
                   ) : (
-                    <Save size={12} />
+                    <Save size={14} />
                   )}
                 </button>
               </div>
             ) : (
-              <p className="first-letter:uppercase text-center sm:text-left"> {props.activity.name} </p>
+              <p className="first-letter:uppercase text-sm text-gray-600 truncate">{props.activity.name}</p>
             )}
-            <Pencil
+            <button
               onClick={() => !isUpdatingName && setSelectedActivity(props.activity.id)}
-              className={`text-neutral-400 hover:cursor-pointer size-3 min-w-3 ${isUpdatingName ? 'opacity-50 cursor-not-allowed' : ''}`}
-            />
+              className={`text-gray-300 hover:text-gray-400 flex-shrink-0 ${isUpdatingName ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              <Pencil size={14} />
+            </button>
           </div>
 
           {/*   Edit, View, Publish, and Delete Buttons  */}
-          <div className="flex items-center gap-2 justify-end">
+          <div className="flex items-center gap-1.5 flex-shrink-0">
             <ActivityElementOptions activity={props.activity} isMobile={isMobile} />
             {/*   Publishing  */}
             <button
-              className={`p-1 px-2 sm:px-3 border shadow-md rounded-md font-bold text-xs flex items-center space-x-1 transition-colors duration-200 ${
+              className={`h-7 px-2 rounded-md text-xs font-bold flex items-center gap-1 transition-colors ${
                 !props.activity.published
-                  ? 'bg-linear-to-bl text-green-800 from-green-400/50 to-lime-200/80 border-green-600/10 hover:from-green-500/50 hover:to-lime-300/80'
-                  : 'bg-linear-to-bl text-gray-800 from-gray-400/50 to-gray-200/80 border-gray-600/10 hover:from-gray-500/50 hover:to-gray-300/80'
+                  ? 'bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 shadow-sm shadow-green-300/20'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200 shadow-sm shadow-gray-300/20'
               }`}
               onClick={() => changePublicStatus()}
             >
               {!props.activity.published ? (
-                <Globe strokeWidth={2} size={12} className="text-green-600" />
+                <Globe size={12} />
               ) : (
-                <Lock strokeWidth={2} size={12} className="text-gray-600" />
+                <Lock size={12} />
               )}
-              <span>{!props.activity.published ? t('dashboard.courses.structure.actions.publish') : t('dashboard.courses.structure.actions.unpublish')}</span>
+              <span className="hidden sm:inline">{!props.activity.published ? t('dashboard.courses.structure.actions.publish') : t('dashboard.courses.structure.actions.unpublish')}</span>
             </button>
-            <div className="w-px h-3 bg-gray-300 mx-1 self-center rounded-full hidden sm:block" />
             <ToolTip content={t('dashboard.courses.structure.actions.preview_activity')} sideOffset={8}>
               <Link
                 href={
@@ -224,10 +232,10 @@ function ActivityElement(props: ActivitiyElementProps) {
                     ''
                   )}`
                 }
-                className="p-1 px-2 sm:px-3 bg-linear-to-bl text-cyan-800 from-sky-400/50 to-cyan-200/80 border border-cyan-600/10 shadow-md rounded-md font-bold text-xs flex items-center space-x-1 transition-colors duration-200 hover:from-sky-500/50 hover:to-cyan-300/80"
+                className="h-7 px-2 bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-md flex items-center transition-colors border border-gray-200 shadow-sm shadow-gray-300/20"
                 rel="noopener noreferrer"
               >
-                <Eye strokeWidth={2} size={14} className="text-sky-600" />
+                <Eye size={12} />
               </Link>
             </ToolTip>
             {/*   Delete Button  */}
@@ -237,10 +245,10 @@ function ActivityElement(props: ActivitiyElementProps) {
               dialogTitle={t('dashboard.courses.structure.modals.delete_activity.title', { name: props.activity.name })}
               dialogTrigger={
                 <button
-                  className="p-1 px-2 sm:px-3 bg-red-600 rounded-md flex items-center space-x-1 shadow-md transition-colors duration-200 hover:bg-red-700"
+                  className="h-7 px-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-md flex items-center transition-colors border border-red-200 shadow-sm shadow-red-300/20"
                   rel="noopener noreferrer"
                 >
-                  <X size={15} className="text-rose-200 font-bold" />
+                  <X size={12} />
                 </button>
               }
               functionToExecute={() => deleteActivityUI()}
@@ -281,13 +289,13 @@ const ActivityTypeIndicator = ({activityType, isMobile} : { activityType: keyof 
   const {displayNameKey, Icon} = ACTIVITIES[activityType]
 
   return (
-    <div className={`text-gray-300 space-x-1 w-28 flex ${isMobile ? 'flex-col' : ''}`}>
-      <div className="flex space-x-2 items-center">
-            <Icon className="size-4" />{' '}
-            <div className="text-xs bg-gray-200 text-gray-400 font-bold px-2 py-1 rounded-full mx-auto justify-center align-middle">
-              {t(`dashboard.courses.structure.activity.types.${displayNameKey}`)}
-            </div>{' '}
-          </div>
+    <div className="flex items-center gap-1.5 flex-shrink-0">
+      <Icon className="size-4 text-gray-400" />
+      {!isMobile && (
+        <span className="text-xs text-gray-400 font-medium">
+          {t(`dashboard.courses.structure.activity.types.${displayNameKey}`)}
+        </span>
+      )}
     </div>
   )
 }
@@ -322,43 +330,37 @@ const ActivityElementOptions = ({ activity, isMobile }: { activity: any; isMobil
   return (
     <>
       {activity.activity_type === 'TYPE_DYNAMIC' && (
-        <>
-          <Link
-            href={
-              getUriWithOrg(org.slug, '') +
-              `/course/${course?.courseStructure.course_uuid.replace(
-                'course_',
-                ''
-              )}/activity/${activity.activity_uuid.replace(
-                'activity_',
-                ''
-              )}/edit`
-            }
-            className={`hover:cursor-pointer p-1 ${isMobile ? 'px-2' : 'px-3'} bg-sky-700 rounded-md items-center`}
-            target='_blank'
-          >
-            <div className="text-sky-100 font-bold text-xs flex items-center space-x-1">
-              <FilePenLine size={12} />  <span>{t('dashboard.courses.structure.actions.edit_page')}</span>
-            </div>
-          </Link>
-        </>
+        <Link
+          href={
+            getUriWithOrg(org.slug, '') +
+            `/course/${course?.courseStructure.course_uuid.replace(
+              'course_',
+              ''
+            )}/activity/${activity.activity_uuid.replace(
+              'activity_',
+              ''
+            )}/edit`
+          }
+          className="h-7 px-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-md flex items-center gap-1 text-xs font-bold transition-colors border border-blue-200 shadow-sm shadow-blue-300/20"
+          target='_blank'
+        >
+          <FilePenLine size={12} />
+          <span className="hidden sm:inline">{t('dashboard.courses.structure.actions.edit_page')}</span>
+        </Link>
       )}
       {activity.activity_type === 'TYPE_ASSIGNMENT' && (
-        <>
-          <Link
-            href={
-              getUriWithOrg(org.slug, '') +
-              `/dash/assignments/${assignmentUUID}`
-            }
-            className={`hover:cursor-pointer p-1 ${isMobile ? 'px-2' : 'px-3'} bg-teal-700 rounded-md items-center`}
-          >
-            <div className="text-sky-100 font-bold text-xs flex items-center space-x-1">
-              <FilePenLine size={12} /> {!isMobile && <span>{t('dashboard.courses.structure.actions.edit_assignment')}</span>}
-            </div>
-          </Link>
-        </>
+        <Link
+          href={
+            getUriWithOrg(org.slug, '') +
+            `/dash/assignments/${assignmentUUID}`
+          }
+          className="h-7 px-2 bg-teal-50 text-teal-600 hover:bg-teal-100 rounded-md flex items-center gap-1 text-xs font-bold transition-colors border border-teal-200 shadow-sm shadow-teal-300/20"
+        >
+          <FilePenLine size={12} />
+          <span className="hidden sm:inline">{t('dashboard.courses.structure.actions.edit_assignment')}</span>
+        </Link>
       )}
-    </> 
+    </>
   );
 };
 

@@ -83,7 +83,7 @@ function UsersSettingsPage(props: { params: Promise<SettingsParams> }) {
 
   return (
     <div className="h-screen w-full bg-[#f8f8f8] grid grid-rows-[auto_1fr]">
-      <div className="pl-10 pr-10  tracking-tight bg-[#fcfbfc] z-10 shadow-[0px_4px_16px_rgba(0,0,0,0.06)]">
+      <div className="pl-10 pr-10 tracking-tight bg-[#fcfbfc] z-10 nice-shadow flex-shrink-0 relative">
         <div className="pt-6 pb-4">
           <Breadcrumbs items={[
             { label: t('common.users'), href: '/dash/users/settings/users', icon: <Users size={14} /> }

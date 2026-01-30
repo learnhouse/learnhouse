@@ -9,9 +9,15 @@ class CookieConfig(BaseModel):
     domain: str
 
 
+class SentryConfig(BaseModel):
+    dsn: str | None
+    enabled: bool
+
+
 class GeneralConfig(BaseModel):
     development_mode: bool
     logfire_enabled: bool
+    sentry_config: SentryConfig
 
 
 class SecurityConfig(BaseModel):
@@ -119,6 +125,11 @@ def get_learnhouse_config() -> LearnHouseConfig:
         env_logfire_enabled.lower() == "true" if env_logfire_enabled != "None"
         else yaml_config.get("general", {}).get("logfire_enabled", False)
     )
+
+    # Sentry config
+    env_sentry_dsn = os.environ.get("LEARNHOUSE_SENTRY_DSN")
+    sentry_dsn = env_sentry_dsn or yaml_config.get("general", {}).get("sentry_dsn")
+    sentry_enabled = sentry_dsn is not None and sentry_dsn != ""
 
     # Security Config
     env_auth_jwt_secret_key = os.environ.get("LEARNHOUSE_AUTH_JWT_SECRET_KEY")
@@ -289,8 +300,9 @@ def get_learnhouse_config() -> LearnHouseConfig:
         site_description=site_description,
         contact_email=contact_email,
         general_config=GeneralConfig(
-            development_mode=bool(development_mode), 
-            logfire_enabled=bool(logfire_enabled)
+            development_mode=bool(development_mode),
+            logfire_enabled=bool(logfire_enabled),
+            sentry_config=SentryConfig(dsn=sentry_dsn, enabled=sentry_enabled)
         ),
         hosting_config=hosting_config,
         database_config=database_config,

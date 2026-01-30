@@ -1,6 +1,9 @@
 from typing import List
 from fastapi import APIRouter, Depends, UploadFile, Form, Request
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
 from sqlmodel import Session
+import io
 from src.core.events.database import get_db_session
 from src.db.courses.course_updates import (
     CourseUpdateCreate,
@@ -22,11 +25,13 @@ from src.services.courses.courses import (
     get_course_by_id,
     get_course_meta,
     get_courses_orgslug,
+    get_courses_count_orgslug,
     update_course,
     delete_course,
     update_course_thumbnail,
     search_courses,
     get_course_user_rights,
+    clone_course,
 )
 from src.services.courses.updates import (
     create_update,
@@ -42,9 +47,140 @@ from src.services.courses.contributors import (
     remove_bulk_course_contributors,
 )
 from src.db.resource_authors import ResourceAuthorshipEnum, ResourceAuthorshipStatusEnum
+from src.services.courses.transfer import (
+    export_course,
+    export_courses_batch,
+    analyze_import_package,
+    import_courses,
+    ImportOptions,
+    ImportAnalysisResponse,
+    ImportResult,
+)
+
+
+# Request models for batch operations
+class BatchExportRequest(BaseModel):
+    course_uuids: List[str]
+
+
+class ImportRequest(BaseModel):
+    temp_id: str
+    course_uuids: List[str]
+    name_prefix: str | None = None
+    set_private: bool = True
+    set_unpublished: bool = True
 
 
 router = APIRouter()
+
+
+# Static routes must come before dynamic /{course_uuid} routes
+@router.post("/export/batch")
+async def api_export_courses_batch(
+    request: Request,
+    batch_request: BatchExportRequest,
+    db_session: Session = Depends(get_db_session),
+    current_user: PublicUser = Depends(get_current_user),
+):
+    """
+    Export multiple courses as a single ZIP file.
+
+    **Request Body:**
+    ```json
+    {
+        "course_uuids": ["course_uuid_1", "course_uuid_2", ...]
+    }
+    ```
+
+    **Required Permissions:**
+    - Read access to all specified courses
+    - All courses must belong to the same organization
+    """
+    from datetime import datetime
+
+    zip_content = await export_courses_batch(
+        request, batch_request.course_uuids, current_user, db_session
+    )
+
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"learnhouse-export-batch-{timestamp}.zip"
+
+    return StreamingResponse(
+        io.BytesIO(zip_content),
+        media_type="application/zip",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@router.post("/import/analyze")
+async def api_analyze_import_package(
+    request: Request,
+    org_id: int,
+    zip_file: UploadFile,
+    db_session: Session = Depends(get_db_session),
+    current_user: PublicUser = Depends(get_current_user),
+) -> ImportAnalysisResponse:
+    """
+    Analyze a LearnHouse course export package for import.
+
+    Upload a ZIP file containing exported courses. The endpoint will:
+    1. Validate the package format
+    2. Extract and analyze the contents
+    3. Return a list of courses available for import
+    4. Store the package temporarily for subsequent import
+
+    The returned `temp_id` should be used when calling the import endpoint.
+    Temporary packages are automatically cleaned up after 30 minutes.
+
+    **Required Permissions:**
+    - Create permission for courses in the organization
+    """
+    return await analyze_import_package(
+        request, zip_file, org_id, current_user, db_session
+    )
+
+
+@router.post("/import")
+async def api_import_courses(
+    request: Request,
+    org_id: int,
+    import_request: ImportRequest,
+    db_session: Session = Depends(get_db_session),
+    current_user: PublicUser = Depends(get_current_user),
+) -> ImportResult:
+    """
+    Import courses from an analyzed package.
+
+    **Request Body:**
+    ```json
+    {
+        "temp_id": "uuid-from-analyze-step",
+        "course_uuids": ["course_uuid_1", "course_uuid_2"],
+        "name_prefix": "Imported",
+        "set_private": true,
+        "set_unpublished": true
+    }
+    ```
+
+    **Options:**
+    - `course_uuids`: Which courses to import from the package
+    - `name_prefix`: Optional prefix to add to imported course names
+    - `set_private`: Make imported courses private (default: true)
+    - `set_unpublished`: Make imported courses unpublished (default: true)
+
+    **Required Permissions:**
+    - Create permission for courses in the organization
+    """
+    options = ImportOptions(
+        course_uuids=import_request.course_uuids,
+        name_prefix=import_request.name_prefix,
+        set_private=import_request.set_private,
+        set_unpublished=import_request.set_unpublished,
+    )
+
+    return await import_courses(
+        request, import_request.temp_id, org_id, options, current_user, db_session
+    )
 
 
 @router.post("/")
@@ -152,6 +288,7 @@ async def api_get_course_by_orgslug(
     page: int,
     limit: int,
     org_slug: str,
+    include_unpublished: bool = False,
     db_session: Session = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ) -> List[CourseRead]:
@@ -159,7 +296,22 @@ async def api_get_course_by_orgslug(
     Get courses by page and limit
     """
     return await get_courses_orgslug(
-        request, current_user, org_slug, db_session, page, limit
+        request, current_user, org_slug, db_session, page, limit, include_unpublished
+    )
+
+
+@router.get("/org_slug/{org_slug}/count")
+async def api_get_courses_count(
+    request: Request,
+    org_slug: str,
+    db_session: Session = Depends(get_db_session),
+    current_user: PublicUser = Depends(get_current_user),
+) -> int:
+    """
+    Get total count of courses for an organization
+    """
+    return await get_courses_count_orgslug(
+        request, current_user, org_slug, db_session
     )
 
 
@@ -209,6 +361,73 @@ async def api_delete_course(
     """
 
     return await delete_course(request, course_uuid, current_user, db_session)
+
+
+@router.post("/{course_uuid}/clone")
+async def api_clone_course(
+    request: Request,
+    course_uuid: str,
+    db_session: Session = Depends(get_db_session),
+    current_user: PublicUser = Depends(get_current_user),
+) -> CourseRead:
+    """
+    Clone a course with all its chapters, activities, blocks, and files.
+
+    Creates a complete copy of the course including:
+    - Course metadata (name, description, about, learnings, tags, SEO, etc.)
+    - Thumbnail files
+    - Chapters with their ordering
+    - Activities with their files (videos, documents, PDFs)
+    - Dynamic activity blocks with their files (images, videos, PDFs)
+
+    The cloned course will:
+    - Have a new course_uuid
+    - Have "(Copy)" appended to the name
+    - Be set to private (public=False) by default
+    - Have the current user as the creator
+
+    **Required Permissions:**
+    - Read access to the source course
+    - Create permission for courses in the organization
+    """
+    return await clone_course(request, course_uuid, current_user, db_session)
+
+
+@router.get("/{course_uuid}/export")
+async def api_export_course(
+    request: Request,
+    course_uuid: str,
+    db_session: Session = Depends(get_db_session),
+    current_user: PublicUser = Depends(get_current_user),
+):
+    """
+    Export a single course as a ZIP file.
+
+    The exported package contains:
+    - Course metadata (name, description, about, learnings, tags, SEO, etc.)
+    - Thumbnail files
+    - Chapters with their ordering
+    - Activities with their files (videos, documents, PDFs)
+    - Dynamic activity blocks with their files (images, videos, PDFs)
+
+    The ZIP file follows the LearnHouse export format and can be imported
+    into any LearnHouse instance.
+
+    **Required Permissions:**
+    - Read access to the course
+    """
+    from datetime import datetime
+
+    zip_content = await export_course(request, course_uuid, current_user, db_session)
+
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"learnhouse-export-{course_uuid}-{timestamp}.zip"
+
+    return StreamingResponse(
+        io.BytesIO(zip_content),
+        media_type="application/zip",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
 
 
 @router.post("/{course_uuid}/apply-contributor")

@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
 import TypeOfContentTitle from '@components/Objects/StyledElements/Titles/TypeOfContentTitle'
 import GeneralWrapperStyled from '@components/Objects/StyledElements/Wrappers/GeneralWrapper'
@@ -18,6 +19,7 @@ interface CommunitiesClientProps {
 }
 
 const CommunitiesClient = ({ communities, orgslug, org_id }: CommunitiesClientProps) => {
+  const { t } = useTranslation()
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [editingCommunity, setEditingCommunity] = useState<Community | null>(null)
 
@@ -25,7 +27,7 @@ const CommunitiesClient = ({ communities, orgslug, org_id }: CommunitiesClientPr
     <GeneralWrapperStyled>
       <div className="flex flex-col space-y-2 mb-6">
         <div className="flex items-center justify-between">
-          <TypeOfContentTitle title="Communities" type="col" />
+          <TypeOfContentTitle title={t('communities.title')} type="col" />
           <AuthenticatedClientElement
             ressourceType="communities"
             action="create"
@@ -37,7 +39,7 @@ const CommunitiesClient = ({ communities, orgslug, org_id }: CommunitiesClientPr
               className="flex items-center gap-2 px-4 py-2 bg-black hover:bg-black/90 text-white rounded-lg transition-colors text-sm font-medium"
             >
               <Plus size={16} />
-              New Community
+              {t('communities.new_community')}
             </button>
           </AuthenticatedClientElement>
         </div>
@@ -59,11 +61,11 @@ const CommunitiesClient = ({ communities, orgslug, org_id }: CommunitiesClientPr
                 <Users className="w-8 h-8 text-gray-300" strokeWidth={1.5} />
               </div>
               <h1 className="text-xl font-bold text-gray-600 mb-2">
-                No communities yet
+                {t('communities.no_communities')}
               </h1>
               <p className="text-md text-gray-400 mb-6 text-center max-w-xs">
                 <ContentPlaceHolderIfUserIsNotAdmin
-                  text="Create a community to start discussions"
+                  text={t('communities.no_communities_description')}
                 />
               </p>
               <div className="flex justify-center">
@@ -78,7 +80,7 @@ const CommunitiesClient = ({ communities, orgslug, org_id }: CommunitiesClientPr
                     className="flex items-center gap-2 px-4 py-2 bg-black hover:bg-black/90 text-white rounded-lg transition-colors text-sm font-medium"
                   >
                     <Plus size={16} />
-                    New Community
+                    {t('communities.new_community')}
                   </button>
                 </AuthenticatedClientElement>
               </div>

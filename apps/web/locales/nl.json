@@ -39,6 +39,23 @@
     "recent": "Recent",
     "expand": "Uitklappen",
     "help": "Hulp",
+    "help_menu": {
+      "documentation": "Documentatie",
+      "website": "LearnHouse Website",
+      "discord": "Discord",
+      "report_feedback": "Probleem of feedback melden",
+      "feedback_title": "Feedback Verzenden",
+      "feedback_description": "Help ons LearnHouse te verbeteren door je gedachten te delen, bugs te melden of nieuwe functies voor te stellen.",
+      "feedback_placeholder": "Vertel ons wat je denkt...",
+      "feedback_success": "Bedankt voor je feedback!",
+      "send_feedback": "Feedback Verzenden",
+      "sending": "Verzenden...",
+      "how_was_experience": "Hoe was je ervaring?",
+      "reaction_happy": "Goed",
+      "reaction_neutral": "Oké",
+      "reaction_sad": "Slecht",
+      "attach_image": "Screenshot bijvoegen"
+    },
     "plans": {
       "label": "Plannen",
       "upgrade_button": "Upgraden naar {{plan}}",
@@ -70,6 +87,10 @@
         "certifications": {
           "title": "Pro Functie",
           "description": "Certificeringen zijn een premiumfunctie die alleen beschikbaar is voor organisaties met ons Pro-abonnement of hoger. Upgrade om certificaten uit te geven aan leerlingen die uw cursussen voltooien."
+        },
+        "communities": {
+          "title": "Standaard Functie",
+          "description": "Community's is een premium functie die alleen beschikbaar is voor organisaties met ons Standaard abonnement of hoger. Upgrade om discussiecommunity's voor je leden te ontgrendelen."
         }
       }
     },
@@ -77,6 +98,8 @@
     "version": "Versie",
     "users": "Gebruikers",
     "save": "Opslaan",
+    "save_changes": "Wijzigingen opslaan",
+    "saving": "Opslaan...",
     "cancel": "Annuleren",
     "submit": "Verzenden",
     "delete": "Verwijderen",
@@ -213,6 +236,8 @@
     "course_completed_exclamation": "Cursus Voltooid!",
     "what_you_will_learn": "Wat je gaat leren",
     "course_lessons": "Cursuslessen",
+    "share_course": "Cursus delen",
+    "copy_link": "Link kopiëren",
     "unlock_certificate_message": "Voltooi alle activiteiten om je certificaat te ontgrendelen",
     "chapter": "Hoofdstuk",
     "chapters": "Hoofdstukken",
@@ -262,7 +287,305 @@
     "submitting_contributor_application": "Aanvraag verzenden...",
     "contributor_application_success": "Je aanvraag om bij te dragen is succesvol verzonden",
     "contributor_application_error": "Kon je aanvraag niet verzenden. Probeer het later opnieuw.",
-    "contribute": "Bijdragen"
+    "contribute": "Bijdragen",
+    "scorm": {
+      "upload_package": "SCORM-pakket uploaden",
+      "package_file": "Pakketbestand (.zip)",
+      "click_to_upload": "Klik om te uploaden of sleep en zet neer",
+      "supported_versions": "SCORM 1.2 of SCORM 2004 pakket",
+      "import_info": "Upload je SCORM-pakket om de inhoud te analyseren. Je kunt de cursus configureren en activiteiten aan hoofdstukken toewijzen.",
+      "analyze_package": "Pakket analyseren",
+      "package_analyzed": "Pakket succesvol geanalyseerd",
+      "assign_scos": "Activiteiten aan hoofdstukken toewijzen",
+      "activity_name": "Activiteit",
+      "chapter_name": "Hoofdstuk",
+      "upload_different": "Ander pakket uploaden",
+      "selected": "geselecteerd",
+      "create_course": "Cursus aanmaken",
+      "configure": "Configureren",
+      "ready_to_analyze": "Klaar voor analyse",
+      "course_details": "Cursusdetails"
+    },
+    "clone_course": "Cursus klonen",
+    "clone_course_title": "\"{{name}}\" klonen",
+    "clone_course_confirm": "Dit maakt een volledige kopie van de cursus, inclusief alle hoofdstukken, activiteiten en bestanden. De gekloonde cursus wordt ingesteld als privé.",
+    "cloning_course": "Cursus klonen...",
+    "course_cloned_success": "Cursus succesvol gekloond",
+    "course_cloned_error": "Kon cursus niet klonen",
+    "published": "Gepubliceerd",
+    "unpublished": "Niet gepubliceerd",
+    "search_courses": "Cursussen zoeken...",
+    "search_results": "{{count}} cursus(sen) gevonden voor \"{{query}}\"",
+    "no_search_results": "Geen cursussen gevonden",
+    "try_different_search": "Probeer een andere zoekterm",
+    "select_courses": "Selecteren",
+    "select_all": "Alles selecteren",
+    "clear_selection": "Selectie wissen",
+    "selected_count": "{{count}} geselecteerd",
+    "clone_selected": "Selectie klonen",
+    "clone_selected_confirm": "Dit maakt kopieën van {{count}} cursus(sen). Alle gekloonde cursussen worden als privé ingesteld. Doorgaan?",
+    "delete_selected": "Selectie verwijderen",
+    "delete_selected_confirm": "{{count}} cursus(sen) worden permanent verwijderd. Deze actie kan niet ongedaan worden gemaakt. Doorgaan?",
+    "course_description_required": "Cursusbeschrijving is verplicht",
+    "export_course": "Cursus Exporteren",
+    "export_selected": "Geselecteerde Exporteren",
+    "exporting_course": "Cursus exporteren...",
+    "exporting_courses": "{{count}} cursus(sen) exporteren...",
+    "course_exported_success": "Cursus succesvol geëxporteerd",
+    "courses_exported_success": "{{count}} cursus(sen) succesvol geëxporteerd",
+    "course_exported_error": "Cursus exporteren mislukt",
+    "courses_exported_error": "Cursussen exporteren mislukt",
+    "clone_courses_title": "Cursussen Klonen",
+    "delete_courses_title": "Cursussen Verwijderen",
+    "deleting_courses": "{{count}} cursus(sen) verwijderen...",
+    "courses_deleted_success": "{{count}} cursus(sen) succesvol verwijderd",
+    "courses_deleted_partial": "{{success}} cursus(sen) verwijderd, {{error}} mislukt",
+    "cloning_courses": "{{count}} cursus(sen) klonen...",
+    "courses_cloned_success": "{{count}} cursus(sen) succesvol gekloond",
+    "courses_cloned_partial": "{{success}} cursus(sen) gekloond, {{error}} mislukt",
+    "import": {
+      "scorm_package": "SCORM Pakket",
+      "scorm_description": "SCORM 1.2 of SCORM 2004 pakketten importeren",
+      "learnhouse_courses": "LearnHouse Cursussen",
+      "learnhouse_description": "Cursussen importeren die zijn geëxporteerd vanuit LearnHouse",
+      "upload_package": "Pakket Uploaden",
+      "configure": "Configureren",
+      "complete": "Voltooid",
+      "click_to_upload": "Klik om te uploaden of sleep en zet neer",
+      "learnhouse_format": "LearnHouse cursus export (.zip)",
+      "learnhouse_info": "Upload een LearnHouse cursus export pakket (.zip). Je kunt selecteren welke cursussen je wilt importeren en importopties configureren.",
+      "analyze_package": "Pakket Analyseren",
+      "ready_to_analyze": "Klaar om te analyseren",
+      "invalid_file_format": "Upload alstublieft een .zip bestand",
+      "analysis_failed": "Pakket analyseren mislukt",
+      "package_analyzed": "Pakket Succesvol Geanalyseerd",
+      "select_courses": "Cursussen Selecteren om te Importeren",
+      "select_all": "Alles Selecteren",
+      "deselect_all": "Alles Deselecteren",
+      "chapters": "hoofdstukken",
+      "activities": "activiteiten",
+      "has_thumbnail": "Heeft miniatuur",
+      "selected": "geselecteerd",
+      "options": "Importopties",
+      "name_prefix": "Cursusnaam Voorvoegsel",
+      "name_prefix_placeholder": "bijv. Geïmporteerd -",
+      "set_private": "Als privé instellen",
+      "set_unpublished": "Als ongepubliceerd instellen",
+      "select_at_least_one": "Selecteer minimaal één cursus om te importeren",
+      "import_courses": "{{count}} Cursus(sen) Importeren",
+      "upload_different": "Ander pakket uploaden",
+      "importing_courses": "Cursussen importeren...",
+      "please_wait": "Dit kan even duren",
+      "import_complete": "Import Voltooid!",
+      "import_failed": "Import Mislukt",
+      "import_partial": "Import Gedeeltelijk Voltooid",
+      "import_summary": "{{successful}} van {{total}} cursus(sen) succesvol geïmporteerd",
+      "created": "Aangemaakt",
+      "done": "Klaar"
+    },
+    "scorm": {
+      "upload_package": "SCORM Pakket Uploaden",
+      "package_file": "Pakketbestand (.zip)",
+      "click_to_upload": "Klik om te uploaden of sleep en zet neer",
+      "supported_versions": "SCORM 1.2 of SCORM 2004 pakket",
+      "import_info": "Upload je SCORM pakket om de inhoud te analyseren. Je kunt de cursus configureren en activiteiten aan hoofdstukken toewijzen.",
+      "analyze_package": "Pakket Analyseren",
+      "package_analyzed": "Pakket Succesvol Geanalyseerd",
+      "assign_scos": "Activiteiten aan Hoofdstukken Toewijzen",
+      "activity_name": "Activiteit",
+      "chapter_name": "Hoofdstuk",
+      "upload_different": "Ander pakket uploaden",
+      "selected": "geselecteerd",
+      "create_course": "Cursus Aanmaken",
+      "configure": "Configureren",
+      "ready_to_analyze": "Klaar om te analyseren",
+      "course_details": "Cursusdetails"
+    },
+    "create": {
+      "choose_type": "Nieuwe cursus maken",
+      "choose_type_description": "Kies hoe je je cursus wilt maken",
+      "from_scratch": "Vanaf nul beginnen",
+      "from_scratch_description": "Maak handmatig je cursusstructuur en inhoud",
+      "with_ai": "Beginnen met AI",
+      "with_ai_description": "Laat AI je helpen bij het plannen en genereren van je cursusinhoud",
+      "ai": {
+        "title": "AI Cursusmaker",
+        "step_planning": "Planning",
+        "step_content": "Inhoud",
+        "continue_to_content": "Doorgaan naar inhoud",
+        "creating_structure": "Structuur maken...",
+        "finish_and_edit": "Afronden & cursus bewerken",
+        "chat_title": "Cursusplanner",
+        "chat_description": "Beschrijf de cursus die je wilt maken, of kies hieronder een sjabloon:",
+        "iterations": "iteraties",
+        "max_iterations_reached": "Maximale iteraties bereikt. Ga door naar inhoudsgeneratie of begin opnieuw.",
+        "content_step_hint": "Je cursusstructuur is gemaakt. Genereer hieronder de inhoud voor elke activiteit.",
+        "content_step_info": "Gebruik het linker paneel om inhoud voor je activiteiten te genereren.",
+        "input_placeholder_initial": "Beschrijf de cursus die je wilt maken...",
+        "input_placeholder_iterate": "Beschrijf wijzigingen in het plan...",
+        "generating": "Cursusplan maken...",
+        "plan_generated": "Cursusplan gegenereerd",
+        "plan_generated_hint": "Bekijk het plan in het voorbeeldpaneel. Je kunt het bewerken of wijzigingen aanvragen.",
+        "describe_course": "Beschrijf je cursus",
+        "describe_course_hint": "Vertel de AI over de cursus die je wilt maken, inclusief onderwerp, doelgroep en leerdoelen.",
+        "generating_plan": "Cursusplan genereren...",
+        "chapters": "Hoofdstukken",
+        "activities": "activiteiten",
+        "add_chapter": "Hoofdstuk toevoegen",
+        "add_activity": "Activiteit toevoegen",
+        "generate_content": "Inhoud genereren",
+        "generate_content_description": "Genereer AI-aangedreven inhoud voor elke activiteit in je cursus.",
+        "generated": "gegenereerd",
+        "generate_all": "Alles genereren",
+        "generate": "Genereren",
+        "generating_short": "Genereren...",
+        "done": "Klaar",
+        "course_structure_created": "Cursusstructuur succesvol gemaakt!",
+        "failed_to_create": "Fout bij maken van cursusstructuur",
+        "create_course": "Cursus maken",
+        "course_created_success": "Cursus succesvol gemaakt!",
+        "content_generated_success": "Inhoud succesvol gegenereerd!",
+        "content_parse_error": "Fout bij het parseren van gegenereerde inhoud",
+        "all_content_generated": "Alle inhoud gegenereerd!",
+        "all_content_generated_hint": "Klik op 'Afronden & cursus bewerken' om je cursusinhoud te bekijken en te bewerken.",
+        "attach_image": "Foto",
+        "attach_video": "Video",
+        "attach_youtube": "YouTube-link",
+        "attach_file": "Document"
+      }
+    }
+  },
+  "communities": {
+    "title": "Community's",
+    "new_community": "Nieuwe community",
+    "no_communities": "Nog geen community's",
+    "no_communities_description": "Maak een community aan om discussies te starten",
+    "public": "Openbaar",
+    "private": "Privé",
+    "discussions": "discussies",
+    "discussion": "discussie",
+    "created": "Aangemaakt",
+    "linked_course": "Gekoppelde cursus",
+    "community_guidelines": "Communityrichtlijnen",
+    "community_guidelines_text": "Wees respectvol en constructief. Help anderen en deel je kennis met de community.",
+    "new_discussion": "Nieuwe discussie",
+    "manage": "Beheren",
+    "sidebar": {
+      "posted_by": "Geplaatst door",
+      "upvotes": "Stemmen",
+      "category": "Categorie",
+      "created": "Aangemaakt",
+      "pinned": "Vastgepind",
+      "locked": "Vergrendeld",
+      "reactions": "Reacties",
+      "community": "Community"
+    },
+    "discussion_list": {
+      "search_placeholder": "Discussies zoeken...",
+      "sort_by": "Sorteren op:",
+      "latest_activity": "Laatste activiteit",
+      "top": "Populair",
+      "hot": "Trending",
+      "new_discussion": "Nieuwe discussie",
+      "select": "Selecteren",
+      "cancel": "Annuleren",
+      "select_all": "Alles selecteren",
+      "deselect_all": "Alles deselecteren",
+      "selected": "geselecteerd",
+      "delete": "Verwijderen",
+      "delete_discussions_title": "{{count}} discussie verwijderen?",
+      "delete_discussions_title_plural": "{{count}} discussies verwijderen?",
+      "delete_discussions_confirm": "Weet je zeker dat je {{count}} {{type}} wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.",
+      "no_results": "Geen resultaten gevonden",
+      "no_results_description": "Probeer je zoekopdracht aan te passen of het filter te wissen",
+      "clear_search": "Zoekopdracht wissen",
+      "no_discussions": "Nog geen discussies",
+      "no_discussions_description": "Wees de eerste die een discussie start in deze community!",
+      "start_discussion": "Discussie starten"
+    },
+    "discussion_detail": {
+      "edit": "Bewerken",
+      "delete": "Verwijderen",
+      "delete_title": "Discussie verwijderen?",
+      "delete_confirm": "Weet je zeker dat je deze discussie wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.",
+      "delete_button": "Discussie verwijderen",
+      "no_details": "Geen aanvullende details verstrekt."
+    },
+    "discussion_card": {
+      "pin_discussion": "Discussie vastpinnen",
+      "unpin_discussion": "Vastpinnen opheffen",
+      "lock_discussion": "Discussie vergrendelen",
+      "unlock_discussion": "Discussie ontgrendelen",
+      "delete_discussion": "Discussie verwijderen",
+      "delete_title": "Discussie verwijderen?",
+      "delete_confirm": "Weet je zeker dat je deze discussie wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.",
+      "votes": "stemmen"
+    },
+    "comments": {
+      "no_replies": "Nog geen reacties",
+      "locked": "Deze discussie is vergrendeld",
+      "sign_in_to_reply": "Log in",
+      "to_reply": "om te reageren",
+      "write_reply": "Schrijf een reactie...",
+      "reply": "Reageren",
+      "edit": "Bewerken",
+      "delete": "Verwijderen",
+      "save": "Opslaan",
+      "cancel": "Annuleren",
+      "failed_to_post": "Kon reactie niet plaatsen. Probeer het opnieuw.",
+      "content_not_allowed": "Je reactie bevat niet-toegestane inhoud.",
+      "failed_to_update": "Bijwerken mislukt. Probeer het opnieuw."
+    },
+    "label_filter": {
+      "label": "Label:",
+      "all": "Alle",
+      "all_discussions": "Alle discussies",
+      "clear_filter": "Filter wissen"
+    },
+    "labels": {
+      "general": "Algemeen",
+      "question": "Vraag",
+      "idea": "Idee",
+      "announcement": "Aankondiging",
+      "showcase": "Showcase"
+    },
+    "create_discussion": {
+      "title": "Start een discussie",
+      "description": "Deel je gedachten met de community",
+      "category_label": "Categorie",
+      "title_label": "Discussietitel",
+      "title_placeholder": "Waar wil je over praten?",
+      "emoji_selected": "Aangepaste emoji geselecteerd",
+      "emoji_hint": "Klik op + om een aangepaste emoji toe te voegen (optioneel)",
+      "details_label": "Details (optioneel)",
+      "details_placeholder": "Voeg meer context of details toe aan je discussie...",
+      "editor_hint": "Gebruik de werkbalk om je tekst op te maken met vet, cursief, lijsten en meer.",
+      "cancel": "Annuleren",
+      "submit": "Discussie plaatsen",
+      "title_required": "Titel is verplicht",
+      "title_min_length": "Titel moet minimaal 5 tekens bevatten",
+      "title_max_length": "Titel moet minder dan 200 tekens bevatten",
+      "content_not_allowed": "Je discussie bevat niet-toegestane inhoud.",
+      "failed_to_create": "Kon discussie niet aanmaken. Probeer het opnieuw."
+    },
+    "edit_discussion": {
+      "title": "Discussie bewerken",
+      "description": "Werk je discussie bij",
+      "save": "Wijzigingen opslaan",
+      "cancel": "Annuleren",
+      "close": "Sluiten",
+      "failed_to_update": "Bijwerken mislukt. Probeer het opnieuw.",
+      "content_not_allowed": "Je discussie bevat niet-toegestane inhoud.",
+      "max_edits_reached": "Je hebt het maximale aantal bewerkingen bereikt ({{count}}). Je kunt deze discussie niet meer bewerken.",
+      "edits_remaining": "Je hebt nog {{count}} bewerking(en) over.",
+      "no_edits_remaining": "Je hebt geen bewerkingen meer over ({{count}})."
+    },
+    "course_section": {
+      "title": "Community discussies",
+      "view_all": "Alles bekijken",
+      "no_discussions": "Nog geen discussies",
+      "start_first": "Start de eerste discussie"
+    }
   },
   "collections": {
     "collections": "Collecties",
@@ -427,6 +750,15 @@
     "benefits": "Voordelen:",
     "min_price": "Minimale prijs:",
     "choose_price": "Kies je prijs"
+  },
+  "account": {
+    "title": "Account",
+    "general": "Algemeen",
+    "profile": "Profiel",
+    "security": "Beveiliging",
+    "my_courses": "Mijn cursussen",
+    "no_purchased_courses": "Nog geen cursussen gekocht",
+    "purchased_courses_description": "Cursussen die je hebt gekocht of waarop je bent geabonneerd verschijnen hier"
   },
   "user": {
     "user_settings": "Gebruikersinstellingen",
@@ -706,10 +1038,538 @@
       "create_course": "Cursus aanmaken",
       "create_new_course": "Maak een nieuwe cursus aan",
       "import_course": "Cursus importeren",
+      "import_scorm": "SCORM Pakket Importeren",
       "import_scorm_description": "Importeer een SCORM-pakket om een nieuwe cursus te maken",
+      "import_learnhouse": "LearnHouse Cursussen Importeren",
+      "import_learnhouse_description": "Importeer cursussen uit een LearnHouse export pakket",
+      "import_select_type": "Selecteer het type pakket dat je wilt importeren",
       "no_courses": "Nog geen cursussen",
       "create_course_placeholder": "Maak een cursus aan om inhoud toe te voegen",
-      "no_courses_available": "Nog geen cursussen beschikbaar"
+      "no_courses_available": "Nog geen cursussen beschikbaar",
+      "publishing": "Cursus publiceren...",
+      "unpublishing": "Cursus depubliceren...",
+      "published_success": "Cursus succesvol gepubliceerd",
+      "unpublished_success": "Cursus succesvol gedepubliceerd",
+      "publish_error": "Fout bij bijwerken publicatiestatus",
+      "published": "Gepubliceerd",
+      "unpublished": "Niet gepubliceerd",
+      "processing": "Verwerken...",
+      "click_to_publish": "Klik om te publiceren",
+      "click_to_unpublish": "Klik om te depubliceren",
+      "preview": "Voorbeeld",
+      "save": {
+        "success": "Wijzigingen succesvol opgeslagen",
+        "error": "Kan wijzigingen niet opslaan",
+        "partial_success": "Opgeslagen met enkele problemen: {{failed}}",
+        "partial_error": "Gedeeltelijk opgeslagen ({{success}}), maar mislukt: {{failed}}",
+        "certification_error": "Kan certificeringsinstellingen niet opslaan",
+        "saving": "Opslaan...",
+        "saved": "Opgeslagen",
+        "save": "Opslaan",
+        "unsaved": "Niet-opgeslagen wijzigingen",
+        "retry": "Fout - Klik om opnieuw te proberen",
+        "retry_button": "Opnieuw proberen"
+      },
+      "overview_top": {
+        "course_label": "Cursus",
+        "rights_guide_button": "Gids voor rechten"
+      },
+      "settings": {
+        "tabs": {
+          "general": "Algemeen",
+          "content": "Inhoud",
+          "access": "Toegang",
+          "contributors": "Bijdragers",
+          "certification": "Certificering"
+        },
+        "access_denied": {
+          "title": "Toegang geweigerd",
+          "message": "Je hebt geen rechten om deze cursus te bekijken."
+        },
+        "access_restricted": {
+          "title": "Toegang beperkt",
+          "message": "Je hebt geen rechten om {{tab}} te bekijken"
+        },
+        "loading": "Laden..."
+      },
+      "general": {
+        "form": {
+          "name_label": "Naam",
+          "name_required": "Naam is verplicht",
+          "name_max_length": "Naam mag niet langer zijn dan 100 tekens",
+          "description_label": "Beschrijving",
+          "description_required": "Beschrijving is verplicht",
+          "description_max_length": "Beschrijving mag niet langer zijn dan 1000 tekens",
+          "about_label": "Over",
+          "learnings_label": "Wat je leert",
+          "learnings_required": "Wat je leert is verplicht",
+          "learnings_invalid_format": "Ongeldig formaat voor wat je leert",
+          "learnings_min_items": "Voeg minimaal één leerdoel toe",
+          "learnings_empty_text": "Leerdoelen mogen niet leeg zijn",
+          "learnings_invalid_json": "Ongeldig JSON-formaat",
+          "tags_label": "Tags",
+          "tags_placeholder": "Druk op Enter om toe te voegen...",
+          "thumbnail_type_label": "Miniatuurtype",
+          "thumbnail_type_image": "Afbeelding",
+          "thumbnail_type_video": "Video",
+          "thumbnail_type_both": "Beide",
+          "thumbnail_label": "Miniatuur",
+          "image_search_placeholder": "Zoek afbeeldingen..."
+        },
+        "thumbnail": {
+          "upload_image": "Afbeelding uploaden",
+          "upload_video": "Video uploaden",
+          "gallery": "Galerij",
+          "tabs": {
+            "image": "Afbeelding",
+            "video": "Video"
+          },
+          "supported_formats": {
+            "image": "Ondersteunt PNG, JPG/JPEG (Max 8MB)",
+            "video": "Ondersteunt MP4, WebM (Max 100MB)"
+          }
+        },
+        "errors": {
+          "save_failed": "Opslaan van cursusstructuur mislukt."
+        }
+      },
+      "access": {
+        "title": "Toegang tot cursus",
+        "subtitle": "Kies of je cursus openbaar op internet moet zijn of alleen toegankelijk voor ingelogde gebruikers",
+        "public": {
+          "title": "Openbaar",
+          "description": "De cursus is openbaar beschikbaar op internet, wordt geïndexeerd door zoekmachines en is voor iedereen toegankelijk",
+          "active": "Actief",
+          "confirmation_title": "Wijzigen naar Openbaar?",
+          "confirmation_message": "Weet je zeker dat je deze cursus openbaar wilt maken op internet?",
+          "confirmation_button": "Wijzigen naar Openbaar"
+        },
+        "users_only": {
+          "title": "Alleen Gebruikers",
+          "description": "De cursus is alleen toegankelijk voor ingelogde gebruikers, en je kunt optioneel gebruikersgroepen selecteren die toegang hebben tot deze cursus",
+          "active": "Actief",
+          "confirmation_title": "Wijzigen naar Alleen Gebruikers?",
+          "confirmation_message": "Weet je zeker dat je deze cursus alleen toegankelijk wilt maken voor ingelogde gebruikers?",
+          "confirmation_button": "Wijzigen naar Alleen Gebruikers"
+        },
+        "usergroups": {
+          "title": "Gebruikersgroepen",
+          "subtitle": "Als je alleen bepaalde gebruikersgroepen toegang wilt geven tot deze cursus, kun je deze hier koppelen",
+          "table": {
+            "name": "Naam",
+            "actions": "Acties"
+          },
+          "actions": {
+            "delete_link": "Link verwijderen",
+            "link_to_usergroup": "Koppelen aan gebruikersgroep"
+          },
+          "modals": {
+            "link_title": "Koppel cursus aan gebruikersgroep",
+            "link_description": "Selecteer de gebruikersgroep waaraan je deze cursus wilt koppelen. Gebruikers in deze groep hebben toegang tot de cursus.",
+            "unlink_title": "Ontkoppelen van gebruikersgroep?",
+            "unlink_message": "Gebruikers in deze groep hebben geen toegang meer tot deze cursus",
+            "unlink_button": "Link verwijderen",
+            "warning": "Gebruikers die niet in de gebruikersgroep zitten, hebben geen toegang meer tot deze cursus",
+            "usergroup_name": "Naam gebruikersgroep",
+            "no_usergroups": "Geen gebruikersgroepen beschikbaar",
+            "create_usergroup": "Gebruikersgroep aanmaken",
+            "link_button": "Koppelen"
+          },
+          "toasts": {
+            "link_success": "Succesvol gekoppeld aan gebruikersgroep",
+            "link_error": "Fout {{status}}: {{detail}}",
+            "unlink_success": "Gebruikersgroep succesvol ontkoppeld",
+            "unlink_error": "Fout bij het ontkoppelen van gebruikersgroep."
+          }
+        }
+      },
+      "contributors": {
+        "title": "Cursus Bijdragers",
+        "subtitle": "Beheer bijdragers en voeg nieuwe bijdragers toe aan de cursus",
+        "open_to_contributors": {
+          "title": "Open voor bijdragers",
+          "description": "De cursus staat open voor bijdragers. Gebruikers kunnen zich aanmelden om bijdrager te worden en te helpen de cursusinhoud te verbeteren.",
+          "active": "Actief",
+          "confirmation_title": "Openen voor bijdragers?",
+          "confirmation_message": "Weet je zeker dat je deze cursus wilt openen voor bijdragers?",
+          "confirmation_button": "Openen voor bijdragers"
+        },
+        "closed_to_contributors": {
+          "title": "Gesloten voor bijdragers",
+          "description": "De cursus is gesloten voor bijdragers. Alleen bestaande bijdragers kunnen de cursusinhoud bewerken.",
+          "active": "Actief",
+          "confirmation_title": "Sluiten voor bijdragers?",
+          "confirmation_message": "Weet je zeker dat je deze cursus wilt sluiten voor bijdragers?",
+          "confirmation_button": "Sluiten voor bijdragers"
+        },
+        "search": {
+          "placeholder": "Zoek gebruikers om toe te voegen als bijdrager op naam of gebruikersnaam...",
+          "searching": "Zoeken...",
+          "no_results": "Geen gebruikers gevonden"
+        },
+        "table": {
+          "name": "Naam",
+          "username": "Gebruikersnaam",
+          "email": "E-mail",
+          "role": "Rol",
+          "status": "Status",
+          "added_on": "Toegevoegd op"
+        },
+        "roles": {
+          "creator": "Maker",
+          "contributor": "Bijdrager",
+          "maintainer": "Beheerder",
+          "reporter": "Reporter"
+        },
+        "statuses": {
+          "active": "Actief",
+          "inactive": "Inactief",
+          "pending": "In afwachting"
+        },
+        "actions": {
+          "selected_users": "{{count}} gebruiker geselecteerd",
+          "selected_users_plural": "{{count}} gebruikers geselecteerd",
+          "clear": "Wissen",
+          "add_selected": "Geselecteerde toevoegen",
+          "selected_contributors": "{{count}} bijdrager geselecteerd",
+          "selected_contributors_plural": "{{count}} bijdragers geselecteerd",
+          "remove_selected": "Geselecteerde verwijderen",
+          "already_contributor": "Al een bijdrager"
+        },
+        "toasts": {
+          "add_success": "{{count}} bijdrager(s) succesvol toegevoegd",
+          "add_error": "Toevoegen van {{username}} mislukt: {{reason}}",
+          "add_failed": "Toevoegen van bijdragers mislukt",
+          "update_success": "Bijdrager succesvol bijgewerkt",
+          "update_error": "Fout: {{detail}}",
+          "update_failed": "Er is een fout opgetreden bij het bijwerken van de bijdrager.",
+          "remove_success": "{{count}} bijdrager(s) succesvol verwijderd",
+          "remove_failed": "Verwijderen van bijdragers mislukt",
+          "cannot_modify_creator": "Je kunt de rol of status van de maker niet wijzigen"
+        }
+      },
+      "certification": {
+        "title": "Cursus Certificering",
+        "subtitle": "Activeer en configureer certificaten voor studenten die deze cursus voltooien",
+        "form": {
+          "certification_name_label": "Certificeringsnaam",
+          "certification_name_required": "Certificeringsnaam is verplicht indien ingeschakeld",
+          "certification_name_max_length": "Naam mag niet langer zijn dan 100 tekens",
+          "certification_name_placeholder": "bijv. Geavanceerde JavaScript Certificering",
+          "certification_type_label": "Certificeringstype",
+          "certification_description_label": "Certificeringsbeschrijving",
+          "certification_description_required": "Beschrijving is verplicht indien ingeschakeld",
+          "certification_description_max_length": "Beschrijving mag niet langer zijn dan 500 tekens",
+          "certification_description_placeholder": "Beschrijf wat deze certificering vertegenwoordigt en de waarde ervan...",
+          "certificate_pattern_label": "Certificaatpatroon",
+          "certificate_instructor_label": "Naam instructeur (optioneel)",
+          "certificate_instructor_placeholder": "bijv. Dr. Jane Smith"
+        },
+        "types": {
+          "completion": "Cursusvoltooiing",
+          "achievement": "Op basis van prestaties",
+          "assessment": "Op basis van beoordeling",
+          "participation": "Deelname",
+          "mastery": "Vaardigheidsbeheersing",
+          "professional": "Professionele ontwikkeling",
+          "continuing": "Permanente educatie",
+          "workshop": "Aanwezigheid bij workshop",
+          "specialization": "Specialisatie"
+        },
+        "patterns": {
+          "royal": {
+            "name": "Koninklijk",
+            "description": "Sierlijke stijl met kroonmotieven"
+          },
+          "tech": {
+            "name": "Tech",
+            "description": "Circuit-geïnspireerde patronen"
+          },
+          "nature": {
+            "name": "Natuur",
+            "description": "Organische bladpatronen"
+          },
+          "geometric": {
+            "name": "Geometrisch",
+            "description": "Abstracte vormen en lijnen"
+          },
+          "vintage": {
+            "name": "Vintage",
+            "description": "Art Deco styling"
+          },
+          "waves": {
+            "name": "Golven",
+            "description": "Vloeiende waterpatronen"
+          },
+          "minimal": {
+            "name": "Minimaal",
+            "description": "Schoon en eenvoudig"
+          },
+          "professional": {
+            "name": "Professioneel",
+            "description": "Zakelijk ontwerp"
+          },
+          "academic": {
+            "name": "Academisch",
+            "description": "Traditionele universiteitsstijl"
+          },
+          "modern": {
+            "name": "Modern",
+            "description": "Eigentijdse strakke lijnen"
+          }
+        },
+        "sections": {
+          "basic_info": {
+            "title": "Basis Informatie",
+            "subtitle": "Configureer de basisdetails van je certificering"
+          },
+          "certificate_design": {
+            "title": "Certificaat Ontwerp",
+            "subtitle": "Kies een decoratief patroon voor je certificaat"
+          },
+          "preview": {
+            "title": "Certificaat Voorbeeld",
+            "subtitle": "Real-time voorbeeld van hoe je certificaat eruit zal zien"
+          }
+        },
+        "states": {
+          "disabled": {
+            "title": "Certificering niet geconfigureerd",
+            "message": "Schakel certificering in om studenten een certificaat aan te bieden bij het voltooien van de cursus.",
+            "button": "Certificering inschakelen",
+            "creating": "Inschakelen..."
+          },
+          "creating": {
+            "title": "Certificering aanmaken...",
+            "message": "Even geduld terwijl we de cursuscertificering voor je instellen."
+          }
+        },
+        "errors": {
+          "loading": "Fout bij het laden van certificering",
+          "create_failed": "Aanmaken van certificering mislukt.",
+          "remove_failed": "Verwijderen van certificering mislukt."
+        },
+        "toasts": {
+          "create_success": "Certificering succesvol aangemaakt",
+          "create_error": "Aanmaken van certificering mislukt",
+          "remove_success": "Certificering succesvol verwijderd",
+          "remove_error": "Verwijderen van certificering mislukt"
+        }
+      },
+      "communities": {
+        "title": "Community's",
+        "new_community": "Nieuwe community",
+        "no_communities": "Nog geen community's",
+        "no_communities_description": "Maak je eerste community om discussies te starten",
+        "card": {
+          "open_settings": "Instellingen openen",
+          "view_community": "Community bekijken",
+          "quick_edit": "Snel bewerken"
+        },
+        "settings": {
+          "tabs": {
+            "general": "Algemeen",
+            "thumbnail": "Miniatuur",
+            "course": "Gekoppelde cursus",
+            "moderation": "Moderatie"
+          },
+          "general": {
+            "title": "Algemene instellingen",
+            "subtitle": "Beheer community-naam, beschrijving en zichtbaarheid"
+          },
+          "thumbnail": {
+            "title": "Miniatuur",
+            "subtitle": "Werk de omslagafbeelding van de community bij"
+          },
+          "course": {
+            "title": "Gekoppelde cursus",
+            "subtitle": "Verbind deze community met een cursus"
+          },
+          "moderation": {
+            "title": "Moderatie",
+            "subtitle": "Configureer instellingen voor contentmoderatie"
+          }
+        },
+        "course": {
+          "title": "Gekoppelde cursus",
+          "subtitle": "Verbind deze community met een cursus voor cursusspecifieke discussies",
+          "currently_linked": "Momenteel gekoppeld",
+          "unlink": "Ontkoppelen",
+          "link_button": "Cursus koppelen",
+          "search_placeholder": "Cursussen zoeken...",
+          "no_courses": "Geen cursussen gevonden",
+          "course_linked_id": "Cursus gekoppeld (ID: {{id}})",
+          "course_not_found": "De gekoppelde cursus bestaat mogelijk niet meer of je hebt geen toegang",
+          "toasts": {
+            "linking": "Cursus koppelen...",
+            "link_success": "Cursus succesvol gekoppeld",
+            "link_error": "Koppelen van cursus mislukt",
+            "unlinking": "Cursus ontkoppelen...",
+            "unlink_success": "Cursus succesvol ontkoppeld",
+            "unlink_error": "Ontkoppelen van cursus mislukt"
+          }
+        },
+        "general": {
+          "title": "Community-instellingen",
+          "subtitle": "Werk de basisinformatie van je community bij",
+          "form": {
+            "name_label": "Community-naam",
+            "name_required": "Community-naam is verplicht",
+            "name_min_length": "Naam moet minimaal 3 tekens bevatten",
+            "name_max_length": "Naam moet minder dan 100 tekens bevatten",
+            "name_placeholder": "Voer community-naam in",
+            "description_label": "Beschrijving",
+            "description_max_length": "Beschrijving moet minder dan 500 tekens bevatten",
+            "description_placeholder": "Beschrijf waar deze community over gaat",
+            "public_label": "Openbare Community",
+            "public_description": "Maak deze community zichtbaar voor iedereen",
+            "characters_left": "{{count}} tekens over"
+          },
+          "toasts": {
+            "updating": "Community bijwerken...",
+            "update_success": "Community succesvol bijgewerkt",
+            "update_error": "Community bijwerken mislukt"
+          }
+        },
+        "thumbnail": {
+          "title": "Community-miniatuur",
+          "subtitle": "Upload een omslagafbeelding voor je community",
+          "no_thumbnail": "Geen miniatuur ingesteld",
+          "upload_image": "Afbeelding uploaden",
+          "browse_unsplash": "Bladeren op Unsplash",
+          "uploading": "Uploaden...",
+          "supported_formats": "Ondersteunde formaten: JPG, JPEG, PNG. Max. grootte: 8MB. Aanbevolen verhouding: 16:9",
+          "toasts": {
+            "update_success": "Miniatuur succesvol bijgewerkt",
+            "update_error": "Miniatuur bijwerken mislukt",
+            "invalid_type": "Ongeldig bestandstype. Upload alleen PNG- of JPG/JPEG-afbeeldingen",
+            "file_too_large": "Bestandsgrootte overschrijdt de limiet van 8MB"
+          }
+        },
+        "moderation": {
+          "title": "Contentmoderatie",
+          "subtitle": "Configureer geblokkeerde woorden en contentfilters",
+          "info_title": "Geblokkeerde woorden",
+          "info_description": "Discussies en reacties met deze woorden worden geblokkeerd. Gebruikers zien een foutmelding en hun content wordt niet geplaatst.",
+          "add_word_label": "Geblokkeerd woord toevoegen",
+          "add_word_placeholder": "Voer een woord of zin in...",
+          "add_button": "Toevoegen",
+          "batch_add_label": "Woorden in bulk toevoegen",
+          "batch_add_description": "Voeg meerdere woorden tegelijk toe, gescheiden door komma's",
+          "batch_add_placeholder": "woord1, woord2, woord3...",
+          "add_all_button": "Alles Toevoegen",
+          "blocked_words_label": "Geblokkeerde woorden",
+          "no_blocked_words": "Nog geen geblokkeerde woorden",
+          "no_blocked_words_description": "Voeg woorden toe om contentmoderatie in te schakelen",
+          "word_exists_error": "Dit woord staat al in de lijst",
+          "all_words_exist_error": "Alle woorden staan al in de lijst of de invoer is leeg",
+          "toasts": {
+            "saving": "Moderatie-instellingen opslaan...",
+            "save_success": "Moderatie-instellingen opgeslagen",
+            "save_error": "Opslaan van moderatie-instellingen mislukt"
+          }
+        },
+        "modals": {
+          "create": {
+            "title": "Community Aanmaken",
+            "description": "Maak een nieuwe community voor discussies",
+            "form": {
+              "name_label": "Community-naam",
+              "name_placeholder": "Voer community-naam in",
+              "description_label": "Beschrijving",
+              "description_placeholder": "Beschrijf waar deze community over gaat",
+              "public_label": "Maak deze community openbaar (zichtbaar voor iedereen)"
+            },
+            "cancel": "Annuleren",
+            "submit": "Community Aanmaken"
+          },
+          "edit": {
+            "title": "Community Bewerken",
+            "description": "Community-instellingen bijwerken"
+          },
+          "delete": {
+            "title": "{{name}} verwijderen?",
+            "message": "Weet je zeker dat je deze community wilt verwijderen? Alle discussies worden permanent verwijderd.",
+            "button": "Community Verwijderen"
+          }
+        },
+        "toasts": {
+          "creating": "Community aanmaken...",
+          "create_success": "Community succesvol aangemaakt",
+          "create_error": "Community aanmaken mislukt",
+          "deleting": "Community verwijderen...",
+          "delete_success": "Community succesvol verwijderd",
+          "delete_error": "Community verwijderen mislukt"
+        }
+      },
+      "structure": {
+        "loading": "Laden...",
+        "add_chapter_button": "Hoofdstuk toevoegen",
+        "modals": {
+          "new_chapter": {
+            "title": "Hoofdstuk aanmaken",
+            "description": "Voeg een nieuw hoofdstuk toe aan je cursus",
+            "form": {
+              "name_label": "Hoofdstuknaam",
+              "name_required": "Geef het hoofdstuk een naam",
+              "description_label": "Hoofdstukbeschrijving",
+              "description_required": "Geef een beschrijving van het hoofdstuk",
+              "submit": "Hoofdstuk aanmaken"
+            }
+          },
+          "delete_chapter": {
+            "title": "Verwijder {{name}}?",
+            "message": "Weet je zeker dat je dit hoofdstuk wilt verwijderen?",
+            "button": "Hoofdstuk verwijderen"
+          },
+          "new_activity": {
+            "title": "Activiteit aanmaken",
+            "description": "Kies een van de activiteitstypen om aan je cursus toe te voegen"
+          },
+          "delete_activity": {
+            "title": "Verwijder {{name}}?",
+            "message": "Weet je zeker dat je deze activiteit wilt verwijderen?",
+            "button": "Activiteit verwijderen"
+          }
+        },
+        "actions": {
+          "add_chapter": "Hoofdstuk toevoegen",
+          "add_activity": "Activiteit toevoegen",
+          "publish": "Publiceren",
+          "unpublish": "Publicatie ongedaan maken",
+          "preview_activity": "Activiteit bekijken",
+          "edit_page": "Pagina bewerken",
+          "edit_assignment": "Opdracht bewerken"
+        },
+        "chapter_element": {
+          "chapter_name_placeholder": "Naam van het hoofdstuk"
+        },
+        "activity": {
+          "name_placeholder": "Naam van de activiteit",
+          "types": {
+            "video": "Video",
+            "document": "Document",
+            "assignment": "Opdracht",
+            "assignments": "Opdrachten",
+            "dynamic": "Dynamisch",
+            "dynamic_page": "Dynamische Pagina",
+            "scorm": "Scorm"
+          },
+          "toasts": {
+            "deleting": "Activiteit verwijderen...",
+            "delete_success": "Activiteit succesvol verwijderd",
+            "updating": "Opdracht bijwerken...",
+            "update_success": "Activiteit succesvol bijgewerkt",
+            "name_update_success": "Activiteitnaam succesvol bijgewerkt",
+            "name_update_error": "Bijwerken van activiteitnaam mislukt",
+            "creating": "Activiteit aanmaken...",
+            "create_success": "Activiteit succesvol aangemaakt",
+            "uploading": "Bestand uploaden & activiteit aanmaken...",
+            "upload_success": "Bestand succesvol geüpload",
+            "creating_uploading": "Activiteit aanmaken & bestand uploaden..."
+          }
+        }
+      }
     },
     "organization": {
       "settings": {
@@ -768,7 +1628,10 @@
         "saving": "Opslaan...",
         "update_success": "Organisatiegegevens bijgewerkt",
         "update_error": "Bijwerken van organisatiegegevens mislukt",
-        "updating": "Organisatiegegevens bijwerken..."
+        "updating": "Organisatiegegevens bijwerken...",
+        "footer_text": "Voettekst",
+        "footer_text_placeholder": "Voer voettekst in...",
+        "footer_text_desc": "Aangepaste tekst die onderaan je organisatiepagina's wordt weergegeven"
       },
       "images": {
         "title": "Afbeeldingen & Previews",
@@ -826,7 +1689,8 @@
         "subtitle": "Beheer de visuele identiteit en sociale aanwezigheid van je organisatie",
         "tabs": {
           "images": "Afbeeldingen & Previews",
-          "social": "Sociale links"
+          "social": "Sociale links",
+          "theme": "Thema"
         }
       },
       "socials": {
@@ -959,7 +1823,11 @@
           "generating": "CSV genereren...",
           "success": "CSV succesvol geëxporteerd",
           "error": "Exporteren van CSV mislukt"
-        }
+        },
+        "enterprise_only": "Auditlogs zijn alleen beschikbaar in het Enterprise-abonnement",
+        "enterprise_feature": "Enterprise Functie",
+        "enterprise_description": "Auditlogs zijn een premium functie die alleen beschikbaar is voor organisaties met ons Enterprise-abonnement. Upgrade om volledige zichtbaarheid te krijgen in de activiteiten van je organisatie.",
+        "upgrade_button": "Upgraden naar Enterprise"
       },
       "landing": {
         "title": "Landingspagina",
@@ -1110,6 +1978,16 @@
           "selected": "Geselecteerd",
           "select": "Selecteer"
         }
+      },
+      "theme": {
+        "primary_color": "Primaire kleur",
+        "primary_color_desc": "Kies een primaire kleur voor de koptekst en pagina-achtergrond van je organisatie.",
+        "clear_color": "Kleur wissen",
+        "preview": "Live voorbeeld",
+        "preview_hint": "Zo zullen de koptekst en achtergrond van je organisatie eruitzien",
+        "footer_text": "Voettekst",
+        "footer_text_desc": "Voeg aangepaste tekst toe om in de paginavoettekst weer te geven.",
+        "footer_text_placeholder": "Voer voettekst in..."
       }
     },
     "users": {
@@ -1167,7 +2045,10 @@
           "remove_from_org": "Verwijderen uit organisatie",
           "removing": "Verwijderen...",
           "remove_success": "Gebruiker succesvol verwijderd uit organisatie",
-          "remove_error": "Fout bij het verwijderen van gebruiker"
+          "remove_error": "Fout bij het verwijderen van gebruiker",
+          "updating_role": "Rol bijwerken...",
+          "role_update_success": "Rol succesvol bijgewerkt",
+          "role_update_error": "Fout bij bijwerken rol"
         },
         "modals": {
           "update_role": {
@@ -1179,6 +2060,13 @@
             "message": "Weet je zeker dat je deze gebruiker wilt verwijderen uit de organisatie?",
             "button": "Gebruiker verwijderen"
           }
+        },
+        "search_placeholder": "Gebruikers zoeken...",
+        "no_results": "Geen gebruikers gevonden die overeenkomen met je zoekopdracht",
+        "no_users": "Nog geen gebruikers in deze organisatie",
+        "pagination": {
+          "showing": "Toont {{start}}-{{end}} van {{total}}",
+          "page": "Pagina {{current}} van {{total}}"
         }
       },
       "signups": {
@@ -1668,481 +2556,6 @@
           "toasts": {
             "creating": "Opdracht aanmaken...",
             "success": "Opdracht succesvol aangemaakt"
-          }
-        }
-      }
-    },
-    "courses": {
-      "title": "Cursussen",
-      "rights_guide": "Gids voor rechten",
-      "create_course": "Cursus aanmaken",
-      "create_new_course": "Maak een nieuwe cursus aan",
-      "import_course": "Cursus importeren",
-      "import_scorm_description": "Importeer een SCORM-pakket om een nieuwe cursus te maken",
-      "no_courses": "Nog geen cursussen",
-      "create_course_placeholder": "Maak een cursus aan om inhoud toe te voegen",
-      "no_courses_available": "Nog geen cursussen beschikbaar",
-      "overview_top": {
-        "course_label": "Cursus",
-        "rights_guide_button": "Gids voor rechten"
-      },
-      "settings": {
-        "tabs": {
-          "general": "Algemeen",
-          "content": "Inhoud",
-          "access": "Toegang",
-          "contributors": "Bijdragers",
-          "certification": "Certificering"
-        },
-        "access_denied": {
-          "title": "Toegang geweigerd",
-          "message": "Je hebt geen rechten om deze cursus te bekijken."
-        },
-        "access_restricted": {
-          "title": "Toegang beperkt",
-          "message": "Je hebt geen rechten om {{tab}} te bekijken"
-        },
-        "loading": "Laden..."
-      },
-      "general": {
-        "form": {
-          "name_label": "Naam",
-          "name_required": "Naam is verplicht",
-          "name_max_length": "Naam mag niet langer zijn dan 100 tekens",
-          "description_label": "Beschrijving",
-          "description_required": "Beschrijving is verplicht",
-          "description_max_length": "Beschrijving mag niet langer zijn dan 1000 tekens",
-          "about_label": "Over",
-          "learnings_label": "Wat je leert",
-          "learnings_required": "Wat je leert is verplicht",
-          "learnings_invalid_format": "Ongeldig formaat voor wat je leert",
-          "learnings_min_items": "Voeg minimaal één leerdoel toe",
-          "learnings_empty_text": "Leerdoelen mogen niet leeg zijn",
-          "learnings_invalid_json": "Ongeldig JSON-formaat",
-          "tags_label": "Tags",
-          "tags_placeholder": "Druk op Enter om toe te voegen...",
-          "thumbnail_type_label": "Miniatuurtype",
-          "thumbnail_type_image": "Afbeelding",
-          "thumbnail_type_video": "Video",
-          "thumbnail_type_both": "Beide",
-          "thumbnail_label": "Miniatuur",
-          "image_search_placeholder": "Zoek afbeeldingen..."
-        },
-        "thumbnail": {
-          "upload_image": "Afbeelding uploaden",
-          "upload_video": "Video uploaden",
-          "gallery": "Galerij",
-          "tabs": {
-            "image": "Afbeelding",
-            "video": "Video"
-          },
-          "supported_formats": {
-            "image": "Ondersteunt PNG, JPG/JPEG (Max 8MB)",
-            "video": "Ondersteunt MP4, WebM (Max 100MB)"
-          }
-        },
-        "errors": {
-          "save_failed": "Opslaan van cursusstructuur mislukt."
-        }
-      },
-      "access": {
-        "title": "Toegang tot cursus",
-        "subtitle": "Kies of je cursus openbaar op internet moet zijn of alleen toegankelijk voor ingelogde gebruikers",
-        "public": {
-          "title": "Openbaar",
-          "description": "De cursus is openbaar beschikbaar op internet, wordt geïndexeerd door zoekmachines en is voor iedereen toegankelijk",
-          "active": "Actief",
-          "confirmation_title": "Wijzigen naar Openbaar?",
-          "confirmation_message": "Weet je zeker dat je deze cursus openbaar wilt maken op internet?",
-          "confirmation_button": "Wijzigen naar Openbaar"
-        },
-        "users_only": {
-          "title": "Alleen Gebruikers",
-          "description": "De cursus is alleen toegankelijk voor ingelogde gebruikers, en je kunt optioneel gebruikersgroepen selecteren die toegang hebben tot deze cursus",
-          "active": "Actief",
-          "confirmation_title": "Wijzigen naar Alleen Gebruikers?",
-          "confirmation_message": "Weet je zeker dat je deze cursus alleen toegankelijk wilt maken voor ingelogde gebruikers?",
-          "confirmation_button": "Wijzigen naar Alleen Gebruikers"
-        },
-        "usergroups": {
-          "title": "Gebruikersgroepen",
-          "subtitle": "Als je alleen bepaalde gebruikersgroepen toegang wilt geven tot deze cursus, kun je deze hier koppelen",
-          "table": {
-            "name": "Naam",
-            "actions": "Acties"
-          },
-          "actions": {
-            "delete_link": "Link verwijderen",
-            "link_to_usergroup": "Koppelen aan gebruikersgroep"
-          },
-          "modals": {
-            "link_title": "Koppel cursus aan gebruikersgroep",
-            "link_description": "Selecteer de gebruikersgroep waaraan je deze cursus wilt koppelen. Gebruikers in deze groep hebben toegang tot de cursus.",
-            "unlink_title": "Ontkoppelen van gebruikersgroep?",
-            "unlink_message": "Gebruikers in deze groep hebben geen toegang meer tot deze cursus",
-            "unlink_button": "Link verwijderen",
-            "warning": "Gebruikers die niet in de gebruikersgroep zitten, hebben geen toegang meer tot deze cursus",
-            "usergroup_name": "Naam gebruikersgroep",
-            "no_usergroups": "Geen gebruikersgroepen beschikbaar",
-            "create_usergroup": "Gebruikersgroep aanmaken",
-            "link_button": "Koppelen"
-          },
-          "toasts": {
-            "link_success": "Succesvol gekoppeld aan gebruikersgroep",
-            "link_error": "Fout {{status}}: {{detail}}",
-            "unlink_success": "Gebruikersgroep succesvol ontkoppeld",
-            "unlink_error": "Fout bij het ontkoppelen van gebruikersgroep."
-          }
-        }
-      },
-      "contributors": {
-        "title": "Cursus Bijdragers",
-        "subtitle": "Beheer bijdragers en voeg nieuwe bijdragers toe aan de cursus",
-        "open_to_contributors": {
-          "title": "Open voor bijdragers",
-          "description": "De cursus staat open voor bijdragers. Gebruikers kunnen zich aanmelden om bijdrager te worden en te helpen de cursusinhoud te verbeteren.",
-          "active": "Actief",
-          "confirmation_title": "Openen voor bijdragers?",
-          "confirmation_message": "Weet je zeker dat je deze cursus wilt openen voor bijdragers?",
-          "confirmation_button": "Openen voor bijdragers"
-        },
-        "closed_to_contributors": {
-          "title": "Gesloten voor bijdragers",
-          "description": "De cursus is gesloten voor bijdragers. Alleen bestaande bijdragers kunnen de cursusinhoud bewerken.",
-          "active": "Actief",
-          "confirmation_title": "Sluiten voor bijdragers?",
-          "confirmation_message": "Weet je zeker dat je deze cursus wilt sluiten voor bijdragers?",
-          "confirmation_button": "Sluiten voor bijdragers"
-        },
-        "search": {
-          "placeholder": "Zoek gebruikers om toe te voegen als bijdrager op naam of gebruikersnaam...",
-          "searching": "Zoeken...",
-          "no_results": "Geen gebruikers gevonden"
-        },
-        "table": {
-          "name": "Naam",
-          "username": "Gebruikersnaam",
-          "email": "E-mail",
-          "role": "Rol",
-          "status": "Status",
-          "added_on": "Toegevoegd op"
-        },
-        "roles": {
-          "creator": "Maker",
-          "contributor": "Bijdrager",
-          "maintainer": "Beheerder",
-          "reporter": "Reporter"
-        },
-        "statuses": {
-          "active": "Actief",
-          "inactive": "Inactief",
-          "pending": "In afwachting"
-        },
-        "actions": {
-          "selected_users": "{{count}} gebruiker geselecteerd",
-          "selected_users_plural": "{{count}} gebruikers geselecteerd",
-          "clear": "Wissen",
-          "add_selected": "Geselecteerde toevoegen",
-          "selected_contributors": "{{count}} bijdrager geselecteerd",
-          "selected_contributors_plural": "{{count}} bijdragers geselecteerd",
-          "remove_selected": "Geselecteerde verwijderen",
-          "already_contributor": "Al een bijdrager"
-        },
-        "toasts": {
-          "add_success": "{{count}} bijdrager(s) succesvol toegevoegd",
-          "add_error": "Toevoegen van {{username}} mislukt: {{reason}}",
-          "add_failed": "Toevoegen van bijdragers mislukt",
-          "update_success": "Bijdrager succesvol bijgewerkt",
-          "update_error": "Fout: {{detail}}",
-          "update_failed": "Er is een fout opgetreden bij het bijwerken van de bijdrager.",
-          "remove_success": "{{count}} bijdrager(s) succesvol verwijderd",
-          "remove_failed": "Verwijderen van bijdragers mislukt",
-          "cannot_modify_creator": "Je kunt de rol of status van de maker niet wijzigen"
-        }
-      },
-      "certification": {
-        "title": "Cursus Certificering",
-        "subtitle": "Activeer en configureer certificaten voor studenten die deze cursus voltooien",
-        "form": {
-          "certification_name_label": "Certificeringsnaam",
-          "certification_name_required": "Certificeringsnaam is verplicht indien ingeschakeld",
-          "certification_name_max_length": "Naam mag niet langer zijn dan 100 tekens",
-          "certification_name_placeholder": "bijv. Geavanceerde JavaScript Certificering",
-          "certification_type_label": "Certificeringstype",
-          "certification_description_label": "Certificeringsbeschrijving",
-          "certification_description_required": "Beschrijving is verplicht indien ingeschakeld",
-          "certification_description_max_length": "Beschrijving mag niet langer zijn dan 500 tekens",
-          "certification_description_placeholder": "Beschrijf wat deze certificering vertegenwoordigt en de waarde ervan...",
-          "certificate_pattern_label": "Certificaatpatroon",
-          "certificate_instructor_label": "Naam instructeur (optioneel)",
-          "certificate_instructor_placeholder": "bijv. Dr. Jane Smith"
-        },
-        "types": {
-          "completion": "Cursusvoltooiing",
-          "achievement": "Op basis van prestaties",
-          "assessment": "Op basis van beoordeling",
-          "participation": "Deelname",
-          "mastery": "Vaardigheidsbeheersing",
-          "professional": "Professionele ontwikkeling",
-          "continuing": "Permanente educatie",
-          "workshop": "Aanwezigheid bij workshop",
-          "specialization": "Specialisatie"
-        },
-        "patterns": {
-          "royal": {
-            "name": "Koninklijk",
-            "description": "Sierlijke stijl met kroonmotieven"
-          },
-          "tech": {
-            "name": "Tech",
-            "description": "Circuit-geïnspireerde patronen"
-          },
-          "nature": {
-            "name": "Natuur",
-            "description": "Organische bladpatronen"
-          },
-          "geometric": {
-            "name": "Geometrisch",
-            "description": "Abstracte vormen en lijnen"
-          },
-          "vintage": {
-            "name": "Vintage",
-            "description": "Art Deco styling"
-          },
-          "waves": {
-            "name": "Golven",
-            "description": "Vloeiende waterpatronen"
-          },
-          "minimal": {
-            "name": "Minimaal",
-            "description": "Schoon en eenvoudig"
-          },
-          "professional": {
-            "name": "Professioneel",
-            "description": "Zakelijk ontwerp"
-          },
-          "academic": {
-            "name": "Academisch",
-            "description": "Traditionele universiteitsstijl"
-          },
-          "modern": {
-            "name": "Modern",
-            "description": "Eigentijdse strakke lijnen"
-          }
-        },
-        "sections": {
-          "basic_info": {
-            "title": "Basis Informatie",
-            "subtitle": "Configureer de basisdetails van je certificering"
-          },
-          "certificate_design": {
-            "title": "Certificaat Ontwerp",
-            "subtitle": "Kies een decoratief patroon voor je certificaat"
-          },
-          "preview": {
-            "title": "Certificaat Voorbeeld",
-            "subtitle": "Real-time voorbeeld van hoe je certificaat eruit zal zien"
-          }
-        },
-        "states": {
-          "disabled": {
-            "title": "Certificering niet geconfigureerd",
-            "message": "Schakel certificering in om studenten een certificaat aan te bieden bij het voltooien van de cursus.",
-            "button": "Certificering inschakelen",
-            "creating": "Inschakelen..."
-          },
-          "creating": {
-            "title": "Certificering aanmaken...",
-            "message": "Even geduld terwijl we de cursuscertificering voor je instellen."
-          }
-        },
-        "errors": {
-          "loading": "Fout bij het laden van certificering",
-          "create_failed": "Aanmaken van certificering mislukt.",
-          "remove_failed": "Verwijderen van certificering mislukt."
-        },
-        "toasts": {
-          "create_success": "Certificering succesvol aangemaakt",
-          "create_error": "Aanmaken van certificering mislukt",
-          "remove_success": "Certificering succesvol verwijderd",
-          "remove_error": "Verwijderen van certificering mislukt"
-        }
-      },
-      "communities": {
-        "title": "Community's",
-        "new_community": "Nieuwe community",
-        "no_communities": "Nog geen community's",
-        "no_communities_description": "Maak je eerste community om discussies te starten",
-        "card": {
-          "open_settings": "Instellingen openen",
-          "view_community": "Community bekijken",
-          "quick_edit": "Snel bewerken"
-        },
-        "settings": {
-          "tabs": {
-            "general": "Algemeen",
-            "thumbnail": "Miniatuur",
-            "moderation": "Moderatie"
-          }
-        },
-        "general": {
-          "title": "Community-instellingen",
-          "subtitle": "Werk de basisinformatie van je community bij",
-          "form": {
-            "name_label": "Community-naam",
-            "name_required": "Community-naam is verplicht",
-            "name_min_length": "Naam moet minimaal 3 tekens bevatten",
-            "name_max_length": "Naam moet minder dan 100 tekens bevatten",
-            "name_placeholder": "Voer community-naam in",
-            "description_label": "Beschrijving",
-            "description_max_length": "Beschrijving moet minder dan 500 tekens bevatten",
-            "description_placeholder": "Beschrijf waar deze community over gaat",
-            "public_label": "Openbare Community",
-            "public_description": "Maak deze community zichtbaar voor iedereen",
-            "characters_left": "{{count}} tekens over"
-          },
-          "toasts": {
-            "updating": "Community bijwerken...",
-            "update_success": "Community succesvol bijgewerkt",
-            "update_error": "Community bijwerken mislukt"
-          }
-        },
-        "thumbnail": {
-          "title": "Community-miniatuur",
-          "subtitle": "Upload een omslagafbeelding voor je community",
-          "no_thumbnail": "Geen miniatuur ingesteld",
-          "upload_image": "Afbeelding uploaden",
-          "browse_unsplash": "Bladeren op Unsplash",
-          "uploading": "Uploaden...",
-          "supported_formats": "Ondersteunde formaten: JPG, JPEG, PNG. Max. grootte: 8MB. Aanbevolen verhouding: 16:9",
-          "toasts": {
-            "update_success": "Miniatuur succesvol bijgewerkt",
-            "update_error": "Miniatuur bijwerken mislukt",
-            "invalid_type": "Ongeldig bestandstype. Upload alleen PNG- of JPG/JPEG-afbeeldingen",
-            "file_too_large": "Bestandsgrootte overschrijdt de limiet van 8MB"
-          }
-        },
-        "moderation": {
-          "title": "Contentmoderatie",
-          "subtitle": "Configureer geblokkeerde woorden en contentfilters",
-          "info_title": "Geblokkeerde woorden",
-          "info_description": "Discussies en reacties met deze woorden worden geblokkeerd. Gebruikers zien een foutmelding en hun content wordt niet geplaatst.",
-          "add_word_label": "Geblokkeerd woord toevoegen",
-          "add_word_placeholder": "Voer een woord of zin in...",
-          "add_button": "Toevoegen",
-          "batch_add_label": "Woorden in bulk toevoegen",
-          "batch_add_description": "Voeg meerdere woorden tegelijk toe, gescheiden door komma's",
-          "batch_add_placeholder": "woord1, woord2, woord3...",
-          "add_all_button": "Alles Toevoegen",
-          "blocked_words_label": "Geblokkeerde woorden",
-          "no_blocked_words": "Nog geen geblokkeerde woorden",
-          "no_blocked_words_description": "Voeg woorden toe om contentmoderatie in te schakelen",
-          "word_exists_error": "Dit woord staat al in de lijst",
-          "all_words_exist_error": "Alle woorden staan al in de lijst of de invoer is leeg",
-          "toasts": {
-            "saving": "Moderatie-instellingen opslaan...",
-            "save_success": "Moderatie-instellingen opgeslagen",
-            "save_error": "Opslaan van moderatie-instellingen mislukt"
-          }
-        },
-        "modals": {
-          "create": {
-            "title": "Community Aanmaken",
-            "description": "Maak een nieuwe community voor discussies",
-            "form": {
-              "name_label": "Community-naam",
-              "name_placeholder": "Voer community-naam in",
-              "description_label": "Beschrijving",
-              "description_placeholder": "Beschrijf waar deze community over gaat",
-              "public_label": "Maak deze community openbaar (zichtbaar voor iedereen)"
-            },
-            "cancel": "Annuleren",
-            "submit": "Community Aanmaken"
-          },
-          "edit": {
-            "title": "Community Bewerken",
-            "description": "Community-instellingen bijwerken"
-          },
-          "delete": {
-            "title": "{{name}} verwijderen?",
-            "message": "Weet je zeker dat je deze community wilt verwijderen? Alle discussies worden permanent verwijderd.",
-            "button": "Community Verwijderen"
-          }
-        },
-        "toasts": {
-          "creating": "Community aanmaken...",
-          "create_success": "Community succesvol aangemaakt",
-          "create_error": "Community aanmaken mislukt",
-          "deleting": "Community verwijderen...",
-          "delete_success": "Community succesvol verwijderd",
-          "delete_error": "Community verwijderen mislukt"
-        }
-      },
-      "structure": {
-        "loading": "Laden...",
-        "add_chapter_button": "Hoofdstuk toevoegen",
-        "modals": {
-          "new_chapter": {
-            "title": "Hoofdstuk aanmaken",
-            "description": "Voeg een nieuw hoofdstuk toe aan je cursus",
-            "form": {
-              "name_label": "Hoofdstuknaam",
-              "name_required": "Geef het hoofdstuk een naam",
-              "description_label": "Hoofdstukbeschrijving",
-              "description_required": "Geef een beschrijving van het hoofdstuk",
-              "submit": "Hoofdstuk aanmaken"
-            }
-          },
-          "delete_chapter": {
-            "title": "Verwijder {{name}}?",
-            "message": "Weet je zeker dat je dit hoofdstuk wilt verwijderen?",
-            "button": "Hoofdstuk verwijderen"
-          },
-          "new_activity": {
-            "title": "Activiteit aanmaken",
-            "description": "Kies een van de activiteitstypen om aan je cursus toe te voegen"
-          },
-          "delete_activity": {
-            "title": "Verwijder {{name}}?",
-            "message": "Weet je zeker dat je deze activiteit wilt verwijderen?",
-            "button": "Activiteit verwijderen"
-          }
-        },
-        "actions": {
-          "add_chapter": "Hoofdstuk toevoegen",
-          "add_activity": "Activiteit toevoegen",
-          "publish": "Publiceren",
-          "unpublish": "Publicatie ongedaan maken",
-          "preview_activity": "Activiteit bekijken",
-          "edit_page": "Pagina bewerken",
-          "edit_assignment": "Opdracht bewerken"
-        },
-        "chapter_element": {
-          "chapter_name_placeholder": "Naam van het hoofdstuk"
-        },
-        "activity": {
-          "name_placeholder": "Naam van de activiteit",
-          "types": {
-            "video": "Video",
-            "document": "Document",
-            "assignment": "Opdracht",
-            "assignments": "Opdrachten",
-            "dynamic": "Dynamisch",
-            "dynamic_page": "Dynamische Pagina",
-            "scorm": "Scorm"
-          },
-          "toasts": {
-            "deleting": "Activiteit verwijderen...",
-            "delete_success": "Activiteit succesvol verwijderd",
-            "updating": "Opdracht bijwerken...",
-            "update_success": "Activiteit succesvol bijgewerkt",
-            "name_update_success": "Activiteitnaam succesvol bijgewerkt",
-            "name_update_error": "Bijwerken van activiteitnaam mislukt",
-            "creating": "Activiteit aanmaken...",
-            "create_success": "Activiteit succesvol aangemaakt",
-            "uploading": "Bestand uploaden & activiteit aanmaken...",
-            "upload_success": "Bestand succesvol geüpload",
-            "creating_uploading": "Activiteit aanmaken & bestand uploaden..."
           }
         }
       }

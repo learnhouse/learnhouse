@@ -33,9 +33,9 @@ interface TabItem {
 
 const getSettingTabs = (t: any): TabItem[] => [
   { id: 'general', label: t('dashboard.organization.settings.tabs.general'), icon: TextIcon },
+  { id: 'branding', label: t('dashboard.organization.settings.tabs.branding'), icon: Palette },
   { id: 'features', label: t('dashboard.organization.settings.tabs.features') || 'Features', icon: ToggleRight },
   { id: 'landing', label: t('dashboard.organization.settings.tabs.landing'), icon: LayoutDashboardIcon },
-  { id: 'branding', label: t('dashboard.organization.settings.tabs.branding'), icon: Palette },
   { id: 'ai', label: t('dashboard.organization.settings.tabs.ai') || 'AI', customIcon: '/learnhouse_ai_simple_colored.png', requiredPlan: 'standard' },
   { id: 'api', label: t('dashboard.organization.settings.tabs.api') || 'API Access', icon: KeyIcon, requiredPlan: 'pro' },
   { id: 'other', label: t('dashboard.organization.settings.tabs.other'), icon: CodeIcon },
@@ -112,7 +112,7 @@ function OrgPage(props: { params: Promise<OrgParams> }) {
 
   return (
     <div className="h-full w-full bg-[#f8f8f8] flex flex-col">
-      <div className="pl-10 pr-10 tracking-tight bg-[#fcfbfc] nice-shadow flex-shrink-0">
+      <div className="pl-10 pr-10 tracking-tight bg-[#fcfbfc] z-10 nice-shadow flex-shrink-0 relative">
         <div className="pt-6 pb-4">
           <Breadcrumbs items={[
             { label: t('common.organization'), href: '/dash/org/settings/general', icon: <School size={14} /> }

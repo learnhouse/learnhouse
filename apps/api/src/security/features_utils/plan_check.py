@@ -61,8 +61,24 @@ def require_plan(required_plan: PlanLevel, feature_name: str):
         request: Request,
         db_session: Session = Depends(get_db_session),
     ):
-        # Extract org_id from path parameters
-        org_id = request.path_params.get("org_id")
+        org_id = None
+
+        # Try to get org_id from path parameters first
+        org_id_param = request.path_params.get("org_id")
+        if org_id_param is not None:
+            try:
+                org_id = int(org_id_param)
+            except (ValueError, TypeError):
+                pass
+
+        # Try to get org_id from query parameters as fallback
+        if org_id is None:
+            org_id_query = request.query_params.get("org_id")
+            if org_id_query is not None:
+                try:
+                    org_id = int(org_id_query)
+                except (ValueError, TypeError):
+                    pass
 
         if org_id is None:
             raise HTTPException(
@@ -70,16 +86,7 @@ def require_plan(required_plan: PlanLevel, feature_name: str):
                 detail="Organization ID is required",
             )
 
-        # Convert to int if string
-        try:
-            org_id_int = int(org_id)
-        except (ValueError, TypeError):
-            raise HTTPException(
-                status_code=400,
-                detail="Invalid organization ID",
-            )
-
-        current_plan = get_org_plan(org_id_int, db_session)
+        current_plan = get_org_plan(org_id, db_session)
 
         if not plan_meets_requirement(current_plan, required_plan):
             raise HTTPException(

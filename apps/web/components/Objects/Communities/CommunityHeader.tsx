@@ -1,5 +1,6 @@
 'use client'
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import { Users } from 'lucide-react'
 import { Community } from '@services/communities/communities'
 
@@ -8,6 +9,7 @@ interface CommunityHeaderProps {
 }
 
 export function CommunityHeader({ community }: CommunityHeaderProps) {
+  const { t } = useTranslation()
   return (
     <div className="relative inset-0 ring-1 ring-inset ring-black/10 rounded-lg shadow-xl w-full h-[150px] md:h-[250px] overflow-hidden">
       {/* Gradient Background */}
@@ -29,7 +31,7 @@ export function CommunityHeader({ community }: CommunityHeaderProps) {
             <Users size={32} className="text-white md:w-10 md:h-10" />
           </div>
           <div className="px-4">
-            <h2 className="text-white/80 text-sm font-medium">Community</h2>
+            <h2 className="text-white/80 text-sm font-medium">{t('communities.sidebar.community')}</h2>
           </div>
         </div>
       </div>

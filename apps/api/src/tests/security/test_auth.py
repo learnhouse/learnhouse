@@ -5,15 +5,18 @@ from sqlmodel import Session
 from src.security.auth import (
     authenticate_user,
     create_access_token,
+    create_refresh_token,
+    decode_refresh_token,
     get_current_user,
     non_public_endpoint,
+    extract_jwt_from_request,
     Token,
     TokenData,
-    Settings,
+    JWT_COOKIE_NAME,
 )
 from src.db.users import User, AnonymousUser, PublicUser
 from datetime import datetime, timedelta, timezone
-from jose import jwt
+import jwt
 from src.security.security import SECRET_KEY, ALGORITHM
 
 
@@ -62,18 +65,35 @@ class TestAuth:
         token_data = TokenData()
         assert token_data.username is None
 
-    def test_settings_model(self):
-        """Test Settings model"""
-        settings = Settings()
-        assert settings.authjwt_secret_key == "secret"  # Default in dev mode
-        assert settings.authjwt_token_location == {"cookies", "headers"}
-        assert settings.authjwt_cookie_csrf_protect is False
-        assert settings.authjwt_cookie_samesite == "lax"
-        assert settings.authjwt_cookie_secure is True
+    def test_extract_jwt_from_cookie(self):
+        """Test extracting JWT from cookie"""
+        mock_request = Mock(spec=Request)
+        mock_request.cookies = {JWT_COOKIE_NAME: "test_token"}
+        mock_request.headers = Mock()
+        mock_request.headers.get = Mock(return_value="")
 
-    # Note: get_config is a decorator function for AuthJWT.load_config
-    # Testing it directly may not be appropriate in unit tests
-    pass
+        token = extract_jwt_from_request(mock_request)
+        assert token == "test_token"
+
+    def test_extract_jwt_from_header(self):
+        """Test extracting JWT from Authorization header"""
+        mock_request = Mock(spec=Request)
+        mock_request.cookies = {}
+        mock_request.headers = Mock()
+        mock_request.headers.get = Mock(return_value="Bearer test_token")
+
+        token = extract_jwt_from_request(mock_request)
+        assert token == "test_token"
+
+    def test_extract_jwt_no_token(self):
+        """Test extracting JWT when no token present"""
+        mock_request = Mock(spec=Request)
+        mock_request.cookies = {}
+        mock_request.headers = Mock()
+        mock_request.headers.get = Mock(return_value="")
+
+        token = extract_jwt_from_request(mock_request)
+        assert token is None
 
     @pytest.mark.asyncio
     async def test_authenticate_user_success(self, mock_request, mock_db_session, mock_user):
@@ -160,21 +180,17 @@ class TestAuth:
     @pytest.mark.asyncio
     async def test_get_current_user_authenticated(self, mock_request, mock_db_session, mock_user):
         """Test getting current user when authenticated"""
-        # Set up mock request with no API token header
+        # Create a valid token
+        token = create_access_token({"sub": "test@example.com"})
+
+        # Set up mock request with token in cookie
         mock_request.headers = Mock()
         mock_request.headers.get = Mock(return_value="")
+        mock_request.cookies = {JWT_COOKIE_NAME: token}
         mock_request.state = Mock()
 
-        with patch('src.security.auth.security_get_user', new_callable=AsyncMock) as mock_get_user, \
-             patch('src.security.auth.AuthJWT') as MockAuthJWT:
-
+        with patch('src.security.auth.security_get_user', new_callable=AsyncMock) as mock_get_user:
             mock_get_user.return_value = mock_user
-
-            # Mock AuthJWT instance
-            mock_authorize = Mock()
-            mock_authorize.jwt_optional.return_value = None
-            mock_authorize.get_jwt_subject.return_value = "test@example.com"
-            MockAuthJWT.return_value = mock_authorize
 
             result = await get_current_user(
                 request=mock_request,
@@ -187,66 +203,48 @@ class TestAuth:
     @pytest.mark.asyncio
     async def test_get_current_user_anonymous(self, mock_request, mock_db_session):
         """Test getting current user when anonymous"""
-        # Set up mock request with no API token header
+        # Set up mock request with no token
         mock_request.headers = Mock()
         mock_request.headers.get = Mock(return_value="")
+        mock_request.cookies = {}
 
-        with patch('src.security.auth.AuthJWT') as MockAuthJWT:
-            # Mock AuthJWT instance
-            mock_authorize = Mock()
-            mock_authorize.jwt_optional.return_value = None
-            mock_authorize.get_jwt_subject.return_value = None
-            MockAuthJWT.return_value = mock_authorize
+        result = await get_current_user(
+            request=mock_request,
+            db_session=mock_db_session
+        )
 
-            result = await get_current_user(
-                request=mock_request,
-                db_session=mock_db_session
-            )
-
-            assert isinstance(result, AnonymousUser)
+        assert isinstance(result, AnonymousUser)
 
     @pytest.mark.asyncio
-    async def test_get_current_user_jwt_error(self, mock_request, mock_db_session):
+    async def test_get_current_user_invalid_token(self, mock_request, mock_db_session):
         """Test getting current user when JWT is invalid"""
-        from jose import JWTError
-
-        # Set up mock request with no API token header
+        # Set up mock request with invalid token
         mock_request.headers = Mock()
-        mock_request.headers.get = Mock(return_value="")
+        mock_request.headers.get = Mock(return_value="Bearer invalid_token")
+        mock_request.cookies = {}
 
-        with patch('src.security.auth.AuthJWT') as MockAuthJWT:
-            # Mock AuthJWT to raise JWTError
-            mock_authorize = Mock()
-            mock_authorize.jwt_optional.side_effect = JWTError("Invalid token")
-            MockAuthJWT.return_value = mock_authorize
+        # Invalid token should result in anonymous user (jwt_optional behavior)
+        result = await get_current_user(
+            request=mock_request,
+            db_session=mock_db_session
+        )
 
-            with pytest.raises(HTTPException) as exc_info:
-                await get_current_user(
-                    request=mock_request,
-                    db_session=mock_db_session
-                )
-
-            assert exc_info.value.status_code == 401
-            assert "Could not validate credentials" in exc_info.value.detail
+        assert isinstance(result, AnonymousUser)
 
     @pytest.mark.asyncio
     async def test_get_current_user_user_not_found(self, mock_request, mock_db_session):
         """Test getting current user when user doesn't exist in database"""
-        # Set up mock request with no API token header
+        # Create a valid token
+        token = create_access_token({"sub": "nonexistent@example.com"})
+
+        # Set up mock request with token
         mock_request.headers = Mock()
         mock_request.headers.get = Mock(return_value="")
+        mock_request.cookies = {JWT_COOKIE_NAME: token}
         mock_request.state = Mock()
 
-        with patch('src.security.auth.security_get_user', new_callable=AsyncMock) as mock_get_user, \
-             patch('src.security.auth.AuthJWT') as MockAuthJWT:
-
+        with patch('src.security.auth.security_get_user', new_callable=AsyncMock) as mock_get_user:
             mock_get_user.return_value = None
-
-            # Mock AuthJWT instance
-            mock_authorize = Mock()
-            mock_authorize.jwt_optional.return_value = None
-            mock_authorize.get_jwt_subject.return_value = "nonexistent@example.com"
-            MockAuthJWT.return_value = mock_authorize
 
             with pytest.raises(HTTPException) as exc_info:
                 await get_current_user(
@@ -267,9 +265,78 @@ class TestAuth:
     async def test_non_public_endpoint_anonymous(self):
         """Test non_public_endpoint with anonymous user"""
         anonymous_user = AnonymousUser()
-        
+
         with pytest.raises(HTTPException) as exc_info:
             await non_public_endpoint(anonymous_user)
-        
+
         assert exc_info.value.status_code == 401
-        assert "Not authenticated" in exc_info.value.detail 
+        assert "Not authenticated" in exc_info.value.detail
+
+    def test_create_refresh_token(self):
+        """Test refresh token creation"""
+        data = {"sub": "test@example.com"}
+        token = create_refresh_token(data)
+
+        # Verify token is created
+        assert isinstance(token, str)
+        assert len(token) > 0
+
+        # Decode and verify token
+        decoded = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        assert decoded["sub"] == "test@example.com"
+        assert decoded["type"] == "refresh"
+        assert "exp" in decoded
+
+    def test_create_refresh_token_custom_expiry(self):
+        """Test refresh token creation with custom expiry"""
+        data = {"sub": "test@example.com"}
+        expires_delta = timedelta(days=7)
+        token = create_refresh_token(data, expires_delta)
+
+        # Decode and verify token
+        decoded = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        assert decoded["sub"] == "test@example.com"
+        assert decoded["type"] == "refresh"
+
+        # Check that expiry time exists and is in the future
+        assert "exp" in decoded
+        exp_time = datetime.fromtimestamp(decoded["exp"], tz=timezone.utc)
+        now = datetime.now(timezone.utc)
+
+        # Verify the token expires in the future
+        assert exp_time > now
+
+    def test_decode_refresh_token_valid(self):
+        """Test decoding a valid refresh token"""
+        data = {"sub": "test@example.com"}
+        token = create_refresh_token(data)
+
+        payload = decode_refresh_token(token)
+        assert payload is not None
+        assert payload["sub"] == "test@example.com"
+        assert payload["type"] == "refresh"
+
+    def test_decode_refresh_token_invalid(self):
+        """Test decoding an invalid refresh token"""
+        payload = decode_refresh_token("invalid_token")
+        assert payload is None
+
+    def test_decode_refresh_token_access_token_rejected(self):
+        """Test that access tokens are rejected by decode_refresh_token"""
+        # Create an access token (no "type": "refresh")
+        data = {"sub": "test@example.com"}
+        access_token = create_access_token(data)
+
+        # Should return None because it's not a refresh token
+        payload = decode_refresh_token(access_token)
+        assert payload is None
+
+    def test_extract_jwt_ignores_api_tokens(self):
+        """Test that extract_jwt_from_request ignores API tokens (lh_ prefix)"""
+        mock_request = Mock(spec=Request)
+        mock_request.cookies = {}
+        mock_request.headers = Mock()
+        mock_request.headers.get = Mock(return_value="Bearer lh_test_api_token")
+
+        token = extract_jwt_from_request(mock_request)
+        assert token is None

@@ -10,8 +10,7 @@ async def upload_org_logo(logo_file: UploadFile, org_uuid: str) -> str:
         type_of_dir="orgs",
         uuid=org_uuid,
         allowed_types=["image"],
-        filename_prefix="logo",
-        max_size=5 * 1024 * 1024  # 5MB
+        filename_prefix="logo"
     )
 
 
@@ -23,8 +22,7 @@ async def upload_org_thumbnail(thumbnail_file: UploadFile, org_uuid: str) -> str
         type_of_dir="orgs",
         uuid=org_uuid,
         allowed_types=["image"],
-        filename_prefix="thumbnail",
-        max_size=5 * 1024 * 1024  # 5MB
+        filename_prefix="thumbnail"
     )
 
 
@@ -36,8 +34,7 @@ async def upload_org_preview(file: UploadFile, org_uuid: str) -> str:
         type_of_dir="orgs",
         uuid=org_uuid,
         allowed_types=["image"],
-        filename_prefix="preview",
-        max_size=5 * 1024 * 1024  # 5MB
+        filename_prefix="preview"
     )
 
 
@@ -49,6 +46,5 @@ async def upload_org_landing_content(file: UploadFile, org_uuid: str) -> str:
         type_of_dir="orgs",
         uuid=org_uuid,
         allowed_types=["image", "video", "document"],
-        filename_prefix="landing",
-        max_size=50 * 1024 * 1024  # 50MB
+        filename_prefix="landing"
     )

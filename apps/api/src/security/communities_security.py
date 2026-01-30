@@ -30,6 +30,8 @@ from sqlmodel import Session, select
 from src.db.users import AnonymousUser, PublicUser, APITokenUser
 from src.db.communities.communities import Community
 from src.db.communities.discussions import Discussion
+from src.db.usergroup_resources import UserGroupResource
+from src.db.usergroup_user import UserGroupUser
 from src.security.rbac.rbac import (
     authorization_verify_if_user_is_anon,
     authorization_verify_based_on_org_admin_status,
@@ -110,6 +112,44 @@ async def _check_api_token_community_permission(
     return True
 
 
+async def _check_usergroup_access(
+    community_uuid: str,
+    user_id: int,
+    db_session: Session,
+) -> bool:
+    """Check if user has access to community via UserGroups."""
+    # Get community
+    community_stmt = select(Community).where(Community.community_uuid == community_uuid)
+    community = db_session.exec(community_stmt).first()
+
+    if not community:
+        return False
+
+    # If community is public, allow access
+    if community.public:
+        return True
+
+    # Check if community has any UserGroups linked
+    usergroup_check = select(UserGroupResource).where(
+        UserGroupResource.resource_uuid == community_uuid
+    )
+    usergroup_resources = db_session.exec(usergroup_check).all()
+
+    # If no UserGroups linked, allow access (unrestricted private community)
+    if not usergroup_resources:
+        return True
+
+    # Check if user is member of any linked UserGroup
+    usergroup_ids = [ugr.usergroup_id for ugr in usergroup_resources]
+    membership_check = select(UserGroupUser).where(
+        UserGroupUser.usergroup_id.in_(usergroup_ids),
+        UserGroupUser.user_id == user_id
+    )
+    membership = db_session.exec(membership_check).first()
+
+    return membership is not None
+
+
 async def communities_rbac_check(
     request: Request,
     community_uuid: str,
@@ -156,15 +196,19 @@ async def communities_rbac_check(
                 )
             return True
         else:
-            # Authenticated users can read any community in orgs they belong to
-            # For simplicity, allow read if community exists
-            statement = select(Community).where(Community.community_uuid == community_uuid)
-            community = db_session.exec(statement).first()
-            if not community:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Community not found",
+            # Authenticated users: check UserGroups access
+            has_access = await _check_usergroup_access(community_uuid, current_user.id, db_session)
+
+            if not has_access:
+                # Check if user is admin/maintainer (they always have access)
+                is_admin_or_maintainer = await authorization_verify_based_on_org_admin_status(
+                    request, current_user.id, "read", community_uuid, db_session
                 )
+                if not is_admin_or_maintainer:
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="You don't have access to this community. Contact an administrator to be added to the appropriate user group.",
+                    )
             return True
     else:
         # For non-read actions
@@ -352,6 +396,9 @@ async def discussions_rbac_check(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="This discussion belongs to a private community",
                 )
+        else:
+            # Authenticated users: delegate to community RBAC check
+            await communities_rbac_check(request, community.community_uuid, current_user, "read", db_session)
         return True
 
     elif action == "create":

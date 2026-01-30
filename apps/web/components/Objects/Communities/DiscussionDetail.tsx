@@ -1,5 +1,6 @@
 'use client'
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 
@@ -70,6 +71,7 @@ export function DiscussionDetail({
   orgslug,
   onEdit,
 }: DiscussionDetailProps) {
+  const { t } = useTranslation()
   const session = useLHSession() as any
   const router = useRouter()
   const communityId = communityUuid.replace('community_', '')
@@ -82,7 +84,7 @@ export function DiscussionDetail({
 
   const authorName = discussion.author
     ? `${discussion.author.first_name} ${discussion.author.last_name}`.trim() || discussion.author.username
-    : 'Unknown'
+    : t('common.unknown')
 
   const handleDelete = async () => {
     try {
@@ -120,17 +122,17 @@ export function DiscussionDetail({
                 {onEdit && (
                   <DropdownMenuItem onClick={onEdit}>
                     <Edit className="mr-2 h-4 w-4" />
-                    Edit
+                    {t('communities.discussion_detail.edit')}
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuItem asChild>
                   <ConfirmationModal
-                    confirmationMessage="Are you sure you want to delete this discussion? This action cannot be undone."
-                    confirmationButtonText="Delete Discussion"
-                    dialogTitle="Delete Discussion?"
+                    confirmationMessage={t('communities.discussion_detail.delete_confirm')}
+                    confirmationButtonText={t('communities.discussion_detail.delete_button')}
+                    dialogTitle={t('communities.discussion_detail.delete_title')}
                     dialogTrigger={
                       <button className="w-full text-left flex items-center px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors">
-                        <Trash2 className="mr-2 h-4 w-4" /> Delete
+                        <Trash2 className="mr-2 h-4 w-4" /> {t('communities.discussion_detail.delete')}
                       </button>
                     }
                     functionToExecute={handleDelete}
@@ -167,7 +169,7 @@ export function DiscussionDetail({
             <DiscussionContent content={parseDiscussionContent(discussion.content)} />
           </div>
         ) : (
-          <p className="text-gray-500 italic">No additional details provided.</p>
+          <p className="text-gray-500 italic">{t('communities.discussion_detail.no_details')}</p>
         )}
       </div>
 

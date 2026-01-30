@@ -1,5 +1,6 @@
 'use client'
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import { ChevronDown, Clock, Flame, TrendingUp } from 'lucide-react'
 import {
   DropdownMenu,
@@ -14,13 +15,15 @@ interface SortDropdownProps {
   onChange: (value: DiscussionSortBy) => void
 }
 
-const sortOptions = [
-  { value: 'recent' as DiscussionSortBy, label: 'Latest activity', icon: Clock },
-  { value: 'upvotes' as DiscussionSortBy, label: 'Top', icon: TrendingUp },
-  { value: 'hot' as DiscussionSortBy, label: 'Hot', icon: Flame },
-]
-
 export function SortDropdown({ value, onChange }: SortDropdownProps) {
+  const { t } = useTranslation()
+
+  const sortOptions = [
+    { value: 'recent' as DiscussionSortBy, label: t('communities.discussion_list.latest_activity'), icon: Clock },
+    { value: 'upvotes' as DiscussionSortBy, label: t('communities.discussion_list.top'), icon: TrendingUp },
+    { value: 'hot' as DiscussionSortBy, label: t('communities.discussion_list.hot'), icon: Flame },
+  ]
+
   const currentOption = sortOptions.find(opt => opt.value === value) || sortOptions[0]
   const CurrentIcon = currentOption.icon
 
@@ -28,7 +31,7 @@ export function SortDropdown({ value, onChange }: SortDropdownProps) {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button className="flex items-center gap-1.5 px-3 py-2 h-8 text-xs bg-gray-50 border border-gray-200 rounded-md hover:bg-gray-100 transition-colors">
-          <span className="text-gray-500">Sort by:</span>
+          <span className="text-gray-500">{t('communities.discussion_list.sort_by')}</span>
           <span className="font-medium text-gray-700">{currentOption.label}</span>
           <ChevronDown size={12} className="text-gray-400" />
         </button>

@@ -34,6 +34,8 @@ function DiscussionContentEditor({ content }: { content: any }) {
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
+        // Disable link since we configure it separately below
+        link: false,
         heading: {
           levels: [2, 3],
         },

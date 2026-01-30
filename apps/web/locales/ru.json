@@ -39,6 +39,23 @@
     "recent": "Недавние",
     "expand": "Развернуть",
     "help": "Помощь",
+    "help_menu": {
+      "documentation": "Документация",
+      "website": "Сайт LearnHouse",
+      "discord": "Discord",
+      "report_feedback": "Сообщить о проблеме или оставить отзыв",
+      "feedback_title": "Отправить отзыв",
+      "feedback_description": "Помогите нам улучшить LearnHouse, поделившись своими мыслями, сообщив об ошибках или предложив новые функции.",
+      "feedback_placeholder": "Расскажите, что вы думаете...",
+      "feedback_success": "Спасибо за ваш отзыв!",
+      "send_feedback": "Отправить отзыв",
+      "sending": "Отправка...",
+      "how_was_experience": "Как прошел ваш опыт?",
+      "reaction_happy": "Хорошо",
+      "reaction_neutral": "Нормально",
+      "reaction_sad": "Плохо",
+      "attach_image": "Прикрепить скриншот"
+    },
     "plans": {
       "label": "Тарифы",
       "upgrade_button": "Перейти на {{plan}}",
@@ -70,6 +87,10 @@
         "certifications": {
           "title": "Функция Pro",
           "description": "Сертификаты — это премиум-функция, доступная только для организаций на тарифе Pro или выше. Обновитесь, чтобы выдавать сертификаты учащимся, завершившим ваши курсы."
+        },
+        "communities": {
+          "title": "Функция Standard",
+          "description": "Сообщества — это премиум-функция, доступная только для организаций с планом Standard или выше. Обновитесь, чтобы разблокировать дискуссионные сообщества для ваших участников."
         }
       }
     },
@@ -77,6 +98,8 @@
     "version": "Версия",
     "users": "Пользователи",
     "save": "Сохранить",
+    "save_changes": "Сохранить изменения",
+    "saving": "Сохранение...",
     "cancel": "Отмена",
     "submit": "Отправить",
     "delete": "Удалить",
@@ -213,6 +236,8 @@
     "course_completed_exclamation": "Курс завершен!",
     "what_you_will_learn": "Что вы узнаете",
     "course_lessons": "Уроки курса",
+    "share_course": "Поделиться курсом",
+    "copy_link": "Копировать ссылку",
     "unlock_certificate_message": "Выполните все задания, чтобы получить сертификат",
     "chapter": "Глава",
     "chapters": "Главы",
@@ -262,7 +287,305 @@
     "submitting_contributor_application": "Отправка заявки...",
     "contributor_application_success": "Ваша заявка на участие была успешно отправлена",
     "contributor_application_error": "Не удалось отправить заявку. Пожалуйста, попробуйте позже.",
-    "contribute": "Участвовать"
+    "contribute": "Участвовать",
+    "scorm": {
+      "upload_package": "Загрузить пакет SCORM",
+      "package_file": "Файл пакета (.zip)",
+      "click_to_upload": "Нажмите для загрузки или перетащите",
+      "supported_versions": "Пакет SCORM 1.2 или SCORM 2004",
+      "import_info": "Загрузите ваш пакет SCORM для анализа его содержимого. Вы сможете настроить курс и назначить активности главам.",
+      "analyze_package": "Анализировать пакет",
+      "package_analyzed": "Пакет успешно проанализирован",
+      "assign_scos": "Назначить активности главам",
+      "activity_name": "Активность",
+      "chapter_name": "Глава",
+      "upload_different": "Загрузить другой пакет",
+      "selected": "выбрано",
+      "create_course": "Создать курс",
+      "configure": "Настроить",
+      "ready_to_analyze": "Готов к анализу",
+      "course_details": "Детали курса"
+    },
+    "clone_course": "Клонировать курс",
+    "clone_course_title": "Клонировать \"{{name}}\"",
+    "clone_course_confirm": "Будет создана полная копия курса, включая все главы, активности и файлы. Клонированный курс будет установлен как приватный.",
+    "cloning_course": "Клонирование курса...",
+    "course_cloned_success": "Курс успешно клонирован",
+    "course_cloned_error": "Не удалось клонировать курс",
+    "published": "Опубликован",
+    "unpublished": "Не опубликован",
+    "search_courses": "Поиск курсов...",
+    "search_results": "Найдено {{count}} курс(ов) по запросу \"{{query}}\"",
+    "no_search_results": "Курсы не найдены",
+    "try_different_search": "Попробуйте другой поисковый запрос",
+    "select_courses": "Выбрать",
+    "select_all": "Выбрать все",
+    "clear_selection": "Очистить",
+    "selected_count": "Выбрано: {{count}}",
+    "clone_selected": "Клонировать выбранные",
+    "clone_selected_confirm": "Будут созданы копии {{count}} курс(ов). Все клонированные курсы будут приватными. Продолжить?",
+    "delete_selected": "Удалить выбранные",
+    "delete_selected_confirm": "{{count}} курс(ов) будет удалено навсегда. Это действие необратимо. Продолжить?",
+    "course_description_required": "Описание курса обязательно",
+    "export_course": "Экспортировать курс",
+    "export_selected": "Экспортировать выбранные",
+    "exporting_course": "Экспорт курса...",
+    "exporting_courses": "Экспорт {{count}} курса(ов)...",
+    "course_exported_success": "Курс успешно экспортирован",
+    "courses_exported_success": "{{count}} курс(ов) успешно экспортировано",
+    "course_exported_error": "Не удалось экспортировать курс",
+    "courses_exported_error": "Не удалось экспортировать курсы",
+    "clone_courses_title": "Клонировать курсы",
+    "delete_courses_title": "Удалить курсы",
+    "deleting_courses": "Удаление {{count}} курса(ов)...",
+    "courses_deleted_success": "{{count}} курс(ов) успешно удалено",
+    "courses_deleted_partial": "{{success}} курс(ов) удалено, {{error}} не удалось",
+    "cloning_courses": "Клонирование {{count}} курса(ов)...",
+    "courses_cloned_success": "{{count}} курс(ов) успешно клонировано",
+    "courses_cloned_partial": "{{success}} курс(ов) клонировано, {{error}} не удалось",
+    "import": {
+      "scorm_package": "Пакет SCORM",
+      "scorm_description": "Импортировать пакеты SCORM 1.2 или SCORM 2004",
+      "learnhouse_courses": "Курсы LearnHouse",
+      "learnhouse_description": "Импортировать курсы, экспортированные из LearnHouse",
+      "upload_package": "Загрузить пакет",
+      "configure": "Настроить",
+      "complete": "Завершено",
+      "click_to_upload": "Нажмите для загрузки или перетащите",
+      "learnhouse_format": "Экспорт курса LearnHouse (.zip)",
+      "learnhouse_info": "Загрузите пакет экспорта курсов LearnHouse (.zip). Вы сможете выбрать, какие курсы импортировать, и настроить параметры импорта.",
+      "analyze_package": "Анализировать пакет",
+      "ready_to_analyze": "Готов к анализу",
+      "invalid_file_format": "Пожалуйста, загрузите файл .zip",
+      "analysis_failed": "Не удалось проанализировать пакет",
+      "package_analyzed": "Пакет успешно проанализирован",
+      "select_courses": "Выберите курсы для импорта",
+      "select_all": "Выбрать все",
+      "deselect_all": "Снять выбор",
+      "chapters": "главы",
+      "activities": "активности",
+      "has_thumbnail": "Есть миниатюра",
+      "selected": "выбрано",
+      "options": "Параметры импорта",
+      "name_prefix": "Префикс названия курса",
+      "name_prefix_placeholder": "напр. Импортированный -",
+      "set_private": "Сделать приватным",
+      "set_unpublished": "Сделать неопубликованным",
+      "select_at_least_one": "Пожалуйста, выберите хотя бы один курс для импорта",
+      "import_courses": "Импортировать {{count}} курс(ов)",
+      "upload_different": "Загрузить другой пакет",
+      "importing_courses": "Импорт курсов...",
+      "please_wait": "Это может занять некоторое время",
+      "import_complete": "Импорт завершен!",
+      "import_failed": "Импорт не удался",
+      "import_partial": "Импорт частично завершен",
+      "import_summary": "{{successful}} из {{total}} курса(ов) успешно импортировано",
+      "created": "Создано",
+      "done": "Готово"
+    },
+    "scorm": {
+      "upload_package": "Загрузить пакет SCORM",
+      "package_file": "Файл пакета (.zip)",
+      "click_to_upload": "Нажмите для загрузки или перетащите",
+      "supported_versions": "Пакет SCORM 1.2 или SCORM 2004",
+      "import_info": "Загрузите свой пакет SCORM для анализа его содержимого. Вы сможете настроить курс и назначить активности главам.",
+      "analyze_package": "Анализировать пакет",
+      "package_analyzed": "Пакет успешно проанализирован",
+      "assign_scos": "Назначить активности главам",
+      "activity_name": "Активность",
+      "chapter_name": "Глава",
+      "upload_different": "Загрузить другой пакет",
+      "selected": "выбрано",
+      "create_course": "Создать курс",
+      "configure": "Настроить",
+      "ready_to_analyze": "Готов к анализу",
+      "course_details": "Детали курса"
+    },
+    "create": {
+      "choose_type": "Создать новый курс",
+      "choose_type_description": "Выберите способ создания курса",
+      "from_scratch": "Начать с нуля",
+      "from_scratch_description": "Вручную создайте структуру и содержание курса",
+      "with_ai": "Начать с ИИ",
+      "with_ai_description": "Позвольте ИИ помочь вам спланировать и сгенерировать содержание курса",
+      "ai": {
+        "title": "Создатель курсов с ИИ",
+        "step_planning": "Планирование",
+        "step_content": "Содержание",
+        "continue_to_content": "Перейти к содержанию",
+        "creating_structure": "Создание структуры...",
+        "finish_and_edit": "Завершить и редактировать курс",
+        "chat_title": "Планировщик курсов",
+        "chat_description": "Опишите курс, который хотите создать, или выберите шаблон ниже:",
+        "iterations": "итерации",
+        "max_iterations_reached": "Достигнуто максимальное количество итераций. Перейдите к генерации содержания или начните заново.",
+        "content_step_hint": "Структура вашего курса создана. Сгенерируйте содержание для каждого занятия ниже.",
+        "content_step_info": "Используйте левую панель для генерации содержания ваших занятий.",
+        "input_placeholder_initial": "Опишите курс, который хотите создать...",
+        "input_placeholder_iterate": "Опишите изменения в плане...",
+        "generating": "Создание плана курса...",
+        "plan_generated": "План курса создан",
+        "plan_generated_hint": "Просмотрите план на панели предпросмотра. Вы можете отредактировать его или запросить изменения.",
+        "describe_course": "Опишите ваш курс",
+        "describe_course_hint": "Расскажите ИИ о курсе, который хотите создать, включая тему, целевую аудиторию и цели обучения.",
+        "generating_plan": "Генерация плана курса...",
+        "chapters": "Главы",
+        "activities": "занятия",
+        "add_chapter": "Добавить главу",
+        "add_activity": "Добавить занятие",
+        "generate_content": "Сгенерировать содержание",
+        "generate_content_description": "Сгенерируйте содержание с помощью ИИ для каждого занятия вашего курса.",
+        "generated": "сгенерировано",
+        "generate_all": "Сгенерировать всё",
+        "generate": "Сгенерировать",
+        "generating_short": "Генерация...",
+        "done": "Готово",
+        "course_structure_created": "Структура курса успешно создана!",
+        "failed_to_create": "Ошибка при создании структуры курса",
+        "create_course": "Создать курс",
+        "course_created_success": "Курс успешно создан!",
+        "content_generated_success": "Содержание успешно сгенерировано!",
+        "content_parse_error": "Ошибка при разборе сгенерированного содержания",
+        "all_content_generated": "Всё содержание сгенерировано!",
+        "all_content_generated_hint": "Нажмите 'Завершить и редактировать курс', чтобы просмотреть и отредактировать содержание курса.",
+        "attach_image": "Фото",
+        "attach_video": "Видео",
+        "attach_youtube": "Ссылка YouTube",
+        "attach_file": "Документ"
+      }
+    }
+  },
+  "communities": {
+    "title": "Сообщества",
+    "new_community": "Новое сообщество",
+    "no_communities": "Сообществ пока нет",
+    "no_communities_description": "Создайте сообщество, чтобы начать обсуждения",
+    "public": "Публичное",
+    "private": "Приватное",
+    "discussions": "обсуждения",
+    "discussion": "обсуждение",
+    "created": "Создано",
+    "linked_course": "Связанный курс",
+    "community_guidelines": "Правила сообщества",
+    "community_guidelines_text": "Будьте уважительны и конструктивны. Помогайте другим и делитесь своими знаниями с сообществом.",
+    "new_discussion": "Новое обсуждение",
+    "manage": "Управление",
+    "sidebar": {
+      "posted_by": "Автор",
+      "upvotes": "Голоса",
+      "category": "Категория",
+      "created": "Создано",
+      "pinned": "Закреплено",
+      "locked": "Заблокировано",
+      "reactions": "Реакции",
+      "community": "Сообщество"
+    },
+    "discussion_list": {
+      "search_placeholder": "Поиск обсуждений...",
+      "sort_by": "Сортировка:",
+      "latest_activity": "Последняя активность",
+      "top": "Популярные",
+      "hot": "В тренде",
+      "new_discussion": "Новое обсуждение",
+      "select": "Выбрать",
+      "cancel": "Отмена",
+      "select_all": "Выбрать все",
+      "deselect_all": "Снять выбор",
+      "selected": "выбрано",
+      "delete": "Удалить",
+      "delete_discussions_title": "Удалить {{count}} обсуждение?",
+      "delete_discussions_title_plural": "Удалить {{count}} обсуждений?",
+      "delete_discussions_confirm": "Вы уверены, что хотите удалить {{count}} {{type}}? Это действие необратимо.",
+      "no_results": "Результатов не найдено",
+      "no_results_description": "Попробуйте изменить поисковый запрос или сбросить фильтр",
+      "clear_search": "Очистить поиск",
+      "no_discussions": "Обсуждений пока нет",
+      "no_discussions_description": "Станьте первым, кто начнёт обсуждение в этом сообществе!",
+      "start_discussion": "Начать обсуждение"
+    },
+    "discussion_detail": {
+      "edit": "Редактировать",
+      "delete": "Удалить",
+      "delete_title": "Удалить обсуждение?",
+      "delete_confirm": "Вы уверены, что хотите удалить это обсуждение? Это действие необратимо.",
+      "delete_button": "Удалить обсуждение",
+      "no_details": "Дополнительные сведения не предоставлены."
+    },
+    "discussion_card": {
+      "pin_discussion": "Закрепить обсуждение",
+      "unpin_discussion": "Открепить обсуждение",
+      "lock_discussion": "Заблокировать обсуждение",
+      "unlock_discussion": "Разблокировать обсуждение",
+      "delete_discussion": "Удалить обсуждение",
+      "delete_title": "Удалить обсуждение?",
+      "delete_confirm": "Вы уверены, что хотите удалить это обсуждение? Это действие необратимо.",
+      "votes": "голосов"
+    },
+    "comments": {
+      "no_replies": "Ответов пока нет",
+      "locked": "Это обсуждение заблокировано",
+      "sign_in_to_reply": "Войдите",
+      "to_reply": "чтобы ответить",
+      "write_reply": "Написать ответ...",
+      "reply": "Ответить",
+      "edit": "Редактировать",
+      "delete": "Удалить",
+      "save": "Сохранить",
+      "cancel": "Отмена",
+      "failed_to_post": "Не удалось опубликовать ответ. Пожалуйста, попробуйте снова.",
+      "content_not_allowed": "Ваш ответ содержит недопустимый контент.",
+      "failed_to_update": "Не удалось обновить. Пожалуйста, попробуйте снова."
+    },
+    "label_filter": {
+      "label": "Метка:",
+      "all": "Все",
+      "all_discussions": "Все обсуждения",
+      "clear_filter": "Сбросить фильтр"
+    },
+    "labels": {
+      "general": "Общее",
+      "question": "Вопрос",
+      "idea": "Идея",
+      "announcement": "Объявление",
+      "showcase": "Витрина"
+    },
+    "create_discussion": {
+      "title": "Начать обсуждение",
+      "description": "Поделитесь мыслями с сообществом",
+      "category_label": "Категория",
+      "title_label": "Заголовок обсуждения",
+      "title_placeholder": "О чём вы хотите поговорить?",
+      "emoji_selected": "Выбран пользовательский эмодзи",
+      "emoji_hint": "Нажмите + для добавления пользовательского эмодзи (необязательно)",
+      "details_label": "Детали (необязательно)",
+      "details_placeholder": "Добавьте больше контекста или деталей к обсуждению...",
+      "editor_hint": "Используйте панель инструментов для форматирования текста: жирный, курсив, списки и др.",
+      "cancel": "Отмена",
+      "submit": "Опубликовать обсуждение",
+      "title_required": "Заголовок обязателен",
+      "title_min_length": "Заголовок должен содержать минимум 5 символов",
+      "title_max_length": "Заголовок должен быть короче 200 символов",
+      "content_not_allowed": "Ваше обсуждение содержит недопустимый контент.",
+      "failed_to_create": "Не удалось создать обсуждение. Пожалуйста, попробуйте снова."
+    },
+    "edit_discussion": {
+      "title": "Редактировать обсуждение",
+      "description": "Обновить обсуждение",
+      "save": "Сохранить изменения",
+      "cancel": "Отмена",
+      "close": "Закрыть",
+      "failed_to_update": "Не удалось обновить. Пожалуйста, попробуйте снова.",
+      "content_not_allowed": "Ваше обсуждение содержит недопустимый контент.",
+      "max_edits_reached": "Вы достигли максимального количества редактирований ({{count}}). Вы больше не можете редактировать это обсуждение.",
+      "edits_remaining": "У вас осталось {{count}} редактирование(й).",
+      "no_edits_remaining": "У вас не осталось редактирований ({{count}})."
+    },
+    "course_section": {
+      "title": "Обсуждения сообщества",
+      "view_all": "Смотреть все",
+      "no_discussions": "Пока нет обсуждений",
+      "start_first": "Начните первое обсуждение"
+    }
   },
   "collections": {
     "collections": "Коллекции",
@@ -427,6 +750,15 @@
     "benefits": "Преимущества:",
     "min_price": "Минимальная цена:",
     "choose_price": "Выберите свою цену"
+  },
+  "account": {
+    "title": "Аккаунт",
+    "general": "Общие",
+    "profile": "Профиль",
+    "security": "Безопасность",
+    "my_courses": "Мои курсы",
+    "no_purchased_courses": "Пока нет купленных курсов",
+    "purchased_courses_description": "Здесь появятся курсы, которые вы купили или на которые подписались"
   },
   "user": {
     "user_settings": "Настройки пользователя",
@@ -706,10 +1038,538 @@
       "create_course": "Создать курс",
       "create_new_course": "Создать новый курс",
       "import_course": "Импортировать курс",
+      "import_scorm": "Импортировать пакет SCORM",
       "import_scorm_description": "Импортировать пакет SCORM для создания нового курса",
+      "import_learnhouse": "Импортировать курсы LearnHouse",
+      "import_learnhouse_description": "Импортировать курсы из экспортного пакета LearnHouse",
+      "import_select_type": "Выберите тип пакета, который хотите импортировать",
       "no_courses": "Курсов пока нет",
       "create_course_placeholder": "Создайте курс, чтобы добавить контент",
-      "no_courses_available": "Доступных курсов пока нет"
+      "no_courses_available": "Доступных курсов пока нет",
+      "publishing": "Публикация курса...",
+      "unpublishing": "Снятие публикации курса...",
+      "published_success": "Курс успешно опубликован",
+      "unpublished_success": "Курс успешно снят с публикации",
+      "publish_error": "Не удалось обновить статус публикации",
+      "published": "Опубликован",
+      "unpublished": "Не опубликован",
+      "processing": "Обработка...",
+      "click_to_publish": "Нажмите для публикации",
+      "click_to_unpublish": "Нажмите для снятия",
+      "preview": "Предпросмотр",
+      "save": {
+        "success": "Изменения успешно сохранены",
+        "error": "Не удалось сохранить изменения",
+        "partial_success": "Сохранено с некоторыми проблемами: {{failed}}",
+        "partial_error": "Частично сохранено ({{success}}), но не удалось: {{failed}}",
+        "certification_error": "Не удалось сохранить настройки сертификации",
+        "saving": "Сохранение...",
+        "saved": "Сохранено",
+        "save": "Сохранить",
+        "unsaved": "Несохранённые изменения",
+        "retry": "Ошибка — нажмите для повтора",
+        "retry_button": "Повторить"
+      },
+      "overview_top": {
+        "course_label": "Курс",
+        "rights_guide_button": "Руководство по правам"
+      },
+      "settings": {
+        "tabs": {
+          "general": "Общие",
+          "content": "Контент",
+          "access": "Доступ",
+          "contributors": "Участники",
+          "certification": "Сертификация"
+        },
+        "access_denied": {
+          "title": "Доступ запрещен",
+          "message": "У вас нет прав для доступа к этому курсу."
+        },
+        "access_restricted": {
+          "title": "Доступ ограничен",
+          "message": "У вас нет прав для доступа к вкладке {{tab}}"
+        },
+        "loading": "Загрузка..."
+      },
+      "general": {
+        "form": {
+          "name_label": "Название",
+          "name_required": "Обязательно",
+          "name_max_length": "Не более 100 символов",
+          "description_label": "Описание",
+          "description_required": "Обязательно",
+          "description_max_length": "Не более 1000 символов",
+          "about_label": "Подробности",
+          "learnings_label": "Чему научит курс",
+          "learnings_required": "Обязательно",
+          "learnings_invalid_format": "Неверный формат",
+          "learnings_min_items": "Требуется хотя бы один пункт обучения",
+          "learnings_empty_text": "Все пункты обучения должны содержать текст",
+          "learnings_invalid_json": "Неверный формат JSON",
+          "tags_label": "Теги",
+          "tags_placeholder": "Нажмите Enter, чтобы добавить...",
+          "thumbnail_type_label": "Тип миниатюры",
+          "thumbnail_type_image": "Изображение",
+          "thumbnail_type_video": "Видео",
+          "thumbnail_type_both": "Оба",
+          "thumbnail_label": "Миниатюра",
+          "image_search_placeholder": "Поиск изображений..."
+        },
+        "thumbnail": {
+          "upload_image": "Загрузить изображение",
+          "upload_video": "Загрузить видео",
+          "gallery": "Галерея",
+          "tabs": {
+            "image": "Изображение",
+            "video": "Видео"
+          },
+          "supported_formats": {
+            "image": "Поддерживаемые форматы: PNG, JPG/JPEG (макс. 8 МБ)",
+            "video": "Поддерживаемые форматы: MP4, WebM (макс. 100 МБ)"
+          }
+        },
+        "errors": {
+          "save_failed": "Не удалось сохранить структуру курса."
+        }
+      },
+      "access": {
+        "title": "Доступ к курсу",
+        "subtitle": "Выберите, будет ли ваш курс доступен всем в Интернете или только зарегистрированным пользователям",
+        "public": {
+          "title": "Публичный",
+          "description": "Курс доступен всем в Интернете, индексируется поисковыми системами и открыт для каждого",
+          "active": "Активен",
+          "confirmation_title": "Сделать публичным?",
+          "confirmation_message": "Вы уверены, что хотите сделать этот курс доступным для всех в Интернете?",
+          "confirmation_button": "Сделать публичным"
+        },
+        "users_only": {
+          "title": "Только для пользователей",
+          "description": "Курс доступен только зарегистрированным пользователям, также вы можете выбрать конкретные группы пользователей",
+          "active": "Активен",
+          "confirmation_title": "Сделать только для пользователей?",
+          "confirmation_message": "Вы уверены, что хотите сделать этот курс доступным только для зарегистрированных пользователей?",
+          "confirmation_button": "Только для пользователей"
+        },
+        "usergroups": {
+          "title": "Группы пользователей",
+          "subtitle": "Вы можете предоставить доступ к этому курсу только определенным группам пользователей, связав его с группой",
+          "table": {
+            "name": "Название",
+            "actions": "Действия"
+          },
+          "actions": {
+            "delete_link": "Удалить связь",
+            "link_to_usergroup": "Связать с группой"
+          },
+          "modals": {
+            "link_title": "Связать курс с группой пользователей",
+            "link_description": "Выберите группу пользователей для связи с этим курсом. Участники этой группы получат доступ к курсу.",
+            "unlink_title": "Удалить связь с группой?",
+            "unlink_message": "Участники этой группы больше не будут иметь доступ к этому курсу",
+            "unlink_button": "Удалить связь",
+            "warning": "Пользователи, не входящие в эту группу, потеряют доступ к этому курсу",
+            "usergroup_name": "Название группы",
+            "no_usergroups": "Нет доступных групп",
+            "create_usergroup": "Создать группу пользователей",
+            "link_button": "Связать"
+          },
+          "toasts": {
+            "link_success": "Успешно связано с группой",
+            "link_error": "Ошибка {{status}}: {{detail}}",
+            "unlink_success": "Связь с группой успешно удалена",
+            "unlink_error": "Произошла ошибка при удалении связи с группой."
+          }
+        }
+      },
+      "contributors": {
+        "title": "Участники курса",
+        "subtitle": "Управляйте участниками и добавляйте новых в ваш курс",
+        "open_to_contributors": {
+          "title": "Открыто для участников",
+          "description": "Курс открыт для участников. Пользователи могут подавать заявки на участие в улучшении контента курса.",
+          "active": "Активен",
+          "confirmation_title": "Открыть для участников?",
+          "confirmation_message": "Вы уверены, что хотите открыть этот курс для участников?",
+          "confirmation_button": "Открыть для участников"
+        },
+        "closed_to_contributors": {
+          "title": "Закрыто для участников",
+          "description": "Курс закрыт для участников. Только текущие участники могут изменять контент курса.",
+          "active": "Активен",
+          "confirmation_title": "Закрыть для участников?",
+          "confirmation_message": "Вы уверены, что хотите закрыть этот курс для участников?",
+          "confirmation_button": "Закрыть для участников"
+        },
+        "search": {
+          "placeholder": "Поиск пользователей по имени или логину для добавления...",
+          "searching": "Поиск...",
+          "no_results": "Пользователи не найдены"
+        },
+        "table": {
+          "name": "Имя",
+          "username": "Логин",
+          "email": "Электронная почта",
+          "role": "Роль",
+          "status": "Статус",
+          "added_on": "Добавлен"
+        },
+        "roles": {
+          "creator": "СОЗДАТЕЛЬ",
+          "contributor": "УЧАСТНИК",
+          "maintainer": "СОПРОВОЖДАЮЩИЙ",
+          "reporter": "РЕПОРТЕР"
+        },
+        "statuses": {
+          "active": "АКТИВЕН",
+          "inactive": "НЕАКТИВЕН",
+          "pending": "ОЖИДАЕТ"
+        },
+        "actions": {
+          "selected_users": "Выбран {{count}} пользователь",
+          "selected_users_plural": "Выбрано {{count}} пользователей",
+          "clear": "Очистить",
+          "add_selected": "Добавить выбранных",
+          "selected_contributors": "Выбран {{count}} участник",
+          "selected_contributors_plural": "Выбрано {{count}} участников",
+          "remove_selected": "Удалить выбранных",
+          "already_contributor": "Уже является участником"
+        },
+        "toasts": {
+          "add_success": "Успешно добавлено {{count}} участника(ов)",
+          "add_error": "Не удалось добавить {{username}}: {{reason}}",
+          "add_failed": "Не удалось добавить участников",
+          "update_success": "Участник успешно обновлен",
+          "update_error": "Ошибка: {{detail}}",
+          "update_failed": "Произошла ошибка при обновлении участника.",
+          "remove_success": "Успешно удалено {{count}} участника(ов)",
+          "remove_failed": "Не удалось удалить участников",
+          "cannot_modify_creator": "Нельзя изменить роль или статус создателя"
+        }
+      },
+      "certification": {
+        "title": "Сертификация курса",
+        "subtitle": "Включите и настройте сертификаты для учеников, завершивших этот курс",
+        "form": {
+          "certification_name_label": "Название сертификации",
+          "certification_name_required": "Обязательно при включенной сертификации",
+          "certification_name_max_length": "Не более 100 символов",
+          "certification_name_placeholder": "напр., Сертификация Advanced JavaScript",
+          "certification_type_label": "Тип сертификации",
+          "certification_description_label": "Описание сертификации",
+          "certification_description_required": "Обязательно при включенной сертификации",
+          "certification_description_max_length": "Не более 500 символов",
+          "certification_description_placeholder": "Опишите, что подтверждает эта сертификация и ее ценность...",
+          "certificate_pattern_label": "Узор сертификата",
+          "certificate_instructor_label": "Имя инструктора (необязательно)",
+          "certificate_instructor_placeholder": "напр., Д-р Анна Петрова"
+        },
+        "types": {
+          "completion": "Завершение курса",
+          "achievement": "За достижения",
+          "assessment": "На основе оценки",
+          "participation": "За участие",
+          "mastery": "За овладение навыками",
+          "professional": "Профессиональное развитие",
+          "continuing": "Повышение квалификации",
+          "workshop": "Посещение семинара",
+          "specialization": "Специализация"
+        },
+        "patterns": {
+          "royal": {
+            "name": "Королевский",
+            "description": "Украшенный мотивами короны"
+          },
+          "tech": {
+            "name": "Техно",
+            "description": "Узоры в стиле микросхем"
+          },
+          "nature": {
+            "name": "Природа",
+            "description": "Органические растительные узоры"
+          },
+          "geometric": {
+            "name": "Геометрия",
+            "description": "Абстрактные формы и линии"
+          },
+          "vintage": {
+            "name": "Винтаж",
+            "description": "Стиль арт-деко"
+          },
+          "waves": {
+            "name": "Волны",
+            "description": "Плавные водные узоры"
+          },
+          "minimal": {
+            "name": "Минимализм",
+            "description": "Чисто и просто"
+          },
+          "professional": {
+            "name": "Профессиональный",
+            "description": "Строгий деловой дизайн"
+          },
+          "academic": {
+            "name": "Академический",
+            "description": "Традиционный университетский стиль"
+          },
+          "modern": {
+            "name": "Модерн",
+            "description": "Современные чистые линии"
+          }
+        },
+        "sections": {
+          "basic_info": {
+            "title": "Основная информация",
+            "subtitle": "Настройте основные детали вашей сертификации"
+          },
+          "certificate_design": {
+            "title": "Дизайн сертификата",
+            "subtitle": "Выберите декоративный узор для вашего сертификата"
+          },
+          "preview": {
+            "title": "Предпросмотр сертификата",
+            "subtitle": "Живой предпросмотр вашего сертификата"
+          }
+        },
+        "states": {
+          "disabled": {
+            "title": "Сертификация не настроена",
+            "message": "Включите сертификацию, чтобы выдавать ученикам сертификаты после завершения курса.",
+            "button": "Включить сертификацию",
+            "creating": "Создание..."
+          },
+          "creating": {
+            "title": "Создание сертификации...",
+            "message": "Пожалуйста, подождите, пока мы настраиваем сертификацию курса."
+          }
+        },
+        "errors": {
+          "loading": "Ошибка при загрузке сертификаций",
+          "create_failed": "Не удалось создать сертификацию.",
+          "remove_failed": "Не удалось удалить сертификацию."
+        },
+        "toasts": {
+          "create_success": "Сертификация успешно создана",
+          "create_error": "Не удалось создать сертификацию",
+          "remove_success": "Сертификация успешно удалена",
+          "remove_error": "Не удалось удалить сертификацию"
+        }
+      },
+      "communities": {
+        "title": "Сообщества",
+        "new_community": "Новое сообщество",
+        "no_communities": "Пока нет сообществ",
+        "no_communities_description": "Создайте свое первое сообщество, чтобы начать обсуждения",
+        "card": {
+          "open_settings": "Открыть настройки",
+          "view_community": "Посмотреть сообщество",
+          "quick_edit": "Быстрое редактирование"
+        },
+        "settings": {
+          "tabs": {
+            "general": "Общие",
+            "thumbnail": "Миниатюра",
+            "course": "Связанный курс",
+            "moderation": "Модерация"
+          },
+          "general": {
+            "title": "Общие настройки",
+            "subtitle": "Управление названием, описанием и видимостью сообщества"
+          },
+          "thumbnail": {
+            "title": "Миниатюра",
+            "subtitle": "Обновить обложку сообщества"
+          },
+          "course": {
+            "title": "Связанный курс",
+            "subtitle": "Связать это сообщество с курсом"
+          },
+          "moderation": {
+            "title": "Модерация",
+            "subtitle": "Настроить параметры модерации контента"
+          }
+        },
+        "course": {
+          "title": "Связанный курс",
+          "subtitle": "Связать это сообщество с курсом для обсуждений по курсу",
+          "currently_linked": "В настоящее время связан",
+          "unlink": "Отвязать",
+          "link_button": "Связать курс",
+          "search_placeholder": "Поиск курсов...",
+          "no_courses": "Курсы не найдены",
+          "course_linked_id": "Курс связан (ID: {{id}})",
+          "course_not_found": "Связанный курс может больше не существовать или у вас нет к нему доступа",
+          "toasts": {
+            "linking": "Связывание курса...",
+            "link_success": "Курс успешно связан",
+            "link_error": "Не удалось связать курс",
+            "unlinking": "Отвязывание курса...",
+            "unlink_success": "Курс успешно отвязан",
+            "unlink_error": "Не удалось отвязать курс"
+          }
+        },
+        "general": {
+          "title": "Настройки сообщества",
+          "subtitle": "Обновите основную информацию о вашем сообществе",
+          "form": {
+            "name_label": "Название сообщества",
+            "name_required": "Название сообщества обязательно",
+            "name_min_length": "Название должно содержать минимум 3 символа",
+            "name_max_length": "Название должно содержать менее 100 символов",
+            "name_placeholder": "Введите название сообщества",
+            "description_label": "Описание",
+            "description_max_length": "Описание должно содержать менее 500 символов",
+            "description_placeholder": "Опишите, о чем это сообщество",
+            "public_label": "Публичное сообщество",
+            "public_description": "Сделать это сообщество видимым для всех",
+            "characters_left": "Осталось {{count}} символов"
+          },
+          "toasts": {
+            "updating": "Обновление сообщества...",
+            "update_success": "Сообщество успешно обновлено",
+            "update_error": "Не удалось обновить сообщество"
+          }
+        },
+        "thumbnail": {
+          "title": "Миниатюра сообщества",
+          "subtitle": "Загрузите обложку для вашего сообщества",
+          "no_thumbnail": "Миниатюра не установлена",
+          "upload_image": "Загрузить изображение",
+          "browse_unsplash": "Искать на Unsplash",
+          "uploading": "Загрузка...",
+          "supported_formats": "Поддерживаемые форматы: JPG, JPEG, PNG. Макс. размер: 8МБ. Рекомендуемое соотношение: 16:9",
+          "toasts": {
+            "update_success": "Миниатюра успешно обновлена",
+            "update_error": "Не удалось обновить миниатюру",
+            "invalid_type": "Недопустимый тип файла. Загружайте только изображения PNG или JPG/JPEG",
+            "file_too_large": "Размер файла превышает лимит 8МБ"
+          }
+        },
+        "moderation": {
+          "title": "Модерация контента",
+          "subtitle": "Настройте заблокированные слова и фильтры контента",
+          "info_title": "Заблокированные слова",
+          "info_description": "Обсуждения и ответы, содержащие эти слова, будут заблокированы. Пользователи увидят сообщение об ошибке, и их контент не будет опубликован.",
+          "add_word_label": "Добавить заблокированное слово",
+          "add_word_placeholder": "Введите слово или фразу...",
+          "add_button": "Добавить",
+          "batch_add_label": "Массовое добавление слов",
+          "batch_add_description": "Добавьте несколько слов сразу, разделенных запятыми",
+          "batch_add_placeholder": "слово1, слово2, слово3...",
+          "add_all_button": "Добавить все",
+          "blocked_words_label": "Заблокированные слова",
+          "no_blocked_words": "Заблокированных слов пока нет",
+          "no_blocked_words_description": "Добавьте слова, чтобы включить модерацию контента",
+          "word_exists_error": "Это слово уже в списке",
+          "all_words_exist_error": "Все слова уже в списке или ввод пуст",
+          "toasts": {
+            "saving": "Сохранение настроек модерации...",
+            "save_success": "Настройки модерации сохранены",
+            "save_error": "Не удалось сохранить настройки модерации"
+          }
+        },
+        "modals": {
+          "create": {
+            "title": "Создать сообщество",
+            "description": "Создайте новое сообщество для обсуждений",
+            "form": {
+              "name_label": "Название сообщества",
+              "name_placeholder": "Введите название сообщества",
+              "description_label": "Описание",
+              "description_placeholder": "Опишите, о чем это сообщество",
+              "public_label": "Сделать это сообщество публичным (видимым для всех)"
+            },
+            "cancel": "Отмена",
+            "submit": "Создать сообщество"
+          },
+          "edit": {
+            "title": "Редактировать сообщество",
+            "description": "Обновить настройки сообщества"
+          },
+          "delete": {
+            "title": "Удалить {{name}}?",
+            "message": "Вы уверены, что хотите удалить это сообщество? Все обсуждения будут удалены навсегда.",
+            "button": "Удалить сообщество"
+          }
+        },
+        "toasts": {
+          "creating": "Создание сообщества...",
+          "create_success": "Сообщество успешно создано",
+          "create_error": "Не удалось создать сообщество",
+          "deleting": "Удаление сообщества...",
+          "delete_success": "Сообщество успешно удалено",
+          "delete_error": "Не удалось удалить сообщество"
+        }
+      },
+      "structure": {
+        "loading": "Загрузка...",
+        "add_chapter_button": "Добавить главу",
+        "modals": {
+          "new_chapter": {
+            "title": "Создать главу",
+            "description": "Добавьте новую главу в курс",
+            "form": {
+              "name_label": "Название главы",
+              "name_required": "Пожалуйста, укажите название главы",
+              "description_label": "Описание главы",
+              "description_required": "Пожалуйста, укажите описание главы",
+              "submit": "Создать главу"
+            }
+          },
+          "delete_chapter": {
+            "title": "Удалить {{name}}?",
+            "message": "Вы уверены, что хотите удалить эту главу?",
+            "button": "Удалить главу"
+          },
+          "new_activity": {
+            "title": "Создать занятие",
+            "description": "Выберите тип занятия для добавления в курс"
+          },
+          "delete_activity": {
+            "title": "Удалить {{name}}?",
+            "message": "Вы уверены, что хотите удалить это занятие?",
+            "button": "Удалить занятие"
+          }
+        },
+        "actions": {
+          "add_chapter": "Добавить главу",
+          "add_activity": "Добавить занятие",
+          "publish": "Опубликовать",
+          "unpublish": "Снять с публикации",
+          "preview_activity": "Предпросмотр занятия",
+          "edit_page": "Редактировать страницу",
+          "edit_assignment": "Редактировать задание"
+        },
+        "chapter_element": {
+          "chapter_name_placeholder": "Название главы"
+        },
+        "activity": {
+          "name_placeholder": "Название занятия",
+          "types": {
+            "video": "Видео",
+            "document": "Документ",
+            "assignment": "Задание",
+            "assignments": "Задания",
+            "dynamic": "Динамическое",
+            "dynamic_page": "Динамическая страница",
+            "scorm": "Scorm"
+          },
+          "toasts": {
+            "deleting": "Удаление занятия...",
+            "delete_success": "Занятие успешно удалено",
+            "updating": "Обновление задания...",
+            "update_success": "Занятие успешно обновлено",
+            "name_update_success": "Название занятия успешно обновлено",
+            "name_update_error": "Не удалось обновить название занятия",
+            "creating": "Создание занятия...",
+            "create_success": "Занятие успешно создано",
+            "uploading": "Загрузка файла и создание занятия...",
+            "upload_success": "Файл успешно загружен",
+            "creating_uploading": "Создание занятия и загрузка файла..."
+          }
+        }
+      }
     },
     "organization": {
       "settings": {
@@ -768,7 +1628,10 @@
         "saving": "Сохранение...",
         "update_success": "Организация обновлена",
         "update_error": "Не удалось обновить организацию",
-        "updating": "Обновление организации..."
+        "updating": "Обновление организации...",
+        "footer_text": "Текст подвала",
+        "footer_text_placeholder": "Введите текст подвала...",
+        "footer_text_desc": "Пользовательский текст, отображаемый внизу страниц вашей организации"
       },
       "images": {
         "title": "Изображения и превью",
@@ -826,7 +1689,8 @@
         "subtitle": "Управляйте визуальной идентичностью и присутствием в соцсетях вашей организации",
         "tabs": {
           "images": "Изображения и превью",
-          "social": "Ссылки на соцсети"
+          "social": "Ссылки на соцсети",
+          "theme": "Тема"
         }
       },
       "socials": {
@@ -959,7 +1823,11 @@
           "generating": "Генерация CSV...",
           "success": "CSV успешно экспортирован",
           "error": "Не удалось экспортировать CSV"
-        }
+        },
+        "enterprise_only": "Журналы аудита доступны только в плане Enterprise",
+        "enterprise_feature": "Функция Enterprise",
+        "enterprise_description": "Журналы аудита — это премиум-функция, доступная только для организаций с планом Enterprise. Обновитесь, чтобы получить полную видимость активностей вашей организации.",
+        "upgrade_button": "Обновить до Enterprise"
       },
       "landing": {
         "title": "Лендинг",
@@ -1110,6 +1978,16 @@
           "selected": "Выбрано",
           "select": "Выбрать"
         }
+      },
+      "theme": {
+        "primary_color": "Основной цвет",
+        "primary_color_desc": "Выберите основной цвет для заголовка и фона страницы вашей организации.",
+        "clear_color": "Очистить цвет",
+        "preview": "Предпросмотр",
+        "preview_hint": "Так будут выглядеть заголовок и фон вашей организации",
+        "footer_text": "Текст подвала",
+        "footer_text_desc": "Добавьте пользовательский текст для отображения в подвале страницы.",
+        "footer_text_placeholder": "Введите текст подвала..."
       }
     },
     "users": {
@@ -1167,7 +2045,10 @@
           "remove_from_org": "Удалить из организации",
           "removing": "Удаление...",
           "remove_success": "Пользователь удален из организации",
-          "remove_error": "Ошибка при удалении пользователя"
+          "remove_error": "Ошибка при удалении пользователя",
+          "updating_role": "Обновление роли...",
+          "role_update_success": "Роль успешно обновлена",
+          "role_update_error": "Ошибка обновления роли"
         },
         "modals": {
           "update_role": {
@@ -1179,6 +2060,13 @@
             "message": "Вы уверены, что хотите удалить этого пользователя из организации?",
             "button": "Удалить пользователя"
           }
+        },
+        "search_placeholder": "Поиск пользователей...",
+        "no_results": "Пользователи, соответствующие вашему поиску, не найдены",
+        "no_users": "В этой организации пока нет пользователей",
+        "pagination": {
+          "showing": "Показано {{start}}-{{end}} из {{total}}",
+          "page": "Страница {{current}} из {{total}}"
         }
       },
       "signups": {
@@ -1668,481 +2556,6 @@
           "toasts": {
             "creating": "Создание задания...",
             "success": "Задание успешно создано"
-          }
-        }
-      }
-    },
-    "courses": {
-      "title": "Курсы",
-      "rights_guide": "Руководство по правам",
-      "create_course": "Создать курс",
-      "create_new_course": "Создать новый курс",
-      "import_course": "Импортировать курс",
-      "import_scorm_description": "Импортировать пакет SCORM для создания нового курса",
-      "no_courses": "Курсов пока нет",
-      "create_course_placeholder": "Создайте курс, чтобы добавить контент",
-      "no_courses_available": "Доступных курсов пока нет",
-      "overview_top": {
-        "course_label": "Курс",
-        "rights_guide_button": "Руководство по правам"
-      },
-      "settings": {
-        "tabs": {
-          "general": "Общие",
-          "content": "Контент",
-          "access": "Доступ",
-          "contributors": "Участники",
-          "certification": "Сертификация"
-        },
-        "access_denied": {
-          "title": "Доступ запрещен",
-          "message": "У вас нет прав для доступа к этому курсу."
-        },
-        "access_restricted": {
-          "title": "Доступ ограничен",
-          "message": "У вас нет прав для доступа к вкладке {{tab}}"
-        },
-        "loading": "Загрузка..."
-      },
-      "general": {
-        "form": {
-          "name_label": "Название",
-          "name_required": "Обязательно",
-          "name_max_length": "Не более 100 символов",
-          "description_label": "Описание",
-          "description_required": "Обязательно",
-          "description_max_length": "Не более 1000 символов",
-          "about_label": "Подробности",
-          "learnings_label": "Чему научит курс",
-          "learnings_required": "Обязательно",
-          "learnings_invalid_format": "Неверный формат",
-          "learnings_min_items": "Требуется хотя бы один пункт обучения",
-          "learnings_empty_text": "Все пункты обучения должны содержать текст",
-          "learnings_invalid_json": "Неверный формат JSON",
-          "tags_label": "Теги",
-          "tags_placeholder": "Нажмите Enter, чтобы добавить...",
-          "thumbnail_type_label": "Тип миниатюры",
-          "thumbnail_type_image": "Изображение",
-          "thumbnail_type_video": "Видео",
-          "thumbnail_type_both": "Оба",
-          "thumbnail_label": "Миниатюра",
-          "image_search_placeholder": "Поиск изображений..."
-        },
-        "thumbnail": {
-          "upload_image": "Загрузить изображение",
-          "upload_video": "Загрузить видео",
-          "gallery": "Галерея",
-          "tabs": {
-            "image": "Изображение",
-            "video": "Видео"
-          },
-          "supported_formats": {
-            "image": "Поддерживаемые форматы: PNG, JPG/JPEG (макс. 8 МБ)",
-            "video": "Поддерживаемые форматы: MP4, WebM (макс. 100 МБ)"
-          }
-        },
-        "errors": {
-          "save_failed": "Не удалось сохранить структуру курса."
-        }
-      },
-      "access": {
-        "title": "Доступ к курсу",
-        "subtitle": "Выберите, будет ли ваш курс доступен всем в Интернете или только зарегистрированным пользователям",
-        "public": {
-          "title": "Публичный",
-          "description": "Курс доступен всем в Интернете, индексируется поисковыми системами и открыт для каждого",
-          "active": "Активен",
-          "confirmation_title": "Сделать публичным?",
-          "confirmation_message": "Вы уверены, что хотите сделать этот курс доступным для всех в Интернете?",
-          "confirmation_button": "Сделать публичным"
-        },
-        "users_only": {
-          "title": "Только для пользователей",
-          "description": "Курс доступен только зарегистрированным пользователям, также вы можете выбрать конкретные группы пользователей",
-          "active": "Активен",
-          "confirmation_title": "Сделать только для пользователей?",
-          "confirmation_message": "Вы уверены, что хотите сделать этот курс доступным только для зарегистрированных пользователей?",
-          "confirmation_button": "Только для пользователей"
-        },
-        "usergroups": {
-          "title": "Группы пользователей",
-          "subtitle": "Вы можете предоставить доступ к этому курсу только определенным группам пользователей, связав его с группой",
-          "table": {
-            "name": "Название",
-            "actions": "Действия"
-          },
-          "actions": {
-            "delete_link": "Удалить связь",
-            "link_to_usergroup": "Связать с группой"
-          },
-          "modals": {
-            "link_title": "Связать курс с группой пользователей",
-            "link_description": "Выберите группу пользователей для связи с этим курсом. Участники этой группы получат доступ к курсу.",
-            "unlink_title": "Удалить связь с группой?",
-            "unlink_message": "Участники этой группы больше не будут иметь доступ к этому курсу",
-            "unlink_button": "Удалить связь",
-            "warning": "Пользователи, не входящие в эту группу, потеряют доступ к этому курсу",
-            "usergroup_name": "Название группы",
-            "no_usergroups": "Нет доступных групп",
-            "create_usergroup": "Создать группу пользователей",
-            "link_button": "Связать"
-          },
-          "toasts": {
-            "link_success": "Успешно связано с группой",
-            "link_error": "Ошибка {{status}}: {{detail}}",
-            "unlink_success": "Связь с группой успешно удалена",
-            "unlink_error": "Произошла ошибка при удалении связи с группой."
-          }
-        }
-      },
-      "contributors": {
-        "title": "Участники курса",
-        "subtitle": "Управляйте участниками и добавляйте новых в ваш курс",
-        "open_to_contributors": {
-          "title": "Открыто для участников",
-          "description": "Курс открыт для участников. Пользователи могут подавать заявки на участие в улучшении контента курса.",
-          "active": "Активен",
-          "confirmation_title": "Открыть для участников?",
-          "confirmation_message": "Вы уверены, что хотите открыть этот курс для участников?",
-          "confirmation_button": "Открыть для участников"
-        },
-        "closed_to_contributors": {
-          "title": "Закрыто для участников",
-          "description": "Курс закрыт для участников. Только текущие участники могут изменять контент курса.",
-          "active": "Активен",
-          "confirmation_title": "Закрыть для участников?",
-          "confirmation_message": "Вы уверены, что хотите закрыть этот курс для участников?",
-          "confirmation_button": "Закрыть для участников"
-        },
-        "search": {
-          "placeholder": "Поиск пользователей по имени или логину для добавления...",
-          "searching": "Поиск...",
-          "no_results": "Пользователи не найдены"
-        },
-        "table": {
-          "name": "Имя",
-          "username": "Логин",
-          "email": "Электронная почта",
-          "role": "Роль",
-          "status": "Статус",
-          "added_on": "Добавлен"
-        },
-        "roles": {
-          "creator": "СОЗДАТЕЛЬ",
-          "contributor": "УЧАСТНИК",
-          "maintainer": "СОПРОВОЖДАЮЩИЙ",
-          "reporter": "РЕПОРТЕР"
-        },
-        "statuses": {
-          "active": "АКТИВЕН",
-          "inactive": "НЕАКТИВЕН",
-          "pending": "ОЖИДАЕТ"
-        },
-        "actions": {
-          "selected_users": "Выбран {{count}} пользователь",
-          "selected_users_plural": "Выбрано {{count}} пользователей",
-          "clear": "Очистить",
-          "add_selected": "Добавить выбранных",
-          "selected_contributors": "Выбран {{count}} участник",
-          "selected_contributors_plural": "Выбрано {{count}} участников",
-          "remove_selected": "Удалить выбранных",
-          "already_contributor": "Уже является участником"
-        },
-        "toasts": {
-          "add_success": "Успешно добавлено {{count}} участника(ов)",
-          "add_error": "Не удалось добавить {{username}}: {{reason}}",
-          "add_failed": "Не удалось добавить участников",
-          "update_success": "Участник успешно обновлен",
-          "update_error": "Ошибка: {{detail}}",
-          "update_failed": "Произошла ошибка при обновлении участника.",
-          "remove_success": "Успешно удалено {{count}} участника(ов)",
-          "remove_failed": "Не удалось удалить участников",
-          "cannot_modify_creator": "Нельзя изменить роль или статус создателя"
-        }
-      },
-      "certification": {
-        "title": "Сертификация курса",
-        "subtitle": "Включите и настройте сертификаты для учеников, завершивших этот курс",
-        "form": {
-          "certification_name_label": "Название сертификации",
-          "certification_name_required": "Обязательно при включенной сертификации",
-          "certification_name_max_length": "Не более 100 символов",
-          "certification_name_placeholder": "напр., Сертификация Advanced JavaScript",
-          "certification_type_label": "Тип сертификации",
-          "certification_description_label": "Описание сертификации",
-          "certification_description_required": "Обязательно при включенной сертификации",
-          "certification_description_max_length": "Не более 500 символов",
-          "certification_description_placeholder": "Опишите, что подтверждает эта сертификация и ее ценность...",
-          "certificate_pattern_label": "Узор сертификата",
-          "certificate_instructor_label": "Имя инструктора (необязательно)",
-          "certificate_instructor_placeholder": "напр., Д-р Анна Петрова"
-        },
-        "types": {
-          "completion": "Завершение курса",
-          "achievement": "За достижения",
-          "assessment": "На основе оценки",
-          "participation": "За участие",
-          "mastery": "За овладение навыками",
-          "professional": "Профессиональное развитие",
-          "continuing": "Повышение квалификации",
-          "workshop": "Посещение семинара",
-          "specialization": "Специализация"
-        },
-        "patterns": {
-          "royal": {
-            "name": "Королевский",
-            "description": "Украшенный мотивами короны"
-          },
-          "tech": {
-            "name": "Техно",
-            "description": "Узоры в стиле микросхем"
-          },
-          "nature": {
-            "name": "Природа",
-            "description": "Органические растительные узоры"
-          },
-          "geometric": {
-            "name": "Геометрия",
-            "description": "Абстрактные формы и линии"
-          },
-          "vintage": {
-            "name": "Винтаж",
-            "description": "Стиль арт-деко"
-          },
-          "waves": {
-            "name": "Волны",
-            "description": "Плавные водные узоры"
-          },
-          "minimal": {
-            "name": "Минимализм",
-            "description": "Чисто и просто"
-          },
-          "professional": {
-            "name": "Профессиональный",
-            "description": "Строгий деловой дизайн"
-          },
-          "academic": {
-            "name": "Академический",
-            "description": "Традиционный университетский стиль"
-          },
-          "modern": {
-            "name": "Модерн",
-            "description": "Современные чистые линии"
-          }
-        },
-        "sections": {
-          "basic_info": {
-            "title": "Основная информация",
-            "subtitle": "Настройте основные детали вашей сертификации"
-          },
-          "certificate_design": {
-            "title": "Дизайн сертификата",
-            "subtitle": "Выберите декоративный узор для вашего сертификата"
-          },
-          "preview": {
-            "title": "Предпросмотр сертификата",
-            "subtitle": "Живой предпросмотр вашего сертификата"
-          }
-        },
-        "states": {
-          "disabled": {
-            "title": "Сертификация не настроена",
-            "message": "Включите сертификацию, чтобы выдавать ученикам сертификаты после завершения курса.",
-            "button": "Включить сертификацию",
-            "creating": "Создание..."
-          },
-          "creating": {
-            "title": "Создание сертификации...",
-            "message": "Пожалуйста, подождите, пока мы настраиваем сертификацию курса."
-          }
-        },
-        "errors": {
-          "loading": "Ошибка при загрузке сертификаций",
-          "create_failed": "Не удалось создать сертификацию.",
-          "remove_failed": "Не удалось удалить сертификацию."
-        },
-        "toasts": {
-          "create_success": "Сертификация успешно создана",
-          "create_error": "Не удалось создать сертификацию",
-          "remove_success": "Сертификация успешно удалена",
-          "remove_error": "Не удалось удалить сертификацию"
-        }
-      },
-      "communities": {
-        "title": "Сообщества",
-        "new_community": "Новое сообщество",
-        "no_communities": "Пока нет сообществ",
-        "no_communities_description": "Создайте свое первое сообщество, чтобы начать обсуждения",
-        "card": {
-          "open_settings": "Открыть настройки",
-          "view_community": "Посмотреть сообщество",
-          "quick_edit": "Быстрое редактирование"
-        },
-        "settings": {
-          "tabs": {
-            "general": "Общие",
-            "thumbnail": "Миниатюра",
-            "moderation": "Модерация"
-          }
-        },
-        "general": {
-          "title": "Настройки сообщества",
-          "subtitle": "Обновите основную информацию о вашем сообществе",
-          "form": {
-            "name_label": "Название сообщества",
-            "name_required": "Название сообщества обязательно",
-            "name_min_length": "Название должно содержать минимум 3 символа",
-            "name_max_length": "Название должно содержать менее 100 символов",
-            "name_placeholder": "Введите название сообщества",
-            "description_label": "Описание",
-            "description_max_length": "Описание должно содержать менее 500 символов",
-            "description_placeholder": "Опишите, о чем это сообщество",
-            "public_label": "Публичное сообщество",
-            "public_description": "Сделать это сообщество видимым для всех",
-            "characters_left": "Осталось {{count}} символов"
-          },
-          "toasts": {
-            "updating": "Обновление сообщества...",
-            "update_success": "Сообщество успешно обновлено",
-            "update_error": "Не удалось обновить сообщество"
-          }
-        },
-        "thumbnail": {
-          "title": "Миниатюра сообщества",
-          "subtitle": "Загрузите обложку для вашего сообщества",
-          "no_thumbnail": "Миниатюра не установлена",
-          "upload_image": "Загрузить изображение",
-          "browse_unsplash": "Искать на Unsplash",
-          "uploading": "Загрузка...",
-          "supported_formats": "Поддерживаемые форматы: JPG, JPEG, PNG. Макс. размер: 8МБ. Рекомендуемое соотношение: 16:9",
-          "toasts": {
-            "update_success": "Миниатюра успешно обновлена",
-            "update_error": "Не удалось обновить миниатюру",
-            "invalid_type": "Недопустимый тип файла. Загружайте только изображения PNG или JPG/JPEG",
-            "file_too_large": "Размер файла превышает лимит 8МБ"
-          }
-        },
-        "moderation": {
-          "title": "Модерация контента",
-          "subtitle": "Настройте заблокированные слова и фильтры контента",
-          "info_title": "Заблокированные слова",
-          "info_description": "Обсуждения и ответы, содержащие эти слова, будут заблокированы. Пользователи увидят сообщение об ошибке, и их контент не будет опубликован.",
-          "add_word_label": "Добавить заблокированное слово",
-          "add_word_placeholder": "Введите слово или фразу...",
-          "add_button": "Добавить",
-          "batch_add_label": "Массовое добавление слов",
-          "batch_add_description": "Добавьте несколько слов сразу, разделенных запятыми",
-          "batch_add_placeholder": "слово1, слово2, слово3...",
-          "add_all_button": "Добавить все",
-          "blocked_words_label": "Заблокированные слова",
-          "no_blocked_words": "Заблокированных слов пока нет",
-          "no_blocked_words_description": "Добавьте слова, чтобы включить модерацию контента",
-          "word_exists_error": "Это слово уже в списке",
-          "all_words_exist_error": "Все слова уже в списке или ввод пуст",
-          "toasts": {
-            "saving": "Сохранение настроек модерации...",
-            "save_success": "Настройки модерации сохранены",
-            "save_error": "Не удалось сохранить настройки модерации"
-          }
-        },
-        "modals": {
-          "create": {
-            "title": "Создать сообщество",
-            "description": "Создайте новое сообщество для обсуждений",
-            "form": {
-              "name_label": "Название сообщества",
-              "name_placeholder": "Введите название сообщества",
-              "description_label": "Описание",
-              "description_placeholder": "Опишите, о чем это сообщество",
-              "public_label": "Сделать это сообщество публичным (видимым для всех)"
-            },
-            "cancel": "Отмена",
-            "submit": "Создать сообщество"
-          },
-          "edit": {
-            "title": "Редактировать сообщество",
-            "description": "Обновить настройки сообщества"
-          },
-          "delete": {
-            "title": "Удалить {{name}}?",
-            "message": "Вы уверены, что хотите удалить это сообщество? Все обсуждения будут удалены навсегда.",
-            "button": "Удалить сообщество"
-          }
-        },
-        "toasts": {
-          "creating": "Создание сообщества...",
-          "create_success": "Сообщество успешно создано",
-          "create_error": "Не удалось создать сообщество",
-          "deleting": "Удаление сообщества...",
-          "delete_success": "Сообщество успешно удалено",
-          "delete_error": "Не удалось удалить сообщество"
-        }
-      },
-      "structure": {
-        "loading": "Загрузка...",
-        "add_chapter_button": "Добавить главу",
-        "modals": {
-          "new_chapter": {
-            "title": "Создать главу",
-            "description": "Добавьте новую главу в курс",
-            "form": {
-              "name_label": "Название главы",
-              "name_required": "Пожалуйста, укажите название главы",
-              "description_label": "Описание главы",
-              "description_required": "Пожалуйста, укажите описание главы",
-              "submit": "Создать главу"
-            }
-          },
-          "delete_chapter": {
-            "title": "Удалить {{name}}?",
-            "message": "Вы уверены, что хотите удалить эту главу?",
-            "button": "Удалить главу"
-          },
-          "new_activity": {
-            "title": "Создать занятие",
-            "description": "Выберите тип занятия для добавления в курс"
-          },
-          "delete_activity": {
-            "title": "Удалить {{name}}?",
-            "message": "Вы уверены, что хотите удалить это занятие?",
-            "button": "Удалить занятие"
-          }
-        },
-        "actions": {
-          "add_chapter": "Добавить главу",
-          "add_activity": "Добавить занятие",
-          "publish": "Опубликовать",
-          "unpublish": "Снять с публикации",
-          "preview_activity": "Предпросмотр занятия",
-          "edit_page": "Редактировать страницу",
-          "edit_assignment": "Редактировать задание"
-        },
-        "chapter_element": {
-          "chapter_name_placeholder": "Название главы"
-        },
-        "activity": {
-          "name_placeholder": "Название занятия",
-          "types": {
-            "video": "Видео",
-            "document": "Документ",
-            "assignment": "Задание",
-            "assignments": "Задания",
-            "dynamic": "Динамическое",
-            "dynamic_page": "Динамическая страница",
-            "scorm": "Scorm"
-          },
-          "toasts": {
-            "deleting": "Удаление занятия...",
-            "delete_success": "Занятие успешно удалено",
-            "updating": "Обновление задания...",
-            "update_success": "Занятие успешно обновлено",
-            "name_update_success": "Название занятия успешно обновлено",
-            "name_update_error": "Не удалось обновить название занятия",
-            "creating": "Создание занятия...",
-            "create_success": "Занятие успешно создано",
-            "uploading": "Загрузка файла и создание занятия...",
-            "upload_success": "Файл успешно загружен",
-            "creating_uploading": "Создание занятия и загрузка файла..."
           }
         }
       }
