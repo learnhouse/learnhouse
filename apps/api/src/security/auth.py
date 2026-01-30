@@ -44,11 +44,17 @@ def extract_jwt_from_request(request: Request) -> Optional[str]:
 def decode_jwt(token: str) -> Optional[dict]:
     """Decode and validate a JWT token."""
     try:
+        decode_options = {"require": ["sub"]}
+        if isDevModeEnabled():
+            # In dev mode, tokens don't have exp claim, so don't verify it
+            decode_options["verify_exp"] = False
+        else:
+            decode_options["require"] = ["exp", "sub"]
         payload = jwt.decode(
             token,
             JWT_SECRET_KEY,
             algorithms=[ALGORITHM],
-            options={"require": ["exp", "sub"]} if JWT_ACCESS_TOKEN_EXPIRES else {"require": ["sub"]}
+            options=decode_options
         )
         return payload
     except PyJWTError:
@@ -89,9 +95,12 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
-    else:
-        expire = datetime.now(timezone.utc) + timedelta(minutes=15)
-    to_encode.update({"exp": expire})
+        to_encode.update({"exp": expire})
+    elif not isDevModeEnabled():
+        # Only set expiry in production if not explicitly provided
+        expire = datetime.now(timezone.utc) + timedelta(hours=8)
+        to_encode.update({"exp": expire})
+    # In dev mode with no expires_delta, don't set exp (token never expires)
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
