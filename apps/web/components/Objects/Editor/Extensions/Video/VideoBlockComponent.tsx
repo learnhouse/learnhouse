@@ -15,6 +15,7 @@ import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { constructAcceptValue } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
+import { useTranslation } from 'react-i18next'
 
 const SUPPORTED_FILES = constructAcceptValue(['webm', 'mp4'])
 
@@ -96,6 +97,7 @@ interface ExtendedNodeViewProps extends Omit<NodeViewProps, 'extension'> {
 }
 
 function VideoBlockComponent(props: ExtendedNodeViewProps) {
+  const { t } = useTranslation()
   const { node, extension, updateAttributes } = props
   const org = useOrg() as Organization | null
   const course = useCourse() as Course | null
@@ -289,14 +291,14 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
                   <button
                     onClick={handleExpand}
                     className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
-                    title="Expand video"
+                    title={t('editor.blocks.video_block.expand_video')}
                   >
                     <Expand className="w-4 h-4 text-white" />
                   </button>
                   <button
                     onClick={handleDownload}
                     className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
-                    title="Download video"
+                    title={t('editor.blocks.video_block.download_video')}
                   >
                     <Download className="w-4 h-4 text-white" />
                   </button>
@@ -309,7 +311,7 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
         <Modal
           isDialogOpen={isModalOpen}
           onOpenChange={setIsModalOpen}
-          dialogTitle="Video Player"
+          dialogTitle={t('editor.blocks.video_block.player_title')}
           minWidth="lg"
           minHeight="lg"
           dialogContent={
@@ -343,7 +345,7 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
           <div className="flex items-center gap-2">
             <Video className="text-neutral-400" size={16} />
             <span className="uppercase tracking-widest text-xs font-bold text-neutral-400">
-              Video
+              {t('editor.blocks.video')}
             </span>
           </div>
           {blockObject && (
@@ -384,7 +386,7 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
               {isLoading ? (
                 <div className="space-y-3">
                   <Loader2 className="w-8 h-8 animate-spin mx-auto text-blue-500" />
-                  <p className="text-sm text-neutral-600">Uploading video... {uploadProgress}%</p>
+                  <p className="text-sm text-neutral-600">{t('editor.blocks.video_block.uploading')} {uploadProgress}%</p>
                   <div className="w-48 h-1 bg-neutral-200 rounded-full mx-auto overflow-hidden">
                     <div
                       className="h-full bg-blue-500 rounded-full transition-all duration-200"
@@ -397,10 +399,10 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
                   <Upload className="w-8 h-8 mx-auto text-neutral-400" />
                   <div>
                     <p className="text-sm font-medium text-neutral-700">
-                      Drop your video here or click to browse
+                      {t('editor.blocks.video_block.drop_or_browse')}
                     </p>
                     <p className="text-xs text-neutral-500 mt-1">
-                      Supports MP4 and WebM formats
+                      {t('editor.blocks.video_block.supported_formats')}
                     </p>
                   </div>
                 </div>
@@ -423,7 +425,7 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
             <div className="flex items-center gap-2 flex-wrap">
               <div className="text-sm text-neutral-500 font-medium flex items-center gap-1">
                 <ArrowLeftRight size={14} />
-                Size:
+                {t('editor.blocks.common.size')}:
               </div>
               {(Object.keys(VIDEO_SIZES) as VideoSize[]).map((size) => (
                 <button
@@ -437,7 +439,7 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
                   )}
                 >
                   {size === selectedSize && <CheckCircle2 size={14} />}
-                  {VIDEO_SIZES[size].label}
+                  {t(`editor.blocks.common.${size}`)}
                 </button>
               ))}
               <button
@@ -445,7 +447,7 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-200 hover:bg-neutral-300 text-neutral-700 rounded-lg text-sm transition-colors ml-auto"
               >
                 <Download size={14} />
-                Download
+                {t('editor.blocks.common.download')}
               </button>
             </div>
 
@@ -478,14 +480,14 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
                     <button
                       onClick={handleExpand}
                       className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
-                      title="Expand video"
+                      title={t('editor.blocks.video_block.expand_video')}
                     >
                       <Expand className="w-4 h-4 text-white" />
                     </button>
                     <button
                       onClick={handleDownload}
                       className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
-                      title="Download video"
+                      title={t('editor.blocks.video_block.download_video')}
                     >
                       <Download className="w-4 h-4 text-white" />
                     </button>
@@ -501,7 +503,7 @@ function VideoBlockComponent(props: ExtendedNodeViewProps) {
         <Modal
           isDialogOpen={isModalOpen}
           onOpenChange={setIsModalOpen}
-          dialogTitle="Video Player"
+          dialogTitle={t('editor.blocks.video_block.player_title')}
           minWidth="lg"
           minHeight="lg"
           dialogContent={

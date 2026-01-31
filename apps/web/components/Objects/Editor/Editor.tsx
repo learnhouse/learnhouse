@@ -13,6 +13,7 @@ import {
   useAIEditor,
   useAIEditorDispatch,
 } from '@components/Contexts/AI/AIEditorContext'
+import { useTranslation } from 'react-i18next'
 
 // Extensions
 import InfoCallout from './Extensions/Callout/Info/InfoCallout'
@@ -20,7 +21,7 @@ import WarningCallout from './Extensions/Callout/Warning/WarningCallout'
 import ImageBlock from './Extensions/Image/ImageBlock'
 import Youtube from '@tiptap/extension-youtube'
 import VideoBlock from './Extensions/Video/VideoBlock'
-import { Eye, Monitor } from 'lucide-react'
+import { Eye, Monitor, History, AlertTriangle, RefreshCw, GitMerge, Loader2 } from 'lucide-react'
 import MathEquationBlock from './Extensions/MathEquation/MathEquationBlock'
 import PDFBlock from './Extensions/PDF/PDFBlock'
 import QuizBlock from './Extensions/Quiz/QuizBlock'
@@ -63,6 +64,16 @@ import MagicBlock from './Extensions/MagicBlocks/MagicBlock'
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
 import { PlanLevel, planMeetsRequirement } from '@services/plans/plans'
 import { useOrg } from '@components/Contexts/OrgContext'
+import VersionHistoryPanel from './VersionHistory/VersionHistoryPanel'
+import MergeConflictModal from './VersionHistory/MergeConflictModal'
+
+interface ConflictInfo {
+  hasConflict: boolean
+  remoteVersion: number
+  localVersion: number
+  lastModifiedBy: string | null
+  lastModifiedAt: string | null
+}
 
 interface Editor {
   content: string
@@ -70,20 +81,36 @@ interface Editor {
   course: any
   org: any
   session: any
-  setContent: (content: any) => void
+  setContent: (content: any, forceOverwrite?: boolean) => Promise<any>
+  checkForConflicts: () => Promise<ConflictInfo | null>
+  fetchRemoteContent: () => Promise<any>
+  localVersion: number
 }
 
 function Editor(props: Editor) {
+  const { t } = useTranslation()
   const dispatchAIEditor = useAIEditorDispatch() as any
   const aiEditorState = useAIEditor() as AIEditorStateTypes
   const is_ai_feature_enabled = useGetAIFeatures({ feature: 'editor' })
   const [isButtonAvailable, setIsButtonAvailable] = React.useState(false)
   const [editorReady, setEditorReady] = React.useState(false)
 
+  // Conflict detection state
+  const [conflictInfo, setConflictInfo] = React.useState<ConflictInfo | null>(null)
+  const [isCheckingConflict, setIsCheckingConflict] = React.useState(false)
+  const [showConflictModal, setShowConflictModal] = React.useState(false)
+  const [showVersionHistory, setShowVersionHistory] = React.useState(false)
+
+  // Merge modal state
+  const [showMergeModal, setShowMergeModal] = React.useState(false)
+  const [remoteContent, setRemoteContent] = React.useState<any>(null)
+  const [isLoadingRemote, setIsLoadingRemote] = React.useState(false)
+
   // Get current plan for feature restrictions (use OrgContext which has fresh data)
   const orgContext = useOrg() as any
   const currentPlan: PlanLevel = orgContext?.config?.config?.cloud?.plan || 'free'
   const canUseAI = planMeetsRequirement(currentPlan, 'standard')
+  const canUseVersioning = planMeetsRequirement(currentPlan, 'standard')
 
 
   React.useEffect(() => {
@@ -212,16 +239,91 @@ function Editor(props: Editor) {
     onCreate: () => setEditorReady(true),
   })
 
+  // Handler to check for conflicts on save button hover
+  const handleSaveButtonHover = React.useCallback(async () => {
+    if (isCheckingConflict) return
+    setIsCheckingConflict(true)
+    try {
+      const info = await props.checkForConflicts()
+      setConflictInfo(info)
+      if (info?.hasConflict) {
+        setShowConflictModal(true)
+      }
+    } finally {
+      setIsCheckingConflict(false)
+    }
+  }, [props.checkForConflicts, isCheckingConflict])
+
+  // Handler for save with conflict awareness
+  const handleSave = React.useCallback(async (forceOverwrite: boolean = false) => {
+    if (!editor) return
+
+    // If there's a known conflict and not force overwrite, show modal
+    if (conflictInfo?.hasConflict && !forceOverwrite) {
+      setShowConflictModal(true)
+      return
+    }
+
+    const result = await props.setContent(editor.getJSON(), forceOverwrite)
+
+    // If save was successful, clear conflict info
+    if (!result?.hasConflict) {
+      setConflictInfo(null)
+      setShowConflictModal(false)
+    }
+  }, [editor, conflictInfo, props.setContent])
+
+  // Handler to reload with remote changes
+  const handleReloadRemote = React.useCallback(() => {
+    // Reload the page to get the latest version
+    window.location.reload()
+  }, [])
+
+  // Handler to open merge modal
+  const handleOpenMerge = React.useCallback(async () => {
+    if (!editor) return
+
+    setIsLoadingRemote(true)
+    try {
+      const remote = await props.fetchRemoteContent()
+      if (remote) {
+        setRemoteContent(remote)
+        setShowMergeModal(true)
+        setShowConflictModal(false)
+      }
+    } catch (error) {
+      console.error('Error fetching remote content:', error)
+    } finally {
+      setIsLoadingRemote(false)
+    }
+  }, [editor, props.fetchRemoteContent])
+
+  // Handler for merge complete
+  const handleMergeComplete = React.useCallback(async (mergedContent: any) => {
+    if (!editor) return
+
+    // Update editor with merged content
+    editor.commands.setContent(mergedContent)
+
+    // Save the merged content (force overwrite since we've manually merged)
+    const result = await props.setContent(mergedContent, true)
+
+    if (!result?.hasConflict) {
+      setConflictInfo(null)
+      setShowMergeModal(false)
+    }
+  }, [editor, props.setContent])
+
   const isMobile = useMediaQuery('(max-width: 767px)')
   if (isMobile) {
     // TODO: Work on a better editor mobile experience
     return (
       <div className="h-screen w-full bg-[#f8f8f8] flex items-center justify-center p-4">
         <div className="bg-white p-6 rounded-lg shadow-md text-center">
-          <h2 className="text-xl font-bold mb-4">Desktop Only</h2>
+          <h2 className="text-xl font-bold mb-4">{t('editor.desktop_only')}</h2>
           <Monitor className='mx-auto my-5' size={60} />
-          <p>The editor is only accessible from a desktop device.</p>
-          <p>Please switch to a desktop to view.</p>
+          <p>{t('editor.desktop_only_message')}</p>
+          <p>{t('editor.switch_to_desktop')}</p>
         </div>
       </div>
     )
@@ -229,6 +331,34 @@ function Editor(props: Editor) {
 
   return (
     <Page>
+      {/* Version History Panel */}
+      {canUseVersioning && (
+        <VersionHistoryPanel
+          isOpen={showVersionHistory}
+          onClose={() => setShowVersionHistory(false)}
+          activityUuid={props.activity.activity_uuid}
+          currentVersion={props.localVersion}
+          activity={props.activity}
+          courseUuid={props.course.course_uuid}
+        />
+      )}
+
+      {/* Merge Conflict Modal */}
+      {editor && (
+        <MergeConflictModal
+          isOpen={showMergeModal}
+          onClose={() => setShowMergeModal(false)}
+          localContent={editor.getJSON()}
+          remoteContent={remoteContent}
+          localVersion={props.localVersion}
+          remoteVersion={conflictInfo?.remoteVersion || props.localVersion}
+          remoteAuthor={conflictInfo?.lastModifiedBy || null}
+          onMergeComplete={handleMergeComplete}
+          activity={props.activity}
+          courseUuid={props.course.course_uuid}
+        />
+      )}
+
       <CourseProvider courseuuid={props.course.course_uuid}>
           <EditorTop>
             <EditorDocSection>
@@ -282,7 +412,7 @@ function Editor(props: Editor) {
                           alt=""
                         />
                       </i>{' '}
-                      <i className="not-italic text-xs font-bold">AI Editor</i>
+                      <i className="not-italic text-xs font-bold">{t('editor.ai_editor')}</i>
                     </div>
                   )}
                   {isButtonAvailable && !canUseAI && (
@@ -297,7 +427,7 @@ function Editor(props: Editor) {
                           alt=""
                         />
                       </i>
-                      <i className="not-italic text-xs font-bold">AI Editor</i>
+                      <i className="not-italic text-xs font-bold">{t('editor.ai_editor')}</i>
                       <PlanBadge currentPlan={currentPlan} requiredPlan="standard" size="sm" />
                     </div>
                   )}
@@ -312,14 +442,87 @@ function Editor(props: Editor) {
                 }}
               />
               <EditorLeftOptionsSection className="space-x-2 ">
-                <div
-                  className="bg-sky-600 hover:bg-sky-700 transition-all ease-linear px-3 py-2 font-black text-sm shadow-sm text-teal-100 rounded-lg hover:cursor-pointer"
-                  onClick={() => props.setContent(editor.getJSON())}
-                >
-                  {' '}
-                  Save{' '}
+                {/* Version History Button */}
+                {canUseVersioning ? (
+                  <ToolTip content={t('editor.versioning.version_history')}>
+                    <div
+                      className="flex bg-neutral-100 hover:bg-neutral-200 transition-all ease-linear h-9 px-3 py-2 font-black justify-center items-center text-sm shadow-sm text-neutral-600 rounded-lg hover:cursor-pointer"
+                      onClick={() => setShowVersionHistory(true)}
+                    >
+                      <History size={15} />
+                    </div>
+                  </ToolTip>
+                ) : (
+                  <ToolTip content={t('editor.versioning.version_history')}>
+                    <div className="flex bg-gray-100 h-9 px-3 py-2 font-black justify-center items-center text-sm shadow-sm text-gray-400 rounded-lg cursor-not-allowed opacity-70 gap-1.5">
+                      <History size={15} className="opacity-50" />
+                      <PlanBadge currentPlan={currentPlan} requiredPlan="standard" size="sm" />
+                    </div>
+                  </ToolTip>
+                )}
+
+                {/* Save Button with Conflict Detection */}
+                <div className="relative">
+                  <div
+                    className={`${
+                      conflictInfo?.hasConflict
+                        ? 'bg-amber-500 hover:bg-amber-600'
+                        : 'bg-sky-600 hover:bg-sky-700'
+                    } transition-all ease-linear px-3 py-2 font-black text-sm shadow-sm text-white rounded-lg hover:cursor-pointer flex items-center gap-1.5`}
+                    onClick={() => handleSave(false)}
+                    onMouseEnter={handleSaveButtonHover}
+                  >
+                    {isCheckingConflict && (
+                      <RefreshCw size={14} className="animate-spin" />
+                    )}
+                    {conflictInfo?.hasConflict && !isCheckingConflict && (
+                      <AlertTriangle size={14} />
+                    )}
+                    {t('editor.save')}
+                  </div>
+
+                  {/* Conflict Modal */}
+                  {showConflictModal && conflictInfo?.hasConflict && (
+                    <div className="absolute top-full right-0 mt-2 w-72 bg-white rounded-lg shadow-xl border border-gray-200 p-4 z-50">
+                      <div className="flex items-start gap-2 mb-3">
+                        <AlertTriangle className="text-amber-500 flex-shrink-0 mt-0.5" size={18} />
+                        <div>
+                          <h4 className="font-semibold text-gray-900 text-sm">{t('editor.versioning.conflict.title')}</h4>
+                          <p className="text-xs text-gray-600 mt-1">
+                            {t('editor.versioning.conflict.editing_notice', { author: conflictInfo.lastModifiedBy || t('editor.versioning.conflict.another_teacher') })}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <button
+                          className="w-full px-3 py-2.5 text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 rounded-lg transition-colors"
+                          onClick={() => handleSave(true)}
+                        >
+                          {t('editor.versioning.conflict.overwrite_mine')}
+                        </button>
+                        <button
+                          className="w-full px-3 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg border border-gray-200 transition-colors"
+                          onClick={handleReloadRemote}
+                        >
+                          {t('editor.versioning.conflict.discard_mine')}
+                        </button>
+                        <button
+                          className="w-full px-3 py-2 text-xs font-medium text-sky-600 hover:text-sky-700 hover:underline transition-colors flex items-center justify-center gap-1"
+                          onClick={handleOpenMerge}
+                          disabled={isLoadingRemote}
+                        >
+                          {isLoadingRemote ? (
+                            <Loader2 size={12} className="animate-spin" />
+                          ) : (
+                            <Eye size={12} />
+                          )}
+                          {t('editor.versioning.conflict.show_changes')}
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <ToolTip content="Preview">
+                <ToolTip content={t('editor.preview')}>
                   <Link
                     target="_blank"
                     href={`/course/${course_uuid}/activity/${activity_uuid}`}
@@ -777,19 +980,19 @@ const logoAnimations = [
   {
     initial: { y: 20 },
     animate: { y: 0 },
-    transition: { delay: 1, type: "spring", stiffness: 120, damping: 20 },
+    transition: { delay: 1, type: "spring" as const, stiffness: 120, damping: 20 },
   },
   // Fade in with scale
   {
     initial: { opacity: 0, scale: 0.5 },
     animate: { opacity: 1, scale: 1 },
-    transition: { delay: 1, type: "spring", stiffness: 150, damping: 18 },
+    transition: { delay: 1, type: "spring" as const, stiffness: 150, damping: 18 },
   },
   // Slide down from top
   {
     initial: { y: -20 },
     animate: { y: 0 },
-    transition: { delay: 1, type: "spring", stiffness: 120, damping: 20 },
+    transition: { delay: 1, type: "spring" as const, stiffness: 120, damping: 20 },
   },
 ]
 

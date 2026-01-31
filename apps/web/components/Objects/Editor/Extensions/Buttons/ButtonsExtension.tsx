@@ -4,8 +4,10 @@ import Picker from '@emoji-mart/react'
 import { ArrowRight, ChevronDown, Link, AlignLeft, AlignCenter, AlignRight, Palette } from 'lucide-react'
 import { twMerge } from 'tailwind-merge'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
+import { useTranslation } from 'react-i18next'
 
 const ButtonsExtension: React.FC = (props: any) => {
+  const { t } = useTranslation()
   const [emoji, setEmoji] = useState(props.node.attrs.emoji)
   const [link, setLink] = useState(props.node.attrs.link)
   const [alignment, setAlignment] = useState(props.node.attrs.alignment)
@@ -144,7 +146,7 @@ const ButtonsExtension: React.FC = (props: any) => {
           type="text"
           value={link}
           onChange={handleLinkChange}
-          placeholder="Enter link URL"
+          placeholder={t('editor.blocks.button_block.enter_link_url')}
           className="mt-2 p-2 w-full border rounded-md"
         />
       )}

@@ -647,9 +647,8 @@ async def create_course(
     # Feature usage
     increase_feature_usage("courses", course.org_id, db_session)
 
-    course = CourseRead(**course.model_dump(), authors=authors)
-
-    return CourseRead.model_validate(course)
+    course_data = {key: getattr(course, key) for key in course.model_fields}
+    return CourseRead.model_validate({**course_data, "authors": authors})
 
 
 async def update_course_thumbnail(

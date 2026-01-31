@@ -1,5 +1,4 @@
 import json
-import redis
 from fastapi import HTTPException, Request
 from sqlmodel import Session, select
 from src.db.organization_config import OrganizationConfig
