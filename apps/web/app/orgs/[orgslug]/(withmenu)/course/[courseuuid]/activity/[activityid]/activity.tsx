@@ -24,6 +24,7 @@ import PaidCourseActivityDisclaimer from '@components/Objects/Courses/CourseActi
 import { useContributorStatus } from '../../../../../../../../hooks/useContributorStatus'
 import ToolTip from '@components/Objects/StyledElements/Tooltip/Tooltip'
 import ActivityChapterDropdown from '@components/Pages/Activity/ActivityChapterDropdown'
+import ActivityShareDropdown from '@components/Pages/Activity/ActivityShareDropdown'
 import FixedActivitySecondaryBar from '@components/Pages/Activity/FixedActivitySecondaryBar'
 import CourseEndView from '@components/Pages/Activity/CourseEndView'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -410,13 +411,21 @@ function ActivityClient(props: ActivityClientProps) {
                         </motion.div>
 
                         {/* Minimize and Chapters - Moved to right */}
-                        <motion.div 
+                        <motion.div
                           initial={isInitialRender.current ? false : { opacity: 0, x: 20 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: 0.2 }}
                           className="flex items-center space-x-2"
                         >
-                          <ActivityChapterDropdown 
+                          <ActivityShareDropdown
+                            activityName={activity.name}
+                            activityUrl={typeof window !== 'undefined' ? window.location.href : ''}
+                            orgslug={orgslug}
+                            courseUuid={course.course_uuid}
+                            activityId={activity.activity_uuid ? activity.activity_uuid.replace('activity_', '') : activityid.replace('activity_', '')}
+                            activityType={activity.activity_type}
+                          />
+                          <ActivityChapterDropdown
                             course={course}
                             currentActivityId={activity.activity_uuid ? activity.activity_uuid.replace('activity_', '') : activityid.replace('activity_', '')}
                             orgslug={orgslug}
@@ -576,6 +585,14 @@ function ActivityClient(props: ActivityClientProps) {
                               </h1>
                             </div>
                           </div>
+                          <ActivityShareDropdown
+                            activityName={activity.name}
+                            activityUrl={typeof window !== 'undefined' ? window.location.href : ''}
+                            orgslug={orgslug}
+                            courseUuid={course.course_uuid}
+                            activityId={activity.activity_uuid ? activity.activity_uuid.replace('activity_', '') : activityid.replace('activity_', '')}
+                            activityType={activity.activity_type}
+                          />
                         </div>
 
                         <ActivityIndicators

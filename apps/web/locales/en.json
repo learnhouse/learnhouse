@@ -667,7 +667,18 @@
     "size_large": "Large Size",
     "change_color": "Change Color",
     "preview_flip": "Preview Flip",
-    "activities_count": "{{count}} activities"
+    "activities_count": "{{count}} activities",
+    "share": "Share",
+    "copy_link": "Copy Link",
+    "link_copied": "Link copied!",
+    "embed": "Embed",
+    "embed_code_copied": "Embed code copied!"
+  },
+  "embed": {
+    "not_supported_title": "This activity is not supported",
+    "not_supported_description": "This type of activity requires authentication and cannot be embedded.",
+    "visit_activity": "Visit Activity Page",
+    "powered_by": "Powered by LearnHouse"
   },
   "assignments": {
     "submit_assignment": "Submit Assignment",
