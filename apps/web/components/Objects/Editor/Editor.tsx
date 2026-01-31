@@ -2,7 +2,6 @@
 import React from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
-import learnhouseIcon from 'public/learnhouse_icon.png'
 import { ToolbarButtons } from './Toolbar/ToolbarButtons'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
@@ -235,12 +234,7 @@ function Editor(props: Editor) {
             <EditorDocSection>
               <EditorInfoWrapper>
                 <Link href="/">
-                  <EditorInfoLearnHouseLogo
-                    width={25}
-                    height={25}
-                    src={learnhouseIcon}
-                    alt=""
-                  />
+                  <EditorLearnHouseLogo />
                 </Link>
                 <Link target="_blank" href={`/course/${course_uuid}`}>
                   <EditorInfoThumbnail
@@ -480,10 +474,6 @@ const EditorUserProfileWrapper = styled.div`
   }
 `
 
-// Inside EditorInfoWrapper
-const EditorInfoLearnHouseLogo = styled(Image)`
-  border-radius: 6px;
-`
 const EditorInfoDocName = styled.div`
   font-size: 16px;
   justify-content: center;
@@ -529,7 +519,7 @@ const EditorInfoThumbnail = styled.img`
   object-fit: cover;
   object-position: top;
   border-radius: 7px;
-  margin-left: 7px;
+  margin-left: 6px;
 
   &:hover {
     cursor: pointer;
@@ -781,5 +771,50 @@ export const EditorContentWrapper = styled.div`
     }
   }
 `
+
+const logoAnimations = [
+  // Slide up from bottom
+  {
+    initial: { y: 20 },
+    animate: { y: 0 },
+    transition: { delay: 1, type: "spring", stiffness: 120, damping: 20 },
+  },
+  // Fade in with scale
+  {
+    initial: { opacity: 0, scale: 0.5 },
+    animate: { opacity: 1, scale: 1 },
+    transition: { delay: 1, type: "spring", stiffness: 150, damping: 18 },
+  },
+  // Slide down from top
+  {
+    initial: { y: -20 },
+    animate: { y: 0 },
+    transition: { delay: 1, type: "spring", stiffness: 120, damping: 20 },
+  },
+]
+
+const EditorLearnHouseLogo = () => {
+  const [animation] = React.useState(
+    () => logoAnimations[Math.floor(Math.random() * logoAnimations.length)]
+  )
+
+  return (
+    <div className="bg-black rounded-md w-[25px] h-[25px] flex items-center justify-center overflow-hidden">
+      <motion.div
+        initial={animation.initial}
+        animate={animation.animate}
+        transition={animation.transition}
+      >
+        <Image
+          src="/lrn.svg"
+          alt="LearnHouse"
+          width={14}
+          height={14}
+          className="invert"
+        />
+      </motion.div>
+    </div>
+  )
+}
 
 export default Editor
