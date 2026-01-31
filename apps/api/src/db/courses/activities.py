@@ -52,6 +52,12 @@ class Activity(ActivityBase, table=True):
     activity_uuid: str = ""
     creation_date: str = ""
     update_date: str = ""
+    # Versioning fields
+    current_version: int = Field(default=1)
+    last_modified_by_id: Optional[int] = Field(
+        default=None,
+        sa_column=Column(Integer, ForeignKey("user.id", ondelete="SET NULL"))
+    )
 
 
 class ActivityCreate(ActivityBase):
@@ -80,4 +86,7 @@ class ActivityRead(ActivityBase):
     creation_date: str
     update_date: str
     details: Optional[dict] = Field(default=None, sa_column=Column(JSON))
-    pass
+    # Versioning fields
+    current_version: int = 1
+    last_modified_by_id: Optional[int] = None
+    last_modified_by_username: Optional[str] = None
