@@ -105,7 +105,7 @@ RUN apt-get update && apt-get install -y curl netcat-openbsd && rm -rf /var/lib/
 # Run the backend
 WORKDIR /app
 COPY ./extra/nginx.conf /etc/nginx/conf.d/default.conf
-ENV PORT=8000 LEARNHOUSE_PORT=9000 HOSTNAME=0.0.0.0
+ENV PORT=8000 LEARNHOUSE_PORT=9000 HOSTNAME=0.0.0.0 LEARNHOUSE_OSS=true
 
 # Copy entrypoint scripts
 COPY ./apps/api/docker-entrypoint.sh /app/api/docker-entrypoint.sh

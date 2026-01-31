@@ -2,8 +2,8 @@
 
 import React, { Suspense, lazy } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useSearchParams } from 'next/navigation'
 import { getUriWithOrg } from '@services/config/config'
-import Link from 'next/link'
 import Image from 'next/image'
 import { CourseContext, CourseDispatchContext } from '@components/Contexts/CourseContext'
 
@@ -54,12 +54,13 @@ const EMBEDDABLE_TYPES = ['TYPE_DYNAMIC', 'TYPE_VIDEO', 'TYPE_DOCUMENT']
 
 function EmbedActivityClient({ activity, course, activityId, orgslug }: EmbedActivityClientProps) {
   const { t } = useTranslation()
+  const searchParams = useSearchParams()
+  const showLearnHouseLogo = searchParams.get('showlearnhouselogo') !== 'false'
   const isEmbeddable = EMBEDDABLE_TYPES.includes(activity.activity_type)
 
   const getActivityUrl = () => {
-    if (typeof window === 'undefined') return '#'
-    const baseUrl = window.location.origin
-    return `${baseUrl}${getUriWithOrg(orgslug, '')}`
+    const cleanCourseUuid = course.course_uuid.replace('course_', '')
+    return getUriWithOrg(orgslug, `/course/${cleanCourseUuid}/activity/${activityId}`)
   }
 
   if (!isEmbeddable) {
@@ -81,16 +82,16 @@ function EmbedActivityClient({ activity, course, activityId, orgslug }: EmbedAct
           <p className="text-gray-600 mb-6">
             {t('embed.not_supported_description')}
           </p>
-          <Link
+          <a
             href={getActivityUrl()}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-block bg-gray-900 text-white px-6 py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors"
           >
             {t('embed.visit_activity')}
-          </Link>
+          </a>
         </div>
-        <PoweredByBadge />
+        {showLearnHouseLogo && <PoweredByBadge activityUrl={getActivityUrl()} />}
       </div>
     )
   }
@@ -129,19 +130,21 @@ function EmbedActivityClient({ activity, course, activityId, orgslug }: EmbedAct
       <div className={`${bgColor} p-4`}>
         {renderActivityContent()}
       </div>
-      <PoweredByBadge />
+      {showLearnHouseLogo && <PoweredByBadge activityUrl={getActivityUrl()} />}
     </div>
   )
 }
 
-function PoweredByBadge() {
+function PoweredByBadge({ activityUrl }: { activityUrl: string }) {
+  const handleClick = () => {
+    window.open(activityUrl, '_blank', 'noopener,noreferrer')
+  }
+
   return (
     <div className="fixed bottom-4 right-4 z-50">
-      <Link
-        href="https://learnhouse.app?source=embed"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="bg-white/80 backdrop-blur-lg rounded-2xl p-2 light-shadow block"
+      <button
+        onClick={handleClick}
+        className="bg-white/80 backdrop-blur-lg rounded-2xl p-2 light-shadow block cursor-pointer"
       >
         <Image
           src="/lrn.svg"
@@ -149,7 +152,7 @@ function PoweredByBadge() {
           width={20}
           height={20}
         />
-      </Link>
+      </button>
     </div>
   )
 }
