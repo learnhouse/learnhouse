@@ -19,6 +19,7 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import { Download, Copy } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { PlanLevel } from '@services/plans/plans'
+import { OrgUsageResponse, orgUsageFetcher } from '@services/orgs/usage'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { deleteCourseFromBackend, cloneCourse } from '@services/courses/courses'
 import { exportCoursesBatch, downloadBlob, ExportStatus } from '@services/courses/transfer'
@@ -58,6 +59,17 @@ function CoursesHome(params: CourseProps) {
   )
 
   const allCourses = coursesData || params.courses
+
+  // Fetch usage limits from backend
+  const { data: usageData } = useSWR<OrgUsageResponse>(
+    access_token && params.org_id ? `${getAPIUrl()}orgs/${params.org_id}/usage` : null,
+    (url) => orgUsageFetcher(url, access_token),
+    { revalidateOnFocus: true }
+  )
+
+  // Check course creation limit from backend
+  const courseLimitReached = usageData?.features?.courses?.limit_reached ?? false
+  const courseLimit = usageData?.features?.courses?.limit ?? 0
 
   // Search state
   const [searchQuery, setSearchQuery] = useState('')
@@ -351,9 +363,15 @@ function CoursesHome(params: CourseProps) {
             orgId={params.org_id}
           >
             <div className="flex items-center space-x-2">
+              {courseLimitReached && (
+                <div className="text-xs text-gray-500 bg-gray-100 px-3 py-2 rounded-lg">
+                  {t('dashboard.courses.limit_reached', { limit: courseLimit })}
+                </div>
+              )}
               <Modal
                 isDialogOpen={importCourseModal}
                 onOpenChange={(open) => {
+                  if (courseLimitReached) return
                   setImportCourseModal(open)
                   if (!open) setImportType('select')
                 }}
@@ -362,7 +380,12 @@ function CoursesHome(params: CourseProps) {
                 dialogDescription={getImportModalDescription()}
                 dialogContent={getImportModalContent()}
                 dialogTrigger={
-                  <button className="rounded-lg bg-black hover:scale-105 transition-all duration-100 ease-linear antialiased p-2 px-5 my-auto font text-xs font-bold text-white nice-shadow flex space-x-2 items-center">
+                  <button
+                    disabled={courseLimitReached}
+                    className={`rounded-lg bg-black transition-all duration-100 ease-linear antialiased p-2 px-5 my-auto font text-xs font-bold text-white nice-shadow flex space-x-2 items-center ${
+                      courseLimitReached ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'
+                    }`}
+                  >
                     <Download className="w-4 h-4" />
                     <span>{t('dashboard.courses.import_course')}</span>
                   </button>
@@ -371,6 +394,7 @@ function CoursesHome(params: CourseProps) {
               <Modal
                 isDialogOpen={newCourseModal}
                 onOpenChange={(open) => {
+                  if (courseLimitReached) return
                   setNewCourseModal(open)
                   if (!open) setCreationType('select')
                 }}
@@ -380,8 +404,8 @@ function CoursesHome(params: CourseProps) {
                 dialogTitle={getNewCourseModalTitle()}
                 dialogDescription={getNewCourseModalDescription()}
                 dialogTrigger={
-                  <button>
-                    <NewCourseButton />
+                  <button disabled={courseLimitReached}>
+                    <NewCourseButton disabled={courseLimitReached} />
                   </button>
                 }
               />
@@ -541,7 +565,7 @@ function CoursesHome(params: CourseProps) {
                   t('dashboard.courses.no_courses_available')
                 )}
               </p>
-              {isUserAdmin && (
+              {isUserAdmin && !courseLimitReached && (
                 <div className="mt-6">
                   <AuthenticatedClientElement
                     action="create"
