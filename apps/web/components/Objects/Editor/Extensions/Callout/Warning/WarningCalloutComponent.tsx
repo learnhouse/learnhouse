@@ -85,7 +85,7 @@ const CalloutWrapper = styled.div<{ size?: string }>`
 
 function WarningCalloutComponent(props: any) {
   const editorState = useEditorProvider() as any
-  const isEditable = editorState.isEditable
+  const isEditable = editorState?.isEditable ?? false
   const [dismissed, setDismissed] = useState(false)
   
   // Extract options from props or use defaults
@@ -120,14 +120,15 @@ function WarningCalloutComponent(props: any) {
     <NodeViewWrapper>
       <CalloutWrapper
         className={`flex items-center rounded-lg shadow-inner ${getVariantClasses()} ${getSizeClasses()}`}
-        contentEditable={isEditable}
+        contentEditable={isEditable || undefined}
+        suppressContentEditableWarning={true}
         size={options.size}
       >
         <IconWrapper size={options.size}>
           <AlertTriangle />
         </IconWrapper>
         <ContentWrapper className="grow">
-          <NodeViewContent contentEditable={isEditable} className="content" />
+          <NodeViewContent className="content" />
         </ContentWrapper>
         {options.dismissible && !isEditable && (
           <DismissButton onClick={() => setDismissed(true)}>

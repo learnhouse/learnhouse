@@ -1,6 +1,7 @@
 from typing import List
-from fastapi import APIRouter, Depends, UploadFile, Form, Request
+from fastapi import APIRouter, Depends, UploadFile, Form, Request, Query
 from src.db.courses.activities import ActivityCreate, ActivityRead, ActivityUpdate
+from src.db.courses.activity_versions import ActivityVersionRead, ActivityStateRead
 from src.db.users import PublicUser
 from src.core.events.database import get_db_session
 from src.services.courses.activities.activities import (
@@ -10,6 +11,12 @@ from src.services.courses.activities.activities import (
     get_activityby_id,
     update_activity,
     delete_activity,
+)
+from src.services.courses.activities.versioning import (
+    get_activity_versions,
+    get_activity_version,
+    get_activity_state,
+    restore_activity_version,
 )
 from src.security.auth import get_current_user
 from src.services.courses.activities.pdf import create_documentpdf_activity
@@ -33,6 +40,80 @@ async def api_create_activity(
     Create new activity
     """
     return await create_activity(request, activity_object, current_user, db_session)
+
+
+# Versioning endpoints - MUST be before /{activity_uuid} catch-all routes
+
+
+@router.get("/{activity_uuid}/versions")
+async def api_get_activity_versions(
+    request: Request,
+    activity_uuid: str,
+    limit: int = Query(default=20, le=100),
+    offset: int = Query(default=0),
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+) -> List[ActivityVersionRead]:
+    """
+    Get version history for an activity.
+    Returns versions in descending order (newest first).
+    """
+    return await get_activity_versions(
+        request, activity_uuid, current_user, db_session, limit, offset
+    )
+
+
+@router.get("/{activity_uuid}/versions/{version_number}")
+async def api_get_activity_version(
+    request: Request,
+    activity_uuid: str,
+    version_number: int,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+) -> ActivityVersionRead:
+    """
+    Get a specific version of an activity.
+    """
+    return await get_activity_version(
+        request, activity_uuid, version_number, current_user, db_session
+    )
+
+
+@router.get("/{activity_uuid}/state")
+async def api_get_activity_state(
+    request: Request,
+    activity_uuid: str,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+) -> ActivityStateRead:
+    """
+    Get the current state of an activity for conflict detection.
+    Returns lightweight info: update_date, current_version, last_modified_by.
+    Used by frontend to check if remote state has changed.
+    """
+    return await get_activity_state(
+        request, activity_uuid, current_user, db_session
+    )
+
+
+@router.post("/{activity_uuid}/versions/{version_number}/restore")
+async def api_restore_activity_version(
+    request: Request,
+    activity_uuid: str,
+    version_number: int,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session=Depends(get_db_session),
+) -> ActivityRead:
+    """
+    Restore an activity to a specific version.
+    Creates a new version with the restored content.
+    """
+    return await restore_activity_version(
+        request, activity_uuid, version_number, current_user, db_session
+    )
+
+
+# Activity CRUD endpoints
 
 
 @router.get("/{activity_uuid}")

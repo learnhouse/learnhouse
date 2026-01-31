@@ -11,10 +11,12 @@ import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { constructAcceptValue } from '@/lib/constants';
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
+import { useTranslation } from 'react-i18next'
 
 const SUPPORTED_FILES = constructAcceptValue(['jpg', 'png', 'webp', 'gif'])
 
 function ImageBlockComponent(props: any) {
+  const { t } = useTranslation()
   const org = useOrg() as any
   const course = useCourse() as any
   const editorState = useEditorProvider() as any
@@ -170,14 +172,14 @@ function ImageBlockComponent(props: any) {
                 <button
                   onClick={handleExpand}
                   className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
-                  title="Expand image"
+                  title={t('editor.blocks.image_block.expand_image')}
                 >
                   <Expand className="w-4 h-4 text-white" />
                 </button>
                 <button
                   onClick={handleDownload}
                   className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
-                  title="Download image"
+                  title={t('editor.blocks.image_block.download_image')}
                 >
                   <Download className="w-4 h-4 text-white" />
                 </button>
@@ -189,7 +191,7 @@ function ImageBlockComponent(props: any) {
         <Modal
           isDialogOpen={isModalOpen}
           onOpenChange={setIsModalOpen}
-          dialogTitle="Image Viewer"
+          dialogTitle={t('editor.blocks.image_block.viewer_title')}
           minWidth="lg"
           minHeight="lg"
           dialogContent={
@@ -219,7 +221,7 @@ function ImageBlockComponent(props: any) {
           <div className="flex items-center gap-2 mb-3">
             <Image className="text-neutral-400" size={16} />
             <span className="uppercase tracking-widest text-xs font-bold text-neutral-400">
-              Image
+              {t('editor.blocks.image')}
             </span>
           </div>
 
@@ -246,17 +248,17 @@ function ImageBlockComponent(props: any) {
               {isLoading ? (
                 <div className="space-y-3">
                   <Loader2 className="w-8 h-8 animate-spin mx-auto text-neutral-500" />
-                  <p className="text-sm text-neutral-600">Uploading image...</p>
+                  <p className="text-sm text-neutral-600">{t('editor.blocks.image_block.uploading')}</p>
                 </div>
               ) : (
                 <div className="space-y-3">
                   <Upload className="w-8 h-8 mx-auto text-neutral-400" />
                   <div>
                     <p className="text-sm font-medium text-neutral-700">
-                      Drop your image here or click to browse
+                      {t('editor.blocks.image_block.drop_or_browse')}
                     </p>
                     <p className="text-xs text-neutral-500 mt-1">
-                      Supports JPG, PNG, WebP, and GIF
+                      {t('editor.blocks.image_block.supported_formats')}
                     </p>
                   </div>
                 </div>
@@ -322,21 +324,21 @@ function ImageBlockComponent(props: any) {
                     <button
                       onClick={() => handleAlignmentChange('left')}
                       className={`p-1.5 rounded-md transition-colors outline-none ${alignment === 'left' ? 'bg-neutral-200 text-neutral-700' : 'hover:bg-neutral-100 text-neutral-500'}`}
-                      title="Align left"
+                      title={t('editor.blocks.common.align_left')}
                     >
                       <AlignLeft size={14} />
                     </button>
                     <button
                       onClick={() => handleAlignmentChange('center')}
                       className={`p-1.5 rounded-md transition-colors outline-none ${alignment === 'center' ? 'bg-neutral-200 text-neutral-700' : 'hover:bg-neutral-100 text-neutral-500'}`}
-                      title="Center align"
+                      title={t('editor.blocks.common.align_center')}
                     >
                       <AlignCenter size={14} />
                     </button>
                     <button
                       onClick={() => handleAlignmentChange('right')}
                       className={`p-1.5 rounded-md transition-colors outline-none ${alignment === 'right' ? 'bg-neutral-200 text-neutral-700' : 'hover:bg-neutral-100 text-neutral-500'}`}
-                      title="Align right"
+                      title={t('editor.blocks.common.align_right')}
                     >
                       <AlignRight size={14} />
                     </button>
@@ -344,7 +346,7 @@ function ImageBlockComponent(props: any) {
                     <button
                       onClick={handleExpand}
                       className="p-1.5 rounded-md hover:bg-neutral-100 text-neutral-500 transition-colors outline-none"
-                      title="Expand image"
+                      title={t('editor.blocks.image_block.expand_image')}
                     >
                       <Expand size={14} />
                     </button>
@@ -361,7 +363,7 @@ function ImageBlockComponent(props: any) {
         <Modal
           isDialogOpen={isModalOpen}
           onOpenChange={setIsModalOpen}
-          dialogTitle="Image Viewer"
+          dialogTitle={t('editor.blocks.image_block.viewer_title')}
           minWidth="lg"
           minHeight="lg"
           dialogContent={

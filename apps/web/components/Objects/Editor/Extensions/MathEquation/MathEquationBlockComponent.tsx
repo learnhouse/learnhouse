@@ -5,6 +5,7 @@ import { BlockMath } from 'react-katex'
 import { Save, Sigma, ExternalLink, ChevronDown, BookOpen, Lightbulb } from 'lucide-react'
 import Link from 'next/link'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
+import { useTranslation } from 'react-i18next'
 
 // Predefined LaTeX templates
 const mathTemplates = [
@@ -80,6 +81,7 @@ const mathSymbols = [
 ];
 
 function MathEquationBlockComponent(props: any) {
+  const { t } = useTranslation()
   const [equation, setEquation] = React.useState(props.node.attrs.math_equation)
   const [isEditing, setIsEditing] = React.useState(true)
   const [showTemplates, setShowTemplates] = React.useState(false)
@@ -173,7 +175,7 @@ function MathEquationBlockComponent(props: any) {
         <div className="flex items-center gap-2 mb-3">
           <Sigma className="text-neutral-400" size={16} />
           <span className="uppercase tracking-widest text-xs font-bold text-neutral-400">
-            Math Equation
+            {t('editor.blocks.math')}
           </span>
         </div>
 
@@ -194,14 +196,14 @@ function MathEquationBlockComponent(props: any) {
                   className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-200 hover:bg-neutral-300 text-neutral-700 rounded-lg text-sm transition-colors outline-none"
                 >
                   <BookOpen size={14} />
-                  <span>Templates</span>
+                  <span>{t('editor.blocks.math_block.templates')}</span>
                   <ChevronDown size={14} className={`transition-transform ${showTemplates ? 'rotate-180' : ''}`} />
                 </button>
 
                 {showTemplates && (
                   <div className="absolute left-0 mt-1 z-10 w-64 max-h-80 overflow-y-auto bg-white rounded-lg border border-neutral-200 nice-shadow">
                     <div className="p-2 text-xs text-neutral-500 border-b border-neutral-100">
-                      Select a template to insert
+                      {t('editor.blocks.math_block.select_template')}
                     </div>
                     {mathTemplates.map((template, index) => (
                       <div
@@ -226,14 +228,14 @@ function MathEquationBlockComponent(props: any) {
                   className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-200 hover:bg-neutral-300 text-neutral-700 rounded-lg text-sm transition-colors outline-none"
                 >
                   <Sigma size={14} />
-                  <span>Symbols</span>
+                  <span>{t('editor.blocks.math_block.symbols')}</span>
                   <ChevronDown size={14} className={`transition-transform ${showSymbols ? 'rotate-180' : ''}`} />
                 </button>
 
                 {showSymbols && (
                   <div className="absolute left-0 mt-1 z-10 w-64 bg-white rounded-lg border border-neutral-200 nice-shadow">
                     <div className="p-2 text-xs text-neutral-500 border-b border-neutral-100">
-                      Click a symbol to insert
+                      {t('editor.blocks.math_block.click_symbol')}
                     </div>
                     <div className="flex flex-wrap p-2 gap-1">
                       {mathSymbols.map((symbol, index) => (
@@ -258,14 +260,14 @@ function MathEquationBlockComponent(props: any) {
                   className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-200 hover:bg-neutral-300 text-neutral-700 rounded-lg text-sm transition-colors outline-none"
                 >
                   <Lightbulb size={14} />
-                  <span>Help</span>
+                  <span>{t('editor.blocks.math_block.help')}</span>
                   <ChevronDown size={14} className={`transition-transform ${showHelp ? 'rotate-180' : ''}`} />
                 </button>
 
                 {showHelp && (
                   <div className="absolute left-0 mt-1 z-10 w-72 bg-white rounded-lg border border-neutral-200 nice-shadow">
                     <div className="p-2 text-xs font-medium text-neutral-700 border-b border-neutral-100">
-                      LaTeX Math Quick Reference
+                      {t('editor.blocks.math_block.quick_reference')}
                     </div>
                     <div className="p-3 text-xs space-y-2 text-neutral-600">
                       <div>
@@ -292,7 +294,7 @@ function MathEquationBlockComponent(props: any) {
                           href="https://katex.org/docs/supported.html"
                           target="_blank"
                         >
-                          View complete reference
+                          {t('editor.blocks.math_block.view_reference')}
                           <ExternalLink size={10} className="ml-1" />
                         </Link>
                       </div>
@@ -308,7 +310,7 @@ function MathEquationBlockComponent(props: any) {
                 ref={inputRef}
                 value={equation}
                 onChange={handleEquationChange}
-                placeholder="Insert a Math Equation (LaTeX)"
+                placeholder={t('editor.blocks.math_block.placeholder')}
                 type="text"
                 className="flex-1 px-3 py-2 text-sm text-neutral-700 placeholder-slate-400 bg-transparent border-none outline-none"
               />
@@ -322,16 +324,16 @@ function MathEquationBlockComponent(props: any) {
 
             {/* Help Link */}
             <div className="flex items-center text-neutral-500 text-sm">
-              <span>Please refer to this</span>
+              <span>{t('editor.blocks.math_block.refer_to')}</span>
               <Link
                 className="inline-flex items-center mx-1 text-blue-600 hover:text-blue-800 font-medium"
                 href="https://katex.org/docs/supported.html"
                 target="_blank"
               >
-                guide
+                {t('editor.blocks.math_block.guide')}
                 <ExternalLink size={12} className="ml-1" />
               </Link>
-              <span>for supported TeX functions</span>
+              <span>{t('editor.blocks.math_block.for_functions')}</span>
             </div>
           </div>
         )}

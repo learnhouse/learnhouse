@@ -85,7 +85,7 @@ const InfoCalloutWrapper = styled.div<{ size?: string }>`
 
 function InfoCalloutComponent(props: any) {
   const editorState = useEditorProvider() as any
-  const isEditable = editorState.isEditable
+  const isEditable = editorState?.isEditable ?? false
   const [dismissed, setDismissed] = useState(false)
   
   // Extract options from props or use defaults
@@ -120,14 +120,15 @@ function InfoCalloutComponent(props: any) {
     <NodeViewWrapper>
       <InfoCalloutWrapper
         className={`flex items-center rounded-xl shadow-inner ${getVariantClasses()} ${getSizeClasses()}`}
-        contentEditable={isEditable}
+        contentEditable={isEditable || undefined}
+        suppressContentEditableWarning={true}
         size={options.size}
       >
         <IconWrapper size={options.size}>
           <Info />
         </IconWrapper>
         <ContentWrapper className="grow">
-          <NodeViewContent contentEditable={isEditable} className="content" />
+          <NodeViewContent className="content" />
         </ContentWrapper>
         {options.dismissible && !isEditable && (
           <DismissButton onClick={() => setDismissed(true)}>
