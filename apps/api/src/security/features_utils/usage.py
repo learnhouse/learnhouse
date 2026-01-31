@@ -1,5 +1,5 @@
 import redis
-from datetime import datetime, date
+from datetime import datetime
 from src.db.organization_config import OrganizationConfig
 from src.db.billing_usage import UsageEvent
 from src.db.user_organizations import UserOrganization
@@ -9,7 +9,7 @@ from config.config import get_learnhouse_config
 from typing import Literal, TypeAlias
 from fastapi import HTTPException
 from sqlmodel import Session, select, func
-from src.security.features_utils.plans import PlanLevel, get_plan_limit, get_ai_credit_limit
+from src.security.features_utils.plans import PlanLevel, get_plan_limit, get_ai_credit_limit, plan_meets_requirement, get_required_plan_for_feature
 
 FeatureSet: TypeAlias = Literal[
     "admin_seats",
@@ -275,6 +275,68 @@ def decrease_feature_usage(
         feature_usage_count = int(feature_usage)
 
     r.set(f"{feature}_usage:{org_id}", max(0, feature_usage_count - 1))
+    return True
+
+
+# ============================================================================
+# Feature Access Check (Plan-Based Features)
+# ============================================================================
+
+def check_feature_access(
+    feature: str,
+    org_id: int,
+    db_session: Session,
+) -> bool:
+    """
+    Check if a feature is accessible based on plan level or OSS mode.
+
+    For features that require a minimum plan level (e.g., versioning requires 'standard'),
+    this function checks:
+    1. If OSS mode is enabled → allow access
+    2. If the organization's plan meets the required level → allow access
+    3. Otherwise → deny access with 403
+
+    Args:
+        feature: The feature key (e.g., 'versioning', 'ai')
+        org_id: The organization ID
+        db_session: Database session
+
+    Returns:
+        True if access is allowed
+
+    Raises:
+        HTTPException 403 if access is denied
+    """
+    # OSS mode enables all features
+    if _is_oss_mode():
+        return True
+
+    # Get required plan for this feature
+    required_plan = get_required_plan_for_feature(feature)
+
+    # If no plan requirement, allow access
+    if required_plan is None:
+        return True
+
+    # Get the organization's plan
+    statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org_id)
+    org_config = db_session.exec(statement).first()
+
+    if org_config is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Organization has no config",
+        )
+
+    org_plan = _get_org_plan(org_config)
+
+    # Check if plan meets requirement
+    if not plan_meets_requirement(org_plan, required_plan):
+        raise HTTPException(
+            status_code=403,
+            detail=f"{feature.capitalize()} requires {required_plan} plan or higher. Current plan: {org_plan}",
+        )
+
     return True
 
 

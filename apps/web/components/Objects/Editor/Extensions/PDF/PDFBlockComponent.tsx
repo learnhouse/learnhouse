@@ -10,10 +10,12 @@ import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { constructAcceptValue } from '@/lib/constants';
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
+import { useTranslation } from 'react-i18next'
 
 const SUPPORTED_FILES = constructAcceptValue(['pdf'])
 
 function PDFBlockComponent(props: any) {
+  const { t } = useTranslation()
   const org = useOrg() as any
   const course = useCourse() as any
   const session = useLHSession() as any
@@ -108,7 +110,7 @@ function PDFBlockComponent(props: any) {
         <div className="bg-neutral-50 rounded-xl px-5 py-4 nice-shadow">
           <div className="flex items-center justify-center gap-3 py-8 bg-white rounded-lg nice-shadow">
             <FileText className="text-neutral-300" size={32} />
-            <p className="text-neutral-500">No PDF available</p>
+            <p className="text-neutral-500">{t('editor.blocks.pdf_block.no_pdf')}</p>
           </div>
         </div>
       </NodeViewWrapper>
@@ -124,20 +126,20 @@ function PDFBlockComponent(props: any) {
             <iframe
               className="w-full h-96 rounded-lg nice-shadow bg-white"
               src={pdfUrl}
-              title="PDF Document"
+              title={t('editor.blocks.pdf_block.document_title')}
             />
             <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
               <button
                 onClick={handleExpand}
                 className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
-                title="Expand PDF"
+                title={t('editor.blocks.pdf_block.expand_pdf')}
               >
                 <Expand className="w-4 h-4 text-white" />
               </button>
               <button
                 onClick={handleDownload}
                 className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
-                title="Download PDF"
+                title={t('editor.blocks.pdf_block.download_pdf')}
               >
                 <Download className="w-4 h-4 text-white" />
               </button>
@@ -148,7 +150,7 @@ function PDFBlockComponent(props: any) {
         <Modal
           isDialogOpen={isModalOpen}
           onOpenChange={setIsModalOpen}
-          dialogTitle="PDF Document"
+          dialogTitle={t('editor.blocks.pdf_block.document_title')}
           minWidth="xl"
           minHeight="xl"
           dialogContent={
@@ -156,7 +158,7 @@ function PDFBlockComponent(props: any) {
               <iframe
                 className="w-full h-full rounded-lg shadow-lg border"
                 src={pdfUrl}
-                title="PDF Document"
+                title={t('editor.blocks.pdf_block.document_title')}
               />
             </div>
           }
@@ -174,7 +176,7 @@ function PDFBlockComponent(props: any) {
           <div className="flex items-center gap-2 mb-3">
             <FileText className="text-neutral-400" size={16} />
             <span className="uppercase tracking-widest text-xs font-bold text-neutral-400">
-              PDF Document
+              {t('editor.blocks.pdf')}
             </span>
           </div>
 
@@ -195,17 +197,17 @@ function PDFBlockComponent(props: any) {
                 {isLoading ? (
                   <div className="space-y-3">
                     <Loader2 className="w-8 h-8 animate-spin mx-auto text-blue-500" />
-                    <p className="text-sm text-neutral-600">Uploading PDF...</p>
+                    <p className="text-sm text-neutral-600">{t('editor.blocks.pdf_block.uploading')}</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
                     <Upload className="w-8 h-8 mx-auto text-neutral-400" />
                     <div>
                       <p className="text-sm font-medium text-neutral-700">
-                        {pdf ? pdf.name : 'Drop your PDF here or click to browse'}
+                        {pdf ? pdf.name : t('editor.blocks.pdf_block.drop_or_browse')}
                       </p>
                       <p className="text-xs text-neutral-500 mt-1">
-                        Supports PDF format
+                        {t('editor.blocks.pdf_block.supported_formats')}
                       </p>
                     </div>
                   </div>
@@ -219,7 +221,7 @@ function PDFBlockComponent(props: any) {
                     className="flex items-center gap-2 px-4 py-2 bg-neutral-700 hover:bg-neutral-800 text-white rounded-lg text-sm transition-colors disabled:opacity-50"
                   >
                     <Upload size={14} />
-                    Upload PDF
+                    {t('editor.blocks.pdf_block.upload_pdf')}
                   </button>
                 </div>
               )}
@@ -238,20 +240,20 @@ function PDFBlockComponent(props: any) {
               <iframe
                 className="w-full h-96 rounded-lg nice-shadow bg-white"
                 src={pdfUrl}
-                title="PDF Document"
+                title={t('editor.blocks.pdf_block.document_title')}
               />
               <div className="absolute top-2 right-2 flex gap-1">
                 <button
                   onClick={handleExpand}
                   className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
-                  title="Expand PDF"
+                  title={t('editor.blocks.pdf_block.expand_pdf')}
                 >
                   <Expand className="w-4 h-4 text-white" />
                 </button>
                 <button
                   onClick={handleDownload}
                   className="p-2 outline-none bg-black/50 hover:bg-black/70 rounded-lg transition-colors"
-                  title="Download PDF"
+                  title={t('editor.blocks.pdf_block.download_pdf')}
                 >
                   <Download className="w-4 h-4 text-white" />
                 </button>
@@ -265,7 +267,7 @@ function PDFBlockComponent(props: any) {
         <Modal
           isDialogOpen={isModalOpen}
           onOpenChange={setIsModalOpen}
-          dialogTitle="PDF Document"
+          dialogTitle={t('editor.blocks.pdf_block.document_title')}
           minWidth="xl"
           minHeight="xl"
           dialogContent={
@@ -273,7 +275,7 @@ function PDFBlockComponent(props: any) {
               <iframe
                 className="w-full h-full rounded-lg shadow-lg border"
                 src={pdfUrl}
-                title="PDF Document"
+                title={t('editor.blocks.pdf_block.document_title')}
               />
             </div>
           }

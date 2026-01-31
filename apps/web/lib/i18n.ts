@@ -95,8 +95,13 @@ i18n
       escapeValue: false, // react already safes from xss
     },
     detection: {
-      order: ['querystring', 'cookie', 'localStorage', 'navigator', 'path', 'subdomain'],
+      order: ['localStorage', 'cookie', 'querystring', 'navigator', 'path', 'subdomain'],
       caches: ['localStorage', 'cookie'],
+      lookupLocalStorage: 'i18nextLng',
+      lookupCookie: 'i18next',
+    },
+    react: {
+      useSuspense: false,
     }
   });
 

@@ -335,7 +335,8 @@ class TestFeaturesUtils:
             )
             
             assert result is True
-            mock_redis.set.assert_called_once_with("ai_usage:1", -1)
+            # Usage should not go below 0
+            mock_redis.set.assert_called_once_with("ai_usage:1", 0)
 
     @pytest.mark.asyncio
     async def test_all_features_covered(self, mock_db_session, mock_org_config):

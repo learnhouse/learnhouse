@@ -5,6 +5,7 @@ import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { SiGithub, SiReplit, SiSpotify, SiLoom, SiGooglemaps, SiCodepen, SiCanva, SiNotion, SiGoogledocs, SiX, SiFigma, SiGiphy, SiYoutube } from '@icons-pack/react-simple-icons'
 import DOMPurify from 'dompurify'
 import { cn } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
 
 // Add new type for script-based embeds
 const SCRIPT_BASED_EMBEDS = {
@@ -105,6 +106,7 @@ const MemoizedEmbed = React.memo(({ embedUrl, sanitizedEmbedCode, embedType }: {
 MemoizedEmbed.displayName = 'MemoizedEmbed';
 
 function EmbedObjectsComponent(props: any) {
+  const { t } = useTranslation()
   const [embedType, setEmbedType] = useState<'url' | 'code'>(props.node.attrs.embedType || 'url')
   const [embedUrl, setEmbedUrl] = useState(props.node.attrs.embedUrl || '')
   const [embedCode, setEmbedCode] = useState(props.node.attrs.embedCode || '')
@@ -357,7 +359,7 @@ function EmbedObjectsComponent(props: any) {
           <div className="flex items-center gap-2">
             <ExternalLink className="text-neutral-400" size={16} />
             <span className="uppercase tracking-widest text-xs font-bold text-neutral-400">
-              Embed
+              {t('editor.blocks.embed')}
             </span>
           </div>
           {(embedUrl || sanitizedEmbedCode) && isEditable && (
@@ -389,7 +391,7 @@ function EmbedObjectsComponent(props: any) {
                   <button
                     onClick={() => setActiveInput(embedType)}
                     className="p-1.5 rounded-md hover:bg-neutral-100 text-neutral-600"
-                    title="Edit embed"
+                    title={t('editor.blocks.embed_block.edit_embed')}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3Z"></path>
@@ -398,7 +400,7 @@ function EmbedObjectsComponent(props: any) {
                   <button
                     onClick={handleCenterBlock}
                     className="p-1.5 rounded-md hover:bg-neutral-100 text-neutral-600"
-                    title={alignment === 'center' ? 'Align left' : 'Center align'}
+                    title={alignment === 'center' ? t('editor.blocks.common.align_left') : t('editor.blocks.common.align_center')}
                   >
                     <AlignCenter size={16} />
                   </button>
@@ -407,7 +409,7 @@ function EmbedObjectsComponent(props: any) {
             </>
           ) : (
             <div className="w-full h-full flex flex-col items-center justify-center p-4 sm:p-6">
-              <p className="text-neutral-500 mb-4 font-medium text-base text-center">Add an embed from:</p>
+              <p className="text-neutral-500 mb-4 font-medium text-base text-center">{t('editor.blocks.embed_block.add_embed_from')}</p>
               <div className="flex flex-wrap gap-3 sm:gap-4 justify-center mb-4">
                 {supportedProducts.map((product) => (
                   <button
@@ -428,7 +430,7 @@ function EmbedObjectsComponent(props: any) {
               </div>
 
               <p className="text-xs text-neutral-500 mb-3 text-center">
-                Click a service to add an embed
+                {t('editor.blocks.embed_block.click_service')}
               </p>
 
               {isEditable && (
@@ -478,8 +480,8 @@ function EmbedObjectsComponent(props: any) {
                     )}
                     <h3 className="text-base font-semibold text-neutral-800">
                       {activeInput === 'url'
-                        ? (selectedProduct ? `Add ${selectedProduct.name} Embed` : 'Add Embed URL')
-                        : 'Add Embed Code'}
+                        ? (selectedProduct ? t('editor.blocks.embed_block.add_embed', { name: selectedProduct.name }) : t('editor.blocks.embed_block.add_embed_url'))
+                        : t('editor.blocks.embed_block.add_embed_code')}
                     </h3>
                   </div>
                   <button
@@ -503,13 +505,13 @@ function EmbedObjectsComponent(props: any) {
                         value={embedUrl}
                         onChange={handleUrlChange}
                         className="w-full pl-10 pr-4 py-2.5 bg-neutral-50 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-neutral-400 focus:border-neutral-400 outline-none transition-all text-sm"
-                        placeholder={selectedProduct ? `Paste ${selectedProduct.name} embed URL` : "Paste embed URL (YouTube, Spotify, etc.)"}
+                        placeholder={selectedProduct ? t('editor.blocks.embed_block.paste_url', { name: selectedProduct.name }) : t('editor.blocks.embed_block.paste_any_url')}
                         autoFocus
                       />
                     </div>
                     <div className="flex justify-between items-center mb-4">
                       <p className="text-xs text-neutral-500">
-                        Paste any embed URL directly
+                        {t('editor.blocks.embed_block.paste_directly')}
                       </p>
                       {selectedProduct && (
                         <button
@@ -517,7 +519,7 @@ function EmbedObjectsComponent(props: any) {
                           onClick={() => handleOpenDocs(selectedProduct.guide)}
                           className="text-xs text-neutral-500 hover:text-neutral-700 flex items-center gap-1"
                         >
-                          How to embed {selectedProduct.name}
+                          {t('editor.blocks.embed_block.how_to_embed', { name: selectedProduct.name })}
                         </button>
                       )}
                     </div>
@@ -530,12 +532,12 @@ function EmbedObjectsComponent(props: any) {
                         value={embedCode}
                         onChange={handleCodeChange}
                         className="w-full p-3 bg-neutral-50 border border-neutral-200 rounded-lg h-32 focus:ring-2 focus:ring-neutral-400 focus:border-neutral-400 outline-none transition-all font-mono text-sm"
-                        placeholder="Paste embed code (iframe, embed script, etc.)"
+                        placeholder={t('editor.blocks.embed_block.paste_code')}
                         autoFocus
                       />
                     </div>
                     <p className="text-xs text-neutral-500 mb-4">
-                      Paste iframe or embed code from any platform
+                      {t('editor.blocks.embed_block.paste_iframe')}
                     </p>
                   </>
                 )}
@@ -546,14 +548,14 @@ function EmbedObjectsComponent(props: any) {
                     onClick={() => setActiveInput('none')}
                     className="px-4 py-2 text-sm text-neutral-600 hover:text-neutral-800 rounded-lg transition-colors"
                   >
-                    Cancel
+                    {t('editor.blocks.common.cancel')}
                   </button>
                   <button
                     type="submit"
                     className="px-4 py-2 bg-neutral-700 hover:bg-neutral-800 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
                     disabled={(activeInput === 'url' && !embedUrl) || (activeInput === 'code' && !embedCode)}
                   >
-                    Apply
+                    {t('editor.blocks.common.apply')}
                   </button>
                 </div>
               </form>

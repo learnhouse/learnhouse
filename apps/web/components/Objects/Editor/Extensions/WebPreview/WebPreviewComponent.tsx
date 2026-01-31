@@ -9,6 +9,7 @@ import { Label } from '@components/ui/label';
 import { Checkbox } from '@components/ui/checkbox';
 import { Button } from '@components/ui/button';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 interface EditorContext {
   isEditable: boolean;
@@ -29,6 +30,7 @@ const ALIGNMENTS = [
 ];
 
 const WebPreviewComponent: React.FC<WebPreviewProps> = ({ node, updateAttributes, deleteNode }) => {
+  const { t } = useTranslation();
   const [inputUrl, setInputUrl] = useState(node.attrs.url || '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -50,7 +52,7 @@ const WebPreviewComponent: React.FC<WebPreviewProps> = ({ node, updateAttributes
   const alignment = node.attrs.alignment || 'left';
   const hasPreview = !!previewData.title;
 
-  const [buttonLabel, setButtonLabel] = useState(node.attrs.buttonLabel || 'Visit Site');
+  const [buttonLabel, setButtonLabel] = useState(node.attrs.buttonLabel || '');
   const [showButton, setShowButton] = useState(node.attrs.showButton !== false);
   const [openInPopup, setOpenInPopup] = useState(node.attrs.openInPopup || false);
   const [popupOpen, setPopupOpen] = useState(false);
@@ -155,13 +157,13 @@ const WebPreviewComponent: React.FC<WebPreviewProps> = ({ node, updateAttributes
       <Modal
         isDialogOpen={popupOpen}
         onOpenChange={setPopupOpen}
-        dialogTitle={previewData.title || 'Website Preview'}
+        dialogTitle={previewData.title || t('editor.blocks.web_preview_block.website_preview')}
         minWidth="xl"
         minHeight="xl"
         dialogContent={
           <iframe
             src={previewData.url}
-            title="Embedded Website Preview"
+            title={t('editor.blocks.web_preview_block.embedded_preview')}
             className="w-full h-full border-0 bg-white"
             style={{ display: 'block', borderRadius: 0 }}
             allowFullScreen
@@ -176,7 +178,7 @@ const WebPreviewComponent: React.FC<WebPreviewProps> = ({ node, updateAttributes
               <button
                 className="flex items-center justify-center bg-yellow-50 text-yellow-700 border border-yellow-200 shadow-md rounded-md p-1.5 hover:bg-yellow-100"
                 onClick={handleEdit}
-                title="Edit URL"
+                title={t('editor.blocks.web_preview_block.edit_url')}
                 type="button"
               >
                 <Edit2 size={16} />
@@ -184,7 +186,7 @@ const WebPreviewComponent: React.FC<WebPreviewProps> = ({ node, updateAttributes
               <button
                 className="flex items-center justify-center bg-red-50 text-red-700 border border-red-200 shadow-md rounded-md p-1.5 hover:bg-red-100"
                 onClick={handleDelete}
-                title="Delete Card"
+                title={t('editor.blocks.web_preview_block.delete_card')}
                 type="button"
               >
                 <Trash size={16} />
@@ -198,18 +200,18 @@ const WebPreviewComponent: React.FC<WebPreviewProps> = ({ node, updateAttributes
               setModalOpen(open);
               if (!open) handleCancelEdit();
             }}
-            dialogTitle="Edit Web Preview Card"
-            dialogDescription="Update the website preview, button, and display options."
+            dialogTitle={t('editor.blocks.web_preview_block.edit_card')}
+            dialogDescription={t('editor.blocks.web_preview_block.edit_card_description')}
             minWidth="md"
             dialogContent={
               <form className="space-y-6" onSubmit={e => { e.preventDefault(); handleSaveEdit(); }}>
                 <div className="space-y-2">
-                  <Label htmlFor="web-url-input">Website URL</Label>
+                  <Label htmlFor="web-url-input">{t('editor.blocks.web_preview_block.website_url')}</Label>
                   <Input
                     id="web-url-input"
                     ref={inputRef}
                     type="text"
-                    placeholder="Enter website URL..."
+                    placeholder={t('editor.blocks.web_preview_block.enter_url')}
                     value={inputUrl}
                     onChange={e => setInputUrl(e.target.value)}
                     disabled={loading}
@@ -217,7 +219,7 @@ const WebPreviewComponent: React.FC<WebPreviewProps> = ({ node, updateAttributes
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Button Options</Label>
+                  <Label>{t('editor.blocks.web_preview_block.button_options')}</Label>
                   <div className="flex flex-col gap-3  pt-3">
                     <div className="flex items-center gap-2">
                       <Checkbox
@@ -225,7 +227,7 @@ const WebPreviewComponent: React.FC<WebPreviewProps> = ({ node, updateAttributes
                         checked={showButton}
                         onCheckedChange={checked => setShowButton(!!checked)}
                       />
-                      <Label htmlFor="show-button" className="text-sm">Show button</Label>
+                      <Label htmlFor="show-button" className="text-sm">{t('editor.blocks.web_preview_block.show_button')}</Label>
                     </div>
                     {showButton && (
                       <>
@@ -235,16 +237,16 @@ const WebPreviewComponent: React.FC<WebPreviewProps> = ({ node, updateAttributes
                             checked={openInPopup}
                             onCheckedChange={checked => setOpenInPopup(!!checked)}
                           />
-                          <Label htmlFor="open-in-popup" className="text-sm">Open in-app popup (might not work on all websites)</Label>
+                          <Label htmlFor="open-in-popup" className="text-sm">{t('editor.blocks.web_preview_block.open_popup')}</Label>
                         </div>
                         <div className="flex  gap-2 flex-col ">
-                          <Label htmlFor="button-label" className="text-sm">Button label</Label>
+                          <Label htmlFor="button-label" className="text-sm">{t('editor.blocks.web_preview_block.button_label')}</Label>
                           <Input
                             id="button-label"
                             type="text"
                             value={buttonLabel}
                             onChange={e => setButtonLabel(e.target.value)}
-                            placeholder="Button label"
+                            placeholder={t('editor.blocks.web_preview_block.button_label')}
                             className="w-36"
                           />
                         </div>
@@ -254,7 +256,7 @@ const WebPreviewComponent: React.FC<WebPreviewProps> = ({ node, updateAttributes
                   </div>
                 </div>
                 <div className="space-y-">
-                  <Label>Alignment</Label>
+                  <Label>{t('editor.blocks.web_preview_block.alignment')}</Label>
                   <div className="flex gap-2 pt-3">
                     {ALIGNMENTS.map(opt => (
                       <Button
@@ -274,10 +276,10 @@ const WebPreviewComponent: React.FC<WebPreviewProps> = ({ node, updateAttributes
                 {error && <div className="text-red-600 text-xs mt-2">{error}</div>}
                 <div className="flex justify-end gap-2 mt-2">
                   <Button type="button" variant="outline" onClick={handleCancelEdit}>
-                    <span className="flex items-center"><X size={16} className="mr-1" /> Cancel</span>
+                    <span className="flex items-center"><X size={16} className="mr-1" /> {t('editor.blocks.common.cancel')}</span>
                   </Button>
                   <Button type="submit" disabled={loading || !inputUrl}>
-                    <span className="flex items-center"><Save size={16} className="mr-1" /> Save</span>
+                    <span className="flex items-center"><Save size={16} className="mr-1" /> {t('editor.blocks.common.save')}</span>
                   </Button>
                 </div>
               </form>
@@ -343,7 +345,7 @@ const WebPreviewComponent: React.FC<WebPreviewProps> = ({ node, updateAttributes
                     style={{ textDecoration: 'none', color: 'white' }}
                     onClick={() => setPopupOpen(true)}
                   >
-                    {buttonLabel || 'Visit Site'}
+                    {buttonLabel || t('editor.blocks.web_preview_block.visit_site')}
                   </button>
                 ) : (
                   <a
@@ -353,7 +355,7 @@ const WebPreviewComponent: React.FC<WebPreviewProps> = ({ node, updateAttributes
                     className="block w-full mt-4 rounded-xl bg-black nice-shadow text-[16px] font-semibold text-white py-2.5 px-4 text-center no-underline hover:bg-gray-900 hover:shadow-lg transition-all"
                     style={{ textDecoration: 'none', color: 'white' }}
                   >
-                    {buttonLabel || 'Visit Site'}
+                    {buttonLabel || t('editor.blocks.web_preview_block.visit_site')}
                   </a>
                 )
               )}
@@ -361,7 +363,7 @@ const WebPreviewComponent: React.FC<WebPreviewProps> = ({ node, updateAttributes
               {isEditable && (
                 <div className="flex flex-col items-center mt-4">
                   <div className="flex items-center gap-1"> {/* AlignmentBar */}
-                    <span className="text-xs text-gray-500 mr-1">Align:</span>
+                    <span className="text-xs text-gray-500 mr-1">{t('editor.blocks.web_preview_block.align')}:</span>
                     {ALIGNMENTS.map(opt => (
                       <button
                         key={opt.value}

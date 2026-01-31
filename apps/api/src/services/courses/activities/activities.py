@@ -3,13 +3,14 @@ from src.db.courses.courses import Course
 from src.db.courses.chapters import Chapter
 from src.db.courses.activities import ActivityCreate, Activity, ActivityRead, ActivityUpdate
 from src.db.courses.chapter_activities import ChapterActivity
-from src.db.users import AnonymousUser, PublicUser
+from src.db.users import AnonymousUser, PublicUser, User
 from fastapi import HTTPException, Request
 from uuid import uuid4
 from datetime import datetime
 
 from src.core.ee_hooks import check_ee_activity_paid_access
 from src.security.courses_security import courses_rbac_check_for_activities
+from src.services.courses.activities.versioning import create_activity_version
 
 
 ####################################################
@@ -96,10 +97,11 @@ async def get_activity(
     current_user: PublicUser,
     db_session: Session,
 ):
-    # Optimize by joining Activity with Course in a single query
+    # Optimize by joining Activity with Course and last modified user in a single query
     statement = (
-        select(Activity, Course)
+        select(Activity, Course, User)
         .join(Course)
+        .outerjoin(User, Activity.last_modified_by_id == User.id)
         .where(Activity.activity_uuid == activity_uuid)
     )
     result = db_session.exec(statement).first()
@@ -109,8 +111,8 @@ async def get_activity(
             status_code=404,
             detail="Activity not found",
         )
-    
-    activity, course = result
+
+    activity, course, last_modified_user = result
 
     # RBAC check
     await courses_rbac_check_for_activities(request, course.course_uuid, current_user, "read", db_session)
@@ -125,6 +127,8 @@ async def get_activity(
 
     activity_read = ActivityRead.model_validate(activity)
     activity_read.content = activity_read.content if has_paid_access else { "paid_access": False }
+    # Include last modified user info
+    activity_read.last_modified_by_username = last_modified_user.username if last_modified_user else None
 
     return activity_read
 
@@ -192,6 +196,16 @@ async def update_activity(
     # Using model_dump(exclude_unset=True) to get only the fields that were passed in
     update_data = activity_object.model_dump(exclude_unset=True)
 
+    # Create a version snapshot before updating content
+    # This preserves the current state for version history
+    if 'content' in update_data and activity.content:
+        user_id = current_user.id if hasattr(current_user, 'id') else None
+        await create_activity_version(activity, user_id, db_session)
+        # Increment version number
+        activity.current_version = (activity.current_version or 1) + 1
+        # Track who made the change
+        activity.last_modified_by_id = user_id
+
     # Debug logging for content updates
     if 'content' in update_data:
         content = update_data['content']
@@ -216,6 +230,9 @@ async def update_activity(
 
     for field, value in update_data.items():
         setattr(activity, field, value)
+
+    # Update the update_date timestamp
+    activity.update_date = str(datetime.now())
 
     # Mark content as modified if it was updated (important for JSON fields)
     if 'content' in update_data:

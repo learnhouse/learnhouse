@@ -5,6 +5,7 @@ import React from 'react'
 import { BadgeHelp, Check, Minus, Plus, RefreshCcw } from 'lucide-react'
 import ReactConfetti from 'react-confetti'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
+import { useTranslation } from 'react-i18next'
 
 interface Answer {
   answer_id: string
@@ -19,6 +20,7 @@ interface Question {
 }
 
 function QuizBlockComponent(props: any) {
+  const { t } = useTranslation()
   const [questions, setQuestions] = React.useState(
     props.node.attrs.questions
   ) as [Question[], any]
@@ -74,7 +76,7 @@ function QuizBlockComponent(props: any) {
       );
     });
 
-    setSubmissionMessage(correctAnswers ? 'All answers are correct!' : 'Some answers are incorrect!');
+    setSubmissionMessage(correctAnswers ? 'correct' : 'incorrect');
   }
 
   const getAnswerID = (answerIndex: number, questionId: string) => {
@@ -198,7 +200,7 @@ function QuizBlockComponent(props: any) {
       <div className="bg-neutral-50 rounded-xl px-5 py-4 nice-shadow transition-all ease-linear">
         {/* Header section */}
         <div className="flex flex-wrap gap-2 items-center text-sm mb-3">
-          {submitted && submissionMessage === 'All answers are correct!' && (
+          {submitted && submissionMessage === 'correct' && (
             <ReactConfetti
               numberOfPieces={submitted ? 1400 : 0}
               recycle={false}
@@ -208,7 +210,7 @@ function QuizBlockComponent(props: any) {
           <div className="flex items-center gap-2">
             <BadgeHelp className="text-neutral-400" size={16} />
             <span className="uppercase tracking-widest text-xs font-bold text-neutral-400">
-              Quiz
+              {t('editor.blocks.quiz')}
             </span>
           </div>
 
@@ -216,11 +218,13 @@ function QuizBlockComponent(props: any) {
           {submitted && (
             <div className={cn(
               "text-xs font-medium px-2 py-1 rounded-md",
-              submissionMessage === 'All answers are correct!'
+              submissionMessage === 'correct'
                 ? 'bg-emerald-100 text-emerald-700'
                 : 'bg-red-100 text-red-700'
             )}>
-              {submissionMessage}
+              {submissionMessage === 'correct'
+                ? t('editor.blocks.quiz_block.all_correct')
+                : t('editor.blocks.quiz_block.some_incorrect')}
             </div>
           )}
 
@@ -232,14 +236,14 @@ function QuizBlockComponent(props: any) {
               onClick={addSampleQuestion}
               className="bg-neutral-200 hover:bg-neutral-300 text-neutral-700 font-medium py-1.5 px-3 rounded-lg text-xs transition-colors outline-none"
             >
-              Add Question
+              {t('editor.blocks.quiz_block.add_question')}
             </button>
           ) : (
             <div className="flex items-center gap-1">
               <button
                 onClick={() => refreshUserSubmission()}
                 className="p-1.5 rounded-md hover:bg-neutral-200 transition-colors"
-                title="Reset answers"
+                title={t('editor.blocks.quiz_block.reset_answers')}
               >
                 <RefreshCcw className="text-neutral-500" size={15} />
               </button>
@@ -247,7 +251,7 @@ function QuizBlockComponent(props: any) {
                 onClick={() => handleUserSubmission()}
                 className="bg-neutral-200 hover:bg-neutral-300 text-neutral-700 font-medium py-1.5 px-3 rounded-lg text-xs transition-colors outline-none"
               >
-                Submit
+                {t('editor.blocks.quiz_block.submit')}
               </button>
             </div>
           )}
@@ -263,7 +267,7 @@ function QuizBlockComponent(props: any) {
                   {isEditable ? (
                     <input
                       value={question.question}
-                      placeholder="Your Question"
+                      placeholder={t('editor.blocks.quiz_block.question_placeholder')}
                       onChange={(e) =>
                         changeQuestionValue(
                           question.question_id,
@@ -353,7 +357,7 @@ function QuizBlockComponent(props: any) {
                                 e.target.value
                               )
                             }
-                            placeholder="Answer"
+                            placeholder={t('editor.blocks.quiz_block.answer_placeholder')}
                             className="w-full text-neutral-700 bg-transparent border-0 text-sm font-medium outline-none"
                             onClick={(e) => e.stopPropagation()}
                           />
@@ -373,7 +377,7 @@ function QuizBlockComponent(props: any) {
                               markAnswerCorrect(question.question_id, answer.answer_id);
                             }}
                             className="w-7 h-7 flex items-center justify-center rounded-lg bg-emerald-100 hover:bg-emerald-200 transition-colors"
-                            title={answer.correct ? "Mark as incorrect" : "Mark as correct"}
+                            title={answer.correct ? t('editor.blocks.quiz_block.mark_incorrect') : t('editor.blocks.quiz_block.mark_correct')}
                           >
                             <Check className="text-emerald-700" size={14} />
                           </button>
@@ -383,7 +387,7 @@ function QuizBlockComponent(props: any) {
                               deleteAnswer(question.question_id, answer.answer_id);
                             }}
                             className="w-7 h-7 flex items-center justify-center rounded-lg bg-neutral-100 hover:bg-neutral-200 transition-colors"
-                            title="Delete answer"
+                            title={t('editor.blocks.quiz_block.delete_answer')}
                           >
                             <Minus className="text-neutral-500" size={14} />
                           </button>
@@ -400,7 +404,7 @@ function QuizBlockComponent(props: any) {
                     className="w-full flex items-center justify-center gap-1 h-11 border-2 border-dashed border-neutral-200 rounded-lg text-neutral-600 hover:border-neutral-300 hover:bg-neutral-50 transition-colors"
                   >
                     <Plus size={15} />
-                    <span className="text-sm font-medium">Add Answer</span>
+                    <span className="text-sm font-medium">{t('editor.blocks.quiz_block.add_answer')}</span>
                   </button>
                 )}
               </div>

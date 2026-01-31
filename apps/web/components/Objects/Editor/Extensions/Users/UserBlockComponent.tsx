@@ -26,6 +26,7 @@ import { useRouter } from 'next/navigation'
 import UserAvatar from '@components/Objects/UserAvatar'
 import { useEditorProvider } from '@components/Contexts/Editor/EditorContext'
 import { getUserAvatarMediaDirectory } from '@services/media/media'
+import { useTranslation } from 'react-i18next'
 
 type UserData = {
   id: string
@@ -67,6 +68,7 @@ const IconComponent = ({ iconName }: { iconName: string }) => {
 }
 
 function UserBlockComponent(props: any) {
+  const { t } = useTranslation()
   const session = useLHSession() as any
   const access_token = session?.data?.tokens?.access_token
   const editorState = useEditorProvider() as any
@@ -140,7 +142,7 @@ function UserBlockComponent(props: any) {
           <div className="flex items-center gap-2 mb-3">
             <User className="text-neutral-400" size={16} />
             <span className="uppercase tracking-widest text-xs font-bold text-neutral-400">
-              User Profile
+              {t('editor.blocks.user')}
             </span>
           </div>
 
@@ -151,14 +153,14 @@ function UserBlockComponent(props: any) {
                 <Input
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Enter username"
+                  placeholder={t('editor.blocks.user_block.enter_username')}
                   className="flex-1 border-neutral-200 focus:border-neutral-300"
                 />
                 <Button type="submit" disabled={isLoading} className="bg-neutral-700 hover:bg-neutral-800">
                   {isLoading ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
-                    'Load User'
+                    t('editor.blocks.user_block.load_user')
                   )}
                 </Button>
               </div>
@@ -206,7 +208,7 @@ function UserBlockComponent(props: any) {
         <div className="bg-neutral-50 rounded-xl px-5 py-4 nice-shadow">
           <div className="flex items-center justify-center gap-3 py-8 bg-white rounded-lg nice-shadow">
             <User className="text-neutral-300" size={32} />
-            <span className="text-neutral-500">No user selected</span>
+            <span className="text-neutral-500">{t('editor.blocks.user_block.no_user')}</span>
           </div>
         </div>
       </NodeViewWrapper>
