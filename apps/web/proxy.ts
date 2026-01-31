@@ -18,8 +18,9 @@ export const config = {
      * 4. Umami Analytics
      * 4. /examples (inside /public)
      * 5. all root files inside /public (e.g. /favicon.ico)
+     * 6. /embed (activity embeds)
      */
-    '/((?!api|_next|fonts|umami|examples|[\\w-]+\\.\\w+).*)',
+    '/((?!api|_next|fonts|umami|examples|embed|[\\w-]+\\.\\w+).*)',
     '/sitemap.xml',
     '/payments/stripe/connect/oauth',
   ],
