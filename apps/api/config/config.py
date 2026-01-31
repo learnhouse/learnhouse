@@ -18,6 +18,7 @@ class GeneralConfig(BaseModel):
     development_mode: bool
     logfire_enabled: bool
     sentry_config: SentryConfig
+    oss_mode: bool
 
 
 class SecurityConfig(BaseModel):
@@ -130,6 +131,13 @@ def get_learnhouse_config() -> LearnHouseConfig:
     env_sentry_dsn = os.environ.get("LEARNHOUSE_SENTRY_DSN")
     sentry_dsn = env_sentry_dsn or yaml_config.get("general", {}).get("sentry_dsn")
     sentry_enabled = sentry_dsn is not None and sentry_dsn != ""
+
+    # OSS Mode (disables plan-based limits for self-hosted deployments)
+    env_oss_mode = os.environ.get("LEARNHOUSE_OSS", "None")
+    oss_mode = (
+        env_oss_mode.lower() in ("true", "1", "yes") if env_oss_mode != "None"
+        else yaml_config.get("general", {}).get("oss_mode", False)
+    )
 
     # Security Config
     env_auth_jwt_secret_key = os.environ.get("LEARNHOUSE_AUTH_JWT_SECRET_KEY")
@@ -302,7 +310,8 @@ def get_learnhouse_config() -> LearnHouseConfig:
         general_config=GeneralConfig(
             development_mode=bool(development_mode),
             logfire_enabled=bool(logfire_enabled),
-            sentry_config=SentryConfig(dsn=sentry_dsn, enabled=sentry_enabled)
+            sentry_config=SentryConfig(dsn=sentry_dsn, enabled=sentry_enabled),
+            oss_mode=bool(oss_mode),
         ),
         hosting_config=hosting_config,
         database_config=database_config,

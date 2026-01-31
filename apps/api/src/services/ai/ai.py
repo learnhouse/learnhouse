@@ -4,8 +4,8 @@ from sqlmodel import Session, select
 from src.db.organization_config import OrganizationConfig
 from src.db.organizations import Organization
 from src.security.features_utils.usage import (
-    check_limits_with_usage,
-    increase_feature_usage,
+    check_ai_credits,
+    deduct_ai_credit,
 )
 from src.db.courses.courses import Course, CourseRead
 from src.core.events.database import get_db_session
@@ -99,8 +99,8 @@ def ai_start_activity_chat_session(
         )
 
     # Check limits and usage
-    check_limits_with_usage("ai", org.id, db_session)
-    increase_feature_usage("ai", org.id, db_session)
+    check_ai_credits(org.id, db_session)
+    deduct_ai_credit(org.id, db_session)
 
     if not activity:
         raise HTTPException(
@@ -233,9 +233,9 @@ def ai_send_activity_chat_message(
     statement = select(Organization).where(Organization.id == course.org_id)
     org = db_session.exec(statement).first()
 
-    # Check limits and usage
-    check_limits_with_usage("ai", course.org_id, db_session)
-    increase_feature_usage("ai", course.org_id, db_session)
+    # Check AI credits and deduct
+    check_ai_credits(course.org_id, db_session)
+    deduct_ai_credit(course.org_id, db_session)
 
     if not activity:
         raise HTTPException(
@@ -416,8 +416,8 @@ async def ai_start_activity_chat_session_stream(
     )
 
     # Check limits and usage
-    check_limits_with_usage("ai", org.id, db_session)
-    increase_feature_usage("ai", org.id, db_session)
+    check_ai_credits(org.id, db_session)
+    deduct_ai_credit(org.id, db_session)
 
     chat_session = get_chat_session_history()
 
@@ -456,8 +456,8 @@ async def ai_send_activity_chat_message_stream(
     )
 
     # Check limits and usage
-    check_limits_with_usage("ai", org.id, db_session)
-    increase_feature_usage("ai", org.id, db_session)
+    check_ai_credits(org.id, db_session)
+    deduct_ai_credit(org.id, db_session)
 
     chat_session = get_chat_session_history(chat_session_object.aichat_uuid)
 

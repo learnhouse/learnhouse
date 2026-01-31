@@ -557,3 +557,18 @@ async def api_upload_org_landing_content(
         current_user=current_user,
         db_session=db_session,
     )
+
+
+@router.get("/{org_id}/usage")
+async def api_get_org_usage(
+    request: Request,
+    org_id: int,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+):
+    """
+    Get organization usage and limits for plan-based features.
+    Returns current usage, limits, and remaining quota.
+    """
+    from src.services.orgs.usage import get_org_usage_and_limits
+    return await get_org_usage_and_limits(request, org_id, current_user, db_session)

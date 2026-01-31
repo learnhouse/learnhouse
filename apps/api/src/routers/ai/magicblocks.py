@@ -10,8 +10,8 @@ from src.core.events.database import get_db_session
 from src.db.users import PublicUser
 from src.security.auth import get_current_user
 from src.security.features_utils.usage import (
-    check_limits_with_usage,
-    increase_feature_usage,
+    check_ai_credits,
+    deduct_ai_credit,
 )
 from src.security.features_utils.plan_check import get_org_plan
 from src.security.features_utils.plans import plan_meets_requirement
@@ -104,9 +104,9 @@ async def start_magicblock_session(
     if not org or org.id is None:
         raise HTTPException(status_code=404, detail="Organization not found")
 
-    # Check limits and usage
-    check_limits_with_usage("ai", org.id, db_session)
-    increase_feature_usage("ai", org.id, db_session)
+    # Check AI credits and deduct
+    check_ai_credits(org.id, db_session)
+    deduct_ai_credit(org.id, db_session)
 
     # Get AI model
     ai_model = get_org_ai_model(org.id, db_session)
@@ -186,9 +186,9 @@ async def iterate_magicblock_session(
     if not org or org.id is None:
         raise HTTPException(status_code=404, detail="Organization not found")
 
-    # Check limits and usage
-    check_limits_with_usage("ai", org.id, db_session)
-    increase_feature_usage("ai", org.id, db_session)
+    # Check AI credits and deduct
+    check_ai_credits(org.id, db_session)
+    deduct_ai_credit(org.id, db_session)
 
     # Get AI model
     ai_model = get_org_ai_model(org.id, db_session)

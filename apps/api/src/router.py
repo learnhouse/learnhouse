@@ -5,6 +5,7 @@ from src.routers import dev, trail, users, auth, orgs, roles, search
 from src.routers import stream
 from src.routers import api_tokens
 from src.routers.ai import ai, magicblocks, courseplanning
+from src.routers.orgs import ai_credits
 from src.routers.courses import chapters, collections, courses, assignments, certifications
 from src.routers.communities import communities as communities_router_module
 from src.routers.communities import discussions as discussions_router_module
@@ -42,6 +43,12 @@ v1_router.include_router(
     orgs.router,
     prefix="/orgs",
     tags=["orgs"],
+    dependencies=[Depends(get_non_api_token_user)]
+)
+v1_router.include_router(
+    ai_credits.router,
+    prefix="/orgs",
+    tags=["ai-credits"],
     dependencies=[Depends(get_non_api_token_user)]
 )
 v1_router.include_router(
