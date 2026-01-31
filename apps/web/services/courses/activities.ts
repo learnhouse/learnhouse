@@ -169,3 +169,57 @@ export async function getUrlPreview(url: string) {
   const res = await result.json()
   return res
 }
+
+// Versioning API functions
+
+export async function getActivityVersions(
+  activity_uuid: string,
+  access_token: string,
+  limit: number = 20,
+  offset: number = 0
+) {
+  const result = await fetch(
+    `${getAPIUrl()}activities/${activity_uuid}/versions?limit=${limit}&offset=${offset}`,
+    RequestBodyWithAuthHeader('GET', null, null, access_token)
+  )
+  const res = await result.json()
+  return res
+}
+
+export async function getActivityVersion(
+  activity_uuid: string,
+  version_number: number,
+  access_token: string
+) {
+  const result = await fetch(
+    `${getAPIUrl()}activities/${activity_uuid}/versions/${version_number}`,
+    RequestBodyWithAuthHeader('GET', null, null, access_token)
+  )
+  const res = await result.json()
+  return res
+}
+
+export async function getActivityState(
+  activity_uuid: string,
+  access_token: string
+) {
+  const result = await fetch(
+    `${getAPIUrl()}activities/${activity_uuid}/state`,
+    RequestBodyWithAuthHeader('GET', null, null, access_token)
+  )
+  const res = await result.json()
+  return res
+}
+
+export async function restoreActivityVersion(
+  activity_uuid: string,
+  version_number: number,
+  access_token: string
+) {
+  const result = await fetch(
+    `${getAPIUrl()}activities/${activity_uuid}/versions/${version_number}/restore`,
+    RequestBodyWithAuthHeader('POST', null, null, access_token)
+  )
+  const res = await getResponseMetadata(result)
+  return res
+}
