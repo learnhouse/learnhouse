@@ -17,6 +17,7 @@ import type { MagicBlockContext, MagicBlockMessage } from './types'
 import { getMagicBlockSession } from '@services/ai/magicblocks'
 import { PlanLevel, planMeetsRequirement } from '@services/plans/plans'
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
+import { useTranslation } from 'react-i18next'
 
 interface EditorState {
   isEditable: boolean
@@ -51,6 +52,7 @@ interface ExtendedNodeViewProps extends Omit<NodeViewProps, 'extension'> {
 }
 
 function MagicBlockComponent(props: ExtendedNodeViewProps) {
+  const { t } = useTranslation()
   const { node, extension, updateAttributes } = props
   const editorState = useEditorProvider() as EditorState
   const session = useLHSession() as Session
@@ -199,7 +201,7 @@ function MagicBlockComponent(props: ExtendedNodeViewProps) {
             <button
               onClick={() => setIsPreviewModalOpen(true)}
               className="absolute top-2 right-2 p-2 bg-black/50 hover:bg-black/70 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
-              title="Expand"
+              title={t('editor.blocks.common.expand')}
             >
               <Expand className="w-4 h-4 text-white" />
             </button>
@@ -209,7 +211,7 @@ function MagicBlockComponent(props: ExtendedNodeViewProps) {
         <Modal
           isDialogOpen={isPreviewModalOpen}
           onOpenChange={setIsPreviewModalOpen}
-          dialogTitle="Interactive Element"
+          dialogTitle={t('editor.blocks.magic_block.interactive_element')}
           minWidth="xl"
           minHeight="lg"
           dialogContent={
@@ -248,13 +250,13 @@ function MagicBlockComponent(props: ExtendedNodeViewProps) {
                   alt="Magic Block"
                 />
                 <span className="text-sm font-semibold text-white/70">
-                  Magic Block
+                  {t('editor.blocks.magic_block.title')}
                 </span>
               </div>
               {sessionUuid && (
                 <div className="bg-white/5 text-white/40 py-0.5 px-3 flex space-x-1 rounded-full items-center outline outline-1 outline-neutral-100/10">
                   <span className="text-xs font-semibold antialiased">
-                    {iterationCount}/6 iterations
+                    {t('editor.blocks.magic_block.iterations', { count: iterationCount, max: 6 })}
                   </span>
                 </div>
               )}
@@ -284,10 +286,10 @@ function MagicBlockComponent(props: ExtendedNodeViewProps) {
                   </div>
                   <div className="space-y-1">
                     <p className="font-semibold text-white/80">
-                      Create Interactive Content
+                      {t('editor.blocks.magic_block.create_interactive')}
                     </p>
                     <p className="text-sm text-white/50">
-                      Generate quizzes, simulations, charts and more with AI
+                      {t('editor.blocks.magic_block.generate_description')}
                     </p>
                   </div>
                   <button
@@ -303,7 +305,7 @@ function MagicBlockComponent(props: ExtendedNodeViewProps) {
                       src={lrnaiIcon}
                       alt=""
                     />
-                    Generate with AI
+                    {t('editor.blocks.magic_block.generate_with_ai')}
                   </button>
                 </div>
               ) : (
@@ -313,11 +315,11 @@ function MagicBlockComponent(props: ExtendedNodeViewProps) {
                   </div>
                   <div className="space-y-1">
                     <p className="font-semibold text-white/80 flex items-center gap-2 justify-center">
-                      Magic Blocks
+                      {t('editor.blocks.magic_block.title')}
                       <PlanBadge currentPlan={currentPlan} requiredPlan="standard" size="sm" alwaysShow />
                     </p>
                     <p className="text-sm text-white/50">
-                      Upgrade to Standard plan to generate interactive content with AI
+                      {t('editor.blocks.magic_block.upgrade_required')}
                     </p>
                   </div>
                   <div className="mt-2 px-5 py-2.5 bg-white/10 text-white/50 text-sm font-bold rounded-full flex items-center gap-2 cursor-not-allowed">
@@ -327,7 +329,7 @@ function MagicBlockComponent(props: ExtendedNodeViewProps) {
                       src={lrnaiIcon}
                       alt=""
                     />
-                    Generate with AI
+                    {t('editor.blocks.magic_block.generate_with_ai')}
                   </div>
                 </div>
               )}
@@ -369,7 +371,7 @@ function MagicBlockComponent(props: ExtendedNodeViewProps) {
                       "flex items-center gap-1 px-2 py-0.5 cursor-ns-resize text-white/30 hover:text-white/50 transition-colors select-none rounded bg-white/5 hover:bg-white/10",
                       isResizing && "text-white/60 bg-white/15"
                     )}
-                    title="Drag to resize"
+                    title={t('editor.blocks.magic_block.drag_resize')}
                   >
                     <GripHorizontal className="w-3 h-3" />
                     <span className="text-xs font-medium">{height}px</span>
@@ -381,7 +383,7 @@ function MagicBlockComponent(props: ExtendedNodeViewProps) {
                     className="flex space-x-1.5 items-center bg-white/5 cursor-pointer px-4 py-1.5 rounded-xl outline outline-1 outline-neutral-100/10 text-xs font-semibold text-white/40 hover:text-white/60 hover:bg-white/10 hover:outline-neutral-200/40 delay-75 ease-linear transition-all"
                   >
                     <Expand className="w-4 h-4" />
-                    <span>Expand</span>
+                    <span>{t('editor.blocks.common.expand')}</span>
                   </button>
                   {iterationCount < 6 && (
                     <button
@@ -389,7 +391,7 @@ function MagicBlockComponent(props: ExtendedNodeViewProps) {
                       className="flex space-x-1.5 items-center bg-white/5 cursor-pointer px-4 py-1.5 rounded-xl outline outline-1 outline-neutral-100/10 text-xs font-semibold text-white/40 hover:text-white/60 hover:bg-white/10 hover:outline-neutral-200/40 delay-75 ease-linear transition-all"
                     >
                       <Edit3 className="w-4 h-4" />
-                      <span>Edit ({6 - iterationCount} left)</span>
+                      <span>{t('editor.blocks.magic_block.edit_left', { count: 6 - iterationCount })}</span>
                     </button>
                   )}
                 </div>
@@ -420,7 +422,7 @@ function MagicBlockComponent(props: ExtendedNodeViewProps) {
       <Modal
         isDialogOpen={isPreviewModalOpen}
         onOpenChange={setIsPreviewModalOpen}
-        dialogTitle="Interactive Element"
+        dialogTitle={t('editor.blocks.magic_block.interactive_element')}
         minWidth="xl"
         minHeight="lg"
         dialogContent={

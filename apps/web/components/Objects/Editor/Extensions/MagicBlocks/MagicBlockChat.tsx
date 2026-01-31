@@ -4,6 +4,7 @@ import Image from 'next/image'
 import { cn } from '@/lib/utils'
 import type { MagicBlockMessage } from './types'
 import lrnaiIcon from 'public/lrnai_icon.png'
+import { useTranslation } from 'react-i18next'
 
 interface MagicBlockChatProps {
   messages: MagicBlockMessage[]
@@ -13,15 +14,6 @@ interface MagicBlockChatProps {
   onSendMessage: (message: string) => void
 }
 
-const SUGGESTION_CHIPS = [
-  { label: 'Physics simulation', prompt: 'Create an interactive physics simulation showing projectile motion with adjustable angle and velocity' },
-  { label: 'Data chart', prompt: 'Create an interactive bar chart with sample sales data that users can hover over to see values' },
-  { label: 'Quiz game', prompt: 'Create a simple quiz game with 5 multiple choice questions about science' },
-  { label: 'Memory game', prompt: 'Create a card matching memory game with colorful cards' },
-  { label: 'Math calculator', prompt: 'Create a calculator that shows step-by-step solutions for basic equations' },
-  { label: 'Timeline', prompt: 'Create an interactive timeline showing major historical events with expandable details' },
-]
-
 function MagicBlockChat({
   messages,
   iterationCount,
@@ -29,7 +21,17 @@ function MagicBlockChat({
   isLoading,
   onSendMessage,
 }: MagicBlockChatProps) {
+  const { t } = useTranslation()
   const [inputValue, setInputValue] = React.useState('')
+
+  const SUGGESTION_CHIPS = [
+    { label: t('editor.blocks.magic_block.suggestion_physics'), prompt: t('editor.blocks.magic_block.suggestion_physics_prompt') },
+    { label: t('editor.blocks.magic_block.suggestion_chart'), prompt: t('editor.blocks.magic_block.suggestion_chart_prompt') },
+    { label: t('editor.blocks.magic_block.suggestion_quiz'), prompt: t('editor.blocks.magic_block.suggestion_quiz_prompt') },
+    { label: t('editor.blocks.magic_block.suggestion_memory'), prompt: t('editor.blocks.magic_block.suggestion_memory_prompt') },
+    { label: t('editor.blocks.magic_block.suggestion_calculator'), prompt: t('editor.blocks.magic_block.suggestion_calculator_prompt') },
+    { label: t('editor.blocks.magic_block.suggestion_timeline'), prompt: t('editor.blocks.magic_block.suggestion_timeline_prompt') },
+  ]
   const messagesEndRef = React.useRef<HTMLDivElement>(null)
   const inputRef = React.useRef<HTMLTextAreaElement>(null)
 
@@ -78,7 +80,7 @@ function MagicBlockChat({
             src={lrnaiIcon}
             alt="Magic Chat"
           />
-          <span className="font-semibold text-sm text-white/70">Magic Chat</span>
+          <span className="font-semibold text-sm text-white/70">{t('editor.blocks.magic_block.magic_chat')}</span>
         </div>
         <div className={cn(
           "text-xs font-semibold px-3 py-1 rounded-full",
@@ -86,7 +88,7 @@ function MagicBlockChat({
             ? "bg-red-500/20 text-red-300 outline outline-1 outline-red-500/30"
             : "bg-white/5 text-white/40 outline outline-1 outline-neutral-100/10"
         )}>
-          {iterationCount}/{maxIterations} iterations
+          {t('editor.blocks.magic_block.iterations', { count: iterationCount, max: maxIterations })}
         </div>
       </div>
 
@@ -96,7 +98,7 @@ function MagicBlockChat({
         {messages.length === 0 && !isLoading && (
           <div className="space-y-4 pt-4">
             <p className="text-sm text-white/50 text-center">
-              Describe what interactive element you want to create:
+              {t('editor.blocks.magic_block.describe_prompt')}
             </p>
             <div className="flex flex-wrap gap-2 justify-center">
               {SUGGESTION_CHIPS.map((chip) => (
@@ -133,9 +135,9 @@ function MagicBlockChat({
                 <p className="whitespace-pre-wrap">{message.content}</p>
               ) : (
                 <div className="space-y-2">
-                  <p className="text-xs text-white/50 font-medium">AI Generated Content</p>
+                  <p className="text-xs text-white/50 font-medium">{t('editor.blocks.magic_block.ai_generated')}</p>
                   <p className="text-white/60 text-xs">
-                    The interactive element has been generated. Check the preview panel.
+                    {t('editor.blocks.magic_block.check_preview')}
                   </p>
                 </div>
               )}
@@ -149,7 +151,7 @@ function MagicBlockChat({
             <div className="bg-white/5 rounded-2xl rounded-bl-md px-4 py-3 ring-1 ring-inset ring-white/10">
               <div className="flex items-center gap-2">
                 <Loader2 className="w-4 h-4 animate-spin text-purple-400" />
-                <span className="text-sm text-white/50">Creating magic...</span>
+                <span className="text-sm text-white/50">{t('editor.blocks.magic_block.creating_magic')}</span>
               </div>
             </div>
           </div>
@@ -162,7 +164,7 @@ function MagicBlockChat({
       <div className="border-t border-white/5 p-4">
         {isExhausted ? (
           <div className="text-center text-sm text-white/50 py-2">
-            Maximum iterations reached. Save your content or start a new block.
+            {t('editor.blocks.magic_block.max_iterations_reached')}
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="relative">
@@ -173,8 +175,8 @@ function MagicBlockChat({
               onKeyDown={handleKeyDown}
               placeholder={
                 messages.length === 0
-                  ? "Describe what you want to create..."
-                  : "Describe changes or improvements..."
+                  ? t('editor.blocks.magic_block.placeholder_new')
+                  : t('editor.blocks.magic_block.placeholder_edit')
               }
               disabled={isLoading}
               rows={2}
