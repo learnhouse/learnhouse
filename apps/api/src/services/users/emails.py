@@ -30,7 +30,7 @@ def send_password_reset_email(
     organization: OrganizationRead,
     email: EmailStr,
 ):
-    
+
     # send email
     return send_email(
         to=email,
@@ -42,6 +42,45 @@ def send_password_reset_email(
         <p>You have requested to reset your password.</p>
         <p>Here is your reset code: {generated_reset_code}</p>
         <p>Click <a href="https://{organization.slug}.learnhouse.io/reset?orgslug={organization.slug}&email={email}&resetCode={generated_reset_code}">here</a> to reset your password.</p>
+    </body>
+</html>
+""",
+    )
+
+
+def send_email_verification_email(
+    token: str,
+    user: UserRead,
+    organization: OrganizationRead,
+    email: EmailStr,
+):
+    """
+    Send email verification email with verification link.
+
+    Args:
+        token: Verification token
+        user: User receiving the email
+        organization: Organization context
+        email: Email address to send to
+
+    Returns:
+        Boolean indicating if email was sent successfully
+    """
+    verification_url = f"https://{organization.slug}.learnhouse.io/verify-email?orgslug={organization.slug}&token={token}&user={user.user_uuid}&org={organization.org_uuid}"
+
+    return send_email(
+        to=email,
+        subject="Verify your email address",
+        body=f"""
+<html>
+    <body>
+        <p>Hello {user.username},</p>
+        <p>Welcome to LearnHouse! Please verify your email address to complete your registration.</p>
+        <p>Click <a href="{verification_url}">here</a> to verify your email address.</p>
+        <p>Or copy and paste this link into your browser:</p>
+        <p>{verification_url}</p>
+        <p>This link will expire in 24 hours.</p>
+        <p>If you didn't create an account with LearnHouse, you can safely ignore this email.</p>
     </body>
 </html>
 """,

@@ -9,8 +9,8 @@ import Image from 'next/image'
 import * as Form from '@radix-ui/react-form'
 import { useFormik } from 'formik'
 import { getOrgLogoMediaDirectory } from '@services/media/media'
-import React from 'react'
-import { AlertTriangle, UserRoundPlus } from 'lucide-react'
+import React, { useState } from 'react'
+import { AlertTriangle, Lock, Mail, UserRoundPlus } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { signIn } from "next-auth/react"
@@ -18,6 +18,7 @@ import { getUriWithOrg, getUriWithoutOrg } from '@services/config/config'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useTranslation } from 'react-i18next'
 import LanguageSwitcher from '@components/Utils/LanguageSwitcher'
+import { resendVerificationEmail } from '@services/auth/auth'
 
 interface LoginClientProps {
   org: any
@@ -28,6 +29,13 @@ const LoginClient = (props: LoginClientProps) => {
   const [isSubmitting, setIsSubmitting] = React.useState(false)
   const router = useRouter();
   const session = useLHSession() as any;
+
+  // Error state with type information
+  const [error, setError] = useState('')
+  const [errorType, setErrorType] = useState<string | null>(null)
+  const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null)
+  const [isResendingVerification, setIsResendingVerification] = useState(false)
+  const [verificationResent, setVerificationResent] = useState(false)
 
   const validate = (values: any) => {
     const errors: any = {}
@@ -47,7 +55,23 @@ const LoginClient = (props: LoginClientProps) => {
     return errors
   }
 
-  const [error, setError] = React.useState('')
+  const handleResendVerification = async () => {
+    if (!unverifiedEmail || !props.org?.id) return
+
+    setIsResendingVerification(true)
+    try {
+      const res = await resendVerificationEmail(unverifiedEmail, props.org.id)
+      if (res.success) {
+        setVerificationResent(true)
+      } else {
+        setError(res.error || t('auth.resend_verification_failed'))
+      }
+    } catch (err) {
+      setError(t('auth.resend_verification_failed'))
+    } finally {
+      setIsResendingVerification(false)
+    }
+  }
   const formik = useFormik({
     initialValues: {
       email: '',
@@ -58,21 +82,56 @@ const LoginClient = (props: LoginClientProps) => {
     validateOnChange: true,
     onSubmit: async (values, {validateForm, setErrors, setSubmitting}) => {
       setIsSubmitting(true)
+      setError('')
+      setErrorType(null)
+      setUnverifiedEmail(null)
+      setVerificationResent(false)
+
       const errors = await validateForm(values);
       if (Object.keys(errors).length > 0) {
         setErrors(errors);
         setSubmitting(false);
+        setIsSubmitting(false);
         return;
       }
-      
+
       const res = await signIn('credentials', {
         redirect: false,
         email: values.email,
         password: values.password,
         callbackUrl: '/redirect_from_auth'
       });
+
       if (res && res.error) {
-        setError(t('auth.wrong_email_password'));
+        // Try to parse the error message for error codes
+        try {
+          // The error from next-auth might contain our structured error
+          const errorData = JSON.parse(res.error);
+          if (errorData.code) {
+            setErrorType(errorData.code);
+            setError(errorData.message || t('auth.wrong_email_password'));
+            if (errorData.code === 'EMAIL_NOT_VERIFIED' && errorData.email) {
+              setUnverifiedEmail(errorData.email);
+            }
+          } else {
+            setError(t('auth.wrong_email_password'));
+          }
+        } catch {
+          // If parsing fails, check for specific error strings
+          if (res.error.includes('EMAIL_NOT_VERIFIED')) {
+            setErrorType('EMAIL_NOT_VERIFIED');
+            setError(t('auth.email_not_verified_message'));
+            setUnverifiedEmail(values.email);
+          } else if (res.error.includes('ACCOUNT_LOCKED')) {
+            setErrorType('ACCOUNT_LOCKED');
+            setError(t('auth.account_locked_message'));
+          } else if (res.error.includes('RATE_LIMITED')) {
+            setErrorType('RATE_LIMITED');
+            setError(t('auth.rate_limited_message'));
+          } else {
+            setError(t('auth.wrong_email_password'));
+          }
+        }
         setIsSubmitting(false);
       } else {
         await signIn('credentials', {
@@ -137,7 +196,51 @@ const LoginClient = (props: LoginClientProps) => {
       </div>
       <div className="left-login-part bg-white flex flex-row">
         <div className="login-form m-auto w-72">
-          {error && (
+          {error && errorType === 'EMAIL_NOT_VERIFIED' && !verificationResent && (
+            <div className="flex flex-col gap-3 bg-yellow-100 rounded-md text-yellow-900 p-4 transition-all shadow-xs">
+              <div className="flex items-center gap-2">
+                <Mail size={18} />
+                <div className="font-bold text-sm">{t('auth.email_not_verified')}</div>
+              </div>
+              <p className="text-xs">{t('auth.email_not_verified_message')}</p>
+              <button
+                type="button"
+                onClick={handleResendVerification}
+                disabled={isResendingVerification}
+                className="text-sm font-medium text-yellow-800 hover:text-yellow-900 underline"
+              >
+                {isResendingVerification ? t('common.loading') : t('auth.resend_verification_email')}
+              </button>
+            </div>
+          )}
+          {verificationResent && (
+            <div className="flex flex-col gap-2 bg-green-100 rounded-md text-green-900 p-4 transition-all shadow-xs">
+              <div className="flex items-center gap-2">
+                <Mail size={18} />
+                <div className="font-bold text-sm">{t('auth.verification_email_resent')}</div>
+              </div>
+              <p className="text-xs">{t('auth.check_inbox_message')}</p>
+            </div>
+          )}
+          {error && errorType === 'ACCOUNT_LOCKED' && (
+            <div className="flex flex-col gap-2 bg-red-100 rounded-md text-red-900 p-4 transition-all shadow-xs">
+              <div className="flex items-center gap-2">
+                <Lock size={18} />
+                <div className="font-bold text-sm">{t('auth.account_locked')}</div>
+              </div>
+              <p className="text-xs">{error}</p>
+            </div>
+          )}
+          {error && errorType === 'RATE_LIMITED' && (
+            <div className="flex flex-col gap-2 bg-orange-100 rounded-md text-orange-900 p-4 transition-all shadow-xs">
+              <div className="flex items-center gap-2">
+                <AlertTriangle size={18} />
+                <div className="font-bold text-sm">{t('auth.rate_limited')}</div>
+              </div>
+              <p className="text-xs">{error}</p>
+            </div>
+          )}
+          {error && !errorType && (
             <div className="flex justify-center bg-red-200 rounded-md text-red-950 space-x-2 items-center p-4 transition-all shadow-xs">
               <AlertTriangle size={18} />
               <div className="font-bold text-sm">{error}</div>
