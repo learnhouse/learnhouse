@@ -596,6 +596,33 @@
       "start_first": "Start de eerste discussie"
     }
   },
+  "podcasts": {
+    "podcasts": "Podcasts",
+    "browse_description": "Luister naar podcasts van deze organisatie",
+    "new_podcast": "Nieuwe Podcast",
+    "search_placeholder": "Podcasts zoeken...",
+    "no_podcasts": "Nog geen podcasts",
+    "no_podcasts_description": "Er zijn momenteel geen podcasts beschikbaar",
+    "no_search_results": "Geen podcasts gevonden",
+    "try_different_search": "Probeer een andere zoekterm",
+    "episodes": "Afleveringen",
+    "no_episodes": "Nog geen afleveringen",
+    "hosted_by": "Gepresenteerd door",
+    "tags": "Tags",
+    "manage_podcast": "Podcast beheren",
+    "published": "Gepubliceerd",
+    "unpublished": "Niet gepubliceerd",
+    "public": "Openbaar",
+    "private": "Privé",
+    "listen_now": "Nu luisteren",
+    "delete_podcast": "Podcast verwijderen",
+    "delete_podcast_title": "Podcast verwijderen?",
+    "delete_podcast_confirm": "Weet je zeker dat je deze podcast wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt en alle afleveringen worden verwijderd.",
+    "deleting_podcast": "Podcast verwijderen...",
+    "podcast_deleted_success": "Podcast succesvol verwijderd",
+    "podcast_deleted_error": "Kan podcast niet verwijderen",
+    "edit_content": "Inhoud bewerken"
+  },
   "collections": {
     "collections": "Collecties",
     "no_collections": "Nog geen collecties",

@@ -10,6 +10,8 @@ from src.routers.courses import chapters, collections, courses, assignments, cer
 from src.routers.communities import communities as communities_router_module
 from src.routers.communities import discussions as discussions_router_module
 from src.routers.courses.activities import activities, blocks
+from src.routers.podcasts import podcasts as podcasts_router_module
+from src.routers.podcasts import episodes as episodes_router_module
 from src.core.ee_hooks import register_ee_routers
 from src.services.dev.dev import isDevModeEnabledOrRaise
 from src.routers.utils import router as utils_router
@@ -92,6 +94,16 @@ v1_router.include_router(
     discussions_router_module.router,
     tags=["discussions"],
     dependencies=[Depends(require_plan_for_community("standard", "Communities"))]
+)
+v1_router.include_router(
+    podcasts_router_module.router,
+    prefix="/podcasts",
+    tags=["podcasts"]
+)
+v1_router.include_router(
+    episodes_router_module.router,
+    prefix="/podcasts",
+    tags=["podcasts", "episodes"]
 )
 v1_router.include_router(
     certifications.router,
