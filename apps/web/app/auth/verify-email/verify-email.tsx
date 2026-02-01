@@ -5,7 +5,7 @@ import learnhouseIcon from 'public/learnhouse_bigicon_1.png'
 import { getOrgLogoMediaDirectory } from '@services/media/media'
 import { AlertTriangle, CheckCircle, Loader2 } from 'lucide-react'
 import Link from 'next/link'
-import { getUriWithOrg, getUriWithoutOrg } from '@services/config/config'
+import { getUriWithOrg } from '@services/config/config'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useSearchParams } from 'next/navigation'
 import { verifyEmail } from '@services/auth/auth'
@@ -121,7 +121,7 @@ function VerifyEmailClient() {
                                 {t('auth.verification_trouble')}
                             </p>
                             <Link
-                                href={getUriWithoutOrg('/login?orgslug=' + org?.slug)}
+                                href="/login"
                                 className="text-blue-600 hover:text-blue-800 font-medium"
                             >
                                 {t('auth.back_to_login')}
@@ -137,7 +137,7 @@ function VerifyEmailClient() {
                                 <div className="text-sm text-green-600">{t('auth.email_verified_message')}</div>
                             </div>
                             <Link
-                                href={getUriWithoutOrg('/login?orgslug=' + org?.slug)}
+                                href="/login"
                                 className="w-full bg-black text-white font-bold text-center p-3 rounded-md shadow-md hover:bg-gray-800 transition-colors"
                             >
                                 {t('auth.proceed_to_login')}

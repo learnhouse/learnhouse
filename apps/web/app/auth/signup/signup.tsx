@@ -3,7 +3,7 @@ import learnhouseIcon from 'public/learnhouse_bigicon_1.png'
 import Image from 'next/image'
 import { getOrgLogoMediaDirectory } from '@services/media/media'
 import Link from 'next/link'
-import { getUriWithOrg, getUriWithoutOrg } from '@services/config/config'
+import { getUriWithOrg } from '@services/config/config'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import React, { useEffect } from 'react'
 import { MailWarning, Ticket, UserPlus } from 'lucide-react'
@@ -199,7 +199,7 @@ const NoTokenScreen = (props: any) => {
         t('auth.invite_code_valid')
       )
       setTimeout(() => {
-        router.push(getUriWithoutOrg(`/signup?inviteCode=${inviteCode}&orgslug=${org.slug}`))
+        router.push(`/signup?inviteCode=${inviteCode}`)
       }, 2000)
     } else {
       toast.error(t('auth.invite_code_invalid'))
