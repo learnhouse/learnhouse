@@ -14,6 +14,7 @@ import Link from 'next/link'
 import { signup } from '@services/auth/auth'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { signIn } from 'next-auth/react'
+import { getLEARNHOUSE_TOP_DOMAIN_VAL } from '@services/config/config'
 import { useTranslation } from 'react-i18next'
 import { PasswordStrengthIndicator, validatePasswordStrength } from '@components/Auth/PasswordStrengthIndicator'
 
@@ -96,6 +97,17 @@ function OpenSignUpComponent() {
   })
 
   useEffect(() => { }, [org])
+
+  const handleGoogleSignIn = () => {
+    // Store org context in cookies before OAuth redirect
+    if (org?.slug) {
+      const topDomain = getLEARNHOUSE_TOP_DOMAIN_VAL();
+      const cookieDomain = topDomain === 'localhost' ? '' : `.${topDomain}`;
+      document.cookie = `learnhouse_oauth_orgslug=${org.slug}; path=/; domain=${cookieDomain}`;
+      document.cookie = `learnhouse_oauth_org_id=${org.id}; path=/; domain=${cookieDomain}`;
+    }
+    signIn('google', { callbackUrl: '/redirect_from_auth' });
+  };
 
   return (
     <div className="login-form m-auto w-72">
@@ -213,7 +225,7 @@ function OpenSignUpComponent() {
       </FormLayout>
       <div>
         <div className='flex h-0.5 rounded-2xl bg-slate-100 mt-5 mb-5 mx-10'></div>
-        <button onClick={() => signIn('google')} className="flex justify-center py-3 text-md w-full bg-white text-slate-600 space-x-3 font-semibold text-center p-2 rounded-md shadow-sm hover:cursor-pointer">
+        <button onClick={handleGoogleSignIn} className="flex justify-center py-3 text-md w-full bg-white text-slate-600 space-x-3 font-semibold text-center p-2 rounded-md shadow-sm hover:cursor-pointer">
           <img src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg" alt="" />
           <span>{t('auth.sign_in_with_google')}</span>
         </button>

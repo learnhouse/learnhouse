@@ -87,10 +87,17 @@ export const nextAuthOptions = {
 
       // Sign up with Google
       if (account?.provider == 'google' && user) {
+        // Read org_id from cookie
+        const { cookies } = require('next/headers');
+        const cookieStore = cookies();
+        const orgIdCookie = cookieStore.get('learnhouse_oauth_org_id');
+        const orgId = orgIdCookie?.value ? parseInt(orgIdCookie.value, 10) : undefined;
+
         let unsanitized_req = await loginWithOAuthToken(
           user.email,
           'google',
-          account.access_token
+          account.access_token,
+          orgId
         );
         let userFromOAuth = await getResponseMetadata(unsanitized_req);
         token.user = userFromOAuth.data;

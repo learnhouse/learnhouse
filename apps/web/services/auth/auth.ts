@@ -40,7 +40,8 @@ export async function loginAndGetToken(
 export async function loginWithOAuthToken(
   email: any,
   provider: any,
-  accessToken: string
+  accessToken: string,
+  orgId?: number
 ): Promise<any> {
   // Request Config
 
@@ -63,8 +64,13 @@ export async function loginWithOAuthToken(
     credentials: 'include',
   }
 
+  // Add org_id as query parameter if provided
+  const url = orgId
+    ? `${getAPIUrl()}auth/oauth?org_id=${orgId}`
+    : `${getAPIUrl()}auth/oauth`;
+
   // fetch using await and async
-  const response = await fetch(`${getAPIUrl()}auth/oauth`, requestOptions)
+  const response = await fetch(url, requestOptions)
   return response
 }
 
