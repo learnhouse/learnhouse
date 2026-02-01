@@ -1,19 +1,26 @@
+'use client'
 import { OrgProvider } from '@components/Contexts/OrgContext'
-import OrgNotFound from '@components/Objects/StyledElements/Error/OrgNotFound'
-import { getOrgSlug } from '@services/org/orgResolution'
+import ErrorUI from '@components/Objects/StyledElements/Error/Error'
+import { useSearchParams, usePathname } from 'next/navigation'
 
-interface AuthLayoutProps {
-  children: React.ReactNode
-}
 
-export default async function AuthLayout({ children }: AuthLayoutProps) {
-  // Resolve org slug from subdomain or cookie
-  // Token-based resolution is handled by individual pages that need it
-  const orgslug = await getOrgSlug()
+export default function AuthLayout({
+    children,
+}: {
+    children: React.ReactNode
+}) {
+    const searchParams = useSearchParams()
+    const pathname = usePathname()
+    const orgslug = searchParams.get('orgslug')
 
-  if (!orgslug) {
-    return <OrgNotFound />
-  }
+    // SSO callback doesn't need org context upfront - it gets org from state
+    if (pathname?.startsWith('/auth/sso/')) {
+        return <>{children}</>
+    }
 
-  return <OrgProvider orgslug={orgslug}>{children}</OrgProvider>
+    if (orgslug) {
+        return <OrgProvider orgslug={orgslug}>{children}</OrgProvider>
+    } else {
+        return <ErrorUI message='Organization not specified' submessage='Please access this page from an Organization' />
+    }
 }

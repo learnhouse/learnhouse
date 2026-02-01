@@ -171,7 +171,7 @@ export const HeaderProfileBox = ({ primaryColor = '' }: { primaryColor?: string 
               <DropdownMenuTrigger asChild>
                 <button className={`cursor-pointer flex items-center space-x-3 rounded-lg p-2 transition-colors ${primaryColor ? 'hover:bg-white/10' : 'hover:bg-gray-50'}`}>
                   <UserAvatar border="border-2" rounded="rounded-lg" width={30} shadow={primaryColor ? '' : undefined} />
-                  <div className="flex flex-col space-y-0">
+                  <div className="flex flex-col items-start space-y-0">
                     <div className="flex items-center space-x-2">
                       <p className={`text-sm font-semibold capitalize ${primaryColor ? 'text-white' : 'text-gray-900'}`}>{session.data.user.username}</p>
                       {userRoleInfo && userRoleInfo.name !== 'USER' && (

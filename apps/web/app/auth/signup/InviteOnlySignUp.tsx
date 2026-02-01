@@ -106,9 +106,10 @@ function InviteOnlySignUpComponent(props: InviteOnlySignUpProps) {
     // Store org context in cookies before OAuth redirect
     if (org?.slug) {
       const topDomain = getLEARNHOUSE_TOP_DOMAIN_VAL();
-      const cookieDomain = topDomain === 'localhost' ? '' : `.${topDomain}`;
-      document.cookie = `learnhouse_oauth_orgslug=${org.slug}; path=/; domain=${cookieDomain}`;
-      document.cookie = `learnhouse_oauth_org_id=${org.id}; path=/; domain=${cookieDomain}`;
+      const baseAttributes = '; path=/; secure; SameSite=Lax';
+      const domainAttr = topDomain === 'localhost' ? '' : `; domain=.${topDomain}`;
+      document.cookie = `learnhouse_oauth_orgslug=${org.slug}${baseAttributes}${domainAttr}`;
+      document.cookie = `learnhouse_oauth_org_id=${org.id}${baseAttributes}${domainAttr}`;
     }
     signIn('google', { callbackUrl: '/redirect_from_auth' });
   };

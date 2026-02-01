@@ -24,6 +24,7 @@ export const FEATURE_PLAN_REQUIREMENTS: Record<string, PlanLevel> = {
   api_tokens: 'pro',
   scorm: 'enterprise',
   audit_logs: 'enterprise',
+  sso: 'enterprise',
 }
 
 // Plan-based resource limits (0 = unlimited)

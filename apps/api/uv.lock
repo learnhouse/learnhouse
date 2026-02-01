@@ -487,6 +487,7 @@ dependencies = [
     { name = "tiktoken" },
     { name = "typer" },
     { name = "uvicorn" },
+    { name = "workos" },
 ]
 
 [package.metadata]
@@ -522,6 +523,7 @@ requires-dist = [
     { name = "tiktoken", specifier = ">=0.7.0" },
     { name = "typer", specifier = ">=0.12.5" },
     { name = "uvicorn", specifier = "==0.30.1" },
+    { name = "workos", specifier = ">=5.0.0" },
 ]
 
 [[package]]
@@ -1302,6 +1304,21 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/ff/83/de1f7709376dc3ca9b7eeb4b9a07b4526b14876b6d372a4dc62312bebee0/websockets-15.0.1-cp312-cp312-win32.whl", hash = "sha256:c338ffa0520bdb12fbc527265235639fb76e7bc7faafbb93f6ba80d9c06578a9", size = 176395, upload-time = "2025-03-05T20:02:33.017Z" },
     { url = "https://files.pythonhosted.org/packages/7d/71/abf2ebc3bbfa40f391ce1428c7168fb20582d0ff57019b69ea20fa698043/websockets-15.0.1-cp312-cp312-win_amd64.whl", hash = "sha256:fcd5cf9e305d7b8338754470cf69cf81f420459dbae8a3b40cee57417f4614a7", size = 176841, upload-time = "2025-03-05T20:02:34.498Z" },
     { url = "https://files.pythonhosted.org/packages/fa/a8/5b41e0da817d64113292ab1f8247140aac61cbf6cfd085d6a0fa77f4984f/websockets-15.0.1-py3-none-any.whl", hash = "sha256:f7a866fbc1e97b5c617ee4116daaa09b722101d4a3c170c787450ba409f9736f", size = 169743, upload-time = "2025-03-05T20:03:39.41Z" },
+]
+
+[[package]]
+name = "workos"
+version = "5.40.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "cryptography" },
+    { name = "httpx" },
+    { name = "pydantic" },
+    { name = "pyjwt" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/28/e6/408af94b29e7da5f5cfa19edde4c5da62a4df2207eb5267df18542c654a3/workos-5.40.0.tar.gz", hash = "sha256:64a687f2cd622ebbebc93bc7220694d4b73f3154ca25ea59e40057169935d815", size = 55663, upload-time = "2026-01-22T20:07:40.114Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/5c/58/fb725bb32ae21f7542870a21141734301722b44ae5875dd1b723200d9fe5/workos-5.40.0-py3-none-any.whl", hash = "sha256:2160386bce46c0f65074b747c9158b1f6e3d8f543c3a08c53ef4160d105ee2b3", size = 103444, upload-time = "2026-01-22T20:07:41.051Z" },
 ]
 
 [[package]]
