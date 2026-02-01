@@ -11,7 +11,7 @@ import * as Form from '@radix-ui/react-form'
 import { getOrgLogoMediaDirectory } from '@services/media/media'
 import { AlertTriangle, Info } from 'lucide-react'
 import Link from 'next/link'
-import { getUriWithOrg, getUriWithoutOrg } from '@services/config/config'
+import { getUriWithOrg } from '@services/config/config'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useFormik } from 'formik'
@@ -150,7 +150,7 @@ function ResetPasswordClient() {
                                 <Info size={18} />
                                 <div className="font-bold text-sm">{message}</div>
                             </div>
-                            <Link href={getUriWithoutOrg('/login?orgslug=' + org.slug)} className="text-center text-sm text-blue-600 hover:text-blue-800">
+                            <Link href="/login" className="text-center text-sm text-blue-600 hover:text-blue-800">
                                 {t('auth.login_again_message')}
                             </Link>
                         </div>

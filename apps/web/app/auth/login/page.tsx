@@ -1,33 +1,41 @@
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
+import { getOrgSlug } from '@services/org/orgResolution'
 import LoginClient from './login'
 import { Metadata } from 'next'
+import OrgNotFound from '@components/Objects/StyledElements/Error/OrgNotFound'
 
-type MetadataProps = {
-  params: Promise<{ orgslug: string }>
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
-}
+export async function generateMetadata(): Promise<Metadata> {
+  const orgslug = await getOrgSlug()
 
-export async function generateMetadata(params: MetadataProps): Promise<Metadata> {
-  const orgslug = (await params.searchParams).orgslug
-  
-  //const orgslug = params.orgslug
-  // Get Org context information
+  if (!orgslug) {
+    return { title: 'Login — LearnHouse' }
+  }
+
   const org = await getOrganizationContextInfo(orgslug, {
-    revalidate: 0,
+    revalidate: 60,
     tags: ['organizations'],
   })
 
   return {
-    title: 'Login' + ` — ${org.name}`,
+    title: 'Login' + ` — ${org?.name || 'LearnHouse'}`,
   }
 }
 
-const Login = async (params: MetadataProps) => {
-  const orgslug = (await params.searchParams).orgslug
+const Login = async () => {
+  const orgslug = await getOrgSlug()
+
+  if (!orgslug) {
+    return <OrgNotFound />
+  }
+
   const org = await getOrganizationContextInfo(orgslug, {
-    revalidate: 0,
+    revalidate: 60,
     tags: ['organizations'],
   })
+
+  if (!org) {
+    return <OrgNotFound />
+  }
 
   return (
     <div>
