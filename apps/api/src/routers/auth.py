@@ -2,8 +2,8 @@ from datetime import timedelta, datetime, timezone
 from typing import Literal, Optional
 from fastapi import Depends, APIRouter, HTTPException, Response, status, Request, Form
 from pydantic import BaseModel, EmailStr
-from sqlmodel import Session
-from src.db.users import AnonymousUser, UserRead
+from sqlmodel import Session, select
+from src.db.users import AnonymousUser, User, UserRead
 from src.core.events.database import get_db_session
 from config.config import get_learnhouse_config
 from src.security.auth import (
@@ -19,6 +19,21 @@ from src.security.auth import (
 )
 from src.services.auth.utils import signWithGoogle
 from src.services.dev.dev import isDevModeEnabled
+from src.services.security.rate_limiting import (
+    check_login_rate_limit,
+    get_client_ip,
+)
+from src.services.security.account_lockout import (
+    check_account_locked,
+    record_failed_login,
+    reset_failed_attempts,
+    update_login_info,
+    format_lockout_message,
+)
+from src.services.users.email_verification import (
+    verify_email_token,
+    resend_verification_email,
+)
 
 
 def get_token_expiry_ms() -> Optional[int]:
@@ -107,16 +122,80 @@ async def login(
     password: str = Form(...),
     db_session: Session = Depends(get_db_session),
 ):
+    # Step 1: Check rate limit (IP-based)
+    is_allowed, retry_after = check_login_rate_limit(request)
+    if not is_allowed:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail={
+                "code": "RATE_LIMITED",
+                "message": f"Too many login attempts. Please try again in {retry_after // 60} minutes.",
+                "retry_after": retry_after,
+            },
+        )
+
+    # Step 2: Get user to check lockout status
+    statement = select(User).where(User.email == username)
+    user_record = db_session.exec(statement).first()
+
+    if user_record:
+        # Step 3: Check if account is locked
+        is_locked, remaining_seconds = check_account_locked(user_record)
+        if is_locked and remaining_seconds:
+            raise HTTPException(
+                status_code=status.HTTP_423_LOCKED,
+                detail={
+                    "code": "ACCOUNT_LOCKED",
+                    "message": format_lockout_message(remaining_seconds),
+                    "retry_after": remaining_seconds,
+                },
+            )
+
+    # Step 4: Authenticate user
     user = await authenticate_user(
         request, username, password, db_session
     )
+
     if not user:
+        # Record failed attempt if user exists
+        if user_record:
+            is_now_locked, lockout_duration = record_failed_login(user_record, db_session)
+            if is_now_locked:
+                raise HTTPException(
+                    status_code=status.HTTP_423_LOCKED,
+                    detail={
+                        "code": "ACCOUNT_LOCKED",
+                        "message": f"Account locked due to too many failed attempts. Please try again in {lockout_duration // 60} minutes.",
+                        "retry_after": lockout_duration,
+                    },
+                )
+
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect Email or password",
+            detail={
+                "code": "INVALID_CREDENTIALS",
+                "message": "Incorrect Email or password",
+            },
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+    # Step 5: Check email verification (required for login)
+    if not user.email_verified:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "code": "EMAIL_NOT_VERIFIED",
+                "message": "Please verify your email address before logging in. Check your inbox for the verification email.",
+                "email": user.email,
+            },
+        )
+
+    # Step 6: Reset failed attempts and update login info
+    reset_failed_attempts(user, db_session)
+    client_ip = get_client_ip(request)
+    update_login_info(user, client_ip, db_session)
+
+    # Step 7: Issue tokens
     access_token = create_access_token(
         data={"sub": username},
         expires_delta=JWT_ACCESS_TOKEN_EXPIRES
@@ -205,3 +284,51 @@ def logout(request: Request, response: Response):
 
     unset_auth_cookies(response)
     return {"msg": "Successfully logout"}
+
+
+class VerifyEmailRequest(BaseModel):
+    token: str
+    user_uuid: str
+    org_uuid: str
+
+
+@router.post("/verify-email")
+async def api_verify_email(
+    request: Request,
+    body: VerifyEmailRequest,
+    db_session: Session = Depends(get_db_session),
+):
+    """
+    Verify user email with token.
+    """
+    result = await verify_email_token(
+        request=request,
+        db_session=db_session,
+        token=body.token,
+        user_uuid=body.user_uuid,
+        org_uuid=body.org_uuid,
+    )
+    return {"message": result}
+
+
+class ResendVerificationRequest(BaseModel):
+    email: EmailStr
+    org_id: int
+
+
+@router.post("/resend-verification")
+async def api_resend_verification_email(
+    request: Request,
+    body: ResendVerificationRequest,
+    db_session: Session = Depends(get_db_session),
+):
+    """
+    Resend verification email (rate limited).
+    """
+    result = await resend_verification_email(
+        request=request,
+        db_session=db_session,
+        email=body.email,
+        org_id=body.org_id,
+    )
+    return {"message": result}

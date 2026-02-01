@@ -241,3 +241,77 @@ export async function signUpWithInviteCode(
 
   return res
 }
+
+// Email Verification
+
+export async function verifyEmail(
+  token: string,
+  userUuid: string,
+  orgUuid: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const HeadersConfig = new Headers({ 'Content-Type': 'application/json' })
+
+    const requestOptions: RequestInit = {
+      method: 'POST',
+      headers: HeadersConfig,
+      body: JSON.stringify({
+        token,
+        user_uuid: userUuid,
+        org_uuid: orgUuid,
+      }),
+    }
+
+    const response = await fetch(`${getAPIUrl()}auth/verify-email`, requestOptions)
+    const data = await response.json()
+
+    if (response.ok) {
+      return { success: true }
+    } else {
+      return {
+        success: false,
+        error: data.detail || 'Verification failed',
+      }
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: 'An error occurred during verification',
+    }
+  }
+}
+
+export async function resendVerificationEmail(
+  email: string,
+  orgId: number
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const HeadersConfig = new Headers({ 'Content-Type': 'application/json' })
+
+    const requestOptions: RequestInit = {
+      method: 'POST',
+      headers: HeadersConfig,
+      body: JSON.stringify({
+        email,
+        org_id: orgId,
+      }),
+    }
+
+    const response = await fetch(`${getAPIUrl()}auth/resend-verification`, requestOptions)
+    const data = await response.json()
+
+    if (response.ok) {
+      return { success: true }
+    } else {
+      return {
+        success: false,
+        error: data.detail || 'Failed to resend verification email',
+      }
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: 'An error occurred',
+    }
+  }
+}

@@ -9,12 +9,13 @@ import FormLayout, {
   Textarea,
 } from '@components/Objects/StyledElements/Form/Form'
 import * as Form from '@radix-ui/react-form'
-import { AlertTriangle, Check, User } from 'lucide-react'
+import { AlertTriangle, Check, Mail, User } from 'lucide-react'
 import Link from 'next/link'
 import { signUpWithInviteCode } from '@services/auth/auth'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { signIn } from 'next-auth/react'
 import { useTranslation } from 'react-i18next'
+import { PasswordStrengthIndicator, validatePasswordStrength } from '@components/Auth/PasswordStrengthIndicator'
 
 const validate = (values: any, t: any) => {
   const errors: any = {}
@@ -27,8 +28,11 @@ const validate = (values: any, t: any) => {
 
   if (!values.password) {
     errors.password = t('validation.required')
-  } else if (values.password.length < 8) {
-    errors.password = t('validation.password_min_length')
+  } else {
+    const passwordValidation = validatePasswordStrength(values.password)
+    if (!passwordValidation.isValid) {
+      errors.password = t('auth.password_requirements_not_met')
+    }
   }
 
   if (!values.username) {
@@ -106,11 +110,14 @@ function InviteOnlySignUpComponent(props: InviteOnlySignUpProps) {
         </div>
       )}
       {message && (
-        <div className="flex flex-col space-y-4 justify-center bg-green-200 rounded-md text-green-950 space-x-2 items-center p-4 transition-all shadow-xs">
-          <div className="flex space-x-2">
-            <Check size={18} />
-            <div className="font-bold text-sm">{message}</div>
+        <div className="flex flex-col space-y-4 justify-center bg-green-200 rounded-md text-green-950 items-center p-4 transition-all shadow-xs">
+          <div className="flex space-x-2 items-center">
+            <Mail size={18} />
+            <div className="font-bold text-sm">{t('auth.check_email_for_verification')}</div>
           </div>
+          <p className="text-xs text-center text-green-800">
+            {t('auth.verification_email_sent_message')}
+          </p>
           <hr className="border-green-900/20 800 w-40 border" />
           <Link className="flex space-x-2 items-center" href={
             `/login?orgslug=${org?.slug}`
@@ -170,6 +177,7 @@ function InviteOnlySignUpComponent(props: InviteOnlySignUpProps) {
               required
             />
           </Form.Control>
+          <PasswordStrengthIndicator password={formik.values.password} />
         </FormField>
         {/* for username  */}
         <FormField name="username">
