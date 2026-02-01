@@ -54,7 +54,7 @@ LEARNHOUSE_IS_AI_ENABLED=false
 | :--- | :--- | :--- |
 | `NEXT_PUBLIC_LEARNHOUSE_API_URL` | URL of the LearnHouse API | `http://localhost:8000/api/v1/` |
 | `NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL` | Base URL for the backend | `http://localhost:8000/` |
-| `NEXT_PUBLIC_LEARNHOUSE_DOMAIN` | Base domain for the frontend | `localhost` |
+| `NEXT_PUBLIC_LEARNHOUSE_DOMAIN` | Base domain for the frontend | `localhost:3000` |
 | `NEXT_PUBLIC_LEARNHOUSE_HTTPS` | Use HTTPS for links | `false` |
 | `NEXT_PUBLIC_LEARNHOUSE_MULTI_ORG` | Enable multi-organization mode | `false` |
 | `NEXT_PUBLIC_LEARNHOUSE_DEFAULT_ORG` | Default organization slug | `default` |
@@ -63,7 +63,7 @@ LEARNHOUSE_IS_AI_ENABLED=false
 ```env
 NEXT_PUBLIC_LEARNHOUSE_API_URL=http://localhost:8000/api/v1/
 NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL=http://localhost:8000/
-NEXT_PUBLIC_LEARNHOUSE_DOMAIN=localhost
+NEXT_PUBLIC_LEARNHOUSE_DOMAIN=localhost:3000
 NEXT_PUBLIC_LEARNHOUSE_HTTPS=false
 NEXT_PUBLIC_LEARNHOUSE_MULTI_ORG=false
 NEXT_PUBLIC_LEARNHOUSE_DEFAULT_ORG=default
