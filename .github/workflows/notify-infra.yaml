@@ -3,8 +3,10 @@ name: Notify Infrastructure
 on:
   push:
     branches:
-      - prod
+      - main
       - dev
+    tags:
+      - 'v*'
   pull_request:
     types: [opened, synchronize, reopened, closed]
 
