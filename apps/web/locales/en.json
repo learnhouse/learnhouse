@@ -96,6 +96,10 @@
         "seo": {
           "title": "Standard Feature",
           "description": "SEO optimization tools are available only to organizations on our Standard plan or higher. Upgrade to customize search engine appearance, social sharing previews, and structured data for your courses."
+        },
+        "sso": {
+          "title": "Enterprise Feature",
+          "description": "Single Sign-On (SSO) is a premium feature available only to organizations on our Enterprise plan. Upgrade to enable secure authentication through your organization's identity provider."
         }
       }
     },
@@ -204,7 +208,32 @@
     "password_req_uppercase": "At least one uppercase letter (A-Z)",
     "password_req_lowercase": "At least one lowercase letter (a-z)",
     "password_req_number": "At least one number (0-9)",
-    "password_req_special": "At least one special character (!@#$%...)"
+    "password_req_special": "At least one special character (!@#$%...)",
+    "sign_in_with_sso": "Sign in with SSO",
+    "sso_error": "SSO authentication failed. Please try again.",
+    "sso_callback": {
+      "missing_params": "Invalid SSO callback. Missing required parameters.",
+      "error": "SSO authentication failed. Please try again.",
+      "authenticating": "Authenticating...",
+      "please_wait": "Please wait while we verify your identity",
+      "auth_failed": "Authentication Failed",
+      "try_again": "Try Again",
+      "go_home": "Go to Home",
+      "success": "Authentication Successful",
+      "redirecting": "Redirecting you to the application...",
+      "show_details": "Show technical details",
+      "hide_details": "Hide technical details",
+      "copy_details": "Copy to clipboard",
+      "copied": "Copied!",
+      "provider": "Provider",
+      "error_code": "Error code",
+      "tips": {
+        "access_denied": "If you declined the login request by mistake, try again and accept the permissions.",
+        "invalid_state": "Your session may have expired. Please try logging in again.",
+        "domain_not_allowed": "Contact your organization administrator to verify your email domain is allowed.",
+        "server_error": "The identity provider is experiencing issues. Please try again later."
+      }
+    }
   },
   "validation": {
     "required": "Required",
@@ -1225,6 +1254,7 @@
           "branding": "Branding",
           "ai": "AI",
           "api": "API Access",
+          "sso": "SSO",
           "features": "Features",
           "other": "Other"
         },
@@ -1256,6 +1286,10 @@
           "features": {
             "title": "Features",
             "subtitle": "Enable or disable features for your organization"
+          },
+          "sso": {
+            "title": "Single Sign-On",
+            "subtitle": "Configure SSO for your organization"
           }
         },
         "name": "Organization Name",
@@ -1398,6 +1432,45 @@
           "save_success": "AI settings updated successfully",
           "save_error": "Failed to update AI settings"
         }
+      },
+      "sso": {
+        "title": "Single Sign-On (SSO)",
+        "subtitle": "Configure enterprise SSO for your organization",
+        "status_enabled": "Enabled",
+        "status_disabled": "Disabled",
+        "provider": "SSO Provider",
+        "select_provider": "Select a provider",
+        "not_configured": "Not configured",
+        "workos_info": "WorkOS provides enterprise SSO with support for SAML and OIDC identity providers.",
+        "workos_org_id": "WorkOS Organization ID",
+        "workos_org_id_help": "This ID is automatically generated when you configure SSO through the setup portal.",
+        "open_setup_portal": "Configure Identity Provider",
+        "oidc_info": "Connect directly to any OpenID Connect compatible identity provider (Azure AD, Okta, Google Workspace, Keycloak).",
+        "oidc_issuer_url": "Issuer URL",
+        "oidc_issuer_url_help": "The OIDC issuer URL. Endpoints will be auto-discovered from /.well-known/openid-configuration.",
+        "oidc_client_id": "Client ID",
+        "oidc_client_secret": "Client Secret",
+        "oidc_client_secret_help": "Keep this secret secure. It's used to authenticate with your identity provider.",
+        "oidc_scopes": "Scopes",
+        "oidc_scopes_help": "OAuth scopes to request (space-separated). Default: openid email profile",
+        "enable_sso": "Enable SSO",
+        "enable_sso_desc": "Allow users to authenticate using your organization's identity provider.",
+        "allowed_domains": "Allowed Email Domains",
+        "allowed_domains_help": "Comma-separated list of email domains allowed to login via SSO (e.g., example.com, company.org). Leave empty to allow all domains.",
+        "auto_provision": "Auto-provision Users",
+        "auto_provision_desc": "Automatically create user accounts for first-time SSO logins.",
+        "save": "Save Configuration",
+        "saving": "Saving...",
+        "delete": "Delete SSO Configuration",
+        "delete_confirm": "Are you sure you want to delete this SSO configuration? Users will no longer be able to log in via SSO.",
+        "load_error": "Failed to load SSO configuration",
+        "save_success": "SSO configuration saved successfully",
+        "save_error": "Failed to save SSO configuration",
+        "delete_success": "SSO configuration deleted",
+        "delete_error": "Failed to delete SSO configuration",
+        "deleting": "Deleting...",
+        "setup_not_available": "Setup portal is not available. Please configure the provider first.",
+        "setup_error": "Failed to get setup portal URL"
       },
       "features": {
         "title": "Feature Settings",
@@ -1943,7 +2016,8 @@
         "actions": {
           "edit": "Edit",
           "delete": "Delete",
-          "create": "Create a Role"
+          "create": "Create a Role",
+          "view_rights": "View Rights"
         },
         "modals": {
           "create": {
@@ -2069,6 +2143,23 @@
             "title": "Delete Role ?",
             "message": "This action cannot be undone. All users with this role will lose their permissions. Are you sure you want to delete this role?",
             "button": "Delete Role"
+          },
+          "view_rights": {
+            "title": "{{roleName}} - Permissions",
+            "description": "View all permissions assigned to this role"
+          }
+        },
+        "rights": {
+          "resources": {
+            "courses": "Courses",
+            "users": "Users",
+            "usergroups": "User Groups",
+            "collections": "Collections",
+            "organizations": "Organizations",
+            "coursechapters": "Course Chapters",
+            "activities": "Activities",
+            "roles": "Roles",
+            "dashboard": "Dashboard"
           }
         },
         "toasts": {

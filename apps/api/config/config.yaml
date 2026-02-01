@@ -12,8 +12,8 @@ security:
   auth_jwt_secret_key: secret
 
 hosting_config:
-  domain: learnhouse.app
-  ssl: true
+  domain: localhost:3000
+  ssl: false
   port: 1338
   allowed_origins:
     - http://localhost:3000

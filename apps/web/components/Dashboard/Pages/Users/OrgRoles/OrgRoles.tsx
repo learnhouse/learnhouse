@@ -10,7 +10,7 @@ import { getAPIUrl } from '@services/config/config'
 import { deleteRole } from '@services/roles/roles'
 import { swrFetcher } from '@services/utils/ts/requests'
 import { PlanLevel, planMeetsRequirement } from '@services/plans/plans'
-import { Pencil, Shield, X, Globe, Lock } from 'lucide-react'
+import { Pencil, Shield, X, Globe, Lock, Eye, Check, XCircle } from 'lucide-react'
 import React from 'react'
 import toast from 'react-hot-toast'
 import useSWR, { mutate } from 'swr'
@@ -25,6 +25,7 @@ function OrgRoles() {
     const canCreateRoles = planMeetsRequirement(currentPlan, 'pro')
     const [createRoleModal, setCreateRoleModal] = React.useState(false)
     const [editRoleModal, setEditRoleModal] = React.useState(false)
+    const [viewRightsModal, setViewRightsModal] = React.useState(false)
     const [selectedRole, setSelectedRole] = React.useState(null) as any
 
     const { data: roles } = useSWR(
@@ -47,6 +48,77 @@ function OrgRoles() {
     const handleEditRoleModal = (role: any) => {
         setSelectedRole(role)
         setEditRoleModal(!editRoleModal)
+    }
+
+    const handleViewRightsModal = (role: any) => {
+        setSelectedRole(role)
+        setViewRightsModal(!viewRightsModal)
+    }
+
+    const formatActionName = (action: string) => {
+        return action
+            .replace('action_', '')
+            .split('_')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ')
+    }
+
+    const formatResourceName = (resource: string) => {
+        const resourceNames: { [key: string]: string } = {
+            courses: t('dashboard.users.roles.rights.resources.courses'),
+            users: t('dashboard.users.roles.rights.resources.users'),
+            usergroups: t('dashboard.users.roles.rights.resources.usergroups'),
+            collections: t('dashboard.users.roles.rights.resources.collections'),
+            organizations: t('dashboard.users.roles.rights.resources.organizations'),
+            coursechapters: t('dashboard.users.roles.rights.resources.coursechapters'),
+            activities: t('dashboard.users.roles.rights.resources.activities'),
+            roles: t('dashboard.users.roles.rights.resources.roles'),
+            dashboard: t('dashboard.users.roles.rights.resources.dashboard'),
+        }
+        return resourceNames[resource] || resource.charAt(0).toUpperCase() + resource.slice(1)
+    }
+
+    const RightsDetailView = ({ rights }: { rights: any }) => {
+        if (!rights || Object.keys(rights).length === 0) {
+            return (
+                <div className="text-center py-8 text-gray-500">
+                    {t('dashboard.users.roles.no_permissions')}
+                </div>
+            )
+        }
+
+        return (
+            <div className="space-y-4 max-h-[60vh] overflow-y-auto">
+                {Object.entries(rights).map(([resource, actions]: [string, any]) => (
+                    <div key={resource} className="border border-gray-200 rounded-lg overflow-hidden">
+                        <div className="bg-gray-50 px-4 py-2 font-medium text-gray-700 border-b border-gray-200">
+                            {formatResourceName(resource)}
+                        </div>
+                        <div className="p-3">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                {Object.entries(actions).map(([action, enabled]: [string, any]) => (
+                                    <div
+                                        key={action}
+                                        className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm ${
+                                            enabled
+                                                ? 'bg-green-50 text-green-700'
+                                                : 'bg-gray-50 text-gray-400'
+                                        }`}
+                                    >
+                                        {enabled ? (
+                                            <Check className="w-4 h-4 text-green-600" />
+                                        ) : (
+                                            <XCircle className="w-4 h-4 text-gray-300" />
+                                        )}
+                                        <span>{formatActionName(action)}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        )
     }
 
     const getRightsSummary = (rights: any) => {
@@ -121,6 +193,28 @@ function OrgRoles() {
                                 </div>
                                 <p className="text-gray-600 text-sm">{role.description || t('dashboard.users.roles.no_description')}</p>
                                 <div className="flex space-x-2">
+                                    <Modal
+                                        isDialogOpen={
+                                            viewRightsModal &&
+                                            selectedRole?.id === role.id
+                                        }
+                                        onOpenChange={() =>
+                                            handleViewRightsModal(role)
+                                        }
+                                        minHeight="md"
+                                        minWidth='lg'
+                                        dialogContent={
+                                            <RightsDetailView rights={role.rights} />
+                                        }
+                                        dialogTitle={t('dashboard.users.roles.modals.view_rights.title', { roleName: role.name })}
+                                        dialogDescription={t('dashboard.users.roles.modals.view_rights.description')}
+                                        dialogTrigger={
+                                            <button className="flex-1 flex justify-center space-x-2 hover:cursor-pointer p-2 bg-blue-600 rounded-md font-bold items-center text-sm text-white hover:bg-blue-700 transition-colors shadow-sm">
+                                                <Eye className="w-4 h-4" />
+                                                <span>{t('dashboard.users.roles.actions.view_rights')}</span>
+                                            </button>
+                                        }
+                                    />
                                     {!isSystem ? (
                                         <>
                                             <Modal
@@ -209,6 +303,28 @@ function OrgRoles() {
                                             </td>
                                             <td className="py-3 px-4">
                                                 <div className="flex space-x-2">
+                                                    <Modal
+                                                        isDialogOpen={
+                                                            viewRightsModal &&
+                                                            selectedRole?.id === role.id
+                                                        }
+                                                        onOpenChange={() =>
+                                                            handleViewRightsModal(role)
+                                                        }
+                                                        minHeight="md"
+                                                        minWidth='lg'
+                                                        dialogContent={
+                                                            <RightsDetailView rights={role.rights} />
+                                                        }
+                                                        dialogTitle={t('dashboard.users.roles.modals.view_rights.title', { roleName: role.name })}
+                                                        dialogDescription={t('dashboard.users.roles.modals.view_rights.description')}
+                                                        dialogTrigger={
+                                                            <button className="flex space-x-2 hover:cursor-pointer p-1 px-3 bg-blue-600 rounded-md font-bold items-center text-sm text-white hover:bg-blue-700 transition-colors shadow-sm">
+                                                                <Eye className="w-4 h-4" />
+                                                                <span>{t('dashboard.users.roles.actions.view_rights')}</span>
+                                                            </button>
+                                                        }
+                                                    />
                                                     {!isSystem ? (
                                                         <>
                                                             <Modal
