@@ -596,6 +596,33 @@
       "start_first": "最初のディスカッションを始める"
     }
   },
+  "podcasts": {
+    "podcasts": "ポッドキャスト",
+    "browse_description": "この組織のポッドキャストを聴く",
+    "new_podcast": "新しいポッドキャスト",
+    "search_placeholder": "ポッドキャストを検索...",
+    "no_podcasts": "ポッドキャストがありません",
+    "no_podcasts_description": "現在利用可能なポッドキャストはありません",
+    "no_search_results": "ポッドキャストが見つかりません",
+    "try_different_search": "別の検索語をお試しください",
+    "episodes": "エピソード",
+    "no_episodes": "エピソードがありません",
+    "hosted_by": "ホスト",
+    "tags": "タグ",
+    "manage_podcast": "ポッドキャストを管理",
+    "published": "公開中",
+    "unpublished": "未公開",
+    "public": "公開",
+    "private": "非公開",
+    "listen_now": "今すぐ聴く",
+    "delete_podcast": "ポッドキャストを削除",
+    "delete_podcast_title": "ポッドキャストを削除しますか？",
+    "delete_podcast_confirm": "このポッドキャストを削除してもよろしいですか？この操作は取り消せず、すべてのエピソードが削除されます。",
+    "deleting_podcast": "ポッドキャストを削除中...",
+    "podcast_deleted_success": "ポッドキャストが正常に削除されました",
+    "podcast_deleted_error": "ポッドキャストの削除に失敗しました",
+    "edit_content": "コンテンツを編集"
+  },
   "collections": {
     "collections": "コレクション",
     "no_collections": "コレクションがまだありません",

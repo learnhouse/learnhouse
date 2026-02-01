@@ -596,6 +596,33 @@
       "start_first": "发起第一个讨论"
     }
   },
+  "podcasts": {
+    "podcasts": "播客",
+    "browse_description": "收听此组织的播客",
+    "new_podcast": "新播客",
+    "search_placeholder": "搜索播客...",
+    "no_podcasts": "暂无播客",
+    "no_podcasts_description": "目前没有可用的播客",
+    "no_search_results": "未找到播客",
+    "try_different_search": "尝试其他搜索词",
+    "episodes": "剧集",
+    "no_episodes": "暂无剧集",
+    "hosted_by": "主持人",
+    "tags": "标签",
+    "manage_podcast": "管理播客",
+    "published": "已发布",
+    "unpublished": "未发布",
+    "public": "公开",
+    "private": "私密",
+    "listen_now": "立即收听",
+    "delete_podcast": "删除播客",
+    "delete_podcast_title": "删除播客？",
+    "delete_podcast_confirm": "确定要删除此播客吗？此操作无法撤销，所有剧集将被删除。",
+    "deleting_podcast": "正在删除播客...",
+    "podcast_deleted_success": "播客删除成功",
+    "podcast_deleted_error": "播客删除失败",
+    "edit_content": "编辑内容"
+  },
   "collections": {
     "collections": "合集",
     "no_collections": "尚无合集",

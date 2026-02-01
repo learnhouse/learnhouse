@@ -596,6 +596,33 @@
       "start_first": "Bắt đầu thảo luận đầu tiên"
     }
   },
+  "podcasts": {
+    "podcasts": "Podcast",
+    "browse_description": "Nghe podcast từ tổ chức này",
+    "new_podcast": "Podcast Mới",
+    "search_placeholder": "Tìm kiếm podcast...",
+    "no_podcasts": "Chưa có podcast nào",
+    "no_podcasts_description": "Hiện không có podcast nào",
+    "no_search_results": "Không tìm thấy podcast",
+    "try_different_search": "Thử từ khóa tìm kiếm khác",
+    "episodes": "Tập",
+    "no_episodes": "Chưa có tập nào",
+    "hosted_by": "Dẫn chương trình",
+    "tags": "Thẻ",
+    "manage_podcast": "Quản lý Podcast",
+    "published": "Đã xuất bản",
+    "unpublished": "Chưa xuất bản",
+    "public": "Công khai",
+    "private": "Riêng tư",
+    "listen_now": "Nghe ngay",
+    "delete_podcast": "Xóa Podcast",
+    "delete_podcast_title": "Xóa Podcast?",
+    "delete_podcast_confirm": "Bạn có chắc chắn muốn xóa podcast này? Hành động này không thể hoàn tác và tất cả các tập sẽ bị xóa.",
+    "deleting_podcast": "Đang xóa podcast...",
+    "podcast_deleted_success": "Xóa podcast thành công",
+    "podcast_deleted_error": "Xóa podcast thất bại",
+    "edit_content": "Chỉnh sửa Nội dung"
+  },
   "collections": {
     "collections": "Bộ sưu tập",
     "no_collections": "Chưa có bộ sưu tập nào",

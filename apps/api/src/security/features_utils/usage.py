@@ -22,6 +22,7 @@ FeatureSet: TypeAlias = Literal[
     "discussions",
     "members",
     "payments",
+    "podcasts",
     "storage",
     "usergroups",
 ]
@@ -31,7 +32,7 @@ PLAN_BASED_FEATURES = {"courses", "members", "admin_seats"}
 
 # Features that use Redis for usage tracking (non-billing, rate limiting)
 REDIS_TRACKED_FEATURES = {"ai", "analytics", "api", "assignments", "collaboration",
-                          "discussions", "payments", "storage", "usergroups"}
+                          "discussions", "payments", "podcasts", "storage", "usergroups"}
 
 
 def _is_oss_mode() -> bool:

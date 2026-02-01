@@ -596,6 +596,33 @@
       "start_first": "Mulai diskusi pertama"
     }
   },
+  "podcasts": {
+    "podcasts": "Podcast",
+    "browse_description": "Dengarkan podcast dari organisasi ini",
+    "new_podcast": "Podcast Baru",
+    "search_placeholder": "Cari podcast...",
+    "no_podcasts": "Belum ada podcast",
+    "no_podcasts_description": "Saat ini tidak ada podcast yang tersedia",
+    "no_search_results": "Podcast tidak ditemukan",
+    "try_different_search": "Coba kata kunci pencarian lain",
+    "episodes": "Episode",
+    "no_episodes": "Belum ada episode",
+    "hosted_by": "Dipandu oleh",
+    "tags": "Tag",
+    "manage_podcast": "Kelola Podcast",
+    "published": "Diterbitkan",
+    "unpublished": "Belum diterbitkan",
+    "public": "Publik",
+    "private": "Pribadi",
+    "listen_now": "Dengar Sekarang",
+    "delete_podcast": "Hapus Podcast",
+    "delete_podcast_title": "Hapus Podcast?",
+    "delete_podcast_confirm": "Apakah Anda yakin ingin menghapus podcast ini? Tindakan ini tidak dapat dibatalkan dan semua episode akan dihapus.",
+    "deleting_podcast": "Menghapus podcast...",
+    "podcast_deleted_success": "Podcast berhasil dihapus",
+    "podcast_deleted_error": "Gagal menghapus podcast",
+    "edit_content": "Edit Konten"
+  },
   "collections": {
     "collections": "Koleksi",
     "no_collections": "Belum ada koleksi",

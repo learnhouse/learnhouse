@@ -48,6 +48,7 @@ class Rights(BaseModel):
     dashboard: DashboardPermission
     communities: Permission
     discussions: PermissionsWithOwn  # Own = author can edit/delete their own
+    podcasts: PermissionsWithOwn  # Own = author can edit/delete their own podcasts
 
     def __getitem__(self, item):
         return getattr(self, item)

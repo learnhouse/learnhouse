@@ -6,6 +6,8 @@ import Watermark from '@components/Objects/Watermark'
 import { OrgMenu } from '@components/Objects/Menus/OrgMenu'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { OrgJoinBanner, OrgJoinBannerProvider } from '@components/Objects/Banners/OrgJoinBanner'
+import { PodcastPlayerProvider } from '@components/Contexts/PodcastPlayerContext'
+import PodcastPlayer from '@components/Objects/Podcasts/PodcastPlayer'
 import Image from 'next/image'
 import Link from 'next/link'
 
@@ -82,9 +84,12 @@ export default function RootLayout(
     <>
       <SessionProvider>
         <OrgJoinBannerProvider>
-          <LayoutContent orgslug={params?.orgslug}>
-            {children}
-          </LayoutContent>
+          <PodcastPlayerProvider>
+            <LayoutContent orgslug={params?.orgslug}>
+              {children}
+            </LayoutContent>
+            <PodcastPlayer />
+          </PodcastPlayerProvider>
         </OrgJoinBannerProvider>
       </SessionProvider>
     </>

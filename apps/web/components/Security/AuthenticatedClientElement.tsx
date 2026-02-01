@@ -15,6 +15,7 @@ interface AuthenticatedClientElementProps {
   | 'organizations'
   | 'communities'
   | 'discussions'
+  | 'podcasts'
   action?: 'create' | 'update' | 'delete' | 'read'
 }
 

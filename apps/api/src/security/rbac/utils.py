@@ -31,6 +31,10 @@ async def check_element_type(element_uuid):
         return "discussions"
     elif element_uuid.startswith("vote_"):
         return "votes"
+    elif element_uuid.startswith("podcast_"):
+        return "podcasts"
+    elif element_uuid.startswith("episode_"):
+        return "episodes"
     else:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -196,6 +200,23 @@ async def get_element_organization_id(
             discussion_statement = select(Discussion).where(Discussion.id == vote.discussion_id)
             discussion = db_session.exec(discussion_statement).first()
             return discussion.org_id if discussion else None
+        return None
+
+    elif element_type == "podcasts":
+        from src.db.podcasts.podcasts import Podcast
+        statement = select(Podcast).where(Podcast.podcast_uuid == element_uuid)
+        podcast = db_session.exec(statement).first()
+        return podcast.org_id if podcast else None
+
+    elif element_type == "episodes":
+        from src.db.podcasts.episodes import PodcastEpisode
+        from src.db.podcasts.podcasts import Podcast
+        statement = select(PodcastEpisode).where(PodcastEpisode.episode_uuid == element_uuid)
+        episode = db_session.exec(statement).first()
+        if episode:
+            podcast_statement = select(Podcast).where(Podcast.id == episode.podcast_id)
+            podcast = db_session.exec(podcast_statement).first()
+            return podcast.org_id if podcast else None
         return None
 
     # Unknown element type
