@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Literal
 from uuid import uuid4
 from fastapi import HTTPException, Request, UploadFile, status
@@ -33,6 +33,7 @@ from src.db.users import (
 )
 from src.db.user_organizations import UserOrganization
 from src.security.security import security_hash_password, security_verify_password
+from src.services.security.password_validation import validate_password_complexity
 
 
 async def create_user(
@@ -41,7 +42,22 @@ async def create_user(
     current_user: PublicUser | AnonymousUser,
     user_object: UserCreate,
     org_id: int,
+    is_oauth: bool = False,
 ):
+    # Validate password complexity (skip for OAuth users who have empty passwords)
+    if user_object.password and not is_oauth:
+        validation_result = validate_password_complexity(user_object.password)
+        if not validation_result.is_valid:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "code": "WEAK_PASSWORD",
+                    "message": "Password does not meet security requirements",
+                    "errors": validation_result.errors,
+                    "requirements": validation_result.requirements,
+                },
+            )
+
     user = User.model_validate(user_object)
 
     # RBAC check
@@ -49,8 +65,16 @@ async def create_user(
 
     # Complete the user object
     user.user_uuid = f"user_{uuid4()}"
-    user.password = security_hash_password(user_object.password)
-    user.email_verified = False
+    user.password = security_hash_password(user_object.password) if user_object.password else ""
+
+    # OAuth users get auto-verified email (provider already verified)
+    if is_oauth:
+        user.email_verified = True
+        user.email_verified_at = datetime.now(timezone.utc).isoformat()
+    else:
+        user.email_verified = False
+        user.email_verified_at = None
+
     user.creation_date = str(datetime.now())
     user.update_date = str(datetime.now())
 
@@ -112,17 +136,26 @@ async def create_user(
     db_session.commit()
     db_session.refresh(user_organization)
 
-    user = UserRead.model_validate(user)
+    user_read = UserRead.model_validate(user)
 
     increase_feature_usage("members", org_id, db_session)
 
-    # Send Account creation email
-    send_account_creation_email(
-        user=user,
-        email=user.email,
-    )
+    # Send verification email for non-OAuth users, account creation email for OAuth users
+    if is_oauth:
+        send_account_creation_email(
+            user=user_read,
+            email=user_read.email,
+        )
+    else:
+        # Import here to avoid circular imports
+        from src.services.users.email_verification import send_verification_email
+        try:
+            await send_verification_email(request, db_session, user, org_id)
+        except Exception:
+            # Log but don't fail user creation if email fails
+            pass
 
-    return user
+    return user_read
 
 
 async def create_user_with_invite(
@@ -173,7 +206,22 @@ async def create_user_without_org(
     db_session: Session,
     current_user: PublicUser | AnonymousUser,
     user_object: UserCreate,
+    is_oauth: bool = False,
 ):
+    # Validate password complexity (skip for OAuth users who have empty passwords)
+    if user_object.password and not is_oauth:
+        validation_result = validate_password_complexity(user_object.password)
+        if not validation_result.is_valid:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "code": "WEAK_PASSWORD",
+                    "message": "Password does not meet security requirements",
+                    "errors": validation_result.errors,
+                    "requirements": validation_result.requirements,
+                },
+            )
+
     user = User.model_validate(user_object)
 
     # RBAC check
@@ -181,8 +229,16 @@ async def create_user_without_org(
 
     # Complete the user object
     user.user_uuid = f"user_{uuid4()}"
-    user.password = security_hash_password(user_object.password)
-    user.email_verified = False
+    user.password = security_hash_password(user_object.password) if user_object.password else ""
+
+    # OAuth users get auto-verified email (provider already verified)
+    if is_oauth:
+        user.email_verified = True
+        user.email_verified_at = datetime.now(timezone.utc).isoformat()
+    else:
+        user.email_verified = False
+        user.email_verified_at = None
+
     user.creation_date = str(datetime.now())
     user.update_date = str(datetime.now())
 
@@ -218,15 +274,17 @@ async def create_user_without_org(
     db_session.commit()
     db_session.refresh(user)
 
-    user = UserRead.model_validate(user)
+    user_read = UserRead.model_validate(user)
 
-    # Send Account creation email
+    # Send account creation email for OAuth users (they're already verified)
+    # Non-OAuth users without org can't receive verification emails since they need org context
+    # So we just send the welcome email
     send_account_creation_email(
-        user=user,
-        email=user.email,
+        user=user_read,
+        email=user_read.email,
     )
 
-    return user
+    return user_read
 
 
 async def update_user(
@@ -339,6 +397,19 @@ async def update_user_password(
     user_id: int,
     form: UserUpdatePassword,
 ):
+    # Validate new password complexity
+    validation_result = validate_password_complexity(form.new_password)
+    if not validation_result.is_valid:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "code": "WEAK_PASSWORD",
+                "message": "Password does not meet security requirements",
+                "errors": validation_result.errors,
+                "requirements": validation_result.requirements,
+            },
+        )
+
     # Get user
     statement = select(User).where(User.id == user_id)
     user = db_session.exec(statement).first()

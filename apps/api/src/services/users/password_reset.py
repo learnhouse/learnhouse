@@ -19,6 +19,7 @@ from src.db.users import (
     User,
     UserRead,
 )
+from src.services.security.password_validation import validate_password_complexity
 
 
 async def send_reset_password_code(
@@ -123,6 +124,19 @@ async def change_password_with_reset_code(
     email: EmailStr,
     reset_code: str,
 ):
+    # Validate new password complexity
+    validation_result = validate_password_complexity(new_password)
+    if not validation_result.is_valid:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "code": "WEAK_PASSWORD",
+                "message": "Password does not meet security requirements",
+                "errors": validation_result.errors,
+                "requirements": validation_result.requirements,
+            },
+        )
+
     # Get user
     statement = select(User).where(User.email == email)
     user = db_session.exec(statement).first()
