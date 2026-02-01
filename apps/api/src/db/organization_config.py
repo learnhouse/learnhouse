@@ -70,6 +70,11 @@ class APIOrgConfig(BaseModel):
     limit: int = 10
 
 
+class PodcastsOrgConfig(BaseModel):
+    enabled: bool = False  # Disabled by default, requires standard+ plan
+    limit: int = 10
+
+
 class OrgFeatureConfig(BaseModel):
     courses: CourseOrgConfig = CourseOrgConfig()
     members: MemberOrgConfig = MemberOrgConfig()
@@ -84,6 +89,7 @@ class OrgFeatureConfig(BaseModel):
     analytics: AnalyticsOrgConfig = AnalyticsOrgConfig()
     collaboration: CollaborationOrgConfig = CollaborationOrgConfig()
     api: APIOrgConfig = APIOrgConfig()
+    podcasts: PodcastsOrgConfig = PodcastsOrgConfig()
 
 
 # General

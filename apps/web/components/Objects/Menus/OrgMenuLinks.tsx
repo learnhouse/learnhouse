@@ -2,7 +2,7 @@ import AuthenticatedClientElement from '@components/Security/AuthenticatedClient
 import { useOrg } from '@components/Contexts/OrgContext'
 import { getUriWithOrg } from '@services/config/config'
 import { planMeetsRequirement, PlanLevel } from '@services/plans/plans'
-import { Books, Signpost, SquaresFour, ChatsCircle } from '@phosphor-icons/react'
+import { Books, Signpost, SquaresFour, ChatsCircle, Headphones } from '@phosphor-icons/react'
 import Link from 'next/link'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
@@ -18,6 +18,11 @@ function MenuLinks(props: { orgslug: string; primaryColor?: string }) {
 
   const isCollectionsEnabled = org?.config?.config?.features?.collections?.enabled !== false
 
+  // Podcasts requires standard+ plan AND feature enabled
+  const isPodcastsFeatureEnabled = org?.config?.config?.features?.podcasts?.enabled === true
+  const canAccessPodcasts = planMeetsRequirement(plan, 'standard')
+  const showPodcasts = isPodcastsFeatureEnabled && canAccessPodcasts
+
   return (
     <div className='pl-1'>
       <ul className="flex space-x-5">
@@ -31,6 +36,14 @@ function MenuLinks(props: { orgslug: string; primaryColor?: string }) {
           <LinkItem
             link="/collections"
             type="collections"
+            orgslug={props.orgslug}
+            primaryColor={props.primaryColor}
+          ></LinkItem>
+        )}
+        {showPodcasts && (
+          <LinkItem
+            link="/podcasts"
+            type="podcasts"
             orgslug={props.orgslug}
             primaryColor={props.primaryColor}
           ></LinkItem>
@@ -81,6 +94,13 @@ const LinkItem = (props: any) => {
           <>
             <Signpost size={20} weight="fill" />{' '}
             <span>{t('courses.progress')}</span>
+          </>
+        )}
+
+        {props.type == 'podcasts' && (
+          <>
+            <Headphones size={20} weight="fill" />{' '}
+            <span>{t('podcasts.podcasts')}</span>
           </>
         )}
 

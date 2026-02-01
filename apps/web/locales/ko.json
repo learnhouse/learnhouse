@@ -596,6 +596,33 @@
       "start_first": "첫 번째 토론을 시작하세요"
     }
   },
+  "podcasts": {
+    "podcasts": "팟캐스트",
+    "browse_description": "이 조직의 팟캐스트를 들으세요",
+    "new_podcast": "새 팟캐스트",
+    "search_placeholder": "팟캐스트 검색...",
+    "no_podcasts": "팟캐스트가 없습니다",
+    "no_podcasts_description": "현재 이용 가능한 팟캐스트가 없습니다",
+    "no_search_results": "팟캐스트를 찾을 수 없습니다",
+    "try_different_search": "다른 검색어를 시도해보세요",
+    "episodes": "에피소드",
+    "no_episodes": "에피소드가 없습니다",
+    "hosted_by": "진행자",
+    "tags": "태그",
+    "manage_podcast": "팟캐스트 관리",
+    "published": "게시됨",
+    "unpublished": "미게시",
+    "public": "공개",
+    "private": "비공개",
+    "listen_now": "지금 듣기",
+    "delete_podcast": "팟캐스트 삭제",
+    "delete_podcast_title": "팟캐스트를 삭제하시겠습니까?",
+    "delete_podcast_confirm": "이 팟캐스트를 삭제하시겠습니까? 이 작업은 취소할 수 없으며 모든 에피소드가 삭제됩니다.",
+    "deleting_podcast": "팟캐스트 삭제 중...",
+    "podcast_deleted_success": "팟캐스트가 성공적으로 삭제되었습니다",
+    "podcast_deleted_error": "팟캐스트 삭제 실패",
+    "edit_content": "콘텐츠 편집"
+  },
   "collections": {
     "collections": "컬렉션",
     "no_collections": "아직 컬렉션이 없습니다",

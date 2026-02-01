@@ -596,6 +596,33 @@
       "start_first": "เริ่มการสนทนาแรก"
     }
   },
+  "podcasts": {
+    "podcasts": "พอดแคสต์",
+    "browse_description": "ฟังพอดแคสต์จากองค์กรนี้",
+    "new_podcast": "พอดแคสต์ใหม่",
+    "search_placeholder": "ค้นหาพอดแคสต์...",
+    "no_podcasts": "ยังไม่มีพอดแคสต์",
+    "no_podcasts_description": "ขณะนี้ยังไม่มีพอดแคสต์",
+    "no_search_results": "ไม่พบพอดแคสต์",
+    "try_different_search": "ลองใช้คำค้นหาอื่น",
+    "episodes": "ตอน",
+    "no_episodes": "ยังไม่มีตอน",
+    "hosted_by": "ดำเนินรายการโดย",
+    "tags": "แท็ก",
+    "manage_podcast": "จัดการพอดแคสต์",
+    "published": "เผยแพร่แล้ว",
+    "unpublished": "ยังไม่เผยแพร่",
+    "public": "สาธารณะ",
+    "private": "ส่วนตัว",
+    "listen_now": "ฟังเลย",
+    "delete_podcast": "ลบพอดแคสต์",
+    "delete_podcast_title": "ลบพอดแคสต์?",
+    "delete_podcast_confirm": "คุณแน่ใจหรือไม่ว่าต้องการลบพอดแคสต์นี้? การดำเนินการนี้ไม่สามารถยกเลิกได้และตอนทั้งหมดจะถูกลบ",
+    "deleting_podcast": "กำลังลบพอดแคสต์...",
+    "podcast_deleted_success": "ลบพอดแคสต์สำเร็จ",
+    "podcast_deleted_error": "ลบพอดแคสต์ไม่สำเร็จ",
+    "edit_content": "แก้ไขเนื้อหา"
+  },
   "collections": {
     "collections": "คอลเลกชัน",
     "no_collections": "ยังไม่มีคอลเลกชัน",
