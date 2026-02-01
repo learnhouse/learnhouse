@@ -1,0 +1,30 @@
+name: Notify Infrastructure
+
+on:
+  push:
+    branches:
+      - prod
+      - dev
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+
+jobs:
+  notify:
+    name: Dispatch to Infrastructure Repo
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send repository dispatch
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.INFRA_REPO_PAT }}
+          repository: ${{ vars.INFRA_REPO }}
+          event-type: source-update
+          client-payload: |
+            {
+              "sha": "${{ github.sha }}",
+              "branch": "${{ github.ref_name }}",
+              "event": "${{ github.event_name }}",
+              "pr_number": "${{ github.event.pull_request.number || '' }}",
+              "pr_action": "${{ github.event.action || '' }}",
+              "repo": "${{ github.repository }}"
+            }
