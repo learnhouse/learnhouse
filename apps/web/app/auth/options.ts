@@ -39,9 +39,31 @@ export const nextAuthOptions = {
       credentials: {
         email: { label: 'Email', type: 'text', placeholder: 'jsmith' },
         password: { label: 'Password', type: 'password' },
+        sso: { label: 'SSO', type: 'hidden' },
+        sso_access_token: { label: 'SSO Access Token', type: 'hidden' },
+        sso_refresh_token: { label: 'SSO Refresh Token', type: 'hidden' },
+        sso_user: { label: 'SSO User', type: 'hidden' },
       },
       async authorize(credentials, req) {
-        // logic to verify if user exists
+        // Handle SSO login - tokens already obtained from backend
+        if (credentials?.sso === 'true' && credentials?.sso_access_token) {
+          try {
+            const user = credentials.sso_user ? JSON.parse(credentials.sso_user) : null
+            return {
+              user: user,
+              tokens: {
+                access_token: credentials.sso_access_token,
+                refresh_token: credentials.sso_refresh_token,
+                expiry: Date.now() + (8 * 60 * 60 * 1000), // 8 hours
+              },
+            }
+          } catch (e) {
+            console.error('SSO login error:', e)
+            return null
+          }
+        }
+
+        // Regular credentials login
         let unsanitized_req = await loginAndGetToken(
           credentials?.email,
           credentials?.password
@@ -130,31 +152,29 @@ export const nextAuthOptions = {
     async session({ session, token }: any) {
       // Include user information in the session
       if (token.user) {
-        // Cache the session for 1 minute to refresh every minute
+        // Cache the session for 10 seconds for quick role updates
         const cacheKey = `user_session_${token.user.tokens.access_token}`;
-        
+
         // Initialize cache if it doesn't exist
         if (!global.sessionCache) {
           global.sessionCache = {};
         }
 
         // Prevent memory leak: clear cache if it grows too large
-        // With refetchInterval={60000}, one entry per user per hour is added
-        // 1000 entries is plenty for a single pod
         if (Object.keys(global.sessionCache).length > 1000) {
           global.sessionCache = {};
         }
 
         let cachedSession = global.sessionCache[cacheKey];
         const now = Date.now();
-        
-        if (cachedSession && now - cachedSession.timestamp < 1 * 60 * 1000) {
+
+        if (cachedSession && now - cachedSession.timestamp < 10 * 1000) {
           return cachedSession.data;
         }
 
         try {
           let api_SESSION = await getUserSession(token.user.tokens.access_token);
-          
+
           if (api_SESSION && api_SESSION.user) {
             session.user = api_SESSION.user;
             session.roles = api_SESSION.roles;

@@ -28,6 +28,7 @@ FEATURE_PLAN_REQUIREMENTS: dict[str, PlanLevel] = {
     "api_tokens": "pro",
     "scorm": "enterprise",
     "audit_logs": "enterprise",
+    "sso": "enterprise",
 }
 
 # Plan-based resource limits

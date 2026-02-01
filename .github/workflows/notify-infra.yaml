@@ -10,6 +10,8 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, closed]
 
+permissions: {}
+
 jobs:
   notify:
     name: Dispatch to Infrastructure Repo

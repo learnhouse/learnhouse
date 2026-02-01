@@ -91,6 +91,10 @@ export default async function proxy(req: NextRequest) {
     return response
   }
 
+  // SSO Callback - pass through without org rewrite
+  if (pathname.startsWith('/auth/sso/')) {
+    return NextResponse.rewrite(new URL(`${pathname}${search}`, req.url))
+  }
 
   // Dynamic Pages Editor
   if (pathname.match(/^\/course\/[^/]+\/activity\/[^/]+\/edit$/)) {

@@ -9,8 +9,9 @@ import Image from 'next/image'
 import * as Form from '@radix-ui/react-form'
 import { useFormik } from 'formik'
 import { getOrgLogoMediaDirectory } from '@services/media/media'
-import React, { useState } from 'react'
-import { AlertTriangle, Lock, Mail, UserRoundPlus } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { AlertTriangle, Lock, Mail, UserRoundPlus, Shield } from 'lucide-react'
+import { checkSSOEnabled, redirectToSSOLogin } from '@services/auth/sso'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { signIn } from "next-auth/react"
@@ -26,7 +27,9 @@ interface LoginClientProps {
 
 const LoginClient = (props: LoginClientProps) => {
   const { t } = useTranslation()
-  const [isSubmitting, setIsSubmitting] = React.useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [ssoEnabled, setSsoEnabled] = useState(false)
+  const [ssoLoading, setSsoLoading] = useState(false)
   const router = useRouter();
   const session = useLHSession() as any;
 
@@ -41,12 +44,39 @@ const LoginClient = (props: LoginClientProps) => {
     // Store org context in cookies before OAuth redirect
     if (props.org?.slug) {
       const topDomain = getLEARNHOUSE_TOP_DOMAIN_VAL();
-      const cookieDomain = topDomain === 'localhost' ? '' : `.${topDomain}`;
-      document.cookie = `learnhouse_oauth_orgslug=${props.org.slug}; path=/; domain=${cookieDomain}`;
-      document.cookie = `learnhouse_oauth_org_id=${props.org.id}; path=/; domain=${cookieDomain}`;
+      const baseAttributes = '; path=/; secure; SameSite=Lax';
+      const domainAttr = topDomain === 'localhost' ? '' : `; domain=.${topDomain}`;
+      document.cookie = `learnhouse_oauth_orgslug=${props.org.slug}${baseAttributes}${domainAttr}`;
+      document.cookie = `learnhouse_oauth_org_id=${props.org.id}${baseAttributes}${domainAttr}`;
     }
     signIn('google', { callbackUrl: '/redirect_from_auth' });
   };
+
+  // Check if SSO is enabled for this organization
+  useEffect(() => {
+    const checkSSO = async () => {
+      if (props.org?.slug) {
+        try {
+          const result = await checkSSOEnabled(props.org.slug)
+          setSsoEnabled(result.sso_enabled)
+        } catch (error) {
+          // SSO not available, silently ignore
+          console.debug('SSO check failed:', error)
+        }
+      }
+    }
+    checkSSO()
+  }, [props.org?.slug])
+
+  const handleSSOLogin = async () => {
+    setSsoLoading(true)
+    try {
+      await redirectToSSOLogin(props.org.slug)
+    } catch (error: any) {
+      setError(error.message || t('auth.sso_error'))
+      setSsoLoading(false)
+    }
+  }
 
   const validate = (values: any) => {
     const errors: any = {}
@@ -306,15 +336,25 @@ const LoginClient = (props: LoginClientProps) => {
           </FormLayout>
           <div className='flex h-0.5 rounded-2xl bg-slate-100 mt-5  mx-10'></div>
           <div className='flex justify-center py-5 mx-auto'>{t('common.or')} </div>
-          <div className='flex flex-col space-y-4'>
-            <Link href="/signup" className="flex justify-center items-center py-3 text-md w-full bg-gray-800 text-gray-300 space-x-3 font-semibold text-center p-2 rounded-md shadow-sm hover:cursor-pointer">
-              <UserRoundPlus size={17} />
+          <div className='flex flex-col space-y-2'>
+            <Link href="/signup" className="flex justify-center items-center py-2 text-sm w-full bg-gray-800 text-gray-300 space-x-2 font-medium text-center px-3 rounded-md shadow-sm hover:cursor-pointer">
+              <UserRoundPlus size={15} />
               <span>{t('auth.sign_up')}</span>
             </Link>
-            <button onClick={handleGoogleSignIn} className="flex justify-center py-3 text-md w-full bg-white text-slate-600 space-x-3 font-semibold text-center p-2 rounded-md shadow-sm hover:cursor-pointer">
-              <img src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg" alt="" />
+            <button onClick={handleGoogleSignIn} className="flex justify-center items-center py-2 text-sm w-full bg-white text-slate-600 space-x-2 font-medium text-center px-3 rounded-md shadow-sm hover:cursor-pointer">
+              <img src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg" alt="" className="w-4 h-4" />
               <span>{t('auth.sign_in_with_google')}</span>
             </button>
+            {ssoEnabled && (
+              <button
+                onClick={handleSSOLogin}
+                disabled={ssoLoading}
+                className="flex justify-center items-center py-2 text-sm w-full bg-indigo-600 text-white space-x-2 font-medium text-center px-3 rounded-md shadow-sm hover:bg-indigo-700 hover:cursor-pointer disabled:opacity-50"
+              >
+                <Shield size={15} />
+                <span>{ssoLoading ? t('common.loading') : t('auth.sign_in_with_sso')}</span>
+              </button>
+            )}
           </div>
         </div>
       </div>

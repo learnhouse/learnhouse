@@ -38,6 +38,7 @@ dependencies = [
     "pytest-asyncio>=1.1.0",
     "sentry-sdk[fastapi]>=2.19.0",
     "protobuf>=6.33.5",
+    "workos>=5.0.0",
 ]
 
 [tool.ruff]
