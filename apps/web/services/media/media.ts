@@ -161,3 +161,54 @@ export function getScormContentUrl(
   // This is required for the SCORM API to work properly in iframes
   return `/api/scorm/${activityUUID}/content/${filePath}`
 }
+
+/**
+ * Get the thumbnail URL for a podcast
+ */
+export function getPodcastThumbnailMediaDirectory(
+  orgUUID: string,
+  podcastUUID: string,
+  fileId: string
+) {
+  let uri = `${getMediaUrl()}content/orgs/${orgUUID}/podcasts/${podcastUUID}/thumbnails/${fileId}`
+  return uri
+}
+
+/**
+ * Get the thumbnail URL for a podcast episode
+ */
+export function getEpisodeThumbnailMediaDirectory(
+  orgUUID: string,
+  podcastUUID: string,
+  episodeUUID: string,
+  fileId: string
+) {
+  let uri = `${getMediaUrl()}content/orgs/${orgUUID}/podcasts/${podcastUUID}/episodes/${episodeUUID}/thumbnails/${fileId}`
+  return uri
+}
+
+/**
+ * Get the direct media URL for a podcast episode audio file.
+ */
+export function getEpisodeAudioMediaDirectory(
+  orgUUID: string,
+  podcastUUID: string,
+  episodeUUID: string,
+  fileId: string
+) {
+  let uri = `${getMediaUrl()}content/orgs/${orgUUID}/podcasts/${podcastUUID}/episodes/${episodeUUID}/audio/${fileId}`
+  return uri
+}
+
+/**
+ * Get the streaming URL for a podcast episode audio file.
+ * Uses the optimized streaming endpoint with proper Range request support.
+ */
+export function getPodcastAudioStreamUrl(
+  orgUUID: string,
+  podcastUUID: string,
+  episodeUUID: string,
+  filename: string
+) {
+  return `${getApiUrl()}api/v1/stream/audio/${orgUUID}/${podcastUUID}/${episodeUUID}/${filename}`
+}
