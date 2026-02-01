@@ -596,6 +596,33 @@
       "start_first": "ابدأ أول نقاش"
     }
   },
+  "podcasts": {
+    "podcasts": "البودكاست",
+    "browse_description": "استمع إلى البودكاست من هذه المنظمة",
+    "new_podcast": "بودكاست جديد",
+    "search_placeholder": "البحث عن البودكاست...",
+    "no_podcasts": "لا يوجد بودكاست بعد",
+    "no_podcasts_description": "لا يوجد بودكاست متاح حالياً",
+    "no_search_results": "لم يتم العثور على بودكاست",
+    "try_different_search": "جرب مصطلح بحث مختلف",
+    "episodes": "الحلقات",
+    "no_episodes": "لا يوجد حلقات بعد",
+    "hosted_by": "يقدمه",
+    "tags": "الوسوم",
+    "manage_podcast": "إدارة البودكاست",
+    "published": "منشور",
+    "unpublished": "غير منشور",
+    "public": "عام",
+    "private": "خاص",
+    "listen_now": "استمع الآن",
+    "delete_podcast": "حذف البودكاست",
+    "delete_podcast_title": "حذف البودكاست؟",
+    "delete_podcast_confirm": "هل أنت متأكد من حذف هذا البودكاست؟ هذا الإجراء لا يمكن التراجع عنه وسيتم حذف جميع الحلقات.",
+    "deleting_podcast": "جاري حذف البودكاست...",
+    "podcast_deleted_success": "تم حذف البودكاست بنجاح",
+    "podcast_deleted_error": "فشل في حذف البودكاست",
+    "edit_content": "تعديل المحتوى"
+  },
   "collections": {
     "collections": "المجموعات",
     "no_collections": "لا توجد مجموعات بعد",

@@ -22,6 +22,7 @@ FEATURE_PLAN_REQUIREMENTS: dict[str, PlanLevel] = {
     "communities": "standard",
     "seo": "standard",
     "versioning": "standard",
+    "podcasts": "standard",
     "certifications": "pro",
     "roles": "pro",
     "api_tokens": "pro",

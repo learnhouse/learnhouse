@@ -596,6 +596,33 @@
       "start_first": "Inicie a primeira discussão"
     }
   },
+  "podcasts": {
+    "podcasts": "Podcasts",
+    "browse_description": "Ouça podcasts desta organização",
+    "new_podcast": "Novo Podcast",
+    "search_placeholder": "Pesquisar podcasts...",
+    "no_podcasts": "Ainda não há podcasts",
+    "no_podcasts_description": "Não há podcasts disponíveis no momento",
+    "no_search_results": "Nenhum podcast encontrado",
+    "try_different_search": "Tente um termo de pesquisa diferente",
+    "episodes": "Episódios",
+    "no_episodes": "Ainda não há episódios",
+    "hosted_by": "Apresentado por",
+    "tags": "Tags",
+    "manage_podcast": "Gerenciar Podcast",
+    "published": "Publicado",
+    "unpublished": "Não publicado",
+    "public": "Público",
+    "private": "Privado",
+    "listen_now": "Ouvir agora",
+    "delete_podcast": "Excluir Podcast",
+    "delete_podcast_title": "Excluir Podcast?",
+    "delete_podcast_confirm": "Tem certeza de que deseja excluir este podcast? Esta ação não pode ser desfeita e todos os episódios serão excluídos.",
+    "deleting_podcast": "Excluindo podcast...",
+    "podcast_deleted_success": "Podcast excluído com sucesso",
+    "podcast_deleted_error": "Falha ao excluir podcast",
+    "edit_content": "Editar Conteúdo"
+  },
   "collections": {
     "collections": "Coleções",
     "no_collections": "Nenhuma coleção ainda",

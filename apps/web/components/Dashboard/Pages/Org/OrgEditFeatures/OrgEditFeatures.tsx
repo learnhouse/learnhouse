@@ -11,7 +11,7 @@ import { PlanLevel, planMeetsRequirement } from '@services/plans/plans'
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
 import useAdminStatus from '@components/Hooks/useAdminStatus'
 import { Switch } from '@components/ui/switch'
-import { ShieldAlert, Users, CreditCard, FolderOpen, Lock } from 'lucide-react'
+import { ShieldAlert, Users, CreditCard, FolderOpen, Lock, Headphones } from 'lucide-react'
 
 interface FeatureToggleProps {
   id: string
@@ -88,6 +88,7 @@ const OrgEditFeatures: React.FC = () => {
   const [communitiesEnabled, setCommunitiesEnabled] = useState<boolean>(true)
   const [paymentsEnabled, setPaymentsEnabled] = useState<boolean>(false)
   const [collectionsEnabled, setCollectionsEnabled] = useState<boolean>(true)
+  const [podcastsEnabled, setPodcastsEnabled] = useState<boolean>(false)
 
   // Loading states
   const [updatingFeature, setUpdatingFeature] = useState<string | null>(null)
@@ -108,6 +109,10 @@ const OrgEditFeatures: React.FC = () => {
       // Collections - default to true
       const collEnabled = features.collections?.enabled
       setCollectionsEnabled(collEnabled !== undefined ? collEnabled : true)
+
+      // Podcasts - default to false (disabled by default)
+      const podEnabled = features.podcasts?.enabled
+      setPodcastsEnabled(podEnabled !== undefined ? podEnabled : false)
     }
   }, [org])
 
@@ -169,6 +174,13 @@ const OrgEditFeatures: React.FC = () => {
     const success = await updateFeatureConfig('collections', enabled)
     if (success) {
       setCollectionsEnabled(enabled)
+    }
+  }
+
+  const handlePodcastsToggle = async (enabled: boolean) => {
+    const success = await updateFeatureConfig('podcasts', enabled)
+    if (success) {
+      setPodcastsEnabled(enabled)
     }
   }
 
@@ -242,6 +254,21 @@ const OrgEditFeatures: React.FC = () => {
             icon={<FolderOpen size={20} className="text-gray-600" />}
             onToggle={handleCollectionsToggle}
             upgradeMessage={t('dashboard.organization.features.upgrade_notice', { plan: 'free' })}
+          />
+
+          {/* Podcasts Toggle */}
+          <FeatureToggle
+            id="podcasts"
+            title={t('dashboard.organization.features.toggles.podcasts.title')}
+            description={t('dashboard.organization.features.toggles.podcasts.description')}
+            enabled={podcastsEnabled}
+            isUpdating={updatingFeature === 'podcasts'}
+            canEdit={canEditOrgSettings}
+            requiredPlan="standard"
+            currentPlan={currentPlan}
+            icon={<Headphones size={20} className="text-gray-600" />}
+            onToggle={handlePodcastsToggle}
+            upgradeMessage={t('dashboard.organization.features.upgrade_notice', { plan: 'standard' })}
           />
         </div>
       </div>

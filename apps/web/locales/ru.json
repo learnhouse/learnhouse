@@ -596,6 +596,33 @@
       "start_first": "Начните первое обсуждение"
     }
   },
+  "podcasts": {
+    "podcasts": "Подкасты",
+    "browse_description": "Слушайте подкасты этой организации",
+    "new_podcast": "Новый подкаст",
+    "search_placeholder": "Поиск подкастов...",
+    "no_podcasts": "Подкастов пока нет",
+    "no_podcasts_description": "В настоящее время нет доступных подкастов",
+    "no_search_results": "Подкасты не найдены",
+    "try_different_search": "Попробуйте другой поисковый запрос",
+    "episodes": "Эпизоды",
+    "no_episodes": "Эпизодов пока нет",
+    "hosted_by": "Ведущий",
+    "tags": "Теги",
+    "manage_podcast": "Управление подкастом",
+    "published": "Опубликовано",
+    "unpublished": "Не опубликовано",
+    "public": "Публичный",
+    "private": "Приватный",
+    "listen_now": "Слушать сейчас",
+    "delete_podcast": "Удалить подкаст",
+    "delete_podcast_title": "Удалить подкаст?",
+    "delete_podcast_confirm": "Вы уверены, что хотите удалить этот подкаст? Это действие нельзя отменить, и все эпизоды будут удалены.",
+    "deleting_podcast": "Удаление подкаста...",
+    "podcast_deleted_success": "Подкаст успешно удалён",
+    "podcast_deleted_error": "Не удалось удалить подкаст",
+    "edit_content": "Редактировать контент"
+  },
   "collections": {
     "collections": "Коллекции",
     "no_collections": "Коллекций пока нет",
