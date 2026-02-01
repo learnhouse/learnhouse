@@ -596,6 +596,33 @@
       "start_first": "প্রথম আলোচনা শুরু করুন"
     }
   },
+  "podcasts": {
+    "podcasts": "পডকাস্ট",
+    "browse_description": "এই সংস্থার পডকাস্ট শুনুন",
+    "new_podcast": "নতুন পডকাস্ট",
+    "search_placeholder": "পডকাস্ট খুঁজুন...",
+    "no_podcasts": "এখনও কোনো পডকাস্ট নেই",
+    "no_podcasts_description": "বর্তমানে কোনো পডকাস্ট উপলব্ধ নেই",
+    "no_search_results": "কোনো পডকাস্ট পাওয়া যায়নি",
+    "try_different_search": "অন্য একটি অনুসন্ধান শব্দ চেষ্টা করুন",
+    "episodes": "পর্ব",
+    "no_episodes": "এখনও কোনো পর্ব নেই",
+    "hosted_by": "উপস্থাপক",
+    "tags": "ট্যাগ",
+    "manage_podcast": "পডকাস্ট পরিচালনা করুন",
+    "published": "প্রকাশিত",
+    "unpublished": "অপ্রকাশিত",
+    "public": "সর্বজনীন",
+    "private": "ব্যক্তিগত",
+    "listen_now": "এখনই শুনুন",
+    "delete_podcast": "পডকাস্ট মুছুন",
+    "delete_podcast_title": "পডকাস্ট মুছে ফেলবেন?",
+    "delete_podcast_confirm": "আপনি কি নিশ্চিত যে আপনি এই পডকাস্ট মুছে ফেলতে চান? এই কাজটি পূর্বাবস্থায় ফেরানো যাবে না এবং সমস্ত পর্ব মুছে যাবে।",
+    "deleting_podcast": "পডকাস্ট মুছে ফেলা হচ্ছে...",
+    "podcast_deleted_success": "পডকাস্ট সফলভাবে মুছে ফেলা হয়েছে",
+    "podcast_deleted_error": "পডকাস্ট মুছে ফেলা যায়নি",
+    "edit_content": "বিষয়বস্তু সম্পাদনা করুন"
+  },
   "collections": {
     "collections": "সংগ্রহ",
     "no_collections": "এখনও কোনও সংগ্রহ নেই",

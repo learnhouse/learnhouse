@@ -596,6 +596,33 @@
       "start_first": "İlk tartışmayı başlatın"
     }
   },
+  "podcasts": {
+    "podcasts": "Podcastler",
+    "browse_description": "Bu organizasyonun podcastlerini dinleyin",
+    "new_podcast": "Yeni Podcast",
+    "search_placeholder": "Podcast ara...",
+    "no_podcasts": "Henüz podcast yok",
+    "no_podcasts_description": "Şu anda mevcut podcast yok",
+    "no_search_results": "Podcast bulunamadı",
+    "try_different_search": "Farklı bir arama terimi deneyin",
+    "episodes": "Bölümler",
+    "no_episodes": "Henüz bölüm yok",
+    "hosted_by": "Sunan",
+    "tags": "Etiketler",
+    "manage_podcast": "Podcast'i Yönet",
+    "published": "Yayınlandı",
+    "unpublished": "Yayınlanmadı",
+    "public": "Herkese Açık",
+    "private": "Özel",
+    "listen_now": "Şimdi Dinle",
+    "delete_podcast": "Podcast'i Sil",
+    "delete_podcast_title": "Podcast silinsin mi?",
+    "delete_podcast_confirm": "Bu podcast'i silmek istediğinizden emin misiniz? Bu işlem geri alınamaz ve tüm bölümler silinecektir.",
+    "deleting_podcast": "Podcast siliniyor...",
+    "podcast_deleted_success": "Podcast başarıyla silindi",
+    "podcast_deleted_error": "Podcast silinemedi",
+    "edit_content": "İçeriği Düzenle"
+  },
   "collections": {
     "collections": "Koleksiyonlar",
     "no_collections": "Henüz koleksiyon yok",

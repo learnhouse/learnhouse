@@ -596,6 +596,33 @@
       "start_first": "पहली चर्चा शुरू करें"
     }
   },
+  "podcasts": {
+    "podcasts": "पॉडकास्ट",
+    "browse_description": "इस संगठन के पॉडकास्ट सुनें",
+    "new_podcast": "नया पॉडकास्ट",
+    "search_placeholder": "पॉडकास्ट खोजें...",
+    "no_podcasts": "अभी तक कोई पॉडकास्ट नहीं",
+    "no_podcasts_description": "वर्तमान में कोई पॉडकास्ट उपलब्ध नहीं है",
+    "no_search_results": "कोई पॉडकास्ट नहीं मिला",
+    "try_different_search": "कोई अलग खोज शब्द आज़माएं",
+    "episodes": "एपिसोड",
+    "no_episodes": "अभी तक कोई एपिसोड नहीं",
+    "hosted_by": "प्रस्तुतकर्ता",
+    "tags": "टैग",
+    "manage_podcast": "पॉडकास्ट प्रबंधित करें",
+    "published": "प्रकाशित",
+    "unpublished": "अप्रकाशित",
+    "public": "सार्वजनिक",
+    "private": "निजी",
+    "listen_now": "अभी सुनें",
+    "delete_podcast": "पॉडकास्ट हटाएं",
+    "delete_podcast_title": "पॉडकास्ट हटाएं?",
+    "delete_podcast_confirm": "क्या आप वाकई इस पॉडकास्ट को हटाना चाहते हैं? यह क्रिया पूर्ववत नहीं की जा सकती और सभी एपिसोड हटा दिए जाएंगे।",
+    "deleting_podcast": "पॉडकास्ट हटाया जा रहा है...",
+    "podcast_deleted_success": "पॉडकास्ट सफलतापूर्वक हटाया गया",
+    "podcast_deleted_error": "पॉडकास्ट हटाने में विफल",
+    "edit_content": "सामग्री संपादित करें"
+  },
   "collections": {
     "collections": "संग्रह",
     "no_collections": "अभी तक कोई संग्रह नहीं",

@@ -24,21 +24,20 @@ async def authorization_verify_if_element_is_public(
 ):
     element_nature = await check_element_type(element_uuid)
     # Verifies if the element is public
-    if element_nature == ("courses") and action == "read":
-        if element_nature == "courses":
-            statement = select(Course).where(
-                Course.public == True, Course.course_uuid == element_uuid
+    if element_nature == "courses" and action == "read":
+        statement = select(Course).where(
+            Course.public == True, Course.course_uuid == element_uuid
+        )
+        course = db_session.exec(statement).first()
+        if course:
+            return True
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="User rights : You don't have the right to perform this action",
             )
-            course = db_session.exec(statement).first()
-            if course:
-                return True
-            else:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="User rights : You don't have the right to perform this action",
-                )
 
-    if element_nature == "collections" and action == "read":
+    elif element_nature == "collections" and action == "read":
         statement = select(Collection).where(
             Collection.public == True, Collection.collection_uuid == element_uuid
         )
@@ -50,6 +49,23 @@ async def authorization_verify_if_element_is_public(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="User rights : You don't have the right to perform this action",
             )
+
+    elif element_nature == "podcasts" and action == "read":
+        from src.db.podcasts.podcasts import Podcast
+        statement = select(Podcast).where(
+            Podcast.public == True,
+            Podcast.published == True,
+            Podcast.podcast_uuid == element_uuid
+        )
+        podcast = db_session.exec(statement).first()
+        if podcast:
+            return True
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="User rights : You don't have the right to perform this action",
+            )
+
     else:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

@@ -42,6 +42,7 @@ from src.services.orgs.orgs import (
     update_org_communities_config,
     update_org_payments_config,
     update_org_collections_config,
+    update_org_podcasts_config,
     update_org_color_config,
     update_org_footer_text_config,
     update_org_thumbnail,
@@ -238,6 +239,22 @@ async def api_update_org_collections_config(
     """
     return await update_org_collections_config(
         request, collections_enabled, org_id, current_user, db_session
+    )
+
+
+@router.put("/{org_id}/config/podcasts")
+async def api_update_org_podcasts_config(
+    request: Request,
+    org_id: int,
+    podcasts_enabled: bool,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+):
+    """
+    Update organization podcasts configuration
+    """
+    return await update_org_podcasts_config(
+        request, podcasts_enabled, org_id, current_user, db_session
     )
 
 

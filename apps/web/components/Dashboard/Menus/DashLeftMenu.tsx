@@ -21,6 +21,7 @@ import {
   ChatsCircle,
   Book,
   ChatCircleDots,
+  Headphones,
 } from '@phosphor-icons/react'
 import { DiscordIcon } from '@components/Objects/Icons/DiscordIcon'
 import Image from 'next/image'
@@ -332,6 +333,12 @@ function DashLeftMenu() {
               href="/dash/communities"
               icon={<ChatsCircle size={20} weight="fill" />}
               label={t('communities.title')}
+              isCollapsed={isCollapsed}
+            />
+            <MenuLink
+              href="/dash/podcasts"
+              icon={<Headphones size={20} weight="fill" />}
+              label={t('podcasts.podcasts')}
               isCollapsed={isCollapsed}
             />
             <MenuLink

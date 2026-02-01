@@ -1,6 +1,6 @@
 'use client'
 import { useOrg } from '@components/Contexts/OrgContext'
-import { Backpack, BadgeDollarSign, BookCopy, Home, MessagesSquare, School, Settings, Users } from 'lucide-react'
+import { Backpack, BadgeDollarSign, BookCopy, Headphones, Home, MessagesSquare, School, Settings, Users } from 'lucide-react'
 import Link from 'next/link'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
@@ -39,6 +39,12 @@ function DashMobileMenu() {
             <Link href={`/dash/communities`} className="flex flex-col items-center p-2" aria-label="Manage communities">
               <MessagesSquare size={20} />
               <span className="text-xs mt-1">{t('communities.title')}</span>
+            </Link>
+          </ToolTip>
+          <ToolTip content={t('podcasts.podcasts')} slateBlack sideOffset={8} side="top">
+            <Link href={`/dash/podcasts`} className="flex flex-col items-center p-2" aria-label="Manage podcasts">
+              <Headphones size={20} />
+              <span className="text-xs mt-1">{t('podcasts.podcasts')}</span>
             </Link>
           </ToolTip>
           <ToolTip content={t('common.payments')} slateBlack sideOffset={8} side="top">
