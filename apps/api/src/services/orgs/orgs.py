@@ -41,13 +41,13 @@ from fastapi import HTTPException, UploadFile, status, Request
 from src.services.orgs.uploads import upload_org_logo, upload_org_preview, upload_org_thumbnail, upload_org_landing_content
 
 
-async def get_organization_by_uuid(
+async def get_organization(
     request: Request,
-    org_uuid: str,
+    org_id: str,
     db_session: Session,
     current_user: PublicUser | AnonymousUser,
 ) -> OrganizationRead:
-    statement = select(Organization).where(Organization.org_uuid == org_uuid)
+    statement = select(Organization).where(Organization.id == org_id)
     result = db_session.exec(statement)
 
     org = result.first()
@@ -68,7 +68,7 @@ async def get_organization_by_uuid(
     org_config = result.first()
 
     if org_config is None:
-        logging.error(f"Organization {org_uuid} has no config")
+        logging.error(f"Organization {org_id} has no config")
 
     config = OrganizationConfig.model_validate(org_config) if org_config else {}
 
@@ -494,16 +494,6 @@ async def delete_org(
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
-    """
-    Delete an organization and all related data.
-
-    SECURITY: Only organization admins can delete their own organization.
-    The RBAC check ensures the user has admin role (role_id=1) specifically
-    in the organization being deleted.
-
-    CASCADE DELETE: Related data is automatically deleted via database
-    CASCADE constraints on foreign keys.
-    """
     statement = select(Organization).where(Organization.id == org_id)
     result = db_session.exec(statement)
 
@@ -515,27 +505,25 @@ async def delete_org(
             detail="Organization not found",
         )
 
-    # Store org info for logging before deletion
-    org_uuid = org.org_uuid
-    org_name = org.name
-
-    # RBAC check - verifies user is admin of THIS specific organization
+    # RBAC check
     await rbac_check(request, org.org_uuid, current_user, "delete", db_session)
 
-    # AUDIT LOG: Record the deletion for security audit trail
-    user_id = current_user.id if hasattr(current_user, 'id') else 'unknown'
-    logging.warning(
-        f"AUDIT: Organization deletion - org_id={org_id}, org_uuid={org_uuid}, "
-        f"org_name={org_name}, deleted_by_user_id={user_id}"
-    )
-
-    # Delete the organization
-    # Related data (UserOrganization, Courses, Collections, etc.) will be
-    # automatically deleted via CASCADE constraints in the database
     db_session.delete(org)
     db_session.commit()
 
-    return {"detail": "Organization deleted", "org_id": org_id, "org_name": org_name}
+    # Delete links to org
+    statement = select(UserOrganization).where(UserOrganization.org_id == org_id)
+    result = db_session.exec(statement)
+
+    user_orgs = result.all()
+
+    for user_org in user_orgs:
+        db_session.delete(user_org)
+        db_session.commit()
+
+    db_session.refresh(org)
+
+    return {"detail": "Organization deleted"}
 
 
 async def get_orgs_by_user_admin(
@@ -1207,17 +1195,8 @@ async def rbac_check(
     if isinstance(current_user, InternalUser):
         return True
 
-    # API Token path: verify token has permissions for this action on organizations
+    # API Token path: verify token has permissions for this action on payments
     if isinstance(current_user, APITokenUser):
-        # SECURITY: API tokens should NOT be allowed to delete organizations
-        # Organization deletion is a critical operation that should only be
-        # performed by authenticated admin users, not programmatic API tokens
-        if action == "delete":
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="API tokens are not allowed to delete organizations",
-            )
-
         # Verify token belongs to this organization
         org = db_session.exec(
             select(Organization).where(Organization.org_uuid == org_uuid)
@@ -1229,7 +1208,7 @@ async def rbac_check(
                 detail="API token cannot access resources outside its organization",
             )
 
-        # Check token's rights for organizations (not payments!)
+        # Check token's rights for payments
         if not current_user.rights:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -1238,16 +1217,16 @@ async def rbac_check(
 
         rights = current_user.rights
         if isinstance(rights, dict):
-            org_rights = rights.get("organizations", {})
-            has_permission = org_rights.get(f"action_{action}", False)
+            payments_rights = rights.get("payments", {})
+            has_permission = payments_rights.get(f"action_{action}", False)
         else:
-            org_rights = getattr(rights, "organizations", None)
-            has_permission = getattr(org_rights, f"action_{action}", False) if org_rights else False
+            payments_rights = getattr(rights, "payments", None)
+            has_permission = getattr(payments_rights, f"action_{action}", False) if payments_rights else False
 
         if not has_permission:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"API token does not have '{action}' permission for organizations",
+                detail=f"API token does not have '{action}' permission for payments",
             )
         return True
 

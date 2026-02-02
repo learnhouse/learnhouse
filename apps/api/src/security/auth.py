@@ -19,9 +19,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 #### JWT Auth Configuration ####################################################
 JWT_SECRET_KEY = SECRET_KEY
-# Dev mode only affects whether expiration is VERIFIED, not whether it's SET
-# This ensures tokens created in dev mode will expire if the app switches to production
-JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=8)
+JWT_ACCESS_TOKEN_EXPIRES = None if isDevModeEnabled() else timedelta(hours=8)
 JWT_COOKIE_SAMESITE = "lax"
 JWT_COOKIE_SECURE = True
 JWT_COOKIE_DOMAIN = get_learnhouse_config().hosting_config.cookie_config.domain
@@ -44,30 +42,18 @@ def extract_jwt_from_request(request: Request) -> Optional[str]:
 
 
 def decode_jwt(token: str) -> Optional[dict]:
-    """
-    Decode and validate a JWT token.
-
-    SECURITY NOTES:
-    - Always requires 'sub' (subject) claim
-    - In production, requires and verifies 'exp' (expiration) claim
-    - In dev mode, expiration verification is skipped for convenience,
-      but tokens should still have exp set (for when mode changes)
-    - Uses explicit algorithm list to prevent algorithm confusion attacks
-    """
+    """Decode and validate a JWT token."""
     try:
-        # SECURITY: Always require sub claim, require exp in production
-        decode_options = {"require": ["exp", "sub"]}
-
+        decode_options = {"require": ["sub"]}
         if isDevModeEnabled():
-            # Dev mode: skip expiration verification for convenience
-            # Tokens still have exp set, just not enforced during development
+            # In dev mode, tokens don't have exp claim, so don't verify it
             decode_options["verify_exp"] = False
-            decode_options["require"] = ["sub"]  # Don't require exp in dev (for legacy tokens)
-
+        else:
+            decode_options["require"] = ["exp", "sub"]
         payload = jwt.decode(
             token,
             JWT_SECRET_KEY,
-            algorithms=[ALGORITHM],  # Explicit algorithm prevents confusion attacks
+            algorithms=[ALGORITHM],
             options=decode_options
         )
         return payload
@@ -106,62 +92,44 @@ async def authenticate_user(
 
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
-    """
-    Create a JWT access token.
-
-    SECURITY FIX: Always sets expiration claim, even in dev mode.
-    This ensures that if a token is created in dev mode but later validated
-    in production mode, it will have a proper expiration.
-    """
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
-    else:
-        # SECURITY: Always set expiration (8 hours default)
-        expire = datetime.now(timezone.utc) + JWT_ACCESS_TOKEN_EXPIRES
-    to_encode.update({"exp": expire})
+        to_encode.update({"exp": expire})
+    elif not isDevModeEnabled():
+        # Only set expiry in production if not explicitly provided
+        expire = datetime.now(timezone.utc) + timedelta(hours=8)
+        to_encode.update({"exp": expire})
+    # In dev mode with no expires_delta, don't set exp (token never expires)
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
 
-JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=30)
+JWT_REFRESH_TOKEN_EXPIRES = None if isDevModeEnabled() else timedelta(days=30)
 JWT_REFRESH_COOKIE_NAME = "refresh_token_cookie"
 
 
 def create_refresh_token(data: dict, expires_delta: timedelta | None = None):
-    """
-    Create a JWT refresh token.
-
-    SECURITY: Always sets expiration claim for refresh tokens.
-    """
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
-    else:
+    elif JWT_REFRESH_TOKEN_EXPIRES:
         expire = datetime.now(timezone.utc) + JWT_REFRESH_TOKEN_EXPIRES
+    else:
+        expire = datetime.now(timezone.utc) + timedelta(days=30)
     to_encode.update({"exp": expire, "type": "refresh"})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
 
 def decode_refresh_token(token: str) -> Optional[dict]:
-    """
-    Decode and validate a refresh JWT token.
-
-    SECURITY: Always requires expiration claim for refresh tokens.
-    Dev mode does not affect refresh token validation.
-    """
+    """Decode and validate a refresh JWT token."""
     try:
-        decode_options = {"require": ["exp", "sub"]}
-        if isDevModeEnabled():
-            # Dev mode: skip expiration verification but still require the claim
-            decode_options["verify_exp"] = False
-
         payload = jwt.decode(
             token,
             JWT_SECRET_KEY,
             algorithms=[ALGORITHM],
-            options=decode_options
+            options={"require": ["exp", "sub"]} if JWT_REFRESH_TOKEN_EXPIRES else {"require": ["sub"]}
         )
         if payload.get("type") != "refresh":
             return None
@@ -219,34 +187,6 @@ async def get_current_user(
 async def non_public_endpoint(current_user: UserRead | AnonymousUser):
     if isinstance(current_user, AnonymousUser):
         raise HTTPException(status_code=401, detail="Not authenticated")
-
-
-async def get_authenticated_user(
-    request: Request,
-    db_session: Session = Depends(get_db_session),
-) -> Union[PublicUser, APITokenUser]:
-    """
-    Dependency that requires authentication.
-
-    SECURITY: Use this for endpoints that should NOT be accessible to anonymous users.
-    This prevents enumeration attacks where attackers iterate through IDs to scrape data.
-
-    Returns:
-        PublicUser or APITokenUser - never AnonymousUser
-
-    Raises:
-        HTTPException 401 if user is not authenticated
-    """
-    user = await get_current_user(request, db_session)
-
-    if isinstance(user, AnonymousUser):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authentication required",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    return user
 
 
 async def validate_api_token(

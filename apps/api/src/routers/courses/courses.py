@@ -1,7 +1,7 @@
 from typing import List
-from fastapi import APIRouter, Depends, UploadFile, Form, Request, Query
+from fastapi import APIRouter, Depends, UploadFile, Form, Request
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel
 from sqlmodel import Session
 import io
 from src.core.events.database import get_db_session
@@ -60,43 +60,15 @@ from src.services.courses.transfer import (
 
 # Request models for batch operations
 class BatchExportRequest(BaseModel):
-    """
-    Request model for batch course export.
-
-    SECURITY: Limited to 20 courses per request to prevent resource exhaustion.
-    """
     course_uuids: List[str]
-
-    @field_validator('course_uuids')
-    @classmethod
-    def validate_course_uuids(cls, v):
-        if len(v) > 20:
-            raise ValueError('Maximum 20 courses can be exported at once')
-        if len(v) == 0:
-            raise ValueError('At least one course UUID is required')
-        return v
 
 
 class ImportRequest(BaseModel):
-    """
-    Request model for course import.
-
-    SECURITY: Limited to 20 courses per import request.
-    """
     temp_id: str
     course_uuids: List[str]
     name_prefix: str | None = None
     set_private: bool = True
     set_unpublished: bool = True
-
-    @field_validator('course_uuids')
-    @classmethod
-    def validate_course_uuids(cls, v):
-        if len(v) > 20:
-            raise ValueError('Maximum 20 courses can be imported at once')
-        if len(v) == 0:
-            raise ValueError('At least one course UUID is required')
-        return v
 
 
 router = APIRouter()
@@ -347,19 +319,14 @@ async def api_get_courses_count(
 async def api_search_courses(
     request: Request,
     org_slug: str,
-    query: str = Query(..., min_length=1, max_length=200, description="Search query"),
-    page: int = Query(default=1, ge=1, description="Page number"),
-    limit: int = Query(default=10, ge=1, le=50, description="Items per page (max 50)"),
+    query: str,
+    page: int = 1,
+    limit: int = 10,
     db_session: Session = Depends(get_db_session),
     current_user: PublicUser = Depends(get_current_user),
 ) -> List[CourseRead]:
     """
-    Search courses by title and description.
-
-    SECURITY:
-    - Maximum limit is 50 to prevent data dumping
-    - Query length limited to 200 characters
-    - Uses parameterized SQL queries (SQL injection protected)
+    Search courses by title and description
     """
     return await search_courses(
         request, current_user, org_slug, query, db_session, page, limit

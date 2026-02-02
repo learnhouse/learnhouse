@@ -28,18 +28,6 @@ async def get_organization_users(
     limit: int = 20,
     search: str = "",
 ):
-    """
-    Get paginated list of users in an organization.
-
-    SECURITY:
-    - Requires authentication (enforced at router level)
-    - User must be a member of the organization to view member list
-    - Maximum limit enforced to prevent data dumping
-    """
-    # SECURITY: Enforce maximum limit
-    limit = min(limit, 100)
-    page = max(page, 1)
-
     statement = select(Organization).where(Organization.id == org_id)
     result = db_session.exec(statement)
 
@@ -51,27 +39,7 @@ async def get_organization_users(
             detail="Organization not found",
         )
 
-    # SECURITY: Verify current user is a member of this organization
-    # This prevents users from enumerating members of orgs they don't belong to
-    if isinstance(current_user, AnonymousUser):
-        raise HTTPException(
-            status_code=401,
-            detail="Authentication required",
-        )
-
-    membership_check = select(UserOrganization).where(
-        UserOrganization.user_id == current_user.id,
-        UserOrganization.org_id == org.id
-    )
-    user_membership = db_session.exec(membership_check).first()
-
-    if not user_membership:
-        raise HTTPException(
-            status_code=403,
-            detail="You must be a member of this organization to view its members",
-        )
-
-    # RBAC check (for additional permission verification)
+    # RBAC check
     await rbac_check(request, org.org_uuid, current_user, "read", db_session)
 
     # Base query for users in the organization

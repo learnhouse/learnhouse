@@ -190,12 +190,11 @@ async def get_course_meta(
     # Avoid circular import
     from src.services.courses.chapters import get_course_chapters
 
-    # Get course with authors and organization in a single query using joins
+    # Get course with authors in a single query using joins
     course_statement = (
-        select(Course, ResourceAuthor, User, Organization)
+        select(Course, ResourceAuthor, User)
         .outerjoin(ResourceAuthor, ResourceAuthor.resource_uuid == Course.course_uuid)  # type: ignore
         .outerjoin(User, ResourceAuthor.user_id == User.id)  # type: ignore
-        .join(Organization, Organization.id == Course.org_id)  # type: ignore
         .where(Course.course_uuid == course_uuid)
         .order_by(ResourceAuthor.id.asc())  # type: ignore
     )
@@ -207,10 +206,9 @@ async def get_course_meta(
             detail="Course not found",
         )
 
-    # Extract course, authors, and organization from results
+    # Extract course and authors from results
     course = results[0][0]  # First result's Course
-    org = results[0][3]  # First result's Organization
-    author_results = [(ra, u) for _, ra, u, _ in results if ra is not None and u is not None]
+    author_results = [(ra, u) for _, ra, u in results if ra is not None and u is not None]
 
     # RBAC check
     await courses_rbac_check(request, course.course_uuid, current_user, "read", db_session)
@@ -231,7 +229,7 @@ async def get_course_meta(
     chapters = []
     if course.id is not None:
         chapters = await get_course_chapters(request, course.id, db_session, current_user, with_unpublished_activities)
-
+    
     # Convert to AuthorWithRole objects
     authors = [
         AuthorWithRole(
@@ -243,15 +241,14 @@ async def get_course_meta(
         )
         for resource_author, user in author_results
     ]
-
-    # Create course read model with chapters and org_uuid
+    
+    # Create course read model with chapters
     course_read = FullCourseRead(
         **course.model_dump(),
-        org_uuid=org.org_uuid,
         authors=authors,
         chapters=chapters
     )
-
+    
     return course_read
 
 
@@ -446,35 +443,22 @@ async def search_courses(
     page: int = 1,
     limit: int = 10,
 ) -> List[CourseRead]:
-    """
-    Search courses within an organization.
-
-    SECURITY FIX: Uses parameterized queries to prevent SQL injection.
-    Previously used f-string interpolation which was vulnerable.
-    """
-    # SECURITY: Enforce maximum limit to prevent data dumping
-    limit = min(limit, 100)
     offset = (page - 1) * limit
 
-    # SECURITY FIX: Use parameterized queries to prevent SQL injection
-    # The search pattern is passed as a parameter, not interpolated into SQL
-    search_pattern = f"%{search_query}%"
-
-    # Base query with parameterized search
+    # Base query
     query = (
         select(Course)
         .join(Organization)
         .where(Organization.slug == org_slug)
         .where(
             or_(
-                text('LOWER(course.name) LIKE LOWER(:pattern)'),
-                text('LOWER(course.description) LIKE LOWER(:pattern)'),
-                text('LOWER(course.about) LIKE LOWER(:pattern)'),
-                text('LOWER(course.learnings) LIKE LOWER(:pattern)'),
-                text('LOWER(course.tags) LIKE LOWER(:pattern)')
+                text(f"LOWER(course.name) LIKE LOWER('%{search_query}%')"),
+                text(f"LOWER(course.description) LIKE LOWER('%{search_query}%')"),
+                text(f"LOWER(course.about) LIKE LOWER('%{search_query}%')"),
+                text(f"LOWER(course.learnings) LIKE LOWER('%{search_query}%')"),
+                text(f"LOWER(course.tags) LIKE LOWER('%{search_query}%')")
             )
         )
-        .params(pattern=search_pattern)
     )
 
     if isinstance(current_user, AnonymousUser):

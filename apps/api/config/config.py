@@ -145,20 +145,6 @@ def get_learnhouse_config() -> LearnHouseConfig:
         "security", {}
     ).get("auth_jwt_secret_key")
 
-    # SECURITY: Validate JWT secret key exists and has sufficient entropy
-    if not auth_jwt_secret_key:
-        raise ValueError(
-            "SECURITY ERROR: LEARNHOUSE_AUTH_JWT_SECRET_KEY must be set. "
-            "Generate a secure key with: python -c \"import secrets; print(secrets.token_urlsafe(32))\""
-        )
-    if len(auth_jwt_secret_key) < 32:
-        raise ValueError(
-            "SECURITY ERROR: LEARNHOUSE_AUTH_JWT_SECRET_KEY must be at least 32 characters. "
-            "Current length: {}. Generate a secure key with: python -c \"import secrets; print(secrets.token_urlsafe(32))\"".format(
-                len(auth_jwt_secret_key)
-            )
-        )
-
     # Check if environment variables are defined
     env_site_name = os.environ.get("LEARNHOUSE_SITE_NAME")
     env_site_description = os.environ.get("LEARNHOUSE_SITE_DESCRIPTION")

@@ -102,12 +102,7 @@ async def get_communities_by_org(
 ) -> List[CommunityRead]:
     """
     Get paginated list of communities for an organization.
-
-    SECURITY: Maximum limit enforced to prevent data dumping.
     """
-    # SECURITY: Enforce maximum limit
-    limit = min(limit, 50)
-    page = max(page, 1)
     offset = (page - 1) * limit
 
     # For anonymous users, only show public communities

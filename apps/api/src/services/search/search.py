@@ -30,18 +30,10 @@ async def search_across_org(
     limit: int = 10,
 ) -> SearchResult:
     """
-    Search across courses, collections and users within an organization.
-
-    SECURITY:
-    - Anonymous users can only search public courses and collections
-    - Anonymous users CANNOT search/enumerate users (privacy protection)
-    - Maximum limit enforced at service level
-    - Uses parameterized queries (SQL injection protected)
+    Search across courses, collections and users within an organization
     """
     from fastapi import HTTPException, status
 
-    # SECURITY: Enforce maximum limit to prevent data dumping
-    limit = min(limit, 50)
     offset = (page - 1) * limit
 
     # Get organization
@@ -111,9 +103,6 @@ async def search_across_org(
     if isinstance(current_user, AnonymousUser):
         # For anonymous users, only show public collections
         collections_query = collections_query.where(Collection.public == sa_true())
-        # SECURITY: Anonymous users CANNOT search/enumerate users
-        # This prevents user directory scraping attacks
-        users = []
     else:
         # For authenticated users, show public collections and those in their org
         collections_query = (
@@ -126,23 +115,9 @@ async def search_across_org(
             )
         )
 
-        # SECURITY: Only allow user search if the authenticated user is a member of this org
-        # This prevents users from enumerating members of orgs they don't belong to
-        membership_check = select(UserOrganization).where(
-            UserOrganization.user_id == current_user.id,
-            UserOrganization.org_id == org.id
-        )
-        user_membership = db_session.exec(membership_check).first()
-
-        if user_membership:
-            # User is a member of this org - allow user search
-            users = db_session.exec(users_query.offset(offset).limit(limit)).all()
-        else:
-            # User is NOT a member - don't return user results
-            users = []
-
-    # Apply pagination to collections query
+    # Apply pagination to queries
     collections = db_session.exec(collections_query.offset(offset).limit(limit)).all()
+    users = db_session.exec(users_query.offset(offset).limit(limit)).all()
 
     # Convert collections to CollectionRead objects with courses
     collection_reads = []

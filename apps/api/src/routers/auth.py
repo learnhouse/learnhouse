@@ -48,16 +48,13 @@ router = APIRouter()
 
 
 def set_auth_cookies(response: Response, access_token: str, refresh_token: str):
-    """Helper to set authentication cookies.
-    """
+    """Helper to set authentication cookies."""
     cookie_domain = get_learnhouse_config().hosting_config.cookie_config.domain
 
     response.set_cookie(
         key=JWT_COOKIE_NAME,
         value=access_token,
-        httponly=True, 
-        secure=True,    # Only send over HTTPS
-        samesite="lax", # CSRF protection
+        httponly=False,
         domain=cookie_domain,
         expires=int(timedelta(hours=8).total_seconds()),
     )
@@ -65,8 +62,6 @@ def set_auth_cookies(response: Response, access_token: str, refresh_token: str):
         key=JWT_REFRESH_COOKIE_NAME,
         value=refresh_token,
         httponly=True,
-        secure=True,    # Only send over HTTPS
-        samesite="lax", # CSRF protection
         domain=cookie_domain,
         expires=int(timedelta(days=30).total_seconds()),
     )
@@ -112,9 +107,7 @@ def refresh(request: Request, response: Response):
     response.set_cookie(
         key=JWT_COOKIE_NAME,
         value=new_access_token,
-        httponly=True,  # SECURITY FIX: Prevent XSS token theft
-        secure=True,    # Only send over HTTPS
-        samesite="lax", # CSRF protection
+        httponly=False,
         domain=cookie_domain,
         expires=int(timedelta(hours=8).total_seconds()),
     )
