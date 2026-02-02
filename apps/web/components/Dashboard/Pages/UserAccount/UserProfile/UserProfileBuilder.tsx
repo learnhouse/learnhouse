@@ -185,7 +185,7 @@ const UserProfileBuilder = () => {
       if (session?.data?.user?.id && access_token) {
         try {
           setIsLoading(true)
-          const userData = await getUser(session.data.user.id)
+          const userData = await getUser(session.data.user.id, access_token)
           
           if (userData.profile) {
             try {
@@ -317,7 +317,7 @@ const UserProfileBuilder = () => {
 
     try {
       // Get fresh user data before update
-      const userData = await getUser(session.data.user.id)
+      const userData = await getUser(session.data.user.id, access_token)
       
       // Update only the profile field
       userData.profile = profileData
