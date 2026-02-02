@@ -331,23 +331,20 @@ class TestRBAC:
     @pytest.mark.asyncio
     async def test_authorization_verify_based_on_org_admin_status_success(self, mock_request, mock_db_session):
         """Test org admin status verification success"""
-        with patch('src.security.rbac.rbac.check_element_type', new_callable=AsyncMock):
-            # Mock admin role
-            from src.db.roles import RoleTypeEnum
-            admin_role = Mock(spec=Role)
-            admin_role.id = 1  # Admin role ID
-            admin_role.org_id = 1
-            admin_role.name = "Admin Role"
-            admin_role.description = "An admin role."
-            admin_role.rights = {}
-            admin_role.role_type = RoleTypeEnum.TYPE_GLOBAL
-            admin_role.role_uuid = "role_admin"
-            admin_role.creation_date = "2024-01-01T00:00:00"
-            admin_role.update_date = "2024-01-01T00:00:00"
-            
-            # Mock database query
-            mock_db_session.exec.return_value.all.return_value = [admin_role]
-            
+        with patch('src.security.rbac.rbac.get_element_organization_id', new_callable=AsyncMock) as mock_get_org_id:
+            # Mock get_element_organization_id to return a valid org_id
+            mock_get_org_id.return_value = 1
+
+            # Mock UserOrganization found (user is admin in target org)
+            from src.db.user_organizations import UserOrganization
+            mock_user_org = Mock(spec=UserOrganization)
+            mock_user_org.user_id = 1
+            mock_user_org.org_id = 1
+            mock_user_org.role_id = 1  # Admin role
+
+            # Mock database query - implementation uses .first()
+            mock_db_session.exec.return_value.first.return_value = mock_user_org
+
             result = await authorization_verify_based_on_org_admin_status(
                 request=mock_request,
                 user_id=1,
@@ -355,29 +352,20 @@ class TestRBAC:
                 element_uuid="course_123",
                 db_session=mock_db_session
             )
-            
+
             assert result is True
 
     @pytest.mark.asyncio
     async def test_authorization_verify_based_on_org_admin_status_no_admin(self, mock_request, mock_db_session):
         """Test org admin status verification failure"""
-        with patch('src.security.rbac.rbac.check_element_type', new_callable=AsyncMock):
-            # Mock non-admin role
-            from src.db.roles import RoleTypeEnum
-            regular_role = Mock(spec=Role)
-            regular_role.id = 3  # Non-admin role ID
-            regular_role.org_id = 1
-            regular_role.name = "Regular Role"
-            regular_role.description = "A regular role."
-            regular_role.rights = {}
-            regular_role.role_type = RoleTypeEnum.TYPE_GLOBAL
-            regular_role.role_uuid = "role_regular"
-            regular_role.creation_date = "2024-01-01T00:00:00"
-            regular_role.update_date = "2024-01-01T00:00:00"
-            
-            # Mock database query
-            mock_db_session.exec.return_value.all.return_value = [regular_role]
-            
+        with patch('src.security.rbac.rbac.get_element_organization_id', new_callable=AsyncMock) as mock_get_org_id:
+            # Mock get_element_organization_id to return a valid org_id
+            mock_get_org_id.return_value = 1
+
+            # Mock no UserOrganization found (user is NOT admin in target org)
+            # Implementation uses .first() which should return None
+            mock_db_session.exec.return_value.first.return_value = None
+
             result = await authorization_verify_based_on_org_admin_status(
                 request=mock_request,
                 user_id=1,
@@ -385,7 +373,7 @@ class TestRBAC:
                 element_uuid="course_123",
                 db_session=mock_db_session
             )
-            
+
             assert result is False
 
     @pytest.mark.asyncio
