@@ -45,13 +45,13 @@ export async function getOrganizationContextInfo(
   return res
 }
 
-export async function getOrganizationContextInfoWithId(
-  org_id: any,
+export async function getOrganizationContextInfoWithUUID(
+  org_uuid: string,
   next: any,
-  access_token: string
+  access_token?: string
 ) {
   const result = await fetch(
-    `${getAPIUrl()}orgs/${org_id}`,
+    `${getAPIUrl()}orgs/uuid/${org_uuid}`,
     RequestBodyWithAuthHeader('GET', null, next, access_token)
   )
   const res = await errorHandling(result)

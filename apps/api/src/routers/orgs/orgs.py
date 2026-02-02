@@ -1,5 +1,5 @@
 from typing import List, Literal, Union
-from fastapi import APIRouter, Depends, Request, UploadFile
+from fastapi import APIRouter, Depends, Request, UploadFile, Query
 from sqlmodel import Session
 from src.services.orgs.invites import (
     create_invite_code,
@@ -25,12 +25,12 @@ from src.db.organizations import (
     OrganizationUpdate,
 )
 from src.core.events.database import get_db_session
-from src.security.auth import get_current_user
+from src.security.auth import get_current_user, get_authenticated_user
 from src.services.orgs.orgs import (
     create_org,
     create_org_with_config,
     delete_org,
-    get_organization,
+    get_organization_by_uuid,
     get_organization_by_slug,
     get_orgs_by_user,
     get_orgs_by_user_admin,
@@ -84,31 +84,36 @@ async def api_create_org_withconfig(
     )
 
 
-@router.get("/{org_id}")
-async def api_get_org(
+@router.get("/uuid/{org_uuid}")
+async def api_get_org_by_uuid(
     request: Request,
-    org_id: str,
+    org_uuid: str,
     current_user: PublicUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
 ) -> OrganizationRead:
     """
-    Get single Org by ID
+    Get single Org by UUID
     """
-    return await get_organization(request, org_id, db_session, current_user)
+    return await get_organization_by_uuid(request, org_uuid, db_session, current_user)
 
 
 @router.get("/{org_id}/users")
 async def api_get_org_users(
     request: Request,
     org_id: str,
-    page: int = 1,
-    limit: int = 20,
+    page: int = Query(default=1, ge=1, description="Page number"),
+    limit: int = Query(default=20, ge=1, le=100, description="Items per page (max 100)"),
     search: str = "",
-    current_user: PublicUser = Depends(get_current_user),
+    current_user: PublicUser = Depends(get_authenticated_user),
     db_session: Session = Depends(get_db_session),
 ):
     """
-    Get organization users with pagination and search
+    Get organization users with pagination and search.
+
+    SECURITY:
+    - Requires authentication (no anonymous access)
+    - Maximum limit is 100 to prevent data dumping attacks
+    - Only org members can list other org members
     """
     return await get_organization_users(
         request, org_id, db_session, current_user, page, limit, search

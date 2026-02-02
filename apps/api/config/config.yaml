@@ -9,7 +9,7 @@ general:
   logfire_enabled: false
 
 security:
-  auth_jwt_secret_key: secret
+  auth_jwt_secret_key: learnhouse-dev-secret-key-32chars!
 
 hosting_config:
   domain: localhost:3000

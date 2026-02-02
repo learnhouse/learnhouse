@@ -129,29 +129,37 @@ export const nextAuthOptions = {
       if (token?.user?.tokens) {
         const tokenExpiry = token.user.tokens.expiry || 0;
         const oneMinute = 1 * 60 * 1000;
-        
+
         if (Date.now() + oneMinute >= tokenExpiry) {
-          const RefreshedToken = await getNewAccessTokenUsingRefreshTokenServer(
-            token?.user?.tokens?.refresh_token
-          );
-          token = {
-            ...token,
-            user: {
-              ...token.user,
-              tokens: {
-                ...token.user.tokens,
-                access_token: RefreshedToken.access_token,
-                expiry: Date.now() + (60 * 60 * 1000), // 1 hour from now
-              },
-            },
-          };
+          try {
+            const RefreshedToken = await getNewAccessTokenUsingRefreshTokenServer(
+              token?.user?.tokens?.refresh_token
+            );
+            // Only update token if refresh succeeded
+            if (RefreshedToken?.access_token) {
+              token = {
+                ...token,
+                user: {
+                  ...token.user,
+                  tokens: {
+                    ...token.user.tokens,
+                    access_token: RefreshedToken.access_token,
+                    expiry: Date.now() + (60 * 60 * 1000), // 1 hour from now
+                  },
+                },
+              };
+            }
+          } catch (error) {
+            console.error("Token refresh failed:", error);
+            // Keep existing token if refresh fails
+          }
         }
       }
       return token;
     },
     async session({ session, token }: any) {
       // Include user information in the session
-      if (token.user) {
+      if (token.user && token.user.tokens?.access_token) {
         // Cache the session for 10 seconds for quick role updates
         const cacheKey = `user_session_${token.user.tokens.access_token}`;
 
@@ -191,6 +199,7 @@ export const nextAuthOptions = {
               session.user = token.user.user;
             }
             session.tokens = token.user.tokens;
+            session.roles = [];
           }
         } catch (error) {
           console.error("Error in session callback:", error);
@@ -199,7 +208,15 @@ export const nextAuthOptions = {
             session.user = token.user.user;
           }
           session.tokens = token.user.tokens;
+          session.roles = [];
         }
+      } else if (token.user) {
+        // Token exists but no valid access_token - set what we can
+        if (token.user?.user) {
+          session.user = token.user.user;
+        }
+        session.tokens = token.user.tokens || {};
+        session.roles = [];
       }
       return session;
     },

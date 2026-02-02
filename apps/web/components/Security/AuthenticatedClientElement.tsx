@@ -32,7 +32,10 @@ export const AuthenticatedClientElement = (
     resourceType: string,
     org_uuid: string
   ): boolean {
-    // Iterate over the user's roles
+    if (!Array.isArray(roles)) {
+      return false
+    }
+
     for (const role of roles) {
       // Check if the role is for the right organization
       if (role.org.org_uuid === org_uuid) {
