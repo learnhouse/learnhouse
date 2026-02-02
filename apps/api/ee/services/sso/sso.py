@@ -17,6 +17,7 @@ from src.db.users import User, UserRead
 from src.db.organizations import Organization
 from src.db.user_organizations import UserOrganization
 from src.db.roles import Role
+from src.db.organization_config import OrganizationConfig, OrganizationConfigBase
 from src.security.features_utils.usage import check_limits_with_usage, increase_feature_usage
 from src.security.security import security_hash_password
 from src.services.users.emails import send_account_creation_email
@@ -39,6 +40,33 @@ from .providers import (
 
 # State storage for SSO flows (in production, use Redis)
 _sso_states: dict[str, dict] = {}
+
+
+async def check_org_has_enterprise_plan(
+    org_id: int,
+    db_session: Session
+) -> bool:
+    """
+    Check if an organization has the enterprise plan.
+
+    Args:
+        org_id: Organization ID
+        db_session: Database session
+
+    Returns:
+        True if org has enterprise plan, False otherwise
+    """
+    statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org_id)
+    org_config = db_session.exec(statement).first()
+
+    if not org_config:
+        return False
+
+    try:
+        config = OrganizationConfigBase(**org_config.config)
+        return config.cloud.plan == "enterprise"
+    except Exception:
+        return False
 
 
 def get_sso_redirect_uri() -> str:
@@ -280,6 +308,8 @@ async def check_sso_enabled(
     """
     Check if SSO is enabled for an organization (public endpoint).
 
+    SSO is only available for organizations on the enterprise plan.
+
     Args:
         org_slug: Organization slug
         db_session: Database session
@@ -290,6 +320,10 @@ async def check_sso_enabled(
     connection = await get_sso_connection_by_org_slug(org_slug, db_session)
 
     if not connection or not connection.enabled:
+        return {"sso_enabled": False, "provider": None}
+
+    # Check if org has enterprise plan
+    if not await check_org_has_enterprise_plan(connection.org_id, db_session):
         return {"sso_enabled": False, "provider": None}
 
     return {
@@ -304,6 +338,8 @@ async def initiate_sso_login(
 ) -> SSOAuthorizationResponse:
     """
     Initiate SSO login flow for an organization.
+
+    SSO is only available for organizations on the enterprise plan.
 
     Args:
         org_slug: Organization slug
@@ -327,6 +363,13 @@ async def initiate_sso_login(
         raise HTTPException(
             status_code=400,
             detail="SSO is not enabled for this organization"
+        )
+
+    # Check if org has enterprise plan
+    if not await check_org_has_enterprise_plan(connection.org_id, db_session):
+        raise HTTPException(
+            status_code=403,
+            detail="SSO is only available on the Enterprise plan"
         )
 
     # Generate state for CSRF protection

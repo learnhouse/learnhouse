@@ -29,6 +29,7 @@ def send_password_reset_email(
     user: UserRead,
     organization: OrganizationRead,
     email: EmailStr,
+    base_url: str,
 ):
 
     # send email
@@ -41,7 +42,7 @@ def send_password_reset_email(
         <p>Hello {user.username}</p>
         <p>You have requested to reset your password.</p>
         <p>Here is your reset code: {generated_reset_code}</p>
-        <p>Click <a href="https://{organization.slug}.learnhouse.io/reset?orgslug={organization.slug}&email={email}&resetCode={generated_reset_code}">here</a> to reset your password.</p>
+        <p>Click <a href="{base_url}/reset?email={email}&resetCode={generated_reset_code}">here</a> to reset your password.</p>
     </body>
 </html>
 """,
@@ -53,6 +54,7 @@ def send_email_verification_email(
     user: UserRead,
     organization: OrganizationRead,
     email: EmailStr,
+    base_url: str,
 ):
     """
     Send email verification email with verification link.
@@ -62,11 +64,12 @@ def send_email_verification_email(
         user: User receiving the email
         organization: Organization context
         email: Email address to send to
+        base_url: Base URL for constructing the verification link
 
     Returns:
         Boolean indicating if email was sent successfully
     """
-    verification_url = f"https://{organization.slug}.learnhouse.io/verify-email?orgslug={organization.slug}&token={token}&user={user.user_uuid}&org={organization.org_uuid}"
+    verification_url = f"{base_url}/verify-email?token={token}&user={user.user_uuid}&org={organization.org_uuid}"
 
     return send_email(
         to=email,

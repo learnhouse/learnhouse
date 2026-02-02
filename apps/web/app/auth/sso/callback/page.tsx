@@ -79,7 +79,7 @@ export default function SSOCallbackPage() {
           // The cookies are already set by the backend
           console.error('NextAuth sign-in failed:', signInResult.error)
           setStatus('success')
-          router.push(result.redirect_url || `/redirect_from_auth?orgslug=${result.org_slug}`)
+          router.push(result.redirect_url || '/redirect_from_auth')
         } else if (signInResult?.ok) {
           setStatus('success')
           router.push(result.redirect_url || '/redirect_from_auth')

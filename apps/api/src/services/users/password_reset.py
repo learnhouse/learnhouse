@@ -14,6 +14,7 @@ from config.config import get_learnhouse_config
 from src.services.users.emails import (
     send_password_reset_email,
 )
+from src.services.email.utils import get_base_url_from_request
 from src.db.users import (
     AnonymousUser,
     PublicUser,
@@ -122,11 +123,13 @@ async def send_reset_password_code(
     org_read = OrganizationRead.model_validate(org)
 
     # Send reset code via email
+    base_url = get_base_url_from_request(request)
     isEmailSent = send_password_reset_email(
         generated_reset_code=generated_reset_code,
         user=user_read,
         organization=org_read,
         email=user_read.email,
+        base_url=base_url,
     )
 
     if not isEmailSent:

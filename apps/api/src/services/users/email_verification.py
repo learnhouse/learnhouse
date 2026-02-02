@@ -14,6 +14,7 @@ from src.db.organizations import Organization, OrganizationRead
 from src.db.users import User, UserRead
 from config.config import get_learnhouse_config
 from src.services.users.emails import send_email_verification_email
+from src.services.email.utils import get_base_url_from_request
 from src.services.security.rate_limiting import check_verification_resend_rate_limit
 
 
@@ -102,11 +103,13 @@ async def send_verification_email(
     org_read = OrganizationRead.model_validate(org)
 
     # Send verification email
+    base_url = get_base_url_from_request(request)
     email_sent = send_email_verification_email(
         token=token,
         user=user_read,
         organization=org_read,
         email=user.email,
+        base_url=base_url,
     )
 
     if not email_sent:

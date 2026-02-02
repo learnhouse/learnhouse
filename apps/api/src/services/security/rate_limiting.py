@@ -2,9 +2,9 @@
 Redis-based rate limiting service for authentication endpoints.
 
 Rate limits:
-- Login: 10 attempts per 15 minutes per IP
-- Signup: 5 attempts per hour per IP
-- Verification resend: 3 attempts per 5 minutes per email
+- Login: 30 attempts per 5 minutes per IP
+- Signup: 10 attempts per hour per IP
+- Verification resend: 5 attempts per 5 minutes per email
 """
 from typing import Optional, Tuple
 import redis
@@ -101,7 +101,7 @@ def check_rate_limit(
 
 def check_login_rate_limit(request: Request) -> Tuple[bool, int]:
     """
-    Check login rate limit: 10 attempts per 15 minutes per IP.
+    Check login rate limit: 30 attempts per 5 minutes per IP.
 
     Returns:
         Tuple of (is_allowed, retry_after_seconds)
@@ -111,8 +111,8 @@ def check_login_rate_limit(request: Request) -> Tuple[bool, int]:
 
     is_allowed, count, retry_after = check_rate_limit(
         key=key,
-        max_attempts=10,
-        window_seconds=15 * 60  # 15 minutes
+        max_attempts=30,
+        window_seconds=5 * 60  # 5 minutes
     )
 
     return is_allowed, retry_after
@@ -120,7 +120,7 @@ def check_login_rate_limit(request: Request) -> Tuple[bool, int]:
 
 def check_signup_rate_limit(request: Request) -> Tuple[bool, int]:
     """
-    Check signup rate limit: 5 attempts per hour per IP.
+    Check signup rate limit: 10 attempts per hour per IP.
 
     Returns:
         Tuple of (is_allowed, retry_after_seconds)
@@ -130,7 +130,7 @@ def check_signup_rate_limit(request: Request) -> Tuple[bool, int]:
 
     is_allowed, count, retry_after = check_rate_limit(
         key=key,
-        max_attempts=5,
+        max_attempts=10,
         window_seconds=60 * 60  # 1 hour
     )
 
@@ -139,7 +139,7 @@ def check_signup_rate_limit(request: Request) -> Tuple[bool, int]:
 
 def check_verification_resend_rate_limit(email: str) -> Tuple[bool, int]:
     """
-    Check verification email resend rate limit: 3 attempts per 5 minutes per email.
+    Check verification email resend rate limit: 5 attempts per 5 minutes per email.
 
     Returns:
         Tuple of (is_allowed, retry_after_seconds)
@@ -148,7 +148,7 @@ def check_verification_resend_rate_limit(email: str) -> Tuple[bool, int]:
 
     is_allowed, count, retry_after = check_rate_limit(
         key=key,
-        max_attempts=3,
+        max_attempts=5,
         window_seconds=5 * 60  # 5 minutes
     )
 

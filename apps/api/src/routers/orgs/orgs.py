@@ -48,7 +48,10 @@ from src.services.orgs.orgs import (
     update_org_thumbnail,
     update_org_landing,
     upload_org_landing_content_service,
+    update_org_auth_branding_config,
+    upload_org_auth_background_service,
 )
+from src.db.organization_config import AuthBrandingConfig
 
 
 router = APIRouter()
@@ -295,6 +298,42 @@ async def api_update_org_footer_text_config(
     )
 
 
+@router.put("/{org_id}/config/auth_branding")
+async def api_update_org_auth_branding_config(
+    request: Request,
+    org_id: int,
+    auth_branding: AuthBrandingConfig,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+):
+    """
+    Update organization auth branding configuration
+    """
+    return await update_org_auth_branding_config(
+        request, auth_branding, org_id, current_user, db_session
+    )
+
+
+@router.put("/{org_id}/auth_background")
+async def api_upload_org_auth_background(
+    request: Request,
+    org_id: int,
+    background_file: UploadFile,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+):
+    """
+    Upload auth page background image
+    """
+    return await upload_org_auth_background_service(
+        request=request,
+        background_file=background_file,
+        org_id=org_id,
+        current_user=current_user,
+        db_session=db_session,
+    )
+
+
 # Invites related routes
 @router.post("/{org_id}/invites")
 async def api_create_invite_code(
@@ -429,7 +468,7 @@ async def api_get_org_by_slug(
 @router.put("/{org_id}/logo")
 async def api_update_org_logo(
     request: Request,
-    org_id: str,
+    org_id: int,
     logo_file: UploadFile,
     current_user: PublicUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
@@ -449,7 +488,7 @@ async def api_update_org_logo(
 @router.put("/{org_id}/thumbnail")
 async def api_update_org_thumbnail(
     request: Request,
-    org_id: str,
+    org_id: int,
     thumbnail_file: UploadFile,
     current_user: PublicUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
@@ -468,13 +507,13 @@ async def api_update_org_thumbnail(
 @router.put("/{org_id}/preview")
 async def api_update_org_preview(
     request: Request,
-    org_id: str,
+    org_id: int,
     preview_file: UploadFile,
     current_user: PublicUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
 ):
     """
-    Update org thumbnail
+    Update org preview
     """
     return await update_org_preview(
         request=request,

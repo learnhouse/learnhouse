@@ -38,7 +38,8 @@ from src.db.organizations import (
 )
 from fastapi import HTTPException, UploadFile, status, Request
 
-from src.services.orgs.uploads import upload_org_logo, upload_org_preview, upload_org_thumbnail, upload_org_landing_content
+from src.services.orgs.uploads import upload_org_logo, upload_org_preview, upload_org_thumbnail, upload_org_landing_content, upload_org_auth_background
+from src.db.organization_config import AuthBrandingConfig
 
 
 async def get_organization_by_uuid(
@@ -83,7 +84,9 @@ async def get_organization_by_slug(
     db_session: Session,
     current_user: PublicUser | AnonymousUser,
 ) -> OrganizationRead:
-    statement = select(Organization).where(Organization.slug == org_slug)
+    # IMPORTANT: Order by id to ensure deterministic results
+    # This prevents issues if duplicate slugs somehow exist in the database
+    statement = select(Organization).where(Organization.slug == org_slug).order_by(Organization.id)
     result = db_session.exec(statement)
 
     org = result.first()
@@ -393,7 +396,7 @@ async def update_org_with_config_no_auth(
 async def update_org_logo(
     request: Request,
     logo_file: UploadFile,
-    org_id: str,
+    org_id: int,
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
@@ -429,7 +432,7 @@ async def update_org_logo(
 async def update_org_thumbnail(
     request: Request,
     thumbnail_file: UploadFile,
-    org_id: str,
+    org_id: int,
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
@@ -465,7 +468,7 @@ async def update_org_thumbnail(
 async def update_org_preview(
     request: Request,
     preview_file: UploadFile,
-    org_id: str,
+    org_id: int,
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
@@ -1052,6 +1055,91 @@ async def update_org_footer_text_config(
     db_session.refresh(org_config)
 
     return {"detail": "Footer text configuration updated"}
+
+
+async def update_org_auth_branding_config(
+    request: Request,
+    auth_branding: AuthBrandingConfig,
+    org_id: int,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+):
+    statement = select(Organization).where(Organization.id == org_id)
+    result = db_session.exec(statement)
+
+    org = result.first()
+
+    if not org:
+        raise HTTPException(
+            status_code=404,
+            detail="Organization not found",
+        )
+
+    # RBAC check
+    await rbac_check(request, org.org_uuid, current_user, "update", db_session)
+
+    # Get org config
+    statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
+    result = db_session.exec(statement)
+
+    org_config = result.first()
+
+    if org_config is None:
+        logging.error(f"Organization {org_id} has no config")
+        raise HTTPException(
+            status_code=404,
+            detail="Organization config not found",
+        )
+
+    # Create a deep copy to ensure SQLAlchemy detects the change
+    updated_config = json.loads(json.dumps(org_config.config))
+
+    # Handle backward compatibility
+    if "general" not in updated_config:
+        updated_config["general"] = {"enabled": True, "color": "", "footer_text": "", "watermark": True, "auth_branding": {}}
+
+    # Update auth branding config
+    updated_config["general"]["auth_branding"] = json.loads(auth_branding.model_dump_json())
+
+    # Update the database with the new dictionary
+    org_config.config = updated_config
+    org_config.update_date = str(datetime.now())
+
+    db_session.add(org_config)
+    db_session.commit()
+    db_session.refresh(org_config)
+
+    return {"detail": "Auth branding configuration updated"}
+
+
+async def upload_org_auth_background_service(
+    request: Request,
+    background_file: UploadFile,
+    org_id: int,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+) -> dict:
+    statement = select(Organization).where(Organization.id == org_id)
+    result = db_session.exec(statement)
+
+    org = result.first()
+
+    if not org:
+        raise HTTPException(
+            status_code=404,
+            detail="Organization not found",
+        )
+
+    # RBAC check
+    await rbac_check(request, org.org_uuid, current_user, "update", db_session)
+
+    # Upload background
+    name_in_disk = await upload_org_auth_background(background_file, org.org_uuid)
+
+    return {
+        "detail": "Auth background uploaded successfully",
+        "filename": name_in_disk
+    }
 
 
 async def get_org_join_mechanism(

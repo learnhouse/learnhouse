@@ -1,7 +1,7 @@
 """
 Account lockout service for protecting against brute force attacks.
 
-Locks account after 5 failed login attempts for 30 minutes.
+Locks account after 10 failed login attempts for 5 minutes.
 """
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Tuple
@@ -10,8 +10,8 @@ from src.db.users import User
 
 
 # Configuration
-MAX_FAILED_ATTEMPTS = 5
-LOCKOUT_DURATION_MINUTES = 30
+MAX_FAILED_ATTEMPTS = 10
+LOCKOUT_DURATION_MINUTES = 5
 
 
 def check_account_locked(user: User) -> Tuple[bool, Optional[int]]:

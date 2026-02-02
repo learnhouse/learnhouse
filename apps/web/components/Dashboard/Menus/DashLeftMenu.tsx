@@ -140,7 +140,7 @@ function DashLeftMenu() {
   }
 
   async function logOutUI() {
-    const res = await signOut({ redirect: true, callbackUrl: getUriWithoutOrg('/login?orgslug=' + org.slug) })
+    const res = await signOut({ redirect: true, callbackUrl: getUriWithOrg(org.slug, '/login') })
     if (res) {
       getUriWithOrg(org.slug, '/')
     }

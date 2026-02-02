@@ -4,7 +4,7 @@ import { useLHSession } from '@components/Contexts/LHSessionContext';
 import useAdminStatus from '@components/Hooks/useAdminStatus';
 import { usePathname, useRouter } from 'next/navigation';
 import PageLoading from '@components/Objects/Loaders/PageLoading';
-import { getUriWithoutOrg } from '@services/config/config';
+import { getUriWithOrg } from '@services/config/config';
 import { useOrg } from '@components/Contexts/OrgContext';
 
 type AuthorizationProps = {
@@ -54,7 +54,7 @@ const AdminAuthorization: React.FC<AuthorizationProps> = ({ children, authorizat
     }
 
     if (!isUserAuthenticated) {
-      router.push(getUriWithoutOrg('/login?orgslug=' + org.slug));
+      router.push(getUriWithOrg(org.slug, '/login'));
       return;
     }
 

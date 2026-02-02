@@ -12,9 +12,12 @@ logger = logging.getLogger(__name__)
 
 class EEAuditLogMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
+        # Capture method early before any processing that might affect request state
+        http_method = request.method
+
         # Only audit "actions" (mutations: POST, PUT, DELETE, PATCH)
         # We skip GET (reads) and OPTIONS to avoid noise
-        if request.method not in ["POST", "PUT", "DELETE", "PATCH"]:
+        if http_method not in ["POST", "PUT", "DELETE", "PATCH"]:
             return await call_next(request)
 
         # Skip health checks, documentation, and static files
@@ -149,7 +152,7 @@ class EEAuditLogMiddleware(BaseHTTPMiddleware):
         if hasattr(request.state, "user") and isinstance(request.state.user, PublicUser):
             user_id = request.state.user.id
 
-        action = f"{request.method} {path}"
+        action = f"{http_method} {path}"
 
         # Queue the log asynchronously only if it's an enterprise org
         if is_enterprise:
@@ -158,7 +161,7 @@ class EEAuditLogMiddleware(BaseHTTPMiddleware):
                 org_id=org_id,
                 action=action,
                 resource=resource,
-                method=request.method,
+                method=http_method,
                 path=path,
                 status_code=response.status_code,
                 payload=payload if payload else None,

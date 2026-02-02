@@ -1,26 +1,18 @@
-'use client'
 import { OrgProvider } from '@components/Contexts/OrgContext'
-import ErrorUI from '@components/Objects/StyledElements/Error/Error'
-import { useSearchParams, usePathname } from 'next/navigation'
+import { getOrgSlug } from '@services/org/orgResolution'
 
-
-export default function AuthLayout({
+export default async function AuthLayout({
     children,
 }: {
     children: React.ReactNode
 }) {
-    const searchParams = useSearchParams()
-    const pathname = usePathname()
-    const orgslug = searchParams.get('orgslug')
+    const orgslug = await getOrgSlug()
 
-    // SSO callback doesn't need org context upfront - it gets org from state
-    if (pathname?.startsWith('/auth/sso/')) {
+    // If no org slug found, let the page components handle it
+    // (they show OrgNotFound appropriately)
+    if (!orgslug) {
         return <>{children}</>
     }
 
-    if (orgslug) {
-        return <OrgProvider orgslug={orgslug}>{children}</OrgProvider>
-    } else {
-        return <ErrorUI message='Organization not specified' submessage='Please access this page from an Organization' />
-    }
+    return <OrgProvider orgslug={orgslug}>{children}</OrgProvider>
 }

@@ -1,6 +1,6 @@
 'use client'
 import React, { useState } from 'react'
-import { UploadCloud, Info, Plus, X, GripVertical, Images, StarIcon, ImageIcon, Share2, Link as LinkIcon, Palette } from 'lucide-react'
+import { UploadCloud, Info, Plus, X, GripVertical, Images, StarIcon, ImageIcon, Share2, Link as LinkIcon, Palette, LogIn } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
@@ -21,6 +21,7 @@ import { Form, Formik } from 'formik'
 import { revalidateTags } from '@services/utils/ts/requests'
 import { mutate } from 'swr'
 import { getAPIUrl } from '@services/config/config'
+import AuthBrandingTab from './AuthBrandingTab'
 
 const SUPPORTED_FILES = constructAcceptValue(['png', 'jpg'])
 
@@ -452,6 +453,20 @@ export default function OrgEditBranding() {
             <span className="hidden sm:inline">{t('dashboard.organization.branding.tabs.theme')}</span>
           </TabsTrigger>
           <TabsTrigger
+            value="auth"
+            className="flex-1 min-w-fit data-[state=active]:bg-white data-[state=active]:shadow-xs transition-all flex items-center justify-center space-x-2 px-3"
+          >
+            <LogIn size={14} />
+            <span className="hidden sm:inline">{t('dashboard.organization.branding.tabs.auth')}</span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="social"
+            className="flex-1 min-w-fit data-[state=active]:bg-white data-[state=active]:shadow-xs transition-all flex items-center justify-center space-x-2 px-3"
+          >
+            <Share2 size={14} />
+            <span className="hidden sm:inline">{t('dashboard.organization.branding.tabs.social')}</span>
+          </TabsTrigger>
+          <TabsTrigger
             value="thumbnail"
             className="flex-1 min-w-fit data-[state=active]:bg-white data-[state=active]:shadow-xs transition-all flex items-center justify-center space-x-2 px-3"
           >
@@ -464,13 +479,6 @@ export default function OrgEditBranding() {
           >
             <Images size={14} />
             <span className="hidden sm:inline">{t('dashboard.organization.images.tabs.previews')}</span>
-          </TabsTrigger>
-          <TabsTrigger
-            value="social"
-            className="flex-1 min-w-fit data-[state=active]:bg-white data-[state=active]:shadow-xs transition-all flex items-center justify-center space-x-2 px-3"
-          >
-            <Share2 size={14} />
-            <span className="hidden sm:inline">{t('dashboard.organization.branding.tabs.social')}</span>
           </TabsTrigger>
         </TabsList>
 
@@ -1078,6 +1086,11 @@ export default function OrgEditBranding() {
               </Form>
             )}
           </Formik>
+        </TabsContent>
+
+        {/* Auth Branding Tab */}
+        <TabsContent value="auth" className="mt-4">
+          <AuthBrandingTab />
         </TabsContent>
       </Tabs>
     </div>

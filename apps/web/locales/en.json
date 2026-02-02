@@ -136,7 +136,9 @@
     "back": "Back",
     "of": "of",
     "creating": "Creating...",
-    "view_details": "View Details"
+    "view_details": "View Details",
+    "optional": "optional",
+    "close": "Close"
   },
   "banner": {
     "viewing_as_guest": "You're viewing {{name}} as a guest.",
@@ -148,11 +150,11 @@
     "email": "Email",
     "password": "Password",
     "forgot_password": "Forgot password?",
-    "login_to": "Login to",
+    "login_to": "Welcome back",
     "sign_up": "Sign up",
     "sign_in_with_google": "Sign in with Google",
     "wrong_email_password": "Wrong Email or password",
-    "invited_to_join": "You've been invited to join",
+    "invited_to_join": "Start your learning journey",
     "join": "Join",
     "invite_code_required": "An invite code is required to join",
     "enter_invite_code": "Please enter an invite code",
@@ -194,6 +196,16 @@
     "resend_verification_failed": "Failed to resend verification email. Please try again.",
     "verification_email_resent": "Verification Email Sent",
     "check_inbox_message": "Please check your inbox and click the verification link.",
+    "welcome_back": "Welcome back",
+    "enter_credentials": "Enter your credentials to access your account",
+    "no_account": "Don't have an account?",
+    "already_have_account": "Already have an account?",
+    "create_your_account": "Create your account",
+    "fill_in_details": "Fill in your details to get started",
+    "reset_your_password": "Reset your password",
+    "create_new_password": "Create a new password",
+    "remember_password": "Remember your password?",
+    "verifying_your_email": "Verifying your email",
     "account_locked": "Account Locked",
     "account_locked_message": "Your account has been temporarily locked due to too many failed login attempts. Please try again later.",
     "rate_limited": "Too Many Requests",
@@ -233,7 +245,17 @@
         "domain_not_allowed": "Contact your organization administrator to verify your email domain is allowed.",
         "server_error": "The identity provider is experiencing issues. Please try again later."
       }
-    }
+    },
+    "login_failed": "Login Failed",
+    "try_again_in": "try again in {{minutes}} min",
+    "join_organization": "Join Organization",
+    "join_organization_desc": "You're about to join this organization",
+    "join_organization_success": "Successfully joined the organization",
+    "joining": "Joining",
+    "invite_required": "Invite Required",
+    "invite_required_desc": "An invite code is required to join {{org}}",
+    "invite_code": "Invite Code",
+    "validate_invite": "Validate Invite"
   },
   "validation": {
     "required": "Required",
@@ -1182,6 +1204,7 @@
     "first_name": "First Name",
     "last_name": "Last Name",
     "bio": "Bio",
+    "bio_placeholder": "Tell us a bit about yourself...",
     "no_biography": "No biography provided",
     "my_progress": "My Progress",
     "no_courses_in_progress": "No courses in progress",
@@ -1368,8 +1391,33 @@
         "tabs": {
           "images": "Images & Previews",
           "theme": "Theme",
-          "social": "Social Links"
+          "social": "Social Links",
+          "auth": "Auth"
         }
+      },
+      "auth_branding": {
+        "title": "Auth Page Branding",
+        "subtitle": "Customize the look and feel of your login and signup pages",
+        "welcome_message": "Welcome Message",
+        "welcome_placeholder": "Enter a custom welcome message for your login page...",
+        "welcome_desc": "This message will be displayed on the login and signup pages. Leave empty for default.",
+        "default_welcome": "Sign in to access your learning content",
+        "background_type": "Background Type",
+        "bg_gradient": "Gradient",
+        "bg_custom": "Custom",
+        "bg_unsplash": "Unsplash",
+        "text_color": "Text Color",
+        "text_light": "Light",
+        "text_dark": "Dark",
+        "text_color_desc": "Choose light text for dark backgrounds, dark text for light backgrounds.",
+        "preview": "Live Preview",
+        "preview_hint": "This is how your login and signup pages will appear",
+        "saving": "Saving...",
+        "save_success": "Auth branding settings saved successfully",
+        "save_error": "Failed to save auth branding settings",
+        "uploading": "Uploading background...",
+        "upload_success": "Background image uploaded successfully",
+        "upload_error": "Failed to upload background image"
       },
       "theme": {
         "primary_color": "Primary Color",
