@@ -3,7 +3,7 @@ import { default as React } from 'react'
 import { getCourseMetadata } from '@services/courses/courses'
 import { Metadata } from 'next'
 import { getActivityWithAuthHeader } from '@services/courses/activities'
-import { getOrganizationContextInfoWithUUID } from '@services/organizations/orgs'
+import { getOrganizationContextInfoWithId } from '@services/organizations/orgs'
 import EditorOptionsProvider from '@components/Contexts/Editor/EditorContext'
 import AIEditorProvider from '@components/Contexts/AI/AIEditorContext'
 import { nextAuthOptions } from 'app/auth/options'
@@ -49,7 +49,7 @@ const EditActivity = async (params: any) => {
     access_token ? access_token : null
   )
   
-  const org = await getOrganizationContextInfoWithUUID(courseInfo.org_uuid, {
+  const org = await getOrganizationContextInfoWithId(courseInfo.org_id, {
     revalidate: 180,
     tags: ['organizations'],
   }, access_token)

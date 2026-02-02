@@ -87,14 +87,10 @@ function UserBlockComponent(props: any) {
   }, [props.node.attrs.user_id])
 
   const fetchUserById = async (userId: string) => {
-    if (!access_token) {
-      setError('Authentication required')
-      return
-    }
     setIsLoading(true)
     setError(null)
     try {
-      const data = await getUser(userId, access_token)
+      const data = await getUser(userId)
       if (!data) {
         throw new Error('User not found')
       }
@@ -112,14 +108,10 @@ function UserBlockComponent(props: any) {
   }
 
   const fetchUserByUsername = async (username: string) => {
-    if (!access_token) {
-      setError('Authentication required')
-      return
-    }
     setIsLoading(true)
     setError(null)
     try {
-      const data = await getUserByUsername(username, access_token)
+      const data = await getUserByUsername(username)
       if (!data) {
         throw new Error('User not found')
       }
