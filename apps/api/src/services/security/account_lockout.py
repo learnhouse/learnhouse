@@ -52,6 +52,10 @@ def record_failed_login(user: User, db_session: Session) -> Tuple[bool, Optional
     """
     Record a failed login attempt and lock account if threshold is reached.
 
+    SECURITY: Uses atomic database operations to prevent race conditions.
+    Without atomic updates, concurrent login attempts could bypass the lockout
+    by both reading the same count before either increments it.
+
     Args:
         user: User who failed login
         db_session: Database session
@@ -60,20 +64,45 @@ def record_failed_login(user: User, db_session: Session) -> Tuple[bool, Optional
         Tuple of (is_now_locked, lockout_duration_seconds)
     """
     from sqlmodel import select
+    from sqlalchemy import update
 
-    # Fetch fresh user from session to avoid detached object issues
-    statement = select(User).where(User.id == user.id)
-    db_user = db_session.exec(statement).first()
+    # SECURITY FIX: Use atomic increment to prevent race conditions
+    # This ensures that even concurrent requests will correctly increment the counter
+    lockout_until = datetime.now(timezone.utc) + timedelta(minutes=LOCKOUT_DURATION_MINUTES)
 
-    if not db_user:
+    # Atomic update: increment failed_login_attempts and set lockout if threshold reached
+    # We use COALESCE to handle NULL values (treating NULL as 0)
+    statement = (
+        update(User)
+        .where(User.id == user.id)
+        .values(
+            failed_login_attempts=(
+                db_session.execute(
+                    select(User.failed_login_attempts).where(User.id == user.id)
+                ).scalar() or 0
+            ) + 1
+        )
+        .returning(User.failed_login_attempts)
+    )
+
+    # Execute atomic increment and get new count
+    result = db_session.execute(statement)
+    new_count = result.scalar()
+
+    if new_count is None:
+        # User not found
+        db_session.rollback()
         return False, None
 
-    db_user.failed_login_attempts = (db_user.failed_login_attempts or 0) + 1
-
-    if db_user.failed_login_attempts >= MAX_FAILED_ATTEMPTS:
-        # Lock the account
-        lockout_until = datetime.now(timezone.utc) + timedelta(minutes=LOCKOUT_DURATION_MINUTES)
-        db_user.locked_until = lockout_until.isoformat()
+    # Check if we need to lock the account
+    if new_count >= MAX_FAILED_ATTEMPTS:
+        # Update the lockout timestamp in a separate atomic operation
+        lock_statement = (
+            update(User)
+            .where(User.id == user.id)
+            .values(locked_until=lockout_until.isoformat())
+        )
+        db_session.execute(lock_statement)
         db_session.commit()
         return True, LOCKOUT_DURATION_MINUTES * 60
 

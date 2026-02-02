@@ -1,5 +1,5 @@
 import { cookies, headers } from 'next/headers'
-import { getOrganizationContextInfoWithoutCredentials, getOrganizationContextInfoWithId } from '@services/organizations/orgs'
+import { getOrganizationContextInfoWithoutCredentials, getOrganizationContextInfoWithUUID } from '@services/organizations/orgs'
 import { getLEARNHOUSE_DOMAIN_VAL } from '@services/config/config'
 
 export interface ResolvedOrg {
@@ -118,16 +118,16 @@ async function resolveFromCookie(): Promise<ResolvedOrg | null> {
  */
 async function resolveFromToken(token: string): Promise<ResolvedOrg | null> {
   try {
-    // Decode the JWT token to get org_id
+    // Decode the JWT token to get org_uuid
     // The token is a base64-encoded JWT, we can decode the payload without verification
     // (verification happens on the backend when the action is performed)
     const payload = decodeTokenPayload(token)
 
-    if (!payload || !payload.org_id) {
+    if (!payload || !payload.org_uuid) {
       return null
     }
 
-    return await fetchOrgById(payload.org_id)
+    return await fetchOrgByUUID(payload.org_uuid)
   } catch (error) {
     console.error('Error resolving org from token:', error)
     return null
@@ -136,9 +136,9 @@ async function resolveFromToken(token: string): Promise<ResolvedOrg | null> {
 
 /**
  * Decode JWT payload without verification
- * (Used only for extracting org_id for display purposes)
+ * (Used only for extracting org_uuid for display purposes)
  */
-function decodeTokenPayload(token: string): { org_id?: number; email?: string; action?: string } | null {
+function decodeTokenPayload(token: string): { org_uuid?: string; email?: string; action?: string } | null {
   try {
     const parts = token.split('.')
     if (parts.length !== 3) {
@@ -175,11 +175,11 @@ async function fetchOrgBySlug(orgslug: string): Promise<ResolvedOrg | null> {
 }
 
 /**
- * Fetch organization by ID from API
+ * Fetch organization by UUID from API
  */
-async function fetchOrgById(orgId: number): Promise<ResolvedOrg | null> {
+async function fetchOrgByUUID(orgUUID: string): Promise<ResolvedOrg | null> {
   try {
-    const org = await getOrganizationContextInfoWithId(orgId, {
+    const org = await getOrganizationContextInfoWithUUID(orgUUID, {
       revalidate: 60,
       tags: ['organizations'],
     }, '')
@@ -190,7 +190,7 @@ async function fetchOrgById(orgId: number): Promise<ResolvedOrg | null> {
 
     return org as ResolvedOrg
   } catch (error) {
-    console.error('Error fetching org by id:', error)
+    console.error('Error fetching org by uuid:', error)
     return null
   }
 }
