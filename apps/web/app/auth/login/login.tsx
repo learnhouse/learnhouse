@@ -207,15 +207,14 @@ const LoginClient = (props: LoginClientProps) => {
             ${verificationResent ? 'bg-green-500 text-white' : ''}
             ${errorType === 'ACCOUNT_LOCKED' ? 'bg-red-500 text-white' : ''}
             ${errorType === 'RATE_LIMITED' ? 'bg-orange-500 text-white' : ''}
-            ${errorType === 'INVALID_CREDENTIALS' ? 'bg-red-500 text-white' : ''}
-            ${error && !errorType ? 'bg-red-500 text-white' : ''}
+            ${error && !verificationResent && errorType !== 'EMAIL_NOT_VERIFIED' && errorType !== 'ACCOUNT_LOCKED' && errorType !== 'RATE_LIMITED' ? 'bg-red-500 text-white' : ''}
           `}>
             <div className="flex items-center gap-3 flex-1 min-w-0">
               {errorType === 'EMAIL_NOT_VERIFIED' && !verificationResent && <Mail size={18} className="shrink-0" />}
               {verificationResent && <Mail size={18} className="shrink-0" />}
               {errorType === 'ACCOUNT_LOCKED' && <Lock size={18} className="shrink-0" />}
               {errorType === 'RATE_LIMITED' && <Clock size={18} className="shrink-0" />}
-              {(errorType === 'INVALID_CREDENTIALS' || (error && !errorType)) && <AlertTriangle size={18} className="shrink-0" />}
+              {error && !verificationResent && errorType !== 'EMAIL_NOT_VERIFIED' && errorType !== 'ACCOUNT_LOCKED' && errorType !== 'RATE_LIMITED' && <AlertTriangle size={18} className="shrink-0" />}
 
               <div className="flex-1 min-w-0">
                 {errorType === 'EMAIL_NOT_VERIFIED' && !verificationResent && (
@@ -246,10 +245,7 @@ const LoginClient = (props: LoginClientProps) => {
                     {retryAfter ? ` · ${t('auth.try_again_in', { minutes: Math.max(1, Math.ceil(retryAfter / 60)) })}` : ''}
                   </span>
                 )}
-                {errorType === 'INVALID_CREDENTIALS' && (
-                  <span className="text-sm font-medium">{error}</span>
-                )}
-                {error && !errorType && (
+                {error && !verificationResent && errorType !== 'EMAIL_NOT_VERIFIED' && errorType !== 'ACCOUNT_LOCKED' && errorType !== 'RATE_LIMITED' && (
                   <span className="text-sm font-medium">{error}</span>
                 )}
               </div>

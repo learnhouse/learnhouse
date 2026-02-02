@@ -647,14 +647,26 @@ async def update_org_signup_mechanism(
             detail="Organization config not found",
         )
 
-    updated_config = org_config.config
+    # Create a deep copy to ensure SQLAlchemy detects the change
+    updated_config = json.loads(json.dumps(org_config.config))
+
+    # Handle backward compatibility - ensure features.members exists
+    if "features" not in updated_config:
+        updated_config["features"] = {}
+
+    if "members" not in updated_config["features"]:
+        updated_config["features"]["members"] = {
+            "enabled": True,
+            "signup_mode": "open",
+            "admin_limit": 1,
+            "limit": 10
+        }
 
     # Update config
-    updated_config = OrganizationConfigBase(**updated_config)
-    updated_config.features.members.signup_mode = signup_mechanism
+    updated_config["features"]["members"]["signup_mode"] = signup_mechanism
 
-    # Update the database
-    org_config.config = json.loads(updated_config.model_dump_json())
+    # Update the database with the new dictionary
+    org_config.config = updated_config
     org_config.update_date = str(datetime.now())
 
     db_session.add(org_config)
@@ -698,14 +710,25 @@ async def update_org_ai_config(
             detail="Organization config not found",
         )
 
-    updated_config = org_config.config
+    # Create a deep copy to ensure SQLAlchemy detects the change
+    updated_config = json.loads(json.dumps(org_config.config))
+
+    # Handle backward compatibility - add ai config if it doesn't exist
+    if "features" not in updated_config:
+        updated_config["features"] = {}
+
+    if "ai" not in updated_config["features"]:
+        updated_config["features"]["ai"] = {"enabled": True, "limit": 10}
 
     # Update config
-    updated_config = OrganizationConfigBase(**updated_config)
-    updated_config.features.ai.enabled = ai_enabled
+    updated_config["features"]["ai"]["enabled"] = ai_enabled
 
-    # Update the database
-    org_config.config = json.loads(updated_config.model_dump_json())
+    # Clean up deprecated model field if present
+    if "model" in updated_config["features"]["ai"]:
+        del updated_config["features"]["ai"]["model"]
+
+    # Update the database with the new dictionary
+    org_config.config = updated_config
     org_config.update_date = str(datetime.now())
 
     db_session.add(org_config)
@@ -887,6 +910,64 @@ async def update_org_collections_config(
     db_session.refresh(org_config)
 
     return {"detail": "Collections configuration updated"}
+
+
+async def update_org_courses_config(
+    request: Request,
+    courses_enabled: bool,
+    org_id: int,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+):
+    statement = select(Organization).where(Organization.id == org_id)
+    result = db_session.exec(statement)
+
+    org = result.first()
+
+    if not org:
+        raise HTTPException(
+            status_code=404,
+            detail="Organization not found",
+        )
+
+    # RBAC check
+    await rbac_check(request, org.org_uuid, current_user, "update", db_session)
+
+    # Get org config
+    statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
+    result = db_session.exec(statement)
+
+    org_config = result.first()
+
+    if org_config is None:
+        logging.error(f"Organization {org_id} has no config")
+        raise HTTPException(
+            status_code=404,
+            detail="Organization config not found",
+        )
+
+    # Create a deep copy to ensure SQLAlchemy detects the change
+    updated_config = json.loads(json.dumps(org_config.config))
+
+    # Handle backward compatibility
+    if "features" not in updated_config:
+        updated_config["features"] = {}
+
+    if "courses" not in updated_config["features"]:
+        updated_config["features"]["courses"] = {"enabled": True, "limit": 100}
+
+    # Update config
+    updated_config["features"]["courses"]["enabled"] = courses_enabled
+
+    # Update the database with the new dictionary
+    org_config.config = updated_config
+    org_config.update_date = str(datetime.now())
+
+    db_session.add(org_config)
+    db_session.commit()
+    db_session.refresh(org_config)
+
+    return {"detail": "Courses configuration updated"}
 
 
 async def update_org_podcasts_config(
@@ -1231,14 +1312,14 @@ async def update_org_landing(
             detail="Organization config not found",
         )
 
-    # Convert to OrganizationConfigBase model and back to ensure all fields exist
-    config_model = OrganizationConfigBase(**org_config.config)
-    
-    # Update the landing object
-    config_model.landing = landing_object
+    # Create a deep copy to ensure SQLAlchemy detects the change
+    # This preserves all existing config values and only updates the landing field
+    updated_config = json.loads(json.dumps(org_config.config))
 
-    # Convert back to dict and update
-    updated_config = json.loads(config_model.model_dump_json())
+    # Update the landing object
+    updated_config["landing"] = landing_object
+
+    # Update the database with the new dictionary
     org_config.config = updated_config
     org_config.update_date = str(datetime.now())
 

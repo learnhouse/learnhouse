@@ -94,6 +94,28 @@
         }
       }
     },
+    "features": {
+      "disabled": {
+        "status": "Fitur Dinonaktifkan",
+        "enable_feature": "Buka Pengaturan",
+        "names": {
+          "courses": "Kursus",
+          "collections": "Koleksi",
+          "communities": "Komunitas",
+          "podcasts": "Podcast",
+          "payments": "Pembayaran",
+          "trail": "Pelacakan Kemajuan"
+        },
+        "public": {
+          "title": "{{feature}} Tidak Tersedia",
+          "description": "Fitur ini saat ini tidak tersedia untuk organisasi ini. Silakan hubungi administrator jika Anda memerlukan akses."
+        },
+        "dashboard": {
+          "title": "{{feature}} Dinonaktifkan",
+          "description": "Fitur ini dinonaktifkan untuk organisasi Anda. Aktifkan di pengaturan untuk membuatnya tersedia bagi pengguna."
+        }
+      }
+    },
     "enterprise": "Enterprise",
     "version": "Versi",
     "users": "Pengguna",
