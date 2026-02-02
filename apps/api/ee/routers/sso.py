@@ -423,7 +423,7 @@ async def sso_callback(
     frontend_domain = config.hosting_config.domain
     protocol = "https" if config.hosting_config.ssl else "http"
 
-    redirect_url = f"{protocol}://{frontend_domain}/redirect_from_auth?orgslug={org_slug}&sso=true"
+    redirect_url = f"{protocol}://{org_slug}.{frontend_domain}/redirect_from_auth"
 
     # Set cookies
     set_auth_cookies(response, access_token, refresh_token)

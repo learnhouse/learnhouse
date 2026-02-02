@@ -7,6 +7,7 @@ from fastapi import HTTPException, Request
 from sqlmodel import Session, select
 from src.security.features_utils.usage import decrease_feature_usage
 from src.services.orgs.invites import send_invite_email
+from src.services.email.utils import get_base_url_from_request
 from config.config import get_learnhouse_config
 from src.services.orgs.orgs import rbac_check
 from src.db.roles import Role, RoleRead
@@ -358,11 +359,13 @@ async def invite_batch_users(
         org = OrganizationRead.model_validate(org)
         user = UserRead.model_validate(user)
 
+        base_url = get_base_url_from_request(request)
         isEmailSent = send_invite_email(
             org,
             invite_code_uuid,
             user,
             email,
+            base_url,
         )
 
         invited_user_object = {

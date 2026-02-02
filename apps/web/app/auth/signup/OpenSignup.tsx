@@ -9,7 +9,7 @@ import FormLayout, {
   Textarea,
 } from '@components/Objects/StyledElements/Form/Form'
 import * as Form from '@radix-ui/react-form'
-import { AlertTriangle, Check, Mail, User } from 'lucide-react'
+import { AlertTriangle, Mail, User } from 'lucide-react'
 import Link from 'next/link'
 import { signup } from '@services/auth/auth'
 import { useOrg } from '@components/Contexts/OrgContext'
@@ -38,15 +38,11 @@ const validate = (values: any, t: any) => {
 
   if (!values.username) {
     errors.username = t('validation.required')
-  }
-
-  if (!values.username || values.username.length < 4) {
+  } else if (values.username.length < 4) {
     errors.username = t('validation.username_min_length')
   }
 
-  if (!values.bio) {
-    errors.bio = t('validation.required')
-  }
+  // Bio is optional - no validation required
 
   return errors
 }
@@ -78,7 +74,6 @@ function OpenSignUpComponent() {
       let res = await signup(values)
       let message = await res.json()
       if (res.status == 200) {
-        //router.push(`/login`);
         setMessage(t('auth.account_created_success'))
         setIsSubmitting(false)
       } else if (
@@ -111,126 +106,171 @@ function OpenSignUpComponent() {
   };
 
   return (
-    <div className="login-form m-auto w-72">
+    <div className="m-auto w-full max-w-sm px-6">
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">{t('auth.create_account')}</h1>
+        <p className="text-gray-500 mt-1">{t('auth.fill_in_details')}</p>
+      </div>
+
+      {/* Error/Success Messages */}
       {error && (
-        <div className="flex justify-center bg-red-200 rounded-md text-red-950 space-x-2 items-center p-4 transition-all shadow-xs">
-          <AlertTriangle size={18} />
+        <div className="flex items-center gap-3 bg-red-100 rounded-xl text-red-900 p-4 mb-6 nice-shadow">
+          <AlertTriangle size={18} className="shrink-0" />
           <div className="font-bold text-sm">{error}</div>
         </div>
       )}
       {message && (
-        <div className="flex flex-col space-y-4 justify-center bg-green-200 rounded-md text-green-950 items-center p-4 transition-all shadow-xs">
-          <div className="flex space-x-2 items-center">
+        <div className="flex flex-col gap-4 bg-green-100 rounded-xl text-green-900 p-4 mb-6 nice-shadow">
+          <div className="flex items-center gap-2">
             <Mail size={18} />
             <div className="font-bold text-sm">{t('auth.check_email_for_verification')}</div>
           </div>
-          <p className="text-xs text-center text-green-800">
+          <p className="text-xs text-green-800">
             {t('auth.verification_email_sent_message')}
           </p>
-          <hr className="border-green-900/20 800 w-40 border" />
-          <Link className="flex space-x-2 items-center" href={'/login'}>
-            <User size={14} /> <div>{t('auth.login')} </div>
+          <hr className="border-green-200" />
+          <Link className="flex items-center gap-2 text-sm font-medium hover:underline" href="/login">
+            <User size={14} />
+            <span>{t('auth.login')}</span>
           </Link>
         </div>
       )}
-      <FormLayout onSubmit={formik.handleSubmit}>
-        <FormField name="email">
-          <FormLabelAndMessage label={t('auth.email')} message={formik.errors.email} />
-          <Form.Control asChild>
-            <Input
-              onChange={formik.handleChange}
-              value={formik.values.email}
-              type="email"
-              required
+
+      {/* Signup Form Card */}
+      <div className="bg-white rounded-xl p-6 nice-shadow">
+        <FormLayout onSubmit={formik.handleSubmit}>
+          <FormField name="email">
+            <FormLabelAndMessage
+              label={t('auth.email')}
+              message={formik.touched.email ? formik.errors.email : undefined}
             />
-          </Form.Control>
-        </FormField>
-        <div className="flex flex-row space-x-2">
-          <FormField name="first_name">
-            <FormLabelAndMessage label={t('user.first_name')} message={formik.errors.first_name} />
             <Form.Control asChild>
               <Input
                 onChange={formik.handleChange}
-                value={formik.values.first_name}
+                onBlur={formik.handleBlur}
+                value={formik.values.email}
+                type="email"
+                required
+              />
+            </Form.Control>
+          </FormField>
+
+          <div className="flex flex-row space-x-2">
+            <FormField name="first_name">
+              <FormLabelAndMessage
+                label={t('user.first_name')}
+                message={formik.touched.first_name ? formik.errors.first_name : undefined}
+              />
+              <Form.Control asChild>
+                <Input
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  value={formik.values.first_name}
+                  type="text"
+                />
+              </Form.Control>
+            </FormField>
+            <FormField name="last_name">
+              <FormLabelAndMessage
+                label={t('user.last_name')}
+                message={formik.touched.last_name ? formik.errors.last_name : undefined}
+              />
+              <Form.Control asChild>
+                <Input
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  value={formik.values.last_name}
+                  type="text"
+                />
+              </Form.Control>
+            </FormField>
+          </div>
+
+          <FormField name="password">
+            <FormLabelAndMessage
+              label={t('auth.password')}
+              message={formik.touched.password ? formik.errors.password : undefined}
+            />
+            <Form.Control asChild>
+              <Input
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                value={formik.values.password}
+                type="password"
+                required
+              />
+            </Form.Control>
+            <PasswordStrengthIndicator password={formik.values.password} />
+          </FormField>
+
+          <FormField name="username">
+            <FormLabelAndMessage
+              label={t('user.username')}
+              message={formik.touched.username ? formik.errors.username : undefined}
+            />
+            <Form.Control asChild>
+              <Input
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                value={formik.values.username}
                 type="text"
                 required
               />
             </Form.Control>
           </FormField>
-          <FormField name="last_name">
-            <FormLabelAndMessage label={t('user.last_name')} message={formik.errors.last_name} />
+
+          <FormField name="bio">
+            <FormLabelAndMessage
+              label={`${t('user.bio')} (${t('common.optional')})`}
+              message={formik.touched.bio ? formik.errors.bio : undefined}
+            />
             <Form.Control asChild>
-              <Input
+              <Textarea
                 onChange={formik.handleChange}
-                value={formik.values.last_name}
-                type="text"
-                required
+                onBlur={formik.handleBlur}
+                value={formik.values.bio}
+                placeholder={t('user.bio_placeholder')}
               />
             </Form.Control>
           </FormField>
+
+          <div className="pt-2">
+            <Form.Submit asChild>
+              <button className="w-full bg-black text-white font-semibold text-center py-2.5 rounded-lg hover:bg-gray-800 transition-colors">
+                {isSubmitting ? t('common.loading') : t('auth.create_account')}
+              </button>
+            </Form.Submit>
+          </div>
+        </FormLayout>
+
+        {/* Divider */}
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-200"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-3 bg-white text-gray-400">{t('common.or')}</span>
+          </div>
         </div>
-        {/* for password  */}
-        <FormField name="password">
-          <FormLabelAndMessage
-            label={t('auth.password')}
-            message={formik.errors.password}
-          />
 
-          <Form.Control asChild>
-            <Input
-              onChange={formik.handleChange}
-              value={formik.values.password}
-              type="password"
-              required
-            />
-          </Form.Control>
-          <PasswordStrengthIndicator password={formik.values.password} />
-        </FormField>
-        {/* for username  */}
-        <FormField name="username">
-          <FormLabelAndMessage
-            label={t('user.username')}
-            message={formik.errors.username}
-          />
-
-          <Form.Control asChild>
-            <Input
-              onChange={formik.handleChange}
-              value={formik.values.username}
-              type="text"
-              required
-            />
-          </Form.Control>
-        </FormField>
-
-        {/* for bio  */}
-        <FormField name="bio">
-          <FormLabelAndMessage label={t('user.bio')} message={formik.errors.bio} />
-
-          <Form.Control asChild>
-            <Textarea
-              onChange={formik.handleChange}
-              value={formik.values.bio}
-              required
-            />
-          </Form.Control>
-        </FormField>
-
-        <div className="flex  py-4">
-          <Form.Submit asChild>
-            <button className="w-full bg-black text-white font-bold text-center p-2 rounded-md shadow-md hover:cursor-pointer">
-              {isSubmitting ? t('common.loading') : t('auth.create_account')}
-            </button>
-          </Form.Submit>
-        </div>
-      </FormLayout>
-      <div>
-        <div className='flex h-0.5 rounded-2xl bg-slate-100 mt-5 mb-5 mx-10'></div>
-        <button onClick={handleGoogleSignIn} className="flex justify-center py-3 text-md w-full bg-white text-slate-600 space-x-3 font-semibold text-center p-2 rounded-md shadow-sm hover:cursor-pointer">
-          <img src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg" alt="" />
+        {/* Google Sign In */}
+        <button
+          onClick={handleGoogleSignIn}
+          className="flex items-center justify-center gap-2 w-full py-2.5 bg-white border border-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
+        >
+          <img src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg" alt="" className="w-4 h-4" />
           <span>{t('auth.sign_in_with_google')}</span>
         </button>
       </div>
+
+      {/* Login Link */}
+      <p className="text-center text-gray-600 mt-6">
+        {t('auth.already_have_account')}{' '}
+        <Link href="/login" className="font-semibold text-gray-900 hover:underline">
+          {t('auth.login')}
+        </Link>
+      </p>
     </div>
   )
 }

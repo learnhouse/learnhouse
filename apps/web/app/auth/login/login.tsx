@@ -1,25 +1,22 @@
 'use client'
-import learnhouseIcon from 'public/learnhouse_bigicon_1.png'
 import FormLayout, {
   FormField,
   FormLabelAndMessage,
   Input,
 } from '@components/Objects/StyledElements/Form/Form'
-import Image from 'next/image'
 import * as Form from '@radix-ui/react-form'
 import { useFormik } from 'formik'
-import { getOrgLogoMediaDirectory } from '@services/media/media'
 import React, { useState, useEffect } from 'react'
-import { AlertTriangle, Lock, Mail, UserRoundPlus, Shield } from 'lucide-react'
+import { AlertTriangle, Lock, Mail, Shield, X, Clock } from 'lucide-react'
 import { checkSSOEnabled, redirectToSSOLogin } from '@services/auth/sso'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { signIn } from "next-auth/react"
-import { getUriWithOrg, getLEARNHOUSE_TOP_DOMAIN_VAL } from '@services/config/config'
+import { getLEARNHOUSE_TOP_DOMAIN_VAL } from '@services/config/config'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useTranslation } from 'react-i18next'
-import LanguageSwitcher from '@components/Utils/LanguageSwitcher'
 import { resendVerificationEmail } from '@services/auth/auth'
+import AuthLayout from '@components/Auth/AuthLayout'
 
 interface LoginClientProps {
   org: any
@@ -39,6 +36,8 @@ const LoginClient = (props: LoginClientProps) => {
   const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null)
   const [isResendingVerification, setIsResendingVerification] = useState(false)
   const [verificationResent, setVerificationResent] = useState(false)
+  const [showErrorModal, setShowErrorModal] = useState(false)
+  const [retryAfter, setRetryAfter] = useState<number | null>(null)
 
   const handleGoogleSignIn = () => {
     // Store org context in cookies before OAuth redirect
@@ -52,9 +51,16 @@ const LoginClient = (props: LoginClientProps) => {
     signIn('google', { callbackUrl: '/redirect_from_auth' });
   };
 
-  // Check if SSO is enabled for this organization
+  // Check if SSO is enabled for this organization (requires enterprise plan)
   useEffect(() => {
     const checkSSO = async () => {
+      // SSO is only available for enterprise plan
+      const plan = props.org?.config?.config?.cloud?.plan
+      if (plan !== 'enterprise') {
+        setSsoEnabled(false)
+        return
+      }
+
       if (props.org?.slug) {
         try {
           const result = await checkSSOEnabled(props.org.slug)
@@ -66,7 +72,7 @@ const LoginClient = (props: LoginClientProps) => {
       }
     }
     checkSSO()
-  }, [props.org?.slug])
+  }, [props.org?.slug, props.org?.config?.config?.cloud?.plan])
 
   const handleSSOLogin = async () => {
     setSsoLoading(true)
@@ -113,6 +119,7 @@ const LoginClient = (props: LoginClientProps) => {
       setIsResendingVerification(false)
     }
   }
+
   const formik = useFormik({
     initialValues: {
       email: '',
@@ -127,6 +134,8 @@ const LoginClient = (props: LoginClientProps) => {
       setErrorType(null)
       setUnverifiedEmail(null)
       setVerificationResent(false)
+      setShowErrorModal(false)
+      setRetryAfter(null)
 
       const errors = await validateForm(values);
       if (Object.keys(errors).length > 0) {
@@ -151,8 +160,11 @@ const LoginClient = (props: LoginClientProps) => {
           if (errorData.code) {
             setErrorType(errorData.code);
             setError(errorData.message || t('auth.wrong_email_password'));
-            if (errorData.code === 'EMAIL_NOT_VERIFIED' && errorData.email) {
-              setUnverifiedEmail(errorData.email);
+            if (errorData.code === 'EMAIL_NOT_VERIFIED') {
+              setUnverifiedEmail(errorData.email || values.email);
+            }
+            if (errorData.retry_after) {
+              setRetryAfter(errorData.retry_after);
             }
           } else {
             setError(t('auth.wrong_email_password'));
@@ -173,6 +185,7 @@ const LoginClient = (props: LoginClientProps) => {
             setError(t('auth.wrong_email_password'));
           }
         }
+        setShowErrorModal(true);
         setIsSubmitting(false);
       } else {
         await signIn('credentials', {
@@ -185,180 +198,177 @@ const LoginClient = (props: LoginClientProps) => {
   })
 
   return (
-    <div className="grid grid-flow-col justify-stretch h-screen">
-      <div className="absolute top-4 right-4 z-dropdown">
-        <LanguageSwitcher />
-      </div>
-      <div
-        className="right-login-part"
-        style={{
-          background:
-            'linear-gradient(041.61deg, #202020 7.15%, #000000 90.96%)',
-        }}
-      >
-        <div className="login-topbar m-10">
-          <Link prefetch href={getUriWithOrg(props.org.slug, '/')}>
-            <Image
-              quality={100}
-              width={30}
-              height={30}
-              src={learnhouseIcon}
-              alt=""
-            />
-          </Link>
-        </div>
-        <div className="ml-10 h-4/6 flex flex-row text-white">
-          <div className="m-auto flex space-x-4 items-center flex-wrap">
-            <div>{t('auth.login_to')} </div>
-            <div className="shadow-[0px_4px_16px_rgba(0,0,0,0.02)]">
-              {props.org?.logo_image ? (
-                <img
-                  src={`${getOrgLogoMediaDirectory(
-                    props.org.org_uuid,
-                    props.org?.logo_image
-                  )}`}
-                  alt="Learnhouse"
-                  style={{ width: 'auto', height: 70 }}
-                  className="rounded-xl shadow-xl inset-0 ring-1 ring-inset ring-black/10 bg-white"
+    <AuthLayout org={props.org} welcomeText={t('auth.login_to')}>
+        {/* Error Top Bar */}
+        {showErrorModal && (
+          <div className={`
+            w-full px-4 py-3 flex items-center justify-between gap-3 animate-in slide-in-from-top duration-200
+            ${errorType === 'EMAIL_NOT_VERIFIED' && !verificationResent ? 'bg-amber-500 text-white' : ''}
+            ${verificationResent ? 'bg-green-500 text-white' : ''}
+            ${errorType === 'ACCOUNT_LOCKED' ? 'bg-red-500 text-white' : ''}
+            ${errorType === 'RATE_LIMITED' ? 'bg-orange-500 text-white' : ''}
+            ${errorType === 'INVALID_CREDENTIALS' ? 'bg-red-500 text-white' : ''}
+            ${error && !errorType ? 'bg-red-500 text-white' : ''}
+          `}>
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              {errorType === 'EMAIL_NOT_VERIFIED' && !verificationResent && <Mail size={18} className="shrink-0" />}
+              {verificationResent && <Mail size={18} className="shrink-0" />}
+              {errorType === 'ACCOUNT_LOCKED' && <Lock size={18} className="shrink-0" />}
+              {errorType === 'RATE_LIMITED' && <Clock size={18} className="shrink-0" />}
+              {(errorType === 'INVALID_CREDENTIALS' || (error && !errorType)) && <AlertTriangle size={18} className="shrink-0" />}
+
+              <div className="flex-1 min-w-0">
+                {errorType === 'EMAIL_NOT_VERIFIED' && !verificationResent && (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-sm font-medium">{t('auth.email_not_verified_message')}</span>
+                    <button
+                      type="button"
+                      onClick={handleResendVerification}
+                      disabled={isResendingVerification}
+                      className="text-sm underline hover:no-underline disabled:opacity-50"
+                    >
+                      {isResendingVerification ? t('common.loading') : t('auth.resend_verification_email')}
+                    </button>
+                  </div>
+                )}
+                {verificationResent && (
+                  <span className="text-sm font-medium">{t('auth.verification_email_resent')} - {t('auth.check_inbox_message')}</span>
+                )}
+                {errorType === 'ACCOUNT_LOCKED' && (
+                  <span className="text-sm font-medium">
+                    {t('auth.account_locked')}
+                    {retryAfter ? ` · ${t('auth.try_again_in', { minutes: Math.max(1, Math.ceil(retryAfter / 60)) })}` : ''}
+                  </span>
+                )}
+                {errorType === 'RATE_LIMITED' && (
+                  <span className="text-sm font-medium">
+                    {t('auth.rate_limited')}
+                    {retryAfter ? ` · ${t('auth.try_again_in', { minutes: Math.max(1, Math.ceil(retryAfter / 60)) })}` : ''}
+                  </span>
+                )}
+                {errorType === 'INVALID_CREDENTIALS' && (
+                  <span className="text-sm font-medium">{error}</span>
+                )}
+                {error && !errorType && (
+                  <span className="text-sm font-medium">{error}</span>
+                )}
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                setShowErrorModal(false)
+                if (verificationResent) setVerificationResent(false)
+              }}
+              className="p-1 hover:bg-white/20 rounded transition-colors shrink-0"
+            >
+              <X size={18} />
+            </button>
+          </div>
+        )}
+
+        <div className="flex-1 flex flex-row">
+        <div className="m-auto w-full max-w-sm px-6">
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="text-2xl font-bold text-gray-900">{t('auth.welcome_back')}</h1>
+            <p className="text-gray-500 mt-1">{t('auth.enter_credentials')}</p>
+          </div>
+
+          {/* Login Form Card */}
+          <div className="bg-white rounded-xl p-6 nice-shadow">
+            <FormLayout onSubmit={formik.handleSubmit}>
+              <FormField name="email">
+                <FormLabelAndMessage
+                  label={t('auth.email')}
+                  message={formik.touched.email ? formik.errors.email : undefined}
                 />
-              ) : (
-                <Image
-                  quality={100}
-                  width={70}
-                  height={70}
-                  src={learnhouseIcon}
-                  alt=""
+                <Form.Control asChild>
+                  <Input
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    value={formik.values.email}
+                    type="email"
+                  />
+                </Form.Control>
+              </FormField>
+
+              <FormField name="password">
+                <FormLabelAndMessage
+                  label={t('auth.password')}
+                  message={formik.touched.password ? formik.errors.password : undefined}
                 />
+                <Form.Control asChild>
+                  <Input
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    value={formik.values.password}
+                    type="password"
+                  />
+                </Form.Control>
+              </FormField>
+
+              <div className="flex justify-end">
+                <Link
+                  href="/forgot"
+                  className="text-xs text-gray-500 hover:text-gray-700 transition-colors"
+                >
+                  {t('auth.forgot_password')}
+                </Link>
+              </div>
+
+              <div className="pt-2">
+                <Form.Submit asChild>
+                  <button className="w-full bg-black text-white font-semibold text-center py-2.5 rounded-lg hover:bg-gray-800 transition-colors">
+                    {isSubmitting ? t('common.loading') : t('auth.login')}
+                  </button>
+                </Form.Submit>
+              </div>
+            </FormLayout>
+
+            {/* Divider */}
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-200"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-3 bg-white text-gray-400">{t('common.or')}</span>
+              </div>
+            </div>
+
+            {/* Social & SSO Buttons */}
+            <div className="space-y-2.5">
+              <button
+                onClick={handleGoogleSignIn}
+                className="flex items-center justify-center gap-2 w-full py-2.5 bg-white border border-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <img src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg" alt="" className="w-4 h-4" />
+                <span>{t('auth.sign_in_with_google')}</span>
+              </button>
+
+              {ssoEnabled && (
+                <button
+                  onClick={handleSSOLogin}
+                  disabled={ssoLoading}
+                  className="flex items-center justify-center gap-2 w-full py-2.5 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50"
+                >
+                  <Shield size={16} />
+                  <span>{ssoLoading ? t('common.loading') : t('auth.sign_in_with_sso')}</span>
+                </button>
               )}
             </div>
-            <div className="font-bold text-xl">{props.org?.name}</div>
           </div>
-        </div>
-      </div>
-      <div className="left-login-part bg-white flex flex-row">
-        <div className="login-form m-auto w-72">
-          {error && errorType === 'EMAIL_NOT_VERIFIED' && !verificationResent && (
-            <div className="flex flex-col gap-3 bg-yellow-100 rounded-md text-yellow-900 p-4 transition-all shadow-xs">
-              <div className="flex items-center gap-2">
-                <Mail size={18} />
-                <div className="font-bold text-sm">{t('auth.email_not_verified')}</div>
-              </div>
-              <p className="text-xs">{t('auth.email_not_verified_message')}</p>
-              <button
-                type="button"
-                onClick={handleResendVerification}
-                disabled={isResendingVerification}
-                className="text-sm font-medium text-yellow-800 hover:text-yellow-900 underline"
-              >
-                {isResendingVerification ? t('common.loading') : t('auth.resend_verification_email')}
-              </button>
-            </div>
-          )}
-          {verificationResent && (
-            <div className="flex flex-col gap-2 bg-green-100 rounded-md text-green-900 p-4 transition-all shadow-xs">
-              <div className="flex items-center gap-2">
-                <Mail size={18} />
-                <div className="font-bold text-sm">{t('auth.verification_email_resent')}</div>
-              </div>
-              <p className="text-xs">{t('auth.check_inbox_message')}</p>
-            </div>
-          )}
-          {error && errorType === 'ACCOUNT_LOCKED' && (
-            <div className="flex flex-col gap-2 bg-red-100 rounded-md text-red-900 p-4 transition-all shadow-xs">
-              <div className="flex items-center gap-2">
-                <Lock size={18} />
-                <div className="font-bold text-sm">{t('auth.account_locked')}</div>
-              </div>
-              <p className="text-xs">{error}</p>
-            </div>
-          )}
-          {error && errorType === 'RATE_LIMITED' && (
-            <div className="flex flex-col gap-2 bg-orange-100 rounded-md text-orange-900 p-4 transition-all shadow-xs">
-              <div className="flex items-center gap-2">
-                <AlertTriangle size={18} />
-                <div className="font-bold text-sm">{t('auth.rate_limited')}</div>
-              </div>
-              <p className="text-xs">{error}</p>
-            </div>
-          )}
-          {error && !errorType && (
-            <div className="flex justify-center bg-red-200 rounded-md text-red-950 space-x-2 items-center p-4 transition-all shadow-xs">
-              <AlertTriangle size={18} />
-              <div className="font-bold text-sm">{error}</div>
-            </div>
-          )}
-          <FormLayout onSubmit={formik.handleSubmit}>
-            <FormField name="email">
-              <FormLabelAndMessage
-                label={t('auth.email')}
-                message={formik.errors.email}
-              />
-              <Form.Control asChild>
-                <Input
-                  onChange={formik.handleChange}
-                  value={formik.values.email}
-                  type="email"
-                  
-                />
-              </Form.Control>
-            </FormField>
-            {/* for password  */}
-            <FormField name="password">
-              <FormLabelAndMessage
-                label={t('auth.password')}
-                message={formik.errors.password}
-              />
 
-              <Form.Control asChild>
-                <Input
-                  onChange={formik.handleChange}
-                  value={formik.values.password}
-                  type="password"
-                  
-                />
-              </Form.Control>
-            </FormField>
-            <div>
-              <Link
-                href="/forgot"
-                className="text-xs text-gray-500 hover:underline"
-              >
-                {t('auth.forgot_password')}
-              </Link>
-            </div>
-            <div className="flex  py-4">
-              <Form.Submit asChild>
-                <button  className="w-full bg-black text-white font-bold text-center p-2 rounded-md shadow-md hover:cursor-pointer">
-                  {isSubmitting ? t('common.loading') : t('auth.login')}
-                </button>
-              </Form.Submit>
-            </div>
-          </FormLayout>
-          <div className='flex h-0.5 rounded-2xl bg-slate-100 mt-5  mx-10'></div>
-          <div className='flex justify-center py-5 mx-auto'>{t('common.or')} </div>
-          <div className='flex flex-col space-y-2'>
-            <Link href="/signup" className="flex justify-center items-center py-2 text-sm w-full bg-gray-800 text-gray-300 space-x-2 font-medium text-center px-3 rounded-md shadow-sm hover:cursor-pointer">
-              <UserRoundPlus size={15} />
-              <span>{t('auth.sign_up')}</span>
+          {/* Sign Up Link */}
+          <p className="text-center text-gray-600 mt-6">
+            {t('auth.no_account')}{' '}
+            <Link href="/signup" className="font-semibold text-gray-900 hover:underline">
+              {t('auth.sign_up')}
             </Link>
-            <button onClick={handleGoogleSignIn} className="flex justify-center items-center py-2 text-sm w-full bg-white text-slate-600 space-x-2 font-medium text-center px-3 rounded-md shadow-sm hover:cursor-pointer">
-              <img src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/24px.svg" alt="" className="w-4 h-4" />
-              <span>{t('auth.sign_in_with_google')}</span>
-            </button>
-            {ssoEnabled && (
-              <button
-                onClick={handleSSOLogin}
-                disabled={ssoLoading}
-                className="flex justify-center items-center py-2 text-sm w-full bg-indigo-600 text-white space-x-2 font-medium text-center px-3 rounded-md shadow-sm hover:bg-indigo-700 hover:cursor-pointer disabled:opacity-50"
-              >
-                <Shield size={15} />
-                <span>{ssoLoading ? t('common.loading') : t('auth.sign_in_with_sso')}</span>
-              </button>
-            )}
-          </div>
+          </p>
         </div>
-      </div>
-    </div>
+        </div>
+    </AuthLayout>
   )
 }
 
