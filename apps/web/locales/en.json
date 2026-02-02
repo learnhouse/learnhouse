@@ -60,6 +60,8 @@
     "plans": {
       "label": "Plans",
       "upgrade_button": "Upgrade to {{plan}}",
+      "upgrade_to": "Upgrade to",
+      "current_plan": "Current plan",
       "feature_restricted": {
         "payments": {
           "title": "Standard Feature",
@@ -85,6 +87,10 @@
           "title": "Standard Feature",
           "description": "Communities is a premium feature available only to organizations on our Standard plan or higher. Upgrade to unlock discussion communities for your members."
         },
+        "podcasts": {
+          "title": "Standard Feature",
+          "description": "Podcasts is a premium feature available only to organizations on our Standard plan or higher. Upgrade to create and share podcasts with your members."
+        },
         "audit_logs": {
           "title": "Enterprise Feature",
           "description": "Audit logs are a premium feature available only to organizations on our Enterprise plan. Upgrade to gain full visibility into your organization's activities."
@@ -100,6 +106,28 @@
         "sso": {
           "title": "Enterprise Feature",
           "description": "Single Sign-On (SSO) is a premium feature available only to organizations on our Enterprise plan. Upgrade to enable secure authentication through your organization's identity provider."
+        }
+      }
+    },
+    "features": {
+      "disabled": {
+        "status": "Feature Disabled",
+        "enable_feature": "Go to Settings",
+        "names": {
+          "courses": "Courses",
+          "collections": "Collections",
+          "communities": "Communities",
+          "podcasts": "Podcasts",
+          "payments": "Payments",
+          "trail": "Progress Tracking"
+        },
+        "public": {
+          "title": "{{feature}} Not Available",
+          "description": "This feature is currently not available for this organization. Please contact an administrator if you need access."
+        },
+        "dashboard": {
+          "title": "{{feature}} Disabled",
+          "description": "This feature is disabled for your organization. Enable it in settings to make it available to users."
         }
       }
     },
@@ -1265,7 +1293,8 @@
       "import_select_type": "Select the type of package you want to import",
       "no_courses": "No courses yet",
       "create_course_placeholder": "Create a course to add content",
-      "no_courses_available": "No courses available yet"
+      "no_courses_available": "No courses available yet",
+      "limit_reached": "Course limit reached ({{limit}})"
     },
     "organization": {
       "settings": {
@@ -1526,6 +1555,10 @@
         "admin_only": "Only organization administrators can modify feature settings.",
         "upgrade_notice": "Upgrade to {{plan}} plan to enable this feature",
         "toggles": {
+          "courses": {
+            "title": "Courses",
+            "description": "Enable courses and progress tracking for your organization"
+          },
           "communities": {
             "title": "Communities",
             "description": "Enable discussion communities for your organization members"
@@ -1548,7 +1581,8 @@
           "disabling": "Disabling {{feature}}...",
           "enabled": "{{feature}} enabled",
           "disabled": "{{feature}} disabled",
-          "error": "Failed to update {{feature}} configuration"
+          "error": "Failed to update {{feature}} configuration",
+          "admin_only": "Only organization admins can enable or disable features"
         }
       },
       "audit_logs": {
@@ -2394,6 +2428,7 @@
       "no_courses": "No courses yet",
       "create_course_placeholder": "Create a course to add content",
       "no_courses_available": "No courses available yet",
+      "limit_reached": "Course limit reached ({{limit}})",
       "publishing": "Publishing course...",
       "unpublishing": "Unpublishing course...",
       "published_success": "Course published successfully",

@@ -18,6 +18,9 @@ function MenuLinks(props: { orgslug: string; primaryColor?: string }) {
 
   const isCollectionsEnabled = org?.config?.config?.features?.collections?.enabled !== false
 
+  // Courses feature flag (also controls trail/progress since it depends on courses)
+  const isCoursesEnabled = org?.config?.config?.features?.courses?.enabled !== false
+
   // Podcasts requires standard+ plan AND feature enabled
   const isPodcastsFeatureEnabled = org?.config?.config?.features?.podcasts?.enabled === true
   const canAccessPodcasts = planMeetsRequirement(plan, 'standard')
@@ -26,12 +29,14 @@ function MenuLinks(props: { orgslug: string; primaryColor?: string }) {
   return (
     <div className='pl-1'>
       <ul className="flex space-x-5">
-        <LinkItem
-          link="/courses"
-          type="courses"
-          orgslug={props.orgslug}
-          primaryColor={props.primaryColor}
-        ></LinkItem>
+        {isCoursesEnabled && (
+          <LinkItem
+            link="/courses"
+            type="courses"
+            orgslug={props.orgslug}
+            primaryColor={props.primaryColor}
+          ></LinkItem>
+        )}
         {isCollectionsEnabled && (
           <LinkItem
             link="/collections"
@@ -56,14 +61,16 @@ function MenuLinks(props: { orgslug: string; primaryColor?: string }) {
             primaryColor={props.primaryColor}
           ></LinkItem>
         )}
-        <AuthenticatedClientElement checkMethod="authentication">
-          <LinkItem
-            link="/trail"
-            type="trail"
-            orgslug={props.orgslug}
-            primaryColor={props.primaryColor}
-          ></LinkItem>
-        </AuthenticatedClientElement>
+        {isCoursesEnabled && (
+          <AuthenticatedClientElement checkMethod="authentication">
+            <LinkItem
+              link="/trail"
+              type="trail"
+              orgslug={props.orgslug}
+              primaryColor={props.primaryColor}
+            ></LinkItem>
+          </AuthenticatedClientElement>
+        )}
       </ul>
     </div>
   )

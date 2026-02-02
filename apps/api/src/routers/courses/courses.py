@@ -19,6 +19,7 @@ from src.db.courses.courses import (
     ThumbnailType,
 )
 from src.security.auth import get_current_user
+from src.security.features_utils.dependencies import require_courses_feature
 from src.services.courses.courses import (
     create_course,
     get_course,
@@ -99,7 +100,7 @@ class ImportRequest(BaseModel):
         return v
 
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_courses_feature)])
 
 
 # Static routes must come before dynamic /{course_uuid} routes

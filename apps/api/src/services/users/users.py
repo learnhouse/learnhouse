@@ -647,16 +647,20 @@ async def delete_user_by_id(
 # Utils & Security functions
 
 
-async def security_get_user(request: Request, db_session: Session, email: str) -> User:
+async def security_get_user(request: Request, db_session: Session, email: str) -> User | None:
+    """
+    Get user by email for security/authentication purposes.
+
+    Returns None if user doesn't exist (rather than throwing an exception)
+    to allow the caller to handle the "user not found" case appropriately
+    and prevent email enumeration vulnerabilities.
+    """
     # Check if user exists
     statement = select(User).where(User.email == email)
     user = db_session.exec(statement).first()
 
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="User with Email does not exist",
-        )
+        return None
 
     user = User(**user.model_dump())
 

@@ -1,7 +1,6 @@
 'use client'
 import { useOrg } from '@components/Contexts/OrgContext'
 import { signOut } from 'next-auth/react'
-import LearnHouseDashboardLogo from '@public/dashLogo.png'
 import {
   House,
   BookOpen,
@@ -24,7 +23,6 @@ import {
   Headphones,
 } from '@phosphor-icons/react'
 import { DiscordIcon } from '@components/Objects/Icons/DiscordIcon'
-import Image from 'next/image'
 import Link from 'next/link'
 import React, { useEffect, useState } from 'react'
 import UserAvatar from '../../Objects/UserAvatar'
@@ -167,19 +165,17 @@ function DashLeftMenu() {
           className={cn("flex items-center transition-opacity hover:opacity-70", isCollapsed ? "" : "space-x-3")}
           href={'/'}
         >
-          {org?.logo_image ? (
+          {plan === 'enterprise' && org?.logo_image ? (
             <img
               src={getOrgLogoMediaDirectory(org.org_uuid, org.logo_image)}
               alt={org?.name}
               className="h-9 w-9 object-contain rounded-lg"
             />
           ) : (
-            <Image
+            <img
+              src="/lrn-dash.svg"
               alt="Learnhouse logo"
-              width={32}
-              height={32}
-              src={LearnHouseDashboardLogo}
-              className="rounded-lg"
+              className="h-8 w-8"
             />
           )}
           {!isCollapsed && (

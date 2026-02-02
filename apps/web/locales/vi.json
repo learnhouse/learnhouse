@@ -94,6 +94,28 @@
         }
       }
     },
+    "features": {
+      "disabled": {
+        "status": "Tính năng bị vô hiệu hóa",
+        "enable_feature": "Đi đến Cài đặt",
+        "names": {
+          "courses": "Khóa học",
+          "collections": "Bộ sưu tập",
+          "communities": "Cộng đồng",
+          "podcasts": "Podcast",
+          "payments": "Thanh toán",
+          "trail": "Theo dõi tiến độ"
+        },
+        "public": {
+          "title": "{{feature}} không khả dụng",
+          "description": "Tính năng này hiện không khả dụng cho tổ chức này. Vui lòng liên hệ quản trị viên nếu bạn cần quyền truy cập."
+        },
+        "dashboard": {
+          "title": "{{feature}} bị vô hiệu hóa",
+          "description": "Tính năng này bị vô hiệu hóa cho tổ chức của bạn. Kích hoạt trong cài đặt để cung cấp cho người dùng."
+        }
+      }
+    },
     "enterprise": "Doanh nghiệp",
     "version": "Phiên bản",
     "users": "Người dùng",

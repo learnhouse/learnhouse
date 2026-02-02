@@ -94,6 +94,28 @@
         }
       }
     },
+    "features": {
+      "disabled": {
+        "status": "機能が無効",
+        "enable_feature": "設定へ移動",
+        "names": {
+          "courses": "コース",
+          "collections": "コレクション",
+          "communities": "コミュニティ",
+          "podcasts": "ポッドキャスト",
+          "payments": "支払い",
+          "trail": "進捗追跡"
+        },
+        "public": {
+          "title": "{{feature}}は利用できません",
+          "description": "この機能は現在この組織では利用できません。アクセスが必要な場合は管理者にお問い合わせください。"
+        },
+        "dashboard": {
+          "title": "{{feature}}は無効です",
+          "description": "この機能は組織で無効になっています。ユーザーが利用できるようにするには、設定で有効にしてください。"
+        }
+      }
+    },
     "enterprise": "エンタープライズ",
     "version": "バージョン",
     "users": "ユーザー",

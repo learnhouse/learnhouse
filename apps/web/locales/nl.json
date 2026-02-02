@@ -94,6 +94,28 @@
         }
       }
     },
+    "features": {
+      "disabled": {
+        "status": "Functie uitgeschakeld",
+        "enable_feature": "Ga naar Instellingen",
+        "names": {
+          "courses": "Cursussen",
+          "collections": "Collecties",
+          "communities": "Gemeenschappen",
+          "podcasts": "Podcasts",
+          "payments": "Betalingen",
+          "trail": "Voortgang bijhouden"
+        },
+        "public": {
+          "title": "{{feature}} niet beschikbaar",
+          "description": "Deze functie is momenteel niet beschikbaar voor deze organisatie. Neem contact op met een beheerder als u toegang nodig heeft."
+        },
+        "dashboard": {
+          "title": "{{feature}} uitgeschakeld",
+          "description": "Deze functie is uitgeschakeld voor uw organisatie. Schakel deze in via de instellingen om deze beschikbaar te maken voor gebruikers."
+        }
+      }
+    },
     "enterprise": "Enterprise",
     "version": "Versie",
     "users": "Gebruikers",

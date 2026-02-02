@@ -94,6 +94,28 @@
         }
       }
     },
+    "features": {
+      "disabled": {
+        "status": "功能已禁用",
+        "enable_feature": "前往设置",
+        "names": {
+          "courses": "课程",
+          "collections": "合集",
+          "communities": "社区",
+          "podcasts": "播客",
+          "payments": "支付",
+          "trail": "进度跟踪"
+        },
+        "public": {
+          "title": "{{feature}}不可用",
+          "description": "此功能目前对该组织不可用。如需访问，请联系管理员。"
+        },
+        "dashboard": {
+          "title": "{{feature}}已禁用",
+          "description": "此功能已为您的组织禁用。在设置中启用它以使其对用户可用。"
+        }
+      }
+    },
     "enterprise": "企业",
     "version": "版本",
     "users": "用户",

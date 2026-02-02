@@ -28,6 +28,7 @@ import { swrFetcher } from '@services/utils/ts/requests'
 import { mutate } from 'swr'
 import useSWR from 'swr'
 import toast from 'react-hot-toast'
+import { FeatureDisabledBanner } from '@components/Dashboard/Shared/FeatureDisabled/FeatureDisabledView'
 
 type CourseProps = {
   orgslug: string
@@ -51,9 +52,12 @@ function CoursesHome(params: CourseProps) {
   const session = useLHSession() as any
   const access_token = session.data?.tokens?.access_token
 
-  // SWR for courses data - fetch all at once for client-side filtering (include unpublished for dashboard)
+  // Check if courses feature is enabled
+  const isCoursesEnabled = org?.config?.config?.features?.courses?.enabled !== false
+
+  // SWR for courses data - only fetch if feature is enabled
   const { data: coursesData, mutate: mutateCourses } = useSWR(
-    access_token ? `${getAPIUrl()}courses/org_slug/${orgslug}/page/1/limit/500?include_unpublished=true` : null,
+    isCoursesEnabled && access_token ? `${getAPIUrl()}courses/org_slug/${orgslug}/page/1/limit/500?include_unpublished=true` : null,
     (url) => swrFetcher(url, access_token),
     { fallbackData: params.courses, revalidateOnFocus: true }
   )
@@ -349,6 +353,7 @@ function CoursesHome(params: CourseProps) {
   return (
     <div className="h-full w-full bg-[#f8f8f8] pl-10 pr-10">
       <div className="mb-6 pt-6">
+        <FeatureDisabledBanner featureName="courses" orgslug={orgslug} />
         <Breadcrumbs items={[
           { label: t('courses.courses'), href: '/dash/courses', icon: <BookCopy size={14} /> }
         ]} />

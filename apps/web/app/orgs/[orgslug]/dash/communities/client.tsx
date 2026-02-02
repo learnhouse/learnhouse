@@ -12,6 +12,7 @@ import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import CommunityCard from '@components/Objects/Communities/CommunityCard'
 import AuthenticatedClientElement from '@components/Security/AuthenticatedClientElement'
 import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/PlanRestrictedFeature'
+import { FeatureDisabledBanner } from '@components/Dashboard/Shared/FeatureDisabled/FeatureDisabledView'
 import { PlanLevel } from '@services/plans/plans'
 
 interface CommunitiesDashClientProps {
@@ -44,6 +45,7 @@ const CommunitiesDashClient = ({
     >
     <div className="h-full w-full bg-[#f8f8f8] pl-10 pr-10">
       <div className="mb-6 pt-6">
+        <FeatureDisabledBanner featureName="communities" orgslug={orgslug} />
         <Breadcrumbs items={[
           { label: t('dashboard.courses.communities.title'), href: '/dash/communities', icon: <MessagesSquare size={14} /> }
         ]} />

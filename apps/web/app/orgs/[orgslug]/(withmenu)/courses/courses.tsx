@@ -11,6 +11,7 @@ import NewCourseButton from '@components/Objects/StyledElements/Buttons/NewCours
 import useAdminStatus from '@components/Hooks/useAdminStatus'
 import { useTranslation } from 'react-i18next'
 import { BookCopy, ChevronLeft, ChevronRight, Search, X } from 'lucide-react'
+import FeatureDisabledView from '@components/Dashboard/Shared/FeatureDisabled/FeatureDisabledView'
 
 interface CourseProps {
   orgslug: string
@@ -95,6 +96,12 @@ function Courses(props: CourseProps) {
   }
 
   return (
+    <FeatureDisabledView
+      featureName="courses"
+      orgslug={orgslug}
+      icon={BookCopy}
+      context="public"
+    >
     <div className="w-full">
       <GeneralWrapperStyled>
         <div className="flex flex-col space-y-2 mb-2">
@@ -260,6 +267,7 @@ function Courses(props: CourseProps) {
         </div>
       </GeneralWrapperStyled>
     </div>
+    </FeatureDisabledView>
   )
 }
 

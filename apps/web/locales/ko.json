@@ -94,6 +94,28 @@
         }
       }
     },
+    "features": {
+      "disabled": {
+        "status": "기능 비활성화됨",
+        "enable_feature": "설정으로 이동",
+        "names": {
+          "courses": "코스",
+          "collections": "컬렉션",
+          "communities": "커뮤니티",
+          "podcasts": "팟캐스트",
+          "payments": "결제",
+          "trail": "진행 상황 추적"
+        },
+        "public": {
+          "title": "{{feature}} 사용 불가",
+          "description": "이 기능은 현재 이 조직에서 사용할 수 없습니다. 액세스가 필요하시면 관리자에게 문의하세요."
+        },
+        "dashboard": {
+          "title": "{{feature}} 비활성화됨",
+          "description": "이 기능은 귀하의 조직에서 비활성화되어 있습니다. 사용자가 사용할 수 있도록 설정에서 활성화하세요."
+        }
+      }
+    },
     "enterprise": "엔터프라이즈",
     "version": "버전",
     "users": "사용자",

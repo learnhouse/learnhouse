@@ -91,6 +91,36 @@
         "communities": {
           "title": "ميزة الخطة القياسية",
           "description": "المجتمعات هي ميزة مميزة متاحة فقط للمنظمات في خطتنا القياسية أو أعلى. قم بالترقية لفتح مجتمعات النقاش لأعضائك."
+        },
+        "seo": {
+          "description": "أدوات تحسين محركات البحث متاحة فقط للمؤسسات على خطة Standard أو أعلى. قم بالترقية لتخصيص مظهر محركات البحث ومعاينات المشاركة الاجتماعية والبيانات المنظمة لدوراتك.",
+          "title": "ميزة Standard"
+        },
+        "sso": {
+          "description": "تسجيل الدخول الموحد (SSO) هو ميزة مميزة متاحة فقط للمؤسسات على خطة Enterprise. قم بالترقية لتمكين المصادقة الآمنة من خلال مزود هوية مؤسستك.",
+          "title": "ميزة Enterprise"
+        }
+      }
+    },
+    "features": {
+      "disabled": {
+        "status": "الميزة معطلة",
+        "enable_feature": "الذهاب إلى الإعدادات",
+        "names": {
+          "courses": "الدورات",
+          "collections": "المجموعات",
+          "communities": "المجتمعات",
+          "podcasts": "البودكاست",
+          "payments": "المدفوعات",
+          "trail": "تتبع التقدم"
+        },
+        "public": {
+          "title": "{{feature}} غير متاح",
+          "description": "هذه الميزة غير متاحة حاليًا لهذه المنظمة. يرجى الاتصال بمسؤول إذا كنت بحاجة إلى الوصول."
+        },
+        "dashboard": {
+          "title": "{{feature}} معطل",
+          "description": "هذه الميزة معطلة لمنظمتك. قم بتفعيلها في الإعدادات لجعلها متاحة للمستخدمين."
         }
       }
     },
@@ -127,7 +157,9 @@
     "back": "رجوع",
     "of": "من",
     "creating": "جاري الإنشاء...",
-    "view_details": "عرض التفاصيل"
+    "view_details": "عرض التفاصيل",
+    "close": "إغلاق",
+    "optional": "اختياري"
   },
   "banner": {
     "viewing_as_guest": "أنت تتصفح {{name}} كضيف.",
@@ -216,7 +248,35 @@
     "invite_required": "الدعوة مطلوبة",
     "invite_required_desc": "مطلوب رمز دعوة للانضمام إلى {{org}}",
     "invite_code": "رمز الدعوة",
-    "validate_invite": "التحقق من الدعوة"
+    "validate_invite": "التحقق من الدعوة",
+    "create_your_account": "أنشئ حسابك",
+    "login_failed": "فشل تسجيل الدخول",
+    "sign_in_with_sso": "تسجيل الدخول عبر SSO",
+    "sso_callback": {
+      "auth_failed": "فشلت المصادقة",
+      "authenticating": "جاري المصادقة...",
+      "copied": "تم النسخ!",
+      "copy_details": "نسخ إلى الحافظة",
+      "error": "فشلت مصادقة SSO. يرجى المحاولة مرة أخرى.",
+      "error_code": "رمز الخطأ",
+      "go_home": "الذهاب إلى الرئيسية",
+      "hide_details": "إخفاء التفاصيل التقنية",
+      "missing_params": "معاودة اتصال SSO غير صالحة. المعلمات المطلوبة مفقودة.",
+      "please_wait": "يرجى الانتظار بينما نتحقق من هويتك",
+      "provider": "المزود",
+      "redirecting": "جاري إعادة توجيهك إلى التطبيق...",
+      "show_details": "عرض التفاصيل التقنية",
+      "success": "تمت المصادقة بنجاح",
+      "tips": {
+        "access_denied": "إذا رفضت طلب تسجيل الدخول عن طريق الخطأ، حاول مرة أخرى وقبل الأذونات.",
+        "domain_not_allowed": "اتصل بمسؤول مؤسستك للتحقق من أن نطاق بريدك الإلكتروني مسموح به.",
+        "invalid_state": "ربما انتهت صلاحية جلستك. يرجى محاولة تسجيل الدخول مرة أخرى.",
+        "server_error": "يواجه مزود الهوية مشاكل. يرجى المحاولة لاحقاً."
+      },
+      "try_again": "حاول مرة أخرى"
+    },
+    "sso_error": "فشلت مصادقة SSO. يرجى المحاولة مرة أخرى.",
+    "try_again_in": "حاول مرة أخرى خلال {{minutes}} دقيقة"
   },
   "verify_email": {
     "title": "تأكيد البريد الإلكتروني",
@@ -356,17 +416,17 @@
     "contributor_application_error": "فشل إرسال الطلب، يرجى المحاولة لاحقاً.",
     "contribute": "ساهم",
     "scorm": {
-      "upload_package": "تحميل حزمة SCORM",
+      "upload_package": "رفع حزمة SCORM",
       "package_file": "ملف الحزمة (.zip)",
-      "click_to_upload": "انقر للتحميل أو اسحب وأفلت",
+      "click_to_upload": "انقر للرفع أو اسحب وأفلت",
       "supported_versions": "حزمة SCORM 1.2 أو SCORM 2004",
-      "import_info": "قم بتحميل حزمة SCORM الخاصة بك لتحليل محتوياتها. ستتمكن من تكوين الدورة وتعيين الأنشطة للفصول.",
+      "import_info": "ارفع حزمة SCORM لتحليل محتوياتها. ستتمكن من تكوين الدورة وتعيين الأنشطة للفصول.",
       "analyze_package": "تحليل الحزمة",
       "package_analyzed": "تم تحليل الحزمة بنجاح",
       "assign_scos": "تعيين الأنشطة للفصول",
       "activity_name": "النشاط",
       "chapter_name": "الفصل",
-      "upload_different": "تحميل حزمة مختلفة",
+      "upload_different": "رفع حزمة مختلفة",
       "selected": "محدد",
       "create_course": "إنشاء دورة",
       "configure": "تكوين",
@@ -450,24 +510,6 @@
       "created": "تم الإنشاء",
       "done": "تم"
     },
-    "scorm": {
-      "upload_package": "رفع حزمة SCORM",
-      "package_file": "ملف الحزمة (.zip)",
-      "click_to_upload": "انقر للرفع أو اسحب وأفلت",
-      "supported_versions": "حزمة SCORM 1.2 أو SCORM 2004",
-      "import_info": "ارفع حزمة SCORM لتحليل محتوياتها. ستتمكن من تكوين الدورة وتعيين الأنشطة للفصول.",
-      "analyze_package": "تحليل الحزمة",
-      "package_analyzed": "تم تحليل الحزمة بنجاح",
-      "assign_scos": "تعيين الأنشطة للفصول",
-      "activity_name": "النشاط",
-      "chapter_name": "الفصل",
-      "upload_different": "رفع حزمة مختلفة",
-      "selected": "محدد",
-      "create_course": "إنشاء دورة",
-      "configure": "تكوين",
-      "ready_to_analyze": "جاهز للتحليل",
-      "course_details": "تفاصيل الدورة"
-    },
     "create": {
       "choose_type": "إنشاء دورة جديدة",
       "choose_type_description": "اختر كيفية إنشاء دورتك",
@@ -518,9 +560,19 @@
         "attach_image": "صورة",
         "attach_video": "فيديو",
         "attach_youtube": "رابط يوتيوب",
-        "attach_file": "مستند"
+        "attach_file": "مستند",
+        "attach": "إرفاق",
+        "processing_video": "جاري تحليل محتوى الفيديو...",
+        "send": "إرسال",
+        "still_working": "لا يزال يتم إنشاء خطة الدورة...",
+        "video_hint": "قد تستغرق معالجة الفيديو 1-2 دقيقة",
+        "video_processing_hint": "الذكاء الاصطناعي يعالج مرفق الفيديو الخاص بك",
+        "video_takes_time": "قد يستغرق تحليل الفيديو 1-2 دقيقة"
       }
-    }
+    },
+    "copied": "تم النسخ!",
+    "quit_course_confirm": "هل أنت متأكد من رغبتك في مغادرة هذه الدورة؟ ستفقد كل تقدمك.",
+    "quit_course_title": "مغادرة الدورة؟"
   },
   "communities": {
     "title": "المجتمعات",
@@ -680,7 +732,99 @@
     "deleting_podcast": "جاري حذف البودكاست...",
     "podcast_deleted_success": "تم حذف البودكاست بنجاح",
     "podcast_deleted_error": "فشل في حذف البودكاست",
-    "edit_content": "تعديل المحتوى"
+    "edit_content": "تعديل المحتوى",
+    "create_new_podcast": "إنشاء بودكاست جديد لمؤسستك",
+    "create_podcast": "إنشاء بودكاست",
+    "create_podcast_btn": "إنشاء بودكاست",
+    "create_podcasts_placeholder": "أنشئ بودكاست لمشاركة المحتوى الصوتي مع جمهورك",
+    "creating_podcast": "جاري إنشاء البودكاست...",
+    "dashboard": {
+      "episodes": {
+        "audio_hint": "ملفات MP3, WAV, أو M4A مدعومة",
+        "audio_label": "ملف الصوت",
+        "create": "إنشاء حلقة",
+        "create_error": "فشل إنشاء الحلقة",
+        "create_first": "إنشاء أول حلقة",
+        "created": "تم إنشاء الحلقة",
+        "creating": "جاري إنشاء الحلقة...",
+        "delete": "حذف",
+        "delete_confirm": "هل أنت متأكد من رغبتك في حذف هذه الحلقة؟ لا يمكن التراجع عن هذا الإجراء.",
+        "delete_error": "فشل حذف الحلقة",
+        "delete_title": "حذف الحلقة؟",
+        "deleted": "تم حذف الحلقة",
+        "deleting": "جاري حذف الحلقة...",
+        "description_label": "الوصف",
+        "description_placeholder": "أدخل وصف الحلقة",
+        "edit": "تعديل",
+        "edit_episode": "تعديل الحلقة",
+        "edit_episode_description": "تحديث تفاصيل الحلقة",
+        "new_episode": "حلقة جديدة",
+        "new_episode_description": "إضافة حلقة جديدة لهذا البودكاست",
+        "no_audio": "لا يوجد ملف صوتي",
+        "no_episodes_description": "ابدأ بإضافة أول حلقة لك",
+        "publish": "نشر",
+        "replace_audio": "استبدال ملف الصوت",
+        "save": "حفظ التغييرات",
+        "title_label": "العنوان",
+        "title_placeholder": "أدخل عنوان الحلقة",
+        "unpublish": "إلغاء النشر",
+        "update_error": "فشل تحديث الحلقة",
+        "updated": "تم تحديث الحلقة",
+        "updating": "جاري تحديث الحلقة...",
+        "upload_audio": "رفع ملف صوتي"
+      },
+      "form": {
+        "about": "حول",
+        "about_max_length": "يجب أن يكون الوصف 2000 حرف أو أقل",
+        "about_placeholder": "أخبر المستمعين المزيد عن هذا البودكاست...",
+        "public_hint": "يمكن لأي شخص العثور على هذا البودكاست والاستماع إليه",
+        "published_hint": "اجعل هذا البودكاست مرئياً على صفحة مؤسستك",
+        "tags_hint": "افصل الوسوم بفواصل",
+        "tags_placeholder": "موسيقى، تعليم، تقنية",
+        "thumbnail": "الصورة المصغرة",
+        "thumbnail_hint": "الحجم الموصى به: 1400x1400 بكسل. JPG أو PNG.",
+        "upload_thumbnail": "رفع صورة مصغرة",
+        "visibility": "إعدادات الظهور"
+      },
+      "save_changes": "حفظ التغييرات",
+      "save_error": "فشل حفظ التغييرات",
+      "saved": "تم حفظ التغييرات",
+      "saving": "جاري الحفظ...",
+      "tabs": {
+        "episodes": "الحلقات",
+        "general": "عام"
+      },
+      "view_podcast": "عرض البودكاست"
+    },
+    "failed_to_create_podcast": "فشل إنشاء البودكاست",
+    "form": {
+      "description_max_length": "يجب أن يكون الوصف 500 حرف أو أقل",
+      "name_max_length": "يجب أن يكون الاسم 100 حرف أو أقل",
+      "name_min_length": "يجب أن يكون الاسم 3 أحرف على الأقل",
+      "name_required": "اسم البودكاست مطلوب"
+    },
+    "modals": {
+      "create": {
+        "cancel": "إلغاء",
+        "description": "املأ التفاصيل لإنشاء بودكاست جديد",
+        "form": {
+          "description_label": "الوصف",
+          "description_placeholder": "أدخل وصف البودكاست",
+          "name_label": "اسم البودكاست",
+          "name_placeholder": "أدخل اسم البودكاست",
+          "public_label": "اجعل هذا البودكاست عاماً"
+        },
+        "submit": "إنشاء بودكاست",
+        "title": "إنشاء بودكاست جديد"
+      }
+    },
+    "podcast_created_success": "تم إنشاء البودكاست بنجاح",
+    "podcast_name": "اسم البودكاست",
+    "podcast_name_required": "اسم البودكاست مطلوب",
+    "podcast_tags": "الوسوم",
+    "podcast_thumbnail": "صورة البودكاست المصغرة",
+    "podcast_visibility": "الظهور",
+    "search_results": "تم العثور على {{count}} بودكاست لـ \"{{query}}\""
   },
   "collections": {
     "collections": "المجموعات",
@@ -756,7 +900,12 @@
     "size_large": "حجم كبير",
     "change_color": "تغيير اللون",
     "preview_flip": "معاينة القلب",
-    "activities_count": "{{count}} أنشطة"
+    "activities_count": "{{count}} أنشطة",
+    "copy_link": "نسخ الرابط",
+    "embed": "تضمين",
+    "embed_code_copied": "تم نسخ كود التضمين!",
+    "link_copied": "تم نسخ الرابط!",
+    "share": "مشاركة"
   },
   "assignments": {
     "submit_assignment": "تسليم الواجب",
@@ -1083,7 +1232,8 @@
     "no_biography": "لا توجد سيرة ذاتية",
     "my_progress": "تقدمي",
     "no_courses_in_progress": "لا توجد دورات قيد التنفيذ",
-    "start_course_to_see_progress": "ابدأ دورة لرؤية تقدمك هنا"
+    "start_course_to_see_progress": "ابدأ دورة لرؤية تقدمك هنا",
+    "bio_placeholder": "أخبرنا قليلاً عن نفسك..."
   },
   "roles": {
     "custom_role": "دور مخصص",
@@ -1175,7 +1325,8 @@
           "content": "المحتوى",
           "access": "الوصول",
           "contributors": "المساهمون",
-          "certification": "الشهادات"
+          "certification": "الشهادات",
+          "seo": "SEO"
         },
         "access_denied": {
           "title": "تم رفض الوصول",
@@ -1466,7 +1617,8 @@
             "general": "عام",
             "thumbnail": "الصورة المصغرة",
             "course": "الدورة المرتبطة",
-            "moderation": "الإشراف"
+            "moderation": "الإشراف",
+            "access": "الوصول"
           },
           "general": {
             "title": "الإعدادات العامة",
@@ -1483,6 +1635,10 @@
           "moderation": {
             "title": "الإشراف",
             "subtitle": "تكوين إعدادات إشراف المحتوى"
+          },
+          "access": {
+            "subtitle": "التحكم في من يمكنه الوصول إلى هذا المجتمع",
+            "title": "إعدادات الوصول"
           }
         },
         "course": {
@@ -1595,6 +1751,60 @@
           "deleting": "جاري حذف المجتمع...",
           "delete_success": "تم حذف المجتمع بنجاح",
           "delete_error": "فشل حذف المجتمع"
+        },
+        "access": {
+          "public": {
+            "active": "نشط",
+            "confirmation_button": "تغيير إلى عام",
+            "confirmation_message": "هل أنت متأكد من رغبتك في جعل هذا المجتمع متاحاً للجميع؟",
+            "confirmation_title": "تغيير إلى عام؟",
+            "description": "المجتمع متاح للجميع. يمكن لأي شخص عرض المناقشات والمشاركة فيها.",
+            "title": "عام"
+          },
+          "restricted": {
+            "active": "نشط",
+            "confirmation_button": "تغيير إلى مقيد",
+            "confirmation_message": "هل أنت متأكد من رغبتك في تقييد هذا المجتمع؟ فقط أعضاء مجموعات المستخدمين المرتبطة سيتمكنون من الوصول.",
+            "confirmation_title": "تغيير إلى مقيد؟",
+            "description": "المجتمع متاح فقط لأعضاء مجموعات المستخدمين المحددة. اربط مجموعات المستخدمين لمنح الوصول.",
+            "title": "مقيد"
+          },
+          "subtitle": "اختر ما إذا كنت تريد أن يكون مجتمعك متاحاً للجميع أو فقط لمجموعات مستخدمين محددة",
+          "title": "إعدادات الوصول",
+          "toasts": {
+            "update_error": "فشل تحديث إعدادات الوصول",
+            "update_success": "تم تحديث إعدادات الوصول بنجاح"
+          },
+          "usergroups": {
+            "actions": {
+              "delete_link": "إزالة",
+              "link_to_usergroup": "ربط بمجموعة مستخدمين"
+            },
+            "modals": {
+              "create_usergroup": "إنشاء مجموعة مستخدمين",
+              "link_button": "ربط",
+              "link_description": "اختر مجموعة مستخدمين لربط هذا المجتمع بها. سيتمكن مستخدمو هذه المجموعة من الوصول.",
+              "link_title": "ربط المجتمع بمجموعة مستخدمين",
+              "no_usergroups": "لا توجد مجموعات مستخدمين متاحة",
+              "unlink_button": "إزالة الوصول",
+              "unlink_message": "لن يتمكن مستخدمو هذه المجموعة من الوصول إلى هذا المجتمع بعد الآن.",
+              "unlink_title": "إزالة وصول مجموعة المستخدمين؟",
+              "usergroup_name": "اسم مجموعة المستخدمين",
+              "warning": "سيفقد المستخدمون غير الموجودين في مجموعات المستخدمين المرتبطة الوصول إلى هذا المجتمع"
+            },
+            "subtitle": "امنح الوصول إلى هذا المجتمع عن طريق ربطه بمجموعات المستخدمين. سيتمكن المستخدمون في هذه المجموعات من العرض والمشاركة.",
+            "table": {
+              "actions": "إجراءات",
+              "name": "الاسم"
+            },
+            "title": "مجموعات المستخدمين",
+            "toasts": {
+              "link_error": "خطأ {{status}}: {{detail}}",
+              "link_success": "تم ربط مجموعة المستخدمين بنجاح",
+              "unlink_error": "حدث خطأ أثناء إزالة وصول مجموعة المستخدمين",
+              "unlink_success": "تم إزالة وصول مجموعة المستخدمين بنجاح"
+            }
+          }
         }
       },
       "structure": {
@@ -1707,6 +1917,74 @@
             }
           }
         }
+      },
+      "seo": {
+        "errors": {
+          "save_failed": "فشل حفظ إعدادات SEO"
+        },
+        "form": {
+          "canonical_url_hint": "استخدم إذا كانت هذه الدورة مكررة في مكان آخر. اتركه فارغاً للرابط الافتراضي",
+          "canonical_url_label": "الرابط الأساسي",
+          "canonical_url_placeholder": "https://example.com/course/your-course",
+          "description_hint": "اتركه فارغاً لاستخدام وصف الدورة. الموصى به: 150-160 حرف",
+          "description_label": "الوصف التعريفي",
+          "description_placeholder": "أدخل وصفاً جذاباً لنتائج البحث",
+          "enable_jsonld_hint": "يضيف ترميز schema.org للدورة لمقتطفات غنية في نتائج البحث",
+          "enable_jsonld_label": "تمكين البيانات المنظمة JSON-LD",
+          "keywords_hint": "قائمة كلمات مفتاحية مفصولة بفواصل متعلقة بدورتك",
+          "keywords_label": "الكلمات المفتاحية",
+          "keywords_placeholder": "كلمة1، كلمة2، كلمة3",
+          "og_description_label": "وصف OG",
+          "og_description_placeholder": "وصف مخصص لمشاركة وسائل التواصل الاجتماعي",
+          "og_image_hint": "رابط صورة مخصص للمشاركة الاجتماعية. اتركه فارغاً لاستخدام صورة الدورة",
+          "og_image_label": "رابط صورة OG",
+          "og_image_placeholder": "https://example.com/image.jpg",
+          "og_title_label": "عنوان OG",
+          "og_title_placeholder": "عنوان مخصص لمشاركة وسائل التواصل الاجتماعي",
+          "robots_nofollow_hint": "عند التمكين، لن تتبع محركات البحث الروابط في هذه الصفحة",
+          "robots_nofollow_label": "منع تتبع الروابط (nofollow)",
+          "robots_noindex_hint": "عند التمكين، لن تقوم محركات البحث بفهرسة هذه الدورة",
+          "robots_noindex_label": "منع فهرسة محركات البحث (noindex)",
+          "title_hint": "اتركه فارغاً لاستخدام اسم الدورة. الموصى به: 50-60 حرف",
+          "title_label": "عنوان SEO",
+          "title_placeholder": "أدخل عنواناً مخصصاً لمحركات البحث",
+          "twitter_card_label": "نوع البطاقة",
+          "twitter_card_summary": "ملخص",
+          "twitter_card_summary_large": "ملخص مع صورة كبيرة",
+          "twitter_description_label": "وصف تويتر",
+          "twitter_description_placeholder": "وصف مخصص لمشاركة تويتر",
+          "twitter_title_label": "عنوان تويتر",
+          "twitter_title_placeholder": "عنوان مخصص لمشاركة تويتر"
+        },
+        "sections": {
+          "basic": {
+            "subtitle": "تكوين كيفية ظهور دورتك في نتائج محركات البحث",
+            "title": "SEO الأساسي"
+          },
+          "opengraph": {
+            "subtitle": "تخصيص كيفية ظهور دورتك عند مشاركتها على وسائل التواصل الاجتماعي (فيسبوك، لينكد إن، إلخ.)",
+            "title": "Open Graph"
+          },
+          "robots": {
+            "subtitle": "التحكم في فهرسة محركات البحث وتمكين المقتطفات الغنية",
+            "title": "الروبوتات والبيانات المنظمة"
+          },
+          "twitter": {
+            "subtitle": "تخصيص كيفية ظهور دورتك عند مشاركتها على تويتر/X",
+            "title": "بطاقة تويتر"
+          }
+        },
+        "subtitle": "تحسين دورتك لمحركات البحث ومشاركة وسائل التواصل الاجتماعي",
+        "title": "إعدادات SEO",
+        "validation": {
+          "description_max_length": "يجب أن يكون الوصف التعريفي 160 حرفاً أو أقل",
+          "invalid_url": "يرجى إدخال رابط صالح",
+          "og_description_max_length": "يجب أن يكون وصف OG 200 حرف أو أقل",
+          "og_title_max_length": "يجب أن يكون عنوان OG 70 حرفاً أو أقل",
+          "title_max_length": "يجب أن يكون عنوان SEO 70 حرفاً أو أقل",
+          "twitter_description_max_length": "يجب أن يكون وصف تويتر 200 حرف أو أقل",
+          "twitter_title_max_length": "يجب أن يكون عنوان تويتر 70 حرفاً أو أقل"
+        }
       }
     },
     "organization": {
@@ -1720,7 +1998,8 @@
           "ai": "الذكاء الاصطناعي",
           "api": "الوصول لـ API",
           "features": "الميزات",
-          "other": "أخرى"
+          "other": "أخرى",
+          "sso": "SSO"
         },
         "pages": {
           "general": {
@@ -1750,6 +2029,10 @@
           "features": {
             "title": "الميزات",
             "subtitle": "تفعيل أو تعطيل الميزات لمنظمتك"
+          },
+          "sso": {
+            "subtitle": "تكوين SSO لمؤسستك",
+            "title": "تسجيل الدخول الموحد"
           }
         },
         "name": "اسم المنظمة",
@@ -1828,7 +2111,8 @@
         "tabs": {
           "images": "الصور والمعاينات",
           "social": "روابط التواصل",
-          "theme": "السمة"
+          "theme": "السمة",
+          "auth": "المصادقة"
         }
       },
       "auth_branding": {
@@ -1924,6 +2208,14 @@
           "collections": {
             "title": "المجموعات",
             "description": "السماح بتنظيم الدورات في مجموعات"
+          },
+          "courses": {
+            "description": "تمكين الدورات وتتبع التقدم لمؤسستك",
+            "title": "الدورات"
+          },
+          "podcasts": {
+            "description": "تمكين إنشاء البودكاست والمحتوى الصوتي لمؤسستك",
+            "title": "البودكاست"
           }
         },
         "toasts": {
@@ -1931,7 +2223,8 @@
           "disabling": "جاري تعطيل {{feature}}...",
           "enabled": "تم تفعيل {{feature}}",
           "disabled": "تم تعطيل {{feature}}",
-          "error": "فشل تحديث تكوين {{feature}}"
+          "error": "فشل تحديث تكوين {{feature}}",
+          "admin_only": "فقط مسؤولو المؤسسة يمكنهم تمكين أو تعطيل الميزات"
         }
       },
       "audit_logs": {
@@ -2150,6 +2443,45 @@
         "footer_text": "نص التذييل",
         "footer_text_desc": "أضف نصًا مخصصًا ليظهر في تذييل الصفحة.",
         "footer_text_placeholder": "أدخل نص التذييل..."
+      },
+      "sso": {
+        "allowed_domains": "نطاقات البريد الإلكتروني المسموحة",
+        "allowed_domains_help": "قائمة نطاقات البريد الإلكتروني المسموح لها بتسجيل الدخول عبر SSO مفصولة بفواصل (مثل example.com, company.org). اتركها فارغة للسماح بجميع النطاقات.",
+        "auto_provision": "إنشاء المستخدمين تلقائياً",
+        "auto_provision_desc": "إنشاء حسابات المستخدمين تلقائياً لتسجيلات SSO لأول مرة.",
+        "delete": "حذف تكوين SSO",
+        "delete_confirm": "هل أنت متأكد من رغبتك في حذف تكوين SSO هذا؟ لن يتمكن المستخدمون من تسجيل الدخول عبر SSO بعد الآن.",
+        "delete_error": "فشل حذف تكوين SSO",
+        "delete_success": "تم حذف تكوين SSO",
+        "deleting": "جاري الحذف...",
+        "enable_sso": "تمكين SSO",
+        "enable_sso_desc": "السماح للمستخدمين بالمصادقة باستخدام مزود هوية مؤسستك.",
+        "load_error": "فشل تحميل تكوين SSO",
+        "not_configured": "غير مكون",
+        "oidc_client_id": "معرف العميل",
+        "oidc_client_secret": "سر العميل",
+        "oidc_client_secret_help": "حافظ على سرية هذا. يُستخدم للمصادقة مع مزود الهوية الخاص بك.",
+        "oidc_info": "الاتصال مباشرة بأي مزود هوية متوافق مع OpenID Connect (Azure AD, Okta, Google Workspace, Keycloak).",
+        "oidc_issuer_url": "رابط المُصدر",
+        "oidc_issuer_url_help": "رابط مُصدر OIDC. سيتم اكتشاف نقاط النهاية تلقائياً من /.well-known/openid-configuration.",
+        "oidc_scopes": "النطاقات",
+        "oidc_scopes_help": "نطاقات OAuth المطلوبة (مفصولة بمسافات). الافتراضي: openid email profile",
+        "open_setup_portal": "تكوين مزود الهوية",
+        "provider": "مزود SSO",
+        "save": "حفظ التكوين",
+        "save_error": "فشل حفظ تكوين SSO",
+        "save_success": "تم حفظ تكوين SSO بنجاح",
+        "saving": "جاري الحفظ...",
+        "select_provider": "اختر مزوداً",
+        "setup_error": "فشل الحصول على رابط بوابة الإعداد",
+        "setup_not_available": "بوابة الإعداد غير متاحة. يرجى تكوين المزود أولاً.",
+        "status_disabled": "معطل",
+        "status_enabled": "مفعل",
+        "subtitle": "تكوين SSO للمؤسسات لمؤسستك",
+        "title": "تسجيل الدخول الموحد (SSO)",
+        "workos_info": "يوفر WorkOS SSO للمؤسسات مع دعم لمزودي هوية SAML و OIDC.",
+        "workos_org_id": "معرف مؤسسة WorkOS",
+        "workos_org_id_help": "يتم إنشاء هذا المعرف تلقائياً عند تكوين SSO من خلال بوابة الإعداد."
       }
     },
     "users": {
@@ -2350,7 +2682,9 @@
             },
             "status": {
               "linked": "مرتبط",
-              "not_linked": "غير مرتبط"
+              "not_linked": "غير مرتبط",
+              "in_group": "في المجموعة",
+              "not_in_group": "ليس في المجموعة"
             },
             "actions": {
               "link": "ربط",
@@ -2359,7 +2693,31 @@
             "toasts": {
               "link_success": "تم ربط المستخدم بنجاح",
               "unlink_success": "تم إلغاء ربط المستخدم بنجاح",
-              "error": "خطأ {{status}}: {{detail}}"
+              "error": "خطأ {{status}}: {{detail}}",
+              "bulk_add_success": "تمت إضافة {{count}} مستخدم إلى المجموعة بنجاح",
+              "bulk_adding": "جاري إضافة المستخدمين إلى المجموعة...",
+              "bulk_error": "حدث خطأ أثناء العملية",
+              "bulk_remove_success": "تمت إزالة {{count}} مستخدم من المجموعة بنجاح",
+              "bulk_removing": "جاري إزالة المستخدمين من المجموعة..."
+            },
+            "no_results": "لم يتم العثور على مستخدمين مطابقين لبحثك",
+            "no_users": "لا يوجد مستخدمون في هذه المؤسسة بعد",
+            "pagination": {
+              "page": "صفحة {{current}} من {{total}}",
+              "showing": "عرض {{start}}-{{end}} من {{total}}"
+            },
+            "search_placeholder": "البحث عن المستخدمين بالاسم أو اسم المستخدم...",
+            "selection": {
+              "add_selected": "إضافة {{count}} إلى المجموعة",
+              "clear": "مسح",
+              "count": "تم تحديد {{count}} مستخدم",
+              "remove_selected": "إزالة {{count}} من المجموعة",
+              "select_all_visible": "تحديد الكل المرئي"
+            },
+            "tabs": {
+              "all": "جميع المستخدمين",
+              "in_group": "في المجموعة",
+              "not_in_group": "ليس في المجموعة"
             }
           },
           "create": {
@@ -2402,7 +2760,18 @@
           "deleting": "جاري الحذف...",
           "delete_success": "تم حذف مجموعة المستخدمين",
           "delete_error": "فشل حذف مجموعة المستخدمين"
-        }
+        },
+        "count": {
+          "plural": "مجموعات",
+          "singular": "مجموعة"
+        },
+        "member_count": {
+          "plural": "أعضاء",
+          "singular": "عضو"
+        },
+        "no_groups": "لا توجد مجموعات مستخدمين بعد",
+        "no_results": "لم يتم العثور على مجموعات مطابقة لبحثك",
+        "search_placeholder": "البحث في المجموعات..."
       },
       "roles": {
         "title": "إدارة الأدوار والصلاحيات",
@@ -2420,7 +2789,8 @@
         "actions": {
           "edit": "تعديل",
           "delete": "حذف",
-          "create": "إنشاء دور"
+          "create": "إنشاء دور",
+          "view_rights": "عرض الصلاحيات"
         },
         "modals": {
           "create": {
@@ -2546,12 +2916,29 @@
             "title": "حذف الدور؟",
             "message": "هذا الإجراء لا يمكن التراجع عنه. جميع المستخدمين المعينين لهذا الدور سيفقدون صلاحياتهم. هل أنت متأكد أنك تريد حذف هذا الدور؟",
             "button": "حذف الدور"
+          },
+          "view_rights": {
+            "description": "عرض جميع الصلاحيات المعينة لهذا الدور",
+            "title": "{{roleName}} - الصلاحيات"
           }
         },
         "toasts": {
           "deleting": "جاري الحذف...",
           "delete_success": "تم حذف الدور",
           "delete_error": "فشل حذف الدور"
+        },
+        "rights": {
+          "resources": {
+            "activities": "الأنشطة",
+            "collections": "المجموعات",
+            "coursechapters": "فصول الدورة",
+            "courses": "الدورات",
+            "dashboard": "لوحة التحكم",
+            "organizations": "المؤسسات",
+            "roles": "الأدوار",
+            "usergroups": "مجموعات المستخدمين",
+            "users": "المستخدمون"
+          }
         }
       }
     },
@@ -2829,7 +3216,39 @@
       "badge": "شارات",
       "button": "زر",
       "user": "مستخدم",
-      "magic_block": "كتلة سحرية (ذكاء اصطناعي)",
+      "magic_block": {
+        "title": "كتلة سحرية",
+        "interactive_element": "عنصر تفاعلي",
+        "iterations": "{{count}}/{{max}} تكرارات",
+        "create_interactive": "إنشاء محتوى تفاعلي",
+        "generate_description": "إنشاء اختبارات ومحاكيات ورسوم بيانية وأكثر باستخدام الذكاء الاصطناعي",
+        "generate_with_ai": "إنشاء باستخدام الذكاء الاصطناعي",
+        "upgrade_required": "ارقَ إلى خطة Standard لإنشاء محتوى تفاعلي باستخدام الذكاء الاصطناعي",
+        "drag_resize": "اسحب لتغيير الحجم",
+        "edit_left": "تعديل ({{count}} متبقية)",
+        "experimental": "تجريبي",
+        "save_and_close": "حفظ وإغلاق",
+        "magic_chat": "الدردشة السحرية",
+        "describe_prompt": "صِف العنصر التفاعلي الذي تريد إنشاءه:",
+        "ai_generated": "محتوى مُنشأ بالذكاء الاصطناعي",
+        "check_preview": "تم إنشاء العنصر التفاعلي. تحقق من لوحة المعاينة.",
+        "creating_magic": "جارٍ إنشاء السحر...",
+        "max_iterations_reached": "تم الوصول إلى الحد الأقصى من التكرارات. احفظ محتواك أو ابدأ كتلة جديدة.",
+        "placeholder_new": "صِف ما تريد إنشاءه...",
+        "placeholder_edit": "صِف التغييرات أو التحسينات...",
+        "suggestion_physics": "محاكاة فيزيائية",
+        "suggestion_physics_prompt": "إنشاء محاكاة فيزيائية تفاعلية تُظهر حركة القذائف مع زاوية وسرعة قابلة للتعديل",
+        "suggestion_chart": "رسم بياني للبيانات",
+        "suggestion_chart_prompt": "إنشاء رسم بياني شريطي تفاعلي مع بيانات مبيعات نموذجية يمكن للمستخدمين التمرير عليها لرؤية القيم",
+        "suggestion_quiz": "لعبة اختبار",
+        "suggestion_quiz_prompt": "إنشاء لعبة اختبار بسيطة مع 5 أسئلة اختيار من متعدد حول العلوم",
+        "suggestion_memory": "لعبة الذاكرة",
+        "suggestion_memory_prompt": "إنشاء لعبة ذاكرة مطابقة البطاقات مع بطاقات ملونة",
+        "suggestion_calculator": "آلة حاسبة رياضية",
+        "suggestion_calculator_prompt": "إنشاء آلة حاسبة تُظهر الحلول خطوة بخطوة للمعادلات الأساسية",
+        "suggestion_timeline": "خط زمني",
+        "suggestion_timeline_prompt": "إنشاء خط زمني تفاعلي يُظهر الأحداث التاريخية الكبرى مع تفاصيل قابلة للتوسيع"
+      },
       "magic_block_disabled": "الكتلة السحرية تتطلب خطة Standard",
       "common": {
         "uploading": "جاري التحميل...",
@@ -2943,39 +3362,15 @@
         "load_user": "تحميل المستخدم",
         "no_user": "لم يتم تحديد مستخدم"
       },
-      "magic_block": {
-        "title": "كتلة سحرية",
-        "interactive_element": "عنصر تفاعلي",
-        "iterations": "{{count}}/{{max}} تكرارات",
-        "create_interactive": "إنشاء محتوى تفاعلي",
-        "generate_description": "إنشاء اختبارات ومحاكيات ورسوم بيانية وأكثر باستخدام الذكاء الاصطناعي",
-        "generate_with_ai": "إنشاء باستخدام الذكاء الاصطناعي",
-        "upgrade_required": "ارقَ إلى خطة Standard لإنشاء محتوى تفاعلي باستخدام الذكاء الاصطناعي",
-        "drag_resize": "اسحب لتغيير الحجم",
-        "edit_left": "تعديل ({{count}} متبقية)",
-        "experimental": "تجريبي",
-        "save_and_close": "حفظ وإغلاق",
-        "magic_chat": "الدردشة السحرية",
-        "describe_prompt": "صِف العنصر التفاعلي الذي تريد إنشاءه:",
-        "ai_generated": "محتوى مُنشأ بالذكاء الاصطناعي",
-        "check_preview": "تم إنشاء العنصر التفاعلي. تحقق من لوحة المعاينة.",
-        "creating_magic": "جارٍ إنشاء السحر...",
-        "max_iterations_reached": "تم الوصول إلى الحد الأقصى من التكرارات. احفظ محتواك أو ابدأ كتلة جديدة.",
-        "placeholder_new": "صِف ما تريد إنشاءه...",
-        "placeholder_edit": "صِف التغييرات أو التحسينات...",
-        "suggestion_physics": "محاكاة فيزيائية",
-        "suggestion_physics_prompt": "إنشاء محاكاة فيزيائية تفاعلية تُظهر حركة القذائف مع زاوية وسرعة قابلة للتعديل",
-        "suggestion_chart": "رسم بياني للبيانات",
-        "suggestion_chart_prompt": "إنشاء رسم بياني شريطي تفاعلي مع بيانات مبيعات نموذجية يمكن للمستخدمين التمرير عليها لرؤية القيم",
-        "suggestion_quiz": "لعبة اختبار",
-        "suggestion_quiz_prompt": "إنشاء لعبة اختبار بسيطة مع 5 أسئلة اختيار من متعدد حول العلوم",
-        "suggestion_memory": "لعبة الذاكرة",
-        "suggestion_memory_prompt": "إنشاء لعبة ذاكرة مطابقة البطاقات مع بطاقات ملونة",
-        "suggestion_calculator": "آلة حاسبة رياضية",
-        "suggestion_calculator_prompt": "إنشاء آلة حاسبة تُظهر الحلول خطوة بخطوة للمعادلات الأساسية",
-        "suggestion_timeline": "خط زمني",
-        "suggestion_timeline_prompt": "إنشاء خط زمني تفاعلي يُظهر الأحداث التاريخية الكبرى مع تفاصيل قابلة للتوسيع"
+      "button_block": {
+        "enter_link_url": "أدخل رابط URL"
       }
     }
+  },
+  "embed": {
+    "not_supported_description": "هذا النوع من النشاط يتطلب المصادقة ولا يمكن تضمينه.",
+    "not_supported_title": "هذا النشاط غير مدعوم",
+    "powered_by": "مدعوم من LearnHouse",
+    "visit_activity": "زيارة صفحة النشاط"
   }
 }

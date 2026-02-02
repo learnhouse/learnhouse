@@ -14,8 +14,9 @@ import { removeCourse } from '@services/courses/activity'
 import { revalidateTags } from '@services/utils/ts/requests'
 import { useRouter } from 'next/navigation'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
-import { BookOpen } from 'lucide-react'
+import { BookOpen, Signpost } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import FeatureDisabledView from '@components/Dashboard/Shared/FeatureDisabled/FeatureDisabledView'
 
 function Trail(params: any) {
   const { t } = useTranslation()
@@ -28,8 +29,12 @@ function Trail(params: any) {
   const [isQuittingAll, setIsQuittingAll] = useState(false)
   const [quittingProgress, setQuittingProgress] = useState(0)
 
+  // Check if courses feature is enabled
+  const isCoursesEnabled = org?.config?.config?.features?.courses?.enabled !== false
+
+  // Only fetch trail data if courses feature is enabled
   const { data: trail, error: error, mutate } = useSWR(
-    `${getAPIUrl()}trail/org/${orgID}/trail`,
+    isCoursesEnabled && orgID ? `${getAPIUrl()}trail/org/${orgID}/trail` : null,
     (url) => swrFetcher(url, access_token)
   )
 
@@ -60,6 +65,12 @@ function Trail(params: any) {
   useEffect(() => { }, [trail, org])
 
   return (
+    <FeatureDisabledView
+      featureName="courses"
+      orgslug={orgslug}
+      icon={Signpost}
+      context="public"
+    >
     <GeneralWrapperStyled>
       <div className="flex flex-col space-y-2 mb-6">
         <div className="flex items-center justify-between">
@@ -120,6 +131,7 @@ function Trail(params: any) {
 
       <UserCertificates orgslug={orgslug} />
     </GeneralWrapperStyled>
+    </FeatureDisabledView>
   )
 }
 

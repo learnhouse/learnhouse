@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, Request
 from src.core.events.database import get_db_session
 from src.db.trails import TrailCreate, TrailRead
 from src.security.auth import get_current_user
+from src.security.features_utils.dependencies import require_courses_feature
 from src.services.trail.trail import (
     Trail,
     add_activity_to_trail,
@@ -14,7 +15,7 @@ from src.services.trail.trail import (
 )
 
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_courses_feature)])
 
 
 @router.post("/start")
@@ -91,7 +92,7 @@ async def api_add_activity_to_trail(
     db_session=Depends(get_db_session),
 ) -> TrailRead:
     """
-    Add Course to trail
+    Add Activity to trail
     """
     return await add_activity_to_trail(
         request, user, activity_uuid, db_session

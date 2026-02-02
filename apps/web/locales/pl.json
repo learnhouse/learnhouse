@@ -94,6 +94,28 @@
         }
       }
     },
+    "features": {
+      "disabled": {
+        "status": "Funkcja wyłączona",
+        "enable_feature": "Przejdź do Ustawień",
+        "names": {
+          "courses": "Kursy",
+          "collections": "Kolekcje",
+          "communities": "Społeczności",
+          "podcasts": "Podcasty",
+          "payments": "Płatności",
+          "trail": "Śledzenie postępów"
+        },
+        "public": {
+          "title": "{{feature}} niedostępna",
+          "description": "Ta funkcja jest obecnie niedostępna dla tej organizacji. Skontaktuj się z administratorem, jeśli potrzebujesz dostępu."
+        },
+        "dashboard": {
+          "title": "{{feature}} wyłączona",
+          "description": "Ta funkcja jest wyłączona dla Twojej organizacji. Włącz ją w ustawieniach, aby udostępnić ją użytkownikom."
+        }
+      }
+    },
     "enterprise": "Przedsiębiorstwo",
     "version": "Wersja",
     "users": "Użytkownicy",

@@ -50,12 +50,24 @@ async function CoursesPage(params: any) {
   })
   const session = await getServerSession(nextAuthOptions)
   const access_token = session?.tokens?.access_token
-  const courses = await getOrgCourses(
-    orgslug,
-    { revalidate: 0, tags: ['courses'] },
-    access_token ? access_token : null,
-    true // include_unpublished for dashboard
-  )
+
+  let courses: any[] = []
+  try {
+    courses = await getOrgCourses(
+      orgslug,
+      { revalidate: 0, tags: ['courses'] },
+      access_token ? access_token : null,
+      true // include_unpublished for dashboard
+    )
+  } catch (error: any) {
+    // If feature is disabled (403), pass empty courses array
+    // The client component will show the feature disabled view
+    if (error?.status === 403) {
+      courses = []
+    } else {
+      throw error
+    }
+  }
 
   return <CoursesHome org_id={org.id} orgslug={orgslug} courses={courses} />
 }
