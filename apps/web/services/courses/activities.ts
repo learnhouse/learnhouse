@@ -72,7 +72,7 @@ export async function createExternalVideoActivity(
   access_token: string
 ) {
   // add coursechapter_id to data
-  data.chapter_id = chapter_id
+  data.chapter_id = String(chapter_id)
   data.activity_id = activity.id
   
   // Add video details with null checking
