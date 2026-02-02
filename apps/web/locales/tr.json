@@ -94,6 +94,28 @@
         }
       }
     },
+    "features": {
+      "disabled": {
+        "status": "Özellik devre dışı",
+        "enable_feature": "Ayarlara Git",
+        "names": {
+          "courses": "Kurslar",
+          "collections": "Koleksiyonlar",
+          "communities": "Topluluklar",
+          "podcasts": "Podcastler",
+          "payments": "Ödemeler",
+          "trail": "İlerleme Takibi"
+        },
+        "public": {
+          "title": "{{feature}} mevcut değil",
+          "description": "Bu özellik şu anda bu kuruluş için mevcut değil. Erişime ihtiyacınız varsa lütfen bir yöneticiyle iletişime geçin."
+        },
+        "dashboard": {
+          "title": "{{feature}} devre dışı",
+          "description": "Bu özellik kuruluşunuz için devre dışı bırakılmış. Kullanıcılara sunmak için ayarlardan etkinleştirin."
+        }
+      }
+    },
     "enterprise": "Kurumsal",
     "version": "Sürüm",
     "users": "Kullanıcılar",

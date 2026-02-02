@@ -94,6 +94,28 @@
         }
       }
     },
+    "features": {
+      "disabled": {
+        "status": "Funzionalità disabilitata",
+        "enable_feature": "Vai alle Impostazioni",
+        "names": {
+          "courses": "Corsi",
+          "collections": "Collezioni",
+          "communities": "Comunità",
+          "podcasts": "Podcast",
+          "payments": "Pagamenti",
+          "trail": "Monitoraggio progressi"
+        },
+        "public": {
+          "title": "{{feature}} non disponibile",
+          "description": "Questa funzionalità non è attualmente disponibile per questa organizzazione. Contatta un amministratore se hai bisogno di accesso."
+        },
+        "dashboard": {
+          "title": "{{feature}} disabilitato",
+          "description": "Questa funzionalità è disabilitata per la tua organizzazione. Abilitala nelle impostazioni per renderla disponibile agli utenti."
+        }
+      }
+    },
     "enterprise": "Enterprise",
     "version": "Versione",
     "users": "Utenti",

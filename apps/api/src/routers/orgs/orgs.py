@@ -26,6 +26,7 @@ from src.db.organizations import (
 )
 from src.core.events.database import get_db_session
 from src.security.auth import get_current_user, get_authenticated_user
+from src.security.features_utils.dependencies import require_org_admin
 from src.services.orgs.orgs import (
     create_org,
     create_org_with_config,
@@ -42,6 +43,7 @@ from src.services.orgs.orgs import (
     update_org_communities_config,
     update_org_payments_config,
     update_org_collections_config,
+    update_org_courses_config,
     update_org_podcasts_config,
     update_org_color_config,
     update_org_footer_text_config,
@@ -55,6 +57,12 @@ from src.db.organization_config import AuthBrandingConfig
 
 
 router = APIRouter()
+
+# Sub-router for feature config endpoints (admin-only)
+feature_config_router = APIRouter(
+    tags=["Feature Configuration"],
+    dependencies=[Depends(require_org_admin)],
+)
 
 
 @router.post("/")
@@ -186,7 +194,12 @@ async def api_get_org_signup_mechanism(
     )
 
 
-@router.put("/{org_id}/config/ai")
+# ============================================================================
+# Feature config routes (admin-only via router-level dependency)
+# ============================================================================
+
+
+@feature_config_router.put("/{org_id}/config/ai")
 async def api_update_org_ai_config(
     request: Request,
     org_id: int,
@@ -195,14 +208,14 @@ async def api_update_org_ai_config(
     db_session: Session = Depends(get_db_session),
 ):
     """
-    Update organization AI configuration
+    Update organization AI configuration (admin-only)
     """
     return await update_org_ai_config(
         request, ai_enabled, org_id, current_user, db_session
     )
 
 
-@router.put("/{org_id}/config/communities")
+@feature_config_router.put("/{org_id}/config/communities")
 async def api_update_org_communities_config(
     request: Request,
     org_id: int,
@@ -211,14 +224,14 @@ async def api_update_org_communities_config(
     db_session: Session = Depends(get_db_session),
 ):
     """
-    Update organization communities configuration
+    Update organization communities configuration (admin-only)
     """
     return await update_org_communities_config(
         request, communities_enabled, org_id, current_user, db_session
     )
 
 
-@router.put("/{org_id}/config/payments")
+@feature_config_router.put("/{org_id}/config/payments")
 async def api_update_org_payments_config(
     request: Request,
     org_id: int,
@@ -227,14 +240,30 @@ async def api_update_org_payments_config(
     db_session: Session = Depends(get_db_session),
 ):
     """
-    Update organization payments configuration
+    Update organization payments configuration (admin-only)
     """
     return await update_org_payments_config(
         request, payments_enabled, org_id, current_user, db_session
     )
 
 
-@router.put("/{org_id}/config/collections")
+@feature_config_router.put("/{org_id}/config/courses")
+async def api_update_org_courses_config(
+    request: Request,
+    org_id: int,
+    courses_enabled: bool,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+):
+    """
+    Update organization courses configuration (admin-only)
+    """
+    return await update_org_courses_config(
+        request, courses_enabled, org_id, current_user, db_session
+    )
+
+
+@feature_config_router.put("/{org_id}/config/collections")
 async def api_update_org_collections_config(
     request: Request,
     org_id: int,
@@ -243,14 +272,14 @@ async def api_update_org_collections_config(
     db_session: Session = Depends(get_db_session),
 ):
     """
-    Update organization collections configuration
+    Update organization collections configuration (admin-only)
     """
     return await update_org_collections_config(
         request, collections_enabled, org_id, current_user, db_session
     )
 
 
-@router.put("/{org_id}/config/podcasts")
+@feature_config_router.put("/{org_id}/config/podcasts")
 async def api_update_org_podcasts_config(
     request: Request,
     org_id: int,
@@ -259,7 +288,7 @@ async def api_update_org_podcasts_config(
     db_session: Session = Depends(get_db_session),
 ):
     """
-    Update organization podcasts configuration
+    Update organization podcasts configuration (admin-only)
     """
     return await update_org_podcasts_config(
         request, podcasts_enabled, org_id, current_user, db_session
@@ -633,3 +662,7 @@ async def api_get_org_usage(
     """
     from src.services.orgs.usage import get_org_usage_and_limits
     return await get_org_usage_and_limits(request, org_id, current_user, db_session)
+
+
+# Include the feature config sub-router (admin-only endpoints)
+router.include_router(feature_config_router)
