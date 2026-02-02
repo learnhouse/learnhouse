@@ -397,6 +397,22 @@ async def update_user_password(
     user_id: int,
     form: UserUpdatePassword,
 ):
+    """
+    Update user password.
+
+    SECURITY: Users can only change their own password. This function:
+    1. Validates that user_id matches current_user.id (IDOR protection)
+    2. Verifies the old password before allowing change
+    3. Validates password complexity requirements
+    """
+    
+    # Users can ONLY change their own password
+    if current_user.id != user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You can only change your own password",
+        )
+
     # Validate new password complexity
     validation_result = validate_password_complexity(form.new_password)
     if not validation_result.is_valid:
@@ -410,7 +426,7 @@ async def update_user_password(
             },
         )
 
-    # Get user
+    # Get user (we already verified it's the current user)
     statement = select(User).where(User.id == user_id)
     user = db_session.exec(statement).first()
 
@@ -420,9 +436,7 @@ async def update_user_password(
             detail="User does not exist",
         )
 
-    # RBAC check
-    await rbac_check(request, current_user, "update", user.user_uuid, db_session)
-
+    # Verify old password before allowing change
     if not security_verify_password(form.old_password, user.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Wrong password"
@@ -448,14 +462,19 @@ async def read_user_by_id(
     current_user: PublicUser | AnonymousUser,
     user_id: int,
 ):
+    """
+    Get user by ID.
+
+    SECURITY: Returns 404 with generic message to prevent user enumeration.
+    """
     # Get user
     statement = select(User).where(User.id == user_id)
     user = db_session.exec(statement).first()
 
     if not user:
         raise HTTPException(
-            status_code=400,
-            detail="User does not exist",
+            status_code=404,
+            detail="Resource not found",  # Generic message prevents enumeration
         )
 
     user = UserRead.model_validate(user)
@@ -469,17 +488,20 @@ async def read_user_by_uuid(
     current_user: PublicUser | AnonymousUser,
     user_uuid: str,
 ):
+    """
+    Get user by UUID.
+
+    SECURITY: Returns 404 with generic message to prevent user enumeration.
+    """
     # Get user
     statement = select(User).where(User.user_uuid == user_uuid)
     user = db_session.exec(statement).first()
 
     if not user:
         raise HTTPException(
-            status_code=400,
-            detail="User does not exist",
+            status_code=404,
+            detail="Resource not found",  # Generic message prevents enumeration
         )
-
-    
 
     user = UserRead.model_validate(user)
 
@@ -492,17 +514,20 @@ async def read_user_by_username(
     current_user: PublicUser | AnonymousUser,
     username: str,
 ):
+    """
+    Get user by username.
+
+    SECURITY: Returns 404 with generic message to prevent username enumeration.
+    """
     # Get user
     statement = select(User).where(User.username == username)
     user = db_session.exec(statement).first()
 
     if not user:
         raise HTTPException(
-            status_code=400,
-            detail="User does not exist",
+            status_code=404,
+            detail="Resource not found",  # Generic message prevents enumeration
         )
-
-    
 
     user = UserRead.model_validate(user)
 
