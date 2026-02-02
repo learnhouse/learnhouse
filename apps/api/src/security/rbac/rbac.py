@@ -163,25 +163,39 @@ async def authorization_verify_based_on_org_admin_status(
     element_uuid: str,
     db_session: Session,
 ):
-    await check_element_type(element_uuid)
+    """
+    Verify if a user has admin status in the SPECIFIC organization being accessed.
 
-    # Get user roles bound to an organization and standard roles
+    Args:
+        request: FastAPI request object
+        user_id: ID of the user to check
+        action: The action being performed (read, update, delete, create)
+        element_uuid: UUID of the element (organization) being accessed
+        db_session: Database session
+
+    Returns:
+        bool: True if user is admin in the target organization, False otherwise
+    """
+    # Get the target organization's ID from the element UUID
+    target_org_id = await get_element_organization_id(element_uuid, db_session)
+
+    if target_org_id is None:
+        # If we can't determine the organization, deny access for safety
+        return False
+
+    # Check if user has admin role (role_id 1) specifically in the TARGET organization
+    # Note: Only Admin (role_id=1) can create/update/delete organizations
+    # Maintainer (role_id=2) can only read organizations per the Rights definition
     statement = (
-        select(Role)
-        .join(UserOrganization)
-        .where((UserOrganization.org_id == Role.org_id) | (Role.org_id == null()))
+        select(UserOrganization)
         .where(UserOrganization.user_id == user_id)
+        .where(UserOrganization.org_id == target_org_id)
+        .where(UserOrganization.role_id == 1)  # Only admin role
     )
 
-    user_roles_in_organization_and_standard_roles = db_session.exec(statement).all()
+    user_org = db_session.exec(statement).first()
 
-    # Check if user has admin role (role_id 1 or 2) in any organization
-    for role in user_roles_in_organization_and_standard_roles:
-        role = Role.model_validate(role)
-        if role.id in [1, 2]:  # Assuming 1 and 2 are admin role IDs
-            return True
-    
-    return False
+    return user_org is not None
 
 
 # Tested and working
