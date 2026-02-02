@@ -70,10 +70,16 @@ export const nextAuthOptions = {
         )
         let res = await getResponseMetadata(unsanitized_req)
         if (res.success) {
-          // If login failed, then this is the place you could do a registration
           return res.data
         } else {
-          return null
+          // Throw error with backend error details so frontend can display proper message
+          const errorData = res.data?.detail || res.data
+          throw new Error(JSON.stringify({
+            code: errorData?.code || 'UNKNOWN_ERROR',
+            message: errorData?.message || 'Login failed',
+            email: errorData?.email,
+            retry_after: errorData?.retry_after,
+          }))
         }
       },
     }),

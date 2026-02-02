@@ -341,6 +341,7 @@ def send_invite_email(
     invite_code_uuid: str,
     user: UserRead,
     email: EmailStr,
+    base_url: str,
 ):
     LH_CONFIG = get_learnhouse_config()
     redis_conn_string = LH_CONFIG.redis_config.redis_connection_string
@@ -377,7 +378,7 @@ def send_invite_email(
     <body>
         <p>Hello {email}</p>
         <p>You have been invited to {org.name} by @{user.username}. Your invite code is {invite['invite_code']}.</p>
-        <p>Click <a href="{org.slug}.learnhouse.io/signup?orgslug={org.slug}&inviteCode={invite['invite_code']}">here</a> to sign up.</p>
+        <p>Click <a href="{base_url}/signup?inviteCode={invite['invite_code']}">here</a> to sign up.</p>
         <p>Thank you</p>
     </body>
 </html>
