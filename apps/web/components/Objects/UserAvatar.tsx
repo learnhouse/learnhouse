@@ -87,7 +87,7 @@ function UserAvatar(props: UserAvatarProps) {
       return props.avatar_url
     }
 
-    // If we have user data from username fetch
+    // If we have user data from userId/username fetch
     if (userData?.avatar_image) {
       const avatarUrl = userData.avatar_image
       // If it's an external URL (e.g., from Google, Facebook, etc.), use it directly
@@ -98,7 +98,13 @@ function UserAvatar(props: UserAvatarProps) {
       return getUserAvatarMediaDirectory(userData.user_uuid, avatarUrl)
     }
 
-    // If user has an avatar in session (only if session exists)
+    // If a specific userId or username was requested but user has no avatar,
+    // don't fall back to session avatar - use empty avatar instead
+    if (props.userId || props.username) {
+      return getUriWithOrg(params.orgslug, '/empty_avatar.png')
+    }
+
+    // Only use session avatar when no specific user is requested
     if (session?.data?.user?.avatar_image) {
       const avatarUrl = session.data.user.avatar_image
       // If it's an external URL (e.g., from Google, Facebook, etc.), use it directly

@@ -196,11 +196,11 @@ function MagicBlockModal({
                     src={lrnaiIcon}
                     alt="Magic Block"
                   />
-                  <span className="text-sm font-semibold text-white/70">{t('editor.blocks.magic_block.title')}</span>
+                  <span className="text-sm font-semibold text-white/70">{t('editor.blocks.magic_block_content.title')}</span>
                 </div>
                 <div className="bg-white/5 text-white/40 py-0.5 px-3 flex space-x-1 rounded-full items-center">
                   <FlaskConical size={14} />
-                  <span className="text-xs font-semibold antialiased">{t('editor.blocks.magic_block.experimental')}</span>
+                  <span className="text-xs font-semibold antialiased">{t('editor.blocks.magic_block_content.experimental')}</span>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -215,7 +215,7 @@ function MagicBlockModal({
                   )}
                 >
                   <Save className="w-4 h-4" />
-                  {t('editor.blocks.magic_block.save_and_close')}
+                  {t('editor.blocks.magic_block_content.save_and_close')}
                 </button>
                 <X
                   size={20}

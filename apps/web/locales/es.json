@@ -2521,6 +2521,7 @@
         "subtitle": "Gestiona los usuarios de tu organización, asigna roles y permisos",
         "table": {
           "user": "Usuario",
+          "groups": "Grupos",
           "role": "Rol",
           "actions": "Acciones"
         },
@@ -3206,7 +3207,7 @@
       "badge": "Insignias",
       "button": "Botón",
       "user": "Usuario",
-      "magic_block": {
+      "magic_block_content": {
         "title": "Bloque mágico",
         "interactive_element": "Elemento interactivo",
         "iterations": "{{count}}/{{max}} iteraciones",

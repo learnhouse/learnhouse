@@ -2221,6 +2221,7 @@
         "subtitle": "組織 of users を管理し、ロールと権限を割り当てます",
         "table": {
           "user": "ユーザー",
+          "groups": "グループ",
           "role": "ロール",
           "actions": "アクション"
         },
@@ -2965,7 +2966,7 @@
         "load_user": "ユーザーを読み込む",
         "no_user": "ユーザーが選択されていません"
       },
-      "magic_block": {
+      "magic_block_content": {
         "title": "マジックブロック",
         "interactive_element": "インタラクティブ要素",
         "iterations": "{{count}}/{{max}}回の反復",

@@ -2221,6 +2221,7 @@
         "subtitle": "조직 사용자를 관리하고 역할 및 권한을 할당합니다",
         "table": {
           "user": "사용자",
+          "groups": "그룹",
           "role": "역할",
           "actions": "작업"
         },
@@ -2911,7 +2912,7 @@
         "load_user": "사용자 로드",
         "no_user": "사용자 없음"
       },
-      "magic_block": {
+      "magic_block_content": {
         "title": "매직 블록",
         "interactive_element": "인터랙티브 요소",
         "iterations": "{{count}}/{{max}} 반복",

@@ -1,8 +1,9 @@
-from typing import Optional, TYPE_CHECKING
+from typing import List, Optional, TYPE_CHECKING
 from pydantic import BaseModel
 from sqlalchemy import JSON, Column
 from sqlmodel import Field, SQLModel
 from src.db.roles import RoleRead
+from src.db.usergroups import UserGroupRead
 
 from src.db.organization_config import OrganizationConfig
 
@@ -69,6 +70,7 @@ class OrganizationRead(OrganizationBase):
 class OrganizationUser(BaseModel):
     user: "UserRead"
     role: RoleRead
+    usergroups: List[UserGroupRead] = []
 
 
 # Rebuild models to resolve forward references after all classes are defined

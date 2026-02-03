@@ -2205,6 +2205,7 @@
         "subtitle": "จัดการผู้ใช้งานในองค์กรและกำหนดบทบาทและสิทธิ์การใช้งาน",
         "table": {
           "user": "ผู้ใช้งาน",
+          "groups": "กลุ่ม",
           "role": "บทบาท",
           "actions": "การดำเนินการ"
         },
@@ -2895,7 +2896,7 @@
         "load_user": "โหลดผู้ใช้",
         "no_user": "ไม่มีผู้ใช้"
       },
-      "magic_block": {
+      "magic_block_content": {
         "title": "บล็อกมายากล",
         "interactive_element": "องค์ประกอบแบบโต้ตอบ",
         "iterations": "{{count}}/{{max}} รอบ",

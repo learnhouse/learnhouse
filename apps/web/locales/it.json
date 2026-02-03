@@ -2212,6 +2212,7 @@
         "subtitle": "Gestisci gli utenti della tua organizzazione, assegna ruoli e permessi",
         "table": {
           "user": "Utente",
+          "groups": "Gruppi",
           "role": "Ruolo",
           "actions": "Azioni"
         },
@@ -2902,7 +2903,7 @@
         "load_user": "Carica utente",
         "no_user": "Nessun utente trovato"
       },
-      "magic_block": {
+      "magic_block_content": {
         "title": "Blocco Magico",
         "interactive_element": "Elemento Interattivo",
         "iterations": "{{count}}/{{max}} iterazioni",

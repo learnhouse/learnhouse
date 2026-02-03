@@ -2212,6 +2212,7 @@
         "subtitle": "Beheer gebruikers van de organisatie en wijs rollen en machtigingen toe",
         "table": {
           "user": "Gebruiker",
+          "groups": "Groepen",
           "role": "Rol",
           "actions": "Acties"
         },
@@ -2902,7 +2903,7 @@
         "load_user": "Gebruiker laden",
         "no_user": "Geen gebruiker gevonden"
       },
-      "magic_block": {
+      "magic_block_content": {
         "title": "Magisch Blok",
         "interactive_element": "Interactief Element",
         "iterations": "{{count}}/{{max}} iteraties",

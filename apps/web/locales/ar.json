@@ -2531,6 +2531,7 @@
         "subtitle": "أدر مستخدمي منظمتك، عين الأدوار والصلاحيات",
         "table": {
           "user": "المستخدم",
+          "groups": "المجموعات",
           "role": "الدور",
           "actions": "الإجراءات"
         },
@@ -3216,7 +3217,7 @@
       "badge": "شارات",
       "button": "زر",
       "user": "مستخدم",
-      "magic_block": {
+      "magic_block_content": {
         "title": "كتلة سحرية",
         "interactive_element": "عنصر تفاعلي",
         "iterations": "{{count}}/{{max}} تكرارات",

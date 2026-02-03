@@ -132,11 +132,9 @@ def ai_start_activity_chat_session(
     org_config = result.first()
 
     org_config = OrganizationConfig.model_validate(org_config)
-    ai_model = org_config.config["features"]["ai"]["model"]
 
-    # Use Gemini 2.0 Flash as default if no model specified or if OpenAI model
-    if not ai_model or ai_model.startswith("gpt-"):
-        ai_model = "gemini-2.5-flash"
+    # Use Gemini 2.5 Flash as the default model
+    ai_model = "gemini-2.5-flash"
 
     chat_session = get_chat_session_history()
 
@@ -264,11 +262,9 @@ def ai_send_activity_chat_message(
     org_config = result.first()
 
     org_config = OrganizationConfig.model_validate(org_config)
-    ai_model = org_config.config["features"]["ai"]["model"]
 
-    # Use Gemini 2.0 Flash as default if no model specified or if OpenAI model
-    if not ai_model or ai_model.startswith("gpt-"):
-        ai_model = "gemini-2.5-flash"
+    # Use Gemini 2.5 Flash as the default model
+    ai_model = "gemini-2.5-flash"
 
     chat_session = get_chat_session_history(chat_session_object.aichat_uuid)
 
@@ -392,11 +388,9 @@ def _get_activity_and_course_info(
     org_config = result.first()
 
     org_config = OrganizationConfig.model_validate(org_config)
-    ai_model = org_config.config["features"]["ai"]["model"]
 
-    # Use Gemini 2.0 Flash as default if no model specified or if OpenAI model
-    if not ai_model or ai_model.startswith("gpt-"):
-        ai_model = "gemini-2.5-flash"
+    # Use Gemini 2.5 Flash as the default model
+    ai_model = "gemini-2.5-flash"
 
     return activity, course, org, ai_model, ai_friendly_text
 
