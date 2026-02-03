@@ -11,7 +11,7 @@ import { PlanLevel, planMeetsRequirement } from '@services/plans/plans'
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
 import useAdminStatus from '@components/Hooks/useAdminStatus'
 import { Switch } from '@components/ui/switch'
-import { ShieldAlert, Users, CreditCard, FolderOpen, Lock, Headphones } from 'lucide-react'
+import { ShieldAlert, Users, CreditCard, FolderOpen, Lock, Headphones, BookCopy } from 'lucide-react'
 
 interface FeatureToggleProps {
   id: string
@@ -85,6 +85,7 @@ const OrgEditFeatures: React.FC = () => {
   const canEditOrgSettings = rights?.organizations?.action_update === true
 
   // Feature states
+  const [coursesEnabled, setCoursesEnabled] = useState<boolean>(true)
   const [communitiesEnabled, setCommunitiesEnabled] = useState<boolean>(true)
   const [paymentsEnabled, setPaymentsEnabled] = useState<boolean>(false)
   const [collectionsEnabled, setCollectionsEnabled] = useState<boolean>(true)
@@ -97,6 +98,10 @@ const OrgEditFeatures: React.FC = () => {
   useEffect(() => {
     if (org?.config?.config?.features) {
       const features = org.config.config.features
+
+      // Courses - default to true for backward compatibility
+      const coursEnabled = features.courses?.enabled
+      setCoursesEnabled(coursEnabled !== undefined ? coursEnabled : true)
 
       // Communities - default to true for backward compatibility
       const commEnabled = features.communities?.enabled
@@ -117,6 +122,12 @@ const OrgEditFeatures: React.FC = () => {
   }, [org])
 
   const updateFeatureConfig = async (feature: string, enabled: boolean) => {
+    // Early check for admin status
+    if (!canEditOrgSettings) {
+      toast.error(t('dashboard.organization.features.toasts.admin_only'))
+      return false
+    }
+
     setUpdatingFeature(feature)
     const loadingToast = toast.loading(
       enabled
@@ -134,6 +145,9 @@ const OrgEditFeatures: React.FC = () => {
       })
 
       if (!response.ok) {
+        if (response.status === 403) {
+          throw new Error('admin_only')
+        }
         throw new Error(`Failed to update ${feature} configuration`)
       }
 
@@ -147,12 +161,22 @@ const OrgEditFeatures: React.FC = () => {
         { id: loadingToast }
       )
       return true
-    } catch (err) {
+    } catch (err: any) {
       console.error(`Error updating ${feature} configuration:`, err)
-      toast.error(t('dashboard.organization.features.toasts.error', { feature }), { id: loadingToast })
+      const errorMessage = err?.message === 'admin_only'
+        ? t('dashboard.organization.features.toasts.admin_only')
+        : t('dashboard.organization.features.toasts.error', { feature })
+      toast.error(errorMessage, { id: loadingToast })
       return false
     } finally {
       setUpdatingFeature(null)
+    }
+  }
+
+  const handleCoursesToggle = async (enabled: boolean) => {
+    const success = await updateFeatureConfig('courses', enabled)
+    if (success) {
+      setCoursesEnabled(enabled)
     }
   }
 
@@ -210,6 +234,21 @@ const OrgEditFeatures: React.FC = () => {
               </div>
             </div>
           )}
+
+          {/* Courses Toggle */}
+          <FeatureToggle
+            id="courses"
+            title={t('dashboard.organization.features.toggles.courses.title')}
+            description={t('dashboard.organization.features.toggles.courses.description')}
+            enabled={coursesEnabled}
+            isUpdating={updatingFeature === 'courses'}
+            canEdit={canEditOrgSettings}
+            requiredPlan="free"
+            currentPlan={currentPlan}
+            icon={<BookCopy size={20} className="text-gray-600" />}
+            onToggle={handleCoursesToggle}
+            upgradeMessage={t('dashboard.organization.features.upgrade_notice', { plan: 'free' })}
+          />
 
           {/* Communities Toggle */}
           <FeatureToggle

@@ -38,16 +38,17 @@ from src.db.organizations import (
 )
 from fastapi import HTTPException, UploadFile, status, Request
 
-from src.services.orgs.uploads import upload_org_logo, upload_org_preview, upload_org_thumbnail, upload_org_landing_content
+from src.services.orgs.uploads import upload_org_logo, upload_org_preview, upload_org_thumbnail, upload_org_landing_content, upload_org_auth_background
+from src.db.organization_config import AuthBrandingConfig
 
 
-async def get_organization(
+async def get_organization_by_uuid(
     request: Request,
-    org_id: str,
+    org_uuid: str,
     db_session: Session,
     current_user: PublicUser | AnonymousUser,
 ) -> OrganizationRead:
-    statement = select(Organization).where(Organization.id == org_id)
+    statement = select(Organization).where(Organization.org_uuid == org_uuid)
     result = db_session.exec(statement)
 
     org = result.first()
@@ -68,7 +69,7 @@ async def get_organization(
     org_config = result.first()
 
     if org_config is None:
-        logging.error(f"Organization {org_id} has no config")
+        logging.error(f"Organization {org_uuid} has no config")
 
     config = OrganizationConfig.model_validate(org_config) if org_config else {}
 
@@ -83,7 +84,9 @@ async def get_organization_by_slug(
     db_session: Session,
     current_user: PublicUser | AnonymousUser,
 ) -> OrganizationRead:
-    statement = select(Organization).where(Organization.slug == org_slug)
+    # IMPORTANT: Order by id to ensure deterministic results
+    # This prevents issues if duplicate slugs somehow exist in the database
+    statement = select(Organization).where(Organization.slug == org_slug).order_by(Organization.id)
     result = db_session.exec(statement)
 
     org = result.first()
@@ -393,7 +396,7 @@ async def update_org_with_config_no_auth(
 async def update_org_logo(
     request: Request,
     logo_file: UploadFile,
-    org_id: str,
+    org_id: int,
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
@@ -429,7 +432,7 @@ async def update_org_logo(
 async def update_org_thumbnail(
     request: Request,
     thumbnail_file: UploadFile,
-    org_id: str,
+    org_id: int,
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
@@ -465,7 +468,7 @@ async def update_org_thumbnail(
 async def update_org_preview(
     request: Request,
     preview_file: UploadFile,
-    org_id: str,
+    org_id: int,
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
@@ -494,6 +497,16 @@ async def delete_org(
     current_user: PublicUser | AnonymousUser,
     db_session: Session,
 ):
+    """
+    Delete an organization and all related data.
+
+    SECURITY: Only organization admins can delete their own organization.
+    The RBAC check ensures the user has admin role (role_id=1) specifically
+    in the organization being deleted.
+
+    CASCADE DELETE: Related data is automatically deleted via database
+    CASCADE constraints on foreign keys.
+    """
     statement = select(Organization).where(Organization.id == org_id)
     result = db_session.exec(statement)
 
@@ -505,25 +518,27 @@ async def delete_org(
             detail="Organization not found",
         )
 
-    # RBAC check
+    # Store org info for logging before deletion
+    org_uuid = org.org_uuid
+    org_name = org.name
+
+    # RBAC check - verifies user is admin of THIS specific organization
     await rbac_check(request, org.org_uuid, current_user, "delete", db_session)
 
+    # AUDIT LOG: Record the deletion for security audit trail
+    user_id = current_user.id if hasattr(current_user, 'id') else 'unknown'
+    logging.warning(
+        f"AUDIT: Organization deletion - org_id={org_id}, org_uuid={org_uuid}, "
+        f"org_name={org_name}, deleted_by_user_id={user_id}"
+    )
+
+    # Delete the organization
+    # Related data (UserOrganization, Courses, Collections, etc.) will be
+    # automatically deleted via CASCADE constraints in the database
     db_session.delete(org)
     db_session.commit()
 
-    # Delete links to org
-    statement = select(UserOrganization).where(UserOrganization.org_id == org_id)
-    result = db_session.exec(statement)
-
-    user_orgs = result.all()
-
-    for user_org in user_orgs:
-        db_session.delete(user_org)
-        db_session.commit()
-
-    db_session.refresh(org)
-
-    return {"detail": "Organization deleted"}
+    return {"detail": "Organization deleted", "org_id": org_id, "org_name": org_name}
 
 
 async def get_orgs_by_user_admin(
@@ -632,14 +647,26 @@ async def update_org_signup_mechanism(
             detail="Organization config not found",
         )
 
-    updated_config = org_config.config
+    # Create a deep copy to ensure SQLAlchemy detects the change
+    updated_config = json.loads(json.dumps(org_config.config))
+
+    # Handle backward compatibility - ensure features.members exists
+    if "features" not in updated_config:
+        updated_config["features"] = {}
+
+    if "members" not in updated_config["features"]:
+        updated_config["features"]["members"] = {
+            "enabled": True,
+            "signup_mode": "open",
+            "admin_limit": 1,
+            "limit": 10
+        }
 
     # Update config
-    updated_config = OrganizationConfigBase(**updated_config)
-    updated_config.features.members.signup_mode = signup_mechanism
+    updated_config["features"]["members"]["signup_mode"] = signup_mechanism
 
-    # Update the database
-    org_config.config = json.loads(updated_config.model_dump_json())
+    # Update the database with the new dictionary
+    org_config.config = updated_config
     org_config.update_date = str(datetime.now())
 
     db_session.add(org_config)
@@ -683,14 +710,25 @@ async def update_org_ai_config(
             detail="Organization config not found",
         )
 
-    updated_config = org_config.config
+    # Create a deep copy to ensure SQLAlchemy detects the change
+    updated_config = json.loads(json.dumps(org_config.config))
+
+    # Handle backward compatibility - add ai config if it doesn't exist
+    if "features" not in updated_config:
+        updated_config["features"] = {}
+
+    if "ai" not in updated_config["features"]:
+        updated_config["features"]["ai"] = {"enabled": True, "limit": 10}
 
     # Update config
-    updated_config = OrganizationConfigBase(**updated_config)
-    updated_config.features.ai.enabled = ai_enabled
+    updated_config["features"]["ai"]["enabled"] = ai_enabled
 
-    # Update the database
-    org_config.config = json.loads(updated_config.model_dump_json())
+    # Clean up deprecated model field if present
+    if "model" in updated_config["features"]["ai"]:
+        del updated_config["features"]["ai"]["model"]
+
+    # Update the database with the new dictionary
+    org_config.config = updated_config
     org_config.update_date = str(datetime.now())
 
     db_session.add(org_config)
@@ -874,6 +912,64 @@ async def update_org_collections_config(
     return {"detail": "Collections configuration updated"}
 
 
+async def update_org_courses_config(
+    request: Request,
+    courses_enabled: bool,
+    org_id: int,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+):
+    statement = select(Organization).where(Organization.id == org_id)
+    result = db_session.exec(statement)
+
+    org = result.first()
+
+    if not org:
+        raise HTTPException(
+            status_code=404,
+            detail="Organization not found",
+        )
+
+    # RBAC check
+    await rbac_check(request, org.org_uuid, current_user, "update", db_session)
+
+    # Get org config
+    statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
+    result = db_session.exec(statement)
+
+    org_config = result.first()
+
+    if org_config is None:
+        logging.error(f"Organization {org_id} has no config")
+        raise HTTPException(
+            status_code=404,
+            detail="Organization config not found",
+        )
+
+    # Create a deep copy to ensure SQLAlchemy detects the change
+    updated_config = json.loads(json.dumps(org_config.config))
+
+    # Handle backward compatibility
+    if "features" not in updated_config:
+        updated_config["features"] = {}
+
+    if "courses" not in updated_config["features"]:
+        updated_config["features"]["courses"] = {"enabled": True, "limit": 100}
+
+    # Update config
+    updated_config["features"]["courses"]["enabled"] = courses_enabled
+
+    # Update the database with the new dictionary
+    org_config.config = updated_config
+    org_config.update_date = str(datetime.now())
+
+    db_session.add(org_config)
+    db_session.commit()
+    db_session.refresh(org_config)
+
+    return {"detail": "Courses configuration updated"}
+
+
 async def update_org_podcasts_config(
     request: Request,
     podcasts_enabled: bool,
@@ -1042,6 +1138,91 @@ async def update_org_footer_text_config(
     return {"detail": "Footer text configuration updated"}
 
 
+async def update_org_auth_branding_config(
+    request: Request,
+    auth_branding: AuthBrandingConfig,
+    org_id: int,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+):
+    statement = select(Organization).where(Organization.id == org_id)
+    result = db_session.exec(statement)
+
+    org = result.first()
+
+    if not org:
+        raise HTTPException(
+            status_code=404,
+            detail="Organization not found",
+        )
+
+    # RBAC check
+    await rbac_check(request, org.org_uuid, current_user, "update", db_session)
+
+    # Get org config
+    statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org.id)
+    result = db_session.exec(statement)
+
+    org_config = result.first()
+
+    if org_config is None:
+        logging.error(f"Organization {org_id} has no config")
+        raise HTTPException(
+            status_code=404,
+            detail="Organization config not found",
+        )
+
+    # Create a deep copy to ensure SQLAlchemy detects the change
+    updated_config = json.loads(json.dumps(org_config.config))
+
+    # Handle backward compatibility
+    if "general" not in updated_config:
+        updated_config["general"] = {"enabled": True, "color": "", "footer_text": "", "watermark": True, "auth_branding": {}}
+
+    # Update auth branding config
+    updated_config["general"]["auth_branding"] = json.loads(auth_branding.model_dump_json())
+
+    # Update the database with the new dictionary
+    org_config.config = updated_config
+    org_config.update_date = str(datetime.now())
+
+    db_session.add(org_config)
+    db_session.commit()
+    db_session.refresh(org_config)
+
+    return {"detail": "Auth branding configuration updated"}
+
+
+async def upload_org_auth_background_service(
+    request: Request,
+    background_file: UploadFile,
+    org_id: int,
+    current_user: PublicUser | AnonymousUser,
+    db_session: Session,
+) -> dict:
+    statement = select(Organization).where(Organization.id == org_id)
+    result = db_session.exec(statement)
+
+    org = result.first()
+
+    if not org:
+        raise HTTPException(
+            status_code=404,
+            detail="Organization not found",
+        )
+
+    # RBAC check
+    await rbac_check(request, org.org_uuid, current_user, "update", db_session)
+
+    # Upload background
+    name_in_disk = await upload_org_auth_background(background_file, org.org_uuid)
+
+    return {
+        "detail": "Auth background uploaded successfully",
+        "filename": name_in_disk
+    }
+
+
 async def get_org_join_mechanism(
     request: Request,
     org_id: int,
@@ -1131,14 +1312,14 @@ async def update_org_landing(
             detail="Organization config not found",
         )
 
-    # Convert to OrganizationConfigBase model and back to ensure all fields exist
-    config_model = OrganizationConfigBase(**org_config.config)
-    
-    # Update the landing object
-    config_model.landing = landing_object
+    # Create a deep copy to ensure SQLAlchemy detects the change
+    # This preserves all existing config values and only updates the landing field
+    updated_config = json.loads(json.dumps(org_config.config))
 
-    # Convert back to dict and update
-    updated_config = json.loads(config_model.model_dump_json())
+    # Update the landing object
+    updated_config["landing"] = landing_object
+
+    # Update the database with the new dictionary
     org_config.config = updated_config
     org_config.update_date = str(datetime.now())
 
@@ -1195,8 +1376,17 @@ async def rbac_check(
     if isinstance(current_user, InternalUser):
         return True
 
-    # API Token path: verify token has permissions for this action on payments
+    # API Token path: verify token has permissions for this action on organizations
     if isinstance(current_user, APITokenUser):
+        # SECURITY: API tokens should NOT be allowed to delete organizations
+        # Organization deletion is a critical operation that should only be
+        # performed by authenticated admin users, not programmatic API tokens
+        if action == "delete":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="API tokens are not allowed to delete organizations",
+            )
+
         # Verify token belongs to this organization
         org = db_session.exec(
             select(Organization).where(Organization.org_uuid == org_uuid)
@@ -1208,7 +1398,7 @@ async def rbac_check(
                 detail="API token cannot access resources outside its organization",
             )
 
-        # Check token's rights for payments
+        # Check token's rights for organizations (not payments!)
         if not current_user.rights:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -1217,16 +1407,16 @@ async def rbac_check(
 
         rights = current_user.rights
         if isinstance(rights, dict):
-            payments_rights = rights.get("payments", {})
-            has_permission = payments_rights.get(f"action_{action}", False)
+            org_rights = rights.get("organizations", {})
+            has_permission = org_rights.get(f"action_{action}", False)
         else:
-            payments_rights = getattr(rights, "payments", None)
-            has_permission = getattr(payments_rights, f"action_{action}", False) if payments_rights else False
+            org_rights = getattr(rights, "organizations", None)
+            has_permission = getattr(org_rights, f"action_{action}", False) if org_rights else False
 
         if not has_permission:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"API token does not have '{action}' permission for payments",
+                detail=f"API token does not have '{action}' permission for organizations",
             )
         return True
 

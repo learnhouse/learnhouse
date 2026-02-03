@@ -17,6 +17,7 @@ type ModalParams = {
   minWidth?: 'sm' | 'md' | 'lg' | 'xl' | 'no-min'
   customHeight?: string
   customWidth?: string
+  noPadding?: boolean
 }
 
 const Modal = (params: ModalParams) => {
@@ -40,39 +41,38 @@ const Modal = (params: ModalParams) => {
     }
   }
 
+  const hasFooter = params.dialogClose || params.addDefCloseButton
+
   return (
     <Dialog open={params.isDialogOpen} onOpenChange={params.onOpenChange}>
       {params.dialogTrigger && (
         <DialogTrigger asChild>{params.dialogTrigger}</DialogTrigger>
       )}
       <DialogContent className={cn(
-        // Base styles
+        "flex flex-col",
         "w-[95vw] max-w-[95vw]",
         "max-h-[90vh]",
         "bg-white",
-        "border border-gray-200/80",
-        "shadow-xl shadow-black/5",
-        // Padding
+        "border border-gray-200",
+        "shadow-lg",
         "p-0",
-        // Mobile-first responsive design
         "sm:w-[90vw] sm:max-w-[90vw]",
         "md:w-auto md:max-w-[90vw]",
         "lg:max-w-[85vw]",
         "xl:max-w-[80vw]",
-        // Dynamic sizing
         getMinHeight(),
         getMinWidth(),
         params.customHeight,
         params.customWidth
       )}>
-        {/* Header Section - Always render DialogTitle for accessibility */}
+        {/* Header */}
         {params.dialogTitle ? (
-          <DialogHeader className="px-5 sm:px-6 py-3 bg-gray-50 shadow-sm">
-            <DialogTitle className="text-xl sm:text-2xl font-semibold text-gray-900 leading-tight">
+          <DialogHeader className="shrink-0 px-5 py-4 border-b border-gray-100 space-y-0">
+            <DialogTitle className="text-xl font-semibold text-gray-900">
               {params.dialogTitle}
             </DialogTitle>
             {params.dialogDescription && (
-              <DialogDescription className="text-base text-gray-500 leading-tight">
+              <DialogDescription className="text-sm text-gray-500">
                 {params.dialogDescription}
               </DialogDescription>
             )}
@@ -81,25 +81,23 @@ const Modal = (params: ModalParams) => {
           <DialogTitle className="sr-only">Dialog</DialogTitle>
         )}
 
-        {/* Content Section */}
+        {/* Content */}
         <div className={cn(
-          "overflow-y-auto scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent hover:scrollbar-thumb-gray-300",
-          "px-5 sm:px-6 py-4",
-          params.dialogTitle ? "max-h-[calc(90vh-140px)]" : "max-h-[calc(90vh-80px)]"
+          "flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent hover:scrollbar-thumb-gray-300",
+          !params.noPadding && "p-5"
         )}>
           {params.dialogContent}
         </div>
 
-        {/* Footer Section */}
-        {(params.dialogClose || params.addDefCloseButton) && (
-          <DialogFooter className="px-5 sm:px-6 py-4 border-t border-gray-100 bg-gray-50/50 flex flex-col sm:flex-row gap-2 sm:gap-3">
+        {/* Footer */}
+        {hasFooter && (
+          <DialogFooter className="shrink-0 px-5 py-3 border-t border-gray-100 flex flex-row justify-end gap-2">
             {params.dialogClose}
             {params.addDefCloseButton && (
               <button
                 type="button"
                 onClick={() => params.onOpenChange(false)}
-                aria-label="Close modal"
-                className="inline-flex items-center justify-center px-5 py-2.5 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
+                className="px-4 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
               >
                 Close
               </button>

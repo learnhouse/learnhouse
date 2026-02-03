@@ -1,7 +1,7 @@
 'use client'
 import { useOrgMembership } from '@components/Contexts/OrgContext'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
-import { getUriWithoutOrg } from '@services/config/config'
+import { getUriWithOrg } from '@services/config/config'
 import { UserPlus } from 'lucide-react'
 import { createContext, useContext } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -50,7 +50,7 @@ export function OrgJoinBanner() {
           <p className="text-sm font-medium">
             {t('banner.viewing_as_guest', { name: org?.name })}{' '}
             <a
-              href={getUriWithoutOrg(`/signup?orgslug=${orgslug}`)}
+              href={getUriWithOrg(orgslug, '/signup')}
               className="underline hover:no-underline font-bold"
             >
               {t('banner.join_organization')}

@@ -82,7 +82,7 @@ const PlanRestrictedFeature: React.FC<PlanRestrictedFeatureProps> = ({
 
           {/* Upgrade button - white with plan badge */}
           <button className="bg-white text-gray-700 px-6 py-2.5 rounded-lg font-semibold hover:bg-gray-50 transition-colors nice-shadow flex items-center gap-2">
-            <span>Upgrade to</span>
+            <span>{t('common.plans.upgrade_to')}</span>
             <PlanBadge
               currentPlan={currentPlan}
               requiredPlan={requiredPlan}
@@ -94,7 +94,7 @@ const PlanRestrictedFeature: React.FC<PlanRestrictedFeatureProps> = ({
 
           {/* Current plan indicator */}
           <p className="mt-6 text-xs text-gray-400">
-            Current plan: <span className="font-medium text-gray-500 capitalize">{currentPlan}</span>
+            {t('common.plans.current_plan')}: <span className="font-medium text-gray-500 capitalize">{currentPlan}</span>
           </p>
         </div>
       </div>
