@@ -2206,6 +2206,7 @@
         "subtitle": "Zarządzaj użytkownikami organizacji oraz przypisuj im role i uprawnienia",
         "table": {
           "user": "Użytkownik",
+          "groups": "Grupy",
           "role": "Rola",
           "actions": "Akcje"
         },
@@ -2896,7 +2897,7 @@
         "load_user": "Załaduj użytkownika",
         "no_user": "Nie znaleziono użytkownika"
       },
-      "magic_block": {
+      "magic_block_content": {
         "title": "Magiczny Blok",
         "interactive_element": "Element Interaktywny",
         "iterations": "{{count}}/{{max}} iteracji",

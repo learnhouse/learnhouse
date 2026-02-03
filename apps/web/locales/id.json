@@ -2206,6 +2206,7 @@
         "subtitle": "Kelola pengguna organisasi Anda, tetapkan peran dan izin",
         "table": {
           "user": "Pengguna",
+          "groups": "Grup",
           "role": "Peran",
           "actions": "Tindakan"
         },
@@ -2896,7 +2897,7 @@
         "load_user": "Muat Pengguna",
         "no_user": "Tidak Ada Pengguna"
       },
-      "magic_block": {
+      "magic_block_content": {
         "title": "Blok Ajaib",
         "interactive_element": "Elemen Interaktif",
         "iterations": "{{count}}/{{max}} iterasi",

@@ -809,3 +809,178 @@
 .animate-shimmer {
   animation: shimmer 1.5s infinite;
 }
+
+/* AI Streaming Text Animation */
+@keyframes ai-text-reveal {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+/* AI streaming text styles defined below with enhanced animations */
+
+/* AI Editor streaming cursor */
+@keyframes ai-cursor-blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+.ai-streaming-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  background: linear-gradient(180deg, rgb(164, 45, 238) 0%, rgb(35, 40, 93) 100%);
+  margin-left: 2px;
+  animation: ai-cursor-blink 1s ease-in-out infinite;
+  vertical-align: text-bottom;
+}
+
+/* AI Side Panel Styles */
+.ai-editor-side-panel {
+  background: linear-gradient(0deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.2) 100%),
+              radial-gradient(105.16% 105.16% at 50% -5.16%, rgba(255, 255, 255, 0.18) 0%, rgba(0, 0, 0, 0) 100%),
+              rgb(2 1 25 / 98%);
+}
+
+/* AI Message streaming effect */
+.ai-message-streaming .ai-content {
+  position: relative;
+}
+
+.ai-message-streaming .ai-content::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, rgba(164, 45, 238, 0.5) 50%, transparent 100%);
+  animation: ai-text-reveal 1.5s linear infinite;
+}
+
+/* AI Block Animation - for inserted blocks like quizzes, callouts, etc. */
+@keyframes ai-block-appear {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+    box-shadow: 0 0 0 0 rgba(164, 45, 238, 0);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    box-shadow: 0 0 20px 5px rgba(164, 45, 238, 0.3);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    box-shadow: 0 0 0 0 rgba(164, 45, 238, 0);
+  }
+}
+
+@keyframes ai-block-glow {
+  0% {
+    box-shadow: 0 0 5px rgba(164, 45, 238, 0.3), 0 0 10px rgba(35, 40, 93, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 15px rgba(164, 45, 238, 0.5), 0 0 25px rgba(35, 40, 93, 0.3);
+  }
+  100% {
+    box-shadow: 0 0 5px rgba(164, 45, 238, 0.3), 0 0 10px rgba(35, 40, 93, 0.2);
+  }
+}
+
+@keyframes ai-border-flow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.ai-block-animate {
+  animation: ai-block-appear 0.8s ease-out forwards;
+  position: relative;
+}
+
+.ai-block-animate::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  padding: 2px;
+  background: linear-gradient(
+    90deg,
+    rgba(164, 45, 238, 0.8) 0%,
+    rgba(35, 40, 93, 0.8) 25%,
+    rgba(164, 45, 238, 0.8) 50%,
+    rgba(35, 40, 93, 0.8) 75%,
+    rgba(164, 45, 238, 0.8) 100%
+  );
+  background-size: 200% 100%;
+  animation: ai-border-flow 2s ease-in-out infinite;
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Enhanced streaming text animation with glow */
+.ai-streaming-text {
+  background: linear-gradient(
+    90deg,
+    rgba(164, 45, 238, 1) 0%,
+    rgba(100, 60, 180, 1) 20%,
+    rgba(35, 40, 93, 1) 40%,
+    rgba(164, 45, 238, 0.9) 60%,
+    rgba(35, 40, 93, 1) 80%,
+    rgba(200, 180, 255, 1) 100%
+  );
+  background-size: 200% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: ai-text-reveal 1.5s linear infinite;
+  text-shadow: 0 0 10px rgba(164, 45, 238, 0.3);
+}
+
+/* Fade out animation when streaming completes */
+@keyframes ai-text-fade-in {
+  0% {
+    opacity: 0.7;
+    filter: blur(1px);
+  }
+  100% {
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+.ai-streaming-text.complete {
+  animation: ai-text-fade-in 0.3s ease-out forwards;
+  background: none;
+  color: inherit;
+  text-shadow: none;
+}
+
+/* ProseMirror specific: highlight newly inserted content */
+.ProseMirror .ai-inserted-content {
+  animation: ai-block-glow 1.5s ease-in-out;
+  border-radius: 4px;
+}

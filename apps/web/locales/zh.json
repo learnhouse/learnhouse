@@ -2221,6 +2221,7 @@
         "subtitle": "管理组织的用户，分配角色和权限",
         "table": {
           "user": "用户",
+          "groups": "群组",
           "role": "角色",
           "actions": "操作"
         },
@@ -2965,7 +2966,7 @@
         "load_user": "加载用户",
         "no_user": "未选择用户"
       },
-      "magic_block": {
+      "magic_block_content": {
         "title": "魔法块",
         "interactive_element": "交互元素",
         "iterations": "{{count}}/{{max}}次迭代",
