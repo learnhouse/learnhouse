@@ -187,13 +187,13 @@ const CourseActionsMobile = ({ courseuuid, orgslug, course, trailData }: CourseA
 
   const handleCourseAction = async () => {
     if (!session.data?.user) {
-      router.push(getUriWithoutOrg(`/signup?orgslug=${orgslug}`))
+      router.push(getUriWithOrg(orgslug, '/signup'))
       return
     }
 
     // Check if user is part of the organization
     if (!isUserPartOfTheOrg) {
-      router.push(getUriWithoutOrg(`/signup?orgslug=${orgslug}`))
+      router.push(getUriWithOrg(orgslug, '/signup'))
       return
     }
 
@@ -249,7 +249,7 @@ const CourseActionsMobile = ({ courseuuid, orgslug, course, trailData }: CourseA
             </p>
           </div>
           <a
-            href={getUriWithoutOrg(`/signup?orgslug=${orgslug}`)}
+            href={getUriWithOrg(orgslug, '/signup')}
             className="w-full py-2 px-4 rounded-lg bg-neutral-900 text-white font-semibold text-sm hover:bg-neutral-800 transition-colors flex items-center justify-center gap-2"
           >
             <UserPlus className="w-4 h-4" />

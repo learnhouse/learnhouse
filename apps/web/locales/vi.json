@@ -94,6 +94,28 @@
         }
       }
     },
+    "features": {
+      "disabled": {
+        "status": "Tính năng bị vô hiệu hóa",
+        "enable_feature": "Đi đến Cài đặt",
+        "names": {
+          "courses": "Khóa học",
+          "collections": "Bộ sưu tập",
+          "communities": "Cộng đồng",
+          "podcasts": "Podcast",
+          "payments": "Thanh toán",
+          "trail": "Theo dõi tiến độ"
+        },
+        "public": {
+          "title": "{{feature}} không khả dụng",
+          "description": "Tính năng này hiện không khả dụng cho tổ chức này. Vui lòng liên hệ quản trị viên nếu bạn cần quyền truy cập."
+        },
+        "dashboard": {
+          "title": "{{feature}} bị vô hiệu hóa",
+          "description": "Tính năng này bị vô hiệu hóa cho tổ chức của bạn. Kích hoạt trong cài đặt để cung cấp cho người dùng."
+        }
+      }
+    },
     "enterprise": "Doanh nghiệp",
     "version": "Phiên bản",
     "users": "Người dùng",
@@ -139,11 +161,11 @@
     "email": "Email",
     "password": "Mật khẩu",
     "forgot_password": "Quên mật khẩu?",
-    "login_to": "Đăng nhập vào",
+    "login_to": "Chào mừng trở lại",
     "sign_up": "Đăng ký",
     "sign_in_with_google": "Đăng nhập bằng Google",
     "wrong_email_password": "Email hoặc mật khẩu không chính xác",
-    "invited_to_join": "Bạn đã được mời tham gia",
+    "invited_to_join": "Bắt đầu hành trình học tập của bạn",
     "join": "Tham gia",
     "invite_code_required": "Cần có mã mời để tham gia",
     "enter_invite_code": "Vui lòng nhập mã mời",
@@ -167,7 +189,50 @@
     "account_created_success": "Tài khoản của bạn đã được tạo thành công",
     "login_to_your_account": "Đăng nhập vào tài khoản của bạn",
     "authenticate_to_contribute": "Xác thực để đóng góp",
-    "sign_up_to_contribute": "Đăng ký để đóng góp"
+    "sign_up_to_contribute": "Đăng ký để đóng góp",
+    "email_not_verified": "Vui lòng xác minh email của bạn trước khi đăng nhập",
+    "email_not_verified_description": "Kiểm tra hộp thư đến của bạn để tìm email xác minh hoặc yêu cầu gửi lại",
+    "resend_verification": "Gửi lại email xác minh",
+    "verification_sent": "Đã gửi email xác minh",
+    "account_locked": "Tài khoản bị khóa",
+    "account_locked_description": "Quá nhiều lần đăng nhập thất bại. Vui lòng thử lại sau {minutes} phút",
+    "rate_limited": "Quá nhiều yêu cầu",
+    "rate_limited_description": "Vui lòng đợi trước khi thử lại",
+    "check_email": "Kiểm tra email của bạn",
+    "check_email_description": "Chúng tôi đã gửi một liên kết xác minh đến địa chỉ email của bạn. Vui lòng xác minh email của bạn để tiếp tục.",
+    "password_requirements": "Yêu cầu mật khẩu",
+    "password_min_length": "Ít nhất 8 ký tự",
+    "password_uppercase": "Ít nhất một chữ cái viết hoa",
+    "password_lowercase": "Ít nhất một chữ cái viết thường",
+    "password_number": "Ít nhất một chữ số",
+    "password_special": "Ít nhất một ký tự đặc biệt",
+    "welcome_back": "Chào mừng trở lại",
+    "enter_credentials": "Nhập thông tin đăng nhập để truy cập tài khoản của bạn",
+    "no_account": "Chưa có tài khoản?",
+    "already_have_account": "Đã có tài khoản?",
+    "fill_in_details": "Điền thông tin của bạn để bắt đầu",
+    "reset_your_password": "Đặt lại mật khẩu của bạn",
+    "create_new_password": "Tạo mật khẩu mới",
+    "remember_password": "Nhớ mật khẩu rồi?",
+    "verifying_your_email": "Đang xác minh email của bạn",
+    "join_organization": "Tham gia tổ chức",
+    "join_organization_desc": "Bạn sắp tham gia tổ chức này",
+    "join_organization_success": "Đã tham gia tổ chức thành công",
+    "joining": "Đang tham gia",
+    "invite_required": "Yêu cầu lời mời",
+    "invite_required_desc": "Cần mã mời để tham gia {{org}}",
+    "invite_code": "Mã mời",
+    "validate_invite": "Xác nhận lời mời"
+  },
+  "verify_email": {
+    "title": "Xác minh email",
+    "verifying": "Đang xác minh email của bạn...",
+    "success": "Xác minh email thành công",
+    "success_description": "Email của bạn đã được xác minh. Bạn có thể đăng nhập ngay bây giờ.",
+    "error": "Xác minh thất bại",
+    "error_description": "Liên kết xác minh không hợp lệ hoặc đã hết hạn.",
+    "go_to_login": "Đến trang đăng nhập",
+    "request_new_link": "Yêu cầu liên kết xác minh mới"
   },
   "validation": {
     "required": "Bắt buộc",
@@ -1850,6 +1915,30 @@
           "disabled": "Đã tắt {{feature}}",
           "error": "Cập nhật cấu hình {{feature}} thất bại"
         }
+      },
+      "auth_branding": {
+        "title": "Thương hiệu trang xác thực",
+        "subtitle": "Tùy chỉnh giao diện của trang đăng nhập và đăng ký",
+        "welcome_message": "Tin nhắn chào mừng",
+        "welcome_placeholder": "Nhập tin nhắn chào mừng tùy chỉnh...",
+        "welcome_desc": "Tin nhắn này sẽ được hiển thị trên các trang đăng nhập và đăng ký. Để trống để sử dụng mặc định.",
+        "default_welcome": "Đăng nhập để truy cập nội dung học tập của bạn",
+        "background_type": "Loại nền",
+        "bg_gradient": "Gradient",
+        "bg_custom": "Tùy chỉnh",
+        "bg_unsplash": "Unsplash",
+        "text_color": "Màu chữ",
+        "text_light": "Sáng",
+        "text_dark": "Tối",
+        "text_color_desc": "Chọn chữ sáng cho nền tối, chữ tối cho nền sáng.",
+        "preview": "Xem trước trực tiếp",
+        "preview_hint": "Đây là cách các trang đăng nhập và đăng ký của bạn sẽ hiển thị",
+        "saving": "Đang lưu...",
+        "save_success": "Đã lưu cài đặt thương hiệu thành công",
+        "save_error": "Không thể lưu cài đặt",
+        "uploading": "Đang tải lên nền...",
+        "upload_success": "Đã tải lên hình nền thành công",
+        "upload_error": "Không thể tải lên hình ảnh"
       },
       "audit_logs": {
         "title": "Nhật ký kiểm tra",

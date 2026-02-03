@@ -34,7 +34,7 @@ function CoursePaidOptions({ course }: CoursePaidOptionsProps) {
   const handleCheckout = async (productId: number) => {
     if (!session.data?.user) {
       // Redirect to login if user is not authenticated
-      router.push(`/signup?orgslug=${org.slug}`)
+      router.push(getUriWithOrg(org.slug, '/signup'))
       return
     }
 

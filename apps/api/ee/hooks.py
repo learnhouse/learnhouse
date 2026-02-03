@@ -12,6 +12,7 @@ from ee.routers import payments
 from ee.routers import info
 from ee.routers import audit_logs
 from ee.routers import scorm
+from ee.routers import sso
 
 logger = logging.getLogger(__name__)
 
@@ -64,6 +65,13 @@ def register_routers(v1_router: APIRouter):
         prefix="/scorm",
         tags=["scorm"],
         dependencies=[Depends(get_non_api_token_user)]
+    )
+
+    # SSO - Admin endpoints require authentication, auth endpoints are public
+    v1_router.include_router(
+        sso.router,
+        prefix="/auth/sso",
+        tags=["sso", "auth"],
     )
 
     logger.info("EE Routers registered")

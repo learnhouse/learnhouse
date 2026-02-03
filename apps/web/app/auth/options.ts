@@ -39,19 +39,47 @@ export const nextAuthOptions = {
       credentials: {
         email: { label: 'Email', type: 'text', placeholder: 'jsmith' },
         password: { label: 'Password', type: 'password' },
+        sso: { label: 'SSO', type: 'hidden' },
+        sso_access_token: { label: 'SSO Access Token', type: 'hidden' },
+        sso_refresh_token: { label: 'SSO Refresh Token', type: 'hidden' },
+        sso_user: { label: 'SSO User', type: 'hidden' },
       },
       async authorize(credentials, req) {
-        // logic to verify if user exists
+        // Handle SSO login - tokens already obtained from backend
+        if (credentials?.sso === 'true' && credentials?.sso_access_token) {
+          try {
+            const user = credentials.sso_user ? JSON.parse(credentials.sso_user) : null
+            return {
+              user: user,
+              tokens: {
+                access_token: credentials.sso_access_token,
+                refresh_token: credentials.sso_refresh_token,
+                expiry: Date.now() + (8 * 60 * 60 * 1000), // 8 hours
+              },
+            }
+          } catch (e) {
+            console.error('SSO login error:', e)
+            return null
+          }
+        }
+
+        // Regular credentials login
         let unsanitized_req = await loginAndGetToken(
           credentials?.email,
           credentials?.password
         )
         let res = await getResponseMetadata(unsanitized_req)
         if (res.success) {
-          // If login failed, then this is the place you could do a registration
           return res.data
         } else {
-          return null
+          // Throw error with backend error details so frontend can display proper message
+          const errorData = res.data?.detail || res.data
+          throw new Error(JSON.stringify({
+            code: errorData?.code || 'UNKNOWN_ERROR',
+            message: errorData?.message || 'Login failed',
+            email: errorData?.email,
+            retry_after: errorData?.retry_after,
+          }))
         }
       },
     }),
@@ -87,10 +115,17 @@ export const nextAuthOptions = {
 
       // Sign up with Google
       if (account?.provider == 'google' && user) {
+        // Read org_id from cookie
+        const { cookies } = require('next/headers');
+        const cookieStore = cookies();
+        const orgIdCookie = cookieStore.get('learnhouse_oauth_org_id');
+        const orgId = orgIdCookie?.value ? parseInt(orgIdCookie.value, 10) : undefined;
+
         let unsanitized_req = await loginWithOAuthToken(
           user.email,
           'google',
-          account.access_token
+          account.access_token,
+          orgId
         );
         let userFromOAuth = await getResponseMetadata(unsanitized_req);
         token.user = userFromOAuth.data;
@@ -100,54 +135,60 @@ export const nextAuthOptions = {
       if (token?.user?.tokens) {
         const tokenExpiry = token.user.tokens.expiry || 0;
         const oneMinute = 1 * 60 * 1000;
-        
+
         if (Date.now() + oneMinute >= tokenExpiry) {
-          const RefreshedToken = await getNewAccessTokenUsingRefreshTokenServer(
-            token?.user?.tokens?.refresh_token
-          );
-          token = {
-            ...token,
-            user: {
-              ...token.user,
-              tokens: {
-                ...token.user.tokens,
-                access_token: RefreshedToken.access_token,
-                expiry: Date.now() + (60 * 60 * 1000), // 1 hour from now
-              },
-            },
-          };
+          try {
+            const RefreshedToken = await getNewAccessTokenUsingRefreshTokenServer(
+              token?.user?.tokens?.refresh_token
+            );
+            // Only update token if refresh succeeded
+            if (RefreshedToken?.access_token) {
+              token = {
+                ...token,
+                user: {
+                  ...token.user,
+                  tokens: {
+                    ...token.user.tokens,
+                    access_token: RefreshedToken.access_token,
+                    expiry: Date.now() + (60 * 60 * 1000), // 1 hour from now
+                  },
+                },
+              };
+            }
+          } catch (error) {
+            console.error("Token refresh failed:", error);
+            // Keep existing token if refresh fails
+          }
         }
       }
       return token;
     },
     async session({ session, token }: any) {
       // Include user information in the session
-      if (token.user) {
-        // Cache the session for 1 minute to refresh every minute
+      if (token.user && token.user.tokens?.access_token) {
+        // Cache the session for 10 seconds for quick role updates
         const cacheKey = `user_session_${token.user.tokens.access_token}`;
-        
+
         // Initialize cache if it doesn't exist
         if (!global.sessionCache) {
           global.sessionCache = {};
         }
 
         // Prevent memory leak: clear cache if it grows too large
-        // With refetchInterval={60000}, one entry per user per hour is added
-        // 1000 entries is plenty for a single pod
         if (Object.keys(global.sessionCache).length > 1000) {
           global.sessionCache = {};
         }
 
         let cachedSession = global.sessionCache[cacheKey];
         const now = Date.now();
-        
-        if (cachedSession && now - cachedSession.timestamp < 1 * 60 * 1000) {
+
+        if (cachedSession && now - cachedSession.timestamp < 10 * 1000) {
           return cachedSession.data;
         }
 
         try {
           let api_SESSION = await getUserSession(token.user.tokens.access_token);
-          
+
           if (api_SESSION && api_SESSION.user) {
             session.user = api_SESSION.user;
             session.roles = api_SESSION.roles;
@@ -164,6 +205,7 @@ export const nextAuthOptions = {
               session.user = token.user.user;
             }
             session.tokens = token.user.tokens;
+            session.roles = [];
           }
         } catch (error) {
           console.error("Error in session callback:", error);
@@ -172,7 +214,15 @@ export const nextAuthOptions = {
             session.user = token.user.user;
           }
           session.tokens = token.user.tokens;
+          session.roles = [];
         }
+      } else if (token.user) {
+        // Token exists but no valid access_token - set what we can
+        if (token.user?.user) {
+          session.user = token.user.user;
+        }
+        session.tokens = token.user.tokens || {};
+        session.roles = [];
       }
       return session;
     },

@@ -1,7 +1,7 @@
 import { useOrg } from '@components/Contexts/OrgContext'
 import PageLoading from '@components/Objects/Loaders/PageLoading'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
-import { getAPIUrl, getUriWithoutOrg } from '@services/config/config'
+import { getAPIUrl, getUriWithOrg } from '@services/config/config'
 import { swrFetcher } from '@services/utils/ts/requests'
 import { Globe, Ticket, UserSquare, Users, X } from 'lucide-react'
 import Link from 'next/link'
@@ -179,13 +179,9 @@ function OrgAccess() {
                           <Link
                             className="outline bg-gray-50 text-gray-600 px-2 py-1 rounded-md outline-gray-300 outline-dashed outline-1"
                             target="_blank"
-                            href={getUriWithoutOrg(
-                              `/signup?inviteCode=${invite.invite_code}&orgslug=${org.slug}`
-                            )}
+                            href={getUriWithOrg(org.slug, `/signup?inviteCode=${invite.invite_code}`)}
                           >
-                            {getUriWithoutOrg(
-                              `/signup?inviteCode=${invite.invite_code}&orgslug=${org.slug}`
-                            )}
+                            {getUriWithOrg(org.slug, `/signup?inviteCode=${invite.invite_code}`)}
                           </Link>
                         </td>
                         <td className="py-3 px-4">

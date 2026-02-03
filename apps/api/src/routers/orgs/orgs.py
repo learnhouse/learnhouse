@@ -1,5 +1,5 @@
 from typing import List, Literal, Union
-from fastapi import APIRouter, Depends, Request, UploadFile
+from fastapi import APIRouter, Depends, Request, UploadFile, Query
 from sqlmodel import Session
 from src.services.orgs.invites import (
     create_invite_code,
@@ -25,12 +25,13 @@ from src.db.organizations import (
     OrganizationUpdate,
 )
 from src.core.events.database import get_db_session
-from src.security.auth import get_current_user
+from src.security.auth import get_current_user, get_authenticated_user
+from src.security.features_utils.dependencies import require_org_admin
 from src.services.orgs.orgs import (
     create_org,
     create_org_with_config,
     delete_org,
-    get_organization,
+    get_organization_by_uuid,
     get_organization_by_slug,
     get_orgs_by_user,
     get_orgs_by_user_admin,
@@ -42,16 +43,26 @@ from src.services.orgs.orgs import (
     update_org_communities_config,
     update_org_payments_config,
     update_org_collections_config,
+    update_org_courses_config,
     update_org_podcasts_config,
     update_org_color_config,
     update_org_footer_text_config,
     update_org_thumbnail,
     update_org_landing,
     upload_org_landing_content_service,
+    update_org_auth_branding_config,
+    upload_org_auth_background_service,
 )
+from src.db.organization_config import AuthBrandingConfig
 
 
 router = APIRouter()
+
+# Sub-router for feature config endpoints (admin-only)
+feature_config_router = APIRouter(
+    tags=["Feature Configuration"],
+    dependencies=[Depends(require_org_admin)],
+)
 
 
 @router.post("/")
@@ -84,31 +95,36 @@ async def api_create_org_withconfig(
     )
 
 
-@router.get("/{org_id}")
-async def api_get_org(
+@router.get("/uuid/{org_uuid}")
+async def api_get_org_by_uuid(
     request: Request,
-    org_id: str,
+    org_uuid: str,
     current_user: PublicUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
 ) -> OrganizationRead:
     """
-    Get single Org by ID
+    Get single Org by UUID
     """
-    return await get_organization(request, org_id, db_session, current_user)
+    return await get_organization_by_uuid(request, org_uuid, db_session, current_user)
 
 
 @router.get("/{org_id}/users")
 async def api_get_org_users(
     request: Request,
     org_id: str,
-    page: int = 1,
-    limit: int = 20,
+    page: int = Query(default=1, ge=1, description="Page number"),
+    limit: int = Query(default=20, ge=1, le=100, description="Items per page (max 100)"),
     search: str = "",
-    current_user: PublicUser = Depends(get_current_user),
+    current_user: PublicUser = Depends(get_authenticated_user),
     db_session: Session = Depends(get_db_session),
 ):
     """
-    Get organization users with pagination and search
+    Get organization users with pagination and search.
+
+    SECURITY:
+    - Requires authentication (no anonymous access)
+    - Maximum limit is 100 to prevent data dumping attacks
+    - Only org members can list other org members
     """
     return await get_organization_users(
         request, org_id, db_session, current_user, page, limit, search
@@ -178,7 +194,12 @@ async def api_get_org_signup_mechanism(
     )
 
 
-@router.put("/{org_id}/config/ai")
+# ============================================================================
+# Feature config routes (admin-only via router-level dependency)
+# ============================================================================
+
+
+@feature_config_router.put("/{org_id}/config/ai")
 async def api_update_org_ai_config(
     request: Request,
     org_id: int,
@@ -187,14 +208,14 @@ async def api_update_org_ai_config(
     db_session: Session = Depends(get_db_session),
 ):
     """
-    Update organization AI configuration
+    Update organization AI configuration (admin-only)
     """
     return await update_org_ai_config(
         request, ai_enabled, org_id, current_user, db_session
     )
 
 
-@router.put("/{org_id}/config/communities")
+@feature_config_router.put("/{org_id}/config/communities")
 async def api_update_org_communities_config(
     request: Request,
     org_id: int,
@@ -203,14 +224,14 @@ async def api_update_org_communities_config(
     db_session: Session = Depends(get_db_session),
 ):
     """
-    Update organization communities configuration
+    Update organization communities configuration (admin-only)
     """
     return await update_org_communities_config(
         request, communities_enabled, org_id, current_user, db_session
     )
 
 
-@router.put("/{org_id}/config/payments")
+@feature_config_router.put("/{org_id}/config/payments")
 async def api_update_org_payments_config(
     request: Request,
     org_id: int,
@@ -219,14 +240,30 @@ async def api_update_org_payments_config(
     db_session: Session = Depends(get_db_session),
 ):
     """
-    Update organization payments configuration
+    Update organization payments configuration (admin-only)
     """
     return await update_org_payments_config(
         request, payments_enabled, org_id, current_user, db_session
     )
 
 
-@router.put("/{org_id}/config/collections")
+@feature_config_router.put("/{org_id}/config/courses")
+async def api_update_org_courses_config(
+    request: Request,
+    org_id: int,
+    courses_enabled: bool,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+):
+    """
+    Update organization courses configuration (admin-only)
+    """
+    return await update_org_courses_config(
+        request, courses_enabled, org_id, current_user, db_session
+    )
+
+
+@feature_config_router.put("/{org_id}/config/collections")
 async def api_update_org_collections_config(
     request: Request,
     org_id: int,
@@ -235,14 +272,14 @@ async def api_update_org_collections_config(
     db_session: Session = Depends(get_db_session),
 ):
     """
-    Update organization collections configuration
+    Update organization collections configuration (admin-only)
     """
     return await update_org_collections_config(
         request, collections_enabled, org_id, current_user, db_session
     )
 
 
-@router.put("/{org_id}/config/podcasts")
+@feature_config_router.put("/{org_id}/config/podcasts")
 async def api_update_org_podcasts_config(
     request: Request,
     org_id: int,
@@ -251,7 +288,7 @@ async def api_update_org_podcasts_config(
     db_session: Session = Depends(get_db_session),
 ):
     """
-    Update organization podcasts configuration
+    Update organization podcasts configuration (admin-only)
     """
     return await update_org_podcasts_config(
         request, podcasts_enabled, org_id, current_user, db_session
@@ -287,6 +324,42 @@ async def api_update_org_footer_text_config(
     """
     return await update_org_footer_text_config(
         request, footer_text, org_id, current_user, db_session
+    )
+
+
+@router.put("/{org_id}/config/auth_branding")
+async def api_update_org_auth_branding_config(
+    request: Request,
+    org_id: int,
+    auth_branding: AuthBrandingConfig,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+):
+    """
+    Update organization auth branding configuration
+    """
+    return await update_org_auth_branding_config(
+        request, auth_branding, org_id, current_user, db_session
+    )
+
+
+@router.put("/{org_id}/auth_background")
+async def api_upload_org_auth_background(
+    request: Request,
+    org_id: int,
+    background_file: UploadFile,
+    current_user: PublicUser = Depends(get_current_user),
+    db_session: Session = Depends(get_db_session),
+):
+    """
+    Upload auth page background image
+    """
+    return await upload_org_auth_background_service(
+        request=request,
+        background_file=background_file,
+        org_id=org_id,
+        current_user=current_user,
+        db_session=db_session,
     )
 
 
@@ -424,7 +497,7 @@ async def api_get_org_by_slug(
 @router.put("/{org_id}/logo")
 async def api_update_org_logo(
     request: Request,
-    org_id: str,
+    org_id: int,
     logo_file: UploadFile,
     current_user: PublicUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
@@ -444,7 +517,7 @@ async def api_update_org_logo(
 @router.put("/{org_id}/thumbnail")
 async def api_update_org_thumbnail(
     request: Request,
-    org_id: str,
+    org_id: int,
     thumbnail_file: UploadFile,
     current_user: PublicUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
@@ -463,13 +536,13 @@ async def api_update_org_thumbnail(
 @router.put("/{org_id}/preview")
 async def api_update_org_preview(
     request: Request,
-    org_id: str,
+    org_id: int,
     preview_file: UploadFile,
     current_user: PublicUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
 ):
     """
-    Update org thumbnail
+    Update org preview
     """
     return await update_org_preview(
         request=request,
@@ -589,3 +662,7 @@ async def api_get_org_usage(
     """
     from src.services.orgs.usage import get_org_usage_and_limits
     return await get_org_usage_and_limits(request, org_id, current_user, db_session)
+
+
+# Include the feature config sub-router (admin-only endpoints)
+router.include_router(feature_config_router)

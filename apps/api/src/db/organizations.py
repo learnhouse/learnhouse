@@ -29,7 +29,8 @@ class OrganizationBase(SQLModel):
 class Organization(OrganizationBase, table=True):
     __table_args__ = {"extend_existing": True}
     id: Optional[int] = Field(default=None, primary_key=True)
-    org_uuid: str = ""
+    org_uuid: str = Field(default="", unique=True)
+    slug: str = Field(unique=True, index=True)  # Override to add unique constraint
     creation_date: str = ""
     update_date: str = ""
 

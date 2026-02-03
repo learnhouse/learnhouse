@@ -9,8 +9,9 @@ import CommunityCard from '@components/Objects/Communities/CommunityCard'
 import { CreateCommunityModal } from '@components/Objects/Modals/Communities/CreateCommunityModal'
 import { EditCommunityModal } from '@components/Objects/Modals/Communities/EditCommunityModal'
 import ContentPlaceHolderIfUserIsNotAdmin from '@components/Objects/ContentPlaceHolder'
-import { Users, Plus } from 'lucide-react'
+import { Users, Plus, MessagesSquare } from 'lucide-react'
 import { Community } from '@services/communities/communities'
+import FeatureDisabledView from '@components/Dashboard/Shared/FeatureDisabled/FeatureDisabledView'
 
 interface CommunitiesClientProps {
   communities: Community[]
@@ -24,6 +25,12 @@ const CommunitiesClient = ({ communities, orgslug, org_id }: CommunitiesClientPr
   const [editingCommunity, setEditingCommunity] = useState<Community | null>(null)
 
   return (
+    <FeatureDisabledView
+      featureName="communities"
+      orgslug={orgslug}
+      icon={MessagesSquare}
+      context="public"
+    >
     <GeneralWrapperStyled>
       <div className="flex flex-col space-y-2 mb-6">
         <div className="flex items-center justify-between">
@@ -105,6 +112,7 @@ const CommunitiesClient = ({ communities, orgslug, org_id }: CommunitiesClientPr
         />
       )}
     </GeneralWrapperStyled>
+    </FeatureDisabledView>
   )
 }
 

@@ -11,6 +11,7 @@ import NewCollectionButton from '@components/Objects/StyledElements/Buttons/NewC
 import ContentPlaceHolderIfUserIsNotAdmin from '@components/Objects/ContentPlaceHolder'
 import { useTranslation } from 'react-i18next'
 import { SquareLibrary } from 'lucide-react'
+import FeatureDisabledView from '@components/Dashboard/Shared/FeatureDisabled/FeatureDisabledView'
 
 interface CollectionsClientProps {
   collections: any[]
@@ -22,6 +23,12 @@ const CollectionsClient = ({ collections, orgslug, org_id }: CollectionsClientPr
   const { t } = useTranslation()
 
   return (
+    <FeatureDisabledView
+      featureName="collections"
+      orgslug={orgslug}
+      icon={SquareLibrary}
+      context="public"
+    >
     <GeneralWrapperStyled>
       <div className="flex flex-col space-y-2 mb-6">
         <div className="flex items-center justify-between">
@@ -77,6 +84,7 @@ const CollectionsClient = ({ collections, orgslug, org_id }: CollectionsClientPr
         </div>
       </div>
     </GeneralWrapperStyled>
+    </FeatureDisabledView>
   )
 }
 

@@ -48,3 +48,15 @@ async def upload_org_landing_content(file: UploadFile, org_uuid: str) -> str:
         allowed_types=["image", "video", "document"],
         filename_prefix="landing"
     )
+
+
+async def upload_org_auth_background(file: UploadFile, org_uuid: str) -> str:
+    """Upload organization auth page background image."""
+    return await upload_file(
+        file=file,
+        directory="auth_backgrounds",
+        type_of_dir="orgs",
+        uuid=org_uuid,
+        allowed_types=["image"],
+        filename_prefix="auth_bg"
+    )

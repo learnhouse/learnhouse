@@ -10,8 +10,8 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import PaymentsConfigurationPage from '@components/Dashboard/Pages/Payments/PaymentsConfigurationPage'
 import PaymentsProductPage from '@components/Dashboard/Pages/Payments/PaymentsProductPage'
 import PaymentsCustomersPage from '@components/Dashboard/Pages/Payments/PaymentsCustomersPage'
-import useFeatureFlag from '@components/Hooks/useFeatureFlag'
 import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/PlanRestrictedFeature'
+import { FeatureDisabledBanner } from '@components/Dashboard/Shared/FeatureDisabled/FeatureDisabledView'
 import { PlanLevel } from '@services/plans/plans'
 import { BadgeDollarSign } from 'lucide-react'
 
@@ -26,11 +26,6 @@ function PaymentsPage(props: { params: Promise<PaymentsParams> }) {
   const org = useOrg() as any
   const subpage = params.subpage || 'customers'
   const currentPlan: PlanLevel = org?.config?.config?.cloud?.plan || 'free'
-
-  const isPaymentsEnabled = useFeatureFlag({
-    path: ['features', 'payments', 'enabled'],
-    defaultValue: false
-  })
 
   const getPageTitle = () => {
     switch (subpage) {
@@ -57,18 +52,6 @@ function PaymentsPage(props: { params: Promise<PaymentsParams> }) {
     }
   }
 
-  if (!isPaymentsEnabled) {
-    return (
-      <div className="h-screen w-full bg-[#f8f8f8] flex items-center justify-center p-4">
-        <div className="bg-white p-6 rounded-lg shadow-md text-center max-w-md">
-          <h2 className="text-xl font-bold mb-4">Payments Not Available</h2>
-          <p className="text-gray-600">The payments feature is not enabled for this organization.</p>
-          <p className="text-gray-600 mt-2">Please contact your administrator to enable payments.</p>
-        </div>
-      </div>
-    )
-  }
-
   const { h1, h2 } = getPageTitle()
 
   return (
@@ -83,6 +66,7 @@ function PaymentsPage(props: { params: Promise<PaymentsParams> }) {
     <div className="h-screen w-full bg-[#f8f8f8] flex flex-col">
       <div className="pl-10 pr-10 tracking-tight bg-[#fcfbfc] z-10 nice-shadow flex-shrink-0 relative">
         <div className="pt-6 pb-4">
+          <FeatureDisabledBanner featureName="payments" orgslug={params.orgslug} />
           <Breadcrumbs items={[
             { label: 'Payments', href: '/dash/payments', icon: <CreditCard size={14} /> }
           ]} />

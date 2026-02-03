@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Literal
 from uuid import uuid4
 from fastapi import HTTPException, Request, UploadFile, status
@@ -33,6 +33,7 @@ from src.db.users import (
 )
 from src.db.user_organizations import UserOrganization
 from src.security.security import security_hash_password, security_verify_password
+from src.services.security.password_validation import validate_password_complexity
 
 
 async def create_user(
@@ -41,7 +42,22 @@ async def create_user(
     current_user: PublicUser | AnonymousUser,
     user_object: UserCreate,
     org_id: int,
+    is_oauth: bool = False,
 ):
+    # Validate password complexity (skip for OAuth users who have empty passwords)
+    if user_object.password and not is_oauth:
+        validation_result = validate_password_complexity(user_object.password)
+        if not validation_result.is_valid:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "code": "WEAK_PASSWORD",
+                    "message": "Password does not meet security requirements",
+                    "errors": validation_result.errors,
+                    "requirements": validation_result.requirements,
+                },
+            )
+
     user = User.model_validate(user_object)
 
     # RBAC check
@@ -49,8 +65,16 @@ async def create_user(
 
     # Complete the user object
     user.user_uuid = f"user_{uuid4()}"
-    user.password = security_hash_password(user_object.password)
-    user.email_verified = False
+    user.password = security_hash_password(user_object.password) if user_object.password else ""
+
+    # OAuth users get auto-verified email (provider already verified)
+    if is_oauth:
+        user.email_verified = True
+        user.email_verified_at = datetime.now(timezone.utc).isoformat()
+    else:
+        user.email_verified = False
+        user.email_verified_at = None
+
     user.creation_date = str(datetime.now())
     user.update_date = str(datetime.now())
 
@@ -112,17 +136,26 @@ async def create_user(
     db_session.commit()
     db_session.refresh(user_organization)
 
-    user = UserRead.model_validate(user)
+    user_read = UserRead.model_validate(user)
 
     increase_feature_usage("members", org_id, db_session)
 
-    # Send Account creation email
-    send_account_creation_email(
-        user=user,
-        email=user.email,
-    )
+    # Send verification email for non-OAuth users, account creation email for OAuth users
+    if is_oauth:
+        send_account_creation_email(
+            user=user_read,
+            email=user_read.email,
+        )
+    else:
+        # Import here to avoid circular imports
+        from src.services.users.email_verification import send_verification_email
+        try:
+            await send_verification_email(request, db_session, user, org_id)
+        except Exception:
+            # Log but don't fail user creation if email fails
+            pass
 
-    return user
+    return user_read
 
 
 async def create_user_with_invite(
@@ -173,7 +206,22 @@ async def create_user_without_org(
     db_session: Session,
     current_user: PublicUser | AnonymousUser,
     user_object: UserCreate,
+    is_oauth: bool = False,
 ):
+    # Validate password complexity (skip for OAuth users who have empty passwords)
+    if user_object.password and not is_oauth:
+        validation_result = validate_password_complexity(user_object.password)
+        if not validation_result.is_valid:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "code": "WEAK_PASSWORD",
+                    "message": "Password does not meet security requirements",
+                    "errors": validation_result.errors,
+                    "requirements": validation_result.requirements,
+                },
+            )
+
     user = User.model_validate(user_object)
 
     # RBAC check
@@ -181,8 +229,16 @@ async def create_user_without_org(
 
     # Complete the user object
     user.user_uuid = f"user_{uuid4()}"
-    user.password = security_hash_password(user_object.password)
-    user.email_verified = False
+    user.password = security_hash_password(user_object.password) if user_object.password else ""
+
+    # OAuth users get auto-verified email (provider already verified)
+    if is_oauth:
+        user.email_verified = True
+        user.email_verified_at = datetime.now(timezone.utc).isoformat()
+    else:
+        user.email_verified = False
+        user.email_verified_at = None
+
     user.creation_date = str(datetime.now())
     user.update_date = str(datetime.now())
 
@@ -218,15 +274,17 @@ async def create_user_without_org(
     db_session.commit()
     db_session.refresh(user)
 
-    user = UserRead.model_validate(user)
+    user_read = UserRead.model_validate(user)
 
-    # Send Account creation email
+    # Send account creation email for OAuth users (they're already verified)
+    # Non-OAuth users without org can't receive verification emails since they need org context
+    # So we just send the welcome email
     send_account_creation_email(
-        user=user,
-        email=user.email,
+        user=user_read,
+        email=user_read.email,
     )
 
-    return user
+    return user_read
 
 
 async def update_user(
@@ -339,7 +397,36 @@ async def update_user_password(
     user_id: int,
     form: UserUpdatePassword,
 ):
-    # Get user
+    """
+    Update user password.
+
+    SECURITY: Users can only change their own password. This function:
+    1. Validates that user_id matches current_user.id (IDOR protection)
+    2. Verifies the old password before allowing change
+    3. Validates password complexity requirements
+    """
+    
+    # Users can ONLY change their own password
+    if current_user.id != user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You can only change your own password",
+        )
+
+    # Validate new password complexity
+    validation_result = validate_password_complexity(form.new_password)
+    if not validation_result.is_valid:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "code": "WEAK_PASSWORD",
+                "message": "Password does not meet security requirements",
+                "errors": validation_result.errors,
+                "requirements": validation_result.requirements,
+            },
+        )
+
+    # Get user (we already verified it's the current user)
     statement = select(User).where(User.id == user_id)
     user = db_session.exec(statement).first()
 
@@ -349,9 +436,7 @@ async def update_user_password(
             detail="User does not exist",
         )
 
-    # RBAC check
-    await rbac_check(request, current_user, "update", user.user_uuid, db_session)
-
+    # Verify old password before allowing change
     if not security_verify_password(form.old_password, user.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Wrong password"
@@ -377,14 +462,19 @@ async def read_user_by_id(
     current_user: PublicUser | AnonymousUser,
     user_id: int,
 ):
+    """
+    Get user by ID.
+
+    SECURITY: Returns 404 with generic message to prevent user enumeration.
+    """
     # Get user
     statement = select(User).where(User.id == user_id)
     user = db_session.exec(statement).first()
 
     if not user:
         raise HTTPException(
-            status_code=400,
-            detail="User does not exist",
+            status_code=404,
+            detail="Resource not found",  # Generic message prevents enumeration
         )
 
     user = UserRead.model_validate(user)
@@ -398,17 +488,20 @@ async def read_user_by_uuid(
     current_user: PublicUser | AnonymousUser,
     user_uuid: str,
 ):
+    """
+    Get user by UUID.
+
+    SECURITY: Returns 404 with generic message to prevent user enumeration.
+    """
     # Get user
     statement = select(User).where(User.user_uuid == user_uuid)
     user = db_session.exec(statement).first()
 
     if not user:
         raise HTTPException(
-            status_code=400,
-            detail="User does not exist",
+            status_code=404,
+            detail="Resource not found",  # Generic message prevents enumeration
         )
-
-    
 
     user = UserRead.model_validate(user)
 
@@ -421,17 +514,20 @@ async def read_user_by_username(
     current_user: PublicUser | AnonymousUser,
     username: str,
 ):
+    """
+    Get user by username.
+
+    SECURITY: Returns 404 with generic message to prevent username enumeration.
+    """
     # Get user
     statement = select(User).where(User.username == username)
     user = db_session.exec(statement).first()
 
     if not user:
         raise HTTPException(
-            status_code=400,
-            detail="User does not exist",
+            status_code=404,
+            detail="Resource not found",  # Generic message prevents enumeration
         )
-
-    
 
     user = UserRead.model_validate(user)
 
@@ -551,16 +647,20 @@ async def delete_user_by_id(
 # Utils & Security functions
 
 
-async def security_get_user(request: Request, db_session: Session, email: str) -> User:
+async def security_get_user(request: Request, db_session: Session, email: str) -> User | None:
+    """
+    Get user by email for security/authentication purposes.
+
+    Returns None if user doesn't exist (rather than throwing an exception)
+    to allow the caller to handle the "user not found" case appropriately
+    and prevent email enumeration vulnerabilities.
+    """
     # Check if user exists
     statement = select(User).where(User.email == email)
     user = db_session.exec(statement).first()
 
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="User with Email does not exist",
-        )
+        return None
 
     user = User(**user.model_dump())
 

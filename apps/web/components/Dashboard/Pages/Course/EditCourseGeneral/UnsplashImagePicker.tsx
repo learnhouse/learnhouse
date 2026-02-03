@@ -66,6 +66,23 @@ const UnsplashImagePicker: React.FC<UnsplashImagePickerProps> = ({ onSelect, onC
     }
   }, []);
 
+  const fetchDefaultImages = useCallback(async (pageNum: number) => {
+    setLoading(true);
+    try {
+      const result = await unsplash.photos.list({
+        page: pageNum,
+        perPage: IMAGES_PER_PAGE,
+      });
+      if (result && result.response) {
+        setImages(prevImages => pageNum === 1 ? result.response.results : [...prevImages, ...result.response.results]);
+      }
+    } catch (error) {
+      console.error('Error fetching default images:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   const debouncedFetchImages = useCallback(
     debounce((searchQuery: string) => {
       setPage(1);
@@ -77,8 +94,12 @@ const UnsplashImagePicker: React.FC<UnsplashImagePickerProps> = ({ onSelect, onC
   useEffect(() => {
     if (query) {
       debouncedFetchImages(query);
+    } else if (isOpen) {
+      // Load default images when modal opens or query is cleared
+      setPage(1);
+      fetchDefaultImages(1);
     }
-  }, [query, debouncedFetchImages]);
+  }, [query, debouncedFetchImages, isOpen, fetchDefaultImages]);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setQuery(e.target.value);
@@ -91,7 +112,11 @@ const UnsplashImagePicker: React.FC<UnsplashImagePickerProps> = ({ onSelect, onC
   const handleLoadMore = () => {
     const nextPage = page + 1;
     setPage(nextPage);
-    fetchImages(query, nextPage);
+    if (query) {
+      fetchImages(query, nextPage);
+    } else {
+      fetchDefaultImages(nextPage);
+    }
   };
 
   const handleImageSelect = (imageUrl: string) => {
@@ -161,6 +186,7 @@ const UnsplashImagePicker: React.FC<UnsplashImagePickerProps> = ({ onSelect, onC
       minWidth="lg"
       minHeight="lg"
       customHeight="h-[80vh]"
+      noPadding
     />
   );
 };

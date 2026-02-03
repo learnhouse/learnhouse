@@ -91,6 +91,36 @@
         "communities": {
           "title": "Standard-Funktion",
           "description": "Communities ist eine Premium-Funktion, die nur für Organisationen in unserem Standard-Plan oder höher verfügbar ist. Upgraden Sie, um Diskussions-Communities für Ihre Mitglieder freizuschalten."
+        },
+        "seo": {
+          "description": "SEO-Optimierungstools sind nur für Organisationen mit unserem Standard-Plan oder höher verfügbar. Upgraden Sie, um Suchmaschinenerscheinung, Social-Sharing-Vorschauen und strukturierte Daten für Ihre Kurse anzupassen.",
+          "title": "Standard-Funktion"
+        },
+        "sso": {
+          "description": "Single Sign-On (SSO) ist eine Premium-Funktion, die nur für Organisationen mit unserem Enterprise-Plan verfügbar ist. Upgraden Sie, um sichere Authentifizierung über den Identitätsanbieter Ihrer Organisation zu ermöglichen.",
+          "title": "Enterprise-Funktion"
+        }
+      }
+    },
+    "features": {
+      "disabled": {
+        "status": "Funktion deaktiviert",
+        "enable_feature": "Zu Einstellungen",
+        "names": {
+          "courses": "Kurse",
+          "collections": "Sammlungen",
+          "communities": "Communities",
+          "podcasts": "Podcasts",
+          "payments": "Zahlungen",
+          "trail": "Fortschrittsverfolgung"
+        },
+        "public": {
+          "title": "{{feature}} nicht verfügbar",
+          "description": "Diese Funktion ist derzeit für diese Organisation nicht verfügbar. Bitte kontaktieren Sie einen Administrator, wenn Sie Zugang benötigen."
+        },
+        "dashboard": {
+          "title": "{{feature}} deaktiviert",
+          "description": "Diese Funktion ist für Ihre Organisation deaktiviert. Aktivieren Sie sie in den Einstellungen, um sie für Benutzer verfügbar zu machen."
         }
       }
     },
@@ -127,7 +157,9 @@
     "back": "Zurück",
     "of": "von",
     "creating": "Wird erstellt...",
-    "view_details": "Details anzeigen"
+    "view_details": "Details anzeigen",
+    "close": "Schließen",
+    "optional": "optional"
   },
   "banner": {
     "viewing_as_guest": "Sie betrachten {{name}} als Gast.",
@@ -139,11 +171,11 @@
     "email": "E-Mail",
     "password": "Passwort",
     "forgot_password": "Passwort vergessen?",
-    "login_to": "Anmelden bei",
+    "login_to": "Willkommen zurück",
     "sign_up": "Registrieren",
     "sign_in_with_google": "Mit Google anmelden",
     "wrong_email_password": "Falsche E-Mail oder Passwort",
-    "invited_to_join": "Sie wurden eingeladen, beizutreten",
+    "invited_to_join": "Starten Sie Ihre Lernreise",
     "join": "Beitreten",
     "invite_code_required": "Ein Einladungscode ist zum Beitritt erforderlich",
     "enter_invite_code": "Bitte geben Sie einen Einladungscode ein",
@@ -167,7 +199,84 @@
     "account_created_success": "Ihr Konto wurde erfolgreich erstellt",
     "login_to_your_account": "Melden Sie sich bei Ihrem Konto an",
     "authenticate_to_contribute": "Authentifizieren, um beizutragen",
-    "sign_up_to_contribute": "Registrieren, um beizutragen"
+    "sign_up_to_contribute": "Registrieren, um beizutragen",
+    "verify_email_title": "E-Mail bestätigen",
+    "verifying_email": "Ihre E-Mail-Adresse wird überprüft...",
+    "verification_failed": "Überprüfung fehlgeschlagen",
+    "verification_missing_params": "Fehlende Überprüfungsparameter. Bitte überprüfen Sie Ihren Bestätigungslink.",
+    "verification_trouble": "Probleme? Fordern Sie eine neue Bestätigungs-E-Mail von der Anmeldeseite an.",
+    "back_to_login": "Zurück zur Anmeldung",
+    "email_verified_success": "E-Mail bestätigt!",
+    "email_verified_message": "Ihre E-Mail wurde erfolgreich bestätigt. Sie können sich jetzt in Ihr Konto einloggen.",
+    "proceed_to_login": "Weiter zur Anmeldung",
+    "check_email_for_verification": "Überprüfen Sie Ihre E-Mail",
+    "verification_email_sent_message": "Wir haben eine Bestätigungs-E-Mail an Ihren Posteingang gesendet. Bitte klicken Sie auf den Link in der E-Mail, um Ihr Konto zu bestätigen.",
+    "email_not_verified": "E-Mail nicht bestätigt",
+    "email_not_verified_message": "Bitte bestätigen Sie Ihre E-Mail-Adresse, bevor Sie sich anmelden. Überprüfen Sie Ihren Posteingang auf die Bestätigungs-E-Mail.",
+    "resend_verification_email": "Bestätigungs-E-Mail erneut senden",
+    "resend_verification_failed": "Fehler beim erneuten Senden der Bestätigungs-E-Mail. Bitte versuchen Sie es erneut.",
+    "verification_email_resent": "Bestätigungs-E-Mail gesendet",
+    "check_inbox_message": "Bitte überprüfen Sie Ihren Posteingang und klicken Sie auf den Bestätigungslink.",
+    "account_locked": "Konto gesperrt",
+    "account_locked_message": "Ihr Konto wurde aufgrund zu vieler fehlgeschlagener Anmeldeversuche vorübergehend gesperrt. Bitte versuchen Sie es später erneut.",
+    "rate_limited": "Zu viele Anfragen",
+    "rate_limited_message": "Sie haben zu viele Anmeldeversuche unternommen. Bitte warten Sie einige Minuten, bevor Sie es erneut versuchen.",
+    "password_requirements_not_met": "Passwort erfüllt nicht die Anforderungen",
+    "password_strength": "Passwortstärke",
+    "password_strength_weak": "Schwach",
+    "password_strength_fair": "Mittel",
+    "password_strength_good": "Gut",
+    "password_strength_strong": "Stark",
+    "password_req_min_length": "Mindestens 8 Zeichen",
+    "password_req_uppercase": "Mindestens ein Großbuchstabe (A-Z)",
+    "password_req_lowercase": "Mindestens ein Kleinbuchstabe (a-z)",
+    "password_req_number": "Mindestens eine Zahl (0-9)",
+    "password_req_special": "Mindestens ein Sonderzeichen (!@#$%...)",
+    "welcome_back": "Willkommen zurück",
+    "enter_credentials": "Geben Sie Ihre Anmeldedaten ein, um auf Ihr Konto zuzugreifen",
+    "no_account": "Sie haben noch kein Konto?",
+    "already_have_account": "Sie haben bereits ein Konto?",
+    "fill_in_details": "Füllen Sie Ihre Daten aus, um loszulegen",
+    "reset_your_password": "Setzen Sie Ihr Passwort zurück",
+    "create_new_password": "Erstellen Sie ein neues Passwort",
+    "remember_password": "Passwort eingefallen?",
+    "verifying_your_email": "E-Mail wird verifiziert",
+    "login_failed": "Anmeldung fehlgeschlagen",
+    "try_again_in": "erneut versuchen in {{minutes}} Min",
+    "join_organization": "Organisation beitreten",
+    "join_organization_desc": "Sie sind dabei, dieser Organisation beizutreten",
+    "join_organization_success": "Erfolgreich der Organisation beigetreten",
+    "joining": "Beitritt",
+    "invite_required": "Einladung erforderlich",
+    "invite_required_desc": "Ein Einladungscode ist erforderlich, um {{org}} beizutreten",
+    "invite_code": "Einladungscode",
+    "validate_invite": "Einladung bestätigen",
+    "create_your_account": "Erstellen Sie Ihr Konto",
+    "sign_in_with_sso": "Mit SSO anmelden",
+    "sso_callback": {
+      "auth_failed": "Authentifizierung fehlgeschlagen",
+      "authenticating": "Authentifizierung...",
+      "copied": "Kopiert!",
+      "copy_details": "In Zwischenablage kopieren",
+      "error": "SSO-Authentifizierung fehlgeschlagen. Bitte versuchen Sie es erneut.",
+      "error_code": "Fehlercode",
+      "go_home": "Zur Startseite",
+      "hide_details": "Technische Details ausblenden",
+      "missing_params": "Ungültiger SSO-Rückruf. Erforderliche Parameter fehlen.",
+      "please_wait": "Bitte warten Sie, während wir Ihre Identität verifizieren",
+      "provider": "Anbieter",
+      "redirecting": "Sie werden zur Anwendung weitergeleitet...",
+      "show_details": "Technische Details anzeigen",
+      "success": "Authentifizierung erfolgreich",
+      "tips": {
+        "access_denied": "Wenn Sie die Anmeldeanfrage versehentlich abgelehnt haben, versuchen Sie es erneut und akzeptieren Sie die Berechtigungen.",
+        "domain_not_allowed": "Kontaktieren Sie Ihren Organisationsadministrator, um zu überprüfen, ob Ihre E-Mail-Domain zugelassen ist.",
+        "invalid_state": "Ihre Sitzung ist möglicherweise abgelaufen. Bitte versuchen Sie erneut, sich anzumelden.",
+        "server_error": "Der Identitätsanbieter hat Probleme. Bitte versuchen Sie es später erneut."
+      },
+      "try_again": "Erneut versuchen"
+    },
+    "sso_error": "SSO-Authentifizierung fehlgeschlagen. Bitte versuchen Sie es erneut."
   },
   "validation": {
     "required": "Erforderlich",
@@ -299,7 +408,7 @@
     "scorm": {
       "upload_package": "SCORM-Paket hochladen",
       "package_file": "Paketdatei (.zip)",
-      "click_to_upload": "Klicken zum Hochladen oder ziehen und ablegen",
+      "click_to_upload": "Klicken zum Hochladen oder per Drag & Drop",
       "supported_versions": "SCORM 1.2 oder SCORM 2004 Paket",
       "import_info": "Laden Sie Ihr SCORM-Paket hoch, um dessen Inhalt zu analysieren. Sie können den Kurs konfigurieren und Aktivitäten den Kapiteln zuweisen.",
       "analyze_package": "Paket analysieren",
@@ -391,24 +500,6 @@
       "created": "Erstellt",
       "done": "Fertig"
     },
-    "scorm": {
-      "upload_package": "SCORM-Paket hochladen",
-      "package_file": "Paketdatei (.zip)",
-      "click_to_upload": "Klicken zum Hochladen oder per Drag & Drop",
-      "supported_versions": "SCORM 1.2 oder SCORM 2004 Paket",
-      "import_info": "Laden Sie Ihr SCORM-Paket hoch, um dessen Inhalt zu analysieren. Sie können den Kurs konfigurieren und Aktivitäten den Kapiteln zuweisen.",
-      "analyze_package": "Paket analysieren",
-      "package_analyzed": "Paket erfolgreich analysiert",
-      "assign_scos": "Aktivitäten den Kapiteln zuweisen",
-      "activity_name": "Aktivität",
-      "chapter_name": "Kapitel",
-      "upload_different": "Anderes Paket hochladen",
-      "selected": "ausgewählt",
-      "create_course": "Kurs erstellen",
-      "configure": "Konfigurieren",
-      "ready_to_analyze": "Bereit zur Analyse",
-      "course_details": "Kursdetails"
-    },
     "create": {
       "choose_type": "Neuen Kurs erstellen",
       "choose_type_description": "Wählen Sie, wie Sie Ihren Kurs erstellen möchten",
@@ -459,9 +550,19 @@
         "attach_image": "Foto",
         "attach_video": "Video",
         "attach_youtube": "YouTube-Link",
-        "attach_file": "Dokument"
+        "attach_file": "Dokument",
+        "attach": "Anhängen",
+        "processing_video": "Videoinhalt wird analysiert...",
+        "send": "Senden",
+        "still_working": "Kursplan wird noch erstellt...",
+        "video_hint": "Videos können 1-2 Minuten zur Verarbeitung benötigen",
+        "video_processing_hint": "KI verarbeitet Ihren Videoanhang",
+        "video_takes_time": "Videoanalyse kann 1-2 Minuten dauern"
       }
-    }
+    },
+    "copied": "Kopiert!",
+    "quit_course_confirm": "Sind Sie sicher, dass Sie diesen Kurs verlassen möchten? Sie verlieren Ihren gesamten Fortschritt.",
+    "quit_course_title": "Kurs verlassen?"
   },
   "communities": {
     "title": "Communities",
@@ -621,7 +722,99 @@
     "deleting_podcast": "Podcast wird gelöscht...",
     "podcast_deleted_success": "Podcast erfolgreich gelöscht",
     "podcast_deleted_error": "Podcast konnte nicht gelöscht werden",
-    "edit_content": "Inhalt bearbeiten"
+    "edit_content": "Inhalt bearbeiten",
+    "create_new_podcast": "Neuen Podcast für Ihre Organisation erstellen",
+    "create_podcast": "Podcast erstellen",
+    "create_podcast_btn": "Podcast erstellen",
+    "create_podcasts_placeholder": "Erstellen Sie Podcasts, um Audioinhalte mit Ihrem Publikum zu teilen",
+    "creating_podcast": "Podcast wird erstellt...",
+    "dashboard": {
+      "episodes": {
+        "audio_hint": "MP3-, WAV- oder M4A-Dateien werden unterstützt",
+        "audio_label": "Audiodatei",
+        "create": "Episode erstellen",
+        "create_error": "Episode konnte nicht erstellt werden",
+        "create_first": "Erste Episode erstellen",
+        "created": "Episode erstellt",
+        "creating": "Episode wird erstellt...",
+        "delete": "Löschen",
+        "delete_confirm": "Sind Sie sicher, dass Sie diese Episode löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+        "delete_error": "Episode konnte nicht gelöscht werden",
+        "delete_title": "Episode löschen?",
+        "deleted": "Episode gelöscht",
+        "deleting": "Episode wird gelöscht...",
+        "description_label": "Beschreibung",
+        "description_placeholder": "Episodenbeschreibung eingeben",
+        "edit": "Bearbeiten",
+        "edit_episode": "Episode bearbeiten",
+        "edit_episode_description": "Episodendetails aktualisieren",
+        "new_episode": "Neue Episode",
+        "new_episode_description": "Neue Episode zu diesem Podcast hinzufügen",
+        "no_audio": "Keine Audiodatei",
+        "no_episodes_description": "Beginnen Sie mit dem Hinzufügen Ihrer ersten Episode",
+        "publish": "Veröffentlichen",
+        "replace_audio": "Audiodatei ersetzen",
+        "save": "Änderungen speichern",
+        "title_label": "Titel",
+        "title_placeholder": "Episodentitel eingeben",
+        "unpublish": "Zurückziehen",
+        "update_error": "Episode konnte nicht aktualisiert werden",
+        "updated": "Episode aktualisiert",
+        "updating": "Episode wird aktualisiert...",
+        "upload_audio": "Audiodatei hochladen"
+      },
+      "form": {
+        "about": "Über",
+        "about_max_length": "Über muss 2000 Zeichen oder weniger sein",
+        "about_placeholder": "Erzählen Sie den Hörern mehr über diesen Podcast...",
+        "public_hint": "Jeder kann diesen Podcast finden und anhören",
+        "published_hint": "Diesen Podcast auf Ihrer Organisationsseite sichtbar machen",
+        "tags_hint": "Tags durch Kommas trennen",
+        "tags_placeholder": "musik, bildung, technik",
+        "thumbnail": "Thumbnail",
+        "thumbnail_hint": "Empfohlene Größe: 1400x1400px. JPG oder PNG.",
+        "upload_thumbnail": "Thumbnail hochladen",
+        "visibility": "Sichtbarkeitseinstellungen"
+      },
+      "save_changes": "Änderungen speichern",
+      "save_error": "Änderungen konnten nicht gespeichert werden",
+      "saved": "Änderungen gespeichert",
+      "saving": "Wird gespeichert...",
+      "tabs": {
+        "episodes": "Episoden",
+        "general": "Allgemein"
+      },
+      "view_podcast": "Podcast anzeigen"
+    },
+    "failed_to_create_podcast": "Podcast konnte nicht erstellt werden",
+    "form": {
+      "description_max_length": "Beschreibung muss 500 Zeichen oder weniger sein",
+      "name_max_length": "Name muss 100 Zeichen oder weniger sein",
+      "name_min_length": "Name muss mindestens 3 Zeichen haben",
+      "name_required": "Podcast-Name ist erforderlich"
+    },
+    "modals": {
+      "create": {
+        "cancel": "Abbrechen",
+        "description": "Details ausfüllen, um einen neuen Podcast zu erstellen",
+        "form": {
+          "description_label": "Beschreibung",
+          "description_placeholder": "Podcast-Beschreibung eingeben",
+          "name_label": "Podcast-Name",
+          "name_placeholder": "Podcast-Namen eingeben",
+          "public_label": "Diesen Podcast öffentlich machen"
+        },
+        "submit": "Podcast erstellen",
+        "title": "Neuen Podcast erstellen"
+      }
+    },
+    "podcast_created_success": "Podcast erfolgreich erstellt",
+    "podcast_name": "Podcast-Name",
+    "podcast_name_required": "Podcast-Name ist erforderlich",
+    "podcast_tags": "Tags",
+    "podcast_thumbnail": "Podcast-Thumbnail",
+    "podcast_visibility": "Sichtbarkeit",
+    "search_results": "{{count}} Podcast(s) für \"{{query}}\" gefunden"
   },
   "collections": {
     "collections": "Kollektionen",
@@ -697,7 +890,12 @@
     "size_large": "Große Größe",
     "change_color": "Farbe ändern",
     "preview_flip": "Vorschau Umdrehen",
-    "activities_count": "{{count}} Aktivitäten"
+    "activities_count": "{{count}} Aktivitäten",
+    "copy_link": "Link kopieren",
+    "embed": "Einbetten",
+    "embed_code_copied": "Einbettungscode kopiert!",
+    "link_copied": "Link kopiert!",
+    "share": "Teilen"
   },
   "assignments": {
     "submit_assignment": "Aufgabe einreichen",
@@ -1024,7 +1222,8 @@
     "no_biography": "Keine Biografie angegeben",
     "my_progress": "Mein Fortschritt",
     "no_courses_in_progress": "Keine Kurse in Arbeit",
-    "start_course_to_see_progress": "Starten Sie einen Kurs, um Ihren Fortschritt hier zu sehen"
+    "start_course_to_see_progress": "Starten Sie einen Kurs, um Ihren Fortschritt hier zu sehen",
+    "bio_placeholder": "Erzählen Sie uns ein wenig über sich..."
   },
   "roles": {
     "custom_role": "Benutzerdefinierte Rolle",
@@ -1116,7 +1315,8 @@
           "content": "Inhalt",
           "access": "Zugriff",
           "contributors": "Mitwirkende",
-          "certification": "Zertifizierung"
+          "certification": "Zertifizierung",
+          "seo": "SEO"
         },
         "access_denied": {
           "title": "Zugriff verweigert",
@@ -1407,7 +1607,8 @@
             "general": "Allgemein",
             "thumbnail": "Vorschaubild",
             "course": "Verknüpfter Kurs",
-            "moderation": "Moderation"
+            "moderation": "Moderation",
+            "access": "Zugriff"
           },
           "general": {
             "title": "Allgemeine Einstellungen",
@@ -1424,6 +1625,10 @@
           "moderation": {
             "title": "Moderation",
             "subtitle": "Einstellungen für die Inhaltsmoderation konfigurieren"
+          },
+          "access": {
+            "subtitle": "Steuern Sie, wer auf diese Community zugreifen kann",
+            "title": "Zugriffseinstellungen"
           }
         },
         "course": {
@@ -1536,6 +1741,60 @@
           "deleting": "Community wird gelöscht...",
           "delete_success": "Community erfolgreich gelöscht",
           "delete_error": "Fehler beim Löschen der Community"
+        },
+        "access": {
+          "public": {
+            "active": "Aktiv",
+            "confirmation_button": "Auf Öffentlich ändern",
+            "confirmation_message": "Sind Sie sicher, dass diese Community öffentlich verfügbar sein soll?",
+            "confirmation_title": "Auf Öffentlich ändern?",
+            "description": "Die Community ist öffentlich verfügbar. Jeder kann Diskussionen ansehen und daran teilnehmen.",
+            "title": "Öffentlich"
+          },
+          "restricted": {
+            "active": "Aktiv",
+            "confirmation_button": "Auf Eingeschränkt ändern",
+            "confirmation_message": "Sind Sie sicher, dass Sie diese Community einschränken möchten? Nur Mitglieder der verknüpften Benutzergruppen haben Zugang.",
+            "confirmation_title": "Auf Eingeschränkt ändern?",
+            "description": "Die Community ist nur für Mitglieder ausgewählter Benutzergruppen zugänglich. Verknüpfen Sie Benutzergruppen, um Zugang zu gewähren.",
+            "title": "Eingeschränkt"
+          },
+          "subtitle": "Wählen Sie, ob Ihre Community öffentlich verfügbar oder nur für bestimmte Benutzergruppen zugänglich sein soll",
+          "title": "Zugriffseinstellungen",
+          "toasts": {
+            "update_error": "Zugriffseinstellungen konnten nicht aktualisiert werden",
+            "update_success": "Zugriffseinstellungen erfolgreich aktualisiert"
+          },
+          "usergroups": {
+            "actions": {
+              "delete_link": "Entfernen",
+              "link_to_usergroup": "Mit Benutzergruppe verknüpfen"
+            },
+            "modals": {
+              "create_usergroup": "Benutzergruppe erstellen",
+              "link_button": "Verknüpfen",
+              "link_description": "Wählen Sie eine Benutzergruppe, um diese Community zu verknüpfen. Benutzer dieser Gruppe erhalten Zugang.",
+              "link_title": "Community mit Benutzergruppe verknüpfen",
+              "no_usergroups": "Keine Benutzergruppen verfügbar",
+              "unlink_button": "Zugang entfernen",
+              "unlink_message": "Benutzer dieser Gruppe haben keinen Zugang mehr zu dieser Community.",
+              "unlink_title": "Benutzergruppenzugang entfernen?",
+              "usergroup_name": "Benutzergruppename",
+              "warning": "Benutzer, die nicht in verknüpften Benutzergruppen sind, verlieren den Zugang zu dieser Community"
+            },
+            "subtitle": "Gewähren Sie Zugang zu dieser Community durch Verknüpfung mit Benutzergruppen. Benutzer in diesen Gruppen können ansehen und teilnehmen.",
+            "table": {
+              "actions": "Aktionen",
+              "name": "Name"
+            },
+            "title": "Benutzergruppen",
+            "toasts": {
+              "link_error": "Fehler {{status}}: {{detail}}",
+              "link_success": "Benutzergruppe erfolgreich verknüpft",
+              "unlink_error": "Beim Entfernen des Benutzergruppenzugangs ist ein Fehler aufgetreten",
+              "unlink_success": "Benutzergruppenzugang erfolgreich entfernt"
+            }
+          }
         }
       },
       "structure": {
@@ -1648,6 +1907,74 @@
             }
           }
         }
+      },
+      "seo": {
+        "errors": {
+          "save_failed": "SEO-Einstellungen konnten nicht gespeichert werden"
+        },
+        "form": {
+          "canonical_url_hint": "Verwenden Sie dies, wenn dieser Kurs an anderer Stelle dupliziert ist. Lassen Sie es für die Standard-URL leer",
+          "canonical_url_label": "Kanonische URL",
+          "canonical_url_placeholder": "https://example.com/course/ihr-kurs",
+          "description_hint": "Lassen Sie es leer, um die Kursbeschreibung zu verwenden. Empfohlen: 150-160 Zeichen",
+          "description_label": "Meta-Beschreibung",
+          "description_placeholder": "Geben Sie eine überzeugende Beschreibung für Suchergebnisse ein",
+          "enable_jsonld_hint": "Fügt Course schema.org-Markup für Rich Snippets in Suchergebnissen hinzu",
+          "enable_jsonld_label": "JSON-LD strukturierte Daten aktivieren",
+          "keywords_hint": "Kommagetrennte Liste von Schlüsselwörtern zu Ihrem Kurs",
+          "keywords_label": "Schlüsselwörter",
+          "keywords_placeholder": "schlüsselwort1, schlüsselwort2, schlüsselwort3",
+          "og_description_label": "OG-Beschreibung",
+          "og_description_placeholder": "Benutzerdefinierte Beschreibung für Social-Media-Sharing",
+          "og_image_hint": "Benutzerdefinierte Bild-URL für Social-Sharing. Lassen Sie es leer, um das Kurs-Thumbnail zu verwenden",
+          "og_image_label": "OG-Bild-URL",
+          "og_image_placeholder": "https://example.com/image.jpg",
+          "og_title_label": "OG-Titel",
+          "og_title_placeholder": "Benutzerdefinierter Titel für Social-Media-Sharing",
+          "robots_nofollow_hint": "Wenn aktiviert, folgen Suchmaschinen nicht den Links auf dieser Seite",
+          "robots_nofollow_label": "Linkfolgen verhindern (nofollow)",
+          "robots_noindex_hint": "Wenn aktiviert, indizieren Suchmaschinen diesen Kurs nicht",
+          "robots_noindex_label": "Suchmaschinenindizierung verhindern (noindex)",
+          "title_hint": "Lassen Sie es leer, um den Kursnamen zu verwenden. Empfohlen: 50-60 Zeichen",
+          "title_label": "SEO-Titel",
+          "title_placeholder": "Geben Sie einen benutzerdefinierten Titel für Suchmaschinen ein",
+          "twitter_card_label": "Kartentyp",
+          "twitter_card_summary": "Zusammenfassung",
+          "twitter_card_summary_large": "Zusammenfassung mit großem Bild",
+          "twitter_description_label": "Twitter-Beschreibung",
+          "twitter_description_placeholder": "Benutzerdefinierte Beschreibung für Twitter-Sharing",
+          "twitter_title_label": "Twitter-Titel",
+          "twitter_title_placeholder": "Benutzerdefinierter Titel für Twitter-Sharing"
+        },
+        "sections": {
+          "basic": {
+            "subtitle": "Konfigurieren Sie, wie Ihr Kurs in Suchmaschinenergebnissen erscheint",
+            "title": "Basis-SEO"
+          },
+          "opengraph": {
+            "subtitle": "Passen Sie an, wie Ihr Kurs beim Teilen auf Social Media erscheint (Facebook, LinkedIn usw.)",
+            "title": "Open Graph"
+          },
+          "robots": {
+            "subtitle": "Steuern Sie die Suchmaschinenindizierung und aktivieren Sie Rich Snippets",
+            "title": "Robots & Strukturierte Daten"
+          },
+          "twitter": {
+            "subtitle": "Passen Sie an, wie Ihr Kurs beim Teilen auf Twitter/X erscheint",
+            "title": "Twitter-Karte"
+          }
+        },
+        "subtitle": "Optimieren Sie Ihren Kurs für Suchmaschinen und Social-Media-Sharing",
+        "title": "SEO-Einstellungen",
+        "validation": {
+          "description_max_length": "Meta-Beschreibung muss 160 Zeichen oder weniger sein",
+          "invalid_url": "Bitte geben Sie eine gültige URL ein",
+          "og_description_max_length": "OG-Beschreibung muss 200 Zeichen oder weniger sein",
+          "og_title_max_length": "OG-Titel muss 70 Zeichen oder weniger sein",
+          "title_max_length": "SEO-Titel muss 70 Zeichen oder weniger sein",
+          "twitter_description_max_length": "Twitter-Beschreibung muss 200 Zeichen oder weniger sein",
+          "twitter_title_max_length": "Twitter-Titel muss 70 Zeichen oder weniger sein"
+        }
       }
     },
     "organization": {
@@ -1661,7 +1988,8 @@
           "ai": "KI",
           "api": "API-Zugang",
           "features": "Funktionen",
-          "other": "Sonstiges"
+          "other": "Sonstiges",
+          "sso": "SSO"
         },
         "pages": {
           "general": {
@@ -1691,6 +2019,10 @@
           "features": {
             "title": "Funktionen",
             "subtitle": "Aktivieren oder deaktivieren Sie Funktionen für Ihre Organisation"
+          },
+          "sso": {
+            "subtitle": "SSO für Ihre Organisation konfigurieren",
+            "title": "Single Sign-On"
           }
         },
         "name": "Organisations-Name",
@@ -1769,8 +2101,33 @@
         "tabs": {
           "images": "Bilder & Vorschauen",
           "social": "Soziale Links",
-          "theme": "Design"
+          "theme": "Design",
+          "auth": "Auth"
         }
+      },
+      "auth_branding": {
+        "title": "Authentifizierungsseiten-Branding",
+        "subtitle": "Passen Sie das Erscheinungsbild Ihrer Anmelde- und Registrierungsseiten an",
+        "welcome_message": "Willkommensnachricht",
+        "welcome_placeholder": "Geben Sie eine benutzerdefinierte Willkommensnachricht ein...",
+        "welcome_desc": "Diese Nachricht wird auf den Anmelde- und Registrierungsseiten angezeigt. Leer lassen für Standard.",
+        "default_welcome": "Melden Sie sich an, um auf Ihre Lerninhalte zuzugreifen",
+        "background_type": "Hintergrundtyp",
+        "bg_gradient": "Farbverlauf",
+        "bg_custom": "Benutzerdefiniert",
+        "bg_unsplash": "Unsplash",
+        "text_color": "Textfarbe",
+        "text_light": "Hell",
+        "text_dark": "Dunkel",
+        "text_color_desc": "Wählen Sie hellen Text für dunkle Hintergründe, dunklen Text für helle Hintergründe.",
+        "preview": "Live-Vorschau",
+        "preview_hint": "So werden Ihre Anmelde- und Registrierungsseiten aussehen",
+        "saving": "Speichern...",
+        "save_success": "Branding-Einstellungen erfolgreich gespeichert",
+        "save_error": "Fehler beim Speichern der Einstellungen",
+        "uploading": "Hintergrundbild wird hochgeladen...",
+        "upload_success": "Hintergrundbild erfolgreich hochgeladen",
+        "upload_error": "Fehler beim Hochladen des Bildes"
       },
       "socials": {
         "title": "Soziale Links",
@@ -1841,6 +2198,14 @@
           "collections": {
             "title": "Sammlungen",
             "description": "Organisation von Kursen in Sammlungen ermöglichen"
+          },
+          "courses": {
+            "description": "Kurse und Fortschrittsverfolgung für Ihre Organisation aktivieren",
+            "title": "Kurse"
+          },
+          "podcasts": {
+            "description": "Podcast-Erstellung und Audioinhalte für Ihre Organisation aktivieren",
+            "title": "Podcasts"
           }
         },
         "toasts": {
@@ -1848,7 +2213,8 @@
           "disabling": "{{feature}} wird deaktiviert...",
           "enabled": "{{feature}} aktiviert",
           "disabled": "{{feature}} deaktiviert",
-          "error": "Fehler beim Aktualisieren der {{feature}}-Konfiguration"
+          "error": "Fehler beim Aktualisieren der {{feature}}-Konfiguration",
+          "admin_only": "Nur Organisationsadministratoren können Funktionen aktivieren oder deaktivieren"
         }
       },
       "audit_logs": {
@@ -2067,6 +2433,45 @@
         "footer_text": "Fußzeilentext",
         "footer_text_desc": "Fügen Sie benutzerdefinierten Text hinzu, der in der Seitenfußzeile angezeigt wird.",
         "footer_text_placeholder": "Fußzeilentext eingeben..."
+      },
+      "sso": {
+        "allowed_domains": "Zugelassene E-Mail-Domains",
+        "allowed_domains_help": "Kommagetrennte Liste von E-Mail-Domains, die sich über SSO anmelden dürfen (z.B. example.com, company.org). Lassen Sie es leer, um alle Domains zuzulassen.",
+        "auto_provision": "Benutzer automatisch bereitstellen",
+        "auto_provision_desc": "Benutzerkonten automatisch für erstmalige SSO-Anmeldungen erstellen.",
+        "delete": "SSO-Konfiguration löschen",
+        "delete_confirm": "Sind Sie sicher, dass Sie diese SSO-Konfiguration löschen möchten? Benutzer können sich nicht mehr über SSO anmelden.",
+        "delete_error": "SSO-Konfiguration konnte nicht gelöscht werden",
+        "delete_success": "SSO-Konfiguration gelöscht",
+        "deleting": "Wird gelöscht...",
+        "enable_sso": "SSO aktivieren",
+        "enable_sso_desc": "Benutzern die Authentifizierung über den Identitätsanbieter Ihrer Organisation ermöglichen.",
+        "load_error": "SSO-Konfiguration konnte nicht geladen werden",
+        "not_configured": "Nicht konfiguriert",
+        "oidc_client_id": "Client-ID",
+        "oidc_client_secret": "Client-Secret",
+        "oidc_client_secret_help": "Halten Sie dieses Geheimnis sicher. Es wird zur Authentifizierung bei Ihrem Identitätsanbieter verwendet.",
+        "oidc_info": "Direkte Verbindung mit jedem OpenID Connect-kompatiblen Identitätsanbieter (Azure AD, Okta, Google Workspace, Keycloak).",
+        "oidc_issuer_url": "Issuer-URL",
+        "oidc_issuer_url_help": "Die OIDC-Issuer-URL. Endpunkte werden automatisch von /.well-known/openid-configuration erkannt.",
+        "oidc_scopes": "Scopes",
+        "oidc_scopes_help": "Anzufordernde OAuth-Scopes (durch Leerzeichen getrennt). Standard: openid email profile",
+        "open_setup_portal": "Identitätsanbieter konfigurieren",
+        "provider": "SSO-Anbieter",
+        "save": "Konfiguration speichern",
+        "save_error": "SSO-Konfiguration konnte nicht gespeichert werden",
+        "save_success": "SSO-Konfiguration erfolgreich gespeichert",
+        "saving": "Wird gespeichert...",
+        "select_provider": "Anbieter auswählen",
+        "setup_error": "Setup-Portal-URL konnte nicht abgerufen werden",
+        "setup_not_available": "Setup-Portal nicht verfügbar. Bitte konfigurieren Sie zuerst den Anbieter.",
+        "status_disabled": "Deaktiviert",
+        "status_enabled": "Aktiviert",
+        "subtitle": "Enterprise-SSO für Ihre Organisation konfigurieren",
+        "title": "Single Sign-On (SSO)",
+        "workos_info": "WorkOS bietet Enterprise-SSO mit Unterstützung für SAML- und OIDC-Identitätsanbieter.",
+        "workos_org_id": "WorkOS-Organisations-ID",
+        "workos_org_id_help": "Diese ID wird automatisch generiert, wenn Sie SSO über das Setup-Portal konfigurieren."
       }
     },
     "users": {
@@ -2267,7 +2672,9 @@
             },
             "status": {
               "linked": "Verknüpft",
-              "not_linked": "Nicht verknüpft"
+              "not_linked": "Nicht verknüpft",
+              "in_group": "In Gruppe",
+              "not_in_group": "Nicht in Gruppe"
             },
             "actions": {
               "link": "Verknüpfen",
@@ -2276,7 +2683,31 @@
             "toasts": {
               "link_success": "Benutzer erfolgreich verknüpft",
               "unlink_success": "Benutzerverknüpfung erfolgreich aufgehoben",
-              "error": "Fehler {{status}}: {{detail}}"
+              "error": "Fehler {{status}}: {{detail}}",
+              "bulk_add_success": "{{count}} Benutzer erfolgreich zur Gruppe hinzugefügt",
+              "bulk_adding": "Benutzer werden zur Gruppe hinzugefügt...",
+              "bulk_error": "Bei der Operation ist ein Fehler aufgetreten",
+              "bulk_remove_success": "{{count}} Benutzer erfolgreich aus Gruppe entfernt",
+              "bulk_removing": "Benutzer werden aus Gruppe entfernt..."
+            },
+            "no_results": "Keine Benutzer gefunden, die Ihrer Suche entsprechen",
+            "no_users": "Noch keine Benutzer in dieser Organisation",
+            "pagination": {
+              "page": "Seite {{current}} von {{total}}",
+              "showing": "Zeigt {{start}}-{{end}} von {{total}}"
+            },
+            "search_placeholder": "Benutzer nach Name oder Benutzername suchen...",
+            "selection": {
+              "add_selected": "{{count}} zur Gruppe hinzufügen",
+              "clear": "Löschen",
+              "count": "{{count}} Benutzer ausgewählt",
+              "remove_selected": "{{count}} aus Gruppe entfernen",
+              "select_all_visible": "Alle sichtbaren auswählen"
+            },
+            "tabs": {
+              "all": "Alle Benutzer",
+              "in_group": "In Gruppe",
+              "not_in_group": "Nicht in Gruppe"
             }
           },
           "create": {
@@ -2319,7 +2750,18 @@
           "deleting": "Wird gelöscht...",
           "delete_success": "Benutzergruppe gelöscht",
           "delete_error": "Fehler beim Löschen der Benutzergruppe"
-        }
+        },
+        "count": {
+          "plural": "Gruppen",
+          "singular": "Gruppe"
+        },
+        "member_count": {
+          "plural": "Mitglieder",
+          "singular": "Mitglied"
+        },
+        "no_groups": "Noch keine Benutzergruppen",
+        "no_results": "Keine Gruppen gefunden, die Ihrer Suche entsprechen",
+        "search_placeholder": "Gruppen suchen..."
       },
       "roles": {
         "title": "Rollen & Berechtigungen verwalten",
@@ -2337,7 +2779,8 @@
         "actions": {
           "edit": "Bearbeiten",
           "delete": "Löschen",
-          "create": "Eine Rolle erstellen"
+          "create": "Eine Rolle erstellen",
+          "view_rights": "Rechte anzeigen"
         },
         "modals": {
           "create": {
@@ -2463,12 +2906,29 @@
             "title": "Rolle löschen?",
             "message": "Diese Aktion kann nicht rückgängig gemacht werden. Alle Benutzer mit dieser Rolle verlieren ihre Berechtigungen. Sind Sie sicher, dass Sie diese Rolle löschen möchten?",
             "button": "Rolle löschen"
+          },
+          "view_rights": {
+            "description": "Alle diesem Rolle zugewiesenen Berechtigungen anzeigen",
+            "title": "{{roleName}} - Berechtigungen"
           }
         },
         "toasts": {
           "deleting": "Wird gelöscht...",
           "delete_success": "Rolle gelöscht",
           "delete_error": "Fehler beim Löschen der Rolle"
+        },
+        "rights": {
+          "resources": {
+            "activities": "Aktivitäten",
+            "collections": "Sammlungen",
+            "coursechapters": "Kurskapitel",
+            "courses": "Kurse",
+            "dashboard": "Dashboard",
+            "organizations": "Organisationen",
+            "roles": "Rollen",
+            "usergroups": "Benutzergruppen",
+            "users": "Benutzer"
+          }
         }
       }
     },
@@ -2746,7 +3206,39 @@
       "badge": "Abzeichen",
       "button": "Schaltfläche",
       "user": "Benutzer",
-      "magic_block": "Magischer Block (KI)",
+      "magic_block": {
+        "title": "Magischer Block",
+        "interactive_element": "Interaktives Element",
+        "iterations": "{{count}}/{{max}} Iterationen",
+        "create_interactive": "Interaktive Inhalte erstellen",
+        "generate_description": "Generieren Sie Quiz, Simulationen, Diagramme und mehr mit KI",
+        "generate_with_ai": "Mit KI generieren",
+        "upgrade_required": "Upgraden Sie auf den Standard-Plan, um interaktive Inhalte mit KI zu generieren",
+        "drag_resize": "Zum Ändern der Größe ziehen",
+        "edit_left": "Bearbeiten ({{count}} verbleibend)",
+        "experimental": "Experimentell",
+        "save_and_close": "Speichern und schließen",
+        "magic_chat": "Magischer Chat",
+        "describe_prompt": "Beschreiben Sie, welches interaktive Element Sie erstellen möchten:",
+        "ai_generated": "KI-generierter Inhalt",
+        "check_preview": "Das interaktive Element wurde generiert. Überprüfen Sie das Vorschaufenster.",
+        "creating_magic": "Magie wird erstellt...",
+        "max_iterations_reached": "Maximale Iterationen erreicht. Speichern Sie Ihren Inhalt oder starten Sie einen neuen Block.",
+        "placeholder_new": "Beschreiben Sie, was Sie erstellen möchten...",
+        "placeholder_edit": "Beschreiben Sie Änderungen oder Verbesserungen...",
+        "suggestion_physics": "Physik-Simulation",
+        "suggestion_physics_prompt": "Erstellen Sie eine interaktive Physik-Simulation, die die Projektilbewegung mit einstellbarem Winkel und Geschwindigkeit zeigt",
+        "suggestion_chart": "Datendiagramm",
+        "suggestion_chart_prompt": "Erstellen Sie ein interaktives Balkendiagramm mit Beispiel-Verkaufsdaten, über die Benutzer hovern können, um Werte zu sehen",
+        "suggestion_quiz": "Quiz-Spiel",
+        "suggestion_quiz_prompt": "Erstellen Sie ein einfaches Quiz-Spiel mit 5 Multiple-Choice-Fragen über Naturwissenschaften",
+        "suggestion_memory": "Memory-Spiel",
+        "suggestion_memory_prompt": "Erstellen Sie ein Karten-Memory-Spiel mit bunten Karten",
+        "suggestion_calculator": "Mathe-Rechner",
+        "suggestion_calculator_prompt": "Erstellen Sie einen Rechner, der Schritt-für-Schritt-Lösungen für einfache Gleichungen zeigt",
+        "suggestion_timeline": "Zeitleiste",
+        "suggestion_timeline_prompt": "Erstellen Sie eine interaktive Zeitleiste mit wichtigen historischen Ereignissen und erweiterbaren Details"
+      },
       "magic_block_disabled": "Magischer Block erfordert Standard-Plan",
       "common": {
         "uploading": "Wird hochgeladen...",
@@ -2860,39 +3352,15 @@
         "load_user": "Benutzer laden",
         "no_user": "Kein Benutzer ausgewählt"
       },
-      "magic_block": {
-        "title": "Magischer Block",
-        "interactive_element": "Interaktives Element",
-        "iterations": "{{count}}/{{max}} Iterationen",
-        "create_interactive": "Interaktive Inhalte erstellen",
-        "generate_description": "Generieren Sie Quiz, Simulationen, Diagramme und mehr mit KI",
-        "generate_with_ai": "Mit KI generieren",
-        "upgrade_required": "Upgraden Sie auf den Standard-Plan, um interaktive Inhalte mit KI zu generieren",
-        "drag_resize": "Zum Ändern der Größe ziehen",
-        "edit_left": "Bearbeiten ({{count}} verbleibend)",
-        "experimental": "Experimentell",
-        "save_and_close": "Speichern und schließen",
-        "magic_chat": "Magischer Chat",
-        "describe_prompt": "Beschreiben Sie, welches interaktive Element Sie erstellen möchten:",
-        "ai_generated": "KI-generierter Inhalt",
-        "check_preview": "Das interaktive Element wurde generiert. Überprüfen Sie das Vorschaufenster.",
-        "creating_magic": "Magie wird erstellt...",
-        "max_iterations_reached": "Maximale Iterationen erreicht. Speichern Sie Ihren Inhalt oder starten Sie einen neuen Block.",
-        "placeholder_new": "Beschreiben Sie, was Sie erstellen möchten...",
-        "placeholder_edit": "Beschreiben Sie Änderungen oder Verbesserungen...",
-        "suggestion_physics": "Physik-Simulation",
-        "suggestion_physics_prompt": "Erstellen Sie eine interaktive Physik-Simulation, die die Projektilbewegung mit einstellbarem Winkel und Geschwindigkeit zeigt",
-        "suggestion_chart": "Datendiagramm",
-        "suggestion_chart_prompt": "Erstellen Sie ein interaktives Balkendiagramm mit Beispiel-Verkaufsdaten, über die Benutzer hovern können, um Werte zu sehen",
-        "suggestion_quiz": "Quiz-Spiel",
-        "suggestion_quiz_prompt": "Erstellen Sie ein einfaches Quiz-Spiel mit 5 Multiple-Choice-Fragen über Naturwissenschaften",
-        "suggestion_memory": "Memory-Spiel",
-        "suggestion_memory_prompt": "Erstellen Sie ein Karten-Memory-Spiel mit bunten Karten",
-        "suggestion_calculator": "Mathe-Rechner",
-        "suggestion_calculator_prompt": "Erstellen Sie einen Rechner, der Schritt-für-Schritt-Lösungen für einfache Gleichungen zeigt",
-        "suggestion_timeline": "Zeitleiste",
-        "suggestion_timeline_prompt": "Erstellen Sie eine interaktive Zeitleiste mit wichtigen historischen Ereignissen und erweiterbaren Details"
+      "button_block": {
+        "enter_link_url": "Link-URL eingeben"
       }
     }
+  },
+  "embed": {
+    "not_supported_description": "Diese Art von Aktivität erfordert eine Authentifizierung und kann nicht eingebettet werden.",
+    "not_supported_title": "Diese Aktivität wird nicht unterstützt",
+    "powered_by": "Betrieben von LearnHouse",
+    "visit_activity": "Aktivitätsseite besuchen"
   }
 }

@@ -92,12 +92,21 @@ class OrgFeatureConfig(BaseModel):
     podcasts: PodcastsOrgConfig = PodcastsOrgConfig()
 
 
+# Auth Branding
+class AuthBrandingConfig(BaseModel):
+    welcome_message: str = ""  # Custom welcome text
+    background_type: Literal["gradient", "custom", "unsplash"] = "gradient"
+    background_image: str = ""  # Filename (custom) or URL (unsplash)
+    text_color: Literal["light", "dark"] = "light"
+
+
 # General
 class OrgGeneralConfig(BaseModel):
     enabled: bool = True
     color: str = ""
     footer_text: str = ""
     watermark: bool = True
+    auth_branding: AuthBrandingConfig = AuthBrandingConfig()
 
 
 # Cloud
@@ -108,7 +117,7 @@ class OrgCloudConfig(BaseModel):
 
 # Main Config
 class OrganizationConfigBase(BaseModel):
-    config_version: str = "1.3"
+    config_version: str = "1.4"
     general: OrgGeneralConfig
     features: OrgFeatureConfig
     cloud: OrgCloudConfig

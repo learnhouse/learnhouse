@@ -147,6 +147,11 @@ export function getOrgPreviewMediaDirectory(orgUUID: string, fileId: string) {
   return uri
 }
 
+export function getOrgAuthBackgroundMediaDirectory(orgUUID: string, fileId: string) {
+  let uri = `${getMediaUrl()}content/orgs/${orgUUID}/auth_backgrounds/${fileId}`
+  return uri
+}
+
 /**
  * Get the URL for SCORM content files
  * Routes through a local proxy to ensure same-origin for SCORM API injection

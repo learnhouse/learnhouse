@@ -1,19 +1,18 @@
-'use client'
 import { OrgProvider } from '@components/Contexts/OrgContext'
-import ErrorUI from '@components/Objects/StyledElements/Error/Error'
-import { useSearchParams } from 'next/navigation'
+import { getOrgSlug } from '@services/org/orgResolution'
 
-
-export default function AuthLayout({
+export default async function AuthLayout({
     children,
 }: {
     children: React.ReactNode
 }) {
-    const searchParams = useSearchParams()
-    const orgslug = searchParams.get('orgslug')
-    if (orgslug) {
-        return <OrgProvider orgslug={orgslug}>{children}</OrgProvider>
-    } else {
-        return <ErrorUI message='Organization not specified' submessage='Please access this page from an Organization' />
+    const orgslug = await getOrgSlug()
+
+    // If no org slug found, let the page components handle it
+    // (they show OrgNotFound appropriately)
+    if (!orgslug) {
+        return <>{children}</>
     }
+
+    return <OrgProvider orgslug={orgslug}>{children}</OrgProvider>
 }

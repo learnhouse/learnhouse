@@ -43,15 +43,21 @@ async def join_org(
         request, args.org_id, current_user, db_session
     )
 
-    # Get User
-    statement = select(User).where(User.id == args.user_id)
+    # Get User by UUID
+    statement = select(User).where(User.user_uuid == args.user_id)
     result = db_session.exec(statement)
 
     user = result.first()
 
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found",
+        )
+
     # Check if User isn't already part of the org
     statement = select(UserOrganization).where(
-        UserOrganization.user_id == args.user_id, UserOrganization.org_id == args.org_id
+        UserOrganization.user_id == user.id, UserOrganization.org_id == args.org_id
     )
     result = db_session.exec(statement)
 

@@ -44,6 +44,7 @@ class UserUpdatePassword(SQLModel):
 class UserRead(UserBase):
     id: int
     user_uuid: str
+    email_verified: bool = False
 
 
 class PublicUser(UserRead):
@@ -91,6 +92,11 @@ class User(UserBase, table=True):
     password: str = ""
     user_uuid: str = ""
     email_verified: bool = False
+    email_verified_at: Optional[str] = None
+    failed_login_attempts: int = 0
+    locked_until: Optional[str] = None
+    last_login_at: Optional[str] = None
+    last_login_ip: Optional[str] = None
     creation_date: str = ""
     update_date: str = ""
 
