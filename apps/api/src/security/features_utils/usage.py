@@ -164,6 +164,52 @@ def log_usage_event(
 # Main Usage Check Functions
 # ============================================================================
 
+def check_feature_enabled(
+    feature: FeatureSet,
+    org_id: int,
+    db_session: Session,
+) -> bool:
+    """
+    Check if a feature is enabled for an organization.
+
+    This is a lightweight check that only verifies the feature flag,
+    not usage limits. Use this for read operations where you want to
+    block access when the feature is disabled, but don't need to check
+    usage limits (e.g., viewing courses, not creating them).
+
+    Args:
+        feature: The feature key (e.g., 'courses', 'collections')
+        org_id: The organization ID
+        db_session: Database session
+
+    Returns:
+        True if the feature is enabled
+
+    Raises:
+        HTTPException 403 if feature is disabled
+    """
+    # Get the Organization Config
+    statement = select(OrganizationConfig).where(OrganizationConfig.org_id == org_id)
+    result = db_session.exec(statement)
+    org_config = result.first()
+
+    if org_config is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Organization has no config",
+        )
+
+    # Check if the feature is enabled
+    feature_config = org_config.config.get("features", {}).get(feature, {})
+    if feature_config.get("enabled") == False:
+        raise HTTPException(
+            status_code=403,
+            detail=f"{feature.capitalize()} is not enabled for this organization",
+        )
+
+    return True
+
+
 def check_limits_with_usage(
     feature: FeatureSet,
     org_id: int,

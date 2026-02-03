@@ -1,7 +1,7 @@
 'use client'
 import { Breadcrumbs } from '@components/Objects/Breadcrumbs/Breadcrumbs'
 import { getUriWithOrg } from '@services/config/config'
-import { TextIcon, LucideIcon, LayoutDashboardIcon, CodeIcon, KeyIcon, Palette, School, ToggleRight } from 'lucide-react'
+import { TextIcon, LucideIcon, LayoutDashboardIcon, CodeIcon, KeyIcon, Palette, School, ToggleRight, Shield } from 'lucide-react'
 import Link from 'next/link'
 import React, { useEffect, use } from 'react';
 import { motion } from 'framer-motion'
@@ -13,6 +13,7 @@ import OrgEditOther from '@components/Dashboard/Pages/Org/OrgEditOther/OrgEditOt
 import OrgEditAPIAccess from '@components/Dashboard/Pages/Org/OrgEditAPIAccess/OrgEditAPIAccess'
 import OrgEditAI from '@components/Dashboard/Pages/Org/OrgEditAI/OrgEditAI'
 import OrgEditFeatures from '@components/Dashboard/Pages/Org/OrgEditFeatures/OrgEditFeatures'
+import OrgEditSSO from '@components/Dashboard/Pages/Org/OrgEditSSO/OrgEditSSO'
 import { useTranslation } from 'react-i18next'
 import { useOrg } from '@components/Contexts/OrgContext'
 import PlanBadge from '@components/Dashboard/Shared/PlanRestricted/PlanBadge'
@@ -38,6 +39,7 @@ const getSettingTabs = (t: any): TabItem[] => [
   { id: 'landing', label: t('dashboard.organization.settings.tabs.landing'), icon: LayoutDashboardIcon },
   { id: 'ai', label: t('dashboard.organization.settings.tabs.ai') || 'AI', customIcon: '/learnhouse_ai_simple_colored.png', requiredPlan: 'standard' },
   { id: 'api', label: t('dashboard.organization.settings.tabs.api') || 'API Access', icon: KeyIcon, requiredPlan: 'pro' },
+  { id: 'sso', label: t('dashboard.organization.settings.tabs.sso') || 'SSO', icon: Shield, requiredPlan: 'enterprise' },
   { id: 'other', label: t('dashboard.organization.settings.tabs.other'), icon: CodeIcon },
 ]
 
@@ -100,6 +102,9 @@ function OrgPage(props: { params: Promise<OrgParams> }) {
     } else if (params.subpage == 'api') {
       setH1Label(t('dashboard.organization.settings.pages.api.title') || 'API Access')
       setH2Label(t('dashboard.organization.settings.pages.api.subtitle') || 'Manage API tokens and access')
+    } else if (params.subpage == 'sso') {
+      setH1Label(t('dashboard.organization.settings.pages.sso.title') || 'Single Sign-On')
+      setH2Label(t('dashboard.organization.settings.pages.sso.subtitle') || 'Configure SSO for your organization')
     } else if (params.subpage == 'other') {
       setH1Label(t('dashboard.organization.settings.pages.other.title'))
       setH2Label(t('dashboard.organization.settings.pages.other.subtitle'))
@@ -154,6 +159,7 @@ function OrgPage(props: { params: Promise<OrgParams> }) {
         {params.subpage == 'landing' ? <OrgEditLanding /> : ''}
         {params.subpage == 'ai' ? <OrgEditAI /> : ''}
         {params.subpage == 'api' ? <OrgEditAPIAccess /> : ''}
+        {params.subpage == 'sso' ? <OrgEditSSO /> : ''}
         {params.subpage == 'other' ? <OrgEditOther /> : ''}
       </motion.div>
     </div>

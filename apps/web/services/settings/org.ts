@@ -105,3 +105,38 @@ export async function updateOrgFooterTextConfig(
   const res = await errorHandling(result)
   return res
 }
+
+export interface AuthBrandingConfig {
+  welcome_message: string
+  background_type: 'gradient' | 'custom' | 'unsplash'
+  background_image: string
+  text_color: 'light' | 'dark'
+}
+
+export async function updateOrgAuthBrandingConfig(
+  org_id: string,
+  auth_branding: AuthBrandingConfig,
+  access_token: string
+) {
+  const result: any = await fetch(
+    `${getAPIUrl()}orgs/${org_id}/config/auth_branding`,
+    RequestBodyWithAuthHeader('PUT', auth_branding, null, access_token)
+  )
+  const res = await errorHandling(result)
+  return res
+}
+
+export async function uploadOrgAuthBackground(
+  org_id: string,
+  background_file: File,
+  access_token: string
+) {
+  const formData = new FormData()
+  formData.append('background_file', background_file)
+  const result: any = await fetch(
+    `${getAPIUrl()}orgs/${org_id}/auth_background`,
+    RequestBodyFormWithAuthHeader('PUT', formData, null, access_token)
+  )
+  const res = await errorHandling(result)
+  return res
+}

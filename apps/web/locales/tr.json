@@ -94,6 +94,28 @@
         }
       }
     },
+    "features": {
+      "disabled": {
+        "status": "Özellik devre dışı",
+        "enable_feature": "Ayarlara Git",
+        "names": {
+          "courses": "Kurslar",
+          "collections": "Koleksiyonlar",
+          "communities": "Topluluklar",
+          "podcasts": "Podcastler",
+          "payments": "Ödemeler",
+          "trail": "İlerleme Takibi"
+        },
+        "public": {
+          "title": "{{feature}} mevcut değil",
+          "description": "Bu özellik şu anda bu kuruluş için mevcut değil. Erişime ihtiyacınız varsa lütfen bir yöneticiyle iletişime geçin."
+        },
+        "dashboard": {
+          "title": "{{feature}} devre dışı",
+          "description": "Bu özellik kuruluşunuz için devre dışı bırakılmış. Kullanıcılara sunmak için ayarlardan etkinleştirin."
+        }
+      }
+    },
     "enterprise": "Kurumsal",
     "version": "Sürüm",
     "users": "Kullanıcılar",
@@ -139,11 +161,11 @@
     "email": "E-posta",
     "password": "Şifre",
     "forgot_password": "Şifrenizi mi unuttunuz?",
-    "login_to": "Giriş yap:",
+    "login_to": "Tekrar hoş geldiniz",
     "sign_up": "Kayıt Ol",
     "sign_in_with_google": "Google ile Giriş Yap",
     "wrong_email_password": "Yanlış e-posta veya şifre",
-    "invited_to_join": "Şuraya katılmaya davet edildiniz:",
+    "invited_to_join": "Öğrenme yolculuğunuza başlayın",
     "join": "Katıl",
     "invite_code_required": "Katılmak için bir davet kodu gereklidir",
     "enter_invite_code": "Lütfen bir davet kodu girin",
@@ -167,7 +189,51 @@
     "account_created_success": "Hesabınız başarıyla oluşturuldu",
     "login_to_your_account": "Hesabınıza giriş yapın",
     "authenticate_to_contribute": "Katkıda bulunmak için kimlik doğrulaması yapın",
-    "sign_up_to_contribute": "Katkıda bulunmak için kayıt olun"
+    "sign_up_to_contribute": "Katkıda bulunmak için kayıt olun",
+    "email_not_verified": "Giriş yapmadan önce lütfen e-postanızı doğrulayın",
+    "email_not_verified_description": "Doğrulama e-postası için gelen kutunuzu kontrol edin veya yeni bir tane isteyin",
+    "resend_verification": "Doğrulama e-postasını yeniden gönder",
+    "verification_sent": "Doğrulama e-postası gönderildi",
+    "account_locked": "Hesap kilitlendi",
+    "account_locked_description": "Çok fazla başarısız giriş denemesi. Lütfen {minutes} dakika sonra tekrar deneyin",
+    "rate_limited": "Çok fazla istek",
+    "rate_limited_description": "Lütfen tekrar denemeden önce bekleyin",
+    "check_email": "E-postanızı kontrol edin",
+    "check_email_description": "E-posta adresinize bir doğrulama bağlantısı gönderdik. Devam etmek için lütfen e-postanızı doğrulayın.",
+    "password_requirements": "Şifre gereksinimleri",
+    "password_min_length": "En az 8 karakter",
+    "password_uppercase": "En az bir büyük harf",
+    "password_lowercase": "En az bir küçük harf",
+    "password_number": "En az bir rakam",
+    "password_special": "En az bir özel karakter",
+    "verify_email": {
+      "title": "E-posta Doğrulama",
+      "verifying": "E-postanız doğrulanıyor...",
+      "success": "E-posta başarıyla doğrulandı",
+      "success_description": "E-postanız doğrulandı. Artık giriş yapabilirsiniz.",
+      "error": "Doğrulama başarısız",
+      "error_description": "Doğrulama bağlantısı geçersiz veya süresi dolmuş.",
+      "go_to_login": "Girişe git",
+      "request_new_link": "Yeni doğrulama bağlantısı iste"
+    },
+    "welcome_back": "Tekrar hoş geldiniz",
+    "enter_credentials": "Hesabınıza erişmek için kimlik bilgilerinizi girin",
+    "no_account": "Hesabınız yok mu?",
+    "already_have_account": "Zaten hesabınız var mı?",
+    "fill_in_details": "Başlamak için bilgilerinizi doldurun",
+    "reset_your_password": "Şifrenizi sıfırlayın",
+    "create_new_password": "Yeni bir şifre oluşturun",
+    "remember_password": "Şifrenizi hatırladınız mı?",
+    "verifying_your_email": "E-postanız doğrulanıyor",
+    "try_again_in": "{{minutes}} dakika sonra tekrar deneyin",
+    "join_organization": "Organizasyona katıl",
+    "join_organization_desc": "Bu organizasyona katılmak üzeresiniz",
+    "join_organization_success": "Organizasyona başarıyla katıldınız",
+    "joining": "Katılıyor",
+    "invite_required": "Davet gerekli",
+    "invite_required_desc": "{{org}} organizasyonuna katılmak için davet kodu gerekli",
+    "invite_code": "Davet kodu",
+    "validate_invite": "Daveti doğrula"
   },
   "validation": {
     "required": "Gerekli",
@@ -2067,6 +2133,30 @@
         "footer_text": "Alt Bilgi Metni",
         "footer_text_desc": "Sayfa alt bilgisinde görüntülenecek özel metin ekleyin.",
         "footer_text_placeholder": "Alt bilgi metnini girin..."
+      },
+      "auth_branding": {
+        "title": "Kimlik Doğrulama Sayfası Markalaması",
+        "subtitle": "Giriş ve kayıt sayfalarınızın görünümünü özelleştirin",
+        "welcome_message": "Hoş Geldiniz Mesajı",
+        "welcome_placeholder": "Özel bir hoş geldiniz mesajı girin...",
+        "welcome_desc": "Bu mesaj giriş ve kayıt sayfalarında görüntülenecektir. Varsayılan için boş bırakın.",
+        "default_welcome": "Öğrenme içeriğinize erişmek için giriş yapın",
+        "background_type": "Arka Plan Türü",
+        "bg_gradient": "Gradyan",
+        "bg_custom": "Özel",
+        "bg_unsplash": "Unsplash",
+        "text_color": "Metin Rengi",
+        "text_light": "Açık",
+        "text_dark": "Koyu",
+        "text_color_desc": "Koyu arka planlar için açık metin, açık arka planlar için koyu metin seçin.",
+        "preview": "Canlı Önizleme",
+        "preview_hint": "Giriş ve kayıt sayfalarınız böyle görünecek",
+        "saving": "Kaydediliyor...",
+        "save_success": "Markalama ayarları başarıyla kaydedildi",
+        "save_error": "Ayarlar kaydedilemedi",
+        "uploading": "Arka plan yükleniyor...",
+        "upload_success": "Arka plan görseli başarıyla yüklendi",
+        "upload_error": "Görsel yüklenemedi"
       }
     },
     "users": {

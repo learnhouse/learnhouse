@@ -23,21 +23,25 @@ type UserAvatarProps = {
 
 function UserAvatar(props: UserAvatarProps) {
   const session = useLHSession() as any
+  const access_token = session?.data?.tokens?.access_token
   const params = useParams() as any
   const [userData, setUserData] = useState<any>(null)
 
   useEffect(() => {
     const fetchUserData = async () => {
+      // Skip fetching if no access token (user not authenticated)
+      if (!access_token) return
+
       if (props.username) {
         try {
-          const data = await getUserByUsername(props.username)
+          const data = await getUserByUsername(props.username, access_token)
           setUserData(data)
         } catch (error) {
           console.error('Error fetching user by username:', error)
         }
       } else if (props.userId) {
         try {
-          const data = await getUser(props.userId)
+          const data = await getUser(props.userId, access_token)
           setUserData(data)
         } catch (error) {
           console.error('Error fetching user by ID:', error)
@@ -46,7 +50,7 @@ function UserAvatar(props: UserAvatarProps) {
     }
 
     fetchUserData()
-  }, [props.username, props.userId])
+  }, [props.username, props.userId, access_token])
 
   const isExternalUrl = (url: string): boolean => {
     return url.startsWith('http://') || url.startsWith('https://')

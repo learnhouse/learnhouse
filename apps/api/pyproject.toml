@@ -13,7 +13,7 @@ dependencies = [
     "fastapi>=0.115.0",
     "httpx>=0.27.0",
     "google-genai>=1.60.0",
-    "passlib>=1.7.4",
+    "pwdlib[argon2]>=0.2.1",
     "psycopg2-binary>=2.9.9",
     "pydantic[email]>=2.9.0,<3.0.0",
     "pytest>=8.2.2",
@@ -38,6 +38,7 @@ dependencies = [
     "pytest-asyncio>=1.1.0",
     "sentry-sdk[fastapi]>=2.19.0",
     "protobuf>=6.33.5",
+    "workos>=5.0.0",
 ]
 
 [tool.ruff]

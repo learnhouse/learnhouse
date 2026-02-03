@@ -29,7 +29,12 @@ export function OrgProvider({ children, orgslug }: { children: React.ReactNode, 
   )
   const { data: orgs, error: orgsError } = useSWR(
     `${getAPIUrl()}orgs/user/page/1/limit/10`,
-    (url) => swrFetcher(url, accessToken)
+    (url) => swrFetcher(url, accessToken),
+    {
+      revalidateOnFocus: true,
+      revalidateOnMount: true,
+      dedupingInterval: 0,
+    }
   )
 
   const isOrgActive = useMemo(() => org?.config?.config?.general?.enabled !== false, [org])
