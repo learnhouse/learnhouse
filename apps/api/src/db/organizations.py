@@ -1,8 +1,9 @@
-from typing import Optional, TYPE_CHECKING
+from typing import List, Optional, TYPE_CHECKING
 from pydantic import BaseModel
 from sqlalchemy import JSON, Column
 from sqlmodel import Field, SQLModel
 from src.db.roles import RoleRead
+from src.db.usergroups import UserGroupRead
 
 from src.db.organization_config import OrganizationConfig
 
@@ -29,7 +30,8 @@ class OrganizationBase(SQLModel):
 class Organization(OrganizationBase, table=True):
     __table_args__ = {"extend_existing": True}
     id: Optional[int] = Field(default=None, primary_key=True)
-    org_uuid: str = ""
+    org_uuid: str = Field(default="", unique=True)
+    slug: str = Field(unique=True, index=True)  # Override to add unique constraint
     creation_date: str = ""
     update_date: str = ""
 
@@ -68,6 +70,7 @@ class OrganizationRead(OrganizationBase):
 class OrganizationUser(BaseModel):
     user: "UserRead"
     role: RoleRead
+    usergroups: List[UserGroupRead] = []
 
 
 # Rebuild models to resolve forward references after all classes are defined

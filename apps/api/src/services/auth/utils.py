@@ -1,4 +1,5 @@
 import random
+from datetime import datetime, timezone
 from typing import Optional
 from fastapi import Depends, HTTPException, Request
 import httpx
@@ -54,26 +55,26 @@ async def signWithGoogle(
         given_name = google_user.get("given_name", "")
         family_name = google_user.get("family_name", "")
         picture = google_user.get("picture", "")
-        
+
         # Generate username more robustly
         username_parts = []
         if given_name:
             username_parts.append(given_name)
         if family_name:
             username_parts.append(family_name)
-        
+
         # If no name parts available, use part of email
         if not username_parts and user_email and "@" in user_email:
             email_prefix = user_email.split("@")[0]
             if email_prefix:  # Make sure it's not empty
                 username_parts.append(email_prefix)
-        
+
         # If still no parts, use a default
         if not username_parts:
             username_parts.append("user")
-        
+
         username = "".join(username_parts) + str(random.randint(10, 99))
-        
+
         user_object = UserCreate(
             email=user_email,
             username=username,
@@ -85,15 +86,23 @@ async def signWithGoogle(
 
         if org_id is not None:
             user = await create_user(
-                request, db_session, current_user, user_object, org_id
+                request, db_session, current_user, user_object, org_id, is_oauth=True
             )
 
             return user
         else:
             user = await create_user_without_org(
-                request, db_session, current_user, user_object
+                request, db_session, current_user, user_object, is_oauth=True
             )
 
             return user
+
+    # For existing users, ensure email is verified (Google already verified it)
+    if not user.email_verified:
+        user.email_verified = True
+        user.email_verified_at = datetime.now(timezone.utc).isoformat()
+        db_session.add(user)
+        db_session.commit()
+        db_session.refresh(user)
 
     return UserRead.model_validate(user)

@@ -7,11 +7,14 @@ from fastapi import HTTPException, Request
 from sqlmodel import Session, select
 from src.security.features_utils.usage import decrease_feature_usage
 from src.services.orgs.invites import send_invite_email
+from src.services.email.utils import get_base_url_from_request
 from config.config import get_learnhouse_config
 from src.services.orgs.orgs import rbac_check
 from src.db.roles import Role, RoleRead
 from src.db.users import AnonymousUser, PublicUser, User, UserRead
 from src.db.user_organizations import UserOrganization
+from src.db.usergroup_user import UserGroupUser
+from src.db.usergroups import UserGroup, UserGroupRead
 from src.db.organizations import (
     Organization,
     OrganizationRead,
@@ -28,6 +31,18 @@ async def get_organization_users(
     limit: int = 20,
     search: str = "",
 ):
+    """
+    Get paginated list of users in an organization.
+
+    SECURITY:
+    - Requires authentication (enforced at router level)
+    - User must be a member of the organization to view member list
+    - Maximum limit enforced to prevent data dumping
+    """
+    # SECURITY: Enforce maximum limit
+    limit = min(limit, 100)
+    page = max(page, 1)
+
     statement = select(Organization).where(Organization.id == org_id)
     result = db_session.exec(statement)
 
@@ -39,7 +54,27 @@ async def get_organization_users(
             detail="Organization not found",
         )
 
-    # RBAC check
+    # SECURITY: Verify current user is a member of this organization
+    # This prevents users from enumerating members of orgs they don't belong to
+    if isinstance(current_user, AnonymousUser):
+        raise HTTPException(
+            status_code=401,
+            detail="Authentication required",
+        )
+
+    membership_check = select(UserOrganization).where(
+        UserOrganization.user_id == current_user.id,
+        UserOrganization.org_id == org.id
+    )
+    user_membership = db_session.exec(membership_check).first()
+
+    if not user_membership:
+        raise HTTPException(
+            status_code=403,
+            detail="You must be a member of this organization to view its members",
+        )
+
+    # RBAC check (for additional permission verification)
     await rbac_check(request, org.org_uuid, current_user, "read", db_session)
 
     # Base query for users in the organization
@@ -110,9 +145,22 @@ async def get_organization_users(
         user = UserRead.model_validate(user)
         role = RoleRead.model_validate(role)
 
+        # Fetch usergroups for this user
+        usergroup_statement = (
+            select(UserGroup)
+            .join(UserGroupUser)
+            .where(
+                UserGroupUser.user_id == user.id,
+                UserGroupUser.org_id == org_id
+            )
+        )
+        user_usergroups = db_session.exec(usergroup_statement).all()
+        usergroups = [UserGroupRead.model_validate(ug) for ug in user_usergroups]
+
         org_user = OrganizationUser(
             user=user,
             role=role,
+            usergroups=usergroups,
         )
 
         org_users_list.append(org_user)
@@ -326,11 +374,13 @@ async def invite_batch_users(
         org = OrganizationRead.model_validate(org)
         user = UserRead.model_validate(user)
 
+        base_url = get_base_url_from_request(request)
         isEmailSent = send_invite_email(
             org,
             invite_code_uuid,
             user,
             email,
+            base_url,
         )
 
         invited_user_object = {

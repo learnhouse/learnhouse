@@ -94,6 +94,28 @@
         }
       }
     },
+    "features": {
+      "disabled": {
+        "status": "기능 비활성화됨",
+        "enable_feature": "설정으로 이동",
+        "names": {
+          "courses": "코스",
+          "collections": "컬렉션",
+          "communities": "커뮤니티",
+          "podcasts": "팟캐스트",
+          "payments": "결제",
+          "trail": "진행 상황 추적"
+        },
+        "public": {
+          "title": "{{feature}} 사용 불가",
+          "description": "이 기능은 현재 이 조직에서 사용할 수 없습니다. 액세스가 필요하시면 관리자에게 문의하세요."
+        },
+        "dashboard": {
+          "title": "{{feature}} 비활성화됨",
+          "description": "이 기능은 귀하의 조직에서 비활성화되어 있습니다. 사용자가 사용할 수 있도록 설정에서 활성화하세요."
+        }
+      }
+    },
     "enterprise": "엔터프라이즈",
     "version": "버전",
     "users": "사용자",
@@ -139,11 +161,11 @@
     "email": "이메일",
     "password": "비밀번호",
     "forgot_password": "비밀번호를 잊으셨나요?",
-    "login_to": "로그인 대상:",
+    "login_to": "다시 오신 것을 환영합니다",
     "sign_up": "회원가입",
     "sign_in_with_google": "Google로 로그인",
     "wrong_email_password": "이메일 또는 비밀번호가 잘못되었습니다",
-    "invited_to_join": "다음에 초대되었습니다:",
+    "invited_to_join": "학습 여정을 시작하세요",
     "join": "가입하기",
     "invite_code_required": "가입하려면 초대 코드가 필요합니다",
     "enter_invite_code": "초대 코드를 입력하세요",
@@ -167,7 +189,66 @@
     "account_created_success": "계정이 성공적으로 생성되었습니다",
     "login_to_your_account": "계정에 로그인",
     "authenticate_to_contribute": "기여하려면 로그인하세요",
-    "sign_up_to_contribute": "기여하려면 가입하세요"
+    "sign_up_to_contribute": "기여하려면 가입하세요",
+    "verify_email_title": "이메일 인증",
+    "verifying_email": "이메일 주소를 확인하는 중...",
+    "verification_failed": "인증 실패",
+    "verification_missing_params": "인증 매개변수가 누락되었습니다. 인증 링크를 확인해 주세요.",
+    "verification_trouble": "문제가 있으신가요? 로그인 페이지에서 새 인증 이메일을 요청해 보세요.",
+    "back_to_login": "로그인으로 돌아가기",
+    "email_verified_success": "이메일이 인증되었습니다!",
+    "email_verified_message": "이메일이 성공적으로 인증되었습니다. 이제 계정에 로그인할 수 있습니다.",
+    "proceed_to_login": "로그인으로 이동",
+    "check_email_for_verification": "이메일을 확인하세요",
+    "verification_email_sent_message": "받은 편지함으로 인증 이메일을 보냈습니다. 이메일의 링크를 클릭하여 계정을 인증해 주세요.",
+    "email_not_verified": "이메일 미인증",
+    "email_not_verified_message": "로그인하기 전에 이메일 주소를 인증해 주세요. 받은 편지함에서 인증 이메일을 확인하세요.",
+    "resend_verification_email": "인증 이메일 다시 보내기",
+    "resend_verification_failed": "인증 이메일 재전송에 실패했습니다. 다시 시도해 주세요.",
+    "verification_email_resent": "인증 이메일이 전송되었습니다",
+    "check_inbox_message": "받은 편지함을 확인하고 인증 링크를 클릭해 주세요.",
+    "account_locked": "계정 잠김",
+    "account_locked_message": "로그인 시도 실패가 너무 많아 계정이 일시적으로 잠겼습니다. 나중에 다시 시도해 주세요.",
+    "rate_limited": "요청이 너무 많습니다",
+    "rate_limited_message": "로그인 시도가 너무 많습니다. 몇 분 후에 다시 시도해 주세요.",
+    "password_requirements_not_met": "비밀번호가 요구사항을 충족하지 않습니다",
+    "password_strength": "비밀번호 강도",
+    "password_strength_weak": "약함",
+    "password_strength_fair": "보통",
+    "password_strength_good": "좋음",
+    "password_strength_strong": "강함",
+    "password_req_min_length": "최소 8자 이상",
+    "password_req_uppercase": "대문자 1개 이상 (A-Z)",
+    "password_req_lowercase": "소문자 1개 이상 (a-z)",
+    "password_req_number": "숫자 1개 이상 (0-9)",
+    "password_req_special": "특수문자 1개 이상 (!@#$%...)",
+    "welcome_back": "다시 오신 것을 환영합니다",
+    "enter_credentials": "계정에 액세스하려면 자격 증명을 입력하세요",
+    "no_account": "계정이 없으신가요?",
+    "already_have_account": "이미 계정이 있으신가요?",
+    "fill_in_details": "시작하려면 세부 정보를 입력하세요",
+    "reset_your_password": "비밀번호 재설정",
+    "create_new_password": "새 비밀번호 만들기",
+    "remember_password": "비밀번호가 기억나셨나요?",
+    "verifying_your_email": "이메일 확인 중",
+    "join_organization": "조직 가입",
+    "join_organization_desc": "이 조직에 가입하려고 합니다",
+    "join_organization_success": "조직에 성공적으로 가입했습니다",
+    "joining": "가입 중",
+    "invite_required": "초대 필요",
+    "invite_required_desc": "{{org}}에 가입하려면 초대 코드가 필요합니다",
+    "invite_code": "초대 코드",
+    "validate_invite": "초대 확인"
+  },
+  "verify_email": {
+    "title": "이메일 인증",
+    "verifying": "이메일을 확인하는 중...",
+    "success": "이메일이 성공적으로 인증되었습니다",
+    "success_description": "이메일이 인증되었습니다. 이제 로그인할 수 있습니다.",
+    "error": "인증 실패",
+    "error_description": "인증 링크가 유효하지 않거나 만료되었습니다.",
+    "go_to_login": "로그인으로 이동",
+    "request_new_link": "새 인증 링크 요청"
   },
   "validation": {
     "required": "필수 항목입니다",
@@ -1772,6 +1853,30 @@
           "theme": "테마"
         }
       },
+      "auth_branding": {
+        "title": "인증 페이지 브랜딩",
+        "subtitle": "로그인 및 가입 페이지의 모양을 사용자 지정하세요",
+        "welcome_message": "환영 메시지",
+        "welcome_placeholder": "사용자 지정 환영 메시지를 입력하세요...",
+        "welcome_desc": "이 메시지는 로그인 및 가입 페이지에 표시됩니다. 기본값을 사용하려면 비워두세요.",
+        "default_welcome": "학습 콘텐츠에 액세스하려면 로그인하세요",
+        "background_type": "배경 유형",
+        "bg_gradient": "그라데이션",
+        "bg_custom": "사용자 지정",
+        "bg_unsplash": "Unsplash",
+        "text_color": "텍스트 색상",
+        "text_light": "밝은색",
+        "text_dark": "어두운색",
+        "text_color_desc": "어두운 배경에는 밝은 텍스트를, 밝은 배경에는 어두운 텍스트를 선택하세요.",
+        "preview": "실시간 미리보기",
+        "preview_hint": "로그인 및 가입 페이지가 이렇게 표시됩니다",
+        "saving": "저장 중...",
+        "save_success": "브랜딩 설정이 저장되었습니다",
+        "save_error": "설정 저장에 실패했습니다",
+        "uploading": "배경 업로드 중...",
+        "upload_success": "배경 이미지가 업로드되었습니다",
+        "upload_error": "이미지 업로드에 실패했습니다"
+      },
       "socials": {
         "title": "소셜 링크",
         "subtitle": "조직의 소셜 미디어 활동을 관리합니다",
@@ -2116,6 +2221,7 @@
         "subtitle": "조직 사용자를 관리하고 역할 및 권한을 할당합니다",
         "table": {
           "user": "사용자",
+          "groups": "그룹",
           "role": "역할",
           "actions": "작업"
         },
@@ -2806,7 +2912,7 @@
         "load_user": "사용자 로드",
         "no_user": "사용자 없음"
       },
-      "magic_block": {
+      "magic_block_content": {
         "title": "매직 블록",
         "interactive_element": "인터랙티브 요소",
         "iterations": "{{count}}/{{max}} 반복",

@@ -94,6 +94,28 @@
         }
       }
     },
+    "features": {
+      "disabled": {
+        "status": "सुविधा अक्षम",
+        "enable_feature": "सेटिंग्स पर जाएं",
+        "names": {
+          "courses": "पाठ्यक्रम",
+          "collections": "संग्रह",
+          "communities": "समुदाय",
+          "podcasts": "पॉडकास्ट",
+          "payments": "भुगतान",
+          "trail": "प्रगति ट्रैकिंग"
+        },
+        "public": {
+          "title": "{{feature}} उपलब्ध नहीं",
+          "description": "यह सुविधा वर्तमान में इस संगठन के लिए उपलब्ध नहीं है। यदि आपको एक्सेस की आवश्यकता है तो कृपया व्यवस्थापक से संपर्क करें।"
+        },
+        "dashboard": {
+          "title": "{{feature}} अक्षम",
+          "description": "यह सुविधा आपके संगठन के लिए अक्षम है। इसे उपयोगकर्ताओं के लिए उपलब्ध कराने के लिए सेटिंग्स में सक्षम करें।"
+        }
+      }
+    },
     "enterprise": "एंटरप्राइज",
     "version": "संस्करण",
     "users": "उपयोगकर्ता",
@@ -139,11 +161,11 @@
     "email": "ईमेल",
     "password": "पासवर्ड",
     "forgot_password": "पासवर्ड भूल गए?",
-    "login_to": "इसमें लॉगिन करें",
+    "login_to": "वापसी पर स्वागत है",
     "sign_up": "साइन अप करें",
     "sign_in_with_google": "Google के साथ साइन इन करें",
     "wrong_email_password": "गलत ईमेल या पासवर्ड",
-    "invited_to_join": "आपको इसमें शामिल होने के लिए आमंत्रित किया गया है",
+    "invited_to_join": "अपनी सीखने की यात्रा शुरू करें",
     "join": "शामिल हों",
     "invite_code_required": "शामिल होने के लिए एक आमंत्रण कोड आवश्यक है",
     "enter_invite_code": "कृपया एक आमंत्रण कोड दर्ज करें",
@@ -167,7 +189,50 @@
     "account_created_success": "आपका खाता सफलतापूर्वक बनाया गया था",
     "login_to_your_account": "अपने खाते में लॉगिन करें",
     "authenticate_to_contribute": "योगदान करने के लिए प्रमाणित करें",
-    "sign_up_to_contribute": "योगदान करने के लिए साइन अप करें"
+    "sign_up_to_contribute": "योगदान करने के लिए साइन अप करें",
+    "email_not_verified": "कृपया लॉगिन करने से पहले अपना ईमेल सत्यापित करें",
+    "email_not_verified_description": "सत्यापन ईमेल के लिए अपना इनबॉक्स जांचें या एक नया अनुरोध करें",
+    "resend_verification": "सत्यापन ईमेल पुनः भेजें",
+    "verification_sent": "सत्यापन ईमेल भेजा गया",
+    "account_locked": "खाता लॉक है",
+    "account_locked_description": "बहुत अधिक असफल लॉगिन प्रयास। कृपया {minutes} मिनट बाद पुनः प्रयास करें",
+    "rate_limited": "बहुत अधिक अनुरोध",
+    "rate_limited_description": "कृपया पुनः प्रयास करने से पहले प्रतीक्षा करें",
+    "check_email": "अपना ईमेल जांचें",
+    "check_email_description": "हमने आपके ईमेल पते पर एक सत्यापन लिंक भेजा है। जारी रखने के लिए कृपया अपना ईमेल सत्यापित करें।",
+    "password_requirements": "पासवर्ड आवश्यकताएं",
+    "password_min_length": "कम से कम 8 अक्षर",
+    "password_uppercase": "कम से कम एक बड़ा अक्षर",
+    "password_lowercase": "कम से कम एक छोटा अक्षर",
+    "password_number": "कम से कम एक अंक",
+    "password_special": "कम से कम एक विशेष अक्षर",
+    "verify_email": {
+      "title": "ईमेल सत्यापन",
+      "verifying": "आपका ईमेल सत्यापित हो रहा है...",
+      "success": "ईमेल सफलतापूर्वक सत्यापित",
+      "success_description": "आपका ईमेल सत्यापित हो गया है। अब आप लॉगिन कर सकते हैं।",
+      "error": "सत्यापन विफल",
+      "error_description": "सत्यापन लिंक अमान्य है या समाप्त हो गया है।",
+      "go_to_login": "लॉगिन पर जाएं",
+      "request_new_link": "नया सत्यापन लिंक अनुरोध करें"
+    },
+    "welcome_back": "वापसी पर स्वागत है",
+    "enter_credentials": "अपने खाते तक पहुंचने के लिए अपनी साख दर्ज करें",
+    "no_account": "खाता नहीं है?",
+    "already_have_account": "पहले से खाता है?",
+    "fill_in_details": "शुरू करने के लिए अपना विवरण भरें",
+    "reset_your_password": "अपना पासवर्ड रीसेट करें",
+    "create_new_password": "नया पासवर्ड बनाएं",
+    "remember_password": "पासवर्ड याद आ गया?",
+    "verifying_your_email": "आपका ईमेल सत्यापित हो रहा है",
+    "join_organization": "संगठन से जुड़ें",
+    "join_organization_desc": "आप इस संगठन से जुड़ने वाले हैं",
+    "join_organization_success": "संगठन में सफलतापूर्वक शामिल हो गए",
+    "joining": "जुड़ रहे हैं",
+    "invite_required": "आमंत्रण आवश्यक",
+    "invite_required_desc": "{{org}} से जुड़ने के लिए आमंत्रण कोड आवश्यक है",
+    "invite_code": "आमंत्रण कोड",
+    "validate_invite": "आमंत्रण सत्यापित करें"
   },
   "validation": {
     "required": "आवश्यक",
@@ -2067,6 +2132,30 @@
         "footer_text": "फ़ुटर टेक्स्ट",
         "footer_text_desc": "पेज फ़ुटर में प्रदर्शित करने के लिए कस्टम टेक्स्ट जोड़ें।",
         "footer_text_placeholder": "फ़ुटर टेक्स्ट दर्ज करें..."
+      },
+      "auth_branding": {
+        "title": "प्रमाणीकरण पृष्ठ ब्रांडिंग",
+        "subtitle": "अपने लॉगिन और साइनअप पृष्ठों की दिखावट को अनुकूलित करें",
+        "welcome_message": "स्वागत संदेश",
+        "welcome_placeholder": "कस्टम स्वागत संदेश दर्ज करें...",
+        "welcome_desc": "यह संदेश लॉगिन और साइनअप पृष्ठों पर प्रदर्शित होगा। डिफ़ॉल्ट के लिए खाली छोड़ें।",
+        "default_welcome": "अपनी सीखने की सामग्री तक पहुंचने के लिए साइन इन करें",
+        "background_type": "पृष्ठभूमि प्रकार",
+        "bg_gradient": "ग्रेडिएंट",
+        "bg_custom": "कस्टम",
+        "bg_unsplash": "Unsplash",
+        "text_color": "टेक्स्ट का रंग",
+        "text_light": "हल्का",
+        "text_dark": "गहरा",
+        "text_color_desc": "गहरी पृष्ठभूमि के लिए हल्का टेक्स्ट, हल्की पृष्ठभूमि के लिए गहरा टेक्स्ट चुनें।",
+        "preview": "लाइव पूर्वावलोकन",
+        "preview_hint": "आपके लॉगिन और साइनअप पृष्ठ ऐसे दिखेंगे",
+        "saving": "सहेजा जा रहा है...",
+        "save_success": "ब्रांडिंग सेटिंग्स सफलतापूर्वक सहेजी गईं",
+        "save_error": "सेटिंग्स सहेजने में विफल",
+        "uploading": "पृष्ठभूमि अपलोड हो रही है...",
+        "upload_success": "पृष्ठभूमि छवि सफलतापूर्वक अपलोड की गई",
+        "upload_error": "छवि अपलोड करने में विफल"
       }
     },
     "users": {
@@ -2116,6 +2205,7 @@
         "subtitle": "अपने संगठन के उपयोगकर्ताओं को प्रबंधित करें, भूमिकाएं और अनुमतियां असाइन करें",
         "table": {
           "user": "उपयोगकर्ता",
+          "groups": "समूह",
           "role": "भूमिका",
           "actions": "कार्रवाई"
         },
@@ -2806,7 +2896,7 @@
         "load_user": "उपयोगकर्ता लोड करें",
         "no_user": "कोई उपयोगकर्ता नहीं"
       },
-      "magic_block": {
+      "magic_block_content": {
         "title": "मैजिक ब्लॉक",
         "interactive_element": "इंटरैक्टिव तत्व",
         "iterations": "{{count}}/{{max}} पुनरावृत्तियां",

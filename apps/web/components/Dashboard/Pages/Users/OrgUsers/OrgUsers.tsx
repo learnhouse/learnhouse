@@ -8,7 +8,7 @@ import UserAvatar from '@components/Objects/UserAvatar'
 import { getAPIUrl } from '@services/config/config'
 import { removeUserFromOrg, updateUserRole } from '@services/organizations/orgs'
 import { swrFetcher } from '@services/utils/ts/requests'
-import { LogOut, Search, ChevronLeft, ChevronRight, Shield, User, Crown } from 'lucide-react'
+import { LogOut, Search, ChevronLeft, ChevronRight, Shield, User, Crown, Users } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import useSWR, { mutate } from 'swr'
@@ -133,9 +133,7 @@ function OrgUsers() {
             </div>
 
             {/* Content */}
-            <div className="px-3 py-2">
-            {/* Users List */}
-            <div className="space-y-1">
+            <div className="px-0">
               {orgUsers.length === 0 ? (
                 <div className="py-16 text-center">
                   <div className="flex flex-col items-center gap-3">
@@ -151,107 +149,148 @@ function OrgUsers() {
                   </div>
                 </div>
               ) : (
-                orgUsers?.map((user: any, index: number) => (
-                  <div
-                    key={user.user.id}
-                    className="group flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg transition-all duration-200"
-                  >
-                    {/* User Info */}
-                    <div className="flex items-center gap-4 flex-1 min-w-0">
-                      <UserAvatar
-                        width={44}
-                        userId={user.user.id?.toString()}
-                        rounded="rounded-full"
-                        showProfilePopup={true}
-                      />
-                      <div className="flex flex-col min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold text-gray-800 text-sm truncate">
-                            {user.user.first_name + ' ' + user.user.last_name}
-                          </span>
-                          <span className="text-xs bg-gray-100 px-2 py-0.5 rounded-full text-gray-500 font-medium">
-                            @{user.user.username}
-                          </span>
-                        </div>
-                        {user.user.email && (
-                          <span className="text-xs text-gray-400 truncate">
-                            {user.user.email}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Role Select & Actions */}
-                    <div className="flex items-center gap-2 ml-4">
-                      {/* Role Select Dropdown */}
-                      <Select
-                        value={user.role.role_uuid}
-                        onValueChange={(newRoleUuid) => handleRoleChange(user.user.id, newRoleUuid)}
-                        disabled={!roles}
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-gray-100">
+                      <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3">
+                        {t('dashboard.users.active_users.table.user') || 'User'}
+                      </th>
+                      <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3">
+                        {t('dashboard.users.active_users.table.groups') || 'Groups'}
+                      </th>
+                      <th className="text-left text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3">
+                        {t('dashboard.users.active_users.table.role') || 'Role'}
+                      </th>
+                      <th className="text-right text-xs font-semibold text-gray-500 uppercase tracking-wider px-6 py-3">
+                        {t('dashboard.users.active_users.table.actions') || 'Actions'}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {orgUsers?.map((user: any) => (
+                      <tr
+                        key={user.user.id}
+                        className="hover:bg-gray-50 transition-colors"
                       >
-                        <SelectTrigger className={`h-8 px-3 text-xs font-semibold rounded-md nice-shadow transition-all border-0 ${
-                          user.role.name.toLowerCase().includes('admin')
-                            ? 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100'
-                            : user.role.name.toLowerCase().includes('teacher') || user.role.name.toLowerCase().includes('instructor')
-                            ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
-                            : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
-                        }`}>
-                          <SelectValue>
-                            <div className="flex items-center gap-1.5">
-                              {user.role.name.toLowerCase().includes('admin') ? (
-                                <Crown className="w-3.5 h-3.5" />
-                              ) : user.role.name.toLowerCase().includes('teacher') || user.role.name.toLowerCase().includes('instructor') ? (
-                                <Shield className="w-3.5 h-3.5" />
-                              ) : (
-                                <User className="w-3.5 h-3.5" />
-                              )}
-                              <span>{user.role.name}</span>
-                            </div>
-                          </SelectValue>
-                        </SelectTrigger>
-                        <SelectContent>
-                          {roles?.map((role: any) => (
-                            <SelectItem key={role.id} value={role.role_uuid}>
+                        {/* User Info */}
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <UserAvatar
+                              width={40}
+                              userId={user.user.id?.toString()}
+                              rounded="rounded-full"
+                              showProfilePopup={true}
+                            />
+                            <div className="flex flex-col min-w-0">
                               <div className="flex items-center gap-2">
-                                {role.name.toLowerCase().includes('admin') ? (
-                                  <Crown className="w-3.5 h-3.5 text-indigo-600" />
-                                ) : role.name.toLowerCase().includes('teacher') || role.name.toLowerCase().includes('instructor') ? (
-                                  <Shield className="w-3.5 h-3.5 text-emerald-600" />
-                                ) : (
-                                  <User className="w-3.5 h-3.5 text-gray-500" />
-                                )}
-                                <span>{role.name}</span>
+                                <span className="font-semibold text-gray-800 text-sm truncate">
+                                  {user.user.first_name + ' ' + user.user.last_name}
+                                </span>
+                                <span className="text-xs bg-gray-100 px-2 py-0.5 rounded-full text-gray-500 font-medium">
+                                  @{user.user.username}
+                                </span>
                               </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                              {user.user.email && (
+                                <span className="text-xs text-gray-400 truncate">
+                                  {user.user.email}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </td>
 
-                      {/* Remove Action */}
-                      <ConfirmationModal
-                        confirmationButtonText={t('dashboard.users.active_users.modals.remove_user.button')}
-                        confirmationMessage={t('dashboard.users.active_users.modals.remove_user.message')}
-                        dialogTitle={t('dashboard.users.active_users.modals.remove_user.title', { username: user.user.username })}
-                        dialogTrigger={
-                          <button
-                            className="flex items-center gap-1.5 h-8 px-4 bg-white text-gray-700 hover:bg-rose-50 hover:text-rose-700 rounded-md text-xs font-semibold nice-shadow transition-all whitespace-nowrap"
-                            title={t('dashboard.users.active_users.actions.remove_from_org')}
+                        {/* User Groups */}
+                        <td className="px-6 py-4">
+                          {user.usergroups && user.usergroups.length > 0 ? (
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              {user.usergroups.map((group: any) => (
+                                <span
+                                  key={group.id}
+                                  className="inline-flex items-center gap-1 text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded-md font-medium"
+                                  title={group.description}
+                                >
+                                  <Users className="w-3 h-3" />
+                                  {group.name}
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-gray-400">—</span>
+                          )}
+                        </td>
+
+                        {/* Role */}
+                        <td className="px-6 py-4">
+                          <Select
+                            value={user.role.role_uuid}
+                            onValueChange={(newRoleUuid) => handleRoleChange(user.user.id, newRoleUuid)}
+                            disabled={!roles}
                           >
-                            <LogOut className="w-3.5 h-3.5" />
-                            <span>{t('dashboard.users.active_users.actions.remove_from_org')}</span>
-                          </button>
-                        }
-                        functionToExecute={() => {
-                          handleRemoveUser(user.user.id)
-                        }}
-                        status="warning"
-                      ></ConfirmationModal>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
+                            <SelectTrigger className={`h-8 w-fit px-3 text-xs font-semibold rounded-md nice-shadow transition-all border-0 ${
+                              user.role.name.toLowerCase().includes('admin')
+                                ? 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100'
+                                : user.role.name.toLowerCase().includes('teacher') || user.role.name.toLowerCase().includes('instructor')
+                                ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                                : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                            }`}>
+                              <SelectValue>
+                                <div className="flex items-center gap-1.5">
+                                  {user.role.name.toLowerCase().includes('admin') ? (
+                                    <Crown className="w-3.5 h-3.5" />
+                                  ) : user.role.name.toLowerCase().includes('teacher') || user.role.name.toLowerCase().includes('instructor') ? (
+                                    <Shield className="w-3.5 h-3.5" />
+                                  ) : (
+                                    <User className="w-3.5 h-3.5" />
+                                  )}
+                                  <span>{user.role.name}</span>
+                                </div>
+                              </SelectValue>
+                            </SelectTrigger>
+                            <SelectContent>
+                              {roles?.map((role: any) => (
+                                <SelectItem key={role.id} value={role.role_uuid}>
+                                  <div className="flex items-center gap-2">
+                                    {role.name.toLowerCase().includes('admin') ? (
+                                      <Crown className="w-3.5 h-3.5 text-indigo-600" />
+                                    ) : role.name.toLowerCase().includes('teacher') || role.name.toLowerCase().includes('instructor') ? (
+                                      <Shield className="w-3.5 h-3.5 text-emerald-600" />
+                                    ) : (
+                                      <User className="w-3.5 h-3.5 text-gray-500" />
+                                    )}
+                                    <span>{role.name}</span>
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </td>
 
+                        {/* Actions */}
+                        <td className="px-6 py-4 text-right">
+                          <ConfirmationModal
+                            confirmationButtonText={t('dashboard.users.active_users.modals.remove_user.button')}
+                            confirmationMessage={t('dashboard.users.active_users.modals.remove_user.message')}
+                            dialogTitle={t('dashboard.users.active_users.modals.remove_user.title', { username: user.user.username })}
+                            dialogTrigger={
+                              <button
+                                className="inline-flex items-center gap-1.5 h-8 px-3 bg-white text-gray-600 hover:bg-rose-50 hover:text-rose-600 rounded-md text-xs font-medium nice-shadow transition-all"
+                                title={t('dashboard.users.active_users.actions.remove_from_org')}
+                              >
+                                <LogOut className="w-3.5 h-3.5" />
+                                <span>{t('dashboard.users.active_users.actions.remove_from_org')}</span>
+                              </button>
+                            }
+                            functionToExecute={() => {
+                              handleRemoveUser(user.user.id)
+                            }}
+                            status="warning"
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
 
             {/* Pagination Controls */}

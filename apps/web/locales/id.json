@@ -94,6 +94,28 @@
         }
       }
     },
+    "features": {
+      "disabled": {
+        "status": "Fitur Dinonaktifkan",
+        "enable_feature": "Buka Pengaturan",
+        "names": {
+          "courses": "Kursus",
+          "collections": "Koleksi",
+          "communities": "Komunitas",
+          "podcasts": "Podcast",
+          "payments": "Pembayaran",
+          "trail": "Pelacakan Kemajuan"
+        },
+        "public": {
+          "title": "{{feature}} Tidak Tersedia",
+          "description": "Fitur ini saat ini tidak tersedia untuk organisasi ini. Silakan hubungi administrator jika Anda memerlukan akses."
+        },
+        "dashboard": {
+          "title": "{{feature}} Dinonaktifkan",
+          "description": "Fitur ini dinonaktifkan untuk organisasi Anda. Aktifkan di pengaturan untuk membuatnya tersedia bagi pengguna."
+        }
+      }
+    },
     "enterprise": "Enterprise",
     "version": "Versi",
     "users": "Pengguna",
@@ -139,11 +161,11 @@
     "email": "Email",
     "password": "Kata Sandi",
     "forgot_password": "Lupa kata sandi?",
-    "login_to": "Masuk ke",
+    "login_to": "Selamat datang kembali",
     "sign_up": "Daftar",
     "sign_in_with_google": "Masuk dengan Google",
     "wrong_email_password": "Email atau kata sandi salah",
-    "invited_to_join": "Anda telah diundang untuk bergabung dengan",
+    "invited_to_join": "Mulai perjalanan belajar Anda",
     "join": "Gabung",
     "invite_code_required": "Kode undangan diperlukan untuk bergabung",
     "enter_invite_code": "Silakan masukkan kode undangan",
@@ -167,7 +189,51 @@
     "account_created_success": "Akun Anda berhasil dibuat",
     "login_to_your_account": "Masuk ke akun Anda",
     "authenticate_to_contribute": "Autentikasi untuk berkontribusi",
-    "sign_up_to_contribute": "Daftar untuk berkontribusi"
+    "sign_up_to_contribute": "Daftar untuk berkontribusi",
+    "email_not_verified": "Harap verifikasi email Anda sebelum masuk",
+    "email_not_verified_description": "Periksa kotak masuk Anda untuk email verifikasi atau minta yang baru",
+    "resend_verification": "Kirim ulang email verifikasi",
+    "verification_sent": "Email verifikasi terkirim",
+    "account_locked": "Akun terkunci",
+    "account_locked_description": "Terlalu banyak percobaan masuk yang gagal. Silakan coba lagi dalam {minutes} menit",
+    "rate_limited": "Terlalu banyak permintaan",
+    "rate_limited_description": "Silakan tunggu sebelum mencoba lagi",
+    "check_email": "Periksa email Anda",
+    "check_email_description": "Kami telah mengirim tautan verifikasi ke alamat email Anda. Silakan verifikasi email Anda untuk melanjutkan.",
+    "password_requirements": "Persyaratan kata sandi",
+    "password_min_length": "Minimal 8 karakter",
+    "password_uppercase": "Minimal satu huruf besar",
+    "password_lowercase": "Minimal satu huruf kecil",
+    "password_number": "Minimal satu angka",
+    "password_special": "Minimal satu karakter khusus",
+    "verify_email": {
+      "title": "Verifikasi Email",
+      "verifying": "Memverifikasi email Anda...",
+      "success": "Email berhasil diverifikasi",
+      "success_description": "Email Anda telah diverifikasi. Anda sekarang dapat masuk.",
+      "error": "Verifikasi gagal",
+      "error_description": "Tautan verifikasi tidak valid atau telah kedaluwarsa.",
+      "go_to_login": "Pergi ke halaman masuk",
+      "request_new_link": "Minta tautan verifikasi baru"
+    },
+    "welcome_back": "Selamat datang kembali",
+    "enter_credentials": "Masukkan kredensial Anda untuk mengakses akun",
+    "no_account": "Belum punya akun?",
+    "already_have_account": "Sudah punya akun?",
+    "fill_in_details": "Isi detail Anda untuk memulai",
+    "reset_your_password": "Atur ulang kata sandi Anda",
+    "create_new_password": "Buat kata sandi baru",
+    "remember_password": "Ingat kata sandi Anda?",
+    "verifying_your_email": "Memverifikasi email Anda",
+    "try_again_in": "coba lagi dalam {{minutes}} menit",
+    "join_organization": "Bergabung dengan organisasi",
+    "join_organization_desc": "Anda akan bergabung dengan organisasi ini",
+    "join_organization_success": "Berhasil bergabung dengan organisasi",
+    "joining": "Bergabung",
+    "invite_required": "Undangan diperlukan",
+    "invite_required_desc": "Kode undangan diperlukan untuk bergabung dengan {{org}}",
+    "invite_code": "Kode undangan",
+    "validate_invite": "Validasi undangan"
   },
   "validation": {
     "required": "Wajib isi",
@@ -2067,6 +2133,30 @@
         "footer_text": "Teks Footer",
         "footer_text_desc": "Tambahkan teks kustom untuk ditampilkan di footer halaman.",
         "footer_text_placeholder": "Masukkan teks footer..."
+      },
+      "auth_branding": {
+        "title": "Branding Halaman Autentikasi",
+        "subtitle": "Kustomisasi tampilan halaman login dan pendaftaran Anda",
+        "welcome_message": "Pesan Selamat Datang",
+        "welcome_placeholder": "Masukkan pesan selamat datang kustom...",
+        "welcome_desc": "Pesan ini akan ditampilkan di halaman login dan pendaftaran. Kosongkan untuk default.",
+        "default_welcome": "Masuk untuk mengakses konten pembelajaran Anda",
+        "background_type": "Tipe Latar Belakang",
+        "bg_gradient": "Gradien",
+        "bg_custom": "Kustom",
+        "bg_unsplash": "Unsplash",
+        "text_color": "Warna Teks",
+        "text_light": "Terang",
+        "text_dark": "Gelap",
+        "text_color_desc": "Pilih teks terang untuk latar belakang gelap, teks gelap untuk latar belakang terang.",
+        "preview": "Pratinjau Langsung",
+        "preview_hint": "Begini tampilan halaman login dan pendaftaran Anda",
+        "saving": "Menyimpan...",
+        "save_success": "Pengaturan branding berhasil disimpan",
+        "save_error": "Gagal menyimpan pengaturan",
+        "uploading": "Mengunggah latar belakang...",
+        "upload_success": "Gambar latar belakang berhasil diunggah",
+        "upload_error": "Gagal mengunggah gambar"
       }
     },
     "users": {
@@ -2116,6 +2206,7 @@
         "subtitle": "Kelola pengguna organisasi Anda, tetapkan peran dan izin",
         "table": {
           "user": "Pengguna",
+          "groups": "Grup",
           "role": "Peran",
           "actions": "Tindakan"
         },
@@ -2806,7 +2897,7 @@
         "load_user": "Muat Pengguna",
         "no_user": "Tidak Ada Pengguna"
       },
-      "magic_block": {
+      "magic_block_content": {
         "title": "Blok Ajaib",
         "interactive_element": "Elemen Interaktif",
         "iterations": "{{count}}/{{max}} iterasi",

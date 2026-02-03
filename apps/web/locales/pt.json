@@ -94,6 +94,28 @@
         }
       }
     },
+    "features": {
+      "disabled": {
+        "status": "Funcionalidade desativada",
+        "enable_feature": "Ir para Configurações",
+        "names": {
+          "courses": "Cursos",
+          "collections": "Coleções",
+          "communities": "Comunidades",
+          "podcasts": "Podcasts",
+          "payments": "Pagamentos",
+          "trail": "Acompanhamento de progresso"
+        },
+        "public": {
+          "title": "{{feature}} não disponível",
+          "description": "Esta funcionalidade não está disponível atualmente para esta organização. Entre em contato com um administrador se precisar de acesso."
+        },
+        "dashboard": {
+          "title": "{{feature}} desativado",
+          "description": "Esta funcionalidade está desativada para sua organização. Ative-a nas configurações para disponibilizá-la aos usuários."
+        }
+      }
+    },
     "enterprise": "Empresarial",
     "version": "Versão",
     "users": "Usuários",
@@ -139,11 +161,11 @@
     "email": "E-mail",
     "password": "Senha",
     "forgot_password": "Esqueceu a senha?",
-    "login_to": "Entrar no",
+    "login_to": "Bem-vindo de volta",
     "sign_up": "Cadastrar-se",
     "sign_in_with_google": "Entrar com Google",
     "wrong_email_password": "E-mail ou senha incorretos",
-    "invited_to_join": "Você foi convidado para participar de",
+    "invited_to_join": "Comece sua jornada de aprendizado",
     "join": "Participar",
     "invite_code_required": "Um código de convite é necessário para participar",
     "enter_invite_code": "Por favor, insira um código de convite",
@@ -167,7 +189,56 @@
     "account_created_success": "Sua conta foi criada com sucesso",
     "login_to_your_account": "Acesse sua conta",
     "authenticate_to_contribute": "Autentique-se para contribuir",
-    "sign_up_to_contribute": "Cadastre-se para contribuir"
+    "sign_up_to_contribute": "Cadastre-se para contribuir",
+    "verify_email_title": "Verifique seu e-mail",
+    "verifying_email": "Verificando seu endereço de e-mail...",
+    "verification_failed": "Verificação falhou",
+    "verification_missing_params": "Parâmetros de verificação ausentes. Por favor, verifique seu link de verificação.",
+    "verification_trouble": "Tendo problemas? Tente solicitar um novo e-mail de verificação na página de login.",
+    "back_to_login": "Voltar ao login",
+    "email_verified_success": "E-mail verificado!",
+    "email_verified_message": "Seu e-mail foi verificado com sucesso. Agora você pode fazer login na sua conta.",
+    "proceed_to_login": "Continuar para o login",
+    "check_email_for_verification": "Verifique seu e-mail",
+    "verification_email_sent_message": "Enviamos um e-mail de verificação para sua caixa de entrada. Por favor, clique no link do e-mail para verificar sua conta.",
+    "email_not_verified": "E-mail não verificado",
+    "email_not_verified_message": "Por favor, verifique seu endereço de e-mail antes de fazer login. Verifique sua caixa de entrada para o e-mail de verificação.",
+    "resend_verification_email": "Reenviar e-mail de verificação",
+    "resend_verification_failed": "Falha ao reenviar o e-mail de verificação. Por favor, tente novamente.",
+    "verification_email_resent": "E-mail de verificação enviado",
+    "check_inbox_message": "Por favor, verifique sua caixa de entrada e clique no link de verificação.",
+    "account_locked": "Conta bloqueada",
+    "account_locked_message": "Sua conta foi temporariamente bloqueada devido a muitas tentativas de login malsucedidas. Por favor, tente novamente mais tarde.",
+    "rate_limited": "Muitas solicitações",
+    "rate_limited_message": "Você fez muitas tentativas de login. Por favor, aguarde alguns minutos antes de tentar novamente.",
+    "password_requirements_not_met": "A senha não atende aos requisitos",
+    "password_strength": "Força da senha",
+    "password_strength_weak": "Fraca",
+    "password_strength_fair": "Regular",
+    "password_strength_good": "Boa",
+    "password_strength_strong": "Forte",
+    "password_req_min_length": "Pelo menos 8 caracteres",
+    "password_req_uppercase": "Pelo menos uma letra maiúscula (A-Z)",
+    "password_req_lowercase": "Pelo menos uma letra minúscula (a-z)",
+    "password_req_number": "Pelo menos um número (0-9)",
+    "password_req_special": "Pelo menos um caractere especial (!@#$%...)",
+    "welcome_back": "Bem-vindo de volta",
+    "enter_credentials": "Digite suas credenciais para acessar sua conta",
+    "no_account": "Não tem uma conta?",
+    "already_have_account": "Já tem uma conta?",
+    "fill_in_details": "Preencha seus dados para começar",
+    "reset_your_password": "Redefina sua senha",
+    "create_new_password": "Crie uma nova senha",
+    "remember_password": "Lembrou da senha?",
+    "verifying_your_email": "Verificando seu email",
+    "join_organization": "Entrar na organização",
+    "join_organization_desc": "Você está prestes a entrar nesta organização",
+    "join_organization_success": "Você entrou na organização com sucesso",
+    "joining": "Entrando",
+    "invite_required": "Convite necessário",
+    "invite_required_desc": "Um código de convite é necessário para entrar em {{org}}",
+    "invite_code": "Código de convite",
+    "validate_invite": "Validar convite"
   },
   "validation": {
     "required": "Obrigatório",
@@ -1772,6 +1843,30 @@
           "theme": "Tema"
         }
       },
+      "auth_branding": {
+        "title": "Personalização da página de autenticação",
+        "subtitle": "Personalize a aparência das suas páginas de login e cadastro",
+        "welcome_message": "Mensagem de boas-vindas",
+        "welcome_placeholder": "Digite uma mensagem de boas-vindas personalizada...",
+        "welcome_desc": "Esta mensagem será exibida nas páginas de login e cadastro. Deixe vazio para o padrão.",
+        "default_welcome": "Faça login para acessar seu conteúdo de aprendizado",
+        "background_type": "Tipo de fundo",
+        "bg_gradient": "Gradiente",
+        "bg_custom": "Personalizado",
+        "bg_unsplash": "Unsplash",
+        "text_color": "Cor do texto",
+        "text_light": "Claro",
+        "text_dark": "Escuro",
+        "text_color_desc": "Escolha texto claro para fundos escuros, texto escuro para fundos claros.",
+        "preview": "Pré-visualização ao vivo",
+        "preview_hint": "É assim que suas páginas de login e cadastro aparecerão",
+        "saving": "Salvando...",
+        "save_success": "Configurações de personalização salvas com sucesso",
+        "save_error": "Falha ao salvar as configurações",
+        "uploading": "Enviando imagem de fundo...",
+        "upload_success": "Imagem de fundo enviada com sucesso",
+        "upload_error": "Falha ao enviar a imagem"
+      },
       "socials": {
         "title": "Links Sociais",
         "subtitle": "Gerencie a presença da sua organização nas redes sociais",
@@ -2116,6 +2211,7 @@
         "subtitle": "Gerencie os usuários da sua organização, atribua funções e permissões",
         "table": {
           "user": "Usuário",
+          "groups": "Grupos",
           "role": "Função",
           "actions": "Ações"
         },
@@ -2860,7 +2956,7 @@
         "load_user": "Carregar usuário",
         "no_user": "Nenhum usuário selecionado"
       },
-      "magic_block": {
+      "magic_block_content": {
         "title": "Bloco mágico",
         "interactive_element": "Elemento interativo",
         "iterations": "{{count}}/{{max}} iterações",

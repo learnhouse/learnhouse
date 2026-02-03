@@ -60,6 +60,8 @@
     "plans": {
       "label": "Plans",
       "upgrade_button": "Upgrade to {{plan}}",
+      "upgrade_to": "Upgrade to",
+      "current_plan": "Current plan",
       "feature_restricted": {
         "payments": {
           "title": "Standard Feature",
@@ -85,6 +87,10 @@
           "title": "Standard Feature",
           "description": "Communities is a premium feature available only to organizations on our Standard plan or higher. Upgrade to unlock discussion communities for your members."
         },
+        "podcasts": {
+          "title": "Standard Feature",
+          "description": "Podcasts is a premium feature available only to organizations on our Standard plan or higher. Upgrade to create and share podcasts with your members."
+        },
         "audit_logs": {
           "title": "Enterprise Feature",
           "description": "Audit logs are a premium feature available only to organizations on our Enterprise plan. Upgrade to gain full visibility into your organization's activities."
@@ -96,6 +102,32 @@
         "seo": {
           "title": "Standard Feature",
           "description": "SEO optimization tools are available only to organizations on our Standard plan or higher. Upgrade to customize search engine appearance, social sharing previews, and structured data for your courses."
+        },
+        "sso": {
+          "title": "Enterprise Feature",
+          "description": "Single Sign-On (SSO) is a premium feature available only to organizations on our Enterprise plan. Upgrade to enable secure authentication through your organization's identity provider."
+        }
+      }
+    },
+    "features": {
+      "disabled": {
+        "status": "Feature Disabled",
+        "enable_feature": "Go to Settings",
+        "names": {
+          "courses": "Courses",
+          "collections": "Collections",
+          "communities": "Communities",
+          "podcasts": "Podcasts",
+          "payments": "Payments",
+          "trail": "Progress Tracking"
+        },
+        "public": {
+          "title": "{{feature}} Not Available",
+          "description": "This feature is currently not available for this organization. Please contact an administrator if you need access."
+        },
+        "dashboard": {
+          "title": "{{feature}} Disabled",
+          "description": "This feature is disabled for your organization. Enable it in settings to make it available to users."
         }
       }
     },
@@ -132,7 +164,9 @@
     "back": "Back",
     "of": "of",
     "creating": "Creating...",
-    "view_details": "View Details"
+    "view_details": "View Details",
+    "optional": "optional",
+    "close": "Close"
   },
   "banner": {
     "viewing_as_guest": "You're viewing {{name}} as a guest.",
@@ -144,11 +178,11 @@
     "email": "Email",
     "password": "Password",
     "forgot_password": "Forgot password?",
-    "login_to": "Login to",
+    "login_to": "Welcome back",
     "sign_up": "Sign up",
     "sign_in_with_google": "Sign in with Google",
     "wrong_email_password": "Wrong Email or password",
-    "invited_to_join": "You've been invited to join",
+    "invited_to_join": "Start your learning journey",
     "join": "Join",
     "invite_code_required": "An invite code is required to join",
     "enter_invite_code": "Please enter an invite code",
@@ -172,7 +206,84 @@
     "account_created_success": "Your account was successfully created",
     "login_to_your_account": "Login to your account",
     "authenticate_to_contribute": "Authenticate to contribute",
-    "sign_up_to_contribute": "Sign up to contribute"
+    "sign_up_to_contribute": "Sign up to contribute",
+    "verify_email_title": "Verify Your Email",
+    "verifying_email": "Verifying your email address...",
+    "verification_failed": "Verification Failed",
+    "verification_missing_params": "Missing verification parameters. Please check your verification link.",
+    "verification_trouble": "Having trouble? Try requesting a new verification email from the login page.",
+    "back_to_login": "Back to Login",
+    "email_verified_success": "Email Verified!",
+    "email_verified_message": "Your email has been successfully verified. You can now log in to your account.",
+    "proceed_to_login": "Proceed to Login",
+    "check_email_for_verification": "Check Your Email",
+    "verification_email_sent_message": "We've sent a verification email to your inbox. Please click the link in the email to verify your account.",
+    "email_not_verified": "Email Not Verified",
+    "email_not_verified_message": "Please verify your email address before logging in. Check your inbox for the verification email.",
+    "resend_verification_email": "Resend verification email",
+    "resend_verification_failed": "Failed to resend verification email. Please try again.",
+    "verification_email_resent": "Verification Email Sent",
+    "check_inbox_message": "Please check your inbox and click the verification link.",
+    "welcome_back": "Welcome back",
+    "enter_credentials": "Enter your credentials to access your account",
+    "no_account": "Don't have an account?",
+    "already_have_account": "Already have an account?",
+    "create_your_account": "Create your account",
+    "fill_in_details": "Fill in your details to get started",
+    "reset_your_password": "Reset your password",
+    "create_new_password": "Create a new password",
+    "remember_password": "Remember your password?",
+    "verifying_your_email": "Verifying your email",
+    "account_locked": "Account Locked",
+    "account_locked_message": "Your account has been temporarily locked due to too many failed login attempts. Please try again later.",
+    "rate_limited": "Too Many Requests",
+    "rate_limited_message": "You've made too many login attempts. Please wait a few minutes before trying again.",
+    "password_requirements_not_met": "Password does not meet requirements",
+    "password_strength": "Password strength",
+    "password_strength_weak": "Weak",
+    "password_strength_fair": "Fair",
+    "password_strength_good": "Good",
+    "password_strength_strong": "Strong",
+    "password_req_min_length": "At least 8 characters",
+    "password_req_uppercase": "At least one uppercase letter (A-Z)",
+    "password_req_lowercase": "At least one lowercase letter (a-z)",
+    "password_req_number": "At least one number (0-9)",
+    "password_req_special": "At least one special character (!@#$%...)",
+    "sign_in_with_sso": "Sign in with SSO",
+    "sso_error": "SSO authentication failed. Please try again.",
+    "sso_callback": {
+      "missing_params": "Invalid SSO callback. Missing required parameters.",
+      "error": "SSO authentication failed. Please try again.",
+      "authenticating": "Authenticating...",
+      "please_wait": "Please wait while we verify your identity",
+      "auth_failed": "Authentication Failed",
+      "try_again": "Try Again",
+      "go_home": "Go to Home",
+      "success": "Authentication Successful",
+      "redirecting": "Redirecting you to the application...",
+      "show_details": "Show technical details",
+      "hide_details": "Hide technical details",
+      "copy_details": "Copy to clipboard",
+      "copied": "Copied!",
+      "provider": "Provider",
+      "error_code": "Error code",
+      "tips": {
+        "access_denied": "If you declined the login request by mistake, try again and accept the permissions.",
+        "invalid_state": "Your session may have expired. Please try logging in again.",
+        "domain_not_allowed": "Contact your organization administrator to verify your email domain is allowed.",
+        "server_error": "The identity provider is experiencing issues. Please try again later."
+      }
+    },
+    "login_failed": "Login Failed",
+    "try_again_in": "try again in {{minutes}} min",
+    "join_organization": "Join Organization",
+    "join_organization_desc": "You're about to join this organization",
+    "join_organization_success": "Successfully joined the organization",
+    "joining": "Joining",
+    "invite_required": "Invite Required",
+    "invite_required_desc": "An invite code is required to join {{org}}",
+    "invite_code": "Invite Code",
+    "validate_invite": "Validate Invite"
   },
   "validation": {
     "required": "Required",
@@ -1121,6 +1232,7 @@
     "first_name": "First Name",
     "last_name": "Last Name",
     "bio": "Bio",
+    "bio_placeholder": "Tell us a bit about yourself...",
     "no_biography": "No biography provided",
     "my_progress": "My Progress",
     "no_courses_in_progress": "No courses in progress",
@@ -1181,7 +1293,8 @@
       "import_select_type": "Select the type of package you want to import",
       "no_courses": "No courses yet",
       "create_course_placeholder": "Create a course to add content",
-      "no_courses_available": "No courses available yet"
+      "no_courses_available": "No courses available yet",
+      "limit_reached": "Course limit reached ({{limit}})"
     },
     "organization": {
       "settings": {
@@ -1193,6 +1306,7 @@
           "branding": "Branding",
           "ai": "AI",
           "api": "API Access",
+          "sso": "SSO",
           "features": "Features",
           "other": "Other"
         },
@@ -1224,6 +1338,10 @@
           "features": {
             "title": "Features",
             "subtitle": "Enable or disable features for your organization"
+          },
+          "sso": {
+            "title": "Single Sign-On",
+            "subtitle": "Configure SSO for your organization"
           }
         },
         "name": "Organization Name",
@@ -1302,8 +1420,33 @@
         "tabs": {
           "images": "Images & Previews",
           "theme": "Theme",
-          "social": "Social Links"
+          "social": "Social Links",
+          "auth": "Auth"
         }
+      },
+      "auth_branding": {
+        "title": "Auth Page Branding",
+        "subtitle": "Customize the look and feel of your login and signup pages",
+        "welcome_message": "Welcome Message",
+        "welcome_placeholder": "Enter a custom welcome message for your login page...",
+        "welcome_desc": "This message will be displayed on the login and signup pages. Leave empty for default.",
+        "default_welcome": "Sign in to access your learning content",
+        "background_type": "Background Type",
+        "bg_gradient": "Gradient",
+        "bg_custom": "Custom",
+        "bg_unsplash": "Unsplash",
+        "text_color": "Text Color",
+        "text_light": "Light",
+        "text_dark": "Dark",
+        "text_color_desc": "Choose light text for dark backgrounds, dark text for light backgrounds.",
+        "preview": "Live Preview",
+        "preview_hint": "This is how your login and signup pages will appear",
+        "saving": "Saving...",
+        "save_success": "Auth branding settings saved successfully",
+        "save_error": "Failed to save auth branding settings",
+        "uploading": "Uploading background...",
+        "upload_success": "Background image uploaded successfully",
+        "upload_error": "Failed to upload background image"
       },
       "theme": {
         "primary_color": "Primary Color",
@@ -1367,12 +1510,55 @@
           "save_error": "Failed to update AI settings"
         }
       },
+      "sso": {
+        "title": "Single Sign-On (SSO)",
+        "subtitle": "Configure enterprise SSO for your organization",
+        "status_enabled": "Enabled",
+        "status_disabled": "Disabled",
+        "provider": "SSO Provider",
+        "select_provider": "Select a provider",
+        "not_configured": "Not configured",
+        "workos_info": "WorkOS provides enterprise SSO with support for SAML and OIDC identity providers.",
+        "workos_org_id": "WorkOS Organization ID",
+        "workos_org_id_help": "This ID is automatically generated when you configure SSO through the setup portal.",
+        "open_setup_portal": "Configure Identity Provider",
+        "oidc_info": "Connect directly to any OpenID Connect compatible identity provider (Azure AD, Okta, Google Workspace, Keycloak).",
+        "oidc_issuer_url": "Issuer URL",
+        "oidc_issuer_url_help": "The OIDC issuer URL. Endpoints will be auto-discovered from /.well-known/openid-configuration.",
+        "oidc_client_id": "Client ID",
+        "oidc_client_secret": "Client Secret",
+        "oidc_client_secret_help": "Keep this secret secure. It's used to authenticate with your identity provider.",
+        "oidc_scopes": "Scopes",
+        "oidc_scopes_help": "OAuth scopes to request (space-separated). Default: openid email profile",
+        "enable_sso": "Enable SSO",
+        "enable_sso_desc": "Allow users to authenticate using your organization's identity provider.",
+        "allowed_domains": "Allowed Email Domains",
+        "allowed_domains_help": "Comma-separated list of email domains allowed to login via SSO (e.g., example.com, company.org). Leave empty to allow all domains.",
+        "auto_provision": "Auto-provision Users",
+        "auto_provision_desc": "Automatically create user accounts for first-time SSO logins.",
+        "save": "Save Configuration",
+        "saving": "Saving...",
+        "delete": "Delete SSO Configuration",
+        "delete_confirm": "Are you sure you want to delete this SSO configuration? Users will no longer be able to log in via SSO.",
+        "load_error": "Failed to load SSO configuration",
+        "save_success": "SSO configuration saved successfully",
+        "save_error": "Failed to save SSO configuration",
+        "delete_success": "SSO configuration deleted",
+        "delete_error": "Failed to delete SSO configuration",
+        "deleting": "Deleting...",
+        "setup_not_available": "Setup portal is not available. Please configure the provider first.",
+        "setup_error": "Failed to get setup portal URL"
+      },
       "features": {
         "title": "Feature Settings",
         "subtitle": "Enable or disable features for your organization",
         "admin_only": "Only organization administrators can modify feature settings.",
         "upgrade_notice": "Upgrade to {{plan}} plan to enable this feature",
         "toggles": {
+          "courses": {
+            "title": "Courses",
+            "description": "Enable courses and progress tracking for your organization"
+          },
           "communities": {
             "title": "Communities",
             "description": "Enable discussion communities for your organization members"
@@ -1395,7 +1581,8 @@
           "disabling": "Disabling {{feature}}...",
           "enabled": "{{feature}} enabled",
           "disabled": "{{feature}} disabled",
-          "error": "Failed to update {{feature}} configuration"
+          "error": "Failed to update {{feature}} configuration",
+          "admin_only": "Only organization admins can enable or disable features"
         }
       },
       "audit_logs": {
@@ -1656,6 +1843,7 @@
         "no_users": "No users in this organization yet",
         "table": {
           "user": "User",
+          "groups": "Groups",
           "role": "Role",
           "actions": "Actions"
         },
@@ -1911,7 +2099,8 @@
         "actions": {
           "edit": "Edit",
           "delete": "Delete",
-          "create": "Create a Role"
+          "create": "Create a Role",
+          "view_rights": "View Rights"
         },
         "modals": {
           "create": {
@@ -2037,6 +2226,23 @@
             "title": "Delete Role ?",
             "message": "This action cannot be undone. All users with this role will lose their permissions. Are you sure you want to delete this role?",
             "button": "Delete Role"
+          },
+          "view_rights": {
+            "title": "{{roleName}} - Permissions",
+            "description": "View all permissions assigned to this role"
+          }
+        },
+        "rights": {
+          "resources": {
+            "courses": "Courses",
+            "users": "Users",
+            "usergroups": "User Groups",
+            "collections": "Collections",
+            "organizations": "Organizations",
+            "coursechapters": "Course Chapters",
+            "activities": "Activities",
+            "roles": "Roles",
+            "dashboard": "Dashboard"
           }
         },
         "toasts": {
@@ -2223,6 +2429,7 @@
       "no_courses": "No courses yet",
       "create_course_placeholder": "Create a course to add content",
       "no_courses_available": "No courses available yet",
+      "limit_reached": "Course limit reached ({{limit}})",
       "publishing": "Publishing course...",
       "unpublishing": "Unpublishing course...",
       "published_success": "Course published successfully",
@@ -2930,6 +3137,26 @@
     "desktop_only_message": "The editor is only accessible from a desktop device.",
     "switch_to_desktop": "Please switch to a desktop to view.",
     "ai_editor": "AI Editor",
+    "ai_panel": {
+      "title": "AI Editor",
+      "input_placeholder": "Ask AI to help with your content...",
+      "how_can_i_help": "How can I help improve your content?",
+      "improve_writing": "Improve writing",
+      "add_examples": "Add examples",
+      "simplify": "Simplify",
+      "expand": "Expand",
+      "add_quiz": "Add quiz",
+      "translate": "Translate",
+      "add_summary": "Add summary",
+      "add_tip": "Add tip",
+      "add_definition": "Add definition",
+      "clear_chat": "Clear chat",
+      "clear_selection": "Clear selection",
+      "block_selected": "block selected",
+      "question_improve": "How can I improve this?",
+      "question_add_quiz": "Add a quiz",
+      "question_summary": "Add a summary"
+    },
     "versioning": {
       "version_history": "Version History",
       "current_version": "Current version:",
@@ -3143,7 +3370,7 @@
         "load_user": "Load User",
         "no_user": "No user selected"
       },
-      "magic_block": {
+      "magic_block_content": {
         "title": "Magic Block",
         "interactive_element": "Interactive Element",
         "iterations": "{{count}}/{{max}} iterations",

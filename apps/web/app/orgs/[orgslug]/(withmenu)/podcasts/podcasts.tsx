@@ -13,6 +13,7 @@ import useAdminStatus from '@components/Hooks/useAdminStatus'
 import { PodcastWithEpisodeCount } from '@services/podcasts/podcasts'
 import { Headphones, ChevronLeft, ChevronRight, Search, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import FeatureDisabledView from '@components/Dashboard/Shared/FeatureDisabled/FeatureDisabledView'
 
 interface PodcastsClientProps {
   orgslug: string
@@ -100,6 +101,12 @@ export default function PodcastsClient({
   }
 
   return (
+    <FeatureDisabledView
+      featureName="podcasts"
+      orgslug={orgslug}
+      icon={Headphones}
+      context="public"
+    >
     <div className="w-full">
       <GeneralWrapperStyled>
         <div className="flex flex-col space-y-2 mb-2">
@@ -265,5 +272,6 @@ export default function PodcastsClient({
         </div>
       </GeneralWrapperStyled>
     </div>
+    </FeatureDisabledView>
   )
 }
