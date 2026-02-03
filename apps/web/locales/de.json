@@ -2521,6 +2521,7 @@
         "subtitle": "Verwalten Sie Ihre Organisationsbenutzer, weisen Sie Rollen und Berechtigungen zu",
         "table": {
           "user": "Benutzer",
+          "groups": "Gruppen",
           "role": "Rolle",
           "actions": "Aktionen"
         },
@@ -3206,7 +3207,7 @@
       "badge": "Abzeichen",
       "button": "Schaltfläche",
       "user": "Benutzer",
-      "magic_block": {
+      "magic_block_content": {
         "title": "Magischer Block",
         "interactive_element": "Interaktives Element",
         "iterations": "{{count}}/{{max}} Iterationen",

@@ -17,6 +17,7 @@ export type AIChatBotStateTypes = {
   followUpSuggestions: string[]
   isLoadingFollowUps: boolean
   isFullscreen: boolean
+  isSidePanelOpen: boolean
 }
 
 type AIError = {
@@ -39,6 +40,7 @@ function AIChatBotProvider({ children }: { children: React.ReactNode }) {
     followUpSuggestions: [] as string[],
     isLoadingFollowUps: false,
     isFullscreen: false,
+    isSidePanelOpen: false,
   })
   return (
     <AIChatBotContext.Provider value={aiChatBotState}>
@@ -101,6 +103,16 @@ function aiChatBotReducer(state: any, action: any) {
       return { ...state, isFullscreen: !state.isFullscreen }
     case 'setFullscreen':
       return { ...state, isFullscreen: action.payload }
+    // Side Panel
+    case 'setSidePanelOpen':
+      return { ...state, isSidePanelOpen: true, isModalOpen: false, isFullscreen: false }
+    case 'setSidePanelClose':
+      return { ...state, isSidePanelOpen: false }
+    // Mode switching - atomic actions
+    case 'switchToHoverMode':
+      return { ...state, isSidePanelOpen: false, isModalOpen: true }
+    case 'switchToSideMode':
+      return { ...state, isSidePanelOpen: true, isModalOpen: false, isFullscreen: false }
 
     default:
       throw new Error(`Unhandled action type: ${action.type}`)

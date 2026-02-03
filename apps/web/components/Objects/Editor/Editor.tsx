@@ -47,6 +47,9 @@ import python from 'highlight.js/lib/languages/python'
 import java from 'highlight.js/lib/languages/java'
 import { CourseProvider } from '@components/Contexts/CourseContext'
 import AIEditorToolkit from './AI/AIEditorToolkit'
+import AIEditorSidePanel from './AI/AIEditorSidePanel'
+import AIStreamingMark from './Extensions/AIStreaming/AIStreamingMark'
+import AISelectionHighlight from './Extensions/AISelectionHighlight/AISelectionHighlight'
 import useGetAIFeatures from '@components/Hooks/useGetAIFeatures'
 import { getUriWithOrg } from '@services/config/config'
 import EmbedObjects from './Extensions/EmbedObjects/EmbedObjects'
@@ -233,6 +236,8 @@ function Editor(props: Editor) {
         editable: true,
         activity: props.activity,
       }),
+      AIStreamingMark,
+      AISelectionHighlight,
     ],
     content: props.content,
     immediatelyRender: false,
@@ -392,9 +397,9 @@ function Editor(props: Editor) {
                     <div
                       onClick={() =>
                         dispatchAIEditor({
-                          type: aiEditorState.isModalOpen
-                            ? 'setIsModalClose'
-                            : 'setIsModalOpen',
+                          type: aiEditorState.isSidePanelOpen
+                            ? 'setSidePanelClose'
+                            : 'setSidePanelOpen',
                         })
                       }
                       style={{
@@ -557,12 +562,22 @@ function Editor(props: Editor) {
             delay: 0.5,
           }}
           exit={{ opacity: 0 }}
-          style={{ position: 'relative' }}
+          className="flex gap-5"
+          style={{ position: 'relative', margin: '0 40px' }}
         >
-          <EditorContentWrapper>
+          <EditorContentWrapper style={{ flex: 1, margin: 0, marginTop: '97px' }}>
             <AIEditorToolkit activity={props.activity} editor={editor} />
             <EditorContent editor={editor} />
           </EditorContentWrapper>
+
+          {/* AI Editor Side Panel */}
+          {editorReady && canUseAI && (
+            <AIEditorSidePanel
+              editor={editor}
+              activity={props.activity}
+              course={props.course}
+            />
+          )}
         </motion.div>
       </CourseProvider>
     </Page>
@@ -972,6 +987,20 @@ export const EditorContentWrapper = styled.div`
       outline: none !important;
       box-shadow: none !important;
     }
+  }
+
+  // AI Selection Highlight - persistent purple highlight for selected text
+  .ai-selection-highlight {
+    background: linear-gradient(
+      135deg,
+      rgba(147, 51, 234, 0.25) 0%,
+      rgba(139, 92, 246, 0.25) 50%,
+      rgba(167, 139, 250, 0.25) 100%
+    );
+    border-radius: 2px;
+    box-shadow: 0 0 0 1px rgba(147, 51, 234, 0.3);
+    padding: 0 1px;
+    transition: background 0.2s ease, box-shadow 0.2s ease;
   }
 `
 

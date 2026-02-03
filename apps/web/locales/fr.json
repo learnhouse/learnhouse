@@ -2220,6 +2220,7 @@
         "subtitle": "Gérez les utilisateurs de votre organisation, assignez des rôles et des permissions",
         "table": {
           "user": "Utilisateur",
+          "groups": "Groupes",
           "role": "Rôle",
           "actions": "Actions"
         },
@@ -2964,7 +2965,7 @@
         "load_user": "Charger l'utilisateur",
         "no_user": "Aucun utilisateur sélectionné"
       },
-      "magic_block": {
+      "magic_block_content": {
         "title": "Bloc magique",
         "interactive_element": "Élément interactif",
         "iterations": "{{count}}/{{max}} itérations",

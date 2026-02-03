@@ -2205,6 +2205,7 @@
         "subtitle": "Quản lý người dùng trong tổ chức của bạn và gán vai trò cùng quyền hạn cho họ",
         "table": {
           "user": "Người dùng",
+          "groups": "Nhóm",
           "role": "Vai trò",
           "actions": "Hành động"
         },
@@ -2895,7 +2896,7 @@
         "load_user": "Tải người dùng",
         "no_user": "Không có người dùng"
       },
-      "magic_block": {
+      "magic_block_content": {
         "title": "Khối Ma Thuật",
         "interactive_element": "Phần tử tương tác",
         "iterations": "{{count}}/{{max}} lần lặp",

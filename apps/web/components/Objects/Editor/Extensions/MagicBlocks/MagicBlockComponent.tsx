@@ -211,7 +211,7 @@ function MagicBlockComponent(props: ExtendedNodeViewProps) {
         <Modal
           isDialogOpen={isPreviewModalOpen}
           onOpenChange={setIsPreviewModalOpen}
-          dialogTitle={t('editor.blocks.magic_block.interactive_element')}
+          dialogTitle={t('editor.blocks.magic_block_content.interactive_element')}
           minWidth="xl"
           minHeight="lg"
           dialogContent={
@@ -250,13 +250,13 @@ function MagicBlockComponent(props: ExtendedNodeViewProps) {
                   alt="Magic Block"
                 />
                 <span className="text-sm font-semibold text-white/70">
-                  {t('editor.blocks.magic_block.title')}
+                  {t('editor.blocks.magic_block_content.title')}
                 </span>
               </div>
               {sessionUuid && (
                 <div className="bg-white/5 text-white/40 py-0.5 px-3 flex space-x-1 rounded-full items-center outline outline-1 outline-neutral-100/10">
                   <span className="text-xs font-semibold antialiased">
-                    {t('editor.blocks.magic_block.iterations', { count: iterationCount, max: 6 })}
+                    {t('editor.blocks.magic_block_content.iterations', { count: iterationCount, max: 6 })}
                   </span>
                 </div>
               )}
@@ -286,10 +286,10 @@ function MagicBlockComponent(props: ExtendedNodeViewProps) {
                   </div>
                   <div className="space-y-1">
                     <p className="font-semibold text-white/80">
-                      {t('editor.blocks.magic_block.create_interactive')}
+                      {t('editor.blocks.magic_block_content.create_interactive')}
                     </p>
                     <p className="text-sm text-white/50">
-                      {t('editor.blocks.magic_block.generate_description')}
+                      {t('editor.blocks.magic_block_content.generate_description')}
                     </p>
                   </div>
                   <button
@@ -305,7 +305,7 @@ function MagicBlockComponent(props: ExtendedNodeViewProps) {
                       src={lrnaiIcon}
                       alt=""
                     />
-                    {t('editor.blocks.magic_block.generate_with_ai')}
+                    {t('editor.blocks.magic_block_content.generate_with_ai')}
                   </button>
                 </div>
               ) : (
@@ -315,11 +315,11 @@ function MagicBlockComponent(props: ExtendedNodeViewProps) {
                   </div>
                   <div className="space-y-1">
                     <p className="font-semibold text-white/80 flex items-center gap-2 justify-center">
-                      {t('editor.blocks.magic_block.title')}
+                      {t('editor.blocks.magic_block_content.title')}
                       <PlanBadge currentPlan={currentPlan} requiredPlan="standard" size="sm" alwaysShow />
                     </p>
                     <p className="text-sm text-white/50">
-                      {t('editor.blocks.magic_block.upgrade_required')}
+                      {t('editor.blocks.magic_block_content.upgrade_required')}
                     </p>
                   </div>
                   <div className="mt-2 px-5 py-2.5 bg-white/10 text-white/50 text-sm font-bold rounded-full flex items-center gap-2 cursor-not-allowed">
@@ -329,7 +329,7 @@ function MagicBlockComponent(props: ExtendedNodeViewProps) {
                       src={lrnaiIcon}
                       alt=""
                     />
-                    {t('editor.blocks.magic_block.generate_with_ai')}
+                    {t('editor.blocks.magic_block_content.generate_with_ai')}
                   </div>
                 </div>
               )}
@@ -371,7 +371,7 @@ function MagicBlockComponent(props: ExtendedNodeViewProps) {
                       "flex items-center gap-1 px-2 py-0.5 cursor-ns-resize text-white/30 hover:text-white/50 transition-colors select-none rounded bg-white/5 hover:bg-white/10",
                       isResizing && "text-white/60 bg-white/15"
                     )}
-                    title={t('editor.blocks.magic_block.drag_resize')}
+                    title={t('editor.blocks.magic_block_content.drag_resize')}
                   >
                     <GripHorizontal className="w-3 h-3" />
                     <span className="text-xs font-medium">{height}px</span>
@@ -391,7 +391,7 @@ function MagicBlockComponent(props: ExtendedNodeViewProps) {
                       className="flex space-x-1.5 items-center bg-white/5 cursor-pointer px-4 py-1.5 rounded-xl outline outline-1 outline-neutral-100/10 text-xs font-semibold text-white/40 hover:text-white/60 hover:bg-white/10 hover:outline-neutral-200/40 delay-75 ease-linear transition-all"
                     >
                       <Edit3 className="w-4 h-4" />
-                      <span>{t('editor.blocks.magic_block.edit_left', { count: 6 - iterationCount })}</span>
+                      <span>{t('editor.blocks.magic_block_content.edit_left', { count: 6 - iterationCount })}</span>
                     </button>
                   )}
                 </div>
@@ -422,7 +422,7 @@ function MagicBlockComponent(props: ExtendedNodeViewProps) {
       <Modal
         isDialogOpen={isPreviewModalOpen}
         onOpenChange={setIsPreviewModalOpen}
-        dialogTitle={t('editor.blocks.magic_block.interactive_element')}
+        dialogTitle={t('editor.blocks.magic_block_content.interactive_element')}
         minWidth="xl"
         minHeight="lg"
         dialogContent={

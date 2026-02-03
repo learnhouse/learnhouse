@@ -2206,6 +2206,7 @@
         "subtitle": "Organizasyonunuzdaki kullanıcıları yönetin ve rolleri ile izinlerini atayın",
         "table": {
           "user": "Kullanıcı",
+          "groups": "Gruplar",
           "role": "Rol",
           "actions": "Eylemler"
         },
@@ -2896,7 +2897,7 @@
         "load_user": "Kullanıcıyı Yükle",
         "no_user": "Kullanıcı Bulunamadı"
       },
-      "magic_block": {
+      "magic_block_content": {
         "title": "Sihirli Blok",
         "interactive_element": "Etkilesimli Eleman",
         "iterations": "{{count}}/{{max}} yineleme",

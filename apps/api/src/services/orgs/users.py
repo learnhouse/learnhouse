@@ -13,6 +13,8 @@ from src.services.orgs.orgs import rbac_check
 from src.db.roles import Role, RoleRead
 from src.db.users import AnonymousUser, PublicUser, User, UserRead
 from src.db.user_organizations import UserOrganization
+from src.db.usergroup_user import UserGroupUser
+from src.db.usergroups import UserGroup, UserGroupRead
 from src.db.organizations import (
     Organization,
     OrganizationRead,
@@ -143,9 +145,22 @@ async def get_organization_users(
         user = UserRead.model_validate(user)
         role = RoleRead.model_validate(role)
 
+        # Fetch usergroups for this user
+        usergroup_statement = (
+            select(UserGroup)
+            .join(UserGroupUser)
+            .where(
+                UserGroupUser.user_id == user.id,
+                UserGroupUser.org_id == org_id
+            )
+        )
+        user_usergroups = db_session.exec(usergroup_statement).all()
+        usergroups = [UserGroupRead.model_validate(ug) for ug in user_usergroups]
+
         org_user = OrganizationUser(
             user=user,
             role=role,
+            usergroups=usergroups,
         )
 
         org_users_list.append(org_user)

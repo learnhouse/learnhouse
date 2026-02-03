@@ -1843,6 +1843,7 @@
         "no_users": "No users in this organization yet",
         "table": {
           "user": "User",
+          "groups": "Groups",
           "role": "Role",
           "actions": "Actions"
         },
@@ -3136,6 +3137,26 @@
     "desktop_only_message": "The editor is only accessible from a desktop device.",
     "switch_to_desktop": "Please switch to a desktop to view.",
     "ai_editor": "AI Editor",
+    "ai_panel": {
+      "title": "AI Editor",
+      "input_placeholder": "Ask AI to help with your content...",
+      "how_can_i_help": "How can I help improve your content?",
+      "improve_writing": "Improve writing",
+      "add_examples": "Add examples",
+      "simplify": "Simplify",
+      "expand": "Expand",
+      "add_quiz": "Add quiz",
+      "translate": "Translate",
+      "add_summary": "Add summary",
+      "add_tip": "Add tip",
+      "add_definition": "Add definition",
+      "clear_chat": "Clear chat",
+      "clear_selection": "Clear selection",
+      "block_selected": "block selected",
+      "question_improve": "How can I improve this?",
+      "question_add_quiz": "Add a quiz",
+      "question_summary": "Add a summary"
+    },
     "versioning": {
       "version_history": "Version History",
       "current_version": "Current version:",
@@ -3349,7 +3370,7 @@
         "load_user": "Load User",
         "no_user": "No user selected"
       },
-      "magic_block": {
+      "magic_block_content": {
         "title": "Magic Block",
         "interactive_element": "Interactive Element",
         "iterations": "{{count}}/{{max}} iterations",

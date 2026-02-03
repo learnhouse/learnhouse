@@ -2211,6 +2211,7 @@
         "subtitle": "Gerencie os usuários da sua organização, atribua funções e permissões",
         "table": {
           "user": "Usuário",
+          "groups": "Grupos",
           "role": "Função",
           "actions": "Ações"
         },
@@ -2955,7 +2956,7 @@
         "load_user": "Carregar usuário",
         "no_user": "Nenhum usuário selecionado"
       },
-      "magic_block": {
+      "magic_block_content": {
         "title": "Bloco mágico",
         "interactive_element": "Elemento interativo",
         "iterations": "{{count}}/{{max}} iterações",
