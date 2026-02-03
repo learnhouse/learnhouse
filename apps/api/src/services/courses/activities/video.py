@@ -1,5 +1,7 @@
 from typing import Literal
 import json
+
+from sqlalchemy import func
 from src.db.courses.courses import Course
 from src.db.organizations import Organization
 
@@ -111,49 +113,67 @@ async def create_video_activity(
         update_date=str(datetime.now()),
     )
 
-    # create activity
-    activity = Activity.model_validate(activity_object)
-    db_session.add(activity)
-    db_session.commit()
-    db_session.refresh(activity)
-
-    # upload video
-    if video_file and organization and course:
-        # get videofile format
-        await upload_video(
-            video_file,
-            activity.activity_uuid,
-            organization.org_uuid,
-            course.course_uuid,
+    try:
+        # 1. Create activity in DB (not committed yet)
+        activity = Activity.model_validate(activity_object)
+        db_session.add(activity)
+        db_session.flush()  # Flush to get activity.id, not commit yet
+        
+        # 2. Upload video - Raise HTTPException if upload fails
+        if video_file and organization and course:
+            await upload_video(
+                video_file,
+                activity.activity_uuid,
+                organization.org_uuid,
+                course.course_uuid,
+            )
+        
+        # 3. Create ChapterActivity link - Lock the rows for this chapter to prevent race conditions
+        chapter_lock_stmt = (
+            select(Chapter)
+            .where(Chapter.id == chapter.id)
+            .with_for_update()  # Lock chapter table
         )
+        db_session.exec(chapter_lock_stmt).first()
 
-    # Find the last activity order in the chapter
-    statement = (
-        select(ChapterActivity)
-        .where(ChapterActivity.chapter_id == chapter.id)
-        .order_by(ChapterActivity.order)  # type: ignore
-    )
-    chapter_activities = db_session.exec(statement).all()
-    last_order = chapter_activities[-1].order if chapter_activities else 0
-    to_be_used_order = last_order + 1
+        # 4. Get MAX ORDER after locking
+        max_order_stmt = (
+            select(func.coalesce(func.max(ChapterActivity.order), 0))
+            .where(ChapterActivity.chapter_id == chapter.id)
+        )
+        max_order = db_session.exec(max_order_stmt).one()
+        next_order = max_order + 1
+        
+        # 5. Create ChapterActivity with guaranteed unique order
+        chapter_activity_object = ChapterActivity(
+            chapter_id=chapter.id,
+            activity_id=activity.id,
+            course_id=coursechapter.course_id,
+            org_id=coursechapter.org_id,
+            creation_date=str(datetime.now()),
+            update_date=str(datetime.now()),
+            order=next_order,
+        )
+        db_session.add(chapter_activity_object)
+        
+        # 6. Commit transaction
+        db_session.commit()
+        db_session.refresh(activity)
+        
+        return ActivityRead.model_validate(activity)
 
-    # update chapter
-    chapter_activity_object = ChapterActivity(
-        chapter_id=chapter.id,  # type: ignore
-        activity_id=activity.id,  # type: ignore
-        course_id=coursechapter.course_id,
-        org_id=coursechapter.org_id,
-        creation_date=str(datetime.now()),
-        update_date=str(datetime.now()),
-        order=to_be_used_order,
-    )
+    except HTTPException:
+        # Upload failure - rollback DB
+        db_session.rollback()
+        raise  # Re-raise HTTPException to be handled by FastAPI
 
-    # Insert ChapterActivity link in DB
-    db_session.add(chapter_activity_object)
-    db_session.commit()
-    db_session.refresh(chapter_activity_object)
-
-    return ActivityRead.model_validate(activity)
+    except Exception as e:
+        # Unexpected failure - rollback and raise
+        db_session.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to create video activity: {str(e)}"
+        )
 
 
 class ExternalVideo(BaseModel):
@@ -229,38 +249,51 @@ async def create_external_video_activity(
         update_date=str(datetime.now()),
     )
 
-    # create activity
-    activity = Activity.model_validate(activity_object)
-    db_session.add(activity)
-    db_session.commit()
-    db_session.refresh(activity)
+    try:
+        # 1. Create activity and flush to get activity.id
+        activity = Activity.model_validate(activity_object)
+        db_session.add(activity)
+        db_session.flush()
+        
+        # 2. Lock chapter and get next order atomically
+        chapter_lock_stmt = (
+            select(Chapter)
+            .where(Chapter.id == chapter.id)
+            .with_for_update()
+        )
+        db_session.exec(chapter_lock_stmt).first()
 
-    # Find the last activity order in the chapter
-    statement = (
-        select(ChapterActivity)
-        .where(ChapterActivity.chapter_id == coursechapter.chapter_id)
-        .order_by(ChapterActivity.order)  # type: ignore
-    )
-    chapter_activities = db_session.exec(statement).all()
-    last_order = chapter_activities[-1].order if chapter_activities else 0
-    to_be_used_order = last_order + 1
+        max_order_stmt = (
+            select(func.coalesce(func.max(ChapterActivity.order), 0))
+            .where(ChapterActivity.chapter_id == coursechapter.chapter_id)
+        )
+        next_order = db_session.exec(max_order_stmt).one() + 1
+        
+        # 3. Create ChapterActivity link
+        chapter_activity_object = ChapterActivity(
+            chapter_id=coursechapter.chapter_id,
+            activity_id=activity.id,
+            course_id=coursechapter.course_id,
+            org_id=coursechapter.org_id,
+            creation_date=str(datetime.now()),
+            update_date=str(datetime.now()),
+            order=next_order,
+        )
+        db_session.add(chapter_activity_object)
+        
+        # 4. Commit all in one transaction
+        db_session.commit()
+        db_session.refresh(activity)
+        
+        return ActivityRead.model_validate(activity)
 
-    # update chapter
-    chapter_activity_object = ChapterActivity(
-        chapter_id=coursechapter.chapter_id,  # type: ignore
-        activity_id=activity.id,  # type: ignore
-        course_id=coursechapter.course_id,
-        org_id=coursechapter.org_id,
-        creation_date=str(datetime.now()),
-        update_date=str(datetime.now()),
-        order=to_be_used_order,
-    )
-
-    # Insert ChapterActivity link in DB
-    db_session.add(chapter_activity_object)
-    db_session.commit()
-
-    return ActivityRead.model_validate(activity)
+    except Exception as e:
+        # Rollback on any error
+        db_session.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to create external video activity: {str(e)}"
+        )
 
 
 ## 🔒 RBAC Utils ##

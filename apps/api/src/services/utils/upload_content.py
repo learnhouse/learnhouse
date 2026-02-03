@@ -1,3 +1,4 @@
+import asyncio
 from typing import Literal, Optional
 import boto3
 from botocore.exceptions import ClientError
@@ -5,6 +6,11 @@ import os
 from fastapi import HTTPException, UploadFile
 from config.config import get_learnhouse_config
 from src.security.file_validation import validate_upload
+from concurrent.futures import ThreadPoolExecutor
+
+
+CHUNK_SIZE = 5 * 1024 * 1024  # 5 MB
+executor = ThreadPoolExecutor(max_workers=2)
 
 
 def ensure_directory_exists(directory: str):
@@ -58,11 +64,12 @@ async def upload_file(
     return filename
 
 
+
 async def upload_content(
     directory: str,
     type_of_dir: Literal["orgs", "users"],
     uuid: str,  # org_uuid or user_uuid
-    file_binary: bytes,
+    file_obj: object,
     file_and_format: str,
     allowed_formats: Optional[list[str]] = None,
 ):
@@ -82,50 +89,79 @@ async def upload_content(
                 detail=f"File format {file_format} not allowed",
             )
 
+    file_path = f"content/{type_of_dir}/{uuid}/{directory}/{file_and_format}"
     ensure_directory_exists(f"content/{type_of_dir}/{uuid}/{directory}")
 
     if content_delivery == "filesystem":
-        # upload file to server
-        with open(
-            f"content/{type_of_dir}/{uuid}/{directory}/{file_and_format}",
-            "wb",
-        ) as f:
-            f.write(file_binary)
-            f.close()
+        # Upload to filesystem using async I/O
+        await _upload_to_filesystem(file_obj, file_path)
 
     elif content_delivery == "s3api":
-        # Upload to server then to s3 (AWS Keys are stored in environment variables and are loaded by boto3)
-        # TODO: Improve implementation of this
-        print("Uploading to s3...")
-        s3 = boto3.client(
-            "s3",
-            endpoint_url=learnhouse_config.hosting_config.content_delivery.s3api.endpoint_url,
-        )
+        # Upload to S3
+        s3_key = f"content/{type_of_dir}/{uuid}/{directory}/{file_and_format}"
+        endpoint_url=learnhouse_config.hosting_config.content_delivery.s3api.endpoint_url
+        await _upload_to_s3(file_obj, s3_key, endpoint_url)
 
-        # Upload file to server
-        with open(
-            f"content/{type_of_dir}/{uuid}/{directory}/{file_and_format}",
-            "wb",
-        ) as f:
-            f.write(file_binary)
-            f.close()
 
-        print("Uploading to s3 using boto3...")
+async def _upload_to_filesystem(file_obj, file_path: str):
+    def _write_file():
         try:
-            s3.upload_file(
-                f"content/{type_of_dir}/{uuid}/{directory}/{file_and_format}",
-                "learnhouse-media",
-                f"content/{type_of_dir}/{uuid}/{directory}/{file_and_format}",
-            )
-        except ClientError as e:
-            print(e)
-
-        print("Checking if file exists in s3...")
-        try:
-            s3.head_object(
-                Bucket="learnhouse-media",
-                Key=f"content/{type_of_dir}/{uuid}/{directory}/{file_and_format}",
-            )
-            print("File upload successful!")
+            with open(file_path, "wb") as f:
+                while True:
+                    chunk = file_obj.read(CHUNK_SIZE)
+                    if not chunk:
+                        break
+                    f.write(chunk)
+            return {"success": True}
         except Exception as e:
-            print(f"An error occurred: {str(e)}")
+            return {"success": False, "error": str(e)}
+    
+    loop = asyncio.get_event_loop()
+    result = await loop.run_in_executor(executor, _write_file)
+    
+    if not result["success"]:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Filesystem upload failed: {result['error']}"
+        )
+    
+    print(f"Filesystem upload successful: {file_path}")
+
+
+async def _upload_to_s3(file_obj, s3_key: str, endpoint_url):
+    def _upload():
+        try:
+            s3 = boto3.client(
+                "s3",
+                endpoint_url=endpoint_url,
+            )
+
+            if hasattr(file_obj, 'seek'):
+                file_obj.seek(0)
+
+            s3.upload_fileobj(
+                file_obj,
+                "learnhouse-media",
+                s3_key,
+                Config=boto3.s3.transfer.TransferConfig(
+                    multipart_threshold=CHUNK_SIZE,
+                    multipart_chunksize=CHUNK_SIZE,
+                    max_concurrency=2,
+                    max_io_queue_size=100,
+                )
+            )
+            print(f"S3 upload successful: {s3_key}")
+            return {"success": True}
+
+        except ClientError as e:
+            print(f"Error uploading to S3: {e}")
+            return {"success": False, "error": str(e)}
+    
+    loop = asyncio.get_event_loop()
+    result = await loop.run_in_executor(executor, _upload)
+    
+    if not result["success"]:
+        raise HTTPException(
+            status_code=500,
+            detail=f"S3 upload failed: {result['error']}"
+        )
