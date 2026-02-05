@@ -1,20 +1,27 @@
+import { stripPort, isSubdomainOf, isSameHost, isLocalhost as isLocalhostCheck } from '@services/utils/ts/hostUtils'
+
 // Runtime configuration cache
 let runtimeConfig: Record<string, string> | null = null;
+let serverConfigLoaded = false;
 
 // Lazy load runtime configuration
 function loadRuntimeConfig(): Record<string, string> {
-  if (runtimeConfig !== null) {
+  if (typeof window !== 'undefined') {
+    // Client-side: always read from window.__RUNTIME_CONFIG__ (may be injected after first call)
+    if ((window as any).__RUNTIME_CONFIG__) {
+      runtimeConfig = (window as any).__RUNTIME_CONFIG__;
+    }
+    return runtimeConfig || {};
+  }
+
+  // Server-side: cache after first successful load
+  if (serverConfigLoaded && runtimeConfig) {
     return runtimeConfig;
   }
 
   runtimeConfig = {};
 
-  if (typeof window !== 'undefined') {
-    // Client-side: read from window.__RUNTIME_CONFIG__ if available
-    if ((window as any).__RUNTIME_CONFIG__) {
-      runtimeConfig = (window as any).__RUNTIME_CONFIG__;
-    }
-  } else {
+  if (typeof window === 'undefined') {
     // Server-side: try to read from runtime-config.json
     // Try multiple possible paths for standalone mode
     try {
@@ -42,6 +49,7 @@ function loadRuntimeConfig(): Record<string, string> {
     } catch {
       // fs/path not available (client-side bundle), skip
     }
+    serverConfigLoaded = true;
   }
 
   return runtimeConfig || {};
@@ -87,15 +95,9 @@ export const LEARNHOUSE_TOP_DOMAIN = getLEARNHOUSE_TOP_DOMAIN()
 // Helper to check if we're on a custom domain (for API URL selection)
 const isOnCustomDomain = (): boolean => {
   if (typeof window === 'undefined') return false
-
   const hostname = window.location.hostname
   const domain = getLEARNHOUSE_DOMAIN()
-
-  // Check if current hostname is a custom domain (not a subdomain of LEARNHOUSE_DOMAIN)
-  const isSubdomain = hostname.endsWith(`.${domain}`) || hostname === domain
-  const isLocalhost = hostname.includes('localhost') || hostname.includes('127.0.0.1')
-
-  return !isSubdomain && !isLocalhost
+  return !isSubdomainOf(hostname, domain) && !isSameHost(hostname, domain) && !isLocalhostCheck(hostname)
 }
 
 // For direct usage, these call the getters
@@ -133,10 +135,10 @@ export const getCustomDomainFromContext = (): string | null => {
     const domain = getLEARNHOUSE_DOMAIN()
 
     // Check if current hostname is a custom domain (not a subdomain of LEARNHOUSE_DOMAIN)
-    const isSubdomain = hostname.endsWith(`.${domain}`) || hostname === domain
-    const isLocalhost = hostname.includes('localhost') || hostname.includes('127.0.0.1')
+    const isSub = isSubdomainOf(hostname, domain) || isSameHost(hostname, domain)
+    const isLocal = isLocalhostCheck(hostname)
 
-    if (!isSubdomain && !isLocalhost) {
+    if (!isSub && !isLocal) {
       // Return host (includes port) for custom domains
       return host
     }
@@ -177,7 +179,7 @@ export const getUriWithOrg = (orgslug: string, path: string) => {
     const currentHostname = window.location.hostname
     const domainConfig = getLEARNHOUSE_DOMAIN()
     // Remove port from domain config for hostname comparison
-    const baseDomain = domainConfig.split(':')[0]
+    const baseDomain = stripPort(domainConfig)
 
     // Check if current hostname matches the target
     const expectedHostname = `${orgslug}.${baseDomain}`
@@ -214,20 +216,6 @@ export const getUriWithoutOrg = (path: string) => {
   const protocol = getLEARNHOUSE_HTTP_PROTOCOL()
   const domain = getLEARNHOUSE_DOMAIN()
   return `${protocol}${domain}${path}`
-}
-
-export const getOrgFromUri = () => {
-  const multi_org = isMultiOrgModeEnabled()
-  if (multi_org) {
-    getDefaultOrg()
-  } else {
-    if (typeof window !== 'undefined') {
-      const hostname = window.location.hostname
-      const domain = getLEARNHOUSE_DOMAIN()
-
-      return hostname.replace(`.${domain}`, '')
-    }
-  }
 }
 
 export const getDefaultOrg = () => {

@@ -6,6 +6,7 @@ from src.security.rbac.rbac import (
     authorization_verify_based_on_roles_and_authorship,
     authorization_verify_if_user_is_anon,
 )
+from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS
 from src.db.users import AnonymousUser, PublicUser
 from src.db.roles import Role, RoleCreate, RoleRead, RoleUpdate, RoleTypeEnum
 from src.db.organizations import Organization
@@ -87,7 +88,7 @@ async def create_role(
             )
     else:
         # If no rights are defined, check if user has admin role (role_id 1 or 2)
-        if user_role.id not in [1, 2]:  # Admin and Maintainer roles
+        if user_role.id not in ADMIN_OR_MAINTAINER_ROLE_IDS:  # Admin and Maintainer roles
             raise HTTPException(
                 status_code=403,
                 detail="You don't have permission to create roles in this organization. Admin or Maintainer role required.",
@@ -265,8 +266,9 @@ async def create_role(
             
             # Update the sequence to the correct value for future inserts
             try:
-                # Use raw SQL to update the sequence
-                db_session.execute(text(f"SELECT setval('role_id_seq', {max_id + 1}, true)"))
+                # Use parameterized query to update the sequence safely
+                next_val = max_id + 1
+                db_session.execute(text("SELECT setval('role_id_seq', :next_val, true)"), {"next_val": next_val})
                 db_session.commit()
             except Exception:
                 # If sequence doesn't exist or can't be updated, that's okay
@@ -357,7 +359,7 @@ async def get_roles_by_organization(
             )
     else:
         # If no rights are defined, check if user has admin role (role_id 1 or 2)
-        if user_role.id not in [1, 2]:  # Admin and Maintainer roles
+        if user_role.id not in ADMIN_OR_MAINTAINER_ROLE_IDS:  # Admin and Maintainer roles
             raise HTTPException(
                 status_code=403,
                 detail="You don't have permission to read roles in this organization. Admin or Maintainer role required.",

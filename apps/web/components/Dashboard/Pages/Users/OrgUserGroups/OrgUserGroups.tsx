@@ -4,6 +4,7 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import AddUserGroup from '@components/Objects/Modals/Dash/OrgUserGroups/AddUserGroup'
 import EditUserGroup from '@components/Objects/Modals/Dash/OrgUserGroups/EditUserGroup'
 import ManageUsers from '@components/Objects/Modals/Dash/OrgUserGroups/ManageUsers'
+import LearnHouseSpinner from '@components/Objects/Loaders/LearnHouseSpinner'
 import ConfirmationModal from '@components/Objects/StyledElements/ConfirmationModal/ConfirmationModal'
 import Modal from '@components/Objects/StyledElements/Modal/Modal'
 import PlanRestrictedFeature from '@components/Dashboard/Shared/PlanRestricted/PlanRestrictedFeature'
@@ -30,10 +31,11 @@ function OrgUserGroups() {
     const [selectedUserGroup, setSelectedUserGroup] = React.useState(null) as any
     const [searchValue, setSearchValue] = useState('')
 
-    const { data: usergroups } = useSWR(
+    const { data: usergroups, isValidating: isUsergroupsValidating } = useSWR(
         org && access_token ? `${getAPIUrl()}usergroups/org/${org.id}?org_id=${org.id}` : null,
         (url) => swrFetcher(url, access_token)
     )
+    const isInitialLoading = !usergroups && isUsergroupsValidating
 
     // Filter usergroups based on search
     const filteredUsergroups = useMemo(() => {
@@ -123,7 +125,11 @@ function OrgUserGroups() {
                 <div className="px-3 py-2">
                     {/* UserGroups List */}
                     <div className="space-y-1">
-                        {filteredUsergroups.length === 0 ? (
+                        {isInitialLoading ? (
+                            <div className="py-20 flex justify-center">
+                                <LearnHouseSpinner size={36} />
+                            </div>
+                        ) : filteredUsergroups.length === 0 ? (
                             <div className="py-16 text-center">
                                 <div className="flex flex-col items-center gap-3">
                                     <div className="bg-gray-100 p-4 rounded-full">

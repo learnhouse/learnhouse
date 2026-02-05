@@ -1,7 +1,8 @@
 'use client'
 import { Building2, ArrowRight } from 'lucide-react'
 import React, { useState } from 'react'
-import { getLEARNHOUSE_HTTP_PROTOCOL_VAL, getLEARNHOUSE_DOMAIN_VAL } from '@services/config/config'
+import { getLEARNHOUSE_DOMAIN_VAL } from '@services/config/config'
+import { stripPort } from '@services/utils/ts/hostUtils'
 
 function OrgNotFound() {
   const [orgSlug, setOrgSlug] = useState('')
@@ -12,11 +13,14 @@ function OrgNotFound() {
     if (!orgSlug.trim()) return
 
     setIsNavigating(true)
-    const protocol = getLEARNHOUSE_HTTP_PROTOCOL_VAL()
     const domain = getLEARNHOUSE_DOMAIN_VAL()
+    const baseDomain = stripPort(domain)
     const cleanSlug = orgSlug.trim().toLowerCase().replace(/[^a-z0-9-]/g, '')
+    const protocol = window.location.protocol + '//'
+    const port = window.location.port
+    const portSuffix = port && port !== '80' && port !== '443' ? `:${port}` : ''
 
-    window.location.href = `${protocol}${cleanSlug}.${domain}/login`
+    window.location.href = `${protocol}${cleanSlug}.${baseDomain}${portSuffix}/login`
   }
 
   return (
@@ -45,7 +49,7 @@ function OrgNotFound() {
                 className="flex-1 bg-transparent outline-none text-gray-900 placeholder-gray-400"
                 autoFocus
               />
-              <span className="text-gray-400 text-sm">.learnhouse.io</span>
+              <span className="text-gray-400 text-sm">.{stripPort(getLEARNHOUSE_DOMAIN_VAL())}</span>
             </div>
 
             <button

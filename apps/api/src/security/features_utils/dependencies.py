@@ -13,6 +13,7 @@ from src.db.courses.courses import Course
 from src.db.user_organizations import UserOrganization
 from src.db.users import AnonymousUser, PublicUser
 from src.security.auth import get_current_user
+from src.security.rbac.constants import ADMIN_ROLE_ID
 from typing import Literal
 
 FeatureName = Literal[
@@ -60,12 +61,12 @@ async def require_org_admin(
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
 
-    # Check if user is admin (role_id=1) in this organization
+    # Check if user is admin in this organization
     statement = (
         select(UserOrganization)
         .where(UserOrganization.user_id == current_user.id)
         .where(UserOrganization.org_id == org_id)
-        .where(UserOrganization.role_id == 1)  # Admin role only
+        .where(UserOrganization.role_id == ADMIN_ROLE_ID)
     )
 
     user_org = db_session.exec(statement).first()

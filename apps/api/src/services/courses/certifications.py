@@ -15,7 +15,7 @@ from src.db.courses.courses import Course
 from src.db.courses.chapter_activities import ChapterActivity
 from src.db.trail_steps import TrailStep
 from src.db.users import PublicUser, AnonymousUser
-from src.security.courses_security import courses_rbac_check_for_certifications
+from src.security.rbac import check_resource_access, AccessAction
 
 
 ####################################################
@@ -42,7 +42,7 @@ async def create_certification(
         )
 
     # RBAC check
-    await courses_rbac_check_for_certifications(request, course.course_uuid, current_user, "create", db_session)
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.CREATE)
 
     # Create certification
     certification = Certifications(
@@ -89,7 +89,7 @@ async def get_certification(
         )
 
     # RBAC check
-    await courses_rbac_check_for_certifications(request, course.course_uuid, current_user, "read", db_session)
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.READ)
 
     return CertificationRead(**certification.model_dump())
 
@@ -113,7 +113,7 @@ async def get_certifications_by_course(
         )
 
     # RBAC check
-    await courses_rbac_check_for_certifications(request, course_uuid, current_user, "read", db_session)
+    await check_resource_access(request, db_session, current_user, course_uuid, AccessAction.READ)
 
     # Get certifications for this course
     statement = select(Certifications).where(Certifications.course_id == course.id)
@@ -151,7 +151,7 @@ async def update_certification(
         )
 
     # RBAC check
-    await courses_rbac_check_for_certifications(request, course.course_uuid, current_user, "update", db_session)
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.UPDATE)
 
     # Update only the fields that were passed in
     for var, value in vars(certification_object).items():
@@ -196,7 +196,7 @@ async def delete_certification(
         )
 
     # RBAC check
-    await courses_rbac_check_for_certifications(request, course.course_uuid, current_user, "delete", db_session)
+    await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.DELETE)
 
     db_session.delete(certification)
     db_session.commit()
@@ -248,7 +248,7 @@ async def create_certificate_user(
             )
 
         # Require course ownership or instructor role for creating certificates
-        await courses_rbac_check_for_certifications(request, course.course_uuid, current_user, "create", db_session)
+        await check_resource_access(request, db_session, current_user, course.course_uuid, AccessAction.CREATE)
 
     # Check if certificate user already exists
     statement = select(CertificateUser).where(
@@ -335,7 +335,7 @@ async def get_user_certificates_for_course(
         )
 
     # RBAC check
-    await courses_rbac_check_for_certifications(request, course_uuid, current_user, "read", db_session)
+    await check_resource_access(request, db_session, current_user, course_uuid, AccessAction.READ)
 
     # Get all certifications for this course
     statement = select(Certifications).where(Certifications.course_id == course.id)
