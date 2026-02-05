@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { handleSSOCallback, SSOError, getErrorMessage } from '@services/auth/sso'
-import { signIn } from 'next-auth/react'
+import { useAuth } from '@components/Contexts/AuthContext'
 import { Shield, AlertTriangle, Loader2, Info, Copy, Check } from 'lucide-react'
 import Link from 'next/link'
 import { useTranslation } from 'react-i18next'
@@ -18,6 +18,7 @@ interface ErrorDetails {
 
 export default function SSOCallbackPage() {
   const { t } = useTranslation()
+  const { signIn } = useAuth()
   const searchParams = useSearchParams()
   const router = useRouter()
   const [error, setError] = useState<ErrorDetails | null>(null)
@@ -62,7 +63,10 @@ export default function SSOCallbackPage() {
         // Exchange code for user profile and tokens
         const result = await handleSSOCallback(code, state)
 
-        // The backend sets cookies, now we need to sign in with NextAuth
+        // Use absolute URL with current origin for custom domain support
+        const defaultRedirect = `${window.location.origin}/redirect_from_auth`
+        const redirectUrl = result.redirect_url || defaultRedirect
+
         // Use the credentials provider with SSO tokens
         const signInResult = await signIn('credentials', {
           redirect: false,
@@ -71,18 +75,26 @@ export default function SSOCallbackPage() {
           sso_access_token: result.tokens.access_token,
           sso_refresh_token: result.tokens.refresh_token,
           sso_user: JSON.stringify(result.user),
-          callbackUrl: result.redirect_url || '/redirect_from_auth',
+          sso_expiry: result.tokens.expiry ?? undefined,
+          callbackUrl: redirectUrl,
         })
 
         if (signInResult?.error) {
-          // If credentials sign-in fails, try redirecting directly
-          // The cookies are already set by the backend
-          console.error('NextAuth sign-in failed:', signInResult.error)
-          setStatus('success')
-          router.push(result.redirect_url || '/redirect_from_auth')
+          console.error('Sign-in failed:', signInResult.error)
+          setError({
+            message: 'Failed to complete sign-in after SSO authentication',
+            errorCode: 'signin_failed',
+            errorDescription: signInResult.error,
+            technicalDetails: `Sign-in error: ${signInResult.error}`,
+          })
+          setStatus('error')
         } else if (signInResult?.ok) {
           setStatus('success')
-          router.push(result.redirect_url || '/redirect_from_auth')
+          router.push(redirectUrl)
+        } else {
+          // No error but not ok either - likely a redirect happened
+          setStatus('success')
+          router.push(redirectUrl)
         }
       } catch (err: any) {
         console.error('SSO callback error:', err)
@@ -114,7 +126,7 @@ export default function SSOCallbackPage() {
     }
 
     handleCallback()
-  }, [searchParams, router, t])
+  }, [searchParams, router, t, signIn])
 
   if (status === 'loading') {
     return (

@@ -8,11 +8,54 @@ from src.db.resource_authors import ResourceAuthor, ResourceAuthorshipEnum, Reso
 from src.db.roles import Role
 from src.db.user_organizations import UserOrganization
 from src.db.users import APITokenUser
+from src.db.usergroup_resources import UserGroupResource
+from src.db.usergroup_user import UserGroupUser
 from src.security.rbac.utils import (
     check_element_type,
     check_course_permissions_with_own,
     get_element_organization_id,
 )
+
+
+async def check_usergroup_access(
+    resource_uuid: str,
+    user_id: int,
+    db_session: Session,
+) -> bool:
+    """
+    Check if a user has access to a resource via UserGroup membership.
+
+    This checks if:
+    1. The resource is linked to any UserGroups
+    2. If yes, whether the user is a member of any of those UserGroups
+
+    Args:
+        resource_uuid: UUID of the resource (course, podcast, community, etc.)
+        user_id: ID of the user to check
+        db_session: Database session
+
+    Returns:
+        bool: True if user has access (either no UserGroup restrictions or user is a member)
+    """
+    # Check if resource has any UserGroups linked
+    usergroup_stmt = select(UserGroupResource).where(
+        UserGroupResource.resource_uuid == resource_uuid
+    )
+    usergroup_resources = db_session.exec(usergroup_stmt).all()
+
+    # If no UserGroups linked, resource is accessible to all authenticated users
+    if not usergroup_resources:
+        return True
+
+    # Check if user is a member of any linked UserGroup
+    usergroup_ids = [ugr.usergroup_id for ugr in usergroup_resources]
+    membership_stmt = select(UserGroupUser).where(
+        UserGroupUser.usergroup_id.in_(usergroup_ids),
+        UserGroupUser.user_id == user_id
+    )
+    membership = db_session.exec(membership_stmt).first()
+
+    return membership is not None
 
 
 # Tested and working
@@ -140,7 +183,11 @@ async def authorization_verify_based_on_roles(
         role = Role.model_validate(role)
         if role.rights:
             rights = role.rights
-            element_rights = getattr(rights, element_type, None)
+            # Handle both dict (from JSON storage) and Rights object
+            if isinstance(rights, dict):
+                element_rights = rights.get(element_type)
+            else:
+                element_rights = getattr(rights, element_type, None)
             if element_rights:
                 # Special handling for courses with PermissionsWithOwn
                 if element_type == "courses":
@@ -148,8 +195,11 @@ async def authorization_verify_based_on_roles(
                         return True
                 else:
                     # For non-course resources, only check general permissions
-                    # (regular Permission class no longer has "own" permissions)
-                    if getattr(element_rights, f"action_{action}", False):
+                    # Handle both dict and object access
+                    if isinstance(element_rights, dict):
+                        if element_rights.get(f"action_{action}", False):
+                            return True
+                    elif getattr(element_rights, f"action_{action}", False):
                         return True
     
     # If we get here, no role granted the permission
@@ -183,14 +233,13 @@ async def authorization_verify_based_on_org_admin_status(
         # If we can't determine the organization, deny access for safety
         return False
 
-    # Check if user has admin role (role_id 1) specifically in the TARGET organization
-    # Note: Only Admin (role_id=1) can create/update/delete organizations
-    # Maintainer (role_id=2) can only read organizations per the Rights definition
+    # Check if user has admin or maintainer role (role_id 1 or 2) in the TARGET organization
+    # Note: This checks for admin/maintainer role which typically have full permissions
     statement = (
         select(UserOrganization)
         .where(UserOrganization.user_id == user_id)
         .where(UserOrganization.org_id == target_org_id)
-        .where(UserOrganization.role_id == 1)  # Only admin role
+        .where(UserOrganization.role_id.in_([1, 2]))  # Admin (1) or Maintainer (2) role
     )
 
     user_org = db_session.exec(statement).first()
@@ -214,7 +263,15 @@ async def authorization_verify_based_on_roles_and_authorship(
         request, user_id, action, element_uuid, db_session
     )
 
-    if isAuthor or isRole:
+    # For read actions, also check UserGroup membership
+    # UserGroups allow access to resources that are not public but restricted to group members
+    hasUserGroupAccess = False
+    if action == "read":
+        hasUserGroupAccess = await check_usergroup_access(
+            element_uuid, user_id, db_session
+        )
+
+    if isAuthor or isRole or hasUserGroupAccess:
         return True
     else:
         raise HTTPException(

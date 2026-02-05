@@ -13,7 +13,7 @@ import { AlertTriangle, Mail, User } from 'lucide-react'
 import Link from 'next/link'
 import { signUpWithInviteCode } from '@services/auth/auth'
 import { useOrg } from '@components/Contexts/OrgContext'
-import { signIn } from 'next-auth/react'
+import { signIn } from '@components/Contexts/AuthContext'
 import { getLEARNHOUSE_TOP_DOMAIN_VAL } from '@services/config/config'
 import { useTranslation } from 'react-i18next'
 import { PasswordStrengthIndicator, validatePasswordStrength } from '@components/Auth/PasswordStrengthIndicator'
@@ -101,12 +101,15 @@ function InviteOnlySignUpComponent(props: InviteOnlySignUpProps) {
     // Store org context in cookies before OAuth redirect
     if (org?.slug) {
       const topDomain = getLEARNHOUSE_TOP_DOMAIN_VAL();
-      const baseAttributes = '; path=/; secure; SameSite=Lax';
+      const isSecure = window.location.protocol === 'https:';
+      const secureAttr = isSecure ? '; secure' : '';
+      const baseAttributes = `; path=/; SameSite=Lax${secureAttr}`;
       const domainAttr = topDomain === 'localhost' ? '' : `; domain=.${topDomain}`;
       document.cookie = `learnhouse_oauth_orgslug=${org.slug}${baseAttributes}${domainAttr}`;
       document.cookie = `learnhouse_oauth_org_id=${org.id}${baseAttributes}${domainAttr}`;
     }
-    signIn('google', { callbackUrl: '/redirect_from_auth' });
+    // Use absolute URL with current origin for custom domain support
+    signIn('google', { callbackUrl: `${window.location.origin}/redirect_from_auth` });
   };
 
   return (

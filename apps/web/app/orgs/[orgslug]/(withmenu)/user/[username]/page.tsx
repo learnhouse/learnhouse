@@ -1,8 +1,7 @@
 import React from 'react'
 import { getUserByUsername } from '@services/users/users'
 import { Metadata } from 'next'
-import { getServerSession } from 'next-auth'
-import { nextAuthOptions } from 'app/auth/options'
+import { getServerSession } from '@/lib/auth/server'
 import UserProfileClient from './UserProfileClient'
 import { redirect } from 'next/navigation'
 
@@ -19,7 +18,7 @@ interface UserPageProps {
 export async function generateMetadata({ params }: UserPageProps): Promise<Metadata> {
   try {
     const resolvedParams = await params
-    const session = await getServerSession(nextAuthOptions)
+    const session = await getServerSession()
     const access_token = session?.tokens?.access_token
 
     // If no session, return basic metadata (SEO will show generic title)
@@ -47,7 +46,7 @@ async function UserPage({ params }: UserPageProps) {
   const { username, orgslug } = resolvedParams;
 
   // Get session for authentication
-  const session = await getServerSession(nextAuthOptions)
+  const session = await getServerSession()
   const access_token = session?.tokens?.access_token
 
   // Require authentication to view user profiles

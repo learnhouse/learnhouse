@@ -203,18 +203,22 @@ async def podcasts_rbac_check(
                     resource_author.authorship_status == ResourceAuthorshipStatusEnum.ACTIVE:
                     is_podcast_owner = True
 
-            # Check if user has admin or maintainer role
-            is_admin_or_maintainer = await authorization_verify_based_on_org_admin_status(
+            # Check if user has permission via role-based permissions from database
+            has_role_permission = await authorization_verify_based_on_roles(
+                request, current_user.id, action, podcast_uuid, db_session
+            )
+            # Also check org admin status as a fallback
+            is_admin_or_maintainer = has_role_permission or await authorization_verify_based_on_org_admin_status(
                 request, current_user.id, action, podcast_uuid, db_session
             )
 
             # SECURITY: For creating, updating, and deleting podcast content, user MUST be either:
             # 1. Podcast owner (CREATOR, MAINTAINER, or CONTRIBUTOR with ACTIVE status)
-            # 2. Admin or maintainer role
+            # 2. Have the appropriate role permissions
             if not (is_podcast_owner or is_admin_or_maintainer):
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    detail=f"You must be the podcast owner (CREATOR, MAINTAINER, or CONTRIBUTOR) or have admin/maintainer role to {action} this podcast",
+                    detail=f"You must be the podcast owner or have appropriate role permissions to {action} this podcast",
                 )
             return True
         else:
