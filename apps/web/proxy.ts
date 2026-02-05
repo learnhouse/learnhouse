@@ -1,12 +1,49 @@
 import {
   getLEARNHOUSE_DOMAIN_VAL,
   getLEARNHOUSE_TOP_DOMAIN_VAL,
+  getLEARNHOUSE_HTTP_PROTOCOL_VAL,
   getDefaultOrg,
   getUriWithOrg,
   isMultiOrgModeEnabled,
+  getAPIUrl,
 } from './services/config/config'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+
+// Helper function to resolve custom domain to org
+async function resolveCustomDomain(domain: string): Promise<{ slug: string } | null> {
+  try {
+    const apiUrl = getAPIUrl()
+    const res = await fetch(`${apiUrl}orgs/resolve/domain/${encodeURIComponent(domain)}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      // Short timeout for middleware
+      signal: AbortSignal.timeout(5000),
+    })
+    if (res.ok) {
+      const data = await res.json()
+      return { slug: data.org_slug }
+    }
+    return null
+  } catch (error) {
+    console.error('Error resolving custom domain:', error)
+    return null
+  }
+}
+
+// Check if the host is a custom domain (not a subdomain of LEARNHOUSE_DOMAIN)
+function isCustomDomain(fullhost: string | null): boolean {
+  if (!fullhost) return false
+
+  const LEARNHOUSE_DOMAIN = getLEARNHOUSE_DOMAIN_VAL()
+  const isSubdomain = fullhost.endsWith(`.${LEARNHOUSE_DOMAIN}`)
+  const isMainDomain = fullhost === LEARNHOUSE_DOMAIN
+  const isLocalhost = fullhost.includes('localhost') || fullhost.includes('127.0.0.1')
+
+  return !isSubdomain && !isMainDomain && !isLocalhost
+}
 
 export const config = {
   matcher: [
@@ -48,11 +85,21 @@ export default async function proxy(req: NextRequest) {
     const LEARNHOUSE_DOMAIN = getLEARNHOUSE_DOMAIN_VAL()
     const LEARNHOUSE_TOP_DOMAIN = getLEARNHOUSE_TOP_DOMAIN_VAL()
 
-    // Resolve orgslug: subdomain > cookie
+    // Resolve orgslug: custom domain > subdomain > cookie
     let orgslug: string | undefined
+    let customDomain: string | undefined
 
-    // 1. Try to extract from subdomain
-    if (fullhost && fullhost !== LEARNHOUSE_DOMAIN) {
+    // 1. Check for custom domain first
+    if (isCustomDomain(fullhost)) {
+      const resolvedOrg = await resolveCustomDomain(fullhost as string)
+      if (resolvedOrg) {
+        orgslug = resolvedOrg.slug
+        customDomain = fullhost as string
+      }
+    }
+
+    // 2. Try to extract from subdomain
+    if (!orgslug && fullhost && fullhost !== LEARNHOUSE_DOMAIN) {
       if (fullhost.endsWith(`.${LEARNHOUSE_DOMAIN}`)) {
         const extracted = fullhost.replace(`.${LEARNHOUSE_DOMAIN}`, '')
         // Skip special subdomains like 'auth', 'www', 'api'
@@ -62,7 +109,7 @@ export default async function proxy(req: NextRequest) {
       }
     }
 
-    // 2. Fall back to cookie
+    // 3. Fall back to cookie
     if (!orgslug) {
       orgslug = cookie_orgslug
     }
@@ -73,19 +120,32 @@ export default async function proxy(req: NextRequest) {
 
     // Set cookie if we have an orgslug
     if (orgslug) {
+      // For custom domains, don't set domain on cookies (let them be host-specific)
+      const cookieDomain = customDomain ? '' : (LEARNHOUSE_TOP_DOMAIN == 'localhost' ? '' : `.${LEARNHOUSE_TOP_DOMAIN}`)
+
       // Set both old and new cookie names for compatibility
       response.cookies.set({
         name: 'learnhouse_current_orgslug',
         value: orgslug,
-        domain: LEARNHOUSE_TOP_DOMAIN == 'localhost' ? '' : `.${LEARNHOUSE_TOP_DOMAIN}`,
+        domain: cookieDomain,
         path: '/',
       })
       response.cookies.set({
         name: 'learnhouse_orgslug',
         value: orgslug,
-        domain: LEARNHOUSE_TOP_DOMAIN == 'localhost' ? '' : `.${LEARNHOUSE_TOP_DOMAIN}`,
+        domain: cookieDomain,
         path: '/',
       })
+
+      // Set custom domain cookie if applicable
+      if (customDomain) {
+        response.cookies.set({
+          name: 'learnhouse_custom_domain',
+          value: customDomain,
+          path: '/',
+        })
+        response.headers.set('x-custom-domain', customDomain)
+      }
     }
 
     return response
@@ -133,10 +193,21 @@ export default async function proxy(req: NextRequest) {
       const searchParams = req.nextUrl.searchParams
       const queryString = searchParams.toString()
       const redirectPathname = '/'
-      const redirectUrl = new URL(
-        getUriWithOrg(cookie_orgslug, redirectPathname),
-        req.url
-      )
+
+      // Check if we have a custom domain cookie
+      const customDomain = req.cookies.get('learnhouse_custom_domain')?.value
+      let redirectUrl: URL
+
+      if (customDomain) {
+        // Redirect to the custom domain
+        const protocol = getLEARNHOUSE_HTTP_PROTOCOL_VAL()
+        redirectUrl = new URL(`${protocol}${customDomain}${redirectPathname}`)
+      } else {
+        redirectUrl = new URL(
+          getUriWithOrg(cookie_orgslug, redirectPathname),
+          req.url
+        )
+      }
 
       if (queryString) {
         redirectUrl.search = queryString
@@ -149,7 +220,7 @@ export default async function proxy(req: NextRequest) {
 
   if (pathname.startsWith('/sitemap.xml')) {
     let orgslug: string;
-    
+
     const LEARNHOUSE_DOMAIN = getLEARNHOUSE_DOMAIN_VAL()
     if (hosting_mode === 'multi') {
       orgslug = fullhost
@@ -169,6 +240,39 @@ export default async function proxy(req: NextRequest) {
     response.headers.set('X-Sitemap-Orgslug', orgslug);
 
     return response;
+  }
+
+  // Custom Domain Detection - check before multi-org mode
+  if (isCustomDomain(fullhost)) {
+    const resolvedOrg = await resolveCustomDomain(fullhost as string)
+    if (resolvedOrg) {
+      const response = NextResponse.rewrite(
+        new URL(`/orgs/${resolvedOrg.slug}${pathname}`, req.url)
+      )
+
+      // Set cookies for the org
+      response.cookies.set({
+        name: 'learnhouse_current_orgslug',
+        value: resolvedOrg.slug,
+        path: '/',
+      })
+      response.cookies.set({
+        name: 'learnhouse_orgslug',
+        value: resolvedOrg.slug,
+        path: '/',
+      })
+      // Set custom domain cookie for link handling
+      response.cookies.set({
+        name: 'learnhouse_custom_domain',
+        value: fullhost as string,
+        path: '/',
+      })
+      // Set header for server components
+      response.headers.set('x-custom-domain', fullhost as string)
+
+      return response
+    }
+    // If custom domain not found, fall through to default behavior
   }
 
   // Multi Organization Mode

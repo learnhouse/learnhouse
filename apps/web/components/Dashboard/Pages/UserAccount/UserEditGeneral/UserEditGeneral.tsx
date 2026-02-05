@@ -40,7 +40,7 @@ import {
   SelectValue,
 } from "@components/ui/select"
 import { toast } from 'react-hot-toast'
-import { signOut } from 'next-auth/react'
+import { signOut } from '@components/Contexts/AuthContext'
 import { getUriWithoutOrg } from '@services/config/config';
 import { useDebounce } from '@/hooks/useDebounce';
 

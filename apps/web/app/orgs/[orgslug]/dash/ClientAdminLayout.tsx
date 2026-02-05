@@ -2,7 +2,7 @@
 import DashLeftMenu from '@components/Dashboard/Menus/DashLeftMenu';
 import DashMobileMenu from '@components/Dashboard/Menus/DashMobileMenu';
 import AdminAuthorization from '@components/Security/AdminAuthorization'
-import { SessionProvider } from 'next-auth/react'
+import { SessionProvider } from '@components/Contexts/AuthContext'
 import React from 'react'
 import { useMediaQuery } from 'usehooks-ts';
 

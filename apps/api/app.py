@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.gzip import GZipMiddleware
 from src.core.ee_hooks import register_ee_middlewares
+from src.security.csrf import CSRFProtectionMiddleware
 
 
 ########################
@@ -46,6 +47,9 @@ app.add_middleware(
     allow_credentials=True,
     allow_headers=["*"],
 )
+
+# CSRF Protection - validates Origin header on state-changing requests
+app.add_middleware(CSRFProtectionMiddleware)
 
 # Only enable logfire if explicitly configured
 if learnhouse_config.general_config.logfire_enabled:

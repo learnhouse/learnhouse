@@ -1,7 +1,7 @@
 'use client';
 import { use } from "react";
 import '@styles/globals.css'
-import { SessionProvider } from 'next-auth/react'
+import { SessionProvider } from '@components/Contexts/AuthContext'
 import Watermark from '@components/Objects/Watermark'
 import { OrgMenu } from '@components/Objects/Menus/OrgMenu'
 import { useOrg } from '@components/Contexts/OrgContext'

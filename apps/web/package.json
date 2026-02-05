@@ -77,7 +77,6 @@
     "lowlight": "^3.3.0",
     "lucide-react": "^0.552.0",
     "next": "16.1.6",
-    "next-auth": "^4.24.13",
     "nextjs-toploader": "^3.9.17",
     "prosemirror-state": "^1.4.4",
     "qrcode": "^1.5.4",

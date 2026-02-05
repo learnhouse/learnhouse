@@ -1,7 +1,6 @@
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { Metadata } from 'next'
-import { nextAuthOptions } from 'app/auth/options'
-import { getServerSession } from 'next-auth'
+import { getServerSession } from '@/lib/auth/server'
 import { getOrgThumbnailMediaDirectory } from '@services/media/media'
 import AccountClient from '@components/Objects/Account/AccountClient'
 import { redirect } from 'next/navigation'
@@ -58,7 +57,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
 
 const AccountSubPage = async (props: { params: Promise<{ orgslug: string; subpage: string }> }) => {
   const params = await props.params
-  const session = await getServerSession(nextAuthOptions)
+  const session = await getServerSession()
 
   // Redirect to login if not authenticated
   if (!session) {

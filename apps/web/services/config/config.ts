@@ -84,17 +84,119 @@ export const LEARNHOUSE_BACKEND_URL = getLEARNHOUSE_BACKEND_URL()
 export const LEARNHOUSE_DOMAIN = getLEARNHOUSE_DOMAIN()
 export const LEARNHOUSE_TOP_DOMAIN = getLEARNHOUSE_TOP_DOMAIN()
 
+// Helper to check if we're on a custom domain (for API URL selection)
+const isOnCustomDomain = (): boolean => {
+  if (typeof window === 'undefined') return false
+
+  const hostname = window.location.hostname
+  const domain = getLEARNHOUSE_DOMAIN()
+
+  // Check if current hostname is a custom domain (not a subdomain of LEARNHOUSE_DOMAIN)
+  const isSubdomain = hostname.endsWith(`.${domain}`) || hostname === domain
+  const isLocalhost = hostname.includes('localhost') || hostname.includes('127.0.0.1')
+
+  return !isSubdomain && !isLocalhost
+}
+
 // For direct usage, these call the getters
-export const getAPIUrl = () => getLEARNHOUSE_API_URL()
+export const getAPIUrl = () => {
+  // On custom domains (client-side), use relative path to go through Next.js proxy
+  // This ensures cookies work correctly (same-origin)
+  if (isOnCustomDomain()) {
+    // Use relative path - Next.js will proxy to the actual backend
+    return '/api/v1/'
+  }
+  return getLEARNHOUSE_API_URL()
+}
+
+// Server-side only - always returns full URL (never relative path)
+// Use this in Server Components, API routes, and server-side data fetching
+export const getServerAPIUrl = () => {
+  // Server-side fetch doesn't go through Next.js rewrites, so always use full URL
+  return getLEARNHOUSE_API_URL()
+}
+
 export const getBackendUrl = () => getLEARNHOUSE_BACKEND_URL()
 
 // Multi Organization Mode
 export const isMultiOrgModeEnabled = () =>
   getConfig('NEXT_PUBLIC_LEARNHOUSE_MULTI_ORG') === 'true' ? true : false
 
+/**
+ * Get custom domain from context (client-side only)
+ * Returns the custom domain with port if we're on one, null otherwise
+ */
+export const getCustomDomainFromContext = (): string | null => {
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname
+    const host = window.location.host // includes port if non-standard
+    const domain = getLEARNHOUSE_DOMAIN()
+
+    // Check if current hostname is a custom domain (not a subdomain of LEARNHOUSE_DOMAIN)
+    const isSubdomain = hostname.endsWith(`.${domain}`) || hostname === domain
+    const isLocalhost = hostname.includes('localhost') || hostname.includes('127.0.0.1')
+
+    if (!isSubdomain && !isLocalhost) {
+      // Return host (includes port) for custom domains
+      return host
+    }
+
+    // Also check cookie as fallback (for cases where hostname check might not work)
+    try {
+      const cookies = document.cookie.split(';')
+      for (const cookie of cookies) {
+        const [name, value] = cookie.trim().split('=')
+        if (name === 'learnhouse_custom_domain' && value) {
+          // Cookie only stores hostname, so add current port if present
+          const cookieDomain = decodeURIComponent(value)
+          const port = window.location.port
+          if (port && port !== '80' && port !== '443') {
+            return `${cookieDomain}:${port}`
+          }
+          return cookieDomain
+        }
+      }
+    } catch {
+      // Ignore cookie parsing errors
+    }
+  }
+  return null
+}
+
 export const getUriWithOrg = (orgslug: string, path: string) => {
-  const multi_org = isMultiOrgModeEnabled()
+  // Client-side: prefer using current origin when appropriate
+  if (typeof window !== 'undefined') {
+    const multi_org = isMultiOrgModeEnabled()
+
+    // In single-org mode or on custom domain, always use current origin
+    if (!multi_org || getCustomDomainFromContext()) {
+      return `${window.location.origin}${path}`
+    }
+
+    // Multi-org mode: check if we need to change subdomains
+    const currentHostname = window.location.hostname
+    const domainConfig = getLEARNHOUSE_DOMAIN()
+    // Remove port from domain config for hostname comparison
+    const baseDomain = domainConfig.split(':')[0]
+
+    // Check if current hostname matches the target
+    const expectedHostname = `${orgslug}.${baseDomain}`
+
+    if (currentHostname === expectedHostname || currentHostname === baseDomain) {
+      // Already on the right host (subdomain or base domain)
+      return `${window.location.origin}${path}`
+    }
+
+    // Different subdomain needed - construct URL with current port
+    const protocol = window.location.protocol + '//'
+    const port = window.location.port
+    const portSuffix = port && port !== '80' && port !== '443' ? `:${port}` : ''
+    return `${protocol}${orgslug}.${baseDomain}${portSuffix}${path}`
+  }
+
+  // Server-side fallback to config-based URL construction
   const protocol = getLEARNHOUSE_HTTP_PROTOCOL()
+  const multi_org = isMultiOrgModeEnabled()
   const domain = getLEARNHOUSE_DOMAIN()
   if (multi_org) {
     return `${protocol}${orgslug}.${domain}${path}`
@@ -103,12 +205,14 @@ export const getUriWithOrg = (orgslug: string, path: string) => {
 }
 
 export const getUriWithoutOrg = (path: string) => {
-  const multi_org = isMultiOrgModeEnabled()
+  // Client-side: always use current origin
+  if (typeof window !== 'undefined') {
+    return `${window.location.origin}${path}`
+  }
+
+  // Server-side fallback
   const protocol = getLEARNHOUSE_HTTP_PROTOCOL()
   const domain = getLEARNHOUSE_DOMAIN()
-  if (multi_org) {
-    return `${protocol}${domain}${path}`
-  }
   return `${protocol}${domain}${path}`
 }
 
