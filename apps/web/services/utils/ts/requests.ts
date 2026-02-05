@@ -167,7 +167,11 @@ export const getResponseMetadata = async (
 
 export const revalidateTags = async (tags: string[], orgslug: string) => {
   const url = getUriWithOrg(orgslug, '')
-  tags.forEach((tag) => {
-    fetch(`${url}/api/revalidate?tag=${tag}`)
-  })
+  await Promise.allSettled(
+    tags.map((tag) =>
+      fetch(`${url}/api/revalidate?tag=${tag}`).catch((err) =>
+        console.error(`Failed to revalidate tag ${tag}:`, err)
+      )
+    )
+  )
 }

@@ -1,9 +1,8 @@
-from typing import List, Literal, Union
+from typing import List, Literal, Optional, Union
 from fastapi import APIRouter, Depends, Request, UploadFile, Query
 from sqlmodel import Session
 from src.services.orgs.invites import (
     create_invite_code,
-    create_invite_code_with_usergroup,
     delete_invite_code,
     get_invite_code,
     get_invite_codes,
@@ -115,6 +114,8 @@ async def api_get_org_users(
     page: int = Query(default=1, ge=1, description="Page number"),
     limit: int = Query(default=20, ge=1, le=100, description="Items per page (max 100)"),
     search: str = "",
+    usergroup_id: Optional[int] = Query(default=None, description="Filter by usergroup membership"),
+    usergroup_filter: Optional[Literal["in_group", "not_in_group"]] = Query(default=None, description="Membership filter: 'in_group' or 'not_in_group'"),
     current_user: PublicUser = Depends(get_authenticated_user),
     db_session: Session = Depends(get_db_session),
 ):
@@ -127,7 +128,8 @@ async def api_get_org_users(
     - Only org members can list other org members
     """
     return await get_organization_users(
-        request, org_id, db_session, current_user, page, limit, search
+        request, org_id, db_session, current_user, page, limit, search,
+        usergroup_id, usergroup_filter,
     )
 
 
@@ -368,29 +370,14 @@ async def api_upload_org_auth_background(
 async def api_create_invite_code(
     request: Request,
     org_id: int,
+    usergroup_id: Optional[int] = None,
     current_user: PublicUser = Depends(get_current_user),
     db_session: Session = Depends(get_db_session),
 ):
     """
-    Create invite code
+    Create invite code, optionally linked to a usergroup
     """
-    return await create_invite_code(request, org_id, current_user, db_session)
-
-
-@router.post("/{org_id}/invites_with_usergroups")
-async def api_create_invite_code_with_ug(
-    request: Request,
-    org_id: int,
-    usergroup_id: int,
-    current_user: PublicUser = Depends(get_current_user),
-    db_session: Session = Depends(get_db_session),
-):
-    """
-    Create invite code
-    """
-    return await create_invite_code_with_usergroup(
-        request, org_id, usergroup_id, current_user, db_session
-    )
+    return await create_invite_code(request, org_id, current_user, db_session, usergroup_id)
 
 
 @router.get("/{org_id}/invites")

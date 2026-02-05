@@ -3,6 +3,7 @@ import { useOrg } from '@components/Contexts/OrgContext'
 import { getAPIUrl } from '@services/config/config'
 import { linkUsersToUserGroup, unlinkUsersFromUserGroup } from '@services/usergroups/usergroups'
 import { swrFetcher } from '@services/utils/ts/requests'
+import LearnHouseSpinner from '@components/Objects/Loaders/LearnHouseSpinner'
 import { Search, Check, Plus, Minus, ChevronLeft, ChevronRight, Users } from 'lucide-react'
 import React, { useState, useMemo, useEffect, useCallback } from 'react'
 import toast from 'react-hot-toast'
@@ -42,7 +43,7 @@ function ManageUsers(props: ManageUsersProps) {
     return () => clearTimeout(timer)
   }, [searchValue])
 
-  // Build query for paginated org users
+  // Build query for paginated org users with server-side usergroup filtering
   const buildQuery = useCallback(() => {
     const params = new URLSearchParams()
     params.append('page', page.toString())
@@ -50,51 +51,51 @@ function ManageUsers(props: ManageUsersProps) {
     if (debouncedSearch) {
       params.append('search', debouncedSearch)
     }
+    // Always pass usergroup_id so we get in_group_total in the response
+    if (props.usergroup_id) {
+      params.append('usergroup_id', props.usergroup_id.toString())
+    }
+    // Pass filter for in_group / not_in_group tabs
+    if (activeTab !== 'all' && props.usergroup_id) {
+      params.append('usergroup_filter', activeTab)
+    }
     return params.toString()
-  }, [page, debouncedSearch])
+  }, [page, debouncedSearch, activeTab, props.usergroup_id])
 
   const usersUrl = org && access_token ? `${getAPIUrl()}orgs/${org?.id}/users?${buildQuery()}` : null
-  const { data: usersData } = useSWR(
+  const { data: usersData, isValidating } = useSWR(
     usersUrl,
-    (url) => swrFetcher(url, access_token)
-  )
-
-  const { data: UGusers } = useSWR(
-    org && access_token ? `${getAPIUrl()}usergroups/${props.usergroup_id}/users?org_id=${org.id}` : null,
-    (url) => swrFetcher(url, access_token)
+    (url) => swrFetcher(url, access_token),
+    { keepPreviousData: true }
   )
 
   const orgUsers = usersData?.items || []
   const total = usersData?.total || 0
+  const inGroupTotal: number | undefined = usersData?.in_group_total
+  const allTotal: number | undefined = usersData?.all_total
+  const isInitialLoading = !usersData && isValidating
+  const isPageTransitioning = !!usersData && isValidating
 
-  // Create a set of user IDs that are in the group for fast lookup
-  const groupUserIds = useMemo(() => {
-    if (!UGusers) return new Set<number>()
-    return new Set(UGusers.map((user: any) => user.id))
-  }, [UGusers])
-
-  const isUserPartOfGroup = useCallback((user_id: number) => {
-    return groupUserIds.has(user_id)
-  }, [groupUserIds])
-
-  // Filter users based on active tab
-  const filteredUsers = useMemo(() => {
-    if (activeTab === 'all') return orgUsers
-    if (activeTab === 'in_group') {
-      return orgUsers.filter((user: any) => isUserPartOfGroup(user.user.id))
-    }
-    return orgUsers.filter((user: any) => !isUserPartOfGroup(user.user.id))
-  }, [orgUsers, activeTab, isUserPartOfGroup])
-
-  // Count users in each tab
+  // Compute tab counts from API response.
+  // `all_total` = total org users matching search (always provided when usergroup_id is set)
+  // `in_group_total` = in-group users matching search (always provided when usergroup_id is set)
+  // `total` = count for the currently active filter tab
   const tabCounts = useMemo(() => {
-    const inGroup = orgUsers.filter((user: any) => isUserPartOfGroup(user.user.id)).length
-    return {
-      all: orgUsers.length,
-      in_group: inGroup,
-      not_in_group: orgUsers.length - inGroup,
+    if (allTotal == null || inGroupTotal == null) {
+      return { all: total, in_group: 0, not_in_group: 0 }
     }
-  }, [orgUsers, isUserPartOfGroup])
+    return {
+      all: allTotal,
+      in_group: inGroupTotal,
+      not_in_group: allTotal - inGroupTotal,
+    }
+  }, [total, inGroupTotal, allTotal])
+
+  // Determine if a user is in the group from the user's usergroups data
+  const isUserPartOfGroup = useCallback((user: any) => {
+    if (!user.usergroups) return false
+    return user.usergroups.some((ug: any) => ug.id === props.usergroup_id)
+  }, [props.usergroup_id])
 
   // Handle selection
   const toggleUserSelection = (userId: number) => {
@@ -110,7 +111,7 @@ function ManageUsers(props: ManageUsersProps) {
   }
 
   const selectAllVisible = () => {
-    const visibleIds = filteredUsers.map((user: any) => user.user.id)
+    const visibleIds = orgUsers.map((user: any) => user.user.id)
     setSelectedUserIds((prev) => {
       const next = new Set(prev)
       visibleIds.forEach((id: number) => next.add(id))
@@ -123,18 +124,30 @@ function ManageUsers(props: ManageUsersProps) {
   }
 
   const isAllVisibleSelected = useMemo(() => {
-    if (filteredUsers.length === 0) return false
-    return filteredUsers.every((user: any) => selectedUserIds.has(user.user.id))
-  }, [filteredUsers, selectedUserIds])
+    if (orgUsers.length === 0) return false
+    return orgUsers.every((user: any) => selectedUserIds.has(user.user.id))
+  }, [orgUsers, selectedUserIds])
 
-  // Get selected users that are in/not in group
+  // Get selected users that are in/not in group (from currently visible users)
   const selectedInGroup = useMemo(() => {
-    return Array.from(selectedUserIds).filter((id) => groupUserIds.has(id))
-  }, [selectedUserIds, groupUserIds])
+    return Array.from(selectedUserIds).filter((id) => {
+      const user = orgUsers.find((u: any) => u.user.id === id)
+      return user && isUserPartOfGroup(user)
+    })
+  }, [selectedUserIds, orgUsers, isUserPartOfGroup])
 
   const selectedNotInGroup = useMemo(() => {
-    return Array.from(selectedUserIds).filter((id) => !groupUserIds.has(id))
-  }, [selectedUserIds, groupUserIds])
+    return Array.from(selectedUserIds).filter((id) => {
+      const user = orgUsers.find((u: any) => u.user.id === id)
+      return user && !isUserPartOfGroup(user)
+    })
+  }, [selectedUserIds, orgUsers, isUserPartOfGroup])
+
+  // Revalidate all tabs' SWR cache after mutations
+  const invalidateCache = () => {
+    const baseUrl = `${getAPIUrl()}orgs/${org?.id}/users`
+    mutate((key: string) => typeof key === 'string' && key.startsWith(baseUrl))
+  }
 
   // Bulk actions
   const handleBulkAdd = async () => {
@@ -147,7 +160,7 @@ function ManageUsers(props: ManageUsersProps) {
           t('dashboard.users.usergroups.modals.manage_users.toasts.bulk_add_success', { count: selectedNotInGroup.length }),
           { id: toastId }
         )
-        mutate(`${getAPIUrl()}usergroups/${props.usergroup_id}/users?org_id=${org.id}`)
+        invalidateCache()
         clearSelection()
       } else {
         toast.error(t('dashboard.users.usergroups.modals.manage_users.toasts.error', { status: res.status, detail: res.data.detail }), { id: toastId })
@@ -167,7 +180,7 @@ function ManageUsers(props: ManageUsersProps) {
           t('dashboard.users.usergroups.modals.manage_users.toasts.bulk_remove_success', { count: selectedInGroup.length }),
           { id: toastId }
         )
-        mutate(`${getAPIUrl()}usergroups/${props.usergroup_id}/users?org_id=${org.id}`)
+        invalidateCache()
         clearSelection()
       } else {
         toast.error(t('dashboard.users.usergroups.modals.manage_users.toasts.error', { status: res.status, detail: res.data.detail }), { id: toastId })
@@ -184,6 +197,7 @@ function ManageUsers(props: ManageUsersProps) {
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab as FilterTab)
+    setPage(1) // Reset to first page on tab change
     setSelectedUserIds(new Set()) // Clear selection on tab change
   }
 
@@ -255,7 +269,7 @@ function ManageUsers(props: ManageUsersProps) {
       )}
 
       {/* Select All Checkbox */}
-      {filteredUsers.length > 0 && (
+      {orgUsers.length > 0 && (
         <div className="flex items-center gap-2 px-2">
           <Checkbox
             id="select-all"
@@ -275,8 +289,12 @@ function ManageUsers(props: ManageUsersProps) {
       )}
 
       {/* Users List */}
-      <div className="space-y-1 max-h-[400px] overflow-y-auto">
-        {filteredUsers.length === 0 ? (
+      <div className="space-y-1 max-h-[400px] overflow-y-auto relative">
+        {isInitialLoading ? (
+          <div className="py-16 flex justify-center">
+            <LearnHouseSpinner size={32} />
+          </div>
+        ) : orgUsers.length === 0 ? (
           <div className="py-12 text-center">
             <div className="flex flex-col items-center gap-3">
               <div className="bg-gray-100 p-4 rounded-full">
@@ -291,8 +309,14 @@ function ManageUsers(props: ManageUsersProps) {
             </div>
           </div>
         ) : (
-          filteredUsers.map((user: any) => {
-            const inGroup = isUserPartOfGroup(user.user.id)
+          <>
+          {isPageTransitioning && (
+            <div className="absolute inset-0 bg-white/60 z-10 flex items-center justify-center rounded-lg">
+              <LearnHouseSpinner size={24} />
+            </div>
+          )}
+          {orgUsers.map((user: any) => {
+            const inGroup = isUserPartOfGroup(user)
             const isSelected = selectedUserIds.has(user.user.id)
             return (
               <div
@@ -335,7 +359,8 @@ function ManageUsers(props: ManageUsersProps) {
                 </div>
               </div>
             )
-          })
+          })}
+          </>
         )}
       </div>
 

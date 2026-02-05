@@ -1,5 +1,10 @@
 import { cookies } from 'next/headers'
-import { getServerAPIUrl } from '@services/config/config'
+
+const BACKEND_URL = (process.env.NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL || 'http://localhost:1338').replace(/\/+$/, '')
+
+// Cookie names (must match the API routes)
+const ACCESS_TOKEN_COOKIE = 'access_token_cookie'
+const REFRESH_TOKEN_COOKIE = 'refresh_token_cookie'
 
 // Types matching the client-side session structure
 export interface Session {
@@ -13,45 +18,75 @@ export interface Session {
 }
 
 /**
- * Get server-side session by reading refresh token from cookies
- * and exchanging it for an access token.
+ * Get server-side session by reading tokens from cookies.
  *
- * This is the server-side equivalent of useSession() for use in
- * Server Components and API routes.
+ * Since cookies are now set by Next.js API routes (same origin),
+ * they are reliably readable by the Next.js server.
  */
 export async function getServerSession(): Promise<Session | null> {
   try {
     const cookieStore = await cookies()
-    const refreshToken = cookieStore.get('refresh_token_cookie')
+
+    // Try to get access token directly
+    const accessToken = cookieStore.get(ACCESS_TOKEN_COOKIE)
+
+    if (accessToken?.value) {
+      // Verify the token is valid by fetching session from backend
+      const sessionResponse = await fetch(`${BACKEND_URL}/api/v1/users/session`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${accessToken.value}`,
+        },
+        cache: 'no-store',
+      })
+
+      if (sessionResponse.ok) {
+        const sessionData = await sessionResponse.json()
+        return {
+          user: sessionData.user,
+          roles: sessionData.roles,
+          tokens: {
+            access_token: accessToken.value,
+          },
+        }
+      }
+
+      // Access token expired or invalid, try refresh
+      console.log('[SERVER_SESSION] Access token invalid, trying refresh')
+    }
+
+    // Try to refresh using refresh token
+    const refreshToken = cookieStore.get(REFRESH_TOKEN_COOKIE)
 
     if (!refreshToken?.value) {
       return null
     }
 
-    // Exchange refresh token for access token
-    const response = await fetch(`${getServerAPIUrl()}auth/refresh`, {
+    // Exchange refresh token for new access token via backend
+    const refreshResponse = await fetch(`${BACKEND_URL}/api/v1/auth/refresh`, {
       method: 'GET',
       headers: {
-        Cookie: `refresh_token_cookie=${refreshToken.value}`,
+        Cookie: `${REFRESH_TOKEN_COOKIE}=${refreshToken.value}`,
       },
-      cache: 'no-store', // Don't cache auth requests
+      cache: 'no-store',
     })
 
-    if (!response.ok) {
+    if (!refreshResponse.ok) {
+      console.log('[SERVER_SESSION] Refresh failed:', refreshResponse.status)
       return null
     }
 
-    const data = await response.json()
+    const refreshData = await refreshResponse.json()
 
-    if (!data.access_token) {
+    if (!refreshData.access_token) {
       return null
     }
 
     // Fetch user session with the new access token
-    const sessionResponse = await fetch(`${getServerAPIUrl()}users/session`, {
+    const sessionResponse = await fetch(`${BACKEND_URL}/api/v1/users/session`, {
       method: 'GET',
       headers: {
-        Authorization: `Bearer ${data.access_token}`,
+        Authorization: `Bearer ${refreshData.access_token}`,
       },
       cache: 'no-store',
     })
@@ -62,8 +97,8 @@ export async function getServerSession(): Promise<Session | null> {
         user: undefined,
         roles: [],
         tokens: {
-          access_token: data.access_token,
-          expiry: data.expiry,
+          access_token: refreshData.access_token,
+          expiry: refreshData.expiry,
         },
       }
     }
@@ -74,12 +109,12 @@ export async function getServerSession(): Promise<Session | null> {
       user: sessionData.user,
       roles: sessionData.roles,
       tokens: {
-        access_token: data.access_token,
-        expiry: data.expiry,
+        access_token: refreshData.access_token,
+        expiry: refreshData.expiry,
       },
     }
   } catch (error) {
-    console.error('Server session error:', error)
+    console.error('[SERVER_SESSION] Error:', error)
     return null
   }
 }
@@ -91,16 +126,23 @@ export async function getServerSession(): Promise<Session | null> {
 export async function getServerAccessToken(): Promise<string | null> {
   try {
     const cookieStore = await cookies()
-    const refreshToken = cookieStore.get('refresh_token_cookie')
 
+    // Try access token first
+    const accessToken = cookieStore.get(ACCESS_TOKEN_COOKIE)
+    if (accessToken?.value) {
+      return accessToken.value
+    }
+
+    // Try to refresh
+    const refreshToken = cookieStore.get(REFRESH_TOKEN_COOKIE)
     if (!refreshToken?.value) {
       return null
     }
 
-    const response = await fetch(`${getServerAPIUrl()}auth/refresh`, {
+    const response = await fetch(`${BACKEND_URL}/api/v1/auth/refresh`, {
       method: 'GET',
       headers: {
-        Cookie: `refresh_token_cookie=${refreshToken.value}`,
+        Cookie: `${REFRESH_TOKEN_COOKIE}=${refreshToken.value}`,
       },
       cache: 'no-store',
     })
@@ -112,7 +154,7 @@ export async function getServerAccessToken(): Promise<string | null> {
     const data = await response.json()
     return data.access_token || null
   } catch (error) {
-    console.error('Server access token error:', error)
+    console.error('[SERVER_SESSION] Error getting access token:', error)
     return null
   }
 }

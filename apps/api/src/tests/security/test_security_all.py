@@ -6,6 +6,8 @@ of the security functionality including:
 - Password hashing and verification
 - JWT authentication
 - Role-based access control (RBAC)
+- Role constants
+- Resource access checker
 - Feature usage tracking
 - Authorization utilities
 """
@@ -14,6 +16,13 @@ from src.tests.security.test_security import TestSecurity
 from src.tests.security.test_auth import TestAuth
 from src.tests.security.test_rbac import TestRBAC
 from src.tests.security.test_rbac_utils import TestRBACUtils
+from src.tests.security.test_rbac_constants import TestRoleConstants, TestRoleHelperFunctions
+from src.tests.security.test_resource_access import (
+    TestResourceConfig,
+    TestAccessDecision,
+    TestResourceAccessChecker,
+    TestParentResourceResolution,
+)
 from src.tests.security.test_features_utils import TestFeaturesUtils
 
 
@@ -66,9 +75,13 @@ class TestSecurityComprehensive:
         import src.security.rbac
         import src.security.rbac.rbac
         import src.security.rbac.utils
+        import src.security.rbac.constants
+        import src.security.rbac.config
+        import src.security.rbac.types
+        import src.security.rbac.resource_access
         import src.security.features_utils
         import src.security.features_utils.usage
-        
+
         # Verify all modules can be imported
         assert src.security is not None
         assert src.security.auth is not None
@@ -76,8 +89,44 @@ class TestSecurityComprehensive:
         assert src.security.rbac is not None
         assert src.security.rbac.rbac is not None
         assert src.security.rbac.utils is not None
+        assert src.security.rbac.constants is not None
+        assert src.security.rbac.config is not None
+        assert src.security.rbac.types is not None
+        assert src.security.rbac.resource_access is not None
         assert src.security.features_utils is not None
         assert src.security.features_utils.usage is not None
+
+    def test_rbac_constants_are_exported(self):
+        """Test that RBAC constants are properly exported."""
+        from src.security.rbac import (
+            ADMIN_ROLE_ID,
+            MAINTAINER_ROLE_ID,
+            ADMIN_OR_MAINTAINER_ROLE_IDS,
+            is_admin,
+            is_admin_or_maintainer,
+        )
+
+        assert ADMIN_ROLE_ID == 1
+        assert MAINTAINER_ROLE_ID == 2
+        assert 1 in ADMIN_OR_MAINTAINER_ROLE_IDS
+        assert 2 in ADMIN_OR_MAINTAINER_ROLE_IDS
+        assert callable(is_admin)
+        assert callable(is_admin_or_maintainer)
+
+    def test_resource_access_checker_is_exported(self):
+        """Test that ResourceAccessChecker is properly exported."""
+        from src.security.rbac import (
+            ResourceAccessChecker,
+            check_resource_access,
+            AccessAction,
+            AccessContext,
+            AccessDecision,
+        )
+
+        assert ResourceAccessChecker is not None
+        assert callable(check_resource_access)
+        assert AccessAction.READ.value == "read"
+        assert AccessContext.PUBLIC_VIEW.value == "public_view"
 
 
 # Test discovery helpers
@@ -88,6 +137,12 @@ def get_security_test_classes():
         TestAuth,
         TestRBAC,
         TestRBACUtils,
+        TestRoleConstants,
+        TestRoleHelperFunctions,
+        TestResourceConfig,
+        TestAccessDecision,
+        TestResourceAccessChecker,
+        TestParentResourceResolution,
         TestFeaturesUtils,
         TestSecurityComprehensive,
     ]

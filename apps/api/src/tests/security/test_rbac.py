@@ -257,9 +257,10 @@ class TestRBAC:
     async def test_authorization_verify_if_user_is_author_wrong_user(self, mock_request, mock_db_session, mock_resource_author):
         """Test author verification with wrong user"""
         with patch('src.security.rbac.rbac.check_element_type', new_callable=AsyncMock):
-            # Mock database query
-            mock_db_session.exec.return_value.first.return_value = mock_resource_author
-            
+            # Mock database query - returns None because the query now filters by user_id
+            # and user_id=2 doesn't match the resource author with user_id=1
+            mock_db_session.exec.return_value.first.return_value = None
+
             result = await authorization_verify_if_user_is_author(
                 request=mock_request,
                 user_id=2,  # Different user
@@ -267,7 +268,7 @@ class TestRBAC:
                 element_uuid="course_123",
                 db_session=mock_db_session
             )
-            
+
             assert result is False
 
     @pytest.mark.asyncio
@@ -380,11 +381,13 @@ class TestRBAC:
     async def test_authorization_verify_based_on_roles_and_authorship_success(self, mock_request, mock_db_session, mock_resource_author):
         """Test combined roles and authorship authorization success"""
         with patch('src.security.rbac.rbac.authorization_verify_if_user_is_author', new_callable=AsyncMock) as mock_author, \
-             patch('src.security.rbac.rbac.authorization_verify_based_on_roles', new_callable=AsyncMock) as mock_roles:
-            
+             patch('src.security.rbac.rbac.authorization_verify_based_on_roles', new_callable=AsyncMock) as mock_roles, \
+             patch('src.security.rbac.rbac.check_usergroup_access', new_callable=AsyncMock) as mock_usergroup:
+
             mock_author.return_value = True
             mock_roles.return_value = False
-            
+            mock_usergroup.return_value = False
+
             result = await authorization_verify_based_on_roles_and_authorship(
                 request=mock_request,
                 user_id=1,
@@ -392,18 +395,20 @@ class TestRBAC:
                 element_uuid="course_123",
                 db_session=mock_db_session
             )
-            
+
             assert result is True
 
     @pytest.mark.asyncio
     async def test_authorization_verify_based_on_roles_and_authorship_failure(self, mock_request, mock_db_session):
         """Test combined roles and authorship authorization failure"""
         with patch('src.security.rbac.rbac.authorization_verify_if_user_is_author', new_callable=AsyncMock) as mock_author, \
-             patch('src.security.rbac.rbac.authorization_verify_based_on_roles', new_callable=AsyncMock) as mock_roles:
-            
+             patch('src.security.rbac.rbac.authorization_verify_based_on_roles', new_callable=AsyncMock) as mock_roles, \
+             patch('src.security.rbac.rbac.check_usergroup_access', new_callable=AsyncMock) as mock_usergroup:
+
             mock_author.return_value = False
             mock_roles.return_value = False
-            
+            mock_usergroup.return_value = False
+
             with pytest.raises(HTTPException) as exc_info:
                 await authorization_verify_based_on_roles_and_authorship(
                     request=mock_request,
@@ -412,7 +417,7 @@ class TestRBAC:
                     element_uuid="course_123",
                     db_session=mock_db_session
                 )
-            
+
             assert exc_info.value.status_code == 403
             assert "User rights (roles & authorship)" in exc_info.value.detail
 

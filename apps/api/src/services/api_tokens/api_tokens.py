@@ -20,6 +20,7 @@ from src.db.users import PublicUser
 from src.security.rbac.rbac import (
     authorization_verify_if_user_is_anon,
 )
+from src.security.rbac.constants import ADMIN_OR_MAINTAINER_ROLE_IDS
 
 
 # Token generation constants
@@ -136,7 +137,7 @@ async def create_api_token(
             )
     else:
         # If no rights are defined, check if user has admin role (role_id 1 or 2)
-        if user_role.id not in [1, 2]:
+        if user_role.id not in ADMIN_OR_MAINTAINER_ROLE_IDS:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You don't have permission to create API tokens. Admin or Maintainer role required.",
@@ -264,7 +265,7 @@ async def list_api_tokens(
                 detail="You don't have permission to view API tokens in this organization",
             )
     else:
-        if user_role.id not in [1, 2]:
+        if user_role.id not in ADMIN_OR_MAINTAINER_ROLE_IDS:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You don't have permission to view API tokens. Admin or Maintainer role required.",
@@ -363,7 +364,7 @@ async def update_api_token(
                 detail="You don't have permission to update API tokens in this organization",
             )
     else:
-        if user_role.id not in [1, 2]:
+        if user_role.id not in ADMIN_OR_MAINTAINER_ROLE_IDS:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You don't have permission to update API tokens. Admin or Maintainer role required.",
@@ -445,7 +446,7 @@ async def revoke_api_token(
                 detail="You don't have permission to revoke API tokens in this organization",
             )
     else:
-        if user_role.id not in [1, 2]:
+        if user_role.id not in ADMIN_OR_MAINTAINER_ROLE_IDS:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You don't have permission to revoke API tokens. Admin or Maintainer role required.",
@@ -519,7 +520,7 @@ async def regenerate_api_token(
                 detail="You don't have permission to regenerate API tokens in this organization",
             )
     else:
-        if user_role.id not in [1, 2]:
+        if user_role.id not in ADMIN_OR_MAINTAINER_ROLE_IDS:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You don't have permission to regenerate API tokens. Admin or Maintainer role required.",

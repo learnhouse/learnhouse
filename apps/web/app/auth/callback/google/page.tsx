@@ -4,8 +4,8 @@ import React, { useEffect, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Loader2, AlertTriangle, ShieldAlert } from 'lucide-react'
 import Link from 'next/link'
-import { getAPIUrl } from '@services/config/config'
 import { useAuth, validateOAuthState } from '@components/Contexts/AuthContext'
+import { getLEARNHOUSE_DOMAIN_VAL } from '@services/config/config'
 
 export default function GoogleCallbackPage() {
   const searchParams = useSearchParams()
@@ -33,11 +33,30 @@ export default function GoogleCallbackPage() {
         return
       }
 
-      // Validate CSRF state parameter
       if (!state) {
         setError('Missing state parameter - potential security issue')
         setStatus('csrf_error')
         return
+      }
+
+      // Check if we need to bounce to a custom domain origin.
+      // When OAuth was initiated from a custom domain (e.g., learn.mozilla.org),
+      // Google redirects to the main domain (dev.learnhouse.io). We detect this
+      // via returnOrigin in the state and bounce the code+state to the custom domain
+      // so CSRF validation and cookie-setting happen on the correct origin.
+      try {
+        const stateData = JSON.parse(atob(state))
+        if (stateData.returnOrigin && stateData.returnOrigin !== window.location.origin) {
+          const bounceUrl = new URL('/auth/callback/google', stateData.returnOrigin)
+          // Forward all search params (code, state, scope, etc.)
+          searchParams.forEach((value, key) => {
+            bounceUrl.searchParams.set(key, value)
+          })
+          window.location.href = bounceUrl.toString()
+          return
+        }
+      } catch {
+        // State parsing failed, continue to CSRF validation which will handle the error
       }
 
       const stateValidation = validateOAuthState(state)
@@ -68,6 +87,10 @@ export default function GoogleCallbackPage() {
       }
 
       try {
+        // redirect_uri must always match what was sent during authorization (main domain)
+        const domain = getLEARNHOUSE_DOMAIN_VAL()
+        const oauthRedirectUri = `${window.location.protocol}//${domain}/auth/callback/google`
+
         // Exchange code for tokens with our backend
         // First, we need to get Google's access token
         const tokenResponse = await fetch('/api/auth/google/token', {
@@ -77,20 +100,24 @@ export default function GoogleCallbackPage() {
           },
           body: JSON.stringify({
             code,
-            redirect_uri: `${window.location.origin}/auth/callback/google`,
+            redirect_uri: oauthRedirectUri,
           }),
         })
 
         if (!tokenResponse.ok) {
-          // If no token endpoint, exchange directly with backend OAuth endpoint
-          // The backend will validate with Google
-          const backendResponse = await fetch(
-            `${getAPIUrl()}auth/oauth/google/callback?code=${encodeURIComponent(code)}&redirect_uri=${encodeURIComponent(`${window.location.origin}/auth/callback/google`)}${orgId ? `&org_id=${orgId}` : ''}`,
-            {
-              method: 'GET',
-              credentials: 'include',
-            }
-          )
+          // If no token endpoint, exchange directly via Next.js API route
+          // This ensures cookies are set by Next.js for reliable SSR access
+          const oauthCallbackUrl = new URL('/api/auth/oauth/google/callback', window.location.origin)
+          oauthCallbackUrl.searchParams.set('code', code)
+          oauthCallbackUrl.searchParams.set('redirect_uri', oauthRedirectUri)
+          if (orgId) {
+            oauthCallbackUrl.searchParams.set('org_id', orgId.toString())
+          }
+
+          const backendResponse = await fetch(oauthCallbackUrl.toString(), {
+            method: 'GET',
+            credentials: 'include',
+          })
 
           if (!backendResponse.ok) {
             const errorData = await backendResponse.json().catch(() => ({}))
@@ -152,12 +179,12 @@ export default function GoogleCallbackPage() {
           throw new Error('Could not retrieve email from Google')
         }
 
-        // Call our backend OAuth endpoint
-        const url = orgId
-          ? `${getAPIUrl()}auth/oauth?org_id=${orgId}`
-          : `${getAPIUrl()}auth/oauth`
+        // Call Next.js API route to ensure cookies are set properly
+        const oauthUrl = orgId
+          ? `/api/auth/oauth?org_id=${orgId}`
+          : '/api/auth/oauth'
 
-        const oauthResponse = await fetch(url, {
+        const oauthResponse = await fetch(oauthUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
