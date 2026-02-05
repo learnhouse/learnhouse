@@ -44,6 +44,7 @@ async def _user_can_view_unpublished_course(
     Users can view unpublished courses if they are:
     1. A resource author (creator, maintainer, or contributor) of the course
     2. An admin or maintainer in the organization
+    3. A member of a UserGroup that has access to the course
 
     Anonymous users cannot view unpublished courses.
     """
@@ -71,6 +72,22 @@ async def _user_can_view_unpublished_course(
     user_roles = db_session.exec(role_statement).all()
     for role in user_roles:
         if role.id in [1, 2]:  # Admin or Maintainer role IDs
+            return True
+
+    # Check if user is a member of a UserGroup that has access to this course
+    usergroup_stmt = select(UserGroupResource).where(
+        UserGroupResource.resource_uuid == course.course_uuid
+    )
+    usergroup_resources = db_session.exec(usergroup_stmt).all()
+
+    if usergroup_resources:
+        usergroup_ids = [ugr.usergroup_id for ugr in usergroup_resources]
+        membership_stmt = select(UserGroupUser).where(
+            UserGroupUser.usergroup_id.in_(usergroup_ids),
+            UserGroupUser.user_id == current_user.id
+        )
+        membership = db_session.exec(membership_stmt).first()
+        if membership:
             return True
 
     return False
@@ -295,13 +312,9 @@ async def get_courses_orgslug(
         .where(Organization.slug == org_slug)
     )
 
-    # Only show published courses unless user has permission to view unpublished
-    if not can_view_unpublished:
-        query = query.where(Course.published == True)
-
     if isinstance(current_user, AnonymousUser):
-        # For anonymous users, only show public courses
-        query = query.where(Course.public == True)
+        # For anonymous users, only show public AND published courses
+        query = query.where(Course.public == True, Course.published == True)
     else:
         # For authenticated users with admin access viewing dashboard, show all courses
         if can_view_unpublished:
@@ -309,10 +322,13 @@ async def get_courses_orgslug(
             pass
         else:
             # For regular users, show:
-            # 1. Public courses
-            # 2. Courses not in any UserGroup
-            # 3. Courses in UserGroups where the user is a member
-            # 4. Courses where the user is a resource author
+            # 1. Published AND public courses
+            # 2. Published courses not in any UserGroup
+            # 3. Courses (including unpublished) in UserGroups where the user is a member
+            # 4. Courses (including unpublished) where the user is a resource author
+            #
+            # This allows UserGroup members and course authors to see unpublished courses
+            # they have access to, while other users only see published courses.
             query = (
                 query
                 .outerjoin(UserGroupResource, UserGroupResource.resource_uuid == Course.course_uuid)  # type: ignore
@@ -322,10 +338,10 @@ async def get_courses_orgslug(
                 ))
                 .outerjoin(ResourceAuthor, ResourceAuthor.resource_uuid == Course.course_uuid)  # type: ignore
                 .where(or_(
-                    Course.public == True,
-                    UserGroupResource.resource_uuid.is_(None),  # Courses not in any UserGroup
-                    UserGroupUser.user_id == current_user.id,  # Courses in UserGroups where user is a member
-                    ResourceAuthor.user_id == current_user.id  # Courses where user is a resource author
+                    and_(Course.published == True, Course.public == True),  # Published public courses
+                    and_(Course.published == True, UserGroupResource.resource_uuid.is_(None)),  # Published courses not in any UserGroup
+                    UserGroupUser.user_id == current_user.id,  # Courses in UserGroups where user is a member (including unpublished)
+                    ResourceAuthor.user_id == current_user.id  # Courses where user is a resource author (including unpublished)
                 ))
             )
 
@@ -409,14 +425,14 @@ async def get_courses_count_orgslug(
     )
 
     if isinstance(current_user, AnonymousUser):
-        # For anonymous users, only count public courses
-        query = query.where(Course.public == True)
+        # For anonymous users, only count public AND published courses
+        query = query.where(Course.public == True, Course.published == True)
     else:
         # For authenticated users, count:
-        # 1. Public courses
-        # 2. Courses not in any UserGroup
-        # 3. Courses in UserGroups where the user is a member
-        # 4. Courses where the user is a resource author
+        # 1. Published AND public courses
+        # 2. Published courses not in any UserGroup
+        # 3. Courses (including unpublished) in UserGroups where the user is a member
+        # 4. Courses (including unpublished) where the user is a resource author
         query = (
             query
             .outerjoin(UserGroupResource, UserGroupResource.resource_uuid == Course.course_uuid)  # type: ignore
@@ -426,10 +442,10 @@ async def get_courses_count_orgslug(
             ))
             .outerjoin(ResourceAuthor, ResourceAuthor.resource_uuid == Course.course_uuid)  # type: ignore
             .where(or_(
-                Course.public == True,
-                UserGroupResource.resource_uuid.is_(None),  # Courses not in any UserGroup
-                UserGroupUser.user_id == current_user.id,  # Courses in UserGroups where user is a member
-                ResourceAuthor.user_id == current_user.id  # Courses where user is a resource author
+                and_(Course.published == True, Course.public == True),  # Published public courses
+                and_(Course.published == True, UserGroupResource.resource_uuid.is_(None)),  # Published courses not in any UserGroup
+                UserGroupUser.user_id == current_user.id,  # Courses in UserGroups where user is a member (including unpublished)
+                ResourceAuthor.user_id == current_user.id  # Courses where user is a resource author (including unpublished)
             ))
         )
 
@@ -478,14 +494,14 @@ async def search_courses(
     )
 
     if isinstance(current_user, AnonymousUser):
-        # For anonymous users, only show public courses
-        query = query.where(Course.public == True)
+        # For anonymous users, only show public AND published courses
+        query = query.where(Course.public == True, Course.published == True)
     else:
         # For authenticated users, show:
-        # 1. Public courses
-        # 2. Courses not in any UserGroup
-        # 3. Courses in UserGroups where the user is a member
-        # 4. Courses where the user is a resource author
+        # 1. Published AND public courses
+        # 2. Published courses not in any UserGroup
+        # 3. Courses (including unpublished) in UserGroups where the user is a member
+        # 4. Courses (including unpublished) where the user is a resource author
         query = (
             query
             .outerjoin(UserGroupResource, UserGroupResource.resource_uuid == Course.course_uuid)  # type: ignore
@@ -495,10 +511,10 @@ async def search_courses(
             ))
             .outerjoin(ResourceAuthor, ResourceAuthor.resource_uuid == Course.course_uuid)  # type: ignore
             .where(or_(
-                Course.public == True,
-                UserGroupResource.resource_uuid.is_(None),  # Courses not in any UserGroup
-                UserGroupUser.user_id == current_user.id,  # Courses in UserGroups where user is a member
-                ResourceAuthor.user_id == current_user.id  # Courses where user is a resource author
+                and_(Course.published == True, Course.public == True),  # Published public courses
+                and_(Course.published == True, UserGroupResource.resource_uuid.is_(None)),  # Published courses not in any UserGroup
+                UserGroupUser.user_id == current_user.id,  # Courses in UserGroups where user is a member (including unpublished)
+                ResourceAuthor.user_id == current_user.id  # Courses where user is a resource author (including unpublished)
             ))
         )
 
