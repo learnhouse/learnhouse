@@ -3,8 +3,7 @@ import { Metadata } from 'next'
 import { getOrgCourses } from '@services/courses/courses'
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { getOrgCollections } from '@services/courses/collections'
-import { getServerSession } from 'next-auth'
-import { nextAuthOptions } from 'app/auth/options'
+import { getServerSession } from '@/lib/auth/server'
 import { getOrgThumbnailMediaDirectory } from '@services/media/media'
 import LandingClassic from '@components/Landings/LandingClassic'
 import LandingCustom from '@components/Landings/LandingCustom'
@@ -54,12 +53,12 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
 
 const OrgHomePage = async (params: any) => {
   const orgslug = (await params.params).orgslug
-  const session = await getServerSession(nextAuthOptions)
+  const session = await getServerSession()
   const access_token = session?.tokens?.access_token
   const courses = await getOrgCourses(
     orgslug,
     { revalidate: 0, tags: ['courses'] },
-    access_token ? access_token : null
+    access_token ?? undefined
   )
   const org = await getOrganizationContextInfo(orgslug, {
     revalidate: 0,
@@ -68,7 +67,7 @@ const OrgHomePage = async (params: any) => {
   const org_id = org.id
   const collections = await getOrgCollections(
     org.id,
-    access_token ? access_token : null,
+    access_token ?? undefined,
     { revalidate: 0, tags: ['courses'] }
   )
 

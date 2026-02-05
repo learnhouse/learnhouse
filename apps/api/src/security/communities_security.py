@@ -35,6 +35,7 @@ from src.db.usergroup_user import UserGroupUser
 from src.security.rbac.rbac import (
     authorization_verify_if_user_is_anon,
     authorization_verify_based_on_org_admin_status,
+    authorization_verify_based_on_roles,
 )
 
 
@@ -228,14 +229,18 @@ async def communities_rbac_check(
                 detail="Community not found",
             )
 
-        is_admin_or_maintainer = await authorization_verify_based_on_org_admin_status(
+        # Check using role-based permissions from database
+        has_role_permission = await authorization_verify_based_on_roles(
+            request, current_user.id, action, community_uuid, db_session
+        )
+        is_admin_or_maintainer = has_role_permission or await authorization_verify_based_on_org_admin_status(
             request, current_user.id, action, community_uuid, db_session
         )
 
         if not is_admin_or_maintainer:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"You must have admin/maintainer role to {action} communities",
+                detail=f"You don't have permission to {action} communities. Check your role permissions.",
             )
 
         return True

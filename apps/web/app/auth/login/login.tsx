@@ -11,7 +11,7 @@ import { AlertTriangle, Lock, Mail, Shield, X, Clock } from 'lucide-react'
 import { checkSSOEnabled, redirectToSSOLogin } from '@services/auth/sso'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { signIn } from "next-auth/react"
+import { useAuth } from '@components/Contexts/AuthContext'
 import { getLEARNHOUSE_TOP_DOMAIN_VAL } from '@services/config/config'
 import { useLHSession } from '@components/Contexts/LHSessionContext'
 import { useTranslation } from 'react-i18next'
@@ -24,6 +24,7 @@ interface LoginClientProps {
 
 const LoginClient = (props: LoginClientProps) => {
   const { t } = useTranslation()
+  const { signIn } = useAuth()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [ssoEnabled, setSsoEnabled] = useState(false)
   const [ssoLoading, setSsoLoading] = useState(false)
@@ -43,12 +44,15 @@ const LoginClient = (props: LoginClientProps) => {
     // Store org context in cookies before OAuth redirect
     if (props.org?.slug) {
       const topDomain = getLEARNHOUSE_TOP_DOMAIN_VAL();
-      const baseAttributes = '; path=/; secure; SameSite=Lax';
+      const isSecure = window.location.protocol === 'https:';
+      const secureAttr = isSecure ? '; secure' : '';
+      const baseAttributes = `; path=/; SameSite=Lax${secureAttr}`;
       const domainAttr = topDomain === 'localhost' ? '' : `; domain=.${topDomain}`;
       document.cookie = `learnhouse_oauth_orgslug=${props.org.slug}${baseAttributes}${domainAttr}`;
       document.cookie = `learnhouse_oauth_org_id=${props.org.id}${baseAttributes}${domainAttr}`;
     }
-    signIn('google', { callbackUrl: '/redirect_from_auth' });
+    // Use absolute URL with current origin for custom domain support
+    signIn('google', { callbackUrl: `${window.location.origin}/redirect_from_auth` });
   };
 
   // Check if SSO is enabled for this organization (requires enterprise plan)
@@ -145,11 +149,14 @@ const LoginClient = (props: LoginClientProps) => {
         return;
       }
 
+      // Use absolute URL with current origin for custom domain support
+      const callbackUrl = `${window.location.origin}/redirect_from_auth`;
+
       const res = await signIn('credentials', {
         redirect: false,
         email: values.email,
         password: values.password,
-        callbackUrl: '/redirect_from_auth'
+        callbackUrl
       });
 
       if (res && res.error) {
@@ -191,7 +198,7 @@ const LoginClient = (props: LoginClientProps) => {
         await signIn('credentials', {
           email: values.email,
           password: values.password,
-          callbackUrl: '/redirect_from_auth'
+          callbackUrl
         });
       }
     },

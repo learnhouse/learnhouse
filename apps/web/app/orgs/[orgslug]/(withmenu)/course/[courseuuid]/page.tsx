@@ -4,8 +4,7 @@ import { getCourseMetadata, getCourseRights } from '@services/courses/courses'
 import { getOrganizationContextInfo } from '@services/organizations/orgs'
 import { Metadata } from 'next'
 import { getCourseThumbnailMediaDirectory } from '@services/media/media'
-import { nextAuthOptions } from 'app/auth/options'
-import { getServerSession } from 'next-auth'
+import { getServerSession } from '@/lib/auth/server'
 import { notFound } from 'next/navigation'
 
 type MetadataProps = {
@@ -15,7 +14,7 @@ type MetadataProps = {
 
 export async function generateMetadata(props: MetadataProps): Promise<Metadata> {
   const params = await props.params;
-  const session = await getServerSession(nextAuthOptions)
+  const session = await getServerSession()
   const access_token = session?.tokens?.access_token
 
   // Get Org context information
@@ -26,7 +25,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
   const course_meta = await getCourseMetadata(
     params.courseuuid,
     { revalidate: 60, tags: ['courses'] },
-    access_token ? access_token : null
+    access_token ?? undefined
   )
 
   // SEO - use custom SEO fields with fallbacks to existing fields
@@ -89,7 +88,7 @@ export async function generateMetadata(props: MetadataProps): Promise<Metadata> 
 }
 
 const CoursePage = async (params: any) => {
-  const session = await getServerSession(nextAuthOptions)
+  const session = await getServerSession()
   const access_token = session?.tokens?.access_token
 
   // Await params before using them
@@ -101,7 +100,7 @@ const CoursePage = async (params: any) => {
     course_meta = await getCourseMetadata(
       courseuuid,
       { revalidate: 0, tags: ['courses'] },
-      access_token ? access_token : null
+      access_token ?? undefined
     )
   } catch (error) {
     // If course not found (404) or any error, show not found

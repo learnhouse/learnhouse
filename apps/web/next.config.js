@@ -3,7 +3,16 @@ const { withSentryConfig } = require("@sentry/nextjs");
 /** @type {import('common.next').NextConfig} */
 const nextConfig = {
   async rewrites() {
+    // Get backend URL from env for API proxy
+    const backendUrl = process.env.NEXT_PUBLIC_LEARNHOUSE_BACKEND_URL || 'http://localhost:1338'
+
     return [
+      // Proxy API requests through Next.js for same-origin cookie handling
+      // This is essential for custom domains where cross-origin cookies don't work
+      {
+        source: '/api/v1/:path*',
+        destination: `${backendUrl}/api/v1/:path*`,
+      },
       {
         source: '/umami/script.js',
         destination: `https://eu.umami.is/script.js`,

@@ -49,28 +49,34 @@ async def check_course_permissions_with_own(
 ) -> bool:
     """
     Check course-specific permissions including "own" permissions.
-    
+
     Args:
-        element_rights: The rights object for courses (PermissionsWithOwn)
+        element_rights: The rights object for courses (PermissionsWithOwn) or dict from JSON
         action: The action to check ("read", "update", "delete", "create")
         is_author: Whether the user is the author of the course
-    
+
     Returns:
         bool: True if permission is granted, False otherwise
     """
     if not element_rights:
         return False
-    
+
+    # Handle both dict (from JSON storage) and object access
+    def get_permission(key: str) -> bool:
+        if isinstance(element_rights, dict):
+            return element_rights.get(key, False)
+        return getattr(element_rights, key, False)
+
     # Check for general permission first
-    if getattr(element_rights, f"action_{action}", False):
+    if get_permission(f"action_{action}"):
         return True
-    
+
     # Check for "own" permission if user is the author
     if is_author:
         own_action = f"action_{action}_own"
-        if getattr(element_rights, own_action, False):
+        if get_permission(own_action):
             return True
-    
+
     return False
 
 

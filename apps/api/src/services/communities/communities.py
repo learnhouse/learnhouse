@@ -22,6 +22,7 @@ from src.security.communities_security import (
 from src.security.rbac.rbac import (
     authorization_verify_if_user_is_anon,
     authorization_verify_based_on_org_admin_status,
+    authorization_verify_based_on_roles,
 )
 
 
@@ -46,15 +47,16 @@ async def create_community(
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
 
-    # Check if user has admin/maintainer role for the organization
-    is_admin_or_maintainer = await authorization_verify_based_on_org_admin_status(
-        request, current_user.id, "create", f"org_{org.org_uuid}", db_session
+    # Check if user has permission to create communities using role-based permissions
+    # This checks the actual database permissions (communities.action_create) instead of hardcoded role IDs
+    has_create_permission = await authorization_verify_based_on_roles(
+        request, current_user.id, "create", f"community_{org.org_uuid}", db_session
     )
 
-    if not is_admin_or_maintainer:
+    if not has_create_permission:
         raise HTTPException(
             status_code=403,
-            detail="You must have admin/maintainer role to create communities",
+            detail="You don't have permission to create communities. Check your role permissions.",
         )
 
     # Create community
@@ -120,8 +122,12 @@ async def get_communities_by_org(
         communities = db_session.exec(query).all()
         return [CommunityRead.model_validate(c.model_dump()) for c in communities]
 
-    # Check if user is admin/maintainer
-    is_admin_or_maintainer = await authorization_verify_based_on_org_admin_status(
+    # Check if user has admin-level permissions (can read all communities)
+    # First check role-based permissions, then fall back to org admin status
+    has_admin_read = await authorization_verify_based_on_roles(
+        request, current_user.id, "update", f"community_{org_id}", db_session
+    )
+    is_admin_or_maintainer = has_admin_read or await authorization_verify_based_on_org_admin_status(
         request, current_user.id, "read", f"org_{org_id}", db_session
     )
 
@@ -396,8 +402,11 @@ async def get_community_user_rights(
         user_memberships = db_session.exec(membership_stmt).all()
         rights["access"]["via_usergroups"] = [m.usergroup_id for m in user_memberships]
 
-    # Check admin/maintainer role
-    is_admin_or_maintainer = await authorization_verify_based_on_org_admin_status(
+    # Check admin/maintainer role using role-based permissions
+    has_update_permission = await authorization_verify_based_on_roles(
+        request, current_user.id, "update", community_uuid, db_session
+    )
+    is_admin_or_maintainer = has_update_permission or await authorization_verify_based_on_org_admin_status(
         request, current_user.id, "update", community_uuid, db_session
     )
 

@@ -2,9 +2,12 @@
 import '../styles/globals.css'
 import StyledComponentsRegistry from '../components/Utils/libs/styled-registry'
 import { motion } from 'framer-motion'
-import { SessionProvider } from 'next-auth/react'
+import { SessionProvider } from '@components/Contexts/AuthContext'
 import LHSessionProvider from '@components/Contexts/LHSessionContext'
-import { isDevEnv, isTelemetryDisabled } from './auth/options'
+import { getLEARNHOUSE_TOP_DOMAIN_VAL, getLEARNHOUSE_TELEMETRY_DISABLED_VAL } from '@services/config/config'
+
+const isDevEnv = getLEARNHOUSE_TOP_DOMAIN_VAL() === 'localhost'
+const isTelemetryDisabled = getLEARNHOUSE_TELEMETRY_DISABLED_VAL() === 'true'
 import Script from 'next/script'
 import '../lib/i18n'
 import I18nProvider from '@components/Contexts/I18nContext'
@@ -37,7 +40,7 @@ export default function RootLayout({
                                 src="/umami/script.js"
                             />
         }
-        <SessionProvider key="session-provider" refetchInterval={60000}>
+        <SessionProvider refetchInterval={60000}>
           <LHSessionProvider>
             <I18nProvider>
               <StyledComponentsRegistry>

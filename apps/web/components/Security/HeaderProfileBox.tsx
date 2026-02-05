@@ -21,7 +21,7 @@ import {
   DropdownMenuSubContent,
   DropdownMenuPortal,
 } from "@components/ui/dropdown-menu"
-import { signOut } from 'next-auth/react'
+import { signOut } from '@components/Contexts/AuthContext'
 import { useTranslation } from 'react-i18next'
 import { AVAILABLE_LANGUAGES } from '@/lib/languages'
 import LanguageSwitcher from '@components/Utils/LanguageSwitcher'
